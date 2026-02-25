@@ -1,0 +1,40 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsNotEmpty,
+  IsString,
+  MaxLength,
+  IsOptional,
+  IsIn,
+  IsUrl,
+} from 'class-validator';
+
+export class SendMessageDto {
+  @ApiProperty({
+    description: 'Message content',
+    example: 'Merhaba, nasilsin?',
+    maxLength: 1000,
+  })
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(1000)
+  content!: string;
+
+  @ApiPropertyOptional({
+    description: 'Message type',
+    enum: ['TEXT', 'IMAGE'],
+    default: 'TEXT',
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(['TEXT', 'IMAGE'])
+  type?: 'TEXT' | 'IMAGE';
+
+  @ApiPropertyOptional({
+    description: 'Media URL for image messages',
+    example: 'https://cdn.luma.app/chat/image.jpg',
+  })
+  @IsOptional()
+  @IsString()
+  @IsUrl()
+  mediaUrl?: string;
+}

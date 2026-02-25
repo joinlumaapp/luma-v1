@@ -1,0 +1,32 @@
+{
+  "name": "luma-v1",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LUMA — Premium Compatibility-Based Dating App",
+  "workspaces": [
+    "apps/mobile",
+    "apps/backend",
+    "packages/shared"
+  ],
+  "scripts": {
+    "mobile": "npm run --workspace=apps/mobile",
+    "backend": "npm run --workspace=apps/backend",
+    "shared": "npm run --workspace=packages/shared",
+    "mobile:start": "npm run start --workspace=apps/mobile",
+    "backend:start": "npm run start:dev --workspace=apps/backend",
+    "backend:build": "npm run build --workspace=apps/backend",
+    "shared:build": "npm run build --workspace=packages/shared",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:coverage": "npm run test:coverage --workspaces --if-present",
+    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "overrides": {
+    "expo": "~54.0.0",
+    "expo-modules-autolinking": "~3.0.0"
+  }
+}

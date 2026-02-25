@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "LUMA",
+    "slug": "luma",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0F0F23"
+    },
+    "updates": {
+      "enabled": true,
+      "fallbackToCacheTimeout": 30000,
+      "checkAutomatically": "ON_LOAD"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.luma.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "LUMA, profil dogrulama ve fotograf cekmek icin kameraniza erisim istiyor.",
+        "NSPhotoLibraryUsageDescription": "LUMA, profilinize fotograf eklemek icin galeri erisinize ihtiyac duyuyor.",
+        "NSPhotoLibraryAddUsageDescription": "LUMA, fotograflari galerinize kaydetmek icin izin istiyor.",
+        "NSLocationWhenInUseUsageDescription": "LUMA, yakininzdaki kisileri gostermek icin konumunuzu kullaniyor.",
+        "NSUserTrackingUsageDescription": "LUMA, size daha iyi bir deneyim sunmak icin reklam takibi kullanmak istiyor."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0F0F23"
+      },
+      "package": "com.luma.app",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ]
+    }
+  }
+}

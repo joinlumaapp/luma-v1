@@ -1,0 +1,53 @@
+# Dependencies (will be installed in container)
+node_modules
+**/node_modules
+
+# Git
+.git
+.github
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Documentation
+*.md
+LICENSE
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Mobile app (not needed for backend image)
+apps/mobile
+
+# Infrastructure
+infrastructure
+
+# Build output (will be rebuilt in container)
+dist
+**/dist
+coverage
+**/coverage
+
+# Claude Code
+.claude
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files (not needed in production image)
+**/*.spec.ts
+**/*.test.ts
+**/test
+**/__tests__
+jest.config.*

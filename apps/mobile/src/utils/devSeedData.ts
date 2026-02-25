@@ -1,0 +1,1053 @@
+// Dev seed data — populates all stores with realistic Turkish bot profiles
+// Only used in __DEV__ mode for testing the app without a backend
+
+import { useDiscoveryStore } from '../stores/discoveryStore';
+import { useMatchStore } from '../stores/matchStore';
+import { useChatStore } from '../stores/chatStore';
+import { useHarmonyStore } from '../stores/harmonyStore';
+import { useProfileStore } from '../stores/profileStore';
+import { useNotificationStore } from '../stores/notificationStore';
+
+// ── Helper: generate timestamps ─────────────────────────────────────
+const now = new Date();
+const minutesAgo = (m: number) => new Date(now.getTime() - m * 60_000).toISOString();
+const hoursAgo = (h: number) => new Date(now.getTime() - h * 3_600_000).toISOString();
+const daysAgo = (d: number) => new Date(now.getTime() - d * 86_400_000).toISOString();
+
+// ── Discovery Profiles (15 bot profiles to swipe) ───────────────────
+const discoveryProfiles = [
+  {
+    id: 'bot-001',
+    name: 'Elif',
+    age: 25,
+    city: 'Istanbul',
+    compatibilityPercent: 94,
+    photoUrls: ['https://i.pravatar.cc/400?img=1'],
+    bio: 'Kitap kurdu, kahve bagimlisi. Hafta sonlari Princes Adalari\'nda bisiklet surmek benim icin terapi.',
+    intentionTag: 'Ciddi Iliski',
+    isVerified: true,
+    distanceKm: 2.3,
+    earnedBadges: ['verified_star', 'social_butterfly'],
+  },
+  {
+    id: 'bot-002',
+    name: 'Zeynep',
+    age: 27,
+    city: 'Istanbul',
+    compatibilityPercent: 91,
+    photoUrls: ['https://i.pravatar.cc/400?img=5'],
+    bio: 'Yazilim muhendisi, yoga tutkunu. Iyi bir sohbet, iyi bir kahve ve iyi bir kitap — hayatin anlami bu.',
+    intentionTag: 'Ciddi Iliski',
+    isVerified: true,
+    distanceKm: 4.1,
+    earnedBadges: ['verified_star'],
+  },
+  {
+    id: 'bot-003',
+    name: 'Selin',
+    age: 24,
+    city: 'Istanbul',
+    compatibilityPercent: 88,
+    photoUrls: ['https://i.pravatar.cc/400?img=9'],
+    bio: 'Grafik tasarimci, fotografcilik meraklisi. Her gece yeni bir dizi baslatip yarisinda birakiyorum.',
+    intentionTag: 'Kesfediyorum',
+    isVerified: false,
+    distanceKm: 7.5,
+    earnedBadges: [],
+  },
+  {
+    id: 'bot-004',
+    name: 'Ayse',
+    age: 28,
+    city: 'Ankara',
+    compatibilityPercent: 86,
+    photoUrls: ['https://i.pravatar.cc/400?img=16'],
+    bio: 'Doktor adayi, muzik dinlemeden calisamam. Konser planlarim her zaman vardir.',
+    intentionTag: 'Ciddi Iliski',
+    isVerified: true,
+    distanceKm: 12.0,
+    earnedBadges: ['verified_star', 'early_bird'],
+  },
+  {
+    id: 'bot-005',
+    name: 'Defne',
+    age: 23,
+    city: 'Istanbul',
+    compatibilityPercent: 85,
+    photoUrls: ['https://i.pravatar.cc/400?img=20'],
+    bio: 'Universite son sinif, psikoloji okuyor. Insanlari anlamak en buyuk hobim.',
+    intentionTag: 'Emin Degilim',
+    isVerified: false,
+    distanceKm: 3.2,
+    earnedBadges: [],
+  },
+  {
+    id: 'bot-006',
+    name: 'Merve',
+    age: 26,
+    city: 'Istanbul',
+    compatibilityPercent: 82,
+    photoUrls: ['https://i.pravatar.cc/400?img=23'],
+    bio: 'Dijital pazarlama uzmani, seyahat blogcusu. 30 ulke gezdim, hedefim 50!',
+    intentionTag: 'Kesfediyorum',
+    isVerified: true,
+    distanceKm: 5.8,
+    earnedBadges: ['globe_trotter'],
+  },
+  {
+    id: 'bot-007',
+    name: 'Buse',
+    age: 29,
+    city: 'Izmir',
+    compatibilityPercent: 79,
+    photoUrls: ['https://i.pravatar.cc/400?img=25'],
+    bio: 'Mimarlik ofisinde calisiyorum. Kedi annesi x3. Pazar kahvaltilarini cok ciddiye aliyorum.',
+    intentionTag: 'Ciddi Iliski',
+    isVerified: true,
+    distanceKm: 8.4,
+    earnedBadges: ['verified_star'],
+  },
+  {
+    id: 'bot-008',
+    name: 'Cansu',
+    age: 25,
+    city: 'Istanbul',
+    compatibilityPercent: 76,
+    photoUrls: ['https://i.pravatar.cc/400?img=29'],
+    bio: 'Pilates egitmeni, vegan mutfak deneyicisi. Pozitif enerji benim ikinci adim.',
+    intentionTag: 'Kesfediyorum',
+    isVerified: false,
+    distanceKm: 6.1,
+    earnedBadges: [],
+  },
+  {
+    id: 'bot-009',
+    name: 'Ipek',
+    age: 27,
+    city: 'Istanbul',
+    compatibilityPercent: 73,
+    photoUrls: ['https://i.pravatar.cc/400?img=32'],
+    bio: 'Avukat, kitap kulupleri beni hayata baglayan sey. Caz muzigi olmadan bir gun bile gecirmem.',
+    intentionTag: 'Ciddi Iliski',
+    isVerified: true,
+    distanceKm: 9.2,
+    earnedBadges: ['bookworm'],
+  },
+  {
+    id: 'bot-010',
+    name: 'Ebru',
+    age: 30,
+    city: 'Istanbul',
+    compatibilityPercent: 71,
+    photoUrls: ['https://i.pravatar.cc/400?img=36'],
+    bio: 'Ogretmen, cocuklarla calismak beni cok mutlu ediyor. Hafta sonlari dag yuruyusu yapiyorum.',
+    intentionTag: 'Ciddi Iliski',
+    isVerified: false,
+    distanceKm: 11.3,
+    earnedBadges: [],
+  },
+  {
+    id: 'bot-011',
+    name: 'Naz',
+    age: 22,
+    city: 'Istanbul',
+    compatibilityPercent: 68,
+    photoUrls: ['https://i.pravatar.cc/400?img=38'],
+    bio: 'Muzik produksiyonu yapiyorum. Gitar calmak ve yeni soundlar kesfetmek hayatim.',
+    intentionTag: 'Emin Degilim',
+    isVerified: false,
+    distanceKm: 4.7,
+    earnedBadges: [],
+  },
+  {
+    id: 'bot-012',
+    name: 'Gizem',
+    age: 26,
+    city: 'Istanbul',
+    compatibilityPercent: 65,
+    photoUrls: ['https://i.pravatar.cc/400?img=41'],
+    bio: 'Eczaci, bilim meraklisi. Netflix ve pipoporn izlerken uyuyakalmak en buyuk yetenegim.',
+    intentionTag: 'Kesfediyorum',
+    isVerified: true,
+    distanceKm: 13.5,
+    earnedBadges: ['verified_star'],
+  },
+  {
+    id: 'bot-013',
+    name: 'Yagmur',
+    age: 24,
+    city: 'Bursa',
+    compatibilityPercent: 62,
+    photoUrls: ['https://i.pravatar.cc/400?img=44'],
+    bio: 'Endustri muhendisi, satiranc oyuncusu. Stratejik dusunmek is hayatimda da kisisel hayatimda da var.',
+    intentionTag: 'Ciddi Iliski',
+    isVerified: false,
+    distanceKm: 15.0,
+    earnedBadges: [],
+  },
+  {
+    id: 'bot-014',
+    name: 'Irem',
+    age: 28,
+    city: 'Istanbul',
+    compatibilityPercent: 58,
+    photoUrls: ['https://i.pravatar.cc/400?img=47'],
+    bio: 'Reklamci, stand-up komedisine bayiliyorum. Hayat gulmeden gecilmez.',
+    intentionTag: 'Kesfediyorum',
+    isVerified: false,
+    distanceKm: 3.9,
+    earnedBadges: [],
+  },
+  {
+    id: 'bot-015',
+    name: 'Dilan',
+    age: 25,
+    city: 'Istanbul',
+    compatibilityPercent: 55,
+    photoUrls: ['https://i.pravatar.cc/400?img=49'],
+    bio: 'Hemire, gece mesaisi hayatim. Ama boyle bile olsa dans kursumu aksatmam.',
+    intentionTag: 'Emin Degilim',
+    isVerified: false,
+    distanceKm: 7.8,
+    earnedBadges: [],
+  },
+];
+
+// ── Matches (6 existing matches) ────────────────────────────────────
+const matches = [
+  {
+    id: 'match-001',
+    userId: 'bot-001',
+    name: 'Elif',
+    age: 25,
+    city: 'Istanbul',
+    photoUrl: 'https://i.pravatar.cc/400?img=1',
+    compatibilityPercent: 94,
+    intentionTag: 'Ciddi Iliski',
+    isVerified: true,
+    lastActivity: minutesAgo(5),
+    isNew: true,
+    hasHarmonyRoom: true,
+    matchedAt: hoursAgo(2),
+  },
+  {
+    id: 'match-002',
+    userId: 'bot-002',
+    name: 'Zeynep',
+    age: 27,
+    city: 'Istanbul',
+    photoUrl: 'https://i.pravatar.cc/400?img=5',
+    compatibilityPercent: 91,
+    intentionTag: 'Ciddi Iliski',
+    isVerified: true,
+    lastActivity: minutesAgo(30),
+    isNew: true,
+    hasHarmonyRoom: false,
+    matchedAt: hoursAgo(6),
+  },
+  {
+    id: 'match-003',
+    userId: 'bot-004',
+    name: 'Ayse',
+    age: 28,
+    city: 'Ankara',
+    photoUrl: 'https://i.pravatar.cc/400?img=16',
+    compatibilityPercent: 86,
+    intentionTag: 'Ciddi Iliski',
+    isVerified: true,
+    lastActivity: hoursAgo(3),
+    isNew: false,
+    hasHarmonyRoom: false,
+    matchedAt: daysAgo(1),
+  },
+  {
+    id: 'match-004',
+    userId: 'bot-006',
+    name: 'Merve',
+    age: 26,
+    city: 'Istanbul',
+    photoUrl: 'https://i.pravatar.cc/400?img=23',
+    compatibilityPercent: 82,
+    intentionTag: 'Kesfediyorum',
+    isVerified: true,
+    lastActivity: hoursAgo(8),
+    isNew: false,
+    hasHarmonyRoom: true,
+    matchedAt: daysAgo(3),
+  },
+  {
+    id: 'match-005',
+    userId: 'bot-007',
+    name: 'Buse',
+    age: 29,
+    city: 'Izmir',
+    photoUrl: 'https://i.pravatar.cc/400?img=25',
+    compatibilityPercent: 79,
+    intentionTag: 'Ciddi Iliski',
+    isVerified: true,
+    lastActivity: daysAgo(1),
+    isNew: false,
+    hasHarmonyRoom: false,
+    matchedAt: daysAgo(5),
+  },
+  {
+    id: 'match-006',
+    userId: 'bot-009',
+    name: 'Ipek',
+    age: 27,
+    city: 'Istanbul',
+    photoUrl: 'https://i.pravatar.cc/400?img=32',
+    compatibilityPercent: 73,
+    intentionTag: 'Ciddi Iliski',
+    isVerified: true,
+    lastActivity: daysAgo(2),
+    isNew: false,
+    hasHarmonyRoom: false,
+    matchedAt: daysAgo(7),
+  },
+];
+
+// ── Chat Conversations & Messages ───────────────────────────────────
+const conversations = [
+  {
+    matchId: 'match-001',
+    userId: 'bot-001',
+    name: 'Elif',
+    photoUrl: 'https://i.pravatar.cc/400?img=1',
+    lastMessage: 'Yarin Karakoy\'de bir kafe var, gidelim mi?',
+    lastMessageAt: minutesAgo(5),
+    unreadCount: 2,
+    isOnline: true,
+  },
+  {
+    matchId: 'match-002',
+    userId: 'bot-002',
+    name: 'Zeynep',
+    photoUrl: 'https://i.pravatar.cc/400?img=5',
+    lastMessage: 'O kitabi ben de cok sevmistim!',
+    lastMessageAt: minutesAgo(45),
+    unreadCount: 1,
+    isOnline: true,
+  },
+  {
+    matchId: 'match-003',
+    userId: 'bot-004',
+    name: 'Ayse',
+    photoUrl: 'https://i.pravatar.cc/400?img=16',
+    lastMessage: 'Merhaba! Uyumluluk puanimiz cok yuksek, cok sasirdim :)',
+    lastMessageAt: hoursAgo(3),
+    unreadCount: 0,
+    isOnline: false,
+  },
+  {
+    matchId: 'match-004',
+    userId: 'bot-006',
+    name: 'Merve',
+    photoUrl: 'https://i.pravatar.cc/400?img=23',
+    lastMessage: 'Japonya fotoraflarini gormelisin!',
+    lastMessageAt: hoursAgo(8),
+    unreadCount: 0,
+    isOnline: false,
+  },
+  {
+    matchId: 'match-005',
+    userId: 'bot-007',
+    name: 'Buse',
+    photoUrl: 'https://i.pravatar.cc/400?img=25',
+    lastMessage: 'Merhaba, nasilsin?',
+    lastMessageAt: daysAgo(1),
+    unreadCount: 0,
+    isOnline: false,
+  },
+];
+
+const messages: Record<string, Array<{
+  id: string;
+  matchId: string;
+  senderId: string;
+  content: string;
+  type: 'TEXT';
+  status: 'SENT' | 'DELIVERED' | 'READ';
+  createdAt: string;
+  isRead: boolean;
+  reactions: Array<{ emoji: 'HEART' | 'LAUGH' | 'WOW' | 'SAD' | 'FIRE' | 'THUMBS_UP'; count: number; hasReacted: boolean }>;
+}>> = {
+  'match-001': [
+    {
+      id: 'msg-001',
+      matchId: 'match-001',
+      senderId: 'bot-001',
+      content: 'Selam! Profilindeki biyo cok hosuma gitti 😊',
+      type: 'TEXT',
+      status: 'READ',
+      createdAt: hoursAgo(2),
+      isRead: true,
+      reactions: [],
+    },
+    {
+      id: 'msg-002',
+      matchId: 'match-001',
+      senderId: 'dev-user-001',
+      content: 'Merhaba Elif! Tesekkkur ederim, seninki de cok guzel. Kitap okumayii sevdigini gordum, son ne okudun?',
+      type: 'TEXT',
+      status: 'READ',
+      createdAt: hoursAgo(1.5),
+      isRead: true,
+      reactions: [{ emoji: 'HEART', count: 1, hasReacted: false }],
+    },
+    {
+      id: 'msg-003',
+      matchId: 'match-001',
+      senderId: 'bot-001',
+      content: 'Orhan Pamuk\'un "Kafamda Bir Tuhaflik" kitabini bitirdim, cok etkileyiciydi. Sen?',
+      type: 'TEXT',
+      status: 'READ',
+      createdAt: hoursAgo(1),
+      isRead: true,
+      reactions: [],
+    },
+    {
+      id: 'msg-004',
+      matchId: 'match-001',
+      senderId: 'dev-user-001',
+      content: 'Ben de Sabahattin Ali okuyorum su an. Kuyucakli Yusuf harika bir eser.',
+      type: 'TEXT',
+      status: 'DELIVERED',
+      createdAt: minutesAgo(30),
+      isRead: true,
+      reactions: [{ emoji: 'FIRE', count: 1, hasReacted: false }],
+    },
+    {
+      id: 'msg-005',
+      matchId: 'match-001',
+      senderId: 'bot-001',
+      content: 'Cok severim onu! Bi ara kitap kafede bulusup tartissak cok iyi olur.',
+      type: 'TEXT',
+      status: 'DELIVERED',
+      createdAt: minutesAgo(15),
+      isRead: false,
+      reactions: [],
+    },
+    {
+      id: 'msg-006',
+      matchId: 'match-001',
+      senderId: 'bot-001',
+      content: 'Yarin Karakoy\'de bir kafe var, gidelim mi?',
+      type: 'TEXT',
+      status: 'DELIVERED',
+      createdAt: minutesAgo(5),
+      isRead: false,
+      reactions: [],
+    },
+  ],
+  'match-002': [
+    {
+      id: 'msg-007',
+      matchId: 'match-002',
+      senderId: 'dev-user-001',
+      content: 'Merhaba Zeynep! Yazilim muhendisi olarak ne uzerinde calisiyorsun?',
+      type: 'TEXT',
+      status: 'READ',
+      createdAt: hoursAgo(5),
+      isRead: true,
+      reactions: [],
+    },
+    {
+      id: 'msg-008',
+      matchId: 'match-002',
+      senderId: 'bot-002',
+      content: 'Selam! Bir fintech startup\'inda React Native ile mobil uygulama gelistiriyorum. Sen?',
+      type: 'TEXT',
+      status: 'READ',
+      createdAt: hoursAgo(4),
+      isRead: true,
+      reactions: [{ emoji: 'WOW', count: 1, hasReacted: true }],
+    },
+    {
+      id: 'msg-009',
+      matchId: 'match-002',
+      senderId: 'dev-user-001',
+      content: 'Vay be, ben de bir dating app uzerinde calisiyorum! React Native kullaniyoruz.',
+      type: 'TEXT',
+      status: 'READ',
+      createdAt: hoursAgo(3),
+      isRead: true,
+      reactions: [{ emoji: 'LAUGH', count: 1, hasReacted: false }],
+    },
+    {
+      id: 'msg-010',
+      matchId: 'match-002',
+      senderId: 'bot-002',
+      content: 'Hahaha ne tesaduf! Yoga icin de vakit bulabiliyor musun yooun is temposuyla?',
+      type: 'TEXT',
+      status: 'DELIVERED',
+      createdAt: hoursAgo(1),
+      isRead: true,
+      reactions: [],
+    },
+    {
+      id: 'msg-011',
+      matchId: 'match-002',
+      senderId: 'dev-user-001',
+      content: 'Yoga hic denemedim aslinda ama merak ediyorum. Onerirr misin?',
+      type: 'TEXT',
+      status: 'READ',
+      createdAt: minutesAgo(50),
+      isRead: true,
+      reactions: [],
+    },
+    {
+      id: 'msg-012',
+      matchId: 'match-002',
+      senderId: 'bot-002',
+      content: 'O kitabi ben de cok sevmistim!',
+      type: 'TEXT',
+      status: 'DELIVERED',
+      createdAt: minutesAgo(45),
+      isRead: false,
+      reactions: [],
+    },
+  ],
+  'match-003': [
+    {
+      id: 'msg-013',
+      matchId: 'match-003',
+      senderId: 'bot-004',
+      content: 'Merhaba! Uyumluluk puanimiz cok yuksek, cok sasirdim :)',
+      type: 'TEXT',
+      status: 'READ',
+      createdAt: hoursAgo(3),
+      isRead: true,
+      reactions: [{ emoji: 'HEART', count: 1, hasReacted: true }],
+    },
+    {
+      id: 'msg-014',
+      matchId: 'match-003',
+      senderId: 'dev-user-001',
+      content: 'Evet %86 bayagi iyi! Konser planlarini merak ettim, en son nereye gittin?',
+      type: 'TEXT',
+      status: 'READ',
+      createdAt: hoursAgo(2.5),
+      isRead: true,
+      reactions: [],
+    },
+  ],
+  'match-004': [
+    {
+      id: 'msg-015',
+      matchId: 'match-004',
+      senderId: 'bot-006',
+      content: 'Selam! 30 ulke gezdim diye yazmmistim, en cok Japonya\'yi sevdim. Sen hic gittin mi?',
+      type: 'TEXT',
+      status: 'READ',
+      createdAt: daysAgo(2),
+      isRead: true,
+      reactions: [],
+    },
+    {
+      id: 'msg-016',
+      matchId: 'match-004',
+      senderId: 'dev-user-001',
+      content: 'Japonya listemmde! Tokyo mu yoksa Kyoto mu daha guzel?',
+      type: 'TEXT',
+      status: 'READ',
+      createdAt: daysAgo(1.5),
+      isRead: true,
+      reactions: [],
+    },
+    {
+      id: 'msg-017',
+      matchId: 'match-004',
+      senderId: 'bot-006',
+      content: 'Japonya fotoraflarini gormelisin!',
+      type: 'TEXT',
+      status: 'DELIVERED',
+      createdAt: hoursAgo(8),
+      isRead: true,
+      reactions: [{ emoji: 'FIRE', count: 1, hasReacted: true }],
+    },
+  ],
+};
+
+// ── Harmony Sessions ────────────────────────────────────────────────
+const harmonySessions = [
+  {
+    id: 'harmony-001',
+    matchId: 'match-001',
+    matchName: 'Elif',
+    status: 'active' as const,
+    remainingSeconds: 720,
+    totalMinutes: 15,
+    extensions: 0,
+    cards: [
+      { id: 'card-001', type: 'question' as const, text: 'Hayatinda en cok neyi degistirmek isterdin?', isRevealed: true },
+      { id: 'card-002', type: 'question' as const, text: 'Ideal bir hafta sonu nasil gecerdi?', isRevealed: true },
+      { id: 'card-003', type: 'game' as const, text: '2 Dogru 1 Yanlis: Her biriniz 3 sey soylesin, biri yanlis olsun!', isRevealed: false },
+      { id: 'card-004', type: 'challenge' as const, text: '60 saniye icinde birbirinize 5 iltifat edin!', isRevealed: false },
+      { id: 'card-005', type: 'question' as const, text: 'En son ne zaman gercekten mutlu hissettin?', isRevealed: false },
+    ],
+    messages: [
+      { id: 'hmsg-001', text: 'Merhaba! Harmony Room cok eglenceli bir fikir ya.', sender: 'other' as const, timestamp: '14:30', status: 'read' as const },
+      { id: 'hmsg-002', text: 'Evet, kartlari acarak sohbet etmek harika!', sender: 'me' as const, timestamp: '14:31', status: 'read' as const },
+      { id: 'hmsg-003', text: 'Ilk karti actim, cok derin bir soru geldi.', sender: 'other' as const, timestamp: '14:32', status: 'delivered' as const },
+    ],
+    startedAt: minutesAgo(3),
+    compatibilityScore: 94,
+  },
+  {
+    id: 'harmony-002',
+    matchId: 'match-004',
+    matchName: 'Merve',
+    status: 'completed' as const,
+    remainingSeconds: 0,
+    totalMinutes: 15,
+    extensions: 1,
+    cards: [
+      { id: 'card-006', type: 'question' as const, text: 'Seyahat ederken en unutulmaz anin neydi?', isRevealed: true },
+      { id: 'card-007', type: 'question' as const, text: 'Bir super gucun olsa ne olmasini isterdin?', isRevealed: true },
+      { id: 'card-008', type: 'game' as const, text: 'Kelime Oyunu: Sira sira bir harf ekleyerek kelime turetiin!', isRevealed: true },
+    ],
+    messages: [
+      { id: 'hmsg-004', text: 'Bu cok guzel bir soru!', sender: 'other' as const, timestamp: '10:15', status: 'read' as const },
+      { id: 'hmsg-005', text: 'Bence en guzel seyahat animm Kapadokya balonlariiydi.', sender: 'me' as const, timestamp: '10:16', status: 'read' as const },
+      { id: 'hmsg-006', text: 'Ben de tam orayi diyecektim!', sender: 'other' as const, timestamp: '10:17', status: 'read' as const },
+      { id: 'hmsg-007', text: 'Super guc olarak telepati isterdim. Seninki?', sender: 'me' as const, timestamp: '10:20', status: 'read' as const },
+      { id: 'hmsg-008', text: 'Zamani durdurmak! Guzel anlari uzatabilmek icin.', sender: 'other' as const, timestamp: '10:21', status: 'read' as const },
+    ],
+    startedAt: daysAgo(2),
+    compatibilityScore: 82,
+  },
+];
+
+// ── Notifications ───────────────────────────────────────────────────
+const notifications = [
+  {
+    id: 'notif-001',
+    type: 'NEW_MATCH',
+    title: 'Yeni Eslesme!',
+    body: 'Elif ile eslestiniz! %94 uyumluluk puani.',
+    data: { matchId: 'match-001' },
+    isRead: false,
+    createdAt: hoursAgo(2),
+  },
+  {
+    id: 'notif-002',
+    type: 'NEW_MATCH',
+    title: 'Yeni Eslesme!',
+    body: 'Zeynep ile eslestiniz! %91 uyumluluk puani.',
+    data: { matchId: 'match-002' },
+    isRead: false,
+    createdAt: hoursAgo(6),
+  },
+  {
+    id: 'notif-003',
+    type: 'MESSAGE',
+    title: 'Elif',
+    body: 'Yarin Karakoy\'de bir kafe var, gidelim mi?',
+    data: { matchId: 'match-001' },
+    isRead: false,
+    createdAt: minutesAgo(5),
+  },
+  {
+    id: 'notif-004',
+    type: 'BADGE_EARNED',
+    title: 'Yeni Rozet!',
+    body: '"Sohbet Yildizi" rozetini kazandin! 10 farkli kisiyle sohbet ettin.',
+    data: { badgeId: 'chat_star' },
+    isRead: false,
+    createdAt: hoursAgo(1),
+  },
+  {
+    id: 'notif-005',
+    type: 'HARMONY',
+    title: 'Harmony Daveti',
+    body: 'Elif seni Harmony Room\'a davet etti!',
+    data: { sessionId: 'harmony-001' },
+    isRead: true,
+    createdAt: minutesAgo(10),
+  },
+  {
+    id: 'notif-006',
+    type: 'SYSTEM',
+    title: 'Hosgeldin!',
+    body: 'LUMA\'ya hosgeldin! Profilini tamamla ve eslesmeler bulmaya basla.',
+    data: {},
+    isRead: true,
+    createdAt: daysAgo(7),
+  },
+  {
+    id: 'notif-007',
+    type: 'MESSAGE',
+    title: 'Zeynep',
+    body: 'O kitabi ben de cok sevmistim!',
+    data: { matchId: 'match-002' },
+    isRead: false,
+    createdAt: minutesAgo(45),
+  },
+];
+
+// ── Dev User's Own Profile ──────────────────────────────────────────
+const devUserProfile = {
+  firstName: 'Ari',
+  birthDate: '1995-06-15',
+  gender: 'male',
+  intentionTag: 'Ciddi Iliski',
+  photos: [
+    'https://i.pravatar.cc/400?img=68',
+    'https://i.pravatar.cc/400?img=59',
+    'https://i.pravatar.cc/400?img=52',
+  ],
+  bio: 'Girisimci, teknoloji tutkunu. Iyi bir kahve esliginde derin sohbetlere bayilirim. Seyahat etmeyi, yeni kulturler kesfetmeyi ve hayati anlamlandirmayi seviyorum.',
+  answers: { 1: 3, 2: 4, 3: 2, 4: 5, 5: 1, 6: 3, 7: 4, 8: 2, 9: 5, 10: 3 },
+  city: 'Istanbul',
+  isComplete: true,
+};
+
+// ── Match Detail Data (compatibility breakdown) ────────────────────
+const matchDetails: Record<string, {
+  photos: string[];
+  bio: string;
+  compatibilityBreakdown: Array<{ category: string; score: number }>;
+}> = {
+  'match-001': {
+    photos: ['https://i.pravatar.cc/400?img=1'],
+    bio: 'Kitap kurdu, kahve bagimlisi. Hafta sonlari Princes Adalari\'nda bisiklet surmek benim icin terapi.',
+    compatibilityBreakdown: [
+      { category: 'Yasam Tarzi', score: 96 },
+      { category: 'Degerler', score: 94 },
+      { category: 'Iletisim', score: 92 },
+      { category: 'Sosyal Uyum', score: 90 },
+      { category: 'Gelecek Planlari', score: 95 },
+    ],
+  },
+  'match-002': {
+    photos: ['https://i.pravatar.cc/400?img=5'],
+    bio: 'Yazilim muhendisi, yoga tutkunu. Iyi bir sohbet, iyi bir kahve ve iyi bir kitap — hayatin anlami bu.',
+    compatibilityBreakdown: [
+      { category: 'Yasam Tarzi', score: 93 },
+      { category: 'Degerler', score: 90 },
+      { category: 'Iletisim', score: 88 },
+      { category: 'Sosyal Uyum', score: 92 },
+      { category: 'Gelecek Planlari', score: 91 },
+    ],
+  },
+  'match-003': {
+    photos: ['https://i.pravatar.cc/400?img=16'],
+    bio: 'Doktor adayi, muzik dinlemeden calisamam. Konser planlarim her zaman vardir.',
+    compatibilityBreakdown: [
+      { category: 'Yasam Tarzi', score: 88 },
+      { category: 'Degerler', score: 90 },
+      { category: 'Iletisim', score: 82 },
+      { category: 'Sosyal Uyum', score: 85 },
+      { category: 'Gelecek Planlari', score: 86 },
+    ],
+  },
+  'match-004': {
+    photos: ['https://i.pravatar.cc/400?img=23'],
+    bio: 'Dijital pazarlama uzmani, seyahat blogcusu. 30 ulke gezdim, hedefim 50!',
+    compatibilityBreakdown: [
+      { category: 'Yasam Tarzi', score: 85 },
+      { category: 'Degerler', score: 80 },
+      { category: 'Iletisim', score: 83 },
+      { category: 'Sosyal Uyum', score: 78 },
+      { category: 'Gelecek Planlari', score: 84 },
+    ],
+  },
+  'match-005': {
+    photos: ['https://i.pravatar.cc/400?img=25'],
+    bio: 'Mimarlik ofisinde calisiyorum. Kedi annesi x3. Pazar kahvaltilarini cok ciddiye aliyorum.',
+    compatibilityBreakdown: [
+      { category: 'Yasam Tarzi', score: 82 },
+      { category: 'Degerler', score: 78 },
+      { category: 'Iletisim', score: 80 },
+      { category: 'Sosyal Uyum', score: 75 },
+      { category: 'Gelecek Planlari', score: 79 },
+    ],
+  },
+  'match-006': {
+    photos: ['https://i.pravatar.cc/400?img=32'],
+    bio: 'Avukat, kitap kulupleri beni hayata baglayan sey. Caz muzigi olmadan bir gun bile gecirmem.',
+    compatibilityBreakdown: [
+      { category: 'Yasam Tarzi', score: 75 },
+      { category: 'Degerler', score: 72 },
+      { category: 'Iletisim', score: 74 },
+      { category: 'Sosyal Uyum', score: 70 },
+      { category: 'Gelecek Planlari', score: 73 },
+    ],
+  },
+};
+
+// ── Main Seed Function ──────────────────────────────────────────────
+
+export function seedDevData(): void {
+  // 1. Profile (dev user's own profile)
+  useProfileStore.setState({
+    profile: devUserProfile,
+    completionPercent: 100,
+    _photoIds: ['photo-1', 'photo-2', 'photo-3'],
+    isLoading: false,
+  });
+
+  // 2. Discovery feed (15 profiles to swipe)
+  useDiscoveryStore.setState({
+    cards: discoveryProfiles,
+    currentIndex: 0,
+    dailyRemaining: 20,
+    isLoading: false,
+    filters: {
+      minAge: 18,
+      maxAge: 35,
+      maxDistance: 50,
+      intentionTags: [],
+      genderPreference: 'all',
+    },
+  });
+
+  // 3. Matches (6 existing matches)
+  useMatchStore.setState({
+    matches,
+    totalCount: matches.length,
+    isLoading: false,
+  });
+
+  // 4. Chat conversations and messages
+  useChatStore.setState({
+    conversations,
+    messages,
+    totalUnread: 3,
+    isLoadingConversations: false,
+    isLoadingMessages: false,
+    hasMore: {
+      'match-001': false,
+      'match-002': false,
+      'match-003': false,
+      'match-004': false,
+    },
+    cursors: {
+      'match-001': null,
+      'match-002': null,
+      'match-003': null,
+      'match-004': null,
+    },
+  });
+
+  // 5. Harmony sessions
+  useHarmonyStore.setState({
+    sessions: harmonySessions,
+    isLoading: false,
+  });
+
+  // 6. Notifications
+  useNotificationStore.setState({
+    notifications,
+    unreadCount: notifications.filter((n) => !n.isRead).length,
+    total: notifications.length,
+    totalPages: 1,
+    page: 1,
+    isLoading: false,
+    hasPermission: true,
+  });
+
+  // 7. Override getMatch to resolve from local data (no backend needed)
+  const originalGetMatch = useMatchStore.getState().getMatch;
+  useMatchStore.setState({
+    getMatch: async (matchId: string) => {
+      const match = matches.find((m) => m.id === matchId);
+      const detail = matchDetails[matchId];
+      if (match && detail) {
+        useMatchStore.setState({
+          selectedMatch: {
+            ...match,
+            photos: detail.photos,
+            bio: detail.bio,
+            compatibilityBreakdown: detail.compatibilityBreakdown,
+          },
+          isLoading: false,
+        });
+      } else {
+        // Fallback to original for unknown IDs
+        await originalGetMatch(matchId);
+      }
+    },
+  });
+
+  // 8. Override fetchMatches to return seeded data
+  useMatchStore.setState({
+    fetchMatches: async () => {
+      useMatchStore.setState({
+        matches,
+        totalCount: matches.length,
+        isLoading: false,
+      });
+    },
+  });
+
+  // 9. Override fetchConversations to return seeded data
+  useChatStore.setState({
+    fetchConversations: async () => {
+      useChatStore.setState({
+        conversations,
+        totalUnread: 3,
+        isLoadingConversations: false,
+      });
+    },
+  });
+
+  // 10. Override fetchMessages to return seeded data
+  useChatStore.setState({
+    fetchMessages: async (matchId: string) => {
+      useChatStore.setState((state) => ({
+        messages: {
+          ...state.messages,
+          [matchId]: messages[matchId] ?? [],
+        },
+        isLoadingMessages: false,
+        hasMore: { ...state.hasMore, [matchId]: false },
+        cursors: { ...state.cursors, [matchId]: null },
+      }));
+    },
+  });
+
+  // 11. Override sendMessage for local echo
+  useChatStore.setState({
+    sendMessage: async (matchId: string, content: string) => {
+      const newMsg = {
+        id: `msg-dev-${Date.now()}`,
+        matchId,
+        senderId: 'dev-user-001',
+        content,
+        type: 'TEXT' as const,
+        status: 'SENT' as const,
+        createdAt: new Date().toISOString(),
+        isRead: true,
+        reactions: [],
+      };
+      useChatStore.setState((state) => ({
+        messages: {
+          ...state.messages,
+          [matchId]: [...(state.messages[matchId] ?? []), newMsg],
+        },
+        isSending: false,
+      }));
+      useChatStore.getState().updateLastMessage(matchId, content, newMsg.createdAt);
+    },
+  });
+
+  // 12. Override discovery swipe for local operation (no API needed)
+  useDiscoveryStore.setState({
+    swipe: async (direction: 'left' | 'right' | 'up', _profileId: string) => {
+      const state = useDiscoveryStore.getState();
+      const currentProfile = state.cards[state.currentIndex];
+      if (!currentProfile) return;
+
+      if (direction === 'right' || direction === 'up') {
+        useDiscoveryStore.setState((prev) => ({
+          dailyRemaining: Math.max(0, prev.dailyRemaining - 1),
+        }));
+      }
+
+      // 20% chance of match on right swipe, 40% on super like
+      const matchChance = direction === 'up' ? 0.4 : direction === 'right' ? 0.2 : 0;
+      const isMatch = Math.random() < matchChance;
+
+      if (isMatch) {
+        const newMatchId = `match-dev-${Date.now()}`;
+        useDiscoveryStore.setState((prev) => ({
+          currentIndex: prev.currentIndex + 1,
+          showMatchAnimation: true,
+          currentMatchId: newMatchId,
+          matchAnimationType: direction === 'up' ? 'super_compatibility' : 'normal',
+          canUndo: false,
+          undoTimerId: null,
+          lastSwipedProfile: null,
+        }));
+      } else {
+        // Start 5-second undo window
+        const timerId = setTimeout(() => {
+          useDiscoveryStore.setState({ canUndo: false, undoTimerId: null, lastSwipedProfile: null });
+        }, 5000);
+
+        if (direction === 'up') {
+          useDiscoveryStore.setState({ showSuperLikeGlow: true });
+          setTimeout(() => {
+            useDiscoveryStore.setState({ showSuperLikeGlow: false });
+          }, 1500);
+        }
+
+        useDiscoveryStore.setState((prev) => ({
+          currentIndex: prev.currentIndex + 1,
+          canUndo: true,
+          undoTimerId: timerId,
+          lastSwipedProfile: currentProfile,
+        }));
+      }
+    },
+  });
+
+  // 13. Override undo for local operation
+  useDiscoveryStore.setState({
+    undoLastSwipe: async () => {
+      const state = useDiscoveryStore.getState();
+      if (!state.canUndo || !state.lastSwipedProfile) return;
+
+      if (state.undoTimerId) clearTimeout(state.undoTimerId);
+
+      useDiscoveryStore.setState((prev) => ({
+        currentIndex: Math.max(0, prev.currentIndex - 1),
+        canUndo: false,
+        undoTimerId: null,
+        lastSwipedProfile: null,
+        dailyRemaining: prev.dailyRemaining + 1,
+      }));
+    },
+  });
+
+  // 14. Override refreshFeed to reset index
+  useDiscoveryStore.setState({
+    refreshFeed: async () => {
+      useDiscoveryStore.setState({
+        currentIndex: 0,
+        isLoading: false,
+      });
+    },
+  });
+
+  // 15. Override fetchFeed to not hit API
+  useDiscoveryStore.setState({
+    fetchFeed: async () => {
+      // Data already seeded, just make sure loading is off
+      useDiscoveryStore.setState({ isLoading: false });
+    },
+  });
+
+  // 16. Override fetchSessions to return seeded harmony data
+  useHarmonyStore.setState({
+    fetchSessions: async () => {
+      useHarmonyStore.setState({
+        sessions: harmonySessions,
+        isLoading: false,
+      });
+    },
+  });
+
+  // 17. Override fetchProfile to return seeded profile
+  useProfileStore.setState({
+    fetchProfile: async () => {
+      useProfileStore.setState({
+        profile: devUserProfile,
+        completionPercent: 100,
+        isLoading: false,
+      });
+    },
+  });
+
+  if (__DEV__) {
+    console.log('[DevSeed] Tum store\'lar mock data ile dolduruldu!');
+    console.log(`  - ${discoveryProfiles.length} kesif profili`);
+    console.log(`  - ${matches.length} eslesme`);
+    console.log(`  - ${conversations.length} sohbet`);
+    console.log(`  - ${harmonySessions.length} harmony oturumu`);
+    console.log(`  - ${notifications.length} bildirim`);
+    console.log('  - API cagirilari mock override edildi');
+  }
+}

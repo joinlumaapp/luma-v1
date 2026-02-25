@@ -1,0 +1,12 @@
+# ─── Production Environment Configuration ──────────────────
+# Copy this file to terraform.tfvars and fill in values.
+# NEVER commit terraform.tfvars to git!
+
+aws_region         = "eu-west-1"
+availability_zones = ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
+
+# Database (required)
+db_password = "CHANGE_ME_production_very_secure_password"
+
+# ACM Certificate (required for production)
+certificate_arn = "arn:aws:acm:eu-west-1:ACCOUNT_ID:certificate/CERTIFICATE_ID"

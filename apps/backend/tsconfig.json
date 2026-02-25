@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "module": "commonjs",
+    "target": "ES2022",
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"],
+      "@luma/shared": ["../../packages/shared/src"]
+    },
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "incremental": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "test"]
+}

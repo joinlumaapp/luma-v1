@@ -1,0 +1,1006 @@
+// LUMA V1 — Complete Database Schema
+// 19 Main Categories — 48 Subsystems
+// PostgreSQL + Prisma ORM
+//
+// MIGRATION NOTE: After schema changes, run:
+//   npx prisma migrate dev --name add_chat_messages_and_notification_prefs
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// SUBSYSTEM 1: User Identity & Account System
+// Registration, Login, Logout, Session state, Account deletion
+// ============================================================
+
+model User {
+  id              String    @id @default(uuid()) @db.Uuid
+  phone           String    @unique @db.VarChar(20)
+  phoneCountryCode String   @db.VarChar(5)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
+  isActive        Boolean   @default(true) @map("is_active")
+
+  // Verification status
+  isSmsVerified    Boolean  @default(false) @map("is_sms_verified")
+  isSelfieVerified Boolean  @default(false) @map("is_selfie_verified")
+  isFullyVerified  Boolean  @default(false) @map("is_fully_verified")
+
+  // Package & Currency (Subsystem 16-17)
+  packageTier PackageTier @default(FREE) @map("package_tier")
+  goldBalance Int         @default(0) @map("gold_balance")
+
+  // Relations
+  profile          UserProfile?
+  sessions         UserSession[]
+  verifications    UserVerification[]
+  photos           UserPhoto[]
+  answers          UserAnswer[]
+  swipesGiven      Swipe[]           @relation("SwipesGiven")
+  swipesReceived   Swipe[]           @relation("SwipesReceived")
+  matchesAsA       Match[]           @relation("MatchUserA")
+  matchesAsB       Match[]           @relation("MatchUserB")
+  harmonySentAs    HarmonySession[]  @relation("HarmonyUserA")
+  harmonyRecvAs    HarmonySession[]  @relation("HarmonyUserB")
+  harmonyMessages  HarmonyMessage[]
+  harmonyExtensions HarmonyExtension[]
+  badges           UserBadge[]
+  subscriptions    Subscription[]
+  goldTransactions GoldTransaction[]
+  notifications    Notification[]
+  reports          Report[]          @relation("ReportsMade")
+  reportedBy       Report[]          @relation("ReportsReceived")
+  blocksGiven      Block[]           @relation("BlocksGiven")
+  blocksReceived   Block[]           @relation("BlocksReceived")
+  relationshipsAsA Relationship[]    @relation("RelationshipUserA")
+  relationshipsAsB Relationship[]    @relation("RelationshipUserB")
+  placeCheckIns    PlaceCheckIn[]
+  placeMemories    PlaceMemory[]
+  deviceTokens     DeviceToken[]
+  sentMessages     ChatMessage[]          @relation("SentMessages")
+  messageReactions MessageReaction[]
+  notificationPreference NotificationPreference?
+  dailyQuestionAnswers   DailyQuestionAnswer[]
+  icebreakerAnswers      IcebreakerAnswer[]
+
+  @@map("users")
+}
+
+model UserSession {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  accessToken  String   @map("access_token")
+  refreshToken String   @unique @map("refresh_token")
+  deviceId     String?  @map("device_id") @db.VarChar(255)
+  deviceType   String?  @map("device_type") @db.VarChar(20)
+  ipAddress    String?  @map("ip_address") @db.VarChar(45)
+  expiresAt    DateTime @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  isRevoked    Boolean  @default(false) @map("is_revoked")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRevoked]) // Auth: find active sessions for a user
+  @@index([refreshToken])
+  @@index([expiresAt]) // Cleanup: find expired sessions
+  @@map("user_sessions")
+}
+
+// ============================================================
+// SUBSYSTEM 2: Verification System (Mandatory)
+// SMS verification, Selfie verification, Anti-fake validation
+// ============================================================
+
+model UserVerification {
+  id               String             @id @default(uuid()) @db.Uuid
+  userId           String             @map("user_id") @db.Uuid
+  type             VerificationType
+  status           VerificationStatus @default(PENDING)
+  // SMS fields (bcrypt hash stored, needs 72+ chars)
+  otpCode          String?            @map("otp_code") @db.VarChar(72)
+  otpExpiresAt     DateTime?          @map("otp_expires_at")
+  otpAttempts      Int                @default(0) @map("otp_attempts")
+  // Selfie fields
+  selfieUrl        String?            @map("selfie_url")
+  livenessScore    Float?             @map("liveness_score")
+  faceMatchScore   Float?             @map("face_match_score")
+  rejectionReason  String?            @map("rejection_reason")
+  // Common
+  verifiedAt       DateTime?          @map("verified_at")
+  createdAt        DateTime           @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type, status]) // Auth: find pending verification for user
+  @@map("user_verifications")
+}
+
+enum VerificationType {
+  SMS
+  SELFIE
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+// ============================================================
+// SUBSYSTEM 3: Profile System
+// Basic profile info, Photos, Bio, Intention tag
+// ============================================================
+
+model UserProfile {
+  id            String       @id @default(uuid()) @db.Uuid
+  userId        String       @unique @map("user_id") @db.Uuid
+  firstName     String       @map("first_name") @db.VarChar(50)
+  birthDate     DateTime     @map("birth_date") @db.Date
+  gender        Gender
+  bio           String?      @db.VarChar(500)
+  // Subsystem 4: Intention Tag — LOCKED: 3 Tags
+  intentionTag  IntentionTag @map("intention_tag")
+  // Location (privacy-safe)
+  city          String?      @db.VarChar(100)
+  country       String?      @db.VarChar(100)
+  latitude      Float?
+  longitude     Float?
+  locationUpdatedAt DateTime? @map("location_updated_at")
+  // Profile status
+  isComplete    Boolean      @default(false) @map("is_complete")
+  lastActiveAt  DateTime     @default(now()) @map("last_active_at")
+  // Mood system (24h expiry)
+  currentMood   String?      @map("current_mood") @db.VarChar(20)
+  moodSetAt     DateTime?    @map("mood_set_at")
+  // Voice intro
+  voiceIntroUrl      String?  @map("voice_intro_url")
+  voiceIntroDuration Float?   @map("voice_intro_duration")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([intentionTag])
+  @@index([city, country])
+  @@index([lastActiveAt])
+  @@index([gender, isComplete]) // Discovery: filter by gender + complete profiles
+  @@index([isComplete, lastActiveAt]) // Discovery: active complete profiles
+  @@map("user_profiles")
+}
+
+model UserPhoto {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  url          String
+  thumbnailUrl String?  @map("thumbnail_url")
+  order        Int      @default(0)
+  isPrimary    Boolean  @default(false) @map("is_primary")
+  isApproved   Boolean  @default(true) @map("is_approved")
+  moderationScore Float? @map("moderation_score")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isApproved, order]) // Profile: approved photos sorted by order
+  @@index([userId, isPrimary]) // Profile: find primary photo quickly
+  @@map("user_photos")
+}
+
+// Subsystem 4: Intention Tags — LOCKED: 3 Tags
+enum IntentionTag {
+  SERIOUS_RELATIONSHIP
+  EXPLORING
+  NOT_SURE
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+// ============================================================
+// SUBSYSTEM 5 & 6: Compatibility Engine
+// 20 core questions + 25 premium questions = 45 total (LOCKED)
+// Base score + Deep score + Super Compatibility trigger
+// ============================================================
+
+model CompatibilityQuestion {
+  id             String           @id @default(uuid()) @db.Uuid
+  questionNumber Int              @unique @map("question_number") // 1-45
+  category       QuestionCategory
+  textEn         String           @map("text_en")
+  textTr         String           @map("text_tr")
+  weight         Float            @default(1.0) // 1.0, 1.2, or 1.5
+  isPremium      Boolean          @default(false) @map("is_premium") // true for Q21-Q45
+  order          Int
+  isActive       Boolean          @default(true) @map("is_active")
+  createdAt      DateTime         @default(now()) @map("created_at")
+
+  options      QuestionOption[]
+  answers      UserAnswer[]
+  dailyAnswers DailyQuestionAnswer[]
+
+  @@index([isPremium])
+  @@map("compatibility_questions")
+}
+
+model QuestionOption {
+  id         String @id @default(uuid()) @db.Uuid
+  questionId String @map("question_id") @db.Uuid
+  labelEn    String @map("label_en")
+  labelTr    String @map("label_tr")
+  value      Float  // normalized 0-1 for scoring
+  order      Int
+
+  question     CompatibilityQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answers      UserAnswer[]
+  dailyAnswers DailyQuestionAnswer[]
+
+  @@index([questionId])
+  @@map("question_options")
+}
+
+model UserAnswer {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  questionId String   @map("question_id") @db.Uuid
+  optionId   String   @map("option_id") @db.Uuid
+  answeredAt DateTime @default(now()) @map("answered_at")
+
+  user     User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question CompatibilityQuestion @relation(fields: [questionId], references: [id])
+  option   QuestionOption        @relation(fields: [optionId], references: [id])
+
+  @@unique([userId, questionId]) // one answer per question per user
+  @@index([userId])
+  @@map("user_answers")
+}
+
+// Subsystem 7: Compatibility Levels — LOCKED: 2 Levels
+// Pre-computed pairwise compatibility scores
+model CompatibilityScore {
+  id           String             @id @default(uuid()) @db.Uuid
+  userAId      String             @map("user_a_id") @db.Uuid
+  userBId      String             @map("user_b_id") @db.Uuid
+  baseScore    Float              @map("base_score") // 0-100 from 20 core questions
+  deepScore    Float?             @map("deep_score") // 0-100 from all 45 questions
+  finalScore   Float              @map("final_score") // weighted combination
+  level        CompatibilityLevel @default(NORMAL)
+  dimensionScores Json?           @map("dimension_scores") // JSON: { communication: 85, values: 72, ... }
+  calculatedAt DateTime           @default(now()) @map("calculated_at")
+  updatedAt    DateTime           @updatedAt @map("updated_at")
+
+  @@unique([userAId, userBId])
+  @@index([userAId])
+  @@index([userBId])
+  @@index([finalScore])
+  @@map("compatibility_scores")
+}
+
+enum QuestionCategory {
+  // Core (Q1-Q20)
+  COMMUNICATION
+  LIFE_GOALS
+  VALUES
+  LIFESTYLE
+  EMOTIONAL_INTELLIGENCE
+  RELATIONSHIP_EXPECTATIONS
+  SOCIAL_COMPATIBILITY
+  // Premium (Q21-Q45)
+  ATTACHMENT_STYLE
+  LOVE_LANGUAGE
+  CONFLICT_STYLE
+  FUTURE_VISION
+  INTELLECTUAL
+  INTIMACY
+  GROWTH_MINDSET
+  CORE_FEARS
+}
+
+enum CompatibilityLevel {
+  NORMAL
+  SUPER
+}
+
+// ============================================================
+// SUBSYSTEM 8: Swipe / Card Flow System
+// Card-based browsing, Like / Pass, Mutual match requirement
+// ============================================================
+
+model Swipe {
+  id        String      @id @default(uuid()) @db.Uuid
+  swiperId  String      @map("swiper_id") @db.Uuid
+  targetId  String      @map("target_id") @db.Uuid
+  action    SwipeAction
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  swiper User @relation("SwipesGiven", fields: [swiperId], references: [id], onDelete: Cascade)
+  target User @relation("SwipesReceived", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@unique([swiperId, targetId]) // can't swipe same person twice
+  @@index([swiperId, createdAt]) // for daily limit check
+  @@index([swiperId, action, createdAt]) // Discovery: super like daily count
+  @@index([targetId])
+  @@map("swipes")
+}
+
+enum SwipeAction {
+  LIKE
+  PASS
+  SUPER_LIKE
+}
+
+// Daily swipe tracking (for package tier limits)
+model DailySwipeCount {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  date      DateTime @db.Date
+  count     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, date])
+  @@map("daily_swipe_counts")
+}
+
+// ============================================================
+// SUBSYSTEM 9: Match System
+// Match confirmation, 2 animation types, Match notification
+// ============================================================
+
+model Match {
+  id                 String             @id @default(uuid()) @db.Uuid
+  userAId            String             @map("user_a_id") @db.Uuid
+  userBId            String             @map("user_b_id") @db.Uuid
+  compatibilityScore Float              @map("compatibility_score")
+  compatibilityLevel CompatibilityLevel @map("compatibility_level")
+  // LOCKED: 2 Animation Types
+  animationType      MatchAnimationType @map("animation_type")
+  isActive           Boolean            @default(true) @map("is_active")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+  unmatchedAt        DateTime?          @map("unmatched_at")
+
+  userA              User             @relation("MatchUserA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB              User             @relation("MatchUserB", fields: [userBId], references: [id], onDelete: Cascade)
+  harmonySessions    HarmonySession[]
+  chatMessages       ChatMessage[]
+  icebreakerSessions IcebreakerSession[]
+
+  @@unique([userAId, userBId])
+  @@index([userAId, isActive, createdAt]) // Matches: user's active matches sorted by date
+  @@index([userBId, isActive, createdAt]) // Matches: user's active matches sorted by date
+  @@map("matches")
+}
+
+enum MatchAnimationType {
+  NORMAL
+  SUPER_COMPATIBILITY
+}
+
+// ============================================================
+// SUBSYSTEM 10: Harmony Room (Core Feature)
+// 30 minutes free, Gold extension, Question cards, Game cards,
+// Voice chat, Optional video chat
+// ============================================================
+
+model HarmonySession {
+  id                    String               @id @default(uuid()) @db.Uuid
+  matchId               String               @map("match_id") @db.Uuid
+  userAId               String               @map("user_a_id") @db.Uuid
+  userBId               String               @map("user_b_id") @db.Uuid
+  status                HarmonySessionStatus @default(PENDING)
+  startedAt             DateTime?            @map("started_at")
+  endsAt                DateTime?            @map("ends_at")
+  actualEndedAt         DateTime?            @map("actual_ended_at")
+  totalExtensionMinutes Int                  @default(0) @map("total_extension_minutes")
+  hasVoiceChat          Boolean              @default(false) @map("has_voice_chat")
+  hasVideoChat          Boolean              @default(false) @map("has_video_chat")
+  createdAt             DateTime             @default(now()) @map("created_at")
+
+  match      Match              @relation(fields: [matchId], references: [id])
+  userA      User               @relation("HarmonyUserA", fields: [userAId], references: [id])
+  userB      User               @relation("HarmonyUserB", fields: [userBId], references: [id])
+  messages   HarmonyMessage[]
+  extensions HarmonyExtension[]
+  usedCards  HarmonyUsedCard[]
+
+  @@index([matchId])
+  @@index([userAId, status])
+  @@index([userBId, status])
+  @@map("harmony_sessions")
+}
+
+enum HarmonySessionStatus {
+  PENDING
+  ACTIVE
+  EXTENDED
+  ENDED
+  CANCELLED
+}
+
+model HarmonyMessage {
+  id        String             @id @default(uuid()) @db.Uuid
+  sessionId String             @map("session_id") @db.Uuid
+  senderId  String             @map("sender_id") @db.Uuid
+  content   String
+  type      HarmonyMessageType @default(TEXT)
+  readAt    DateTime?          @map("read_at")
+  createdAt DateTime           @default(now()) @map("created_at")
+
+  session HarmonySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sender  User           @relation(fields: [senderId], references: [id])
+
+  @@index([sessionId, createdAt])
+  @@index([senderId]) // Query: messages by sender
+  @@map("harmony_messages")
+}
+
+enum HarmonyMessageType {
+  TEXT
+  QUESTION_CARD
+  GAME_CARD
+  SYSTEM
+}
+
+// Question cards for Harmony Room (30 cards)
+model HarmonyQuestionCard {
+  id       String               @id @default(uuid()) @db.Uuid
+  category QuestionCardCategory
+  textEn   String               @map("text_en")
+  textTr   String               @map("text_tr")
+  order    Int
+  isActive Boolean              @default(true) @map("is_active")
+
+  usedInSessions HarmonyUsedCard[]
+
+  @@map("harmony_question_cards")
+}
+
+enum QuestionCardCategory {
+  ICEBREAKER
+  DEEP_CONNECTION
+  FUN_PLAYFUL
+}
+
+// Game cards for Harmony Room (5 games)
+model HarmonyGameCard {
+  id            String @id @default(uuid()) @db.Uuid
+  nameEn        String @map("name_en")
+  nameTr        String @map("name_tr")
+  descriptionEn String @map("description_en")
+  descriptionTr String @map("description_tr")
+  gameType      String @map("game_type") @db.VarChar(50)
+  isActive      Boolean @default(true) @map("is_active")
+
+  usedInSessions HarmonyUsedCard[]
+
+  @@map("harmony_game_cards")
+}
+
+// Track which cards were used in which session
+model HarmonyUsedCard {
+  id              String  @id @default(uuid()) @db.Uuid
+  sessionId       String  @map("session_id") @db.Uuid
+  questionCardId  String? @map("question_card_id") @db.Uuid
+  gameCardId      String? @map("game_card_id") @db.Uuid
+  usedAt          DateTime @default(now()) @map("used_at")
+
+  session      HarmonySession       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  questionCard HarmonyQuestionCard? @relation(fields: [questionCardId], references: [id])
+  gameCard     HarmonyGameCard?     @relation(fields: [gameCardId], references: [id])
+
+  @@index([sessionId])
+  @@map("harmony_used_cards")
+}
+
+// Gold-based time extension
+model HarmonyExtension {
+  id           String   @id @default(uuid()) @db.Uuid
+  sessionId    String   @map("session_id") @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  goldSpent    Int      @map("gold_spent")
+  minutesAdded Int      @map("minutes_added")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  session HarmonySession @relation(fields: [sessionId], references: [id])
+  user    User           @relation(fields: [userId], references: [id])
+
+  @@index([sessionId])
+  @@map("harmony_extensions")
+}
+
+// ============================================================
+// SUBSYSTEM 11: Relationship Mode
+// Manual activation, Couple Badge, Hidden / Visible mode
+// ============================================================
+
+model Relationship {
+  id          String             @id @default(uuid()) @db.Uuid
+  userAId     String             @map("user_a_id") @db.Uuid
+  userBId     String             @map("user_b_id") @db.Uuid
+  status      RelationshipStatus @default(PROPOSED)
+  isVisible   Boolean            @default(true) @map("is_visible")
+  activatedAt DateTime?          @map("activated_at")
+  endedAt     DateTime?          @map("ended_at")
+  createdAt   DateTime           @default(now()) @map("created_at")
+
+  userA                    User                      @relation("RelationshipUserA", fields: [userAId], references: [id])
+  userB                    User                      @relation("RelationshipUserB", fields: [userBId], references: [id])
+  coupleBadge              CoupleBadge?
+  couplesClubParticipants  CouplesClubParticipant[]
+
+  @@unique([userAId, userBId])
+  @@index([userAId, status]) // Relationship: active relationships for user
+  @@index([userBId, status]) // Relationship: active relationships for user
+  @@map("relationships")
+}
+
+enum RelationshipStatus {
+  PROPOSED
+  ACTIVE
+  HIDDEN
+  ENDED
+}
+
+model CoupleBadge {
+  id             String   @id @default(uuid()) @db.Uuid
+  relationshipId String   @unique @map("relationship_id") @db.Uuid
+  badgeType      String   @map("badge_type") @db.VarChar(50)
+  issuedAt       DateTime @default(now()) @map("issued_at")
+
+  relationship Relationship @relation(fields: [relationshipId], references: [id], onDelete: Cascade)
+
+  @@map("couple_badges")
+}
+
+// ============================================================
+// SUBSYSTEM 12: Couples Club
+// Couples-only access, 2v2 interactions, Group events
+// ============================================================
+
+model CouplesClubEvent {
+  id          String   @id @default(uuid()) @db.Uuid
+  title       String   @db.VarChar(200)
+  titleTr     String   @map("title_tr") @db.VarChar(200)
+  description String
+  descriptionTr String @map("description_tr")
+  eventDate   DateTime @map("event_date")
+  location    String?
+  maxCouples  Int      @map("max_couples")
+  imageUrl    String?  @map("image_url")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  participants CouplesClubParticipant[]
+
+  @@index([eventDate])
+  @@map("couples_club_events")
+}
+
+model CouplesClubParticipant {
+  id             String   @id @default(uuid()) @db.Uuid
+  eventId        String   @map("event_id") @db.Uuid
+  relationshipId String   @map("relationship_id") @db.Uuid
+  rsvpStatus     String   @map("rsvp_status") @db.VarChar(20) // attending, maybe, declined
+  joinedAt       DateTime @default(now()) @map("joined_at")
+
+  event        CouplesClubEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  relationship Relationship     @relation(fields: [relationshipId], references: [id])
+
+  @@unique([eventId, relationshipId])
+  @@map("couples_club_participants")
+}
+
+// ============================================================
+// SUBSYSTEM 13: Discovered Places
+// Couple check-in, Shared places, Memory mechanic
+// ============================================================
+
+model DiscoveredPlace {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @db.VarChar(200)
+  address   String?
+  latitude  Float
+  longitude Float
+  category  String?  @db.VarChar(50) // restaurant, park, cafe, etc.
+  imageUrl  String?  @map("image_url")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  checkIns PlaceCheckIn[]
+  memories PlaceMemory[]
+
+  @@index([latitude, longitude])
+  @@map("discovered_places")
+}
+
+model PlaceCheckIn {
+  id             String   @id @default(uuid()) @db.Uuid
+  placeId        String   @map("place_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  relationshipId String?  @map("relationship_id") @db.Uuid
+  checkedInAt    DateTime @default(now()) @map("checked_in_at")
+
+  place DiscoveredPlace @relation(fields: [placeId], references: [id])
+  user  User            @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([placeId])
+  @@map("place_check_ins")
+}
+
+model PlaceMemory {
+  id        String   @id @default(uuid()) @db.Uuid
+  placeId   String   @map("place_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  note      String?  @db.VarChar(500)
+  photoUrl  String?  @map("photo_url")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  place DiscoveredPlace @relation(fields: [placeId], references: [id])
+  user  User            @relation(fields: [userId], references: [id])
+
+  @@index([placeId])
+  @@map("place_memories")
+}
+
+// ============================================================
+// SUBSYSTEM 14: Badge & Reputation System
+// Positive-only badge logic, No negative scoring, Visual rewards
+// ============================================================
+
+model BadgeDefinition {
+  id          String  @id @default(uuid()) @db.Uuid
+  key         String  @unique @db.VarChar(50) // e.g. "first_spark"
+  nameEn      String  @map("name_en") @db.VarChar(100)
+  nameTr      String  @map("name_tr") @db.VarChar(100)
+  descriptionEn String @map("description_en")
+  descriptionTr String @map("description_tr")
+  iconUrl     String? @map("icon_url")
+  criteria    Json    // JSON defining how to earn this badge
+  goldReward  Int     @default(0) @map("gold_reward") // Gold earned on badge unlock
+  isActive    Boolean @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  userBadges UserBadge[]
+
+  @@map("badge_definitions")
+}
+
+model UserBadge {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  badgeId   String   @map("badge_id") @db.Uuid
+  earnedAt  DateTime @default(now()) @map("earned_at")
+
+  user  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge BadgeDefinition @relation(fields: [badgeId], references: [id])
+
+  @@unique([userId, badgeId]) // can't earn same badge twice
+  @@index([userId])
+  @@map("user_badges")
+}
+
+// ============================================================
+// SUBSYSTEM 16: Package Structure (LOCKED: 4 Packages)
+// Free, Gold, Pro, Reserved
+// ============================================================
+
+enum PackageTier {
+  FREE
+  GOLD
+  PRO
+  RESERVED
+}
+
+model Subscription {
+  id            String         @id @default(uuid()) @db.Uuid
+  userId        String         @map("user_id") @db.Uuid
+  packageTier   PackageTier    @map("package_tier")
+  platform      PaymentPlatform
+  productId     String         @map("product_id") @db.VarChar(100)
+  purchaseToken String?        @map("purchase_token")
+  startDate     DateTime       @map("start_date")
+  expiryDate    DateTime       @map("expiry_date")
+  isActive      Boolean        @default(true) @map("is_active")
+  autoRenew     Boolean        @default(true) @map("auto_renew")
+  cancelledAt   DateTime?      @map("cancelled_at")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  receipts IapReceipt[]
+
+  @@index([userId, isActive])
+  @@index([expiryDate])
+  @@map("subscriptions")
+}
+
+enum PaymentPlatform {
+  APPLE
+  GOOGLE
+}
+
+model IapReceipt {
+  id               String   @id @default(uuid()) @db.Uuid
+  subscriptionId   String?  @map("subscription_id") @db.Uuid
+  platform         PaymentPlatform
+  receiptData      String   @map("receipt_data")
+  transactionId    String   @unique @map("transaction_id")
+  productId        String   @map("product_id") @db.VarChar(100)
+  isValid          Boolean  @map("is_valid")
+  validationResponse Json?  @map("validation_response")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id])
+
+  @@index([transactionId])
+  @@map("iap_receipts")
+}
+
+// ============================================================
+// SUBSYSTEM 17: Virtual Currency System
+// Gold balance, Gold spending logic, Harmony extension purchase
+// ============================================================
+
+model GoldTransaction {
+  id          String              @id @default(uuid()) @db.Uuid
+  userId      String              @map("user_id") @db.Uuid
+  type        GoldTransactionType
+  amount      Int                 // positive = credit, negative = debit
+  balance     Int                 // balance after this transaction
+  description String              @db.VarChar(255)
+  referenceId String?             @map("reference_id") @db.Uuid // link to extension/purchase/badge
+  createdAt   DateTime            @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("gold_transactions")
+}
+
+enum GoldTransactionType {
+  PURCHASE
+  SUBSCRIPTION_ALLOCATION
+  REFERRAL_BONUS
+  BADGE_REWARD
+  HARMONY_EXTENSION
+  PROFILE_BOOST
+  SUPER_LIKE
+}
+
+// ============================================================
+// NOTIFICATIONS & SAFETY
+// ============================================================
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  type      NotificationType
+  title     String           @db.VarChar(200)
+  body      String           @db.VarChar(500)
+  data      Json?            // Additional payload (matchId, sessionId, etc.)
+  isRead    Boolean          @default(false) @map("is_read")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  NEW_MATCH
+  SUPER_LIKE
+  HARMONY_INVITE
+  HARMONY_REMINDER
+  BADGE_EARNED
+  SUBSCRIPTION_EXPIRING
+  SYSTEM
+}
+
+model DeviceToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  token     String   @unique
+  platform  String   @db.VarChar(10) // ios, android
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isActive]) // Push: find active devices for user
+  @@map("device_tokens")
+}
+
+// User blocking
+model Block {
+  id        String   @id @default(uuid()) @db.Uuid
+  blockerId String   @map("blocker_id") @db.Uuid
+  blockedId String   @map("blocked_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  blocker User @relation("BlocksGiven", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("BlocksReceived", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
+  @@map("blocks")
+}
+
+// User reporting
+model Report {
+  id         String       @id @default(uuid()) @db.Uuid
+  reporterId String       @map("reporter_id") @db.Uuid
+  reportedId String       @map("reported_id") @db.Uuid
+  category   ReportCategory
+  details    String?      @db.VarChar(1000)
+  status     ReportStatus @default(PENDING)
+  reviewedAt DateTime?    @map("reviewed_at")
+  reviewNote String?      @map("review_note")
+  createdAt  DateTime     @default(now()) @map("created_at")
+
+  reporter User @relation("ReportsMade", fields: [reporterId], references: [id])
+  reported User @relation("ReportsReceived", fields: [reportedId], references: [id])
+
+  @@index([reportedId, status])
+  @@index([reporterId]) // Moderation: reports made by a user
+  @@index([status, createdAt]) // Moderation: pending reports queue
+  @@map("reports")
+}
+
+enum ReportCategory {
+  FAKE_PROFILE
+  HARASSMENT
+  INAPPROPRIATE_PHOTO
+  SPAM
+  UNDERAGE
+  SCAM
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+// ============================================================
+// SUBSYSTEM: Chat Messaging (1-on-1 matched user chat)
+// Persistent messages between matched users, read receipts
+// ============================================================
+
+model ChatMessage {
+  id        String             @id @default(uuid()) @db.Uuid
+  matchId   String             @map("match_id") @db.Uuid
+  senderId  String             @map("sender_id") @db.Uuid
+  content   String
+  type      ChatMessageType    @default(TEXT)
+  status    ChatMessageStatus  @default(SENT) @map("status")
+  mediaUrl  String?            @map("media_url")
+  readAt    DateTime?          @map("read_at")
+  createdAt DateTime           @default(now()) @map("created_at")
+  updatedAt DateTime           @updatedAt @map("updated_at")
+
+  match     Match              @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  sender    User               @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  reactions MessageReaction[]
+
+  @@index([matchId, createdAt]) // Chat: message pagination
+  @@index([matchId, senderId, status]) // Chat: find undelivered messages from other user
+  @@index([senderId])
+  @@map("chat_messages")
+}
+
+model MessageReaction {
+  id        String   @id @default(uuid()) @db.Uuid
+  messageId String   @map("message_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  emoji     String   @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  message ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([messageId])
+  @@map("message_reactions")
+}
+
+enum ChatMessageType {
+  TEXT
+  IMAGE
+  SYSTEM
+}
+
+enum ChatMessageStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+// ============================================================
+// SUBSYSTEM: Notification Preferences
+// Per-user notification toggles
+// ============================================================
+
+model NotificationPreference {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @unique @map("user_id") @db.Uuid
+  newMatches      Boolean  @default(true) @map("new_matches")
+  messages        Boolean  @default(true)
+  harmonyInvites  Boolean  @default(true) @map("harmony_invites")
+  badges          Boolean  @default(true)
+  system          Boolean  @default(true)
+  allDisabled     Boolean  @default(false) @map("all_disabled")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+model DailyQuestionAnswer {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  questionId String   @map("question_id") @db.Uuid
+  optionId   String?  @map("option_id") @db.Uuid
+  dayNumber  Int      @map("day_number")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user     User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question CompatibilityQuestion @relation(fields: [questionId], references: [id])
+  option   QuestionOption?       @relation(fields: [optionId], references: [id])
+
+  @@unique([userId, dayNumber])
+  @@index([questionId])
+  @@index([userId, createdAt])
+  @@map("daily_question_answers")
+}
+
+// ============================================================
+// SUBSYSTEM: Icebreaker Game Sessions
+// Persistent game sessions and answers for icebreaker games
+// ============================================================
+
+model IcebreakerSession {
+  id        String   @id @default(uuid()) @db.Uuid
+  matchId   String   @map("match_id") @db.Uuid
+  gameType  String   @map("game_type") @db.VarChar(50)
+  status    String   @default("active") @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  match   Match              @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  answers IcebreakerAnswer[]
+
+  @@index([matchId])
+  @@map("icebreaker_sessions")
+}
+
+model IcebreakerAnswer {
+  id         String   @id @default(uuid()) @db.Uuid
+  sessionId  String   @map("session_id") @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  questionId String   @map("question_id")
+  answer     String   @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  session IcebreakerSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, userId, questionId])
+  @@index([sessionId])
+  @@map("icebreaker_answers")
+}

@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-native",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@luma/shared": ["../../packages/shared/src"]
+    }
+  },
+  "include": ["src/**/*", "App.tsx"],
+  "exclude": ["node_modules"]
+}

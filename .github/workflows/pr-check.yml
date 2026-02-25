@@ -1,0 +1,500 @@
+# ─────────────────────────────────────────────────────────────
+# LUMA V1 — PR Quality Gates
+# Runs quality checks on pull requests and comments a summary.
+# Optimized: reuses CI workflow's workspace cache, parallel
+#   type-check and code-quality jobs, faster feedback loop.
+# ─────────────────────────────────────────────────────────────
+name: PR Quality Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main, develop]
+
+concurrency:
+  group: pr-check-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  # ── Setup (shared by all parallel jobs) ─────────────────
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build shared package
+        run: npm run shared:build
+
+      - name: Generate Prisma client
+        run: cd apps/backend && npx prisma generate
+
+      - name: Cache workspace
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            node_modules
+            apps/backend/node_modules
+            apps/mobile/node_modules
+            packages/shared/node_modules
+            packages/shared/dist
+            apps/backend/node_modules/.prisma
+          key: pr-workspace-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+
+  # ── Type Check (parallel) ──────────────────────────────
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: setup
+    outputs:
+      prisma-result: ${{ steps.prisma-validate.outcome }}
+      shared-result: ${{ steps.typecheck-shared.outcome }}
+      backend-result: ${{ steps.typecheck-backend.outcome }}
+      mobile-result: ${{ steps.typecheck-mobile.outcome }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore workspace cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            apps/backend/node_modules
+            apps/mobile/node_modules
+            packages/shared/node_modules
+            packages/shared/dist
+            apps/backend/node_modules/.prisma
+          key: pr-workspace-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+
+      - name: Prisma schema validation
+        id: prisma-validate
+        run: cd apps/backend && npx prisma validate
+        continue-on-error: true
+
+      - name: Shared — Type Check
+        id: typecheck-shared
+        run: npx tsc --noEmit --project packages/shared/tsconfig.json
+        continue-on-error: true
+
+      - name: Backend — Type Check
+        id: typecheck-backend
+        run: npx tsc --noEmit --project apps/backend/tsconfig.json
+        continue-on-error: true
+
+      - name: Mobile — Type Check
+        id: typecheck-mobile
+        run: npx tsc --noEmit --project apps/mobile/tsconfig.json
+        continue-on-error: true
+
+  # ── Code Quality (parallel with typecheck) ──────────────
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: setup
+    outputs:
+      any-count: ${{ steps.any-check.outputs.count }}
+      any-files: ${{ steps.any-check.outputs.files }}
+      console-count: ${{ steps.console-check.outputs.count }}
+      console-files: ${{ steps.console-check.outputs.files }}
+      todo-count: ${{ steps.todo-check.outputs.count }}
+      todo-files: ${{ steps.todo-check.outputs.files }}
+      large-count: ${{ steps.large-files.outputs.count }}
+      large-files: ${{ steps.large-files.outputs.files }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for "any" type usage in changed files
+        id: any-check
+        run: |
+          CHANGED_FILES=$(git diff --name-only --diff-filter=ACMR origin/${{ github.base_ref }}...HEAD -- '*.ts' '*.tsx' || true)
+
+          ANY_COUNT=0
+          ANY_FILES=""
+
+          for file in $CHANGED_FILES; do
+            if [ -f "$file" ]; then
+              COUNT=$(grep -c -E ':\s*any\b|as\s+any\b|<any>' "$file" 2>/dev/null || true)
+              if [ "$COUNT" -gt 0 ]; then
+                ANY_COUNT=$((ANY_COUNT + COUNT))
+                ANY_FILES="$ANY_FILES\n- \`$file\` ($COUNT occurrence(s))"
+              fi
+            fi
+          done
+
+          echo "count=$ANY_COUNT" >> "$GITHUB_OUTPUT"
+          if [ -n "$ANY_FILES" ]; then
+            {
+              echo "files<<DELIMITER"
+              echo -e "$ANY_FILES"
+              echo "DELIMITER"
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "files=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check for console.log leaks in changed files
+        id: console-check
+        run: |
+          CHANGED_FILES=$(git diff --name-only --diff-filter=ACMR origin/${{ github.base_ref }}...HEAD -- '*.ts' '*.tsx' || true)
+
+          CONSOLE_COUNT=0
+          CONSOLE_FILES=""
+
+          for file in $CHANGED_FILES; do
+            if [ -f "$file" ]; then
+              case "$file" in
+                *.spec.ts|*.test.ts|*.spec.tsx|*.test.tsx) continue ;;
+              esac
+
+              COUNT=$(grep -c -E 'console\.(log|debug|info)\(' "$file" 2>/dev/null || true)
+              if [ "$COUNT" -gt 0 ]; then
+                CONSOLE_COUNT=$((CONSOLE_COUNT + COUNT))
+                CONSOLE_FILES="$CONSOLE_FILES\n- \`$file\` ($COUNT occurrence(s))"
+              fi
+            fi
+          done
+
+          echo "count=$CONSOLE_COUNT" >> "$GITHUB_OUTPUT"
+          if [ -n "$CONSOLE_FILES" ]; then
+            {
+              echo "files<<DELIMITER"
+              echo -e "$CONSOLE_FILES"
+              echo "DELIMITER"
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "files=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check TODO/FIXME count
+        id: todo-check
+        run: |
+          CHANGED_FILES=$(git diff --name-only --diff-filter=ACMR origin/${{ github.base_ref }}...HEAD -- '*.ts' '*.tsx' || true)
+
+          TODO_COUNT=0
+          TODO_FILES=""
+
+          for file in $CHANGED_FILES; do
+            if [ -f "$file" ]; then
+              COUNT=$(grep -c -E 'TODO|FIXME|HACK|XXX' "$file" 2>/dev/null || true)
+              if [ "$COUNT" -gt 0 ]; then
+                TODO_COUNT=$((TODO_COUNT + COUNT))
+                TODO_FILES="$TODO_FILES\n- \`$file\` ($COUNT)"
+              fi
+            fi
+          done
+
+          echo "count=$TODO_COUNT" >> "$GITHUB_OUTPUT"
+          if [ -n "$TODO_FILES" ]; then
+            {
+              echo "files<<DELIMITER"
+              echo -e "$TODO_FILES"
+              echo "DELIMITER"
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "files=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check for large files in PR
+        id: large-files
+        run: |
+          LARGE_FILES=""
+          LARGE_COUNT=0
+          CHANGED_FILES=$(git diff --name-only --diff-filter=ACMR origin/${{ github.base_ref }}...HEAD -- '*.ts' '*.tsx' || true)
+
+          for file in $CHANGED_FILES; do
+            if [ -f "$file" ]; then
+              LINES=$(wc -l < "$file")
+              if [ "$LINES" -gt 500 ]; then
+                LARGE_COUNT=$((LARGE_COUNT + 1))
+                LARGE_FILES="$LARGE_FILES\n- \`$file\` ($LINES lines)"
+              fi
+            fi
+          done
+
+          echo "count=$LARGE_COUNT" >> "$GITHUB_OUTPUT"
+          if [ -n "$LARGE_FILES" ]; then
+            {
+              echo "files<<DELIMITER"
+              echo -e "$LARGE_FILES"
+              echo "DELIMITER"
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "files=" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ── Tests (parallel with typecheck and code-quality) ────
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: setup
+    outputs:
+      test-outcome: ${{ steps.tests.outcome }}
+      total: ${{ steps.test-summary.outputs.total }}
+      passed: ${{ steps.test-summary.outputs.passed }}
+      failed: ${{ steps.test-summary.outputs.failed }}
+      suites: ${{ steps.test-summary.outputs.suites }}
+      duration: ${{ steps.test-summary.outputs.duration }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore workspace cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            apps/backend/node_modules
+            apps/mobile/node_modules
+            packages/shared/node_modules
+            packages/shared/dist
+            apps/backend/node_modules/.prisma
+          key: pr-workspace-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+
+      - name: Run backend unit tests
+        id: tests
+        run: |
+          npx jest --forceExit --ci --passWithNoTests --json --outputFile=/tmp/test-results.json 2>&1 | tee /tmp/test-output.txt
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+        working-directory: apps/backend
+        continue-on-error: true
+        env:
+          NODE_ENV: test
+          JWT_SECRET: ci-test-secret
+          JWT_REFRESH_SECRET: ci-test-refresh-secret
+          JWT_ACCESS_EXPIRY: 15m
+          JWT_REFRESH_EXPIRY: 7d
+          JWT_REFRESH_EXPIRY_DAYS: '7'
+
+      - name: Parse test results
+        id: test-summary
+        if: always()
+        run: |
+          if [ -f /tmp/test-results.json ]; then
+            TOTAL=$(jq '.numTotalTests // 0' /tmp/test-results.json)
+            PASSED=$(jq '.numPassedTests // 0' /tmp/test-results.json)
+            FAILED=$(jq '.numFailedTests // 0' /tmp/test-results.json)
+            SUITES=$(jq '.numTotalTestSuites // 0' /tmp/test-results.json)
+            DURATION=$(jq '(.testResults | map(.perfStats.end - .perfStats.start) | add // 0) / 1000 | floor' /tmp/test-results.json)
+          else
+            TOTAL=0
+            PASSED=0
+            FAILED=0
+            SUITES=0
+            DURATION=0
+          fi
+
+          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+          echo "passed=$PASSED" >> "$GITHUB_OUTPUT"
+          echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
+          echo "suites=$SUITES" >> "$GITHUB_OUTPUT"
+          echo "duration=${DURATION}s" >> "$GITHUB_OUTPUT"
+
+  # ── Report & Gate ──────────────────────────────────────
+  report:
+    name: Quality Report
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: always()
+    needs: [typecheck, code-quality, tests]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Comment PR with results
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prismaOutcome = '${{ needs.typecheck.outputs.prisma-result }}';
+            const typecheckShared = '${{ needs.typecheck.outputs.shared-result }}';
+            const typecheckBackend = '${{ needs.typecheck.outputs.backend-result }}';
+            const typecheckMobile = '${{ needs.typecheck.outputs.mobile-result }}';
+            const anyCount = '${{ needs.code-quality.outputs.any-count }}';
+            const anyFiles = `${{ needs.code-quality.outputs.any-files }}`;
+            const consoleCount = '${{ needs.code-quality.outputs.console-count }}';
+            const consoleFiles = `${{ needs.code-quality.outputs.console-files }}`;
+            const todoCount = '${{ needs.code-quality.outputs.todo-count }}';
+            const todoFiles = `${{ needs.code-quality.outputs.todo-files }}`;
+            const largeCount = '${{ needs.code-quality.outputs.large-count }}';
+            const largeFiles = `${{ needs.code-quality.outputs.large-files }}`;
+            const testTotal = '${{ needs.tests.outputs.total }}';
+            const testPassed = '${{ needs.tests.outputs.passed }}';
+            const testFailed = '${{ needs.tests.outputs.failed }}';
+            const testSuites = '${{ needs.tests.outputs.suites }}';
+            const testDuration = '${{ needs.tests.outputs.duration }}';
+            const testOutcome = '${{ needs.tests.outputs.test-outcome }}';
+
+            const tcIcon = (outcome) => outcome === 'success' ? '✅' : '❌';
+            const warnIcon = (count) => count === '0' ? '✅' : '⚠️';
+
+            let body = `## LUMA PR Quality Report\n\n`;
+
+            // Prisma Section
+            body += `### Prisma Schema\n`;
+            body += `| Check | Status |\n`;
+            body += `|-------|--------|\n`;
+            body += `| Schema Validation | ${tcIcon(prismaOutcome)} ${prismaOutcome} |\n\n`;
+
+            // Type Check Section
+            body += `### Type Check\n`;
+            body += `| Package | Status |\n`;
+            body += `|---------|--------|\n`;
+            body += `| Shared  | ${tcIcon(typecheckShared)} ${typecheckShared} |\n`;
+            body += `| Backend | ${tcIcon(typecheckBackend)} ${typecheckBackend} |\n`;
+            body += `| Mobile  | ${tcIcon(typecheckMobile)} ${typecheckMobile} |\n\n`;
+
+            // Test Results Section
+            body += `### Test Results\n`;
+            body += `| Metric | Value |\n`;
+            body += `|--------|-------|\n`;
+            body += `| Status | ${testOutcome === 'success' ? '✅ Passed' : '❌ Failed'} |\n`;
+            body += `| Suites | ${testSuites} |\n`;
+            body += `| Tests  | ${testPassed}/${testTotal} passed |\n`;
+            body += `| Failed | ${testFailed} |\n`;
+            body += `| Duration | ${testDuration} |\n\n`;
+
+            // Code Quality Section
+            body += `### Code Quality\n`;
+            body += `| Check | Count | Status |\n`;
+            body += `|-------|-------|--------|\n`;
+            body += `| \`any\` type usage | ${anyCount} | ${anyCount === '0' ? '✅' : '❌'} |\n`;
+            body += `| \`console.log\` leaks | ${consoleCount} | ${warnIcon(consoleCount)} |\n`;
+            body += `| TODO/FIXME markers | ${todoCount} | ${warnIcon(todoCount)} |\n`;
+            body += `| Large files (>500 lines) | ${largeCount} | ${warnIcon(largeCount)} |\n\n`;
+
+            // Expandable details
+            if (anyCount !== '0' && anyFiles) {
+              body += `<details>\n<summary>Files with \`any\` type usage (must fix)</summary>\n\n${anyFiles}\n\n</details>\n\n`;
+            }
+
+            if (consoleCount !== '0' && consoleFiles) {
+              body += `<details>\n<summary>Files with \`console.log\` statements</summary>\n\n${consoleFiles}\n\n</details>\n\n`;
+            }
+
+            if (todoCount !== '0' && todoFiles) {
+              body += `<details>\n<summary>Files with TODO/FIXME</summary>\n\n${todoFiles}\n\n</details>\n\n`;
+            }
+
+            if (largeCount !== '0' && largeFiles) {
+              body += `<details>\n<summary>Large files (consider splitting)</summary>\n\n${largeFiles}\n\n</details>\n\n`;
+            }
+
+            // Overall Status
+            const criticalPassed =
+              prismaOutcome === 'success' &&
+              typecheckShared === 'success' &&
+              typecheckBackend === 'success' &&
+              typecheckMobile === 'success' &&
+              testOutcome === 'success' &&
+              anyCount === '0';
+
+            body += `---\n`;
+            if (criticalPassed && consoleCount === '0') {
+              body += `**Overall: ✅ All quality gates passed**`;
+            } else if (criticalPassed) {
+              body += `**Overall: ⚠️ Passed with warnings — review console.log usage**`;
+            } else {
+              body += `**Overall: ❌ Quality gates failed — see details above**`;
+            }
+
+            body += `\n\n_Commit: \`${context.sha.substring(0, 7)}\`_`;
+
+            // Find and update existing comment or create new one
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('LUMA PR Quality Report')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      # ── Fail if critical checks failed ────────────────────
+      - name: Evaluate quality gates
+        if: always()
+        run: |
+          FAILED=0
+
+          if [ "${{ needs.typecheck.outputs.prisma-result }}" != "success" ]; then
+            echo "ERROR: Prisma schema validation failed"
+            FAILED=1
+          fi
+
+          if [ "${{ needs.typecheck.outputs.shared-result }}" != "success" ]; then
+            echo "ERROR: Shared package type check failed"
+            FAILED=1
+          fi
+
+          if [ "${{ needs.typecheck.outputs.backend-result }}" != "success" ]; then
+            echo "ERROR: Backend type check failed"
+            FAILED=1
+          fi
+
+          if [ "${{ needs.typecheck.outputs.mobile-result }}" != "success" ]; then
+            echo "ERROR: Mobile type check failed"
+            FAILED=1
+          fi
+
+          if [ "${{ needs.tests.outputs.test-outcome }}" != "success" ]; then
+            echo "ERROR: Backend tests failed"
+            FAILED=1
+          fi
+
+          if [ "${{ needs.code-quality.outputs.any-count }}" != "0" ]; then
+            echo "ERROR: Found ${{ needs.code-quality.outputs.any-count }} 'any' type usage(s) in changed files"
+            FAILED=1
+          fi
+
+          if [ "${{ needs.code-quality.outputs.console-count }}" != "0" ]; then
+            echo "WARNING: Found ${{ needs.code-quality.outputs.console-count }} console.log statement(s) in changed files"
+            # Warning only — does not fail the gate
+          fi
+
+          exit $FAILED

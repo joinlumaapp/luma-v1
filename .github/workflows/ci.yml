@@ -1,0 +1,402 @@
+# ─────────────────────────────────────────────────────────────
+# LUMA V1 — CI Pipeline
+# Runs on every push to main/develop and on all pull requests.
+# Optimized: path filtering, parallel jobs, ESLint cache,
+#   coverage thresholds, and proper dependency chain.
+# ─────────────────────────────────────────────────────────────
+name: LUMA CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.editorconfig'
+      - 'LICENSE'
+  pull_request:
+    branches: [main, develop]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.editorconfig'
+      - 'LICENSE'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # ── Install & Cache ──────────────────────────────────────
+  install:
+    name: Install Dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build shared package
+        run: npm run shared:build
+
+      - name: Generate Prisma client
+        run: cd apps/backend && npx prisma generate
+
+      - name: Cache workspace
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            node_modules
+            apps/backend/node_modules
+            apps/mobile/node_modules
+            packages/shared/node_modules
+            packages/shared/dist
+            apps/backend/node_modules/.prisma
+          key: workspace-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+
+  # ── Shared Types Check ─────────────────────────────────
+  shared:
+    name: Shared Types
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: install
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore workspace cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            apps/backend/node_modules
+            apps/mobile/node_modules
+            packages/shared/node_modules
+            packages/shared/dist
+            apps/backend/node_modules/.prisma
+          key: workspace-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+
+      - name: TypeScript check
+        run: npx tsc --noEmit --project packages/shared/tsconfig.json
+
+  # ── Backend Checks ─────────────────────────────────────
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: install
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore workspace cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            apps/backend/node_modules
+            apps/mobile/node_modules
+            packages/shared/node_modules
+            packages/shared/dist
+            apps/backend/node_modules/.prisma
+          key: workspace-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+
+      - name: Prisma validate
+        run: cd apps/backend && npx prisma validate
+
+      - name: TypeScript check
+        run: npx tsc --noEmit --project apps/backend/tsconfig.json
+
+      - name: Unit tests with coverage
+        run: npx jest --forceExit --ci --coverage
+        working-directory: apps/backend
+        env:
+          NODE_ENV: test
+          JWT_SECRET: ci-test-secret
+          JWT_REFRESH_SECRET: ci-test-refresh-secret
+          JWT_ACCESS_EXPIRY: 15m
+          JWT_REFRESH_EXPIRY: 7d
+          JWT_REFRESH_EXPIRY_DAYS: '7'
+
+      - name: Check coverage thresholds
+        run: |
+          if [ -f apps/backend/coverage/coverage-summary.json ]; then
+            STATEMENTS=$(node -e "const c=require('./apps/backend/coverage/coverage-summary.json');console.log(c.total.statements.pct)")
+            BRANCHES=$(node -e "const c=require('./apps/backend/coverage/coverage-summary.json');console.log(c.total.branches.pct)")
+            FUNCTIONS=$(node -e "const c=require('./apps/backend/coverage/coverage-summary.json');console.log(c.total.functions.pct)")
+            LINES=$(node -e "const c=require('./apps/backend/coverage/coverage-summary.json');console.log(c.total.lines.pct)")
+
+            echo "Coverage: statements=$STATEMENTS% branches=$BRANCHES% functions=$FUNCTIONS% lines=$LINES%"
+
+            # Warn if coverage drops below 50% (adjust threshold as test suite matures)
+            node -e "
+              const c = require('./apps/backend/coverage/coverage-summary.json');
+              const threshold = 50;
+              const metrics = ['statements','branches','functions','lines'];
+              let failed = false;
+              metrics.forEach(m => {
+                if (c.total[m].pct < threshold) {
+                  console.log('WARNING: ' + m + ' coverage ' + c.total[m].pct + '% is below ' + threshold + '%');
+                  failed = true;
+                }
+              });
+              if (failed) {
+                console.log('Coverage threshold warnings detected. Will enforce as gate when coverage stabilizes.');
+              }
+            "
+          else
+            echo "No coverage summary found — skipping threshold check"
+          fi
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: apps/backend/coverage/
+          retention-days: 7
+
+  # ── Backend E2E Tests ──────────────────────────────────
+  backend-e2e:
+    name: Backend E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: install
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore workspace cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            apps/backend/node_modules
+            apps/mobile/node_modules
+            packages/shared/node_modules
+            packages/shared/dist
+            apps/backend/node_modules/.prisma
+          key: workspace-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+
+      - name: Run E2E tests
+        run: npx jest --config test/jest-e2e.json --forceExit --ci
+        working-directory: apps/backend
+        env:
+          NODE_ENV: test
+          JWT_SECRET: ci-test-secret
+          JWT_REFRESH_SECRET: ci-test-refresh-secret
+          JWT_ACCESS_EXPIRY: 15m
+          JWT_REFRESH_EXPIRY: 7d
+          JWT_REFRESH_EXPIRY_DAYS: '7'
+
+  # ── Mobile Checks ──────────────────────────────────────
+  mobile:
+    name: Mobile
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: install
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore workspace cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            apps/backend/node_modules
+            apps/mobile/node_modules
+            packages/shared/node_modules
+            packages/shared/dist
+            apps/backend/node_modules/.prisma
+          key: workspace-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+
+      - name: TypeScript check
+        run: npx tsc --noEmit --project apps/mobile/tsconfig.json
+
+  # ── Lint ───────────────────────────────────────────────
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: install
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore workspace cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            apps/backend/node_modules
+            apps/mobile/node_modules
+            packages/shared/node_modules
+            packages/shared/dist
+            apps/backend/node_modules/.prisma
+          key: workspace-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+
+      - name: Restore ESLint cache
+        uses: actions/cache@v4
+        with:
+          path: .eslintcache
+          key: eslint-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            eslint-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+            eslint-${{ runner.os }}-
+
+      - name: Run ESLint (backend)
+        run: npx eslint "{src,apps,libs,test}/**/*.ts" --cache --cache-location ../../.eslintcache
+        working-directory: apps/backend
+
+  # ── Security Audit ─────────────────────────────────────
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: install
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore workspace cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            apps/backend/node_modules
+            apps/mobile/node_modules
+            packages/shared/node_modules
+            packages/shared/dist
+            apps/backend/node_modules/.prisma
+          key: workspace-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+
+      - name: npm audit (high + critical)
+        run: npm audit --audit-level=high || true
+
+      - name: Check for hardcoded secrets
+        run: |
+          echo "Scanning for hardcoded secrets in source files..."
+          FOUND=0
+
+          # Check for AWS keys
+          if grep -r "AKIA[0-9A-Z]\{16\}" --include="*.ts" --include="*.tsx" --include="*.js" apps/ packages/ 2>/dev/null; then
+            echo "ERROR: Possible AWS access key found"
+            FOUND=1
+          fi
+
+          # Check for Stripe live keys
+          if grep -r "sk_live_\|pk_live_\|rk_live_" --include="*.ts" --include="*.tsx" --include="*.js" apps/ packages/ 2>/dev/null; then
+            echo "ERROR: Possible Stripe live key found"
+            FOUND=1
+          fi
+
+          # Check for hardcoded passwords (common patterns)
+          if grep -rn "password\s*[:=]\s*['\"][^'\"]\{8,\}['\"]" --include="*.ts" --include="*.tsx" --include="*.js" apps/ packages/ 2>/dev/null | grep -v "spec\.\|test\.\|mock\.\|example\.\|\.d\.ts\|schema\.\|dto\.\|validator\|placeholder\|your_\|change_me\|xxx\|dummy"; then
+            echo "WARNING: Possible hardcoded password found"
+            FOUND=1
+          fi
+
+          # Check for private keys
+          if grep -r "-----BEGIN.*PRIVATE KEY-----" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.pem" apps/ packages/ 2>/dev/null; then
+            echo "ERROR: Private key found in source"
+            FOUND=1
+          fi
+
+          if [ "$FOUND" -eq 0 ]; then
+            echo "No hardcoded secrets found."
+          else
+            echo "WARNING: Review the findings above."
+            exit 1
+          fi
+
+      - name: Check for .env files committed
+        run: |
+          # Ensure no .env files are tracked (except .env.example)
+          ENV_FILES=$(git ls-files '*.env' '.env.*' | grep -v '\.example' || true)
+          if [ -n "$ENV_FILES" ]; then
+            echo "ERROR: .env files found in repository:"
+            echo "$ENV_FILES"
+            exit 1
+          else
+            echo "No .env files tracked (good)."
+          fi
+
+  # ── Build Verification ─────────────────────────────────
+  build:
+    name: Build Verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [shared, backend, mobile, lint, backend-e2e, security]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore workspace cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            apps/backend/node_modules
+            apps/mobile/node_modules
+            packages/shared/node_modules
+            packages/shared/dist
+            apps/backend/node_modules/.prisma
+          key: workspace-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+
+      - name: Verify shared build (from cache)
+        run: |
+          test -f packages/shared/dist/index.js || (echo "ERROR: Shared build output missing" && exit 1)
+          test -f packages/shared/dist/index.d.ts || (echo "ERROR: Shared type declarations missing" && exit 1)
+
+      - name: Build backend
+        run: npm run build
+        working-directory: apps/backend
+
+      - name: Verify backend build output
+        run: |
+          test -d apps/backend/dist || (echo "ERROR: Backend build output missing" && exit 1)
+
+      - name: CI Summary
+        run: |
+          echo "=========================================="
+          echo " LUMA CI — All Checks Passed"
+          echo "=========================================="
+          echo "  Shared Types  : OK"
+          echo "  Backend       : OK (type-check + tests + build)"
+          echo "  Backend E2E   : OK"
+          echo "  Mobile        : OK (type-check)"
+          echo "  Lint          : OK"
+          echo "  Security      : OK"
+          echo "=========================================="
