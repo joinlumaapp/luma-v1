@@ -193,7 +193,7 @@ export class ModerationService {
     }
 
     // Use a transaction: create block + deactivate matches + cancel harmony sessions
-    const block = await this.prisma.$transaction(async (tx: typeof this.prisma) => {
+    const block = await this.prisma.$transaction(async (tx) => {
       // 1. Create the block record
       const newBlock = await tx.block.create({
         data: {

@@ -2,13 +2,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { HealthController } from './health.controller';
 import { PrismaService } from '../../prisma/prisma.service';
+import { LumaCacheService } from '../cache/cache.service';
 
 describe('HealthController', () => {
   let controller: HealthController;
-  let prisma: { $queryRawUnsafe: jest.Mock };
+  let prisma: { $queryRaw: jest.Mock };
 
   const mockPrisma = {
-    $queryRawUnsafe: jest.fn(),
+    $queryRaw: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -18,6 +19,7 @@ describe('HealthController', () => {
       controllers: [HealthController],
       providers: [
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: LumaCacheService, useValue: { get: jest.fn(), set: jest.fn(), isHealthy: jest.fn().mockResolvedValue(true), isRedisConnected: jest.fn().mockReturnValue(true) } },
       ],
     })
       .overrideGuard(ThrottlerGuard)
@@ -38,7 +40,7 @@ describe('HealthController', () => {
 
   describe('check()', () => {
     it('should return healthy status when database is reachable', async () => {
-      mockPrisma.$queryRawUnsafe.mockResolvedValue([{ '?column?': 1 }]);
+      mockPrisma.$queryRaw.mockResolvedValue([{ '?column?': 1 }]);
 
       const result = await controller.check();
 
@@ -50,7 +52,7 @@ describe('HealthController', () => {
     });
 
     it('should return degraded status when database is unreachable', async () => {
-      mockPrisma.$queryRawUnsafe.mockRejectedValue(
+      mockPrisma.$queryRaw.mockRejectedValue(
         new Error('Connection refused'),
       );
 
@@ -62,7 +64,7 @@ describe('HealthController', () => {
     });
 
     it('should include a valid ISO timestamp', async () => {
-      mockPrisma.$queryRawUnsafe.mockResolvedValue([{ '?column?': 1 }]);
+      mockPrisma.$queryRaw.mockResolvedValue([{ '?column?': 1 }]);
 
       const result = await controller.check();
 
@@ -72,7 +74,7 @@ describe('HealthController', () => {
     });
 
     it('should always include version 1.0.0', async () => {
-      mockPrisma.$queryRawUnsafe.mockResolvedValue([{ '?column?': 1 }]);
+      mockPrisma.$queryRaw.mockResolvedValue([{ '?column?': 1 }]);
 
       const result = await controller.check();
 
@@ -80,11 +82,11 @@ describe('HealthController', () => {
     });
 
     it('should execute SELECT 1 query to check database', async () => {
-      mockPrisma.$queryRawUnsafe.mockResolvedValue([{ '?column?': 1 }]);
+      mockPrisma.$queryRaw.mockResolvedValue([{ '?column?': 1 }]);
 
       await controller.check();
 
-      expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledWith('SELECT 1');
+      expect(mockPrisma.$queryRaw).toHaveBeenCalled();
     });
   });
 
@@ -109,7 +111,7 @@ describe('HealthController', () => {
     it('should not call database', () => {
       controller.ping();
 
-      expect(mockPrisma.$queryRawUnsafe).not.toHaveBeenCalled();
+      expect(mockPrisma.$queryRaw).not.toHaveBeenCalled();
     });
   });
 });

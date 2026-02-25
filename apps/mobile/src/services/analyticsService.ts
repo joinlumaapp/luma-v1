@@ -1,6 +1,12 @@
-// Analytics service — provider-agnostic event tracking, ready for Mixpanel/Amplitude/Firebase Analytics
-// Dev mode: events logged to console. Production: swap in real SDK calls.
-// Includes funnel tracking, A/B test assignment, and session duration tracking.
+// Analytics service — Mixpanel event tracking with graceful dev/offline fallback
+// Production: events sent to Mixpanel via mixpanel-react-native SDK.
+// Dev mode (no MIXPANEL_TOKEN): events logged to console only.
+// Includes funnel tracking, A/B test assignment, session duration tracking, and batch queue.
+
+import { Mixpanel } from 'mixpanel-react-native';
+import { APP_CONFIG } from '../constants/config';
+
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 type EventProperties = Record<string, string | number | boolean | null>;
 
@@ -96,7 +102,7 @@ export const ANALYTICS_EVENTS = {
 
 export type AnalyticsEventName = (typeof ANALYTICS_EVENTS)[keyof typeof ANALYTICS_EVENTS];
 
-// ─── Funnel Definitions (self-contained — no shared package build dependency) ─
+// ─── Funnel Definitions (self-contained -- no shared package build dependency) ─
 
 type FunnelName =
   | 'registration'
@@ -157,6 +163,14 @@ interface UserExperimentAssignment {
   assignedAt: string;
 }
 
+// ─── Mixpanel Instance ──────────────────────────────────────────────────────
+
+let mixpanelInstance: Mixpanel | null = null;
+
+function isMixpanelEnabled(): boolean {
+  return mixpanelInstance !== null;
+}
+
 // ─── Timed Event Tracking ────────────────────────────────────────────────────
 
 const timedEvents = new Map<string, number>();
@@ -173,7 +187,7 @@ const funnelProgress = new Map<FunnelName, number>();
 
 const experimentAssignments = new Map<string, UserExperimentAssignment>();
 
-// ─── Event Queue (batching for performance) ──────────────────────────────────
+// ─── Event Queue (batching for offline support and performance) ──────────────
 
 interface QueuedEvent {
   event: string;
@@ -202,8 +216,11 @@ function flushEventQueue(): void {
     console.log(`[Analytics] Flushing ${batch.length} events`);
   }
 
-  // TODO: In production, send batch to Mixpanel/Amplitude
-  // Example: mixpanel.trackBatch(batch.map(e => ({ event: e.event, properties: e.properties })));
+  if (isMixpanelEnabled()) {
+    for (const entry of batch) {
+      mixpanelInstance!.track(entry.event, entry.properties);
+    }
+  }
 }
 
 // ─── Analytics Service ───────────────────────────────────────────────────────
@@ -211,40 +228,88 @@ function flushEventQueue(): void {
 export const analyticsService = {
   /**
    * Initialize analytics provider. Call once at app startup.
-   * In dev mode, logs to console. In production, initialize Mixpanel/Amplitude here.
+   * When MIXPANEL_TOKEN is set, initializes the Mixpanel SDK.
+   * Without a token, falls back to console logging in dev mode.
    */
   initialize: async (): Promise<void> => {
-    // TODO: Initialize Mixpanel when MIXPANEL_TOKEN is available
-    // Example: await Mixpanel.init(MIXPANEL_TOKEN);
     sessionStartTime = Date.now();
-    if (__DEV__) {
-      console.log('[Analytics] Initialized (dev mode — events logged to console)');
+
+    const token = APP_CONFIG.MIXPANEL_TOKEN;
+    if (token && token.length > 0) {
+      try {
+        const mp = new Mixpanel(token, true); // trackAutomaticEvents = true
+        await mp.init();
+        mixpanelInstance = mp;
+
+        if (__DEV__) {
+          console.log('[Analytics] Mixpanel initialized successfully');
+        }
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.warn(`[Analytics] Mixpanel init failed, falling back to dev mode: ${message}`);
+        mixpanelInstance = null;
+      }
+    } else if (__DEV__) {
+      console.log('[Analytics] Initialized (dev mode -- events logged to console, no MIXPANEL_TOKEN)');
     }
   },
 
   /**
    * Identify the current user. Call after login or when user properties change.
    * Sets user-level properties for segmentation and cohort analysis.
+   * Never sends PII (phone, email, real name) -- only opaque IDs and feature data.
    */
   identify: (properties: UserProperties): void => {
     if (__DEV__) {
       console.log('[Analytics] Identify:', properties.userId, properties);
     }
-    // TODO: mixpanel.identify(properties.userId);
-    // TODO: mixpanel.people.set({
-    //   $name: properties.userId,
-    //   packageTier: properties.packageTier,
-    //   gender: properties.gender,
-    //   ageRange: properties.ageRange,
-    //   intentionTag: properties.intentionTag,
-    //   isVerified: properties.isVerified,
-    //   profileCompleteness: properties.profileCompleteness,
-    // });
+
+    if (isMixpanelEnabled()) {
+      mixpanelInstance!.identify(properties.userId);
+
+      // Build a clean properties object, excluding undefined values
+      const profileProps: Record<string, string | number | boolean> = {
+        packageTier: properties.packageTier,
+      };
+
+      if (properties.gender !== undefined) {
+        profileProps.gender = properties.gender;
+      }
+      if (properties.ageRange !== undefined) {
+        profileProps.ageRange = properties.ageRange;
+      }
+      if (properties.intentionTag !== undefined) {
+        profileProps.intentionTag = properties.intentionTag;
+      }
+      if (properties.isVerified !== undefined) {
+        profileProps.isVerified = properties.isVerified;
+      }
+      if (properties.profileCompleteness !== undefined) {
+        profileProps.profileCompleteness = properties.profileCompleteness;
+      }
+
+      mixpanelInstance!.getPeople().set(profileProps);
+    }
+  },
+
+  /**
+   * Set arbitrary user properties on the Mixpanel People profile.
+   * Useful for updating properties outside the identify flow.
+   */
+  setUserProperties: (props: Record<string, string | number | boolean>): void => {
+    if (__DEV__) {
+      console.log('[Analytics] Set user properties:', props);
+    }
+
+    if (isMixpanelEnabled()) {
+      mixpanelInstance!.getPeople().set(props);
+    }
   },
 
   /**
    * Track a named event with optional properties.
-   * Events are batched and flushed periodically for performance.
+   * Events are enriched with timing data and batched for performance.
+   * In dev mode without Mixpanel, events are logged to console.
    */
   track: (event: string, properties?: EventProperties): void => {
     const enrichedProperties: EventProperties = { ...properties };
@@ -265,7 +330,8 @@ export const analyticsService = {
       console.log(`[Analytics] ${event}`, enrichedProperties);
     }
 
-    // Add to batch queue
+    // If Mixpanel is live and we are not batching, send directly
+    // Otherwise add to the batch queue for offline/deferred delivery
     eventQueue.push({
       event,
       properties: enrichedProperties,
@@ -303,7 +369,10 @@ export const analyticsService = {
     if (__DEV__) {
       console.log('[Analytics] Reset');
     }
-    // TODO: mixpanel.reset();
+
+    if (isMixpanelEnabled()) {
+      mixpanelInstance!.reset();
+    }
   },
 
   /**
@@ -421,6 +490,7 @@ export const analyticsService = {
 
   /**
    * Manually flush all queued events. Call before app background/exit.
+   * Forces immediate delivery of all batched events to Mixpanel.
    */
   flush: (): void => {
     if (flushTimer) {
@@ -428,5 +498,10 @@ export const analyticsService = {
       flushTimer = null;
     }
     flushEventQueue();
+
+    // Also flush the Mixpanel SDK internal queue
+    if (isMixpanelEnabled()) {
+      mixpanelInstance!.flush();
+    }
   },
 };

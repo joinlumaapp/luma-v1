@@ -6,6 +6,7 @@ import {
 import { PaymentsService } from './payments.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BadgesService } from '../badges/badges.service';
+import { ReceiptValidatorService } from './receipt-validator.service';
 import { PackageTier } from './dto/subscribe.dto';
 
 const mockPrisma = {
@@ -32,16 +33,68 @@ const mockBadgesService = {
   checkAndAwardBadges: jest.fn().mockResolvedValue(undefined),
 };
 
+const mockReceiptValidator = {
+  validateReceipt: jest.fn().mockResolvedValue({
+    isValid: true,
+    transactionId: `mock_txn_${Date.now()}`,
+    productId: 'mock_product',
+    purchaseDate: new Date(),
+    expiresDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    platform: 'APPLE' as const,
+    isTrial: false,
+    isCancelled: false,
+    rawResult: {
+      isValid: true,
+      transactionId: `mock_txn_${Date.now()}`,
+      originalTransactionId: `mock_orig_${Date.now()}`,
+      productId: 'mock_product',
+      purchaseDate: new Date(),
+      expiresDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      isTrial: false,
+      isCancelled: false,
+      environment: 'mock',
+      bundleId: 'com.luma.dating',
+    },
+  }),
+  validateAppleReceipt: jest.fn(),
+  validateGoogleReceipt: jest.fn(),
+};
+
 describe('PaymentsService', () => {
   let service: PaymentsService;
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    // Reset the mock to return unique transactionIds per call
+    mockReceiptValidator.validateReceipt.mockImplementation(async () => ({
+      isValid: true,
+      transactionId: `mock_txn_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      productId: 'mock_product',
+      purchaseDate: new Date(),
+      expiresDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      platform: 'APPLE' as const,
+      isTrial: false,
+      isCancelled: false,
+      rawResult: {
+        isValid: true,
+        transactionId: `mock_txn_${Date.now()}`,
+        originalTransactionId: `mock_orig_${Date.now()}`,
+        productId: 'mock_product',
+        purchaseDate: new Date(),
+        expiresDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        isTrial: false,
+        isCancelled: false,
+        environment: 'mock',
+        bundleId: 'com.luma.dating',
+      },
+    }));
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PaymentsService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: BadgesService, useValue: mockBadgesService },
+        { provide: ReceiptValidatorService, useValue: mockReceiptValidator },
       ],
     }).compile();
     service = module.get<PaymentsService>(PaymentsService);

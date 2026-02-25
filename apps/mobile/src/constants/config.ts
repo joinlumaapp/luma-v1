@@ -1,11 +1,18 @@
 // LUMA application configuration
 
-export const APP_CONFIG = {
+export const APP_CONFIG: {
+  readonly APP_NAME: string;
+  readonly APP_VERSION: string;
+  readonly API_BASE_URL: string;
+  readonly WS_BASE_URL: string;
+  readonly MIXPANEL_TOKEN: string;
+} = {
   APP_NAME: 'LUMA',
   APP_VERSION: '0.1.0',
   API_BASE_URL: __DEV__ ? 'http://localhost:3000' : 'https://api.luma.dating',
   WS_BASE_URL: __DEV__ ? 'ws://localhost:3000' : 'wss://api.luma.dating',
-} as const;
+  MIXPANEL_TOKEN: '', // Set via environment or build config — empty string disables Mixpanel
+};
 
 // LOCKED architecture constants — do not modify
 export const LOCKED_ARCHITECTURE = {

@@ -4,7 +4,7 @@
 // Photos, Answers, Matches, Chat Messages, and Badge Awards
 
 import { PrismaClient, QuestionCategory, PackageTier, IntentionTag, Gender, SwipeAction, MatchAnimationType, CompatibilityLevel, ChatMessageType, ChatMessageStatus } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 

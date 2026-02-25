@@ -14,20 +14,15 @@ import type { NotificationPreferences } from './dto';
 
 const NOTIFICATIONS_PAGE_SIZE = 30;
 
-export type NotificationType =
-  | 'NEW_MATCH'
-  | 'NEW_MESSAGE'
-  | 'HARMONY_INVITE'
-  | 'HARMONY_REMINDER'
-  | 'BADGE_EARNED'
-  | 'SUBSCRIPTION_EXPIRING'
-  | 'RELATIONSHIP_REQUEST'
-  | 'SYSTEM';
+export { NotificationType } from '@prisma/client';
+import { NotificationType } from '@prisma/client';
 
 /** Maps notification types to preference keys. */
 const TYPE_TO_PREF_KEY: Record<NotificationType, keyof NotificationPreferences | null> = {
   NEW_MATCH: 'newMatches',
   NEW_MESSAGE: 'messages',
+  SUPER_LIKE: 'newMatches',
+  MATCH_REMOVED: 'newMatches',
   HARMONY_INVITE: 'harmonyInvites',
   HARMONY_REMINDER: 'harmonyInvites',
   BADGE_EARNED: 'badges',

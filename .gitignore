@@ -71,6 +71,9 @@ service-account.json
 *.p8
 *.p12
 
+# Local uploads (dev fallback for S3)
+uploads/
+
 # Misc
 .cache/
 tmp/

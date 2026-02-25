@@ -1,10 +1,12 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { SentryModule } from './common/sentry/sentry.module';
+import { SentryInterceptor } from './common/sentry/sentry.interceptor';
 
 // Core modules
 import { PrismaModule } from './prisma/prisma.module';
@@ -31,6 +33,7 @@ import { ModerationModule } from './modules/moderation/moderation.module';
 import { SearchModule } from './modules/search/search.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { CacheModule } from './modules/cache/cache.module';
+import { StorageModule } from './modules/storage/storage.module';
 
 @Module({
   imports: [
@@ -75,6 +78,9 @@ import { CacheModule } from './modules/cache/cache.module';
     // Scheduled tasks (cron jobs)
     ScheduleModule.forRoot(),
 
+    // Error tracking (no-op if SENTRY_DSN is not set)
+    SentryModule,
+
     // Database
     PrismaModule,
 
@@ -97,10 +103,12 @@ import { CacheModule } from './modules/cache/cache.module';
     SearchModule,            // Elasticsearch user search
     ChatModule,              // 1-on-1 messaging
     CacheModule,             // Global Redis cache layer
+    StorageModule,           // S3/CloudFront photo & voice storage
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_INTERCEPTOR, useClass: SentryInterceptor },
   ],
 })
 export class AppModule implements NestModule {

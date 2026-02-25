@@ -7,6 +7,10 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import { BadgesService } from '../badges/badges.service';
 import {
+  ReceiptValidatorService,
+  ReceiptValidationResult,
+} from './receipt-validator.service';
+import {
   SubscribeDto,
   ValidateReceiptDto,
   PurchaseGoldDto,
@@ -124,6 +128,7 @@ export class PaymentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly badgesService: BadgesService,
+    private readonly receiptValidator: ReceiptValidatorService,
   ) {}
 
   /**
@@ -853,28 +858,31 @@ export class PaymentsService {
 
   /**
    * Validate receipt with Apple App Store or Google Play Store.
-   * In production: Make actual API calls to Apple/Google.
-   * For now: Mock validation for development.
+   * Delegates to ReceiptValidatorService which handles:
+   * - Apple: verifyReceipt endpoint with sandbox auto-retry
+   * - Google: Android Publisher API via googleapis
+   * - Dev fallback: mock validation when credentials not configured
    */
   private async validatePlatformReceipt(
     platform: 'APPLE' | 'GOOGLE',
     receipt: string,
-  ): Promise<{
-    isValid: boolean;
-    transactionId: string;
-    productId: string;
-  }> {
-    // In production:
-    // Apple: POST to https://buy.itunes.apple.com/verifyReceipt
-    // Google: Use google-auth-library to validate with Play Developer API
+    productId?: string,
+  ): Promise<ReceiptValidationResult> {
+    this.logger.debug(
+      `[${platform}] Validating receipt: ${receipt.substring(0, 20)}...`,
+    );
 
-    this.logger.debug(`[${platform}] Validating receipt: ${receipt.substring(0, 20)}...`);
+    const result = await this.receiptValidator.validateReceipt(
+      platform,
+      receipt,
+      'com.luma.dating',
+      productId,
+    );
 
-    // Mock: Accept all receipts in development
-    return {
-      isValid: true,
-      transactionId: `txn_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-      productId: 'mock_product',
-    };
+    this.logger.debug(
+      `[${platform}] Validation result: valid=${result.isValid}, txn=${result.transactionId}`,
+    );
+
+    return result;
   }
 }

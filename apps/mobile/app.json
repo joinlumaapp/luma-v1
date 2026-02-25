@@ -5,29 +5,40 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
+    "scheme": "luma",
+    "icon": "./assets/icon.png",
     "splash": {
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#0F0F23"
     },
     "updates": {
       "enabled": true,
       "fallbackToCacheTimeout": 30000,
-      "checkAutomatically": "ON_LOAD"
+      "checkAutomatically": "ON_LOAD",
+      "url": "https://u.expo.dev/EAS_PROJECT_ID_PLACEHOLDER"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.luma.app",
       "buildNumber": "1",
+      "icon": "./assets/icon.png",
       "infoPlist": {
         "NSCameraUsageDescription": "LUMA, profil dogrulama ve fotograf cekmek icin kameraniza erisim istiyor.",
         "NSPhotoLibraryUsageDescription": "LUMA, profilinize fotograf eklemek icin galeri erisinize ihtiyac duyuyor.",
         "NSPhotoLibraryAddUsageDescription": "LUMA, fotograflari galerinize kaydetmek icin izin istiyor.",
         "NSLocationWhenInUseUsageDescription": "LUMA, yakininzdaki kisileri gostermek icin konumunuzu kullaniyor.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "LUMA, yakininzdaki kisileri gostermek icin arka planda konumunuzu kullaniyor.",
+        "NSMicrophoneUsageDescription": "LUMA, Harmony Room sesli gorusmeleri icin mikrofonunuza erisim istiyor.",
         "NSUserTrackingUsageDescription": "LUMA, size daha iyi bir deneyim sunmak icin reklam takibi kullanmak istiyor."
       }
     },
     "android": {
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0F0F23"
       },
       "package": "com.luma.app",
@@ -41,8 +52,47 @@
         "ACCESS_COARSE_LOCATION",
         "POST_NOTIFICATIONS",
         "RECEIVE_BOOT_COMPLETED",
-        "VIBRATE"
+        "VIBRATE",
+        "RECORD_AUDIO"
+      ],
+      "googleServicesFile": "./google-services.json"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#0F0F23"
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "LUMA, profil dogrulama ve fotograf cekmek icin kameraniza erisim istiyor.",
+          "microphonePermission": "LUMA, Harmony Room sesli gorusmeleri icin mikrofonunuza erisim istiyor."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "LUMA, yakininzdaki kisileri gostermek icin konumunuzu kullaniyor.",
+          "locationAlwaysPermission": "LUMA, yakininzdaki kisileri gostermek icin arka planda konumunuzu kullaniyor.",
+          "locationWhenInUsePermission": "LUMA, yakininzdaki kisileri gostermek icin konumunuzu kullaniyor."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "LUMA, profilinize fotograf eklemek icin galeri erisinize ihtiyac duyuyor.",
+          "cameraPermission": "LUMA, profil dogrulama ve fotograf cekmek icin kameraniza erisim istiyor."
+        }
       ]
-    }
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "EAS_PROJECT_ID_PLACEHOLDER"
+      }
+    },
+    "owner": "luma-dating"
   }
 }

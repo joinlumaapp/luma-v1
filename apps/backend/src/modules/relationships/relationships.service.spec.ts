@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { RelationshipsService } from './relationships.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { BadgesService } from '../badges/badges.service';
 
 const mockPrisma = {
   match: { findUnique: jest.fn(), findFirst: jest.fn() },
@@ -32,6 +33,7 @@ describe('RelationshipsService', () => {
       providers: [
         RelationshipsService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: BadgesService, useValue: { checkAndAwardBadges: jest.fn().mockResolvedValue([]) } },
       ],
     }).compile();
     service = module.get<RelationshipsService>(RelationshipsService);

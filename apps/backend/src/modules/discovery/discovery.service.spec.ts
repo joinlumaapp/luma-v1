@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { DiscoveryService } from './discovery.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { BadgesService } from '../badges/badges.service';
 import { SwipeDirection } from './dto/swipe.dto';
 import { GenderPreferenceParam } from './dto/feed-filter.dto';
 
@@ -27,6 +28,7 @@ const mockPrisma = {
   },
   compatibilityScore: {
     findUnique: jest.fn(),
+    findMany: jest.fn().mockResolvedValue([]),
   },
   match: {
     create: jest.fn(),
@@ -46,6 +48,7 @@ describe('DiscoveryService', () => {
       providers: [
         DiscoveryService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: BadgesService, useValue: { checkAndAwardBadges: jest.fn().mockResolvedValue([]) } },
       ],
     }).compile();
     service = module.get<DiscoveryService>(DiscoveryService);
@@ -92,10 +95,12 @@ describe('DiscoveryService', () => {
           },
         },
       ]);
-      mockPrisma.compatibilityScore.findUnique.mockResolvedValue({
+      mockPrisma.compatibilityScore.findMany.mockResolvedValue([{
+        userAId: 'u1',
+        userBId: 'u2',
         finalScore: 75,
         level: 'NORMAL',
-      });
+      }]);
       mockPrisma.dailySwipeCount.findUnique.mockResolvedValue(null);
 
       const result = await service.getFeed('u1');

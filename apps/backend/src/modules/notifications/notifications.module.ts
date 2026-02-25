@@ -6,6 +6,6 @@ import { FirebaseProvider } from './firebase.provider';
 @Module({
   controllers: [NotificationsController],
   providers: [NotificationsService, FirebaseProvider],
-  exports: [NotificationsService],
+  exports: [NotificationsService, FirebaseProvider],
 })
 export class NotificationsModule {}

@@ -8,6 +8,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../prisma/prisma.service';
+import { SmsProvider } from './sms.provider';
 import {
   RegisterDto,
   VerifySmsDto,
@@ -17,7 +18,7 @@ import {
 } from './dto';
 import { JwtPayload } from '../../common/decorators/current-user.decorator';
 import * as crypto from 'crypto';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 // ─── Constants ────────────────────────────────────────────────────
 const OTP_LENGTH = 6;
@@ -53,6 +54,7 @@ export class AuthService implements OnModuleDestroy {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly smsProvider: SmsProvider,
   ) {
     // Periodically clean up expired rate limit entries every 5 minutes
     this.cleanupInterval = setInterval(() => {
@@ -698,26 +700,15 @@ export class AuthService implements OnModuleDestroy {
   }
 
   /**
-   * Send SMS OTP via provider (mock in development).
-   * In production: Replace with Twilio / AWS SNS integration.
+   * Send SMS OTP via the SmsProvider (Twilio in production, console log in dev).
    */
   private async sendSmsOtp(phone: string, code: string): Promise<void> {
-    const environment = this.configService.get<string>('NODE_ENV', 'development');
-
-    if (environment === 'production') {
-      // TODO: Integrate Twilio SMS
-      // const twilioClient = require('twilio')(accountSid, authToken);
-      // await twilioClient.messages.create({
-      //   body: `LUMA doğrulama kodunuz: ${code}`,
-      //   to: phone,
-      //   from: '+1234567890',
-      // });
-      this.logger.log(`[SMS] Production SMS sent to ${phone.slice(0, 4)}****${phone.slice(-2)}`);
-    } else {
-      // Development: log the OTP to console
-      this.logger.debug(`══════════════════════════════════════`);
-      this.logger.debug(`  SMS OTP for ${phone}: ${code}`);
-      this.logger.debug(`══════════════════════════════════════`);
+    try {
+      await this.smsProvider.sendOtp(phone, code);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'SMS gonderilemedi';
+      this.logger.error(`SMS OTP send failed for ${phone.slice(0, 4)}****: ${errorMessage}`);
+      throw new BadRequestException(errorMessage);
     }
   }
 

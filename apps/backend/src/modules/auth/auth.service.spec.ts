@@ -7,11 +7,12 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../../prisma/prisma.service';
-import * as bcrypt from 'bcrypt';
+import { SmsProvider } from './sms.provider';
+import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 
 // Mock bcrypt to control OTP comparison in tests
-jest.mock('bcrypt', () => ({
+jest.mock('bcryptjs', () => ({
   hash: jest.fn().mockResolvedValue('hashed-otp'),
   compare: jest.fn(),
 }));
@@ -154,6 +155,10 @@ describe('AuthService', () => {
     get: jest.fn(),
   };
 
+  const mockSmsProvider = {
+    sendOtp: jest.fn().mockResolvedValue(true),
+  };
+
   // ─── Setup ────────────────────────────────────────────────────
 
   beforeEach(async () => {
@@ -179,6 +184,7 @@ describe('AuthService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: SmsProvider, useValue: mockSmsProvider },
       ],
     }).compile();
 
@@ -189,6 +195,9 @@ describe('AuthService', () => {
 
     // Default JWT mock behavior
     mockJwtService.signAsync.mockResolvedValue('mock-jwt-token');
+
+    // Default SMS provider mock (cleared by resetAllMocks)
+    mockSmsProvider.sendOtp.mockResolvedValue(true);
 
     // Default session findMany mock (for enforceSessionLimit)
     mockPrismaUserSession.findMany.mockResolvedValue([]);
