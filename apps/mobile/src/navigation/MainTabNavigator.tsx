@@ -14,7 +14,6 @@ import type {
   HarmonyStackParamList,
   ProfileStackParamList,
 } from './types';
-import { colors as staticColors } from '../theme/colors';
 import { useTheme } from '../theme/ThemeContext';
 import { spacing, layout, borderRadius } from '../theme/spacing';
 import { typography } from '../theme/typography';
@@ -314,7 +313,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     right: -10,
-    backgroundColor: staticColors.error,
+    backgroundColor: '#EF4444',
     borderRadius: borderRadius.full,
     minWidth: 18,
     height: 18,

@@ -55,7 +55,7 @@
         "VIBRATE",
         "RECORD_AUDIO"
       ],
-      "googleServicesFile": "./google-services.json"
+      "_googleServicesFile_NOTE": "Enable after adding real google-services.json"
     },
     "plugins": [
       [
