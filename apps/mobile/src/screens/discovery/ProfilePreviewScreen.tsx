@@ -1,4 +1,5 @@
 // Profile preview — detailed view of a discovery card profile
+// Enhanced with voice intro, badge showcase, compatibility breakdown, and super like
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -13,12 +14,101 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { DiscoveryStackParamList } from '../../navigation/types';
 import { compatibilityService, type CompatibilityScore } from '../../services/compatibilityService';
+import { VoiceIntroPlayer } from '../../components/profile/VoiceIntro';
+import { BadgeShowcase } from '../../components/badges/BadgeShowcase';
+import { CompatibilityPreviewCard } from './CompatibilityPreviewCard';
 import { colors } from '../../theme/colors';
+import { palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 import { useDiscoveryStore } from '../../stores/discoveryStore';
 
 type ProfilePreviewRouteProp = RouteProp<DiscoveryStackParamList, 'ProfilePreview'>;
+
+// Build CompatibilityPreviewData from CompatibilityScore for the preview card
+interface CompatibilityPreviewData {
+  compatibilityPercent: number;
+  level: 'normal' | 'super';
+  sharedValues: Array<{ label: string; color: string }>;
+  commonAnswers: Array<{ questionTextTr: string; answerLabelTr: string }>;
+  dimensionScores: number[];
+}
+
+const SHARED_VALUE_COLORS = [
+  palette.purple[500],
+  palette.pink[500],
+  palette.gold[500],
+  colors.success,
+  colors.info,
+  palette.purple[400],
+  palette.pink[400],
+];
+
+const buildPreviewData = (compat: CompatibilityScore): CompatibilityPreviewData => {
+  const breakdownEntries = Object.entries(compat.breakdown);
+
+  // Extract dimension scores (up to 7 for the radar chart)
+  const dimensionScores = breakdownEntries
+    .slice(0, 7)
+    .map(([, score]) => Math.round(score));
+
+  // Pad to 7 dimensions if fewer available
+  while (dimensionScores.length < 7) {
+    dimensionScores.push(0);
+  }
+
+  // Build shared values from high-scoring categories (>= 70)
+  const sharedValues = breakdownEntries
+    .filter(([, score]) => score >= 70)
+    .slice(0, 5)
+    .map(([category], index) => ({
+      label: formatCategoryLabel(category),
+      color: SHARED_VALUE_COLORS[index % SHARED_VALUE_COLORS.length],
+    }));
+
+  // Build common answers from the top categories
+  const commonAnswers = breakdownEntries
+    .filter(([, score]) => score >= 80)
+    .slice(0, 3)
+    .map(([category, score]) => ({
+      questionTextTr: formatCategoryLabel(category),
+      answerLabelTr: `%${Math.round(score)} uyum`,
+    }));
+
+  return {
+    compatibilityPercent: compat.finalScore,
+    level: compat.isSuperCompatible ? 'super' : 'normal',
+    sharedValues,
+    commonAnswers,
+    dimensionScores,
+  };
+};
+
+// Format category key to human-readable Turkish label
+const formatCategoryLabel = (category: string): string => {
+  const labelMap: Record<string, string> = {
+    lifestyle: 'Yasam Tarzi',
+    values: 'Degerler',
+    personality: 'Kisilik',
+    interests: 'Ilgi Alanlari',
+    communication: 'Iletisim',
+    goals: 'Hedefler',
+    emotional: 'Duygusal',
+    social: 'Sosyal',
+    intellectual: 'Entelektuel',
+    humor: 'Mizah',
+    family: 'Aile',
+    career: 'Kariyer',
+    adventure: 'Macera',
+    creativity: 'Yaraticilik',
+    spirituality: 'Maneviyat',
+    health: 'Saglik',
+    finance: 'Finans',
+    romance: 'Romantizm',
+    independence: 'Bagimsizlik',
+  };
+  return labelMap[category.toLowerCase()] ?? category;
+};
 
 export const ProfilePreviewScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -47,7 +137,7 @@ export const ProfilePreviewScreen: React.FC = () => {
     fetchCompat();
   }, [userId]);
 
-  const handleSwipe = (direction: 'left' | 'right') => {
+  const handleSwipe = (direction: 'left' | 'right' | 'up') => {
     if (profile) {
       swipeAction(direction, profile.id);
     }
@@ -74,6 +164,8 @@ export const ProfilePreviewScreen: React.FC = () => {
     if (score >= 70) return colors.accent;
     return colors.textSecondary;
   };
+
+  const compatPreviewData = compatibility ? buildPreviewData(compatibility) : null;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -110,6 +202,30 @@ export const ProfilePreviewScreen: React.FC = () => {
           </View>
         </View>
 
+        {/* Voice Intro Player */}
+        {profile.voiceIntroUrl ? (
+          <View style={styles.voiceIntroSection}>
+            <Text style={styles.sectionTitle}>Sesini Dinle</Text>
+            <VoiceIntroPlayer
+              voiceIntroUrl={profile.voiceIntroUrl}
+              userName={profile.name}
+            />
+          </View>
+        ) : null}
+
+        {/* Badge Showcase */}
+        {profile.earnedBadges && profile.earnedBadges.length > 0 ? (
+          <View style={styles.badgeSection}>
+            <Text style={styles.sectionTitle}>Rozetleri</Text>
+            <View style={styles.badgeContainer}>
+              <BadgeShowcase
+                badgeKeys={profile.earnedBadges}
+                size={32}
+              />
+            </View>
+          </View>
+        ) : null}
+
         {/* Compatibility */}
         <View style={styles.compatSection}>
           <Text style={styles.sectionTitle}>Uyumluluk</Text>
@@ -143,6 +259,14 @@ export const ProfilePreviewScreen: React.FC = () => {
           )}
         </View>
 
+        {/* Compatibility Detail Preview Card */}
+        {!loadingCompat && compatPreviewData ? (
+          <View style={styles.compatDetailSection}>
+            <Text style={styles.sectionTitle}>Uyumluluk Detaylari</Text>
+            <CompatibilityPreviewCard data={compatPreviewData} />
+          </View>
+        ) : null}
+
         {/* Bio */}
         {profile.bio.length > 0 && (
           <View style={styles.bioSection}>
@@ -161,15 +285,30 @@ export const ProfilePreviewScreen: React.FC = () => {
           style={styles.passButton}
           onPress={() => handleSwipe('left')}
           activeOpacity={0.8}
+          accessibilityLabel="Gec"
+          accessibilityRole="button"
         >
           <Text style={styles.passButtonIcon}>X</Text>
           <Text style={styles.actionLabel}>Gec</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
+          style={styles.superLikeButton}
+          onPress={() => handleSwipe('up')}
+          activeOpacity={0.8}
+          accessibilityLabel="Super Begen"
+          accessibilityRole="button"
+        >
+          <Text style={styles.superLikeButtonIcon}>{'\u2605'}</Text>
+          <Text style={styles.actionLabelGold}>Super</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
           style={styles.likeButton}
           onPress={() => handleSwipe('right')}
           activeOpacity={0.8}
+          accessibilityLabel="Begen"
+          accessibilityRole="button"
         >
           <Text style={styles.likeButtonIcon}>{'\u2665'}</Text>
           <Text style={styles.actionLabel}>Begen</Text>
@@ -269,6 +408,26 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontWeight: '600',
   },
+
+  // Voice Intro section
+  voiceIntroSection: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+
+  // Badge section
+  badgeSection: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  badgeContainer: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    ...shadows.small,
+  },
+
+  // Compatibility section
   compatSection: {
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.lg,
@@ -317,6 +476,14 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
     fontStyle: 'italic',
   },
+
+  // Compatibility detail section (CompatibilityPreviewCard)
+  compatDetailSection: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+
+  // Bio section
   bioSection: {
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.lg,
@@ -335,6 +502,8 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.textSecondary,
   },
+
+  // Action buttons
   actions: {
     position: 'absolute',
     bottom: 0,
@@ -342,6 +511,7 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: 'row',
     justifyContent: 'center',
+    alignItems: 'center',
     gap: spacing.xl,
     paddingTop: spacing.md,
     backgroundColor: colors.background + 'F0',
@@ -362,6 +532,21 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.error,
   },
+  superLikeButton: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: palette.gold[500],
+    ...shadows.small,
+  },
+  superLikeButtonIcon: {
+    fontSize: 22,
+    color: palette.gold[500],
+  },
   likeButton: {
     width: 64,
     height: 64,
@@ -378,6 +563,14 @@ const styles = StyleSheet.create({
   actionLabel: {
     ...typography.captionSmall,
     color: colors.textSecondary,
+    marginTop: 4,
+    position: 'absolute',
+    bottom: -20,
+  },
+  actionLabelGold: {
+    ...typography.captionSmall,
+    color: palette.gold[500],
+    fontWeight: '600',
     marginTop: 4,
     position: 'absolute',
     bottom: -20,

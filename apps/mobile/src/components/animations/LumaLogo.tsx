@@ -1,7 +1,18 @@
-// Premium animated LUMA logo — letter-by-letter fade-in with purple glow
+// Premium animated LUMA logo — Reanimated v4
+// Letter-by-letter spring entrance with purple glow, pulsing background circle
 
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, StyleSheet, Platform } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  withDelay,
+  withRepeat,
+  withSequence,
+  Easing,
+} from 'react-native-reanimated';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing } from '../../theme/spacing';
@@ -16,82 +27,163 @@ interface LumaLogoProps {
 }
 
 const LETTERS = ['L', 'U', 'M', 'A'] as const;
-const LETTER_DELAY = 150;
-const LETTER_DURATION = 400;
-const GLOW_DURATION = 2000;
+const LETTER_DELAY = 180;
+const GLOW_PULSE_DURATION = 2200;
+
+// Individual animated letter with spring bounce
+const AnimatedLetter: React.FC<{
+  letter: string;
+  index: number;
+  fontSize: number;
+}> = ({ letter, index, fontSize }) => {
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(30);
+  const scale = useSharedValue(0.5);
+
+  useEffect(() => {
+    const delay = index * LETTER_DELAY;
+
+    opacity.value = withDelay(
+      delay,
+      withTiming(1, { duration: 300, easing: Easing.out(Easing.cubic) }),
+    );
+
+    // Spring bounce — letter drops from above and bounces into place
+    translateY.value = withDelay(
+      delay,
+      withSpring(0, {
+        damping: 8,
+        stiffness: 150,
+        mass: 0.6,
+      }),
+    );
+
+    scale.value = withDelay(
+      delay,
+      withSequence(
+        withSpring(1.15, { damping: 6, stiffness: 180 }),
+        withSpring(1.0, { damping: 10, stiffness: 120 }),
+      ),
+    );
+  }, [opacity, translateY, scale, index]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [
+      { translateY: translateY.value },
+      { scale: scale.value },
+    ],
+  }));
+
+  return (
+    <Animated.Text
+      style={[
+        styles.letter,
+        {
+          fontSize,
+          textShadowRadius: 20,
+        },
+        animatedStyle,
+      ]}
+    >
+      {letter}
+    </Animated.Text>
+  );
+};
 
 export const LumaLogo: React.FC<LumaLogoProps> = ({
   size = 1,
   showTagline = true,
   onAnimationComplete,
 }) => {
-  // One opacity animation per letter
-  const letterAnims = useRef(
-    LETTERS.map(() => new Animated.Value(0)),
-  ).current;
+  // Glow circle animations
+  const glowOpacity = useSharedValue(0);
+  const glowScale = useSharedValue(0.8);
 
-  // Glow pulse animation
-  const glowAnim = useRef(new Animated.Value(0)).current;
-
-  // Tagline fade-in
-  const taglineOpacity = useRef(new Animated.Value(0)).current;
+  // Tagline animation
+  const taglineOpacity = useSharedValue(0);
+  const taglineTranslateY = useSharedValue(10);
 
   useEffect(() => {
-    // Letter-by-letter fade-in
-    const letterAnimations = LETTERS.map((_letter, index) =>
-      Animated.timing(letterAnims[index], {
-        toValue: 1,
-        duration: LETTER_DURATION,
-        delay: index * LETTER_DELAY,
-        useNativeDriver: true,
-      }),
+    // Total letter animation time: (LETTERS.length - 1) * LETTER_DELAY + ~500ms spring settle
+    const lettersCompleteTime = (LETTERS.length - 1) * LETTER_DELAY + 500;
+
+    // Start glow pulse after letters appear
+    glowOpacity.value = withDelay(
+      200,
+      withRepeat(
+        withSequence(
+          withTiming(0.6, {
+            duration: GLOW_PULSE_DURATION,
+            easing: Easing.inOut(Easing.sin),
+          }),
+          withTiming(0.25, {
+            duration: GLOW_PULSE_DURATION,
+            easing: Easing.inOut(Easing.sin),
+          }),
+        ),
+        -1,
+        true,
+      ),
     );
 
-    Animated.parallel(letterAnimations).start(() => {
-      // After letters are in, fade tagline and start glow loop
-      Animated.timing(taglineOpacity, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }).start(() => {
-        onAnimationComplete?.();
-      });
-
-      // Infinite glow pulse
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(glowAnim, {
-            toValue: 1,
-            duration: GLOW_DURATION,
-            useNativeDriver: true,
+    glowScale.value = withDelay(
+      200,
+      withRepeat(
+        withSequence(
+          withTiming(1.2, {
+            duration: GLOW_PULSE_DURATION,
+            easing: Easing.inOut(Easing.sin),
           }),
-          Animated.timing(glowAnim, {
-            toValue: 0,
-            duration: GLOW_DURATION,
-            useNativeDriver: true,
+          withTiming(0.95, {
+            duration: GLOW_PULSE_DURATION,
+            easing: Easing.inOut(Easing.sin),
           }),
-        ]),
-      ).start();
-    });
-  }, [letterAnims, glowAnim, taglineOpacity, onAnimationComplete]);
+        ),
+        -1,
+        true,
+      ),
+    );
 
-  const glowOpacity = glowAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.3, 0.7],
-  });
+    // Tagline fades in after letters complete
+    taglineOpacity.value = withDelay(
+      lettersCompleteTime,
+      withTiming(1, { duration: 500, easing: Easing.out(Easing.cubic) }),
+    );
+    taglineTranslateY.value = withDelay(
+      lettersCompleteTime,
+      withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) }),
+    );
 
-  const glowScale = glowAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1, 1.15],
-  });
+    // Fire completion callback
+    if (onAnimationComplete) {
+      const completionTime = lettersCompleteTime + 500;
+      const timeoutId = setTimeout(() => {
+        onAnimationComplete();
+      }, completionTime);
+      return () => clearTimeout(timeoutId);
+    }
 
-  const fontSize = 48 * size;
-  const letterSpacing = 10 * size;
-  const glowSize = 160 * size;
+    return undefined;
+  }, [glowOpacity, glowScale, taglineOpacity, taglineTranslateY, onAnimationComplete]);
+
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: glowOpacity.value,
+    transform: [{ scale: glowScale.value }],
+  }));
+
+  const taglineStyle = useAnimatedStyle(() => ({
+    opacity: taglineOpacity.value,
+    transform: [{ translateY: taglineTranslateY.value }],
+  }));
+
+  const fontSize = 52 * size;
+  const letterSpacing = 12 * size;
+  const glowSize = 180 * size;
 
   return (
     <View style={styles.container}>
-      {/* Background glow circle */}
+      {/* Background glow circle — pulsing */}
       <Animated.View
         style={[
           styles.glowCircle,
@@ -99,44 +191,27 @@ export const LumaLogo: React.FC<LumaLogoProps> = ({
             width: glowSize,
             height: glowSize,
             borderRadius: glowSize / 2,
-            opacity: glowOpacity,
-            transform: [{ scale: glowScale }],
           },
+          glowStyle,
         ]}
       />
 
-      {/* Letter row */}
+      {/* Letter row — each letter springs in independently */}
       <View style={[styles.letterRow, { gap: letterSpacing }]}>
-        {LETTERS.map((letter, index) => {
-          const translateY = letterAnims[index].interpolate({
-            inputRange: [0, 1],
-            outputRange: [20, 0],
-          });
-
-          return (
-            <Animated.Text
-              key={letter}
-              style={[
-                styles.letter,
-                {
-                  fontSize,
-                  opacity: letterAnims[index],
-                  transform: [{ translateY }],
-                },
-              ]}
-            >
-              {letter}
-            </Animated.Text>
-          );
-        })}
+        {LETTERS.map((letter, index) => (
+          <AnimatedLetter
+            key={letter}
+            letter={letter}
+            index={index}
+            fontSize={fontSize}
+          />
+        ))}
       </View>
 
       {/* Tagline */}
       {showTagline && (
-        <Animated.Text
-          style={[styles.tagline, { opacity: taglineOpacity }]}
-        >
-          Gercek Uyumluluk, Gercek Baglanti
+        <Animated.Text style={[styles.tagline, taglineStyle]}>
+          Gerçek Uyumluluk, Gerçek Bağlantı
         </Animated.Text>
       )}
     </View>
@@ -150,7 +225,18 @@ const styles = StyleSheet.create({
   },
   glowCircle: {
     position: 'absolute',
-    backgroundColor: palette.purple[500],
+    backgroundColor: palette.purple[600],
+    ...Platform.select({
+      ios: {
+        shadowColor: palette.purple[500],
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.8,
+        shadowRadius: 40,
+      },
+      android: {
+        elevation: 10,
+      },
+    }),
   },
   letterRow: {
     flexDirection: 'row',
@@ -159,15 +245,17 @@ const styles = StyleSheet.create({
   letter: {
     ...typography.h1,
     color: colors.text,
-    fontWeight: '700',
-    textShadowColor: palette.purple[500],
+    fontWeight: '800',
+    textShadowColor: palette.purple[400],
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 16,
+    textShadowRadius: 20,
+    letterSpacing: 2,
   },
   tagline: {
     ...typography.body,
-    color: colors.textSecondary,
+    color: palette.gray[400],
     marginTop: spacing.md,
     textAlign: 'center',
+    letterSpacing: 0.5,
   },
 });

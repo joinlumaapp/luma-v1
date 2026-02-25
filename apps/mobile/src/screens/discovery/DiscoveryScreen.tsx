@@ -6,7 +6,6 @@ import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import {
   View,
   Text,
-  Image,
   TouchableWithoutFeedback,
   StyleSheet,
   Dimensions,
@@ -29,10 +28,8 @@ import { useDiscoveryStore } from '../../stores/discoveryStore';
 import { useProfileStore } from '../../stores/profileStore';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { MoodSelector } from './MoodSelector';
-import { VoiceIntroPlayer } from '../../components/profile/VoiceIntro';
 import { MatchAnimation } from '../../components/animations/MatchAnimation';
-import { CompatibilityBadge } from '../../components/animations/CompatibilityBadge';
-import { BadgeShowcase } from '../../components/badges/BadgeShowcase';
+import { DiscoveryCard } from '../../components/cards/DiscoveryCard';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
@@ -225,13 +222,59 @@ export const DiscoveryScreen: React.FC = () => {
   const resetPositionRef = useRef(resetPosition);
   resetPositionRef.current = resetPosition;
 
+  // Tap detection — track gesture start time and position
+  const gestureStartRef = useRef<{ x: number; y: number; time: number }>({
+    x: 0,
+    y: 0,
+    time: 0,
+  });
+
+  // Tap handler — navigate to profile preview on tap (ref-based for PanResponder)
+  const handleCardTapRef = useRef(() => {
+    const card = cards[currentIndex];
+    if (card) {
+      navigation.navigate('ProfilePreview', { userId: card.id });
+    }
+  });
+  handleCardTapRef.current = () => {
+    const card = cards[currentIndex];
+    if (card) {
+      navigation.navigate('ProfilePreview', { userId: card.id });
+    }
+  };
+
+  // Tap threshold constants
+  const TAP_MOVE_THRESHOLD = 10;
+  const TAP_DURATION_MS = 300;
+
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
+      onPanResponderGrant: (evt) => {
+        gestureStartRef.current = {
+          x: evt.nativeEvent.pageX,
+          y: evt.nativeEvent.pageY,
+          time: Date.now(),
+        };
+      },
       onPanResponderMove: (_evt, gestureState) => {
         position.setValue({ x: gestureState.dx, y: gestureState.dy * 0.3 });
       },
-      onPanResponderRelease: (_evt, gestureState) => {
+      onPanResponderRelease: (evt, gestureState) => {
+        // Detect tap: minimal movement and short duration
+        const { x: startX, y: startY, time: startTime } = gestureStartRef.current;
+        const totalMovement = Math.sqrt(
+          Math.pow(evt.nativeEvent.pageX - startX, 2) +
+          Math.pow(evt.nativeEvent.pageY - startY, 2),
+        );
+        const elapsed = Date.now() - startTime;
+
+        if (totalMovement < TAP_MOVE_THRESHOLD && elapsed < TAP_DURATION_MS) {
+          resetPositionRef.current();
+          handleCardTapRef.current();
+          return;
+        }
+
         // Detect swipe up for super like (negative dy = upward)
         if (gestureState.dy < -SWIPE_UP_THRESHOLD && Math.abs(gestureState.dx) < SWIPE_THRESHOLD) {
           swipeCardRef.current('up', Math.abs(gestureState.vy));
@@ -404,96 +447,33 @@ export const DiscoveryScreen: React.FC = () => {
             },
           ]}
         >
-          {/* "BEGENDIM" label — fades in on right swipe */}
-          <Animated.View style={[styles.likeOverlay, { opacity: likeOpacity }]}>
-            <Text style={styles.likeText}>BEGENDIM</Text>
-          </Animated.View>
-
-          {/* "GEC" label — fades in on left swipe */}
-          <Animated.View style={[styles.passOverlay, { opacity: passOpacity }]}>
-            <Text style={styles.passText}>GEC</Text>
-          </Animated.View>
-
-          {/* "SUPER" label — fades in on upward swipe */}
-          <Animated.View style={[styles.superLikeOverlay, { opacity: superLikeOpacity }]}>
-            <Text style={styles.superLikeText}>SUPER</Text>
-          </Animated.View>
-
-          {/* Card content */}
-          <View style={styles.cardContent}>
-            {/* Profile photo */}
-            <View style={styles.photoArea}>
-              {currentCard.photoUrls.length > 0 ? (
-                <Image
-                  source={{ uri: currentCard.photoUrls[0] }}
-                  style={styles.profileImage}
-                  resizeMode="cover"
-                />
-              ) : (
-                <View style={styles.photoPlaceholder}>
-                  <Text style={styles.photoInitial}>
-                    {currentCard.name.charAt(0)}
-                  </Text>
-                </View>
-              )}
-            </View>
-
-            {/* Gradient overlay at bottom for text readability */}
-            <LinearGradient
-              colors={['transparent', 'rgba(0,0,0,0.7)'] as [string, string, ...string[]]}
-              style={styles.cardGradientOverlay}
-            />
-
-            {/* Info overlay at bottom */}
-            <View style={styles.cardInfo}>
-              {/* Compatibility badge */}
-              <View style={styles.compatibilityBadge}>
-                <CompatibilityBadge
-                  score={currentCard.compatibilityPercent}
-                  level={currentCard.compatibilityPercent >= 85 ? 'super' : 'normal'}
-                  size={48}
-                />
-              </View>
-
-              <Text style={styles.cardName}>
-                {currentCard.name}, {currentCard.age}
-              </Text>
-              <View style={styles.cardLocationRow}>
-                <Text style={styles.cardCity}>{currentCard.city}</Text>
-                {currentCard.distanceKm != null && (
-                  <View style={styles.distanceBadge}>
-                    <Text style={styles.distanceBadgeText}>
-                      {currentCard.distanceKm < 1
-                        ? `${Math.round(currentCard.distanceKm * 1000)} m`
-                        : `${currentCard.distanceKm.toFixed(1)} km`}
-                    </Text>
-                  </View>
-                )}
-              </View>
-              <Text style={styles.cardBio} numberOfLines={2}>
-                {currentCard.bio}
-              </Text>
-
-              {/* Sesli tanitim — ses kaydini dinle */}
-              {currentCard.voiceIntroUrl && (
-                <VoiceIntroPlayer
-                  voiceIntroUrl={currentCard.voiceIntroUrl}
-                  userName={currentCard.name}
-                />
-              )}
-
-              <View style={styles.cardBottomRow}>
-                <View style={styles.intentionChip}>
-                  <Text style={styles.intentionChipText}>{currentCard.intentionTag}</Text>
-                </View>
-
-                {/* Badge showcase — top 3 earned badges */}
-                {currentCard.earnedBadges && currentCard.earnedBadges.length > 0 && (
-                  <BadgeShowcase badgeKeys={currentCard.earnedBadges.slice(0, 3)} />
-                )}
-              </View>
-            </View>
-          </View>
+          <DiscoveryCard
+            profile={{
+              userId: currentCard.id,
+              firstName: currentCard.name,
+              age: currentCard.age,
+              bio: currentCard.bio || null,
+              city: currentCard.city || null,
+              intentionTag: currentCard.intentionTag || null,
+              isVerified: currentCard.isVerified,
+              photoUrl: currentCard.photoUrls[0] ?? null,
+              thumbnailUrl: currentCard.photoUrls[0] ?? null,
+              compatibility: {
+                score: currentCard.compatibilityPercent,
+                level: currentCard.compatibilityPercent >= 85 ? 'super' : 'normal',
+              },
+              distanceKm: currentCard.distanceKm ?? null,
+              voiceIntroUrl: currentCard.voiceIntroUrl ?? null,
+              earnedBadges: currentCard.earnedBadges ?? [],
+              feedScore: 0,
+            }}
+            onTapCard={() => {
+              navigation.navigate('ProfilePreview', { userId: currentCard.id });
+            }}
+            likeOpacity={likeOpacity}
+            passOpacity={passOpacity}
+            superLikeOpacity={superLikeOpacity}
+          />
         </Animated.View>
       </View>
 
@@ -694,149 +674,7 @@ const styles = StyleSheet.create({
     ...typography.h2,
     color: colors.textTertiary,
   },
-  cardContent: {
-    flex: 1,
-  },
-  photoArea: {
-    flex: 1,
-    backgroundColor: colors.surfaceLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  profileImage: {
-    width: '100%',
-    height: '100%',
-  },
-  photoPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: colors.primary + '30',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  photoInitial: {
-    ...typography.h1,
-    color: colors.primary,
-  },
-  cardGradientOverlay: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 180,
-  },
-  cardInfo: {
-    padding: spacing.md,
-    backgroundColor: colors.surface,
-  },
-  compatibilityBadge: {
-    position: 'absolute',
-    top: -24,
-    right: spacing.md,
-  },
-  cardName: {
-    ...typography.h3,
-    color: colors.text,
-    marginBottom: 2,
-  },
-  cardLocationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.xs,
-    gap: spacing.sm,
-  },
-  cardCity: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-  },
-  distanceBadge: {
-    backgroundColor: colors.primary + '20',
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-  },
-  distanceBadgeText: {
-    ...typography.captionSmall,
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  cardBio: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-    lineHeight: 20,
-  },
-  cardBottomRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  intentionChip: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.primary + '20',
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-  },
-  intentionChipText: {
-    ...typography.captionSmall,
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  likeOverlay: {
-    position: 'absolute',
-    top: 40,
-    left: 20,
-    zIndex: 10,
-    borderWidth: 3,
-    borderColor: colors.success,
-    borderRadius: borderRadius.md,
-    padding: spacing.sm,
-    backgroundColor: colors.success + '15',
-    transform: [{ rotate: '-15deg' }],
-  },
-  likeText: {
-    ...typography.h4,
-    color: colors.success,
-    fontWeight: '800',
-    letterSpacing: 2,
-  },
-  passOverlay: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
-    zIndex: 10,
-    borderWidth: 3,
-    borderColor: colors.error,
-    borderRadius: borderRadius.md,
-    padding: spacing.sm,
-    backgroundColor: colors.error + '15',
-    transform: [{ rotate: '15deg' }],
-  },
-  passText: {
-    ...typography.h4,
-    color: colors.error,
-    fontWeight: '800',
-    letterSpacing: 2,
-  },
-  superLikeOverlay: {
-    position: 'absolute',
-    bottom: 100,
-    alignSelf: 'center',
-    zIndex: 10,
-    borderWidth: 3,
-    borderColor: palette.gold[400],
-    borderRadius: borderRadius.md,
-    padding: spacing.sm,
-    backgroundColor: palette.gold[400] + '20',
-  },
-  superLikeText: {
-    ...typography.h4,
-    color: palette.gold[400],
-    fontWeight: '800',
-    letterSpacing: 2,
-  },
+  // Card content styles moved to DiscoveryCard component
   superLikeGlowOverlay: {
     position: 'absolute',
     top: 0,
