@@ -10,8 +10,9 @@ import { CreateSessionDto, ExtendSessionDto } from './dto';
 
 // Harmony Room constants
 const DEFAULT_DURATION_MINUTES = 30; // Free: 30 minutes
-const GOLD_PER_MINUTE = 2; // 2 Gold per extra minute
-const MAX_EXTENSION_MINUTES = 60;
+const GOLD_PER_EXTENSION = 50; // Gold cost per 15-minute extension block
+const EXTENSION_BLOCK_MINUTES = 15;
+const MAX_EXTENSION_MINUTES = 60; // Max total extension (4 blocks x 15 min)
 const CARDS_PER_SESSION = 5; // Initial cards
 const CARDS_PER_EXTENSION = 2; // Extra cards per extension
 
@@ -122,6 +123,46 @@ export class HarmonyService {
       throw new BadRequestException('Bu eşleşme için zaten aktif bir Harmony Room oturumu var');
     }
 
+    // Tier gating: FREE users cannot create Harmony Room sessions
+    const requestingUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { packageTier: true },
+    });
+
+    if (requestingUser?.packageTier === 'FREE') {
+      throw new ForbiddenException(
+        'Harmony Room başlatmak için Gold veya üzeri üyelik gereklidir. Davet ile katılabilirsiniz.',
+      );
+    }
+
+    // 5-minute chat prerequisite: both users must have chatted for at least 5 minutes
+    const chatMessages = await this.prisma.chatMessage.findMany({
+      where: { matchId: dto.matchId },
+      orderBy: { createdAt: 'asc' },
+      select: { senderId: true, createdAt: true },
+    });
+
+    const senderIds = new Set(chatMessages.map((msg) => msg.senderId));
+    const bothUsersSentMessages =
+      senderIds.has(match.userAId) && senderIds.has(match.userBId);
+
+    if (!bothUsersSentMessages || chatMessages.length < 2) {
+      throw new BadRequestException(
+        'Harmony Room için en az 5 dakika sohbet etmeniz gerekiyor.',
+      );
+    }
+
+    const firstMessageTime = chatMessages[0].createdAt.getTime();
+    const lastMessageTime = chatMessages[chatMessages.length - 1].createdAt.getTime();
+    const chatDurationMs = lastMessageTime - firstMessageTime;
+    const MIN_CHAT_DURATION_MS = 300000; // 5 minutes
+
+    if (chatDurationMs < MIN_CHAT_DURATION_MS) {
+      throw new BadRequestException(
+        'Harmony Room için en az 5 dakika sohbet etmeniz gerekiyor.',
+      );
+    }
+
     // Determine partner
     const partnerId = match.userAId === userId ? match.userBId : match.userAId;
 
@@ -140,9 +181,13 @@ export class HarmonyService {
       },
     });
 
-    // Assign initial cards (mix of question cards and game cards)
+    // Assign initial cards (category-based deck selection or mixed)
+    const questionCardWhere: Record<string, unknown> = { isActive: true };
+    if (dto.deckCategory) {
+      questionCardWhere.category = dto.deckCategory as 'ICEBREAKER' | 'DEEP_CONNECTION' | 'FUN_PLAYFUL';
+    }
     const questionCards = await this.prisma.harmonyQuestionCard.findMany({
-      where: { isActive: true },
+      where: questionCardWhere,
       orderBy: { order: 'asc' },
     });
 
@@ -290,8 +335,9 @@ export class HarmonyService {
       );
     }
 
-    // Calculate gold cost
-    const goldCost = dto.additionalMinutes * GOLD_PER_MINUTE;
+    // Calculate gold cost — block-based pricing (15-min blocks at 50 Gold each)
+    const extensionBlocks = Math.ceil(dto.additionalMinutes / EXTENSION_BLOCK_MINUTES);
+    const goldCost = extensionBlocks * GOLD_PER_EXTENSION;
 
     // Check user's gold balance
     const user = await this.prisma.user.findUnique({

@@ -17,6 +17,7 @@ describe('PlacesController', () => {
     addMemory: jest.fn(),
     getMemoriesTimeline: jest.fn(),
     getMyCheckIns: jest.fn(),
+    getPopularPlaces: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -270,6 +271,62 @@ describe('PlacesController', () => {
 
       expect(mockPlacesService.getMemoriesTimeline).toHaveBeenCalledWith(userId, partnerId);
       expect(mockPlacesService.getMemoriesTimeline).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // GET /places/popular
+  // ═══════════════════════════════════════════════════════════════
+
+  describe('getPopularPlaces()', () => {
+    it('should return popular places near a location', async () => {
+      const expected = {
+        places: [
+          {
+            id: 'p1',
+            name: 'Cafe Istanbul',
+            category: 'cafe',
+            latitude: 41.009,
+            longitude: 28.978,
+            totalVisits: 15,
+            recentVisits: 8,
+          },
+        ],
+        total: 1,
+        radiusKm: 25,
+      };
+      mockPlacesService.getPopularPlaces.mockResolvedValue(expected);
+
+      const result = await controller.getPopularPlaces('41.0082', '28.9784');
+
+      expect(result.places).toHaveLength(1);
+      expect(result.total).toBe(1);
+      expect(result.places[0].name).toBe('Cafe Istanbul');
+    });
+
+    it('should use default radiusKm of 25 when not provided', async () => {
+      mockPlacesService.getPopularPlaces.mockResolvedValue({ places: [], total: 0, radiusKm: 25 });
+
+      await controller.getPopularPlaces('41.0082', '28.9784');
+
+      expect(mockPlacesService.getPopularPlaces).toHaveBeenCalledWith(41.0082, 28.9784, 25);
+    });
+
+    it('should pass custom radiusKm when provided', async () => {
+      mockPlacesService.getPopularPlaces.mockResolvedValue({ places: [], total: 0, radiusKm: 50 });
+
+      await controller.getPopularPlaces('41.0082', '28.9784', '50');
+
+      expect(mockPlacesService.getPopularPlaces).toHaveBeenCalledWith(41.0082, 28.9784, 50);
+    });
+
+    it('should return empty when no popular places exist', async () => {
+      mockPlacesService.getPopularPlaces.mockResolvedValue({ places: [], total: 0, radiusKm: 25 });
+
+      const result = await controller.getPopularPlaces('41.0082', '28.9784');
+
+      expect(result.places).toEqual([]);
+      expect(result.total).toBe(0);
     });
   });
 

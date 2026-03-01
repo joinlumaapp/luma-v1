@@ -1,4 +1,4 @@
-// Onboarding step 4/7: Intention tag selection — 3 LOCKED tags
+// Onboarding step 5/7: Intention tag selection — 3 LOCKED tags
 
 import React, { useState } from 'react';
 import {
@@ -18,28 +18,28 @@ import { spacing, borderRadius, layout } from '../../theme/spacing';
 
 type IntentionNavigationProp = NativeStackNavigationProp<OnboardingStackParamList, 'IntentionTag'>;
 
-const CURRENT_STEP = 4;
+const CURRENT_STEP = 5;
 
-// LOCKED: 3 intention tags
+// LOCKED: 3 intention tags — soft, non-judgmental wording per Master Brief
 const INTENTION_OPTIONS = [
   {
-    id: 'serious',
-    label: 'Ciddi Iliski',
-    description: 'Uzun vadeli, anlamli bir iliski ariyorum.',
+    id: 'serious_relationship',
+    label: 'Uzun Vadeli Uyumluluk',
+    description: 'Uzun vadeli uyumluluk ar\u0131yorum.',
     icon: '***',
     color: colors.secondary,
   },
   {
     id: 'exploring',
-    label: 'Kesfediyorum',
-    description: 'Yeni insanlarla tanimak ve ne olacagini gormek istiyorum.',
+    label: 'Do\u011Fal Ba\u011Flant\u0131',
+    description: 'Do\u011Fal bir ba\u011Flant\u0131ya a\u00E7\u0131\u011F\u0131m.',
     icon: '>>',
     color: colors.primary,
   },
   {
     id: 'not_sure',
-    label: 'Emin Degilim',
-    description: 'Henuz ne aradigimdan emin degilim, akisina birakiyorum.',
+    label: '\u015Eimdilik Ke\u015Ffediyorum',
+    description: '\u015Eimdilik ke\u015Ffediyorum, ak\u0131\u015F\u0131na b\u0131rak\u0131yorum.',
     icon: '??',
     color: colors.accent,
   },
@@ -66,9 +66,9 @@ export const IntentionTagScreen: React.FC = () => {
 
       {/* Content */}
       <View style={styles.content}>
-        <Text style={styles.title}>Ne Ariyorsun?</Text>
+        <Text style={styles.title}>Niyetin Ne?</Text>
         <Text style={styles.subtitle}>
-          Seni benzer niyetlere sahip kisilerle eslestirmemize yardimci olur.
+          Seni benzer niyetlere sahip ki\u015Filerle e\u015Fle\u015Ftirmemize yard\u0131mc\u0131 olur.
         </Text>
 
         <View style={styles.cardsContainer}>
@@ -108,7 +108,7 @@ export const IntentionTagScreen: React.FC = () => {
         </View>
 
         <Text style={styles.hint}>
-          Bu secim daha sonra profil ayarlarindan degistirilebilir.
+          Bu se\u00E7im daha sonra profil ayarlar\u0131ndan de\u011Fi\u015Ftirilebilir.
         </Text>
       </View>
 

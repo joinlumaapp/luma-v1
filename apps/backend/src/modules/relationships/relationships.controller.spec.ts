@@ -15,9 +15,12 @@ describe('RelationshipsController', () => {
   const mockRelationshipsService = {
     activate: jest.fn(),
     deactivate: jest.fn(),
+    confirmDeactivation: jest.fn(),
+    cancelDeactivation: jest.fn(),
     toggleVisibility: jest.fn(),
     getStatus: jest.fn(),
     getMilestones: jest.fn(),
+    findCoupleMatches: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -129,15 +132,18 @@ describe('RelationshipsController', () => {
   describe('deactivate()', () => {
     const userId = 'user-uuid-1';
 
-    it('should deactivate a relationship successfully', async () => {
+    it('should initiate 48-hour deactivation', async () => {
       mockRelationshipsService.deactivate.mockResolvedValue({
-        deactivated: true,
-        message: 'Iliski modu sonlandirildi',
+        deactivated: false,
+        status: 'ENDING',
+        deactivationDeadline: new Date(),
+        message: 'Iliski sonlandirma talebi gonderildi.',
       });
 
       const result = await controller.deactivate(userId);
 
-      expect(result.deactivated).toBe(true);
+      expect(result.status).toBe('ENDING');
+      expect(result.deactivated).toBe(false);
     });
 
     it('should throw NotFoundException when no active relationship', async () => {
@@ -151,12 +157,58 @@ describe('RelationshipsController', () => {
     });
 
     it('should delegate to relationshipsService.deactivate with userId', async () => {
-      mockRelationshipsService.deactivate.mockResolvedValue({ deactivated: true });
+      mockRelationshipsService.deactivate.mockResolvedValue({ deactivated: false, status: 'ENDING' });
 
       await controller.deactivate(userId);
 
       expect(mockRelationshipsService.deactivate).toHaveBeenCalledWith(userId);
       expect(mockRelationshipsService.deactivate).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('confirmDeactivation()', () => {
+    const userId = 'user-uuid-1';
+
+    it('should confirm deactivation successfully', async () => {
+      mockRelationshipsService.confirmDeactivation.mockResolvedValue({
+        confirmed: true,
+        message: 'Iliski modu sonlandirildi',
+      });
+
+      const result = await controller.confirmDeactivation(userId);
+
+      expect(result.confirmed).toBe(true);
+    });
+
+    it('should delegate to relationshipsService.confirmDeactivation', async () => {
+      mockRelationshipsService.confirmDeactivation.mockResolvedValue({ confirmed: true });
+
+      await controller.confirmDeactivation(userId);
+
+      expect(mockRelationshipsService.confirmDeactivation).toHaveBeenCalledWith(userId);
+    });
+  });
+
+  describe('cancelDeactivation()', () => {
+    const userId = 'user-uuid-1';
+
+    it('should cancel deactivation successfully', async () => {
+      mockRelationshipsService.cancelDeactivation.mockResolvedValue({
+        cancelled: true,
+        message: 'Iliski sonlandirma talebi iptal edildi.',
+      });
+
+      const result = await controller.cancelDeactivation(userId);
+
+      expect(result.cancelled).toBe(true);
+    });
+
+    it('should delegate to relationshipsService.cancelDeactivation', async () => {
+      mockRelationshipsService.cancelDeactivation.mockResolvedValue({ cancelled: true });
+
+      await controller.cancelDeactivation(userId);
+
+      expect(mockRelationshipsService.cancelDeactivation).toHaveBeenCalledWith(userId);
     });
   });
 
@@ -321,6 +373,53 @@ describe('RelationshipsController', () => {
 
       expect(mockRelationshipsService.getMilestones).toHaveBeenCalledWith(userId);
       expect(mockRelationshipsService.getMilestones).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // GET /relationships/couple-matches
+  // ═══════════════════════════════════════════════════════════════
+
+  describe('getCoupleMatches()', () => {
+    const userId = 'user-uuid-1';
+
+    it('should return couple matches', async () => {
+      const expected = {
+        coupleMatches: [
+          {
+            coupleId: 'rel-2',
+            partnerNames: ['Zeynep', 'Emre'],
+            sharedInterests: ['SERIOUS_RELATIONSHIP'],
+            compatibilityScore: 75,
+          },
+        ],
+        total: 1,
+      };
+      mockRelationshipsService.findCoupleMatches.mockResolvedValue(expected);
+
+      const result = await controller.getCoupleMatches(userId);
+
+      expect(result.coupleMatches).toHaveLength(1);
+      expect(result.total).toBe(1);
+    });
+
+    it('should throw NotFoundException when no active relationship', async () => {
+      mockRelationshipsService.findCoupleMatches.mockRejectedValue(
+        new NotFoundException('Cift eslesmelerini gormek icin aktif bir iliskiniz olmalidir'),
+      );
+
+      await expect(controller.getCoupleMatches(userId)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should delegate to relationshipsService.findCoupleMatches', async () => {
+      mockRelationshipsService.findCoupleMatches.mockResolvedValue({ coupleMatches: [], total: 0 });
+
+      await controller.getCoupleMatches(userId);
+
+      expect(mockRelationshipsService.findCoupleMatches).toHaveBeenCalledWith(userId);
+      expect(mockRelationshipsService.findCoupleMatches).toHaveBeenCalledTimes(1);
     });
   });
 });

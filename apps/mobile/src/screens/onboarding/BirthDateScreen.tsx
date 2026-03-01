@@ -1,4 +1,4 @@
-// Onboarding step 2/7: Birth date picker with 18+ validation
+// Onboarding step 3/7: Birth date picker with 18+ validation
 
 import React, { useState } from 'react';
 import {
@@ -19,7 +19,7 @@ import { spacing, borderRadius, layout } from '../../theme/spacing';
 
 type BirthDateNavigationProp = NativeStackNavigationProp<OnboardingStackParamList, 'BirthDate'>;
 
-const CURRENT_STEP = 2;
+const CURRENT_STEP = 3;
 const MIN_AGE = 18;
 
 const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);

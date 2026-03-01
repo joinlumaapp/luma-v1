@@ -533,6 +533,11 @@ model Relationship {
   endedAt     DateTime?          @map("ended_at")
   createdAt   DateTime           @default(now()) @map("created_at")
 
+  // 48-hour exit confirmation fields
+  deactivationInitiatedAt   DateTime?  @map("deactivation_initiated_at")
+  deactivationInitiatedBy   String?    @map("deactivation_initiated_by") @db.Uuid
+  deactivationDeadline      DateTime?  @map("deactivation_deadline")
+
   userA                    User                      @relation("RelationshipUserA", fields: [userAId], references: [id])
   userB                    User                      @relation("RelationshipUserB", fields: [userBId], references: [id])
   coupleBadge              CoupleBadge?
@@ -548,6 +553,7 @@ enum RelationshipStatus {
   PROPOSED
   ACTIVE
   HIDDEN
+  ENDING
   ENDED
 }
 

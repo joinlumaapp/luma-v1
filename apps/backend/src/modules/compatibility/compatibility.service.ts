@@ -9,16 +9,32 @@ import { BadgesService } from '../badges/badges.service';
 import { SubmitAnswerDto, SubmitAnswersBulkDto } from './dto';
 
 // LOCKED: 2 Compatibility Levels
-const SUPER_COMPATIBILITY_THRESHOLD = 85;
+const SUPER_COMPATIBILITY_THRESHOLD = 90;
 const CORE_QUESTION_COUNT = 20;
 const TOTAL_QUESTION_COUNT = 45;
+
+// Score display bounds — LOCKED per product spec
+const MIN_DISPLAY_SCORE = 47;
+const MAX_DISPLAY_SCORE = 97;
 
 // Staleness threshold for cached scores — recalculate after 24 hours
 const SCORE_STALENESS_MS = 24 * 60 * 60 * 1000;
 
+// Categories where balanced opposites are beneficial (complementary pairing)
+// These categories benefit from diversity, not just similarity
+const COMPLEMENTARY_CATEGORIES = new Set([
+  'social_compatibility', // Introverts + extroverts can complement
+  'lifestyle',            // Different life paces can balance
+  'conflict_style',       // Different conflict approaches can be healthy
+  'attachment_style',     // Anxious + secure pairing is well-documented
+]);
+
 @Injectable()
 export class CompatibilityService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly badgesService: BadgesService,
+  ) {}
 
   /**
    * Get all compatibility questions.
@@ -64,10 +80,16 @@ export class CompatibilityService {
       select: { questionId: true, optionId: true },
     });
 
-    const answeredMap = new Map(answers.map((a) => [a.questionId, a.optionId]));
+    const answeredMap = new Map<string, string>(
+      answers.map((a: { questionId: string; optionId: string }) => [a.questionId, a.optionId]),
+    );
 
     // Build response
-    const questionsWithStatus = questions.map((q) => ({
+    const questionsWithStatus = questions.map((q: {
+      id: string; questionNumber: number; category: string;
+      textEn: string; textTr: string; weight: number;
+      isPremium: boolean; options: unknown[];
+    }) => ({
       id: q.id,
       questionNumber: q.questionNumber,
       category: q.category,
@@ -182,7 +204,9 @@ export class CompatibilityService {
       include: { options: { select: { id: true } } },
     });
 
-    const questionMap = new Map(questions.map((q) => [q.id, q]));
+    const questionMap = new Map<string, { id: string; isPremium: boolean; options: { id: string }[] }>(
+      questions.map((q: { id: string; isPremium: boolean; options: { id: string }[] }) => [q.id, q]),
+    );
 
     // Validate each answer
     for (const answer of dto.answers) {
@@ -195,7 +219,7 @@ export class CompatibilityService {
           'Premium sorulara erişmek için Gold veya üzeri pakete geçin',
         );
       }
-      const validOptionIds = question.options.map((o) => o.id);
+      const validOptionIds = question.options.map((o: { id: string }) => o.id);
       if (!validOptionIds.includes(answer.optionId)) {
         throw new BadRequestException(
           `Geçersiz seçenek: ${answer.optionId} (soru: ${answer.questionId})`,
@@ -237,6 +261,42 @@ export class CompatibilityService {
   }
 
   /**
+   * Check daily compatibility check limit for the user's tier.
+   * Free=1/day, Gold=3/day, Pro=5/day, Reserved=unlimited
+   */
+  private async checkDailyCompatibilityLimit(userId: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { packageTier: true },
+    });
+
+    const DAILY_COMPAT_LIMITS: Record<string, number> = {
+      FREE: 1,
+      GOLD: 3,
+      PRO: 5,
+      RESERVED: 999999,
+    };
+
+    const dailyLimit = DAILY_COMPAT_LIMITS[user?.packageTier ?? 'FREE'] ?? 1;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const todayCount = await this.prisma.compatibilityScore.count({
+      where: {
+        OR: [{ userAId: userId }, { userBId: userId }],
+        calculatedAt: { gte: today },
+      },
+    });
+
+    if (todayCount >= dailyLimit) {
+      throw new ForbiddenException(
+        `Günlük uyumluluk kontrol limitinize ulaştınız (${dailyLimit}). Daha fazla kontrol için paketinizi yükseltin.`,
+      );
+    }
+  }
+
+  /**
    * Get compatibility score between current user and another user.
    * Returns one of 2 compatibility levels (LOCKED: Normal / Super).
    */
@@ -245,6 +305,9 @@ export class CompatibilityService {
     if (userId === targetUserId) {
       throw new BadRequestException('Kendinizle uyumluluk puani hesaplanamaz');
     }
+
+    // Enforce daily compatibility check limit per tier
+    await this.checkDailyCompatibilityLimit(userId);
 
     // Check if score is already computed
     const existingScore = await this.prisma.compatibilityScore.findUnique({
@@ -296,8 +359,24 @@ export class CompatibilityService {
     ]);
 
     // Create answer maps: questionId -> option value
-    const mapA = new Map(answersA.map((a) => [a.questionId, { value: a.option.value, weight: a.question.weight, category: a.question.category, isPremium: a.question.isPremium }]));
-    const mapB = new Map(answersB.map((a) => [a.questionId, { value: a.option.value, weight: a.question.weight, category: a.question.category, isPremium: a.question.isPremium }]));
+    interface AnswerData {
+      value: number;
+      weight: number;
+      category: string;
+      isPremium: boolean;
+    }
+    const mapA = new Map<string, AnswerData>(
+      answersA.map((a: { questionId: string; option: { value: number }; question: { weight: number; category: string; isPremium: boolean } }) => [
+        a.questionId,
+        { value: a.option.value, weight: a.question.weight, category: a.question.category, isPremium: a.question.isPremium },
+      ]),
+    );
+    const mapB = new Map<string, AnswerData>(
+      answersB.map((a: { questionId: string; option: { value: number }; question: { weight: number; category: string; isPremium: boolean } }) => [
+        a.questionId,
+        { value: a.option.value, weight: a.question.weight, category: a.question.category, isPremium: a.question.isPremium },
+      ]),
+    );
 
     // Find common questions (both users answered)
     const commonQuestionIds = [...mapA.keys()].filter((id) => mapB.has(id));
@@ -306,9 +385,9 @@ export class CompatibilityService {
       return {
         userId: userAId,
         targetUserId: userBId,
-        baseScore: 0,
+        baseScore: MIN_DISPLAY_SCORE,
         deepScore: null,
-        finalScore: 0,
+        finalScore: MIN_DISPLAY_SCORE,
         level: 'NORMAL',
         breakdown: {},
         commonQuestions: 0,
@@ -326,8 +405,21 @@ export class CompatibilityService {
       const a = mapA.get(qId)!;
       const b = mapB.get(qId)!;
 
-      // Similarity: 1 - |valueA - valueB| (values are normalized 0-1)
-      const similarity = 1 - Math.abs(a.value - b.value);
+      // Compatibility score: similarity OR complementary depending on category
+      // Complementary categories: balanced opposites can score HIGHER than similar answers
+      // This detects "anxious+secure", "introvert+extrovert" type pairings
+      const rawSimilarity = 1 - Math.abs(a.value - b.value);
+      let similarity: number;
+      if (COMPLEMENTARY_CATEGORIES.has(a.category)) {
+        // Complementary pairing: moderate differences score highest (sweet spot at ~0.4 difference)
+        // Pure similarity: 1.0 -> 0.85, moderate diff: 0.4 -> 1.0, extreme diff: 1.0 -> 0.7
+        const diff = Math.abs(a.value - b.value);
+        const complementBonus = diff > 0.2 && diff < 0.7 ? 0.15 : 0;
+        similarity = Math.max(0.4, rawSimilarity) + complementBonus;
+        similarity = Math.min(1.0, similarity);
+      } else {
+        similarity = rawSimilarity;
+      }
       const weightedScore = similarity * a.weight;
 
       // Accumulate category scores
@@ -348,39 +440,75 @@ export class CompatibilityService {
       }
     }
 
-    // Calculate percentage scores
-    const baseScore = coreWeight > 0
-      ? Math.round((coreTotal / coreWeight) * 100)
+    // Intention tag alignment bonus
+    const [userAProfile, userBProfile] = await Promise.all([
+      this.prisma.userProfile.findUnique({
+        where: { userId: first },
+        select: { intentionTag: true },
+      }),
+      this.prisma.userProfile.findUnique({
+        where: { userId: second },
+        select: { intentionTag: true },
+      }),
+    ]);
+
+    let intentionBonus = 0;
+    if (userAProfile?.intentionTag && userBProfile?.intentionTag) {
+      if (userAProfile.intentionTag === userBProfile.intentionTag) {
+        intentionBonus = 3; // Same intention: +3 points to final score
+      } else {
+        intentionBonus = -1; // Different intention: slight penalty
+      }
+    }
+
+    // Calculate raw percentage scores (0-100 range)
+    const rawBaseScore = coreWeight > 0
+      ? (coreTotal / coreWeight) * 100
       : 0;
 
     const hasPremiumAnswers = premiumWeight > 0;
-    const premiumScore = hasPremiumAnswers
-      ? Math.round((premiumTotal / premiumWeight) * 100)
-      : null;
 
     // Deep score = combined score from ALL questions (core + premium)
     const allWeight = coreWeight + premiumWeight;
     const allTotal = coreTotal + premiumTotal;
-    const deepScore = hasPremiumAnswers && allWeight > 0
-      ? Math.round((allTotal / allWeight) * 100)
+    const rawDeepScore = hasPremiumAnswers && allWeight > 0
+      ? (allTotal / allWeight) * 100
       : null;
 
-    // Final score: 70% core + 30% premium-only (not double-counted)
-    // This ensures premium questions add refinement without diluting core
-    const finalScore = premiumScore !== null
-      ? Math.round(baseScore * 0.7 + premiumScore * 0.3)
-      : baseScore;
+    // MASTER BRIEF: Premium NEVER changes displayed score, only ranking visibility
+    // finalScore is ALWAYS based on core answers only
+    // deepScore is stored separately for ranking and Deep Match features
+    const rawFinalScore = rawBaseScore;
+    const rawFinalScoreWithIntent = rawFinalScore + intentionBonus;
 
-    // Determine compatibility level (LOCKED: 2 levels)
-    const level = finalScore >= SUPER_COMPATIBILITY_THRESHOLD ? 'SUPER' : 'NORMAL';
+    // Clamp all scores to display range [47-97] — no 100%, minimum 47
+    const clampScore = (raw: number): number =>
+      Math.round(Math.max(MIN_DISPLAY_SCORE, Math.min(MAX_DISPLAY_SCORE, raw)));
 
-    // Category breakdown
+    const baseScore = clampScore(rawBaseScore);
+    const deepScore = rawDeepScore !== null ? clampScore(rawDeepScore) : null;
+    const finalScore = clampScore(rawFinalScoreWithIntent);
+
+    // Category breakdown (computed before level determination)
     const breakdown: Record<string, number> = {};
     for (const [cat, data] of Object.entries(categoryScores)) {
       breakdown[cat] = data.weight > 0
         ? Math.round((data.total / data.weight) * 100)
         : 0;
     }
+
+    // SUPER compatibility requires multi-criteria (per shared types spec):
+    // - finalScore >= 90
+    // - All dimensions >= 60
+    // - At least 3 dimensions >= 90
+    const dimensionValues = Object.values(breakdown);
+    const allDimensionsAbove60 = dimensionValues.length > 0 && dimensionValues.every((v) => v >= 60);
+    const highDimensionCount = dimensionValues.filter((v) => v >= 90).length;
+    const level = (
+      finalScore >= SUPER_COMPATIBILITY_THRESHOLD &&
+      allDimensionsAbove60 &&
+      highDimensionCount >= 3
+    ) ? 'SUPER' : 'NORMAL';
 
     // Store/update the score
     const score = await this.prisma.compatibilityScore.upsert({
@@ -404,6 +532,14 @@ export class CompatibilityService {
         dimensionScores: breakdown,
       },
     });
+
+    // Award Deep Match badge if both users answered all 45 questions
+    if (deepScore !== null) {
+      await Promise.all([
+        this.badgesService.checkAndAwardBadges(first, 'compatibility'),
+        this.badgesService.checkAndAwardBadges(second, 'compatibility'),
+      ]);
+    }
 
     return this.formatScoreResponse(userAId, userBId, score);
   }
@@ -439,7 +575,12 @@ export class CompatibilityService {
     });
 
     return {
-      answers: answers.map((a) => ({
+      answers: answers.map((a: {
+        questionId: string;
+        question: { questionNumber: number; category: string; textEn: string; textTr: string; isPremium: boolean };
+        option: { id: string; labelEn: string; labelTr: string };
+        answeredAt: Date;
+      }) => ({
         questionId: a.questionId,
         questionNumber: a.question.questionNumber,
         category: a.question.category,

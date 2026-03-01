@@ -5,6 +5,7 @@ import {
   Patch,
   Delete,
   Body,
+  Param,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -32,9 +33,21 @@ export class RelationshipsController {
   }
 
   @Delete('deactivate')
-  @ApiOperation({ summary: 'Deactivate relationship mode' })
+  @ApiOperation({ summary: 'Initiate 48-hour relationship deactivation' })
   async deactivate(@CurrentUser('sub') userId: string) {
     return this.relationshipsService.deactivate(userId);
+  }
+
+  @Post('deactivate/confirm')
+  @ApiOperation({ summary: 'Confirm relationship deactivation (partner only)' })
+  async confirmDeactivation(@CurrentUser('sub') userId: string) {
+    return this.relationshipsService.confirmDeactivation(userId);
+  }
+
+  @Post('deactivate/cancel')
+  @ApiOperation({ summary: 'Cancel pending relationship deactivation (initiator only)' })
+  async cancelDeactivation(@CurrentUser('sub') userId: string) {
+    return this.relationshipsService.cancelDeactivation(userId);
   }
 
   @Patch('visibility')
@@ -56,5 +69,27 @@ export class RelationshipsController {
   @ApiOperation({ summary: 'Get relationship milestones (achieved and upcoming)' })
   async getMilestones(@CurrentUser('sub') userId: string) {
     return this.relationshipsService.getMilestones(userId);
+  }
+
+  @Get('couple-matches')
+  @ApiOperation({ summary: 'Find compatible couples for 2v2 interactions' })
+  async getCoupleMatches(@CurrentUser('sub') userId: string) {
+    return this.relationshipsService.findCoupleMatches(userId);
+  }
+
+  @Get('events')
+  @ApiOperation({ summary: 'Get upcoming Couples Club events' })
+  async getEvents(@CurrentUser('sub') userId: string) {
+    return this.relationshipsService.getEvents(userId);
+  }
+
+  @Post('events/:eventId/rsvp')
+  @ApiOperation({ summary: 'RSVP to a Couples Club event' })
+  async rsvpEvent(
+    @CurrentUser('sub') userId: string,
+    @Param('eventId') eventId: string,
+    @Body() body: { status: 'attending' | 'maybe' | 'declined' },
+  ) {
+    return this.relationshipsService.rsvpEvent(userId, eventId, body.status);
   }
 }

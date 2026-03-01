@@ -595,6 +595,7 @@ export class HarmonyGateway
 
   /**
    * Initiate a voice or video call in the Harmony Room.
+   * Voice calls proceed directly. Video calls require dual consent first.
    * Validates session participation before broadcasting.
    */
   @SubscribeMessage('harmony:call_initiate')
@@ -615,10 +616,97 @@ export class HarmonyGateway
 
     this.logger.log(`User ${userId} initiating ${data.callType} call in session ${data.sessionId}`);
 
+    if (data.callType === 'video') {
+      // Video calls require dual consent — send consent request to the partner
+      const session = await this.prisma.harmonySession.findUnique({
+        where: { id: data.sessionId },
+      });
+      if (!session) return;
+
+      const targetUserId = session.userAId === userId ? session.userBId : session.userAId;
+      this.server.to(`user:${targetUserId}`).emit('harmony:video_consent_request', {
+        sessionId: data.sessionId,
+        requesterId: userId,
+      });
+      // Also broadcast to the Harmony room so that the partner receives the event
+      // even if they have not joined the user-specific room
+      client.to(`harmony:${data.sessionId}`).emit('harmony:video_consent_request', {
+        sessionId: data.sessionId,
+        requesterId: userId,
+      });
+      return;
+    }
+
+    // Voice calls proceed directly
     client.to(`harmony:${data.sessionId}`).emit('harmony:call_initiate', {
       callerId: userId,
       callType: data.callType,
     });
+  }
+
+  // ─── Video Consent Flow ─────────────────────────────────────────
+
+  /**
+   * Request video consent from the partner.
+   * Emits harmony:video_consent_request to the target user.
+   */
+  @SubscribeMessage('harmony:video_consent_request')
+  async handleVideoConsentRequest(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { sessionId: string; targetUserId: string },
+  ): Promise<void> {
+    const userId = this.getUserId(client);
+
+    if (!(await this.validateSessionParticipant(client, userId, data.sessionId))) {
+      return;
+    }
+
+    // Emit consent request to the target user
+    this.server.to(`user:${data.targetUserId}`).emit('harmony:video_consent_request', {
+      sessionId: data.sessionId,
+      requesterId: userId,
+    });
+  }
+
+  /**
+   * Respond to a video consent request.
+   * If accepted, notifies the requester to proceed with the video call.
+   * If rejected, notifies the requester that consent was denied.
+   */
+  @SubscribeMessage('harmony:video_consent_response')
+  async handleVideoConsentResponse(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { sessionId: string; requesterId: string; accepted: boolean },
+  ): Promise<void> {
+    const userId = this.getUserId(client);
+
+    if (!(await this.validateSessionParticipant(client, userId, data.sessionId))) {
+      return;
+    }
+
+    if (data.accepted) {
+      // Both parties consented — notify requester to proceed with video call
+      this.server.to(`user:${data.requesterId}`).emit('harmony:video_consent_accepted', {
+        sessionId: data.sessionId,
+        acceptedBy: userId,
+      });
+      // Also broadcast to the Harmony room
+      this.server.to(`harmony:${data.sessionId}`).emit('harmony:video_consent_accepted', {
+        sessionId: data.sessionId,
+        acceptedBy: userId,
+      });
+    } else {
+      // Consent rejected — notify requester
+      this.server.to(`user:${data.requesterId}`).emit('harmony:video_consent_rejected', {
+        sessionId: data.sessionId,
+        rejectedBy: userId,
+      });
+      // Also broadcast to the Harmony room
+      this.server.to(`harmony:${data.sessionId}`).emit('harmony:video_consent_rejected', {
+        sessionId: data.sessionId,
+        rejectedBy: userId,
+      });
+    }
   }
 
   /**

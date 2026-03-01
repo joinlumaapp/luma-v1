@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
+import { RelationshipsService } from '../relationships/relationships.service';
 
 /**
  * Scheduled tasks (cron jobs) for LUMA V1.
@@ -10,12 +11,19 @@ import { PrismaService } from '../../prisma/prisma.service';
  * 3. Reset daily swipe counters (midnight)
  * 4. Expire stale subscriptions
  * 5. Clean up revoked sessions older than 30 days
+ * 6. Clean old notifications
+ * 7. Clean old expired verifications
+ * 8. Clean old daily swipe counts
+ * 9. Auto-end expired relationship deactivations (48-hour deadline)
  */
 @Injectable()
 export class TasksService {
   private readonly logger = new Logger(TasksService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly relationshipsService: RelationshipsService,
+  ) {}
 
   // ─── 1. End Expired Harmony Sessions ─────────────────────────
   // Runs every minute
@@ -182,6 +190,17 @@ export class TasksService {
 
     if (result.count > 0) {
       this.logger.log(`Cleaned ${result.count} old daily swipe count record(s)`);
+    }
+  }
+
+  // ─── 9. Auto-End Expired Relationship Deactivations ────────────
+  // Runs every 15 minutes — ends relationships past the 48-hour deadline
+  @Cron(CronExpression.EVERY_10_MINUTES)
+  async autoEndExpiredRelationships(): Promise<void> {
+    const endedCount = await this.relationshipsService.autoEndExpiredRelationships();
+
+    if (endedCount > 0) {
+      this.logger.log(`Auto-ended ${endedCount} expired relationship deactivation(s)`);
     }
   }
 }

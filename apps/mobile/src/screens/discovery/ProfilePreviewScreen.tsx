@@ -160,7 +160,7 @@ export const ProfilePreviewScreen: React.FC = () => {
   }
 
   const getCompatColor = (score: number): string => {
-    if (score >= 85) return colors.success;
+    if (score >= 90) return colors.success;
     if (score >= 70) return colors.accent;
     return colors.textSecondary;
   };

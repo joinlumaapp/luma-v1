@@ -1,4 +1,4 @@
-// Onboarding step 5/7: Photo upload grid (max 6, min 1)
+// Onboarding step 6/7: Photo upload grid (max 6, min 1)
 
 import React, { useState } from 'react';
 import {
@@ -24,7 +24,7 @@ import { PROFILE_CONFIG } from '../../constants/config';
 
 type PhotosNavigationProp = NativeStackNavigationProp<OnboardingStackParamList, 'Photos'>;
 
-const CURRENT_STEP = 5;
+const CURRENT_STEP = 6;
 const { width } = Dimensions.get('window');
 const GRID_GAP = spacing.sm;
 const GRID_PADDING = spacing.lg;

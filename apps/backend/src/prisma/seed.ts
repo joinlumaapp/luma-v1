@@ -305,8 +305,8 @@ const USER_BADGE_AWARDS: Record<number, string[]> = {
   3: ['first_spark', 'chat_master'],                            // Can
   4: ['first_spark', 'soul_mate'],                              // Selin
   5: ['first_spark'],                                           // Burak
-  6: ['first_spark', 'verified_star', 'gold_member'],          // Defne
-  7: ['first_spark', 'verified_star', 'gold_member'],          // Emre
+  6: ['first_spark', 'verified_star', 'deep_match'],          // Defne
+  7: ['first_spark', 'verified_star', 'deep_match'],          // Emre
   8: ['first_spark'],                                           // Ece
   9: ['first_spark', 'soul_mate'],                              // Kaan
 };
@@ -1403,9 +1403,9 @@ async function seedBadgeDefinitions(): Promise<void> {
       criteria: { type: 'swipe_count', count: 50 }, goldReward: 5,
     },
     {
-      key: 'gold_member', nameEn: 'Gold Member', nameTr: 'Altin Uye',
-      descriptionEn: 'Welcome to the premium world!', descriptionTr: 'Premium dunyaya hos geldin!',
-      criteria: { type: 'subscription_active', count: 1 }, goldReward: 10,
+      key: 'deep_match', nameEn: 'Deep Match', nameTr: 'Derin Uyum',
+      descriptionEn: 'Both you and a match completed all 45 questions!', descriptionTr: '45 soruyu tamamladin ve bir eslesmende de tamamlandi!',
+      criteria: { type: 'deep_match', count: 1 }, goldReward: 15,
     },
   ];
 

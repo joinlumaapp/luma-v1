@@ -68,9 +68,13 @@ export enum QuestionCategory {
   CORE_FEARS = 'core_fears', // Q44-Q45
 }
 
+// Score display bounds — LOCKED per product spec
+export const MIN_DISPLAY_SCORE = 47;
+export const MAX_DISPLAY_SCORE = 97;
+
 // Super Compatibility threshold criteria
 export const SUPER_COMPATIBILITY_THRESHOLD = {
-  minimumDeepScore: 85,
+  minimumDeepScore: 90,
   minimumDimensionScore: 60,
   requiredHighDimensions: 3,
   highDimensionThreshold: 90,

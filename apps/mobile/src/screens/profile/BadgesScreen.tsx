@@ -46,7 +46,7 @@ const BADGE_VISUALS: BadgeVisual[] = [
   { key: 'verified_star', name: 'Dogrulanmis Yildiz', icon: 'V', color: '#10B981', hint: 'Selfie dogrulamasini tamamla' },
   { key: 'couple_goal', name: 'Cift Hedefi', icon: '+', color: '#EF4444', hint: 'Iliski modunu aktiflestir' },
   { key: 'explorer', name: 'Kasif', icon: 'O', color: '#6366F1', hint: '50 profil kesfet' },
-  { key: 'gold_member', name: 'Altin Uye', icon: 'G', color: '#FFD700', hint: 'Premium pakete abone ol' },
+  { key: 'deep_match', name: 'Derin Uyum', icon: 'D', color: '#8B5CF6', hint: '45 soruyu tamamla ve bir eslesmende de tamamlansin' },
 ];
 
 // Merged badge data for display

@@ -26,19 +26,19 @@ export const MENU_TABS = {
   PROFILE: { index: 3, key: 'profile', label: 'Profil', icon: 'user' },
 } as const;
 
-// Intention Tag Labels
+// Intention Tag Labels — Soft, non-judgmental language per brand identity
 export const INTENTION_TAG_LABELS = {
   serious_relationship: {
-    en: 'Serious Relationship',
-    tr: 'Ciddi İlişki',
+    en: 'Looking for long-term compatibility',
+    tr: 'Uzun vadeli uyumluluk arıyorum',
   },
   exploring: {
-    en: 'Exploring',
-    tr: 'Keşfediyorum',
+    en: 'Open to a natural connection',
+    tr: 'Doğal bir bağlantıya açığım',
   },
   not_sure: {
-    en: 'Not Sure',
-    tr: 'Emin Değilim',
+    en: 'Exploring for now',
+    tr: 'Şimdilik keşfediyorum',
   },
 } as const;
 
@@ -51,7 +51,7 @@ export const BADGE_DEFINITIONS = {
   VERIFIED_STAR: { key: 'verified_star', tr: 'Doğrulanmış Yıldız', en: 'Verified Star' },
   COUPLE_GOAL: { key: 'couple_goal', tr: 'Çift Hedefi', en: 'Couple Goal' },
   EXPLORER: { key: 'explorer', tr: 'Kaşif', en: 'Explorer' },
-  GOLD_MEMBER: { key: 'gold_member', tr: 'Altın Üye', en: 'Gold Member' },
+  DEEP_MATCH: { key: 'deep_match', tr: 'Derin Uyum', en: 'Deep Match' },
 } as const;
 
 // Photo constraints

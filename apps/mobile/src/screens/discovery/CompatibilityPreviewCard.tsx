@@ -206,7 +206,7 @@ export const CompatibilityPreviewCard: React.FC<CompatibilityPreviewCardProps> =
   const isSuper = level === 'super';
 
   const getScoreColor = (score: number): string => {
-    if (score >= 85) return colors.success;
+    if (score >= 90) return colors.success;
     if (score >= 70) return colors.accent;
     if (score >= 50) return colors.warning;
     return colors.textSecondary;
@@ -300,7 +300,7 @@ export const CompatibilityPreviewCard: React.FC<CompatibilityPreviewCardProps> =
             styles.insightBadge,
             {
               backgroundColor:
-                compatibilityPercent >= 85
+                compatibilityPercent >= 90
                   ? colors.success + '15'
                   : compatibilityPercent >= 70
                     ? colors.accent + '15'
@@ -313,7 +313,7 @@ export const CompatibilityPreviewCard: React.FC<CompatibilityPreviewCardProps> =
               styles.insightText,
               {
                 color:
-                  compatibilityPercent >= 85
+                  compatibilityPercent >= 90
                     ? colors.success
                     : compatibilityPercent >= 70
                       ? colors.accent
@@ -321,7 +321,7 @@ export const CompatibilityPreviewCard: React.FC<CompatibilityPreviewCardProps> =
               },
             ]}
           >
-            {compatibilityPercent >= 85
+            {compatibilityPercent >= 90
               ? 'Muhtesem bir baglanti potansiyeli!'
               : compatibilityPercent >= 70
                 ? 'Guclu bir uyum icerindesiniz'

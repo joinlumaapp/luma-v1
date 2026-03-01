@@ -87,7 +87,7 @@ export const MatchDetailScreen: React.FC = () => {
   };
 
   const getScoreColor = (score: number): string => {
-    if (score >= 85) return colors.success;
+    if (score >= 90) return colors.success;
     if (score >= 70) return colors.accent;
     if (score >= 50) return colors.warning;
     return colors.error;

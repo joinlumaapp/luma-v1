@@ -20,7 +20,7 @@ const BADGE_META: Record<string, BadgeMeta> = {
   verified_star: { icon: 'V', color: '#10B981', label: 'Dogrulanmis' },
   couple_goal: { icon: '+', color: '#EF4444', label: 'Cift Hedefi' },
   explorer: { icon: 'O', color: '#6366F1', label: 'Kasif' },
-  gold_member: { icon: 'G', color: '#FFD700', label: 'Altin Uye' },
+  deep_match: { icon: 'D', color: '#8B5CF6', label: 'Derin Uyum' },
 };
 
 interface BadgeShowcaseProps {

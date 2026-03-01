@@ -36,6 +36,10 @@ const mockPrisma = {
   notification: {
     createMany: jest.fn(),
   },
+  relationship: {
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+  },
   $transaction: jest.fn(),
 };
 
@@ -55,6 +59,49 @@ describe('DiscoveryService', () => {
   });
 
   describe('getFeed()', () => {
+    beforeEach(() => {
+      // Default: user has no active relationship, no users in relationships
+      mockPrisma.relationship.findFirst.mockResolvedValue(null);
+      mockPrisma.relationship.findMany.mockResolvedValue([]);
+    });
+
+    it('should return empty feed with message when user has active relationship', async () => {
+      mockPrisma.relationship.findFirst.mockResolvedValue({
+        id: 'r1',
+        userAId: 'u1',
+        userBId: 'u2',
+        status: 'ACTIVE',
+      });
+
+      const result = await service.getFeed('u1');
+
+      expect(result.cards).toEqual([]);
+      expect(result.remaining).toBe(0);
+      expect(result.message).toBe('Aktif bir ilişkiniz var. Keşif modu devre dışı.');
+    });
+
+    it('should exclude users in active relationships from feed candidates', async () => {
+      mockPrisma.relationship.findFirst.mockResolvedValue(null);
+      mockPrisma.relationship.findMany.mockResolvedValue([
+        { userAId: 'u-coupled-1', userBId: 'u-coupled-2' },
+      ]);
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'u1',
+        packageTier: 'FREE',
+        profile: { firstName: 'Ali', intentionTag: 'SERIOUS_RELATIONSHIP' },
+      });
+      mockPrisma.swipe.findMany.mockResolvedValue([]);
+      mockPrisma.block.findMany.mockResolvedValue([]);
+      mockPrisma.userProfile.findMany.mockResolvedValue([]);
+      mockPrisma.dailySwipeCount.findUnique.mockResolvedValue(null);
+
+      await service.getFeed('u1');
+
+      const queryArgs = mockPrisma.userProfile.findMany.mock.calls[0][0];
+      expect(queryArgs.where.userId.notIn).toContain('u-coupled-1');
+      expect(queryArgs.where.userId.notIn).toContain('u-coupled-2');
+    });
+
     it('should throw BadRequestException when user has no profile', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({
         id: 'u1',

@@ -281,11 +281,11 @@ export class BadgesService {
       match: ['first_spark', 'soul_mate'],
       harmony: ['chat_master'],
       answer: ['question_explorer'],
-      compatibility: ['soul_mate'],
+      compatibility: ['soul_mate', 'deep_match'],
       verification: ['verified_star'],
       relationship: ['couple_goal'],
       swipe: ['explorer'],
-      subscription: ['gold_member'],
+      subscription: [],
     };
 
     const keysToCheck = hint ? badgeChecks[hint] ?? [] : Object.values(badgeChecks).flat();
@@ -381,16 +381,31 @@ export class BadgesService {
         return swipeCount >= 50;
       }
 
-      case 'gold_member': {
-        // Has active subscription (any paid tier)
-        const subscription = await this.prisma.subscription.findFirst({
-          where: {
-            userId,
-            isActive: true,
-            packageTier: { in: ['GOLD', 'PRO', 'RESERVED'] },
-          },
+      case 'deep_match': {
+        // Both users in a match have answered all 45 questions
+        const userAnswerCount = await this.prisma.userAnswer.count({
+          where: { userId },
         });
-        return subscription !== null;
+        if (userAnswerCount < 45) return false;
+
+        // Check if any matched partner also answered all 45
+        const matches = await this.prisma.match.findMany({
+          where: {
+            OR: [{ userAId: userId }, { userBId: userId }],
+            isActive: true,
+          },
+          select: { userAId: true, userBId: true },
+          take: 10,
+        });
+
+        for (const match of matches) {
+          const partnerId = match.userAId === userId ? match.userBId : match.userAId;
+          const partnerAnswerCount = await this.prisma.userAnswer.count({
+            where: { userId: partnerId },
+          });
+          if (partnerAnswerCount >= 45) return true;
+        }
+        return false;
       }
 
       default:
@@ -489,16 +504,11 @@ export class BadgesService {
         break;
       }
 
-      case 'subscription_active': {
-        const subscription = await this.prisma.subscription.findFirst({
-          where: {
-            userId,
-            isActive: true,
-            packageTier: { in: ['GOLD', 'PRO', 'RESERVED'] },
-          },
+      case 'deep_match': {
+        currentValue = await this.prisma.userAnswer.count({
+          where: { userId },
         });
-        currentValue = subscription ? 1 : 0;
-        description = 'Premium pakete abone ol';
+        description = '45 uyumluluk sorusunu tamamla ve bir eslesmende de tamamlansin';
         break;
       }
 

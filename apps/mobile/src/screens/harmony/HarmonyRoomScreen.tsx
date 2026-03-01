@@ -30,6 +30,8 @@ import { useHarmonyStore } from '../../stores/harmonyStore';
 import type { HarmonyMessage } from '../../stores/harmonyStore';
 import type { HarmonyReaction } from '../../services/socketService';
 import type { CallType } from '../../services/socketService';
+import type { VideoConsentRequestPayload, VideoConsentAcceptedPayload, VideoConsentRejectedPayload } from '../../services/socketService';
+import { socketService } from '../../services/socketService';
 import { webrtcService, type CallState } from '../../services/webrtcService';
 import { IncomingCallOverlay } from '../../components/harmony/IncomingCallOverlay';
 import { ActiveCallBar } from '../../components/harmony/ActiveCallBar';
@@ -251,6 +253,30 @@ export const HarmonyRoomScreen: React.FC = () => {
   const cardSlideAnim = useRef(new Animated.Value(0)).current;
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTypingRef = useRef(false);
+  const activeSessionRef = useRef(activeSession);
+
+  // Keep ref in sync with store state
+  useEffect(() => {
+    activeSessionRef.current = activeSession;
+  }, [activeSession]);
+
+  // ─── Screen Capture Prevention ─────────────────────────────────
+
+  // Screen capture prevention for Harmony Room privacy
+  useEffect(() => {
+    let cleanup: (() => void) | undefined;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const ScreenCapture = require('expo-screen-capture');
+      ScreenCapture.preventScreenCaptureAsync();
+      cleanup = () => {
+        ScreenCapture.allowScreenCaptureAsync();
+      };
+    } catch {
+      // expo-screen-capture not available — will be added with npm install
+    }
+    return () => cleanup?.();
+  }, []);
 
   // ─── WebSocket Lifecycle ───────────────────────────────────────
 
@@ -326,12 +352,54 @@ export const HarmonyRoomScreen: React.FC = () => {
     // Setup socket listeners for WebRTC signaling
     const cleanupListeners = webrtcService.setupListeners();
 
+    // Video dual consent listeners
+    const onConsentRequest = (data: VideoConsentRequestPayload) => {
+      Alert.alert(
+        'Video Arama \u0130ste\u011Fi',
+        'Partneriniz video arama ba\u015Flatmak istiyor. Kabul ediyor musunuz?',
+        [
+          {
+            text: 'Reddet',
+            style: 'cancel',
+            onPress: () => {
+              socketService.sendVideoConsentResponse(data.sessionId, data.requesterId, false);
+            },
+          },
+          {
+            text: 'Kabul Et',
+            onPress: () => {
+              socketService.sendVideoConsentResponse(data.sessionId, data.requesterId, true);
+            },
+          },
+        ],
+      );
+    };
+
+    const onConsentAccepted = (_payload: VideoConsentAcceptedPayload) => {
+      // Both parties consented — proceed with video call
+      setCallType('video');
+      if (activeSessionRef.current) {
+        webrtcService.initiateCall(activeSessionRef.current.id, 'video');
+      }
+    };
+
+    const onConsentRejected = (_payload: VideoConsentRejectedPayload) => {
+      Alert.alert('Video Reddedildi', 'Partneriniz video aramay\u0131 reddetti.');
+    };
+
+    const cleanupConsentReq = socketService.on<VideoConsentRequestPayload>('harmony:video_consent_request', onConsentRequest);
+    const cleanupConsentAcc = socketService.on<VideoConsentAcceptedPayload>('harmony:video_consent_accepted', onConsentAccepted);
+    const cleanupConsentRej = socketService.on<VideoConsentRejectedPayload>('harmony:video_consent_rejected', onConsentRejected);
+
     return () => {
       // End any active call when leaving the screen
       if (webrtcService.getCallState() !== 'idle') {
         webrtcService.endCall();
       }
       cleanupListeners();
+      cleanupConsentReq();
+      cleanupConsentAcc();
+      cleanupConsentRej();
     };
     // Only run on mount/unmount
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -743,11 +811,15 @@ export const HarmonyRoomScreen: React.FC = () => {
       return;
     }
     if (!isPartnerOnline) {
-      Alert.alert('Partner Cevrimdisi', 'Partner henuz odaya katilmadi.');
+      Alert.alert('Partner \u00C7evrimd\u0131\u015F\u0131', 'Partner hen\u00FCz odaya kat\u0131lmad\u0131.');
       return;
     }
-    setCallType('video');
-    webrtcService.initiateCall(activeSession.id, 'video');
+    // Video calls require dual consent — send consent request first
+    socketService.sendVideoConsentRequest(activeSession.id, activeSession.matchId);
+    Alert.alert(
+      'Video \u0130zni',
+      'Partnerinizden video izni bekleniyor...',
+    );
   }, [activeSession, callState, isPartnerOnline]);
 
   // ─── WebRTC Call Control Handlers ──────────────────────────────

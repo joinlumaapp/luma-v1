@@ -39,13 +39,14 @@ const DEFAULT_MAX_DISTANCE_KM = 100;
 
 // ─── Smart Feed Scoring Weights ─────────────────────────────────
 const SCORE_WEIGHTS = {
-  COMPATIBILITY: 0.35,       // Compatibility score contribution
-  DISTANCE: 0.20,            // Distance proximity score
-  ACTIVITY: 0.15,            // Recent activity score
-  PROFILE_COMPLETENESS: 0.10, // Profile completeness bonus
-  INTENTION_MATCH: 0.10,     // Intention tag matching bonus
+  COMPATIBILITY: 0.32,       // Compatibility score contribution
+  DISTANCE: 0.18,            // Distance proximity score
+  ACTIVITY: 0.14,            // Recent activity score
+  PROFILE_COMPLETENESS: 0.09, // Profile completeness bonus
+  INTENTION_MATCH: 0.09,     // Intention tag matching bonus
   PHOTO_COUNT: 0.05,         // Photo count factor
   NEW_USER_BOOST: 0.05,      // New user visibility boost
+  PREMIUM_PRIORITY: 0.08,   // Premium package priority boost
 };
 
 // New user boost: accounts created within this many days get a boost
@@ -68,6 +69,24 @@ export class DiscoveryService {
    * Supports gender, age, distance, and intention tag filters.
    */
   async getFeed(userId: string, filters?: FeedFilterDto) {
+    // Block discovery for users with an active relationship
+    const activeRelationship = await this.prisma.relationship.findFirst({
+      where: {
+        OR: [{ userAId: userId }, { userBId: userId }],
+        status: 'ACTIVE',
+      },
+    });
+
+    if (activeRelationship) {
+      return {
+        cards: [],
+        remaining: 0,
+        dailyLimit: 0,
+        totalCandidates: 0,
+        message: 'Aktif bir ilişkiniz var. Keşif modu devre dışı.',
+      };
+    }
+
     // Get current user with profile
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -105,7 +124,18 @@ export class DiscoveryService {
       }),
     ]);
 
-    const excludeIds = new Set([userId, ...swipedIds, ...blockedIds]);
+    // Exclude users who are currently in active relationships
+    const activeRelationships = await this.prisma.relationship.findMany({
+      where: { status: 'ACTIVE' },
+      select: { userAId: true, userBId: true },
+    });
+    const usersInRelationships = new Set<string>();
+    for (const rel of activeRelationships) {
+      usersInRelationships.add(rel.userAId);
+      usersInRelationships.add(rel.userBId);
+    }
+
+    const excludeIds = new Set([userId, ...swipedIds, ...blockedIds, ...usersInRelationships]);
 
     // Build dynamic filter conditions
     const profileWhere = this.buildProfileWhereClause(excludeIds, filters);
@@ -205,6 +235,7 @@ export class DiscoveryService {
         accountCreatedAt: profile.user.createdAt,
         isVerified: profile.user.isSelfieVerified,
         distanceKm,
+        candidatePackageTier: profile.user.packageTier,
       });
 
       return {
@@ -222,6 +253,7 @@ export class DiscoveryService {
           thumbnailUrl: p.thumbnailUrl,
         })),
         isVerified: profile.user.isSelfieVerified,
+        packageTier: profile.user.packageTier,
         compatibility: score
           ? {
               score: score.finalScore,
@@ -239,6 +271,20 @@ export class DiscoveryService {
       if (a.isVerified !== b.isVerified) return a.isVerified ? -1 : 1;
       return 0;
     });
+
+    // Premium visibility pool: Pro/Reserved users see other premium users boosted
+    if (user.packageTier === 'PRO' || user.packageTier === 'RESERVED') {
+      cards.sort((a, b) => {
+        const aIsPremium = a.packageTier === 'PRO' || a.packageTier === 'RESERVED';
+        const bIsPremium = b.packageTier === 'PRO' || b.packageTier === 'RESERVED';
+        if (aIsPremium && !bIsPremium) return -1;
+        if (!aIsPremium && bIsPremium) return 1;
+        // Within same tier group, keep feedScore order
+        if (b.feedScore !== a.feedScore) return b.feedScore - a.feedScore;
+        if (a.isVerified !== b.isVerified) return a.isVerified ? -1 : 1;
+        return 0;
+      });
+    }
 
     // Page the results — client can call again for more
     const paginatedCards = cards.slice(0, FEED_PAGE_SIZE);
@@ -558,6 +604,7 @@ export class DiscoveryService {
     accountCreatedAt: Date;
     isVerified: boolean;
     distanceKm: number | null;
+    candidatePackageTier: string;
   }): number {
     // 1. Compatibility score (0-100, direct mapping)
     const compatibilityComponent = params.compatibilityScore;
@@ -623,6 +670,16 @@ export class DiscoveryService {
       newUserComponent = 100 * (1 - accountAgeDays / NEW_USER_BOOST_DAYS);
     }
 
+    // 8. Premium priority boost (Pro/Reserved get higher feed placement)
+    let premiumPriorityComponent = 0;
+    if (params.candidatePackageTier === 'PRO') {
+      premiumPriorityComponent = 60;
+    } else if (params.candidatePackageTier === 'RESERVED') {
+      premiumPriorityComponent = 100;
+    } else if (params.candidatePackageTier === 'GOLD') {
+      premiumPriorityComponent = 20;
+    }
+
     // Compute weighted composite score
     const totalScore =
       compatibilityComponent * SCORE_WEIGHTS.COMPATIBILITY +
@@ -631,7 +688,8 @@ export class DiscoveryService {
       completenessComponent * SCORE_WEIGHTS.PROFILE_COMPLETENESS +
       intentionComponent * SCORE_WEIGHTS.INTENTION_MATCH +
       photoComponent * SCORE_WEIGHTS.PHOTO_COUNT +
-      newUserComponent * SCORE_WEIGHTS.NEW_USER_BOOST;
+      newUserComponent * SCORE_WEIGHTS.NEW_USER_BOOST +
+      premiumPriorityComponent * SCORE_WEIGHTS.PREMIUM_PRIORITY;
 
     return Math.round(totalScore * 100) / 100;
   }

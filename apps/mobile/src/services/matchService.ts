@@ -35,6 +35,10 @@ export interface MatchDetailResponse {
     maxScore: number;
   }>;
   matchedAt: string;
+  /** Smart conversation starters based on shared compatibility */
+  conversationStarters?: string[];
+  /** Intelligent explanation of why this match is compatible */
+  compatibilityExplanation?: string;
 }
 
 export const matchService = {

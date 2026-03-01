@@ -32,6 +32,8 @@ const PACKAGE_DEFINITIONS = {
       premiumQuestions: 0,
       harmonyMinutes: 30,
       monthlyGold: 0,
+      dailyCompatibilityChecks: 1,
+      dailySuperCompatibility: 0,
       seeWhoLikesYou: false,
       profileBoost: false,
       readReceipts: false,
@@ -51,6 +53,8 @@ const PACKAGE_DEFINITIONS = {
       premiumQuestions: 25,
       harmonyMinutes: 30,
       monthlyGold: 50,
+      dailyCompatibilityChecks: 3,
+      dailySuperCompatibility: 0,
       seeWhoLikesYou: true,
       profileBoost: false,
       readReceipts: false,
@@ -70,6 +74,8 @@ const PACKAGE_DEFINITIONS = {
       premiumQuestions: 25,
       harmonyMinutes: 45,
       monthlyGold: 150,
+      dailyCompatibilityChecks: 5,
+      dailySuperCompatibility: 1,
       seeWhoLikesYou: true,
       profileBoost: true,
       readReceipts: true,
@@ -89,6 +95,8 @@ const PACKAGE_DEFINITIONS = {
       premiumQuestions: 25,
       harmonyMinutes: 60,
       monthlyGold: 500,
+      dailyCompatibilityChecks: 999999,
+      dailySuperCompatibility: 3,
       seeWhoLikesYou: true,
       profileBoost: true,
       readReceipts: true,
@@ -111,6 +119,11 @@ const GOLD_COSTS: Record<string, { cost: number; descriptionTr: string }> = {
   harmony_extension: { cost: 50, descriptionTr: 'Harmony Room sure uzatma (15 dk)' },
   profile_boost: { cost: 100, descriptionTr: 'Profil one cikarma (24 saat)' },
   super_like: { cost: 25, descriptionTr: 'Super begeni gonderme' },
+};
+
+// One-time purchase products (not subscription-based)
+const ONE_TIME_PRODUCTS: Record<string, { priceTry: number; priceUsd: number; descriptionTr: string }> = {
+  deep_analysis: { priceTry: 69, priceUsd: 9.99, descriptionTr: 'Derin uyumluluk analizi' },
 };
 
 // Tier hierarchy: higher number = higher tier
@@ -255,7 +268,7 @@ export class PaymentsService {
 
     this.logger.log(`User ${userId} subscribed to ${dto.packageTier}`);
 
-    // Award gold_member badge (non-blocking)
+    // Check badges after subscription (non-blocking)
     this.badgesService.checkAndAwardBadges(userId, 'subscription').catch(() => {});
 
     return {
@@ -852,6 +865,88 @@ export class PaymentsService {
     }
 
     return processedCount;
+  }
+
+  /**
+   * Purchase a one-time product (e.g., deep analysis).
+   * Not a subscription — single purchase, permanent unlock.
+   */
+  async purchaseOneTime(userId: string, productId: string, platform: string, receipt: string) {
+    const product = ONE_TIME_PRODUCTS[productId];
+    if (!product) {
+      throw new BadRequestException(
+        `Geçersiz ürün. Geçerli ürünler: ${Object.keys(ONE_TIME_PRODUCTS).join(', ')}`,
+      );
+    }
+
+    // Validate receipt
+    const platformUpper = platform.toUpperCase() as 'APPLE' | 'GOOGLE';
+    const validation = await this.validatePlatformReceipt(platformUpper, receipt);
+    if (!validation.isValid) {
+      throw new BadRequestException('Ödeme makbuzu doğrulanamadı');
+    }
+
+    // Prevent receipt replay
+    const existingReceipt = await this.prisma.iapReceipt.findUnique({
+      where: { transactionId: validation.transactionId },
+    });
+    if (existingReceipt) {
+      throw new BadRequestException('Bu makbuz daha önce kullanılmış');
+    }
+
+    // Store purchase
+    await this.prisma.$transaction(async (tx) => {
+      await tx.iapReceipt.create({
+        data: {
+          platform: platformUpper,
+          receiptData: receipt,
+          transactionId: validation.transactionId,
+          productId,
+          isValid: true,
+          validationResponse: validation as object,
+        },
+      });
+
+      // Record as gold transaction for audit trail (0 gold, but records the purchase)
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: { goldBalance: true },
+      });
+
+      await tx.goldTransaction.create({
+        data: {
+          userId,
+          type: 'PURCHASE',
+          amount: 0,
+          balance: user?.goldBalance ?? 0,
+          description: `${product.descriptionTr} (${product.priceTry} TL)`,
+          referenceId: productId,
+        },
+      });
+    });
+
+    this.logger.log(`User ${userId} purchased one-time product: ${productId}`);
+
+    return {
+      purchased: true,
+      productId,
+      priceTry: product.priceTry,
+    };
+  }
+
+  /**
+   * Check if a user has purchased a specific one-time product.
+   */
+  async hasOneTimePurchase(userId: string, productId: string): Promise<boolean> {
+    const purchase = await this.prisma.goldTransaction.findFirst({
+      where: {
+        userId,
+        referenceId: productId,
+        type: 'PURCHASE',
+        description: { contains: ONE_TIME_PRODUCTS[productId]?.descriptionTr ?? '' },
+      },
+    });
+    return purchase !== null;
   }
 
   // ─── Private Helpers ───────────────────────────────────────────

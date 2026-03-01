@@ -25,6 +25,9 @@ export const CLIENT_EVENTS = {
   WEBRTC_OFFER: 'harmony:webrtc_offer',
   WEBRTC_ANSWER: 'harmony:webrtc_answer',
   WEBRTC_ICE_CANDIDATE: 'harmony:webrtc_ice_candidate',
+  // Video Consent
+  VIDEO_CONSENT_REQUEST: 'harmony:video_consent_request',
+  VIDEO_CONSENT_RESPONSE: 'harmony:video_consent_response',
 } as const;
 
 /** Events received FROM server TO client */
@@ -48,6 +51,10 @@ export const SERVER_EVENTS = {
   WEBRTC_OFFER: 'harmony:webrtc_offer',
   WEBRTC_ANSWER: 'harmony:webrtc_answer',
   WEBRTC_ICE_CANDIDATE: 'harmony:webrtc_ice_candidate',
+  // Video Consent
+  VIDEO_CONSENT_REQUEST: 'harmony:video_consent_request',
+  VIDEO_CONSENT_ACCEPTED: 'harmony:video_consent_accepted',
+  VIDEO_CONSENT_REJECTED: 'harmony:video_consent_rejected',
 } as const;
 
 // ─── Payload Types ────────────────────────────────────────────
@@ -187,6 +194,24 @@ export interface WebRTCAnswerPayload {
 export interface ICECandidatePayload {
   senderId: string;
   candidate: string;
+}
+
+/** Server -> Client: video consent request from partner */
+export interface VideoConsentRequestPayload {
+  sessionId: string;
+  requesterId: string;
+}
+
+/** Server -> Client: video consent accepted by partner */
+export interface VideoConsentAcceptedPayload {
+  sessionId: string;
+  acceptedBy: string;
+}
+
+/** Server -> Client: video consent rejected by partner */
+export interface VideoConsentRejectedPayload {
+  sessionId: string;
+  rejectedBy: string;
 }
 
 // ─── Socket Service ───────────────────────────────────────────
@@ -384,6 +409,22 @@ class SocketService {
    */
   sendICECandidate(sessionId: string, candidate: string): void {
     this.emit(CLIENT_EVENTS.WEBRTC_ICE_CANDIDATE, { sessionId, candidate });
+  }
+
+  // ─── Video Consent ─────────────────────────────────────────
+
+  /**
+   * Send a video consent request to the partner via the signaling server.
+   */
+  sendVideoConsentRequest(sessionId: string, targetUserId: string): void {
+    this.emit(CLIENT_EVENTS.VIDEO_CONSENT_REQUEST, { sessionId, targetUserId });
+  }
+
+  /**
+   * Respond to a video consent request (accept or reject).
+   */
+  sendVideoConsentResponse(sessionId: string, requesterId: string, accepted: boolean): void {
+    this.emit(CLIENT_EVENTS.VIDEO_CONSENT_RESPONSE, { sessionId, requesterId, accepted });
   }
 
   // ─── Event Listener Management ──────────────────────────────

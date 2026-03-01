@@ -1,6 +1,6 @@
 // Root navigator — switches between Auth, Onboarding, and Main flows
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -23,10 +23,19 @@ const SPLASH_GRADIENT_COLORS: readonly [string, string, ...string[]] = [
   '#2D1B69',
 ];
 
+/** Minimum time (ms) the splash screen stays visible */
+const SPLASH_MIN_DURATION = 2000;
+
 export const RootNavigator: React.FC = () => {
   const { isAuthenticated, isLoading, isOnboarded } = useAuth();
+  const [splashReady, setSplashReady] = useState(false);
 
-  if (isLoading) {
+  useEffect(() => {
+    const timer = setTimeout(() => setSplashReady(true), SPLASH_MIN_DURATION);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading || !splashReady) {
     return (
       <View style={styles.splashContainer}>
         <LinearGradient

@@ -410,7 +410,7 @@ export const CompatibilityInsightScreen: React.FC = () => {
   }, [loadCompatibilityData]);
 
   const getScoreColor = (score: number): string => {
-    if (score >= 85) return colors.success;
+    if (score >= 90) return colors.success;
     if (score >= 70) return colors.accent;
     if (score >= 50) return colors.warning;
     return colors.error;
@@ -686,7 +686,7 @@ export const CompatibilityInsightScreen: React.FC = () => {
               Genel Degerlendirme
             </Text>
             <Text style={styles.overallInsightText}>
-              {compatibilityData.finalScore >= 85
+              {compatibilityData.finalScore >= 90
                 ? `${partnerName} ile aranizda olaganustu bir uyum var. Degerleriniz, yasam hedefleriniz ve iletisim tarzlariniz birbirini tamamliyor. Bu, nadir bulunan bir baglanti!`
                 : compatibilityData.finalScore >= 70
                   ? `${partnerName} ile iyi bir uyum icerindesiniz. Bazi alanlarda cok guclu bir baglantiniz var. Birbirinizi tanidikca bu uyum daha da guclenir.`

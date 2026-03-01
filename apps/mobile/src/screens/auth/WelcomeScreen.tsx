@@ -196,7 +196,7 @@ const FloatingOrb: React.FC<{ config: OrbConfig }> = ({ config }) => {
 };
 
 // Tagline with word-by-word stagger fade-in
-const TAGLINE_WORDS = ['Gerçek', 'Uyumluluk,', 'Gerçek', 'Bağlantı'];
+const TAGLINE_WORDS = ['Tesadüfen', 'değil.', 'Uyumlulukla.'];
 const WORD_STAGGER = 200;
 
 const TaglineWord: React.FC<{ word: string; index: number; startDelay: number }> = ({

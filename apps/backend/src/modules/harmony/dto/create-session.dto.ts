@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotEmpty, IsString, IsOptional, IsIn } from 'class-validator';
 
 export class CreateSessionDto {
   @ApiProperty({
@@ -8,4 +8,13 @@ export class CreateSessionDto {
   @IsNotEmpty()
   @IsString()
   matchId!: string;
+
+  @ApiPropertyOptional({
+    description: 'Optional question deck category to focus the session on',
+    enum: ['ICEBREAKER', 'DEEP_CONNECTION', 'FUN_PLAYFUL'],
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(['ICEBREAKER', 'DEEP_CONNECTION', 'FUN_PLAYFUL'])
+  deckCategory?: string;
 }

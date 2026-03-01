@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Param,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -53,6 +54,20 @@ export class PlacesController {
     @Param('partnerId') partnerId: string,
   ) {
     return this.placesService.getMemoriesTimeline(userId, partnerId);
+  }
+
+  @Get('popular')
+  @ApiOperation({ summary: 'Get popular places near a location with social proof' })
+  async getPopularPlaces(
+    @Query('latitude') latitude: string,
+    @Query('longitude') longitude: string,
+    @Query('radiusKm') radiusKm?: string,
+  ) {
+    return this.placesService.getPopularPlaces(
+      parseFloat(latitude),
+      parseFloat(longitude),
+      radiusKm ? parseFloat(radiusKm) : 25,
+    );
   }
 
   @Get('my-check-ins')

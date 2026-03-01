@@ -1,18 +1,23 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TasksService } from './tasks.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { RelationshipsService } from '../relationships/relationships.service';
 
 describe('TasksService', () => {
   let service: TasksService;
 
   const mockPrisma = {
     harmonySession: { updateMany: jest.fn() },
-    userVerification: { updateMany: jest.fn() },
+    userVerification: { updateMany: jest.fn(), deleteMany: jest.fn() },
     dailySwipeCount: { deleteMany: jest.fn() },
     subscription: { updateMany: jest.fn(), findMany: jest.fn() },
     user: { updateMany: jest.fn() },
     userSession: { deleteMany: jest.fn() },
     notification: { deleteMany: jest.fn() },
+  };
+
+  const mockRelationshipsService = {
+    autoEndExpiredRelationships: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -22,6 +27,7 @@ describe('TasksService', () => {
       providers: [
         TasksService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: RelationshipsService, useValue: mockRelationshipsService },
       ],
     }).compile();
 
@@ -218,6 +224,26 @@ describe('TasksService', () => {
       mockPrisma.notification.deleteMany.mockResolvedValue({ count: 0 });
 
       await expect(service.cleanOldNotifications()).resolves.toBeUndefined();
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // autoEndExpiredRelationships()
+  // ═══════════════════════════════════════════════════════════════
+
+  describe('autoEndExpiredRelationships()', () => {
+    it('should delegate to relationshipsService.autoEndExpiredRelationships', async () => {
+      mockRelationshipsService.autoEndExpiredRelationships.mockResolvedValue(3);
+
+      await service.autoEndExpiredRelationships();
+
+      expect(mockRelationshipsService.autoEndExpiredRelationships).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not throw when no expired relationships', async () => {
+      mockRelationshipsService.autoEndExpiredRelationships.mockResolvedValue(0);
+
+      await expect(service.autoEndExpiredRelationships()).resolves.toBeUndefined();
     });
   });
 });

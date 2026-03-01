@@ -24,7 +24,11 @@ interface MatchAnimationProps {
   userName?: string;
   compatibilityScore: number;
   isSuperCompatible: boolean;
-  onSendMessage: () => void;
+  /** Intelligent explanation of why this match is compatible */
+  compatibilityExplanation?: string;
+  /** 2-3 smart conversation starters based on shared compatibility */
+  conversationStarters?: string[];
+  onSendMessage: (prefillMessage?: string) => void;
   onClose: () => void;
 }
 
@@ -115,6 +119,8 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
   userName = 'Sen',
   compatibilityScore,
   isSuperCompatible,
+  compatibilityExplanation,
+  conversationStarters,
   onSendMessage,
   onClose,
 }) => {
@@ -366,6 +372,13 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
             <Text style={styles.scoreLabel}>uyum</Text>
           </Animated.View>
 
+          {/* Intelligent compatibility explanation */}
+          {compatibilityExplanation ? (
+            <Text style={styles.explanationText}>
+              {compatibilityExplanation}
+            </Text>
+          ) : null}
+
           {/* Action buttons with slide-up entrance */}
           <Animated.View
             style={[
@@ -381,13 +394,32 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
                 styles.primaryButton,
                 { backgroundColor: accentColor },
               ]}
-              onPress={onSendMessage}
+              onPress={() => onSendMessage()}
               activeOpacity={0.85}
             >
               <Text style={styles.primaryButtonText}>
                 Mesaj Gonder
               </Text>
             </TouchableOpacity>
+
+            {/* Smart conversation starters */}
+            {conversationStarters && conversationStarters.length > 0 ? (
+              <View style={styles.startersContainer}>
+                <Text style={styles.startersLabel}>Konusma baslat:</Text>
+                {conversationStarters.map((starter, idx) => (
+                  <TouchableOpacity
+                    key={`starter-${idx}`}
+                    style={styles.starterChip}
+                    onPress={() => onSendMessage(starter)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.starterText} numberOfLines={2}>
+                      {starter}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : null}
 
             <TouchableOpacity
               onPress={onClose}
@@ -547,5 +579,40 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     ...typography.bodySmall,
     color: colors.textTertiary,
+  },
+  // ── Compatibility explanation ─────────────────────
+  explanationText: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.sm,
+    lineHeight: 20,
+    fontStyle: 'italic',
+  },
+  // ── Conversation starters ────────────────────────
+  startersContainer: {
+    width: '100%',
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  startersLabel: {
+    ...typography.captionSmall,
+    color: colors.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: spacing.xs,
+  },
+  starterChip: {
+    backgroundColor: colors.surfaceLight,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  starterText: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
   },
 });

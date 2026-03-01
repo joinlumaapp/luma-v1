@@ -7,6 +7,16 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import { CheckInDto, AddMemoryDto } from './dto';
 
+export interface PopularPlace {
+  id: string;
+  name: string;
+  category: string | null;
+  latitude: number;
+  longitude: number;
+  totalVisits: number;
+  recentVisits: number;
+}
+
 @Injectable()
 export class PlacesService {
   constructor(private readonly prisma: PrismaService) {}
@@ -301,6 +311,87 @@ export class PlacesService {
       })),
       total: memories.length,
     };
+  }
+
+  /**
+   * Get popular places near a given location with social proof (aggregate visit counts).
+   * No personal data is exposed — only aggregated counts per place.
+   */
+  async getPopularPlaces(latitude: number, longitude: number, radiusKm: number) {
+    // Fetch all discovered places
+    const allPlaces = await this.prisma.discoveredPlace.findMany({
+      include: {
+        checkIns: {
+          select: { checkedInAt: true },
+        },
+      },
+    });
+
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    // Filter by distance and compute popularity
+    const popularPlaces: PopularPlace[] = [];
+
+    for (const place of allPlaces) {
+      const distanceKm = this.calculateDistanceKm(
+        latitude,
+        longitude,
+        place.latitude,
+        place.longitude,
+      );
+
+      if (distanceKm > radiusKm) continue;
+
+      const totalVisits = place.checkIns.length;
+      const recentVisits = place.checkIns.filter(
+        (ci) => ci.checkedInAt >= thirtyDaysAgo,
+      ).length;
+
+      popularPlaces.push({
+        id: place.id,
+        name: place.name,
+        category: place.category,
+        latitude: place.latitude,
+        longitude: place.longitude,
+        totalVisits,
+        recentVisits,
+      });
+    }
+
+    // Sort by total visits descending (most popular first)
+    popularPlaces.sort((a, b) => b.totalVisits - a.totalVisits);
+
+    return {
+      places: popularPlaces,
+      total: popularPlaces.length,
+      radiusKm,
+    };
+  }
+
+  /**
+   * Haversine formula: calculates the great-circle distance between
+   * two points on Earth given their latitude and longitude in degrees.
+   * Returns distance in kilometers.
+   */
+  private calculateDistanceKm(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ): number {
+    const R = 6371; // Earth's radius in km
+    const dLat = this.toRad(lat2 - lat1);
+    const dLon = this.toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(this.toRad(lat1)) *
+        Math.cos(this.toRad(lat2)) *
+        Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  private toRad(deg: number): number {
+    return deg * (Math.PI / 180);
   }
 
   /**

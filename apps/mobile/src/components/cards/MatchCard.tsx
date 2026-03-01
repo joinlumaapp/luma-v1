@@ -32,7 +32,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
   onPress,
 }) => {
   const compatColor =
-    compatibilityPercent >= 85
+    compatibilityPercent >= 90
       ? colors.success
       : compatibilityPercent >= 70
         ? colors.accent

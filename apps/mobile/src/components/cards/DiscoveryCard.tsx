@@ -78,8 +78,12 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({
       accessibilityRole="button"
       accessibilityHint="Profil detayini gormek icin dokunun"
     >
-      <View style={[styles.cardRoot, { backgroundColor: colors.surface }]}>
-        {/* ── Photo Section (top 50%) ── */}
+      <View style={[
+        styles.cardRoot,
+        { backgroundColor: colors.surface },
+        compatLevel === 'super' && styles.superCompatGlow,
+      ]}>
+        {/* ── Photo Section (top 55%) ── */}
         <View style={styles.photoSection}>
           {profile.photoUrl ? (
             <Image
@@ -224,10 +228,19 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     overflow: 'hidden',
   },
+  superCompatGlow: {
+    borderWidth: 2,
+    borderColor: palette.gold[400],
+    shadowColor: palette.gold[400],
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    elevation: 10,
+  },
 
   // ── Photo Section ──
   photoSection: {
-    height: '50%',
+    height: '55%',
     position: 'relative',
   },
   photo: {

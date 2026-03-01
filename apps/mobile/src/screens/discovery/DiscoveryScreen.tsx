@@ -26,6 +26,7 @@ import type {
 } from '../../navigation/types';
 import { useDiscoveryStore } from '../../stores/discoveryStore';
 import { useProfileStore } from '../../stores/profileStore';
+import { matchService } from '../../services/matchService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { MoodSelector } from './MoodSelector';
 import { MatchAnimation } from '../../components/animations/MatchAnimation';
@@ -67,6 +68,10 @@ export const DiscoveryScreen: React.FC = () => {
   const matchAnimationType = useDiscoveryStore((state) => state.matchAnimationType);
   const dismissMatch = useDiscoveryStore((state) => state.dismissMatch);
   const userFirstName = useProfileStore((state) => state.profile.firstName);
+
+  // Match detail state for conversation starters and compatibility explanation
+  const [matchConversationStarters, setMatchConversationStarters] = useState<string[]>([]);
+  const [matchExplanation, setMatchExplanation] = useState<string | undefined>(undefined);
 
   // Undo state
   const canUndo = useDiscoveryStore((state) => state.canUndo);
@@ -132,6 +137,30 @@ export const DiscoveryScreen: React.FC = () => {
     }
   }, [showSuperLikeGlow, superLikeGlowOpacity, superLikeGlowScale]);
 
+  // Fetch match details (conversation starters + explanation) when a match occurs
+  useEffect(() => {
+    if (!showMatchAnimation || !currentMatchId) return;
+
+    let cancelled = false;
+
+    const fetchMatchDetails = async () => {
+      try {
+        const details = await matchService.getMatch(currentMatchId);
+        if (cancelled) return;
+        setMatchConversationStarters(details.conversationStarters ?? []);
+        setMatchExplanation(details.compatibilityExplanation ?? undefined);
+      } catch {
+        // Non-blocking: animation shows without starters if fetch fails
+      }
+    };
+
+    fetchMatchDetails();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [showMatchAnimation, currentMatchId]);
+
   const currentCard = cards[currentIndex];
   const hasMoreCards = currentIndex < cards.length;
 
@@ -142,6 +171,8 @@ export const DiscoveryScreen: React.FC = () => {
 
   const handleMatchSendMessage = useCallback(() => {
     dismissMatch();
+    setMatchConversationStarters([]);
+    setMatchExplanation(undefined);
     if (currentMatchId && matchedCard) {
       navigation.navigate('MatchesTab', {
         screen: 'Chat',
@@ -156,6 +187,8 @@ export const DiscoveryScreen: React.FC = () => {
 
   const handleMatchDismiss = useCallback(() => {
     dismissMatch();
+    setMatchConversationStarters([]);
+    setMatchExplanation(undefined);
   }, [dismissMatch]);
 
   const resetPosition = useCallback(() => {
@@ -460,7 +493,7 @@ export const DiscoveryScreen: React.FC = () => {
               thumbnailUrl: currentCard.photoUrls[0] ?? null,
               compatibility: {
                 score: currentCard.compatibilityPercent,
-                level: currentCard.compatibilityPercent >= 85 ? 'super' : 'normal',
+                level: currentCard.compatibilityPercent >= 90 ? 'super' : 'normal',
               },
               distanceKm: currentCard.distanceKm ?? null,
               voiceIntroUrl: currentCard.voiceIntroUrl ?? null,
@@ -585,6 +618,8 @@ export const DiscoveryScreen: React.FC = () => {
         userName={userFirstName || undefined}
         compatibilityScore={matchedCard?.compatibilityPercent ?? 0}
         isSuperCompatible={matchAnimationType === 'super_compatibility'}
+        conversationStarters={matchConversationStarters}
+        compatibilityExplanation={matchExplanation}
         onSendMessage={handleMatchSendMessage}
         onClose={handleMatchDismiss}
       />

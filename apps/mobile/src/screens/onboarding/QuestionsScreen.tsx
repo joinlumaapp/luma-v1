@@ -1,4 +1,4 @@
-// Onboarding step 7/7: Compatibility questions — 20 core questions (swipeable cards)
+// Onboarding step 1/7: Compatibility questions — 20 core questions (swipeable cards)
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
@@ -10,8 +10,10 @@ import {
   Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { OnboardingStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../stores/profileStore';
-import { useAuthStore } from '../../stores/authStore';
 import { compatibilityService } from '../../services/compatibilityService';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
@@ -20,7 +22,9 @@ import { LOCKED_ARCHITECTURE } from '../../constants/config';
 import { LumaLogo } from '../../components/animations/LumaLogo';
 import { OnboardingProgress } from '../../components/onboarding/OnboardingProgress';
 
-const CURRENT_STEP = 7;
+type QuestionsNavigationProp = NativeStackNavigationProp<OnboardingStackParamList, 'Questions'>;
+
+const CURRENT_STEP = 1;
 
 // Sample core compatibility questions (20 LOCKED)
 const CORE_QUESTIONS = [
@@ -243,6 +247,7 @@ const CELEBRATION_GRADIENT_COLORS: readonly [string, string, ...string[]] = [
 const CELEBRATION_DURATION = 2200;
 
 export const QuestionsScreen: React.FC = () => {
+  const navigation = useNavigation<QuestionsNavigationProp>();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -250,7 +255,6 @@ export const QuestionsScreen: React.FC = () => {
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
   const [isCompleting, setIsCompleting] = useState(false);
   const setProfileField = useProfileStore((state) => state.setField);
-  const setOnboarded = useAuthStore((state) => state.setOnboarded);
 
   // Celebration screen animations
   const celebrationOpacity = useRef(new Animated.Value(0)).current;
@@ -312,15 +316,15 @@ export const QuestionsScreen: React.FC = () => {
         }),
       ]).start();
 
-      // After the celebration duration, navigate to MainTabs
+      // After the celebration duration, navigate to Name screen
       const timer = setTimeout(() => {
         setProfileField('answers', finalAnswers);
-        setOnboarded(true);
+        navigation.navigate('Name');
       }, CELEBRATION_DURATION);
 
       return () => clearTimeout(timer);
     },
-    [celebrationOpacity, celebrationScale, setProfileField, setOnboarded],
+    [celebrationOpacity, celebrationScale, setProfileField, navigation],
   );
 
   const handleNext = useCallback(async () => {

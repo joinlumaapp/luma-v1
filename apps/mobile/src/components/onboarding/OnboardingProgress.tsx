@@ -11,15 +11,15 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing } from '../../theme/spacing';
 
-/** Labels for each onboarding step (Turkish) */
+/** Labels for each onboarding step (Turkish) — Questions first */
 const STEP_LABELS = [
+  'Sorular',
   'Ad',
   'Dogum',
   'Cinsiyet',
   'Niyet',
   'Foto',
   'Hakkinda',
-  'Sorular',
 ] as const;
 
 const TOTAL_STEPS = STEP_LABELS.length;

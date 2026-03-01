@@ -11,6 +11,7 @@ export type RootStackParamList = {
 
 // -- Auth Stack --
 export type AuthStackParamList = {
+  EmotionalIntro: undefined;
   Welcome: undefined;
   PhoneEntry: undefined;
   OTPVerification: { phoneNumber: string; countryCode: string };

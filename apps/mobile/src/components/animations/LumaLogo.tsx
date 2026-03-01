@@ -211,7 +211,7 @@ export const LumaLogo: React.FC<LumaLogoProps> = ({
       {/* Tagline */}
       {showTagline && (
         <Animated.Text style={[styles.tagline, taglineStyle]}>
-          Gerçek Uyumluluk, Gerçek Bağlantı
+          Tesadüfen değil. Uyumlulukla.
         </Animated.Text>
       )}
     </View>

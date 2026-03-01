@@ -1,4 +1,4 @@
-// Onboarding step 3/7: Gender selection (3 options)
+// Onboarding step 4/7: Gender selection (3 options)
 
 import React, { useState } from 'react';
 import {
@@ -18,7 +18,7 @@ import { spacing, borderRadius, layout } from '../../theme/spacing';
 
 type GenderNavigationProp = NativeStackNavigationProp<OnboardingStackParamList, 'Gender'>;
 
-const CURRENT_STEP = 3;
+const CURRENT_STEP = 4;
 
 type GenderOption = 'male' | 'female' | 'other';
 

@@ -711,6 +711,131 @@ describe('PlacesService', () => {
   });
 
   // ─────────────────────────────────────────────
+  // getPopularPlaces()
+  // ─────────────────────────────────────────────
+  describe('getPopularPlaces()', () => {
+    it('should return empty when no places exist', async () => {
+      mockPrisma.discoveredPlace.findMany.mockResolvedValue([]);
+
+      const result = await service.getPopularPlaces(41.0082, 28.9784, 25);
+
+      expect(result.places).toEqual([]);
+      expect(result.total).toBe(0);
+      expect(result.radiusKm).toBe(25);
+    });
+
+    it('should filter places within the given radius', async () => {
+      mockPrisma.discoveredPlace.findMany.mockResolvedValue([
+        {
+          id: 'p1',
+          name: 'Close Cafe',
+          category: 'cafe',
+          latitude: 41.01,
+          longitude: 28.98,
+          checkIns: [{ checkedInAt: new Date() }],
+        },
+        {
+          id: 'p2',
+          name: 'Far Away Park',
+          category: 'park',
+          latitude: 45.0, // very far from Istanbul
+          longitude: 35.0,
+          checkIns: [{ checkedInAt: new Date() }],
+        },
+      ]);
+
+      const result = await service.getPopularPlaces(41.0082, 28.9784, 25);
+
+      expect(result.places).toHaveLength(1);
+      expect(result.places[0].name).toBe('Close Cafe');
+    });
+
+    it('should sort places by total visits descending', async () => {
+      mockPrisma.discoveredPlace.findMany.mockResolvedValue([
+        {
+          id: 'p1',
+          name: 'Less Popular',
+          category: 'cafe',
+          latitude: 41.009,
+          longitude: 28.978,
+          checkIns: [{ checkedInAt: new Date() }],
+        },
+        {
+          id: 'p2',
+          name: 'More Popular',
+          category: 'restaurant',
+          latitude: 41.008,
+          longitude: 28.979,
+          checkIns: [
+            { checkedInAt: new Date() },
+            { checkedInAt: new Date() },
+            { checkedInAt: new Date() },
+          ],
+        },
+      ]);
+
+      const result = await service.getPopularPlaces(41.0082, 28.9784, 25);
+
+      expect(result.places[0].name).toBe('More Popular');
+      expect(result.places[0].totalVisits).toBe(3);
+      expect(result.places[1].name).toBe('Less Popular');
+      expect(result.places[1].totalVisits).toBe(1);
+    });
+
+    it('should correctly count recent visits within last 30 days', async () => {
+      const recentDate = new Date();
+      const oldDate = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000); // 60 days ago
+
+      mockPrisma.discoveredPlace.findMany.mockResolvedValue([
+        {
+          id: 'p1',
+          name: 'Mixed Cafe',
+          category: 'cafe',
+          latitude: 41.009,
+          longitude: 28.978,
+          checkIns: [
+            { checkedInAt: recentDate },
+            { checkedInAt: recentDate },
+            { checkedInAt: oldDate },
+          ],
+        },
+      ]);
+
+      const result = await service.getPopularPlaces(41.0082, 28.9784, 25);
+
+      expect(result.places[0].totalVisits).toBe(3);
+      expect(result.places[0].recentVisits).toBe(2);
+    });
+
+    it('should not expose personal data, only aggregate counts', async () => {
+      mockPrisma.discoveredPlace.findMany.mockResolvedValue([
+        {
+          id: 'p1',
+          name: 'Cafe',
+          category: 'cafe',
+          latitude: 41.009,
+          longitude: 28.978,
+          checkIns: [{ checkedInAt: new Date() }],
+        },
+      ]);
+
+      const result = await service.getPopularPlaces(41.0082, 28.9784, 25);
+
+      const place = result.places[0];
+      expect(place).toHaveProperty('id');
+      expect(place).toHaveProperty('name');
+      expect(place).toHaveProperty('category');
+      expect(place).toHaveProperty('latitude');
+      expect(place).toHaveProperty('longitude');
+      expect(place).toHaveProperty('totalVisits');
+      expect(place).toHaveProperty('recentVisits');
+      // Should NOT have any user-identifiable data
+      expect(place).not.toHaveProperty('checkIns');
+      expect(place).not.toHaveProperty('userId');
+    });
+  });
+
+  // ─────────────────────────────────────────────
   // getMemoriesTimeline()
   // ─────────────────────────────────────────────
   describe('getMemoriesTimeline()', () => {

@@ -94,12 +94,12 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress }) => {
   }, [scaleAnim]);
 
   const getCompatibilityColor = (percent: number): string => {
-    if (percent >= 85) return colors.success;
+    if (percent >= 90) return colors.success;
     if (percent >= 70) return colors.accent;
     return colors.textSecondary;
   };
 
-  const isSuperCompatible = item.compatibilityPercent >= 85;
+  const isSuperCompatible = item.compatibilityPercent >= 90;
 
   const avatarContent = item.photoUrl ? (
     <Image source={{ uri: item.photoUrl }} style={styles.avatarImage} />

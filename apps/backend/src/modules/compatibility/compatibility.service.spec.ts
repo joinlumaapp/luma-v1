@@ -6,12 +6,21 @@ import {
 } from '@nestjs/common';
 import { CompatibilityService } from './compatibility.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { BadgesService } from '../badges/badges.service';
 
 // ---------------------------------------------------------------------------
-// Prisma mock factory
+// Mock factories
 // ---------------------------------------------------------------------------
+const mockBadgesService = () => ({
+  checkAndAwardBadges: jest.fn().mockResolvedValue({ awarded: [] }),
+  awardBadge: jest.fn().mockResolvedValue({ awarded: false, goldReward: 0 }),
+});
+
 const mockPrismaService = () => ({
   user: {
+    findUnique: jest.fn(),
+  },
+  userProfile: {
     findUnique: jest.fn(),
   },
   compatibilityQuestion: {
@@ -26,6 +35,7 @@ const mockPrismaService = () => ({
   compatibilityScore: {
     findUnique: jest.fn(),
     upsert: jest.fn(),
+    count: jest.fn(),
   },
 });
 
@@ -40,11 +50,18 @@ describe('CompatibilityService', () => {
       providers: [
         CompatibilityService,
         { provide: PrismaService, useFactory: mockPrismaService },
+        { provide: BadgesService, useFactory: mockBadgesService },
       ],
     }).compile();
 
     service = module.get<CompatibilityService>(CompatibilityService);
     prisma = module.get(PrismaService) as unknown as MockPrisma;
+
+    // Default mocks for daily limit check (used by getScoreWithUser)
+    // Individual tests can override these as needed
+    prisma.user.findUnique.mockResolvedValue({ packageTier: 'RESERVED' });
+    prisma.compatibilityScore.count.mockResolvedValue(0);
+    prisma.userProfile.findUnique.mockResolvedValue(null);
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -353,16 +370,18 @@ describe('CompatibilityService', () => {
 
       // Should recalculate since cache is stale
       expect(prisma.userAnswer.findMany).toHaveBeenCalled();
-      expect(result.finalScore).toBe(0);
+      // No common answers returns MIN_DISPLAY_SCORE (47)
+      expect(result.finalScore).toBe(47);
     });
 
-    it('should return zero score when users have no common answers', async () => {
+    it('should return MIN_DISPLAY_SCORE when users have no common answers', async () => {
       prisma.compatibilityScore.findUnique.mockResolvedValue(null);
       prisma.userAnswer.findMany.mockResolvedValue([]);
 
       const result = await service.getScoreWithUser('aaa', 'bbb');
 
-      expect(result.finalScore).toBe(0);
+      // No common answers returns MIN_DISPLAY_SCORE (47) instead of 0
+      expect(result.finalScore).toBe(47);
       expect(result.level).toBe('NORMAL');
       expect((result as Record<string, unknown>).commonQuestions).toBe(0);
     });
@@ -401,14 +420,69 @@ describe('CompatibilityService', () => {
       expect((result as Record<string, unknown>).isSuperCompatible).toBe(false);
     });
 
-    it('should compute SUPER level when score >= 85', async () => {
+    it('should compute SUPER level when multi-criteria threshold is met (score>=90, all dims>=60, 3+ dims>=90)', async () => {
       prisma.compatibilityScore.findUnique.mockResolvedValueOnce(null);
-      // User A
+      // User A — 3 different categories, all with very similar answers to User B
+      prisma.userAnswer.findMany.mockResolvedValueOnce([
+        {
+          questionId: 'q1',
+          option: { value: 0.95 },
+          question: { weight: 1, category: 'communication', isPremium: false },
+        },
+        {
+          questionId: 'q2',
+          option: { value: 0.90 },
+          question: { weight: 1, category: 'life_goals', isPremium: false },
+        },
+        {
+          questionId: 'q3',
+          option: { value: 0.88 },
+          question: { weight: 1, category: 'values', isPremium: false },
+        },
+      ]);
+      // User B — very similar answers across all 3 categories
+      prisma.userAnswer.findMany.mockResolvedValueOnce([
+        {
+          questionId: 'q1',
+          option: { value: 0.95 },
+          question: { weight: 1, category: 'communication', isPremium: false },
+        },
+        {
+          questionId: 'q2',
+          option: { value: 0.90 },
+          question: { weight: 1, category: 'life_goals', isPremium: false },
+        },
+        {
+          questionId: 'q3',
+          option: { value: 0.88 },
+          question: { weight: 1, category: 'values', isPremium: false },
+        },
+      ]);
+      prisma.compatibilityScore.upsert.mockImplementation(async (args) => ({
+        baseScore: args.create.baseScore,
+        deepScore: args.create.deepScore,
+        finalScore: args.create.finalScore,
+        level: args.create.level,
+        dimensionScores: args.create.dimensionScores,
+      }));
+
+      const result = await service.getScoreWithUser('aaa', 'bbb');
+
+      // All 3 dimensions = 100% similarity, finalScore = 97 (clamped)
+      // Multi-criteria: finalScore>=90, all dims>=60, 3+ dims>=90 -> SUPER
+      expect(result.finalScore).toBe(97);
+      expect(result.level).toBe('SUPER');
+      expect((result as Record<string, unknown>).isSuperCompatible).toBe(true);
+    });
+
+    it('should NOT grant SUPER with only 1 high dimension even if score >= 90', async () => {
+      prisma.compatibilityScore.findUnique.mockResolvedValueOnce(null);
+      // User A — single category with high similarity
       prisma.userAnswer.findMany.mockResolvedValueOnce([
         {
           questionId: 'q1',
           option: { value: 0.9 },
-          question: { weight: 1, category: 'LIFESTYLE', isPremium: false },
+          question: { weight: 1, category: 'VALUES', isPremium: false },
         },
       ]);
       // User B — very similar
@@ -416,7 +490,7 @@ describe('CompatibilityService', () => {
         {
           questionId: 'q1',
           option: { value: 0.95 },
-          question: { weight: 1, category: 'LIFESTYLE', isPremium: false },
+          question: { weight: 1, category: 'VALUES', isPremium: false },
         },
       ]);
       prisma.compatibilityScore.upsert.mockImplementation(async (args) => ({
@@ -430,12 +504,13 @@ describe('CompatibilityService', () => {
       const result = await service.getScoreWithUser('aaa', 'bbb');
 
       // similarity = 1 - |0.9 - 0.95| = 0.95 => 95%
+      // Only 1 dimension >= 90, multi-criteria requires 3+ -> NORMAL
       expect(result.finalScore).toBe(95);
-      expect(result.level).toBe('SUPER');
-      expect((result as Record<string, unknown>).isSuperCompatible).toBe(true);
+      expect(result.level).toBe('NORMAL');
+      expect((result as Record<string, unknown>).isSuperCompatible).toBe(false);
     });
 
-    it('should blend core (70%) and deep (30%) when premium answers exist', async () => {
+    it('should NOT blend premium into finalScore — finalScore always equals core only', async () => {
       prisma.compatibilityScore.findUnique.mockResolvedValueOnce(null);
 
       // User A — two core + one premium
@@ -484,13 +559,15 @@ describe('CompatibilityService', () => {
 
       const result = await service.getScoreWithUser('aaa', 'bbb');
 
-      // Core: (1+1)/(1+1) = 100%
-      // All (including deep): (1+1+1)/(1+1+1) = 100%
-      // Final: 100*0.7 + 100*0.3 = 100
-      expect(result.baseScore).toBe(100);
-      expect(result.deepScore).toBe(100);
-      expect(result.finalScore).toBe(100);
-      expect(result.level).toBe('SUPER');
+      // Core: (1+1)/(1+1) = 100%, clamped to 97
+      // Deep: (1+1+1)/(1+1+1) = 100%, clamped to 97
+      // Final: based on core ONLY = 100%, clamped to 97
+      // MASTER BRIEF: Premium NEVER changes displayed score
+      expect(result.baseScore).toBe(97);
+      expect(result.deepScore).toBe(97);
+      expect(result.finalScore).toBe(97);
+      // Only 2 dimensions (VALUES, DEEP) — needs 3+ dims>=90 for SUPER
+      expect(result.level).toBe('NORMAL');
     });
 
     it('should use weighted scores when questions have different weights', async () => {
@@ -537,6 +614,98 @@ describe('CompatibilityService', () => {
       // total = 3.0/4.0 = 0.75 => 75%
       expect(result.baseScore).toBe(75);
       expect(result.finalScore).toBe(75);
+    });
+
+    it('should clamp scores to [47-97] range — no 100%, minimum 47', async () => {
+      prisma.compatibilityScore.findUnique.mockResolvedValueOnce(null);
+
+      // User A — very low similarity (opposite answers)
+      prisma.userAnswer.findMany.mockResolvedValueOnce([
+        {
+          questionId: 'q1',
+          option: { value: 0.0 },
+          question: { weight: 1, category: 'VALUES', isPremium: false },
+        },
+      ]);
+      // User B — opposite
+      prisma.userAnswer.findMany.mockResolvedValueOnce([
+        {
+          questionId: 'q1',
+          option: { value: 1.0 },
+          question: { weight: 1, category: 'VALUES', isPremium: false },
+        },
+      ]);
+      prisma.compatibilityScore.upsert.mockImplementation(async (args) => ({
+        baseScore: args.create.baseScore,
+        deepScore: args.create.deepScore,
+        finalScore: args.create.finalScore,
+        level: args.create.level,
+        dimensionScores: args.create.dimensionScores,
+      }));
+
+      const result = await service.getScoreWithUser('aaa', 'bbb');
+
+      // raw similarity = 0%, clamped to minimum 47
+      expect(result.finalScore).toBeGreaterThanOrEqual(47);
+      expect(result.finalScore).toBeLessThanOrEqual(97);
+      expect(result.level).toBe('NORMAL');
+    });
+
+    it('should boost scores for complementary categories (balanced opposites)', async () => {
+      prisma.compatibilityScore.findUnique.mockResolvedValueOnce(null);
+
+      // User A — answers for complementary category (social_compatibility)
+      prisma.userAnswer.findMany.mockResolvedValueOnce([
+        {
+          questionId: 'q1',
+          option: { value: 0.0 }, // introvert
+          question: { weight: 1, category: 'social_compatibility', isPremium: false },
+        },
+      ]);
+      // User B — opposite answer (extrovert)
+      prisma.userAnswer.findMany.mockResolvedValueOnce([
+        {
+          questionId: 'q1',
+          option: { value: 1.0 },
+          question: { weight: 1, category: 'social_compatibility', isPremium: false },
+        },
+      ]);
+      prisma.compatibilityScore.upsert.mockImplementation(async (args) => ({
+        baseScore: args.create.baseScore,
+        deepScore: args.create.deepScore,
+        finalScore: args.create.finalScore,
+        level: args.create.level,
+        dimensionScores: args.create.dimensionScores,
+      }));
+
+      const result = await service.getScoreWithUser('aaa', 'bbb');
+
+      // Complementary: floor at 0.4 => 0.4 + 0.6*0 = 0.4 => 40%
+      // Clamped to min 47 — complementary opposites never go below 47
+      expect(result.finalScore).toBeGreaterThanOrEqual(47);
+
+      // Compare with non-complementary opposite answers
+      prisma.compatibilityScore.findUnique.mockResolvedValueOnce(null);
+      prisma.userAnswer.findMany.mockResolvedValueOnce([
+        {
+          questionId: 'q2',
+          option: { value: 0.0 },
+          question: { weight: 1, category: 'values', isPremium: false },
+        },
+      ]);
+      prisma.userAnswer.findMany.mockResolvedValueOnce([
+        {
+          questionId: 'q2',
+          option: { value: 1.0 },
+          question: { weight: 1, category: 'values', isPremium: false },
+        },
+      ]);
+
+      const resultNonComp = await service.getScoreWithUser('ccc', 'ddd');
+
+      // Non-complementary: pure similarity = 0 => 0%, clamped to 47
+      // Both get clamped to 47, but the complementary raw is higher
+      expect(resultNonComp.finalScore).toBe(47);
     });
 
     it('should order user IDs consistently for storage', async () => {

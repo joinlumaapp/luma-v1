@@ -1,4 +1,4 @@
-// Onboarding step 1/7: First name input
+// Onboarding step 2/7: First name input
 
 import React, { useState } from 'react';
 import {
@@ -21,7 +21,7 @@ import { spacing, borderRadius, layout } from '../../theme/spacing';
 
 type NameNavigationProp = NativeStackNavigationProp<OnboardingStackParamList, 'Name'>;
 
-const CURRENT_STEP = 1;
+const CURRENT_STEP = 2;
 
 export const NameScreen: React.FC = () => {
   const navigation = useNavigation<NameNavigationProp>();
