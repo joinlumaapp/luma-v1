@@ -25,21 +25,21 @@ const INTENTION_OPTIONS = [
   {
     id: 'serious_relationship',
     label: 'Uzun Vadeli Uyumluluk',
-    description: 'Uzun vadeli uyumluluk ar\u0131yorum.',
+    description: 'Uzun vadeli uyumluluk arıyorum.',
     icon: '***',
     color: colors.secondary,
   },
   {
     id: 'exploring',
-    label: 'Do\u011Fal Ba\u011Flant\u0131',
-    description: 'Do\u011Fal bir ba\u011Flant\u0131ya a\u00E7\u0131\u011F\u0131m.',
+    label: 'Doğal Bağlantı',
+    description: 'Doğal bir bağlantıya açığım.',
     icon: '>>',
     color: colors.primary,
   },
   {
     id: 'not_sure',
-    label: '\u015Eimdilik Ke\u015Ffediyorum',
-    description: '\u015Eimdilik ke\u015Ffediyorum, ak\u0131\u015F\u0131na b\u0131rak\u0131yorum.',
+    label: 'Şimdilik Keşfediyorum',
+    description: 'Şimdilik keşfediyorum, akışına bırakıyorum.',
     icon: '??',
     color: colors.accent,
   },
@@ -68,7 +68,7 @@ export const IntentionTagScreen: React.FC = () => {
       <View style={styles.content}>
         <Text style={styles.title}>Niyetin Ne?</Text>
         <Text style={styles.subtitle}>
-          Seni benzer niyetlere sahip ki\u015Filerle e\u015Fle\u015Ftirmemize yard\u0131mc\u0131 olur.
+          Seni benzer niyetlere sahip kişilerle eşleştirmemize yardımcı olur.
         </Text>
 
         <View style={styles.cardsContainer}>
@@ -108,7 +108,7 @@ export const IntentionTagScreen: React.FC = () => {
         </View>
 
         <Text style={styles.hint}>
-          Bu se\u00E7im daha sonra profil ayarlar\u0131ndan de\u011Fi\u015Ftirilebilir.
+          Bu seçim daha sonra profil ayarlarından değiştirilebilir.
         </Text>
       </View>
 

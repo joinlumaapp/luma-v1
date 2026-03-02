@@ -21,9 +21,9 @@ import { PROFILE_CONFIG } from '../../constants/config';
 const CURRENT_STEP = 7;
 
 const BIO_PROMPTS = [
-  'Bos zamanlarinda ne yapmayi seversin?',
-  'Ideal bir hafta sonu nasil gecer?',
-  'Hayatta en cok neye deger verirsin?',
+  'Boş zamanlarında ne yapmayı seversin?',
+  'İdeal bir hafta sonu nasıl geçer?',
+  'Hayatta en çok neye değer verirsin?',
 ];
 
 export const BioScreen: React.FC = () => {
@@ -58,9 +58,9 @@ export const BioScreen: React.FC = () => {
 
       {/* Content */}
       <View style={styles.content}>
-        <Text style={styles.title}>Hakkinda</Text>
+        <Text style={styles.title}>Hakkında</Text>
         <Text style={styles.subtitle}>
-          Kendini tanimla. Ilgi cekici bir bio eslesme sansin arttirir.
+          Kendini tanımla. İlgi çekici bir bio eşleşme şansını arttırır.
         </Text>
 
         {/* Prompt suggestions */}
@@ -126,7 +126,7 @@ export const BioScreen: React.FC = () => {
           <Text style={styles.continueButtonText}>Devam</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
-          <Text style={styles.skipText}>Simdilik Atla</Text>
+          <Text style={styles.skipText}>Şimdilik Atla</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
