@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsNotEmpty,
   IsString,
+  MinLength,
   MaxLength,
   IsOptional,
   IsIn,
@@ -16,6 +17,7 @@ export class SendMessageDto {
   })
   @IsNotEmpty()
   @IsString()
+  @MinLength(1)
   @MaxLength(1000)
   content!: string;
 

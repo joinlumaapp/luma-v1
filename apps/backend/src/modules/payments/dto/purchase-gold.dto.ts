@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsNumber, Min, IsIn } from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber, Min, MaxLength, IsIn } from 'class-validator';
 
 export class PurchaseGoldDto {
   @ApiProperty({
@@ -14,6 +14,7 @@ export class PurchaseGoldDto {
   })
   @IsNotEmpty()
   @IsString()
+  @MaxLength(10000)
   receipt!: string;
 
   @ApiProperty({

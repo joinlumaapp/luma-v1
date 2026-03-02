@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BadgesService } from '../badges/badges.service';
@@ -17,6 +18,8 @@ export interface CoupleMatch {
 
 @Injectable()
 export class RelationshipsService {
+  private readonly logger = new Logger(RelationshipsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly badgesService: BadgesService,
@@ -90,8 +93,8 @@ export class RelationshipsService {
           });
 
           // Award couple_goal badge to both users (non-blocking)
-          this.badgesService.checkAndAwardBadges(userId, 'relationship').catch(() => {});
-          this.badgesService.checkAndAwardBadges(partnerId, 'relationship').catch(() => {});
+          this.badgesService.checkAndAwardBadges(userId, 'relationship').catch((err) => this.logger.warn('Badge check failed', err.message));
+          this.badgesService.checkAndAwardBadges(partnerId, 'relationship').catch((err) => this.logger.warn('Badge check failed', err.message));
 
           return {
             relationshipId: relationship.id,

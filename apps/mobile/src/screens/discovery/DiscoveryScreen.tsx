@@ -160,7 +160,7 @@ export const DiscoveryScreen: React.FC = () => {
   const currentMatchId = useDiscoveryStore((s) => s.currentMatchId);
   const matchAnimationType = useDiscoveryStore((s) => s.matchAnimationType);
   const dismissMatch = useDiscoveryStore((s) => s.dismissMatch);
-  const userFirstName = useProfileStore((s) => s.profile.firstName);
+  const userFirstName = useProfileStore((s) => s.profile?.firstName ?? '');
   const canUndo = useDiscoveryStore((s) => s.canUndo);
   const undoLastSwipe = useDiscoveryStore((s) => s.undoLastSwipe);
   const showSuperLikeGlow = useDiscoveryStore((s) => s.showSuperLikeGlow);
@@ -197,10 +197,10 @@ export const DiscoveryScreen: React.FC = () => {
   const superGlowScale = useSharedValue(0.8);
 
   // ─── Derived card refs ─────────────────────────────────────
-  const currentCard = cards[currentIndex];
+  const currentCard = currentIndex < cards.length ? cards[currentIndex] : undefined;
   const nextCard = currentIndex + 1 < cards.length ? cards[currentIndex + 1] : null;
-  const hasMoreCards = currentIndex < cards.length;
-  const matchedCard = showMatchAnimation && currentIndex > 0
+  const hasMoreCards = currentIndex < cards.length && currentCard !== undefined;
+  const matchedCard = showMatchAnimation && currentIndex > 0 && currentIndex - 1 < cards.length
     ? cards[currentIndex - 1]
     : undefined;
 
@@ -298,7 +298,7 @@ export const DiscoveryScreen: React.FC = () => {
         params: {
           matchId: currentMatchId,
           partnerName: matchedCard.name,
-          partnerPhotoUrl: matchedCard.photoUrls[0] ?? '',
+          partnerPhotoUrl: matchedCard.photoUrls?.[0] ?? '',
         },
       });
     }
@@ -616,6 +616,9 @@ export const DiscoveryScreen: React.FC = () => {
 
   // ─── Main render ───────────────────────────────────────────
 
+  // Safety: TypeScript cannot narrow through derived booleans, so guard explicitly
+  if (!currentCard) return null;
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
@@ -796,18 +799,20 @@ export const DiscoveryScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* Match celebration overlay */}
-      <MatchAnimation
-        visible={showMatchAnimation}
-        matchName={matchedCard?.name ?? ''}
-        userName={userFirstName || undefined}
-        compatibilityScore={matchedCard?.compatibilityPercent ?? 0}
-        isSuperCompatible={matchAnimationType === 'super_compatibility'}
-        conversationStarters={matchConversationStarters}
-        compatibilityExplanation={matchExplanation}
-        onSendMessage={handleMatchSendMessage}
-        onClose={handleMatchDismiss}
-      />
+      {/* Match celebration overlay — only render when matchedCard exists */}
+      {(!showMatchAnimation || matchedCard) && (
+        <MatchAnimation
+          visible={showMatchAnimation && !!matchedCard}
+          matchName={matchedCard?.name ?? ''}
+          userName={userFirstName || undefined}
+          compatibilityScore={matchedCard?.compatibilityPercent ?? 0}
+          isSuperCompatible={matchAnimationType === 'super_compatibility'}
+          conversationStarters={matchConversationStarters}
+          compatibilityExplanation={matchExplanation}
+          onSendMessage={handleMatchSendMessage}
+          onClose={handleMatchDismiss}
+        />
+      )}
     </View>
   );
 };

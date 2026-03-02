@@ -246,7 +246,7 @@ export const ChatScreen: React.FC = () => {
         aspect: [4, 3],
       });
 
-      if (!result.canceled && result.assets[0]) {
+      if (!result.canceled && result.assets?.length && result.assets[0]) {
         setImagePreview(result.assets[0].uri);
       }
     } catch {

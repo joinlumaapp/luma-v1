@@ -269,7 +269,7 @@ export class PaymentsService {
     this.logger.log(`User ${userId} subscribed to ${dto.packageTier}`);
 
     // Check badges after subscription (non-blocking)
-    this.badgesService.checkAndAwardBadges(userId, 'subscription').catch(() => {});
+    this.badgesService.checkAndAwardBadges(userId, 'subscription').catch((err) => this.logger.warn('Badge check failed', err.message));
 
     return {
       subscribed: true,

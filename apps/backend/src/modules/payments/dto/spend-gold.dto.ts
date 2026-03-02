@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsOptional, IsIn } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsIn, IsNumber, Min } from 'class-validator';
 
 const VALID_GOLD_ACTIONS = ['harmony_extension', 'profile_boost', 'super_like'] as const;
 
@@ -12,6 +12,16 @@ export class SpendGoldDto {
   @IsNotEmpty()
   @IsIn(VALID_GOLD_ACTIONS)
   action!: string;
+
+  @ApiProperty({
+    description: 'Gold amount to spend (defaults to action cost if not specified)',
+    example: 1,
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  amount?: number;
 
   @ApiProperty({
     description: 'Optional reference ID (e.g. session ID for harmony extension, target user ID for super like)',

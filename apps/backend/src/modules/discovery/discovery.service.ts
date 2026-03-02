@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BadgesService } from '../badges/badges.service';
@@ -58,6 +59,8 @@ const MAX_PHOTO_COUNT_FOR_SCORE = 6;
 
 @Injectable()
 export class DiscoveryService {
+  private readonly logger = new Logger(DiscoveryService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly badgesService: BadgesService,
@@ -519,12 +522,12 @@ export class DiscoveryService {
     });
 
     // Award badge checks after swipe (non-blocking)
-    this.badgesService.checkAndAwardBadges(userId, 'swipe').catch(() => {});
+    this.badgesService.checkAndAwardBadges(userId, 'swipe').catch((err) => this.logger.warn('Badge check failed', err.message));
 
     // If match was created, check match-related badges for both users
     if (result.isMatch) {
-      this.badgesService.checkAndAwardBadges(userId, 'match').catch(() => {});
-      this.badgesService.checkAndAwardBadges(dto.targetUserId, 'match').catch(() => {});
+      this.badgesService.checkAndAwardBadges(userId, 'match').catch((err) => this.logger.warn('Badge check failed', err.message));
+      this.badgesService.checkAndAwardBadges(dto.targetUserId, 'match').catch((err) => this.logger.warn('Badge check failed', err.message));
     }
 
     return {

@@ -55,7 +55,7 @@ export const MatchDetailScreen: React.FC = () => {
     navigation.navigate('Chat', {
       matchId,
       partnerName: selectedMatch?.name ?? '',
-      partnerPhotoUrl: selectedMatch?.photos[0] ?? '',
+      partnerPhotoUrl: selectedMatch?.photos?.[0] ?? '',
     });
   };
 

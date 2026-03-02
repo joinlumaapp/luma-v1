@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BadgesService } from '../badges/badges.service';
@@ -18,6 +19,8 @@ const CARDS_PER_EXTENSION = 2; // Extra cards per extension
 
 @Injectable()
 export class HarmonyService {
+  private readonly logger = new Logger(HarmonyService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly badgesService: BadgesService,
@@ -277,8 +280,8 @@ export class HarmonyService {
       session.status = 'ENDED';
 
       // Check chat_master badge for both participants (non-blocking)
-      this.badgesService.checkAndAwardBadges(session.userAId, 'harmony').catch(() => {});
-      this.badgesService.checkAndAwardBadges(session.userBId, 'harmony').catch(() => {});
+      this.badgesService.checkAndAwardBadges(session.userAId, 'harmony').catch((err) => this.logger.warn('Badge check failed', err.message));
+      this.badgesService.checkAndAwardBadges(session.userBId, 'harmony').catch((err) => this.logger.warn('Badge check failed', err.message));
     }
 
     // Get cards and messages
