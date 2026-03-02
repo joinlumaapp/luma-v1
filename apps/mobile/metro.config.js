@@ -15,8 +15,21 @@ config.resolver.nodeModulesPaths = [
   path.resolve(monorepoRoot, 'node_modules'),
 ];
 
+// Windows: .bin symlink'leri EACCES hatası veriyor — watcher'dan hariç tut
+config.watcher = {
+  ...config.watcher,
+  additionalExclusions: [
+    '**/node_modules/.bin/**',
+    '**/.git/**',
+  ],
+};
+
+config.resolver.blockList = [
+  /node_modules[/\\]\.bin[/\\].*/,
+  /\.git[/\\].*/,
+];
+
 // Backup resolver: AppEntry.js ../../App importunu apps/mobile/App.tsx'e yönlendir.
-// Root App.js bridge dosyası birincil çözümdür, bu sadece yedektir.
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (moduleName === '../../App') {
     return {

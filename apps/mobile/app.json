@@ -13,13 +13,7 @@
       "backgroundColor": "#0F0F23"
     },
     "updates": {
-      "enabled": true,
-      "fallbackToCacheTimeout": 30000,
-      "checkAutomatically": "ON_LOAD",
-      "url": "https://u.expo.dev/EAS_PROJECT_ID_PLACEHOLDER"
-    },
-    "runtimeVersion": {
-      "policy": "appVersion"
+      "enabled": false
     },
     "ios": {
       "supportsTablet": false,
@@ -88,11 +82,7 @@
         }
       ]
     ],
-    "extra": {
-      "eas": {
-        "projectId": "EAS_PROJECT_ID_PLACEHOLDER"
-      }
-    },
+    "extra": {},
     "owner": "luma-dating"
   }
 }
