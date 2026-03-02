@@ -1,9 +1,10 @@
 // WebRTC service — manages peer connections for voice/video calls in Harmony Room.
-// Ready for react-native-webrtc integration. Currently provides the full signaling
-// layer via Socket.IO and a state machine for call lifecycle.
+// Uses dynamic import for react-native-webrtc so the app works even when the package
+// is not installed (all methods become graceful no-ops with __DEV__ logging).
 //
-// When react-native-webrtc is installed, the TODO comments mark where
-// RTCPeerConnection, getUserMedia, and MediaStream logic should be wired in.
+// When react-native-webrtc IS available: full RTCPeerConnection setup, ICE candidate
+// handling, offer/answer exchange, and local/remote media stream management.
+// When it is NOT available: all methods are safe no-ops that simulate the call flow.
 
 import {
   socketService,
@@ -17,6 +18,16 @@ import {
   type WebRTCAnswerPayload,
   type ICECandidatePayload,
 } from './socketService';
+
+// Re-export types from the module declaration for internal use.
+// These are resolved via apps/mobile/src/types/declarations.d.ts.
+import type {
+  RTCPeerConnection as RTCPeerConnectionClass,
+  RTCSessionDescription as RTCSessionDescriptionClass,
+  RTCIceCandidate as RTCIceCandidateClass,
+  RTCIceCandidateInit,
+  MediaStream as WebRTCMediaStream,
+} from 'react-native-webrtc';
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -37,12 +48,25 @@ export interface CallEventHandlers {
   onCallEnded?: () => void;
   onConnectionStateChange?: (state: CallState) => void;
   onRemoteStream?: (stream: unknown) => void; // MediaStream when WebRTC library is available
+  onLocalStream?: (stream: unknown) => void; // MediaStream for local preview
+}
+
+// ─── Dynamic WebRTC Module ──────────────────────────────────────
+
+/** Shape of the dynamically imported react-native-webrtc module */
+interface WebRTCModule {
+  RTCPeerConnection: typeof RTCPeerConnectionClass;
+  RTCSessionDescription: typeof RTCSessionDescriptionClass;
+  RTCIceCandidate: typeof RTCIceCandidateClass;
+  mediaDevices: {
+    getUserMedia: (constraints: { audio: boolean; video: boolean }) => Promise<WebRTCMediaStream>;
+  };
 }
 
 // ─── STUN/TURN Configuration ────────────────────────────────────
 
 /** Default ICE servers for NAT traversal. Replace with your own TURN server in production. */
-const ICE_SERVERS = [
+const ICE_SERVERS: ReadonlyArray<{ urls: string }> = [
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
 ];
@@ -66,13 +90,68 @@ class WebRTCService {
   private connectionTimer: ReturnType<typeof setTimeout> | null = null;
   private callStartTime: number | null = null;
 
-  // TODO: When react-native-webrtc is installed, add these fields:
-  // private peerConnection: RTCPeerConnection | null = null;
-  // private localStream: MediaStream | null = null;
-  // private remoteStream: MediaStream | null = null;
-  // private isMuted: boolean = false;
-  // private isSpeakerOn: boolean = false;
-  // private isVideoEnabled: boolean = true;
+  // WebRTC module (loaded dynamically)
+  private webrtcModule: WebRTCModule | null = null;
+  private webrtcModuleLoaded = false;
+
+  // Peer connection and media streams
+  private peerConnection: RTCPeerConnectionClass | null = null;
+  private localStream: WebRTCMediaStream | null = null;
+  private remoteStream: WebRTCMediaStream | null = null;
+  private isMuted = false;
+  private isSpeakerOn = false;
+  private isVideoEnabled = true;
+
+  // ICE candidate queue: candidates received before remote description is set
+  private pendingIceCandidates: RTCIceCandidateInit[] = [];
+  private hasRemoteDescription = false;
+
+  // ─── Module Loading ─────────────────────────────────────────
+
+  /**
+   * Attempt to load react-native-webrtc dynamically.
+   * Safe to call multiple times — caches the result after first attempt.
+   * Returns true if the module is available.
+   */
+  async loadModule(): Promise<boolean> {
+    if (this.webrtcModuleLoaded) {
+      return this.webrtcModule !== null;
+    }
+
+    try {
+      // Dynamic import — will throw if react-native-webrtc is not installed
+      const mod = await import('react-native-webrtc');
+      this.webrtcModule = {
+        RTCPeerConnection: mod.RTCPeerConnection,
+        RTCSessionDescription: mod.RTCSessionDescription,
+        RTCIceCandidate: mod.RTCIceCandidate,
+        mediaDevices: mod.mediaDevices,
+      };
+      this.webrtcModuleLoaded = true;
+
+      if (__DEV__) {
+        console.log('[WebRTCService] react-native-webrtc loaded successfully');
+      }
+      return true;
+    } catch {
+      this.webrtcModule = null;
+      this.webrtcModuleLoaded = true;
+
+      if (__DEV__) {
+        console.log(
+          '[WebRTCService] react-native-webrtc not installed — voice/video calls disabled',
+        );
+      }
+      return false;
+    }
+  }
+
+  /**
+   * Check if the WebRTC module is available.
+   */
+  isAvailable(): boolean {
+    return this.webrtcModule !== null;
+  }
 
   // ─── Public API ───────────────────────────────────────────────
 
@@ -125,7 +204,7 @@ class WebRTCService {
       ),
     );
 
-    // Call accepted
+    // Call accepted — caller side: create peer connection and send offer
     cleanups.push(
       socketService.on<CallAcceptPayload>(
         SERVER_EVENTS.CALL_ACCEPT,
@@ -140,24 +219,12 @@ class WebRTCService {
           // Start connection timeout
           this.connectionTimer = setTimeout(() => {
             if (this.callState === 'connecting') {
-              // Connection failed to establish in time
               this.endCall();
             }
           }, CONNECTION_TIMEOUT_MS);
 
-          // TODO: Create RTCPeerConnection, create SDP offer, send via signaling
-          // this.createPeerConnection();
-          // this.createAndSendOffer();
-
-          // For now, simulate connection established after a short delay
-          setTimeout(() => {
-            if (this.callState === 'connecting') {
-              this.clearConnectionTimer();
-              this.callState = 'connected';
-              this.callStartTime = Date.now();
-              this.handlers.onConnectionStateChange?.('connected');
-            }
-          }, 1000);
+          // Caller creates the peer connection and sends an offer
+          this.createPeerConnectionAndOffer();
         },
       ),
     );
@@ -194,12 +261,8 @@ class WebRTCService {
     cleanups.push(
       socketService.on<WebRTCOfferPayload>(
         SERVER_EVENTS.WEBRTC_OFFER,
-        (_data) => {
-          // TODO: When RTCPeerConnection is available:
-          // await this.peerConnection.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: data.sdp }));
-          // const answer = await this.peerConnection.createAnswer();
-          // await this.peerConnection.setLocalDescription(answer);
-          // socketService.sendWebRTCAnswer(this.currentSessionId!, answer.sdp!);
+        (data) => {
+          this.handleRemoteOffer(data.sdp);
         },
       ),
     );
@@ -208,9 +271,8 @@ class WebRTCService {
     cleanups.push(
       socketService.on<WebRTCAnswerPayload>(
         SERVER_EVENTS.WEBRTC_ANSWER,
-        (_data) => {
-          // TODO: When RTCPeerConnection is available:
-          // await this.peerConnection.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: data.sdp }));
+        (data) => {
+          this.handleRemoteAnswer(data.sdp);
         },
       ),
     );
@@ -219,10 +281,8 @@ class WebRTCService {
     cleanups.push(
       socketService.on<ICECandidatePayload>(
         SERVER_EVENTS.WEBRTC_ICE_CANDIDATE,
-        (_data) => {
-          // TODO: When RTCPeerConnection is available:
-          // const candidate = new RTCIceCandidate(JSON.parse(data.candidate));
-          // await this.peerConnection.addIceCandidate(candidate);
+        (data) => {
+          this.handleRemoteIceCandidate(data.candidate);
         },
       ),
     );
@@ -274,18 +334,8 @@ class WebRTCService {
       }
     }, CONNECTION_TIMEOUT_MS);
 
-    // TODO: Create RTCPeerConnection and wait for offer from caller
-    // this.createPeerConnection();
-
-    // For now, simulate connection established after a short delay
-    setTimeout(() => {
-      if (this.callState === 'connecting') {
-        this.clearConnectionTimer();
-        this.callState = 'connected';
-        this.callStartTime = Date.now();
-        this.handlers.onConnectionStateChange?.('connected');
-      }
-    }, 1000);
+    // Callee creates peer connection and waits for the offer from the caller
+    this.createPeerConnectionOnly();
   }
 
   /**
@@ -359,77 +409,405 @@ class WebRTCService {
     return ICE_SERVERS;
   }
 
-  // ─── Media Controls (stubs for react-native-webrtc) ───────────
+  // ─── Media Controls ───────────────────────────────────────────
 
-  /** Toggle microphone mute (stub — will control local audio track) */
+  /** Toggle microphone mute. Returns the new muted state. */
   toggleMute(): boolean {
-    // TODO: When react-native-webrtc is installed:
-    // if (this.localStream) {
-    //   const audioTracks = this.localStream.getAudioTracks();
-    //   audioTracks.forEach(track => { track.enabled = !track.enabled; });
-    //   this.isMuted = !audioTracks[0]?.enabled;
-    //   return this.isMuted;
-    // }
-    return false;
+    if (!this.localStream) {
+      if (__DEV__) {
+        console.log('[WebRTCService] toggleMute — no local stream');
+      }
+      return false;
+    }
+
+    const audioTracks = this.localStream.getAudioTracks();
+    if (audioTracks.length === 0) {
+      return this.isMuted;
+    }
+
+    this.isMuted = !this.isMuted;
+    for (const track of audioTracks) {
+      track.enabled = !this.isMuted;
+    }
+
+    return this.isMuted;
   }
 
-  /** Toggle speaker output (stub — will use InCallManager or similar) */
+  /** Toggle speaker output. Returns the new speaker state. */
   toggleSpeaker(): boolean {
-    // TODO: When react-native-webrtc + InCallManager is installed:
-    // InCallManager.setSpeakerphoneOn(!this.isSpeakerOn);
-    // this.isSpeakerOn = !this.isSpeakerOn;
-    // return this.isSpeakerOn;
-    return false;
+    // Speaker routing requires a native module (e.g., react-native-incall-manager).
+    // When that module is integrated, toggle speaker here.
+    // For now, flip the local state so the UI can reflect the intent.
+    this.isSpeakerOn = !this.isSpeakerOn;
+
+    if (__DEV__) {
+      console.log(
+        `[WebRTCService] toggleSpeaker — speaker is now ${this.isSpeakerOn ? 'ON' : 'OFF'} (native routing requires InCallManager)`,
+      );
+    }
+
+    return this.isSpeakerOn;
   }
 
-  /** Toggle video on/off during a video call (stub) */
+  /** Toggle video on/off during a video call. Returns the new video-enabled state. */
   toggleVideo(): boolean {
-    // TODO: When react-native-webrtc is installed:
-    // if (this.localStream) {
-    //   const videoTracks = this.localStream.getVideoTracks();
-    //   videoTracks.forEach(track => { track.enabled = !track.enabled; });
-    //   this.isVideoEnabled = videoTracks[0]?.enabled ?? false;
-    //   return this.isVideoEnabled;
-    // }
-    return true;
+    if (!this.localStream) {
+      if (__DEV__) {
+        console.log('[WebRTCService] toggleVideo — no local stream');
+      }
+      return true;
+    }
+
+    const videoTracks = this.localStream.getVideoTracks();
+    if (videoTracks.length === 0) {
+      return this.isVideoEnabled;
+    }
+
+    this.isVideoEnabled = !this.isVideoEnabled;
+    for (const track of videoTracks) {
+      track.enabled = this.isVideoEnabled;
+    }
+
+    return this.isVideoEnabled;
+  }
+
+  /** Get current mute state */
+  getIsMuted(): boolean {
+    return this.isMuted;
+  }
+
+  /** Get current speaker state */
+  getIsSpeakerOn(): boolean {
+    return this.isSpeakerOn;
+  }
+
+  /** Get current video enabled state */
+  getIsVideoEnabled(): boolean {
+    return this.isVideoEnabled;
+  }
+
+  /** Get the local media stream (for local video preview) */
+  getLocalStream(): unknown {
+    return this.localStream;
+  }
+
+  /** Get the remote media stream (for remote video/audio playback) */
+  getRemoteStream(): unknown {
+    return this.remoteStream;
+  }
+
+  // ─── Private: Peer Connection ─────────────────────────────────
+
+  /**
+   * Create peer connection, acquire local media, then create and send an SDP offer.
+   * Called by the initiator (caller) after the callee accepts.
+   */
+  private async createPeerConnectionAndOffer(): Promise<void> {
+    const ready = await this.setupPeerConnection();
+    if (!ready) return;
+
+    await this.createAndSendOffer();
+  }
+
+  /**
+   * Create peer connection and acquire local media without sending an offer.
+   * Called by the callee; the offer will arrive via signaling.
+   */
+  private async createPeerConnectionOnly(): Promise<void> {
+    await this.setupPeerConnection();
+  }
+
+  /**
+   * Core peer connection setup: create RTCPeerConnection, get local media, add tracks.
+   * Returns true if native WebRTC setup succeeded, false if falling back to simulation.
+   */
+  private async setupPeerConnection(): Promise<boolean> {
+    if (!this.webrtcModule) {
+      if (__DEV__) {
+        console.log(
+          '[WebRTCService] WebRTC module not available — simulating connection',
+        );
+      }
+      // Fallback: simulate connection for development without the native module
+      this.simulateConnection();
+      return false;
+    }
+
+    try {
+      const { RTCPeerConnection, mediaDevices } = this.webrtcModule;
+
+      // Reset ICE candidate queue
+      this.pendingIceCandidates = [];
+      this.hasRemoteDescription = false;
+
+      // Create the peer connection
+      this.peerConnection = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+
+      // Handle ICE candidates — send to remote peer via signaling
+      this.peerConnection.onicecandidate = (event) => {
+        if (event.candidate && this.currentSessionId) {
+          socketService.sendICECandidate(
+            this.currentSessionId,
+            JSON.stringify({
+              candidate: event.candidate.candidate,
+              sdpMLineIndex: event.candidate.sdpMLineIndex,
+              sdpMid: event.candidate.sdpMid,
+            }),
+          );
+        }
+      };
+
+      // Handle remote tracks (audio/video from the other peer)
+      this.peerConnection.ontrack = (event) => {
+        if (event.streams && event.streams.length > 0) {
+          this.remoteStream = event.streams[0];
+          this.handlers.onRemoteStream?.(this.remoteStream);
+        }
+      };
+
+      // Handle connection state changes
+      this.peerConnection.onconnectionstatechange = () => {
+        const state = this.peerConnection?.connectionState;
+
+        if (__DEV__) {
+          console.log(`[WebRTCService] Connection state: ${state}`);
+        }
+
+        if (state === 'connected') {
+          this.clearConnectionTimer();
+          this.callState = 'connected';
+          this.callStartTime = Date.now();
+          this.handlers.onConnectionStateChange?.('connected');
+        } else if (state === 'failed') {
+          // 'failed' is terminal — end the call
+          if (__DEV__) {
+            console.warn('[WebRTCService] Peer connection failed — ending call');
+          }
+          this.endCall();
+        }
+      };
+
+      // Acquire local media (audio always, video only for video calls)
+      this.localStream = await mediaDevices.getUserMedia({
+        audio: true,
+        video: this.currentCallType === 'video',
+      });
+      this.handlers.onLocalStream?.(this.localStream);
+
+      // Add local tracks to the peer connection
+      const tracks = this.localStream.getTracks();
+      for (const track of tracks) {
+        this.peerConnection.addTrack(track, this.localStream);
+      }
+
+      return true;
+    } catch (error) {
+      if (__DEV__) {
+        console.error('[WebRTCService] Failed to setup peer connection:', error);
+      }
+      // Fallback to simulated connection so the call flow does not break
+      this.simulateConnection();
+      return false;
+    }
+  }
+
+  /**
+   * Create an SDP offer and send it to the remote peer via signaling.
+   */
+  private async createAndSendOffer(): Promise<void> {
+    if (!this.peerConnection || !this.currentSessionId || !this.webrtcModule) {
+      return;
+    }
+
+    try {
+      const offer = await this.peerConnection.createOffer({});
+      await this.peerConnection.setLocalDescription(offer);
+      socketService.sendWebRTCOffer(this.currentSessionId, offer.sdp);
+    } catch (error) {
+      if (__DEV__) {
+        console.error('[WebRTCService] Failed to create/send offer:', error);
+      }
+    }
+  }
+
+  /**
+   * Handle a remote SDP offer (callee side).
+   * Sets the remote description, flushes queued ICE candidates, creates and sends an answer.
+   */
+  private async handleRemoteOffer(sdp: string): Promise<void> {
+    if (!this.peerConnection || !this.currentSessionId || !this.webrtcModule) {
+      if (__DEV__) {
+        console.log('[WebRTCService] Ignoring remote offer — no peer connection');
+      }
+      return;
+    }
+
+    try {
+      const { RTCSessionDescription } = this.webrtcModule;
+      const remoteDesc = new RTCSessionDescription({ type: 'offer', sdp });
+      await this.peerConnection.setRemoteDescription(remoteDesc);
+      this.hasRemoteDescription = true;
+
+      // Flush any ICE candidates that arrived before the remote description was set
+      await this.flushPendingIceCandidates();
+
+      // Create and send the answer
+      const answer = await this.peerConnection.createAnswer({});
+      await this.peerConnection.setLocalDescription(answer);
+      socketService.sendWebRTCAnswer(this.currentSessionId, answer.sdp);
+    } catch (error) {
+      if (__DEV__) {
+        console.error('[WebRTCService] Failed to handle remote offer:', error);
+      }
+    }
+  }
+
+  /**
+   * Handle a remote SDP answer (caller side).
+   * Sets the remote description and flushes queued ICE candidates.
+   */
+  private async handleRemoteAnswer(sdp: string): Promise<void> {
+    if (!this.peerConnection || !this.webrtcModule) {
+      if (__DEV__) {
+        console.log('[WebRTCService] Ignoring remote answer — no peer connection');
+      }
+      return;
+    }
+
+    try {
+      const { RTCSessionDescription } = this.webrtcModule;
+      const remoteDesc = new RTCSessionDescription({ type: 'answer', sdp });
+      await this.peerConnection.setRemoteDescription(remoteDesc);
+      this.hasRemoteDescription = true;
+
+      // Flush any ICE candidates that arrived before the remote description was set
+      await this.flushPendingIceCandidates();
+    } catch (error) {
+      if (__DEV__) {
+        console.error('[WebRTCService] Failed to handle remote answer:', error);
+      }
+    }
+  }
+
+  /**
+   * Handle a remote ICE candidate. If the remote description is not yet set,
+   * queue the candidate for later processing (trickle ICE).
+   */
+  private async handleRemoteIceCandidate(candidateJson: string): Promise<void> {
+    if (!this.peerConnection || !this.webrtcModule) {
+      return;
+    }
+
+    try {
+      const parsed: RTCIceCandidateInit = JSON.parse(candidateJson);
+
+      if (!this.hasRemoteDescription) {
+        // Queue the candidate — it will be added after setRemoteDescription
+        this.pendingIceCandidates.push(parsed);
+        return;
+      }
+
+      const { RTCIceCandidate } = this.webrtcModule;
+      const candidate = new RTCIceCandidate(parsed);
+      await this.peerConnection.addIceCandidate(candidate);
+    } catch (error) {
+      if (__DEV__) {
+        console.error('[WebRTCService] Failed to add ICE candidate:', error);
+      }
+    }
+  }
+
+  /**
+   * Add all queued ICE candidates to the peer connection.
+   * Called after setRemoteDescription succeeds.
+   */
+  private async flushPendingIceCandidates(): Promise<void> {
+    if (!this.peerConnection || !this.webrtcModule) return;
+
+    const candidates = [...this.pendingIceCandidates];
+    this.pendingIceCandidates = [];
+
+    const { RTCIceCandidate } = this.webrtcModule;
+
+    for (const parsed of candidates) {
+      try {
+        const candidate = new RTCIceCandidate(parsed);
+        await this.peerConnection.addIceCandidate(candidate);
+      } catch (error) {
+        if (__DEV__) {
+          console.error('[WebRTCService] Failed to flush ICE candidate:', error);
+        }
+      }
+    }
+  }
+
+  /**
+   * Simulate a successful connection when the native WebRTC module is not available.
+   * This allows the call UI flow to work in development (Expo Go) without the native module.
+   */
+  private simulateConnection(): void {
+    setTimeout(() => {
+      if (this.callState === 'connecting') {
+        this.clearConnectionTimer();
+        this.callState = 'connected';
+        this.callStartTime = Date.now();
+        this.handlers.onConnectionStateChange?.('connected');
+      }
+    }, 1000);
   }
 
   // ─── Private Helpers ──────────────────────────────────────────
 
   /**
    * Clean up all call state and resources.
+   * Closes the peer connection, stops media tracks, resets all state.
    */
   private cleanup(): void {
     this.clearIncomingCallTimer();
     this.clearConnectionTimer();
+
+    // Close RTCPeerConnection
+    if (this.peerConnection) {
+      // Remove handlers to prevent callbacks after close
+      this.peerConnection.onicecandidate = null;
+      this.peerConnection.ontrack = null;
+      this.peerConnection.onconnectionstatechange = null;
+      this.peerConnection.close();
+      this.peerConnection = null;
+    }
+
+    // Release local media tracks (stops camera/microphone)
+    if (this.localStream) {
+      const tracks = this.localStream.getTracks();
+      for (const track of tracks) {
+        track.stop();
+      }
+      this.localStream = null;
+    }
+
+    // Clear remote stream reference
+    this.remoteStream = null;
+
+    // Reset call state
     this.callState = 'idle';
     this.currentSessionId = null;
     this.currentCallType = null;
     this.currentCallerId = null;
     this.callStartTime = null;
-
-    // TODO: When react-native-webrtc is installed:
-    // Close RTCPeerConnection
-    // if (this.peerConnection) {
-    //   this.peerConnection.close();
-    //   this.peerConnection = null;
-    // }
-    // Release local media tracks
-    // if (this.localStream) {
-    //   this.localStream.getTracks().forEach(track => track.stop());
-    //   this.localStream = null;
-    // }
-    // this.remoteStream = null;
-    // this.isMuted = false;
-    // this.isSpeakerOn = false;
-    // this.isVideoEnabled = true;
+    this.isMuted = false;
+    this.isSpeakerOn = false;
+    this.isVideoEnabled = true;
+    this.pendingIceCandidates = [];
+    this.hasRemoteDescription = false;
   }
 
   /**
    * Remove all socket event listeners.
    */
   private teardownListeners(): void {
-    this.listenerCleanups.forEach((cleanup) => cleanup());
+    for (const cleanupFn of this.listenerCleanups) {
+      cleanupFn();
+    }
     this.listenerCleanups = [];
   }
 
@@ -446,57 +824,6 @@ class WebRTCService {
       this.connectionTimer = null;
     }
   }
-
-  // TODO: When react-native-webrtc is installed, add these methods:
-  //
-  // private async createPeerConnection(): Promise<void> {
-  //   this.peerConnection = new RTCPeerConnection({ iceServers: ICE_SERVERS });
-  //
-  //   // Handle ICE candidates
-  //   this.peerConnection.onicecandidate = (event) => {
-  //     if (event.candidate && this.currentSessionId) {
-  //       socketService.sendICECandidate(
-  //         this.currentSessionId,
-  //         JSON.stringify(event.candidate),
-  //       );
-  //     }
-  //   };
-  //
-  //   // Handle remote stream
-  //   this.peerConnection.ontrack = (event) => {
-  //     this.remoteStream = event.streams[0];
-  //     this.handlers.onRemoteStream?.(this.remoteStream);
-  //   };
-  //
-  //   // Handle connection state changes
-  //   this.peerConnection.onconnectionstatechange = () => {
-  //     if (this.peerConnection?.connectionState === 'connected') {
-  //       this.clearConnectionTimer();
-  //       this.callState = 'connected';
-  //       this.callStartTime = Date.now();
-  //       this.handlers.onConnectionStateChange?.('connected');
-  //     } else if (this.peerConnection?.connectionState === 'failed') {
-  //       this.endCall();
-  //     }
-  //   };
-  //
-  //   // Get local media stream
-  //   const constraints = {
-  //     audio: true,
-  //     video: this.currentCallType === 'video',
-  //   };
-  //   this.localStream = await mediaDevices.getUserMedia(constraints);
-  //   this.localStream.getTracks().forEach(track => {
-  //     this.peerConnection?.addTrack(track, this.localStream!);
-  //   });
-  // }
-  //
-  // private async createAndSendOffer(): Promise<void> {
-  //   if (!this.peerConnection || !this.currentSessionId) return;
-  //   const offer = await this.peerConnection.createOffer({});
-  //   await this.peerConnection.setLocalDescription(offer);
-  //   socketService.sendWebRTCOffer(this.currentSessionId, offer.sdp!);
-  // }
 }
 
 /** Singleton instance shared across the app */

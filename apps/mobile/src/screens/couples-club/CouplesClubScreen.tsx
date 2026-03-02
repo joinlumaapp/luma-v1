@@ -328,9 +328,13 @@ export const CouplesClubScreen: React.FC = () => {
   }, []);
 
   const loadLeaderboard = useCallback(async () => {
-    // TODO: Backend does not have leaderboard endpoint yet
-    setLeaderboard([]);
-    setMyRank(null);
+    try {
+      const data = await couplesClubService.getLeaderboard();
+      setLeaderboard(data.entries);
+      setMyRank(data.myRank);
+    } catch {
+      // Silently handle
+    }
   }, []);
 
   const loadData = useCallback(async () => {
@@ -385,14 +389,20 @@ export const CouplesClubScreen: React.FC = () => {
 
     setIsCreating(true);
     try {
-      // TODO: Backend does not have event creation endpoint yet
-      Alert.alert('Bilgi', 'Etkinlik oluşturma yakında aktif olacak.', [{ text: 'Tamam' }]);
+      const created = await couplesClubService.createEvent({
+        title: newTitle.trim(),
+        description: newDescription.trim(),
+        date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        location: newLocation.trim(),
+        capacity: parseInt(newCapacity, 10) || 20,
+      });
+      setEvents((prev) => [created, ...prev]);
       setCreateModalVisible(false);
       setNewTitle('');
       setNewDescription('');
       setNewLocation('');
       setNewCapacity('');
-      Alert.alert('Başarılı', 'Etkinlik oluşturuldu!', [{ text: 'Tamam' }]);
+      Alert.alert('Basarili', 'Etkinlik olusturuldu!', [{ text: 'Tamam' }]);
     } catch {
       Alert.alert('Hata', 'Etkinlik oluşturulamadı. Lütfen tekrar deneyin.', [
         { text: 'Tamam' },

@@ -26,6 +26,8 @@ const mockPrisma = {
   harmonySession: { count: jest.fn() },
   placeCheckIn: { findMany: jest.fn() },
   compatibilityScore: { findMany: jest.fn() },
+  couplesClubEvent: { create: jest.fn(), findMany: jest.fn(), findUnique: jest.fn() },
+  couplesClubParticipant: { upsert: jest.fn() },
 };
 
 describe('RelationshipsService', () => {
@@ -458,6 +460,172 @@ describe('RelationshipsService', () => {
       expect(result.coupleMatches[0].coupleId).toBe('r2');
       expect(result.coupleMatches[0].partnerNames).toEqual(['Zeynep', 'Emre']);
       expect(result.coupleMatches[0].compatibilityScore).toBe(65); // avg of 80, 70, 60, 50
+    });
+  });
+
+  describe('createEvent()', () => {
+    it('should throw NotFoundException when no active relationship', async () => {
+      mockPrisma.relationship.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.createEvent('u1', {
+          title: 'Test',
+          description: 'Desc',
+          date: '2027-01-01T18:00:00.000Z',
+          location: 'Istanbul',
+          capacity: 10,
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException when event date is in the past', async () => {
+      mockPrisma.relationship.findFirst.mockResolvedValue({
+        id: 'r1',
+        userAId: 'u1',
+        userBId: 'u2',
+        status: 'ACTIVE',
+      });
+
+      await expect(
+        service.createEvent('u1', {
+          title: 'Test',
+          description: 'Desc',
+          date: '2020-01-01T18:00:00.000Z',
+          location: 'Istanbul',
+          capacity: 10,
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should create event and return formatted response', async () => {
+      mockPrisma.relationship.findFirst.mockResolvedValue({
+        id: 'r1',
+        userAId: 'u1',
+        userBId: 'u2',
+        status: 'ACTIVE',
+      });
+
+      const eventDate = new Date('2027-06-01T18:00:00.000Z');
+      mockPrisma.couplesClubEvent.create.mockResolvedValue({
+        id: 'evt-1',
+        title: 'Cift Yogasi',
+        titleTr: 'Cift Yogasi',
+        description: 'Birlikte yoga',
+        descriptionTr: 'Birlikte yoga',
+        eventDate,
+        location: 'Istanbul',
+        maxCouples: 10,
+        imageUrl: null,
+        isActive: true,
+        createdAt: new Date(),
+      });
+      mockPrisma.userProfile.findUnique.mockResolvedValue({
+        firstName: 'Ali',
+      });
+
+      const result = await service.createEvent('u1', {
+        title: 'Cift Yogasi',
+        description: 'Birlikte yoga',
+        date: '2027-06-01T18:00:00.000Z',
+        location: 'Istanbul',
+        capacity: 10,
+      });
+
+      expect(result.id).toBe('evt-1');
+      expect(result.title).toBe('Cift Yogasi');
+      expect(result.attendeeCount).toBe(0);
+      expect(result.createdByName).toBe('Ali');
+      expect(result.capacity).toBe(10);
+      expect(mockPrisma.couplesClubEvent.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            title: 'Cift Yogasi',
+            maxCouples: 10,
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('getLeaderboard()', () => {
+    it('should throw NotFoundException when no active relationship', async () => {
+      mockPrisma.relationship.findFirst.mockResolvedValue(null);
+
+      await expect(service.getLeaderboard('u1')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should return leaderboard entries sorted by score with myRank', async () => {
+      // First call: findActiveRelationship for the requesting user
+      mockPrisma.relationship.findFirst.mockResolvedValue({
+        id: 'r1',
+        userAId: 'u1',
+        userBId: 'u2',
+        status: 'ACTIVE',
+      });
+
+      const activatedAt30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const activatedAt10 = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
+
+      // findMany: all active visible relationships
+      mockPrisma.relationship.findMany.mockResolvedValue([
+        {
+          id: 'r1',
+          userAId: 'u1',
+          userBId: 'u2',
+          activatedAt: activatedAt30,
+          createdAt: activatedAt30,
+          status: 'ACTIVE',
+          isVisible: true,
+          userA: { profile: { firstName: 'Ali' } },
+          userB: { profile: { firstName: 'Ayse' } },
+          coupleBadge: { id: 'b1', badgeType: 'couple_goal' },
+        },
+        {
+          id: 'r2',
+          userAId: 'u3',
+          userBId: 'u4',
+          activatedAt: activatedAt10,
+          createdAt: activatedAt10,
+          status: 'ACTIVE',
+          isVisible: true,
+          userA: { profile: { firstName: 'Zeynep' } },
+          userB: { profile: { firstName: 'Emre' } },
+          coupleBadge: null,
+        },
+      ]);
+
+      const result = await service.getLeaderboard('u1');
+
+      expect(result.entries).toHaveLength(2);
+      // r1 (30 days * 10 + 1 badge * 50 = 350) should rank first
+      // r2 (10 days * 10 + 0 badges = 100) should rank second
+      expect(result.entries[0].coupleId).toBe('r1');
+      expect(result.entries[0].rank).toBe(1);
+      expect(result.entries[0].score).toBe(350);
+      expect(result.entries[1].coupleId).toBe('r2');
+      expect(result.entries[1].rank).toBe(2);
+      expect(result.entries[1].score).toBe(100);
+      expect(result.myRank).toBe(1);
+    });
+
+    it('should return null myRank when user relationship is not visible', async () => {
+      // findActiveRelationship returns active rel
+      mockPrisma.relationship.findFirst.mockResolvedValue({
+        id: 'r1',
+        userAId: 'u1',
+        userBId: 'u2',
+        status: 'ACTIVE',
+      });
+
+      // But it's not in the visible list (isVisible=false filtered out by findMany)
+      mockPrisma.relationship.findMany.mockResolvedValue([]);
+
+      const result = await service.getLeaderboard('u1');
+
+      expect(result.entries).toHaveLength(0);
+      expect(result.myRank).toBeNull();
     });
   });
 });

@@ -21,6 +21,10 @@ describe('RelationshipsController', () => {
     getStatus: jest.fn(),
     getMilestones: jest.fn(),
     findCoupleMatches: jest.fn(),
+    getEvents: jest.fn(),
+    rsvpEvent: jest.fn(),
+    createEvent: jest.fn(),
+    getLeaderboard: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -420,6 +424,126 @@ describe('RelationshipsController', () => {
 
       expect(mockRelationshipsService.findCoupleMatches).toHaveBeenCalledWith(userId);
       expect(mockRelationshipsService.findCoupleMatches).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // POST /relationships/events
+  // ═══════════════════════════════════════════════════════════════
+
+  describe('createEvent()', () => {
+    const userId = 'user-uuid-1';
+
+    it('should create an event successfully', async () => {
+      const dto = {
+        title: 'Cift Yogasi',
+        description: 'Birlikte yoga yapalim',
+        date: '2026-04-01T18:00:00.000Z',
+        location: 'Istanbul',
+        capacity: 10,
+      };
+      const expected = {
+        id: 'evt-1',
+        title: 'Cift Yogasi',
+        description: 'Birlikte yoga yapalim',
+        date: '2026-04-01T18:00:00.000Z',
+        location: 'Istanbul',
+        capacity: 10,
+        attendeeCount: 0,
+        isRsvped: false,
+        createdByName: 'Ali',
+        imageUrl: null,
+        isPro: false,
+      };
+      mockRelationshipsService.createEvent.mockResolvedValue(expected);
+
+      const result = await controller.createEvent(userId, dto);
+
+      expect(result.id).toBe('evt-1');
+      expect(result.title).toBe('Cift Yogasi');
+    });
+
+    it('should throw NotFoundException when no active relationship', async () => {
+      const dto = {
+        title: 'Test',
+        description: 'Test desc',
+        date: '2026-04-01T18:00:00.000Z',
+        location: 'Istanbul',
+        capacity: 10,
+      };
+      mockRelationshipsService.createEvent.mockRejectedValue(
+        new NotFoundException('Aktif bir iliskiniz bulunmuyor'),
+      );
+
+      await expect(controller.createEvent(userId, dto)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should delegate to relationshipsService.createEvent with userId and dto', async () => {
+      const dto = {
+        title: 'Test',
+        description: 'Test desc',
+        date: '2026-04-01T18:00:00.000Z',
+        location: 'Istanbul',
+        capacity: 10,
+      };
+      mockRelationshipsService.createEvent.mockResolvedValue({ id: 'evt-1' });
+
+      await controller.createEvent(userId, dto);
+
+      expect(mockRelationshipsService.createEvent).toHaveBeenCalledWith(userId, dto);
+      expect(mockRelationshipsService.createEvent).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // GET /relationships/leaderboard
+  // ═══════════════════════════════════════════════════════════════
+
+  describe('getLeaderboard()', () => {
+    const userId = 'user-uuid-1';
+
+    it('should return leaderboard entries with my rank', async () => {
+      const expected = {
+        entries: [
+          {
+            rank: 1,
+            coupleId: 'rel-1',
+            partnerAName: 'Ali',
+            partnerBName: 'Ayse',
+            score: 350,
+            badgeCount: 1,
+            durationDays: 30,
+          },
+        ],
+        myRank: 1,
+      };
+      mockRelationshipsService.getLeaderboard.mockResolvedValue(expected);
+
+      const result = await controller.getLeaderboard(userId);
+
+      expect(result.entries).toHaveLength(1);
+      expect(result.myRank).toBe(1);
+    });
+
+    it('should throw NotFoundException when no active relationship', async () => {
+      mockRelationshipsService.getLeaderboard.mockRejectedValue(
+        new NotFoundException('Aktif bir iliskiniz bulunmuyor'),
+      );
+
+      await expect(controller.getLeaderboard(userId)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should delegate to relationshipsService.getLeaderboard with userId', async () => {
+      mockRelationshipsService.getLeaderboard.mockResolvedValue({ entries: [], myRank: null });
+
+      await controller.getLeaderboard(userId);
+
+      expect(mockRelationshipsService.getLeaderboard).toHaveBeenCalledWith(userId);
+      expect(mockRelationshipsService.getLeaderboard).toHaveBeenCalledTimes(1);
     });
   });
 });

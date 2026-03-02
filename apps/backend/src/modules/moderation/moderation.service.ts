@@ -13,7 +13,7 @@ import { CreateBlockDto } from './dto/block.dto';
  */
 const REASON_TO_CATEGORY: Record<ReportReasonDto, string> = {
   [ReportReasonDto.SPAM]: 'SPAM',
-  [ReportReasonDto.INAPPROPRIATE_PHOTOS]: 'INAPPROPRIATE_PHOTO',
+  [ReportReasonDto.INAPPROPRIATE_PHOTO]: 'INAPPROPRIATE_PHOTO',
   [ReportReasonDto.HARASSMENT]: 'HARASSMENT',
   [ReportReasonDto.UNDERAGE]: 'UNDERAGE',
   [ReportReasonDto.FAKE_PROFILE]: 'FAKE_PROFILE',

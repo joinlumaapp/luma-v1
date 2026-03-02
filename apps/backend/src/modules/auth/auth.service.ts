@@ -3,11 +3,11 @@ import {
   UnauthorizedException,
   BadRequestException,
   Logger,
-  OnModuleDestroy,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../prisma/prisma.service';
+import { LumaCacheService } from '../cache/cache.service';
 import { SmsProvider } from './sms.provider';
 import {
   RegisterDto,
@@ -32,67 +32,44 @@ const SELFIE_MAX_BASE64_LENGTH = 5 * 1024 * 1024; // 5MB max selfie
 // ─── OTP Rate Limiting Constants ──────────────────────────────────
 const OTP_RATE_LIMIT_MAX_REQUESTS = 3;
 const OTP_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+const OTP_RATE_LIMIT_WINDOW_SECONDS = 10 * 60;     // 10 minutes (TTL for Redis)
 const OTP_RESEND_COOLDOWN_SECONDS = 60;
 
-/** Tracks OTP request history for rate limiting */
+/** Redis key prefix for OTP rate limiting */
+const OTP_RATE_LIMIT_KEY_PREFIX = 'otp:ratelimit:';
+
+/** Tracks OTP request history for rate limiting (stored in Redis as JSON) */
 interface OtpRateLimitEntry {
   timestamps: number[];
   lastRequestAt: number;
 }
 
 @Injectable()
-export class AuthService implements OnModuleDestroy {
+export class AuthService {
   private readonly logger = new Logger(AuthService.name);
-
-  /** In-memory map for OTP rate limiting per phone number (TTL managed by cleanup) */
-  private readonly otpRateLimitMap = new Map<string, OtpRateLimitEntry>();
-
-  /** Periodic cleanup interval reference */
-  private readonly cleanupInterval: ReturnType<typeof setInterval>;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly smsProvider: SmsProvider,
-  ) {
-    // Periodically clean up expired rate limit entries every 5 minutes
-    this.cleanupInterval = setInterval(() => {
-      this.cleanupRateLimitEntries();
-    }, 5 * 60 * 1000);
-  }
-
-  onModuleDestroy(): void {
-    clearInterval(this.cleanupInterval);
-  }
-
-  /** Clean up stale rate limit entries that have expired beyond the window */
-  private cleanupRateLimitEntries(): void {
-    const now = Date.now();
-    for (const [key, entry] of this.otpRateLimitMap.entries()) {
-      const validTimestamps = entry.timestamps.filter(
-        (ts) => now - ts < OTP_RATE_LIMIT_WINDOW_MS,
-      );
-      if (validTimestamps.length === 0) {
-        this.otpRateLimitMap.delete(key);
-      } else {
-        entry.timestamps = validTimestamps;
-      }
-    }
-  }
+    private readonly cache: LumaCacheService,
+  ) {}
 
   /**
    * Check and enforce OTP rate limiting for a phone number.
+   * Rate limit data is persisted in Redis so it survives server restarts.
    * Returns remaining attempts and retry-after info.
    */
-  private checkOtpRateLimit(phone: string): {
+  private async checkOtpRateLimit(phone: string): Promise<{
     allowed: boolean;
     remainingAttempts: number;
     retryAfterSeconds: number;
     cooldownSeconds: number;
-  } {
+  }> {
     const now = Date.now();
-    const entry = this.otpRateLimitMap.get(phone);
+    const cacheKey = `${OTP_RATE_LIMIT_KEY_PREFIX}${phone}`;
+    const entry = await this.cache.get<OtpRateLimitEntry>(cacheKey);
 
     if (!entry) {
       // First request — no limits
@@ -108,7 +85,6 @@ export class AuthService implements OnModuleDestroy {
     const validTimestamps = entry.timestamps.filter(
       (ts) => now - ts < OTP_RATE_LIMIT_WINDOW_MS,
     );
-    entry.timestamps = validTimestamps;
 
     // Check cooldown since last request (60-second resend cooldown)
     const timeSinceLastRequest = now - entry.lastRequestAt;
@@ -148,20 +124,26 @@ export class AuthService implements OnModuleDestroy {
     };
   }
 
-  /** Record an OTP request for rate limiting purposes */
-  private recordOtpRequest(phone: string): void {
+  /**
+   * Record an OTP request for rate limiting purposes.
+   * Persists the entry in Redis with a TTL matching the rate limit window.
+   */
+  private async recordOtpRequest(phone: string): Promise<void> {
     const now = Date.now();
-    const entry = this.otpRateLimitMap.get(phone);
+    const cacheKey = `${OTP_RATE_LIMIT_KEY_PREFIX}${phone}`;
+    const entry = await this.cache.get<OtpRateLimitEntry>(cacheKey);
 
-    if (entry) {
-      entry.timestamps.push(now);
-      entry.lastRequestAt = now;
-    } else {
-      this.otpRateLimitMap.set(phone, {
-        timestamps: [now],
-        lastRequestAt: now,
-      });
-    }
+    // Filter timestamps within the window before appending
+    const validTimestamps = entry
+      ? entry.timestamps.filter((ts) => now - ts < OTP_RATE_LIMIT_WINDOW_MS)
+      : [];
+
+    const updatedEntry: OtpRateLimitEntry = {
+      timestamps: [...validTimestamps, now],
+      lastRequestAt: now,
+    };
+
+    await this.cache.set(cacheKey, updatedEntry, OTP_RATE_LIMIT_WINDOW_SECONDS);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -175,8 +157,8 @@ export class AuthService implements OnModuleDestroy {
     retryAfterSeconds: number;
     cooldownSeconds: number;
   }> {
-    // Check OTP rate limit before processing
-    const rateLimit = this.checkOtpRateLimit(dto.phone);
+    // Check OTP rate limit before processing (Redis-backed)
+    const rateLimit = await this.checkOtpRateLimit(dto.phone);
 
     if (!rateLimit.allowed) {
       throw new BadRequestException({
@@ -243,8 +225,8 @@ export class AuthService implements OnModuleDestroy {
       },
     });
 
-    // Record this OTP request for rate limiting
-    this.recordOtpRequest(dto.phone);
+    // Record this OTP request for rate limiting (Redis-backed)
+    await this.recordOtpRequest(dto.phone);
 
     // Send SMS (mock in development, Twilio in production)
     await this.sendSmsOtp(dto.phone, otpCode);

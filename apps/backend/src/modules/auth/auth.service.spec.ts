@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { LumaCacheService } from '../cache/cache.service';
 import { SmsProvider } from './sms.provider';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
@@ -159,6 +160,14 @@ describe('AuthService', () => {
     sendOtp: jest.fn().mockResolvedValue(true),
   };
 
+  const mockCacheService = {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(undefined),
+    del: jest.fn().mockResolvedValue(undefined),
+    invalidatePattern: jest.fn().mockResolvedValue(undefined),
+    isRedisConnected: jest.fn().mockReturnValue(true),
+  };
+
   // ─── Setup ────────────────────────────────────────────────────
 
   beforeEach(async () => {
@@ -185,6 +194,7 @@ describe('AuthService', () => {
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: SmsProvider, useValue: mockSmsProvider },
+        { provide: LumaCacheService, useValue: mockCacheService },
       ],
     }).compile();
 
@@ -198,6 +208,10 @@ describe('AuthService', () => {
 
     // Default SMS provider mock (cleared by resetAllMocks)
     mockSmsProvider.sendOtp.mockResolvedValue(true);
+
+    // Default cache service mock — no existing rate limit entries
+    mockCacheService.get.mockResolvedValue(null);
+    mockCacheService.set.mockResolvedValue(undefined);
 
     // Default session findMany mock (for enforceSessionLimit)
     mockPrismaUserSession.findMany.mockResolvedValue([]);

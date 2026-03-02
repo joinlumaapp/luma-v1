@@ -8,7 +8,6 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
-  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,6 +17,7 @@ import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 import { PACKAGE_TIERS } from '../../constants/config';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
 import { paymentService } from '../../services/paymentService';
+import { iapService } from '../../services/iapService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 
 // Package accent colors
@@ -171,11 +171,28 @@ export const PackagesScreen: React.FC = () => {
             onPress: async () => {
               setIsSubscribing(true);
               try {
-                // TODO: Replace mock receipt with real IAP receipt from expo-in-app-purchases
+                // Initialize IAP if not already done
+                const status = await iapService.initIAP();
+                if (__DEV__ && status.isMockMode) {
+                  console.log(
+                    '[PackagesScreen] IAP is in mock mode — using dev receipt for subscription',
+                  );
+                }
+
+                // Request purchase from the store (or mock in dev mode)
+                const purchase = await iapService.purchaseSubscription(packageId);
+
+                if (__DEV__) {
+                  console.log(
+                    `[PackagesScreen] Purchase complete — product: ${purchase.productId}, platform: ${purchase.platform}`,
+                  );
+                }
+
+                // Send the receipt to the backend for validation
                 const result = await paymentService.subscribe({
                   packageTier: packageId,
-                  platform: Platform.OS === 'ios' ? 'apple' : 'google',
-                  receipt: `mock-receipt-${Date.now()}`,
+                  platform: purchase.platform,
+                  receipt: purchase.receipt,
                 });
                 if (updatePackageTier) {
                   updatePackageTier(result.packageTier as PackageTier);
@@ -184,7 +201,13 @@ export const PackagesScreen: React.FC = () => {
                   'Başarılı!',
                   `${targetPkg.name} aboneliğiniz aktif edildi!`,
                 );
-              } catch {
+              } catch (error: unknown) {
+                const message =
+                  error instanceof Error ? error.message : '';
+                // Do not show an error if the user simply cancelled
+                if (message.includes('cancelled')) {
+                  return;
+                }
                 Alert.alert(
                   'Hata',
                   'Ödeme işlemi başarısız oldu. Lütfen tekrar deneyin.',

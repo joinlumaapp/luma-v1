@@ -10,7 +10,7 @@ import {
 
 export enum ReportReasonDto {
   SPAM = 'spam',
-  INAPPROPRIATE_PHOTOS = 'inappropriate_photos',
+  INAPPROPRIATE_PHOTO = 'inappropriate_photo',
   HARASSMENT = 'harassment',
   UNDERAGE = 'underage',
   FAKE_PROFILE = 'fake_profile',

@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { RelationshipsService } from './relationships.service';
-import { ActivateRelationshipDto, ToggleVisibilityDto } from './dto';
+import { ActivateRelationshipDto, ToggleVisibilityDto, CreateEventDto } from './dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -91,5 +91,20 @@ export class RelationshipsController {
     @Body() body: { status: 'attending' | 'maybe' | 'declined' },
   ) {
     return this.relationshipsService.rsvpEvent(userId, eventId, body.status);
+  }
+
+  @Post('events')
+  @ApiOperation({ summary: 'Create a new Couples Club event' })
+  async createEvent(
+    @CurrentUser('sub') userId: string,
+    @Body() dto: CreateEventDto,
+  ) {
+    return this.relationshipsService.createEvent(userId, dto);
+  }
+
+  @Get('leaderboard')
+  @ApiOperation({ summary: 'Get Couples Club leaderboard' })
+  async getLeaderboard(@CurrentUser('sub') userId: string) {
+    return this.relationshipsService.getLeaderboard(userId);
   }
 }

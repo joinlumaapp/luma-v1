@@ -70,8 +70,10 @@ export const API_ROUTES = {
   // Subsystem 12: Couples Club (routed through relationships controller)
   COUPLES_CLUB: {
     GET_EVENTS: '/relationships/events',
+    CREATE_EVENT: '/relationships/events',
     RSVP_EVENT: '/relationships/events/:eventId/rsvp',
     CANCEL_RSVP: '/relationships/events/:eventId/rsvp',
+    GET_LEADERBOARD: '/relationships/leaderboard',
   },
   // Subsystem 14: Badges
   BADGES: {

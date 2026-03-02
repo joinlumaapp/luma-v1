@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BadgesService } from '../badges/badges.service';
-import { ActivateRelationshipDto, ToggleVisibilityDto } from './dto';
+import { ActivateRelationshipDto, ToggleVisibilityDto, CreateEventDto } from './dto';
 
 export interface CoupleMatch {
   coupleId: string;
@@ -898,6 +898,136 @@ export class RelationshipsService {
         : status === 'maybe'
           ? 'Katılım durumunuz "belki" olarak kaydedildi.'
           : 'Etkinlikten çıkış yapıldı.',
+    };
+  }
+
+  /**
+   * Create a new Couples Club event.
+   * Only accessible to users in active relationships.
+   */
+  async createEvent(userId: string, dto: CreateEventDto) {
+    const relationship = await this.findActiveRelationship(userId);
+
+    if (!relationship) {
+      throw new NotFoundException('Aktif bir ilişkiniz bulunmuyor');
+    }
+
+    const eventDate = new Date(dto.date);
+    if (eventDate <= new Date()) {
+      throw new BadRequestException('Etkinlik tarihi gelecekte olmalıdır');
+    }
+
+    const event = await this.prisma.couplesClubEvent.create({
+      data: {
+        title: dto.title,
+        titleTr: dto.title,
+        description: dto.description,
+        descriptionTr: dto.description,
+        eventDate,
+        location: dto.location,
+        maxCouples: dto.capacity,
+        imageUrl: dto.imageUrl ?? null,
+        isActive: true,
+      },
+    });
+
+    // Get the creator's name for the response
+    const profile = await this.prisma.userProfile.findUnique({
+      where: { userId },
+      select: { firstName: true },
+    });
+
+    return {
+      id: event.id,
+      title: event.titleTr,
+      description: event.descriptionTr,
+      date: event.eventDate.toISOString(),
+      location: event.location ?? '',
+      capacity: event.maxCouples,
+      attendeeCount: 0,
+      isRsvped: false,
+      createdByName: profile?.firstName ?? 'Bilinmeyen',
+      imageUrl: event.imageUrl,
+      isPro: false,
+    };
+  }
+
+  /**
+   * Get the Couples Club leaderboard.
+   * Ranks active, visible couples by a composite score:
+   * relationship duration + badge count + milestone engagement.
+   * Only accessible to users in active relationships.
+   */
+  async getLeaderboard(userId: string) {
+    const relationship = await this.findActiveRelationship(userId);
+
+    if (!relationship) {
+      throw new NotFoundException('Aktif bir ilişkiniz bulunmuyor');
+    }
+
+    // Find all active, visible relationships
+    const activeRelationships = await this.prisma.relationship.findMany({
+      where: {
+        status: 'ACTIVE',
+        isVisible: true,
+      },
+      include: {
+        userA: {
+          select: {
+            profile: {
+              select: { firstName: true },
+            },
+          },
+        },
+        userB: {
+          select: {
+            profile: {
+              select: { firstName: true },
+            },
+          },
+        },
+        coupleBadge: true,
+      },
+      orderBy: { activatedAt: 'asc' },
+    });
+
+    // Calculate scores for each couple
+    const now = Date.now();
+    const entries = activeRelationships.map((rel) => {
+      const activatedAt = rel.activatedAt ?? rel.createdAt;
+      const durationDays = Math.floor(
+        (now - activatedAt.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      const badgeCount = rel.coupleBadge ? 1 : 0;
+
+      // Score formula: duration weight + badge bonus
+      const score = durationDays * 10 + badgeCount * 50;
+
+      return {
+        coupleId: rel.id,
+        partnerAName: rel.userA.profile?.firstName ?? 'Bilinmeyen',
+        partnerBName: rel.userB.profile?.firstName ?? 'Bilinmeyen',
+        score,
+        badgeCount,
+        durationDays,
+      };
+    });
+
+    // Sort by score descending
+    entries.sort((a, b) => b.score - a.score);
+
+    // Assign ranks
+    const ranked = entries.map((entry, index) => ({
+      rank: index + 1,
+      ...entry,
+    }));
+
+    // Find the current user's rank
+    const myEntry = ranked.find((e) => e.coupleId === relationship.id);
+
+    return {
+      entries: ranked.slice(0, 50), // Return top 50
+      myRank: myEntry?.rank ?? null,
     };
   }
 

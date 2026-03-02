@@ -64,15 +64,19 @@ export const couplesClubService = {
     await api.post(`/relationships/events/${eventId}/rsvp`, { status: 'declined' });
   },
 
-  // TODO: Backend does not have a POST /relationships/events endpoint yet.
-  // createEvent: async (data: CreateEventRequest): Promise<CouplesEvent> => {
-  //   const response = await api.post<CouplesEvent>('/relationships/events', data);
-  //   return response.data;
-  // },
+  /**
+   * Yeni bir etkinlik olustur.
+   */
+  createEvent: async (data: CreateEventRequest): Promise<CouplesEvent> => {
+    const response = await api.post<CouplesEvent>('/relationships/events', data);
+    return response.data;
+  },
 
-  // TODO: Backend does not have a GET /relationships/leaderboard endpoint yet.
-  // getLeaderboard: async (): Promise<LeaderboardResponse> => {
-  //   const response = await api.get<LeaderboardResponse>('/relationships/leaderboard');
-  //   return response.data;
-  // },
+  /**
+   * Liderlik tablosunu getir.
+   */
+  getLeaderboard: async (): Promise<LeaderboardResponse> => {
+    const response = await api.get<LeaderboardResponse>('/relationships/leaderboard');
+    return response.data;
+  },
 };
