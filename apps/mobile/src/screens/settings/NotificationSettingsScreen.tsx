@@ -31,23 +31,23 @@ interface NotificationSetting {
 const NOTIFICATION_SETTINGS: NotificationSetting[] = [
   {
     key: 'newMatches',
-    label: 'Yeni Eslesmeler',
-    description: 'Yeni bir eslesmede bildirim al',
+    label: 'Yeni Eşleşmeler',
+    description: 'Yeni bir eşleşmede bildirim al',
   },
   {
     key: 'messages',
     label: 'Mesajlar',
-    description: 'Yeni mesaj geldiginde bildirim al',
+    description: 'Yeni mesaj geldiğinde bildirim al',
   },
   {
     key: 'harmonyInvites',
     label: 'Harmony Davetleri',
-    description: 'Harmony davetleri ve hatirlatmalari',
+    description: 'Harmony davetleri ve hatırlatmaları',
   },
   {
     key: 'badges',
     label: 'Rozet Bildirimleri',
-    description: 'Yeni rozet kazandiginda bildirim al',
+    description: 'Yeni rozet kazandığında bildirim al',
   },
   {
     key: 'system',
@@ -122,7 +122,7 @@ export const NotificationSettingsScreen: React.FC = () => {
         await notificationService.updatePreferences(updated);
       } catch {
         if (__DEV__) {
-          console.warn('[BildirimAyarlari] Backend senkronizasyonu basarisiz');
+          console.warn('[BildirimAyarlari] Backend senkronizasyonu başarısız');
         }
       } finally {
         setIsSaving(false);
@@ -217,7 +217,7 @@ export const NotificationSettingsScreen: React.FC = () => {
         >
           <Text style={styles.backText}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Bildirim Ayarlari</Text>
+        <Text style={styles.headerTitle}>Bildirim Ayarları</Text>
         <View style={styles.headerRight}>
           {isSaving && (
             <ActivityIndicator size="small" color={colors.primary} />
@@ -245,14 +245,14 @@ export const NotificationSettingsScreen: React.FC = () => {
           <Text style={styles.permissionText}>
             {hasPermission
               ? 'Bildirim izni verildi'
-              : 'Bildirim izni verilmedi — ayarlardan acin'}
+              : 'Bildirim izni verilmedi — ayarlardan açın'}
           </Text>
         </View>
 
         {/* Section title */}
         <Text style={styles.sectionTitle}>Bildirim Tercihleri</Text>
         <Text style={styles.sectionSubtitle}>
-          Hangi bildirimleri almak istediginizi secin
+          Hangi bildirimleri almak istediğinizi seçin
         </Text>
 
         {/* Master toggle */}
@@ -260,10 +260,10 @@ export const NotificationSettingsScreen: React.FC = () => {
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
               <Text style={styles.masterToggleLabel}>
-                Tum bildirimleri kapat
+                Tüm bildirimleri kapat
               </Text>
               <Text style={styles.settingDescription}>
-                Tum push bildirimlerini devre disi birak
+                Tüm push bildirimlerini devre dışı bırak
               </Text>
             </View>
             <Switch
@@ -290,8 +290,8 @@ export const NotificationSettingsScreen: React.FC = () => {
 
         {/* Footer note */}
         <Text style={styles.footerNote}>
-          Bildirimleri kapatmak onemli eslestirme ve mesaj bildirimlerini
-          kacimaniza neden olabilir.
+          Bildirimleri kapatmak önemli eşleştirme ve mesaj bildirimlerini
+          kaçırmanıza neden olabilir.
         </Text>
       </ScrollView>
     </View>

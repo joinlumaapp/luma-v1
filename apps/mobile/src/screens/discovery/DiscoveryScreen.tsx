@@ -64,20 +64,19 @@ type DiscoveryNavProp = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabParamList>
 >;
 
-// ─── Action Button component ─────────────────────────────────
+// ─── Action Button component — premium gradient-filled circles ──
 
 const ActionButton: React.FC<{
   icon: string;
-  color: string;
   size: number;
-  borderColor: string;
   onPress: () => void;
-  glowColor?: string;
+  gradientColors: readonly string[];
+  glowColor: string;
   hapticStyle?: Haptics.ImpactFeedbackStyle;
   testID: string;
   accessibilityLabel: string;
   accessibilityHint: string;
-}> = ({ icon, color, size, borderColor, onPress, glowColor, hapticStyle, testID, accessibilityLabel, accessibilityHint }) => {
+}> = ({ icon, size, onPress, gradientColors, glowColor, hapticStyle, testID, accessibilityLabel, accessibilityHint }) => {
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -114,25 +113,29 @@ const ActionButton: React.FC<{
             width: size,
             height: size,
             borderRadius: size / 2,
-            borderColor,
           },
-          glowColor ? {
-            ...Platform.select({
-              ios: {
-                shadowColor: glowColor,
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.45,
-                shadowRadius: 10,
-              },
-              android: { elevation: 6 },
-            }),
-          } : {},
+          Platform.select({
+            ios: {
+              shadowColor: glowColor,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.5,
+              shadowRadius: 12,
+            },
+            android: { elevation: 8 },
+          }),
           animatedStyle,
         ]}
       >
-        <Text style={[styles.actionBtnIcon, { color, fontSize: size * 0.38 }]}>
-          {icon}
-        </Text>
+        <LinearGradient
+          colors={gradientColors as [string, string, ...string[]]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.actionBtnGradient, { borderRadius: size / 2 }]}
+        >
+          <Text style={[styles.actionBtnIcon, { fontSize: size * 0.38 }]}>
+            {icon}
+          </Text>
+        </LinearGradient>
       </Animated.View>
     </Pressable>
   );
@@ -592,15 +595,15 @@ export const DiscoveryScreen: React.FC = () => {
           <View style={styles.emptyIconCircle}>
             <Text style={styles.emptyIconLetter}>L</Text>
           </View>
-          <Text style={styles.emptyTitle}>Gunluk kesfini tamamladin</Text>
+          <Text style={styles.emptyTitle}>G\u00FCnl\u00FCk ke\u015Ffini tamamlad\u0131n</Text>
           <Text style={styles.emptySubtitle}>
-            {'En uyumlu insanlar sabirla bulunur.\nYarin yeni profiller seni bekliyor.'}
+            {'En uyumlu insanlar sab\u0131rla bulunur.\nYar\u0131n yeni profiller seni bekliyor.'}
           </Text>
           <Pressable
             onPress={() => refreshFeed()}
             accessibilityLabel="Yenile"
             accessibilityRole="button"
-            accessibilityHint="Yeni profilleri yuklemek icin dokunun"
+            accessibilityHint="Yeni profilleri y\u00FCklemek i\u00E7in dokunun"
           >
             <View style={styles.refreshButton} testID="discovery-refresh-btn">
               <Text style={styles.refreshButtonText}>Yenile</Text>
@@ -626,9 +629,9 @@ export const DiscoveryScreen: React.FC = () => {
         <View style={styles.headerRight}>
           <Pressable
             onPress={() => navigation.navigate('Filter')}
-            accessibilityLabel="Filtreleri ac"
+            accessibilityLabel="Filtreleri a\u00E7"
             accessibilityRole="button"
-            accessibilityHint="Kesif filtrelerini duzenlemek icin dokunun"
+            accessibilityHint="Ke\u015Fif filtrelerini d\u00FCzenlemek i\u00E7in dokunun"
           >
             <View style={styles.filterButton} testID="discovery-filter-btn">
               <Text style={styles.filterIcon}>{'='}</Text>
@@ -640,10 +643,12 @@ export const DiscoveryScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* Mood selector */}
-      <MoodSelector />
+      {/* Mood selector — zIndex keeps it above card stack */}
+      <View style={styles.moodWrapper}>
+        <MoodSelector />
+      </View>
 
-      {/* Card stack */}
+      {/* Card stack — overflow hidden prevents cards from covering mood selector */}
       <View style={styles.cardStack}>
         {/* Next card (behind) — animates forward as current card is dragged */}
         {nextCard && (
@@ -676,9 +681,9 @@ export const DiscoveryScreen: React.FC = () => {
         <GestureDetector gesture={composedGesture}>
           <Animated.View
             accessible
-            accessibilityLabel={`${currentCard.name}, ${currentCard.age} yasinda, ${currentCard.city}`}
+            accessibilityLabel={`${currentCard.name}, ${currentCard.age} ya\u015F\u0131nda, ${currentCard.city}`}
             accessibilityRole="button"
-            accessibilityHint="Begenme, gecme veya super begenme icin kaydirin"
+            accessibilityHint="Be\u011Fenme, ge\u00E7me veya s\u00FCper be\u011Fenme i\u00E7in kayd\u0131r\u0131n"
             testID="discovery-card"
             style={[styles.card, styles.cardFront, cardStyle]}
           >
@@ -745,7 +750,7 @@ export const DiscoveryScreen: React.FC = () => {
             onPress={() => { if (canUndo) { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); undoLastSwipe(); } }}
             accessibilityLabel="Geri al"
             accessibilityRole="button"
-            accessibilityHint="Son kaydirma islemini geri almak icin dokunun"
+            accessibilityHint="Son kayd\u0131rma i\u015Flemini geri almak i\u00E7in dokunun"
           >
             <View style={styles.undoButton} testID="discovery-undo-btn">
               <Text style={styles.undoIcon}>{'\u21A9'}</Text>
@@ -753,42 +758,40 @@ export const DiscoveryScreen: React.FC = () => {
           </Pressable>
         </Animated.View>
 
-        {/* Main action buttons */}
+        {/* Main action buttons — premium gradient filled */}
         <View style={styles.actions}>
           <ActionButton
             icon={'\u2715'}
-            color={colors.error}
-            borderColor={colors.error + '60'}
+            gradientColors={['#FF6B6B', '#EF4444']}
+            glowColor="#EF4444"
             size={62}
             hapticStyle={Haptics.ImpactFeedbackStyle.Light}
             onPress={handlePassPress}
             testID="discovery-pass-btn"
-            accessibilityLabel="Gec"
-            accessibilityHint="Bu profili gecmek icin dokunun"
+            accessibilityLabel="Ge\u00E7"
+            accessibilityHint="Bu profili ge\u00E7mek i\u00E7in dokunun"
           />
           <ActionButton
             icon={'\u2605'}
-            color={palette.gold[400]}
-            borderColor={palette.gold[400] + '60'}
-            size={50}
+            gradientColors={[palette.gold[400], palette.gold[600]]}
             glowColor={palette.gold[400]}
+            size={50}
             hapticStyle={Haptics.ImpactFeedbackStyle.Heavy}
             onPress={handleSuperLikePress}
             testID="discovery-superlike-btn"
-            accessibilityLabel="Super Begen"
-            accessibilityHint="Bu profili super begenmek icin dokunun"
+            accessibilityLabel="S\u00FCper Be\u011Fen"
+            accessibilityHint="Bu profili s\u00FCper be\u011Fenmek i\u00E7in dokunun"
           />
           <ActionButton
             icon={'\u2665'}
-            color={colors.success}
-            borderColor={colors.success + '60'}
+            gradientColors={['#9B6BF8', '#EC4899']}
+            glowColor="#9B6BF8"
             size={62}
-            glowColor={colors.success}
             hapticStyle={Haptics.ImpactFeedbackStyle.Medium}
             onPress={handleLikePress}
             testID="discovery-like-btn"
-            accessibilityLabel="Begen"
-            accessibilityHint="Bu profili begenmek icin dokunun"
+            accessibilityLabel="Be\u011Fen"
+            accessibilityHint="Bu profili be\u011Fenmek i\u00E7in dokunun"
           />
         </View>
       </View>
@@ -868,12 +871,18 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
+  // ── Mood Wrapper — above card stack ──
+  moodWrapper: {
+    zIndex: 2,
+  },
+
   // ── Card Stack ──
   cardStack: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.md,
+    overflow: 'hidden',
   },
   card: {
     width: layout.cardWidth,
@@ -950,14 +959,22 @@ const styles = StyleSheet.create({
     gap: spacing.xl,
   },
   actionBtn: {
-    backgroundColor: 'rgba(26, 26, 46, 0.85)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    ...shadows.medium,
+    overflow: 'hidden',
+  },
+  actionBtnGradient: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   actionBtnIcon: {
     fontWeight: '700',
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
 
   // ── Undo Button ──

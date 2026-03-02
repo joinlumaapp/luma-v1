@@ -115,9 +115,9 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress }) => {
         onPress={() => onPress(item.id)}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        accessibilityLabel={`${item.name}, ${item.age} yasinda, yuzde ${item.compatibilityPercent} uyum`}
+        accessibilityLabel={`${item.name}, ${item.age} yaşında, yüzde ${item.compatibilityPercent} uyum`}
         accessibilityRole="button"
-        accessibilityHint="Eslesme detaylarini gormek icin dokunun"
+        accessibilityHint="Eşleşme detaylarını görmek için dokunun"
       >
         <Animated.View
           style={[
@@ -238,9 +238,9 @@ export const MatchesListScreen: React.FC = () => {
   const renderEmptyList = useCallback(() => (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyIcon}>{'<3'}</Text>
-      <Text style={styles.emptyTitle}>Henuz Eslesmen Yok</Text>
+      <Text style={styles.emptyTitle}>Henüz Eşleşmen Yok</Text>
       <Text style={styles.emptySubtitle}>
-        Kesfet sekmesinde profilleri begenerek eslesme olusturabilirsin.
+        Keşfet sekmesinde profilleri beğenerek eşleşme oluşturabilirsin.
       </Text>
     </View>
   ), []);
@@ -250,7 +250,7 @@ export const MatchesListScreen: React.FC = () => {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Eslesmeler</Text>
+          <Text style={styles.headerTitle}>Eşleşmeler</Text>
         </View>
         <View style={styles.skeletonContainer}>
           {Array.from({ length: SKELETON_ROWS }).map((_, i) => (
@@ -265,24 +265,24 @@ export const MatchesListScreen: React.FC = () => {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Eslesmeler</Text>
-        <Text style={styles.matchCount}>{totalCount} eslesme</Text>
+        <Text style={styles.headerTitle}>Eşleşmeler</Text>
+        <Text style={styles.matchCount}>{totalCount} eşleşme</Text>
       </View>
 
       {/* Filters */}
       <View style={styles.filterRow}>
         {[
-          { key: 'all' as const, label: 'Tumu' },
+          { key: 'all' as const, label: 'Tümü' },
           { key: 'new' as const, label: 'Yeni' },
           { key: 'harmony' as const, label: 'Harmony' },
         ].map((filter) => (
           <TouchableWithoutFeedback
             key={filter.key}
             onPress={() => setActiveFilter(filter.key)}
-            accessibilityLabel={`${filter.label} filtresi${activeFilter === filter.key ? ', secili' : ''}`}
+            accessibilityLabel={`${filter.label} filtresi${activeFilter === filter.key ? ', seçili' : ''}`}
             accessibilityRole="button"
             accessibilityState={{ selected: activeFilter === filter.key }}
-            accessibilityHint={`${filter.label} filtresini secmek icin dokunun`}
+            accessibilityHint={`${filter.label} filtresini seçmek için dokunun`}
           >
             <View
               style={[

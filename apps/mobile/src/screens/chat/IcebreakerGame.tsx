@@ -1,5 +1,5 @@
 // IcebreakerGame — Fun icebreaker games for new matches
-// 3 game types: Bu mu O mu?, 2 Dogru 1 Yanlis, Hizli Sorular
+// 3 game types: Bu mu O mu?, 2 Doğru 1 Yanlış, Hızlı Sorular
 // Premium card UI with flip animations and result compatibility view
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
@@ -48,21 +48,21 @@ const GAME_OPTIONS: GameOption[] = [
   {
     type: 'THIS_OR_THAT',
     title: 'Bu mu O mu?',
-    subtitle: 'Ikisinden birini sec, eslesmen de secsin!',
+    subtitle: 'İkisinden birini seç, eşleşmen de seçsin!',
     emoji: '\u2696\uFE0F',
     color: palette.purple[500],
   },
   {
     type: 'TWO_TRUTHS_ONE_LIE',
-    title: '2 Dogru 1 Yanlis',
-    subtitle: '3 sey yaz, partnerin yalani bulsun!',
+    title: '2 Doğru 1 Yanlış',
+    subtitle: '3 şey yaz, partnerin yalanı bulsun!',
     emoji: '\uD83E\uDD25',
     color: palette.pink[500],
   },
   {
     type: 'RAPID_FIRE',
-    title: 'Hizli Sorular',
-    subtitle: '10 eglenceli soruya hizlica cevap ver!',
+    title: 'Hızlı Sorular',
+    subtitle: '10 eğlenceli soruya hızlıca cevap ver!',
     emoji: '\u26A1',
     color: palette.gold[500],
   },
@@ -70,28 +70,28 @@ const GAME_OPTIONS: GameOption[] = [
 
 // Sample this-or-that questions (Turkish)
 const THIS_OR_THAT_QUESTIONS: ThisOrThatQuestion[] = [
-  { id: '1', optionA: 'Sabah insani', optionB: 'Gece kusu' },
-  { id: '2', optionA: 'Dag tatili', optionB: 'Deniz tatili' },
+  { id: '1', optionA: 'Sabah insanı', optionB: 'Gece kuşu' },
+  { id: '2', optionA: 'Dağ tatili', optionB: 'Deniz tatili' },
   { id: '3', optionA: 'Film gecesi', optionB: 'Konser gecesi' },
-  { id: '4', optionA: 'Cay', optionB: 'Kahve' },
+  { id: '4', optionA: 'Çay', optionB: 'Kahve' },
   { id: '5', optionA: 'Kitap okumak', optionB: 'Podcast dinlemek' },
   { id: '6', optionA: 'Pizza', optionB: 'Sushi' },
   { id: '7', optionA: 'Macera filmi', optionB: 'Romantik komedi' },
-  { id: '8', optionA: 'Sehir hayati', optionB: 'Koy hayati' },
+  { id: '8', optionA: 'Şehir hayatı', optionB: 'Köy hayatı' },
 ];
 
 // Sample rapid-fire questions (Turkish)
 const RAPID_FIRE_QUESTIONS: RapidFireQuestion[] = [
-  { id: '1', question: 'En sevdigin yemek?', options: ['Kebap', 'Makarna', 'Sushi', 'Pizza'] },
+  { id: '1', question: 'En sevdiğin yemek?', options: ['Kebap', 'Makarna', 'Sushi', 'Pizza'] },
   { id: '2', question: 'Hayal tatil yerin?', options: ['Paris', 'Tokyo', 'Bali', 'New York'] },
-  { id: '3', question: 'Süper gücün ne olurdu?', options: ['Ucmak', 'Teleportasyon', 'Zaman yolculugu', 'Görünmezlik'] },
-  { id: '4', question: 'Hafta sonu plani?', options: ['Kafe', 'Dogada yürüyüs', 'Evde film', 'Arkadaslarla bulusma'] },
-  { id: '5', question: 'Muzik tarzi?', options: ['Pop', 'Rock', 'Jazz', 'Elektronik'] },
-  { id: '6', question: 'Sabah rutinin?', options: ['Spor', 'Kahve + gazete', 'Son dakika uyanis', 'Meditasyon'] },
-  { id: '7', question: 'En iyi hediye?', options: ['Deneyim', 'Kitap', 'Teknoloji', 'El yapimi'] },
-  { id: '8', question: 'Ilk bulus yeri?', options: ['Kafe', 'Park', 'Restoran', 'Müze'] },
-  { id: '9', question: 'Hayvan?', options: ['Kedi', 'Köpek', 'Kus', 'Balik'] },
-  { id: '10', question: 'Hobiyi sec!', options: ['Resim', 'Müzik', 'Yemek yapma', 'Seyahat'] },
+  { id: '3', question: 'Süper gücün ne olurdu?', options: ['Uçmak', 'Teleportasyon', 'Zaman yolculuğu', 'Görünmezlik'] },
+  { id: '4', question: 'Hafta sonu planı?', options: ['Kafe', 'Doğada yürüyüş', 'Evde film', 'Arkadaşlarla buluşma'] },
+  { id: '5', question: 'Müzik tarzı?', options: ['Pop', 'Rock', 'Jazz', 'Elektronik'] },
+  { id: '6', question: 'Sabah rutinin?', options: ['Spor', 'Kahve + gazete', 'Son dakika uyanış', 'Meditasyon'] },
+  { id: '7', question: 'En iyi hediye?', options: ['Deneyim', 'Kitap', 'Teknoloji', 'El yapımı'] },
+  { id: '8', question: 'İlk buluş yeri?', options: ['Kafe', 'Park', 'Restoran', 'Müze'] },
+  { id: '9', question: 'Hayvan?', options: ['Kedi', 'Köpek', 'Kuş', 'Balık'] },
+  { id: '10', question: 'Hobiyi seç!', options: ['Resim', 'Müzik', 'Yemek yapma', 'Seyahat'] },
 ];
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -230,10 +230,10 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ matchCount, totalCount, onC
   };
 
   const getResultMessage = (): string => {
-    if (percentage >= 80) return 'Mukemmel uyum! Birbiriniz icin yaratilmissiniz!';
-    if (percentage >= 60) return 'Harika bir baslangic! Ortak yanlariniz cok!';
-    if (percentage >= 40) return 'Farkliliklarin güzelligi! Birbirinizi kesfetmeye devam edin.';
-    return 'Zitlar birbirini ceker! Konusarak daha cok sey kesfedeceksiniz.';
+    if (percentage >= 80) return 'Mükemmel uyum! Birbiriniz için yaratılmışsınız!';
+    if (percentage >= 60) return 'Harika bir başlangıç! Ortak yanlarınız çok!';
+    if (percentage >= 40) return 'Farklılıkların güzelliği! Birbirinizi keşfetmeye devam edin.';
+    return 'Zıtlar birbirini çeker! Konuşarak daha çok şey keşfedeceksiniz.';
   };
 
   return (
@@ -243,7 +243,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ matchCount, totalCount, onC
       <Text style={styles.resultTitle}>Uyum Skoru</Text>
       <Text style={styles.resultMessage}>{getResultMessage()}</Text>
       <Text style={styles.resultDetail}>
-        {totalCount} sorudan {matchCount} tanesinde ayni dusunüyorsunuz
+        {totalCount} sorudan {matchCount} tanesinde aynı düşünüyorsunuz
       </Text>
 
       <TouchableOpacity
@@ -371,12 +371,12 @@ export const IcebreakerGameScreen: React.FC<Props> = ({ navigation, route }) => 
             <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
               <Text style={styles.closeButtonText}>{'\u2715'}</Text>
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Buzlari Kiralim!</Text>
+            <Text style={styles.modalTitle}>Buzları Kıralım!</Text>
             <View style={styles.closeButton} />
           </View>
 
           <Text style={styles.selectionSubtitle}>
-            Bir oyun sec ve eslesmeni daha iyi tani
+            Bir oyun seç ve eşleşmeni daha iyi tanı
           </Text>
 
           <ScrollView
@@ -410,7 +410,7 @@ export const IcebreakerGameScreen: React.FC<Props> = ({ navigation, route }) => 
             <TouchableOpacity onPress={handleBackToSelection} style={styles.closeButton}>
               <Text style={styles.closeButtonText}>{'\u2190'}</Text>
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Sonuclar</Text>
+            <Text style={styles.modalTitle}>Sonuçlar</Text>
             <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
               <Text style={styles.closeButtonText}>{'\u2715'}</Text>
             </TouchableOpacity>
@@ -494,7 +494,7 @@ export const IcebreakerGameScreen: React.FC<Props> = ({ navigation, route }) => 
             <TouchableOpacity onPress={handleBackToSelection} style={styles.closeButton}>
               <Text style={styles.closeButtonText}>{'\u2190'}</Text>
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Hizli Sorular</Text>
+            <Text style={styles.modalTitle}>Hızlı Sorular</Text>
             <Text style={styles.questionCounter}>
               {currentQuestionIndex + 1}/{RAPID_FIRE_QUESTIONS.length}
             </Text>
@@ -563,7 +563,7 @@ export const IcebreakerGameScreen: React.FC<Props> = ({ navigation, route }) => 
             <TouchableOpacity onPress={handleBackToSelection} style={styles.closeButton}>
               <Text style={styles.closeButtonText}>{'\u2190'}</Text>
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>2 Dogru 1 Yanlis</Text>
+            <Text style={styles.modalTitle}>2 Doğru 1 Yanlış</Text>
             <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
               <Text style={styles.closeButtonText}>{'\u2715'}</Text>
             </TouchableOpacity>
@@ -573,8 +573,8 @@ export const IcebreakerGameScreen: React.FC<Props> = ({ navigation, route }) => 
             <Text style={styles.twoTruthsEmoji}>{'\uD83E\uDD25'}</Text>
             <Text style={styles.twoTruthsTitle}>
               {showTwoTruthsInput
-                ? '3 sey yaz — 2 dogru, 1 yanlis!'
-                : 'Partnerin hangi yanlis tahmin etsin!'}
+                ? '3 şey yaz — 2 doğru, 1 yanlış!'
+                : 'Partnerin hangi yanlış tahmin etsin!'}
             </Text>
 
             {showTwoTruthsInput ? (
@@ -602,8 +602,8 @@ export const IcebreakerGameScreen: React.FC<Props> = ({ navigation, route }) => 
                     <View style={styles.twoTruthsInputField}>
                       <Text style={styles.twoTruthsPlaceholder}>
                         {index < 2
-                          ? `${index + 1}. dogru bilgini yaz...`
-                          : 'Yanlis bilgini yaz...'}
+                          ? `${index + 1}. doğru bilgini yaz...`
+                          : 'Yanlış bilgini yaz...'}
                       </Text>
                     </View>
                   </View>
@@ -630,7 +630,7 @@ export const IcebreakerGameScreen: React.FC<Props> = ({ navigation, route }) => 
             ) : (
               <View style={styles.twoTruthsWaiting}>
                 <Text style={styles.twoTruthsWaitingText}>
-                  Cevaplarin gönderildi! Partnerinin tahminini bekle...
+                  Cevapların gönderildi! Partnerinin tahminini bekle...
                 </Text>
                 <View style={styles.waitingDots}>
                   <WaitingDot delay={0} />

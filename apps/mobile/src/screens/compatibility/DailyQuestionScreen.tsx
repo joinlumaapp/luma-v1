@@ -1,6 +1,6 @@
-// LUMA V1 -- Gunluk Uyumluluk Sorusu Ekrani
-// BENZERSIZ OZELLIK: Her gun yeni bir soru — kullanicilari aktif tutar
-// Eslesmelerle karsilastirma, seri sayaci ve ruh esi icgoruleri
+// LUMA V1 -- Günlük Uyumluluk Sorusu Ekranı
+// BENZERSIZ OZELLIK: Her gün yeni bir soru — kullanıcıları aktif tutar
+// Eşleşmelerle karşılaştırma, seri sayacı ve ruh eşi içgörüleri
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
@@ -43,9 +43,9 @@ interface CelebrationOverlayProps {
 const STREAK_MILESTONES = [7, 14, 30] as const;
 
 const getMilestoneMessage = (days: number): string | null => {
-  if (days === 7) return '1 haftalik seri! Muhtesemssin!';
-  if (days === 14) return '2 haftalik seri! Azimlisin!';
-  if (days >= 30) return `${days} gunluk seri! Efsane adanmislik!`;
+  if (days === 7) return '1 haftalık seri! Muhteşemsin!';
+  if (days === 14) return '2 haftalık seri! Azimlisin!';
+  if (days >= 30) return `${days} günlük seri! Efsane adanmışlık!`;
   return null;
 };
 
@@ -199,7 +199,7 @@ const CelebrationOverlay: React.FC<CelebrationOverlayProps> = ({
           >
             <Text style={celebrationStyles.fireEmoji}>{'\uD83D\uDD25'}</Text>
             <Text style={celebrationStyles.streakText}>
-              {streakCount} Gun Seri
+              {streakCount} Gün Seri
             </Text>
             <Text style={celebrationStyles.fireEmoji}>{'\uD83D\uDD25'}</Text>
           </Animated.View>
@@ -292,12 +292,12 @@ interface StreakBadgeProps {
 
 const StreakBadge: React.FC<StreakBadgeProps> = ({ streak }) => {
   const getStreakMessage = (days: number): string => {
-    if (days === 0) return 'Bugun ilk gunun!';
-    if (days === 1) return '1 gun — baslangiclari severiz!';
-    if (days < 7) return `${days} gun ust uste!`;
-    if (days === 7) return '1 haftalik seri! Harika!';
-    if (days < 30) return `${days} gun ust uste yanitladin!`;
-    return `${days} gun! Muhtesem bir adanmislik!`;
+    if (days === 0) return 'Bugün ilk günün!';
+    if (days === 1) return '1 gün — başlangıçları severiz!';
+    if (days < 7) return `${days} gün üst üste!`;
+    if (days === 7) return '1 haftalık seri! Harika!';
+    if (days < 30) return `${days} gün üst üste yanıtladın!`;
+    return `${days} gün! Muhteşem bir adanmışlık!`;
   };
 
   const getStreakEmoji = (days: number): string => {
@@ -314,7 +314,7 @@ const StreakBadge: React.FC<StreakBadgeProps> = ({ streak }) => {
       <Text style={streakStyles.emoji}>{getStreakEmoji(streak.currentStreak)}</Text>
       <View style={streakStyles.info}>
         <Text style={streakStyles.count}>
-          {streak.currentStreak} Gun Seri
+          {streak.currentStreak} Gün Seri
         </Text>
         <Text style={streakStyles.message}>
           {getStreakMessage(streak.currentStreak)}
@@ -674,21 +674,21 @@ export const DailyQuestionScreen: React.FC = () => {
 
   const getCategoryLabel = (category: string): string => {
     const labels: Record<string, string> = {
-      communication: 'Iletisim',
-      life_goals: 'Yasam Hedefleri',
-      values: 'Degerler',
-      lifestyle: 'Yasam Tarzi',
+      communication: 'İletişim',
+      life_goals: 'Yaşam Hedefleri',
+      values: 'Değerler',
+      lifestyle: 'Yaşam Tarzı',
       emotional_intelligence: 'Duygusal Zeka',
-      relationship_expectations: 'Iliski Beklentileri',
+      relationship_expectations: 'İlişki Beklentileri',
       social_compatibility: 'Sosyal Uyum',
-      attachment_style: 'Baglanma Tarzi',
+      attachment_style: 'Bağlanma Tarzı',
       love_language: 'Sevgi Dili',
-      conflict_style: 'Catisma Tarzi',
+      conflict_style: 'Çatışma Tarzı',
       future_vision: 'Gelecek Vizyonu',
-      intellectual: 'Entelektuel Uyum',
-      intimacy: 'Yakinlik',
-      growth_mindset: 'Gelisim',
-      core_fears: 'Temel Kaygilar',
+      intellectual: 'Entelektüel Uyum',
+      intimacy: 'Yakınlık',
+      growth_mindset: 'Gelişim',
+      core_fears: 'Temel Kaygılar',
     };
     return labels[category] ?? category;
   };
@@ -699,7 +699,7 @@ export const DailyQuestionScreen: React.FC = () => {
     return (
       <View style={[styles.container, styles.centerContent, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Gunun sorusu yukleniyor...</Text>
+        <Text style={styles.loadingText}>Günün sorusu yükleniyor...</Text>
       </View>
     );
   }
@@ -710,7 +710,7 @@ export const DailyQuestionScreen: React.FC = () => {
     return (
       <View style={[styles.container, styles.centerContent, { paddingTop: insets.top }]}>
         <Text style={styles.errorIcon}>{'\u26A0'}</Text>
-        <Text style={styles.errorText}>Soru yuklenemedi</Text>
+        <Text style={styles.errorText}>Soru yüklenemedi</Text>
         <TouchableOpacity style={styles.retryButton} onPress={loadData}>
           <Text style={styles.retryText}>Tekrar Dene</Text>
         </TouchableOpacity>
@@ -732,9 +732,9 @@ export const DailyQuestionScreen: React.FC = () => {
         >
           <Text style={styles.backText}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Gunun Sorusu</Text>
+        <Text style={styles.headerTitle}>Günün Sorusu</Text>
         <View style={styles.dayBadge}>
-          <Text style={styles.dayText}>Gun {question.dayNumber}</Text>
+          <Text style={styles.dayText}>Gün {question.dayNumber}</Text>
         </View>
       </View>
 
@@ -802,15 +802,15 @@ export const DailyQuestionScreen: React.FC = () => {
         >
           <Text style={styles.insightTitle}>
             {insight.sameAnswerPercent >= 60
-              ? 'Ruh esin de ayni sekilde dusunuyor!'
-              : 'Eslesmelerinle karsilastirma'}
+              ? 'Ruh eşin de aynı şekilde düşünüyor!'
+              : 'Eşleşmelerinle karşılaştırma'}
           </Text>
           <Text style={styles.insightStat}>
-            Eslesmelerinin %{insight.sameAnswerPercent}'i ayni yaniti verdi
+            Eşleşmelerinin %{insight.sameAnswerPercent}'i aynı yanıtı verdi
           </Text>
           <Text style={styles.insightMessage}>{insight.soulMateInsight}</Text>
           <Text style={styles.insightMeta}>
-            Toplam {insight.totalResponses} kisi yanitladi
+            Toplam {insight.totalResponses} kişi yanıtladı
           </Text>
         </Animated.View>
       )}
@@ -831,7 +831,7 @@ export const DailyQuestionScreen: React.FC = () => {
               <ActivityIndicator size="small" color={colors.text} />
             ) : (
               <Text style={styles.submitButtonText}>
-                Yanitla
+                Yanıtla
               </Text>
             )}
           </TouchableOpacity>
@@ -844,7 +844,7 @@ export const DailyQuestionScreen: React.FC = () => {
           <View style={styles.analyzingContainer}>
             <ActivityIndicator size="small" color={colors.primary} />
             <Text style={styles.analyzingText}>
-              Eslesmelerinle karsilastiriliyor...
+              Eşleşmelerinle karşılaştırılıyor...
             </Text>
           </View>
         </View>
@@ -861,7 +861,7 @@ export const DailyQuestionScreen: React.FC = () => {
           {/* User's answer highlight */}
           {answerStats.userAnswer && (
             <View style={styles.answerStatsUserRow}>
-              <Text style={styles.answerStatsUserLabel}>Senin cevabin:</Text>
+              <Text style={styles.answerStatsUserLabel}>Senin cevabın:</Text>
               <Text style={styles.answerStatsUserAnswer}>
                 {answerStats.userAnswer.labelTr}
               </Text>
@@ -918,7 +918,7 @@ export const DailyQuestionScreen: React.FC = () => {
 
           {/* Total count */}
           <Text style={styles.answerStatsTotalCount}>
-            Toplam {answerStats.totalAnswers} kisi yanitladi
+            Toplam {answerStats.totalAnswers} kişi yanıtladı
           </Text>
         </Animated.View>
       )}
@@ -927,7 +927,7 @@ export const DailyQuestionScreen: React.FC = () => {
       {(phase === 'insight' || phase === 'answered') && (
         <View style={styles.tomorrowTeaser}>
           <Text style={styles.tomorrowText}>
-            Yarin yeni bir soru seni bekliyor!
+            Yarın yeni bir soru seni bekliyor!
           </Text>
         </View>
       )}

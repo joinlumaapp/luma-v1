@@ -76,7 +76,7 @@ export const useRelationshipStore = create<RelationshipState>((set, get) => ({
         relationship: null,
         hasActiveRelationship: false,
         isLoading: false,
-        error: 'Iliski durumu yuklenemedi. Lutfen tekrar deneyin.',
+        error: 'İlişki durumu yüklenemedi. Lütfen tekrar deneyin.',
       });
     }
   },
@@ -101,7 +101,7 @@ export const useRelationshipStore = create<RelationshipState>((set, get) => ({
         error: null,
       });
     } catch {
-      set({ isLoading: false, error: 'Iliski aktiflestirilirken bir hata olustu.' });
+      set({ isLoading: false, error: 'İlişki aktifleştirilirken bir hata oluştu.' });
     }
   },
 
@@ -116,7 +116,7 @@ export const useRelationshipStore = create<RelationshipState>((set, get) => ({
         error: null,
       });
     } catch {
-      set({ isLoading: false, error: 'Iliski sonlandirilirken bir hata olustu.' });
+      set({ isLoading: false, error: 'İlişki sonlandırılırken bir hata oluştu.' });
     }
   },
 
@@ -134,7 +134,7 @@ export const useRelationshipStore = create<RelationshipState>((set, get) => ({
         },
       });
     } catch {
-      set({ error: 'Gorunurluk ayari degistirilirken bir hata olustu.' });
+      set({ error: 'Görünürlük ayarı değiştirilirken bir hata oluştu.' });
     }
   },
 }));

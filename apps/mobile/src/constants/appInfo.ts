@@ -5,7 +5,7 @@ import { Platform } from 'react-native';
 // --- Core app identity ---
 export const APP_NAME = 'LUMA' as const;
 export const APP_DISPLAY_NAME = 'LUMA - Ruh Esin Bul' as const;
-export const APP_TAGLINE = 'Gercekten uyumlu insanlarla tanisma platformu' as const;
+export const APP_TAGLINE = 'Gerçekten uyumlu insanlarla tanışma platformu' as const;
 export const APP_VERSION = '1.0.0' as const;
 export const BUILD_NUMBER = '1' as const;
 export const APP_IDENTIFIER = 'com.luma.app' as const;
@@ -83,19 +83,19 @@ export const MIN_SUPPORTED_VERSION = '1.0.0' as const;
 // --- App Store submission metadata (Turkish — user-facing) ---
 export const APP_STORE_META = {
   /** Short description for store listing (max 80 chars) */
-  subtitle: 'Uyumlu insanlarla tanisma platformu',
+  subtitle: 'Uyumlu insanlarla tanışma platformu',
   /** Promotional text (can be updated without new build) */
-  promotionalText: 'LUMA ile gercekten uyumlu insanlari kesfet!',
+  promotionalText: 'LUMA ile gerçekten uyumlu insanları keşfet!',
   /** Keywords for App Store search optimization */
   keywords:
-    'tanisma,flort,ask,dating,uyumluluk,eslestirme,iliski,arkadas,premium',
+    'tanışma,flört,aşk,dating,uyumluluk,eşleştirme,ilişki,arkadaş,premium',
   /** App Store category */
   primaryCategory: 'SOCIAL_NETWORKING',
   secondaryCategory: 'LIFESTYLE',
   /** Content rating */
   contentRating: '17+',
   /** Copyright notice */
-  copyright: `Copyright ${new Date().getFullYear()} LUMA Dating. Tum haklari saklidir.`,
+  copyright: `Copyright ${new Date().getFullYear()} LUMA Dating. Tüm hakları saklıdır.`,
 } as const;
 
 // --- Consolidated app info export ---

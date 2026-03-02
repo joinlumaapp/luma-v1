@@ -24,8 +24,8 @@ const MIN_AGE = 18;
 
 const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
 const MONTHS = [
-  'Ocak', 'Subat', 'Mart', 'Nisan', 'Mayis', 'Haziran',
-  'Temmuz', 'Agustos', 'Eylul', 'Ekim', 'Kasim', 'Aralik',
+  'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+  'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
 ];
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 80 }, (_, i) => currentYear - MIN_AGE - i);
@@ -57,7 +57,7 @@ export const BirthDateScreen: React.FC = () => {
 
     const age = calculateAge();
     if (age < MIN_AGE) {
-      setError(`LUMA'yi kullanabilmek icin en az ${MIN_AGE} yasinda olmalisin.`);
+      setError(`LUMA'yı kullanabilmek için en az ${MIN_AGE} yaşında olmalısın.`);
       return;
     }
 
@@ -74,13 +74,13 @@ export const BirthDateScreen: React.FC = () => {
 
       {/* Content */}
       <View style={styles.content}>
-        <Text style={styles.title}>Dogum Tarihin</Text>
+        <Text style={styles.title}>Doğum Tarihin</Text>
         <Text style={styles.subtitle}>
-          Yasin profilinde gorunecek ama dogum tarihin gizli kalacak.
+          Yaşın profilinde görünecek ama doğum tarihin gizli kalacak.
         </Text>
 
         {/* Day selector */}
-        <Text style={styles.label}>Gun</Text>
+        <Text style={styles.label}>Gün</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollRow}>
           <View style={styles.optionsRow}>
             {DAYS.map((day) => (
@@ -123,7 +123,7 @@ export const BirthDateScreen: React.FC = () => {
         </ScrollView>
 
         {/* Year selector */}
-        <Text style={styles.label}>Yil</Text>
+        <Text style={styles.label}>Yıl</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollRow}>
           <View style={styles.optionsRow}>
             {YEARS.map((year) => (

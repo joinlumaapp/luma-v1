@@ -47,29 +47,29 @@ export const NameScreen: React.FC = () => {
 
       {/* Content */}
       <View style={styles.content}>
-        <Text style={styles.title}>Adin ne?</Text>
+        <Text style={styles.title}>Adın ne?</Text>
         <Text style={styles.subtitle}>
-          Diger kullanicilar seni bu isimle gorecek.
+          Diğer kullanıcılar seni bu isimle görecek.
         </Text>
 
         <TextInput
           style={styles.input}
           value={name}
           onChangeText={setName}
-          placeholder="Adini gir"
+          placeholder="Adını gir"
           placeholderTextColor={colors.textTertiary}
           autoFocus
           maxLength={30}
           autoCapitalize="words"
           returnKeyType="done"
           onSubmitEditing={handleContinue}
-          accessibilityLabel="Adiniz"
-          accessibilityHint="Adinizi girin, en az 2 karakter"
+          accessibilityLabel="Adınız"
+          accessibilityHint="Adınızı girin, en az 2 karakter"
           testID="onboarding-name-input"
         />
 
         <Text style={styles.hint}>
-          Bu isim daha sonra degistirilemez.
+          Bu isim daha sonra değiştirilemez.
         </Text>
       </View>
 
@@ -82,7 +82,7 @@ export const NameScreen: React.FC = () => {
           activeOpacity={0.85}
           accessibilityLabel="Devam"
           accessibilityRole="button"
-          accessibilityHint="Sonraki adima gecmek icin dokunun"
+          accessibilityHint="Sonraki adıma geçmek için dokunun"
           accessibilityState={{ disabled: !isValid }}
           testID="onboarding-name-continue-btn"
         >

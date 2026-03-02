@@ -1,5 +1,5 @@
 // SubscriptionStatusCard — Shows current subscription tier, expiry, and renewal info
-// Displayed on ProfileScreen. For free users, shows animated "Yukselt" button.
+// Displayed on ProfileScreen. For free users, shows animated "Yükselt" button.
 // For paid users, shows active status with expiry date and renewal info.
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
@@ -36,7 +36,7 @@ const TIER_COLORS: Record<string, string> = {
 };
 
 const TIER_DISPLAY_NAMES: Record<string, string> = {
-  FREE: 'Ucretsiz',
+  FREE: 'Ücretsiz',
   GOLD: 'Gold',
   PRO: 'Pro',
   RESERVED: 'Reserved',
@@ -110,7 +110,7 @@ export const SubscriptionStatusCard: React.FC<SubscriptionStatusCardProps> = ({
 
   const tierKey = status?.packageTier ?? currentTier.toUpperCase();
   const accentColor = TIER_COLORS[tierKey] ?? colors.textSecondary;
-  const displayName = TIER_DISPLAY_NAMES[tierKey] ?? 'Ucretsiz';
+  const displayName = TIER_DISPLAY_NAMES[tierKey] ?? 'Ücretsiz';
   const isPaid = status?.isPaid ?? currentTier !== 'free';
 
   if (isLoading) {
@@ -143,7 +143,7 @@ export const SubscriptionStatusCard: React.FC<SubscriptionStatusCardProps> = ({
             ]}
           >
             <Text style={[styles.tierBadgeText, { color: accentColor }]}>
-              {isPaid ? 'Aktif' : 'Ucretsiz Plan'}
+              {isPaid ? 'Aktif' : 'Ücretsiz Plan'}
             </Text>
           </View>
         </View>
@@ -163,7 +163,7 @@ export const SubscriptionStatusCard: React.FC<SubscriptionStatusCardProps> = ({
           {/* Expiry date */}
           {status.expiryDate && (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Bitis tarihi</Text>
+              <Text style={styles.detailLabel}>Bitiş tarihi</Text>
               <Text style={styles.detailValue}>
                 {formatDate(status.expiryDate)}
               </Text>
@@ -181,7 +181,7 @@ export const SubscriptionStatusCard: React.FC<SubscriptionStatusCardProps> = ({
                 },
               ]}
             >
-              {status.autoRenew ? 'Aktif' : 'Kapali'}
+              {status.autoRenew ? 'Aktif' : 'Kapalı'}
             </Text>
           </View>
 
@@ -189,7 +189,7 @@ export const SubscriptionStatusCard: React.FC<SubscriptionStatusCardProps> = ({
           {status.isExpiringSoon && (
             <View style={styles.warningBanner}>
               <Text style={styles.warningText}>
-                Aboneliginiz yakinda sona erecek!
+                Aboneliğiniz yakında sona erecek!
               </Text>
             </View>
           )}
@@ -198,7 +198,7 @@ export const SubscriptionStatusCard: React.FC<SubscriptionStatusCardProps> = ({
           {status.cancelledAt && (
             <View style={styles.cancelledBanner}>
               <Text style={styles.cancelledText}>
-                Iptal edildi - {formatDate(status.expiryDate)} tarihine kadar erisim devam eder
+                İptal edildi - {formatDate(status.expiryDate)} tarihine kadar erişim devam eder
               </Text>
             </View>
           )}
@@ -209,7 +209,7 @@ export const SubscriptionStatusCard: React.FC<SubscriptionStatusCardProps> = ({
       {!isPaid && (
         <View style={styles.freeContainer}>
           <Text style={styles.freeDescription}>
-            Premium ozelliklerin kilidini ac ve LUMA deneyimini yukselt.
+            Premium özelliklerin kilidini aç ve LUMA deneyimini yükselt.
           </Text>
           <Animated.View
             style={[styles.upgradeButtonWrapper, { transform: [{ scale: pulseAnim }] }]}
@@ -219,7 +219,7 @@ export const SubscriptionStatusCard: React.FC<SubscriptionStatusCardProps> = ({
               onPress={onUpgrade}
               activeOpacity={0.85}
             >
-              <Text style={styles.upgradeButtonText}>Yukselt</Text>
+              <Text style={styles.upgradeButtonText}>Yükselt</Text>
             </TouchableOpacity>
           </Animated.View>
         </View>

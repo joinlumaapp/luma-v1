@@ -27,9 +27,9 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-    // TODO: Hata raporlama servisine gonder
+    // TODO: Hata raporlama servisine gönder
     if (__DEV__) {
-      console.error('ErrorBoundary yakaladi:', error, errorInfo);
+      console.error('ErrorBoundary yakaladı:', error, errorInfo);
     }
   }
 
@@ -46,9 +46,9 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
       return (
         <View style={styles.container}>
           <Text style={styles.icon}>{'!'}</Text>
-          <Text style={styles.title}>Bir hata olustu</Text>
+          <Text style={styles.title}>Bir hata oluştu</Text>
           <Text style={styles.message}>
-            Beklenmeyen bir sorun meydana geldi. Lutfen tekrar deneyin.
+            Beklenmeyen bir sorun meydana geldi. Lütfen tekrar deneyin.
           </Text>
           {__DEV__ && this.state.error && (
             <Text style={styles.errorDetail} numberOfLines={5}>

@@ -44,7 +44,7 @@ const TIER_COLORS: Record<PackageTier, string> = {
 };
 
 const TIER_LABELS: Record<PackageTier, string> = {
-  free: 'Ucretsiz',
+  free: 'Ücretsiz',
   gold: 'Gold',
   pro: 'Pro',
   reserved: 'Reserved',
@@ -63,18 +63,18 @@ const TIER_ORDER: PackageTier[] = ['free', 'gold', 'pro', 'reserved'];
 // Feature comparison data — each row maps to all 4 tiers
 const FEATURES: ComparisonFeature[] = [
   {
-    label: 'Gunluk swipe limiti',
+    label: 'Günlük swipe limiti',
     free: '20',
     gold: '60',
     pro: '200',
-    reserved: 'Sinirsiz',
+    reserved: 'Sınırsız',
   },
   {
     label: 'Super Like',
-    free: '1/gun',
-    gold: '5/gun',
-    pro: 'Sinirsiz',
-    reserved: 'Sinirsiz',
+    free: '1/gün',
+    gold: '5/gün',
+    pro: 'Sınırsız',
+    reserved: 'Sınırsız',
   },
   {
     label: 'Geri Al (Undo)',
@@ -84,42 +84,42 @@ const FEATURES: ComparisonFeature[] = [
     reserved: '\u2713',
   },
   {
-    label: 'Kimin begendigi',
+    label: 'Kimin beğendiği',
     free: '\u2717',
     gold: '\u2713',
     pro: '\u2713',
     reserved: '\u2713',
   },
   {
-    label: 'Profil ziyaretcileri',
+    label: 'Profil ziyaretçileri',
     free: '\u2717',
     gold: '\u2713',
     pro: '\u2713',
     reserved: '\u2713',
   },
   {
-    label: 'Gelismis filtreler',
+    label: 'Gelişmiş filtreler',
     free: '\u2717',
     gold: '\u2717',
     pro: '\u2713',
     reserved: '\u2713',
   },
   {
-    label: 'Oncelikli gosterim',
+    label: 'Öncelikli gösterim',
     free: '\u2717',
     gold: '\u2717',
     pro: '\u2713',
     reserved: '\u2713',
   },
   {
-    label: 'Ozel rozet',
+    label: 'Özel rozet',
     free: '\u2717',
     gold: '\u2717',
     pro: '\u2717',
     reserved: '\u2713',
   },
   {
-    label: 'Ozel etkinlik davet',
+    label: 'Özel etkinlik davet',
     free: '\u2717',
     gold: '\u2717',
     pro: '\u2717',
@@ -167,7 +167,7 @@ export const PackageComparisonModal: React.FC<PackageComparisonModalProps> = ({
         <View style={[styles.container, { paddingBottom: insets.bottom + spacing.md }]}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Paket Karsilastirmasi</Text>
+            <Text style={styles.title}>Paket Karşılaştırması</Text>
             <TouchableOpacity
               onPress={onClose}
               style={styles.closeButton}
@@ -178,7 +178,7 @@ export const PackageComparisonModal: React.FC<PackageComparisonModalProps> = ({
           </View>
 
           <Text style={styles.subtitle}>
-            Tum ozellikleri karsilastir ve sana en uygun paketi sec.
+            Tüm özellikleri karşılaştır ve sana en uygun paketi seç.
           </Text>
 
           <ScrollView
@@ -188,7 +188,7 @@ export const PackageComparisonModal: React.FC<PackageComparisonModalProps> = ({
             {/* Column headers — tier names + prices */}
             <View style={styles.tableHeaderRow}>
               <View style={styles.featureLabelCell}>
-                <Text style={styles.featureLabelHeader}>Ozellik</Text>
+                <Text style={styles.featureLabelHeader}>Özellik</Text>
               </View>
               {TIER_ORDER.map((tier) => {
                 const isRecommended = tier === RECOMMENDED_TIER;
@@ -203,7 +203,7 @@ export const PackageComparisonModal: React.FC<PackageComparisonModalProps> = ({
                   >
                     {isRecommended && (
                       <View style={styles.recommendedBadge}>
-                        <Text style={styles.recommendedBadgeText}>Onerilen</Text>
+                        <Text style={styles.recommendedBadgeText}>Önerilen</Text>
                       </View>
                     )}
                     <Text style={[styles.tierHeaderName, { color: accentColor }]}>
@@ -282,7 +282,7 @@ export const PackageComparisonModal: React.FC<PackageComparisonModalProps> = ({
                         onPress={() => onUpgrade(tier)}
                         activeOpacity={0.85}
                       >
-                        <Text style={styles.upgradeBtnText}>Simdi{'\n'}Yukselt</Text>
+                        <Text style={styles.upgradeBtnText}>Şimdi{'\n'}Yükselt</Text>
                       </TouchableOpacity>
                     ) : (
                       <View style={styles.emptyBtnPlaceholder} />

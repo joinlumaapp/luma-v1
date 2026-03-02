@@ -168,14 +168,14 @@ export function useBiometricAuth(): BiometricAuthState {
         biometricType === 'facial'
           ? Platform.OS === 'ios'
             ? 'Face ID'
-            : 'Yuz Tanima'
+            : 'Yüz Tanıma'
           : 'Parmak Izi';
 
       const result = await LocalAuth.authenticateAsync({
-        promptMessage: `LUMA'ya giris yapmak icin ${biometricLabel} kullanin`,
-        cancelLabel: 'Iptal',
+        promptMessage: `LUMA'ya giriş yapmak için ${biometricLabel} kullanın`,
+        cancelLabel: 'İptal',
         disableDeviceFallback: false,
-        fallbackLabel: 'Sifre Kullan',
+        fallbackLabel: 'Şifre Kullan',
       });
 
       if (!result.success) {

@@ -24,8 +24,8 @@ const requestCameraPermission = async (): Promise<boolean> => {
   const { status } = await ImagePicker.requestCameraPermissionsAsync();
   if (status !== 'granted') {
     Alert.alert(
-      'Kamera Izni Gerekli',
-      'Fotografinizi cekmek icin kamera iznine ihtiyacimiz var. Lutfen ayarlardan izin verin.',
+      'Kamera İzni Gerekli',
+      'Fotoğrafınızı çekmek için kamera iznine ihtiyacımız var. Lütfen ayarlardan izin verin.',
       [{ text: 'Tamam' }],
     );
     return false;
@@ -40,8 +40,8 @@ const requestGalleryPermission = async (): Promise<boolean> => {
   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (status !== 'granted') {
     Alert.alert(
-      'Galeri Izni Gerekli',
-      'Fotograflariniza erismek icin galeri iznine ihtiyacimiz var. Lutfen ayarlardan izin verin.',
+      'Galeri İzni Gerekli',
+      'Fotoğraflarınıza erişmek için galeri iznine ihtiyacımız var. Lütfen ayarlardan izin verin.',
       [{ text: 'Tamam' }],
     );
     return false;

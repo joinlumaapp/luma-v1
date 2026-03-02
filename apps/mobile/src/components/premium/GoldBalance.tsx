@@ -165,7 +165,7 @@ export const GoldBalance: React.FC<GoldBalanceProps> = ({ balance }) => {
           >
             {/* Header */}
             <View style={historyStyles.header}>
-              <Text style={historyStyles.title}>Gold Gecmisi</Text>
+              <Text style={historyStyles.title}>Gold Geçmişi</Text>
               <TouchableOpacity
                 onPress={() => setModalVisible(false)}
                 style={historyStyles.closeButton}
@@ -203,7 +203,7 @@ export const GoldBalance: React.FC<GoldBalanceProps> = ({ balance }) => {
                 ) : (
                   <View style={historyStyles.emptyContainer}>
                     <Text style={historyStyles.emptyText}>
-                      Henuz Gold islemi yok
+                      Henüz Gold işlemi yok
                     </Text>
                   </View>
                 )

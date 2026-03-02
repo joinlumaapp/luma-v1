@@ -204,9 +204,9 @@ export const ProfileScreen: React.FC = () => {
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffMins < 60) return `${diffMins} dk once`;
-    if (diffHours < 24) return `${diffHours} saat once`;
-    return `${diffDays} gun once`;
+    if (diffMins < 60) return `${diffMins} dk önce`;
+    if (diffHours < 24) return `${diffHours} saat önce`;
+    return `${diffDays} gün önce`;
   };
 
   const handleEditProfile = () => {
@@ -254,7 +254,7 @@ export const ProfileScreen: React.FC = () => {
             style={styles.settingsButton}
             accessibilityLabel="Ayarlar"
             accessibilityRole="button"
-            accessibilityHint="Uygulama ayarlarini acmak icin dokunun"
+            accessibilityHint="Uygulama ayarlarını açmak için dokunun"
             testID="profile-settings-btn"
           >
             <Text style={styles.settingsIcon}>{'O'}</Text>
@@ -298,12 +298,12 @@ export const ProfileScreen: React.FC = () => {
               style={styles.editButton}
               onPress={handleEditProfile}
               activeOpacity={0.85}
-              accessibilityLabel="Profili duzenle"
+              accessibilityLabel="Profili düzenle"
               accessibilityRole="button"
-              accessibilityHint="Profil bilgilerinizi duzenlemek icin dokunun"
+              accessibilityHint="Profil bilgilerinizi düzenlemek için dokunun"
               testID="profile-edit-btn"
             >
-              <Text style={styles.editButtonText}>Profili Duzenle</Text>
+              <Text style={styles.editButtonText}>Profili Düzenle</Text>
             </TouchableOpacity>
           </View>
         </SlideIn>
@@ -312,7 +312,7 @@ export const ProfileScreen: React.FC = () => {
         {strengthData && (
           <SlideIn direction="down" delay={100} distance={20}>
             <View style={styles.strengthCard}>
-              <Text style={styles.sectionTitle}>Profil Gucu</Text>
+              <Text style={styles.sectionTitle}>Profil Gücü</Text>
 
               {/* Circular ring container */}
               <View style={styles.strengthRingContainer}>
@@ -392,9 +392,9 @@ export const ProfileScreen: React.FC = () => {
         {/* Stats with count-up animation */}
         <SlideIn direction="down" delay={200} distance={20}>
           <View style={styles.statsCard}>
-            <Text style={styles.sectionTitle}>Istatistikler</Text>
+            <Text style={styles.sectionTitle}>İstatistikler</Text>
             <View style={styles.statsRow}>
-              <CountUpStat target={totalMatches} label="Eslesme" />
+              <CountUpStat target={totalMatches} label="Eşleşme" />
               <View style={styles.statDivider} />
               <CountUpStat target={0} label="Harmony" />
               <View style={styles.statDivider} />
@@ -409,7 +409,7 @@ export const ProfileScreen: React.FC = () => {
         {/* Bio */}
         <SlideIn direction="down" delay={300} distance={20}>
           <View style={styles.bioCard}>
-            <Text style={styles.sectionTitle}>Hakkinda</Text>
+            <Text style={styles.sectionTitle}>Hakkında</Text>
             <Text style={styles.bioText}>{profile.bio || '-'}</Text>
           </View>
         </SlideIn>
@@ -422,12 +422,12 @@ export const ProfileScreen: React.FC = () => {
             activeOpacity={0.7}
             accessibilityLabel="Rozetler"
             accessibilityRole="button"
-            accessibilityHint="Tum rozetleri gormek icin dokunun"
+            accessibilityHint="Tüm rozetleri görmek için dokunun"
             testID="profile-badges-btn"
           >
             <View style={styles.badgesHeader}>
               <Text style={styles.sectionTitle}>Rozetler</Text>
-              <Text style={styles.seeAllText}>Tumunu Gor {'>'}</Text>
+              <Text style={styles.seeAllText}>Tümünü Gör {'>'}</Text>
             </View>
             <View style={styles.badgesRow}>
               {badges.length > 0 ? (
@@ -448,20 +448,20 @@ export const ProfileScreen: React.FC = () => {
                   </View>
                 ))
               ) : (
-                <Text style={styles.badgeLabel}>Henuz rozet kazanilmadi</Text>
+                <Text style={styles.badgeLabel}>Henüz rozet kazanılmadı</Text>
               )}
             </View>
           </TouchableOpacity>
         </SlideIn>
 
-        {/* Profile Visitors — "Seni kimler gordu" */}
+        {/* Profile Visitors — "Seni kimler gördü" */}
         {visitorsData && visitorsData.totalCount > 0 && (
           <SlideIn direction="down" delay={500} distance={20}>
             <View style={styles.visitorsCard}>
               <View style={styles.visitorsHeader}>
-                <Text style={styles.sectionTitle}>Seni Kimler Gordu</Text>
+                <Text style={styles.sectionTitle}>Seni Kimler Gördü</Text>
                 <Text style={styles.visitorsCount}>
-                  {visitorsData.totalCount} kisi
+                  {visitorsData.totalCount} kişi
                 </Text>
               </View>
 
@@ -520,13 +520,13 @@ export const ProfileScreen: React.FC = () => {
                   style={styles.visitorsUpgradeButton}
                   onPress={handlePackages}
                   activeOpacity={0.85}
-                  accessibilityLabel="Gold paketine yukselt"
+                  accessibilityLabel="Gold paketine yükselt"
                   accessibilityRole="button"
-                  accessibilityHint="Paket seceneklerini gormek icin dokunun"
+                  accessibilityHint="Paket seçeneklerini görmek için dokunun"
                   testID="profile-upgrade-btn"
                 >
                   <Text style={styles.visitorsUpgradeText}>
-                    Gold&apos;a yukselt ve kimlerin gordugunu ogren!
+                    Gold&apos;a yükselt ve kimlerin gördüğünü öğren!
                   </Text>
                 </TouchableOpacity>
               )}

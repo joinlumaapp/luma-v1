@@ -324,7 +324,7 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
                 <Image
                   source={{ uri: userPhotoUrl }}
                   style={styles.profilePhoto}
-                  accessibilityLabel={`${userName} profil fotografi`}
+                  accessibilityLabel={`${userName} profil fotoğrafı`}
                 />
               ) : (
                 <Text
@@ -352,7 +352,7 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
                 <Image
                   source={{ uri: matchPhotoUrl }}
                   style={styles.profilePhoto}
-                  accessibilityLabel={`${matchName} profil fotografi`}
+                  accessibilityLabel={`${matchName} profil fotoğrafı`}
                 />
               ) : (
                 <Text
@@ -372,18 +372,18 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
             ]}
           >
             {isSuperCompatible
-              ? 'Super Uyumlu Eslesme!'
-              : 'Yeni Eslesme!'}
+              ? 'Süper Uyumlu Eşleşme!'
+              : 'Yeni Eşleşme!'}
           </Animated.Text>
 
           <Text style={styles.subtitle}>
-            Sen ve {matchName} birbirinizi begendiniz
+            Sen ve {matchName} birbirinizi beğendiniz
           </Text>
 
           {/* Compatibility level label */}
           {isSuperCompatible && (
             <View style={styles.superBadge}>
-              <Text style={styles.superBadgeText}>Super Uyumlu</Text>
+              <Text style={styles.superBadgeText}>Süper Uyumlu</Text>
             </View>
           )}
 
@@ -431,14 +431,14 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
               activeOpacity={0.85}
             >
               <Text style={styles.primaryButtonText}>
-                Mesaj Gonder
+                Mesaj Gönder
               </Text>
             </TouchableOpacity>
 
             {/* Smart conversation starters */}
             {conversationStarters && conversationStarters.length > 0 ? (
               <View style={styles.startersContainer}>
-                <Text style={styles.startersLabel}>Konusma baslat:</Text>
+                <Text style={styles.startersLabel}>Konuşma başlat:</Text>
                 {conversationStarters.map((starter, idx) => (
                   <TouchableOpacity
                     key={`starter-${idx}`}
@@ -460,7 +460,7 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
               style={styles.secondaryButton}
             >
               <Text style={styles.secondaryButtonText}>
-                Kesfetmeye Devam Et
+                Keşfetmeye Devam Et
               </Text>
             </TouchableOpacity>
           </Animated.View>

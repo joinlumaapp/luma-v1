@@ -98,7 +98,7 @@ export const OTPVerificationScreen: React.FC = () => {
 
       if (!result.verified) {
         setFailedAttempts((prev) => prev + 1);
-        Alert.alert('Hata', 'Kod gecersiz. Tekrar deneyin.');
+        Alert.alert('Hata', 'Kod geçersiz. Tekrar deneyin.');
         setCode(Array(OTP_LENGTH).fill(''));
         setActiveIndex(0);
         inputRefs.current[0]?.focus();
@@ -121,7 +121,7 @@ export const OTPVerificationScreen: React.FC = () => {
       }
     } catch {
       setFailedAttempts((prev) => prev + 1);
-      Alert.alert('Hata', 'Kod gecersiz. Tekrar deneyin.');
+      Alert.alert('Hata', 'Kod geçersiz. Tekrar deneyin.');
       setCode(Array(OTP_LENGTH).fill(''));
       setActiveIndex(0);
       inputRefs.current[0]?.focus();
@@ -186,7 +186,7 @@ export const OTPVerificationScreen: React.FC = () => {
         setRateLimitTimer(responseData.retryAfterSeconds);
         setResendTimer(responseData.retryAfterSeconds);
       } else {
-        Alert.alert('Hata', 'Kod gonderilemedi.');
+        Alert.alert('Hata', 'Kod gönderilemedi.');
       }
     }
   };
@@ -220,7 +220,7 @@ export const OTPVerificationScreen: React.FC = () => {
           style={styles.backButton}
           accessibilityLabel="Geri"
           accessibilityRole="button"
-          accessibilityHint="Telefon numarasi ekranina donmek icin dokunun"
+          accessibilityHint="Telefon numarası ekranına dönmek için dokunun"
           testID="otp-back-btn"
         >
           <Text style={styles.backText}>{'<'}</Text>
@@ -229,16 +229,16 @@ export const OTPVerificationScreen: React.FC = () => {
 
       {/* Content */}
       <View style={styles.content}>
-        <Text style={styles.title}>Dogrulama Kodu</Text>
+        <Text style={styles.title}>Doğrulama Kodu</Text>
         <Text style={styles.subtitle}>
-          {maskedPhone} numarasina gonderilen 6 haneli kodu gir.
+          {maskedPhone} numarasına gönderilen 6 haneli kodu gir.
         </Text>
 
         {/* Rate limit warning */}
         {isRateLimited && (
           <View style={styles.rateLimitBanner}>
             <Text style={styles.rateLimitText}>
-              Cok fazla deneme. {formatTimer(rateLimitTimer)} sonra tekrar deneyebilirsin.
+              Çok fazla deneme. {formatTimer(rateLimitTimer)} sonra tekrar deneyebilirsin.
             </Text>
           </View>
         )}
@@ -247,7 +247,7 @@ export const OTPVerificationScreen: React.FC = () => {
         {failedAttempts >= 3 && !isRateLimited && (
           <View style={styles.warningBanner}>
             <Text style={styles.warningText}>
-              {5 - failedAttempts} deneme hakkin kaldi. Dogru kodu girdiginizden emin olun.
+              {5 - failedAttempts} deneme hakkın kaldı. Doğru kodu girdiğinizden emin olun.
             </Text>
           </View>
         )}
@@ -273,9 +273,9 @@ export const OTPVerificationScreen: React.FC = () => {
               autoFocus={index === 0}
               editable={!isVerifying && !isRateLimited}
               selectTextOnFocus
-              accessibilityLabel={`Dogrulama kodu ${index + 1}. hane`}
+              accessibilityLabel={`Doğrulama kodu ${index + 1}. hane`}
               accessibilityRole="text"
-              accessibilityHint={`${index + 1}. haneyi girin`}
+              accessibilityHint={`${index + 1}. haneyi giriniz`}
               testID={`otp-input-${index}`}
             />
           ))}
@@ -285,32 +285,32 @@ export const OTPVerificationScreen: React.FC = () => {
         <View style={styles.resendContainer}>
           {isRateLimited ? (
             <Text style={styles.rateLimitTimerText}>
-              Tekrar gonder ({formatTimer(rateLimitTimer)})
+              Tekrar gönder ({formatTimer(rateLimitTimer)})
             </Text>
           ) : resendTimer > 0 ? (
             <Text style={styles.resendTimerText}>
-              Tekrar gonder ({formatTimer(resendTimer)})
+              Tekrar gönder ({formatTimer(resendTimer)})
             </Text>
           ) : remainingResends > 0 ? (
             <TouchableOpacity
               onPress={handleResend}
-              accessibilityLabel="Kodu tekrar gonder"
+              accessibilityLabel="Kodu tekrar gönder"
               accessibilityRole="button"
-              accessibilityHint="Dogrulama kodunu tekrar gondermek icin dokunun"
+              accessibilityHint="Doğrulama kodunu tekrar göndermek için dokunun"
               testID="otp-resend-btn"
             >
-              <Text style={styles.resendButton}>Kodu Tekrar Gonder</Text>
+              <Text style={styles.resendButton}>Kodu Tekrar Gönder</Text>
             </TouchableOpacity>
           ) : (
             <Text style={styles.resendExhaustedText}>
-              Maksimum gonderim sayisina ulasildi
+              Maksimum gönderim sayısına ulaşıldı
             </Text>
           )}
 
           {/* Show remaining resend count */}
           {!isRateLimited && remainingResends > 0 && remainingResends < MAX_RESEND_ATTEMPTS && (
             <Text style={styles.resendCountText}>
-              {remainingResends} gonderim hakki kaldi
+              {remainingResends} gönderim hakkı kaldı
             </Text>
           )}
         </View>
@@ -318,7 +318,7 @@ export const OTPVerificationScreen: React.FC = () => {
         {/* Loading state */}
         {isVerifying && (
           <View style={styles.verifyingContainer}>
-            <Text style={styles.verifyingText}>Dogrulanıyor...</Text>
+            <Text style={styles.verifyingText}>Doğrulanıyor...</Text>
           </View>
         )}
       </View>
@@ -333,9 +333,9 @@ export const OTPVerificationScreen: React.FC = () => {
           onPress={() => handleVerify(code.join(''))}
           disabled={code.includes('') || isVerifying || isRateLimited}
           activeOpacity={0.85}
-          accessibilityLabel="Dogrula"
+          accessibilityLabel="Doğrula"
           accessibilityRole="button"
-          accessibilityHint="Girilen kodu dogrulamak icin dokunun"
+          accessibilityHint="Girilen kodu doğrulamak için dokunun"
           accessibilityState={{ disabled: code.includes('') || isVerifying || isRateLimited }}
           testID="otp-verify-btn"
         >
@@ -345,7 +345,7 @@ export const OTPVerificationScreen: React.FC = () => {
               (code.includes('') || isVerifying || isRateLimited) && styles.verifyButtonTextDisabled,
             ]}
           >
-            Dogrula
+            Doğrula
           </Text>
         </TouchableOpacity>
       </View>

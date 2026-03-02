@@ -34,7 +34,7 @@ const formatTimestamp = (dateString: string): string => {
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffMinutes < 1) return 'Simdi';
+  if (diffMinutes < 1) return 'Şimdi';
   if (diffMinutes < 60) return `${diffMinutes} dk`;
   if (diffHours < 24) return `${diffHours} sa`;
   if (diffDays < 7) return `${diffDays} g`;
@@ -89,7 +89,7 @@ const MemoizedConversationCard = memo<ConversationCardProps>(({ item, onPress })
           ]}
           numberOfLines={1}
         >
-          {item.lastMessage || 'Henuz mesaj yok'}
+          {item.lastMessage || 'Henüz mesaj yok'}
         </Text>
         {item.unreadCount > 0 && (
           <View style={styles.unreadBadge}>
@@ -153,9 +153,9 @@ export const ChatListScreen: React.FC = () => {
   const renderEmptyList = useCallback(() => (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyIcon}>{'...'}</Text>
-      <Text style={styles.emptyTitle}>Henuz Sohbetin Yok</Text>
+      <Text style={styles.emptyTitle}>Henüz Sohbetin Yok</Text>
       <Text style={styles.emptySubtitle}>
-        Eslesmelerine mesaj gondererek sohbet baslatabilirsin.
+        Eşleşmelerine mesaj göndererek sohbet başlatabilirsin.
       </Text>
     </View>
   ), []);

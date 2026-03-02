@@ -67,12 +67,12 @@ export const RelationshipScreen: React.FC = () => {
 
   const handleEndRelationship = () => {
     Alert.alert(
-      'Iliskiyi Sonlandir',
-      'Iliskinizi sonlandirmak istediginizden emin misiniz? Bu islem geri alinamaz.',
+      'İlişkiyi Sonlandır',
+      'İlişkinizi sonlandırmak istediğinizden emin misiniz? Bu işlem geri alınamaz.',
       [
-        { text: 'Iptal', style: 'cancel' },
+        { text: 'İptal', style: 'cancel' },
         {
-          text: 'Sonlandir',
+          text: 'Sonlandır',
           style: 'destructive',
           onPress: async () => {
             await deactivate();
@@ -94,7 +94,7 @@ export const RelationshipScreen: React.FC = () => {
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Text style={styles.backText}>{'<'}</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Iliski Durumu</Text>
+          <Text style={styles.headerTitle}>İlişki Durumu</Text>
           <View style={{ width: 40 }} />
         </View>
         <View style={styles.emptyState}>
@@ -136,10 +136,10 @@ export const RelationshipScreen: React.FC = () => {
           </View>
           <Text style={styles.partnerName}>{relationship.partnerName}</Text>
           <View style={styles.durationChip}>
-            <Text style={styles.durationText}>{days} gundur birlikte</Text>
+            <Text style={styles.durationText}>{days} gündür birlikte</Text>
           </View>
           <Text style={styles.activatedDate}>
-            Baslangic: {new Date(relationship.activatedAt).toLocaleDateString('tr-TR', {
+            Başlangıç: {new Date(relationship.activatedAt).toLocaleDateString('tr-TR', {
               day: 'numeric',
               month: 'long',
               year: 'numeric',
@@ -151,7 +151,7 @@ export const RelationshipScreen: React.FC = () => {
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{days}</Text>
-            <Text style={styles.statLabel}>Gun</Text>
+            <Text style={styles.statLabel}>Gün</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{badges.length}</Text>
@@ -163,7 +163,7 @@ export const RelationshipScreen: React.FC = () => {
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>0</Text>
-            <Text style={styles.statLabel}>Ani</Text>
+            <Text style={styles.statLabel}>Anı</Text>
           </View>
         </View>
 
@@ -196,7 +196,7 @@ export const RelationshipScreen: React.FC = () => {
           ) : (
             <View style={styles.noBadges}>
               <Text style={styles.noBadgesText}>
-                Henuz rozet kazanilmadi. Birlikte vakit gecirdikce rozetler kazanacaksiniz!
+                Henüz rozet kazanılmadı. Birlikte vakit geçirdikçe rozetler kazanacaksınız!
               </Text>
             </View>
           )}
@@ -204,13 +204,13 @@ export const RelationshipScreen: React.FC = () => {
 
         {/* Settings section */}
         <View style={styles.settingsSection}>
-          <Text style={styles.sectionTitle}>Iliski Ayarlari</Text>
+          <Text style={styles.sectionTitle}>İlişki Ayarları</Text>
 
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Gorunurluk</Text>
+              <Text style={styles.settingLabel}>Görünürlük</Text>
               <Text style={styles.settingDescription}>
-                Iliskiniz diger kullanicilara gorunur olsun
+                İlişkiniz diğer kullanıcılara görünür olsun
               </Text>
             </View>
             <Switch
@@ -229,7 +229,7 @@ export const RelationshipScreen: React.FC = () => {
             onPress={handleEndRelationship}
             activeOpacity={0.7}
           >
-            <Text style={styles.endButtonText}>Iliskiyi Sonlandir</Text>
+            <Text style={styles.endButtonText}>İlişkiyi Sonlandır</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -248,7 +248,7 @@ export const RelationshipScreen: React.FC = () => {
       </View>
       <Text style={styles.emptyTitle}>Aktif iliskiniz bulunmuyor</Text>
       <Text style={styles.emptySubtitle}>
-        Bir eslestirme ile iliski baslattiginizda burada gorunecektir.
+        Bir eşleştirme ile ilişki başlattığınızda burada görünecektir.
       </Text>
     </View>
   );
@@ -260,7 +260,7 @@ export const RelationshipScreen: React.FC = () => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Text style={styles.backText}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Iliski Durumu</Text>
+        <Text style={styles.headerTitle}>İlişki Durumu</Text>
         <View style={{ width: 40 }} />
       </View>
 

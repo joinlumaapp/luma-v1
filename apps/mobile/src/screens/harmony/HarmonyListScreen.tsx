@@ -93,11 +93,11 @@ export const HarmonyListScreen: React.FC = () => {
       case 'active':
         return 'Aktif';
       case 'scheduled':
-        return 'Planlanmis';
+        return 'Planlanmış';
       case 'completed':
-        return 'Tamamlandi';
+        return 'Tamamlandı';
       case 'expired':
-        return 'Suresi Doldu';
+        return 'Süresi Doldu';
     }
   };
 
@@ -120,9 +120,9 @@ export const HarmonyListScreen: React.FC = () => {
       onPress={() => handleOpenSession(item)}
       activeOpacity={0.7}
       disabled={item.status === 'expired'}
-      accessibilityLabel={`${item.matchName} ile Harmony oturumu, ${getStatusLabel(item.status)}, yuzde ${item.compatibilityScore} uyum`}
+      accessibilityLabel={`${item.matchName} ile Harmony oturumu, ${getStatusLabel(item.status)}, yüzde ${item.compatibilityScore} uyum`}
       accessibilityRole="button"
-      accessibilityHint="Harmony oturumunu acmak icin dokunun"
+      accessibilityHint="Harmony oturumunu açmak için dokunun"
       accessibilityState={{ disabled: item.status === 'expired' }}
       testID={`harmony-session-${item.id}`}
     >
@@ -161,7 +161,7 @@ export const HarmonyListScreen: React.FC = () => {
             />
           </View>
           <Text style={styles.timerText}>
-            {Math.ceil(item.remainingSeconds / 60)} dakika kaldi
+            {Math.ceil(item.remainingSeconds / 60)} dakika kaldı
           </Text>
         </View>
       )}
@@ -186,8 +186,8 @@ export const HarmonyListScreen: React.FC = () => {
       <Text style={styles.emptyIcon}>{'~'}</Text>
       <Text style={styles.emptyTitle}>Harmony Room Yok</Text>
       <Text style={styles.emptySubtitle}>
-        Eslesmelerin uzerinden Harmony Room baslatabilirsin. Birlikte sorulari yanitlayin ve
-        uyumlulugunuzu keşfedin.
+        Eşleşmelerin üzerinden Harmony Room başlatabilirsin. Birlikte soruları yanıtlayın ve
+        uyumluluğunuzu keşfedin.
       </Text>
     </View>
   );

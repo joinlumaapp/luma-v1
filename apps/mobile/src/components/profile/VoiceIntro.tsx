@@ -226,8 +226,8 @@ export const VoiceIntroRecorder: React.FC<VoiceIntroRecorderProps> = ({
       const permission = await Audio.requestPermissionsAsync();
       if (!permission.granted) {
         Alert.alert(
-          'Mikrofon Izni Gerekli',
-          'Sesli tanitim kaydetmek icin mikrofon iznine ihtiyacimiz var. Lütfen ayarlardan mikrofon iznini aktif edin.',
+          'Mikrofon İzni Gerekli',
+          'Sesli tanıtım kaydetmek için mikrofon iznine ihtiyacımız var. Lütfen ayarlardan mikrofon iznini aktif edin.',
         );
         return;
       }
@@ -246,8 +246,8 @@ export const VoiceIntroRecorder: React.FC<VoiceIntroRecorderProps> = ({
       setState('recording');
     } catch (error) {
       Alert.alert(
-        'Kayit Hatasi',
-        'Ses kaydi baslatilirken bir hata olustu. Lütfen tekrar deneyin.',
+        'Kayıt Hatası',
+        'Ses kaydı başlatılırken bir hata oluştu. Lütfen tekrar deneyin.',
       );
     }
   }, []);
@@ -280,8 +280,8 @@ export const VoiceIntroRecorder: React.FC<VoiceIntroRecorderProps> = ({
       setState('recorded');
     } catch (error) {
       Alert.alert(
-        'Kayit Hatasi',
-        'Ses kaydi durdurulurken bir hata olustu. Lütfen tekrar deneyin.',
+        'Kayıt Hatası',
+        'Ses kaydı durdurulurken bir hata oluştu. Lütfen tekrar deneyin.',
       );
       setState('idle');
     }
@@ -311,8 +311,8 @@ export const VoiceIntroRecorder: React.FC<VoiceIntroRecorderProps> = ({
       setState('playing');
     } catch (error) {
       Alert.alert(
-        'Oynatma Hatasi',
-        'Ses kaydini oynatirken bir hata olustu. Lütfen tekrar deneyin.',
+        'Oynatma Hatası',
+        'Ses kaydını oynatırken bir hata oluştu. Lütfen tekrar deneyin.',
       );
     }
   }, [recordedUri]);
@@ -325,8 +325,8 @@ export const VoiceIntroRecorder: React.FC<VoiceIntroRecorderProps> = ({
       setState('paused');
     } catch (error) {
       Alert.alert(
-        'Oynatma Hatasi',
-        'Ses duraklatilirken bir hata olustu.',
+        'Oynatma Hatası',
+        'Ses duraklatılırken bir hata oluştu.',
       );
     }
   }, []);
@@ -351,9 +351,9 @@ export const VoiceIntroRecorder: React.FC<VoiceIntroRecorderProps> = ({
 
   return (
     <View style={styles.recorderContainer}>
-      <Text style={styles.recorderTitle}>Sesli Tanitim</Text>
+      <Text style={styles.recorderTitle}>Sesli Tanıtım</Text>
       <Text style={styles.recorderSubtitle}>
-        30 saniyede kendini sesli olarak tanit
+        30 saniyede kendini sesli olarak tanıt
       </Text>
 
       {/* Waveform */}
@@ -384,7 +384,7 @@ export const VoiceIntroRecorder: React.FC<VoiceIntroRecorderProps> = ({
             style={styles.recordButton}
           >
             <View style={styles.recordButtonInner} />
-            <Text style={styles.recordButtonLabel}>Kayit Baslat</Text>
+            <Text style={styles.recordButtonLabel}>Kayıt Başlat</Text>
           </TouchableOpacity>
         )}
 
@@ -556,8 +556,8 @@ export const VoiceIntroPlayer: React.FC<VoiceIntroPlayerProps> = ({
     } catch (error) {
       setIsPlaying(false);
       Alert.alert(
-        'Oynatma Hatasi',
-        'Sesli tanitim oynatilirken bir hata olustu. Lütfen tekrar deneyin.',
+        'Oynatma Hatası',
+        'Sesli tanıtım oynatılırken bir hata oluştu. Lütfen tekrar deneyin.',
       );
     }
   }, [voiceIntroUrl, isPlaying]);

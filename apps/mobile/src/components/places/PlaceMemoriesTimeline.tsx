@@ -202,9 +202,9 @@ export const PlaceMemoriesTimeline: React.FC<PlaceMemoriesTimelineProps> = ({
         <View style={timelineStyles.emptyIconCircle}>
           <Text style={timelineStyles.emptyIcon}>--</Text>
         </View>
-        <Text style={timelineStyles.emptyTitle}>Henuz ani eklenmemis</Text>
+        <Text style={timelineStyles.emptyTitle}>Henüz anı eklenmemiş</Text>
         <Text style={timelineStyles.emptySubtitle}>
-          Mekanlariniza check-in yaparak ve not ekleyerek anilari biriktirmeye baslayin.
+          Mekanlarınıza check-in yaparak ve not ekleyerek anıları biriktirmeye başlayın.
         </Text>
         {onAddMemory && (
           <TouchableOpacity
@@ -212,7 +212,7 @@ export const PlaceMemoriesTimeline: React.FC<PlaceMemoriesTimelineProps> = ({
             onPress={onAddMemory}
             activeOpacity={0.8}
           >
-            <Text style={timelineStyles.addFirstButtonText}>Ilk Aniyi Ekle</Text>
+            <Text style={timelineStyles.addFirstButtonText}>İlk Anıyı Ekle</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -258,7 +258,7 @@ export const PlaceMemoriesTimeline: React.FC<PlaceMemoriesTimelineProps> = ({
           activeOpacity={0.8}
         >
           <Text style={timelineStyles.fabIcon}>+</Text>
-          <Text style={timelineStyles.fabText}>Yeni Ani Ekle</Text>
+          <Text style={timelineStyles.fabText}>Yeni Anı Ekle</Text>
         </TouchableOpacity>
       )}
     </View>

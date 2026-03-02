@@ -204,7 +204,7 @@ export const useHarmonyStore = create<HarmonyState>((set, get) => ({
       return newSession.id;
     } catch {
       set({ isLoading: false });
-      throw new Error('Harmony Room olusturulamadi');
+      throw new Error('Harmony Room oluşturulamadı');
     }
   },
 
@@ -266,8 +266,8 @@ export const useHarmonyStore = create<HarmonyState>((set, get) => ({
   connectSocket: () => {
     const token = useAuthStore.getState().accessToken;
     if (!token) {
-      console.warn('[HarmonyStore] Baglanti icin token gerekli');
-      set({ socketError: 'Kimlik dogrulama bilgisi bulunamadi' });
+      console.warn('[HarmonyStore] Bağlantı için token gerekli');
+      set({ socketError: 'Kimlik doğrulama bilgisi bulunamadı' });
       return;
     }
 

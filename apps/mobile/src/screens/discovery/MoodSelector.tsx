@@ -143,7 +143,7 @@ export const MoodSelector: React.FC = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Bugün Ne Moddayim?</Text>
+        <Text style={styles.title}>Bug\u00FCn Ne Modday\u0131m?</Text>
         {currentMood && !isExpired && (
           <View style={styles.activeBadge}>
             <View style={styles.activeDot} />
@@ -152,7 +152,7 @@ export const MoodSelector: React.FC = () => {
         )}
       </View>
       <Text style={styles.subtitle}>
-        Ruh halini paylas, sana uygun kisileri bul
+        Ruh halini payla\u015F, sana uygun ki\u015Fileri bul
       </Text>
 
       {/* Horizontal Scrollable Mood Chips */}

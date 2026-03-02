@@ -32,12 +32,12 @@ interface ReportReason {
 
 const REPORT_REASONS: ReportReason[] = [
   { id: 'spam', label: 'Spam' },
-  { id: 'inappropriate_photos', label: 'Uygunsuz Fotograflar' },
+  { id: 'inappropriate_photos', label: 'Uygunsuz Fotoğraflar' },
   { id: 'harassment', label: 'Taciz' },
-  { id: 'underage', label: 'Yas Siniri Ihlali' },
+  { id: 'underage', label: 'Yaş Sınırı İhlali' },
   { id: 'fake_profile', label: 'Sahte Profil' },
-  { id: 'scam', label: 'Dolandiricilik' },
-  { id: 'other', label: 'Diger' },
+  { id: 'scam', label: 'Dolandırıcılık' },
+  { id: 'other', label: 'Diğer' },
 ];
 
 export const ReportModal: React.FC<ReportModalProps> = ({
@@ -75,9 +75,9 @@ export const ReportModal: React.FC<ReportModalProps> = ({
           <View style={styles.handleBar} />
 
           {/* Title */}
-          <Text style={styles.title}>{userName} Adli Kullaniciyi Sikayet Et</Text>
+          <Text style={styles.title}>{userName} Adlı Kullanıcıyı Şikayet Et</Text>
           <Text style={styles.subtitle}>
-            Lutfen sikayet nedenini secin. Raporunuz gizli tutulacaktir.
+            Lütfen şikayet nedenini seçin. Raporunuz gizli tutulacaktır.
           </Text>
 
           {/* Reasons */}
@@ -111,12 +111,12 @@ export const ReportModal: React.FC<ReportModalProps> = ({
 
             {/* Optional details */}
             <View style={styles.detailsSection}>
-              <Text style={styles.detailsLabel}>Ek Aciklama (Istege Bagli)</Text>
+              <Text style={styles.detailsLabel}>Ek Açıklama (İsteğe Bağlı)</Text>
               <TextInput
                 style={styles.detailsInput}
                 value={details}
                 onChangeText={setDetails}
-                placeholder="Detaylari buraya yazabilirsiniz..."
+                placeholder="Detayları buraya yazabilirsiniz..."
                 placeholderTextColor={colors.textTertiary}
                 multiline
                 maxLength={1000}
@@ -138,7 +138,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
             {isSubmitting ? (
               <ActivityIndicator size="small" color={colors.text} />
             ) : (
-              <Text style={styles.submitButtonText}>Sikayet Et</Text>
+              <Text style={styles.submitButtonText}>Şikayet Et</Text>
             )}
           </TouchableOpacity>
         </Pressable>

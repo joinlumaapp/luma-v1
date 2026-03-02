@@ -1,4 +1,4 @@
-// SettingsScreen — SectionList with Hesap, Bildirimler, Gizlilik, Gorunum, Yardim Merkezi, Hakkinda, Tehlike Bolgesi
+// SettingsScreen — SectionList with Hesap, Bildirimler, Gizlilik, Görünüm, Yardım Merkezi, Hakkında, Tehlike Bölgesi
 
 import React, { useState, useCallback, useMemo } from 'react';
 import {
@@ -91,7 +91,7 @@ interface SettingSection {
 
 // Theme option labels (Turkish)
 const THEME_OPTIONS: { mode: ThemeMode; label: string }[] = [
-  { mode: 'light', label: 'Acik' },
+  { mode: 'light', label: 'Açık' },
   { mode: 'dark', label: 'Koyu' },
   { mode: 'system', label: 'Sistem' },
 ];
@@ -124,12 +124,12 @@ export const SettingsScreen: React.FC = () => {
 
   const handleLogout = useCallback(() => {
     Alert.alert(
-      'Cikis Yap',
-      'Hesabindan cikmak istediginden emin misin?',
+      'Çıkış Yap',
+      'Hesabından çıkmak istediğinden emin misin?',
       [
-        { text: 'Iptal', style: 'cancel' },
+        { text: 'İptal', style: 'cancel' },
         {
-          text: 'Cikis Yap',
+          text: 'Çıkış Yap',
           style: 'destructive',
           onPress: () => {
             logout();
@@ -157,7 +157,7 @@ export const SettingsScreen: React.FC = () => {
       const logoutAction = useAuthStore.getState().logout;
       logoutAction();
     } catch {
-      Alert.alert('Hata', 'Hesap silinemedi. Lutfen tekrar dene.');
+      Alert.alert('Hata', 'Hesap silinemedi. Lütfen tekrar dene.');
     } finally {
       setIsDeleting(false);
     }
@@ -170,19 +170,19 @@ export const SettingsScreen: React.FC = () => {
 
   const handleContactUs = useCallback(() => {
     Linking.openURL('mailto:destek@luma.dating').catch(() => {
-      Alert.alert('Hata', 'E-posta uygulamasi acilamadi.');
+      Alert.alert('Hata', 'E-posta uygulaması açılamadı.');
     });
   }, []);
 
   const handleOpenTerms = useCallback(() => {
     Linking.openURL('https://luma.dating/terms').catch(() => {
-      Alert.alert('Hata', 'Sayfa acilamadi.');
+      Alert.alert('Hata', 'Sayfa açılamadı.');
     });
   }, []);
 
   const handleOpenPrivacy = useCallback(() => {
     Linking.openURL('https://luma.dating/privacy').catch(() => {
-      Alert.alert('Hata', 'Sayfa acilamadi.');
+      Alert.alert('Hata', 'Sayfa açılamadı.');
     });
   }, []);
 
@@ -196,7 +196,7 @@ export const SettingsScreen: React.FC = () => {
         {
           key: 'phone',
           icon: 'P',
-          title: 'Telefon Numarasi',
+          title: 'Telefon Numarası',
           type: 'display',
           subtitle: phoneDisplay,
         },
@@ -223,7 +223,7 @@ export const SettingsScreen: React.FC = () => {
         {
           key: 'match_notif',
           icon: 'E',
-          title: 'Eslesme Bildirimleri',
+          title: 'Eşleşme Bildirimleri',
           type: 'toggle',
           value: matchNotifications,
           onToggle: setMatchNotifications,
@@ -239,7 +239,7 @@ export const SettingsScreen: React.FC = () => {
         {
           key: 'notif_settings',
           icon: 'A',
-          title: 'Bildirim Ayarlari',
+          title: 'Bildirim Ayarları',
           type: 'navigation',
           onPress: () => navigation.navigate('NotificationSettings'),
         },
@@ -251,7 +251,7 @@ export const SettingsScreen: React.FC = () => {
         {
           key: 'online_status',
           icon: 'C',
-          title: 'Cevrimici Durumu Goster',
+          title: 'Çevrimiçi Durumu Göster',
           type: 'toggle',
           value: showOnlineStatus,
           onToggle: setShowOnlineStatus,
@@ -259,7 +259,7 @@ export const SettingsScreen: React.FC = () => {
         {
           key: 'distance',
           icon: 'M',
-          title: 'Mesafeyi Goster',
+          title: 'Mesafeyi Göster',
           type: 'toggle',
           value: showDistance,
           onToggle: setShowDistance,
@@ -267,7 +267,7 @@ export const SettingsScreen: React.FC = () => {
         {
           key: 'age',
           icon: 'Y',
-          title: 'Yasi Goster',
+          title: 'Yaşı Göster',
           type: 'toggle',
           value: showAge,
           onToggle: setShowAge,
@@ -275,7 +275,7 @@ export const SettingsScreen: React.FC = () => {
       ],
     },
     {
-      title: 'Gorunum',
+      title: 'Görünüm',
       data: [
         {
           key: 'theme_selector',
@@ -286,83 +286,83 @@ export const SettingsScreen: React.FC = () => {
       ],
     },
     {
-      title: 'Yardim Merkezi',
+      title: 'Yardım Merkezi',
       data: [
         {
           key: 'faq_delete',
           icon: '?',
-          title: 'Hesabimi nasil silebilirim?',
+          title: 'Hesabımı nasıl silebilirim?',
           type: 'faq',
           answer:
-            'Ayarlar ekraninin en altindaki "Tehlike Bolgesi" bolumunden "Hesabi Sil" butonuna tiklayarak hesabinizi kalici olarak silebilirsiniz. Bu islem geri alinamaz.',
+            'Ayarlar ekranının en altındaki "Tehlike Bölgesi" bölümünden "Hesabı Sil" butonuna tıklayarak hesabınızı kalıcı olarak silebilirsiniz. Bu işlem geri alınamaz.',
         },
         {
           key: 'faq_matching',
           icon: '?',
-          title: 'Eslesme nasil oluyor?',
+          title: 'Eşleşme nasıl oluyor?',
           type: 'faq',
           answer:
-            'LUMA, 45 soruya verdiginiz yanitlari analiz ederek sizinle uyumlu kisileri bulur. Karsilikli begeni durumunda eslesmis olursunuz ve sohbet baslatabilirsiniz.',
+            'LUMA, 45 soruya verdiğiniz yanıtları analiz ederek sizinle uyumlu kişileri bulur. Karşılıklı beğeni durumunda eşleşmiş olursunuz ve sohbet başlatabilirsiniz.',
         },
         {
           key: 'faq_gold',
           icon: '?',
-          title: 'Gold ne ise yarar?',
+          title: 'Gold ne işe yarar?',
           type: 'faq',
           answer:
-            'Gold paketi ile sinirsiz begeni, detayli uyumluluk analizi, 25 premium soru, Harmony Room sure uzatma ve kimin begenidigini gorme gibi ozellikler kazanirsiniz.',
+            'Gold paketi ile sınırsız beğeni, detaylı uyumluluk analizi, 25 premium soru, Harmony Room süre uzatma ve kimin beğendiğini görme gibi özellikler kazanırsınız.',
         },
         {
           key: 'faq_super',
           icon: '?',
-          title: 'Super Uyumluluk nedir?',
+          title: 'Süper Uyumluluk nedir?',
           type: 'faq',
           answer:
-            'Super Uyumluluk, iki kullanicinin uyumluluk skorunun %85 ve uzerinde oldugu ozel eslesme durumudur. Bu esleslmelerde ozel animasyonlar ve oncelikli bildirimler gosterilir.',
+            'Süper Uyumluluk, iki kullanıcının uyumluluk skorunun %85 ve üzerinde olduğu özel eşleşme durumudur. Bu eşleşmelerde özel animasyonlar ve öncelikli bildirimler gösterilir.',
         },
         {
           key: 'faq_verify',
           icon: '?',
-          title: 'Profil dogrulama nasil yapilir?',
+          title: 'Profil doğrulama nasıl yapılır?',
           type: 'faq',
           answer:
-            'Profil dogrulama icin selfie cekim adimindan gecmeniz gerekiyor. Yuzunuzun net gorunur oldugu bir selfie cekerek kimliginizi dogrulayin. Dogrulanmis profiller mavi tik alir.',
+            'Profil doğrulama için selfie çekim adımından geçmeniz gerekiyor. Yüzünüzün net görünür olduğu bir selfie çekerek kimliğinizi doğrulayın. Doğrulanmış profiller mavi tik alır.',
         },
       ],
     },
     {
-      title: 'Hakkinda',
+      title: 'Hakkında',
       data: [
         {
           key: 'contact',
           icon: 'D',
-          title: 'Bize Ulasin',
+          title: 'Bize Ulaşın',
           type: 'navigation',
           onPress: handleContactUs,
         },
         {
           key: 'terms',
           icon: 'K',
-          title: 'Kullanim Kosullari',
+          title: 'Kullanım Koşulları',
           type: 'navigation',
           onPress: handleOpenTerms,
         },
         {
           key: 'privacy',
           icon: 'G',
-          title: 'Gizlilik Politikasi',
+          title: 'Gizlilik Politikası',
           type: 'navigation',
           onPress: handleOpenPrivacy,
         },
       ],
     },
     {
-      title: 'Tehlike Bolgesi',
+      title: 'Tehlike Bölgesi',
       data: [
         {
           key: 'logout',
           icon: 'X',
-          title: 'Cikis Yap',
+          title: 'Çıkış Yap',
           type: 'action',
           destructive: true,
           onPress: handleLogout,
@@ -370,7 +370,7 @@ export const SettingsScreen: React.FC = () => {
         {
           key: 'delete',
           icon: '!',
-          title: 'Hesabi Sil',
+          title: 'Hesabı Sil',
           type: 'action',
           destructive: true,
           onPress: handleOpenDeleteModal,
@@ -533,7 +533,7 @@ export const SettingsScreen: React.FC = () => {
       <Text
         style={[
           dynamicStyles.sectionTitle,
-          section.title === 'Tehlike Bolgesi' && dynamicStyles.sectionTitleDanger,
+          section.title === 'Tehlike Bölgesi' && dynamicStyles.sectionTitleDanger,
         ]}
       >
         {section.title}
@@ -591,10 +591,10 @@ export const SettingsScreen: React.FC = () => {
           <View style={dynamicStyles.modalContainer}>
             {deleteStep === 1 ? (
               <>
-                <Text style={dynamicStyles.modalTitle}>Hesabi Sil</Text>
+                <Text style={dynamicStyles.modalTitle}>Hesabı Sil</Text>
                 <Text style={dynamicStyles.modalMessage}>
-                  Hesabinizi silmek istediginizden emin misiniz?{'\n\n'}
-                  Tum verileriniz, eslesmeleriniz ve sohbetleriniz silinecek.
+                  Hesabınızı silmek istediğinizden emin misiniz?{'\n\n'}
+                  Tüm verileriniz, eşleşmeleriniz ve sohbetleriniz silinecek.
                 </Text>
                 <View style={staticStyles.modalActions}>
                   <TouchableOpacity
@@ -604,7 +604,7 @@ export const SettingsScreen: React.FC = () => {
                       setDeleteStep(1);
                     }}
                   >
-                    <Text style={dynamicStyles.modalCancelText}>Iptal</Text>
+                    <Text style={dynamicStyles.modalCancelText}>İptal</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={dynamicStyles.modalDeleteButton}
@@ -616,10 +616,10 @@ export const SettingsScreen: React.FC = () => {
               </>
             ) : (
               <>
-                <Text style={dynamicStyles.modalTitle}>Son Uyari!</Text>
+                <Text style={dynamicStyles.modalTitle}>Son Uyarı!</Text>
                 <Text style={dynamicStyles.modalMessage}>
-                  Bu islem geri alinamaz!{'\n\n'}
-                  Hesabiniz ve tum verileriniz kalici olarak silinecektir.
+                  Bu işlem geri alınamaz!{'\n\n'}
+                  Hesabınız ve tüm verileriniz kalıcı olarak silinecektir.
                 </Text>
                 <View style={staticStyles.modalActions}>
                   <TouchableOpacity
@@ -630,7 +630,7 @@ export const SettingsScreen: React.FC = () => {
                     }}
                     disabled={isDeleting}
                   >
-                    <Text style={dynamicStyles.modalCancelText}>Vazgec</Text>
+                    <Text style={dynamicStyles.modalCancelText}>Vazgeç</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={dynamicStyles.modalDeleteButton}
@@ -640,7 +640,7 @@ export const SettingsScreen: React.FC = () => {
                     {isDeleting ? (
                       <ActivityIndicator size="small" color={colors.text} />
                     ) : (
-                      <Text style={dynamicStyles.modalDeleteText}>Hesabi Sil</Text>
+                      <Text style={dynamicStyles.modalDeleteText}>Hesabı Sil</Text>
                     )}
                   </TouchableOpacity>
                 </View>

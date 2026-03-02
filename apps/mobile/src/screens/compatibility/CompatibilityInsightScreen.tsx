@@ -1,6 +1,6 @@
-// LUMA V1 -- Derin Uyumluluk Analizi Ekrani
-// Radar chart ile 7 uyumluluk boyutunu gorsellestirir
-// Premium kullanicilara ozel detayli analiz
+// LUMA V1 -- Derin Uyumluluk Analizi Ekranı
+// Radar chart ile 7 uyumluluk boyutunu görselleştirir
+// Premium kullanıcılara özel detaylı analiz
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -54,33 +54,33 @@ const DIMENSION_LABELS: Array<{
 }> = [
   {
     key: 'communication',
-    labelTr: 'Iletisim Uyumu',
+    labelTr: 'İletişim Uyumu',
     descriptionTr:
-      'Iletisim tarzlarinizin ne kadar uyumlu oldugunu gosterir. Ayni dili konusmak, iliskinin temelidir.',
+      'İletişim tarzlarınızın ne kadar uyumlu olduğunu gösterir. Aynı dili konuşmak, ilişkinin temelidir.',
     categories: ['communication'],
     color: palette.purple[400],
   },
   {
     key: 'life_goals',
-    labelTr: 'Yasam Hedefleri',
+    labelTr: 'Yaşam Hedefleri',
     descriptionTr:
-      'Hayattan ne beklediginiz ve gelecek vizyonunuzun ne kadar ortustugunun gostergesidir.',
+      'Hayattan ne beklediğiniz ve gelecek vizyonunuzun ne kadar örtüştüğünün göstergesidir.',
     categories: ['life_goals', 'future_vision'],
     color: palette.pink[400],
   },
   {
     key: 'values',
-    labelTr: 'Degerler',
+    labelTr: 'Değerler',
     descriptionTr:
-      'Temel degerlerinizin ve hayata bakis acinizin ne kadar uyumlu oldugunu olcer.',
+      'Temel değerlerinizin ve hayata bakış açınızın ne kadar uyumlu olduğunu ölçer.',
     categories: ['values'],
     color: palette.gold[400],
   },
   {
     key: 'lifestyle',
-    labelTr: 'Yasam Tarzi',
+    labelTr: 'Yaşam Tarzı',
     descriptionTr:
-      'Gunluk rutinler, hobiler ve yasam tercihleri acisindan ne kadar uyumlu oldugunuzu gosterir.',
+      'Günlük rutinler, hobiler ve yaşam tercihleri açısından ne kadar uyumlu olduğunuzu gösterir.',
     categories: ['lifestyle'],
     color: '#10B981',
   },
@@ -88,15 +88,15 @@ const DIMENSION_LABELS: Array<{
     key: 'emotional_intelligence',
     labelTr: 'Duygusal Zeka',
     descriptionTr:
-      'Duygulari anlama, ifade etme ve empati kurma becerinizin ne kadar ortustugunun olcusudur.',
+      'Duyguları anlama, ifade etme ve empati kurma becerinizin ne kadar örtüştüğünün ölçüsüdür.',
     categories: ['emotional_intelligence', 'attachment_style'],
     color: '#3B82F6',
   },
   {
     key: 'relationship_expectations',
-    labelTr: 'Iliski Beklentileri',
+    labelTr: 'İlişki Beklentileri',
     descriptionTr:
-      'Bir iliskiden ne beklediginiz, sevgi dili ve yakinlik anlayisinizin uyumu.',
+      'Bir ilişkiden ne beklediğiniz, sevgi dili ve yakınlık anlayışınızın uyumu.',
     categories: ['relationship_expectations', 'love_language', 'intimacy'],
     color: '#F472B6',
   },
@@ -104,7 +104,7 @@ const DIMENSION_LABELS: Array<{
     key: 'social_compatibility',
     labelTr: 'Sosyal Uyum',
     descriptionTr:
-      'Sosyal cevre, arkadas iliskileri ve toplumsal yaklasimlarinizin ne kadar benzer oldugunu olcer.',
+      'Sosyal çevre, arkadaş ilişkileri ve toplumsal yaklaşımlarınızın ne kadar benzer olduğunu ölçer.',
     categories: ['social_compatibility', 'intellectual'],
     color: '#8B5CF6',
   },
@@ -421,7 +421,7 @@ export const CompatibilityInsightScreen: React.FC = () => {
   ): { text: string; color: string; bgColor: string } => {
     if (level === 'SUPER') {
       return {
-        text: 'Super Uyum',
+        text: 'Süper Uyum',
         color: colors.accent,
         bgColor: colors.accent + '20',
       };
@@ -441,7 +441,7 @@ export const CompatibilityInsightScreen: React.FC = () => {
     return (
       <View style={[styles.container, styles.loadingContainer, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Uyumluluk analizi hazirlaniyor...</Text>
+        <Text style={styles.loadingText}>Uyumluluk analizi hazırlanıyor...</Text>
       </View>
     );
   }
@@ -449,7 +449,7 @@ export const CompatibilityInsightScreen: React.FC = () => {
   if (!compatibilityData) {
     return (
       <View style={[styles.container, styles.loadingContainer, { paddingTop: insets.top }]}>
-        <Text style={styles.errorText}>Uyumluluk verisi yuklenemedi</Text>
+        <Text style={styles.errorText}>Uyumluluk verisi yüklenemedi</Text>
         <TouchableOpacity
           style={styles.retryButton}
           onPress={loadCompatibilityData}
@@ -524,7 +524,7 @@ export const CompatibilityInsightScreen: React.FC = () => {
 
           {/* Radar Chart */}
           <View style={styles.radarSection}>
-            <Text style={styles.sectionTitle}>7 Boyutlu Uyum Haritasi</Text>
+            <Text style={styles.sectionTitle}>7 Boyutlu Uyum Haritası</Text>
             <View style={styles.radarContainer}>
               <RadarChart
                 scores={compatibilityData.dimensions.map((d) => d.score)}
@@ -538,7 +538,7 @@ export const CompatibilityInsightScreen: React.FC = () => {
 
           {/* Dimension breakdown */}
           <View style={styles.dimensionsSection}>
-            <Text style={styles.sectionTitle}>Boyut Detaylari</Text>
+            <Text style={styles.sectionTitle}>Boyut Detayları</Text>
 
             {compatibilityData.dimensions.map((dim) => (
               <View key={dim.key} style={styles.dimensionCard}>
@@ -621,7 +621,7 @@ export const CompatibilityInsightScreen: React.FC = () => {
                     {dim.score >= 80 && (
                       <View style={styles.insightBadge}>
                         <Text style={styles.insightText}>
-                          Bu alanda muhtesem bir uyumunuz var!
+                          Bu alanda muhteşem bir uyumunuz var!
                         </Text>
                       </View>
                     )}
@@ -635,7 +635,7 @@ export const CompatibilityInsightScreen: React.FC = () => {
                         <Text
                           style={[styles.insightText, { color: colors.warning }]}
                         >
-                          Iyi bir temel var, birlikte gelistirebilirsiniz.
+                          İyi bir temel var, birlikte geliştirebilirsiniz.
                         </Text>
                       </View>
                     )}
@@ -649,8 +649,8 @@ export const CompatibilityInsightScreen: React.FC = () => {
                         <Text
                           style={[styles.insightText, { color: colors.info }]}
                         >
-                          Farkliliklar iliskiyi zenginlestirebilir. Anlayis
-                          onemli!
+                          Farklılıklar ilişkiyi zenginleştirebilir. Anlayış
+                          önemli!
                         </Text>
                       </View>
                     )}
@@ -664,17 +664,17 @@ export const CompatibilityInsightScreen: React.FC = () => {
           {isFreeUser && (
             <View style={styles.premiumCta}>
               <Text style={styles.premiumCtaTitle}>
-                Tum Boyutlari Ac
+                Tüm Boyutları Aç
               </Text>
               <Text style={styles.premiumCtaSubtitle}>
-                Premium ile 7 boyutun tamamini gor ve ruh esini bul!
+                Premium ile 7 boyutun tamamını gör ve ruh eşini bul!
               </Text>
               <TouchableOpacity
                 style={styles.premiumCtaButton}
                 activeOpacity={0.85}
               >
                 <Text style={styles.premiumCtaButtonText}>
-                  Premium'a Yukselt
+                  Premium'a Yükselt
                 </Text>
               </TouchableOpacity>
             </View>
@@ -683,16 +683,16 @@ export const CompatibilityInsightScreen: React.FC = () => {
           {/* Overall insight */}
           <View style={styles.overallInsight}>
             <Text style={styles.overallInsightTitle}>
-              Genel Degerlendirme
+              Genel Değerlendirme
             </Text>
             <Text style={styles.overallInsightText}>
               {compatibilityData.finalScore >= 90
-                ? `${partnerName} ile aranizda olaganustu bir uyum var. Degerleriniz, yasam hedefleriniz ve iletisim tarzlariniz birbirini tamamliyor. Bu, nadir bulunan bir baglanti!`
+                ? `${partnerName} ile aranızda olağanüstü bir uyum var. Değerleriniz, yaşam hedefleriniz ve iletişim tarzlarınız birbirini tamamlıyor. Bu, nadir bulunan bir bağlantı!`
                 : compatibilityData.finalScore >= 70
-                  ? `${partnerName} ile iyi bir uyum icerindesiniz. Bazi alanlarda cok guclu bir baglantiniz var. Birbirinizi tanidikca bu uyum daha da guclenir.`
+                  ? `${partnerName} ile iyi bir uyum içerisindesiniz. Bazı alanlarda çok güçlü bir bağlantınız var. Birbirinizi tanıdıkça bu uyum daha da güçlenir.`
                   : compatibilityData.finalScore >= 50
-                    ? `${partnerName} ile ortaklasiniz var ama farkliliklar da mevcut. Bu farkliliklar, dogru iletisimle iliskiyi zenginlestirebilir.`
-                    : `${partnerName} ile farkli bakis acilarina sahipsiniz. Farkliliklar her zaman kotu degildir — onemli olan anlayis ve saygidir.`}
+                    ? `${partnerName} ile ortaklığınız var ama farklılıklar da mevcut. Bu farklılıklar, doğru iletişimle ilişkiyi zenginleştirebilir.`
+                    : `${partnerName} ile farklı bakış açılarına sahipsiniz. Farklılıklar her zaman kötü değildir — önemli olan anlayış ve saygıdır.`}
             </Text>
           </View>
 

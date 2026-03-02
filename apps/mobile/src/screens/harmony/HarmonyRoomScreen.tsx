@@ -43,11 +43,11 @@ type HarmonyRoomRouteProp = RouteProp<HarmonyStackParamList, 'HarmonyRoom'>;
 // Available reactions
 const REACTIONS: { type: HarmonyReaction; label: string }[] = [
   { type: 'love', label: 'Sev' },
-  { type: 'laugh', label: 'Gul' },
-  { type: 'think', label: 'Dusun' },
-  { type: 'surprise', label: 'Sasir' },
-  { type: 'agree', label: 'Katil' },
-  { type: 'disagree', label: 'Katilma' },
+  { type: 'laugh', label: 'Gül' },
+  { type: 'think', label: 'Düşün' },
+  { type: 'surprise', label: 'Şaşır' },
+  { type: 'agree', label: 'Katıl' },
+  { type: 'disagree', label: 'Katılma' },
 ];
 
 /** Interval for requesting timer sync from the server (every 30 seconds) */
@@ -113,7 +113,7 @@ const TypingIndicator: React.FC = () => {
           style={[styles.typingDot, { transform: [{ translateY: dot3Anim }] }]}
         />
       </View>
-      <Text style={styles.typingText}>... yaziyor</Text>
+      <Text style={styles.typingText}>... yazıyor</Text>
     </View>
   );
 };
@@ -145,7 +145,7 @@ const SessionSummary: React.FC<SessionSummaryProps> = ({
   >
     <View style={styles.summaryOverlay}>
       <View style={styles.summaryCard}>
-        <Text style={styles.summaryTitle}>Oturum Ozeti</Text>
+        <Text style={styles.summaryTitle}>Oturum Özeti</Text>
         <View style={styles.summaryDivider} />
 
         <View style={styles.summaryStatRow}>
@@ -154,7 +154,7 @@ const SessionSummary: React.FC<SessionSummaryProps> = ({
         </View>
 
         <View style={styles.summaryStatRow}>
-          <Text style={styles.summaryStatLabel}>Oturum suresi</Text>
+          <Text style={styles.summaryStatLabel}>Oturum süresi</Text>
           <Text style={styles.summaryStatValue}>{sessionDurationMinutes} dk</Text>
         </View>
 
@@ -330,9 +330,9 @@ export const HarmonyRoomScreen: React.FC = () => {
       onCallRejected: (reason?: string) => {
         setShowIncomingCall(false);
         if (reason === 'busy') {
-          Alert.alert('Mesgul', 'Partner su anda baska bir aramada.');
+          Alert.alert('Meşgul', 'Partner şu anda başka bir aramada.');
         } else if (reason === 'timeout') {
-          Alert.alert('Cevapsiz', 'Arama cevaplanmadi.');
+          Alert.alert('Cevapsız', 'Arama cevaplanmadı.');
         }
       },
       onCallEnded: () => {
@@ -638,7 +638,7 @@ export const HarmonyRoomScreen: React.FC = () => {
 
   useEffect(() => {
     if (socketError) {
-      Alert.alert('Baglanti Hatasi', socketError);
+      Alert.alert('Bağlantı Hatası', socketError);
     }
   }, [socketError]);
 
@@ -683,11 +683,11 @@ export const HarmonyRoomScreen: React.FC = () => {
   const getReactionLabel = (reaction: string): string => {
     const labels: Record<string, string> = {
       love: 'Sevdi',
-      laugh: 'Guldu',
-      think: 'Dusunuyor',
-      surprise: 'Sasirdi',
-      agree: 'Katildi',
-      disagree: 'Katilmadi',
+      laugh: 'Güldü',
+      think: 'Düşünüyor',
+      surprise: 'Şaşırdı',
+      agree: 'Katıldı',
+      disagree: 'Katılmadı',
     };
     return labels[reaction] ?? reaction;
   };
@@ -771,19 +771,19 @@ export const HarmonyRoomScreen: React.FC = () => {
   const handleExtendSession = useCallback(() => {
     if (!activeSession) return;
     if (extensions >= HARMONY_CONFIG.MAX_EXTENSIONS) {
-      Alert.alert('Limit', 'Maksimum uzatma sayisina ulastin.');
+      Alert.alert('Limit', 'Maksimum uzatma sayısına ulaştın.');
       return;
     }
     Alert.alert(
-      'Sure Uzat',
-      `${HARMONY_CONFIG.EXTENSION_DURATION_MINUTES} dakika eklemek icin ${HARMONY_CONFIG.GOLD_EXTENSION_COST} Gold kullanilacak.`,
+      'Süre Uzat',
+      `${HARMONY_CONFIG.EXTENSION_DURATION_MINUTES} dakika eklemek için ${HARMONY_CONFIG.GOLD_EXTENSION_COST} Gold kullanılacak.`,
       [
-        { text: 'Iptal', style: 'cancel' },
+        { text: 'İptal', style: 'cancel' },
         {
           text: 'Uzat',
           onPress: async () => {
             const success = await extendSession(activeSession.id);
-            if (!success) Alert.alert('Hata', 'Sure uzatilamadi.');
+            if (!success) Alert.alert('Hata', 'Süre uzatılamadı.');
           },
         },
       ]
@@ -797,7 +797,7 @@ export const HarmonyRoomScreen: React.FC = () => {
       return;
     }
     if (!isPartnerOnline) {
-      Alert.alert('Partner Cevrimdisi', 'Partner henuz odaya katilmadi.');
+      Alert.alert('Partner Çevrimdışı', 'Partner henüz odaya katılmadı.');
       return;
     }
     setCallType('voice');
@@ -858,12 +858,12 @@ export const HarmonyRoomScreen: React.FC = () => {
 
   const handleLeaveRoom = useCallback(() => {
     Alert.alert(
-      'Odadan Ayril',
-      'Harmony Room\'dan ayrilmak istediginden emin misin?',
+      'Odadan Ayrıl',
+      'Harmony Room\'dan ayrılmak istediğinden emin misin?',
       [
         { text: 'Kal', style: 'cancel' },
         {
-          text: 'Ayril',
+          text: 'Ayrıl',
           style: 'destructive',
           onPress: () => {
             if (activeSession) {
@@ -1059,7 +1059,7 @@ export const HarmonyRoomScreen: React.FC = () => {
                     ? 'Soru'
                     : currentCard.type === 'game'
                       ? 'Oyun'
-                      : 'Gorev'}
+                      : 'Görev'}
                 </Text>
               </View>
 
@@ -1104,7 +1104,7 @@ export const HarmonyRoomScreen: React.FC = () => {
       ) : (
         <View style={styles.cardSection}>
           <View style={[styles.harmonyCard, { borderColor: colors.surfaceBorder }]}>
-            <Text style={styles.cardText}>Henuz kart yok</Text>
+            <Text style={styles.cardText}>Henüz kart yok</Text>
           </View>
         </View>
       )}
@@ -1129,7 +1129,7 @@ export const HarmonyRoomScreen: React.FC = () => {
       {/* 1-minute countdown toast */}
       {showOneMinuteToast && (
         <Animated.View style={[styles.countdownToast, { opacity: toastFadeAnim }]}>
-          <Text style={styles.countdownToastText}>1 dakika kaldi!</Text>
+          <Text style={styles.countdownToastText}>1 dakika kaldı!</Text>
         </Animated.View>
       )}
 
@@ -1171,7 +1171,7 @@ export const HarmonyRoomScreen: React.FC = () => {
               remainingSeconds <= TIMER_YELLOW_THRESHOLD && styles.extendTextProminent,
             ]}
           >
-            Sure Uzat ({HARMONY_CONFIG.GOLD_EXTENSION_COST} Gold)
+            Süre Uzat ({HARMONY_CONFIG.GOLD_EXTENSION_COST} Gold)
           </Text>
         </TouchableOpacity>
       )}

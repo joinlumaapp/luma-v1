@@ -1,6 +1,6 @@
-// LUMA V1 -- Gelistirilmis Kesif Karti
-// Neden eslestiginizi gosterir — swipe'i BAGLANTI odakli yapar, sadece goruntuye degil
-// Ortak degerler, uyum puani, ortak noktalar ve mini radar grafigi
+// LUMA V1 -- Geliştirilmiş Keşif Kartı
+// Neden eşleştiğinizi gösterir — swipe'ı BAĞLANTI odaklı yapar, sadece görüntüye değil
+// Ortak değerler, uyum puanı, ortak noktalar ve mini radar grafiği
 
 import React from 'react';
 import {
@@ -248,7 +248,7 @@ export const CompatibilityPreviewCard: React.FC<CompatibilityPreviewCardProps> =
               %{compatibilityPercent}
             </Text>
             <Text style={styles.scoreLabel}>
-              {isSuper ? 'Super Uyum' : 'Uyum'}
+              {isSuper ? 'Süper Uyum' : 'Uyum'}
             </Text>
           </View>
         </View>
@@ -260,7 +260,7 @@ export const CompatibilityPreviewCard: React.FC<CompatibilityPreviewCardProps> =
       {/* Shared values / interests */}
       {displayedValues.length > 0 && (
         <View style={styles.valuesSection}>
-          <Text style={styles.sectionLabel}>Ortak Degerler</Text>
+          <Text style={styles.sectionLabel}>Ortak Değerler</Text>
           <View style={styles.valuesRow}>
             {displayedValues.map((value, index) => (
               <ValueChip
@@ -276,7 +276,7 @@ export const CompatibilityPreviewCard: React.FC<CompatibilityPreviewCardProps> =
       {/* Common question answers */}
       {displayedAnswers.length > 0 && (
         <View style={styles.commonSection}>
-          <Text style={styles.sectionLabel}>Ortak Noktalariniz</Text>
+          <Text style={styles.sectionLabel}>Ortak Noktalarınız</Text>
           {displayedAnswers.map((answer, index) => (
             <View key={index} style={styles.commonAnswer}>
               <Text style={styles.commonDot}>{'\u2022'}</Text>
@@ -285,7 +285,7 @@ export const CompatibilityPreviewCard: React.FC<CompatibilityPreviewCardProps> =
                   {answer.questionTextTr}
                 </Text>
                 <Text style={styles.commonAnswerText} numberOfLines={1}>
-                  Ikiniz de: "{answer.answerLabelTr}"
+                  İkiniz de: "{answer.answerLabelTr}"
                 </Text>
               </View>
             </View>
@@ -322,12 +322,12 @@ export const CompatibilityPreviewCard: React.FC<CompatibilityPreviewCardProps> =
             ]}
           >
             {compatibilityPercent >= 90
-              ? 'Muhtesem bir baglanti potansiyeli!'
+              ? 'Muhteşem bir bağlantı potansiyeli!'
               : compatibilityPercent >= 70
-                ? 'Guclu bir uyum icerindesiniz'
+                ? 'Güçlü bir uyum içerisindesiniz'
                 : compatibilityPercent >= 50
-                  ? 'Ortak noktalarinizi kesfedin'
-                  : 'Farkliliklar zenginlik yaratir'}
+                  ? 'Ortak noktalarınızı keşfedin'
+                  : 'Farklılıklar zenginlik yaratır'}
           </Text>
         </View>
       </View>

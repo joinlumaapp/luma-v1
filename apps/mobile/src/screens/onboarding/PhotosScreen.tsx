@@ -57,8 +57,8 @@ export const PhotosScreen: React.FC = () => {
 
   const showPickerOptions = (index: number) => {
     Alert.alert(
-      'Fotograf Ekle',
-      'Fotograf kaynagini secin',
+      'Fotoğraf Ekle',
+      'Fotoğraf kaynağını seçin',
       [
         {
           text: 'Galeri',
@@ -69,7 +69,7 @@ export const PhotosScreen: React.FC = () => {
           onPress: () => handleTakePhoto(index),
         },
         {
-          text: 'Iptal',
+          text: 'İptal',
           style: 'cancel',
         },
       ],
@@ -126,8 +126,8 @@ export const PhotosScreen: React.FC = () => {
         return next;
       });
       Alert.alert(
-        'Yukleme Hatasi',
-        'Fotograf yuklenirken bir sorun olustu. Lutfen tekrar deneyin.',
+        'Yükleme Hatası',
+        'Fotoğraf yüklenirken bir sorun oluştu. Lütfen tekrar deneyin.',
         [{ text: 'Tamam' }],
       );
     }
@@ -138,10 +138,10 @@ export const PhotosScreen: React.FC = () => {
     if (!photo.uri) return;
 
     Alert.alert(
-      'Fotografi Sil',
-      'Bu fotografi silmek istediginizden emin misiniz?',
+      'Fotoğrafı Sil',
+      'Bu fotoğrafı silmek istediğinizden emin misiniz?',
       [
-        { text: 'Iptal', style: 'cancel' },
+        { text: 'İptal', style: 'cancel' },
         {
           text: 'Sil',
           style: 'destructive',
@@ -151,8 +151,8 @@ export const PhotosScreen: React.FC = () => {
                 await photoService.deletePhoto(photo.serverId);
               } catch {
                 Alert.alert(
-                  'Silme Hatasi',
-                  'Fotograf silinirken bir hata olustu.',
+                  'Silme Hatası',
+                  'Fotoğraf silinirken bir hata oluştu.',
                   [{ text: 'Tamam' }],
                 );
                 return;
@@ -190,9 +190,9 @@ export const PhotosScreen: React.FC = () => {
 
       {/* Content */}
       <View style={styles.content}>
-        <Text style={styles.title}>Fotograflarin</Text>
+        <Text style={styles.title}>Fotoğrafların</Text>
         <Text style={styles.subtitle}>
-          En az {PROFILE_CONFIG.MIN_PHOTOS} fotograf ekle. Ilk fotograf ana profil fotografin olacak.
+          En az {PROFILE_CONFIG.MIN_PHOTOS} fotoğraf ekle. İlk fotoğraf ana profil fotoğrafın olacak.
         </Text>
 
         {/* Photo grid */}
@@ -214,7 +214,7 @@ export const PhotosScreen: React.FC = () => {
               {photo.isUploading ? (
                 <View style={styles.uploadingContent}>
                   <ActivityIndicator size="small" color={colors.primary} />
-                  <Text style={styles.uploadingText}>Yukleniyor...</Text>
+                  <Text style={styles.uploadingText}>Yükleniyor...</Text>
                 </View>
               ) : photo.uri ? (
                 <View style={styles.photoContent}>
@@ -246,7 +246,7 @@ export const PhotosScreen: React.FC = () => {
         </View>
 
         <Text style={styles.counterText}>
-          {uploadedCount}/{PROFILE_CONFIG.MAX_PHOTOS} fotograf eklendi
+          {uploadedCount}/{PROFILE_CONFIG.MAX_PHOTOS} fotoğraf eklendi
         </Text>
       </View>
 

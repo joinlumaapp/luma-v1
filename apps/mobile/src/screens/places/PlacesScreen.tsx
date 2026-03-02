@@ -106,10 +106,10 @@ const EmptyPlacesHint: React.FC<EmptyPlacesHintProps> = ({ onCheckIn }) => {
       {/* Title and subtitle */}
       <Animated.View style={{ opacity: textOpacityAnim, alignItems: 'center' }}>
         <Text style={emptyHintStyles.title}>
-          Kesif bekliyor
+          Keşif bekliyor
         </Text>
         <Text style={emptyHintStyles.subtitle}>
-          {'Ozel mekanlari kesfetmek icin\nbir eslesmene ihtiyacin var.'}
+          {'Özel mekanları keşfetmek için\nbir eşleşmeye ihtiyacın var.'}
         </Text>
       </Animated.View>
 
@@ -117,15 +117,15 @@ const EmptyPlacesHint: React.FC<EmptyPlacesHintProps> = ({ onCheckIn }) => {
       <Animated.View style={[emptyHintStyles.featureList, { opacity: featureOpacityAnim }]}>
         <View style={emptyHintStyles.featureRow}>
           <Text style={emptyHintStyles.featureIcon}>{'\uD83D\uDCCD'}</Text>
-          <Text style={emptyHintStyles.featureText}>Favori mekanlarinizi kaydedin</Text>
+          <Text style={emptyHintStyles.featureText}>Favori mekanlarınızı kaydedin</Text>
         </View>
         <View style={emptyHintStyles.featureRow}>
           <Text style={emptyHintStyles.featureIcon}>{'\uD83D\uDCF8'}</Text>
-          <Text style={emptyHintStyles.featureText}>Her ziyarete ozel anilar ekleyin</Text>
+          <Text style={emptyHintStyles.featureText}>Her ziyarete özel anılar ekleyin</Text>
         </View>
         <View style={emptyHintStyles.featureRow}>
           <Text style={emptyHintStyles.featureIcon}>{'\u2764\uFE0F'}</Text>
-          <Text style={emptyHintStyles.featureText}>Ortak mekan haritaniz olusin</Text>
+          <Text style={emptyHintStyles.featureText}>Ortak mekan haritanız olsun</Text>
         </View>
       </Animated.View>
 
@@ -142,7 +142,7 @@ const EmptyPlacesHint: React.FC<EmptyPlacesHintProps> = ({ onCheckIn }) => {
           activeOpacity={0.8}
         >
           <Text style={emptyHintStyles.ctaIcon}>{'\uD83D\uDCCD'}</Text>
-          <Text style={emptyHintStyles.ctaText}>Ilk Check-in'i Yap</Text>
+          <Text style={emptyHintStyles.ctaText}>İlk Check-in'i Yap</Text>
         </TouchableOpacity>
       </Animated.View>
     </View>
@@ -282,7 +282,7 @@ const AbstractMapView: React.FC<AbstractMapViewProps> = ({ places, onPinPress })
   if (places.length === 0) {
     return (
       <View style={mapStyles.emptyMap}>
-        <Text style={mapStyles.emptyMapText}>Henuz mekan eklenmemis</Text>
+        <Text style={mapStyles.emptyMapText}>Henüz mekan eklenmemiş</Text>
       </View>
     );
   }
@@ -355,11 +355,11 @@ const AbstractMapView: React.FC<AbstractMapViewProps> = ({ places, onPinPress })
         </View>
         <View style={mapStyles.legendItem}>
           <View style={[mapStyles.legendDot, { backgroundColor: palette.gold[500] }]} />
-          <Text style={mapStyles.legendText}>Istek Listesi</Text>
+          <Text style={mapStyles.legendText}>İstek Listesi</Text>
         </View>
         <View style={mapStyles.legendItem}>
           <View style={[mapStyles.legendDot, { backgroundColor: palette.pink[500] }]} />
-          <Text style={mapStyles.legendText}>Partner Onerisi</Text>
+          <Text style={mapStyles.legendText}>Partner Önerisi</Text>
         </View>
       </View>
     </Animated.View>
@@ -521,7 +521,7 @@ export const PlacesScreen: React.FC = () => {
 
   const handleCheckIn = async () => {
     if (!checkInName.trim()) {
-      Alert.alert('Hata', 'Lutfen mekan adini girin.', [{ text: 'Tamam' }]);
+      Alert.alert('Hata', 'Lütfen mekan adını girin.', [{ text: 'Tamam' }]);
       return;
     }
 
@@ -531,8 +531,8 @@ export const PlacesScreen: React.FC = () => {
       const coords = await locationService.getCurrentLocation();
       if (!coords) {
         Alert.alert(
-          'Konum Alinamadi',
-          'Check-in icin konum izni gereklidir. Lutfen konum ayarlarinizi kontrol edin.',
+          'Konum Alınamadı',
+          'Check-in için konum izni gereklidir. Lütfen konum ayarlarınızı kontrol edin.',
           [{ text: 'Tamam' }],
         );
         setIsCheckingIn(false);
@@ -552,9 +552,9 @@ export const PlacesScreen: React.FC = () => {
       setCheckInNote('');
       // Reload places
       loadPlaces();
-      Alert.alert('Basarili', 'Check-in yapildi!', [{ text: 'Tamam' }]);
+      Alert.alert('Başarılı', 'Check-in yapıldı!', [{ text: 'Tamam' }]);
     } catch {
-      Alert.alert('Hata', 'Check-in yapilamadi. Lutfen tekrar deneyin.', [{ text: 'Tamam' }]);
+      Alert.alert('Hata', 'Check-in yapılamadı. Lütfen tekrar deneyin.', [{ text: 'Tamam' }]);
     } finally {
       setIsCheckingIn(false);
     }
@@ -584,7 +584,7 @@ export const PlacesScreen: React.FC = () => {
           {item.memories.length > 0 && (
             <View style={styles.statChip}>
               <Text style={styles.statText}>
-                {item.memories.length} ani
+                {item.memories.length} anı
               </Text>
             </View>
           )}
@@ -622,7 +622,7 @@ export const PlacesScreen: React.FC = () => {
                 </View>
                 <View style={styles.modalStatCard}>
                   <Text style={styles.modalStatValue}>{selectedPlace.memories.length}</Text>
-                  <Text style={styles.modalStatLabel}>Ani</Text>
+                  <Text style={styles.modalStatLabel}>Anı</Text>
                 </View>
               </View>
 
@@ -633,7 +633,7 @@ export const PlacesScreen: React.FC = () => {
 
               {selectedPlace.memories.length > 0 && (
                 <>
-                  <Text style={styles.modalSectionTitle}>Anilar</Text>
+                  <Text style={styles.modalSectionTitle}>Anılar</Text>
                   {selectedPlace.memories.map((memory) => (
                     <View key={memory.id} style={styles.memoryItem}>
                       <Text style={styles.memoryText}>{memory.note}</Text>
@@ -667,22 +667,22 @@ export const PlacesScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.inputLabel}>Mekan Adi</Text>
+          <Text style={styles.inputLabel}>Mekan Adı</Text>
           <TextInput
             style={styles.textInput}
             value={checkInName}
             onChangeText={setCheckInName}
-            placeholder="Mekan adini girin..."
+            placeholder="Mekan adını girin..."
             placeholderTextColor={colors.textTertiary}
             autoFocus
           />
 
-          <Text style={styles.inputLabel}>Not (istege bagli)</Text>
+          <Text style={styles.inputLabel}>Not (isteğe bağlı)</Text>
           <TextInput
             style={[styles.textInput, styles.textInputMultiline]}
             value={checkInNote}
             onChangeText={setCheckInNote}
-            placeholder="Bu mekan hakkinda bir not yazin..."
+            placeholder="Bu mekan hakkında bir not yazın..."
             placeholderTextColor={colors.textTertiary}
             multiline
             numberOfLines={3}
@@ -711,7 +711,7 @@ export const PlacesScreen: React.FC = () => {
         const labels: Record<ViewMode, string> = {
           list: 'Liste',
           map: 'Harita',
-          timeline: 'Zaman Cizgisi',
+          timeline: 'Zaman Çizgisi',
         };
         const isActive = viewMode === mode;
         return (
@@ -746,7 +746,7 @@ export const PlacesScreen: React.FC = () => {
       {placesWithStatus.length > 0 && (
         <View style={styles.mapPlacesList}>
           <Text style={styles.mapPlacesListTitle}>
-            {placesWithStatus.length} mekan kesfedildi
+            {placesWithStatus.length} mekan keşfedildi
           </Text>
           {placesWithStatus.map((place) => (
             <TouchableOpacity
@@ -782,7 +782,7 @@ export const PlacesScreen: React.FC = () => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Text style={styles.backText}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Kesfedilen Mekanlar</Text>
+        <Text style={styles.headerTitle}>Keşfedilen Mekanlar</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -793,10 +793,10 @@ export const PlacesScreen: React.FC = () => {
             <Text style={styles.emptyIconBrandedLetter}>L</Text>
           </View>
           <Text style={styles.noRelationshipTitle}>
-            Kesif bekliyor
+            Keşif bekliyor
           </Text>
           <Text style={styles.noRelationshipSubtitle}>
-            Ozel mekanlari kesfetmek icin bir eslesmene ihtiyacin var.
+            Özel mekanları keşfetmek için bir eşleşmeye ihtiyacın var.
           </Text>
         </View>
       ) : loading ? (

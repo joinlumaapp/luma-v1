@@ -87,25 +87,25 @@ const buildPreviewData = (compat: CompatibilityScore): CompatibilityPreviewData 
 // Format category key to human-readable Turkish label
 const formatCategoryLabel = (category: string): string => {
   const labelMap: Record<string, string> = {
-    lifestyle: 'Yasam Tarzi',
-    values: 'Degerler',
-    personality: 'Kisilik',
-    interests: 'Ilgi Alanlari',
-    communication: 'Iletisim',
+    lifestyle: 'Yaşam Tarzı',
+    values: 'Değerler',
+    personality: 'Kişilik',
+    interests: 'İlgi Alanları',
+    communication: 'İletişim',
     goals: 'Hedefler',
     emotional: 'Duygusal',
     social: 'Sosyal',
-    intellectual: 'Entelektuel',
+    intellectual: 'Entelektüel',
     humor: 'Mizah',
     family: 'Aile',
     career: 'Kariyer',
     adventure: 'Macera',
-    creativity: 'Yaraticilik',
+    creativity: 'Yaratıcılık',
     spirituality: 'Maneviyat',
-    health: 'Saglik',
+    health: 'Sağlık',
     finance: 'Finans',
     romance: 'Romantizm',
-    independence: 'Bagimsizlik',
+    independence: 'Bağımsızlık',
   };
   return labelMap[category.toLowerCase()] ?? category;
 };
@@ -153,7 +153,7 @@ export const ProfilePreviewScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Profil bulunamadi</Text>
+          <Text style={styles.emptyText}>Profil bulunamadı</Text>
         </View>
       </View>
     );
@@ -245,7 +245,7 @@ export const ProfilePreviewScreen: React.FC = () => {
               </View>
               <View style={styles.compatInfo}>
                 <Text style={styles.compatLevel}>
-                  {compatibility.isSuperCompatible ? 'Super Uyumluluk!' : 'Normal Uyumluluk'}
+                  {compatibility.isSuperCompatible ? 'Süper Uyumluluk!' : 'Normal Uyumluluk'}
                 </Text>
                 {compatibility.breakdown && Object.keys(compatibility.breakdown).length > 0 && (
                   <Text style={styles.compatDetail}>
@@ -255,14 +255,14 @@ export const ProfilePreviewScreen: React.FC = () => {
               </View>
             </View>
           ) : (
-            <Text style={styles.compatUnavailable}>Uyumluluk skoru henuz hesaplanmadi</Text>
+            <Text style={styles.compatUnavailable}>Uyumluluk skoru henüz hesaplanmadı</Text>
           )}
         </View>
 
         {/* Compatibility Detail Preview Card */}
         {!loadingCompat && compatPreviewData ? (
           <View style={styles.compatDetailSection}>
-            <Text style={styles.sectionTitle}>Uyumluluk Detaylari</Text>
+            <Text style={styles.sectionTitle}>Uyumluluk Detayları</Text>
             <CompatibilityPreviewCard data={compatPreviewData} />
           </View>
         ) : null}
@@ -270,7 +270,7 @@ export const ProfilePreviewScreen: React.FC = () => {
         {/* Bio */}
         {profile.bio.length > 0 && (
           <View style={styles.bioSection}>
-            <Text style={styles.sectionTitle}>Hakkinda</Text>
+            <Text style={styles.sectionTitle}>Hakkında</Text>
             <Text style={styles.bioText}>{profile.bio}</Text>
           </View>
         )}
@@ -285,33 +285,33 @@ export const ProfilePreviewScreen: React.FC = () => {
           style={styles.passButton}
           onPress={() => handleSwipe('left')}
           activeOpacity={0.8}
-          accessibilityLabel="Gec"
+          accessibilityLabel="Geç"
           accessibilityRole="button"
         >
           <Text style={styles.passButtonIcon}>X</Text>
-          <Text style={styles.actionLabel}>Gec</Text>
+          <Text style={styles.actionLabel}>Geç</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.superLikeButton}
           onPress={() => handleSwipe('up')}
           activeOpacity={0.8}
-          accessibilityLabel="Super Begen"
+          accessibilityLabel="Süper Beğen"
           accessibilityRole="button"
         >
           <Text style={styles.superLikeButtonIcon}>{'\u2605'}</Text>
-          <Text style={styles.actionLabelGold}>Super</Text>
+          <Text style={styles.actionLabelGold}>Süper</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.likeButton}
           onPress={() => handleSwipe('right')}
           activeOpacity={0.8}
-          accessibilityLabel="Begen"
+          accessibilityLabel="Beğen"
           accessibilityRole="button"
         >
           <Text style={styles.likeButtonIcon}>{'\u2665'}</Text>
-          <Text style={styles.actionLabel}>Begen</Text>
+          <Text style={styles.actionLabel}>Beğen</Text>
         </TouchableOpacity>
       </View>
     </View>

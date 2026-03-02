@@ -130,7 +130,7 @@ export const PhoneEntryScreen: React.FC = () => {
       await authService.register(fullNumber, selectedCountry.code);
       navigation.navigate('OTPVerification', { phoneNumber: fullNumber, countryCode: selectedCountry.code });
     } catch {
-      Alert.alert('Hata', 'SMS gonderilemedi. Tekrar deneyin.');
+      Alert.alert('Hata', 'SMS gönderilemedi. Tekrar deneyin.');
     } finally {
       setIsSubmitting(false);
     }
@@ -258,7 +258,7 @@ export const PhoneEntryScreen: React.FC = () => {
             style={[styles.backButton, backButtonAnimatedStyle]}
             accessibilityLabel="Geri"
             accessibilityRole="button"
-            accessibilityHint="Onceki ekrana donmek icin dokunun"
+            accessibilityHint="Önceki ekrana dönmek için dokunun"
             testID="phone-entry-back-btn"
             activeOpacity={0.7}
           >
@@ -270,12 +270,12 @@ export const PhoneEntryScreen: React.FC = () => {
         <Animated.View style={[styles.content, contentAnimatedStyle]}>
           {/* Title slides in from top with fade */}
           <Animated.Text style={[styles.title, titleAnimatedStyle]}>
-            Telefon Numarani Gir
+            Telefon Numaranı Gir
           </Animated.Text>
 
           {/* Subtitle fades in */}
           <Animated.Text style={[styles.subtitle, subtitleAnimatedStyle]}>
-            Sana bir dogrulama kodu gondermemiz icin telefon numarani gir.
+            Sana bir doğrulama kodu göndermemiz için telefon numaranı gir.
           </Animated.Text>
 
           {/* Phone input row with animated entrance */}
@@ -284,9 +284,9 @@ export const PhoneEntryScreen: React.FC = () => {
             <AnimatedTouchable
               style={[styles.countrySelector, countrySelectorGlowStyle]}
               onPress={toggleCountryPicker}
-              accessibilityLabel={`Ulke kodu ${selectedCountry.code}`}
+              accessibilityLabel={`Ülke kodu ${selectedCountry.code}`}
               accessibilityRole="button"
-              accessibilityHint="Ulke kodunu degistirmek icin dokunun"
+              accessibilityHint="Ülke kodunu değiştirmek için dokunun"
               testID="phone-entry-country-btn"
               activeOpacity={0.7}
             >
@@ -324,9 +324,9 @@ export const PhoneEntryScreen: React.FC = () => {
                 autoFocus
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
-                accessibilityLabel="Telefon numarasi"
+                accessibilityLabel="Telefon numarası"
                 accessibilityRole="text"
-                accessibilityHint="Telefon numaranizi girin"
+                accessibilityHint="Telefon numaranızı girin"
                 testID="phone-entry-input"
               />
             </Animated.View>
@@ -370,7 +370,7 @@ export const PhoneEntryScreen: React.FC = () => {
             activeOpacity={0.9}
             accessibilityLabel="Devam et"
             accessibilityRole="button"
-            accessibilityHint="Dogrulama kodu gondermek icin dokunun"
+            accessibilityHint="Doğrulama kodu göndermek için dokunun"
             accessibilityState={{ disabled: !isValid || isSubmitting }}
             testID="phone-entry-submit-btn"
           >
@@ -388,7 +388,7 @@ export const PhoneEntryScreen: React.FC = () => {
                 <ActivityIndicator color={colors.text} />
               ) : (
                 <Text style={[styles.submitButtonText, !isValid && styles.submitButtonTextDisabled]}>
-                  Dogrulama Kodu Gonder
+                  Doğrulama Kodu Gönder
                 </Text>
               )}
             </LinearGradient>
@@ -399,7 +399,7 @@ export const PhoneEntryScreen: React.FC = () => {
             entering={FadeIn.delay(900).duration(400)}
             style={styles.securityNote}
           >
-            Numarani kimseyle paylasmiyoruz.
+            Numaranı kimseyle paylaşmıyoruz.
           </Animated.Text>
         </Animated.View>
       </KeyboardAvoidingView>

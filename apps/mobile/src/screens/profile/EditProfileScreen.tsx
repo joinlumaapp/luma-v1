@@ -107,7 +107,7 @@ export const EditProfileScreen: React.FC = () => {
         const data = await voiceIntroService.getVoiceIntro(user.id);
         setVoiceIntroData(data);
       } catch {
-        setVoiceIntroError('Sesli tanitim yuklenemedi.');
+        setVoiceIntroError('Sesli tanıtım yüklenemedi.');
       } finally {
         setIsVoiceIntroLoading(false);
       }
@@ -217,8 +217,8 @@ export const EditProfileScreen: React.FC = () => {
       const response = await voiceIntroService.uploadVoiceIntro(file, 30);
       setVoiceIntroData(response);
     } catch {
-      setVoiceIntroError('Sesli tanitim yuklenemedi. Lutfen tekrar dene.');
-      Alert.alert('Hata', 'Sesli tanitim yuklenemedi. Lutfen tekrar dene.');
+      setVoiceIntroError('Sesli tanıtım yüklenemedi. Lütfen tekrar dene.');
+      Alert.alert('Hata', 'Sesli tanıtım yüklenemedi. Lütfen tekrar dene.');
     } finally {
       setIsVoiceIntroLoading(false);
     }
@@ -231,8 +231,8 @@ export const EditProfileScreen: React.FC = () => {
       await voiceIntroService.deleteVoiceIntro();
       setVoiceIntroData(null);
     } catch {
-      setVoiceIntroError('Sesli tanitim silinemedi.');
-      Alert.alert('Hata', 'Sesli tanitim silinemedi. Lutfen tekrar dene.');
+      setVoiceIntroError('Sesli tanıtım silinemedi.');
+      Alert.alert('Hata', 'Sesli tanıtım silinemedi. Lütfen tekrar dene.');
     } finally {
       setIsVoiceIntroLoading(false);
     }
@@ -352,16 +352,16 @@ export const EditProfileScreen: React.FC = () => {
             </View>
           </View>
 
-          {/* Sesli Tanitim */}
+          {/* Sesli Tanıtım */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Sesli Tanitim</Text>
+            <Text style={styles.sectionTitle}>Sesli Tanıtım</Text>
             <Text style={styles.sectionHint}>
-              30 saniyeye kadar sesli tanitim kaydi olustur
+              30 saniyeye kadar sesli tanıtım kaydı oluştur
             </Text>
             {isVoiceIntroLoading ? (
               <View style={styles.voiceIntroLoading}>
                 <ActivityIndicator size="small" color={colors.primary} />
-                <Text style={styles.voiceIntroLoadingText}>Yukleniyor...</Text>
+                <Text style={styles.voiceIntroLoadingText}>Yükleniyor...</Text>
               </View>
             ) : voiceIntroError ? (
               <View style={styles.voiceIntroError}>
@@ -374,7 +374,7 @@ export const EditProfileScreen: React.FC = () => {
                       voiceIntroService
                         .getVoiceIntro(user.id)
                         .then((data) => setVoiceIntroData(data))
-                        .catch(() => setVoiceIntroError('Sesli tanitim yuklenemedi.'))
+                        .catch(() => setVoiceIntroError('Sesli tanıtım yüklenemedi.'))
                         .finally(() => setIsVoiceIntroLoading(false));
                     }
                   }}

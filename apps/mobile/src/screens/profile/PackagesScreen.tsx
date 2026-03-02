@@ -181,13 +181,13 @@ export const PackagesScreen: React.FC = () => {
                   updatePackageTier(result.packageTier as PackageTier);
                 }
                 Alert.alert(
-                  'Basarili!',
-                  `${targetPkg.name} aboneliginiz aktif edildi!`,
+                  'Başarılı!',
+                  `${targetPkg.name} aboneliğiniz aktif edildi!`,
                 );
               } catch {
                 Alert.alert(
                   'Hata',
-                  'Odeme islemi basarisiz oldu. Lutfen tekrar deneyin.',
+                  'Ödeme işlemi başarısız oldu. Lütfen tekrar deneyin.',
                 );
               } finally {
                 setIsSubscribing(false);

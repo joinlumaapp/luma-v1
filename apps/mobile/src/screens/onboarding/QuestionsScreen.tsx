@@ -30,102 +30,102 @@ const CURRENT_STEP = 1;
 const CORE_QUESTIONS = [
   {
     id: 1,
-    question: 'Hafta sonu planlarinda hangisi sana daha yakin?',
+    question: 'Hafta sonu planlarında hangisi sana daha yakın?',
     options: [
       'Evde kitap okumak veya film izlemek',
-      'Arkadaslarla disari cikmak',
-      'Dogada yuruyus veya spor yapmak',
+      'Arkadaşlarla dışarı çıkmak',
+      'Doğada yürüyüş veya spor yapmak',
       'Yeni bir hobi veya etkinlik denemek',
     ],
   },
   {
     id: 2,
-    question: 'Bir anlasilmazlikta nasil bir yaklasim benimsersin?',
+    question: 'Bir anlaşılmazlıkta nasıl bir yaklaşım benimsersin?',
     options: [
-      'Hemen konusup cozmek isterim',
-      'Biraz soguyup sonra konusurum',
-      'Karsi tarafin baslatmasini beklerim',
-      'Yazili iletisimi tercih ederim',
+      'Hemen konuşup çözmek isterim',
+      'Biraz soğuyup sonra konuşurum',
+      'Karşı tarafın başlatmasını beklerim',
+      'Yazılı iletişimi tercih ederim',
     ],
   },
   {
     id: 3,
-    question: 'Ideal bir tatil nasil olurdu?',
+    question: 'İdeal bir tatil nasıl olurdu?',
     options: [
       'Sahilde dinlenmek',
-      'Tarih ve kultur turu',
-      'Macera ve doga sporlari',
-      'Sehir kesfi ve gastronomi',
+      'Tarih ve kültür turu',
+      'Macera ve doğa sporları',
+      'Şehir keşfi ve gastronomi',
     ],
   },
   {
     id: 4,
-    question: 'Para yonetimi konusunda nasil birisin?',
+    question: 'Para yönetimi konusunda nasıl birisin?',
     options: [
-      'Biriktirmeyi severim, planliyim',
+      'Biriktirmeyi severim, planlıyım',
       'Dengeli harcama, orta yol',
-      'Anin tadini cikarir, fazla dusunmem',
-      'Deneyimlere yatirim yaparim',
+      'Anın tadını çıkarır, fazla düşünmem',
+      'Deneyimlere yatırım yaparım',
     ],
   },
   {
     id: 5,
-    question: 'Sosyal ortamlarda kendin nasil tanimlarsin?',
+    question: 'Sosyal ortamlarda kendini nasıl tanımlarsın?',
     options: [
-      'Hayatin merkezi, enerjik',
-      'Kucuk gruplarla rahat',
-      'Secici, az ama oz',
-      'Dinleyici ve gozlemci',
+      'Hayatın merkezi, enerjik',
+      'Küçük gruplarla rahat',
+      'Seçici, az ama öz',
+      'Dinleyici ve gözlemci',
     ],
   },
   {
     id: 6,
-    question: 'Gelecek planlarin konusunda ne dusunursun?',
+    question: 'Gelecek planların konusunda ne düşünürsün?',
     options: [
-      'Net hedeflerim var, plan yaparim',
-      'Genel bir yonum var ama esnekim',
-      'Akisina birakirim',
-      'Simdiyi yasarim, gelecek gelir',
+      'Net hedeflerim var, plan yaparım',
+      'Genel bir yönüm var ama esneyim',
+      'Akışına bırakırım',
+      'Şimdiyi yaşarım, gelecek gelir',
     ],
   },
   {
     id: 7,
     question: 'Sevgi dilini en iyi ne ifade eder?',
     options: [
-      'Fiziksel yakinlik ve dokunma',
-      'Soz ve iltifatlar',
-      'Birlikte zaman gecirmek',
-      'Hediye ve surprizler',
+      'Fiziksel yakınlık ve dokunma',
+      'Söz ve iltifatlar',
+      'Birlikte zaman geçirmek',
+      'Hediye ve sürprizler',
     ],
   },
   {
     id: 8,
-    question: 'Stresle nasil basa cikarsin?',
+    question: 'Stresle nasıl başa çıkarsın?',
     options: [
       'Egzersiz ve fiziksel aktivite',
-      'Yalniz vakit gecirmek',
-      'Birileriyle konusmak',
-      'Yaratici bir ugras (muzik, resim vb.)',
+      'Yalnız vakit geçirmek',
+      'Birileriyle konuşmak',
+      'Yaratıcı bir uğraş (müzik, resim vb.)',
     ],
   },
   {
     id: 9,
-    question: 'Iliskide bagimsizlik konusundaki gorusun?',
+    question: 'İlişkide bağımsızlık konusundaki görüşün?',
     options: [
-      'Her sey birlikte yapilmali',
-      'Bagimsiz alanlar onemli',
+      'Her şey birlikte yapılmalı',
+      'Bağımsız alanlar önemli',
       'Dengeli bir karışım ideal',
-      'Duruma gore degisir',
+      'Duruma göre değişir',
     ],
   },
   {
     id: 10,
-    question: 'Sabah rutinin nasil?',
+    question: 'Sabah rutinin nasıl?',
     options: [
-      'Erken kalkici, uretken sabahlar',
-      'Normal saatlerde, sakin baslangiç',
-      'Gec kalkici, gece kusuyum',
-      'Gunune gore degisir',
+      'Erken kalkıcı, üretken sabahlar',
+      'Normal saatlerde, sakin başlangıç',
+      'Geç kalkıcı, gece kuşuyum',
+      'Gününe göre değişir',
     ],
   },
   {
@@ -133,16 +133,16 @@ const CORE_QUESTIONS = [
     question: 'Yemek konusunda tercihin?',
     options: [
       'Evde yemek yapmak',
-      'Disarda yemek',
-      'Yeni tatlar kesfetmek',
-      'Pratik ve hizli cozumler',
+      'Dışarda yemek',
+      'Yeni tatlar keşfetmek',
+      'Pratik ve hızlı çözümler',
     ],
   },
   {
     id: 12,
     question: 'Evcil hayvan tercihin?',
     options: [
-      'Kopek sever',
+      'Köpek sever',
       'Kedi sever',
       'Her ikisi de',
       'Evcil hayvan istemem',
@@ -150,81 +150,81 @@ const CORE_QUESTIONS = [
   },
   {
     id: 13,
-    question: 'Iliskide iletisim sikligi?',
+    question: 'İlişkide iletişim sıklığı?',
     options: [
-      'Surekli iletisimde olmak',
-      'Gun icerisinde birkaç kez',
-      'Ihtiyac duydukca',
-      'Gorusmeyi tercih ederim',
+      'Sürekli iletişimde olmak',
+      'Gün içerisinde birkaç kez',
+      'İhtiyaç duydukça',
+      'Görüşmeyi tercih ederim',
     ],
   },
   {
     id: 14,
-    question: 'Aile ile iliskin nasil?',
+    question: 'Aile ile ilişkin nasıl?',
     options: [
-      'Cok yakiniz, sik gorusuruz',
-      'Iyi iliskimiz var, makul mesafe',
-      'Mesafeli ama saygiyla',
-      'Karmasik bir durum',
+      'Çok yakınız, sık görüşürüz',
+      'İyi ilişkimiz var, makul mesafe',
+      'Mesafeli ama saygıyla',
+      'Karmaşık bir durum',
     ],
   },
   {
     id: 15,
-    question: 'Fit olmak senin icin ne kadar onemli?',
+    question: 'Fit olmak senin için ne kadar önemli?',
     options: [
-      'Cok onemli, duzenli spor yaparim',
-      'Onemli ama obsesif degilim',
-      'Ara sira hareket ederim',
-      'Cok takılmam',
+      'Çok önemli, düzenli spor yaparım',
+      'Önemli ama obsesif değilim',
+      'Ara sıra hareket ederim',
+      'Çok takılmam',
     ],
   },
   {
     id: 16,
-    question: 'Teknoloji ve sosyal medya kullanimim?',
+    question: 'Teknoloji ve sosyal medya kullanımın?',
     options: [
-      'Cok aktifim, her yerdeyim',
-      'Orta duzeyde kullanirim',
-      'Minimalist, sinirli kullanim',
-      'Mumkun oldugunca uzak dururum',
+      'Çok aktifim, her yerdeyim',
+      'Orta düzeyde kullanırım',
+      'Minimalist, sınırlı kullanım',
+      'Mümkün olduğunca uzak dururum',
     ],
   },
   {
     id: 17,
-    question: 'Cocuk sahibi olmak hakkindaki gorusun?',
+    question: 'Çocuk sahibi olmak hakkındaki görüşün?',
     options: [
       'Kesinlikle istiyorum',
-      'Acigim ama acele yok',
-      'Emin degilim',
-      'Istemiyorum',
+      'Açığım ama acele yok',
+      'Emin değilim',
+      'İstemiyorum',
     ],
   },
   {
     id: 18,
-    question: 'Hangi ortam seni daha iyi tanimlar?',
+    question: 'Hangi ortam seni daha iyi tanımlar?',
     options: [
-      'Sehir hayati, kalabalik',
+      'Şehir hayatı, kalabalık',
       'Sakin bir mahalle',
-      'Kirsal, dogayla ic ice',
-      'Fark etmez, esnek davranirim',
+      'Kırsal, doğayla iç içe',
+      'Fark etmez, esnek davranırım',
     ],
   },
   {
     id: 19,
     question: 'Seyahat tercihin?',
     options: [
-      'Yurt disi, uzak ulkeler',
-      'Yurt ici, yakin yerler',
+      'Yurt dışı, uzak ülkeler',
+      'Yurt içi, yakın yerler',
       'Her ikisi de',
       'Seyahati pek sevmem',
     ],
   },
   {
     id: 20,
-    question: 'Bir iliskide en cok neye deger verirsin?',
+    question: 'Bir ilişkide en çok neye değer verirsin?',
     options: [
-      'Guven ve sadakat',
-      'Mizah ve eglence',
-      'Entelektuel uyum',
+      'Güven ve sadakat',
+      'Mizah ve eğlence',
+      'Entelektüel uyum',
       'Duygusal destek',
     ],
   },
@@ -368,7 +368,7 @@ export const QuestionsScreen: React.FC = () => {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Sorular yukleniyor...</Text>
+        <Text style={styles.loadingText}>Sorular yükleniyor...</Text>
       </View>
     );
   }
@@ -393,7 +393,7 @@ export const QuestionsScreen: React.FC = () => {
           <LumaLogo size={1.3} showTagline={false} />
           <Text style={styles.celebrationTitle}>Harika!</Text>
           <Text style={styles.celebrationSubtitle}>
-            Profilin hazir. Sana en uyumlu kisileri buluyoruz...
+            Profilin hazır. Sana en uyumlu kişileri buluyoruz...
           </Text>
           <ActivityIndicator
             size="small"

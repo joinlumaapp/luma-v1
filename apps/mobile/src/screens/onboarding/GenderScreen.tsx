@@ -24,8 +24,8 @@ type GenderOption = 'male' | 'female' | 'other';
 
 const GENDER_OPTIONS: Array<{ value: GenderOption; label: string; icon: string }> = [
   { value: 'male', label: 'Erkek', icon: 'M' },
-  { value: 'female', label: 'Kadin', icon: 'F' },
-  { value: 'other', label: 'Diger', icon: 'O' },
+  { value: 'female', label: 'Kadın', icon: 'F' },
+  { value: 'other', label: 'Diğer', icon: 'O' },
 ];
 
 export const GenderScreen: React.FC = () => {
@@ -49,7 +49,7 @@ export const GenderScreen: React.FC = () => {
       <View style={styles.content}>
         <Text style={styles.title}>Cinsiyetin</Text>
         <Text style={styles.subtitle}>
-          Bu bilgi eslesme onerilerin icin kullanilacak.
+          Bu bilgi eşleşme önerilerin için kullanılacak.
         </Text>
 
         <View style={styles.optionsContainer}>

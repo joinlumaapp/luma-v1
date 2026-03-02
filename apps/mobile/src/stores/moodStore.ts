@@ -16,9 +16,9 @@ export interface MoodOption {
 export const MOOD_OPTIONS: MoodOption[] = [
   { type: 'SAKIN', emoji: '\u2615', label: 'Sakin', color: '#6B9DFC', glowColor: 'rgba(107, 157, 252, 0.4)' },
   { type: 'ENERJIK', emoji: '\uD83C\uDF89', label: 'Enerjik', color: '#FF6B6B', glowColor: 'rgba(255, 107, 107, 0.4)' },
-  { type: 'YARATICI', emoji: '\uD83C\uDFA8', label: 'Yaratici', color: '#A78BFA', glowColor: 'rgba(167, 139, 250, 0.4)' },
-  { type: 'DUSUNCELI', emoji: '\uD83D\uDCAD', label: 'Düsünceli', color: '#34D399', glowColor: 'rgba(52, 211, 153, 0.4)' },
-  { type: 'HEYECANLI', emoji: '\uD83C\uDF1F', label: 'Heyecanli', color: '#FBBF24', glowColor: 'rgba(251, 191, 36, 0.4)' },
+  { type: 'YARATICI', emoji: '\uD83C\uDFA8', label: 'Yarat\u0131c\u0131', color: '#A78BFA', glowColor: 'rgba(167, 139, 250, 0.4)' },
+  { type: 'DUSUNCELI', emoji: '\uD83D\uDCAD', label: 'D\u00FC\u015F\u00FCnceli', color: '#34D399', glowColor: 'rgba(52, 211, 153, 0.4)' },
+  { type: 'HEYECANLI', emoji: '\uD83C\uDF1F', label: 'Heyecanl\u0131', color: '#FBBF24', glowColor: 'rgba(251, 191, 36, 0.4)' },
   { type: 'MUTLU', emoji: '\uD83D\uDE0A', label: 'Mutlu', color: '#F472B6', glowColor: 'rgba(244, 114, 182, 0.4)' },
 ];
 

@@ -50,8 +50,8 @@ export const SelfieVerificationScreen: React.FC = () => {
     const result = await requestPermission();
     if (!result.granted) {
       Alert.alert(
-        'Kamera Izni Gerekli',
-        'Selfie dogrulama icin kamera iznine ihtiyacimiz var. Lutfen ayarlardan kamera iznini aktif edin.',
+        'Kamera İzni Gerekli',
+        'Selfie doğrulama için kamera iznine ihtiyacımız var. Lütfen ayarlardan kamera iznini aktif edin.',
       );
     }
   }, [requestPermission]);
@@ -69,7 +69,7 @@ export const SelfieVerificationScreen: React.FC = () => {
         setSelfieComplete(true);
       }
     } catch {
-      Alert.alert('Hata', 'Selfie cekilemedi. Lutfen tekrar deneyin.');
+      Alert.alert('Hata', 'Selfie çekilemedi. Lütfen tekrar deneyin.');
     } finally {
       setIsTakingSelfie(false);
     }
@@ -105,9 +105,9 @@ export const SelfieVerificationScreen: React.FC = () => {
 
       {/* Content */}
       <View style={styles.content}>
-        <Text style={styles.title}>Selfie Dogrulama</Text>
+        <Text style={styles.title}>Selfie Doğrulama</Text>
         <Text style={styles.subtitle}>
-          Profilinin gercek oldugunu dogrulamak icin bir selfie cek. Yuzun net gorunmeli.
+          Profilinin gerçek olduğunu doğrulamak için bir selfie çek. Yüzün net görünmeli.
         </Text>
 
         {/* Camera preview area */}
@@ -145,19 +145,19 @@ export const SelfieVerificationScreen: React.FC = () => {
           <View style={styles.instructionRow}>
             <Text style={styles.instructionBullet}>1</Text>
             <Text style={styles.instructionText}>
-              Yuzunu cerceve icine yerlestir
+              Yüzünü çerçeve içine yerleştir
             </Text>
           </View>
           <View style={styles.instructionRow}>
             <Text style={styles.instructionBullet}>2</Text>
             <Text style={styles.instructionText}>
-              Iyi aydinlatilmis bir ortamda ol
+              İyi aydınlatılmış bir ortamda ol
             </Text>
           </View>
           <View style={styles.instructionRow}>
             <Text style={styles.instructionBullet}>3</Text>
             <Text style={styles.instructionText}>
-              Gunes gozlugu veya maske takma
+              Güneş gözlüğü veya maske takma
             </Text>
           </View>
         </View>
@@ -175,7 +175,7 @@ export const SelfieVerificationScreen: React.FC = () => {
               <Text style={styles.continueButtonText}>Onayla ve Devam Et</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={handleRetake} style={styles.skipButton}>
-              <Text style={styles.retakeText}>Tekrar Cek</Text>
+              <Text style={styles.retakeText}>Tekrar Çek</Text>
             </TouchableOpacity>
           </>
         ) : (
@@ -186,14 +186,14 @@ export const SelfieVerificationScreen: React.FC = () => {
             activeOpacity={0.85}
           >
             <Text style={styles.selfieButtonText}>
-              {isTakingSelfie ? 'Cekiliyor...' : 'Selfie Cek'}
+              {isTakingSelfie ? 'Çekiliyor...' : 'Selfie Çek'}
             </Text>
           </TouchableOpacity>
         )}
 
         {!selfieComplete && (
           <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
-            <Text style={styles.skipText}>Simdilik Atla</Text>
+            <Text style={styles.skipText}>Şimdilik Atla</Text>
           </TouchableOpacity>
         )}
       </View>

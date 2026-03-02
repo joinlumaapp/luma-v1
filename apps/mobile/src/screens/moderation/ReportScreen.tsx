@@ -31,17 +31,17 @@ export const ReportScreen: React.FC = () => {
           details,
         });
         Alert.alert(
-          'Sikayet Gonderildi',
-          'Sikayetiniz incelenmek uzere iletildi. Tesekkur ederiz.',
+          'Şikayet Gönderildi',
+          'Şikayetiniz incelenmek üzere iletildi. Teşekkür ederiz.',
           [{ text: 'Tamam', onPress: handleClose }],
         );
       } catch {
         if (__DEV__) {
-          console.warn('[ReportScreen] Sikayet gonderilemedi');
+          console.warn('[ReportScreen] Şikayet gönderilemedi');
         }
         Alert.alert(
           'Hata',
-          'Sikayet gonderilirken bir hata olustu. Lutfen tekrar deneyin.',
+          'Şikayet gönderilirken bir hata oluştu. Lütfen tekrar deneyin.',
           [{ text: 'Tamam' }],
         );
       } finally {

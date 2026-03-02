@@ -48,8 +48,8 @@ const formatDateHeader = (dateString: string): string => {
     (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
   );
 
-  if (diffDays === 0) return 'Bugun';
-  if (diffDays === 1) return 'Dun';
+  if (diffDays === 0) return 'Bugün';
+  if (diffDays === 1) return 'Dün';
   return date.toLocaleDateString('tr-TR', {
     day: 'numeric',
     month: 'long',
@@ -235,7 +235,7 @@ export const ChatScreen: React.FC = () => {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (!permissionResult.granted) {
-        Alert.alert('Izin Gerekli', 'Fotograf gondermek icin galeri izni gereklidir.');
+        Alert.alert('İzin Gerekli', 'Fotoğraf göndermek için galeri izni gereklidir.');
         return;
       }
 
@@ -250,7 +250,7 @@ export const ChatScreen: React.FC = () => {
         setImagePreview(result.assets[0].uri);
       }
     } catch {
-      Alert.alert('Hata', 'Fotograf secilemedi. Lutfen tekrar deneyin.');
+      Alert.alert('Hata', 'Fotoğraf seçilemedi. Lütfen tekrar deneyin.');
     }
   }, []);
 
@@ -331,7 +331,7 @@ export const ChatScreen: React.FC = () => {
           style={styles.backButton}
           accessibilityLabel="Geri"
           accessibilityRole="button"
-          accessibilityHint="Onceki ekrana donmek icin dokunun"
+          accessibilityHint="Önceki ekrana dönmek için dokunun"
           testID="chat-back-btn"
         >
           <Text style={styles.backText}>{'<'}</Text>
@@ -344,7 +344,7 @@ export const ChatScreen: React.FC = () => {
           <View>
             <Text style={styles.headerName}>{partnerName}</Text>
             {isTyping ? (
-              <Text style={styles.headerStatus}>yaziyor...</Text>
+              <Text style={styles.headerStatus}>yazıyor...</Text>
             ) : null}
           </View>
         </View>
@@ -353,9 +353,9 @@ export const ChatScreen: React.FC = () => {
           style={styles.gameButton}
           onPress={() => navigation.navigate('IcebreakerGame', { matchId })}
           activeOpacity={0.8}
-          accessibilityLabel="Oyun baslat"
+          accessibilityLabel="Oyun başlat"
           accessibilityRole="button"
-          accessibilityHint="Buzkirici oyunu baslatmak icin dokunun"
+          accessibilityHint="Buz kırıcı oyunu başlatmak için dokunun"
           testID="chat-game-btn"
         >
           <Text style={styles.gameButtonText}>Oyun</Text>
@@ -377,9 +377,9 @@ export const ChatScreen: React.FC = () => {
             <View style={styles.emptyChatAvatar}>
               <Text style={styles.emptyChatInitial}>{partnerName.charAt(0)}</Text>
             </View>
-            <Text style={styles.emptyChatTitle}>Henuz sohbet yok</Text>
+            <Text style={styles.emptyChatTitle}>Henüz sohbet yok</Text>
             <Text style={styles.emptyChatSubtitle}>
-              {'Eslesmelerinden birine ilk mesaji at.\nIlk adim her zaman ozeldir.'}
+              {'Eşleşmelerinden birine ilk mesajı at.\nİlk adım her zaman özeldir.'}
             </Text>
           </View>
         ) : (
@@ -403,11 +403,11 @@ export const ChatScreen: React.FC = () => {
                 <TouchableOpacity
                   style={styles.loadMoreButton}
                   onPress={handleLoadMore}
-                  accessibilityLabel="Eski mesajlari yukle"
+                  accessibilityLabel="Eski mesajları yükle"
                   accessibilityRole="button"
                   testID="chat-load-more-btn"
                 >
-                  <Text style={styles.loadMoreText}>Eski mesajlari yukle</Text>
+                  <Text style={styles.loadMoreText}>Eski mesajları yükle</Text>
                 </TouchableOpacity>
               ) : null
             }
@@ -422,14 +422,14 @@ export const ChatScreen: React.FC = () => {
           <View style={styles.imagePreviewBar}>
             <Image source={{ uri: imagePreview }} style={styles.imagePreviewThumb} />
             <View style={styles.imagePreviewInfo}>
-              <Text style={styles.imagePreviewText}>Fotograf gondermeye hazir</Text>
+              <Text style={styles.imagePreviewText}>Fotoğraf göndermeye hazır</Text>
               <TouchableOpacity
                 onPress={() => setImagePreview(null)}
-                accessibilityLabel="Fotograf secimini iptal et"
+                accessibilityLabel="Fotoğraf seçimini iptal et"
                 accessibilityRole="button"
                 testID="chat-image-cancel-btn"
               >
-                <Text style={styles.imagePreviewCancel}>Iptal</Text>
+                <Text style={styles.imagePreviewCancel}>İptal</Text>
               </TouchableOpacity>
             </View>
             <TouchableOpacity
@@ -437,7 +437,7 @@ export const ChatScreen: React.FC = () => {
               onPress={handleSendImage}
               disabled={isSending}
               activeOpacity={0.8}
-              accessibilityLabel="Fotografi gonder"
+              accessibilityLabel="Fotoğrafı gönder"
               accessibilityRole="button"
               testID="chat-send-image-btn"
             >
@@ -457,9 +457,9 @@ export const ChatScreen: React.FC = () => {
             style={styles.mediaButton}
             onPress={handlePickImage}
             activeOpacity={0.7}
-            accessibilityLabel="Fotograf ekle"
+            accessibilityLabel="Fotoğraf ekle"
             accessibilityRole="button"
-            accessibilityHint="Galeriden fotograf secmek icin dokunun"
+            accessibilityHint="Galeriden fotoğraf seçmek için dokunun"
             testID="chat-image-btn"
           >
             <Text style={styles.mediaButtonText}>+</Text>
@@ -476,7 +476,7 @@ export const ChatScreen: React.FC = () => {
               returnKeyType="default"
               accessibilityLabel="Mesaj yaz"
               accessibilityRole="text"
-              accessibilityHint="Mesajinizi buraya yazin"
+              accessibilityHint="Mesajınızı buraya yazın"
               testID="chat-message-input"
             />
           </View>
@@ -488,9 +488,9 @@ export const ChatScreen: React.FC = () => {
             onPress={handleSend}
             disabled={!inputText.trim() || isSending}
             activeOpacity={0.8}
-            accessibilityLabel="Mesaj gonder"
+            accessibilityLabel="Mesaj gönder"
             accessibilityRole="button"
-            accessibilityHint="Yazdiginiz mesaji gondermek icin dokunun"
+            accessibilityHint="Yazdığınız mesajı göndermek için dokunun"
             testID="chat-send-btn"
           >
             {isSending ? (

@@ -39,14 +39,14 @@ interface BadgeVisual {
 }
 
 const BADGE_VISUALS: BadgeVisual[] = [
-  { key: 'first_spark', name: 'Ilk Kivilcim', icon: '*', color: '#F59E0B', hint: 'Ilk eslesmeni yap' },
-  { key: 'chat_master', name: 'Sohbet Ustasi', icon: '#', color: '#3B82F6', hint: '5 Harmony oturumu tamamla' },
-  { key: 'question_explorer', name: 'Merak Uzmani', icon: '?', color: '#8B5CF6', hint: 'Tum soru kartlarini kesfet' },
-  { key: 'soul_mate', name: 'Ruh Ikizi', icon: '&', color: '#EC4899', hint: 'Super uyumluluk eslesme bul' },
-  { key: 'verified_star', name: 'Dogrulanmis Yildiz', icon: 'V', color: '#10B981', hint: 'Selfie dogrulamasini tamamla' },
-  { key: 'couple_goal', name: 'Cift Hedefi', icon: '+', color: '#EF4444', hint: 'Iliski modunu aktiflestir' },
-  { key: 'explorer', name: 'Kasif', icon: 'O', color: '#6366F1', hint: '50 profil kesfet' },
-  { key: 'deep_match', name: 'Derin Uyum', icon: 'D', color: '#8B5CF6', hint: '45 soruyu tamamla ve bir eslesmende de tamamlansin' },
+  { key: 'first_spark', name: 'İlk Kıvılcım', icon: '*', color: '#F59E0B', hint: 'İlk eşleşmeni yap' },
+  { key: 'chat_master', name: 'Sohbet Ustası', icon: '#', color: '#3B82F6', hint: '5 Harmony oturumu tamamla' },
+  { key: 'question_explorer', name: 'Merak Uzmanı', icon: '?', color: '#8B5CF6', hint: 'Tüm soru kartlarını keşfet' },
+  { key: 'soul_mate', name: 'Ruh İkizi', icon: '&', color: '#EC4899', hint: 'Süper uyumluluk eşleşme bul' },
+  { key: 'verified_star', name: 'Doğrulanmış Yıldız', icon: 'V', color: '#10B981', hint: 'Selfie doğrulamasını tamamla' },
+  { key: 'couple_goal', name: 'Çift Hedefi', icon: '+', color: '#EF4444', hint: 'İlişki modunu aktifleştir' },
+  { key: 'explorer', name: 'Kaşif', icon: 'O', color: '#6366F1', hint: '50 profil keşfet' },
+  { key: 'deep_match', name: 'Derin Uyum', icon: 'D', color: '#8B5CF6', hint: '45 soruyu tamamla ve bir eşleşmende de tamamlansın' },
 ];
 
 // Merged badge data for display
@@ -286,7 +286,7 @@ const RecentlyEarnedSection: React.FC<RecentlyEarnedProps> = ({ badges }) => {
 
   return (
     <View style={recentStyles.container}>
-      <Text style={recentStyles.title}>Son Kazanilan</Text>
+      <Text style={recentStyles.title}>Son Kazanılan</Text>
       <View style={recentStyles.row}>
         {badges.map((badge) => (
           <View key={badge.key} style={recentStyles.item}>
@@ -489,7 +489,7 @@ export const BadgesScreen: React.FC = () => {
           <View style={styles.earnedContainer}>
             <View style={[styles.earnedDot, { backgroundColor: item.color }]} />
             <Text style={[styles.earnedText, { color: item.color }]}>
-              Kazanildi
+              Kazanıldı
             </Text>
             {item.earnedAt && (
               <Text style={styles.earnedDate}>{formatDate(item.earnedAt)}</Text>
@@ -525,7 +525,7 @@ export const BadgesScreen: React.FC = () => {
     return (
       <View style={[styles.container, styles.loadingContainer, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Rozetler yukleniyor...</Text>
+        <Text style={styles.loadingText}>Rozetler yükleniyor...</Text>
       </View>
     );
   }
@@ -566,7 +566,7 @@ export const BadgesScreen: React.FC = () => {
           />
         </View>
         <Text style={styles.summaryText}>
-          {earnedCount}/{totalCount} Rozet Kazanildi
+          {earnedCount}/{totalCount} Rozet Kazanıldı
         </Text>
       </View>
 

@@ -126,7 +126,7 @@ const CouplesClubGuard: React.FC<CouplesClubGuardProps> = ({ onGoBack }) => {
         <TouchableOpacity onPress={onGoBack} style={styles.backButton}>
           <Text style={styles.backText}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Ciftler Kulubu</Text>
+        <Text style={styles.headerTitle}>Çiftler Kulübü</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -147,10 +147,10 @@ const CouplesClubGuard: React.FC<CouplesClubGuardProps> = ({ onGoBack }) => {
         {/* Welcome text */}
         <Animated.View style={{ opacity: titleOpacityAnim, alignItems: 'center' }}>
           <Text style={guardStyles.welcomeTitle}>
-            Ciftler Kulubu'ne Hos Geldiniz!
+            Çiftler Kulübü'ne Hoş Geldiniz!
           </Text>
           <Text style={guardStyles.welcomeSubtitle}>
-            Iliskinizi guclendirin, birlikte buyuyun ve ozel avantajlarin keyfini cikarin.
+            İlişkinizi güçlendirin, birlikte büyüyün ve özel avantajların keyfini çıkarın.
           </Text>
         </Animated.View>
 
@@ -159,19 +159,19 @@ const CouplesClubGuard: React.FC<CouplesClubGuardProps> = ({ onGoBack }) => {
           <FeaturePreviewBadge
             emoji={'\uD83C\uDF89'}
             title="Etkinlikler"
-            description="Ciftlere ozel etkinliklere katilin ve sosyallesin"
+            description="Çiftlere özel etkinliklere katılın ve sosyalleşin"
             delay={200}
           />
           <FeaturePreviewBadge
             emoji={'\uD83C\uDFC6'}
             title="Liderlik Tablosu"
-            description="Diger ciftlerle yarisarak siralamalarda yukselsin"
+            description="Diğer çiftlerle yarışarak sıralamalarda yükselsin"
             delay={400}
           />
           <FeaturePreviewBadge
             emoji={'\uD83C\uDFC5'}
             title="Rozetler"
-            description="Iliskinizin her asamasinda ozel rozetler kazanin"
+            description="İlişkinizin her aşamasında özel rozetler kazanın"
             delay={600}
           />
           <FeaturePreviewBadge
@@ -186,7 +186,7 @@ const CouplesClubGuard: React.FC<CouplesClubGuardProps> = ({ onGoBack }) => {
         <View style={guardStyles.infoContainer}>
           <Text style={guardStyles.infoIcon}>{'\u2764\uFE0F'}</Text>
           <Text style={guardStyles.infoText}>
-            Ciftler Kulubune erisim icin aktif bir iliskiniz olmasi gerekiyor. Eslestikten sonra bu ozelliklerin tadini cikarabilirsiniz!
+            Çiftler Kulübüne erişim için aktif bir ilişkiniz olması gerekiyor. Eşleştikten sonra bu özelliklerin tadını çıkarabilirsiniz!
           </Text>
         </View>
       </ScrollView>
@@ -373,28 +373,28 @@ export const CouplesClubScreen: React.FC = () => {
         ),
       );
     } catch {
-      Alert.alert('Hata', 'Islem basarisiz oldu. Lutfen tekrar deneyin.', [{ text: 'Tamam' }]);
+      Alert.alert('Hata', 'İşlem başarısız oldu. Lütfen tekrar deneyin.', [{ text: 'Tamam' }]);
     }
   };
 
   const handleCreateEvent = async () => {
     if (!newTitle.trim() || !newDescription.trim() || !newLocation.trim()) {
-      Alert.alert('Hata', 'Lutfen tum alanlari doldurun.', [{ text: 'Tamam' }]);
+      Alert.alert('Hata', 'Lütfen tüm alanları doldurun.', [{ text: 'Tamam' }]);
       return;
     }
 
     setIsCreating(true);
     try {
       // TODO: Backend does not have event creation endpoint yet
-      Alert.alert('Bilgi', 'Etkinlik olusturma yaklnda aktif olacak.', [{ text: 'Tamam' }]);
+      Alert.alert('Bilgi', 'Etkinlik oluşturma yakında aktif olacak.', [{ text: 'Tamam' }]);
       setCreateModalVisible(false);
       setNewTitle('');
       setNewDescription('');
       setNewLocation('');
       setNewCapacity('');
-      Alert.alert('Basarili', 'Etkinlik olusturuldu!', [{ text: 'Tamam' }]);
+      Alert.alert('Başarılı', 'Etkinlik oluşturuldu!', [{ text: 'Tamam' }]);
     } catch {
-      Alert.alert('Hata', 'Etkinlik olusturulamadi. Lutfen tekrar deneyin.', [
+      Alert.alert('Hata', 'Etkinlik oluşturulamadı. Lütfen tekrar deneyin.', [
         { text: 'Tamam' },
       ]);
     } finally {
@@ -427,7 +427,7 @@ export const CouplesClubScreen: React.FC = () => {
       </View>
       <View style={styles.eventFooter}>
         <Text style={styles.eventAttendees}>
-          {item.attendeeCount}/{item.capacity} katilimci
+          {item.attendeeCount}/{item.capacity} katılımcı
         </Text>
         <TouchableOpacity
           style={[styles.rsvpButton, item.isRsvped && styles.rsvpButtonActive]}
@@ -435,7 +435,7 @@ export const CouplesClubScreen: React.FC = () => {
           activeOpacity={0.7}
         >
           <Text style={[styles.rsvpButtonText, item.isRsvped && styles.rsvpButtonTextActive]}>
-            {item.isRsvped ? 'Katilimdan Cik' : 'Katil'}
+            {item.isRsvped ? 'Katılımdan Çık' : 'Katıl'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -462,7 +462,7 @@ export const CouplesClubScreen: React.FC = () => {
           {item.partnerAName} & {item.partnerBName}
         </Text>
         <Text style={styles.coupleStats}>
-          {item.durationDays} gun | {item.badgeCount} rozet
+          {item.durationDays} gün | {item.badgeCount} rozet
         </Text>
       </View>
       <View style={styles.scoreContainer}>
@@ -483,28 +483,28 @@ export const CouplesClubScreen: React.FC = () => {
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Etkinlik Olustur</Text>
+            <Text style={styles.modalTitle}>Etkinlik Oluştur</Text>
             <TouchableOpacity onPress={() => setCreateModalVisible(false)}>
               <Text style={styles.modalCloseText}>X</Text>
             </TouchableOpacity>
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false}>
-            <Text style={styles.inputLabel}>Baslik</Text>
+            <Text style={styles.inputLabel}>Başlık</Text>
             <TextInput
               style={styles.textInput}
               value={newTitle}
               onChangeText={setNewTitle}
-              placeholder="Etkinlik basligi..."
+              placeholder="Etkinlik başlığı..."
               placeholderTextColor={colors.textTertiary}
             />
 
-            <Text style={styles.inputLabel}>Aciklama</Text>
+            <Text style={styles.inputLabel}>Açıklama</Text>
             <TextInput
               style={[styles.textInput, styles.textInputMultiline]}
               value={newDescription}
               onChangeText={setNewDescription}
-              placeholder="Etkinlik aciklamasi..."
+              placeholder="Etkinlik açıklaması..."
               placeholderTextColor={colors.textTertiary}
               multiline
               numberOfLines={3}
@@ -538,7 +538,7 @@ export const CouplesClubScreen: React.FC = () => {
               {isCreating ? (
                 <ActivityIndicator size="small" color={colors.text} />
               ) : (
-                <Text style={styles.createButtonText}>Olustur</Text>
+                <Text style={styles.createButtonText}>Oluştur</Text>
               )}
             </TouchableOpacity>
           </ScrollView>
@@ -554,7 +554,7 @@ export const CouplesClubScreen: React.FC = () => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Text style={styles.backText}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Ciftler Kulubu</Text>
+        <Text style={styles.headerTitle}>Çiftler Kulübü</Text>
         <TouchableOpacity
           onPress={() => setCreateModalVisible(true)}
           style={styles.createHeaderButton}
@@ -578,7 +578,7 @@ export const CouplesClubScreen: React.FC = () => {
           onPress={() => setActiveTab('leaderboard')}
         >
           <Text style={[styles.tabText, activeTab === 'leaderboard' && styles.tabTextActive]}>
-            Siralama
+            Sıralama
           </Text>
         </TouchableOpacity>
       </View>
@@ -607,9 +607,9 @@ export const CouplesClubScreen: React.FC = () => {
               <View style={styles.emptyIconBranded}>
                 <Text style={styles.emptyIconBrandedLetter}>L</Text>
               </View>
-              <Text style={styles.emptyTitle}>Henuz etkinlik yok</Text>
+              <Text style={styles.emptyTitle}>Henüz etkinlik yok</Text>
               <Text style={styles.emptySubtitle}>
-                Ciftler kulubu yakindir etkinliklerle dolacak.
+                Çiftler kulübü yakında etkinliklerle dolacak.
               </Text>
             </View>
           }
@@ -631,7 +631,7 @@ export const CouplesClubScreen: React.FC = () => {
           ListHeaderComponent={
             myRank !== null ? (
               <View style={styles.myRankCard}>
-                <Text style={styles.myRankLabel}>Sizin Siralamaniz</Text>
+                <Text style={styles.myRankLabel}>Sizin Sıralamanız</Text>
                 <Text style={styles.myRankValue}>#{myRank}</Text>
               </View>
             ) : null
@@ -641,9 +641,9 @@ export const CouplesClubScreen: React.FC = () => {
               <View style={styles.emptyIconBranded}>
                 <Text style={styles.emptyIconBrandedLetter}>L</Text>
               </View>
-              <Text style={styles.emptyTitle}>Siralama henuz hazir degil</Text>
+              <Text style={styles.emptyTitle}>Sıralama henüz hazır değil</Text>
               <Text style={styles.emptySubtitle}>
-                Ciftler kulubu yakindir etkinliklerle dolacak.
+                Çiftler kulübü yakında etkinliklerle dolacak.
               </Text>
             </View>
           }

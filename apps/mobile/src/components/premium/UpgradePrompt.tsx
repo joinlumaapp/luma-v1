@@ -51,65 +51,65 @@ interface FeatureConfig {
 const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
   undo: {
     icon: '\u21A9', // Return arrow
-    title: 'Geri Al Ozelligi',
+    title: 'Geri Al Özelliği',
     description:
-      'Yanlis yonde kaydirdin mi? Geri Al ile son begeni kararini geri alabilirsin.',
+      'Yanlış yönde kaydırdın mı? Geri Al ile son beğeni kararını geri alabilirsin.',
     minimumTier: 'gold',
     tierLabel: 'Gold+',
   },
   super_like: {
     icon: '\u2605', // Star
-    title: 'Super Begeni',
+    title: 'Süper Beğeni',
     description:
-      'Super Begeni ile ozel birinden one cik! Eslesme sansin 3 kat artar.',
+      'Süper Beğeni ile özel birinden öne çık! Eşleşme şansın 3 kat artar.',
     minimumTier: 'gold',
     tierLabel: 'Gold+',
   },
   visitors: {
     icon: '\u{1F441}', // Eye symbol (text representation)
-    title: 'Profil Ziyaretcileri',
+    title: 'Profil Ziyaretçileri',
     description:
-      'Profilini kimlerin ziyaret ettigini gor ve yeni baglanti firsatlarini kacirma.',
+      'Profilini kimlerin ziyaret ettiğini gör ve yeni bağlantı fırsatlarını kaçırma.',
     minimumTier: 'gold',
     tierLabel: 'Gold+',
   },
   who_likes: {
     icon: '\u2665', // Heart
-    title: 'Kimin Begendigi',
+    title: 'Kimin Beğendiği',
     description:
-      'Seni begenen kisileri hemen gor ve aninda eslesmeler olustur.',
+      'Seni beğenen kişileri hemen gör ve anında eşleşmeler oluştur.',
     minimumTier: 'gold',
     tierLabel: 'Gold+',
   },
   filters: {
     icon: '\u2699', // Gear
-    title: 'Gelismis Filtreler',
+    title: 'Gelişmiş Filtreler',
     description:
-      'Yas araligi, mesafe, niyet etiketi ve daha fazlasi ile arama sonuclarini daralt.',
+      'Yaş aralığı, mesafe, niyet etiketi ve daha fazlası ile arama sonuçlarını daralt.',
     minimumTier: 'pro',
     tierLabel: 'Pro',
   },
   priority: {
     icon: '\u2B06', // Up arrow
-    title: 'Oncelikli Gosterim',
+    title: 'Öncelikli Gösterim',
     description:
-      'Profilin diger kullanicilara once gosterilir. Daha fazla begeni ve eslesme kazan.',
+      'Profilin diğer kullanıcılara önce gösterilir. Daha fazla beğeni ve eşleşme kazan.',
     minimumTier: 'pro',
     tierLabel: 'Pro',
   },
   badge: {
     icon: '\u2726', // Star-like
-    title: 'Ozel Rozet',
+    title: 'Özel Rozet',
     description:
-      'Reserved uyelerine ozel rozet ile profilinde fark yarat.',
+      'Reserved üyelerine özel rozet ile profilinde fark yarat.',
     minimumTier: 'reserved',
     tierLabel: 'Reserved',
   },
   events: {
     icon: '\u2606', // Empty star
-    title: 'Ozel Etkinlik Davetleri',
+    title: 'Özel Etkinlik Davetleri',
     description:
-      'LUMA Reserved uyelerine ozel duzenenen etkinliklere davet al.',
+      'LUMA Reserved üyelerine özel düzenlenen etkinliklere davet al.',
     minimumTier: 'reserved',
     tierLabel: 'Reserved',
   },
@@ -199,7 +199,7 @@ export const UpgradePrompt: React.FC<UpgradePromptProps> = ({
           {/* Tier requirement tag */}
           <View style={styles.tierTag}>
             <Text style={styles.tierTagText}>
-              Bu ozellik {config.tierLabel} paketinde
+              Bu özellik {config.tierLabel} paketinde
             </Text>
           </View>
 
@@ -215,7 +215,7 @@ export const UpgradePrompt: React.FC<UpgradePromptProps> = ({
               end={{ x: 1, y: 0 }}
               style={styles.upgradeGradient}
             >
-              <Text style={styles.upgradeButtonText}>Yukselt</Text>
+              <Text style={styles.upgradeButtonText}>Yükselt</Text>
 
               {/* Shimmer overlay */}
               <Animated.View
