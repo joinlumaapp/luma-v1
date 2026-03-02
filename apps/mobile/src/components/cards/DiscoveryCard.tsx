@@ -1,5 +1,5 @@
-// DiscoveryCard — Premium summary card for Discovery feed
-// Photo (55%) + Info (45%) split, clean typography, compact compat badge
+// DiscoveryCard — Full-screen photo with glassmorphism info overlay
+// Photo fills entire card, info panel floats at bottom with glass effect
 // No gesture handling — parent manages swipe + tap
 
 import React from 'react';
@@ -50,6 +50,22 @@ const INTENTION_COLORS: Record<string, { bg: string; text: string }> = {
 const getIntentionStyle = (tag: string) =>
   INTENTION_COLORS[tag] ?? { bg: palette.purple[500] + '25', text: palette.purple[400] };
 
+// ─── Badge emoji map ─────────────────────────────────────────
+
+const BADGE_ICONS: Record<string, string> = {
+  verified: '\u2713',
+  icebreaker: '\u2744',
+  popular: '\u2605',
+  active: '\u26A1',
+  premium: '\u2666',
+  friendly: '\u263A',
+  explorer: '\u2708',
+  creative: '\u270E',
+};
+
+const getBadgeIcon = (badge: string): string =>
+  BADGE_ICONS[badge.toLowerCase()] ?? '\u25CF';
+
 // ─── Component ────────────────────────────────────────────────
 
 const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile }) => {
@@ -69,71 +85,82 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile }) => {
     : null;
 
   return (
-    <View style={[styles.cardRoot, { backgroundColor: colors.surface }]}>
-      {/* ── Photo Section (55%) ── */}
-      <View style={styles.photoSection}>
-        {profile.photoUrl ? (
-          <Image
-            source={{ uri: profile.photoUrl }}
-            style={styles.photo}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={[styles.photoPlaceholder, { backgroundColor: colors.surfaceLight }]}>
-            <Text style={styles.photoInitial}>
-              {profile.firstName.charAt(0).toUpperCase()}
-            </Text>
-          </View>
-        )}
-
-        {/* Gradient fade at bottom of photo */}
-        <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.45)'] as [string, string, ...string[]]}
-          style={styles.photoGradient}
+    <View style={styles.cardRoot}>
+      {/* ── Full-screen Photo ── */}
+      {profile.photoUrl ? (
+        <Image
+          source={{ uri: profile.photoUrl }}
+          style={styles.fullPhoto}
+          resizeMode="cover"
         />
+      ) : (
+        <View style={[styles.photoPlaceholder, { backgroundColor: colors.surfaceLight }]}>
+          <Text style={styles.photoInitial}>
+            {profile.firstName.charAt(0).toUpperCase()}
+          </Text>
+        </View>
+      )}
 
-        {/* Verified badge — top-left */}
-        {profile.isVerified && (
-          <View style={styles.verifiedBadge}>
-            <Text style={styles.verifiedText}>{'\u2713'} Do\u011Frulanm\u0131\u015F</Text>
-          </View>
-        )}
+      {/* ── Gradient fade over bottom half of photo ── */}
+      <LinearGradient
+        colors={['transparent', 'rgba(0,0,0,0.55)'] as [string, string, ...string[]]}
+        style={styles.bottomGradient}
+      />
 
-        {/* Compact compatibility badge — top-right */}
-        {profile.compatibility && (
-          <View style={[
-            styles.compatBadge,
-            isSuper && styles.compatBadgeSuper,
+      {/* ── Verified badge — top-left ── */}
+      {profile.isVerified && (
+        <View style={styles.verifiedBadge}>
+          <Text style={styles.verifiedText}>{'\u2713'} Do{'\u011F'}rulanm{'\u0131\u015F'}</Text>
+        </View>
+      )}
+
+      {/* ── Compact compatibility badge — top-right ── */}
+      {profile.compatibility && (
+        <View style={[
+          styles.compatBadge,
+          isSuper && styles.compatBadgeSuper,
+        ]}>
+          <Text style={[
+            styles.compatBadgeText,
+            isSuper && styles.compatBadgeTextSuper,
           ]}>
-            <Text style={[
-              styles.compatBadgeText,
-              isSuper && styles.compatBadgeTextSuper,
-            ]}>
-              %{compatScore}
-            </Text>
-          </View>
-        )}
-      </View>
+            %{compatScore}
+          </Text>
+        </View>
+      )}
 
-      {/* ── Info Panel (45%) ── */}
-      <View style={[styles.infoPanel, { backgroundColor: colors.surface }]}>
-        {/* Name + Age */}
-        <Text style={[styles.nameAge, { color: colors.text }]} numberOfLines={1}>
-          {profile.firstName}, {profile.age}
-        </Text>
+      {/* ── Glassmorphism Info Panel — bottom overlay ── */}
+      <View style={styles.glassPanel}>
+        {/* Name + Age + Badges row */}
+        <View style={styles.nameRow}>
+          <Text style={styles.nameAge} numberOfLines={1}>
+            {profile.firstName}, {profile.age}
+          </Text>
+          {profile.earnedBadges.length > 0 && (
+            <View style={styles.badgeRow}>
+              {profile.earnedBadges.slice(0, 3).map((badge, index) => (
+                <View key={`${badge}-${index}`} style={styles.badgeIcon}>
+                  <Text style={styles.badgeIconText}>
+                    {getBadgeIcon(badge)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
 
         {/* Location Row: City + Distance */}
         <View style={styles.locationRow}>
           {profile.city && (
-            <Text style={[styles.locationText, { color: colors.textSecondary }]} numberOfLines={1}>
+            <Text style={styles.locationText} numberOfLines={1}>
               {profile.city}
             </Text>
           )}
           {profile.city && distanceLabel && (
-            <Text style={[styles.locationDot, { color: colors.textTertiary }]}>{'\u00B7'}</Text>
+            <Text style={styles.locationDot}>{'\u00B7'}</Text>
           )}
           {distanceLabel && (
-            <Text style={[styles.locationText, { color: colors.textSecondary }]}>
+            <Text style={styles.locationText}>
               {distanceLabel}
             </Text>
           )}
@@ -151,7 +178,7 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile }) => {
         {/* Bio preview (2 lines) */}
         {profile.bio ? (
           <Text
-            style={[styles.bioText, { color: colors.textSecondary }]}
+            style={styles.bioText}
             numberOfLines={2}
           >
             {profile.bio}
@@ -159,8 +186,8 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile }) => {
         ) : null}
 
         {/* Subtle tap hint */}
-        <Text style={[styles.tapHint, { color: colors.textTertiary }]}>
-          {'\u25B4'} Profili G\u00F6r
+        <Text style={styles.tapHint}>
+          {'\u25B4'} Profili G{'\u00F6'}r
         </Text>
       </View>
     </View>
@@ -175,41 +202,44 @@ export const DiscoveryCard = React.memo(DiscoveryCardInner, (prevProps, nextProp
 
 // ─── Styles ───────────────────────────────────────────────────
 
+const GLASS_BG = 'rgba(8, 8, 15, 0.75)';
+const GLASS_BORDER = 'rgba(255, 255, 255, 0.08)';
+
 const styles = StyleSheet.create({
   cardRoot: {
     flex: 1,
     borderRadius: borderRadius.xl,
     overflow: 'hidden',
+    backgroundColor: '#08080F',
   },
 
-  // ── Photo Section ──
-  photoSection: {
-    height: '55%',
-    position: 'relative',
-  },
-  photo: {
-    width: '100%',
-    height: '100%',
+  // ── Full-screen Photo ──
+  fullPhoto: {
+    ...StyleSheet.absoluteFillObject,
+    width: undefined,
+    height: undefined,
   },
   photoPlaceholder: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
   },
   photoInitial: {
-    fontSize: 48,
+    fontSize: 64,
     fontWeight: fontWeights.bold,
     color: palette.purple[400],
   },
-  photoGradient: {
+
+  // ── Bottom gradient (helps readability of glass panel) ──
+  bottomGradient: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    height: 80,
+    height: '55%',
   },
 
-  // ── Verified Badge ──
+  // ── Verified Badge — top-left ──
   verifiedBadge: {
     position: 'absolute',
     top: spacing.sm + 2,
@@ -225,7 +255,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semibold,
   },
 
-  // ── Compatibility Badge (compact, on photo) ──
+  // ── Compatibility Badge — top-right ──
   compatBadge: {
     position: 'absolute',
     top: spacing.sm + 2,
@@ -270,19 +300,53 @@ const styles = StyleSheet.create({
     color: '#1A1A2E',
   },
 
-  // ── Info Panel ──
-  infoPanel: {
-    flex: 1,
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-    justifyContent: 'flex-start',
+  // ── Glassmorphism Info Panel ──
+  glassPanel: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: GLASS_BG,
+    borderTopWidth: 1,
+    borderTopColor: GLASS_BORDER,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 20,
     gap: spacing.xs + 2,
   },
+
+  // ── Name + Badges row ──
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
   nameAge: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: fontWeights.bold,
+    color: palette.white,
     letterSpacing: -0.3,
+    flexShrink: 1,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  badgeIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(139, 92, 246, 0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeIconText: {
+    fontSize: 11,
+    color: palette.white,
+    fontWeight: fontWeights.semibold,
   },
 
   // ── Location Row ──
@@ -294,10 +358,12 @@ const styles = StyleSheet.create({
   locationText: {
     fontSize: 13,
     fontWeight: fontWeights.regular,
+    color: 'rgba(156, 163, 175, 0.9)',
   },
   locationDot: {
     fontSize: 13,
     fontWeight: fontWeights.bold,
+    color: 'rgba(107, 114, 128, 0.8)',
   },
 
   // ── Intention Chip ──
@@ -318,6 +384,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     fontWeight: fontWeights.regular,
+    color: 'rgba(209, 213, 219, 0.85)',
     marginTop: 2,
   },
 
@@ -326,7 +393,8 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: fontWeights.medium,
     textAlign: 'center',
-    marginTop: 'auto',
+    color: 'rgba(107, 114, 128, 0.7)',
     letterSpacing: 0.5,
+    marginTop: 4,
   },
 });

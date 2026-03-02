@@ -93,23 +93,23 @@ const EmptyPlacesHint: React.FC<EmptyPlacesHintProps> = ({ onCheckIn }) => {
 
   return (
     <View style={emptyHintStyles.container}>
-      {/* Map pin icon */}
+      {/* Branded LUMA icon */}
       <Animated.View
         style={[
           emptyHintStyles.iconCircle,
           { transform: [{ scale: iconScaleAnim }] },
         ]}
       >
-        <Text style={emptyHintStyles.iconEmoji}>{'\uD83D\uDDFA\uFE0F'}</Text>
+        <Text style={emptyHintStyles.iconLetter}>L</Text>
       </Animated.View>
 
       {/* Title and subtitle */}
       <Animated.View style={{ opacity: textOpacityAnim, alignItems: 'center' }}>
         <Text style={emptyHintStyles.title}>
-          Birlikte kesfetmeye baslayin!
+          Kesif bekliyor
         </Text>
         <Text style={emptyHintStyles.subtitle}>
-          Ilk check-in'inizi yapin ve anilarinizi biriktirmeye baslayin
+          {'Ozel mekanlari kesfetmek icin\nbir eslesmene ihtiyacin var.'}
         </Text>
       </Animated.View>
 
@@ -168,6 +168,11 @@ const emptyHintStyles = StyleSheet.create({
   },
   iconEmoji: {
     fontSize: 44,
+  },
+  iconLetter: {
+    fontSize: 38,
+    color: colors.primary,
+    fontWeight: '700',
   },
   title: {
     ...typography.h3,
@@ -784,14 +789,14 @@ export const PlacesScreen: React.FC = () => {
       {/* Content */}
       {!hasActiveRelationship && !loading ? (
         <View style={styles.noRelationshipContainer}>
-          <View style={styles.emptyIcon}>
-            <Text style={styles.emptyIconText}>{'\uD83D\uDDFA\uFE0F'}</Text>
+          <View style={styles.emptyIconBranded}>
+            <Text style={styles.emptyIconBrandedLetter}>L</Text>
           </View>
           <Text style={styles.noRelationshipTitle}>
-            Aktif bir iliskiniz bulunmuyor
+            Kesif bekliyor
           </Text>
           <Text style={styles.noRelationshipSubtitle}>
-            Mekanlari birlikte kesfetmek icin once bir iliski baslatin.
+            Ozel mekanlari kesfetmek icin bir eslesmene ihtiyacin var.
           </Text>
         </View>
       ) : loading ? (
@@ -959,6 +964,22 @@ const styles = StyleSheet.create({
   emptyIconText: {
     fontSize: 36,
     color: colors.textTertiary,
+  },
+  emptyIconBranded: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.primary + '18',
+    borderWidth: 2,
+    borderColor: colors.primary + '30',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  emptyIconBrandedLetter: {
+    fontSize: 32,
+    color: colors.primary,
+    fontWeight: '700',
   },
   emptyTitle: {
     ...typography.h4,

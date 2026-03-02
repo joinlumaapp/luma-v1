@@ -3,7 +3,7 @@
 // finger-tracking, velocity-based throws, spring-back, and haptic feedback.
 // Performance: InteractionManager for deferred fetch, memoized card rendering
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -73,10 +73,11 @@ const ActionButton: React.FC<{
   borderColor: string;
   onPress: () => void;
   glowColor?: string;
+  hapticStyle?: Haptics.ImpactFeedbackStyle;
   testID: string;
   accessibilityLabel: string;
   accessibilityHint: string;
-}> = ({ icon, color, size, borderColor, onPress, glowColor, testID, accessibilityLabel, accessibilityHint }) => {
+}> = ({ icon, color, size, borderColor, onPress, glowColor, hapticStyle, testID, accessibilityLabel, accessibilityHint }) => {
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -92,7 +93,7 @@ const ActionButton: React.FC<{
   };
 
   const handlePress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Haptics.impactAsync(hapticStyle ?? Haptics.ImpactFeedbackStyle.Light);
     onPress();
   };
 
@@ -161,6 +162,20 @@ export const DiscoveryScreen: React.FC = () => {
   const undoLastSwipe = useDiscoveryStore((s) => s.undoLastSwipe);
   const showSuperLikeGlow = useDiscoveryStore((s) => s.showSuperLikeGlow);
 
+  // ─── Time-based greeting ──────────────────────────────────
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    let base: string;
+    if (hour < 12) {
+      base = 'G\u00FCnayd\u0131n';
+    } else if (hour < 18) {
+      base = 'Merhaba';
+    } else {
+      base = '\u0130yi ak\u015Famlar';
+    }
+    return userFirstName ? `${base}, ${userFirstName}` : base;
+  }, [userFirstName]);
+
   // Match detail state
   const [matchConversationStarters, setMatchConversationStarters] = useState<string[]>([]);
   const [matchExplanation, setMatchExplanation] = useState<string | undefined>(undefined);
@@ -223,6 +238,13 @@ export const DiscoveryScreen: React.FC = () => {
       superGlowScale.value = withSpring(1.3, { damping: 8, stiffness: 40 });
     }
   }, [showSuperLikeGlow, superGlowOpacity, superGlowScale]);
+
+  // Match created haptic — fires success notification when a match is shown
+  useEffect(() => {
+    if (showMatchAnimation) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  }, [showMatchAnimation]);
 
   // Match detail fetch
   useEffect(() => {
@@ -413,33 +435,93 @@ export const DiscoveryScreen: React.FC = () => {
     };
   });
 
-  // Swipe overlays
-  const likeOverlayStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
+  // Swipe color-wash overlays
+  const HALF_THRESHOLD = SWIPE_THRESHOLD * 0.5;
+  const HALF_UP_THRESHOLD = SWIPE_UP_THRESHOLD * 0.5;
+
+  const likeWashStyle = useAnimatedStyle(() => ({
+    backgroundColor: `rgba(16, 185, 129, ${interpolate(
       translateX.value,
       [0, SWIPE_THRESHOLD],
+      [0, 0.35],
+      Extrapolation.CLAMP,
+    )})`,
+  }));
+
+  const likeIconStyle = useAnimatedStyle(() => {
+    const iconOpacity = interpolate(
+      translateX.value,
+      [HALF_THRESHOLD, SWIPE_THRESHOLD],
       [0, 1],
       Extrapolation.CLAMP,
-    ),
-  }));
+    );
+    const iconScale = interpolate(
+      translateX.value,
+      [HALF_THRESHOLD, SWIPE_THRESHOLD],
+      [0.5, 1.2],
+      Extrapolation.CLAMP,
+    );
+    return {
+      opacity: iconOpacity,
+      transform: [{ scale: iconScale }],
+    };
+  });
 
-  const passOverlayStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
+  const passWashStyle = useAnimatedStyle(() => ({
+    backgroundColor: `rgba(239, 68, 68, ${interpolate(
       translateX.value,
       [-SWIPE_THRESHOLD, 0],
-      [1, 0],
+      [0.35, 0],
       Extrapolation.CLAMP,
-    ),
+    )})`,
   }));
 
-  const superOverlayStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      translateY.value,
-      [-SWIPE_UP_THRESHOLD, 0],
+  const passIconStyle = useAnimatedStyle(() => {
+    const iconOpacity = interpolate(
+      translateX.value,
+      [-SWIPE_THRESHOLD, -HALF_THRESHOLD],
       [1, 0],
       Extrapolation.CLAMP,
-    ),
+    );
+    const iconScale = interpolate(
+      translateX.value,
+      [-SWIPE_THRESHOLD, -HALF_THRESHOLD],
+      [1.2, 0.5],
+      Extrapolation.CLAMP,
+    );
+    return {
+      opacity: iconOpacity,
+      transform: [{ scale: iconScale }],
+    };
+  });
+
+  const superWashStyle = useAnimatedStyle(() => ({
+    backgroundColor: `rgba(251, 191, 36, ${interpolate(
+      translateY.value,
+      [-SWIPE_UP_THRESHOLD, 0],
+      [0.30, 0],
+      Extrapolation.CLAMP,
+    )})`,
   }));
+
+  const superIconStyle = useAnimatedStyle(() => {
+    const iconOpacity = interpolate(
+      translateY.value,
+      [-SWIPE_UP_THRESHOLD, -HALF_UP_THRESHOLD],
+      [1, 0],
+      Extrapolation.CLAMP,
+    );
+    const iconScale = interpolate(
+      translateY.value,
+      [-SWIPE_UP_THRESHOLD, -HALF_UP_THRESHOLD],
+      [1.2, 0.5],
+      Extrapolation.CLAMP,
+    );
+    return {
+      opacity: iconOpacity,
+      transform: [{ scale: iconScale }],
+    };
+  });
 
   // Undo button
   const undoAnimatedStyle = useAnimatedStyle(() => ({
@@ -479,7 +561,12 @@ export const DiscoveryScreen: React.FC = () => {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Ke\u015Ffet</Text>
+          <View>
+            <Text style={styles.headerTitle}>{greeting}</Text>
+            <Text style={styles.headerSubtitle}>
+              Bug\u00FCn {dailyRemaining} profil kald\u0131
+            </Text>
+          </View>
         </View>
         <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -494,13 +581,20 @@ export const DiscoveryScreen: React.FC = () => {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Ke\u015Ffet</Text>
+          <View>
+            <Text style={styles.headerTitle}>{greeting}</Text>
+            <Text style={styles.headerSubtitle}>
+              Bug\u00FCn {dailyRemaining} profil kald\u0131
+            </Text>
+          </View>
         </View>
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyIcon}>{'( )'}</Text>
-          <Text style={styles.emptyTitle}>Kartlar Bitti!</Text>
+          <View style={styles.emptyIconCircle}>
+            <Text style={styles.emptyIconLetter}>L</Text>
+          </View>
+          <Text style={styles.emptyTitle}>Gunluk kesfini tamamladin</Text>
           <Text style={styles.emptySubtitle}>
-            Yeni profiller i\u00E7in daha sonra tekrar gel.
+            {'En uyumlu insanlar sabirla bulunur.\nYarin yeni profiller seni bekliyor.'}
           </Text>
           <Pressable
             onPress={() => refreshFeed()}
@@ -523,7 +617,12 @@ export const DiscoveryScreen: React.FC = () => {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Ke\u015Ffet</Text>
+        <View>
+          <Text style={styles.headerTitle}>{greeting}</Text>
+          <Text style={styles.headerSubtitle}>
+            Bug\u00FCn {dailyRemaining} profil kald\u0131
+          </Text>
+        </View>
         <View style={styles.headerRight}>
           <Pressable
             onPress={() => navigation.navigate('Filter')}
@@ -605,15 +704,21 @@ export const DiscoveryScreen: React.FC = () => {
               }}
             />
 
-            {/* Swipe overlays — rendered on top of card */}
-            <Animated.View style={[styles.likeOverlay, likeOverlayStyle]} pointerEvents="none">
-              <Text style={styles.likeOverlayText}>BEGEN\u0130M</Text>
+            {/* Color-wash swipe overlays — rendered on top of card content */}
+            <Animated.View style={[styles.colorWashOverlay, likeWashStyle]} pointerEvents="none">
+              <Animated.View style={likeIconStyle}>
+                <Text style={styles.washIconText}>{'\u2713'}</Text>
+              </Animated.View>
             </Animated.View>
-            <Animated.View style={[styles.passOverlay, passOverlayStyle]} pointerEvents="none">
-              <Text style={styles.passOverlayText}>GE\u00C7</Text>
+            <Animated.View style={[styles.colorWashOverlay, passWashStyle]} pointerEvents="none">
+              <Animated.View style={passIconStyle}>
+                <Text style={styles.washIconText}>{'\u2715'}</Text>
+              </Animated.View>
             </Animated.View>
-            <Animated.View style={[styles.superOverlay, superOverlayStyle]} pointerEvents="none">
-              <Text style={styles.superOverlayText}>S\u00DCPER</Text>
+            <Animated.View style={[styles.colorWashOverlay, superWashStyle]} pointerEvents="none">
+              <Animated.View style={superIconStyle}>
+                <Text style={[styles.washIconText, styles.washIconStar]}>{'\u2605'}</Text>
+              </Animated.View>
             </Animated.View>
           </Animated.View>
         </GestureDetector>
@@ -637,7 +742,7 @@ export const DiscoveryScreen: React.FC = () => {
         {/* Undo button */}
         <Animated.View style={[styles.undoWrapper, undoAnimatedStyle]}>
           <Pressable
-            onPress={() => { if (canUndo) undoLastSwipe(); }}
+            onPress={() => { if (canUndo) { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); undoLastSwipe(); } }}
             accessibilityLabel="Geri al"
             accessibilityRole="button"
             accessibilityHint="Son kaydirma islemini geri almak icin dokunun"
@@ -655,6 +760,7 @@ export const DiscoveryScreen: React.FC = () => {
             color={colors.error}
             borderColor={colors.error + '60'}
             size={62}
+            hapticStyle={Haptics.ImpactFeedbackStyle.Light}
             onPress={handlePassPress}
             testID="discovery-pass-btn"
             accessibilityLabel="Gec"
@@ -666,6 +772,7 @@ export const DiscoveryScreen: React.FC = () => {
             borderColor={palette.gold[400] + '60'}
             size={50}
             glowColor={palette.gold[400]}
+            hapticStyle={Haptics.ImpactFeedbackStyle.Heavy}
             onPress={handleSuperLikePress}
             testID="discovery-superlike-btn"
             accessibilityLabel="Super Begen"
@@ -677,6 +784,7 @@ export const DiscoveryScreen: React.FC = () => {
             borderColor={colors.success + '60'}
             size={62}
             glowColor={colors.success}
+            hapticStyle={Haptics.ImpactFeedbackStyle.Medium}
             onPress={handleLikePress}
             testID="discovery-like-btn"
             accessibilityLabel="Begen"
@@ -721,6 +829,11 @@ const styles = StyleSheet.create({
     ...typography.h3,
     color: colors.text,
     letterSpacing: -0.3,
+  },
+  headerSubtitle: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: 2,
   },
   headerRight: {
     flexDirection: 'row',
@@ -784,62 +897,24 @@ const styles = StyleSheet.create({
     // Initial state set by animated style
   },
 
-  // ── Swipe Overlays ──
-  likeOverlay: {
-    position: 'absolute',
-    top: 32,
-    left: 20,
+  // ── Color-Wash Swipe Overlays ──
+  colorWashOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: borderRadius.xl,
     zIndex: 10,
-    borderWidth: 3,
-    borderColor: palette.success,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: palette.success + '18',
-    transform: [{ rotate: '-15deg' }],
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  likeOverlayText: {
-    fontSize: 22,
-    color: palette.success,
-    fontWeight: '800',
-    letterSpacing: 3,
+  washIconText: {
+    fontSize: 60,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 6,
   },
-  passOverlay: {
-    position: 'absolute',
-    top: 32,
-    right: 20,
-    zIndex: 10,
-    borderWidth: 3,
-    borderColor: palette.error,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: palette.error + '18',
-    transform: [{ rotate: '15deg' }],
-  },
-  passOverlayText: {
-    fontSize: 22,
-    color: palette.error,
-    fontWeight: '800',
-    letterSpacing: 3,
-  },
-  superOverlay: {
-    position: 'absolute',
-    top: '40%',
-    alignSelf: 'center',
-    zIndex: 10,
-    borderWidth: 3,
-    borderColor: palette.gold[400],
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    backgroundColor: palette.gold[400] + '20',
-  },
-  superOverlayText: {
-    fontSize: 24,
-    color: palette.gold[400],
-    fontWeight: '800',
-    letterSpacing: 3,
+  washIconStar: {
+    fontSize: 56,
   },
 
   // ── Super Like Glow ──
@@ -916,14 +991,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.xxl,
   },
-  emptyIcon: {
-    fontSize: 64,
-    color: colors.textTertiary,
+  emptyIconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.primary + '18',
+    borderWidth: 2,
+    borderColor: colors.primary + '30',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: spacing.lg,
+  },
+  emptyIconLetter: {
+    fontSize: 32,
+    color: colors.primary,
+    fontWeight: '700',
   },
   emptyTitle: {
     ...typography.h3,
     color: colors.text,
+    textAlign: 'center',
     marginBottom: spacing.sm,
   },
   emptySubtitle: {

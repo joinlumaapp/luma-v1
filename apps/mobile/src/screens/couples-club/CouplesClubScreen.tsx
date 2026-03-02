@@ -604,13 +604,12 @@ export const CouplesClubScreen: React.FC = () => {
           }
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <View style={styles.emptyIcon}>
-                <Text style={styles.emptyIconText}>O</Text>
+              <View style={styles.emptyIconBranded}>
+                <Text style={styles.emptyIconBrandedLetter}>L</Text>
               </View>
               <Text style={styles.emptyTitle}>Henuz etkinlik yok</Text>
               <Text style={styles.emptySubtitle}>
-                Ciftler Kulubunde henuz bir etkinlik bulunmuyor. Pro+ uyeliginiz varsa
-                ilk etkinligi siz olusturabilirsiniz!
+                Ciftler kulubu yakindir etkinliklerle dolacak.
               </Text>
             </View>
           }
@@ -639,12 +638,12 @@ export const CouplesClubScreen: React.FC = () => {
           }
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <View style={styles.emptyIcon}>
-                <Text style={styles.emptyIconText}>--</Text>
+              <View style={styles.emptyIconBranded}>
+                <Text style={styles.emptyIconBrandedLetter}>L</Text>
               </View>
-              <Text style={styles.emptyTitle}>Siralama bos</Text>
+              <Text style={styles.emptyTitle}>Siralama henuz hazir degil</Text>
               <Text style={styles.emptySubtitle}>
-                Henuz siralama icin yeterli veri bulunmuyor.
+                Ciftler kulubu yakindir etkinliklerle dolacak.
               </Text>
             </View>
           }
@@ -957,6 +956,22 @@ const styles = StyleSheet.create({
   emptyIconText: {
     fontSize: 36,
     color: colors.textTertiary,
+  },
+  emptyIconBranded: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.primary + '18',
+    borderWidth: 2,
+    borderColor: colors.primary + '30',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  emptyIconBrandedLetter: {
+    fontSize: 32,
+    color: colors.primary,
+    fontWeight: '700',
   },
   emptyTitle: {
     ...typography.h4,

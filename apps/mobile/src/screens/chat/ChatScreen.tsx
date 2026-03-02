@@ -377,9 +377,9 @@ export const ChatScreen: React.FC = () => {
             <View style={styles.emptyChatAvatar}>
               <Text style={styles.emptyChatInitial}>{partnerName.charAt(0)}</Text>
             </View>
-            <Text style={styles.emptyChatTitle}>{partnerName} ile sohbet</Text>
+            <Text style={styles.emptyChatTitle}>Henuz sohbet yok</Text>
             <Text style={styles.emptyChatSubtitle}>
-              Merhaba diyerek sohbete basla!
+              {'Eslesmelerinden birine ilk mesaji at.\nIlk adim her zaman ozeldir.'}
             </Text>
           </View>
         ) : (

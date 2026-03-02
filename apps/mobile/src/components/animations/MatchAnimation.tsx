@@ -1,16 +1,18 @@
-// Premium match celebration animation with confetti particles, user initials,
-// blur overlay, and super-compatibility gold variant
+// Premium match celebration animation with confetti particles, profile photos,
+// gradient overlay, and super-compatibility gold variant
 
 import React, { useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
+  Image,
   TouchableOpacity,
   StyleSheet,
   Animated,
   Modal,
   Dimensions,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
@@ -22,6 +24,10 @@ interface MatchAnimationProps {
   matchName: string;
   /** Current user's display name */
   userName?: string;
+  /** Matched person's profile photo URL */
+  matchPhotoUrl?: string;
+  /** Current user's profile photo URL */
+  userPhotoUrl?: string;
   compatibilityScore: number;
   isSuperCompatible: boolean;
   /** Intelligent explanation of why this match is compatible */
@@ -117,6 +123,8 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
   visible,
   matchName,
   userName = 'Sen',
+  matchPhotoUrl,
+  userPhotoUrl,
   compatibilityScore,
   isSuperCompatible,
   compatibilityExplanation,
@@ -266,10 +274,19 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      {/* Blur overlay */}
+      {/* Gradient overlay */}
       <Animated.View
         style={[styles.overlay, { opacity: overlayOpacity }]}
       >
+        <LinearGradient
+          colors={[
+            'rgba(8,8,15,0.9)',
+            'rgba(20,10,40,0.95)',
+            'rgba(8,8,15,0.9)',
+          ]}
+          style={StyleSheet.absoluteFill}
+        />
+
         {/* Confetti particles */}
         {particles.map((config, idx) => (
           <ConfettiDot
@@ -290,7 +307,7 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
             },
           ]}
         >
-          {/* User initials circles */}
+          {/* User profile circles */}
           <Animated.View
             style={[
               styles.initialsRow,
@@ -303,11 +320,19 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
                 { borderColor: accentColor },
               ]}
             >
-              <Text
-                style={[styles.initialsText, { color: accentColor }]}
-              >
-                {userInitials}
-              </Text>
+              {userPhotoUrl ? (
+                <Image
+                  source={{ uri: userPhotoUrl }}
+                  style={styles.profilePhoto}
+                  accessibilityLabel={`${userName} profil fotografi`}
+                />
+              ) : (
+                <Text
+                  style={[styles.initialsText, { color: accentColor }]}
+                >
+                  {userInitials}
+                </Text>
+              )}
             </View>
 
             {/* Heart connector */}
@@ -323,11 +348,19 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
                 { borderColor: accentColor },
               ]}
             >
-              <Text
-                style={[styles.initialsText, { color: accentColor }]}
-              >
-                {matchInitials}
-              </Text>
+              {matchPhotoUrl ? (
+                <Image
+                  source={{ uri: matchPhotoUrl }}
+                  style={styles.profilePhoto}
+                  accessibilityLabel={`${matchName} profil fotografi`}
+                />
+              ) : (
+                <Text
+                  style={[styles.initialsText, { color: accentColor }]}
+                >
+                  {matchInitials}
+                </Text>
+              )}
             </View>
           </Animated.View>
 
@@ -440,7 +473,7 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.82)',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.xl,
@@ -480,6 +513,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceLight,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
+  },
+  profilePhoto: {
+    width: 59,
+    height: 59,
+    borderRadius: 29.5,
   },
   initialsText: {
     ...typography.h3,

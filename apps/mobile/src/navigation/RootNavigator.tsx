@@ -18,9 +18,9 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 /** Gradient stops for the branded splash background */
 const SPLASH_GRADIENT_COLORS: readonly [string, string, ...string[]] = [
-  '#0F0F23',
-  '#1A0A3E',
-  '#2D1B69',
+  '#08080F',
+  '#150A30',
+  '#251560',
 ];
 
 /** Minimum time (ms) the splash screen stays visible */
