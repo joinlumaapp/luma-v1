@@ -12,8 +12,9 @@ export interface FeedCard {
   compatibility: {
     score: number;
     level: string;
-  };
+  } | null;
   photos: Array<{ url: string; thumbnailUrl: string }>;
+  isVerified?: boolean;
   isSelfieVerified: boolean;
   isFullyVerified: boolean;
   voiceIntroUrl?: string;

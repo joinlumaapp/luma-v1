@@ -4,6 +4,7 @@
 import { useDiscoveryStore } from '../stores/discoveryStore';
 import { useMatchStore } from '../stores/matchStore';
 import { useChatStore } from '../stores/chatStore';
+import type { ReactionEmoji } from '../services/chatService';
 import { useHarmonyStore } from '../stores/harmonyStore';
 import { useProfileStore } from '../stores/profileStore';
 import { useNotificationStore } from '../stores/notificationStore';
@@ -911,6 +912,7 @@ export function seedDevData(): void {
   // 11. Override sendMessage for local echo
   useChatStore.setState({
     sendMessage: async (matchId: string, content: string) => {
+      useChatStore.setState({ isSending: true });
       const newMsg = {
         id: `msg-dev-${Date.now()}`,
         matchId,
@@ -930,6 +932,86 @@ export function seedDevData(): void {
         isSending: false,
       }));
       useChatStore.getState().updateLastMessage(matchId, content, newMsg.createdAt);
+    },
+  });
+
+  // 11b. Override sendImageMessage for local echo
+  useChatStore.setState({
+    sendImageMessage: async (matchId: string, _imageUri: string) => {
+      useChatStore.setState({ isSending: true });
+      const newMsg = {
+        id: `msg-img-dev-${Date.now()}`,
+        matchId,
+        senderId: 'dev-user-001',
+        content: '',
+        type: 'IMAGE' as const,
+        status: 'SENT' as const,
+        createdAt: new Date().toISOString(),
+        isRead: true,
+        reactions: [],
+        imageUrl: _imageUri,
+      };
+      useChatStore.setState((state) => ({
+        messages: {
+          ...state.messages,
+          [matchId]: [...(state.messages[matchId] ?? []), newMsg],
+        },
+        isSending: false,
+      }));
+      useChatStore.getState().updateLastMessage(matchId, 'Fotograf', newMsg.createdAt);
+    },
+  });
+
+  // 11c. Override markAsRead for local operation
+  useChatStore.setState({
+    markAsRead: async (matchId: string) => {
+      useChatStore.setState((state) => ({
+        conversations: state.conversations.map((conv) =>
+          conv.matchId === matchId ? { ...conv, unreadCount: 0 } : conv
+        ),
+        totalUnread: state.conversations.reduce(
+          (sum, conv) => sum + (conv.matchId === matchId ? 0 : conv.unreadCount),
+          0
+        ),
+      }));
+    },
+  });
+
+  // 11d. Override toggleReaction for local operation
+  useChatStore.setState({
+    toggleReaction: async (matchId: string, messageId: string, emoji: ReactionEmoji) => {
+      useChatStore.setState((state) => {
+        const matchMessages = state.messages[matchId] ?? [];
+        const updatedMessages = matchMessages.map((msg) => {
+          if (msg.id !== messageId) return msg;
+          const existingReactions = msg.reactions ?? [];
+          const existingIndex = existingReactions.findIndex(
+            (r) => r.emoji === emoji && r.hasReacted
+          );
+          if (existingIndex >= 0) {
+            // Remove reaction
+            const updated = existingReactions
+              .map((r) => r.emoji === emoji ? { ...r, count: r.count - 1, hasReacted: false } : r)
+              .filter((r) => r.count > 0);
+            return { ...msg, reactions: updated };
+          }
+          // Add reaction
+          const emojiIndex = existingReactions.findIndex((r) => r.emoji === emoji);
+          if (emojiIndex >= 0) {
+            const updated = existingReactions.map((r) =>
+              r.emoji === emoji ? { ...r, count: r.count + 1, hasReacted: true } : r
+            );
+            return { ...msg, reactions: updated };
+          }
+          return {
+            ...msg,
+            reactions: [...existingReactions, { emoji, count: 1, hasReacted: true }],
+          };
+        });
+        return {
+          messages: { ...state.messages, [matchId]: updatedMessages },
+        };
+      });
     },
   });
 

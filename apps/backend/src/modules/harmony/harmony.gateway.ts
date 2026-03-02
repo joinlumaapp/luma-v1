@@ -61,6 +61,9 @@ export class HarmonyGateway
   /** Maps userId → Set of socketIds (supports multiple devices) */
   private userSockets = new Map<string, Set<string>>();
 
+  /** Maps socketId → Set of sessionIds the socket has joined */
+  private readonly socketSessions = new Map<string, Set<string>>();
+
   /** Tracks last event timestamps per socket for rate limiting */
   private eventTimestamps = new Map<string, Map<string, number[]>>();
 
@@ -116,6 +119,24 @@ export class HarmonyGateway
 
   handleDisconnect(client: AuthenticatedSocket): void {
     const userId = client.data?.userId;
+
+    // Notify all rooms that the user has left before cleaning up
+    const sessions = this.socketSessions.get(client.id);
+    if (sessions && userId) {
+      for (const sessionId of sessions) {
+        const roomName = `harmony:${sessionId}`;
+        client.to(roomName).emit('harmony:user_left', {
+          userId,
+          sessionId,
+          timestamp: new Date().toISOString(),
+        });
+        this.logger.log(
+          `Disconnect: notified room ${roomName} that user ${userId} left`,
+        );
+      }
+    }
+    this.socketSessions.delete(client.id);
+
     if (userId) {
       const sockets = this.userSockets.get(userId);
       if (sockets) {
@@ -220,6 +241,11 @@ export class HarmonyGateway
     const roomName = `harmony:${data.sessionId}`;
     await client.join(roomName);
 
+    // Track which sessions this socket has joined
+    const existingSessions = this.socketSessions.get(client.id) || new Set<string>();
+    existingSessions.add(data.sessionId);
+    this.socketSessions.set(client.id, existingSessions);
+
     // Calculate remaining time using the up-to-date endsAt
     const remainingMs = currentEndsAt
       ? Math.max(0, currentEndsAt.getTime() - Date.now())
@@ -263,6 +289,13 @@ export class HarmonyGateway
     });
 
     await client.leave(roomName);
+
+    // Remove session from socket tracking
+    const sessions = this.socketSessions.get(client.id);
+    if (sessions) {
+      sessions.delete(data.sessionId);
+    }
+
     this.logger.log(`User ${userId} left session ${data.sessionId}`);
   }
 

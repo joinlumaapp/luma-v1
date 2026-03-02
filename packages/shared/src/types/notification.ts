@@ -10,6 +10,7 @@ export enum NotificationType {
   BADGE_EARNED = 'BADGE_EARNED',
   SUBSCRIPTION_EXPIRING = 'SUBSCRIPTION_EXPIRING',
   SYSTEM = 'SYSTEM',
+  MATCH_REMOVED = 'MATCH_REMOVED',
   // App-level push notification types (not persisted in DB)
   NEW_MESSAGE = 'NEW_MESSAGE',
   RELATIONSHIP_REQUEST = 'RELATIONSHIP_REQUEST',
@@ -18,7 +19,7 @@ export enum NotificationType {
 export interface Notification {
   id: string;
   userId: string;
-  type: NotificationType | string;
+  type: NotificationType;
   title: string;
   body: string;
   data: Record<string, string>;

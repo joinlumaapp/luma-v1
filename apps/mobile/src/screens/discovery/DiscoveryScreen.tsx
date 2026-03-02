@@ -1,20 +1,31 @@
-// Discovery screen — premium card stack with enhanced swipe animations,
-// undo (Geri Al) button, and super like (swipe up) support
-// Performance: InteractionManager for deferred fetch, memoized interpolations
+// Discovery screen — premium card stack with Tinder-like swipe physics
+// Uses react-native-gesture-handler v2 + react-native-reanimated for real-time
+// finger-tracking, velocity-based throws, spring-back, and haptic feedback.
+// Performance: InteractionManager for deferred fetch, memoized card rendering
 
-import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
-  TouchableWithoutFeedback,
+  Pressable,
   StyleSheet,
   Dimensions,
-  PanResponder,
-  Animated,
+  Platform,
   ActivityIndicator,
   InteractionManager,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  runOnJS,
+  interpolate,
+  Extrapolation,
+} from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -36,63 +47,152 @@ import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
-const SWIPE_UP_THRESHOLD = SCREEN_HEIGHT * 0.12; // Vertical threshold for super like
 
-// Spring physics for card release
-const CARD_SPRING_CONFIG = {
-  tension: 60,
-  friction: 8,
-  useNativeDriver: false,
-};
+// ─── Swipe thresholds ────────────────────────────────────────
+const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
+const VELOCITY_THRESHOLD = 700;
+const SWIPE_UP_THRESHOLD = SCREEN_HEIGHT * 0.13;
+const VELOCITY_UP_THRESHOLD = 600;
+
+// Spring configs — organic feel (lower stiffness = more bounce, less mechanical)
+const SPRING_BACK = { damping: 14, stiffness: 120, mass: 0.9, overshootClamping: false };
+const SPRING_EXIT = { damping: 18, stiffness: 80, mass: 0.7 };
+const SPRING_BUTTON = { damping: 14, stiffness: 200 };
 
 type DiscoveryNavProp = CompositeNavigationProp<
   NativeStackNavigationProp<DiscoveryStackParamList, 'Discovery'>,
   BottomTabNavigationProp<MainTabParamList>
 >;
 
+// ─── Action Button component ─────────────────────────────────
+
+const ActionButton: React.FC<{
+  icon: string;
+  color: string;
+  size: number;
+  borderColor: string;
+  onPress: () => void;
+  glowColor?: string;
+  testID: string;
+  accessibilityLabel: string;
+  accessibilityHint: string;
+}> = ({ icon, color, size, borderColor, onPress, glowColor, testID, accessibilityLabel, accessibilityHint }) => {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = () => {
+    scale.value = withSpring(0.85, SPRING_BUTTON);
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1, SPRING_BUTTON);
+  };
+
+  const handlePress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    onPress();
+  };
+
+  return (
+    <Pressable
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      onPress={handlePress}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      accessibilityHint={accessibilityHint}
+    >
+      <Animated.View
+        testID={testID}
+        style={[
+          styles.actionBtn,
+          {
+            width: size,
+            height: size,
+            borderRadius: size / 2,
+            borderColor,
+          },
+          glowColor ? {
+            ...Platform.select({
+              ios: {
+                shadowColor: glowColor,
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.45,
+                shadowRadius: 10,
+              },
+              android: { elevation: 6 },
+            }),
+          } : {},
+          animatedStyle,
+        ]}
+      >
+        <Text style={[styles.actionBtnIcon, { color, fontSize: size * 0.38 }]}>
+          {icon}
+        </Text>
+      </Animated.View>
+    </Pressable>
+  );
+};
+
+// ─── Main Screen ─────────────────────────────────────────────
+
 export const DiscoveryScreen: React.FC = () => {
   useScreenTracking('Discovery');
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<DiscoveryNavProp>();
-  const [position] = useState(new Animated.ValueXY());
-  const cards = useDiscoveryStore((state) => state.cards);
-  const currentIndex = useDiscoveryStore((state) => state.currentIndex);
-  const dailyRemaining = useDiscoveryStore((state) => state.dailyRemaining);
-  const isLoading = useDiscoveryStore((state) => state.isLoading);
-  const fetchFeed = useDiscoveryStore((state) => state.fetchFeed);
-  const swipeAction = useDiscoveryStore((state) => state.swipe);
-  const refreshFeed = useDiscoveryStore((state) => state.refreshFeed);
-  const showMatchAnimation = useDiscoveryStore((state) => state.showMatchAnimation);
-  const currentMatchId = useDiscoveryStore((state) => state.currentMatchId);
-  const matchAnimationType = useDiscoveryStore((state) => state.matchAnimationType);
-  const dismissMatch = useDiscoveryStore((state) => state.dismissMatch);
-  const userFirstName = useProfileStore((state) => state.profile.firstName);
 
-  // Match detail state for conversation starters and compatibility explanation
+  // Store selectors
+  const cards = useDiscoveryStore((s) => s.cards);
+  const currentIndex = useDiscoveryStore((s) => s.currentIndex);
+  const dailyRemaining = useDiscoveryStore((s) => s.dailyRemaining);
+  const isLoading = useDiscoveryStore((s) => s.isLoading);
+  const fetchFeed = useDiscoveryStore((s) => s.fetchFeed);
+  const swipeAction = useDiscoveryStore((s) => s.swipe);
+  const refreshFeed = useDiscoveryStore((s) => s.refreshFeed);
+  const showMatchAnimation = useDiscoveryStore((s) => s.showMatchAnimation);
+  const currentMatchId = useDiscoveryStore((s) => s.currentMatchId);
+  const matchAnimationType = useDiscoveryStore((s) => s.matchAnimationType);
+  const dismissMatch = useDiscoveryStore((s) => s.dismissMatch);
+  const userFirstName = useProfileStore((s) => s.profile.firstName);
+  const canUndo = useDiscoveryStore((s) => s.canUndo);
+  const undoLastSwipe = useDiscoveryStore((s) => s.undoLastSwipe);
+  const showSuperLikeGlow = useDiscoveryStore((s) => s.showSuperLikeGlow);
+
+  // Match detail state
   const [matchConversationStarters, setMatchConversationStarters] = useState<string[]>([]);
   const [matchExplanation, setMatchExplanation] = useState<string | undefined>(undefined);
 
-  // Undo state
-  const canUndo = useDiscoveryStore((state) => state.canUndo);
-  const undoLastSwipe = useDiscoveryStore((state) => state.undoLastSwipe);
+  // ─── Shared values ─────────────────────────────────────────
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const touchStartY = useSharedValue(SCREEN_HEIGHT / 2);
+  const hasPassedThreshold = useSharedValue(false);
 
-  // Super like glow state
-  const showSuperLikeGlow = useDiscoveryStore((state) => state.showSuperLikeGlow);
+  // Undo button
+  const undoOpacity = useSharedValue(0);
 
-  // Action button press animations
-  const passScale = useRef(new Animated.Value(1)).current;
-  const likeScale = useRef(new Animated.Value(1)).current;
-  const superLikeScale = useRef(new Animated.Value(1)).current;
+  // Super like glow
+  const superGlowOpacity = useSharedValue(0);
+  const superGlowScale = useSharedValue(0.8);
 
-  // Undo button fade animation
-  const undoOpacity = useRef(new Animated.Value(0)).current;
+  // ─── Derived card refs ─────────────────────────────────────
+  const currentCard = cards[currentIndex];
+  const nextCard = currentIndex + 1 < cards.length ? cards[currentIndex + 1] : null;
+  const hasMoreCards = currentIndex < cards.length;
+  const matchedCard = showMatchAnimation && currentIndex > 0
+    ? cards[currentIndex - 1]
+    : undefined;
 
-  // Super like gold glow animation
-  const superLikeGlowOpacity = useRef(new Animated.Value(0)).current;
-  const superLikeGlowScale = useRef(new Animated.Value(0.8)).current;
+  // ─── Stable refs for gesture callbacks ─────────────────────
+  const currentCardRef = useRef(currentCard);
+  currentCardRef.current = currentCard;
 
-  // Defer initial feed fetch until navigation animation completes
+  // ─── Effects ───────────────────────────────────────────────
+
+  // Deferred feed fetch
   useEffect(() => {
     const task = InteractionManager.runAfterInteractions(() => {
       fetchFeed();
@@ -100,47 +200,33 @@ export const DiscoveryScreen: React.FC = () => {
     return () => task.cancel();
   }, [fetchFeed]);
 
-  // Animate undo button visibility based on canUndo state
+  // Reset card position when index changes
   useEffect(() => {
-    Animated.timing(undoOpacity, {
-      toValue: canUndo ? 1 : 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
+    translateX.value = 0;
+    translateY.value = 0;
+    hasPassedThreshold.value = false;
+  }, [currentIndex, translateX, translateY, hasPassedThreshold]);
+
+  // Undo visibility
+  useEffect(() => {
+    undoOpacity.value = withTiming(canUndo ? 1 : 0, { duration: 200 });
   }, [canUndo, undoOpacity]);
 
-  // Animate super like gold glow effect
+  // Super like glow animation
   useEffect(() => {
     if (showSuperLikeGlow) {
-      superLikeGlowOpacity.setValue(0);
-      superLikeGlowScale.setValue(0.8);
-      Animated.parallel([
-        Animated.sequence([
-          Animated.timing(superLikeGlowOpacity, {
-            toValue: 1,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-          Animated.timing(superLikeGlowOpacity, {
-            toValue: 0,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.spring(superLikeGlowScale, {
-          toValue: 1.3,
-          tension: 40,
-          friction: 5,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      superGlowOpacity.value = 0;
+      superGlowScale.value = 0.8;
+      superGlowOpacity.value = withTiming(1, { duration: 300 }, () => {
+        superGlowOpacity.value = withTiming(0, { duration: 1000 });
+      });
+      superGlowScale.value = withSpring(1.3, { damping: 8, stiffness: 40 });
     }
-  }, [showSuperLikeGlow, superLikeGlowOpacity, superLikeGlowScale]);
+  }, [showSuperLikeGlow, superGlowOpacity, superGlowScale]);
 
-  // Fetch match details (conversation starters + explanation) when a match occurs
+  // Match detail fetch
   useEffect(() => {
     if (!showMatchAnimation || !currentMatchId) return;
-
     let cancelled = false;
 
     const fetchMatchDetails = async () => {
@@ -150,24 +236,32 @@ export const DiscoveryScreen: React.FC = () => {
         setMatchConversationStarters(details.conversationStarters ?? []);
         setMatchExplanation(details.compatibilityExplanation ?? undefined);
       } catch {
-        // Non-blocking: animation shows without starters if fetch fails
+        // Non-blocking
       }
     };
-
     fetchMatchDetails();
-
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [showMatchAnimation, currentMatchId]);
 
-  const currentCard = cards[currentIndex];
-  const hasMoreCards = currentIndex < cards.length;
+  // ─── Callbacks ─────────────────────────────────────────────
 
-  // The matched card is the one before current (swipe already incremented the index)
-  const matchedCard = showMatchAnimation && currentIndex > 0
-    ? cards[currentIndex - 1]
-    : undefined;
+  const triggerThresholdHaptic = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  }, []);
+
+  const handleSwipeComplete = useCallback((direction: 'left' | 'right' | 'up') => {
+    const card = currentCardRef.current;
+    if (card) {
+      swipeAction(direction, card.id);
+    }
+  }, [swipeAction]);
+
+  const handleCardTap = useCallback(() => {
+    const card = currentCardRef.current;
+    if (card) {
+      navigation.navigate('ProfilePreview', { userId: card.id });
+    }
+  }, [navigation]);
 
   const handleMatchSendMessage = useCallback(() => {
     dismissMatch();
@@ -191,202 +285,201 @@ export const DiscoveryScreen: React.FC = () => {
     setMatchExplanation(undefined);
   }, [dismissMatch]);
 
-  const resetPosition = useCallback(() => {
-    Animated.spring(position, {
-      toValue: { x: 0, y: 0 },
-      ...CARD_SPRING_CONFIG,
-    }).start();
-  }, [position]);
+  // ─── Gestures ──────────────────────────────────────────────
 
-  const swipeCard = useCallback(
-    (direction: 'left' | 'right' | 'up', velocity: number = 0) => {
-      if (!currentCard) return;
+  const tapGesture = Gesture.Tap()
+    .maxDuration(300)
+    .onEnd(() => {
+      runOnJS(handleCardTap)();
+    });
 
-      // Super like: card flies upward
-      if (direction === 'up') {
-        Animated.timing(position, {
-          toValue: { x: 0, y: -SCREEN_HEIGHT },
-          duration: 350,
-          useNativeDriver: false,
-        }).start(() => {
-          position.setValue({ x: 0, y: 0 });
-          swipeAction('up', currentCard.id);
+  const panGesture = Gesture.Pan()
+    .minDistance(5)
+    .onStart((e) => {
+      touchStartY.value = e.absoluteY;
+    })
+    .onUpdate((e) => {
+      translateX.value = e.translationX;
+      translateY.value = e.translationY * 0.5;
+
+      // Haptic at threshold crossing
+      const pastH = Math.abs(e.translationX) > SWIPE_THRESHOLD;
+      const pastV = e.translationY < -SWIPE_UP_THRESHOLD;
+      const pastAny = pastH || pastV;
+
+      if (pastAny && !hasPassedThreshold.value) {
+        hasPassedThreshold.value = true;
+        runOnJS(triggerThresholdHaptic)();
+      }
+      if (!pastAny) {
+        hasPassedThreshold.value = false;
+      }
+    })
+    .onEnd((e) => {
+      // Super like (swipe up)
+      if (
+        e.translationY < -SWIPE_UP_THRESHOLD ||
+        (e.velocityY < -VELOCITY_UP_THRESHOLD && Math.abs(e.translationX) < SWIPE_THRESHOLD)
+      ) {
+        translateY.value = withSpring(-SCREEN_HEIGHT, {
+          velocity: e.velocityY,
+          ...SPRING_EXIT,
+          stiffness: 100,
         });
+        translateX.value = withSpring(translateX.value * 0.5, {
+          velocity: e.velocityX * 0.3,
+          ...SPRING_EXIT,
+        });
+        runOnJS(handleSwipeComplete)('up');
         return;
       }
 
-      const xValue = direction === 'right' ? SCREEN_WIDTH + 100 : -SCREEN_WIDTH - 100;
-      const absVelocity = Math.abs(velocity);
-
-      const onComplete = () => {
-        position.setValue({ x: 0, y: 0 });
-        swipeAction(direction, currentCard.id);
-      };
-
-      if (absVelocity > 1.5) {
-        // Hizli firlat — parmak hizli ittiyse kart ucarak gitsin
-        Animated.timing(position, {
-          toValue: { x: xValue, y: 0 },
-          duration: Math.max(80, 180 - absVelocity * 30),
-          useNativeDriver: false,
-        }).start(onComplete);
-      } else if (absVelocity > 0.5) {
-        // Orta hiz — rahat tempoda gitsin
-        Animated.timing(position, {
-          toValue: { x: xValue, y: 0 },
-          duration: 250,
-          useNativeDriver: false,
-        }).start(onComplete);
-      } else {
-        // Yavas/nazik — spring fizigi ile yumusak kaysin
-        Animated.spring(position, {
-          toValue: { x: xValue, y: 0 },
-          ...CARD_SPRING_CONFIG,
-        }).start(onComplete);
+      // Right swipe (like) — momentum-preserving spring exit
+      if (e.translationX > SWIPE_THRESHOLD || e.velocityX > VELOCITY_THRESHOLD) {
+        translateX.value = withSpring(SCREEN_WIDTH + 200, {
+          velocity: e.velocityX,
+          ...SPRING_EXIT,
+        });
+        translateY.value = withSpring(translateY.value * 1.3, {
+          velocity: e.velocityY * 0.3,
+          damping: 20,
+          stiffness: 100,
+        });
+        runOnJS(handleSwipeComplete)('right');
+        return;
       }
-    },
-    [position, currentCard, swipeAction],
-  );
 
-  // Refs to hold latest callbacks — PanResponder is created once via useRef,
-  // so it would capture stale closures without this indirection.
-  const swipeCardRef = useRef(swipeCard);
-  swipeCardRef.current = swipeCard;
-  const resetPositionRef = useRef(resetPosition);
-  resetPositionRef.current = resetPosition;
+      // Left swipe (pass) — momentum-preserving spring exit
+      if (e.translationX < -SWIPE_THRESHOLD || e.velocityX < -VELOCITY_THRESHOLD) {
+        translateX.value = withSpring(-SCREEN_WIDTH - 200, {
+          velocity: e.velocityX,
+          ...SPRING_EXIT,
+        });
+        translateY.value = withSpring(translateY.value * 1.3, {
+          velocity: e.velocityY * 0.3,
+          damping: 20,
+          stiffness: 100,
+        });
+        runOnJS(handleSwipeComplete)('left');
+        return;
+      }
 
-  // Tap detection — track gesture start time and position
-  const gestureStartRef = useRef<{ x: number; y: number; time: number }>({
-    x: 0,
-    y: 0,
-    time: 0,
+      // Spring back to center — organic bounce
+      translateX.value = withSpring(0, { ...SPRING_BACK, velocity: e.velocityX });
+      translateY.value = withSpring(0, { ...SPRING_BACK, velocity: e.velocityY });
+    });
+
+  const composedGesture = Gesture.Exclusive(panGesture, tapGesture);
+
+  // ─── Animated styles ───────────────────────────────────────
+
+  // Current card: translate + rotate based on finger position
+  // Tinder-style: grab top → clockwise on right swipe; grab bottom → counter-clockwise
+  const cardStyle = useAnimatedStyle(() => {
+    const fingerOnTop = touchStartY.value < SCREEN_HEIGHT / 2;
+    const rotationDir = fingerOnTop ? 1 : -1;
+    const rotation = interpolate(
+      translateX.value,
+      [-SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2],
+      [-8 * rotationDir, 0, 8 * rotationDir],
+      Extrapolation.CLAMP,
+    );
+
+    return {
+      transform: [
+        { translateX: translateX.value },
+        { translateY: translateY.value },
+        { rotate: `${rotation}deg` },
+      ],
+    };
   });
 
-  // Tap handler — navigate to profile preview on tap (ref-based for PanResponder)
-  const handleCardTapRef = useRef(() => {
-    const card = cards[currentIndex];
-    if (card) {
-      navigation.navigate('ProfilePreview', { userId: card.id });
-    }
+  // Card behind: scale up + fade in as current card is dragged
+  const behindStyle = useAnimatedStyle(() => {
+    const progress = Math.min(
+      Math.max(
+        Math.abs(translateX.value) / SWIPE_THRESHOLD,
+        Math.abs(translateY.value) / SWIPE_UP_THRESHOLD,
+      ),
+      1,
+    );
+
+    return {
+      transform: [
+        { scale: interpolate(progress, [0, 1], [0.92, 1], Extrapolation.CLAMP) },
+        { translateY: interpolate(progress, [0, 1], [10, 0], Extrapolation.CLAMP) },
+      ],
+      opacity: interpolate(progress, [0, 1], [0.45, 1], Extrapolation.CLAMP),
+    };
   });
-  handleCardTapRef.current = () => {
-    const card = cards[currentIndex];
-    if (card) {
-      navigation.navigate('ProfilePreview', { userId: card.id });
-    }
-  };
 
-  // Tap threshold constants
-  const TAP_MOVE_THRESHOLD = 10;
-  const TAP_DURATION_MS = 300;
+  // Swipe overlays
+  const likeOverlayStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      translateX.value,
+      [0, SWIPE_THRESHOLD],
+      [0, 1],
+      Extrapolation.CLAMP,
+    ),
+  }));
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onPanResponderGrant: (evt) => {
-        gestureStartRef.current = {
-          x: evt.nativeEvent.pageX,
-          y: evt.nativeEvent.pageY,
-          time: Date.now(),
-        };
-      },
-      onPanResponderMove: (_evt, gestureState) => {
-        position.setValue({ x: gestureState.dx, y: gestureState.dy * 0.3 });
-      },
-      onPanResponderRelease: (evt, gestureState) => {
-        // Detect tap: minimal movement and short duration
-        const { x: startX, y: startY, time: startTime } = gestureStartRef.current;
-        const totalMovement = Math.sqrt(
-          Math.pow(evt.nativeEvent.pageX - startX, 2) +
-          Math.pow(evt.nativeEvent.pageY - startY, 2),
-        );
-        const elapsed = Date.now() - startTime;
+  const passOverlayStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      translateX.value,
+      [-SWIPE_THRESHOLD, 0],
+      [1, 0],
+      Extrapolation.CLAMP,
+    ),
+  }));
 
-        if (totalMovement < TAP_MOVE_THRESHOLD && elapsed < TAP_DURATION_MS) {
-          resetPositionRef.current();
-          handleCardTapRef.current();
-          return;
-        }
+  const superOverlayStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      translateY.value,
+      [-SWIPE_UP_THRESHOLD, 0],
+      [1, 0],
+      Extrapolation.CLAMP,
+    ),
+  }));
 
-        // Detect swipe up for super like (negative dy = upward)
-        if (gestureState.dy < -SWIPE_UP_THRESHOLD && Math.abs(gestureState.dx) < SWIPE_THRESHOLD) {
-          swipeCardRef.current('up', Math.abs(gestureState.vy));
-        } else if (gestureState.dx > SWIPE_THRESHOLD) {
-          swipeCardRef.current('right', gestureState.vx);
-        } else if (gestureState.dx < -SWIPE_THRESHOLD) {
-          swipeCardRef.current('left', gestureState.vx);
-        } else {
-          resetPositionRef.current();
-        }
-      },
-    }),
-  ).current;
+  // Undo button
+  const undoAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: undoOpacity.value,
+    transform: [{ scale: interpolate(undoOpacity.value, [0, 1], [0.8, 1]) }],
+  }));
 
-  // Memoized interpolations — computed once, not recreated per render
-  // Card tilt rotation: +/-12deg with extrapolate clamp
-  const cardRotation = useMemo(
-    () => position.x.interpolate({
-      inputRange: [-SCREEN_WIDTH, 0, SCREEN_WIDTH],
-      outputRange: ['-12deg', '0deg', '12deg'],
-      extrapolate: 'clamp',
-    }),
-    [position.x],
-  );
+  // Super glow
+  const superGlowAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: superGlowOpacity.value,
+    transform: [{ scale: superGlowScale.value }],
+  }));
 
-  // "BEGENDIM" overlay fades in on right swipe
-  const likeOpacity = useMemo(
-    () => position.x.interpolate({
-      inputRange: [0, SWIPE_THRESHOLD],
-      outputRange: [0, 1],
-      extrapolate: 'clamp',
-    }),
-    [position.x],
-  );
+  // ─── Button handlers ───────────────────────────────────────
 
-  // "GEC" overlay fades in on left swipe
-  const passOpacity = useMemo(
-    () => position.x.interpolate({
-      inputRange: [-SWIPE_THRESHOLD, 0],
-      outputRange: [1, 0],
-      extrapolate: 'clamp',
-    }),
-    [position.x],
-  );
+  const handlePassPress = useCallback(() => {
+    if (!currentCard) return;
+    translateX.value = withSpring(-SCREEN_WIDTH - 200, SPRING_EXIT);
+    swipeAction('left', currentCard.id);
+  }, [currentCard, swipeAction, translateX]);
 
-  // "SUPER" overlay fades in on upward swipe
-  const superLikeOpacity = useMemo(
-    () => position.y.interpolate({
-      inputRange: [-SWIPE_UP_THRESHOLD, 0],
-      outputRange: [1, 0],
-      extrapolate: 'clamp',
-    }),
-    [position.y],
-  );
+  const handleLikePress = useCallback(() => {
+    if (!currentCard) return;
+    translateX.value = withSpring(SCREEN_WIDTH + 200, SPRING_EXIT);
+    swipeAction('right', currentCard.id);
+  }, [currentCard, swipeAction, translateX]);
 
-  // Action button spring animation helpers — memoized to prevent new references
-  const handleButtonPressIn = useCallback((scaleRef: Animated.Value) => {
-    Animated.spring(scaleRef, {
-      toValue: 0.88,
-      tension: 200,
-      friction: 10,
-      useNativeDriver: true,
-    }).start();
-  }, []);
+  const handleSuperLikePress = useCallback(() => {
+    if (!currentCard) return;
+    translateY.value = withSpring(-SCREEN_HEIGHT, { ...SPRING_EXIT, stiffness: 100 });
+    swipeAction('up', currentCard.id);
+  }, [currentCard, swipeAction, translateY]);
 
-  const handleButtonPressOut = useCallback((scaleRef: Animated.Value) => {
-    Animated.spring(scaleRef, {
-      toValue: 1.0,
-      tension: 200,
-      friction: 10,
-      useNativeDriver: true,
-    }).start();
-  }, []);
+  // ─── Loading state ─────────────────────────────────────────
 
   if (isLoading && cards.length === 0) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Kesfet</Text>
+          <Text style={styles.headerTitle}>Ke\u015Ffet</Text>
         </View>
         <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -395,19 +488,21 @@ export const DiscoveryScreen: React.FC = () => {
     );
   }
 
+  // ─── Empty state ───────────────────────────────────────────
+
   if (!hasMoreCards) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Kesfet</Text>
+          <Text style={styles.headerTitle}>Ke\u015Ffet</Text>
         </View>
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyIcon}>{'( )'}</Text>
           <Text style={styles.emptyTitle}>Kartlar Bitti!</Text>
           <Text style={styles.emptySubtitle}>
-            Yeni profiller icin daha sonra tekrar gel.
+            Yeni profiller i\u00E7in daha sonra tekrar gel.
           </Text>
-          <TouchableWithoutFeedback
+          <Pressable
             onPress={() => refreshFeed()}
             accessibilityLabel="Yenile"
             accessibilityRole="button"
@@ -416,19 +511,21 @@ export const DiscoveryScreen: React.FC = () => {
             <View style={styles.refreshButton} testID="discovery-refresh-btn">
               <Text style={styles.refreshButtonText}>Yenile</Text>
             </View>
-          </TouchableWithoutFeedback>
+          </Pressable>
         </View>
       </View>
     );
   }
 
+  // ─── Main render ───────────────────────────────────────────
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Kesfet</Text>
+        <Text style={styles.headerTitle}>Ke\u015Ffet</Text>
         <View style={styles.headerRight}>
-          <TouchableWithoutFeedback
+          <Pressable
             onPress={() => navigation.navigate('Filter')}
             accessibilityLabel="Filtreleri ac"
             accessibilityRole="button"
@@ -437,89 +534,95 @@ export const DiscoveryScreen: React.FC = () => {
             <View style={styles.filterButton} testID="discovery-filter-btn">
               <Text style={styles.filterIcon}>{'='}</Text>
             </View>
-          </TouchableWithoutFeedback>
+          </Pressable>
           <View style={styles.remainingBadge}>
             <Text style={styles.remainingText}>{dailyRemaining}</Text>
           </View>
         </View>
       </View>
 
-      {/* Mood selector — horizontal mood chip strip */}
+      {/* Mood selector */}
       <MoodSelector />
 
       {/* Card stack */}
       <View style={styles.cardStack}>
-        {/* Next card (behind) */}
-        {currentIndex + 1 < cards.length && (
-          <View style={[styles.card, styles.cardBehind]}>
-            <View style={styles.cardBackground}>
-              <Text style={styles.cardBackgroundText}>
-                {cards[currentIndex + 1].name}
-              </Text>
-            </View>
-          </View>
+        {/* Next card (behind) — animates forward as current card is dragged */}
+        {nextCard && (
+          <Animated.View style={[styles.card, styles.cardBehind, behindStyle]}>
+            <DiscoveryCard
+              profile={{
+                userId: nextCard.id,
+                firstName: nextCard.name,
+                age: nextCard.age,
+                bio: nextCard.bio || null,
+                city: nextCard.city || null,
+                intentionTag: nextCard.intentionTag || null,
+                isVerified: nextCard.isVerified,
+                photoUrl: nextCard.photoUrls[0] ?? null,
+                thumbnailUrl: nextCard.photoUrls[0] ?? null,
+                compatibility: {
+                  score: nextCard.compatibilityPercent,
+                  level: nextCard.compatibilityPercent >= 90 ? 'super' : 'normal',
+                },
+                distanceKm: nextCard.distanceKm ?? null,
+                voiceIntroUrl: nextCard.voiceIntroUrl ?? null,
+                earnedBadges: nextCard.earnedBadges ?? [],
+                feedScore: 0,
+              }}
+            />
+          </Animated.View>
         )}
 
-        {/* Current card — with enhanced tilt and glow */}
-        <Animated.View
-          {...panResponder.panHandlers}
-          accessible
-          accessibilityLabel={`${currentCard.name}, ${currentCard.age} yasinda, ${currentCard.city}`}
-          accessibilityRole="button"
-          accessibilityHint="Begenme, gecme veya super begenme icin kaydirin"
-          testID="discovery-card"
-          style={[
-            styles.card,
-            styles.cardGlow,
-            {
-              transform: [
-                { translateX: position.x },
-                { translateY: position.y },
-                { rotate: cardRotation },
-              ],
-            },
-          ]}
-        >
-          <DiscoveryCard
-            profile={{
-              userId: currentCard.id,
-              firstName: currentCard.name,
-              age: currentCard.age,
-              bio: currentCard.bio || null,
-              city: currentCard.city || null,
-              intentionTag: currentCard.intentionTag || null,
-              isVerified: currentCard.isVerified,
-              photoUrl: currentCard.photoUrls[0] ?? null,
-              thumbnailUrl: currentCard.photoUrls[0] ?? null,
-              compatibility: {
-                score: currentCard.compatibilityPercent,
-                level: currentCard.compatibilityPercent >= 90 ? 'super' : 'normal',
-              },
-              distanceKm: currentCard.distanceKm ?? null,
-              voiceIntroUrl: currentCard.voiceIntroUrl ?? null,
-              earnedBadges: currentCard.earnedBadges ?? [],
-              feedScore: 0,
-            }}
-            onTapCard={() => {
-              navigation.navigate('ProfilePreview', { userId: currentCard.id });
-            }}
-            likeOpacity={likeOpacity}
-            passOpacity={passOpacity}
-            superLikeOpacity={superLikeOpacity}
-          />
-        </Animated.View>
+        {/* Current card — gesture-driven with real-time finger tracking */}
+        <GestureDetector gesture={composedGesture}>
+          <Animated.View
+            accessible
+            accessibilityLabel={`${currentCard.name}, ${currentCard.age} yasinda, ${currentCard.city}`}
+            accessibilityRole="button"
+            accessibilityHint="Begenme, gecme veya super begenme icin kaydirin"
+            testID="discovery-card"
+            style={[styles.card, styles.cardFront, cardStyle]}
+          >
+            <DiscoveryCard
+              profile={{
+                userId: currentCard.id,
+                firstName: currentCard.name,
+                age: currentCard.age,
+                bio: currentCard.bio || null,
+                city: currentCard.city || null,
+                intentionTag: currentCard.intentionTag || null,
+                isVerified: currentCard.isVerified,
+                photoUrl: currentCard.photoUrls[0] ?? null,
+                thumbnailUrl: currentCard.photoUrls[0] ?? null,
+                compatibility: {
+                  score: currentCard.compatibilityPercent,
+                  level: currentCard.compatibilityPercent >= 90 ? 'super' : 'normal',
+                },
+                distanceKm: currentCard.distanceKm ?? null,
+                voiceIntroUrl: currentCard.voiceIntroUrl ?? null,
+                earnedBadges: currentCard.earnedBadges ?? [],
+                feedScore: 0,
+              }}
+            />
+
+            {/* Swipe overlays — rendered on top of card */}
+            <Animated.View style={[styles.likeOverlay, likeOverlayStyle]} pointerEvents="none">
+              <Text style={styles.likeOverlayText}>BEGEN\u0130M</Text>
+            </Animated.View>
+            <Animated.View style={[styles.passOverlay, passOverlayStyle]} pointerEvents="none">
+              <Text style={styles.passOverlayText}>GE\u00C7</Text>
+            </Animated.View>
+            <Animated.View style={[styles.superOverlay, superOverlayStyle]} pointerEvents="none">
+              <Text style={styles.superOverlayText}>S\u00DCPER</Text>
+            </Animated.View>
+          </Animated.View>
+        </GestureDetector>
       </View>
 
-      {/* Super Like gold glow overlay animation */}
+      {/* Super Like gold glow overlay */}
       {showSuperLikeGlow && (
         <Animated.View
-          style={[
-            styles.superLikeGlowOverlay,
-            {
-              opacity: superLikeGlowOpacity,
-              transform: [{ scale: superLikeGlowScale }],
-            },
-          ]}
+          style={[styles.superLikeGlowOverlay, superGlowAnimatedStyle]}
           pointerEvents="none"
         >
           <LinearGradient
@@ -529,85 +632,56 @@ export const DiscoveryScreen: React.FC = () => {
         </Animated.View>
       )}
 
-      {/* Action buttons with spring press animation */}
+      {/* Action buttons */}
       <View style={styles.actionsRow}>
-        {/* Undo (Geri Al) button — bottom left, appears for 5s after swipe */}
-        <Animated.View style={[styles.undoButtonWrapper, { opacity: undoOpacity }]}>
-          <TouchableWithoutFeedback
-            onPress={() => {
-              if (canUndo) undoLastSwipe();
-            }}
+        {/* Undo button */}
+        <Animated.View style={[styles.undoWrapper, undoAnimatedStyle]}>
+          <Pressable
+            onPress={() => { if (canUndo) undoLastSwipe(); }}
             accessibilityLabel="Geri al"
             accessibilityRole="button"
             accessibilityHint="Son kaydirma islemini geri almak icin dokunun"
           >
             <View style={styles.undoButton} testID="discovery-undo-btn">
-              <Text style={styles.undoButtonIcon}>{'<-'}</Text>
+              <Text style={styles.undoIcon}>{'\u21A9'}</Text>
             </View>
-          </TouchableWithoutFeedback>
+          </Pressable>
         </Animated.View>
 
         {/* Main action buttons */}
         <View style={styles.actions}>
-          {/* Pass button */}
-          <TouchableWithoutFeedback
-            onPressIn={() => handleButtonPressIn(passScale)}
-            onPressOut={() => handleButtonPressOut(passScale)}
-            onPress={() => swipeCard('left', 0)}
+          <ActionButton
+            icon={'\u2715'}
+            color={colors.error}
+            borderColor={colors.error + '60'}
+            size={62}
+            onPress={handlePassPress}
+            testID="discovery-pass-btn"
             accessibilityLabel="Gec"
-            accessibilityRole="button"
             accessibilityHint="Bu profili gecmek icin dokunun"
-          >
-            <Animated.View
-              style={[
-                styles.passButton,
-                { transform: [{ scale: passScale }] },
-              ]}
-              testID="discovery-pass-btn"
-            >
-              <Text style={styles.passButtonIcon}>X</Text>
-            </Animated.View>
-          </TouchableWithoutFeedback>
-
-          {/* Super Like button */}
-          <TouchableWithoutFeedback
-            onPressIn={() => handleButtonPressIn(superLikeScale)}
-            onPressOut={() => handleButtonPressOut(superLikeScale)}
-            onPress={() => swipeCard('up', 0)}
+          />
+          <ActionButton
+            icon={'\u2605'}
+            color={palette.gold[400]}
+            borderColor={palette.gold[400] + '60'}
+            size={50}
+            glowColor={palette.gold[400]}
+            onPress={handleSuperLikePress}
+            testID="discovery-superlike-btn"
             accessibilityLabel="Super Begen"
-            accessibilityRole="button"
             accessibilityHint="Bu profili super begenmek icin dokunun"
-          >
-            <Animated.View
-              style={[
-                styles.superLikeButton,
-                { transform: [{ scale: superLikeScale }] },
-              ]}
-              testID="discovery-superlike-btn"
-            >
-              <Text style={styles.superLikeButtonIcon}>{'*'}</Text>
-            </Animated.View>
-          </TouchableWithoutFeedback>
-
-          {/* Like button */}
-          <TouchableWithoutFeedback
-            onPressIn={() => handleButtonPressIn(likeScale)}
-            onPressOut={() => handleButtonPressOut(likeScale)}
-            onPress={() => swipeCard('right', 0)}
+          />
+          <ActionButton
+            icon={'\u2665'}
+            color={colors.success}
+            borderColor={colors.success + '60'}
+            size={62}
+            glowColor={colors.success}
+            onPress={handleLikePress}
+            testID="discovery-like-btn"
             accessibilityLabel="Begen"
-            accessibilityRole="button"
             accessibilityHint="Bu profili begenmek icin dokunun"
-          >
-            <Animated.View
-              style={[
-                styles.likeButton,
-                { transform: [{ scale: likeScale }] },
-              ]}
-              testID="discovery-like-btn"
-            >
-              <Text style={styles.likeButtonIcon}>{'<3'}</Text>
-            </Animated.View>
-          </TouchableWithoutFeedback>
+          />
         </View>
       </View>
 
@@ -627,21 +701,26 @@ export const DiscoveryScreen: React.FC = () => {
   );
 };
 
+// ─── Styles ──────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
   },
+
+  // ── Header ──
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm + 2,
   },
   headerTitle: {
     ...typography.h3,
     color: colors.text,
+    letterSpacing: -0.3,
   },
   headerRight: {
     flexDirection: 'row',
@@ -655,6 +734,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
   },
   filterIcon: {
     ...typography.bodyLarge,
@@ -669,10 +750,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   remainingText: {
-    ...typography.captionSmall,
+    fontSize: 11,
     color: colors.text,
     fontWeight: '700',
   },
+
+  // ── Card Stack ──
   cardStack: {
     flex: 1,
     alignItems: 'center',
@@ -686,30 +769,80 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     overflow: 'hidden',
     position: 'absolute',
-    ...shadows.large,
   },
-  cardGlow: {
+  cardFront: {
+    ...shadows.large,
     shadowColor: palette.purple[500],
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
     shadowRadius: 16,
     elevation: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
   },
   cardBehind: {
-    transform: [{ scale: 0.95 }],
-    opacity: 0.6,
+    // Initial state set by animated style
   },
-  cardBackground: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.surfaceLight,
+
+  // ── Swipe Overlays ──
+  likeOverlay: {
+    position: 'absolute',
+    top: 32,
+    left: 20,
+    zIndex: 10,
+    borderWidth: 3,
+    borderColor: palette.success,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: palette.success + '18',
+    transform: [{ rotate: '-15deg' }],
   },
-  cardBackgroundText: {
-    ...typography.h2,
-    color: colors.textTertiary,
+  likeOverlayText: {
+    fontSize: 22,
+    color: palette.success,
+    fontWeight: '800',
+    letterSpacing: 3,
   },
-  // Card content styles moved to DiscoveryCard component
+  passOverlay: {
+    position: 'absolute',
+    top: 32,
+    right: 20,
+    zIndex: 10,
+    borderWidth: 3,
+    borderColor: palette.error,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: palette.error + '18',
+    transform: [{ rotate: '15deg' }],
+  },
+  passOverlayText: {
+    fontSize: 22,
+    color: palette.error,
+    fontWeight: '800',
+    letterSpacing: 3,
+  },
+  superOverlay: {
+    position: 'absolute',
+    top: '40%',
+    alignSelf: 'center',
+    zIndex: 10,
+    borderWidth: 3,
+    borderColor: palette.gold[400],
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    backgroundColor: palette.gold[400] + '20',
+  },
+  superOverlayText: {
+    fontSize: 24,
+    color: palette.gold[400],
+    fontWeight: '800',
+    letterSpacing: 3,
+  },
+
+  // ── Super Like Glow ──
   superLikeGlowOverlay: {
     position: 'absolute',
     top: 0,
@@ -725,22 +858,44 @@ const styles = StyleSheet.create({
     height: SCREEN_WIDTH * 1.5,
     borderRadius: SCREEN_WIDTH * 0.75,
   },
+
+  // ── Action Buttons ──
   actionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: Platform.OS === 'ios' ? spacing.sm : spacing.md,
   },
-  undoButtonWrapper: {
+  actions: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: spacing.xl,
+  },
+  actionBtn: {
+    backgroundColor: 'rgba(26, 26, 46, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    ...shadows.medium,
+  },
+  actionBtnIcon: {
+    fontWeight: '700',
+  },
+
+  // ── Undo Button ──
+  undoWrapper: {
     position: 'absolute',
     left: spacing.md,
-    bottom: spacing.lg + 12,
+    bottom: spacing.md + 14,
     zIndex: 5,
   },
   undoButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
@@ -748,66 +903,13 @@ const styles = StyleSheet.create({
     borderColor: palette.gold[500],
     ...shadows.medium,
   },
-  undoButtonIcon: {
-    fontSize: 16,
+  undoIcon: {
+    fontSize: 18,
     color: palette.gold[500],
     fontWeight: '700',
   },
-  actions: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: spacing.xl,
-  },
-  passButton: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: colors.error,
-    ...shadows.medium,
-  },
-  passButtonIcon: {
-    fontSize: 24,
-    color: colors.error,
-    fontWeight: '700',
-  },
-  superLikeButton: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: palette.gold[400],
-    ...shadows.glow,
-    shadowColor: palette.gold[400],
-  },
-  superLikeButtonIcon: {
-    fontSize: 28,
-    color: palette.gold[400],
-    fontWeight: '700',
-  },
-  likeButton: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: colors.success,
-    ...shadows.medium,
-  },
-  likeButtonIcon: {
-    fontSize: 24,
-    color: colors.success,
-    fontWeight: '700',
-  },
+
+  // ── Empty/Loading States ──
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',

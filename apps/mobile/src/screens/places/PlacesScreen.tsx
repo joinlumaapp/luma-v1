@@ -316,11 +316,11 @@ const AbstractMapView: React.FC<AbstractMapViewProps> = ({ places, onPinPress })
 
       {/* Place pins */}
       {places.map((place) => {
-        const pos = hashToPosition(place.id, MAP_WIDTH, MAP_HEIGHT);
+        const pos = hashToPosition(place.placeId, MAP_WIDTH, MAP_HEIGHT);
         const pinColor = getStatusColor(place.status);
         return (
           <TouchableOpacity
-            key={place.id}
+            key={place.placeId}
             style={[
               mapStyles.pin,
               {
@@ -336,7 +336,7 @@ const AbstractMapView: React.FC<AbstractMapViewProps> = ({ places, onPinPress })
               <View style={[mapStyles.pinDot, { backgroundColor: pinColor }]} />
             </View>
             <Text style={[mapStyles.pinLabel, { color: pinColor }]} numberOfLines={1}>
-              {place.placeName}
+              {place.name}
             </Text>
           </TouchableOpacity>
         );
@@ -566,14 +566,14 @@ export const PlacesScreen: React.FC = () => {
       </View>
 
       <View style={styles.placeInfo}>
-        <Text style={styles.placeName}>{item.placeName}</Text>
+        <Text style={styles.placeName}>{item.name}</Text>
         <Text style={styles.placeDate}>
-          Son ziyaret: {formatDate(item.lastVisitedAt)}
+          Son ziyaret: {formatDate(item.lastVisited)}
         </Text>
         <View style={styles.placeStats}>
           <View style={styles.statChip}>
             <Text style={styles.statText}>
-              {item.visitCount} check-in
+              {item.myVisits + item.partnerVisits} check-in
             </Text>
           </View>
           {item.memories.length > 0 && (
@@ -604,7 +604,7 @@ export const PlacesScreen: React.FC = () => {
           {selectedPlace && (
             <>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>{selectedPlace.placeName}</Text>
+                <Text style={styles.modalTitle}>{selectedPlace.name}</Text>
                 <TouchableOpacity onPress={() => setDetailModalVisible(false)}>
                   <Text style={styles.modalCloseText}>X</Text>
                 </TouchableOpacity>
@@ -612,7 +612,7 @@ export const PlacesScreen: React.FC = () => {
 
               <View style={styles.modalStatsRow}>
                 <View style={styles.modalStatCard}>
-                  <Text style={styles.modalStatValue}>{selectedPlace.visitCount}</Text>
+                  <Text style={styles.modalStatValue}>{selectedPlace.myVisits + selectedPlace.partnerVisits}</Text>
                   <Text style={styles.modalStatLabel}>Check-in</Text>
                 </View>
                 <View style={styles.modalStatCard}>
@@ -623,7 +623,7 @@ export const PlacesScreen: React.FC = () => {
 
               <Text style={styles.modalSectionTitle}>Son Ziyaret</Text>
               <Text style={styles.modalDateText}>
-                {formatDate(selectedPlace.lastVisitedAt)}
+                {formatDate(selectedPlace.lastVisited)}
               </Text>
 
               {selectedPlace.memories.length > 0 && (
@@ -631,7 +631,7 @@ export const PlacesScreen: React.FC = () => {
                   <Text style={styles.modalSectionTitle}>Anilar</Text>
                   {selectedPlace.memories.map((memory) => (
                     <View key={memory.id} style={styles.memoryItem}>
-                      <Text style={styles.memoryText}>{memory.text}</Text>
+                      <Text style={styles.memoryText}>{memory.note}</Text>
                       <Text style={styles.memoryDate}>
                         {formatDate(memory.createdAt)}
                       </Text>
@@ -745,14 +745,14 @@ export const PlacesScreen: React.FC = () => {
           </Text>
           {placesWithStatus.map((place) => (
             <TouchableOpacity
-              key={place.id}
+              key={place.placeId}
               style={styles.mapPlaceRow}
               onPress={() => handleOpenDetail(place)}
               activeOpacity={0.7}
             >
               <View style={[styles.mapPlaceDot, { backgroundColor: getStatusColor(place.status) }]} />
-              <Text style={styles.mapPlaceName} numberOfLines={1}>{place.placeName}</Text>
-              <Text style={styles.mapPlaceVisits}>{place.visitCount}x</Text>
+              <Text style={styles.mapPlaceName} numberOfLines={1}>{place.name}</Text>
+              <Text style={styles.mapPlaceVisits}>{place.myVisits + place.partnerVisits}x</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -808,7 +808,7 @@ export const PlacesScreen: React.FC = () => {
             <>
               <FlatList
                 data={places}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item) => item.placeId}
                 renderItem={renderPlaceItem}
                 contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator={false}

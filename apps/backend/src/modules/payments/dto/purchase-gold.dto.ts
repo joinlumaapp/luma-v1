@@ -20,6 +20,6 @@ export class PurchaseGoldDto {
     description: 'Platform: ios or android',
   })
   @IsNotEmpty()
-  @IsIn(['ios', 'android'])
+  @IsIn(['apple', 'google'])
   platform!: string;
 }

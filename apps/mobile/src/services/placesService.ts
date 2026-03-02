@@ -11,39 +11,43 @@ export interface CheckInRequest {
 }
 
 export interface CheckInResponse {
-  id: string;
+  checkInId: string;
   placeId: string;
   placeName: string;
-  latitude: number;
-  longitude: number;
-  note: string | null;
-  createdAt: string;
+  checkedInAt: string;
 }
 
 /** Place status for map view color-coding */
 export type PlaceStatus = 'visited' | 'wishlist' | 'partner_suggestion';
 
-export interface SharedPlace {
+interface SharedPlaceMemory {
   id: string;
+  note: string | null;
+  photoUrl: string | null;
+  userId: string;
+  createdAt: string;
+}
+
+export interface SharedPlace {
   placeId: string;
-  placeName: string;
+  name: string;
+  address: string | null;
   latitude: number;
   longitude: number;
-  visitCount: number;
-  lastVisitedAt: string;
-  memories: PlaceMemory[];
+  myVisits: number;
+  partnerVisits: number;
+  lastVisited: string;
+  memories: SharedPlaceMemory[];
   /** Used for map view color-coding — defaults to 'visited' */
   status?: PlaceStatus;
 }
 
 export interface PlaceMemory {
-  id: string;
+  memoryId: string;
   placeId: string;
-  text: string;
+  text: string | null;
   photoUrl: string | null;
   createdAt: string;
-  /** Display name of who added this memory */
-  addedBy?: string;
 }
 
 export interface AddMemoryRequest {
@@ -63,6 +67,17 @@ export interface TimelineEntry {
   createdAt: string;
 }
 
+/** Backend wrapper responses */
+interface SharedPlacesResponse {
+  sharedPlaces: SharedPlace[];
+  total: number;
+}
+
+interface TimelineResponse {
+  timeline: TimelineEntry[];
+  total: number;
+}
+
 export const placesService = {
   // Check in to a place
   checkIn: async (data: CheckInRequest): Promise<CheckInResponse> => {
@@ -75,10 +90,11 @@ export const placesService = {
 
   // Get places shared with a matched user
   getSharedPlaces: async (partnerId: string): Promise<SharedPlace[]> => {
-    const response = await api.get<SharedPlace[]>(
+    const response = await api.get<SharedPlacesResponse>(
       `/places/shared/${partnerId}`,
     );
-    return response.data;
+    const body = response.data;
+    return (body as SharedPlacesResponse).sharedPlaces ?? (body as unknown as SharedPlace[]);
   },
 
   // Add a memory to a place
@@ -92,9 +108,10 @@ export const placesService = {
 
   // Get memories timeline for the relationship
   getMemoriesTimeline: async (partnerId: string): Promise<TimelineEntry[]> => {
-    const response = await api.get<TimelineEntry[]>(
+    const response = await api.get<TimelineResponse>(
       `/places/timeline/${partnerId}`,
     );
-    return response.data;
+    const body = response.data;
+    return (body as TimelineResponse).timeline ?? (body as unknown as TimelineEntry[]);
   },
 };

@@ -25,6 +25,6 @@ export class UpgradePackageDto {
     example: 'ios',
   })
   @IsNotEmpty()
-  @IsIn(['ios', 'android'])
+  @IsIn(['apple', 'google'])
   platform!: string;
 }

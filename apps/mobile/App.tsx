@@ -11,6 +11,8 @@ import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { ToastProvider, useToast } from './src/components/common/Toast';
 import { OfflineBanner } from './src/components/common/OfflineBanner';
 import { useNetworkStore } from './src/stores/networkStore';
+import { useAuthStore } from './src/stores/authStore';
+import { useNotificationStore } from './src/stores/notificationStore';
 import { requestQueue } from './src/services/requestQueue';
 import { api } from './src/services/api';
 import { analyticsService, ANALYTICS_EVENTS } from './src/services/analyticsService';
@@ -66,6 +68,60 @@ function NetworkMonitor(): null {
   return null;
 }
 
+/**
+ * Initializes push notification permission, device registration, and
+ * foreground listeners once the user is authenticated.
+ * Runs as an invisible component inside the provider tree.
+ */
+function NotificationInitializer(): null {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isLoading = useAuthStore((s) => s.isLoading);
+  const hasInitializedRef = useRef(false);
+
+  useEffect(() => {
+    // Only initialize once, after auth loading completes and user is authenticated
+    if (isLoading || !isAuthenticated || hasInitializedRef.current) {
+      return;
+    }
+
+    hasInitializedRef.current = true;
+
+    const { requestPermission, registerDevice, setupForegroundListener } =
+      useNotificationStore.getState();
+
+    let foregroundCleanup: (() => void) | undefined;
+
+    const initNotifications = async (): Promise<void> => {
+      try {
+        await requestPermission();
+        await registerDevice();
+        foregroundCleanup = setupForegroundListener();
+      } catch {
+        if (__DEV__) {
+          console.warn('[App] Notification initialization failed');
+        }
+      }
+    };
+
+    initNotifications();
+
+    return () => {
+      if (foregroundCleanup) {
+        foregroundCleanup();
+      }
+    };
+  }, [isAuthenticated, isLoading]);
+
+  // Reset flag on logout so notifications re-initialize on next login
+  useEffect(() => {
+    if (!isAuthenticated && !isLoading) {
+      hasInitializedRef.current = false;
+    }
+  }, [isAuthenticated, isLoading]);
+
+  return null;
+}
+
 export default function App(): React.JSX.Element {
   const [storageReady, setStorageReady] = useState(false);
 
@@ -113,6 +169,7 @@ export default function App(): React.JSX.Element {
           <ToastProvider>
             <ThemedStatusBar />
             <NetworkMonitor />
+            <NotificationInitializer />
             <Navigation />
             <OfflineBanner />
           </ToastProvider>

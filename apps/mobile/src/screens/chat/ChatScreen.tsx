@@ -391,7 +391,6 @@ export const ChatScreen: React.FC = () => {
             contentContainerStyle={styles.messagesList}
             showsVerticalScrollIndicator={false}
             onEndReachedThreshold={0.3}
-            onStartReached={handleLoadMore}
             inverted={false}
             // ── Performance tuning ──
             initialNumToRender={20}

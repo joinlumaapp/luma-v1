@@ -188,7 +188,7 @@ describe('PaymentsService', () => {
       await expect(
         service.subscribe('u1', {
           packageTier: PackageTier.FREE,
-          platform: 'ios',
+          platform: 'apple',
           receipt: 'mock-receipt',
         }),
       ).rejects.toThrow(BadRequestException);
@@ -203,7 +203,7 @@ describe('PaymentsService', () => {
       await expect(
         service.subscribe('u1', {
           packageTier: PackageTier.GOLD,
-          platform: 'ios',
+          platform: 'apple',
           receipt: 'mock-receipt',
         }),
       ).rejects.toThrow(BadRequestException);
@@ -217,7 +217,7 @@ describe('PaymentsService', () => {
       await expect(
         service.subscribe('u1', {
           packageTier: PackageTier.GOLD,
-          platform: 'ios',
+          platform: 'apple',
           receipt: 'duplicate-receipt',
         }),
       ).rejects.toThrow(BadRequestException);
@@ -523,7 +523,7 @@ describe('PaymentsService', () => {
       await expect(
         service.upgradePackage('u1', {
           targetTier: PackageTier.GOLD,
-          platform: 'ios',
+          platform: 'apple',
           receipt: 'receipt',
         }),
       ).rejects.toThrow(NotFoundException);
@@ -538,7 +538,7 @@ describe('PaymentsService', () => {
       await expect(
         service.upgradePackage('u1', {
           targetTier: PackageTier.GOLD,
-          platform: 'ios',
+          platform: 'apple',
           receipt: 'receipt',
         }),
       ).rejects.toThrow(BadRequestException);
@@ -553,7 +553,7 @@ describe('PaymentsService', () => {
       await expect(
         service.upgradePackage('u1', {
           targetTier: PackageTier.GOLD,
-          platform: 'ios',
+          platform: 'apple',
           receipt: 'receipt',
         }),
       ).rejects.toThrow(BadRequestException);
@@ -569,7 +569,7 @@ describe('PaymentsService', () => {
       await expect(
         service.upgradePackage('u1', {
           targetTier: PackageTier.GOLD,
-          platform: 'ios',
+          platform: 'apple',
           receipt: 'duplicate',
         }),
       ).rejects.toThrow(BadRequestException);
@@ -585,7 +585,7 @@ describe('PaymentsService', () => {
       await expect(
         service.purchaseGold('u1', {
           packageId: 'gold_9999',
-          platform: 'ios',
+          platform: 'apple',
           receipt: 'receipt',
         }),
       ).rejects.toThrow(BadRequestException);
@@ -597,7 +597,7 @@ describe('PaymentsService', () => {
       await expect(
         service.purchaseGold('u1', {
           packageId: 'gold_50',
-          platform: 'ios',
+          platform: 'apple',
           receipt: 'duplicate',
         }),
       ).rejects.toThrow(BadRequestException);
@@ -614,7 +614,7 @@ describe('PaymentsService', () => {
 
         const result = await service.purchaseGold('u1', {
           packageId: packId,
-          platform: 'ios',
+          platform: 'apple',
           receipt: `receipt-${packId}`,
         });
 

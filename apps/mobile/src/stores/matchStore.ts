@@ -58,7 +58,7 @@ const mapDetailToMatchDetail = (data: MatchDetailResponse): MatchDetail => ({
   isVerified: data.isVerified,
   lastActivity: '',
   isNew: false,
-  hasHarmonyRoom: false,
+  hasHarmonyRoom: data.hasHarmonyRoom,
   matchedAt: data.matchedAt,
   photos: data.photos.map((p) => p.url),
   bio: data.bio,

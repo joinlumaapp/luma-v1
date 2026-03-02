@@ -1,4 +1,5 @@
-// Couples Club API service — events, RSVP, leaderboard
+// Couples Club API service — events, RSVP
+// Routes through /relationships controller on backend
 
 import api from './api';
 
@@ -44,7 +45,7 @@ export const couplesClubService = {
    * Ciftler kulubundeki etkinlikleri listele.
    */
   getEvents: async (): Promise<CouplesEvent[]> => {
-    const response = await api.get<CouplesEvent[]>('/couples-club/events');
+    const response = await api.get<CouplesEvent[]>('/relationships/events');
     return response.data;
   },
 
@@ -52,29 +53,26 @@ export const couplesClubService = {
    * Bir etkinlige katilim bildirimi yap.
    */
   rsvpEvent: async (eventId: string): Promise<void> => {
-    await api.post(`/couples-club/events/${eventId}/rsvp`);
+    await api.post(`/relationships/events/${eventId}/rsvp`, { status: 'attending' });
   },
 
   /**
    * Bir etkinlik katilimini iptal et.
+   * Backend uses POST with status values instead of DELETE.
    */
   cancelRsvp: async (eventId: string): Promise<void> => {
-    await api.delete(`/couples-club/events/${eventId}/rsvp`);
+    await api.post(`/relationships/events/${eventId}/rsvp`, { status: 'declined' });
   },
 
-  /**
-   * Yeni bir etkinlik olustur (Pro+ kullanicilar icin).
-   */
-  createEvent: async (data: CreateEventRequest): Promise<CouplesEvent> => {
-    const response = await api.post<CouplesEvent>('/couples-club/events', data);
-    return response.data;
-  },
+  // TODO: Backend does not have a POST /relationships/events endpoint yet.
+  // createEvent: async (data: CreateEventRequest): Promise<CouplesEvent> => {
+  //   const response = await api.post<CouplesEvent>('/relationships/events', data);
+  //   return response.data;
+  // },
 
-  /**
-   * Ciftler siralamasi (leaderboard) bilgilerini al.
-   */
-  getLeaderboard: async (): Promise<LeaderboardResponse> => {
-    const response = await api.get<LeaderboardResponse>('/couples-club/leaderboard');
-    return response.data;
-  },
+  // TODO: Backend does not have a GET /relationships/leaderboard endpoint yet.
+  // getLeaderboard: async (): Promise<LeaderboardResponse> => {
+  //   const response = await api.get<LeaderboardResponse>('/relationships/leaderboard');
+  //   return response.data;
+  // },
 };

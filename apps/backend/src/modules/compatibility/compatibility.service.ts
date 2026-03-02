@@ -171,6 +171,9 @@ export class CompatibilityService {
       where: { userId },
     });
 
+    // Check and award answer-related badges
+    await this.badgesService.checkAndAwardBadges(userId, 'answer');
+
     return {
       questionId: dto.questionId,
       optionId: selectedOption.id,
@@ -251,6 +254,9 @@ export class CompatibilityService {
     const answeredCount = await this.prisma.userAnswer.count({
       where: { userId },
     });
+
+    // Check and award answer-related badges
+    await this.badgesService.checkAndAwardBadges(userId, 'answer');
 
     return {
       saved: true,

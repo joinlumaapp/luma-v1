@@ -16,21 +16,22 @@ export const API_ROUTES = {
   },
   // Subsystem 3: Profile
   PROFILE: {
-    GET: '/profile',
-    UPDATE: '/profile',
-    UPLOAD_PHOTO: '/profile/photos',
-    DELETE_PHOTO: '/profile/photos/:id',
-    REORDER_PHOTOS: '/profile/photos/reorder',
-    SET_INTENTION: '/profile/intention',
-    STRENGTH: '/profile/strength',
-    TRACK_VIEW: '/profile/view/:targetUserId',
-    VISITORS: '/profile/visitors',
+    GET: '/profiles/me',
+    UPDATE: '/profiles/me',
+    UPLOAD_PHOTO: '/profiles/photos',
+    DELETE_PHOTO: '/profiles/photos/:photoId',
+    REORDER_PHOTOS: '/profiles/photos/reorder',
+    SET_INTENTION: '/profiles/intention-tag',
+    STRENGTH: '/profiles/strength',
+    TRACK_VIEW: '/profiles/view/:targetUserId',
+    VISITORS: '/profiles/visitors',
     LOCATION: '/profiles/location',
   },
   // Subsystem 5-6: Compatibility
   COMPATIBILITY: {
     GET_QUESTIONS: '/compatibility/questions',
     SUBMIT_ANSWER: '/compatibility/answers',
+    SUBMIT_ANSWERS_BULK: '/compatibility/answers/bulk',
     GET_SCORE: '/compatibility/score/:userId',
     GET_MY_ANSWERS: '/compatibility/my-answers',
     DAILY_QUESTION: '/compatibility/daily',
@@ -49,14 +50,14 @@ export const API_ROUTES = {
   MATCHES: {
     GET_ALL: '/matches',
     GET_ONE: '/matches/:id',
+    UNMATCH: '/matches/:id',
   },
   // Subsystem 10: Harmony
   HARMONY: {
     CREATE_SESSION: '/harmony/sessions',
     GET_SESSION: '/harmony/sessions/:id',
-    EXTEND_SESSION: '/harmony/sessions/:id/extend',
-    GET_QUESTION_CARDS: '/harmony/cards/questions',
-    GET_GAME_CARDS: '/harmony/cards/games',
+    EXTEND_SESSION: '/harmony/sessions/extend',
+    GET_CARDS: '/harmony/sessions/:sessionId/cards',
   },
   // Subsystem 11: Relationships
   RELATIONSHIPS: {
@@ -66,13 +67,11 @@ export const API_ROUTES = {
     GET_STATUS: '/relationships/status',
     GET_MILESTONES: '/relationships/milestones',
   },
-  // Subsystem 12: Couples Club
+  // Subsystem 12: Couples Club (routed through relationships controller)
   COUPLES_CLUB: {
-    GET_EVENTS: '/couples-club/events',
-    CREATE_EVENT: '/couples-club/events',
-    RSVP_EVENT: '/couples-club/events/:eventId/rsvp',
-    CANCEL_RSVP: '/couples-club/events/:eventId/rsvp',
-    GET_LEADERBOARD: '/couples-club/leaderboard',
+    GET_EVENTS: '/relationships/events',
+    RSVP_EVENT: '/relationships/events/:eventId/rsvp',
+    CANCEL_RSVP: '/relationships/events/:eventId/rsvp',
   },
   // Subsystem 14: Badges
   BADGES: {

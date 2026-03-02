@@ -14,6 +14,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import { SendMessageDto } from './dto/send-message.dto';
 
 /**
@@ -63,6 +64,7 @@ export class ChatGateway
     private readonly chatService: ChatService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly prisma: PrismaService,
   ) {}
 
   afterInit(): void {
@@ -155,6 +157,37 @@ export class ChatGateway
     return false;
   }
 
+  /**
+   * Verify user is a participant in an active match.
+   */
+  private async validateMatchParticipant(
+    client: AuthenticatedSocket,
+    userId: string,
+    matchId: string,
+  ): Promise<boolean> {
+    const match = await this.prisma.match.findUnique({
+      where: { id: matchId },
+      select: { userAId: true, userBId: true, isActive: true },
+    });
+
+    if (!match) {
+      client.emit('chat:error', { message: 'Eslestirme bulunamadi' });
+      return false;
+    }
+
+    if (match.userAId !== userId && match.userBId !== userId) {
+      client.emit('chat:error', { message: 'Bu sohbete erisim yetkiniz yok' });
+      return false;
+    }
+
+    if (!match.isActive) {
+      client.emit('chat:error', { message: 'Bu eslestirme artik aktif degil' });
+      return false;
+    }
+
+    return true;
+  }
+
   // ─── Conversation Events ──────────────────────────────────
 
   /**
@@ -169,6 +202,11 @@ export class ChatGateway
 
     if (!data.matchId) {
       client.emit('chat:error', { message: 'Match ID gerekli' });
+      return;
+    }
+
+    // Verify user is a participant of this active match
+    if (!(await this.validateMatchParticipant(client, userId, data.matchId))) {
       return;
     }
 
@@ -223,6 +261,11 @@ export class ChatGateway
       return;
     }
 
+    // Verify user is a participant of this active match
+    if (!(await this.validateMatchParticipant(client, userId, data.matchId))) {
+      return;
+    }
+
     try {
       const dto: SendMessageDto = {
         content: data.content,
@@ -254,13 +297,18 @@ export class ChatGateway
    * Rate limited to 10 events per minute.
    */
   @SubscribeMessage('chat:typing')
-  handleTyping(
+  async handleTyping(
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { matchId: string },
-  ): void {
+  ): Promise<void> {
     const userId = this.getUserId(client);
 
     if (this.isRateLimited(client.id, 'chat:typing', 10)) {
+      return;
+    }
+
+    // Verify user is a participant of this match
+    if (!(await this.validateMatchParticipant(client, userId, data.matchId))) {
       return;
     }
 
@@ -275,11 +323,16 @@ export class ChatGateway
    * Broadcast stop-typing indicator to conversation partner.
    */
   @SubscribeMessage('chat:stop_typing')
-  handleStopTyping(
+  async handleStopTyping(
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { matchId: string },
-  ): void {
+  ): Promise<void> {
     const userId = this.getUserId(client);
+
+    // Verify user is a participant of this match
+    if (!(await this.validateMatchParticipant(client, userId, data.matchId))) {
+      return;
+    }
 
     client.to(`chat:${data.matchId}`).emit('chat:stop_typing', {
       userId,
@@ -299,6 +352,11 @@ export class ChatGateway
     @MessageBody() data: { matchId: string },
   ): Promise<void> {
     const userId = this.getUserId(client);
+
+    // Verify user is a participant of this match
+    if (!(await this.validateMatchParticipant(client, userId, data.matchId))) {
+      return;
+    }
 
     try {
       const result = await this.chatService.markAsRead(userId, data.matchId);

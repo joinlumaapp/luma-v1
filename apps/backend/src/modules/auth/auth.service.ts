@@ -371,7 +371,7 @@ export class AuthService implements OnModuleDestroy {
 
       // Award "Verified" badge if badge exists
       const verifiedBadge = await this.prisma.badgeDefinition.findUnique({
-        where: { key: 'verified_identity' },
+        where: { key: 'verified_star' },
       });
 
       if (verifiedBadge) {

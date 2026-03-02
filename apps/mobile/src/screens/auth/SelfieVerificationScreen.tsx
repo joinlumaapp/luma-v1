@@ -1,6 +1,6 @@
 // Selfie verification screen — real camera with face guide overlay
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../stores/authStore';
+import { useTestModeStore } from '../../stores/testModeStore';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
@@ -32,6 +33,18 @@ export const SelfieVerificationScreen: React.FC = () => {
   const [capturedUri, setCapturedUri] = useState<string | null>(null);
   const cameraRef = useRef<CameraView>(null);
   const setVerified = useAuthStore((state) => state.setVerified);
+  const isTestMode = useTestModeStore((state) => state.isTestMode);
+
+  // Founder test mode: auto-approve selfie after 2s
+  useEffect(() => {
+    if (__DEV__ && isTestMode) {
+      const timer = setTimeout(() => {
+        setVerified(true);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [isTestMode, setVerified]);
 
   const handleRequestPermission = useCallback(async () => {
     const result = await requestPermission();

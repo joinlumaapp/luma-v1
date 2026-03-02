@@ -17,6 +17,7 @@ import type { RouteProp } from '@react-navigation/native';
 import type { AuthStackParamList } from '../../navigation/types';
 import { authService } from '../../services/authService';
 import { useAuthStore } from '../../stores/authStore';
+import { useTestModeStore } from '../../stores/testModeStore';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
@@ -32,6 +33,8 @@ export const OTPVerificationScreen: React.FC = () => {
   const navigation = useNavigation<OTPNavigationProp>();
   const route = useRoute<OTPRouteProp>();
   const { phoneNumber, countryCode } = route.params;
+
+  const isTestMode = useTestModeStore((state) => state.isTestMode);
 
   const [code, setCode] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [activeIndex, setActiveIndex] = useState(0);
@@ -78,6 +81,19 @@ export const OTPVerificationScreen: React.FC = () => {
   const handleVerify = useCallback(async (otpCode: string) => {
     setIsVerifying(true);
     try {
+      // Founder test mode: 000000 auto-verifies without API call
+      if (__DEV__ && isTestMode && otpCode === '000000') {
+        const { login } = useAuthStore.getState();
+        login('test-access-token', 'test-refresh-token', {
+          id: 'test-user-001',
+          phone: phoneNumber,
+          isVerified: false,
+          packageTier: 'free',
+        });
+        navigation.navigate('SelfieVerification');
+        return;
+      }
+
       const result = await authService.verifySms(phoneNumber, otpCode);
 
       if (!result.verified) {
@@ -112,7 +128,7 @@ export const OTPVerificationScreen: React.FC = () => {
     } finally {
       setIsVerifying(false);
     }
-  }, [phoneNumber, navigation]);
+  }, [phoneNumber, navigation, isTestMode]);
 
   const handleDigitInput = (text: string, index: number) => {
     const digit = text.replace(/[^0-9]/g, '');

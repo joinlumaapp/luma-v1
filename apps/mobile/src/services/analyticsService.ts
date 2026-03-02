@@ -3,8 +3,11 @@
 // Dev mode (no MIXPANEL_TOKEN): events logged to console only.
 // Includes funnel tracking, A/B test assignment, session duration tracking, and batch queue.
 
-import { Mixpanel } from 'mixpanel-react-native';
 import { APP_CONFIG } from '../constants/config';
+
+// Lazy-load Mixpanel to avoid Expo Go crash when native module is missing
+type MixpanelType = import('mixpanel-react-native').Mixpanel;
+let MixpanelClass: (new (token: string, trackAutomaticEvents: boolean) => MixpanelType) | null = null;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -165,7 +168,7 @@ interface UserExperimentAssignment {
 
 // ─── Mixpanel Instance ──────────────────────────────────────────────────────
 
-let mixpanelInstance: Mixpanel | null = null;
+let mixpanelInstance: MixpanelType | null = null;
 
 function isMixpanelEnabled(): boolean {
   return mixpanelInstance !== null;
@@ -237,7 +240,12 @@ export const analyticsService = {
     const token = APP_CONFIG.MIXPANEL_TOKEN;
     if (token && token.length > 0) {
       try {
-        const mp = new Mixpanel(token, true); // trackAutomaticEvents = true
+        // Lazy-load the Mixpanel native module (may not be available in Expo Go)
+        if (!MixpanelClass) {
+          const mod = await import('mixpanel-react-native');
+          MixpanelClass = mod.Mixpanel;
+        }
+        const mp = new MixpanelClass(token, true); // trackAutomaticEvents = true
         await mp.init();
         mixpanelInstance = mp;
 

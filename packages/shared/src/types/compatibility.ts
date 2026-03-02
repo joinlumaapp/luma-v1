@@ -43,8 +43,8 @@ export interface CompatibilityScore {
 
 // Subsystem 7: Compatibility Levels — LOCKED: 2 Levels
 export enum CompatibilityLevel {
-  NORMAL = 'normal',
-  SUPER = 'super',
+  NORMAL = 'NORMAL',
+  SUPER = 'SUPER',
 }
 
 // Question categories mapping to psychological dimensions
