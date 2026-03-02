@@ -1,40 +1,44 @@
 // Sentry error-tracking service for React Native.
-// Wraps @sentry/react-native with graceful no-op behavior when SENTRY_DSN is not configured.
+// Uses lazy dynamic import to avoid crash when @sentry/react-native is not installed.
+// All functions are safe no-ops until initSentry() succeeds.
 
-import * as Sentry from '@sentry/react-native';
 import { APP_CONFIG } from '../constants/config';
 
-/** Sentry DSN — set via app config or Expo extra. Empty string disables Sentry. */
-const SENTRY_DSN = (
-  (
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    require('expo-constants') as { default: { expoConfig?: { extra?: { sentryDsn?: string } } } }
-  ).default.expoConfig?.extra?.sentryDsn ?? ''
-);
-
+let Sentry: typeof import('@sentry/react-native') | null = null;
 let isInitialized = false;
 
 /**
  * Initialize Sentry error tracking. Should be called once at app startup.
- * If no DSN is configured, all Sentry functions become silent no-ops.
+ * If the package is not installed or no DSN is configured, all functions become silent no-ops.
  */
-export function initSentry(): void {
-  if (!SENTRY_DSN) {
+export async function initSentry(): Promise<void> {
+  try {
+    Sentry = await import('@sentry/react-native');
+  } catch {
     if (__DEV__) {
-      console.log('[Sentry] DSN not configured — error tracking disabled');
+      console.log('[Sentry] @sentry/react-native not installed — error tracking disabled');
     }
     return;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const Constants = (require('expo-constants') as { default: { expoConfig?: { extra?: { sentryDsn?: string } } } }).default;
+  const dsn = Constants.expoConfig?.extra?.sentryDsn ?? '';
+
+  if (!dsn) {
+    if (__DEV__) {
+      console.log('[Sentry] DSN not configured — error tracking disabled');
+    }
+    Sentry = null;
+    return;
+  }
+
   Sentry.init({
-    dsn: SENTRY_DSN,
+    dsn,
     environment: __DEV__ ? 'development' : 'production',
     release: `luma-mobile@${APP_CONFIG.APP_VERSION}`,
-    // Lower sample rate in production to reduce overhead
     tracesSampleRate: __DEV__ ? 1.0 : 0.2,
-    // Do not send PII by default — userId is attached explicitly via setUser
     sendDefaultPii: false,
-    // Disable in development to avoid noise during debugging
     enabled: !__DEV__,
   });
 
@@ -50,7 +54,7 @@ export function initSentry(): void {
  * No-op if Sentry is not initialized.
  */
 export function captureException(error: Error, context?: Record<string, string>): void {
-  if (!isInitialized) {
+  if (!isInitialized || !Sentry) {
     if (__DEV__) {
       console.error('[Sentry] captureException (not initialized):', error.message);
     }
@@ -58,12 +62,11 @@ export function captureException(error: Error, context?: Record<string, string>)
   }
 
   if (context) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    Sentry.withScope((scope: any) => {
+    Sentry.withScope((scope) => {
       Object.entries(context).forEach(([key, value]) => {
         scope.setExtra(key, value);
       });
-      Sentry.captureException(error);
+      Sentry!.captureException(error);
     });
   } else {
     Sentry.captureException(error);
@@ -72,10 +75,9 @@ export function captureException(error: Error, context?: Record<string, string>)
 
 /**
  * Set the current authenticated user for Sentry context.
- * All subsequent error reports will include this user ID.
  */
 export function setUser(id: string): void {
-  if (!isInitialized) return;
+  if (!isInitialized || !Sentry) return;
   Sentry.setUser({ id });
 }
 
@@ -83,20 +85,19 @@ export function setUser(id: string): void {
  * Clear the current user context (e.g., on logout).
  */
 export function clearUser(): void {
-  if (!isInitialized) return;
+  if (!isInitialized || !Sentry) return;
   Sentry.setUser(null);
 }
 
 /**
  * Add a breadcrumb for debugging context in Sentry reports.
- * No-op if Sentry is not initialized.
  */
 export function addBreadcrumb(
   category: string,
   message: string,
   level: 'debug' | 'info' | 'warning' | 'error' = 'info',
 ): void {
-  if (!isInitialized) return;
+  if (!isInitialized || !Sentry) return;
   Sentry.addBreadcrumb({ category, message, level });
 }
 
