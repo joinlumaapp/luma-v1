@@ -49,6 +49,18 @@ export class HarmonyService {
             compatibilityLevel: true,
           },
         },
+        userA: {
+          select: {
+            id: true,
+            profile: { select: { firstName: true } },
+          },
+        },
+        userB: {
+          select: {
+            id: true,
+            profile: { select: { firstName: true } },
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -81,6 +93,10 @@ export class HarmonyService {
         return {
           sessionId: session.id,
           matchId: session.matchId,
+          userAId: session.userAId,
+          userBId: session.userBId,
+          userAName: session.userA?.profile?.firstName ?? '',
+          userBName: session.userB?.profile?.firstName ?? '',
           status: session.status,
           startedAt: session.startedAt,
           endsAt: session.endsAt,
@@ -256,6 +272,18 @@ export class HarmonyService {
             compatibilityLevel: true,
           },
         },
+        userA: {
+          select: {
+            id: true,
+            profile: { select: { firstName: true } },
+          },
+        },
+        userB: {
+          select: {
+            id: true,
+            profile: { select: { firstName: true } },
+          },
+        },
       },
     });
 
@@ -298,6 +326,10 @@ export class HarmonyService {
     return {
       sessionId: session.id,
       matchId: session.matchId,
+      userAId: session.userAId,
+      userBId: session.userBId,
+      userAName: session.userA?.profile?.firstName ?? '',
+      userBName: session.userB?.profile?.firstName ?? '',
       status: session.status,
       startedAt: session.startedAt,
       endsAt: session.endsAt,

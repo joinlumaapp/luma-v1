@@ -1,4 +1,4 @@
-// EditProfileScreen — full profile editing: photos, voice intro, name, bio, gender, intention, city
+// EditProfileScreen — full profile editing: photos, voice intro, name, bio, prompts, gender, intention, city
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -14,6 +14,7 @@ import {
   Platform,
   ActivityIndicator,
   Image,
+  Modal,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -29,6 +30,12 @@ import { VoiceIntroRecorder } from '../../components/profile/VoiceIntro';
 import { voiceIntroService } from '../../services/voiceIntroService';
 import type { VoiceIntroResponse } from '../../services/voiceIntroService';
 import { photoService } from '../../services/photoService';
+import { discoveryService } from '../../services/discoveryService';
+import type { ProfilePrompt } from '../../services/discoveryService';
+import { PromptCard } from '../../components/prompts/PromptCard';
+import { PromptPickerSheet } from '../../components/prompts/PromptPickerSheet';
+import { MAX_PROMPTS, MAX_PROMPT_ANSWER_LENGTH } from '../../constants/promptBank';
+import type { PromptOption } from '../../constants/promptBank';
 
 type EditProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'EditProfile'>;
 
@@ -88,6 +95,15 @@ export const EditProfileScreen: React.FC = () => {
   const [isVoiceIntroLoading, setIsVoiceIntroLoading] = useState(false);
   const [voiceIntroError, setVoiceIntroError] = useState<string | null>(null);
 
+  // Profile prompts state
+  const [prompts, setPrompts] = useState<Array<ProfilePrompt | null>>([null, null, null]);
+  const [isPromptsLoading, setIsPromptsLoading] = useState(false);
+  const [isPromptPickerVisible, setIsPromptPickerVisible] = useState(false);
+  const [activePromptSlot, setActivePromptSlot] = useState<number>(0);
+  const [editingPromptIndex, setEditingPromptIndex] = useState<number | null>(null);
+  const [editingPromptAnswer, setEditingPromptAnswer] = useState('');
+  const [isEditPromptModalVisible, setIsEditPromptModalVisible] = useState(false);
+
   // Sync from store when profile updates externally
   useEffect(() => {
     setFirstName(profile.firstName);
@@ -114,6 +130,153 @@ export const EditProfileScreen: React.FC = () => {
     };
     fetchVoiceIntro();
   }, [user?.id]);
+
+  // Fetch existing prompts on mount
+  useEffect(() => {
+    const fetchPrompts = async () => {
+      if (!user?.id) return;
+      setIsPromptsLoading(true);
+      try {
+        const data = await discoveryService.getPrompts(user.id);
+        const slots: Array<ProfilePrompt | null> = [null, null, null];
+        data.forEach((p, i) => {
+          if (i < MAX_PROMPTS) {
+            slots[i] = p;
+          }
+        });
+        setPrompts(slots);
+      } catch {
+        // Silently fail — user can still add prompts
+      } finally {
+        setIsPromptsLoading(false);
+      }
+    };
+    fetchPrompts();
+  }, [user?.id]);
+
+  // Prompt handlers
+  const usedPromptIds: string[] = prompts
+    .filter((p): p is ProfilePrompt => p !== null)
+    .map((p) => p.question);
+
+  const handleOpenPromptPicker = useCallback((slotIndex: number) => {
+    setActivePromptSlot(slotIndex);
+    setIsPromptPickerVisible(true);
+  }, []);
+
+  const handleSelectPrompt = useCallback(
+    (promptOption: PromptOption) => {
+      setIsPromptPickerVisible(false);
+      // Open the edit modal for the selected prompt
+      setEditingPromptIndex(activePromptSlot);
+      setEditingPromptAnswer('');
+      // Temporarily set the prompt with empty answer so we know the question
+      const updated = [...prompts];
+      updated[activePromptSlot] = {
+        question: promptOption.textTr,
+        answer: '',
+        order: activePromptSlot,
+      };
+      setPrompts(updated);
+      setIsEditPromptModalVisible(true);
+    },
+    [activePromptSlot, prompts],
+  );
+
+  const handleEditPrompt = useCallback(
+    (index: number) => {
+      const prompt = prompts[index];
+      if (!prompt) return;
+      setEditingPromptIndex(index);
+      setEditingPromptAnswer(prompt.answer);
+      setIsEditPromptModalVisible(true);
+    },
+    [prompts],
+  );
+
+  const handleSavePromptAnswer = useCallback(async () => {
+    if (editingPromptIndex === null) return;
+    const prompt = prompts[editingPromptIndex];
+    if (!prompt) return;
+
+    const trimmedAnswer = editingPromptAnswer.trim();
+    if (trimmedAnswer.length === 0) {
+      Alert.alert('Hata', 'Lutfen bir cevap yaz.');
+      return;
+    }
+
+    const updated = [...prompts];
+    updated[editingPromptIndex] = {
+      ...prompt,
+      answer: trimmedAnswer,
+      order: editingPromptIndex,
+    };
+    setPrompts(updated);
+    setIsEditPromptModalVisible(false);
+    setEditingPromptIndex(null);
+    setEditingPromptAnswer('');
+
+    // Save to backend
+    const toSave = updated
+      .filter((p): p is ProfilePrompt => p !== null && p.answer.length > 0)
+      .map((p, i) => ({ ...p, order: i }));
+    try {
+      await discoveryService.savePrompts(toSave);
+    } catch {
+      Alert.alert('Hata', 'Profil sorulari kaydedilemedi.');
+    }
+  }, [editingPromptIndex, editingPromptAnswer, prompts]);
+
+  const handleDeletePrompt = useCallback(
+    async (index: number) => {
+      Alert.alert('Soruyu Sil', 'Bu soruyu silmek istediginize emin misiniz?', [
+        { text: 'Iptal', style: 'cancel' },
+        {
+          text: 'Sil',
+          style: 'destructive',
+          onPress: async () => {
+            const updated = [...prompts];
+            updated[index] = null;
+            // Compact: shift non-null prompts to the beginning
+            const compacted: Array<ProfilePrompt | null> = [null, null, null];
+            let ci = 0;
+            for (const p of updated) {
+              if (p !== null) {
+                compacted[ci] = { ...p, order: ci };
+                ci++;
+              }
+            }
+            setPrompts(compacted);
+
+            const toSave = compacted
+              .filter((p): p is ProfilePrompt => p !== null && p.answer.length > 0)
+              .map((p, i) => ({ ...p, order: i }));
+            try {
+              await discoveryService.savePrompts(toSave);
+            } catch {
+              Alert.alert('Hata', 'Soru silinemedi.');
+            }
+          },
+        },
+      ]);
+    },
+    [prompts],
+  );
+
+  const handleCancelEditPrompt = useCallback(() => {
+    // If the prompt has no answer (just selected, not yet saved), remove it
+    if (editingPromptIndex !== null) {
+      const prompt = prompts[editingPromptIndex];
+      if (prompt && prompt.answer.length === 0) {
+        const updated = [...prompts];
+        updated[editingPromptIndex] = null;
+        setPrompts(updated);
+      }
+    }
+    setIsEditPromptModalVisible(false);
+    setEditingPromptIndex(null);
+    setEditingPromptAnswer('');
+  }, [editingPromptIndex, prompts]);
 
   // Build photo grid: fill to 6 slots
   const photos: Array<string | null> = [
@@ -443,6 +606,120 @@ export const EditProfileScreen: React.FC = () => {
               maxLength={PROFILE_CONFIG.MAX_BIO_LENGTH}
             />
           </View>
+
+          {/* Profil Sorulari (Profile Prompts) */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Profil Sorulari</Text>
+            <Text style={styles.sectionHint}>
+              Profilini one cikar! 3 soruya kadar cevap ekleyebilirsin.
+            </Text>
+            {isPromptsLoading ? (
+              <View style={styles.promptsLoading}>
+                <ActivityIndicator size="small" color={colors.primary} />
+              </View>
+            ) : (
+              <View style={styles.promptSlots}>
+                {prompts.map((prompt, index) => {
+                  if (prompt !== null && prompt.answer.length > 0) {
+                    return (
+                      <View key={`prompt-${index}`} style={styles.promptSlotWrapper}>
+                        <PromptCard
+                          question={prompt.question}
+                          answer={prompt.answer}
+                          showEditIcon
+                          onEdit={() => handleEditPrompt(index)}
+                        />
+                        <TouchableOpacity
+                          style={styles.promptDeleteButton}
+                          onPress={() => handleDeletePrompt(index)}
+                          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={styles.promptDeleteText}>Sil</Text>
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  }
+                  return (
+                    <TouchableOpacity
+                      key={`prompt-empty-${index}`}
+                      style={styles.promptEmptySlot}
+                      onPress={() => handleOpenPromptPicker(index)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.promptEmptyIcon}>+</Text>
+                      <Text style={styles.promptEmptyText}>Soru Ekle</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+
+          {/* Prompt Picker Sheet */}
+          <PromptPickerSheet
+            visible={isPromptPickerVisible}
+            onSelect={handleSelectPrompt}
+            onClose={() => setIsPromptPickerVisible(false)}
+            usedPromptIds={usedPromptIds}
+          />
+
+          {/* Edit Prompt Answer Modal */}
+          <Modal
+            transparent
+            visible={isEditPromptModalVisible}
+            animationType="fade"
+            statusBarTranslucent
+            onRequestClose={handleCancelEditPrompt}
+          >
+            <View style={styles.editPromptOverlay}>
+              <View style={styles.editPromptSheet}>
+                <Text style={styles.editPromptTitle}>
+                  {editingPromptIndex !== null && prompts[editingPromptIndex]
+                    ? prompts[editingPromptIndex]?.question
+                    : ''}
+                </Text>
+                <TextInput
+                  style={styles.editPromptInput}
+                  value={editingPromptAnswer}
+                  onChangeText={(text) => {
+                    if (text.length <= MAX_PROMPT_ANSWER_LENGTH) {
+                      setEditingPromptAnswer(text);
+                    }
+                  }}
+                  placeholder="Cevabini yaz..."
+                  placeholderTextColor={colors.textTertiary}
+                  multiline
+                  textAlignVertical="top"
+                  maxLength={MAX_PROMPT_ANSWER_LENGTH}
+                  autoFocus
+                />
+                <Text style={styles.editPromptCharCount}>
+                  {editingPromptAnswer.length}/{MAX_PROMPT_ANSWER_LENGTH}
+                </Text>
+                <View style={styles.editPromptActions}>
+                  <TouchableOpacity
+                    style={styles.editPromptCancelButton}
+                    onPress={handleCancelEditPrompt}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.editPromptCancelText}>Iptal</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.editPromptSaveButton,
+                      editingPromptAnswer.trim().length === 0 && styles.editPromptSaveDisabled,
+                    ]}
+                    onPress={handleSavePromptAnswer}
+                    disabled={editingPromptAnswer.trim().length === 0}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.editPromptSaveText}>Kaydet</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
 
           {/* Gender Chips */}
           <View style={styles.section}>
@@ -827,5 +1104,123 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textTertiary,
     marginTop: spacing.xs,
+  },
+
+  // Profile Prompts
+  promptsLoading: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xl,
+  },
+  promptSlots: {
+    gap: spacing.sm,
+  },
+  promptSlotWrapper: {
+    position: 'relative',
+  },
+  promptDeleteButton: {
+    position: 'absolute',
+    bottom: spacing.sm,
+    right: spacing.sm,
+  },
+  promptDeleteText: {
+    ...typography.captionSmall,
+    color: colors.error,
+    fontWeight: '600',
+  },
+  promptEmptySlot: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    padding: spacing.lg,
+    borderWidth: 2,
+    borderColor: colors.surfaceBorder,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.sm,
+    minHeight: 64,
+  },
+  promptEmptyIcon: {
+    fontSize: 20,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  promptEmptyText: {
+    ...typography.body,
+    color: colors.primary,
+    fontWeight: '500',
+  },
+
+  // Edit Prompt Modal
+  editPromptOverlay: {
+    flex: 1,
+    backgroundColor: colors.overlay,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  editPromptSheet: {
+    backgroundColor: colors.background,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    width: '100%',
+    maxWidth: 400,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  editPromptTitle: {
+    ...typography.bodyLarge,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
+    marginBottom: spacing.md,
+  },
+  editPromptInput: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    ...typography.body,
+    color: colors.text,
+    minHeight: 100,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    textAlignVertical: 'top',
+  },
+  editPromptCharCount: {
+    ...typography.caption,
+    color: colors.textTertiary,
+    textAlign: 'right',
+    marginTop: spacing.xs,
+  },
+  editPromptActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  editPromptCancelButton: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  editPromptCancelText: {
+    ...typography.button,
+    color: colors.textSecondary,
+  },
+  editPromptSaveButton: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.primary,
+  },
+  editPromptSaveDisabled: {
+    opacity: 0.4,
+  },
+  editPromptSaveText: {
+    ...typography.button,
+    color: colors.text,
   },
 });

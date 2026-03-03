@@ -4,6 +4,7 @@
 import { Platform, AppState } from 'react-native';
 import { create } from 'zustand';
 import { notificationService } from '../services/notificationService';
+import { useAuthStore } from './authStore';
 import type {
   Notification,
   NotificationPreferences,
@@ -98,6 +99,11 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   // Actions
 
   fetchNotifications: async () => {
+    const token = useAuthStore.getState().accessToken;
+    if (!token) {
+      set({ isLoading: false });
+      return;
+    }
     set({ isLoading: true });
     try {
       const { page } = get();
@@ -165,6 +171,8 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   },
 
   refresh: async () => {
+    const token = useAuthStore.getState().accessToken;
+    if (!token) return;
     set({ page: 1, notifications: [], unreadCount: 0, total: 0, totalPages: 1 });
     await get().fetchNotifications();
   },

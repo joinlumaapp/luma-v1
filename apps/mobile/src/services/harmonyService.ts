@@ -2,6 +2,7 @@
 // Maps backend response shapes to the mobile-expected interfaces
 
 import api from './api';
+import { useAuthStore } from '../stores/authStore';
 
 // ─── Backend Response Shapes (what the API actually returns) ──────────
 
@@ -48,6 +49,10 @@ interface BackendGetSessionsResponse {
 interface BackendSessionListItem {
   sessionId: string;
   matchId: string;
+  userAId?: string;
+  userBId?: string;
+  userAName?: string;
+  userBName?: string;
   status: string;
   startedAt: string;
   endsAt: string | null;
@@ -66,6 +71,10 @@ interface BackendSessionListItem {
 interface BackendGetSessionResponse {
   sessionId: string;
   matchId: string;
+  userAId?: string;
+  userBId?: string;
+  userAName?: string;
+  userBName?: string;
   status: string;
   startedAt: string;
   endsAt: string | null;
@@ -172,11 +181,19 @@ const calcRemainingSeconds = (endsAt: string | null): number => {
   return Math.max(0, Math.floor(remaining / 1000));
 };
 
+/** Resolve partner name from session user IDs */
+const resolvePartnerName = (item: { userAId?: string; userBId?: string; userAName?: string; userBName?: string }): string => {
+  const myUserId = useAuthStore.getState().user?.id;
+  if (!myUserId) return '';
+  if (item.userAId === myUserId) return item.userBName ?? '';
+  return item.userAName ?? '';
+};
+
 /** Map backend session list item to mobile session response */
 const mapSessionListItem = (item: BackendSessionListItem): HarmonySessionResponse => ({
   id: item.sessionId,
   matchId: item.matchId,
-  matchName: '',
+  matchName: resolvePartnerName(item),
   status: mapStatus(item.status),
   remainingSeconds: calcRemainingSeconds(item.endsAt),
   totalMinutes: DEFAULT_DURATION_MINUTES + (item.totalExtensionMinutes ?? 0),
@@ -204,7 +221,7 @@ const mapCreateSessionResponse = (res: BackendCreateSessionResponse): HarmonySes
 const mapGetSessionResponse = (res: BackendGetSessionResponse): HarmonySessionResponse => ({
   id: res.sessionId,
   matchId: res.matchId,
-  matchName: '',
+  matchName: resolvePartnerName(res),
   status: mapStatus(res.status),
   remainingSeconds: res.remainingSeconds ?? 0,
   totalMinutes: DEFAULT_DURATION_MINUTES + (res.totalExtensionMinutes ?? 0),

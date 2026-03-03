@@ -57,22 +57,33 @@ const formatDateHeader = (dateString: string): string => {
   });
 };
 
-// Group messages by date
-const groupMessagesByDate = (
-  messages: ChatMessage[]
-): Array<{ type: 'header'; date: string } | { type: 'message'; data: ChatMessage }> => {
-  const result: Array<
-    { type: 'header'; date: string } | { type: 'message'; data: ChatMessage }
-  > = [];
+// Grouped item types used by FlatList
+type GroupedHeader = { type: 'header'; date: string };
+type GroupedMessage = { type: 'message'; data: ChatMessage; isLastInBlock: boolean };
+type GroupedItem = GroupedHeader | GroupedMessage;
+
+// Group messages by date and mark the last message in each consecutive sender block
+const groupMessagesByDate = (messages: ChatMessage[]): GroupedItem[] => {
+  const result: GroupedItem[] = [];
   let lastDate = '';
 
-  for (const msg of messages) {
+  for (let i = 0; i < messages.length; i++) {
+    const msg = messages[i];
     const msgDate = new Date(msg.createdAt).toDateString();
     if (msgDate !== lastDate) {
       lastDate = msgDate;
       result.push({ type: 'header', date: msg.createdAt });
     }
-    result.push({ type: 'message', data: msg });
+
+    // A message is "last in block" when the next message is from a different sender,
+    // is a date header boundary, or this is the very last message in the list.
+    const nextMsg = messages[i + 1];
+    const isLastInBlock =
+      !nextMsg ||
+      nextMsg.senderId !== msg.senderId ||
+      new Date(nextMsg.createdAt).toDateString() !== msgDate;
+
+    result.push({ type: 'message', data: msg, isLastInBlock });
   }
 
   return result;
@@ -286,7 +297,7 @@ export const ChatScreen: React.FC = () => {
   const renderItem = useCallback(({
     item,
   }: {
-    item: { type: 'header'; date: string } | { type: 'message'; data: ChatMessage };
+    item: GroupedItem;
   }) => {
     if (item.type === 'header') {
       return (
@@ -308,6 +319,7 @@ export const ChatScreen: React.FC = () => {
       <MemoizedMessageBubble
         message={message}
         isMine={isMine}
+        isLastInBlock={item.isLastInBlock}
         onReact={handleReaction}
         onImagePress={handleImagePress}
       />
@@ -315,8 +327,8 @@ export const ChatScreen: React.FC = () => {
   }, [currentUserId, handleReaction, handleImagePress]);
 
   const getItemKey = (
-    item: { type: 'header'; date: string } | { type: 'message'; data: ChatMessage },
-    index: number
+    item: GroupedItem,
+    index: number,
   ): string => {
     if (item.type === 'header') return `header-${item.date}-${index}`;
     return item.data.id;

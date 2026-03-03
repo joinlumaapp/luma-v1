@@ -48,6 +48,12 @@ interface DiscoveryState {
     maxDistance: number;
     intentionTags: string[];
     genderPreference: 'male' | 'female' | 'all';
+    height: { min: number; max: number } | null;
+    education: string[];
+    smoking: string[];
+    drinking: string[];
+    exercise: string[];
+    zodiac: string[];
   };
 
   // Location state
@@ -109,6 +115,12 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
     maxDistance: DISCOVERY_CONFIG.DEFAULT_DISTANCE_KM,
     intentionTags: [],
     genderPreference: 'all',
+    height: null,
+    education: [],
+    smoking: [],
+    drinking: [],
+    exercise: [],
+    zodiac: [],
   },
 
   // Location initial state

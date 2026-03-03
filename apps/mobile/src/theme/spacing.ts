@@ -32,7 +32,7 @@ export const layout = {
   screenWidth: SCREEN_WIDTH,
   screenHeight: SCREEN_HEIGHT,
   cardWidth: SCREEN_WIDTH - spacing.md * 2,
-  cardHeight: SCREEN_HEIGHT * 0.75,
+  cardHeight: SCREEN_HEIGHT * 0.62,
   avatarSmall: 40,
   avatarMedium: 56,
   avatarLarge: 80,

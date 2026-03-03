@@ -55,6 +55,8 @@ MemoizedSystemMessage.displayName = 'MemoizedSystemMessage';
 interface MessageBubbleProps {
   message: ChatMessage;
   isMine: boolean;
+  /** When true, show the delivery/read status indicator below the bubble */
+  isLastInBlock: boolean;
   onReact: (messageId: string, emoji: ReactionEmoji) => void;
   onImagePress: (mediaUrl: string) => void;
 }
@@ -78,6 +80,7 @@ function areMessageBubblePropsEqual(
     prev.type === next.type &&
     prev.mediaUrl === next.mediaUrl &&
     prevProps.isMine === nextProps.isMine &&
+    prevProps.isLastInBlock === nextProps.isLastInBlock &&
     prev.reactions.length === next.reactions.length &&
     prev.reactions.every(
       (r, i) =>
@@ -89,7 +92,7 @@ function areMessageBubblePropsEqual(
 }
 
 export const MemoizedMessageBubble = memo<MessageBubbleProps>(
-  ({ message, isMine, onReact, onImagePress }) => {
+  ({ message, isMine, isLastInBlock, onReact, onImagePress }) => {
     const handleReact = useCallback(
       (_messageId: string, emoji: ReactionEmoji) => {
         onReact(message.id, emoji);
@@ -102,6 +105,9 @@ export const MemoizedMessageBubble = memo<MessageBubbleProps>(
         onImagePress(message.mediaUrl);
       }
     }, [message.mediaUrl, onImagePress]);
+
+    // Whether to show the read receipt indicator below the bubble
+    const showReadReceipt = isMine && isLastInBlock;
 
     // Image messages
     if (message.type === 'IMAGE' && message.mediaUrl) {
@@ -123,9 +129,15 @@ export const MemoizedMessageBubble = memo<MessageBubbleProps>(
               isMine={isMine}
               timestamp={message.createdAt}
               status={message.status}
+              showStatus={showReadReceipt}
               onPress={handleImagePress}
             />
           </MessageReactionWrapper>
+          {showReadReceipt && (
+            <View style={styles.readReceiptContainer}>
+              <MessageStatus status={message.status} />
+            </View>
+          )}
         </View>
       );
     }
@@ -167,10 +179,14 @@ export const MemoizedMessageBubble = memo<MessageBubbleProps>(
               >
                 {formatMessageTime(message.createdAt)}
               </Text>
-              {isMine && <MessageStatus status={message.status} />}
             </View>
           </View>
         </MessageReactionWrapper>
+        {showReadReceipt && (
+          <View style={styles.readReceiptContainer}>
+            <MessageStatus status={message.status} />
+          </View>
+        )}
       </View>
     );
   },
@@ -259,5 +275,11 @@ const styles = StyleSheet.create({
   },
   messageTimeTheirs: {
     color: colors.textTertiary,
+  },
+  // Read receipt positioned below the bubble, right-aligned
+  readReceiptContainer: {
+    alignSelf: 'flex-end',
+    marginTop: 2,
+    marginRight: 4,
   },
 });

@@ -24,6 +24,8 @@ import { withDeferredMount } from './LazyScreens';
 import { DiscoveryScreen } from '../screens/discovery/DiscoveryScreen';
 import { ProfilePreviewScreen } from '../screens/discovery/ProfilePreviewScreen';
 import { FilterScreen } from '../screens/discovery/FilterScreen';
+import { LikesYouScreen } from '../screens/discovery/LikesYouScreen';
+import { DailyPicksScreen } from '../screens/discovery/DailyPicksScreen';
 import { DailyQuestionScreen } from '../screens/compatibility/DailyQuestionScreen';
 
 // Matches screens
@@ -122,6 +124,16 @@ const DiscoveryStackNavigator: React.FC = () => (
     <DiscoveryStack.Screen
       name="Filter"
       component={FilterScreen}
+      options={{ animation: 'slide_from_bottom' }}
+    />
+    <DiscoveryStack.Screen
+      name="LikesYou"
+      component={LikesYouScreen}
+      options={{ animation: 'slide_from_bottom' }}
+    />
+    <DiscoveryStack.Screen
+      name="DailyPicks"
+      component={DailyPicksScreen}
       options={{ animation: 'slide_from_bottom' }}
     />
     <DiscoveryStack.Screen

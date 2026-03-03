@@ -113,4 +113,43 @@ export class ProfilesController {
   ) {
     return this.profilesService.updateLocation(userId, dto.latitude, dto.longitude);
   }
+
+  // ── Profile Prompts (Hinge-style) ───────────────────────────
+
+  @Get(':userId/prompts')
+  @ApiOperation({ summary: 'Get profile prompts for a user' })
+  async getPrompts(@Param('userId') userId: string) {
+    return this.profilesService.getPrompts(userId);
+  }
+
+  @Post('prompts')
+  @ApiOperation({ summary: 'Save profile prompts (max 3)' })
+  async savePrompts(
+    @CurrentUser('sub') userId: string,
+    @Body() body: { prompts: Array<{ question: string; answer: string; order: number }> },
+  ) {
+    return this.profilesService.savePrompts(userId, body.prompts);
+  }
+
+  // ── Profile Boost ───────────────────────────────────────────
+
+  @Get('boost/status')
+  @ApiOperation({ summary: 'Get current boost status' })
+  async getBoostStatus(@CurrentUser('sub') userId: string) {
+    return this.profilesService.getBoostStatus(userId);
+  }
+
+  @Post('boost')
+  @ApiOperation({ summary: 'Activate a 30-minute profile boost (costs 50 Gold)' })
+  async activateBoost(@CurrentUser('sub') userId: string) {
+    return this.profilesService.activateBoost(userId);
+  }
+
+  // ── Login Streak ────────────────────────────────────────────
+
+  @Post('login-streak')
+  @ApiOperation({ summary: 'Record daily login and return streak info + Gold reward' })
+  async recordLoginStreak(@CurrentUser('sub') userId: string) {
+    return this.profilesService.recordLoginStreak(userId);
+  }
 }

@@ -60,6 +60,35 @@ export const formatRelativeTime = (dateString: string): string => {
 };
 
 /**
+ * Format match activity timestamp for match list display.
+ * Today → "Bugün HH:MM"
+ * Yesterday → "Dün"
+ * 2-6 days → "X gün önce"
+ * 7+ days → "X hafta önce" or full date
+ */
+export const formatMatchActivity = (dateString: string): string => {
+  const now = new Date();
+  const date = new Date(dateString);
+
+  if (isNaN(date.getTime())) return '';
+
+  const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const inputDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffDays = Math.floor((nowDate.getTime() - inputDate.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `Bugün ${hours}:${minutes}`;
+  }
+  if (diffDays === 1) return 'Dün';
+  if (diffDays < 7) return `${diffDays} gün önce`;
+  const weeks = Math.floor(diffDays / 7);
+  if (weeks < 4) return `${weeks} hafta önce`;
+  return formatDate(dateString);
+};
+
+/**
  * Format gold amount with Turkish locale
  */
 export const formatGold = (amount: number): string => {

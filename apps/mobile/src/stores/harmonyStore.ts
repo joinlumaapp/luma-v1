@@ -171,12 +171,17 @@ export const useHarmonyStore = create<HarmonyState>((set, get) => ({
   // ─── REST API Actions ──────────────────────────────────────────
 
   fetchSessions: async () => {
+    const token = useAuthStore.getState().accessToken;
+    if (!token) { set({ isLoading: false }); return; }
     set({ isLoading: true });
     try {
       const sessionsData = await harmonyService.getSessions();
       const sessions = sessionsData.map((s) => mapSessionResponse(s));
       set({ sessions, isLoading: false });
-    } catch {
+    } catch (error) {
+      if (__DEV__) {
+        console.error('[HarmonyStore] Oturumlar alinamadi:', error);
+      }
       set({ isLoading: false });
     }
   },
@@ -228,7 +233,10 @@ export const useHarmonyStore = create<HarmonyState>((set, get) => ({
         ),
         isLoading: false,
       }));
-    } catch {
+    } catch (error) {
+      if (__DEV__) {
+        console.error('[HarmonyStore] Oturum alinamadi:', error);
+      }
       set({ isLoading: false });
     }
   },

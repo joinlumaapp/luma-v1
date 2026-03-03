@@ -22,6 +22,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ProfileStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../stores/authStore';
 import { authService } from '../../services/authService';
+import { storage } from '../../utils/storage';
 import { useTheme } from '../../theme/ThemeContext';
 import type { ThemeColors, ThemeMode } from '../../theme/colors';
 import { typography } from '../../theme/typography';
@@ -185,6 +186,26 @@ export const SettingsScreen: React.FC = () => {
       Alert.alert('Hata', 'Sayfa açılamadı.');
     });
   }, []);
+
+  const setOnboarded = useAuthStore((state) => state.setOnboarded);
+
+  // DEV: Reset onboarding to re-test questions flow
+  const handleResetOnboarding = useCallback(() => {
+    Alert.alert(
+      'Onboarding Sıfırla',
+      'Onboarding adımlarını tekrar görmek istiyor musun?',
+      [
+        { text: 'İptal', style: 'cancel' },
+        {
+          text: 'Sıfırla',
+          onPress: async () => {
+            await storage.clearOnboarded();
+            setOnboarded(false);
+          },
+        },
+      ],
+    );
+  }, [setOnboarded]);
 
   // Format phone for display
   const phoneDisplay = user?.phone ?? '-';
@@ -356,6 +377,23 @@ export const SettingsScreen: React.FC = () => {
         },
       ],
     },
+    // DEV-only section — visible only in development builds
+    ...(__DEV__
+      ? [
+          {
+            title: 'Geliştirici',
+            data: [
+              {
+                key: 'reset_onboarding',
+                icon: 'R',
+                title: 'Onboarding Tekrar Gör',
+                type: 'action' as const,
+                onPress: handleResetOnboarding,
+              },
+            ],
+          },
+        ]
+      : []),
     {
       title: 'Tehlike Bölgesi',
       data: [

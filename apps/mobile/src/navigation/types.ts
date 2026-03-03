@@ -44,6 +44,8 @@ export type DiscoveryStackParamList = {
   ProfilePreview: { userId: string };
   Filter: undefined;
   DailyQuestion: undefined;
+  LikesYou: undefined;
+  DailyPicks: undefined;
   Report: { userId: string; userName: string };
 };
 

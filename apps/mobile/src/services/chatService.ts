@@ -39,6 +39,7 @@ export interface ChatMessage {
   status: MessageStatusType;
   mediaUrl?: string;
   createdAt: string;
+  readAt?: string;
   isRead: boolean;
   reactions: ReactionCount[];
 }

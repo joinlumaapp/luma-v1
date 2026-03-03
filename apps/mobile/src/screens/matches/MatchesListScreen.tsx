@@ -24,6 +24,7 @@ import type { Match } from '../../stores/matchStore';
 import { SlideIn } from '../../components/animations/SlideIn';
 import { PulseGlow } from '../../components/animations/PulseGlow';
 import { useScreenTracking } from '../../hooks/useAnalytics';
+import { formatMatchActivity } from '../../utils/formatters';
 
 type MatchesNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'MatchesList'>;
 
@@ -156,7 +157,7 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress }) => {
                 </View>
               )}
             </View>
-            <Text style={styles.lastActivity}>{item.lastActivity}</Text>
+            <Text style={styles.lastActivity}>{formatMatchActivity(item.lastActivity)}</Text>
           </View>
 
           {/* Compatibility */}
@@ -274,7 +275,7 @@ export const MatchesListScreen: React.FC = () => {
         {[
           { key: 'all' as const, label: 'Tümü' },
           { key: 'new' as const, label: 'Yeni' },
-          { key: 'harmony' as const, label: 'Harmony' },
+          { key: 'harmony' as const, label: 'Uyum Odası' },
         ].map((filter) => (
           <TouchableWithoutFeedback
             key={filter.key}

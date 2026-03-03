@@ -634,4 +634,295 @@ export class ProfilesService {
       photoCount >= MIN_PHOTOS
     );
   }
+
+  // ─── Profile Prompts ─────────────────────────────────────────
+
+  /** Get profile prompts for a user (public) */
+  async getPrompts(userId: string) {
+    return this.prisma.profilePrompt.findMany({
+      where: { userId },
+      orderBy: { order: 'asc' },
+      select: {
+        id: true,
+        question: true,
+        answer: true,
+        order: true,
+      },
+    });
+  }
+
+  /** Save profile prompts (max 3). Replaces existing prompts. */
+  async savePrompts(
+    userId: string,
+    prompts: Array<{ question: string; answer: string; order: number }>,
+  ) {
+    if (prompts.length > 3) {
+      throw new BadRequestException('En fazla 3 profil sorusu eklenebilir');
+    }
+
+    // Validate each prompt
+    for (const prompt of prompts) {
+      if (!prompt.question || prompt.question.length > 200) {
+        throw new BadRequestException('Soru 1-200 karakter arasi olmali');
+      }
+      if (!prompt.answer || prompt.answer.length > 300) {
+        throw new BadRequestException('Cevap 1-300 karakter arasi olmali');
+      }
+      if (prompt.order < 0 || prompt.order > 2) {
+        throw new BadRequestException('Sira 0-2 arasi olmali');
+      }
+    }
+
+    // Delete existing and create new in a transaction
+    return this.prisma.$transaction(async (tx) => {
+      await tx.profilePrompt.deleteMany({ where: { userId } });
+
+      const created = await Promise.all(
+        prompts.map((p) =>
+          tx.profilePrompt.create({
+            data: {
+              userId,
+              question: p.question,
+              answer: p.answer,
+              order: p.order,
+            },
+            select: { id: true, question: true, answer: true, order: true },
+          }),
+        ),
+      );
+
+      return created;
+    });
+  }
+
+  // ─── Profile Boost ───────────────────────────────────────────
+
+  private static readonly BOOST_DURATION_MINUTES = 30;
+  private static readonly BOOST_GOLD_COST = 50;
+
+  /** Check if user has an active boost */
+  async getBoostStatus(userId: string) {
+    const activeBoost = await this.prisma.profileBoost.findFirst({
+      where: {
+        userId,
+        isActive: true,
+        endsAt: { gt: new Date() },
+      },
+      orderBy: { endsAt: 'desc' },
+    });
+
+    if (!activeBoost) {
+      return { isActive: false };
+    }
+
+    const remainingSeconds = Math.max(
+      0,
+      Math.floor((activeBoost.endsAt.getTime() - Date.now()) / 1000),
+    );
+
+    return {
+      isActive: true,
+      endsAt: activeBoost.endsAt.toISOString(),
+      remainingSeconds,
+    };
+  }
+
+  /** Activate a 30-minute profile boost (costs Gold) */
+  async activateBoost(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { goldBalance: true },
+    });
+
+    if (!user) throw new NotFoundException('Kullanici bulunamadi');
+
+    if (user.goldBalance < ProfilesService.BOOST_GOLD_COST) {
+      throw new BadRequestException(
+        `Yetersiz Gold. Boost icin ${ProfilesService.BOOST_GOLD_COST} Gold gerekli.`,
+      );
+    }
+
+    // Check if already has active boost
+    const existingBoost = await this.prisma.profileBoost.findFirst({
+      where: {
+        userId,
+        isActive: true,
+        endsAt: { gt: new Date() },
+      },
+    });
+
+    if (existingBoost) {
+      throw new BadRequestException('Zaten aktif bir Boost mevcut');
+    }
+
+    const now = new Date();
+    const endsAt = new Date(now.getTime() + ProfilesService.BOOST_DURATION_MINUTES * 60 * 1000);
+
+    // Deduct Gold and create boost in transaction
+    const result = await this.prisma.$transaction(async (tx) => {
+      // Deduct Gold
+      const updatedUser = await tx.user.update({
+        where: { id: userId },
+        data: { goldBalance: { decrement: ProfilesService.BOOST_GOLD_COST } },
+        select: { goldBalance: true },
+      });
+
+      // Record transaction
+      await tx.goldTransaction.create({
+        data: {
+          userId,
+          type: 'PROFILE_BOOST',
+          amount: -ProfilesService.BOOST_GOLD_COST,
+          balance: updatedUser.goldBalance,
+          description: `Profil Boost - ${ProfilesService.BOOST_DURATION_MINUTES} dakika`,
+        },
+      });
+
+      // Create boost record
+      const boost = await tx.profileBoost.create({
+        data: {
+          userId,
+          endsAt,
+          goldSpent: ProfilesService.BOOST_GOLD_COST,
+        },
+      });
+
+      return { boost, goldBalance: updatedUser.goldBalance };
+    });
+
+    return {
+      success: true,
+      endsAt: result.boost.endsAt.toISOString(),
+      goldDeducted: ProfilesService.BOOST_GOLD_COST,
+      goldBalance: result.goldBalance,
+    };
+  }
+
+  // ─── Login Streak ────────────────────────────────────────────
+
+  /** Streak milestone thresholds and Gold rewards */
+  private static readonly STREAK_REWARDS: Array<{
+    days: number;
+    gold: number;
+    name: string;
+  }> = [
+    { days: 3, gold: 5, name: '3 Gün' },
+    { days: 7, gold: 10, name: '1 Hafta' },
+    { days: 14, gold: 20, name: '2 Hafta' },
+    { days: 30, gold: 50, name: '1 Ay' },
+    { days: 60, gold: 100, name: '2 Ay' },
+    { days: 100, gold: 200, name: '100 Gün' },
+  ];
+
+  /** Record daily login and calculate streak + rewards */
+  async recordLoginStreak(userId: string) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Get or create streak record
+    let streak = await this.prisma.loginStreak.findUnique({
+      where: { userId },
+    });
+
+    if (!streak) {
+      // First login ever
+      streak = await this.prisma.loginStreak.create({
+        data: {
+          userId,
+          currentStreak: 1,
+          longestStreak: 1,
+          lastLoginDate: today,
+          totalGoldEarned: 0,
+        },
+      });
+
+      return {
+        currentStreak: 1,
+        longestStreak: 1,
+        goldAwarded: 0,
+        milestoneReached: false,
+      };
+    }
+
+    // Already logged in today
+    const lastLogin = new Date(streak.lastLoginDate);
+    lastLogin.setHours(0, 0, 0, 0);
+
+    if (lastLogin.getTime() === today.getTime()) {
+      return {
+        currentStreak: streak.currentStreak,
+        longestStreak: streak.longestStreak,
+        goldAwarded: 0,
+        milestoneReached: false,
+      };
+    }
+
+    // Calculate new streak
+    let newStreak: number;
+    if (lastLogin.getTime() === yesterday.getTime()) {
+      // Consecutive day — increment streak
+      newStreak = streak.currentStreak + 1;
+    } else {
+      // Streak broken — reset to 1
+      newStreak = 1;
+    }
+
+    const newLongest = Math.max(streak.longestStreak, newStreak);
+
+    // Check for milestone rewards
+    let goldAwarded = 0;
+    let milestoneReached = false;
+    let milestoneName: string | undefined;
+
+    for (const reward of ProfilesService.STREAK_REWARDS) {
+      if (newStreak === reward.days) {
+        goldAwarded = reward.gold;
+        milestoneReached = true;
+        milestoneName = reward.name;
+        break;
+      }
+    }
+
+    // Update streak and award Gold in transaction
+    await this.prisma.$transaction(async (tx) => {
+      await tx.loginStreak.update({
+        where: { userId },
+        data: {
+          currentStreak: newStreak,
+          longestStreak: newLongest,
+          lastLoginDate: today,
+          totalGoldEarned: { increment: goldAwarded },
+        },
+      });
+
+      if (goldAwarded > 0) {
+        const updatedUser = await tx.user.update({
+          where: { id: userId },
+          data: { goldBalance: { increment: goldAwarded } },
+          select: { goldBalance: true },
+        });
+
+        await tx.goldTransaction.create({
+          data: {
+            userId,
+            type: 'STREAK_REWARD',
+            amount: goldAwarded,
+            balance: updatedUser.goldBalance,
+            description: `Giris serisi odulu - ${milestoneName}`,
+          },
+        });
+      }
+    });
+
+    return {
+      currentStreak: newStreak,
+      longestStreak: newLongest,
+      goldAwarded,
+      milestoneReached,
+      ...(milestoneName ? { milestoneName } : {}),
+    };
+  }
 }

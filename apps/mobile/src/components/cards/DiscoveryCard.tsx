@@ -1,4 +1,4 @@
-// DiscoveryCard — Photo (60%) + Info Panel (40%) layout
+// DiscoveryCard — Photo (62%) + Info Panel (38%) layout
 // No gesture handling — parent manages swipe + tap
 
 import React from 'react';
@@ -33,7 +33,6 @@ export interface DiscoveryCardProfile {
   earnedBadges: string[];
   feedScore: number;
   interestTags: string[];
-  compatExplanation: string | null;
 }
 
 interface DiscoveryCardProps {
@@ -83,12 +82,12 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
 
   // Interest tags: show up to 3, plus "+N" overflow
   const allTags = profile.interestTags ?? [];
-  const visibleTags = allTags.slice(0, 3);
-  const remainingCount = Math.max(0, allTags.length - 3);
+  const visibleTags = allTags.slice(0, 2);
+  const remainingCount = Math.max(0, allTags.length - 2);
 
   return (
     <View style={styles.cardRoot}>
-      {/* ── Photo section — 60% ── */}
+      {/* ── Photo section — 62% ── */}
       <View style={styles.photoSection}>
         {profile.photoUrl ? (
           <Image
@@ -120,7 +119,7 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
         />
       </View>
 
-      {/* ── Info panel — 40%, 7 rows ── */}
+      {/* ── Info panel — 38%, 6 rows ── */}
       <View style={styles.infoPanel}>
         {/* Row 1: Name + Age */}
         <Text style={styles.nameAge} numberOfLines={1}>
@@ -150,7 +149,7 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
           </Text>
         )}
 
-        {/* Row 5: Interest Tags (max 3 + "+N") */}
+        {/* Row 5: Interest Tags (max 2 + "+N") */}
         {visibleTags.length > 0 && (
           <View style={styles.tagsRow}>
             {visibleTags.map((tagId) => (
@@ -171,7 +170,7 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
           </View>
         )}
 
-        {/* Row 6+7: Compatibility Area (tappable) */}
+        {/* Row 6: Compatibility Score (tappable) */}
         {profile.compatibility && (
           <Pressable
             style={styles.compatArea}
@@ -182,11 +181,6 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
             <Text style={[styles.compatScore, isSuper && styles.compatScoreSuper]}>
               %{compatScore} Uyum
             </Text>
-            {profile.compatExplanation && (
-              <Text style={styles.compatExplanation} numberOfLines={1}>
-                {profile.compatExplanation}
-              </Text>
-            )}
           </Pressable>
         )}
       </View>
@@ -202,7 +196,7 @@ export const DiscoveryCard = React.memo(DiscoveryCardInner, (prevProps, nextProp
 
 // ─── Styles ───────────────────────────────────────────────────
 
-const PHOTO_RATIO = 0.60;
+const PHOTO_RATIO = 0.62;
 
 const styles = StyleSheet.create({
   cardRoot: {
@@ -212,7 +206,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0D0D18',
   },
 
-  // ── Photo section — 60% ──
+  // ── Photo section — 62% ──
   photoSection: {
     flex: PHOTO_RATIO,
     position: 'relative',
@@ -260,15 +254,15 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.bold,
   },
 
-  // ── Info panel — 40%, 7 rows ──
+  // ── Info panel — 38%, 6 rows ──
   infoPanel: {
     flex: 1 - PHOTO_RATIO,
     backgroundColor: '#0D0D18',
     paddingHorizontal: spacing.md + 2,
     paddingTop: 4,
-    paddingBottom: 6,
+    paddingBottom: 4,
     justifyContent: 'flex-start',
-    gap: 4,
+    gap: 3,
   },
 
   // ── Row 1: Name + Age ──
@@ -283,7 +277,7 @@ const styles = StyleSheet.create({
   locationText: {
     fontSize: 13,
     fontWeight: fontWeights.regular,
-    color: '#B0B0C0',
+    color: '#C0C0D0',
   },
 
   // ── Row 3: Intention Badge ──
@@ -303,7 +297,7 @@ const styles = StyleSheet.create({
   bioText: {
     fontSize: 13,
     fontWeight: fontWeights.regular,
-    color: '#B0B0C0',
+    color: '#C0C0D0',
     lineHeight: 18,
   },
 
@@ -347,7 +341,7 @@ const styles = StyleSheet.create({
     color: palette.purple[300],
   },
 
-  // ── Row 6+7: Compatibility Area ──
+  // ── Row 6: Compatibility Area ──
   compatArea: {
     marginTop: 2,
     gap: 1,
@@ -359,12 +353,5 @@ const styles = StyleSheet.create({
   },
   compatScoreSuper: {
     color: palette.gold[300],
-  },
-  compatExplanation: {
-    fontSize: 12,
-    fontWeight: fontWeights.regular,
-    color: '#B0B0C0',
-    lineHeight: 16,
-    opacity: 0.9,
   },
 });

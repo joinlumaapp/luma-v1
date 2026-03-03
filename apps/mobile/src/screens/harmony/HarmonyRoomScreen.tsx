@@ -1326,14 +1326,19 @@ export const HarmonyRoomScreen: React.FC = () => {
   if (!activeSession) {
     return (
       <View style={[styles.container, styles.loadingContainer, { paddingTop: insets.top }]}>
-        <Text style={{ fontSize: 40, marginBottom: spacing.md }}>{'~'}</Text>
-        <Text style={styles.loadingText}>Uyum Odasi bulunamadi</Text>
+        <Text style={{ fontSize: 48, marginBottom: spacing.md }}>{'\u{1F54A}'}</Text>
+        <Text style={styles.loadingText}>Henüz aktif Uyum Odası yok</Text>
+        <Text style={{ ...typography.bodySmall, color: colors.textSecondary, textAlign: 'center', marginTop: spacing.sm, paddingHorizontal: spacing.xl }}>
+          Eşleşmelerinizden Uyum Odası başlatın ve birbirinizi keşfetmeye başlayın.
+        </Text>
         <TouchableOpacity
           style={{ marginTop: spacing.lg, backgroundColor: colors.primary, borderRadius: borderRadius.lg, paddingHorizontal: spacing.xl, paddingVertical: spacing.md }}
           onPress={() => navigation.goBack()}
           activeOpacity={0.85}
+          accessibilityLabel="Geri dön"
+          accessibilityRole="button"
         >
-          <Text style={{ ...typography.button, color: colors.text }}>Geri Don</Text>
+          <Text style={{ ...typography.button, color: colors.text }}>Eşleşmelere Dön</Text>
         </TouchableOpacity>
       </View>
     );

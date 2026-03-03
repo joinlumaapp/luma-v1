@@ -44,6 +44,9 @@ import { MoodSelector } from './MoodSelector';
 import { MatchAnimation } from '../../components/animations/MatchAnimation';
 import { DiscoveryCard } from '../../components/cards/DiscoveryCard';
 import { CompatibilityBottomSheet } from '../../components/discovery/CompatibilityBottomSheet';
+import { discoveryService } from '../../services/discoveryService';
+import type { LoginStreakResponse } from '../../services/discoveryService';
+import { StreakBanner } from '../../components/streak/StreakBanner';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
@@ -217,6 +220,26 @@ export const DiscoveryScreen: React.FC = () => {
     moodOpacity.value = withTiming(1, { duration: 200 });
     setMoodCollapsed(false);
   }, [moodHeight, moodOpacity]);
+
+  // ─── Login streak state ─────────────────────────────────
+  const [streakData, setStreakData] = useState<LoginStreakResponse | null>(null);
+  const streakRecorded = useRef(false);
+
+  useEffect(() => {
+    if (streakRecorded.current) return;
+    streakRecorded.current = true;
+    discoveryService.recordLogin().then((data) => {
+      if (data.goldAwarded > 0) {
+        setStreakData(data);
+      }
+    }).catch(() => {
+      // Non-blocking — streak is not critical
+    });
+  }, []);
+
+  const handleStreakDismiss = useCallback(() => {
+    setStreakData(null);
+  }, []);
 
   // ─── Time-based greeting ──────────────────────────────────
   const greeting = useMemo(() => {
@@ -617,7 +640,7 @@ export const DiscoveryScreen: React.FC = () => {
                   styles.moodChip,
                   {
                     borderColor: selectedMoodOption.color,
-                    backgroundColor: `${selectedMoodOption.color}20`,
+                    backgroundColor: `${selectedMoodOption.color}15`,
                   },
                 ]}
               >
@@ -628,6 +651,26 @@ export const DiscoveryScreen: React.FC = () => {
               </View>
             </TouchableOpacity>
           )}
+          <Pressable
+            onPress={() => navigation.navigate('LikesYou')}
+            accessibilityLabel="Seni beğenenler"
+            accessibilityRole="button"
+            accessibilityHint="Seni beğenen profilleri görmek için dokunun"
+          >
+            <View style={styles.headerIconButton} testID="discovery-likes-btn">
+              <Text style={styles.headerIconText}>{'\u2665'}</Text>
+            </View>
+          </Pressable>
+          <Pressable
+            onPress={() => navigation.navigate('DailyPicks')}
+            accessibilityLabel="Günün seçkileri"
+            accessibilityRole="button"
+            accessibilityHint="Günün özel seçkilerini görmek için dokunun"
+          >
+            <View style={styles.headerIconButton} testID="discovery-picks-btn">
+              <Text style={styles.headerIconText}>{'\u2606'}</Text>
+            </View>
+          </Pressable>
           <Pressable
             onPress={() => navigation.navigate('Filter')}
             accessibilityLabel="Filtreleri aç"
@@ -674,7 +717,6 @@ export const DiscoveryScreen: React.FC = () => {
                 earnedBadges: nextCard.earnedBadges ?? [],
                 feedScore: 0,
                 interestTags: nextCard.interestTags ?? [],
-                compatExplanation: nextCard.compatExplanation ?? null,
               }}
               onCompatTap={handleCompatTap}
             />
@@ -711,7 +753,6 @@ export const DiscoveryScreen: React.FC = () => {
                 earnedBadges: currentCard.earnedBadges ?? [],
                 feedScore: 0,
                 interestTags: currentCard.interestTags ?? [],
-                compatExplanation: currentCard.compatExplanation ?? null,
               }}
               onCompatTap={handleCompatTap}
             />
@@ -801,6 +842,17 @@ export const DiscoveryScreen: React.FC = () => {
         targetUserId={compatSheetUserId}
         onClose={handleCompatClose}
       />
+
+      {/* Login streak banner */}
+      {streakData && (
+        <StreakBanner
+          streak={streakData.currentStreak}
+          goldAwarded={streakData.goldAwarded}
+          milestoneReached={streakData.milestoneReached}
+          milestoneName={streakData.milestoneName}
+          onDismiss={handleStreakDismiss}
+        />
+      )}
     </View>
   );
 };
@@ -835,6 +887,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
+  },
+  headerIconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  headerIconText: {
+    fontSize: 16,
+    color: colors.textSecondary,
   },
   filterButton: {
     width: 40,
@@ -873,7 +939,8 @@ const styles = StyleSheet.create({
   cardStack: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: spacing.sm,
     paddingHorizontal: spacing.md,
   },
   card: {
@@ -921,7 +988,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.md,
     paddingBottom: Platform.OS === 'ios' ? spacing.xs : spacing.sm,
   },
   actions: {
@@ -1009,17 +1076,17 @@ const styles = StyleSheet.create({
   moodChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.sm + 2,
-    paddingVertical: spacing.xs + 1,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
     borderRadius: borderRadius.full,
-    borderWidth: 1.5,
+    borderWidth: 1,
   },
   moodChipEmoji: {
-    fontSize: 14,
-    marginRight: 4,
+    fontSize: 13,
+    marginRight: 3,
   },
   moodChipLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
   },
 });

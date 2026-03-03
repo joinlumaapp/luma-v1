@@ -802,6 +802,12 @@ export function seedDevData(): void {
       maxDistance: 50,
       intentionTags: [],
       genderPreference: 'all',
+      height: null,
+      education: [],
+      smoking: [],
+      drinking: [],
+      exercise: [],
+      zodiac: [],
     },
   });
 

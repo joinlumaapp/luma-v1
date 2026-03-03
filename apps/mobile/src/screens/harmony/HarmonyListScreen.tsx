@@ -19,6 +19,7 @@ import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 import { useHarmonyStore } from '../../stores/harmonyStore';
 import type { HarmonySession } from '../../stores/harmonyStore';
 import { useScreenTracking } from '../../hooks/useAnalytics';
+import { formatMatchActivity } from '../../utils/formatters';
 
 type HarmonyNavigationProp = NativeStackNavigationProp<HarmonyStackParamList, 'HarmonyList'>;
 
@@ -134,7 +135,7 @@ export const HarmonyListScreen: React.FC = () => {
 
         <View style={styles.sessionInfo}>
           <Text style={styles.matchName}>{item.matchName}</Text>
-          <Text style={styles.sessionTime}>{item.startedAt}</Text>
+          <Text style={styles.sessionTime}>{formatMatchActivity(item.startedAt)}</Text>
         </View>
 
         {/* Status badge */}

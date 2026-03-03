@@ -861,4 +861,303 @@ export class DiscoveryService {
     }
     return `${label} alaninda uyum (%${Math.round(topScore)})`;
   }
+
+  // ─── Likes You (Seni Beğenenler) ─────────────────────────────
+
+  /**
+   * Returns users who liked the current user but have not been matched yet.
+   * Free users see blurred results; Gold+ see clear profiles.
+   */
+  async getLikesYou(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { packageTier: true },
+    });
+
+    if (!user) throw new BadRequestException('Kullanıcı bulunamadı');
+
+    const isBlurred = user.packageTier === 'FREE';
+
+    // Get swipes where someone liked this user AND no match exists yet
+    const incomingLikes = await this.prisma.swipe.findMany({
+      where: {
+        targetId: userId,
+        action: { in: ['LIKE', 'SUPER_LIKE'] },
+        // Exclude users current user already swiped on
+        swiper: {
+          isActive: true,
+          deletedAt: null,
+          // Exclude blocked users
+          blocksReceived: { none: { blockerId: userId } },
+          blocksGiven: { none: { blockedId: userId } },
+        },
+        swiperId: {
+          notIn: await this.getSwipedUserIds(userId),
+        },
+      },
+      include: {
+        swiper: {
+          select: {
+            id: true,
+            profile: {
+              select: {
+                firstName: true,
+                birthDate: true,
+              },
+            },
+            photos: {
+              where: { isPrimary: true, isApproved: true },
+              select: { url: true, thumbnailUrl: true },
+              take: 1,
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+
+    // Batch-fetch compatibility scores
+    const likerIds = incomingLikes.map((s) => s.swiperId);
+    const compatScores = likerIds.length > 0
+      ? await this.prisma.compatibilityScore.findMany({
+          where: {
+            OR: likerIds.map((likerId) => {
+              const { first, second } = this.orderIds(userId, likerId);
+              return { userAId: first, userBId: second };
+            }),
+          },
+          select: { userAId: true, userBId: true, finalScore: true },
+        })
+      : [];
+
+    const compatMap = new Map<string, number>();
+    for (const s of compatScores) {
+      compatMap.set(`${s.userAId}_${s.userBId}`, s.finalScore);
+    }
+
+    const likes = incomingLikes.map((swipe) => {
+      const photo = swipe.swiper.photos[0];
+      const { first, second } = this.orderIds(userId, swipe.swiperId);
+      const score = compatMap.get(`${first}_${second}`) ?? 0;
+
+      return {
+        userId: swipe.swiperId,
+        firstName: swipe.swiper.profile?.firstName ?? '',
+        age: swipe.swiper.profile?.birthDate
+          ? this.calculateAge(swipe.swiper.profile.birthDate)
+          : 0,
+        photoUrl: photo?.thumbnailUrl ?? photo?.url ?? '',
+        compatibilityPercent: Math.round(score),
+        likedAt: swipe.createdAt.toISOString(),
+      };
+    });
+
+    return {
+      likes,
+      total: likes.length,
+      isBlurred,
+    };
+  }
+
+  /** Get IDs of users the current user has already swiped on */
+  private async getSwipedUserIds(userId: string): Promise<string[]> {
+    const swipes = await this.prisma.swipe.findMany({
+      where: { swiperId: userId },
+      select: { targetId: true },
+    });
+    return swipes.map((s) => s.targetId);
+  }
+
+  // ─── Daily Picks (Günün Seçkileri) ─────────────────────────
+
+  /** Number of daily picks per package tier */
+  private static readonly DAILY_PICK_COUNTS: Record<string, number> = {
+    FREE: 3,
+    GOLD: 10,
+    PRO: 10,
+    RESERVED: 10,
+  };
+
+  /**
+   * Returns daily curated high-compatibility profiles.
+   * Generates new picks at midnight, returns cached picks during the day.
+   */
+  async getDailyPicks(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { packageTier: true },
+    });
+
+    if (!user) throw new BadRequestException('Kullanıcı bulunamadı');
+
+    const today = this.getToday();
+    const totalAvailable = DiscoveryService.DAILY_PICK_COUNTS[user.packageTier] ?? 3;
+
+    // Check if picks already generated for today
+    const existingPicks = await this.prisma.dailyPick.findMany({
+      where: { userId, date: today },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    let pickUserIds: string[];
+
+    if (existingPicks.length > 0) {
+      pickUserIds = existingPicks.map((p) => p.pickedUserId);
+    } else {
+      // Generate new picks: top compatibility users not yet swiped
+      pickUserIds = await this.generateDailyPicks(userId, 10);
+
+      // Store picks
+      if (pickUserIds.length > 0) {
+        await this.prisma.dailyPick.createMany({
+          data: pickUserIds.map((pickedUserId) => ({
+            userId,
+            pickedUserId,
+            date: today,
+          })),
+        });
+      }
+    }
+
+    // Fetch profile data for picked users
+    const pickedUsers = pickUserIds.length > 0
+      ? await this.prisma.userProfile.findMany({
+          where: { userId: { in: pickUserIds } },
+          select: {
+            userId: true,
+            firstName: true,
+            birthDate: true,
+            city: true,
+            bio: true,
+            intentionTag: true,
+            user: {
+              select: {
+                photos: {
+                  where: { isPrimary: true, isApproved: true },
+                  select: { url: true, thumbnailUrl: true },
+                  take: 1,
+                },
+              },
+            },
+          },
+        })
+      : [];
+
+    // Batch compatibility scores
+    const compatScores = pickUserIds.length > 0
+      ? await this.prisma.compatibilityScore.findMany({
+          where: {
+            OR: pickUserIds.map((pid) => {
+              const { first, second } = this.orderIds(userId, pid);
+              return { userAId: first, userBId: second };
+            }),
+          },
+          select: { userAId: true, userBId: true, finalScore: true, dimensionScores: true },
+        })
+      : [];
+
+    const compatMap = new Map<string, { finalScore: number; dimensionScores: Record<string, number> | null }>();
+    for (const s of compatScores) {
+      compatMap.set(`${s.userAId}_${s.userBId}`, {
+        finalScore: s.finalScore,
+        dimensionScores: s.dimensionScores as Record<string, number> | null,
+      });
+    }
+
+    // Map viewed status from existing picks
+    const viewedSet = new Set(
+      existingPicks.filter((p) => p.isViewed).map((p) => p.pickedUserId),
+    );
+
+    const profileMap = new Map(pickedUsers.map((p) => [p.userId, p]));
+
+    const picks = pickUserIds
+      .slice(0, totalAvailable)
+      .map((pickedUserId) => {
+        const profile = profileMap.get(pickedUserId);
+        if (!profile) return null;
+
+        const photo = profile.user.photos[0];
+        const { first, second } = this.orderIds(userId, pickedUserId);
+        const compat = compatMap.get(`${first}_${second}`);
+        const explanation = this.buildCompatExplanation(compat?.dimensionScores ?? null);
+
+        return {
+          userId: pickedUserId,
+          firstName: profile.firstName,
+          age: this.calculateAge(profile.birthDate),
+          city: profile.city ?? '',
+          bio: profile.bio ?? '',
+          photoUrl: photo?.thumbnailUrl ?? photo?.url ?? '',
+          compatibilityPercent: Math.round(compat?.finalScore ?? 0),
+          compatExplanation: explanation,
+          intentionTag: profile.intentionTag,
+          isViewed: viewedSet.has(pickedUserId),
+        };
+      })
+      .filter(Boolean);
+
+    // Calculate next refresh time (midnight)
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    return {
+      picks,
+      refreshesAt: tomorrow.toISOString(),
+      totalAvailable,
+    };
+  }
+
+  /** Generate top compatibility picks for a user */
+  private async generateDailyPicks(userId: string, count: number): Promise<string[]> {
+    const swipedIds = await this.getSwipedUserIds(userId);
+    const excludeIds = new Set([userId, ...swipedIds]);
+
+    // Get top compatibility scores where user hasn't swiped yet
+    const topScores = await this.prisma.compatibilityScore.findMany({
+      where: {
+        OR: [
+          { userAId: userId, userBId: { notIn: [...excludeIds] } },
+          { userBId: userId, userAId: { notIn: [...excludeIds] } },
+        ],
+      },
+      orderBy: { finalScore: 'desc' },
+      take: count * 2, // fetch extra to filter inactive
+      select: { userAId: true, userBId: true, finalScore: true },
+    });
+
+    // Extract partner IDs, verify they are active
+    const partnerIds = topScores.map((s) =>
+      s.userAId === userId ? s.userBId : s.userAId,
+    );
+
+    if (partnerIds.length === 0) return [];
+
+    const activeUsers = await this.prisma.user.findMany({
+      where: {
+        id: { in: partnerIds },
+        isActive: true,
+        deletedAt: null,
+        profile: { isComplete: true },
+      },
+      select: { id: true },
+    });
+
+    const activeSet = new Set(activeUsers.map((u) => u.id));
+
+    return partnerIds.filter((id) => activeSet.has(id)).slice(0, count);
+  }
+
+  /** Mark a daily pick as viewed */
+  async markDailyPickViewed(userId: string, pickedUserId: string) {
+    const today = this.getToday();
+
+    await this.prisma.dailyPick.updateMany({
+      where: { userId, pickedUserId, date: today },
+      data: { isViewed: true },
+    });
+
+    return { success: true };
+  }
 }

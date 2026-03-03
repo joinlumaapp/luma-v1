@@ -14,6 +14,8 @@ interface ImageMessageProps {
   isMine: boolean;
   timestamp: string;
   status: MessageStatusType;
+  /** Whether to show the inline delivery status (defaults to true for backwards compat) */
+  showStatus?: boolean;
   onPress: () => void;
 }
 
@@ -31,6 +33,7 @@ export const ImageMessage: React.FC<ImageMessageProps> = ({
   isMine,
   timestamp,
   status,
+  showStatus = true,
   onPress,
 }) => {
   return (
@@ -56,7 +59,7 @@ export const ImageMessage: React.FC<ImageMessageProps> = ({
         >
           {formatMessageTime(timestamp)}
         </Text>
-        {isMine && <MessageStatus status={status} />}
+        {isMine && showStatus && <MessageStatus status={status} />}
       </View>
     </TouchableOpacity>
   );

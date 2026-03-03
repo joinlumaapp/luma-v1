@@ -2,7 +2,9 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Body,
+  Param,
   Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
@@ -47,5 +49,30 @@ export class DiscoveryController {
     @CurrentUser('sub') userId: string,
   ) {
     return this.discoveryService.undoSwipe(userId);
+  }
+
+  // ── Likes You (Seni Beğenenler) ─────────────────────────────
+
+  @Get('likes-you')
+  @ApiOperation({ summary: 'Get users who liked you (blurred for Free, clear for Gold+)' })
+  async getLikesYou(@CurrentUser('sub') userId: string) {
+    return this.discoveryService.getLikesYou(userId);
+  }
+
+  // ── Daily Picks (Günün Seçkileri) ───────────────────────────
+
+  @Get('daily-picks')
+  @ApiOperation({ summary: 'Get 10 daily curated high-compatibility profiles' })
+  async getDailyPicks(@CurrentUser('sub') userId: string) {
+    return this.discoveryService.getDailyPicks(userId);
+  }
+
+  @Patch('daily-picks/:pickedUserId/view')
+  @ApiOperation({ summary: 'Mark a daily pick as viewed' })
+  async markDailyPickViewed(
+    @CurrentUser('sub') userId: string,
+    @Param('pickedUserId') pickedUserId: string,
+  ) {
+    return this.discoveryService.markDailyPickViewed(userId, pickedUserId);
   }
 }

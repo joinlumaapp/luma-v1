@@ -32,6 +32,7 @@ interface ChatState {
   setTyping: (matchId: string, isTyping: boolean) => void;
   updateLastMessage: (matchId: string, content: string, timestamp: string) => void;
   toggleReaction: (matchId: string, messageId: string, emoji: ReactionEmoji) => Promise<void>;
+  updateMessageStatus: (matchId: string, messageId: string, status: 'SENT' | 'DELIVERED' | 'READ', readAt?: string) => void;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -300,5 +301,26 @@ export const useChatStore = create<ChatState>((set, get) => ({
     } catch {
       // Handle error silently
     }
+  },
+
+  updateMessageStatus: (matchId, messageId, status, readAt) => {
+    set((state) => {
+      const matchMessages = state.messages[matchId] ?? [];
+      const updatedMessages = matchMessages.map((msg) => {
+        if (msg.id !== messageId) return msg;
+        return {
+          ...msg,
+          status,
+          ...(readAt ? { readAt, isRead: true } : {}),
+        };
+      });
+
+      return {
+        messages: {
+          ...state.messages,
+          [matchId]: updatedMessages,
+        },
+      };
+    });
   },
 }));

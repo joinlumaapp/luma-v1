@@ -69,6 +69,9 @@ model User {
   notificationPreference NotificationPreference?
   dailyQuestionAnswers   DailyQuestionAnswer[]
   icebreakerAnswers      IcebreakerAnswer[]
+  profilePrompts         ProfilePrompt[]
+  profileBoosts          ProfileBoost[]
+  loginStreak            LoginStreak?
 
   @@map("users")
 }
@@ -165,6 +168,14 @@ model UserProfile {
   // Voice intro
   voiceIntroUrl      String?  @map("voice_intro_url")
   voiceIntroDuration Float?   @map("voice_intro_duration")
+  // Advanced profile fields (for filters)
+  height         Int?            // cm (150-220)
+  education      String?         @db.VarChar(50)   // lise, universite, yuksek_lisans, doktora
+  smoking        String?         @db.VarChar(20)   // iciyor, icmiyor, bazen
+  drinking       String?         @db.VarChar(20)   // iciyor, icmiyor, sosyal
+  exercise       String?         @db.VarChar(20)   // aktif, bazen, nadiren
+  zodiacSign     String?         @map("zodiac_sign") @db.VarChar(20)
+  religion       String?         @db.VarChar(50)
   createdAt     DateTime     @default(now()) @map("created_at")
   updatedAt     DateTime     @updatedAt @map("updated_at")
 
@@ -783,6 +794,8 @@ enum GoldTransactionType {
   HARMONY_EXTENSION
   PROFILE_BOOST
   SUPER_LIKE
+  STREAK_REWARD
+  DAILY_LOGIN
 }
 
 // ============================================================
@@ -1014,4 +1027,84 @@ model IcebreakerAnswer {
   @@unique([sessionId, userId, questionId])
   @@index([sessionId])
   @@map("icebreaker_answers")
+}
+
+// ============================================================
+// SUBSYSTEM: Profile Prompts (Hinge-style)
+// 3 question-answer pairs per user profile
+// ============================================================
+
+model ProfilePrompt {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  question   String   @db.VarChar(200)
+  answer     String   @db.VarChar(300)
+  order      Int      @default(0) // 0, 1, 2
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, order]) // max 3 prompts per user (order 0,1,2)
+  @@index([userId])
+  @@map("profile_prompts")
+}
+
+// ============================================================
+// SUBSYSTEM: Profile Boost
+// 30-minute visibility boost, costs Gold
+// ============================================================
+
+model ProfileBoost {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  startedAt DateTime @default(now()) @map("started_at")
+  endsAt    DateTime @map("ends_at")
+  goldSpent Int      @map("gold_spent")
+  isActive  Boolean  @default(true) @map("is_active")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isActive])
+  @@index([endsAt]) // Cleanup: deactivate expired boosts
+  @@map("profile_boosts")
+}
+
+// ============================================================
+// SUBSYSTEM: Login Streak & Daily Rewards
+// Track consecutive daily logins, award Gold at milestones
+// ============================================================
+
+model LoginStreak {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @unique @map("user_id") @db.Uuid
+  currentStreak  Int      @default(1) @map("current_streak")
+  longestStreak  Int      @default(1) @map("longest_streak")
+  lastLoginDate  DateTime @map("last_login_date") @db.Date
+  totalGoldEarned Int     @default(0) @map("total_gold_earned")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("login_streaks")
+}
+
+// ============================================================
+// SUBSYSTEM: Daily Picks (Curated profiles)
+// 10 daily algorithmically selected high-compatibility profiles
+// ============================================================
+
+model DailyPick {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  pickedUserId String   @map("picked_user_id") @db.Uuid
+  date         DateTime @db.Date
+  isViewed     Boolean  @default(false) @map("is_viewed")
+  isLiked      Boolean  @default(false) @map("is_liked")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, pickedUserId, date]) // same pick can't appear twice on same day
+  @@index([userId, date])
+  @@map("daily_picks")
 }
