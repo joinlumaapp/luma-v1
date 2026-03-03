@@ -39,7 +39,7 @@ interface MatchAnimationProps {
 }
 
 // ── Confetti particle config ──────────────────────────────────
-const PARTICLE_COUNT = 18;
+const PARTICLE_COUNT = 12;
 
 interface ParticleConfig {
   startX: number;
@@ -167,53 +167,53 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
       // 1. Blur overlay fades in
       Animated.timing(overlayOpacity, {
         toValue: 1,
-        duration: 250,
+        duration: 150,
         useNativeDriver: true,
       }),
       // 2. Card + confetti + initials
       Animated.parallel([
         Animated.spring(cardScale, {
           toValue: 1,
-          tension: 50,
-          friction: 7,
+          tension: 120,
+          friction: 8,
           useNativeDriver: true,
         }),
         Animated.timing(cardOpacity, {
           toValue: 1,
-          duration: 300,
+          duration: 180,
           useNativeDriver: true,
         }),
         Animated.spring(initialsScale, {
           toValue: 1,
-          tension: 60,
-          friction: 5,
-          delay: 200,
+          tension: 120,
+          friction: 8,
+          delay: 100,
           useNativeDriver: true,
         }),
         // Confetti fall
         Animated.timing(confettiProgress, {
           toValue: 1,
-          duration: 2800,
+          duration: 1500,
           useNativeDriver: true,
         }),
       ]),
       // 3. Title scale-up
       Animated.spring(titleScale, {
         toValue: 1,
-        tension: 80,
-        friction: 6,
+        tension: 120,
+        friction: 8,
         useNativeDriver: true,
       }),
       // 4. Buttons slide up
       Animated.parallel([
         Animated.timing(buttonSlide, {
           toValue: 0,
-          duration: 300,
+          duration: 200,
           useNativeDriver: true,
         }),
         Animated.timing(buttonOpacity, {
           toValue: 1,
-          duration: 300,
+          duration: 200,
           useNativeDriver: true,
         }),
       ]),

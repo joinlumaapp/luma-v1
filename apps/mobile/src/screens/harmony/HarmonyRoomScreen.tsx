@@ -859,7 +859,7 @@ export const HarmonyRoomScreen: React.FC = () => {
   const handleLeaveRoom = useCallback(() => {
     Alert.alert(
       'Odadan Ayrıl',
-      'Harmony Room\'dan ayrılmak istediğinden emin misin?',
+      'Uyum Odası\'ndan ayrılmak istediğinden emin misin?',
       [
         { text: 'Kal', style: 'cancel' },
         {
@@ -926,13 +926,29 @@ export const HarmonyRoomScreen: React.FC = () => {
     </View>
   );
 
-  // ─── Loading State ─────────────────────────────────────────────
+  // ─── Loading / Error State ──────────────────────────────────────
 
-  if (isLoading || !activeSession) {
+  if (isLoading) {
     return (
       <View style={[styles.container, styles.loadingContainer, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Harmony Room yukleniyor...</Text>
+        <Text style={styles.loadingText}>Uyum Odası yükleniyor...</Text>
+      </View>
+    );
+  }
+
+  if (!activeSession) {
+    return (
+      <View style={[styles.container, styles.loadingContainer, { paddingTop: insets.top }]}>
+        <Text style={{ fontSize: 40, marginBottom: spacing.md }}>{'~'}</Text>
+        <Text style={styles.loadingText}>Uyum Odası bulunamadı</Text>
+        <TouchableOpacity
+          style={{ marginTop: spacing.lg, backgroundColor: colors.primary, borderRadius: borderRadius.lg, paddingHorizontal: spacing.xl, paddingVertical: spacing.md }}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.85}
+        >
+          <Text style={{ ...typography.button, color: colors.text }}>Geri Dön</Text>
+        </TouchableOpacity>
       </View>
     );
   }

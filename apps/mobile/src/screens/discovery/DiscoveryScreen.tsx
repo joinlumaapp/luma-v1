@@ -8,6 +8,7 @@ import {
   View,
   Text,
   Pressable,
+  TouchableOpacity,
   StyleSheet,
   Dimensions,
   Platform,
@@ -37,6 +38,7 @@ import type {
 } from '../../navigation/types';
 import { useDiscoveryStore } from '../../stores/discoveryStore';
 import { useProfileStore } from '../../stores/profileStore';
+import { useMoodStore, MOOD_OPTIONS } from '../../stores/moodStore';
 import { matchService } from '../../services/matchService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { MoodSelector } from './MoodSelector';
@@ -64,19 +66,19 @@ type DiscoveryNavProp = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabParamList>
 >;
 
-// ─── Action Button component — premium gradient-filled circles ──
+// ─── Action Button component — bare icon style with glow ──
 
 const ActionButton: React.FC<{
   icon: string;
-  size: number;
-  onPress: () => void;
-  gradientColors: readonly string[];
+  iconSize: number;
+  iconColor: string;
   glowColor: string;
+  onPress: () => void;
   hapticStyle?: Haptics.ImpactFeedbackStyle;
   testID: string;
   accessibilityLabel: string;
   accessibilityHint: string;
-}> = ({ icon, size, onPress, gradientColors, glowColor, hapticStyle, testID, accessibilityLabel, accessibilityHint }) => {
+}> = ({ icon, iconSize, iconColor, glowColor, onPress, hapticStyle, testID, accessibilityLabel, accessibilityHint }) => {
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -109,33 +111,32 @@ const ActionButton: React.FC<{
         testID={testID}
         style={[
           styles.actionBtn,
-          {
-            width: size,
-            height: size,
-            borderRadius: size / 2,
-          },
           Platform.select({
             ios: {
               shadowColor: glowColor,
-              shadowOffset: { width: 0, height: 4 },
+              shadowOffset: { width: 0, height: 0 },
               shadowOpacity: 0.5,
               shadowRadius: 12,
             },
-            android: { elevation: 8 },
+            android: {},
           }),
           animatedStyle,
         ]}
       >
-        <LinearGradient
-          colors={gradientColors as [string, string, ...string[]]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[styles.actionBtnGradient, { borderRadius: size / 2 }]}
+        <Text
+          style={[
+            styles.actionBtnIcon,
+            {
+              fontSize: iconSize,
+              color: iconColor,
+              textShadowColor: glowColor,
+              textShadowOffset: { width: 0, height: 0 },
+              textShadowRadius: iconSize >= 42 ? 16 : 12,
+            },
+          ]}
         >
-          <Text style={[styles.actionBtnIcon, { fontSize: size * 0.38 }]}>
-            {icon}
-          </Text>
-        </LinearGradient>
+          {icon}
+        </Text>
       </Animated.View>
     </Pressable>
   );
@@ -164,6 +165,41 @@ export const DiscoveryScreen: React.FC = () => {
   const canUndo = useDiscoveryStore((s) => s.canUndo);
   const undoLastSwipe = useDiscoveryStore((s) => s.undoLastSwipe);
   const showSuperLikeGlow = useDiscoveryStore((s) => s.showSuperLikeGlow);
+
+  // Mood store — for collapsed chip display
+  const currentMood = useMoodStore((s) => s.currentMood);
+  const isMoodExpired = useMoodStore((s) => s.isMoodExpired);
+  const selectedMoodOption = currentMood ? MOOD_OPTIONS.find((m) => m.type === currentMood) : undefined;
+  const hasMoodActive = !!currentMood && !isMoodExpired();
+
+  // ─── Mood collapse state ──────────────────────────────────
+  const [moodCollapsed, setMoodCollapsed] = useState(false);
+  const moodHeight = useSharedValue(1); // 1 = full height, 0 = collapsed
+  const moodOpacity = useSharedValue(1);
+
+  const moodWrapperStyle = useAnimatedStyle(() => ({
+    maxHeight: interpolate(moodHeight.value, [0, 1], [0, 200]),
+    opacity: moodOpacity.value,
+    overflow: 'hidden' as const,
+  }));
+
+  // When a mood is selected, collapse the selector
+  const prevMoodRef = useRef(currentMood);
+  useEffect(() => {
+    if (currentMood && currentMood !== prevMoodRef.current && !isMoodExpired()) {
+      moodHeight.value = withTiming(0, { duration: 300 });
+      moodOpacity.value = withTiming(0, { duration: 200 });
+      setMoodCollapsed(true);
+    }
+    prevMoodRef.current = currentMood;
+  }, [currentMood, isMoodExpired, moodHeight, moodOpacity]);
+
+  // Expand mood selector
+  const expandMoodSelector = useCallback(() => {
+    moodHeight.value = withTiming(1, { duration: 300 });
+    moodOpacity.value = withTiming(1, { duration: 200 });
+    setMoodCollapsed(false);
+  }, [moodHeight, moodOpacity]);
 
   // ─── Time-based greeting ──────────────────────────────────
   const greeting = useMemo(() => {
@@ -630,6 +666,31 @@ export const DiscoveryScreen: React.FC = () => {
           </Text>
         </View>
         <View style={styles.headerRight}>
+          {/* Collapsed mood chip — shows selected mood when selector is hidden */}
+          {moodCollapsed && hasMoodActive && selectedMoodOption && (
+            <TouchableOpacity
+              onPress={expandMoodSelector}
+              activeOpacity={0.7}
+              accessibilityLabel={`Mod: ${selectedMoodOption.label}. Geni\u015Fletmek i\u00E7in dokunun`}
+              accessibilityRole="button"
+              accessibilityHint="Mod se\u00E7iciyi tekrar a\u00E7mak i\u00E7in dokunun"
+            >
+              <View
+                style={[
+                  styles.moodChip,
+                  {
+                    borderColor: selectedMoodOption.color,
+                    backgroundColor: `${selectedMoodOption.color}20`,
+                  },
+                ]}
+              >
+                <Text style={styles.moodChipEmoji}>{selectedMoodOption.emoji}</Text>
+                <Text style={[styles.moodChipLabel, { color: selectedMoodOption.color }]}>
+                  {selectedMoodOption.label}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          )}
           <Pressable
             onPress={() => navigation.navigate('Filter')}
             accessibilityLabel="Filtreleri a\u00E7"
@@ -646,10 +707,10 @@ export const DiscoveryScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* Mood selector — zIndex keeps it above card stack */}
-      <View style={styles.moodWrapper}>
+      {/* Mood selector — collapses after selection, zIndex keeps it above card stack */}
+      <Animated.View style={[styles.moodWrapper, moodWrapperStyle]}>
         <MoodSelector />
-      </View>
+      </Animated.View>
 
       {/* Card stack — overflow hidden prevents cards from covering mood selector */}
       <View style={styles.cardStack}>
@@ -761,13 +822,13 @@ export const DiscoveryScreen: React.FC = () => {
           </Pressable>
         </Animated.View>
 
-        {/* Main action buttons — premium gradient filled */}
+        {/* Main action buttons — bare icons with glow */}
         <View style={styles.actions}>
           <ActionButton
             icon={'\u2715'}
-            gradientColors={['#FF6B6B', '#EF4444']}
-            glowColor="#EF4444"
-            size={62}
+            iconSize={42}
+            iconColor="#EF4444"
+            glowColor="rgba(239,68,68,0.6)"
             hapticStyle={Haptics.ImpactFeedbackStyle.Light}
             onPress={handlePassPress}
             testID="discovery-pass-btn"
@@ -776,9 +837,9 @@ export const DiscoveryScreen: React.FC = () => {
           />
           <ActionButton
             icon={'\u2605'}
-            gradientColors={[palette.gold[400], palette.gold[600]]}
-            glowColor={palette.gold[400]}
-            size={50}
+            iconSize={34}
+            iconColor={palette.gold[400]}
+            glowColor="rgba(251,191,36,0.6)"
             hapticStyle={Haptics.ImpactFeedbackStyle.Heavy}
             onPress={handleSuperLikePress}
             testID="discovery-superlike-btn"
@@ -787,9 +848,9 @@ export const DiscoveryScreen: React.FC = () => {
           />
           <ActionButton
             icon={'\u2665'}
-            gradientColors={['#9B6BF8', '#EC4899']}
-            glowColor="#9B6BF8"
-            size={62}
+            iconSize={42}
+            iconColor="#9B6BF8"
+            glowColor="rgba(155,107,248,0.6)"
             hapticStyle={Haptics.ImpactFeedbackStyle.Medium}
             onPress={handleLikePress}
             testID="discovery-like-btn"
@@ -964,22 +1025,13 @@ const styles = StyleSheet.create({
     gap: spacing.xl,
   },
   actionBtn: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  actionBtnGradient: {
-    flex: 1,
-    width: '100%',
+    width: 60,
+    height: 60,
     justifyContent: 'center',
     alignItems: 'center',
   },
   actionBtnIcon: {
     fontWeight: '700',
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
   },
 
   // ── Undo Button ──
@@ -1050,5 +1102,23 @@ const styles = StyleSheet.create({
   refreshButtonText: {
     ...typography.button,
     color: colors.text,
+  },
+
+  // ── Collapsed Mood Chip (header) ──
+  moodChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs + 1,
+    borderRadius: borderRadius.full,
+    borderWidth: 1.5,
+  },
+  moodChipEmoji: {
+    fontSize: 14,
+    marginRight: 4,
+  },
+  moodChipLabel: {
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

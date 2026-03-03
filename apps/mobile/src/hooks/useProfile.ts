@@ -59,7 +59,7 @@ export const useProfile = (): UseProfileReturn => {
         await storeUpdateProfile(data);
         return true;
       } catch {
-        setError('Profil guncellenemedi. Tekrar deneyin.');
+        setError('Profil güncellenemedi. Tekrar deneyin.');
         return false;
       } finally {
         setIsLoading(false);

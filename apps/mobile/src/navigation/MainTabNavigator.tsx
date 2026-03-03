@@ -224,11 +224,11 @@ export const MainTabNavigator: React.FC = () => {
         name="DiscoveryTab"
         component={DiscoveryStackNavigator}
         options={{
-          tabBarLabel: 'Kesfet',
+          tabBarLabel: 'Keşfet',
           tabBarIcon: ({ focused }) => (
             <TabIcon name="compass" focused={focused} />
           ),
-          tabBarAccessibilityLabel: 'Kesfet',
+          tabBarAccessibilityLabel: 'Keşfet',
           tabBarButtonTestID: 'tab-discovery',
         }}
       />
@@ -236,7 +236,7 @@ export const MainTabNavigator: React.FC = () => {
         name="MatchesTab"
         component={MatchesStackNavigator}
         options={{
-          tabBarLabel: 'Eslesmeler',
+          tabBarLabel: 'Eşleşmeler',
           tabBarIcon: ({ focused }) => (
             <TabIconWithBadge
               name="heart"
@@ -244,7 +244,7 @@ export const MainTabNavigator: React.FC = () => {
               badgeCount={totalUnread}
             />
           ),
-          tabBarAccessibilityLabel: `Eslesmeler${totalUnread > 0 ? `, ${totalUnread} okunmamis mesaj` : ''}`,
+          tabBarAccessibilityLabel: `Eşleşmeler${totalUnread > 0 ? `, ${totalUnread} okunmamış mesaj` : ''}`,
           tabBarButtonTestID: 'tab-matches',
         }}
       />
@@ -252,11 +252,11 @@ export const MainTabNavigator: React.FC = () => {
         name="HarmonyTab"
         component={HarmonyStackNavigator}
         options={{
-          tabBarLabel: 'Harmony',
+          tabBarLabel: 'Uyum',
           tabBarIcon: ({ focused }) => (
             <TabIcon name="music" focused={focused} />
           ),
-          tabBarAccessibilityLabel: 'Harmony',
+          tabBarAccessibilityLabel: 'Uyum Odası',
           tabBarButtonTestID: 'tab-harmony',
         }}
       />

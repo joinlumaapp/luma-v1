@@ -1,5 +1,5 @@
 // Notification store — Zustand store for notification state
-// Enhanced: grouped notifications by type (Yeni Eslesme, Mesaj, Rozet, etc.)
+// Enhanced: grouped notifications by type (Yeni Eşleşme, Mesaj, Rozet, etc.)
 
 import { Platform, AppState } from 'react-native';
 import { create } from 'zustand';
@@ -43,12 +43,12 @@ const getGroupKey = (type: string): NotificationGroupKey => {
 
 /** Turkish display titles for each group */
 const GROUP_TITLES: Record<NotificationGroupKey, string> = {
-  NEW_MATCH: 'Yeni Eslesmeler',
+  NEW_MATCH: 'Yeni Eşleşmeler',
   MESSAGE: 'Mesajlar',
   BADGE: 'Rozetler',
-  HARMONY: 'Harmony',
+  HARMONY: 'Uyum Odası',
   SYSTEM: 'Sistem',
-  OTHER: 'Diger',
+  OTHER: 'Diğer',
 };
 
 /** Display order for groups */

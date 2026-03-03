@@ -127,9 +127,9 @@ export default function App(): React.JSX.Element {
 
   // Load persisted storage into memory before rendering the app
   useEffect(() => {
-    storage.initialize().then(() => {
-      setStorageReady(true);
-    });
+    storage.initialize()
+      .then(() => setStorageReady(true))
+      .catch(() => setStorageReady(true)); // Start app even if storage fails
   }, []);
 
   // Initialize analytics and track app lifecycle events

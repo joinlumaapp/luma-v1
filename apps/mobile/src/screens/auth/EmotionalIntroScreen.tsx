@@ -78,7 +78,7 @@ const PAGES: IntroPage[] = [
   {
     id: 'page-1',
     title: '\u015Eansa de\u011Fil,\nuyuma g\u00FCven.',
-    subtitle: 'Ger\u00E7ek uyum, do\u011Fru sorularla ba\u015Flar.',
+    subtitle: 'Ger\u00E7ek uyum i\u00E7in kendin ol.',
     showLogo: false,
   },
   {
@@ -90,7 +90,7 @@ const PAGES: IntroPage[] = [
   {
     id: 'page-3',
     title: '',
-    subtitle: 'Tesad\u00FCf de\u011Fil. Uyumla.',
+    subtitle: 'Ger\u00E7ek uyum i\u00E7in kendin ol.',
     showLogo: true,
   },
 ];

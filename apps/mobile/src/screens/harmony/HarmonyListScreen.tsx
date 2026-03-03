@@ -120,9 +120,9 @@ export const HarmonyListScreen: React.FC = () => {
       onPress={() => handleOpenSession(item)}
       activeOpacity={0.7}
       disabled={item.status === 'expired'}
-      accessibilityLabel={`${item.matchName} ile Harmony oturumu, ${getStatusLabel(item.status)}, yüzde ${item.compatibilityScore} uyum`}
+      accessibilityLabel={`${item.matchName} ile Uyum Odası oturumu, ${getStatusLabel(item.status)}, yüzde ${item.compatibilityScore} uyum`}
       accessibilityRole="button"
-      accessibilityHint="Harmony oturumunu açmak için dokunun"
+      accessibilityHint="Uyum Odası oturumunu açmak için dokunun"
       accessibilityState={{ disabled: item.status === 'expired' }}
       testID={`harmony-session-${item.id}`}
     >
@@ -184,9 +184,9 @@ export const HarmonyListScreen: React.FC = () => {
   const renderEmptyList = () => (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyIcon}>{'~'}</Text>
-      <Text style={styles.emptyTitle}>Harmony Room Yok</Text>
+      <Text style={styles.emptyTitle}>Uyum Odası Yok</Text>
       <Text style={styles.emptySubtitle}>
-        Eşleşmelerin üzerinden Harmony Room başlatabilirsin. Birlikte soruları yanıtlayın ve
+        Eşleşmelerin üzerinden Uyum Odası başlatabilirsin. Birlikte soruları yanıtlayın ve
         uyumluluğunuzu keşfedin.
       </Text>
     </View>
@@ -196,7 +196,7 @@ export const HarmonyListScreen: React.FC = () => {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Harmony</Text>
+          <Text style={styles.headerTitle}>Uyum Odası</Text>
         </View>
         <View style={styles.skeletonContainer}>
           {Array.from({ length: SKELETON_CARDS }).map((_, i) => (
@@ -211,7 +211,7 @@ export const HarmonyListScreen: React.FC = () => {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Harmony</Text>
+        <Text style={styles.headerTitle}>Uyum Odası</Text>
         <Text style={styles.headerSubtitle}>
           {activeSessions.length} aktif oturum
         </Text>

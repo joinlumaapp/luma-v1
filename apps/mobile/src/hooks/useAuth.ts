@@ -41,6 +41,14 @@ export const useAuth = (): UseAuthReturn => {
 
   // Check stored tokens on mount
   useEffect(() => {
+    // Safety timeout — never stay on splash more than 5 seconds
+    const safetyTimer = setTimeout(() => {
+      if (useAuthStore.getState().isLoading) {
+        if (__DEV__) console.warn('[Auth] Safety timeout — forcing loading=false');
+        setLoading(false);
+      }
+    }, 5000);
+
     const initAuth = async () => {
       try {
         const tokens = await storage.getTokens();
@@ -91,6 +99,8 @@ export const useAuth = (): UseAuthReturn => {
       }
     };
     initAuth();
+
+    return () => clearTimeout(safetyTimer);
   }, []);
 
   const register = useCallback(async (phone: string, countryCode = '+90'): Promise<boolean> => {

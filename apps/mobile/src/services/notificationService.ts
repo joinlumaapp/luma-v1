@@ -133,7 +133,7 @@ export const notificationService = {
     // Push tokens only work on physical devices
     if (!Device.isDevice) {
       if (__DEV__) {
-        console.log('[Bildirim] Emulator — push token alinamaz, placeholder kullaniliyor');
+        console.log('[Bildirim] Emulator — push token alınamaz, placeholder kullanılıyor');
       }
       return `dev_${Platform.OS}_${Date.now()}`;
     }

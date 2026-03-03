@@ -62,20 +62,20 @@ export const MatchDetailScreen: React.FC = () => {
   const handleStartHarmony = async () => {
     try {
       await createSession(matchId);
-      Alert.alert('Harmony Room', 'Harmony Room olusturuldu!');
+      Alert.alert('Uyum Odası', 'Uyum Odası oluşturuldu!');
     } catch {
-      Alert.alert('Hata', 'Harmony Room olusturulamadi.');
+      Alert.alert('Hata', 'Uyum Odası oluşturulamadı.');
     }
   };
 
   const handleUnmatch = () => {
     Alert.alert(
-      'Eslestirmeyi Kaldir',
-      'Bu eslestirmeyi kaldirmak istediginden emin misin? Bu islem geri alinamaz.',
+      'Eşleştirmeyi Kaldır',
+      'Bu eşleştirmeyi kaldırmak istediğinden emin misin? Bu işlem geri alınamaz.',
       [
-        { text: 'Iptal', style: 'cancel' },
+        { text: 'İptal', style: 'cancel' },
         {
-          text: 'Kaldir',
+          text: 'Kaldır',
           style: 'destructive',
           onPress: async () => {
             await unmatch(matchId);
@@ -109,7 +109,7 @@ export const MatchDetailScreen: React.FC = () => {
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Text style={styles.backText}>{'<'}</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Eslesme Detayi</Text>
+          <Text style={styles.headerTitle}>Eşleşme Detayı</Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -226,7 +226,7 @@ export const MatchDetailScreen: React.FC = () => {
             onPress={handleStartHarmony}
             activeOpacity={0.85}
           >
-            <Text style={styles.harmonyButtonText}>Harmony Room Baslat</Text>
+            <Text style={styles.harmonyButtonText}>Uyum Odası Başlat</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -234,7 +234,7 @@ export const MatchDetailScreen: React.FC = () => {
             onPress={handleUnmatch}
             activeOpacity={0.7}
           >
-            <Text style={styles.unmatchButtonText}>Eslestirmeyi Kaldir</Text>
+            <Text style={styles.unmatchButtonText}>Eşleştirmeyi Kaldır</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
