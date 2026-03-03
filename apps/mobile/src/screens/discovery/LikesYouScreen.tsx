@@ -1,4 +1,4 @@
-// Likes You screen — "Seni Beğenenler" — 3-column grid of profiles who liked the user
+// Likes You screen — "Beğenenler" — 3-column grid of profiles who liked the user
 // #1 monetization driver: Free users see blurred photos with lock overlay + Gold upgrade CTA.
 // Gold+ users see clear photos with tap-to-preview navigation.
 // Performance: InteractionManager deferred fetch, memoized cards, FlatList tuning.
@@ -342,7 +342,7 @@ export const LikesYouScreen: React.FC = () => {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Seni Be\u011Fenenler</Text>
+          <Text style={styles.headerTitle}>Beğenenler</Text>
         </View>
         <View style={styles.skeletonGrid}>
           {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
@@ -371,7 +371,7 @@ export const LikesYouScreen: React.FC = () => {
               <Text style={styles.backIcon}>{'\u2039'}</Text>
             </View>
           </Pressable>
-          <Text style={styles.headerTitle}>Seni Be\u011Fenenler</Text>
+          <Text style={styles.headerTitle}>Beğenenler</Text>
           {total > 0 && (
             <View style={styles.countBadge}>
               <Text style={styles.countBadgeText}>{total}</Text>

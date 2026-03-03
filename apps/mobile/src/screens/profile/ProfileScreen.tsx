@@ -265,7 +265,7 @@ export const ProfileScreen: React.FC = () => {
             accessibilityHint="Uygulama ayarlarını açmak için dokunun"
             testID="profile-settings-btn"
           >
-            <Text style={styles.settingsIcon}>{'O'}</Text>
+            <Text style={styles.settingsIcon}>{'\u2699'}</Text>
           </TouchableOpacity>
         </View>
 

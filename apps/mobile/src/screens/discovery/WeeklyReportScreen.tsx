@@ -69,7 +69,7 @@ export const WeeklyReportScreen: React.FC = () => {
               <Text style={styles.backIcon}>{'\u2039'}</Text>
             </View>
           </Pressable>
-          <Text style={styles.headerTitle}>Haftalik Rapor</Text>
+          <Text style={styles.headerTitle}>Haftalık Rapor</Text>
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -87,7 +87,7 @@ export const WeeklyReportScreen: React.FC = () => {
               <Text style={styles.backIcon}>{'\u2039'}</Text>
             </View>
           </Pressable>
-          <Text style={styles.headerTitle}>Haftalik Rapor</Text>
+          <Text style={styles.headerTitle}>Haftalık Rapor</Text>
         </View>
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyIcon}>{'\uD83D\uDCCA'}</Text>
@@ -109,7 +109,7 @@ export const WeeklyReportScreen: React.FC = () => {
             <Text style={styles.backIcon}>{'\u2039'}</Text>
           </View>
         </Pressable>
-        <Text style={styles.headerTitle}>Haftalik Rapor</Text>
+        <Text style={styles.headerTitle}>Haftalık Rapor</Text>
       </View>
 
       <ScrollView

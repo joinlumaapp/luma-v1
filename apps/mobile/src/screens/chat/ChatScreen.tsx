@@ -401,7 +401,7 @@ export const ChatScreen: React.FC = () => {
           accessibilityHint="Önceki ekrana dönmek için dokunun"
           testID="chat-back-btn"
         >
-          <Text style={styles.backText}>{'<'}</Text>
+          <Text style={styles.backText}>{'\u2039'}</Text>
         </TouchableOpacity>
 
         <View style={styles.headerInfo}>

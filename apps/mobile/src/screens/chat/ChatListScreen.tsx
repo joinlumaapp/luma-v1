@@ -173,7 +173,7 @@ export const ChatListScreen: React.FC = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backText}>{'<'}</Text>
+          <Text style={styles.backText}>{'\u2039'}</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mesajlar</Text>
         <View style={styles.headerSpacer} />

@@ -114,7 +114,7 @@ export const MatchDetailScreen: React.FC = () => {
         {/* Header with back button */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Text style={styles.backText}>{'<'}</Text>
+            <Text style={styles.backText}>{'\u2039'}</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Eşleşme Detayı</Text>
           <View style={{ width: 40 }} />
@@ -225,7 +225,7 @@ export const MatchDetailScreen: React.FC = () => {
             onPress={handleSendMessage}
             activeOpacity={0.85}
           >
-            <Text style={styles.messageButtonText}>Mesaj Gonder</Text>
+            <Text style={styles.messageButtonText}>{'\uD83D\uDCAC'} Mesaj Gönder</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -233,7 +233,7 @@ export const MatchDetailScreen: React.FC = () => {
             onPress={handleStartHarmony}
             activeOpacity={0.85}
           >
-            <Text style={styles.harmonyButtonText}>Uyum Odası Başlat</Text>
+            <Text style={styles.harmonyButtonText}>{'\uD83C\uDFB5'} Uyum Odası Başlat</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -241,7 +241,7 @@ export const MatchDetailScreen: React.FC = () => {
             onPress={handleDatePlanner}
             activeOpacity={0.85}
           >
-            <Text style={styles.datePlanButtonText}>Buluşma Planla</Text>
+            <Text style={styles.datePlanButtonText}>{'\uD83D\uDCC5'} Buluşma Planla</Text>
           </TouchableOpacity>
 
           <TouchableOpacity

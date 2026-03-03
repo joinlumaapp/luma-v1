@@ -686,12 +686,12 @@ export const DiscoveryScreen: React.FC = () => {
           </Pressable>
           <Pressable
             onPress={() => navigation.navigate('LikesYou')}
-            accessibilityLabel="Seni beğenenler"
+            accessibilityLabel="Beğenenler"
             accessibilityRole="button"
             accessibilityHint="Seni beğenen profilleri görmek için dokunun"
           >
             <View style={styles.headerIconButton} testID="discovery-likes-btn">
-              <Text style={styles.headerIconText}>{'\u2665'}</Text>
+              <Text style={styles.headerIconText}>{'\uD83D\uDC9C'}</Text>
             </View>
           </Pressable>
           <Pressable
@@ -701,7 +701,7 @@ export const DiscoveryScreen: React.FC = () => {
             accessibilityHint="Günün özel seçkilerini görmek için dokunun"
           >
             <View style={styles.headerIconButton} testID="discovery-picks-btn">
-              <Text style={styles.headerIconText}>{'\u2606'}</Text>
+              <Text style={styles.headerIconText}>{'\u2B50'}</Text>
             </View>
           </Pressable>
           <Pressable
@@ -711,7 +711,7 @@ export const DiscoveryScreen: React.FC = () => {
             accessibilityHint="Keşif filtrelerini düzenlemek için dokunun"
           >
             <View style={styles.filterButton} testID="discovery-filter-btn">
-              <Text style={styles.filterIcon}>{'='}</Text>
+              <Text style={styles.filterIcon}>{'\u2699'}</Text>
             </View>
           </Pressable>
           <View style={styles.remainingBadge}>

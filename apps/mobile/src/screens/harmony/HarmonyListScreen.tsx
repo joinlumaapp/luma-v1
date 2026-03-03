@@ -171,7 +171,7 @@ export const HarmonyListScreen: React.FC = () => {
       <View style={styles.sessionStats}>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{item.totalMinutes} dk</Text>
-          <Text style={styles.statLabel}>Sure</Text>
+          <Text style={styles.statLabel}>Süre</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
@@ -182,14 +182,33 @@ export const HarmonyListScreen: React.FC = () => {
     </TouchableOpacity>
   );
 
+  const handleGoToMatches = () => {
+    navigation.getParent()?.navigate('MatchesTab');
+  };
+
   const renderEmptyList = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyIcon}>{'~'}</Text>
-      <Text style={styles.emptyTitle}>Uyum Odası Yok</Text>
+      <Text style={styles.emptyIcon}>{'\uD83C\uDFB5'}</Text>
+      <Text style={styles.emptyTitle}>Uyum Odası</Text>
       <Text style={styles.emptySubtitle}>
-        Eşleşmelerin üzerinden Uyum Odası başlatabilirsin. Birlikte soruları yanıtlayın ve
-        uyumluluğunuzu keşfedin.
+        Eşleşmelerin ile birlikte soruları yanıtla, oyunlar oyna ve gerçek uyumunuzu keşfedin.
       </Text>
+
+      <View style={styles.howItWorksContainer}>
+        <Text style={styles.howItWorksTitle}>Nasıl Çalışır?</Text>
+        <Text style={styles.howItWorksItem}>{'\u2022'} Eşleşmelerinden birine "Uyum Odası Başlat" de</Text>
+        <Text style={styles.howItWorksItem}>{'\u2022'} 30 dakika boyunca birlikte sorular yanıtlayın</Text>
+        <Text style={styles.howItWorksItem}>{'\u2022'} Canlı uyum skoru değişimini izleyin</Text>
+        <Text style={styles.howItWorksItem}>{'\u2022'} Sesli ve görüntülü arama yapabilirsiniz</Text>
+      </View>
+
+      <TouchableOpacity
+        style={styles.emptyCtaButton}
+        onPress={handleGoToMatches}
+        activeOpacity={0.85}
+      >
+        <Text style={styles.emptyCtaText}>Eşleşmelere Git {'\u2192'}</Text>
+      </TouchableOpacity>
     </View>
   );
 
@@ -366,6 +385,38 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
+  },
+  howItWorksContainer: {
+    marginTop: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    alignSelf: 'stretch',
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  howItWorksTitle: {
+    ...typography.bodyLarge,
+    color: colors.text,
+    fontWeight: '600',
+    marginBottom: spacing.sm,
+  },
+  howItWorksItem: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+    lineHeight: 22,
+    paddingLeft: spacing.xs,
+  },
+  emptyCtaButton: {
+    marginTop: spacing.lg,
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+  },
+  emptyCtaText: {
+    ...typography.button,
+    color: colors.text,
   },
   // Skeleton loader styles
   skeletonContainer: {
