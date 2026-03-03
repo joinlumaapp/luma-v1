@@ -28,11 +28,11 @@ import { spacing, borderRadius } from '../../theme/spacing';
 type DatePlannerRouteProp = RouteProp<MatchesStackParamList, 'DatePlanner'>;
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  PROPOSED: { label: '\u00D6nerildi', color: colors.accent },
+  PROPOSED: { label: 'Önerildi', color: colors.accent },
   ACCEPTED: { label: 'Kabul Edildi', color: colors.success },
   DECLINED: { label: 'Reddedildi', color: colors.error },
-  COMPLETED: { label: 'Tamamland\u0131', color: colors.textSecondary },
-  CANCELLED: { label: '\u0130ptal Edildi', color: colors.textTertiary },
+  COMPLETED: { label: 'Tamamlandı', color: colors.textSecondary },
+  CANCELLED: { label: 'İptal Edildi', color: colors.textTertiary },
 };
 
 // Date plan card component
@@ -106,10 +106,10 @@ const DatePlanCard: React.FC<{
         <Pressable
           onPress={() => onCancel(plan.id)}
           style={styles.cancelBtn}
-          accessibilityLabel="\u0130ptal et"
+          accessibilityLabel="İptal et"
           accessibilityRole="button"
         >
-          <Text style={styles.cancelBtnText}>\u0130ptal Et</Text>
+          <Text style={styles.cancelBtnText}>İptal Et</Text>
         </Pressable>
       )}
     </View>
@@ -153,7 +153,7 @@ export const DatePlannerScreen: React.FC = () => {
 
   const handleCreate = useCallback(async () => {
     if (!title.trim()) {
-      Alert.alert('Hata', 'Bulu\u015Fma ba\u015Fl\u0131\u011F\u0131 gerekli.');
+      Alert.alert('Hata', 'Buluşma başlığı gerekli.');
       return;
     }
     try {
@@ -168,7 +168,7 @@ export const DatePlannerScreen: React.FC = () => {
       setPlace('');
       setNote('');
     } catch {
-      Alert.alert('Hata', 'Bulu\u015Fma plan\u0131 olu\u015Fturulamad\u0131.');
+      Alert.alert('Hata', 'Buluşma planı oluşturulamadı.');
     }
   }, [matchId, title, place, note]);
 
@@ -177,7 +177,7 @@ export const DatePlannerScreen: React.FC = () => {
       const updated = await matchService.respondToDatePlan(planId, 'ACCEPTED');
       setPlans((prev) => prev.map((p) => (p.id === planId ? updated : p)));
     } catch {
-      Alert.alert('Hata', '\u0130\u015Flem ba\u015Far\u0131s\u0131z.');
+      Alert.alert('Hata', 'İşlem başarısız.');
     }
   }, []);
 
@@ -186,16 +186,16 @@ export const DatePlannerScreen: React.FC = () => {
       const updated = await matchService.respondToDatePlan(planId, 'DECLINED');
       setPlans((prev) => prev.map((p) => (p.id === planId ? updated : p)));
     } catch {
-      Alert.alert('Hata', '\u0130\u015Flem ba\u015Far\u0131s\u0131z.');
+      Alert.alert('Hata', 'İşlem başarısız.');
     }
   }, []);
 
   const handleCancel = useCallback(async (planId: string) => {
     Alert.alert(
-      '\u0130ptal Et',
-      'Bu bulu\u015Fma plan\u0131n\u0131 iptal etmek istedi\u011Finize emin misiniz?',
+      'İptal Et',
+      'Bu buluşma planını iptal etmek istediğinize emin misiniz?',
       [
-        { text: 'Hay\u0131r', style: 'cancel' },
+        { text: 'Hayır', style: 'cancel' },
         {
           text: 'Evet',
           style: 'destructive',
@@ -208,7 +208,7 @@ export const DatePlannerScreen: React.FC = () => {
                 )
               );
             } catch {
-              Alert.alert('Hata', '\u0130ptal i\u015Flemi ba\u015Far\u0131s\u0131z.');
+              Alert.alert('Hata', 'İptal işlemi başarısız.');
             }
           },
         },
@@ -241,7 +241,7 @@ export const DatePlannerScreen: React.FC = () => {
           </View>
         </Pressable>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Bulu\u015Fma Plan\u0131</Text>
+          <Text style={styles.headerTitle}>Buluşma Planı</Text>
           <Text style={styles.headerSubtitle}>{partnerName} ile</Text>
         </View>
         <Pressable
@@ -262,7 +262,7 @@ export const DatePlannerScreen: React.FC = () => {
             style={styles.formInput}
             value={title}
             onChangeText={setTitle}
-            placeholder="Bulu\u015Fma ba\u015Fl\u0131\u011F\u0131 (ör. Kahve i\u00E7elim)"
+            placeholder="Buluşma başlığı (ör. Kahve içelim)"
             placeholderTextColor={colors.textTertiary}
             maxLength={100}
           />
@@ -270,7 +270,7 @@ export const DatePlannerScreen: React.FC = () => {
             style={styles.formInput}
             value={place}
             onChangeText={setPlace}
-            placeholder="Mekan \u00F6nerisi (opsiyonel)"
+            placeholder="Mekan önerisi (opsiyonel)"
             placeholderTextColor={colors.textTertiary}
             maxLength={200}
           />
@@ -284,7 +284,7 @@ export const DatePlannerScreen: React.FC = () => {
             maxLength={300}
           />
           <Pressable onPress={handleCreate} style={styles.createBtn}>
-            <Text style={styles.createBtnText}>\u00D6ner</Text>
+            <Text style={styles.createBtnText}>Öner</Text>
           </Pressable>
         </View>
       )}
@@ -304,9 +304,9 @@ export const DatePlannerScreen: React.FC = () => {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyIcon}>{'\uD83D\uDCC5'}</Text>
-              <Text style={styles.emptyTitle}>Hen\u00FCz plan yok</Text>
+              <Text style={styles.emptyTitle}>Henüz plan yok</Text>
               <Text style={styles.emptySubtitle}>
-                + butonuna dokunarak {partnerName} ile bulu\u015Fma plan\u0131 \u00F6ner.
+                + butonuna dokunarak {partnerName} ile buluşma planı öner.
               </Text>
             </View>
           }

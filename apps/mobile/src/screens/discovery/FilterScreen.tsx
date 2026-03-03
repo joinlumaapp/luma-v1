@@ -31,7 +31,7 @@ type RequiredTier = 'gold' | 'pro';
 
 const GENDER_OPTIONS: Array<{ value: GenderPreference; label: string }> = [
   { value: 'male', label: 'Erkek' },
-  { value: 'female', label: 'Kad\u0131n' },
+  { value: 'female', label: 'Kadın' },
   { value: 'all', label: 'Hepsi' },
 ];
 
@@ -40,20 +40,20 @@ const HEIGHT_MAX = 200;
 
 const EDUCATION_OPTIONS = [
   'Lise',
-  '\u00DCniversite',
-  'Y\u00FCksek Lisans',
+  'Üniversite',
+  'Yüksek Lisans',
   'Doktora',
 ];
 
 const SMOKING_OPTIONS = [
-  '\u0130\u00E7iyor',
-  '\u0130\u00E7miyor',
+  'İçiyor',
+  'İçmiyor',
   'Bazen',
 ];
 
 const DRINKING_OPTIONS = [
-  '\u0130\u00E7iyor',
-  '\u0130\u00E7miyor',
+  'İçiyor',
+  'İçmiyor',
   'Sosyal',
 ];
 
@@ -64,18 +64,18 @@ const EXERCISE_OPTIONS = [
 ];
 
 const ZODIAC_OPTIONS = [
-  'Ko\u00E7',
-  'Bo\u011Fa',
-  '\u0130kizler',
-  'Yenge\u00E7',
+  'Koç',
+  'Boğa',
+  'İkizler',
+  'Yengeç',
   'Aslan',
-  'Ba\u015Fak',
+  'Başak',
   'Terazi',
   'Akrep',
   'Yay',
-  'O\u011Flak',
+  'Oğlak',
   'Kova',
-  'Bal\u0131k',
+  'Balık',
 ];
 
 // ── Helpers ────────────────────────────────────────────────────────
@@ -160,11 +160,11 @@ export const FilterScreen: React.FC = () => {
       const tierName = tierDisplayName(requiredTier);
       Alert.alert(
         'Premium Filtre',
-        `Bu filtre ${tierName} paketi ile kullan\u0131labilir. Y\u00FCkseltmek ister misin?`,
+        `Bu filtre ${tierName} paketi ile kullanılabilir. Yükseltmek ister misin?`,
         [
           { text: 'Kapat', style: 'cancel' },
           {
-            text: 'Y\u00FCkselt',
+            text: 'Yükselt',
             onPress: () => {
               // Navigate to Packages screen in ProfileTab
               navigation.navigate('MainTabs', {
@@ -305,7 +305,7 @@ export const FilterScreen: React.FC = () => {
               activeOpacity={0.8}
             >
               <Text style={styles.proLabelText}>
-                {tierDisplayName(requiredTier)} ile a\u00E7
+                {tierDisplayName(requiredTier)} ile aç
               </Text>
             </TouchableOpacity>
           )}
@@ -380,7 +380,7 @@ export const FilterScreen: React.FC = () => {
 
         {/* ── Age range ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ya\u015F Aral\u0131\u011F\u0131 (18-65)</Text>
+          <Text style={styles.sectionTitle}>Yaş Aralığı (18-65)</Text>
           <View style={styles.rangeRow}>
             <View style={styles.rangeInputWrapper}>
               <Text style={styles.rangeLabel}>Min</Text>
@@ -457,7 +457,7 @@ export const FilterScreen: React.FC = () => {
           <View style={styles.heightSection}>
             <View style={styles.heightToggleRow}>
               <Text style={styles.heightRangeLabel}>
-                Boy filtresi {heightEnabled ? 'aktif' : 'kapal\u0131'}
+                Boy filtresi {heightEnabled ? 'aktif' : 'kapalı'}
               </Text>
               <TouchableOpacity
                 style={[
@@ -477,7 +477,7 @@ export const FilterScreen: React.FC = () => {
                     heightEnabled && styles.toggleButtonTextActive,
                   ]}
                 >
-                  {heightEnabled ? 'Aktif' : 'Kapat\u0131k'}
+                  {heightEnabled ? 'Aktif' : 'Kapatık'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -565,12 +565,12 @@ export const FilterScreen: React.FC = () => {
         ))}
 
         {/* ── Education (Gold+) ── */}
-        {renderLockedSection('E\u011Fitim', 'gold',
+        {renderLockedSection('Eğitim', 'gold',
           renderChipGroup(EDUCATION_OPTIONS, selectedEducation, toggleChip(setSelectedEducation))
         )}
 
         {/* ── Lifestyle (Gold+) ── */}
-        {renderLockedSection('Ya\u015Fam Tarz\u0131', 'gold', (
+        {renderLockedSection('Yaşam Tarzı', 'gold', (
           <View style={styles.lifestyleContainer}>
             <View style={styles.lifestyleSubSection}>
               <Text style={styles.subSectionTitle}>Sigara</Text>
@@ -588,7 +588,7 @@ export const FilterScreen: React.FC = () => {
         ))}
 
         {/* ── Zodiac (Pro+) ── */}
-        {renderLockedSection('Bur\u00E7', 'pro',
+        {renderLockedSection('Burç', 'pro',
           renderChipGroup(ZODIAC_OPTIONS, selectedZodiac, toggleChip(setSelectedZodiac))
         )}
 
@@ -603,7 +603,7 @@ export const FilterScreen: React.FC = () => {
           onPress={handleReset}
           activeOpacity={0.8}
         >
-          <Text style={styles.resetButtonText}>S\u0131f\u0131rla</Text>
+          <Text style={styles.resetButtonText}>Sıfırla</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.applyButton}

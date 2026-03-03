@@ -98,8 +98,8 @@ export const StreakBanner: React.FC<StreakBannerProps> = ({
 
   // Build the left-side text
   const streakText = isMilestone
-    ? `Harika! ${streak} g\u00FCnl\u00FCk seri!`
-    : `${streak} g\u00FCn serisi!`;
+    ? `Harika! ${streak} günlük seri!`
+    : `${streak} gün serisi!`;
 
   const streakEmoji = isMilestone ? '\u2B50' : '\uD83D\uDD25';
 
@@ -115,7 +115,7 @@ export const StreakBanner: React.FC<StreakBannerProps> = ({
         style={styles.touchArea}
         onPress={handleDismiss}
         activeOpacity={0.9}
-        accessibilityLabel={`${streak} g\u00FCn seri, +${goldAwarded} Gold`}
+        accessibilityLabel={`${streak} gün seri, +${goldAwarded} Gold`}
         accessibilityRole="alert"
         testID="streak-banner"
       >

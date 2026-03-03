@@ -50,9 +50,9 @@ type DailyPicksNavProp = CompositeNavigationProp<
 // ─── Intention tag label mapping ──────────────────────────────
 
 const INTENTION_LABELS: Record<string, string> = {
-  serious: 'Ciddi \u0130li\u015Fki',
-  exploring: 'Ke\u015Ffediyorum',
-  not_sure: 'Emin De\u011Filim',
+  serious: 'Ciddi İlişki',
+  exploring: 'Keşfediyorum',
+  not_sure: 'Emin Değilim',
 };
 
 // ─── Countdown timer hook ─────────────────────────────────────
@@ -195,14 +195,14 @@ const PickCard = memo<PickCardProps>(({ card, index, isCardBlurred, onCardPress,
         onPressOut={handlePressOut}
         accessibilityLabel={
           isCardBlurred
-            ? 'Profili g\u00F6rmek i\u00E7in Gold pakete ge\u00E7in'
-            : `${card.firstName}, ${card.age} ya\u015F\u0131nda, ${card.city}, y\u00FCzde ${card.compatibilityPercent} uyum`
+            ? 'Profili görmek için Gold pakete geçin'
+            : `${card.firstName}, ${card.age} yaşında, ${card.city}, yüzde ${card.compatibilityPercent} uyum`
         }
         accessibilityRole="button"
         accessibilityHint={
           isCardBlurred
-            ? 'Gold paketine y\u00FCkseltmek i\u00E7in dokunun'
-            : 'Profil \u00F6nizlemesini g\u00F6rmek i\u00E7in dokunun'
+            ? 'Gold paketine yükseltmek için dokunun'
+            : 'Profil önizlemesini görmek için dokunun'
         }
       >
         <Animated.View
@@ -388,18 +388,18 @@ export const DailyPicksScreen: React.FC = () => {
         <Pressable
           onPress={handleUpgradePress}
           style={styles.upgradeFooter}
-          accessibilityLabel="Gold ile hepsini g\u00F6r"
+          accessibilityLabel="Gold ile hepsini gör"
           accessibilityRole="button"
-          accessibilityHint="T\u00FCm g\u00FCnl\u00FCk se\u00E7kileri a\u00E7mak i\u00E7in dokunun"
+          accessibilityHint="Tüm günlük seçkileri açmak için dokunun"
         >
           <View style={styles.upgradeFooterContent}>
             <Text style={styles.upgradeFooterIcon}>{'\u2B50'}</Text>
-            <Text style={styles.upgradeFooterTitle}>Gold ile hepsini g\u00F6r</Text>
+            <Text style={styles.upgradeFooterTitle}>Gold ile hepsini gör</Text>
             <Text style={styles.upgradeFooterSubtitle}>
-              G\u00FCnde 10 \u00F6zenle se\u00E7ilmi\u015F profili ke\u015Ffet
+              Günde 10 özenle seçilmiş profili keşfet
             </Text>
             <View style={styles.upgradeFooterButton}>
-              <Text style={styles.upgradeFooterButtonText}>Gold&apos;a Ge\u00E7</Text>
+              <Text style={styles.upgradeFooterButtonText}>Gold&apos;a Geç</Text>
             </View>
           </View>
         </Pressable>
@@ -414,10 +414,10 @@ export const DailyPicksScreen: React.FC = () => {
             <Text style={styles.allViewedIcon}>{'\u2728'}</Text>
           </View>
           <Text style={styles.allViewedTitle}>
-            Yar\u0131nki se\u00E7kilerin haz\u0131rlan\u0131yor
+            Yarınki seçkilerin hazırlanıyor
           </Text>
           <View style={styles.allViewedCountdown}>
-            <Text style={styles.allViewedCountdownLabel}>Yeni se\u00E7kiler:</Text>
+            <Text style={styles.allViewedCountdownLabel}>Yeni seçkiler:</Text>
             <Text style={styles.allViewedCountdownValue}>{countdown}</Text>
           </View>
         </View>
@@ -432,9 +432,9 @@ export const DailyPicksScreen: React.FC = () => {
       <View style={styles.emptyIconCircle}>
         <Text style={styles.emptyStarIcon}>{'\u2B50'}</Text>
       </View>
-      <Text style={styles.emptyTitle}>G\u00FCnl\u00FCk se\u00E7kiler haz\u0131rlan\u0131yor</Text>
+      <Text style={styles.emptyTitle}>Günlük seçkiler hazırlanıyor</Text>
       <Text style={styles.emptySubtitle}>
-        Her g\u00FCn senin i\u00E7in \u00F6zenle se\u00E7ilmi\u015F profiller burada olacak.
+        Her gün senin için özenle seçilmiş profiller burada olacak.
       </Text>
       <View style={styles.emptyCountdown}>
         <Text style={styles.emptyCountdownLabel}>Yenileme:</Text>
@@ -449,7 +449,7 @@ export const DailyPicksScreen: React.FC = () => {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>G\u00FCn\u00FCn Se\u00E7kileri</Text>
+          <Text style={styles.headerTitle}>Günün Seçkileri</Text>
         </View>
         <View style={styles.skeletonGrid}>
           {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
@@ -471,14 +471,14 @@ export const DailyPicksScreen: React.FC = () => {
             onPress={() => navigation.goBack()}
             accessibilityLabel="Geri"
             accessibilityRole="button"
-            accessibilityHint="Ke\u015Ffet ekran\u0131na d\u00F6nmek i\u00E7in dokunun"
+            accessibilityHint="Keşfet ekranına dönmek için dokunun"
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <View style={styles.backButton}>
               <Text style={styles.backIcon}>{'\u2039'}</Text>
             </View>
           </Pressable>
-          <Text style={styles.headerTitle}>G\u00FCn\u00FCn Se\u00E7kileri</Text>
+          <Text style={styles.headerTitle}>Günün Seçkileri</Text>
           <Text style={styles.headerStar}>{'\u2B50'}</Text>
         </View>
         <View style={styles.headerRight}>
@@ -493,8 +493,8 @@ export const DailyPicksScreen: React.FC = () => {
       <View style={styles.infoRow}>
         <Text style={styles.infoText}>
           {picks.length > 0
-            ? `${picks.filter((p) => !p.isViewed).length} / ${totalAvailable} se\u00E7ki kald\u0131`
-            : 'Se\u00E7kiler y\u00FCkleniyor...'}
+            ? `${picks.filter((p) => !p.isViewed).length} / ${totalAvailable} seçki kaldı`
+            : 'Seçkiler yükleniyor...'}
         </Text>
       </View>
 

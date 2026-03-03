@@ -91,9 +91,9 @@ export const WeeklyReportScreen: React.FC = () => {
         </View>
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyIcon}>{'\uD83D\uDCCA'}</Text>
-          <Text style={styles.emptyTitle}>Hen\u00FCz rapor yok</Text>
+          <Text style={styles.emptyTitle}>Henüz rapor yok</Text>
           <Text style={styles.emptySubtitle}>
-            Bir hafta aktif kullan\u0131m sonras\u0131 ilk raporun burada g\u00F6r\u00FCnecek.
+            Bir hafta aktif kullanım sonrası ilk raporun burada görünecek.
           </Text>
         </View>
       </View>
@@ -122,25 +122,25 @@ export const WeeklyReportScreen: React.FC = () => {
             day: 'numeric',
             month: 'long',
           })}{' '}
-          haftas\u0131
+          haftası
         </Text>
 
         {/* Stats grid */}
         <View style={styles.statsGrid}>
           <StatCard
-            label="Toplam Kayd\u0131rma"
+            label="Toplam Kaydırma"
             value={report.totalSwipes}
             icon={'\uD83D\uDC46'}
             color={colors.primary}
           />
           <StatCard
-            label="Be\u011Feni"
+            label="Beğeni"
             value={report.totalLikes}
             icon={'\u2665'}
             color="#9B6BF8"
           />
           <StatCard
-            label="E\u015Fle\u015Fme"
+            label="Eşleşme"
             value={report.totalMatches}
             icon={'\u2728'}
             color={colors.success}
@@ -173,20 +173,20 @@ export const WeeklyReportScreen: React.FC = () => {
 
         {/* Like rate */}
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Be\u011Feni Oran\u0131</Text>
+          <Text style={styles.infoLabel}>Beğeni Oranı</Text>
           <Text style={styles.infoValue}>%{Math.round(report.likeRate)}</Text>
         </View>
 
         {report.mostActiveDay && (
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>En Aktif G\u00FCn</Text>
+            <Text style={styles.infoLabel}>En Aktif Gün</Text>
             <Text style={styles.infoValue}>{report.mostActiveDay}</Text>
           </View>
         )}
 
         {report.topCategory && (
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>G\u00FC\u00E7l\u00FC Uyum Alan\u0131</Text>
+            <Text style={styles.infoLabel}>Güçlü Uyum Alanı</Text>
             <Text style={styles.infoValue}>{report.topCategory}</Text>
           </View>
         )}
@@ -194,7 +194,7 @@ export const WeeklyReportScreen: React.FC = () => {
         {/* Insights */}
         {report.insights.length > 0 && (
           <View style={styles.insightsSection}>
-            <Text style={styles.sectionTitle}>{'\uD83D\uDCA1'} \u00D6neriler</Text>
+            <Text style={styles.sectionTitle}>{'\uD83D\uDCA1'} Öneriler</Text>
             {report.insights.map((insight, idx) => (
               <View key={idx} style={styles.insightCard}>
                 <Text style={styles.insightText}>{insight}</Text>

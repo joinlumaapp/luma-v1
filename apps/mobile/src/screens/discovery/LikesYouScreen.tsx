@@ -131,14 +131,14 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, onCardPress, onU
         onPressOut={handlePressOut}
         accessibilityLabel={
           isBlurred
-            ? 'Profili g\u00F6rmek i\u00E7in Gold pakete ge\u00E7in'
-            : `${card.firstName}, ${card.age} ya\u015F\u0131nda, y\u00FCzde ${card.compatibilityPercent} uyum`
+            ? 'Profili görmek için Gold pakete geçin'
+            : `${card.firstName}, ${card.age} yaşında, yüzde ${card.compatibilityPercent} uyum`
         }
         accessibilityRole="button"
         accessibilityHint={
           isBlurred
-            ? "Gold paketine y\u00FCkseltmek i\u00E7in dokunun"
-            : 'Profil \u00F6nizlemesini g\u00F6rmek i\u00E7in dokunun'
+            ? "Gold paketine yükseltmek için dokunun"
+            : 'Profil önizlemesini görmek için dokunun'
         }
       >
         <Animated.View
@@ -292,18 +292,18 @@ export const LikesYouScreen: React.FC = () => {
       <View style={styles.emptyIconCircle}>
         <Text style={styles.emptyHeartIcon}>{'\u2665'}</Text>
       </View>
-      <Text style={styles.emptyTitle}>Hen\u00FCz seni be\u011Fenen yok</Text>
+      <Text style={styles.emptyTitle}>Henüz seni beğenen yok</Text>
       <Text style={styles.emptySubtitle}>
-        Profilini tamamla ve ke\u015Ffette aktif ol.{'\n'}Be\u011Fenenler burada g\u00F6r\u00FCnecek.
+        Profilini tamamla ve keşfette aktif ol.{'\n'}Beğenenler burada görünecek.
       </Text>
       <Pressable
         onPress={handleDiscoverPress}
-        accessibilityLabel="Ke\u015Ffete git"
+        accessibilityLabel="Keşfete git"
         accessibilityRole="button"
-        accessibilityHint="Ke\u015Ffet ekran\u0131na d\u00F6nmek i\u00E7in dokunun"
+        accessibilityHint="Keşfet ekranına dönmek için dokunun"
       >
         <View style={styles.ctaButton} testID="likes-you-discover-btn">
-          <Text style={styles.ctaButtonText}>Ke\u015Ffet</Text>
+          <Text style={styles.ctaButtonText}>Keşfet</Text>
         </View>
       </Pressable>
     </View>
@@ -316,16 +316,16 @@ export const LikesYouScreen: React.FC = () => {
       <Pressable
         onPress={handleUpgradePress}
         style={styles.upgradeBanner}
-        accessibilityLabel="Gold paketine ge\u00E7"
+        accessibilityLabel="Gold paketine geç"
         accessibilityRole="button"
-        accessibilityHint="Gold paketine y\u00FCkseltmek i\u00E7in dokunun"
+        accessibilityHint="Gold paketine yükseltmek için dokunun"
       >
         <View style={styles.upgradeBannerContent}>
           <Text style={styles.upgradeBannerIcon}>{'\uD83D\uDD13'}</Text>
           <View style={styles.upgradeBannerTextContainer}>
-            <Text style={styles.upgradeBannerTitle}>Gold&apos;a Ge\u00E7</Text>
+            <Text style={styles.upgradeBannerTitle}>Gold&apos;a Geç</Text>
             <Text style={styles.upgradeBannerSubtitle}>
-              Seni be\u011Fenenleri g\u00F6r ve hemen e\u015Fle\u015F
+              Seni beğenenleri gör ve hemen eşleş
             </Text>
           </View>
           <View style={styles.upgradeBannerArrow}>
@@ -364,7 +364,7 @@ export const LikesYouScreen: React.FC = () => {
             onPress={() => navigation.goBack()}
             accessibilityLabel="Geri"
             accessibilityRole="button"
-            accessibilityHint="Ke\u015Ffet ekran\u0131na d\u00F6nmek i\u00E7in dokunun"
+            accessibilityHint="Keşfet ekranına dönmek için dokunun"
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <View style={styles.backButton}>

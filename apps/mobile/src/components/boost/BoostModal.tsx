@@ -151,7 +151,7 @@ export const BoostModal: React.FC<BoostModalProps> = ({
           </Animated.View>
 
           {/* Title */}
-          <Text style={styles.title}>Profilini {'\u00D6'}ne {'\u00C7\u0131'}kar!</Text>
+          <Text style={styles.title}>Profilini {'Ö'}ne {'Çı'}kar!</Text>
 
           {/* Active boost: countdown */}
           {boostStatus.isActive ? (
@@ -161,17 +161,17 @@ export const BoostModal: React.FC<BoostModalProps> = ({
                 <Text style={styles.activeLabel}>Boost Aktif</Text>
               </View>
               <Text style={styles.countdownText}>
-                {formatCountdown(remainingSeconds)} kald{'\u0131'}
+                {formatCountdown(remainingSeconds)} kald{'ı'}
               </Text>
               <Text style={styles.activeDescription}>
-                Profiling {'\u015F'}u anda 10x daha fazla g{'\u00F6'}r{'\u00FC'}nt{'\u00FC'}leniyor
+                Profiling {'ş'}u anda 10x daha fazla g{'ö'}r{'ü'}nt{'ü'}leniyor
               </Text>
             </View>
           ) : (
             <>
               {/* Subtitle */}
               <Text style={styles.subtitle}>
-                30 dakika boyunca 10x daha fazla g{'\u00F6'}r{'\u00FC'}n{'\u00FC'}rl{'\u00FC'}k
+                30 dakika boyunca 10x daha fazla g{'ö'}r{'ü'}n{'ü'}rl{'ü'}k
               </Text>
 
               {/* Gold cost display */}
@@ -202,14 +202,14 @@ export const BoostModal: React.FC<BoostModalProps> = ({
                   onPress={handleActivate}
                   disabled={isActivating}
                   activeOpacity={0.8}
-                  accessibilityLabel="Boost aktifle\u015Ftir"
+                  accessibilityLabel="Boost aktifleştir"
                   accessibilityRole="button"
                   testID="boost-activate-btn"
                 >
                   {isActivating ? (
                     <ActivityIndicator size="small" color={colors.text} />
                   ) : (
-                    <Text style={styles.activateButtonText}>Aktifle{'\u015F'}tir</Text>
+                    <Text style={styles.activateButtonText}>Aktifle{'ş'}tir</Text>
                   )}
                 </TouchableOpacity>
               ) : (
@@ -228,11 +228,11 @@ export const BoostModal: React.FC<BoostModalProps> = ({
                     <TouchableOpacity
                       onPress={onBuyGold}
                       activeOpacity={0.7}
-                      accessibilityLabel="Gold sat\u0131n al"
+                      accessibilityLabel="Gold satın al"
                       accessibilityRole="link"
                       testID="boost-buy-gold-btn"
                     >
-                      <Text style={styles.buyGoldText}>Gold Sat{'\u0131'}n Al</Text>
+                      <Text style={styles.buyGoldText}>Gold Sat{'ı'}n Al</Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -245,11 +245,11 @@ export const BoostModal: React.FC<BoostModalProps> = ({
             onPress={onClose}
             activeOpacity={0.7}
             style={styles.dismissButton}
-            accessibilityLabel="Vazge\u00E7"
+            accessibilityLabel="Vazgeç"
             accessibilityRole="button"
             testID="boost-dismiss-btn"
           >
-            <Text style={styles.dismissText}>Vazge{'\u00E7'}</Text>
+            <Text style={styles.dismissText}>Vazge{'ç'}</Text>
           </TouchableOpacity>
         </View>
       </View>
