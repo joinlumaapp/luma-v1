@@ -25,7 +25,6 @@ import Animated, {
   Extrapolation,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -54,8 +53,6 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 // ─── Swipe thresholds ────────────────────────────────────────
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
 const VELOCITY_THRESHOLD = 700;
-const SWIPE_UP_THRESHOLD = SCREEN_HEIGHT * 0.13;
-const VELOCITY_UP_THRESHOLD = 600;
 
 // Spring configs — organic feel (lower stiffness = more bounce, less mechanical)
 const SPRING_BACK = { damping: 14, stiffness: 120, mass: 0.9, overshootClamping: false };
@@ -171,8 +168,6 @@ export const DiscoveryScreen: React.FC = () => {
   const userFirstName = useProfileStore((s) => s.profile?.firstName ?? '');
   const canUndo = useDiscoveryStore((s) => s.canUndo);
   const undoLastSwipe = useDiscoveryStore((s) => s.undoLastSwipe);
-  const showSuperLikeGlow = useDiscoveryStore((s) => s.showSuperLikeGlow);
-
   // Mood store — for collapsed chip display
   const currentMood = useMoodStore((s) => s.currentMood);
   const isMoodExpired = useMoodStore((s) => s.isMoodExpired);
@@ -250,10 +245,6 @@ export const DiscoveryScreen: React.FC = () => {
   // Undo button
   const undoOpacity = useSharedValue(0);
 
-  // Super like glow
-  const superGlowOpacity = useSharedValue(0);
-  const superGlowScale = useSharedValue(0.8);
-
   // ─── Derived card refs ─────────────────────────────────────
   const currentCard = currentIndex < cards.length ? cards[currentIndex] : undefined;
   const nextCard = currentIndex + 1 < cards.length ? cards[currentIndex + 1] : null;
@@ -287,18 +278,6 @@ export const DiscoveryScreen: React.FC = () => {
   useEffect(() => {
     undoOpacity.value = withTiming(canUndo ? 1 : 0, { duration: 200 });
   }, [canUndo, undoOpacity]);
-
-  // Super like glow animation
-  useEffect(() => {
-    if (showSuperLikeGlow) {
-      superGlowOpacity.value = 0;
-      superGlowScale.value = 0.8;
-      superGlowOpacity.value = withTiming(1, { duration: 300 }, () => {
-        superGlowOpacity.value = withTiming(0, { duration: 1000 });
-      });
-      superGlowScale.value = withSpring(1.3, { damping: 8, stiffness: 40 });
-    }
-  }, [showSuperLikeGlow, superGlowOpacity, superGlowScale]);
 
   // Match created haptic — fires success notification when a match is shown
   useEffect(() => {
@@ -386,9 +365,7 @@ export const DiscoveryScreen: React.FC = () => {
       translateY.value = e.translationY * 0.5;
 
       // Haptic at threshold crossing
-      const pastH = Math.abs(e.translationX) > SWIPE_THRESHOLD;
-      const pastV = e.translationY < -SWIPE_UP_THRESHOLD;
-      const pastAny = pastH || pastV;
+      const pastAny = Math.abs(e.translationX) > SWIPE_THRESHOLD;
 
       if (pastAny && !hasPassedThreshold.value) {
         hasPassedThreshold.value = true;
@@ -399,24 +376,6 @@ export const DiscoveryScreen: React.FC = () => {
       }
     })
     .onEnd((e) => {
-      // Super like (swipe up)
-      if (
-        e.translationY < -SWIPE_UP_THRESHOLD ||
-        (e.velocityY < -VELOCITY_UP_THRESHOLD && Math.abs(e.translationX) < SWIPE_THRESHOLD)
-      ) {
-        translateY.value = withSpring(-SCREEN_HEIGHT, {
-          velocity: e.velocityY,
-          ...SPRING_EXIT,
-          stiffness: 100,
-        });
-        translateX.value = withSpring(translateX.value * 0.5, {
-          velocity: e.velocityX * 0.3,
-          ...SPRING_EXIT,
-        });
-        runOnJS(handleSwipeComplete)('up');
-        return;
-      }
-
       // Right swipe (like) — momentum-preserving spring exit
       if (e.translationX > SWIPE_THRESHOLD || e.velocityX > VELOCITY_THRESHOLD) {
         translateX.value = withSpring(SCREEN_WIDTH + 200, {
@@ -480,10 +439,7 @@ export const DiscoveryScreen: React.FC = () => {
   // Card behind: scale up + fade in as current card is dragged (subtler peek)
   const behindStyle = useAnimatedStyle(() => {
     const progress = Math.min(
-      Math.max(
-        Math.abs(translateX.value) / SWIPE_THRESHOLD,
-        Math.abs(translateY.value) / SWIPE_UP_THRESHOLD,
-      ),
+      Math.abs(translateX.value) / SWIPE_THRESHOLD,
       1,
     );
 
@@ -498,7 +454,6 @@ export const DiscoveryScreen: React.FC = () => {
 
   // Swipe color-wash overlays
   const HALF_THRESHOLD = SWIPE_THRESHOLD * 0.5;
-  const HALF_UP_THRESHOLD = SWIPE_UP_THRESHOLD * 0.5;
 
   const likeWashStyle = useAnimatedStyle(() => ({
     backgroundColor: `rgba(16, 185, 129, ${interpolate(
@@ -556,44 +511,10 @@ export const DiscoveryScreen: React.FC = () => {
     };
   });
 
-  const superWashStyle = useAnimatedStyle(() => ({
-    backgroundColor: `rgba(251, 191, 36, ${interpolate(
-      translateY.value,
-      [-SWIPE_UP_THRESHOLD, 0],
-      [0.30, 0],
-      Extrapolation.CLAMP,
-    )})`,
-  }));
-
-  const superIconStyle = useAnimatedStyle(() => {
-    const iconOpacity = interpolate(
-      translateY.value,
-      [-SWIPE_UP_THRESHOLD, -HALF_UP_THRESHOLD],
-      [1, 0],
-      Extrapolation.CLAMP,
-    );
-    const iconScale = interpolate(
-      translateY.value,
-      [-SWIPE_UP_THRESHOLD, -HALF_UP_THRESHOLD],
-      [1.2, 0.5],
-      Extrapolation.CLAMP,
-    );
-    return {
-      opacity: iconOpacity,
-      transform: [{ scale: iconScale }],
-    };
-  });
-
   // Undo button
   const undoAnimatedStyle = useAnimatedStyle(() => ({
     opacity: undoOpacity.value,
     transform: [{ scale: interpolate(undoOpacity.value, [0, 1], [0.8, 1]) }],
-  }));
-
-  // Super glow
-  const superGlowAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: superGlowOpacity.value,
-    transform: [{ scale: superGlowScale.value }],
   }));
 
   // ─── Button handlers ───────────────────────────────────────
@@ -609,12 +530,6 @@ export const DiscoveryScreen: React.FC = () => {
     translateX.value = withSpring(SCREEN_WIDTH + 200, SPRING_EXIT);
     swipeAction('right', currentCard.id);
   }, [currentCard, swipeAction, translateX]);
-
-  const handleSuperLikePress = useCallback(() => {
-    if (!currentCard) return;
-    translateY.value = withSpring(-SCREEN_HEIGHT, { ...SPRING_EXIT, stiffness: 100 });
-    swipeAction('up', currentCard.id);
-  }, [currentCard, swipeAction, translateY]);
 
   // ─── Loading state ─────────────────────────────────────────
 
@@ -772,7 +687,7 @@ export const DiscoveryScreen: React.FC = () => {
             accessible
             accessibilityLabel={`${currentCard.name}, ${currentCard.age} yaşında, ${currentCard.city}`}
             accessibilityRole="button"
-            accessibilityHint="Beğenme, geçme veya süper beğenme için kaydırın"
+            accessibilityHint="Beğenmek veya geçmek için kaydırın"
             testID="discovery-card"
             style={[styles.card, styles.cardFront, cardStyle]}
           >
@@ -812,27 +727,9 @@ export const DiscoveryScreen: React.FC = () => {
                 <Text style={styles.washIconText}>{'\u2715'}</Text>
               </Animated.View>
             </Animated.View>
-            <Animated.View style={[styles.colorWashOverlay, superWashStyle]} pointerEvents="none">
-              <Animated.View style={superIconStyle}>
-                <Text style={[styles.washIconText, styles.washIconStar]}>{'\u2605'}</Text>
-              </Animated.View>
-            </Animated.View>
           </Animated.View>
         </GestureDetector>
       </View>
-
-      {/* Super Like gold glow overlay */}
-      {showSuperLikeGlow && (
-        <Animated.View
-          style={[styles.superLikeGlowOverlay, superGlowAnimatedStyle]}
-          pointerEvents="none"
-        >
-          <LinearGradient
-            colors={[palette.gold[400] + '60', palette.gold[500] + '30', 'transparent'] as [string, string, ...string[]]}
-            style={styles.superLikeGlowGradient}
-          />
-        </Animated.View>
-      )}
 
       {/* Action buttons */}
       <View style={styles.actionsRow}>
@@ -865,20 +762,6 @@ export const DiscoveryScreen: React.FC = () => {
             testID="discovery-pass-btn"
             accessibilityLabel="Geç"
             accessibilityHint="Bu profili geçmek için dokunun"
-          />
-          <ActionButton
-            icon={'\u2605'}
-            iconSize={22}
-            iconColor={palette.gold[400]}
-            glowColor="rgba(251,191,36,0.4)"
-            size={44}
-            bgColor="rgba(251,191,36,0.12)"
-            borderColor="rgba(251,191,36,0.25)"
-            hapticStyle={Haptics.ImpactFeedbackStyle.Heavy}
-            onPress={handleSuperLikePress}
-            testID="discovery-superlike-btn"
-            accessibilityLabel="Süper Beğen"
-            accessibilityHint="Bu profili süper beğenmek için dokunun"
           />
           <ActionButton
             icon={'\u2665'}
@@ -1032,27 +915,6 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 6,
   },
-  washIconStar: {
-    fontSize: 56,
-  },
-
-  // ── Super Like Glow ──
-  superLikeGlowOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  superLikeGlowGradient: {
-    width: SCREEN_WIDTH * 1.5,
-    height: SCREEN_WIDTH * 1.5,
-    borderRadius: SCREEN_WIDTH * 0.75,
-  },
-
   // ── Action Buttons ──
   actionsRow: {
     flexDirection: 'row',
@@ -1067,7 +929,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: spacing.xl,
+    gap: spacing.xxl,
   },
   actionBtnIcon: {
     fontWeight: '700',
