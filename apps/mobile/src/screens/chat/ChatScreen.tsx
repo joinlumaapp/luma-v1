@@ -186,6 +186,8 @@ const typingStyles = StyleSheet.create({
   },
 });
 
+const EMPTY_MESSAGES: ChatMessage[] = [];
+
 export const ChatScreen: React.FC = () => {
   useScreenTracking('Chat');
   const navigation = useNavigation<ChatNavigationProp>();
@@ -206,7 +208,7 @@ export const ChatScreen: React.FC = () => {
 
   const currentUserId = useAuthStore((state) => state.user?.id);
 
-  const messages = useChatStore((state) => state.messages[matchId] ?? []);
+  const messages = useChatStore((state) => state.messages[matchId] ?? EMPTY_MESSAGES);
   const isLoadingMessages = useChatStore((state) => state.isLoadingMessages);
   const isSending = useChatStore((state) => state.isSending);
   const isTyping = useChatStore((state) => state.typingUsers[matchId] ?? false);
