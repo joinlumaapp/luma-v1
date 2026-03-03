@@ -693,6 +693,7 @@ const devUserProfile = {
   birthDate: '1995-06-15',
   gender: 'male',
   intentionTag: 'Ciddi İlişki',
+  interestTags: ['technology', 'travel', 'coffee', 'music', 'books'],
   photos: [
     'https://i.pravatar.cc/400?img=68',
     'https://i.pravatar.cc/400?img=59',

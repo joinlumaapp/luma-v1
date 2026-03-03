@@ -172,7 +172,7 @@ export const CompatibilityBadge: React.FC<CompatibilityBadgeProps> = ({
         { width: size, height: size },
         goldShadow,
       ]}
-      accessibilityLabel={`Uyum skoru y\u00FCzde ${clampedScore}`}
+      accessibilityLabel={`Uyum skoru yüzde ${clampedScore}`}
       accessibilityRole="text"
     >
       {/* Background track ring */}

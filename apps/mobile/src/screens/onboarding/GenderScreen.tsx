@@ -18,7 +18,7 @@ import { spacing, borderRadius, layout } from '../../theme/spacing';
 
 type GenderNavigationProp = NativeStackNavigationProp<OnboardingStackParamList, 'Gender'>;
 
-const CURRENT_STEP = 4;
+const CURRENT_STEP = 6;
 
 type GenderOption = 'male' | 'female' | 'other';
 
@@ -36,7 +36,7 @@ export const GenderScreen: React.FC = () => {
   const handleContinue = () => {
     if (selectedGender) {
       setProfileField('gender', selectedGender);
-      navigation.navigate('IntentionTag');
+      navigation.navigate('Photos');
     }
   };
 

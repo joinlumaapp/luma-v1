@@ -1,3 +1,4 @@
+// DEPRECATED: Replaced by ModeSelectionScreen — kept for reference only
 // Onboarding step 5/7: Intention tag selection — 3 LOCKED tags
 
 import React, { useState } from 'react';
@@ -16,7 +17,7 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 
-type IntentionNavigationProp = NativeStackNavigationProp<OnboardingStackParamList, 'IntentionTag'>;
+type IntentionNavigationProp = NativeStackNavigationProp<OnboardingStackParamList, 'ModeSelection'>;
 
 const CURRENT_STEP = 5;
 

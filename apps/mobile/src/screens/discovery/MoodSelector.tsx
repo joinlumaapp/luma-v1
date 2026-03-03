@@ -1,5 +1,5 @@
-// MoodSelector — "Bugün Ne Moddayım?" inline component for Discovery screen
-// Premium, eye-catching horizontal mood picker with animated emoji bounce
+// MoodSelector — compact horizontal mood picker for Discovery screen
+// Just emoji chips in a scrollable row — no title, no subtitle
 
 import React, { useCallback, useRef, useEffect } from 'react';
 import {
@@ -11,8 +11,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { colors } from '../../theme/colors';
-import { spacing, borderRadius, shadows } from '../../theme/spacing';
-import { typography } from '../../theme/typography';
+import { spacing, borderRadius } from '../../theme/spacing';
 import { useMoodStore, MOOD_OPTIONS, type MoodType, type MoodOption } from '../../stores/moodStore';
 
 // ─── Single Mood Chip ─────────────────────────────────────────
@@ -29,11 +28,10 @@ const MoodChip: React.FC<MoodChipProps> = ({ option, isSelected, onPress }) => {
 
   useEffect(() => {
     if (isSelected) {
-      // Bounce animation
       Animated.sequence([
         Animated.timing(bounceAnim, {
-          toValue: 1.3,
-          duration: 150,
+          toValue: 1.2,
+          duration: 120,
           useNativeDriver: true,
         }),
         Animated.spring(bounceAnim, {
@@ -44,7 +42,6 @@ const MoodChip: React.FC<MoodChipProps> = ({ option, isSelected, onPress }) => {
         }),
       ]).start();
 
-      // Glow pulse animation (loop)
       Animated.loop(
         Animated.sequence([
           Animated.timing(glowAnim, {
@@ -81,13 +78,11 @@ const MoodChip: React.FC<MoodChipProps> = ({ option, isSelected, onPress }) => {
           isSelected && {
             borderColor: option.color,
             backgroundColor: `${option.color}20`,
-          },
-          isSelected && {
             shadowColor: option.color,
             shadowOffset: { width: 0, height: 0 },
-            shadowRadius: 12,
-            shadowOpacity: 0.5,
-            elevation: 8,
+            shadowRadius: 8,
+            shadowOpacity: 0.4,
+            elevation: 6,
           },
         ]}
       >
@@ -108,19 +103,6 @@ const MoodChip: React.FC<MoodChipProps> = ({ option, isSelected, onPress }) => {
           {option.label}
         </Text>
       </Animated.View>
-
-      {/* Glow indicator for selected mood */}
-      {isSelected && (
-        <Animated.View
-          style={[
-            styles.selectedDot,
-            {
-              backgroundColor: option.color,
-              opacity: glowAnim,
-            },
-          ]}
-        />
-      )}
     </TouchableOpacity>
   );
 };
@@ -141,21 +123,6 @@ export const MoodSelector: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Bug\u00FCn Ne Modday\u0131m?</Text>
-        {currentMood && !isExpired && (
-          <View style={styles.activeBadge}>
-            <View style={styles.activeDot} />
-            <Text style={styles.activeText}>Aktif</Text>
-          </View>
-        )}
-      </View>
-      <Text style={styles.subtitle}>
-        Ruh halini payla\u015F, sana uygun ki\u015Fileri bul
-      </Text>
-
-      {/* Horizontal Scrollable Mood Chips */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -199,48 +166,13 @@ export const MoodBadge: React.FC<MoodBadgeProps> = ({ mood }) => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
     paddingLeft: spacing.md,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingRight: spacing.md,
-    marginBottom: spacing.xs,
-  },
-  title: {
-    ...typography.h4,
-    color: colors.text,
-  },
-  subtitle: {
-    ...typography.caption,
-    color: colors.textTertiary,
-    marginBottom: spacing.md,
-  },
-  activeBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: `${colors.success}20`,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  activeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.success,
-    marginRight: spacing.xs,
-  },
-  activeText: {
-    ...typography.captionSmall,
-    color: colors.success,
-    fontWeight: '600',
   },
   chipsContainer: {
     paddingRight: spacing.md,
     gap: spacing.sm,
+    alignItems: 'center',
   },
   chipTouchable: {
     alignItems: 'center',
@@ -248,27 +180,20 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.sm + 4,
+    paddingVertical: spacing.xs + 2,
     borderRadius: borderRadius.full,
     backgroundColor: colors.surfaceLight,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: colors.surfaceBorder,
-    ...shadows.small,
   },
   chipEmoji: {
-    fontSize: 20,
-    marginRight: spacing.sm,
+    fontSize: 16,
+    marginRight: spacing.xs + 2,
   },
   chipLabel: {
-    ...typography.bodySmall,
+    fontSize: 12,
     color: colors.textSecondary,
-  },
-  selectedDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    marginTop: spacing.xs,
   },
   // MoodBadge styles
   moodBadge: {
@@ -283,7 +208,7 @@ const styles = StyleSheet.create({
     marginRight: 3,
   },
   moodBadgeText: {
-    ...typography.captionSmall,
+    fontSize: 10,
     fontWeight: '600',
   },
 });

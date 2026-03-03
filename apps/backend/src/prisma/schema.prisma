@@ -160,6 +160,8 @@ model UserProfile {
   // Mood system (24h expiry)
   currentMood   String?      @map("current_mood") @db.VarChar(20)
   moodSetAt     DateTime?    @map("mood_set_at")
+  // Interest tags (user-selected topic/hobby tags)
+  interestTags  String[]     @default([]) @map("interest_tags")
   // Voice intro
   voiceIntroUrl      String?  @map("voice_intro_url")
   voiceIntroDuration Float?   @map("voice_intro_duration")

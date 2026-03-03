@@ -78,6 +78,11 @@ export class ProfilesService {
       throw new BadRequestException('Hakkinda yazisi en az 10 karakter olmali');
     }
 
+    // Validate interestTags max count
+    if (dto.interestTags && dto.interestTags.length > 10) {
+      throw new BadRequestException('En fazla 10 ilgi alani etiketi eklenebilir');
+    }
+
     // Upsert profile (create if not exists, update if exists)
     const profile = await this.prisma.userProfile.upsert({
       where: { userId },
@@ -92,6 +97,7 @@ export class ProfilesService {
         latitude: dto.latitude,
         longitude: dto.longitude,
         intentionTag: dto.intentionTag ?? 'NOT_SURE',
+        interestTags: dto.interestTags ?? [],
         isComplete: false,
       },
       update: {
@@ -104,6 +110,7 @@ export class ProfilesService {
         ...(dto.latitude !== undefined && { latitude: dto.latitude }),
         ...(dto.longitude !== undefined && { longitude: dto.longitude }),
         ...(dto.intentionTag !== undefined && { intentionTag: dto.intentionTag }),
+        ...(dto.interestTags !== undefined && { interestTags: dto.interestTags }),
         lastActiveAt: new Date(),
       },
     });

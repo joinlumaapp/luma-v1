@@ -34,7 +34,7 @@ export const OfflineBanner: React.FC = () => {
       <View style={styles.content}>
         <View style={styles.dot} />
         <Text style={styles.text}>
-          {'\u00C7evrimd\u0131\u015F\u0131 \u2014 \u0130nternet ba\u011Flant\u0131s\u0131 yok'}
+          {'Çevrimdışı \u2014 İnternet bağlantısı yok'}
         </Text>
       </View>
     </Animated.View>

@@ -10,6 +10,7 @@ export interface ProfileData {
   birthDate: string;
   gender: string;
   intentionTag: string;
+  interestTags: string[];
   photos: string[];
   bio: string;
   answers: Record<number, number>;
@@ -27,6 +28,8 @@ interface ProfileState {
 
   // Actions
   setField: (key: string, value: unknown) => void;
+  setIntentionTag: (tag: string) => void;
+  setInterestTags: (tags: string[]) => void;
   fetchProfile: () => Promise<void>;
   updateProfile: (data: Partial<ProfileData>) => Promise<void>;
   uploadPhoto: (uri: string) => Promise<void>;
@@ -40,6 +43,7 @@ const initialProfile: ProfileData = {
   birthDate: '',
   gender: '',
   intentionTag: '',
+  interestTags: [],
   photos: [],
   bio: '',
   answers: {},
@@ -53,6 +57,7 @@ const mapResponseToProfile = (data: ProfileResponse): ProfileData => ({
   birthDate: data.birthDate,
   gender: data.gender,
   intentionTag: data.intentionTag,
+  interestTags: Array.isArray((data as { interestTags?: string[] }).interestTags) ? (data as { interestTags?: string[] }).interestTags! : [],
   photos: data.photos.map((p) => p.url),
   bio: data.bio,
   answers: {},
@@ -72,6 +77,16 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     set((state) => ({
       profile: { ...state.profile, [key]: value },
       completionPercent: get().calculateCompletion(),
+    })),
+
+  setIntentionTag: (tag) =>
+    set((state) => ({
+      profile: { ...state.profile, intentionTag: tag },
+    })),
+
+  setInterestTags: (tags) =>
+    set((state) => ({
+      profile: { ...state.profile, interestTags: tags },
     })),
 
   fetchProfile: async () => {

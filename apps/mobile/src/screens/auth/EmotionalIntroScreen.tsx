@@ -1,12 +1,11 @@
-// Premium intro screen — dating app with couple imagery, pulsing heart, gradient CTA
-// Each slide: real couple photo background + dark gradient overlay + animated text
-// Founder Test Mode: DEV button (top-right) or long-press LUMA logo 3s on page 3
+// EmotionalIntroScreen — Single emotional landing page
+// Background: subtle animated gradient, pulsing heart, LUMA logo
+// Founder Test Panel: DEV button (top-right) or long-press LUMA logo 3s
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
-  Image,
   StyleSheet,
   Dimensions,
   TouchableOpacity,
@@ -15,7 +14,6 @@ import {
   Modal,
   Pressable,
   Alert,
-  type ImageSourcePropType,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -25,7 +23,6 @@ import Animated, {
   withSpring,
   withRepeat,
   withSequence,
-  useAnimatedScrollHandler,
   Easing,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -42,58 +39,7 @@ import { spacing, borderRadius } from '../../theme/spacing';
 
 type IntroNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'EmotionalIntro'>;
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-
-/** Overlay gradient — deep dark for text readability over couple photos */
-const OVERLAY_GRADIENT: readonly [string, string, ...string[]] = [
-  'rgba(7, 5, 26, 0.55)',
-  'rgba(18, 10, 40, 0.72)',
-  'rgba(26, 14, 48, 0.88)',
-];
-
-// ────────────────────────────────────────────
-// Couple photo backgrounds (placeholder → replace with real stock photos)
-// ────────────────────────────────────────────
-
-/* eslint-disable @typescript-eslint/no-var-requires */
-const SLIDE_IMAGES: ImageSourcePropType[] = [
-  require('../../../assets/intro/couple-1.png'),
-  require('../../../assets/intro/couple-2.png'),
-  require('../../../assets/intro/couple-3.png'),
-];
-/* eslint-enable @typescript-eslint/no-var-requires */
-
-// ────────────────────────────────────────────
-// Data
-// ────────────────────────────────────────────
-
-interface IntroPage {
-  id: string;
-  title: string;
-  subtitle: string;
-  showLogo: boolean;
-}
-
-const PAGES: IntroPage[] = [
-  {
-    id: 'page-1',
-    title: '\u015Eansa de\u011Fil,\nuyuma g\u00FCven.',
-    subtitle: 'Ger\u00E7ek uyum i\u00E7in kendin ol.',
-    showLogo: false,
-  },
-  {
-    id: 'page-2',
-    title: '20 soru.',
-    subtitle: 'Ger\u00E7ek uyum i\u00E7in.',
-    showLogo: false,
-  },
-  {
-    id: 'page-3',
-    title: '',
-    subtitle: 'Ger\u00E7ek uyum i\u00E7in kendin ol.',
-    showLogo: true,
-  },
-];
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // ────────────────────────────────────────────
 // Pulsing Heart — realistic heartbeat rhythm
@@ -106,7 +52,6 @@ const PulsingHeart: React.FC = () => {
   const glowOpacity = useSharedValue(0.10);
 
   useEffect(() => {
-    // Heartbeat: strong beat → small rebound → rest
     heartScale.value = withRepeat(
       withSequence(
         withTiming(1.14, { duration: 1100, easing: Easing.out(Easing.cubic) }),
@@ -129,7 +74,6 @@ const PulsingHeart: React.FC = () => {
       false,
     );
 
-    // Pink glow behind heart
     glowScale.value = withRepeat(
       withSequence(
         withTiming(1.35, { duration: 1100, easing: Easing.out(Easing.cubic) }),
@@ -172,138 +116,6 @@ const PulsingHeart: React.FC = () => {
     </View>
   );
 };
-
-// ────────────────────────────────────────────
-// Page content — fade + translateY + logo scale
-// ────────────────────────────────────────────
-
-const PageContent: React.FC<{
-  page: IntroPage;
-  isActive: boolean;
-  onLogoLongPress?: () => void;
-}> = ({ page, isActive, onLogoLongPress }) => {
-  const titleOpacity = useSharedValue(0);
-  const titleTranslateY = useSharedValue(20);
-  const subtitleOpacity = useSharedValue(0);
-  const subtitleTranslateY = useSharedValue(14);
-  const logoScale = useSharedValue(0.90);
-
-  useEffect(() => {
-    if (isActive) {
-      titleOpacity.value = 0;
-      titleTranslateY.value = 20;
-      subtitleOpacity.value = 0;
-      subtitleTranslateY.value = 14;
-      logoScale.value = 0.90;
-
-      titleOpacity.value = withDelay(
-        200,
-        withTiming(1, { duration: 800, easing: Easing.out(Easing.cubic) }),
-      );
-      titleTranslateY.value = withDelay(
-        200,
-        withTiming(0, { duration: 800, easing: Easing.out(Easing.cubic) }),
-      );
-      subtitleOpacity.value = withDelay(
-        550,
-        withTiming(1, { duration: 700, easing: Easing.out(Easing.cubic) }),
-      );
-      subtitleTranslateY.value = withDelay(
-        550,
-        withTiming(0, { duration: 700, easing: Easing.out(Easing.cubic) }),
-      );
-      if (page.showLogo) {
-        logoScale.value = withDelay(
-          200,
-          withTiming(1.0, { duration: 900, easing: Easing.out(Easing.cubic) }),
-        );
-      }
-    }
-  }, [isActive, titleOpacity, titleTranslateY, subtitleOpacity, subtitleTranslateY, logoScale, page.showLogo]);
-
-  const titleStyle = useAnimatedStyle(() => ({
-    opacity: titleOpacity.value,
-    transform: [{ translateY: titleTranslateY.value }],
-  }));
-
-  const subtitleStyle = useAnimatedStyle(() => ({
-    opacity: subtitleOpacity.value,
-    transform: [{ translateY: subtitleTranslateY.value }],
-  }));
-
-  const logoStyle = useAnimatedStyle(() => ({
-    opacity: titleOpacity.value,
-    transform: [
-      { translateY: titleTranslateY.value },
-      { scale: logoScale.value },
-    ],
-  }));
-
-  return (
-    <View style={styles.pageContent}>
-      {page.showLogo && (
-        <Pressable
-          onLongPress={onLogoLongPress}
-          delayLongPress={3000}
-        >
-          <Animated.Text style={[styles.logoText, logoStyle]}>
-            LUMA
-          </Animated.Text>
-        </Pressable>
-      )}
-      {page.title !== '' && (
-        <Animated.Text style={[styles.pageTitle, titleStyle]}>
-          {page.title}
-        </Animated.Text>
-      )}
-      {page.subtitle !== '' && (
-        <Animated.Text style={[styles.pageSubtitle, subtitleStyle]}>
-          {page.subtitle}
-        </Animated.Text>
-      )}
-    </View>
-  );
-};
-
-// ────────────────────────────────────────────
-// Animated dot indicators
-// ────────────────────────────────────────────
-
-const AnimatedDot: React.FC<{ isActive: boolean }> = ({ isActive }) => {
-  const dotWidth = useSharedValue(isActive ? 28 : 7);
-  const dotOpacity = useSharedValue(isActive ? 1 : 0.3);
-
-  useEffect(() => {
-    dotWidth.value = withSpring(isActive ? 28 : 7, { damping: 15, stiffness: 200 });
-    dotOpacity.value = withTiming(isActive ? 1 : 0.3, { duration: 300 });
-  }, [isActive, dotWidth, dotOpacity]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    width: dotWidth.value,
-    opacity: dotOpacity.value,
-  }));
-
-  return (
-    <Animated.View
-      style={[
-        styles.dot,
-        isActive ? styles.dotActive : styles.dotInactive,
-        animatedStyle,
-      ]}
-    />
-  );
-};
-
-const DotIndicators: React.FC<{ activeIndex: number; total: number }> = ({
-  activeIndex,
-  total,
-}) => (
-  <View style={styles.dotsContainer}>
-    {Array.from({ length: total }, (_, i) => (
-      <AnimatedDot key={`dot-${i}`} isActive={i === activeIndex} />
-    ))}
-  </View>
-);
 
 // ────────────────────────────────────────────
 // Gradient CTA button with glow + spring press
@@ -384,25 +196,6 @@ const GradientCTAButton: React.FC<{
 };
 
 // ────────────────────────────────────────────
-// Glass-morphism secondary button
-// ────────────────────────────────────────────
-
-const GlassButton: React.FC<{
-  label: string;
-  onPress: () => void;
-}> = ({ label, onPress }) => (
-  <TouchableOpacity
-    style={styles.glassButton}
-    onPress={onPress}
-    activeOpacity={0.8}
-    accessibilityLabel={label}
-    accessibilityRole="button"
-  >
-    <Text style={styles.glassButtonText}>{label}</Text>
-  </TouchableOpacity>
-);
-
-// ────────────────────────────────────────────
 // Founder Test Panel (__DEV__ only)
 // ────────────────────────────────────────────
 
@@ -426,7 +219,7 @@ const FounderTestPanel: React.FC<{
       <View style={styles.testPanel}>
         <Text style={styles.testPanelTitle}>Founder Test Modu</Text>
         <Text style={styles.testPanelSubtitle}>
-          Sadece geli\u015Ftirme modunda g\u00F6r\u00FCn\u00FCr
+          Sadece geliştirme modunda görünür
         </Text>
 
         <TouchableOpacity
@@ -435,7 +228,7 @@ const FounderTestPanel: React.FC<{
           activeOpacity={0.8}
         >
           <Text style={styles.testPanelButtonText}>
-            Founder Giri\u015Fi (Tam Atla)
+            Founder Girişi (Tam Atla)
           </Text>
           <Text style={styles.testPanelButtonDesc}>
             Auth + onboarding atla, mock data ile MainTabs&apos;a git
@@ -448,7 +241,7 @@ const FounderTestPanel: React.FC<{
           activeOpacity={0.8}
         >
           <Text style={styles.testPanelButtonText}>
-            Normal Test (Ak\u0131\u015F \u0130\u00E7i)
+            Normal Test (Akış İçi)
           </Text>
           <Text style={styles.testPanelButtonDesc}>
             OTP: 000000 otomatik, selfie otomatik onayla
@@ -464,24 +257,57 @@ const FounderTestPanel: React.FC<{
 );
 
 // ────────────────────────────────────────────
-// Main screen
+// Main screen — single emotional landing page
 // ────────────────────────────────────────────
-
-const AnimatedFlatList = Animated.FlatList<IntroPage>;
 
 const EmotionalIntroScreen: React.FC = () => {
   const navigation = useNavigation<IntroNavigationProp>();
-  const [activeIndex, setActiveIndex] = useState(0);
   const [showTestPanel, setShowTestPanel] = useState(false);
-  const flatListRef = useRef<Animated.FlatList<IntroPage>>(null);
-  const scrollX = useSharedValue(0);
-  const isLastPage = activeIndex === PAGES.length - 1;
 
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      scrollX.value = event.contentOffset.x;
-    },
-  });
+  // Animated entrance
+  const logoOpacity = useSharedValue(0);
+  const logoScale = useSharedValue(0.85);
+  const headlineOpacity = useSharedValue(0);
+  const headlineTranslateY = useSharedValue(24);
+  const subtextOpacity = useSharedValue(0);
+  const subtextTranslateY = useSharedValue(16);
+  const ctaOpacity = useSharedValue(0);
+  const ctaTranslateY = useSharedValue(20);
+
+  useEffect(() => {
+    // Staggered entrance animation
+    logoOpacity.value = withDelay(300, withTiming(1, { duration: 900, easing: Easing.out(Easing.cubic) }));
+    logoScale.value = withDelay(300, withTiming(1, { duration: 900, easing: Easing.out(Easing.cubic) }));
+
+    headlineOpacity.value = withDelay(700, withTiming(1, { duration: 800, easing: Easing.out(Easing.cubic) }));
+    headlineTranslateY.value = withDelay(700, withTiming(0, { duration: 800, easing: Easing.out(Easing.cubic) }));
+
+    subtextOpacity.value = withDelay(1000, withTiming(1, { duration: 700, easing: Easing.out(Easing.cubic) }));
+    subtextTranslateY.value = withDelay(1000, withTiming(0, { duration: 700, easing: Easing.out(Easing.cubic) }));
+
+    ctaOpacity.value = withDelay(1400, withTiming(1, { duration: 700, easing: Easing.out(Easing.cubic) }));
+    ctaTranslateY.value = withDelay(1400, withTiming(0, { duration: 700, easing: Easing.out(Easing.cubic) }));
+  }, [logoOpacity, logoScale, headlineOpacity, headlineTranslateY, subtextOpacity, subtextTranslateY, ctaOpacity, ctaTranslateY]);
+
+  const logoStyle = useAnimatedStyle(() => ({
+    opacity: logoOpacity.value,
+    transform: [{ scale: logoScale.value }],
+  }));
+
+  const headlineStyle = useAnimatedStyle(() => ({
+    opacity: headlineOpacity.value,
+    transform: [{ translateY: headlineTranslateY.value }],
+  }));
+
+  const subtextStyle = useAnimatedStyle(() => ({
+    opacity: subtextOpacity.value,
+    transform: [{ translateY: subtextTranslateY.value }],
+  }));
+
+  const ctaSectionStyle = useAnimatedStyle(() => ({
+    opacity: ctaOpacity.value,
+    transform: [{ translateY: ctaTranslateY.value }],
+  }));
 
   // Navigation handlers
   const handleStartTest = useCallback(() => {
@@ -489,28 +315,15 @@ const EmotionalIntroScreen: React.FC = () => {
   }, [navigation]);
 
   const handleGoogleAuth = useCallback(() => {
-    // Google OAuth not yet integrated
     Alert.alert(
-      'Google ile Giri\u015F',
-      'Google ile giri\u015F yak\u0131nda aktif olacak. \u015Eimdilik telefon numaran\u0131 ile devam edebilirsin.',
+      'Google ile Giriş',
+      'Google ile giriş yakında aktif olacak. Şimdilik telefon numaranı ile devam edebilirsin.',
     );
   }, []);
 
   const handleLogin = useCallback(() => {
     navigation.navigate('PhoneEntry');
   }, [navigation]);
-
-  // Page scroll with haptic
-  const handleMomentumScrollEnd = useCallback(
-    (event: { nativeEvent: { contentOffset: { x: number } } }) => {
-      const newIndex = Math.round(event.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-      if (newIndex !== activeIndex) {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        setActiveIndex(newIndex);
-      }
-    },
-    [activeIndex],
-  );
 
   // Founder Test Mode handlers
   const handleFounderLogin = useCallback(async () => {
@@ -546,53 +359,22 @@ const EmotionalIntroScreen: React.FC = () => {
     setShowTestPanel(true);
   }, []);
 
-  // FlatList renderers — each slide has couple photo background + overlay
-  const renderPage = useCallback(
-    ({ item, index }: { item: IntroPage; index: number }) => (
-      <View style={styles.page}>
-        {/* Couple photo background */}
-        <Image
-          source={SLIDE_IMAGES[index]}
-          style={StyleSheet.absoluteFillObject}
-          resizeMode="cover"
-        />
-        {/* Dark gradient overlay for text readability */}
-        <LinearGradient
-          colors={OVERLAY_GRADIENT}
-          style={StyleSheet.absoluteFillObject}
-        />
-        <PageContent
-          page={item}
-          isActive={index === activeIndex}
-          onLogoLongPress={handleLogoLongPress}
-        />
-      </View>
-    ),
-    [activeIndex, handleLogoLongPress],
-  );
-
-  const getItemLayout = useCallback(
-    (_data: ArrayLike<IntroPage> | null | undefined, index: number) => ({
-      length: SCREEN_WIDTH,
-      offset: SCREEN_WIDTH * index,
-      index,
-    }),
-    [],
-  );
-
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      {/* Base dark background — couple photos are per-slide */}
-      <View style={StyleSheet.absoluteFill}>
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: '#07051A' }]} />
-      </View>
+      {/* Animated gradient background */}
+      <LinearGradient
+        colors={['#07051A', '#120A28', '#1A0E30', '#07051A'] as [string, string, ...string[]]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={StyleSheet.absoluteFillObject}
+      />
 
-      {/* Pulsing heart — grows and shrinks like a heartbeat, overlaid on photos */}
+      {/* Pulsing heart — behind content */}
       <PulsingHeart />
 
-      {/* DEV test button — visible only in development mode */}
+      {/* DEV test button */}
       {__DEV__ && (
         <TouchableOpacity
           style={styles.devButton}
@@ -603,53 +385,57 @@ const EmotionalIntroScreen: React.FC = () => {
         </TouchableOpacity>
       )}
 
-      {/* Swipeable pages — manual only */}
-      <AnimatedFlatList
-        ref={flatListRef}
-        data={PAGES}
-        renderItem={renderPage}
-        keyExtractor={(item) => item.id}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={handleMomentumScrollEnd}
-        onScroll={scrollHandler}
-        scrollEventThrottle={16}
-        getItemLayout={getItemLayout}
-        bounces={false}
-        style={styles.flatList}
-      />
+      {/* Main content — centered */}
+      <View style={styles.mainContent}>
+        {/* LUMA logo */}
+        <Pressable onLongPress={handleLogoLongPress} delayLongPress={3000}>
+          <Animated.Text style={[styles.logoText, logoStyle]}>
+            LUMA
+          </Animated.Text>
+        </Pressable>
 
-      {/* Bottom: dots + auth section on last page */}
-      <View style={styles.bottomSection}>
-        <DotIndicators activeIndex={activeIndex} total={PAGES.length} />
+        {/* Headline */}
+        <Animated.Text style={[styles.headline, headlineStyle]}>
+          Seni gerçekten anlayan{'\n'}biriyle tanışmaya{'\n'}hazır mısın?
+        </Animated.Text>
 
-        {isLastPage && (
-          <View style={styles.authSection}>
-            <GradientCTAButton
-              label="Uyumluluk testine ba\u015Fla"
-              onPress={handleStartTest}
-            />
-            <GlassButton
-              label="Google ile devam et"
-              onPress={handleGoogleAuth}
-            />
-            <TouchableOpacity
-              onPress={handleLogin}
-              activeOpacity={0.7}
-              accessibilityLabel="Giri\u015F yap"
-              accessibilityRole="link"
-            >
-              <Text style={styles.loginText}>
-                {'Hesab\u0131n var m\u0131? '}
-                <Text style={styles.loginLink}>Giri\u015F yap</Text>
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        {/* Subtext */}
+        <Animated.Text style={[styles.subtext, subtextStyle]}>
+          2 dakikalık uyumluluk testi ile başla.
+        </Animated.Text>
       </View>
 
-      {/* Founder Test Mode modal — __DEV__ only */}
+      {/* Bottom auth section */}
+      <Animated.View style={[styles.bottomSection, ctaSectionStyle]}>
+        <GradientCTAButton
+          label="Uyumluluk Testine Başla"
+          onPress={handleStartTest}
+        />
+
+        <TouchableOpacity
+          style={styles.glassButton}
+          onPress={handleGoogleAuth}
+          activeOpacity={0.8}
+          accessibilityLabel="Google ile devam et"
+          accessibilityRole="button"
+        >
+          <Text style={styles.glassButtonText}>Google ile devam et</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={handleLogin}
+          activeOpacity={0.7}
+          accessibilityLabel="Giriş yap"
+          accessibilityRole="link"
+        >
+          <Text style={styles.loginText}>
+            {'Zaten hesabın var mı? '}
+            <Text style={styles.loginLink}>Giriş yap</Text>
+          </Text>
+        </TouchableOpacity>
+      </Animated.View>
+
+      {/* Founder Test Mode modal */}
       {__DEV__ && (
         <FounderTestPanel
           visible={showTestPanel}
@@ -676,11 +462,11 @@ const styles = StyleSheet.create({
   // Pulsing heart
   heartContainer: {
     position: 'absolute',
-    top: SCREEN_HEIGHT * 0.28,
+    top: SCREEN_HEIGHT * 0.22,
     alignSelf: 'center',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 1,
+    zIndex: 0,
   },
   heartGlow: {
     position: 'absolute',
@@ -723,27 +509,20 @@ const styles = StyleSheet.create({
     color: palette.purple[300],
     letterSpacing: 1,
   },
-  flatList: {
-    flex: 1,
-  },
-  page: {
-    width: SCREEN_WIDTH,
+  // Main content — vertically centered
+  mainContent: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
-    overflow: 'hidden',
-  },
-  pageContent: {
-    alignItems: 'center',
-    paddingHorizontal: spacing.sm,
+    zIndex: 1,
   },
   logoText: {
     fontSize: 56,
     fontWeight: '200',
     color: '#FFFFFF',
     letterSpacing: 24,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.xl + spacing.md,
     ...Platform.select({
       ios: {
         textShadowColor: 'rgba(168, 85, 247, 0.5)',
@@ -753,68 +532,38 @@ const styles = StyleSheet.create({
       android: {},
     }),
   },
-  pageTitle: {
-    fontSize: 38,
+  headline: {
+    fontSize: 32,
     fontWeight: '700',
     color: '#FFFFFF',
     textAlign: 'center',
-    lineHeight: 48,
-    letterSpacing: -0.5,
+    lineHeight: 42,
+    letterSpacing: -0.3,
     marginBottom: spacing.lg,
     ...Platform.select({
       ios: {
-        textShadowColor: 'rgba(236, 72, 153, 0.3)',
+        textShadowColor: 'rgba(236, 72, 153, 0.2)',
         textShadowOffset: { width: 0, height: 0 },
-        textShadowRadius: 20,
+        textShadowRadius: 16,
       },
       android: {},
     }),
   },
-  pageSubtitle: {
-    fontSize: 17,
+  subtext: {
+    fontSize: 16,
     fontWeight: '400',
-    color: 'rgba(255, 255, 255, 0.75)',
+    color: 'rgba(255, 255, 255, 0.65)',
     textAlign: 'center',
-    lineHeight: 26,
-    letterSpacing: 0.3,
-    paddingHorizontal: spacing.lg,
-  },
-  // Dots
-  dotsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  dot: {
-    height: 7,
-    borderRadius: 4,
-  },
-  dotActive: {
-    backgroundColor: palette.pink[400],
-    ...Platform.select({
-      ios: {
-        shadowColor: palette.pink[400],
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.6,
-        shadowRadius: 8,
-      },
-      android: {},
-    }),
-  },
-  dotInactive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    lineHeight: 24,
+    letterSpacing: 0.2,
   },
   // Bottom section
   bottomSection: {
     paddingBottom: Platform.OS === 'ios' ? 48 : 36,
     paddingHorizontal: spacing.lg,
     alignItems: 'center',
-    gap: spacing.lg,
-  },
-  authSection: {
-    width: '100%',
     gap: spacing.md,
-    alignItems: 'center',
+    zIndex: 2,
   },
   // CTA button
   ctaWrapper: {

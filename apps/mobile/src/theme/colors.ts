@@ -155,5 +155,15 @@ export const lightColors: ThemeColors = lightTheme;
 // Theme mode type
 export type ThemeMode = 'light' | 'dark' | 'system';
 
+// Glassmorphism design tokens
+export const glassmorphism = {
+  bg: 'rgba(20, 20, 34, 0.7)',
+  bgLight: 'rgba(28, 28, 50, 0.5)',
+  bgDark: 'rgba(8, 8, 15, 0.85)',
+  border: 'rgba(139, 92, 246, 0.15)',
+  borderActive: 'rgba(139, 92, 246, 0.35)',
+  borderGold: 'rgba(251, 191, 36, 0.25)',
+} as const;
+
 // Default theme is dark (backwards compatible)
 export const colors: ThemeColors = darkTheme;

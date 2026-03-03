@@ -20,13 +20,14 @@ export type AuthStackParamList = {
 
 // -- Onboarding Stack --
 export type OnboardingStackParamList = {
+  ModeSelection: undefined;
+  Questions: undefined;
+  InterestSelection: undefined;
   Name: undefined;
   BirthDate: undefined;
   Gender: undefined;
-  IntentionTag: undefined;
   Photos: undefined;
   Bio: undefined;
-  Questions: undefined;
 };
 
 // -- Main Tabs (LOCKED: 4 tabs) --

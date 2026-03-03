@@ -16,9 +16,9 @@ export interface MoodOption {
 export const MOOD_OPTIONS: MoodOption[] = [
   { type: 'SAKIN', emoji: '\u2615', label: 'Sakin', color: '#6B9DFC', glowColor: 'rgba(107, 157, 252, 0.4)' },
   { type: 'ENERJIK', emoji: '\uD83C\uDF89', label: 'Enerjik', color: '#FF6B6B', glowColor: 'rgba(255, 107, 107, 0.4)' },
-  { type: 'YARATICI', emoji: '\uD83C\uDFA8', label: 'Yarat\u0131c\u0131', color: '#A78BFA', glowColor: 'rgba(167, 139, 250, 0.4)' },
-  { type: 'DUSUNCELI', emoji: '\uD83D\uDCAD', label: 'D\u00FC\u015F\u00FCnceli', color: '#34D399', glowColor: 'rgba(52, 211, 153, 0.4)' },
-  { type: 'HEYECANLI', emoji: '\uD83C\uDF1F', label: 'Heyecanl\u0131', color: '#FBBF24', glowColor: 'rgba(251, 191, 36, 0.4)' },
+  { type: 'YARATICI', emoji: '\uD83C\uDFA8', label: 'Yaratıcı', color: '#A78BFA', glowColor: 'rgba(167, 139, 250, 0.4)' },
+  { type: 'DUSUNCELI', emoji: '\uD83D\uDCAD', label: 'Düşünceli', color: '#34D399', glowColor: 'rgba(52, 211, 153, 0.4)' },
+  { type: 'HEYECANLI', emoji: '\uD83C\uDF1F', label: 'Heyecanlı', color: '#FBBF24', glowColor: 'rgba(251, 191, 36, 0.4)' },
   { type: 'MUTLU', emoji: '\uD83D\uDE0A', label: 'Mutlu', color: '#F472B6', glowColor: 'rgba(244, 114, 182, 0.4)' },
 ];
 
@@ -46,15 +46,14 @@ export const useMoodStore = create<MoodState>((set, get) => ({
 
   // Actions
   setMood: async (mood: MoodType) => {
-    set({ isLoading: true });
+    // Optimistic: set mood immediately so UI collapses instantly
+    const nowIso = new Date().toISOString();
+    set({ currentMood: mood, moodSetAt: nowIso, isLoading: true });
     try {
       const response = await moodService.setMood(mood);
-      set({
-        currentMood: mood,
-        moodSetAt: response.moodSetAt,
-        isLoading: false,
-      });
+      set({ moodSetAt: response.moodSetAt ?? nowIso, isLoading: false });
     } catch {
+      // Keep mood set locally even if API fails
       set({ isLoading: false });
     }
   },

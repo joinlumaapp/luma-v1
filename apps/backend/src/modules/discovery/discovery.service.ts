@@ -9,6 +9,28 @@ import { BadgesService } from '../badges/badges.service';
 import { SwipeDto, SwipeDirection } from './dto';
 import { FeedFilterDto, GenderPreferenceParam } from './dto/feed-filter.dto';
 
+// Turkish labels for compatibility dimension categories
+const DIMENSION_LABELS_TR: Record<string, string> = {
+  COMMUNICATION: 'Iletisim Tarzi',
+  LIFE_GOALS: 'Yasam Hedefleri',
+  VALUES: 'Degerler',
+  LIFESTYLE: 'Yasam Tarzi',
+  EMOTIONAL_INTELLIGENCE: 'Duygusal Zeka',
+  RELATIONSHIP_EXPECTATIONS: 'Iliski Beklentileri',
+  SOCIAL_COMPATIBILITY: 'Sosyal Uyum',
+  ATTACHMENT_STYLE: 'Baglanma Tarzi',
+  LOVE_LANGUAGE: 'Sevgi Dili',
+  CONFLICT_STYLE: 'Catisma Yaklasimi',
+  FUTURE_VISION: 'Gelecek Vizyonu',
+  INTELLECTUAL: 'Entelektuel Uyum',
+  INTIMACY: 'Yakinlik',
+  GROWTH_MINDSET: 'Gelisim Odaklilik',
+  CORE_FEARS: 'Temel Kaygilar',
+};
+
+// Threshold for a dimension to be considered "strong"
+const STRONG_DIMENSION_THRESHOLD = 70;
+
 // Daily swipe limits per package tier (LOCKED: 4 packages)
 const DAILY_SWIPE_LIMITS: Record<string, number> = {
   FREE: 20,
@@ -209,16 +231,26 @@ export class DiscoveryService {
               userBId: pair.second,
             })),
           },
-          select: { userAId: true, userBId: true, finalScore: true, level: true },
+          select: {
+            userAId: true,
+            userBId: true,
+            finalScore: true,
+            level: true,
+            dimensionScores: true,
+          },
         })
       : [];
 
-    // Build O(1) lookup map: "userAId_userBId" -> score
-    const compatMap = new Map<string, { finalScore: number; level: string }>();
+    // Build O(1) lookup map: "userAId_userBId" -> score + dimensions
+    const compatMap = new Map<
+      string,
+      { finalScore: number; level: string; dimensionScores: Record<string, number> | null }
+    >();
     for (const score of compatScores) {
       compatMap.set(`${score.userAId}_${score.userBId}`, {
         finalScore: score.finalScore,
         level: score.level,
+        dimensionScores: score.dimensionScores as Record<string, number> | null,
       });
     }
 
@@ -241,6 +273,11 @@ export class DiscoveryService {
         candidatePackageTier: profile.user.packageTier,
       });
 
+      // Derive strong categories and explanation from dimension scores
+      const dimensions = score?.dimensionScores ?? null;
+      const strongCategories = this.getStrongCategories(dimensions);
+      const compatExplanation = this.buildCompatExplanation(dimensions);
+
       return {
         userId: profile.userId,
         firstName: profile.firstName,
@@ -249,6 +286,7 @@ export class DiscoveryService {
         city: profile.city,
         gender: profile.gender,
         intentionTag: profile.intentionTag,
+        interestTags: profile.interestTags,
         distanceKm: distanceKm !== null ? Math.round(distanceKm * 10) / 10 : null,
         photos: profile.user.photos.map((p) => ({
           id: p.id,
@@ -264,6 +302,8 @@ export class DiscoveryService {
               isSuperCompatible: score.level === 'SUPER',
             }
           : null,
+        compatExplanation,
+        strongCategories,
         feedScore,
       };
     });
@@ -775,5 +815,50 @@ export class DiscoveryService {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return today;
+  }
+
+  /**
+   * Extract top 3 dimension names where score >= STRONG_DIMENSION_THRESHOLD.
+   * Returns Turkish labels for display on feed cards.
+   */
+  private getStrongCategories(
+    dimensionScores: Record<string, number> | null,
+  ): string[] {
+    if (!dimensionScores) return [];
+
+    return Object.entries(dimensionScores)
+      .filter(([, score]) => score >= STRONG_DIMENSION_THRESHOLD)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([category]) => DIMENSION_LABELS_TR[category] ?? category);
+  }
+
+  /**
+   * Build a 1-line Turkish explanation from the top scoring dimension.
+   * Returns null if no dimension data is available.
+   */
+  private buildCompatExplanation(
+    dimensionScores: Record<string, number> | null,
+  ): string | null {
+    if (!dimensionScores) return null;
+
+    const entries = Object.entries(dimensionScores);
+    if (entries.length === 0) return null;
+
+    // Find highest scoring dimension
+    const [topCategory, topScore] = entries.reduce(
+      (best, current) => (current[1] > best[1] ? current : best),
+      entries[0],
+    );
+
+    const label = DIMENSION_LABELS_TR[topCategory] ?? topCategory;
+
+    if (topScore >= 90) {
+      return `${label} alaninda mukemmel uyum (%${Math.round(topScore)})`;
+    }
+    if (topScore >= 70) {
+      return `${label} alaninda guclu uyum (%${Math.round(topScore)})`;
+    }
+    return `${label} alaninda uyum (%${Math.round(topScore)})`;
   }
 }

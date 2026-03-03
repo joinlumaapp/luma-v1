@@ -20,6 +20,69 @@ const MAX_DISPLAY_SCORE = 97;
 // Staleness threshold for cached scores — recalculate after 24 hours
 const SCORE_STALENESS_MS = 24 * 60 * 60 * 1000;
 
+// Turkish labels for compatibility dimension categories
+const DIMENSION_LABELS_TR: Record<string, string> = {
+  COMMUNICATION: 'Iletisim Tarzi',
+  LIFE_GOALS: 'Yasam Hedefleri',
+  VALUES: 'Degerler',
+  LIFESTYLE: 'Yasam Tarzi',
+  EMOTIONAL_INTELLIGENCE: 'Duygusal Zeka',
+  RELATIONSHIP_EXPECTATIONS: 'Iliski Beklentileri',
+  SOCIAL_COMPATIBILITY: 'Sosyal Uyum',
+  ATTACHMENT_STYLE: 'Baglanma Tarzi',
+  LOVE_LANGUAGE: 'Sevgi Dili',
+  CONFLICT_STYLE: 'Catisma Yaklasimi',
+  FUTURE_VISION: 'Gelecek Vizyonu',
+  INTELLECTUAL: 'Entelektuel Uyum',
+  INTIMACY: 'Yakinlik',
+  GROWTH_MINDSET: 'Gelisim Odaklilik',
+  CORE_FEARS: 'Temel Kaygilar',
+};
+
+// Conversation starter templates per category (Turkish)
+const CONVERSATION_STARTERS_TR: Record<string, string[]> = {
+  COMMUNICATION: [
+    'Iletisimde en cok neye onem verirsiniz?',
+    'Zor bir konuyu nasil dile getirirsiniz?',
+  ],
+  LIFE_GOALS: [
+    '5 yil sonra kendinizi nerede goruyorsunuz?',
+    'Hayattaki en buyuk hedefiniz ne?',
+  ],
+  VALUES: [
+    'Sizin icin vazgecilmez degerleriniz neler?',
+    'Hayatta en cok neye onem verirsiniz?',
+  ],
+  LIFESTYLE: [
+    'Ideal bir hafta sonu nasil gecirir?',
+    'Serbest zamaninizda en cok ne yapmayi seversiniz?',
+  ],
+  EMOTIONAL_INTELLIGENCE: [
+    'Duygularinizi nasil ifade edersiniz?',
+    'Zor zamanlarla nasil basa cikarsiniz?',
+  ],
+  RELATIONSHIP_EXPECTATIONS: [
+    'Ideal bir iliskide en onemli sey sizce ne?',
+    'Bir iliskiden beklentileriniz neler?',
+  ],
+  SOCIAL_COMPATIBILITY: [
+    'Arkadasliklariniz sizin icin ne ifade ediyor?',
+    'Sosyal ortamlarda kendinizi nasil hissedersiniz?',
+  ],
+  ATTACHMENT_STYLE: [
+    'Yakinlik kurarken kendinizi rahat hisseder misiniz?',
+    'Guven sizin icin ne anlama geliyor?',
+  ],
+  LOVE_LANGUAGE: [
+    'Sevginizi nasil gosterirsiniz?',
+    'Sevildigini en cok ne zaman hissedersiniz?',
+  ],
+  CONFLICT_STYLE: [
+    'Bir anlasmazlik yasandiginda nasil tepki verirsiniz?',
+    'Cozum odakli misiniz yoksa once duygulari mi konusursunuz?',
+  ],
+};
+
 // Categories where balanced opposites are beneficial (complementary pairing)
 // These categories benefit from diversity, not just similarity
 const COMPLEMENTARY_CATEGORIES = new Set([
@@ -605,6 +668,96 @@ export class CompatibilityService {
     };
   }
 
+  /**
+   * Get detailed compatibility breakdown between current user and target.
+   * Returns strong areas, differences, and conversation starters (all Turkish).
+   */
+  async getDetailedCompatibility(
+    userId: string,
+    targetUserId: string,
+  ): Promise<{
+    score: number;
+    level: 'NORMAL' | 'SUPER';
+    strongAreas: Array<{ category: string; labelTr: string; description: string }>;
+    differences: Array<{ category: string; labelTr: string; description: string }>;
+    conversationStarters: string[];
+  }> {
+    if (userId === targetUserId) {
+      throw new BadRequestException('Kendinizle uyumluluk detayi goruntuleyemezsiniz');
+    }
+
+    const { first, second } = this.orderIds(userId, targetUserId);
+
+    // Fetch or compute the score
+    let existingScore = await this.prisma.compatibilityScore.findUnique({
+      where: { userAId_userBId: { userAId: first, userBId: second } },
+    });
+
+    if (!existingScore) {
+      await this.calculateAndStoreScore(userId, targetUserId);
+      existingScore = await this.prisma.compatibilityScore.findUnique({
+        where: { userAId_userBId: { userAId: first, userBId: second } },
+      });
+    }
+
+    const finalScore = existingScore?.finalScore ?? MIN_DISPLAY_SCORE;
+    const level = (existingScore?.level ?? 'NORMAL') as 'NORMAL' | 'SUPER';
+    const dimensionScores = (existingScore?.dimensionScores ?? {}) as Record<string, number>;
+
+    // Partition dimensions into strong areas and differences
+    const strongAreas: Array<{ category: string; labelTr: string; description: string }> = [];
+    const differences: Array<{ category: string; labelTr: string; description: string }> = [];
+
+    for (const [category, score] of Object.entries(dimensionScores)) {
+      const labelTr = DIMENSION_LABELS_TR[category] ?? category;
+
+      if (score >= 70) {
+        strongAreas.push({
+          category,
+          labelTr,
+          description: score >= 90
+            ? `${labelTr} alaninda mukemmel bir uyumunuz var (%${Math.round(score)})`
+            : `${labelTr} alaninda guclu bir uyumunuz var (%${Math.round(score)})`,
+        });
+      } else {
+        differences.push({
+          category,
+          labelTr,
+          description: score >= 50
+            ? `${labelTr} alaninda farkli bakis acilariniz var (%${Math.round(score)})`
+            : `${labelTr} alaninda belirgin farkliliklar mevcut (%${Math.round(score)})`,
+        });
+      }
+    }
+
+    // Sort strong areas by score (descending), differences by score (ascending)
+    strongAreas.sort((a, b) => {
+      const scoreA = dimensionScores[a.category] ?? 0;
+      const scoreB = dimensionScores[b.category] ?? 0;
+      return scoreB - scoreA;
+    });
+    differences.sort((a, b) => {
+      const scoreA = dimensionScores[a.category] ?? 0;
+      const scoreB = dimensionScores[b.category] ?? 0;
+      return scoreA - scoreB;
+    });
+
+    // Generate conversation starters based on dimensions
+    const conversationStarters = this.generateConversationStarters(
+      dimensionScores,
+      strongAreas,
+      differences,
+    );
+
+    return {
+      score: finalScore,
+      level,
+      strongAreas,
+      differences,
+      conversationStarters,
+    };
+  }
+
   // ─── Private Helpers ───────────────────────────────────────────
 
   /**
@@ -636,5 +789,64 @@ export class CompatibilityService {
       isSuperCompatible: score.level === 'SUPER',
       breakdown: score.dimensionScores ?? {},
     };
+  }
+
+  /**
+   * Generate conversation starter suggestions based on compatibility dimensions.
+   * Picks starters from strong areas and difference areas for balanced discussion.
+   */
+  private generateConversationStarters(
+    dimensionScores: Record<string, number>,
+    strongAreas: Array<{ category: string }>,
+    differences: Array<{ category: string }>,
+  ): string[] {
+    const starters: string[] = [];
+    const usedCategories = new Set<string>();
+
+    // Add 1-2 starters from strong areas
+    for (const area of strongAreas.slice(0, 2)) {
+      const categoryStarters = CONVERSATION_STARTERS_TR[area.category];
+      if (categoryStarters && categoryStarters.length > 0 && !usedCategories.has(area.category)) {
+        starters.push(categoryStarters[0]);
+        usedCategories.add(area.category);
+      }
+    }
+
+    // Add 1 starter from differences (to explore different perspectives)
+    for (const diff of differences.slice(0, 1)) {
+      const categoryStarters = CONVERSATION_STARTERS_TR[diff.category];
+      if (categoryStarters && categoryStarters.length > 1 && !usedCategories.has(diff.category)) {
+        starters.push(categoryStarters[1]);
+        usedCategories.add(diff.category);
+      }
+    }
+
+    // Fill remaining slots from any unused high-score categories
+    if (starters.length < 3) {
+      const sortedDimensions = Object.entries(dimensionScores)
+        .sort((a, b) => b[1] - a[1]);
+
+      for (const [category] of sortedDimensions) {
+        if (starters.length >= 3) break;
+        if (usedCategories.has(category)) continue;
+
+        const categoryStarters = CONVERSATION_STARTERS_TR[category];
+        if (categoryStarters && categoryStarters.length > 0) {
+          starters.push(categoryStarters[0]);
+          usedCategories.add(category);
+        }
+      }
+    }
+
+    // Fallback if no dimension-based starters available
+    if (starters.length === 0) {
+      starters.push(
+        'Hayatta en cok neye onem verirsiniz?',
+        'Ideal bir hafta sonu nasil gecirirsiniz?',
+        'Sizi en cok ne mutlu eder?',
+      );
+    }
+
+    return starters.slice(0, 5);
   }
 }

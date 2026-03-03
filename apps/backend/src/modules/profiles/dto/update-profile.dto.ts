@@ -110,4 +110,15 @@ export class UpdateProfileDto {
   @IsArray()
   @IsString({ each: true })
   interests?: string[];
+
+  @ApiPropertyOptional({
+    description: 'Interest tags displayed on profile cards (max 10)',
+    type: [String],
+    example: ['Müzik', 'Seyahat', 'Yoga'],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @MaxLength(30, { each: true, message: 'Her etiket en fazla 30 karakter olabilir' })
+  interestTags?: string[];
 }

@@ -78,6 +78,20 @@ export interface MyAnswersResponse {
   totalQuestions: number;
 }
 
+export interface DetailedCompatibilityArea {
+  category: string;
+  labelTr: string;
+  description: string;
+}
+
+export interface DetailedCompatibilityResponse {
+  score: number;
+  level: 'NORMAL' | 'SUPER';
+  strongAreas: DetailedCompatibilityArea[];
+  differences: DetailedCompatibilityArea[];
+  conversationStarters: string[];
+}
+
 export const compatibilityService = {
   // Get all compatibility questions (20 core + 25 premium)
   getQuestions: async (): Promise<GetQuestionsResponse> => {
@@ -113,6 +127,14 @@ export const compatibilityService = {
   getScoreWithUser: async (targetUserId: string): Promise<CompatibilityScore> => {
     const response = await api.get<CompatibilityScore>(
       `/compatibility/score/${targetUserId}`,
+    );
+    return response.data;
+  },
+
+  // Get detailed compatibility breakdown with a user
+  getDetailedCompatibility: async (targetUserId: string): Promise<DetailedCompatibilityResponse> => {
+    const response = await api.get<DetailedCompatibilityResponse>(
+      `/compatibility/detailed/${targetUserId}`,
     );
     return response.data;
   },

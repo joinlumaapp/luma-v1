@@ -1,30 +1,39 @@
-// Onboarding step 1/7: Compatibility questions — 20 core questions (swipeable cards)
+// Onboarding step 2/8: Compatibility questions — 20 core + optional 25 premium
+// Mode-aware: 'serious_relationship' → 45 questions, 'exploring' → 20 core only
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   StyleSheet,
   ActivityIndicator,
-  Animated,
+  Platform,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withDelay,
+  withSpring,
+  Easing,
+  FadeIn,
+  SlideInRight,
+  SlideOutLeft,
+} from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { OnboardingStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../stores/profileStore';
 import { compatibilityService } from '../../services/compatibilityService';
-import { colors, palette } from '../../theme/colors';
-import { typography } from '../../theme/typography';
-import { spacing, borderRadius, layout } from '../../theme/spacing';
-import { LOCKED_ARCHITECTURE } from '../../constants/config';
-import { LumaLogo } from '../../components/animations/LumaLogo';
-import { OnboardingProgress } from '../../components/onboarding/OnboardingProgress';
+import { colors, palette, glassmorphism } from '../../theme/colors';
+import { typography, fontWeights } from '../../theme/typography';
+import { spacing, borderRadius } from '../../theme/spacing';
+import { GlowButton } from '../../components/ui/GlowButton';
 
 type QuestionsNavigationProp = NativeStackNavigationProp<OnboardingStackParamList, 'Questions'>;
-
-const CURRENT_STEP = 1;
 
 // Sample core compatibility questions (20 LOCKED)
 const CORE_QUESTIONS = [
@@ -234,92 +243,123 @@ interface NormalizedQuestion {
   id: string;
   question: string;
   options: string[];
+  isPremium: boolean;
 }
 
-/** Gradient stops for the completion celebration background */
-const CELEBRATION_GRADIENT_COLORS: readonly [string, string, ...string[]] = [
+/** Gradient stops for the celebration/interstitial background */
+const DEEP_GRADIENT: readonly [string, string, ...string[]] = [
   '#0F0F23',
   '#1A0A3E',
   '#2D1B69',
 ];
 
-/** Brief delay (ms) before navigating away from the celebration screen */
 const CELEBRATION_DURATION = 2200;
+const INTERSTITIAL_DURATION = 2500;
 
 export const QuestionsScreen: React.FC = () => {
   const navigation = useNavigation<QuestionsNavigationProp>();
+  const selectedMode = useProfileStore((s) => s.profile.intentionTag);
+  const setProfileField = useProfileStore((s) => s.setField);
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [questions, setQuestions] = useState<NormalizedQuestion[]>([]);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
   const [isCompleting, setIsCompleting] = useState(false);
-  const setProfileField = useProfileStore((state) => state.setField);
+  const [showInterstitial, setShowInterstitial] = useState(false);
+  const [cardKey, setCardKey] = useState(0); // forces re-render for animation
 
-  // Celebration screen animations
-  const celebrationOpacity = useRef(new Animated.Value(0)).current;
-  const celebrationScale = useRef(new Animated.Value(0.8)).current;
+  // Whether this user gets premium questions
+  const showPremium = selectedMode === 'serious_relationship';
+
+  // Animated progress bar
+  const progressWidth = useSharedValue(0);
+
+  // Celebration animations
+  const celebrationOpacity = useSharedValue(0);
+  const celebrationScale = useSharedValue(0.85);
 
   // Fetch questions from API, fallback to hardcoded
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
         const response = await compatibilityService.getQuestions();
-        const normalized: NormalizedQuestion[] = response.questions.map((q) => ({
-          id: q.id,
-          question: q.textTr || q.text || '',
-          options: Array.isArray(q.options)
-            ? q.options.map((o) => (typeof o === 'string' ? o : o.labelTr))
-            : [],
-        }));
+        const normalized: NormalizedQuestion[] = response.questions
+          .filter((q) => showPremium || !q.isPremium)
+          .map((q) => ({
+            id: q.id,
+            question: q.textTr || q.text || '',
+            options: Array.isArray(q.options)
+              ? q.options.map((o) => (typeof o === 'string' ? o : o.labelTr))
+              : [],
+            isPremium: q.isPremium,
+          }));
         if (normalized.length > 0) {
           setQuestions(normalized);
         } else {
-          setQuestions(CORE_QUESTIONS.map((q) => ({ ...q, id: String(q.id) })));
+          setQuestions(CORE_QUESTIONS.map((q) => ({
+            ...q,
+            id: String(q.id),
+            isPremium: false,
+          })));
         }
       } catch {
-        // Fallback to hardcoded questions
-        setQuestions(CORE_QUESTIONS.map((q) => ({ ...q, id: String(q.id) })));
+        setQuestions(CORE_QUESTIONS.map((q) => ({
+          ...q,
+          id: String(q.id),
+          isPremium: false,
+        })));
       } finally {
         setIsLoadingQuestions(false);
       }
     };
     fetchQuestions();
-  }, []);
+  }, [showPremium]);
 
-  const totalQuestions = questions.length || LOCKED_ARCHITECTURE.CORE_QUESTIONS;
+  const totalQuestions = questions.length;
   const currentQuestion = questions[currentIndex];
   const isLastQuestion = currentIndex === totalQuestions - 1;
-  const progress = (currentIndex + 1) / totalQuestions;
 
-  const handleSelectOption = (optionIndex: number) => {
+  // Animate progress bar
+  useEffect(() => {
+    if (totalQuestions > 0) {
+      progressWidth.value = withTiming(
+        ((currentIndex + 1) / totalQuestions) * 100,
+        { duration: 400, easing: Easing.out(Easing.cubic) },
+      );
+    }
+  }, [currentIndex, totalQuestions, progressWidth]);
+
+  const progressBarStyle = useAnimatedStyle(() => ({
+    width: `${progressWidth.value}%` as `${number}%`,
+  }));
+
+  const handleSelectOption = useCallback((optionIndex: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedOption(optionIndex);
-  };
+  }, []);
 
-  /** Show the celebration screen then complete onboarding after a brief delay */
+  // Interstitial between core→premium
+  const showPremiumInterstitial = useCallback(() => {
+    setShowInterstitial(true);
+    const timer = setTimeout(() => {
+      setShowInterstitial(false);
+      setCurrentIndex((prev) => prev + 1);
+      setCardKey((prev) => prev + 1);
+    }, INTERSTITIAL_DURATION);
+    return () => clearTimeout(timer);
+  }, []);
+
   const showCelebrationAndComplete = useCallback(
     (finalAnswers: Record<string, number>) => {
       setIsCompleting(true);
+      celebrationOpacity.value = withDelay(100, withTiming(1, { duration: 500 }));
+      celebrationScale.value = withDelay(100, withSpring(1, { damping: 12, stiffness: 100 }));
 
-      // Animate in the celebration overlay
-      Animated.parallel([
-        Animated.timing(celebrationOpacity, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-        Animated.spring(celebrationScale, {
-          toValue: 1,
-          friction: 6,
-          tension: 40,
-          useNativeDriver: true,
-        }),
-      ]).start();
-
-      // After the celebration duration, navigate to Name screen
       const timer = setTimeout(() => {
         setProfileField('answers', finalAnswers);
-        navigation.navigate('Name');
+        navigation.navigate('InterestSelection');
       }, CELEBRATION_DURATION);
 
       return () => clearTimeout(timer);
@@ -327,73 +367,107 @@ export const QuestionsScreen: React.FC = () => {
     [celebrationOpacity, celebrationScale, setProfileField, navigation],
   );
 
+  const celebrationContainerStyle = useAnimatedStyle(() => ({
+    opacity: celebrationOpacity.value,
+    transform: [{ scale: celebrationScale.value }],
+  }));
+
   const handleNext = useCallback(async () => {
     if (selectedOption === null || !currentQuestion) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     const newAnswers = { ...answers, [currentQuestion.id]: selectedOption };
     setAnswers(newAnswers);
     setSelectedOption(null);
 
     if (isLastQuestion) {
-      // Submit answers to backend
       try {
         await compatibilityService.submitAnswers(newAnswers);
       } catch {
-        // Continue anyway - answers saved locally
+        // Continue — answers saved locally
       }
-      // Show celebration before completing onboarding
       showCelebrationAndComplete(newAnswers);
     } else {
-      setCurrentIndex((prev) => prev + 1);
+      // Check if we're transitioning from core to premium
+      const nextQ = questions[currentIndex + 1];
+      if (nextQ && !currentQuestion.isPremium && nextQ.isPremium) {
+        showPremiumInterstitial();
+      } else {
+        setCurrentIndex((prev) => prev + 1);
+        setCardKey((prev) => prev + 1);
+      }
     }
-  }, [selectedOption, answers, currentQuestion, isLastQuestion, showCelebrationAndComplete]);
+  }, [selectedOption, answers, currentQuestion, isLastQuestion, questions, currentIndex, showCelebrationAndComplete, showPremiumInterstitial]);
 
-  const handleSkipQuestion = async () => {
+  const handleSkipQuestion = useCallback(async () => {
     setSelectedOption(null);
     if (isLastQuestion) {
-      // Submit answers to backend
       try {
         await compatibilityService.submitAnswers(answers);
       } catch {
-        // Continue anyway - answers saved locally
+        // Continue
       }
-      // Show celebration before completing onboarding
       showCelebrationAndComplete(answers);
     } else {
-      setCurrentIndex((prev) => prev + 1);
+      const nextQ = questions[currentIndex + 1];
+      if (nextQ && currentQuestion && !currentQuestion.isPremium && nextQ.isPremium) {
+        showPremiumInterstitial();
+      } else {
+        setCurrentIndex((prev) => prev + 1);
+        setCardKey((prev) => prev + 1);
+      }
     }
-  };
+  }, [answers, isLastQuestion, questions, currentIndex, currentQuestion, showCelebrationAndComplete, showPremiumInterstitial]);
 
+  // Loading state
   if (isLoadingQuestions || !currentQuestion) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={palette.purple[400]} />
         <Text style={styles.loadingText}>Sorular yükleniyor...</Text>
       </View>
     );
   }
 
-  // Celebration screen shown after completing all questions
+  // Interstitial screen: core → premium transition
+  if (showInterstitial) {
+    return (
+      <View style={styles.interstitialContainer}>
+        <LinearGradient
+          colors={DEEP_GRADIENT}
+          style={StyleSheet.absoluteFillObject}
+        />
+        <Animated.View
+          entering={FadeIn.duration(500)}
+          style={styles.interstitialContent}
+        >
+          <Text style={styles.interstitialEmoji}>{'\u2728'}</Text>
+          <Text style={styles.interstitialTitle}>Harika!</Text>
+          <Text style={styles.interstitialSubtitle}>
+            Şimdi daha derin sorulara geçelim...
+          </Text>
+          <Text style={styles.interstitialHint}>
+            Bu sorular seni daha iyi anlamamıza yardımcı olacak.
+          </Text>
+        </Animated.View>
+      </View>
+    );
+  }
+
+  // Celebration screen
   if (isCompleting) {
     return (
       <View style={styles.celebrationContainer}>
         <LinearGradient
-          colors={CELEBRATION_GRADIENT_COLORS}
+          colors={DEEP_GRADIENT}
           style={StyleSheet.absoluteFillObject}
         />
-        <Animated.View
-          style={[
-            styles.celebrationContent,
-            {
-              opacity: celebrationOpacity,
-              transform: [{ scale: celebrationScale }],
-            },
-          ]}
-        >
-          <LumaLogo size={1.3} showTagline={false} />
+        <Animated.View style={[styles.celebrationContent, celebrationContainerStyle]}>
+          <Text style={styles.celebrationEmoji}>{'\uD83C\uDF89'}</Text>
           <Text style={styles.celebrationTitle}>Harika!</Text>
           <Text style={styles.celebrationSubtitle}>
-            Profilin hazır. Sana en uyumlu kişileri buluyoruz...
+            Uyumluluk profilin hazırlanıyor...
           </Text>
           <ActivityIndicator
             size="small"
@@ -407,79 +481,97 @@ export const QuestionsScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Progress indicator */}
-      <OnboardingProgress currentStep={CURRENT_STEP} />
+      {/* Step indicator */}
+      <View style={styles.header}>
+        <Text style={styles.step}>2 / 8</Text>
 
-      {/* Question progress */}
-      <View style={styles.questionProgressContainer}>
-        <View style={styles.questionProgressBar}>
-          <View style={[styles.questionProgressFill, { width: `${progress * 100}%` }]} />
+        {/* Progress bar */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressTrack}>
+            <Animated.View style={[styles.progressFill, progressBarStyle]}>
+              <LinearGradient
+                colors={[palette.purple[500], palette.pink[400]] as [string, string]}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                style={StyleSheet.absoluteFillObject}
+              />
+            </Animated.View>
+          </View>
+          <Text style={styles.progressText}>
+            {currentIndex + 1}/{totalQuestions}
+          </Text>
         </View>
-        <Text style={styles.questionProgressText}>
-          Soru {currentIndex + 1}/{totalQuestions}
-        </Text>
+
+        {/* Premium badge */}
+        {currentQuestion.isPremium && (
+          <Animated.View entering={FadeIn.duration(300)} style={styles.premiumBadge}>
+            <Text style={styles.premiumBadgeText}>{'\u2B50'} Derin Soru</Text>
+          </Animated.View>
+        )}
       </View>
 
-      {/* Content */}
+      {/* Question card with animated transitions */}
       <View style={styles.content}>
-        {/* Question card */}
-        <View style={styles.questionCard}>
+        <Animated.View
+          key={cardKey}
+          entering={SlideInRight.duration(350).easing(Easing.out(Easing.cubic))}
+          exiting={SlideOutLeft.duration(250)}
+          style={styles.questionCard}
+        >
           <Text style={styles.questionText}>{currentQuestion.question}</Text>
 
-          {/* Options */}
+          {/* Answer options — glassmorphism style */}
           <View style={styles.optionsContainer}>
-            {currentQuestion.options.map((option, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.optionButton,
-                  selectedOption === index && styles.optionButtonActive,
-                ]}
-                onPress={() => handleSelectOption(index)}
-                activeOpacity={0.8}
-              >
-                <View
-                  style={[
-                    styles.optionRadio,
-                    selectedOption === index && styles.optionRadioActive,
-                  ]}
+            {currentQuestion.options.map((option, index) => {
+              const isSelected = selectedOption === index;
+              return (
+                <Pressable
+                  key={index}
+                  onPress={() => handleSelectOption(index)}
+                  accessibilityLabel={option}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isSelected }}
                 >
-                  {selectedOption === index && <View style={styles.optionRadioDot} />}
-                </View>
-                <Text
-                  style={[
-                    styles.optionText,
-                    selectedOption === index && styles.optionTextActive,
-                  ]}
-                >
-                  {option}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <View
+                    style={[
+                      styles.optionCard,
+                      isSelected && styles.optionCardSelected,
+                      isSelected && Platform.select({
+                        ios: {
+                          shadowColor: palette.purple[500],
+                          shadowOffset: { width: 0, height: 0 },
+                          shadowOpacity: 0.25,
+                          shadowRadius: 8,
+                        },
+                        android: { elevation: 3 },
+                      }),
+                    ]}
+                  >
+                    <View style={[styles.optionRadio, isSelected && styles.optionRadioSelected]}>
+                      {isSelected && <View style={styles.optionRadioDot} />}
+                    </View>
+                    <Text style={[styles.optionText, isSelected && styles.optionTextSelected]}>
+                      {option}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            })}
           </View>
-        </View>
+        </Animated.View>
       </View>
 
       {/* Footer */}
       <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.nextButton, selectedOption === null && styles.nextButtonDisabled]}
+        <GlowButton
+          title={isLastQuestion ? 'Tamamla' : 'Sonraki'}
           onPress={handleNext}
           disabled={selectedOption === null}
-          activeOpacity={0.85}
-        >
-          <Text
-            style={[
-              styles.nextButtonText,
-              selectedOption === null && styles.nextButtonTextDisabled,
-            ]}
-          >
-            {isLastQuestion ? 'Tamamla' : 'Sonraki'}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleSkipQuestion} style={styles.skipButton}>
+          testID="question-next-btn"
+        />
+        <Pressable onPress={handleSkipQuestion} style={styles.skipButton}>
           <Text style={styles.skipText}>Bu soruyu atla</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
     </View>
   );
@@ -490,28 +582,54 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  questionProgressContainer: {
+  header: {
     paddingHorizontal: spacing.lg,
+    paddingTop: Platform.OS === 'ios' ? 60 : 44,
     paddingBottom: spacing.md,
+  },
+  step: {
+    ...typography.caption,
+    color: colors.textTertiary,
+    marginBottom: spacing.sm,
+  },
+  progressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
   },
-  questionProgressBar: {
+  progressTrack: {
     flex: 1,
-    height: 3,
-    backgroundColor: colors.surfaceBorder,
-    borderRadius: 1.5,
+    height: 4,
+    backgroundColor: 'rgba(139, 92, 246, 0.12)',
+    borderRadius: 2,
     overflow: 'hidden',
   },
-  questionProgressFill: {
+  progressFill: {
     height: '100%',
-    backgroundColor: colors.accent,
-    borderRadius: 1.5,
+    borderRadius: 2,
+    overflow: 'hidden',
   },
-  questionProgressText: {
-    ...typography.captionSmall,
-    color: colors.textTertiary,
+  progressText: {
+    fontSize: 13,
+    fontWeight: fontWeights.semibold,
+    color: palette.purple[400],
+    minWidth: 40,
+    textAlign: 'right',
+  },
+  premiumBadge: {
+    marginTop: spacing.sm,
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(251, 191, 36, 0.12)',
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 4,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: 'rgba(251, 191, 36, 0.25)',
+  },
+  premiumBadgeText: {
+    fontSize: 12,
+    fontWeight: fontWeights.semibold,
+    color: palette.gold[400],
   },
   content: {
     flex: 1,
@@ -519,11 +637,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   questionCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: glassmorphism.bg,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
+    borderColor: glassmorphism.border,
   },
   questionText: {
     ...typography.h4,
@@ -532,21 +650,21 @@ const styles = StyleSheet.create({
     lineHeight: 28,
   },
   optionsContainer: {
-    gap: spacing.sm,
+    gap: spacing.sm + 2,
   },
-  optionButton: {
+  optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.background,
-    borderRadius: borderRadius.md,
+    backgroundColor: glassmorphism.bgLight,
+    borderRadius: borderRadius.lg,
     padding: spacing.md,
     gap: spacing.md,
-    borderWidth: 1,
-    borderColor: 'transparent',
+    borderWidth: 1.5,
+    borderColor: glassmorphism.border,
   },
-  optionButtonActive: {
-    backgroundColor: colors.primary + '15',
-    borderColor: colors.primary,
+  optionCardSelected: {
+    borderColor: glassmorphism.borderActive,
+    backgroundColor: `${palette.purple[500]}14`,
   },
   optionRadio: {
     width: 22,
@@ -557,48 +675,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  optionRadioActive: {
-    borderColor: colors.primary,
+  optionRadioSelected: {
+    borderColor: palette.purple[400],
   },
   optionRadioDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: colors.primary,
+    backgroundColor: palette.purple[400],
   },
   optionText: {
     ...typography.body,
     color: colors.textSecondary,
     flex: 1,
   },
-  optionTextActive: {
+  optionTextSelected: {
     color: colors.text,
-    fontWeight: '500',
+    fontWeight: fontWeights.medium,
   },
   footer: {
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxl,
+    paddingBottom: Platform.OS === 'ios' ? 36 : 24,
     gap: spacing.sm,
   },
-  nextButton: {
-    backgroundColor: colors.primary,
-    height: layout.buttonHeight,
-    borderRadius: borderRadius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  nextButtonDisabled: {
-    backgroundColor: colors.surfaceBorder,
-  },
-  nextButtonText: {
-    ...typography.button,
-    color: colors.text,
-  },
-  nextButtonTextDisabled: {
-    color: colors.textTertiary,
-  },
   skipButton: {
-    height: layout.buttonSmallHeight,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -616,7 +717,39 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: spacing.sm,
   },
-  // Celebration screen styles
+  // Interstitial (core → premium transition)
+  interstitialContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  interstitialContent: {
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+  },
+  interstitialEmoji: {
+    fontSize: 48,
+    marginBottom: spacing.md,
+  },
+  interstitialTitle: {
+    ...typography.h2,
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  interstitialSubtitle: {
+    ...typography.body,
+    color: palette.purple[300],
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: spacing.sm,
+  },
+  interstitialHint: {
+    ...typography.bodySmall,
+    color: colors.textTertiary,
+    textAlign: 'center',
+  },
+  // Celebration
   celebrationContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -626,10 +759,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
   },
+  celebrationEmoji: {
+    fontSize: 56,
+    marginBottom: spacing.md,
+  },
   celebrationTitle: {
     ...typography.h2,
     color: colors.text,
-    marginTop: spacing.lg,
     textAlign: 'center',
   },
   celebrationSubtitle: {

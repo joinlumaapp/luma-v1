@@ -1,5 +1,5 @@
-// DiscoveryCard — Split layout: photo top 45%, info panel bottom 55%
-// Photo area with rounded bottom edges, solid dark info panel below
+// DiscoveryCard — Photo (70%) + Info Panel (30%) layout
+// Redesigned for LUMA 1.0: interest tags, compat explanation, mode badge
 // No gesture handling — parent manages swipe + tap
 
 import React from 'react';
@@ -7,13 +7,15 @@ import {
   View,
   Text,
   Image,
+  Pressable,
   StyleSheet,
   Platform,
 } from 'react-native';
-import { useTheme } from '../../theme/ThemeContext';
-import { palette } from '../../theme/colors';
+import { LinearGradient } from 'expo-linear-gradient';
+import { palette, glassmorphism } from '../../theme/colors';
 import { fontWeights } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
+import { INTEREST_OPTIONS } from '../../constants/config';
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -32,65 +34,52 @@ export interface DiscoveryCardProfile {
   voiceIntroUrl: string | null;
   earnedBadges: string[];
   feedScore: number;
+  interestTags: string[];
+  compatExplanation: string | null;
 }
 
 interface DiscoveryCardProps {
   profile: DiscoveryCardProfile;
+  onCompatTap?: (userId: string) => void;
 }
 
-// ─── Intention tag colors ────────────────────────────────────
+// ─── Interest tag emoji lookup ────────────────────────────────
 
-const INTENTION_COLORS: Record<string, { bg: string; text: string }> = {
-  'Ciddi İlişki': { bg: palette.purple[500] + '25', text: palette.purple[400] },
-  'Keşfediyorum': { bg: palette.pink[500] + '25', text: palette.pink[400] },
-  'Emin Değilim': { bg: palette.gold[500] + '25', text: palette.gold[400] },
+const INTEREST_EMOJI_MAP: Record<string, string> = {};
+for (const opt of INTEREST_OPTIONS) {
+  INTEREST_EMOJI_MAP[opt.id] = opt.emoji;
+}
+
+const INTEREST_LABEL_MAP: Record<string, string> = {};
+for (const opt of INTEREST_OPTIONS) {
+  INTEREST_LABEL_MAP[opt.id] = opt.label;
+}
+
+// ─── Mode badge labels ───────────────────────────────────────
+
+const MODE_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
+  serious_relationship: { label: 'Anlamlı Bağlantı', bg: 'rgba(139, 92, 246, 0.35)', text: palette.purple[300] },
+  exploring: { label: 'Keşfet', bg: 'rgba(236, 72, 153, 0.35)', text: palette.pink[300] },
+  not_sure: { label: 'Keşfet', bg: 'rgba(251, 191, 36, 0.35)', text: palette.gold[300] },
 };
 
-const getIntentionStyle = (tag: string) =>
-  INTENTION_COLORS[tag] ?? { bg: palette.purple[500] + '25', text: palette.purple[400] };
-
-// ─── Badge emoji map ─────────────────────────────────────────
-
-const BADGE_ICONS: Record<string, string> = {
-  verified: '\u2713',
-  icebreaker: '\u2744',
-  popular: '\u2605',
-  active: '\u26A1',
-  premium: '\u2666',
-  friendly: '\u263A',
-  explorer: '\u2708',
-  creative: '\u270E',
-};
-
-const getBadgeIcon = (badge: string): string =>
-  BADGE_ICONS[badge.toLowerCase()] ?? '\u25CF';
-
-// ─── Solid info panel background ─────────────────────────────
-
-const INFO_PANEL_BG = '#0E0E1A';
+const getModeStyle = (tag: string) =>
+  MODE_CONFIG[tag] ?? MODE_CONFIG.exploring;
 
 // ─── Component ────────────────────────────────────────────────
 
-const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile }) => {
-  const { colors } = useTheme();
-
+const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap }) => {
   const compatScore = profile.compatibility?.score ?? 0;
   const isSuper = profile.compatibility?.level === 'super';
+  const modeStyle = profile.intentionTag ? getModeStyle(profile.intentionTag) : null;
 
-  const distanceLabel = profile.distanceKm != null
-    ? profile.distanceKm < 1
-      ? `${Math.round(profile.distanceKm * 1000)} m`
-      : `${profile.distanceKm.toFixed(1)} km`
-    : null;
-
-  const intentionStyle = profile.intentionTag
-    ? getIntentionStyle(profile.intentionTag)
-    : null;
+  // Show up to 3 interest tags
+  const visibleTags = (profile.interestTags ?? []).slice(0, 3);
 
   return (
     <View style={styles.cardRoot}>
-      {/* ── Photo Area (top 45%) ── */}
-      <View style={styles.photoContainer}>
+      {/* ── Photo section — ~70% ── */}
+      <View style={styles.photoSection}>
         {profile.photoUrl ? (
           <Image
             source={{ uri: profile.photoUrl }}
@@ -98,134 +87,81 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile }) => {
             resizeMode="cover"
           />
         ) : (
-          <View style={[styles.photoPlaceholder, { backgroundColor: colors.surfaceLight }]}>
+          <View style={styles.photoPlaceholder}>
             <Text style={styles.photoInitial}>
               {profile.firstName.charAt(0).toUpperCase()}
             </Text>
           </View>
         )}
 
-        {/* ── Verified badge — top-left (over photo) ── */}
+        {/* Verified badge — top-left on photo */}
         {profile.isVerified && (
           <View style={styles.verifiedBadge}>
-            <Text style={styles.verifiedText}>{'\u2713'} Do{'\u011F'}rulanm{'\u0131\u015F'}</Text>
+            <Text style={styles.verifiedText}>{'\u2713'}</Text>
           </View>
         )}
 
-        {/* ── Compact compatibility badge — top-right (over photo) ── */}
+        {/* Compatibility badge — top-right on photo, tappable */}
         {profile.compatibility && (
-          <View style={[
-            styles.compatBadge,
-            isSuper && styles.compatBadgeSuper,
-          ]}>
-            <Text style={[
-              styles.compatBadgeText,
-              isSuper && styles.compatBadgeTextSuper,
-            ]}>
+          <Pressable
+            style={[styles.compatBadge, isSuper && styles.compatBadgeSuper]}
+            onPress={() => onCompatTap?.(profile.userId)}
+            accessibilityLabel={`Uyumluluk yüzde ${compatScore}`}
+            accessibilityRole="button"
+          >
+            <Text style={[styles.compatBadgeText, isSuper && styles.compatBadgeTextSuper]}>
               %{compatScore}
             </Text>
-          </View>
+          </Pressable>
         )}
+
+        {/* Soft gradient at bottom of photo for smooth transition */}
+        <LinearGradient
+          colors={['transparent', 'rgba(8,8,15,0.6)', '#0D0D18'] as [string, string, ...string[]]}
+          locations={[0, 0.55, 1]}
+          style={styles.photoGradient}
+          pointerEvents="none"
+        />
       </View>
 
-      {/* ── Info Panel (bottom 55%) ── */}
+      {/* ── Info panel — ~30% ── */}
       <View style={styles.infoPanel}>
-        {/* Name + Age + Badges row */}
+        {/* Row 1: Name, Age + Mode badge */}
         <View style={styles.nameRow}>
           <Text style={styles.nameAge} numberOfLines={1}>
             {profile.firstName}, {profile.age}
           </Text>
-          {profile.earnedBadges.length > 0 && (
-            <View style={styles.badgeRow}>
-              {profile.earnedBadges.slice(0, 3).map((badge, index) => (
-                <View key={`${badge}-${index}`} style={styles.badgeIcon}>
-                  <Text style={styles.badgeIconText}>
-                    {getBadgeIcon(badge)}
-                  </Text>
-                </View>
-              ))}
+          {modeStyle && (
+            <View style={[styles.modeBadge, { backgroundColor: modeStyle.bg }]}>
+              <Text style={[styles.modeBadgeText, { color: modeStyle.text }]}>
+                {modeStyle.label}
+              </Text>
             </View>
           )}
         </View>
 
-        {/* Location Row: City + Distance */}
-        <View style={styles.locationRow}>
-          {profile.city && (
-            <Text style={styles.locationText} numberOfLines={1}>
-              {profile.city}
-            </Text>
-          )}
-          {profile.city && distanceLabel && (
-            <Text style={styles.locationDot}>{'\u00B7'}</Text>
-          )}
-          {distanceLabel && (
-            <Text style={styles.locationText}>
-              {distanceLabel}
-            </Text>
-          )}
-        </View>
-
-        {/* Intention tag chip */}
-        {profile.intentionTag && intentionStyle && (
-          <View style={[styles.intentionChip, { backgroundColor: intentionStyle.bg }]}>
-            <Text style={[styles.intentionChipText, { color: intentionStyle.text }]}>
-              {profile.intentionTag}
-            </Text>
-          </View>
-        )}
-
-        {/* Earned badges display */}
-        {profile.earnedBadges.length > 0 && (
-          <View style={styles.earnedBadgesRow}>
-            {profile.earnedBadges.slice(0, 5).map((badge, index) => (
-              <View key={`earned-${badge}-${index}`} style={styles.earnedBadgeChip}>
-                <Text style={styles.earnedBadgeChipText}>
-                  {getBadgeIcon(badge)} {badge}
+        {/* Row 2: Interest tags as chips */}
+        {visibleTags.length > 0 && (
+          <View style={styles.tagsRow}>
+            {visibleTags.map((tagId) => (
+              <View key={tagId} style={styles.tagChip}>
+                <Text style={styles.tagEmoji}>
+                  {INTEREST_EMOJI_MAP[tagId] ?? '\u2022'}
+                </Text>
+                <Text style={styles.tagLabel}>
+                  {INTEREST_LABEL_MAP[tagId] ?? tagId}
                 </Text>
               </View>
             ))}
           </View>
         )}
 
-        {/* Bio preview (4 lines) */}
-        {profile.bio ? (
-          <Text
-            style={styles.bioText}
-            numberOfLines={4}
-          >
-            {profile.bio}
+        {/* Row 3: Compatibility explanation */}
+        {profile.compatExplanation && (
+          <Text style={styles.compatExplanation} numberOfLines={1}>
+            {profile.compatExplanation}
           </Text>
-        ) : null}
-
-        {/* Compatibility score bar */}
-        {profile.compatibility && (
-          <View style={styles.compatRow}>
-            <Text style={[
-              styles.compatLabel,
-              isSuper && styles.compatLabelSuper,
-            ]}>
-              {isSuper ? 'Super Uyum' : 'Uyum'}
-            </Text>
-            <View style={styles.compatBarTrack}>
-              <View style={[
-                styles.compatBarFill,
-                { width: `${Math.min(compatScore, 100)}%` },
-                isSuper && styles.compatBarFillSuper,
-              ]} />
-            </View>
-            <Text style={[
-              styles.compatPercent,
-              isSuper && styles.compatPercentSuper,
-            ]}>
-              %{compatScore}
-            </Text>
-          </View>
         )}
-
-        {/* Subtle tap hint */}
-        <Text style={styles.tapHint}>
-          {'\u25B4'} Profili G{'\u00F6'}r
-        </Text>
       </View>
     </View>
   );
@@ -239,68 +175,78 @@ export const DiscoveryCard = React.memo(DiscoveryCardInner, (prevProps, nextProp
 
 // ─── Styles ───────────────────────────────────────────────────
 
+const PHOTO_RATIO = 0.70;
+
 const styles = StyleSheet.create({
   cardRoot: {
     flex: 1,
-    borderRadius: 28,
+    borderRadius: 24,
     overflow: 'hidden',
-    backgroundColor: '#08080F',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: '#0D0D18',
   },
 
-  // ── Photo Container (top 45%) ──
-  photoContainer: {
-    height: '45%',
-    overflow: 'hidden',
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+  // ── Photo section — 70% ──
+  photoSection: {
+    flex: PHOTO_RATIO,
+    position: 'relative',
   },
   photo: {
     width: '100%',
     height: '100%',
   },
   photoPlaceholder: {
-    width: '100%',
-    height: '100%',
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#12121F',
   },
   photoInitial: {
-    fontSize: 64,
+    fontSize: 72,
     fontWeight: fontWeights.bold,
     color: palette.purple[400],
+    opacity: 0.6,
+  },
+  photoGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '35%',
   },
 
-  // ── Verified Badge — top-left (positioned within photo container) ──
+  // ── Verified Badge — top-left ──
   verifiedBadge: {
     position: 'absolute',
-    top: spacing.sm + 2,
-    left: spacing.sm + 2,
-    backgroundColor: '#10B981',
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
+    top: spacing.sm + 4,
+    left: spacing.sm + 4,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(16, 185, 129, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
   },
   verifiedText: {
-    fontSize: 10,
+    fontSize: 13,
     color: palette.white,
-    fontWeight: fontWeights.semibold,
+    fontWeight: fontWeights.bold,
   },
 
-  // ── Compatibility Badge — top-right (positioned within photo container) ──
+  // ── Compatibility Badge — top-right, tappable ──
   compatBadge: {
     position: 'absolute',
-    top: spacing.sm + 2,
-    right: spacing.sm + 2,
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    top: spacing.sm + 4,
+    right: spacing.sm + 4,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     backgroundColor: 'rgba(139, 92, 246, 0.85)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.25)',
+    zIndex: 2,
     ...Platform.select({
       ios: {
         shadowColor: palette.purple[500],
@@ -325,7 +271,7 @@ const styles = StyleSheet.create({
     }),
   },
   compatBadgeText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.bold,
     color: palette.white,
   },
@@ -333,156 +279,74 @@ const styles = StyleSheet.create({
     color: '#1A1A2E',
   },
 
-  // ── Info Panel (bottom 55%) — solid dark background ──
+  // ── Info panel — 30% ──
   infoPanel: {
-    flex: 1,
-    backgroundColor: INFO_PANEL_BG,
-    padding: 16,
-    gap: spacing.xs + 2,
+    flex: 1 - PHOTO_RATIO,
+    backgroundColor: '#0D0D18',
+    paddingHorizontal: spacing.md + 2,
+    paddingTop: 6,
+    paddingBottom: 8,
+    justifyContent: 'center',
+    gap: 6,
   },
 
-  // ── Name + Badges row ──
+  // ── Row 1: Name + Age + Mode Badge ──
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
   },
   nameAge: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: fontWeights.bold,
     color: palette.white,
     letterSpacing: -0.3,
     flexShrink: 1,
   },
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  badgeIcon: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: 'rgba(139, 92, 246, 0.45)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  badgeIconText: {
-    fontSize: 11,
-    color: palette.white,
-    fontWeight: fontWeights.semibold,
-  },
-
-  // ── Location Row ──
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  locationText: {
-    fontSize: 13,
-    fontWeight: fontWeights.regular,
-    color: 'rgba(156, 163, 175, 0.9)',
-  },
-  locationDot: {
-    fontSize: 13,
-    fontWeight: fontWeights.bold,
-    color: 'rgba(107, 114, 128, 0.8)',
-  },
-
-  // ── Intention Chip ──
-  intentionChip: {
-    alignSelf: 'flex-start',
+  modeBadge: {
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.sm + 2,
     paddingVertical: 3,
   },
-  intentionChipText: {
+  modeBadgeText: {
     fontSize: 11,
     fontWeight: fontWeights.semibold,
     letterSpacing: 0.2,
   },
 
-  // ── Earned Badges Row ──
-  earnedBadgesRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 2,
-  },
-  earnedBadgeChip: {
-    backgroundColor: 'rgba(139, 92, 246, 0.15)',
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.25)',
-  },
-  earnedBadgeChipText: {
-    fontSize: 10,
-    fontWeight: fontWeights.medium,
-    color: palette.purple[300],
-    textTransform: 'capitalize',
-  },
-
-  // ── Bio ──
-  bioText: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: fontWeights.regular,
-    color: 'rgba(209, 213, 219, 0.85)',
-    marginTop: 2,
-  },
-
-  // ── Compatibility Score Bar ──
-  compatRow: {
+  // ── Row 2: Interest tags ──
+  tagsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginTop: 4,
-  },
-  compatLabel: {
-    fontSize: 11,
-    fontWeight: fontWeights.semibold,
-    color: palette.purple[400],
-    minWidth: 62,
-  },
-  compatLabelSuper: {
-    color: palette.gold[400],
-  },
-  compatBarTrack: {
-    flex: 1,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+    gap: 6,
     overflow: 'hidden',
   },
-  compatBarFill: {
-    height: '100%',
-    borderRadius: 2,
-    backgroundColor: palette.purple[500],
+  tagChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: glassmorphism.bg,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: glassmorphism.border,
   },
-  compatBarFillSuper: {
-    backgroundColor: palette.gold[400],
-  },
-  compatPercent: {
+  tagEmoji: {
     fontSize: 12,
-    fontWeight: fontWeights.bold,
-    color: palette.purple[400],
-    minWidth: 28,
-    textAlign: 'right',
   },
-  compatPercentSuper: {
-    color: palette.gold[400],
-  },
-
-  // ── Tap Hint ──
-  tapHint: {
+  tagLabel: {
     fontSize: 11,
     fontWeight: fontWeights.medium,
-    textAlign: 'center',
-    color: 'rgba(107, 114, 128, 0.7)',
-    letterSpacing: 0.5,
-    marginTop: 4,
+    color: 'rgba(255, 255, 255, 0.7)',
+  },
+
+  // ── Row 3: Compatibility explanation ──
+  compatExplanation: {
+    fontSize: 13,
+    fontWeight: fontWeights.regular,
+    color: palette.purple[300],
+    lineHeight: 18,
+    opacity: 0.85,
   },
 });

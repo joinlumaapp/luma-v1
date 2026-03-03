@@ -23,6 +23,12 @@ export interface FeedCard {
   distanceKm?: number | null;
   /** Badge keys earned by this user (e.g. ["first_spark", "verified_star"]) */
   earnedBadges?: string[];
+  /** User-selected interest tags */
+  interestTags?: string[];
+  /** 1-line Turkish compatibility explanation */
+  compatExplanation?: string | null;
+  /** Top 3 strong compatibility categories (Turkish labels) */
+  strongCategories?: string[];
 }
 
 export interface FeedResponse {

@@ -44,6 +44,7 @@ import { useScreenTracking } from '../../hooks/useAnalytics';
 import { MoodSelector } from './MoodSelector';
 import { MatchAnimation } from '../../components/animations/MatchAnimation';
 import { DiscoveryCard } from '../../components/cards/DiscoveryCard';
+import { CompatibilityBottomSheet } from '../../components/discovery/CompatibilityBottomSheet';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
@@ -66,19 +67,22 @@ type DiscoveryNavProp = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabParamList>
 >;
 
-// ─── Action Button component — bare icon style with glow ──
+// ─── Action Button component — soft circular style (Tinder-inspired) ──
 
 const ActionButton: React.FC<{
   icon: string;
   iconSize: number;
   iconColor: string;
   glowColor: string;
+  size: number;
+  bgColor: string;
+  borderColor: string;
   onPress: () => void;
   hapticStyle?: Haptics.ImpactFeedbackStyle;
   testID: string;
   accessibilityLabel: string;
   accessibilityHint: string;
-}> = ({ icon, iconSize, iconColor, glowColor, onPress, hapticStyle, testID, accessibilityLabel, accessibilityHint }) => {
+}> = ({ icon, iconSize, iconColor, glowColor, size, bgColor, borderColor, onPress, hapticStyle, testID, accessibilityLabel, accessibilityHint }) => {
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -110,15 +114,24 @@ const ActionButton: React.FC<{
       <Animated.View
         testID={testID}
         style={[
-          styles.actionBtn,
+          {
+            width: size,
+            height: size,
+            borderRadius: size / 2,
+            backgroundColor: bgColor,
+            borderWidth: 1.5,
+            borderColor,
+            justifyContent: 'center' as const,
+            alignItems: 'center' as const,
+          },
           Platform.select({
             ios: {
               shadowColor: glowColor,
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.5,
-              shadowRadius: 12,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
             },
-            android: {},
+            android: { elevation: 4 },
           }),
           animatedStyle,
         ]}
@@ -126,13 +139,7 @@ const ActionButton: React.FC<{
         <Text
           style={[
             styles.actionBtnIcon,
-            {
-              fontSize: iconSize,
-              color: iconColor,
-              textShadowColor: glowColor,
-              textShadowOffset: { width: 0, height: 0 },
-              textShadowRadius: iconSize >= 42 ? 16 : 12,
-            },
+            { fontSize: iconSize, color: iconColor },
           ]}
         >
           {icon}
@@ -172,6 +179,20 @@ export const DiscoveryScreen: React.FC = () => {
   const selectedMoodOption = currentMood ? MOOD_OPTIONS.find((m) => m.type === currentMood) : undefined;
   const hasMoodActive = !!currentMood && !isMoodExpired();
 
+  // ─── Compatibility bottom sheet state ─────────────────────
+  const [showCompatSheet, setShowCompatSheet] = useState(false);
+  const [compatSheetUserId, setCompatSheetUserId] = useState<string | null>(null);
+
+  const handleCompatTap = useCallback((userId: string) => {
+    setCompatSheetUserId(userId);
+    setShowCompatSheet(true);
+  }, []);
+
+  const handleCompatClose = useCallback(() => {
+    setShowCompatSheet(false);
+    setCompatSheetUserId(null);
+  }, []);
+
   // ─── Mood collapse state ──────────────────────────────────
   const [moodCollapsed, setMoodCollapsed] = useState(false);
   const moodHeight = useSharedValue(1); // 1 = full height, 0 = collapsed
@@ -186,13 +207,14 @@ export const DiscoveryScreen: React.FC = () => {
   // When a mood is selected, collapse the selector
   const prevMoodRef = useRef(currentMood);
   useEffect(() => {
-    if (currentMood && currentMood !== prevMoodRef.current && !isMoodExpired()) {
-      moodHeight.value = withTiming(0, { duration: 300 });
-      moodOpacity.value = withTiming(0, { duration: 200 });
+    if (currentMood && currentMood !== prevMoodRef.current) {
+      // If user just selected a mood, it cannot be expired — collapse immediately
+      moodHeight.value = withTiming(0, { duration: 250 });
+      moodOpacity.value = withTiming(0, { duration: 180 });
       setMoodCollapsed(true);
     }
     prevMoodRef.current = currentMood;
-  }, [currentMood, isMoodExpired, moodHeight, moodOpacity]);
+  }, [currentMood, moodHeight, moodOpacity]);
 
   // Expand mood selector
   const expandMoodSelector = useCallback(() => {
@@ -206,11 +228,11 @@ export const DiscoveryScreen: React.FC = () => {
     const hour = new Date().getHours();
     let base: string;
     if (hour < 12) {
-      base = 'G\u00FCnayd\u0131n';
+      base = 'Günaydın';
     } else if (hour < 18) {
       base = 'Merhaba';
     } else {
-      base = '\u0130yi ak\u015Famlar';
+      base = 'İyi akşamlar';
     }
     return userFirstName ? `${base}, ${userFirstName}` : base;
   }, [userFirstName]);
@@ -455,7 +477,7 @@ export const DiscoveryScreen: React.FC = () => {
     };
   });
 
-  // Card behind: scale up + fade in as current card is dragged
+  // Card behind: scale up + fade in as current card is dragged (subtler peek)
   const behindStyle = useAnimatedStyle(() => {
     const progress = Math.min(
       Math.max(
@@ -467,10 +489,10 @@ export const DiscoveryScreen: React.FC = () => {
 
     return {
       transform: [
-        { scale: interpolate(progress, [0, 1], [0.92, 1], Extrapolation.CLAMP) },
-        { translateY: interpolate(progress, [0, 1], [10, 0], Extrapolation.CLAMP) },
+        { scale: interpolate(progress, [0, 1], [0.95, 1], Extrapolation.CLAMP) },
+        { translateY: interpolate(progress, [0, 1], [6, 0], Extrapolation.CLAMP) },
       ],
-      opacity: interpolate(progress, [0, 1], [0.45, 1], Extrapolation.CLAMP),
+      opacity: interpolate(progress, [0, 1], [0.6, 1], Extrapolation.CLAMP),
     };
   });
 
@@ -603,7 +625,7 @@ export const DiscoveryScreen: React.FC = () => {
           <View>
             <Text style={styles.headerTitle}>{greeting}</Text>
             <Text style={styles.headerSubtitle}>
-              Bug\u00FCn {dailyRemaining} profil kald\u0131
+              Bugün {dailyRemaining} profil kaldı
             </Text>
           </View>
         </View>
@@ -623,7 +645,7 @@ export const DiscoveryScreen: React.FC = () => {
           <View>
             <Text style={styles.headerTitle}>{greeting}</Text>
             <Text style={styles.headerSubtitle}>
-              Bug\u00FCn {dailyRemaining} profil kald\u0131
+              Bugün {dailyRemaining} profil kaldı
             </Text>
           </View>
         </View>
@@ -631,15 +653,15 @@ export const DiscoveryScreen: React.FC = () => {
           <View style={styles.emptyIconCircle}>
             <Text style={styles.emptyIconLetter}>L</Text>
           </View>
-          <Text style={styles.emptyTitle}>G\u00FCnl\u00FCk ke\u015Ffini tamamlad\u0131n</Text>
+          <Text style={styles.emptyTitle}>Günlük keşfini tamamladın</Text>
           <Text style={styles.emptySubtitle}>
-            {'En uyumlu insanlar sab\u0131rla bulunur.\nYar\u0131n yeni profiller seni bekliyor.'}
+            {'En uyumlu insanlar sabırla bulunur.\nYarın yeni profiller seni bekliyor.'}
           </Text>
           <Pressable
             onPress={() => refreshFeed()}
             accessibilityLabel="Yenile"
             accessibilityRole="button"
-            accessibilityHint="Yeni profilleri y\u00FCklemek i\u00E7in dokunun"
+            accessibilityHint="Yeni profilleri yüklemek için dokunun"
           >
             <View style={styles.refreshButton} testID="discovery-refresh-btn">
               <Text style={styles.refreshButtonText}>Yenile</Text>
@@ -662,7 +684,7 @@ export const DiscoveryScreen: React.FC = () => {
         <View>
           <Text style={styles.headerTitle}>{greeting}</Text>
           <Text style={styles.headerSubtitle}>
-            Bug\u00FCn {dailyRemaining} profil kald\u0131
+            Bugün {dailyRemaining} profil kaldı
           </Text>
         </View>
         <View style={styles.headerRight}>
@@ -671,9 +693,9 @@ export const DiscoveryScreen: React.FC = () => {
             <TouchableOpacity
               onPress={expandMoodSelector}
               activeOpacity={0.7}
-              accessibilityLabel={`Mod: ${selectedMoodOption.label}. Geni\u015Fletmek i\u00E7in dokunun`}
+              accessibilityLabel={`Mod: ${selectedMoodOption.label}. Genişletmek için dokunun`}
               accessibilityRole="button"
-              accessibilityHint="Mod se\u00E7iciyi tekrar a\u00E7mak i\u00E7in dokunun"
+              accessibilityHint="Mod seçiciyi tekrar açmak için dokunun"
             >
               <View
                 style={[
@@ -693,9 +715,9 @@ export const DiscoveryScreen: React.FC = () => {
           )}
           <Pressable
             onPress={() => navigation.navigate('Filter')}
-            accessibilityLabel="Filtreleri a\u00E7"
+            accessibilityLabel="Filtreleri aç"
             accessibilityRole="button"
-            accessibilityHint="Ke\u015Fif filtrelerini d\u00FCzenlemek i\u00E7in dokunun"
+            accessibilityHint="Keşif filtrelerini düzenlemek için dokunun"
           >
             <View style={styles.filterButton} testID="discovery-filter-btn">
               <Text style={styles.filterIcon}>{'='}</Text>
@@ -736,7 +758,10 @@ export const DiscoveryScreen: React.FC = () => {
                 voiceIntroUrl: nextCard.voiceIntroUrl ?? null,
                 earnedBadges: nextCard.earnedBadges ?? [],
                 feedScore: 0,
+                interestTags: nextCard.interestTags ?? [],
+                compatExplanation: nextCard.compatExplanation ?? null,
               }}
+              onCompatTap={handleCompatTap}
             />
           </Animated.View>
         )}
@@ -745,9 +770,9 @@ export const DiscoveryScreen: React.FC = () => {
         <GestureDetector gesture={composedGesture}>
           <Animated.View
             accessible
-            accessibilityLabel={`${currentCard.name}, ${currentCard.age} ya\u015F\u0131nda, ${currentCard.city}`}
+            accessibilityLabel={`${currentCard.name}, ${currentCard.age} yaşında, ${currentCard.city}`}
             accessibilityRole="button"
-            accessibilityHint="Be\u011Fenme, ge\u00E7me veya s\u00FCper be\u011Fenme i\u00E7in kayd\u0131r\u0131n"
+            accessibilityHint="Beğenme, geçme veya süper beğenme için kaydırın"
             testID="discovery-card"
             style={[styles.card, styles.cardFront, cardStyle]}
           >
@@ -770,7 +795,10 @@ export const DiscoveryScreen: React.FC = () => {
                 voiceIntroUrl: currentCard.voiceIntroUrl ?? null,
                 earnedBadges: currentCard.earnedBadges ?? [],
                 feedScore: 0,
+                interestTags: currentCard.interestTags ?? [],
+                compatExplanation: currentCard.compatExplanation ?? null,
               }}
+              onCompatTap={handleCompatTap}
             />
 
             {/* Color-wash swipe overlays — rendered on top of card content */}
@@ -814,7 +842,7 @@ export const DiscoveryScreen: React.FC = () => {
             onPress={() => { if (canUndo) { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); undoLastSwipe(); } }}
             accessibilityLabel="Geri al"
             accessibilityRole="button"
-            accessibilityHint="Son kayd\u0131rma i\u015Flemini geri almak i\u00E7in dokunun"
+            accessibilityHint="Son kaydırma işlemini geri almak için dokunun"
           >
             <View style={styles.undoButton} testID="discovery-undo-btn">
               <Text style={styles.undoIcon}>{'\u21A9'}</Text>
@@ -822,40 +850,49 @@ export const DiscoveryScreen: React.FC = () => {
           </Pressable>
         </Animated.View>
 
-        {/* Main action buttons — bare icons with glow */}
+        {/* Main action buttons — soft circles with colored icons */}
         <View style={styles.actions}>
           <ActionButton
             icon={'\u2715'}
-            iconSize={42}
+            iconSize={26}
             iconColor="#EF4444"
-            glowColor="rgba(239,68,68,0.6)"
+            glowColor="rgba(239,68,68,0.4)"
+            size={56}
+            bgColor="rgba(239,68,68,0.12)"
+            borderColor="rgba(239,68,68,0.25)"
             hapticStyle={Haptics.ImpactFeedbackStyle.Light}
             onPress={handlePassPress}
             testID="discovery-pass-btn"
-            accessibilityLabel="Ge\u00E7"
-            accessibilityHint="Bu profili ge\u00E7mek i\u00E7in dokunun"
+            accessibilityLabel="Geç"
+            accessibilityHint="Bu profili geçmek için dokunun"
           />
           <ActionButton
             icon={'\u2605'}
-            iconSize={34}
+            iconSize={22}
             iconColor={palette.gold[400]}
-            glowColor="rgba(251,191,36,0.6)"
+            glowColor="rgba(251,191,36,0.4)"
+            size={44}
+            bgColor="rgba(251,191,36,0.12)"
+            borderColor="rgba(251,191,36,0.25)"
             hapticStyle={Haptics.ImpactFeedbackStyle.Heavy}
             onPress={handleSuperLikePress}
             testID="discovery-superlike-btn"
-            accessibilityLabel="S\u00FCper Be\u011Fen"
-            accessibilityHint="Bu profili s\u00FCper be\u011Fenmek i\u00E7in dokunun"
+            accessibilityLabel="Süper Beğen"
+            accessibilityHint="Bu profili süper beğenmek için dokunun"
           />
           <ActionButton
             icon={'\u2665'}
-            iconSize={42}
+            iconSize={26}
             iconColor="#9B6BF8"
-            glowColor="rgba(155,107,248,0.6)"
+            glowColor="rgba(155,107,248,0.4)"
+            size={56}
+            bgColor="rgba(155,107,248,0.12)"
+            borderColor="rgba(155,107,248,0.25)"
             hapticStyle={Haptics.ImpactFeedbackStyle.Medium}
             onPress={handleLikePress}
             testID="discovery-like-btn"
-            accessibilityLabel="Be\u011Fen"
-            accessibilityHint="Bu profili be\u011Fenmek i\u00E7in dokunun"
+            accessibilityLabel="Beğen"
+            accessibilityHint="Bu profili beğenmek için dokunun"
           />
         </View>
       </View>
@@ -874,6 +911,13 @@ export const DiscoveryScreen: React.FC = () => {
           onClose={handleMatchDismiss}
         />
       )}
+
+      {/* Compatibility detail bottom sheet */}
+      <CompatibilityBottomSheet
+        visible={showCompatSheet}
+        targetUserId={compatSheetUserId}
+        onClose={handleCompatClose}
+      />
     </View>
   );
 };
@@ -948,7 +992,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.md,
-    overflow: 'hidden',
   },
   card: {
     width: layout.cardWidth,
@@ -959,6 +1002,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   cardFront: {
+    zIndex: 1,
     ...shadows.large,
     shadowColor: palette.purple[500],
     shadowOffset: { width: 0, height: 6 },
@@ -969,7 +1013,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.06)',
   },
   cardBehind: {
-    // Initial state set by animated style
+    zIndex: 0,
   },
 
   // ── Color-Wash Swipe Overlays ──
@@ -1013,9 +1057,10 @@ const styles = StyleSheet.create({
   actionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: Platform.OS === 'ios' ? spacing.sm : spacing.md,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: Platform.OS === 'ios' ? spacing.xs : spacing.sm,
   },
   actions: {
     flex: 1,
@@ -1023,12 +1068,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: spacing.xl,
-  },
-  actionBtn: {
-    width: 60,
-    height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   actionBtnIcon: {
     fontWeight: '700',

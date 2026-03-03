@@ -22,6 +22,12 @@ export interface DiscoveryProfile {
   distanceKm?: number | null;
   /** Badge keys earned by this user */
   earnedBadges?: string[];
+  /** User-selected interest tags */
+  interestTags?: string[];
+  /** 1-line Turkish compatibility explanation */
+  compatExplanation?: string | null;
+  /** Top 3 strong compatibility categories */
+  strongCategories?: string[];
 }
 
 // Undo window duration in milliseconds
@@ -83,6 +89,9 @@ const mapFeedCardToProfile = (card: FeedCard): DiscoveryProfile => ({
   voiceIntroUrl: card.voiceIntroUrl,
   distanceKm: card.distanceKm ?? null,
   earnedBadges: card.earnedBadges,
+  interestTags: card.interestTags ?? [],
+  compatExplanation: card.compatExplanation ?? null,
+  strongCategories: card.strongCategories ?? [],
 });
 
 export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({

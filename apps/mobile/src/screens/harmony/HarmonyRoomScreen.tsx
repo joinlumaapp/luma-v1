@@ -1,6 +1,7 @@
 // Harmony Room screen — timer, question cards, chat, voice/video buttons, gold extension
 // Real-time WebSocket integration for live Harmony Room sessions
-// Features: typing indicator, enhanced timer, read receipts, session summary, WebRTC calls
+// Features: countdown intro, live compat animation, enhanced summary, card flip, typing,
+//   enhanced timer, read receipts, session summary, WebRTC calls
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
@@ -17,13 +18,25 @@ import {
   Animated,
   Modal,
 } from 'react-native';
+import ReanimatedAnimated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  withSequence,
+  withDelay,
+  Easing,
+  interpolate,
+} from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { HarmonyStackParamList } from '../../navigation/types';
-import { colors } from '../../theme/colors';
-import { typography } from '../../theme/typography';
+import { colors, palette } from '../../theme/colors';
+import { typography, fontSizes } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 import { HARMONY_CONFIG } from '../../constants/config';
 import { useHarmonyStore } from '../../stores/harmonyStore';
@@ -43,11 +56,11 @@ type HarmonyRoomRouteProp = RouteProp<HarmonyStackParamList, 'HarmonyRoom'>;
 // Available reactions
 const REACTIONS: { type: HarmonyReaction; label: string }[] = [
   { type: 'love', label: 'Sev' },
-  { type: 'laugh', label: 'Gül' },
-  { type: 'think', label: 'Düşün' },
-  { type: 'surprise', label: 'Şaşır' },
-  { type: 'agree', label: 'Katıl' },
-  { type: 'disagree', label: 'Katılma' },
+  { type: 'laugh', label: 'Gul' },
+  { type: 'think', label: 'Dusun' },
+  { type: 'surprise', label: 'Sasir' },
+  { type: 'agree', label: 'Katil' },
+  { type: 'disagree', label: 'Katilma' },
 ];
 
 /** Interval for requesting timer sync from the server (every 30 seconds) */
@@ -61,6 +74,203 @@ const TIMER_GREEN_THRESHOLD = 15 * 60;  // > 15 minutes
 const TIMER_YELLOW_THRESHOLD = 5 * 60;  // 5-15 minutes
 const TIMER_PULSE_THRESHOLD = 2 * 60;   // < 2 minutes — pulsing animation
 const TIMER_TOAST_THRESHOLD = 60;        // 1 minute — countdown toast
+
+// Simulated per-card compat increase
+const COMPAT_INCREASE_PER_CARD = 2;
+
+// ─── Countdown Overlay Component ────────────────────────────────
+
+interface CountdownOverlayProps {
+  visible: boolean;
+  onComplete: () => void;
+}
+
+const CountdownOverlay: React.FC<CountdownOverlayProps> = ({ visible, onComplete }) => {
+  const [countdownValue, setCountdownValue] = useState(3);
+  const numberScale = useSharedValue(0.3);
+  const numberOpacity = useSharedValue(0);
+  const glowOpacity = useSharedValue(0);
+  const overlayOpacity = useSharedValue(1);
+
+  useEffect(() => {
+    if (!visible) return;
+
+    let isMounted = true;
+
+    const animateNumber = (num: number) => {
+      if (!isMounted) return;
+      setCountdownValue(num);
+
+      // Haptic feedback
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+
+      // Reset values
+      numberScale.value = 0.3;
+      numberOpacity.value = 0;
+      glowOpacity.value = 0;
+
+      // Animate number: scale up + fade in, then hold, then fade out
+      numberOpacity.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) });
+      numberScale.value = withSpring(1, { damping: 8, stiffness: 120 });
+      glowOpacity.value = withSequence(
+        withTiming(0.8, { duration: 300 }),
+        withTiming(0.2, { duration: 500 }),
+      );
+
+      // Fade out after 700ms
+      numberOpacity.value = withDelay(
+        700,
+        withTiming(0, { duration: 250, easing: Easing.in(Easing.cubic) }),
+      );
+      numberScale.value = withDelay(
+        700,
+        withTiming(1.5, { duration: 250 }),
+      );
+    };
+
+    // 3 -> 2 -> 1 -> done
+    animateNumber(3);
+
+    const timer2 = setTimeout(() => {
+      if (isMounted) animateNumber(2);
+    }, 1000);
+
+    const timer3 = setTimeout(() => {
+      if (isMounted) animateNumber(1);
+    }, 2000);
+
+    const timerDone = setTimeout(() => {
+      if (!isMounted) return;
+      // Fade out overlay
+      overlayOpacity.value = withTiming(0, { duration: 300, easing: Easing.in(Easing.cubic) });
+      setTimeout(() => {
+        if (isMounted) onComplete();
+      }, 320);
+    }, 3000);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+      clearTimeout(timerDone);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
+
+  const numberAnimStyle = useAnimatedStyle(() => ({
+    opacity: numberOpacity.value,
+    transform: [{ scale: numberScale.value }],
+  }));
+
+  const glowAnimStyle = useAnimatedStyle(() => ({
+    opacity: glowOpacity.value,
+    transform: [{ scale: interpolate(glowOpacity.value, [0, 0.8], [0.5, 1.2]) }],
+  }));
+
+  const overlayAnimStyle = useAnimatedStyle(() => ({
+    opacity: overlayOpacity.value,
+  }));
+
+  if (!visible) return null;
+
+  return (
+    <ReanimatedAnimated.View style={[styles.countdownOverlay, overlayAnimStyle]}>
+      {/* Purple glow pulse behind the number */}
+      <ReanimatedAnimated.View style={[styles.countdownGlow, glowAnimStyle]} />
+
+      {/* Large number */}
+      <ReanimatedAnimated.View style={numberAnimStyle}>
+        <Text style={styles.countdownNumber}>{countdownValue}</Text>
+      </ReanimatedAnimated.View>
+
+      <Text style={styles.countdownSubText}>Uyum Odasi basliyior...</Text>
+    </ReanimatedAnimated.View>
+  );
+};
+
+// ─── Floating Compat Increase Component ─────────────────────────
+
+interface FloatingCompatProps {
+  amount: number;
+  triggerId: number; // changes to trigger animation
+}
+
+const FloatingCompat: React.FC<FloatingCompatProps> = ({ amount, triggerId }) => {
+  const floatY = useSharedValue(0);
+  const floatOpacity = useSharedValue(0);
+  const floatScale = useSharedValue(0.5);
+
+  useEffect(() => {
+    if (triggerId === 0) return;
+
+    // Reset
+    floatY.value = 0;
+    floatOpacity.value = 0;
+    floatScale.value = 0.5;
+
+    // Animate: appear, rise, and fade
+    floatOpacity.value = withSequence(
+      withTiming(1, { duration: 200 }),
+      withDelay(800, withTiming(0, { duration: 500 })),
+    );
+    floatY.value = withTiming(-80, { duration: 1500, easing: Easing.out(Easing.cubic) });
+    floatScale.value = withSpring(1, { damping: 10, stiffness: 100 });
+  }, [triggerId, floatY, floatOpacity, floatScale]);
+
+  const animStyle = useAnimatedStyle(() => ({
+    opacity: floatOpacity.value,
+    transform: [
+      { translateY: floatY.value },
+      { scale: floatScale.value },
+    ],
+  }));
+
+  if (triggerId === 0) return null;
+
+  return (
+    <ReanimatedAnimated.View style={[styles.floatingCompat, animStyle]}>
+      <Text style={styles.floatingCompatText}>+{amount}% uyum</Text>
+    </ReanimatedAnimated.View>
+  );
+};
+
+// ─── Compat Progress Mini Bar ───────────────────────────────────
+
+interface CompatProgressBarProps {
+  baseScore: number;
+  sessionIncrease: number;
+}
+
+const CompatProgressBar: React.FC<CompatProgressBarProps> = ({ baseScore, sessionIncrease }) => {
+  const barWidth = useSharedValue(0);
+
+  useEffect(() => {
+    const totalPercent = Math.min(baseScore + sessionIncrease, 100);
+    barWidth.value = withSpring(totalPercent, { damping: 15, stiffness: 80 });
+  }, [baseScore, sessionIncrease, barWidth]);
+
+  const barStyle = useAnimatedStyle(() => ({
+    width: `${barWidth.value}%` as unknown as number,
+  }));
+
+  return (
+    <View style={styles.compatBarContainer}>
+      <View style={styles.compatBarTrack}>
+        <ReanimatedAnimated.View style={[styles.compatBarFill, barStyle]}>
+          <LinearGradient
+            colors={[palette.purple[400], palette.pink[400]]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={StyleSheet.absoluteFill}
+          />
+        </ReanimatedAnimated.View>
+      </View>
+      <Text style={styles.compatBarLabel}>
+        {Math.min(baseScore + sessionIncrease, 100)}% uyum
+      </Text>
+    </View>
+  );
+};
 
 // ─── Typing Indicator Component ─────────────────────────────────
 
@@ -113,27 +323,33 @@ const TypingIndicator: React.FC = () => {
           style={[styles.typingDot, { transform: [{ translateY: dot3Anim }] }]}
         />
       </View>
-      <Text style={styles.typingText}>... yazıyor</Text>
+      <Text style={styles.typingText}>... yaziyor</Text>
     </View>
   );
 };
 
-// ─── Session Summary Component ──────────────────────────────────
+// ─── Enhanced Session Summary Component ─────────────────────────
 
 interface SessionSummaryProps {
   visible: boolean;
   messageCount: number;
   sessionDurationMinutes: number;
   cardsPlayedCount: number;
+  sessionCompatIncrease: number;
   onContinueToChat: () => void;
   onDismiss: () => void;
 }
+
+/** Simulated strong and growth areas based on session activity */
+const STRONG_AREAS = ['Iletisim', 'Degerler'];
+const GROWTH_AREAS = ['Catisma yaklasimi'];
 
 const SessionSummary: React.FC<SessionSummaryProps> = ({
   visible,
   messageCount,
   sessionDurationMinutes,
   cardsPlayedCount,
+  sessionCompatIncrease,
   onContinueToChat,
   onDismiss,
 }) => (
@@ -145,23 +361,51 @@ const SessionSummary: React.FC<SessionSummaryProps> = ({
   >
     <View style={styles.summaryOverlay}>
       <View style={styles.summaryCard}>
-        <Text style={styles.summaryTitle}>Oturum Özeti</Text>
+        <Text style={styles.summaryTitle}>Oturum Ozeti</Text>
+
+        {/* Compat increase highlight */}
+        <View style={styles.summaryCompatBadge}>
+          <LinearGradient
+            colors={[palette.purple[600], palette.pink[500]]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.md }]}
+          />
+          <Text style={styles.summaryCompatText}>
+            +{sessionCompatIncrease}% Uyum Artisi
+          </Text>
+        </View>
+
         <View style={styles.summaryDivider} />
 
-        <View style={styles.summaryStatRow}>
-          <Text style={styles.summaryStatLabel}>Toplam mesaj</Text>
-          <Text style={styles.summaryStatValue}>{messageCount}</Text>
+        {/* Strong areas */}
+        <View style={styles.summarySectionRow}>
+          <Text style={styles.summarySectionIcon}>{'>'}</Text>
+          <Text style={styles.summarySectionTitle}>Guclu Alanlariniz</Text>
         </View>
+        {STRONG_AREAS.map((area) => (
+          <Text key={area} style={styles.summaryBullet}>  {area}</Text>
+        ))}
 
-        <View style={styles.summaryStatRow}>
-          <Text style={styles.summaryStatLabel}>Oturum süresi</Text>
-          <Text style={styles.summaryStatValue}>{sessionDurationMinutes} dk</Text>
+        {/* Growth areas */}
+        <View style={[styles.summarySectionRow, { marginTop: spacing.md }]}>
+          <Text style={styles.summarySectionIcon}>{'~'}</Text>
+          <Text style={styles.summarySectionTitle}>Gelisim Alanlariniz</Text>
         </View>
+        {GROWTH_AREAS.map((area) => (
+          <Text key={area} style={styles.summaryBullet}>  {area}</Text>
+        ))}
 
-        <View style={styles.summaryStatRow}>
-          <Text style={styles.summaryStatLabel}>Oynanan soru/oyun</Text>
-          <Text style={styles.summaryStatValue}>{cardsPlayedCount}</Text>
+        <View style={styles.summaryDivider} />
+
+        {/* Session stats */}
+        <View style={styles.summarySectionRow}>
+          <Text style={styles.summarySectionIcon}>{'#'}</Text>
+          <Text style={styles.summarySectionTitle}>Oturum Istatistikleri</Text>
         </View>
+        <Text style={styles.summaryStatsLine}>
+          {messageCount} mesaj  {sessionDurationMinutes} dakika  {cardsPlayedCount} kart
+        </Text>
 
         <View style={styles.summaryDivider} />
 
@@ -170,7 +414,7 @@ const SessionSummary: React.FC<SessionSummaryProps> = ({
           onPress={onContinueToChat}
           activeOpacity={0.85}
         >
-          <Text style={styles.summaryContinueText}>Devam et</Text>
+          <Text style={styles.summaryContinueText}>Sohbete Devam Et</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -184,6 +428,135 @@ const SessionSummary: React.FC<SessionSummaryProps> = ({
     </View>
   </Modal>
 );
+
+// ─── Interactive Question Card Component ────────────────────────
+
+interface InteractiveCardProps {
+  card: {
+    id: string;
+    type: 'question' | 'game' | 'challenge';
+    text: string;
+    isRevealed: boolean;
+  };
+  cardIndex: number;
+  totalCards: number;
+  showReactions: boolean;
+  partnerAnswered: boolean;
+  onToggleReactions: () => void;
+  onSendReaction: (reaction: HarmonyReaction) => void;
+  onRevealNext: () => void;
+  hasNext: boolean;
+}
+
+const InteractiveCard: React.FC<InteractiveCardProps> = ({
+  card,
+  cardIndex,
+  totalCards,
+  showReactions,
+  partnerAnswered,
+  onToggleReactions,
+  onSendReaction,
+  onRevealNext,
+  hasNext,
+}) => {
+  const flipRotation = useSharedValue(0);
+  const cardScale = useSharedValue(0.92);
+  const cardOpacity = useSharedValue(0);
+  const slideX = useSharedValue(40);
+
+  // Animate in on mount / card change
+  useEffect(() => {
+    // Reset for entrance
+    cardScale.value = 0.92;
+    cardOpacity.value = 0;
+    slideX.value = 40;
+    flipRotation.value = 180; // start face-down
+
+    // Card flip + slide entrance with spring
+    flipRotation.value = withDelay(100, withSpring(0, { damping: 14, stiffness: 90 }));
+    cardOpacity.value = withTiming(1, { duration: 350, easing: Easing.out(Easing.cubic) });
+    slideX.value = withSpring(0, { damping: 16, stiffness: 100 });
+    cardScale.value = withSpring(1, { damping: 12, stiffness: 100 });
+  }, [card.id, flipRotation, cardScale, cardOpacity, slideX]);
+
+  const flipAnimStyle = useAnimatedStyle(() => ({
+    opacity: cardOpacity.value,
+    transform: [
+      { translateX: slideX.value },
+      { perspective: 1000 },
+      { rotateY: `${flipRotation.value}deg` },
+      { scale: cardScale.value },
+    ],
+  }));
+
+  return (
+    <View style={styles.cardSection}>
+      <ReanimatedAnimated.View style={[styles.cardFlipWrapper, flipAnimStyle]}>
+        <View
+          style={[
+            styles.harmonyCard,
+            { borderColor: card.type === 'game' ? colors.accent : colors.primary },
+          ]}
+        >
+          <View style={styles.cardHeader}>
+            <View style={styles.cardBadge}>
+              <Text style={styles.cardBadgeText}>
+                {card.type === 'question'
+                  ? 'Soru'
+                  : card.type === 'game'
+                    ? 'Oyun'
+                    : 'Gorev'}
+              </Text>
+            </View>
+
+            {/* Partner answered indicator */}
+            {partnerAnswered && (
+              <View style={styles.partnerAnsweredBadge}>
+                <Text style={styles.partnerAnsweredText}>Partner secti</Text>
+              </View>
+            )}
+
+            {/* Reaction toggle button */}
+            <TouchableOpacity
+              onPress={onToggleReactions}
+              style={styles.reactionToggle}
+            >
+              <Text style={styles.reactionToggleText}>
+                {showReactions ? 'Kapat' : 'Tepki'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.cardText}>{card.text}</Text>
+
+          {/* Reaction buttons — always visible below card content */}
+          {showReactions && (
+            <View style={styles.reactionsContainer}>
+              {REACTIONS.map((r) => (
+                <TouchableOpacity
+                  key={r.type}
+                  style={styles.reactionButton}
+                  onPress={() => onSendReaction(r.type)}
+                >
+                  <Text style={styles.reactionButtonText}>{r.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          {hasNext && (
+            <TouchableOpacity onPress={onRevealNext} style={styles.nextCardButton}>
+              <Text style={styles.nextCardButtonText}>Sonraki Kart</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </ReanimatedAnimated.View>
+      <Text style={styles.cardCounter}>
+        {cardIndex + 1}/{totalCards}
+      </Text>
+    </View>
+  );
+};
 
 // ─── Main Component ─────────────────────────────────────────────
 
@@ -233,6 +606,14 @@ export const HarmonyRoomScreen: React.FC = () => {
   const [showOneMinuteToast, setShowOneMinuteToast] = useState(false);
   const [oneMinuteToastShown, setOneMinuteToastShown] = useState(false);
 
+  // Countdown state
+  const [showCountdown, setShowCountdown] = useState(true);
+
+  // Live compat increase state
+  const [sessionCompatIncrease, setSessionCompatIncrease] = useState(0);
+  const [compatTriggerId, setCompatTriggerId] = useState(0);
+  const [partnerAnsweredCard, setPartnerAnsweredCard] = useState(false);
+
   // ─── WebRTC Call State ──────────────────────────────────────────
   const [callState, setCallState] = useState<CallState>('idle');
   const [callType, setCallType] = useState<CallType>('voice');
@@ -249,11 +630,10 @@ export const HarmonyRoomScreen: React.FC = () => {
   const reactionScaleAnim = useRef(new Animated.Value(0.5)).current;
   const timerPulseAnim = useRef(new Animated.Value(1)).current;
   const toastFadeAnim = useRef(new Animated.Value(0)).current;
-  const cardFadeAnim = useRef(new Animated.Value(1)).current;
-  const cardSlideAnim = useRef(new Animated.Value(0)).current;
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTypingRef = useRef(false);
   const activeSessionRef = useRef(activeSession);
+  const prevCardsPlayedRef = useRef(0);
 
   // Keep ref in sync with store state
   useEffect(() => {
@@ -330,9 +710,9 @@ export const HarmonyRoomScreen: React.FC = () => {
       onCallRejected: (reason?: string) => {
         setShowIncomingCall(false);
         if (reason === 'busy') {
-          Alert.alert('Meşgul', 'Partner şu anda başka bir aramada.');
+          Alert.alert('Mesgul', 'Partner su anda baska bir aramada.');
         } else if (reason === 'timeout') {
-          Alert.alert('Cevapsız', 'Arama cevaplanmadı.');
+          Alert.alert('Cevapsiz', 'Arama cevaplanmadi.');
         }
       },
       onCallEnded: () => {
@@ -355,8 +735,8 @@ export const HarmonyRoomScreen: React.FC = () => {
     // Video dual consent listeners
     const onConsentRequest = (data: VideoConsentRequestPayload) => {
       Alert.alert(
-        'Video Arama \u0130ste\u011Fi',
-        'Partneriniz video arama ba\u015Flatmak istiyor. Kabul ediyor musunuz?',
+        'Video Arama Istegi',
+        'Partneriniz video arama baslatmak istiyor. Kabul ediyor musunuz?',
         [
           {
             text: 'Reddet',
@@ -384,7 +764,7 @@ export const HarmonyRoomScreen: React.FC = () => {
     };
 
     const onConsentRejected = (_payload: VideoConsentRejectedPayload) => {
-      Alert.alert('Video Reddedildi', 'Partneriniz video aramay\u0131 reddetti.');
+      Alert.alert('Video Reddedildi', 'Partneriniz video aramayi reddetti.');
     };
 
     const cleanupConsentReq = socketService.on<VideoConsentRequestPayload>('harmony:video_consent_request', onConsentRequest);
@@ -638,7 +1018,7 @@ export const HarmonyRoomScreen: React.FC = () => {
 
   useEffect(() => {
     if (socketError) {
-      Alert.alert('Bağlantı Hatası', socketError);
+      Alert.alert('Baglanti Hatasi', socketError);
     }
   }, [socketError]);
 
@@ -672,6 +1052,32 @@ export const HarmonyRoomScreen: React.FC = () => {
     return cards.filter((c) => c.isRevealed).length;
   }, [cards]);
 
+  const baseCompatScore = activeSession?.compatibilityScore ?? 60;
+
+  // ─── Live Compat Increase — trigger on card reveal ────────────
+
+  useEffect(() => {
+    const currentPlayed = cards.filter((c) => c.isRevealed).length;
+    if (currentPlayed > prevCardsPlayedRef.current && prevCardsPlayedRef.current > 0) {
+      // A new card was just revealed/played — increment compat
+      setSessionCompatIncrease((prev) => prev + COMPAT_INCREASE_PER_CARD);
+      setCompatTriggerId((prev) => prev + 1);
+      // Simulate partner answered after a short delay
+      setPartnerAnsweredCard(false);
+      const partnerTimer = setTimeout(() => {
+        setPartnerAnsweredCard(true);
+        // Trigger another compat bump when partner "answers"
+        setSessionCompatIncrease((prev) => prev + 1);
+        setCompatTriggerId((prev) => prev + 1);
+      }, 2000 + Math.random() * 2000);
+      prevCardsPlayedRef.current = currentPlayed;
+      return () => clearTimeout(partnerTimer);
+    }
+    prevCardsPlayedRef.current = currentPlayed;
+    return undefined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cardsPlayedCount]);
+
   // ─── Helpers ───────────────────────────────────────────────────
 
   const formatTime = (totalSeconds: number): string => {
@@ -683,11 +1089,11 @@ export const HarmonyRoomScreen: React.FC = () => {
   const getReactionLabel = (reaction: string): string => {
     const labels: Record<string, string> = {
       love: 'Sevdi',
-      laugh: 'Güldü',
-      think: 'Düşünüyor',
-      surprise: 'Şaşırdı',
-      agree: 'Katıldı',
-      disagree: 'Katılmadı',
+      laugh: 'Guldu',
+      think: 'Dusunuyor',
+      surprise: 'Sasirdi',
+      agree: 'Katildi',
+      disagree: 'Katilmadi',
     };
     return labels[reaction] ?? reaction;
   };
@@ -703,6 +1109,10 @@ export const HarmonyRoomScreen: React.FC = () => {
   };
 
   // ─── Handlers ──────────────────────────────────────────────────
+
+  const handleCountdownComplete = useCallback(() => {
+    setShowCountdown(false);
+  }, []);
 
   const handleSendMessage = useCallback(() => {
     if (inputText.trim().length === 0 || !activeSession) return;
@@ -726,44 +1136,20 @@ export const HarmonyRoomScreen: React.FC = () => {
     const nextIndex = currentCardIndex + 1;
     if (nextIndex < cards.length) {
       revealCard(activeSession.id, cards[nextIndex].id);
-
-      // Animate card transition: slide out left + fade, then slide in from right
-      Animated.parallel([
-        Animated.timing(cardFadeAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(cardSlideAnim, {
-          toValue: -30,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        setCurrentCardIndex(nextIndex);
-        cardSlideAnim.setValue(30);
-        Animated.parallel([
-          Animated.timing(cardFadeAnim, {
-            toValue: 1,
-            duration: 250,
-            useNativeDriver: true,
-          }),
-          Animated.spring(cardSlideAnim, {
-            toValue: 0,
-            friction: 8,
-            tension: 100,
-            useNativeDriver: true,
-          }),
-        ]).start();
-      });
+      setCurrentCardIndex(nextIndex);
+      setShowReactions(false);
+      setPartnerAnsweredCard(false);
+      // Haptic feedback on card reveal
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-  }, [activeSession, currentCardIndex, cards, revealCard, cardFadeAnim, cardSlideAnim]);
+  }, [activeSession, currentCardIndex, cards, revealCard]);
 
   const handleSendReaction = useCallback(
     (reaction: HarmonyReaction) => {
       if (!activeSession || !currentCard) return;
       sendReaction(activeSession.id, currentCard.id, reaction);
       setShowReactions(false);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     },
     [activeSession, currentCard, sendReaction]
   );
@@ -771,19 +1157,19 @@ export const HarmonyRoomScreen: React.FC = () => {
   const handleExtendSession = useCallback(() => {
     if (!activeSession) return;
     if (extensions >= HARMONY_CONFIG.MAX_EXTENSIONS) {
-      Alert.alert('Limit', 'Maksimum uzatma sayısına ulaştın.');
+      Alert.alert('Limit', 'Maksimum uzatma sayisina ulastin.');
       return;
     }
     Alert.alert(
-      'Süre Uzat',
-      `${HARMONY_CONFIG.EXTENSION_DURATION_MINUTES} dakika eklemek için ${HARMONY_CONFIG.GOLD_EXTENSION_COST} Gold kullanılacak.`,
+      'Sure Uzat',
+      `${HARMONY_CONFIG.EXTENSION_DURATION_MINUTES} dakika eklemek icin ${HARMONY_CONFIG.GOLD_EXTENSION_COST} Gold kullanilacak.`,
       [
-        { text: 'İptal', style: 'cancel' },
+        { text: 'Iptal', style: 'cancel' },
         {
           text: 'Uzat',
           onPress: async () => {
             const success = await extendSession(activeSession.id);
-            if (!success) Alert.alert('Hata', 'Süre uzatılamadı.');
+            if (!success) Alert.alert('Hata', 'Sure uzatilamadi.');
           },
         },
       ]
@@ -797,7 +1183,7 @@ export const HarmonyRoomScreen: React.FC = () => {
       return;
     }
     if (!isPartnerOnline) {
-      Alert.alert('Partner Çevrimdışı', 'Partner henüz odaya katılmadı.');
+      Alert.alert('Partner Cevrimdisi', 'Partner henuz odaya katilmadi.');
       return;
     }
     setCallType('voice');
@@ -811,13 +1197,13 @@ export const HarmonyRoomScreen: React.FC = () => {
       return;
     }
     if (!isPartnerOnline) {
-      Alert.alert('Partner \u00C7evrimd\u0131\u015F\u0131', 'Partner hen\u00FCz odaya kat\u0131lmad\u0131.');
+      Alert.alert('Partner Cevrimdisi', 'Partner henuz odaya katilmadi.');
       return;
     }
     // Video calls require dual consent — send consent request first
     socketService.sendVideoConsentRequest(activeSession.id, activeSession.matchId);
     Alert.alert(
-      'Video \u0130zni',
+      'Video Izni',
       'Partnerinizden video izni bekleniyor...',
     );
   }, [activeSession, callState, isPartnerOnline]);
@@ -858,12 +1244,12 @@ export const HarmonyRoomScreen: React.FC = () => {
 
   const handleLeaveRoom = useCallback(() => {
     Alert.alert(
-      'Odadan Ayrıl',
-      'Uyum Odası\'ndan ayrılmak istediğinden emin misin?',
+      'Odadan Ayril',
+      'Uyum Odasindan ayrilmak istediginden emin misin?',
       [
         { text: 'Kal', style: 'cancel' },
         {
-          text: 'Ayrıl',
+          text: 'Ayril',
           style: 'destructive',
           onPress: () => {
             if (activeSession) {
@@ -932,7 +1318,7 @@ export const HarmonyRoomScreen: React.FC = () => {
     return (
       <View style={[styles.container, styles.loadingContainer, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Uyum Odası yükleniyor...</Text>
+        <Text style={styles.loadingText}>Uyum Odasi yukleniyor...</Text>
       </View>
     );
   }
@@ -941,13 +1327,13 @@ export const HarmonyRoomScreen: React.FC = () => {
     return (
       <View style={[styles.container, styles.loadingContainer, { paddingTop: insets.top }]}>
         <Text style={{ fontSize: 40, marginBottom: spacing.md }}>{'~'}</Text>
-        <Text style={styles.loadingText}>Uyum Odası bulunamadı</Text>
+        <Text style={styles.loadingText}>Uyum Odasi bulunamadi</Text>
         <TouchableOpacity
           style={{ marginTop: spacing.lg, backgroundColor: colors.primary, borderRadius: borderRadius.lg, paddingHorizontal: spacing.xl, paddingVertical: spacing.md }}
           onPress={() => navigation.goBack()}
           activeOpacity={0.85}
         >
-          <Text style={{ ...typography.button, color: colors.text }}>Geri Dön</Text>
+          <Text style={{ ...typography.button, color: colors.text }}>Geri Don</Text>
         </TouchableOpacity>
       </View>
     );
@@ -960,12 +1346,16 @@ export const HarmonyRoomScreen: React.FC = () => {
       style={[styles.container, { paddingTop: insets.top }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      {/* Session Summary Overlay */}
+      {/* Countdown Overlay — 3-2-1 before session starts */}
+      <CountdownOverlay visible={showCountdown} onComplete={handleCountdownComplete} />
+
+      {/* Enhanced Session Summary Overlay */}
       <SessionSummary
         visible={showSessionSummary}
         messageCount={messages.length}
         sessionDurationMinutes={sessionDurationMinutes}
         cardsPlayedCount={cardsPlayedCount}
+        sessionCompatIncrease={sessionCompatIncrease}
         onContinueToChat={handleSummaryContinueToChat}
         onDismiss={handleSummaryDismiss}
       />
@@ -1036,6 +1426,14 @@ export const HarmonyRoomScreen: React.FC = () => {
         </View>
       </View>
 
+      {/* Live Compat Progress Bar — shown below header */}
+      {!showCountdown && (
+        <CompatProgressBar
+          baseScore={baseCompatScore}
+          sessionIncrease={sessionCompatIncrease}
+        />
+      )}
+
       {/* Active Call Bar — shown when in a call */}
       {callState !== 'idle' && (
         <ActiveCallBar
@@ -1051,76 +1449,31 @@ export const HarmonyRoomScreen: React.FC = () => {
         />
       )}
 
-      {/* Harmony card */}
+      {/* Interactive Harmony Card with flip animation */}
       {currentCard ? (
-        <Animated.View
-          style={[
-            styles.cardSection,
-            {
-              opacity: cardFadeAnim,
-              transform: [{ translateX: cardSlideAnim }],
-            },
-          ]}
-        >
-          <View
-            style={[
-              styles.harmonyCard,
-              { borderColor: currentCard.type === 'game' ? colors.accent : colors.primary },
-            ]}
-          >
-            <View style={styles.cardHeader}>
-              <View style={styles.cardBadge}>
-                <Text style={styles.cardBadgeText}>
-                  {currentCard.type === 'question'
-                    ? 'Soru'
-                    : currentCard.type === 'game'
-                      ? 'Oyun'
-                      : 'Görev'}
-                </Text>
-              </View>
+        <View style={{ position: 'relative' }}>
+          <InteractiveCard
+            card={currentCard}
+            cardIndex={currentCardIndex}
+            totalCards={cards.length}
+            showReactions={showReactions}
+            partnerAnswered={partnerAnsweredCard}
+            onToggleReactions={() => setShowReactions(!showReactions)}
+            onSendReaction={handleSendReaction}
+            onRevealNext={handleRevealCard}
+            hasNext={currentCardIndex < cards.length - 1}
+          />
 
-              {/* Reaction toggle button */}
-              <TouchableOpacity
-                onPress={() => setShowReactions(!showReactions)}
-                style={styles.reactionToggle}
-              >
-                <Text style={styles.reactionToggleText}>
-                  {showReactions ? 'Kapat' : 'Tepki'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.cardText}>{currentCard.text}</Text>
-
-            {/* Reaction buttons */}
-            {showReactions && (
-              <View style={styles.reactionsContainer}>
-                {REACTIONS.map((r) => (
-                  <TouchableOpacity
-                    key={r.type}
-                    style={styles.reactionButton}
-                    onPress={() => handleSendReaction(r.type)}
-                  >
-                    <Text style={styles.reactionButtonText}>{r.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-
-            {currentCardIndex < cards.length - 1 && (
-              <TouchableOpacity onPress={handleRevealCard} style={styles.nextCardButton}>
-                <Text style={styles.nextCardButtonText}>Sonraki Kart</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-          <Text style={styles.cardCounter}>
-            {currentCardIndex + 1}/{cards.length}
-          </Text>
-        </Animated.View>
+          {/* Floating compat increase animation */}
+          <FloatingCompat
+            amount={COMPAT_INCREASE_PER_CARD}
+            triggerId={compatTriggerId}
+          />
+        </View>
       ) : (
         <View style={styles.cardSection}>
           <View style={[styles.harmonyCard, { borderColor: colors.surfaceBorder }]}>
-            <Text style={styles.cardText}>Henüz kart yok</Text>
+            <Text style={styles.cardText}>Henuz kart yok</Text>
           </View>
         </View>
       )}
@@ -1145,7 +1498,7 @@ export const HarmonyRoomScreen: React.FC = () => {
       {/* 1-minute countdown toast */}
       {showOneMinuteToast && (
         <Animated.View style={[styles.countdownToast, { opacity: toastFadeAnim }]}>
-          <Text style={styles.countdownToastText}>1 dakika kaldı!</Text>
+          <Text style={styles.countdownToastText}>1 dakika kaldi!</Text>
         </Animated.View>
       )}
 
@@ -1187,7 +1540,7 @@ export const HarmonyRoomScreen: React.FC = () => {
               remainingSeconds <= TIMER_YELLOW_THRESHOLD && styles.extendTextProminent,
             ]}
           >
-            Süre Uzat ({HARMONY_CONFIG.GOLD_EXTENSION_COST} Gold)
+            Sure Uzat ({HARMONY_CONFIG.GOLD_EXTENSION_COST} Gold)
           </Text>
         </TouchableOpacity>
       )}
@@ -1304,10 +1657,91 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.text,
   },
+
+  // ─── Compat Progress Bar ──────────────────────────────────────
+  compatBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    gap: spacing.sm,
+  },
+  compatBarTrack: {
+    flex: 1,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.surfaceBorder,
+    overflow: 'hidden',
+  },
+  compatBarFill: {
+    height: '100%',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  compatBarLabel: {
+    ...typography.captionSmall,
+    color: colors.textSecondary,
+    fontWeight: '600',
+    minWidth: 60,
+    textAlign: 'right',
+  },
+
+  // ─── Floating Compat Increase ─────────────────────────────────
+  floatingCompat: {
+    position: 'absolute',
+    top: '30%',
+    alignSelf: 'center',
+    backgroundColor: palette.purple[600] + 'E6',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    zIndex: 20,
+    ...shadows.glow,
+  },
+  floatingCompatText: {
+    ...typography.bodySmall,
+    color: colors.text,
+    fontWeight: '700',
+  },
+
+  // ─── Countdown Overlay ────────────────────────────────────────
+  countdownOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  countdownGlow: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: palette.purple[500],
+    opacity: 0.3,
+  },
+  countdownNumber: {
+    fontSize: fontSizes['5xl'] * 2,
+    fontWeight: '800',
+    color: palette.purple[400],
+    textShadowColor: palette.purple[500],
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 30,
+  },
+  countdownSubText: {
+    ...typography.bodyLarge,
+    color: colors.textSecondary,
+    marginTop: spacing.lg,
+  },
+
+  // ─── Card Section ─────────────────────────────────────────────
   cardSection: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     alignItems: 'center',
+  },
+  cardFlipWrapper: {
+    width: '100%',
   },
   harmonyCard: {
     backgroundColor: colors.surface,
@@ -1332,6 +1766,19 @@ const styles = StyleSheet.create({
   cardBadgeText: {
     ...typography.captionSmall,
     color: colors.primary,
+    fontWeight: '600',
+  },
+  partnerAnsweredBadge: {
+    backgroundColor: colors.success + '20',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderWidth: 1,
+    borderColor: colors.success + '40',
+  },
+  partnerAnsweredText: {
+    ...typography.captionSmall,
+    color: colors.success,
     fontWeight: '600',
   },
   reactionToggle: {
@@ -1592,10 +2039,50 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: spacing.md,
   },
+  summaryCompatBadge: {
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    overflow: 'hidden',
+    marginBottom: spacing.sm,
+  },
+  summaryCompatText: {
+    ...typography.h4,
+    color: colors.text,
+    fontWeight: '700',
+  },
   summaryDivider: {
     height: 1,
     backgroundColor: colors.divider,
     marginVertical: spacing.md,
+  },
+  summarySectionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  summarySectionIcon: {
+    ...typography.body,
+    color: colors.primary,
+    fontWeight: '700',
+  },
+  summarySectionTitle: {
+    ...typography.body,
+    color: colors.text,
+    fontWeight: '600',
+  },
+  summaryBullet: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+    paddingLeft: spacing.lg,
+    paddingVertical: 2,
+  },
+  summaryStatsLine: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+    paddingLeft: spacing.lg,
+    paddingVertical: spacing.xs,
   },
   summaryStatRow: {
     flexDirection: 'row',

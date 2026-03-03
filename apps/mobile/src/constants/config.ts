@@ -28,11 +28,38 @@ export const LOCKED_ARCHITECTURE = {
   COMPATIBILITY_LEVELS: 2,
 } as const;
 
-// Intention tags — LOCKED at 3
+// Intention tags — 3 in backend, 2 visible in UI (not_sure hidden for now)
 export const INTENTION_TAGS = [
-  { id: 'serious', label: 'Ciddi Ilişki', icon: 'heart' },
-  { id: 'exploring', label: 'Keşfediyorum', icon: 'compass' },
-  { id: 'not_sure', label: 'Emin Değilim', icon: 'help-circle' },
+  { id: 'serious_relationship', label: 'Anlamlı Bağlantı', icon: 'heart' },
+  { id: 'exploring', label: 'Keşfet', icon: 'compass' },
+  { id: 'not_sure', label: 'Emin Değilim', icon: 'help-circle', hidden: true },
+] as const;
+
+// Visible modes for onboarding (excludes hidden tags)
+export const VISIBLE_MODES = INTENTION_TAGS.filter(
+  (t): t is typeof INTENTION_TAGS[0] | typeof INTENTION_TAGS[1] => !('hidden' in t && t.hidden),
+);
+
+// Interest tags — predefined list for onboarding selection
+export const INTEREST_OPTIONS = [
+  { id: 'travel', emoji: '\u2708\uFE0F', label: 'Seyahat' },
+  { id: 'music', emoji: '\uD83C\uDFB5', label: 'Müzik' },
+  { id: 'sports', emoji: '\uD83C\uDFC3', label: 'Spor' },
+  { id: 'cooking', emoji: '\uD83C\uDF73', label: 'Yemek' },
+  { id: 'art', emoji: '\uD83C\uDFA8', label: 'Sanat' },
+  { id: 'technology', emoji: '\uD83D\uDCBB', label: 'Teknoloji' },
+  { id: 'nature', emoji: '\uD83C\uDF3F', label: 'Doğa' },
+  { id: 'books', emoji: '\uD83D\uDCDA', label: 'Kitap' },
+  { id: 'movies', emoji: '\uD83C\uDFAC', label: 'Film' },
+  { id: 'photography', emoji: '\uD83D\uDCF7', label: 'Fotoğrafçılık' },
+  { id: 'dance', emoji: '\uD83D\uDC83', label: 'Dans' },
+  { id: 'yoga', emoji: '\uD83E\uDDD8', label: 'Yoga' },
+  { id: 'gaming', emoji: '\uD83C\uDFAE', label: 'Oyun' },
+  { id: 'animals', emoji: '\uD83D\uDC3E', label: 'Hayvanlar' },
+  { id: 'fashion', emoji: '\uD83D\uDC57', label: 'Moda' },
+  { id: 'football', emoji: '\u26BD', label: 'Futbol' },
+  { id: 'hiking', emoji: '\uD83C\uDFD4\uFE0F', label: 'Dağcılık' },
+  { id: 'coffee', emoji: '\u2615', label: 'Kahve & Şarap' },
 ] as const;
 
 // Package tiers — LOCKED at 4

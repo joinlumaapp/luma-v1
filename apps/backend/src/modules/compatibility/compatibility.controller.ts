@@ -59,4 +59,20 @@ export class CompatibilityController {
   ) {
     return this.compatibilityService.getScoreWithUser(userId, targetUserId);
   }
+
+  @Get('detailed/:targetUserId')
+  @ApiOperation({
+    summary: 'Get detailed compatibility breakdown with another user',
+    description:
+      'Returns strong areas, differences, and conversation starters in Turkish.',
+  })
+  async getDetailedCompatibility(
+    @CurrentUser('sub') userId: string,
+    @Param('targetUserId') targetUserId: string,
+  ) {
+    return this.compatibilityService.getDetailedCompatibility(
+      userId,
+      targetUserId,
+    );
+  }
 }
