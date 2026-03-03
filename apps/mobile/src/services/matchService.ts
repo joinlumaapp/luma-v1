@@ -145,6 +145,27 @@ const mapBackendToMatchDetail = (raw: BackendMatchDetailResponse): MatchDetailRe
   };
 };
 
+// ─── Date Plan Types ────────────────────────────────────────────────
+
+export interface DatePlan {
+  id: string;
+  matchId: string;
+  proposedById: string;
+  title: string;
+  suggestedDate: string | null;
+  suggestedPlace: string | null;
+  note: string | null;
+  status: 'PROPOSED' | 'ACCEPTED' | 'DECLINED' | 'COMPLETED' | 'CANCELLED';
+  createdAt: string;
+}
+
+export interface CreateDatePlanRequest {
+  title: string;
+  suggestedDate?: string;
+  suggestedPlace?: string;
+  note?: string;
+}
+
 // ─── Service ─────────────────────────────────────────────────────────
 
 export const matchService = {
@@ -167,5 +188,40 @@ export const matchService = {
   // Unmatch — remove a match
   unmatch: async (matchId: string): Promise<void> => {
     await api.delete(`/matches/${matchId}`);
+  },
+
+  // ── Date Plans ────────────────────────────────────────────
+
+  getDatePlans: async (matchId: string): Promise<DatePlan[]> => {
+    const response = await api.get<{ datePlans: DatePlan[] }>(
+      `/matches/${matchId}/date-plans`
+    );
+    return response.data.datePlans ?? [];
+  },
+
+  createDatePlan: async (
+    matchId: string,
+    data: CreateDatePlanRequest
+  ): Promise<DatePlan> => {
+    const response = await api.post<DatePlan>(
+      `/matches/${matchId}/date-plans`,
+      data
+    );
+    return response.data;
+  },
+
+  respondToDatePlan: async (
+    planId: string,
+    response: 'ACCEPTED' | 'DECLINED'
+  ): Promise<DatePlan> => {
+    const res = await api.patch<DatePlan>(
+      `/matches/date-plans/${planId}/respond`,
+      { response }
+    );
+    return res.data;
+  },
+
+  cancelDatePlan: async (planId: string): Promise<void> => {
+    await api.delete(`/matches/date-plans/${planId}`);
   },
 };

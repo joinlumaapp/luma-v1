@@ -620,6 +620,42 @@ export class ProfilesService {
     return Math.round((score / total) * 100);
   }
 
+  /**
+   * Calculate a weighted profile strength percentage.
+   * Used by the coach tips method to determine overall completeness.
+   */
+  private calculateProfileStrength(
+    profile: {
+      firstName?: string;
+      bio?: string | null;
+      intentionTag?: string;
+      voiceIntroUrl?: string | null;
+    } | null,
+    photoCount: number,
+    answeredQuestions: number,
+    isSelfieVerified: boolean,
+  ): number {
+    let earned = 0;
+    const total = 100;
+
+    // Name (10%)
+    if (profile?.firstName && profile.firstName.length > 0) earned += 10;
+    // Bio (15%)
+    if (profile?.bio && profile.bio.length > 0) earned += 15;
+    // Photos — 4+ (20%)
+    if (photoCount >= 4) earned += 20;
+    // Intention tag (10%)
+    if (profile?.intentionTag) earned += 10;
+    // Questions — 20+ answered (20%)
+    if (answeredQuestions >= 20) earned += 20;
+    // Voice intro (10%)
+    if (profile?.voiceIntroUrl) earned += 10;
+    // Selfie verified (15%)
+    if (isSelfieVerified) earned += 15;
+
+    return Math.round((earned / total) * 100);
+  }
+
   private isProfileComplete(
     profile: { firstName: string; bio: string | null; intentionTag: string },
     photoCount: number,
@@ -834,6 +870,228 @@ export class ProfilesService {
     });
 
     return { isIncognito: enabled };
+  }
+
+  // ─── AI Profile Coach (Rule-Based Tips) ────────────────────
+
+  private static readonly VALID_MBTI_TYPES: ReadonlyArray<string> = [
+    'INTJ', 'INTP', 'ENTJ', 'ENTP',
+    'INFJ', 'INFP', 'ENFJ', 'ENFP',
+    'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ',
+    'ISTP', 'ISFP', 'ESTP', 'ESFP',
+  ];
+
+  private static readonly VALID_ENNEAGRAM_TYPES: ReadonlyArray<string> = [
+    '1', '2', '3', '4', '5', '6', '7', '8', '9',
+  ];
+
+  /**
+   * Generate rule-based profile improvement tips.
+   * Analyzes the user's profile for missing or weak sections
+   * and returns prioritized, actionable advice.
+   */
+  async getProfileCoachTips(userId: string): Promise<{
+    tips: Array<{ category: string; tip: string; priority: 'high' | 'medium' | 'low' }>;
+    profileStrength: number;
+  }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        profile: true,
+        photos: {
+          where: { isApproved: true },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Kullanici bulunamadi');
+    }
+
+    // Count prompts and answered questions
+    const promptCount = await this.prisma.profilePrompt.count({
+      where: { userId },
+    });
+
+    const answeredCount = await this.prisma.userAnswer.count({
+      where: { userId },
+    });
+
+    const profile = user.profile;
+    const photoCount = user.photos.length;
+
+    const tips: Array<{ category: string; tip: string; priority: 'high' | 'medium' | 'low' }> = [];
+
+    // High priority tips (core profile elements)
+    if (!profile?.bio) {
+      tips.push({
+        category: 'bio',
+        tip: 'Bio ekle \u2014 kendini 2-3 c\u00fcmleyle tan\u0131t',
+        priority: 'high',
+      });
+    } else if (profile.bio.length < 50) {
+      tips.push({
+        category: 'bio',
+        tip: "Bio'nu zenginle\u015ftir \u2014 ilgi \u00e7ekici detaylar ekle",
+        priority: 'medium',
+      });
+    }
+
+    if (photoCount < 3) {
+      tips.push({
+        category: 'photos',
+        tip: 'En az 3 foto\u011fraf ekle \u2014 farkl\u0131 ortamlarda \u00e7ekilmi\u015f',
+        priority: 'high',
+      });
+    }
+
+    if (!profile?.voiceIntroUrl) {
+      tips.push({
+        category: 'voice',
+        tip: 'Sesli tan\u0131t\u0131m ekle \u2014 sesin ki\u015fili\u011fini yans\u0131t\u0131r',
+        priority: 'medium',
+      });
+    }
+
+    if (!profile?.interestTags || profile.interestTags.length === 0) {
+      tips.push({
+        category: 'interests',
+        tip: '\u0130lgi alanlar\u0131n\u0131 se\u00e7 \u2014 ortak noktalar bulmay\u0131 kolayla\u015ft\u0131r\u0131r',
+        priority: 'high',
+      });
+    }
+
+    // Medium priority tips (enrichment)
+    if (!profile?.height) {
+      tips.push({
+        category: 'height',
+        tip: 'Boy bilgini ekle \u2014 aramalarda \u00f6ne \u00e7\u0131kmana yard\u0131mc\u0131 olur',
+        priority: 'medium',
+      });
+    }
+
+    if (!profile?.education) {
+      tips.push({
+        category: 'education',
+        tip: 'E\u011fitim bilgini ekle',
+        priority: 'medium',
+      });
+    }
+
+    if (promptCount === 0) {
+      tips.push({
+        category: 'prompts',
+        tip: 'Profil sorular\u0131 ekle \u2014 ki\u015fili\u011fini g\u00f6ster',
+        priority: 'medium',
+      });
+    }
+
+    // Low priority tips (extras)
+    if (!profile?.zodiacSign) {
+      tips.push({
+        category: 'zodiac',
+        tip: 'Bur\u00e7 bilgini ekle \u2014 e\u011flenceli bir ba\u011f kurma yolu',
+        priority: 'low',
+      });
+    }
+
+    if (!profile?.mbtiType) {
+      tips.push({
+        category: 'mbti',
+        tip: 'Ki\u015filik tipini se\u00e7 \u2014 uyum analizini g\u00fc\u00e7lendirir',
+        priority: 'low',
+      });
+    }
+
+    // Calculate profile strength using the same weighted system
+    const strengthData = this.calculateProfileStrength(
+      profile,
+      photoCount,
+      answeredCount,
+      user.isSelfieVerified,
+    );
+
+    // Add strength tip if below 70%
+    if (strengthData < 70) {
+      tips.push({
+        category: 'strength',
+        tip: "Profilini %70'in \u00fczerine \u00e7\u0131kar \u2014 daha fazla e\u015fle\u015fme al",
+        priority: 'high',
+      });
+    }
+
+    return {
+      tips,
+      profileStrength: strengthData,
+    };
+  }
+
+  // ─── Personality Type (MBTI + Enneagram) ──────────────────
+
+  /**
+   * Update the user's personality type information (MBTI and/or Enneagram).
+   * Validates against the 16 MBTI types and 9 Enneagram types.
+   */
+  async updatePersonality(
+    userId: string,
+    mbtiType?: string,
+    enneagramType?: string,
+  ): Promise<{
+    mbtiType: string | null;
+    enneagramType: string | null;
+    message: string;
+  }> {
+    // Validate MBTI if provided
+    if (mbtiType !== undefined) {
+      const upperMbti = mbtiType.toUpperCase();
+      if (!ProfilesService.VALID_MBTI_TYPES.includes(upperMbti)) {
+        throw new BadRequestException(
+          `Gecersiz MBTI tipi: ${mbtiType}. Gecerli tipler: ${ProfilesService.VALID_MBTI_TYPES.join(', ')}`,
+        );
+      }
+      mbtiType = upperMbti;
+    }
+
+    // Validate Enneagram if provided
+    if (enneagramType !== undefined) {
+      if (!ProfilesService.VALID_ENNEAGRAM_TYPES.includes(enneagramType)) {
+        throw new BadRequestException(
+          `Gecersiz Enneagram tipi: ${enneagramType}. Gecerli tipler: 1-9`,
+        );
+      }
+    }
+
+    // At least one must be provided
+    if (mbtiType === undefined && enneagramType === undefined) {
+      throw new BadRequestException('En az bir kisilik tipi belirtilmeli (mbtiType veya enneagramType)');
+    }
+
+    const profile = await this.prisma.userProfile.findUnique({
+      where: { userId },
+    });
+
+    if (!profile) {
+      throw new NotFoundException('Profil bulunamadi. Once profil olusturun.');
+    }
+
+    const updatedProfile = await this.prisma.userProfile.update({
+      where: { userId },
+      data: {
+        ...(mbtiType !== undefined && { mbtiType }),
+        ...(enneagramType !== undefined && { enneagramType }),
+        lastActiveAt: new Date(),
+      },
+      select: {
+        mbtiType: true,
+        enneagramType: true,
+      },
+    });
+
+    return {
+      mbtiType: updatedProfile.mbtiType,
+      enneagramType: updatedProfile.enneagramType,
+      message: 'Kisilik tipi guncellendi',
+    };
   }
 
   /** Record daily login and calculate streak + rewards */

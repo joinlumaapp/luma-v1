@@ -1,21 +1,29 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
   Param,
+  Patch,
+  Post,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { MatchesService } from './matches.service';
+import { DatePlanService } from './date-plan.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { CreateDatePlanDto, RespondDatePlanDto } from './dto/date-plan.dto';
 
 @ApiTags('Matches')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('matches')
 export class MatchesController {
-  constructor(private readonly matchesService: MatchesService) {}
+  constructor(
+    private readonly matchesService: MatchesService,
+    private readonly datePlanService: DatePlanService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all matches for current user' })
@@ -39,5 +47,45 @@ export class MatchesController {
     @Param('matchId') matchId: string,
   ) {
     return this.matchesService.unmatch(userId, matchId);
+  }
+
+  // ─── Date Plan Endpoints ────────────────────────────────────────
+
+  @Post(':matchId/date-plans')
+  @ApiOperation({ summary: 'Propose a new date plan for a match' })
+  async createDatePlan(
+    @CurrentUser('sub') userId: string,
+    @Param('matchId') matchId: string,
+    @Body() dto: CreateDatePlanDto,
+  ) {
+    return this.datePlanService.createDatePlan(userId, matchId, dto);
+  }
+
+  @Get(':matchId/date-plans')
+  @ApiOperation({ summary: 'Get all date plans for a match' })
+  async getDatePlans(
+    @CurrentUser('sub') userId: string,
+    @Param('matchId') matchId: string,
+  ) {
+    return this.datePlanService.getDatePlans(userId, matchId);
+  }
+
+  @Patch('date-plans/:planId/respond')
+  @ApiOperation({ summary: 'Respond to a date plan (accept or decline)' })
+  async respondToDatePlan(
+    @CurrentUser('sub') userId: string,
+    @Param('planId') planId: string,
+    @Body() dto: RespondDatePlanDto,
+  ) {
+    return this.datePlanService.respondToDatePlan(userId, planId, dto);
+  }
+
+  @Delete('date-plans/:planId')
+  @ApiOperation({ summary: 'Cancel a date plan (proposer only)' })
+  async cancelDatePlan(
+    @CurrentUser('sub') userId: string,
+    @Param('planId') planId: string,
+  ) {
+    return this.datePlanService.cancelDatePlan(userId, planId);
   }
 }

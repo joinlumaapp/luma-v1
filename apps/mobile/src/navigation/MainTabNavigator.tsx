@@ -50,7 +50,15 @@ import { PlacesScreen } from '../screens/places/PlacesScreen';
 import { RelationshipScreen } from '../screens/relationship/RelationshipScreen';
 import { CouplesClubScreen } from '../screens/couples-club/CouplesClubScreen';
 import { NotificationSettingsScreen } from '../screens/settings/NotificationSettingsScreen';
+import { PersonalitySelectionScreen } from '../screens/profile/PersonalitySelectionScreen';
+import { ProfileCoachScreen } from '../screens/profile/ProfileCoachScreen';
 import { ReportScreen } from '../screens/moderation/ReportScreen';
+
+// Discovery extra screens
+import { WeeklyReportScreen } from '../screens/discovery/WeeklyReportScreen';
+
+// Matches extra screens
+import { DatePlannerScreen } from '../screens/matches/DatePlannerScreen';
 
 // ── Deferred Screens ─────────────────────────────────────────
 // Heavy screens that benefit from deferred mount after navigation animation
@@ -142,6 +150,11 @@ const DiscoveryStackNavigator: React.FC = () => (
       options={{ animation: 'slide_from_bottom' }}
     />
     <DiscoveryStack.Screen
+      name="WeeklyReport"
+      component={WeeklyReportScreen}
+      options={{ animation: 'slide_from_bottom' }}
+    />
+    <DiscoveryStack.Screen
       name="Report"
       component={ReportScreen}
       options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
@@ -171,6 +184,7 @@ const MatchesStackNavigator: React.FC = () => (
       component={DeferredIcebreakerGame}
       options={{ animation: 'slide_from_bottom' }}
     />
+    <MatchesStack.Screen name="DatePlanner" component={DatePlannerScreen} />
     <MatchesStack.Screen
       name="Report"
       component={ReportScreen}
@@ -213,6 +227,8 @@ const ProfileStackNavigator: React.FC = () => (
     <ProfileStack.Screen name="Relationship" component={RelationshipScreen} />
     <ProfileStack.Screen name="CouplesClub" component={CouplesClubScreen} />
     <ProfileStack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
+    <ProfileStack.Screen name="PersonalitySelection" component={PersonalitySelectionScreen} />
+    <ProfileStack.Screen name="ProfileCoach" component={ProfileCoachScreen} />
   </ProfileStack.Navigator>
 );
 

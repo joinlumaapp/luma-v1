@@ -18,7 +18,13 @@ import {
   ApiConsumes,
 } from '@nestjs/swagger';
 import { ProfilesService } from './profiles.service';
-import { UpdateProfileDto, SetIntentionTagDto, ReorderPhotosDto, UpdateLocationDto } from './dto';
+import {
+  UpdateProfileDto,
+  SetIntentionTagDto,
+  ReorderPhotosDto,
+  UpdateLocationDto,
+  UpdatePersonalityDto,
+} from './dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -39,6 +45,21 @@ export class ProfilesController {
   @ApiOperation({ summary: 'Get profile strength/completeness breakdown' })
   async getProfileStrength(@CurrentUser('sub') userId: string) {
     return this.profilesService.getProfileStrength(userId);
+  }
+
+  @Get('coach')
+  @ApiOperation({ summary: 'Get AI profile coach tips (rule-based)' })
+  async getProfileCoachTips(@CurrentUser('sub') userId: string) {
+    return this.profilesService.getProfileCoachTips(userId);
+  }
+
+  @Patch('personality')
+  @ApiOperation({ summary: 'Update personality type (MBTI / Enneagram)' })
+  async updatePersonality(
+    @CurrentUser('sub') userId: string,
+    @Body() dto: UpdatePersonalityDto,
+  ) {
+    return this.profilesService.updatePersonality(userId, dto.mbtiType, dto.enneagramType);
   }
 
   @Post('view/:targetUserId')

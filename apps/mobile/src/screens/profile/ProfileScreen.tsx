@@ -225,6 +225,14 @@ export const ProfileScreen: React.FC = () => {
     navigation.navigate('Packages');
   };
 
+  const handleProfileCoach = () => {
+    navigation.navigate('ProfileCoach');
+  };
+
+  const handlePersonality = () => {
+    navigation.navigate('PersonalitySelection');
+  };
+
   if (isLoading && !profile.firstName) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -452,6 +460,32 @@ export const ProfileScreen: React.FC = () => {
               )}
             </View>
           </TouchableOpacity>
+        </SlideIn>
+
+        {/* Quick Actions — Profil Koçu + Kişilik Tipi */}
+        <SlideIn direction="down" delay={450} distance={20}>
+          <View style={styles.quickActionsRow}>
+            <TouchableOpacity
+              style={styles.quickActionCard}
+              onPress={handleProfileCoach}
+              activeOpacity={0.7}
+              accessibilityLabel="Profil Koçu"
+              accessibilityRole="button"
+            >
+              <Text style={styles.quickActionIcon}>{'\u2728'}</Text>
+              <Text style={styles.quickActionLabel}>Profil Koçu</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.quickActionCard}
+              onPress={handlePersonality}
+              activeOpacity={0.7}
+              accessibilityLabel="Kişilik Tipi"
+              accessibilityRole="button"
+            >
+              <Text style={styles.quickActionIcon}>{'\uD83E\uDDE0'}</Text>
+              <Text style={styles.quickActionLabel}>Kişilik Tipi</Text>
+            </TouchableOpacity>
+          </View>
         </SlideIn>
 
         {/* Profile Visitors — "Seni kimler gördü" */}
@@ -790,6 +824,31 @@ const styles = StyleSheet.create({
   subscriptionCardWrapper: {
     marginHorizontal: spacing.lg,
     marginBottom: spacing.xxl,
+  },
+  // Quick Actions (Profile Coach + Personality)
+  quickActionsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  quickActionCard: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    gap: spacing.xs,
+  },
+  quickActionIcon: {
+    fontSize: 24,
+  },
+  quickActionLabel: {
+    ...typography.caption,
+    color: colors.text,
+    fontWeight: '600',
   },
   // Profile Strength Meter styles
   strengthCard: {

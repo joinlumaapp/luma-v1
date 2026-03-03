@@ -46,6 +46,7 @@ export type DiscoveryStackParamList = {
   DailyQuestion: undefined;
   LikesYou: undefined;
   DailyPicks: undefined;
+  WeeklyReport: undefined;
   Report: { userId: string; userName: string };
 };
 
@@ -57,6 +58,7 @@ export type MatchesStackParamList = {
   ChatList: undefined;
   Chat: { matchId: string; partnerName: string; partnerPhotoUrl: string };
   IcebreakerGame: { matchId: string };
+  DatePlanner: { matchId: string; partnerName: string };
   Report: { userId: string; userName: string };
 };
 
@@ -77,6 +79,8 @@ export type ProfileStackParamList = {
   Relationship: undefined;
   CouplesClub: undefined;
   NotificationSettings: undefined;
+  PersonalitySelection: undefined;
+  ProfileCoach: undefined;
 };
 
 // Utility types for screen props

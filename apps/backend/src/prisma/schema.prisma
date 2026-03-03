@@ -72,6 +72,8 @@ model User {
   profilePrompts         ProfilePrompt[]
   profileBoosts          ProfileBoost[]
   loginStreak            LoginStreak?
+  datePlans              DatePlan[]
+  weeklyReports          WeeklyReport[]
 
   @@map("users")
 }
@@ -177,6 +179,9 @@ model UserProfile {
   zodiacSign     String?         @map("zodiac_sign") @db.VarChar(20)
   religion       String?         @db.VarChar(50)
   isIncognito    Boolean      @default(false) @map("is_incognito") // hide from discovery feed
+  // Personality types (MBTI + Enneagram)
+  mbtiType       String?      @map("mbti_type") @db.VarChar(4)       // INTJ, ENFP, etc.
+  enneagramType  String?      @map("enneagram_type") @db.VarChar(2)  // 1-9
   createdAt     DateTime     @default(now()) @map("created_at")
   updatedAt     DateTime     @updatedAt @map("updated_at")
 
@@ -389,6 +394,7 @@ model Match {
   harmonySessions    HarmonySession[]
   chatMessages       ChatMessage[]
   icebreakerSessions IcebreakerSession[]
+  datePlans          DatePlan[]
 
   @@unique([userAId, userBId])
   @@index([userAId, isActive, createdAt]) // Matches: user's active matches sorted by date
@@ -1112,4 +1118,61 @@ model DailyPick {
   @@unique([userId, pickedUserId, date]) // same pick can't appear twice on same day
   @@index([userId, date])
   @@map("daily_picks")
+}
+
+// ============================================================
+// SUBSYSTEM: Date Plans (In-app date planner between matches)
+// ============================================================
+
+enum DatePlanStatus {
+  PROPOSED
+  ACCEPTED
+  DECLINED
+  COMPLETED
+  CANCELLED
+}
+
+model DatePlan {
+  id            String         @id @default(uuid()) @db.Uuid
+  matchId       String         @map("match_id") @db.Uuid
+  proposedById  String         @map("proposed_by_id") @db.Uuid
+  title         String         @db.VarChar(100)
+  suggestedDate DateTime?      @map("suggested_date")
+  suggestedPlace String?       @map("suggested_place") @db.VarChar(200)
+  note          String?        @db.VarChar(300)
+  status        DatePlanStatus @default(PROPOSED)
+  respondedAt   DateTime?      @map("responded_at")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  match      Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  proposedBy User  @relation(fields: [proposedById], references: [id], onDelete: Cascade)
+
+  @@index([matchId, status])
+  @@index([proposedById])
+  @@map("date_plans")
+}
+
+// ============================================================
+// SUBSYSTEM: Weekly Compatibility Report
+// ============================================================
+
+model WeeklyReport {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  weekStart   DateTime @map("week_start") @db.Date
+  totalSwipes Int      @default(0) @map("total_swipes")
+  totalLikes  Int      @default(0) @map("total_likes")
+  totalMatches Int     @default(0) @map("total_matches")
+  avgCompatibility Float @default(0) @map("avg_compatibility")
+  topCategory String?  @map("top_category") @db.VarChar(50)
+  messagesExchanged Int @default(0) @map("messages_exchanged")
+  mostActiveDay String? @map("most_active_day") @db.VarChar(10)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekStart])
+  @@index([userId])
+  @@map("weekly_reports")
 }

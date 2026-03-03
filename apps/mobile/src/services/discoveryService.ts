@@ -138,6 +138,41 @@ export interface ProfilePrompt {
   order: number;
 }
 
+// ─── Weekly Report ────────────────────────────────────────────
+
+export interface WeeklyReportResponse {
+  weekStart: string;
+  totalSwipes: number;
+  totalLikes: number;
+  totalMatches: number;
+  avgCompatibility: number;
+  topCategory: string | null;
+  messagesExchanged: number;
+  mostActiveDay: string | null;
+  likeRate: number;
+  insights: string[];
+}
+
+// ─── Profile Coach ────────────────────────────────────────────
+
+export interface ProfileCoachTip {
+  category: string;
+  tip: string;
+  priority: 'high' | 'medium' | 'low';
+}
+
+export interface ProfileCoachResponse {
+  tips: ProfileCoachTip[];
+  profileStrength: number;
+}
+
+// ─── Personality Types ────────────────────────────────────────
+
+export interface PersonalityResponse {
+  mbtiType: string | null;
+  enneagramType: string | null;
+}
+
 export const discoveryService = {
   // Get discovery feed
   getFeed: async (filters?: FeedFilters): Promise<FeedResponse> => {
@@ -206,6 +241,30 @@ export const discoveryService = {
   // ── Incognito Mode ──────────────────────────────────────────
   toggleIncognito: async (enabled: boolean): Promise<{ isIncognito: boolean }> => {
     const response = await api.patch<{ isIncognito: boolean }>('/profiles/incognito', { enabled });
+    return response.data;
+  },
+
+  // ── Weekly Report ─────────────────────────────────────────
+  getWeeklyReport: async (): Promise<WeeklyReportResponse> => {
+    const response = await api.get<WeeklyReportResponse>('/discovery/weekly-report');
+    return response.data;
+  },
+
+  // ── Profile Coach ─────────────────────────────────────────
+  getProfileCoachTips: async (): Promise<ProfileCoachResponse> => {
+    const response = await api.get<ProfileCoachResponse>('/profiles/coach');
+    return response.data;
+  },
+
+  // ── Personality Types ─────────────────────────────────────
+  updatePersonality: async (
+    mbtiType?: string,
+    enneagramType?: string
+  ): Promise<PersonalityResponse> => {
+    const response = await api.patch<PersonalityResponse>('/profiles/personality', {
+      mbtiType,
+      enneagramType,
+    });
     return response.data;
   },
 };

@@ -10,6 +10,7 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { DiscoveryService } from './discovery.service';
+import { WeeklyReportService } from './weekly-report.service';
 import { SwipeDto, FeedFilterDto } from './dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -17,7 +18,10 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 @ApiBearerAuth()
 @Controller('discovery')
 export class DiscoveryController {
-  constructor(private readonly discoveryService: DiscoveryService) {}
+  constructor(
+    private readonly discoveryService: DiscoveryService,
+    private readonly weeklyReportService: WeeklyReportService,
+  ) {}
 
   @Get('feed')
   @ApiOperation({ summary: 'Get discovery card feed with optional filters' })
@@ -74,5 +78,13 @@ export class DiscoveryController {
     @Param('pickedUserId') pickedUserId: string,
   ) {
     return this.discoveryService.markDailyPickViewed(userId, pickedUserId);
+  }
+
+  // ── Weekly Report (Haftalik Rapor) ────────────────────────────
+
+  @Get('weekly-report')
+  @ApiOperation({ summary: 'Get weekly compatibility report with activity insights' })
+  async getWeeklyReport(@CurrentUser('sub') userId: string) {
+    return this.weeklyReportService.getWeeklyReport(userId);
   }
 }
