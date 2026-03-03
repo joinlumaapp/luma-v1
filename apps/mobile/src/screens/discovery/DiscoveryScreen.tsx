@@ -675,6 +675,16 @@ export const DiscoveryScreen: React.FC = () => {
             </TouchableOpacity>
           )}
           <Pressable
+            onPress={() => navigation.navigate('WeeklyReport')}
+            accessibilityLabel="Haftalık rapor"
+            accessibilityRole="button"
+            accessibilityHint="Haftalık uyum raporunu görmek için dokunun"
+          >
+            <View style={styles.headerIconButton} testID="discovery-report-btn">
+              <Text style={styles.headerIconText}>{'\uD83D\uDCCA'}</Text>
+            </View>
+          </Pressable>
+          <Pressable
             onPress={() => navigation.navigate('LikesYou')}
             accessibilityLabel="Seni beğenenler"
             accessibilityRole="button"

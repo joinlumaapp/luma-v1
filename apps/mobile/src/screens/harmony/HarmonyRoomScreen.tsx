@@ -56,11 +56,11 @@ type HarmonyRoomRouteProp = RouteProp<HarmonyStackParamList, 'HarmonyRoom'>;
 // Available reactions
 const REACTIONS: { type: HarmonyReaction; label: string }[] = [
   { type: 'love', label: 'Sev' },
-  { type: 'laugh', label: 'Gul' },
-  { type: 'think', label: 'Dusun' },
-  { type: 'surprise', label: 'Sasir' },
-  { type: 'agree', label: 'Katil' },
-  { type: 'disagree', label: 'Katilma' },
+  { type: 'laugh', label: 'Gül' },
+  { type: 'think', label: 'Düşün' },
+  { type: 'surprise', label: 'Şaşır' },
+  { type: 'agree', label: 'Katıl' },
+  { type: 'disagree', label: 'Katılma' },
 ];
 
 /** Interval for requesting timer sync from the server (every 30 seconds) */
@@ -1089,11 +1089,11 @@ export const HarmonyRoomScreen: React.FC = () => {
   const getReactionLabel = (reaction: string): string => {
     const labels: Record<string, string> = {
       love: 'Sevdi',
-      laugh: 'Guldu',
-      think: 'Dusunuyor',
-      surprise: 'Sasirdi',
-      agree: 'Katildi',
-      disagree: 'Katilmadi',
+      laugh: 'Güldü',
+      think: 'Düşünüyor',
+      surprise: 'Şaşırdı',
+      agree: 'Katıldı',
+      disagree: 'Katılmadı',
     };
     return labels[reaction] ?? reaction;
   };

@@ -59,6 +59,13 @@ export const MatchDetailScreen: React.FC = () => {
     });
   };
 
+  const handleDatePlanner = () => {
+    navigation.navigate('DatePlanner', {
+      matchId,
+      partnerName: selectedMatch?.name ?? '',
+    });
+  };
+
   const handleStartHarmony = async () => {
     try {
       await createSession(matchId);
@@ -227,6 +234,14 @@ export const MatchDetailScreen: React.FC = () => {
             activeOpacity={0.85}
           >
             <Text style={styles.harmonyButtonText}>Uyum Odası Başlat</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.datePlanButton}
+            onPress={handleDatePlanner}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.datePlanButtonText}>Buluşma Planla</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -455,6 +470,19 @@ const styles = StyleSheet.create({
   harmonyButtonText: {
     ...typography.button,
     color: colors.primary,
+  },
+  datePlanButton: {
+    height: layout.buttonHeight,
+    borderRadius: borderRadius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: colors.accent,
+    backgroundColor: colors.accent + '10',
+  },
+  datePlanButtonText: {
+    ...typography.button,
+    color: colors.accent,
   },
   unmatchButton: {
     height: layout.buttonSmallHeight,
