@@ -814,6 +814,28 @@ export class ProfilesService {
     { days: 100, gold: 200, name: '100 Gün' },
   ];
 
+  /** Toggle incognito mode (hide from discovery, Gold+ only) */
+  async toggleIncognito(userId: string, enabled: boolean) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { packageTier: true },
+    });
+
+    if (!user) throw new BadRequestException('Kullanıcı bulunamadı');
+
+    // Incognito requires Gold+ package
+    if (enabled && user.packageTier === 'FREE') {
+      throw new BadRequestException('Gizli mod için Gold veya üzeri paket gereklidir');
+    }
+
+    await this.prisma.userProfile.update({
+      where: { userId },
+      data: { isIncognito: enabled },
+    });
+
+    return { isIncognito: enabled };
+  }
+
   /** Record daily login and calculate streak + rewards */
   async recordLoginStreak(userId: string) {
     const today = new Date();

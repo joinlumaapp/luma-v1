@@ -69,7 +69,7 @@ interface DiscoveryState {
 
   // Actions
   fetchFeed: () => Promise<void>;
-  swipe: (direction: 'left' | 'right' | 'up', profileId: string) => Promise<void>;
+  swipe: (direction: 'left' | 'right' | 'up', profileId: string, comment?: string) => Promise<void>;
   undoLastSwipe: () => Promise<void>;
   refreshFeed: () => Promise<void>;
   setFilters: (filters: Partial<DiscoveryState['filters']>) => void;
@@ -151,7 +151,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
     }
   },
 
-  swipe: async (direction, profileId) => {
+  swipe: async (direction, profileId, comment) => {
     try {
       // Map direction to API direction: left=pass, right=like, up=super_like
       const apiDirection = direction === 'up'
@@ -174,6 +174,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
       const response = await discoveryService.swipe({
         targetUserId: profileId,
         direction: apiDirection,
+        ...(comment ? { comment } : {}),
       });
 
       if (direction === 'right' || direction === 'up') {

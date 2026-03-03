@@ -114,6 +114,22 @@ export const SettingsScreen: React.FC = () => {
   const [showOnlineStatus, setShowOnlineStatus] = useState(true);
   const [showDistance, setShowDistance] = useState(true);
   const [showAge, setShowAge] = useState(true);
+  const [isIncognito, setIsIncognito] = useState(false);
+
+  const handleIncognitoToggle = useCallback((value: boolean) => {
+    const packageTier = useAuthStore.getState().user?.packageTier ?? 'FREE';
+    if (value && packageTier === 'FREE') {
+      Alert.alert('Gold Gerekli', 'Gizli mod için Gold veya üzeri paket gereklidir.');
+      return;
+    }
+    setIsIncognito(value);
+    // Fire and forget — non-blocking
+    import('../../services/discoveryService').then(({ discoveryService }) => {
+      discoveryService.toggleIncognito(value).catch(() => {
+        setIsIncognito(!value); // revert on error
+      });
+    });
+  }, []);
 
   // FAQ expanded state
   const [expandedFAQKey, setExpandedFAQKey] = useState<string | null>(null);
@@ -292,6 +308,14 @@ export const SettingsScreen: React.FC = () => {
           type: 'toggle',
           value: showAge,
           onToggle: setShowAge,
+        },
+        {
+          key: 'incognito',
+          icon: 'G',
+          title: 'Gizli Mod',
+          type: 'toggle' as const,
+          value: isIncognito,
+          onToggle: handleIncognitoToggle,
         },
       ],
     },

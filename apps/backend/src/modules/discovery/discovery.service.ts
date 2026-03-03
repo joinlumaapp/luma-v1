@@ -444,6 +444,7 @@ export class DiscoveryService {
           swiperId: userId,
           targetId: dto.targetUserId,
           action,
+          ...(dto.comment && action === 'LIKE' ? { comment: dto.comment } : {}),
         },
       });
 
@@ -747,6 +748,7 @@ export class DiscoveryService {
     const baseWhere: Record<string, unknown> = {
       userId: { notIn: [...excludeIds] },
       isComplete: true,
+      isIncognito: false, // hide incognito users from discovery
       user: {
         isActive: true,
         deletedAt: null,
@@ -950,6 +952,7 @@ export class DiscoveryService {
         photoUrl: photo?.thumbnailUrl ?? photo?.url ?? '',
         compatibilityPercent: Math.round(score),
         likedAt: swipe.createdAt.toISOString(),
+        comment: swipe.comment ?? null,
       };
     });
 

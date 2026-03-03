@@ -230,6 +230,7 @@ export class ChatService {
         type: messageType,
         status: 'SENT',
         mediaUrl: dto.mediaUrl ?? null,
+        mediaDuration: dto.mediaDuration ?? null,
       },
       select: {
         id: true,

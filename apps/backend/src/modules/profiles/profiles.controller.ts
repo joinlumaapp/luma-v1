@@ -145,6 +145,17 @@ export class ProfilesController {
     return this.profilesService.activateBoost(userId);
   }
 
+  // ── Incognito Mode ─────────────────────────────────────────
+
+  @Patch('incognito')
+  @ApiOperation({ summary: 'Toggle incognito mode (hide from discovery, Gold+ only)' })
+  async toggleIncognito(
+    @CurrentUser('sub') userId: string,
+    @Body() body: { enabled: boolean },
+  ) {
+    return this.profilesService.toggleIncognito(userId, body.enabled);
+  }
+
   // ── Login Streak ────────────────────────────────────────────
 
   @Post('login-streak')

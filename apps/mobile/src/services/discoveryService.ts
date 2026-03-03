@@ -41,6 +41,7 @@ export interface FeedResponse {
 export interface SwipeRequest {
   targetUserId: string;
   direction: 'like' | 'pass' | 'super_like';
+  comment?: string; // optional comment attached to LIKE
 }
 
 export interface SwipeResponse {
@@ -73,6 +74,7 @@ export interface LikeYouCard {
   photoUrl: string;
   compatibilityPercent: number;
   likedAt: string;
+  comment: string | null;
 }
 
 export interface LikesYouResponse {
@@ -198,6 +200,12 @@ export const discoveryService = {
 
   savePrompts: async (prompts: ProfilePrompt[]): Promise<ProfilePrompt[]> => {
     const response = await api.post<ProfilePrompt[]>('/profiles/prompts', { prompts });
+    return response.data;
+  },
+
+  // ── Incognito Mode ──────────────────────────────────────────
+  toggleIncognito: async (enabled: boolean): Promise<{ isIncognito: boolean }> => {
+    const response = await api.patch<{ isIncognito: boolean }>('/profiles/incognito', { enabled });
     return response.data;
   },
 };

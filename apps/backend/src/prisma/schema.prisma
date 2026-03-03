@@ -176,6 +176,7 @@ model UserProfile {
   exercise       String?         @db.VarChar(20)   // aktif, bazen, nadiren
   zodiacSign     String?         @map("zodiac_sign") @db.VarChar(20)
   religion       String?         @db.VarChar(50)
+  isIncognito    Boolean      @default(false) @map("is_incognito") // hide from discovery feed
   createdAt     DateTime     @default(now()) @map("created_at")
   updatedAt     DateTime     @updatedAt @map("updated_at")
 
@@ -334,6 +335,7 @@ model Swipe {
   swiperId  String      @map("swiper_id") @db.Uuid
   targetId  String      @map("target_id") @db.Uuid
   action    SwipeAction
+  comment   String?     @db.VarChar(200) // optional comment attached to LIKE
   createdAt DateTime    @default(now()) @map("created_at")
 
   swiper User @relation("SwipesGiven", fields: [swiperId], references: [id], onDelete: Cascade)
@@ -911,8 +913,9 @@ model ChatMessage {
   content   String
   type      ChatMessageType    @default(TEXT)
   status    ChatMessageStatus  @default(SENT) @map("status")
-  mediaUrl  String?            @map("media_url")
-  readAt    DateTime?          @map("read_at")
+  mediaUrl       String?            @map("media_url")
+  mediaDuration  Float?             @map("media_duration") // seconds — for VOICE messages
+  readAt         DateTime?          @map("read_at")
   createdAt DateTime           @default(now()) @map("created_at")
   updatedAt DateTime           @updatedAt @map("updated_at")
 
@@ -944,6 +947,8 @@ model MessageReaction {
 enum ChatMessageType {
   TEXT
   IMAGE
+  GIF
+  VOICE
   SYSTEM
 }
 

@@ -35,9 +35,10 @@ export interface ChatMessage {
   matchId: string;
   senderId: string;
   content: string;
-  type: 'TEXT' | 'IMAGE' | 'SYSTEM';
+  type: 'TEXT' | 'IMAGE' | 'GIF' | 'VOICE' | 'SYSTEM';
   status: MessageStatusType;
   mediaUrl?: string;
+  mediaDuration?: number;
   createdAt: string;
   readAt?: string;
   isRead: boolean;
@@ -53,7 +54,9 @@ export interface MessagesResponse {
 
 export interface SendMessageRequest {
   content: string;
-  type?: 'TEXT' | 'IMAGE';
+  type?: 'TEXT' | 'IMAGE' | 'GIF' | 'VOICE';
+  mediaUrl?: string;
+  mediaDuration?: number;
 }
 
 export interface SendMessageResponse {
@@ -140,6 +143,55 @@ export const chatService = {
         content: 'Fotograf',
         type: 'IMAGE',
         mediaUrl: uploadResponse.data.url,
+      }
+    );
+    return response.data;
+  },
+
+  // Send a GIF message
+  sendGifMessage: async (
+    matchId: string,
+    gifUrl: string,
+  ): Promise<SendMessageResponse> => {
+    const response = await api.post<SendMessageResponse>(
+      `/chat/conversations/${matchId}/messages`,
+      {
+        content: 'GIF',
+        type: 'GIF',
+        mediaUrl: gifUrl,
+      }
+    );
+    return response.data;
+  },
+
+  // Send a voice message
+  sendVoiceMessage: async (
+    matchId: string,
+    audioUri: string,
+    duration: number,
+  ): Promise<SendMessageResponse> => {
+    // Upload audio file first
+    const formData = new FormData();
+    const filename = audioUri.split('/').pop() ?? 'voice.m4a';
+    formData.append('file', {
+      uri: audioUri,
+      name: filename,
+      type: 'audio/m4a',
+    } as unknown as Blob);
+
+    const uploadResponse = await api.post<{ url: string }>(
+      '/upload/chat-image',
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+
+    const response = await api.post<SendMessageResponse>(
+      `/chat/conversations/${matchId}/messages`,
+      {
+        content: 'Sesli mesaj',
+        type: 'VOICE',
+        mediaUrl: uploadResponse.data.url,
+        mediaDuration: duration,
       }
     );
     return response.data;

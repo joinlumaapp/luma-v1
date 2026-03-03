@@ -28,15 +28,22 @@ export class SendMessageDto {
   })
   @IsOptional()
   @IsString()
-  @IsIn(['TEXT', 'IMAGE'])
-  type?: 'TEXT' | 'IMAGE';
+  @IsIn(['TEXT', 'IMAGE', 'GIF', 'VOICE'])
+  type?: 'TEXT' | 'IMAGE' | 'GIF' | 'VOICE';
 
   @ApiPropertyOptional({
-    description: 'Media URL for image messages',
+    description: 'Media URL for image/GIF/voice messages',
     example: 'https://cdn.luma.app/chat/image.jpg',
   })
   @IsOptional()
   @IsString()
   @IsUrl()
   mediaUrl?: string;
+
+  @ApiPropertyOptional({
+    description: 'Duration in seconds for voice messages',
+    example: 12.5,
+  })
+  @IsOptional()
+  mediaDuration?: number;
 }

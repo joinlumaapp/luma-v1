@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsEnum } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotEmpty, IsString, IsEnum, IsOptional, MaxLength } from 'class-validator';
 
 export enum SwipeDirection {
   LIKE = 'like',
@@ -22,4 +22,14 @@ export class SwipeDto {
   @IsNotEmpty()
   @IsEnum(SwipeDirection)
   direction!: SwipeDirection;
+
+  @ApiPropertyOptional({
+    description: 'Optional comment attached to a LIKE (max 200 chars)',
+    example: 'Seyahat fotoğrafların harika!',
+    maxLength: 200,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  comment?: string;
 }
