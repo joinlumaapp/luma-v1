@@ -178,11 +178,23 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, onCardPress, onU
             </Text>
           </View>
 
+          {/* Comment indicator badge */}
+          {!isBlurred && card.comment && (
+            <View style={styles.commentBadge}>
+              <Text style={styles.commentBadgeIcon}>{'\uD83D\uDCAC'}</Text>
+            </View>
+          )}
+
           {/* Name + age overlay at bottom */}
           <View style={styles.cardInfoOverlay}>
             <Text style={styles.cardName} numberOfLines={1}>
               {isBlurred ? '???' : `${card.firstName}, ${card.age}`}
             </Text>
+            {!isBlurred && card.comment && (
+              <Text style={styles.cardComment} numberOfLines={1}>
+                {`"${card.comment}"`}
+              </Text>
+            )}
           </View>
         </Animated.View>
       </Pressable>
@@ -192,7 +204,8 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, onCardPress, onU
   prev.card.userId === next.card.userId &&
   prev.isBlurred === next.isBlurred &&
   prev.index === next.index &&
-  prev.card.compatibilityPercent === next.card.compatibilityPercent
+  prev.card.compatibilityPercent === next.card.compatibilityPercent &&
+  prev.card.comment === next.card.comment
 ));
 
 LikeCard.displayName = 'LikeCard';
@@ -566,6 +579,22 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
+  // ── Comment badge ──
+  commentBadge: {
+    position: 'absolute',
+    top: spacing.xs,
+    left: spacing.xs,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(155, 107, 248, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  commentBadgeIcon: {
+    fontSize: 12,
+  },
+
   // ── Card info overlay ──
   cardInfoOverlay: {
     position: 'absolute',
@@ -580,6 +609,12 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.text,
     fontWeight: '600',
+  },
+  cardComment: {
+    fontSize: 9,
+    color: 'rgba(155, 107, 248, 0.9)',
+    fontStyle: 'italic',
+    marginTop: 1,
   },
 
   // ── Empty state ──

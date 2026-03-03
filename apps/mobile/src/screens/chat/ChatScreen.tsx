@@ -198,6 +198,11 @@ export const ChatScreen: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+  const [showGifPicker, setShowGifPicker] = useState(false);
+  const [gifSearchQuery, setGifSearchQuery] = useState('');
+  const [isRecordingVoice, setIsRecordingVoice] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const currentUserId = useAuthStore((state) => state.user?.id);
 
@@ -210,6 +215,8 @@ export const ChatScreen: React.FC = () => {
   const loadMoreMessages = useChatStore((state) => state.loadMoreMessages);
   const sendMessage = useChatStore((state) => state.sendMessage);
   const sendImageMessage = useChatStore((state) => state.sendImageMessage);
+  const sendGifMessage = useChatStore((state) => state.sendGifMessage);
+  const sendVoiceMessage = useChatStore((state) => state.sendVoiceMessage);
   const markAsRead = useChatStore((state) => state.markAsRead);
   const toggleReaction = useChatStore((state) => state.toggleReaction);
 
@@ -271,6 +278,52 @@ export const ChatScreen: React.FC = () => {
     sendImageMessage(matchId, imagePreview);
     setImagePreview(null);
   }, [imagePreview, isSending, matchId, sendImageMessage]);
+
+  // GIF picker handlers
+  const handleGifSelect = useCallback((gifUrl: string) => {
+    sendGifMessage(matchId, gifUrl);
+    setShowGifPicker(false);
+    setGifSearchQuery('');
+  }, [matchId, sendGifMessage]);
+
+  // Voice recording handlers
+  const handleVoiceRecordStart = useCallback(() => {
+    setIsRecordingVoice(true);
+    setRecordingDuration(0);
+    recordingTimerRef.current = setInterval(() => {
+      setRecordingDuration((prev) => prev + 1);
+    }, 1000);
+  }, []);
+
+  const handleVoiceRecordStop = useCallback(async () => {
+    setIsRecordingVoice(false);
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+    // Voice recording requires expo-av which is optional
+    // The recording URI and duration would come from the recorder
+    // For now, this sets up the UI flow — actual recording uses expo-av
+    if (recordingDuration > 0) {
+      // Placeholder until expo-av integration provides real audioUri
+      sendVoiceMessage(matchId, 'placeholder://audio', recordingDuration);
+    }
+  }, [recordingDuration, matchId, sendVoiceMessage]);
+
+  const handleVoiceRecordCancel = useCallback(() => {
+    setIsRecordingVoice(false);
+    setRecordingDuration(0);
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+  }, []);
+
+  const formatRecordingTime = useCallback((seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }, []);
 
   const handleLoadMore = useCallback(() => {
     if (hasMore && !isLoadingMessages) {
@@ -462,7 +515,37 @@ export const ChatScreen: React.FC = () => {
           </View>
         )}
 
+        {/* Voice recording overlay */}
+        {isRecordingVoice && (
+          <View style={styles.voiceRecordingBar}>
+            <View style={styles.voiceRecordingDot} />
+            <Text style={styles.voiceRecordingTime}>{formatRecordingTime(recordingDuration)}</Text>
+            <Text style={styles.voiceRecordingLabel}>Kayıt yapılıyor...</Text>
+            <View style={styles.voiceRecordingActions}>
+              <TouchableOpacity
+                onPress={handleVoiceRecordCancel}
+                style={styles.voiceRecordCancelBtn}
+                accessibilityLabel="Kaydı iptal et"
+                accessibilityRole="button"
+                testID="chat-voice-cancel-btn"
+              >
+                <Text style={styles.voiceRecordCancelText}>{'\u2715'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleVoiceRecordStop}
+                style={styles.voiceRecordSendBtn}
+                accessibilityLabel="Sesli mesajı gönder"
+                accessibilityRole="button"
+                testID="chat-voice-send-btn"
+              >
+                <Text style={styles.voiceRecordSendText}>{'\u2191'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         {/* Input area */}
+        {!isRecordingVoice && (
         <View style={[styles.inputArea, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]}>
           {/* Camera/image picker button */}
           <TouchableOpacity
@@ -475,6 +558,18 @@ export const ChatScreen: React.FC = () => {
             testID="chat-image-btn"
           >
             <Text style={styles.mediaButtonText}>+</Text>
+          </TouchableOpacity>
+          {/* GIF button */}
+          <TouchableOpacity
+            style={styles.mediaButton}
+            onPress={() => setShowGifPicker(true)}
+            activeOpacity={0.7}
+            accessibilityLabel="GIF gönder"
+            accessibilityRole="button"
+            accessibilityHint="GIF aramak ve göndermek için dokunun"
+            testID="chat-gif-btn"
+          >
+            <Text style={styles.gifButtonText}>GIF</Text>
           </TouchableOpacity>
           <View style={styles.inputContainer}>
             <TextInput
@@ -492,27 +587,96 @@ export const ChatScreen: React.FC = () => {
               testID="chat-message-input"
             />
           </View>
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              (!inputText.trim() || isSending) && styles.sendButtonDisabled,
-            ]}
-            onPress={handleSend}
-            disabled={!inputText.trim() || isSending}
-            activeOpacity={0.8}
-            accessibilityLabel="Mesaj gönder"
-            accessibilityRole="button"
-            accessibilityHint="Yazdığınız mesajı göndermek için dokunun"
-            testID="chat-send-btn"
-          >
-            {isSending ? (
-              <ActivityIndicator size="small" color={colors.text} />
-            ) : (
-              <Text style={styles.sendButtonText}>{'\u2191'}</Text>
-            )}
-          </TouchableOpacity>
+          {inputText.trim() ? (
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                isSending && styles.sendButtonDisabled,
+              ]}
+              onPress={handleSend}
+              disabled={isSending}
+              activeOpacity={0.8}
+              accessibilityLabel="Mesaj gönder"
+              accessibilityRole="button"
+              accessibilityHint="Yazdığınız mesajı göndermek için dokunun"
+              testID="chat-send-btn"
+            >
+              {isSending ? (
+                <ActivityIndicator size="small" color={colors.text} />
+              ) : (
+                <Text style={styles.sendButtonText}>{'\u2191'}</Text>
+              )}
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.micButton}
+              onPress={handleVoiceRecordStart}
+              activeOpacity={0.7}
+              accessibilityLabel="Sesli mesaj kaydet"
+              accessibilityRole="button"
+              accessibilityHint="Sesli mesaj kaydetmek için dokunun"
+              testID="chat-mic-btn"
+            >
+              <Text style={styles.micButtonText}>{'\uD83C\uDF99'}</Text>
+            </TouchableOpacity>
+          )}
         </View>
+        )}
       </KeyboardAvoidingView>
+
+      {/* GIF picker modal */}
+      <Modal
+        visible={showGifPicker}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowGifPicker(false)}
+      >
+        <View style={styles.gifPickerOverlay}>
+          <View style={styles.gifPickerContainer}>
+            <View style={styles.gifPickerHeader}>
+              <Text style={styles.gifPickerTitle}>GIF Gönder</Text>
+              <TouchableOpacity
+                onPress={() => { setShowGifPicker(false); setGifSearchQuery(''); }}
+                accessibilityLabel="Kapat"
+                accessibilityRole="button"
+                testID="chat-gif-close-btn"
+              >
+                <Text style={styles.gifPickerClose}>{'\u2715'}</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.gifSearchContainer}>
+              <TextInput
+                style={styles.gifSearchInput}
+                value={gifSearchQuery}
+                onChangeText={setGifSearchQuery}
+                placeholder="GIF ara..."
+                placeholderTextColor={colors.textTertiary}
+                autoFocus
+                testID="chat-gif-search-input"
+              />
+            </View>
+            <View style={styles.gifPlaceholder}>
+              <Text style={styles.gifPlaceholderText}>
+                GIF arama Giphy/Tenor API entegrasyonu ile çalışacak.
+              </Text>
+              <Text style={styles.gifPlaceholderSubtext}>
+                API anahtarı eklendikten sonra burada GIF sonuçları görünecek.
+              </Text>
+              {gifSearchQuery.length > 0 && (
+                <TouchableOpacity
+                  style={styles.gifDemoButton}
+                  onPress={() => handleGifSelect(`https://media.giphy.com/demo/${encodeURIComponent(gifSearchQuery)}.gif`)}
+                  accessibilityLabel="Demo GIF gönder"
+                  accessibilityRole="button"
+                  testID="chat-gif-demo-btn"
+                >
+                  <Text style={styles.gifDemoButtonText}>Demo GIF Gönder</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Fullscreen image viewer modal */}
       <Modal
@@ -752,6 +916,160 @@ const styles = StyleSheet.create({
   imagePreviewCancel: {
     ...typography.caption,
     color: colors.error,
+    fontWeight: '600',
+  },
+  // GIF button
+  gifButtonText: {
+    fontSize: 11,
+    color: colors.primary,
+    fontWeight: '700',
+  },
+  // Mic button (voice record trigger)
+  micButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  micButtonText: {
+    fontSize: 20,
+  },
+  // Voice recording bar
+  voiceRecordingBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
+    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+    gap: spacing.sm,
+  },
+  voiceRecordingDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#EF4444',
+  },
+  voiceRecordingTime: {
+    ...typography.bodyLarge,
+    color: colors.text,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'] as const,
+  },
+  voiceRecordingLabel: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    flex: 1,
+  },
+  voiceRecordingActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  voiceRecordCancelBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  voiceRecordCancelText: {
+    fontSize: 16,
+    color: '#EF4444',
+    fontWeight: '700',
+  },
+  voiceRecordSendBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  voiceRecordSendText: {
+    fontSize: 18,
+    color: colors.text,
+    fontWeight: '700',
+  },
+  // GIF picker modal
+  gifPickerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'flex-end',
+  },
+  gifPickerContainer: {
+    backgroundColor: colors.background,
+    borderTopLeftRadius: borderRadius.xl,
+    borderTopRightRadius: borderRadius.xl,
+    maxHeight: '70%',
+    minHeight: 300,
+  },
+  gifPickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.divider,
+  },
+  gifPickerTitle: {
+    ...typography.bodyLarge,
+    color: colors.text,
+    fontWeight: '600',
+  },
+  gifPickerClose: {
+    fontSize: 18,
+    color: colors.textSecondary,
+  },
+  gifSearchContainer: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+  },
+  gifSearchInput: {
+    ...typography.body,
+    color: colors.text,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  gifPlaceholder: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xxl,
+    paddingBottom: spacing.xxl,
+  },
+  gifPlaceholderText: {
+    ...typography.body,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  gifPlaceholderSubtext: {
+    ...typography.caption,
+    color: colors.textTertiary,
+    textAlign: 'center',
+  },
+  gifDemoButton: {
+    marginTop: spacing.md,
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+  },
+  gifDemoButtonText: {
+    ...typography.bodySmall,
+    color: colors.text,
     fontWeight: '600',
   },
   // Fullscreen image viewer

@@ -9,11 +9,14 @@ import {
   Text,
   Pressable,
   TouchableOpacity,
+  TextInput,
   StyleSheet,
   Dimensions,
   Platform,
   ActivityIndicator,
   InteractionManager,
+  Modal,
+  KeyboardAvoidingView,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -176,6 +179,10 @@ export const DiscoveryScreen: React.FC = () => {
   const isMoodExpired = useMoodStore((s) => s.isMoodExpired);
   const selectedMoodOption = currentMood ? MOOD_OPTIONS.find((m) => m.type === currentMood) : undefined;
   const hasMoodActive = !!currentMood && !isMoodExpired();
+
+  // ─── Like-with-comment modal state ──────────────────────
+  const [showCommentModal, setShowCommentModal] = useState(false);
+  const [likeComment, setLikeComment] = useState('');
 
   // ─── Compatibility bottom sheet state ─────────────────────
   const [showCompatSheet, setShowCompatSheet] = useState(false);
@@ -550,8 +557,24 @@ export const DiscoveryScreen: React.FC = () => {
 
   const handleLikePress = useCallback(() => {
     if (!currentCard) return;
+    setShowCommentModal(true);
+  }, [currentCard]);
+
+  const handleLikeWithComment = useCallback(() => {
+    if (!currentCard) return;
+    const comment = likeComment.trim() || undefined;
+    translateX.value = withSpring(SCREEN_WIDTH + 200, SPRING_EXIT);
+    swipeAction('right', currentCard.id, comment);
+    setShowCommentModal(false);
+    setLikeComment('');
+  }, [currentCard, likeComment, swipeAction, translateX]);
+
+  const handleLikeSkipComment = useCallback(() => {
+    if (!currentCard) return;
     translateX.value = withSpring(SCREEN_WIDTH + 200, SPRING_EXIT);
     swipeAction('right', currentCard.id);
+    setShowCommentModal(false);
+    setLikeComment('');
   }, [currentCard, swipeAction, translateX]);
 
   // ─── Loading state ─────────────────────────────────────────
@@ -843,6 +866,70 @@ export const DiscoveryScreen: React.FC = () => {
         onClose={handleCompatClose}
       />
 
+      {/* Like-with-comment modal */}
+      <Modal
+        visible={showCommentModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => { setShowCommentModal(false); setLikeComment(''); }}
+      >
+        <KeyboardAvoidingView
+          style={styles.commentModalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <Pressable
+            style={styles.commentModalBackdrop}
+            onPress={handleLikeSkipComment}
+          />
+          <View style={styles.commentModalContent}>
+            <View style={styles.commentModalHeader}>
+              <Text style={styles.commentModalHeartIcon}>{'\u2665'}</Text>
+              <Text style={styles.commentModalTitle}>
+                {currentCard ? `${currentCard.name} için bir not bırak` : 'Beğeni notu'}
+              </Text>
+            </View>
+            <TextInput
+              style={styles.commentModalInput}
+              value={likeComment}
+              onChangeText={setLikeComment}
+              placeholder="Profilinde ne dikkatimi çekti..."
+              placeholderTextColor={colors.textTertiary}
+              multiline
+              maxLength={200}
+              autoFocus
+              testID="discovery-comment-input"
+            />
+            <Text style={styles.commentModalCharCount}>
+              {likeComment.length}/200
+            </Text>
+            <View style={styles.commentModalActions}>
+              <Pressable
+                onPress={handleLikeSkipComment}
+                style={styles.commentModalSkipBtn}
+                accessibilityLabel="Notsuz beğen"
+                accessibilityRole="button"
+                testID="discovery-comment-skip-btn"
+              >
+                <Text style={styles.commentModalSkipText}>Sadece Beğen</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleLikeWithComment}
+                style={[
+                  styles.commentModalSendBtn,
+                  !likeComment.trim() && styles.commentModalSendBtnDisabled,
+                ]}
+                disabled={!likeComment.trim()}
+                accessibilityLabel="Notlu beğen"
+                accessibilityRole="button"
+                testID="discovery-comment-send-btn"
+              >
+                <Text style={styles.commentModalSendText}>Notlu Beğen</Text>
+              </Pressable>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
       {/* Login streak banner */}
       {streakData && (
         <StreakBanner
@@ -1088,5 +1175,90 @@ const styles = StyleSheet.create({
   moodChipLabel: {
     fontSize: 11,
     fontWeight: '600',
+  },
+
+  // ── Like-with-comment modal ──
+  commentModalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  commentModalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  commentModalContent: {
+    backgroundColor: colors.background,
+    borderTopLeftRadius: borderRadius.xl,
+    borderTopRightRadius: borderRadius.xl,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xxl,
+  },
+  commentModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  commentModalHeartIcon: {
+    fontSize: 22,
+    color: '#9B6BF8',
+  },
+  commentModalTitle: {
+    ...typography.bodyLarge,
+    color: colors.text,
+    fontWeight: '600',
+    flex: 1,
+  },
+  commentModalInput: {
+    ...typography.body,
+    color: colors.text,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    minHeight: 80,
+    maxHeight: 120,
+    textAlignVertical: 'top',
+  },
+  commentModalCharCount: {
+    ...typography.caption,
+    color: colors.textTertiary,
+    textAlign: 'right',
+    marginTop: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  commentModalActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  commentModalSkipBtn: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  commentModalSkipText: {
+    ...typography.button,
+    color: colors.textSecondary,
+  },
+  commentModalSendBtn: {
+    flex: 1,
+    backgroundColor: '#9B6BF8',
+    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  commentModalSendBtnDisabled: {
+    opacity: 0.4,
+  },
+  commentModalSendText: {
+    ...typography.button,
+    color: '#FFFFFF',
   },
 });

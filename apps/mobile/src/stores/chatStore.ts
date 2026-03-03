@@ -27,6 +27,8 @@ interface ChatState {
   loadMoreMessages: (matchId: string) => Promise<void>;
   sendMessage: (matchId: string, content: string) => Promise<void>;
   sendImageMessage: (matchId: string, imageUri: string) => Promise<void>;
+  sendGifMessage: (matchId: string, gifUrl: string) => Promise<void>;
+  sendVoiceMessage: (matchId: string, audioUri: string, duration: number) => Promise<void>;
   markAsRead: (matchId: string) => Promise<void>;
   addIncomingMessage: (message: ChatMessage) => void;
   setTyping: (matchId: string, isTyping: boolean) => void;
@@ -160,6 +162,48 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }));
       // Update last message in conversations
       get().updateLastMessage(matchId, 'Fotograf', response.message.createdAt);
+    } catch {
+      set({ isSending: false });
+    }
+  },
+
+  sendGifMessage: async (matchId, gifUrl) => {
+    set({ isSending: true });
+    try {
+      const response = await chatService.sendGifMessage(matchId, gifUrl);
+      analyticsService.track(ANALYTICS_EVENTS.CHAT_MESSAGE_SENT, { matchId, type: 'GIF' });
+      set((state) => ({
+        messages: {
+          ...state.messages,
+          [matchId]: [
+            ...(state.messages[matchId] ?? []),
+            response.message,
+          ],
+        },
+        isSending: false,
+      }));
+      get().updateLastMessage(matchId, 'GIF', response.message.createdAt);
+    } catch {
+      set({ isSending: false });
+    }
+  },
+
+  sendVoiceMessage: async (matchId, audioUri, duration) => {
+    set({ isSending: true });
+    try {
+      const response = await chatService.sendVoiceMessage(matchId, audioUri, duration);
+      analyticsService.track(ANALYTICS_EVENTS.CHAT_MESSAGE_SENT, { matchId, type: 'VOICE' });
+      set((state) => ({
+        messages: {
+          ...state.messages,
+          [matchId]: [
+            ...(state.messages[matchId] ?? []),
+            response.message,
+          ],
+        },
+        isSending: false,
+      }));
+      get().updateLastMessage(matchId, 'Sesli mesaj', response.message.createdAt);
     } catch {
       set({ isSending: false });
     }
