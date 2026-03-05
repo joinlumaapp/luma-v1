@@ -57,9 +57,18 @@ import { ReportScreen } from '../screens/moderation/ReportScreen';
 
 // Discovery extra screens
 import { WeeklyReportScreen } from '../screens/discovery/WeeklyReportScreen';
+import { CrossedPathsScreen } from '../screens/discovery/CrossedPathsScreen';
+import { SocialFeedScreen } from '../screens/discovery/SocialFeedScreen';
 
 // Matches extra screens
 import { DatePlannerScreen } from '../screens/matches/DatePlannerScreen';
+import { AICoachScreen } from '../screens/chat/AICoachScreen';
+
+// Compatibility game screens
+import { CompatibilityQuizScreen } from '../screens/chat/CompatibilityQuizScreen';
+import { WordAssociationScreen } from '../screens/chat/WordAssociationScreen';
+import { ImagineGameScreen } from '../screens/chat/ImagineGameScreen';
+import { EmojiStoryScreen } from '../screens/chat/EmojiStoryScreen';
 
 // ── Deferred Screens ─────────────────────────────────────────
 // Heavy screens that benefit from deferred mount after navigation animation
@@ -160,6 +169,16 @@ const DiscoveryStackNavigator: React.FC = () => (
       options={{ animation: 'slide_from_bottom' }}
     />
     <DiscoveryStack.Screen
+      name="CrossedPaths"
+      component={CrossedPathsScreen}
+      options={{ animation: 'slide_from_right' }}
+    />
+    <DiscoveryStack.Screen
+      name="SocialFeed"
+      component={SocialFeedScreen}
+      options={{ animation: 'slide_from_right' }}
+    />
+    <DiscoveryStack.Screen
       name="Report"
       component={ReportScreen}
       options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
@@ -189,7 +208,32 @@ const MatchesStackNavigator: React.FC = () => (
       component={DeferredIcebreakerGame}
       options={{ animation: 'slide_from_bottom' }}
     />
+    <MatchesStack.Screen
+      name="CompatibilityQuiz"
+      component={CompatibilityQuizScreen}
+      options={{ animation: 'slide_from_bottom' }}
+    />
+    <MatchesStack.Screen
+      name="WordAssociation"
+      component={WordAssociationScreen}
+      options={{ animation: 'slide_from_bottom' }}
+    />
+    <MatchesStack.Screen
+      name="ImagineGame"
+      component={ImagineGameScreen}
+      options={{ animation: 'slide_from_bottom' }}
+    />
+    <MatchesStack.Screen
+      name="EmojiStory"
+      component={EmojiStoryScreen}
+      options={{ animation: 'slide_from_bottom' }}
+    />
     <MatchesStack.Screen name="DatePlanner" component={DatePlannerScreen} />
+    <MatchesStack.Screen
+      name="AICoach"
+      component={AICoachScreen}
+      options={{ animation: 'slide_from_bottom' }}
+    />
     <MatchesStack.Screen
       name="Report"
       component={ReportScreen}

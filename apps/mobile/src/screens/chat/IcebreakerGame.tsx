@@ -1,5 +1,6 @@
 // IcebreakerGame — Fun icebreaker games for new matches
-// 3 game types: Bu mu O mu?, 2 Doğru 1 Yanlış, Hızlı Sorular
+// 7 game types: Bu mu O mu?, 2 Doğru 1 Yanlış, Hızlı Sorular,
+// Uyum Quizi, Kelime Çağrışımı, Hayal Et, Emoji Hikaye
 // Premium card UI with flip animations and result compatibility view
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
@@ -22,7 +23,14 @@ import { typography, fontWeights } from '../../theme/typography';
 
 // ─── Types ────────────────────────────────────────────────────
 
-type GameType = 'THIS_OR_THAT' | 'TWO_TRUTHS_ONE_LIE' | 'RAPID_FIRE';
+type GameType =
+  | 'THIS_OR_THAT'
+  | 'TWO_TRUTHS_ONE_LIE'
+  | 'RAPID_FIRE'
+  | 'COMPATIBILITY_QUIZ'
+  | 'WORD_ASSOCIATION'
+  | 'IMAGINE_GAME'
+  | 'EMOJI_STORY';
 
 interface GameOption {
   type: GameType;
@@ -65,6 +73,34 @@ const GAME_OPTIONS: GameOption[] = [
     subtitle: '10 eğlenceli soruya hızlıca cevap ver!',
     emoji: '\u26A1',
     color: palette.gold[500],
+  },
+  {
+    type: 'COMPATIBILITY_QUIZ',
+    title: 'Uyum Quizi',
+    subtitle: '10 soruda ne kadar uyumlusunuz? Canlı skor!',
+    emoji: '\uD83E\uDDE0',
+    color: '#6366F1',
+  },
+  {
+    type: 'WORD_ASSOCIATION',
+    title: 'Kelime Çağrışımı',
+    subtitle: 'Bir kelime gör, aklına gelen ilk şeyi yaz!',
+    emoji: '\uD83D\uDCAC',
+    color: '#F59E0B',
+  },
+  {
+    type: 'IMAGINE_GAME',
+    title: 'Hayal Et',
+    subtitle: 'Senaryolar hayal et, cevapları karşılaştır!',
+    emoji: '\uD83C\uDF20',
+    color: '#EC4899',
+  },
+  {
+    type: 'EMOJI_STORY',
+    title: 'Emoji Hikaye',
+    subtitle: '5 emoji seç, partnerin anlamını tahmin etsin!',
+    emoji: '\uD83C\uDFA8',
+    color: '#A855F7',
   },
 ];
 
@@ -294,11 +330,30 @@ export const IcebreakerGameScreen: React.FC<Props> = ({ navigation, route }) => 
   }, [slideAnim]);
 
   const handleSelectGame = useCallback((type: GameType) => {
+    // Navigate to dedicated screens for new game types
+    const partnerName = 'Partner'; // Default name for navigation
+    switch (type) {
+      case 'COMPATIBILITY_QUIZ':
+        navigation.navigate('CompatibilityQuiz', { matchId, partnerName });
+        return;
+      case 'WORD_ASSOCIATION':
+        navigation.navigate('WordAssociation', { matchId, partnerName });
+        return;
+      case 'IMAGINE_GAME':
+        navigation.navigate('ImagineGame', { matchId, partnerName });
+        return;
+      case 'EMOJI_STORY':
+        navigation.navigate('EmojiStory', { matchId, partnerName });
+        return;
+      default:
+        break;
+    }
+    // Handle original 3 game types in-screen
     setSelectedGame(type);
     setCurrentQuestionIndex(0);
     setAnswers({});
     setShowResult(false);
-  }, []);
+  }, [navigation, matchId]);
 
   const handleThisOrThatAnswer = useCallback(
     (questionId: string, answer: string) => {
@@ -371,12 +426,12 @@ export const IcebreakerGameScreen: React.FC<Props> = ({ navigation, route }) => 
             <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
               <Text style={styles.closeButtonText}>{'\u2715'}</Text>
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Buzları Kıralım!</Text>
+            <Text style={styles.modalTitle}>Uyum Oyunları</Text>
             <View style={styles.closeButton} />
           </View>
 
           <Text style={styles.selectionSubtitle}>
-            Bir oyun seç ve eşleşmeni daha iyi tanı
+            Bir oyun seç ve eşleşmenle eğlenceli vakit geçir!
           </Text>
 
           <ScrollView

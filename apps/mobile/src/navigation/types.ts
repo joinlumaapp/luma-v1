@@ -47,6 +47,8 @@ export type DiscoveryStackParamList = {
   LikesYou: undefined;
   DailyPicks: undefined;
   WeeklyReport: undefined;
+  CrossedPaths: undefined;
+  SocialFeed: undefined;
   Report: { userId: string; userName: string };
 };
 
@@ -58,7 +60,12 @@ export type MatchesStackParamList = {
   ChatList: undefined;
   Chat: { matchId: string; partnerName: string; partnerPhotoUrl: string };
   IcebreakerGame: { matchId: string };
+  CompatibilityQuiz: { matchId: string; partnerName: string };
+  WordAssociation: { matchId: string; partnerName: string };
+  ImagineGame: { matchId: string; partnerName: string };
+  EmojiStory: { matchId: string; partnerName: string };
   DatePlanner: { matchId: string; partnerName: string };
+  AICoach: { matchId?: string; matchName?: string };
   Report: { userId: string; userName: string };
 };
 

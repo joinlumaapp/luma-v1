@@ -66,6 +66,13 @@ export const MatchDetailScreen: React.FC = () => {
     });
   };
 
+  const handleAICoach = () => {
+    navigation.navigate('AICoach', {
+      matchId,
+      matchName: selectedMatch?.name ?? '',
+    });
+  };
+
   const handleStartHarmony = async () => {
     try {
       await createSession(matchId);
@@ -239,6 +246,14 @@ export const MatchDetailScreen: React.FC = () => {
             activeOpacity={0.85}
           >
             <Text style={styles.datePlanButtonText}>{'\uD83D\uDCC5'} Buluşma Planla</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.aiCoachButton}
+            onPress={handleAICoach}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.aiCoachButtonText}>{'\uD83E\uDD16'} AI Koç</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -480,6 +495,19 @@ const styles = StyleSheet.create({
   datePlanButtonText: {
     ...typography.button,
     color: colors.accent,
+  },
+  aiCoachButton: {
+    height: layout.buttonHeight,
+    borderRadius: borderRadius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: colors.info,
+    backgroundColor: colors.info + '10',
+  },
+  aiCoachButtonText: {
+    ...typography.button,
+    color: colors.info,
   },
   unmatchButton: {
     height: layout.buttonSmallHeight,

@@ -8,6 +8,9 @@ import type { ReactionEmoji } from '../services/chatService';
 import { useHarmonyStore } from '../stores/harmonyStore';
 import { useProfileStore } from '../stores/profileStore';
 import { useNotificationStore } from '../stores/notificationStore';
+import { useCrossedPathsStore } from '../stores/crossedPathsStore';
+import { useSocialFeedStore } from '../stores/socialFeedStore';
+import { socialFeedService } from '../services/socialFeedService';
 
 // ── Helper: generate timestamps ─────────────────────────────────────
 const now = new Date();
@@ -702,6 +705,170 @@ const notifications = [
   },
 ];
 
+// ── Crossed Paths (10 profiles in Istanbul neighborhoods) ───────────
+const crossedPaths = [
+  {
+    id: 'cp-001',
+    userId: 'bot-cp-001',
+    name: 'Deniz',
+    age: 26,
+    photoUrl: 'https://i.pravatar.cc/400?img=2',
+    areaName: 'Bebek',
+    city: 'İstanbul',
+    lastSeenAt: minutesAgo(45),
+    crossingCount: 3,
+    crossingPeriod: 'Bu hafta',
+    compatibilityPercent: 89,
+    intentionTag: 'Ciddi İlişki',
+    isVerified: true,
+    distanceKm: 0.8,
+  },
+  {
+    id: 'cp-002',
+    userId: 'bot-cp-002',
+    name: 'Cemre',
+    age: 24,
+    photoUrl: 'https://i.pravatar.cc/400?img=10',
+    areaName: 'Kadıköy',
+    city: 'İstanbul',
+    lastSeenAt: hoursAgo(2),
+    crossingCount: 5,
+    crossingPeriod: 'Bu hafta',
+    compatibilityPercent: 92,
+    intentionTag: 'Ciddi İlişki',
+    isVerified: true,
+    distanceKm: 1.2,
+  },
+  {
+    id: 'cp-003',
+    userId: 'bot-cp-003',
+    name: 'Ece',
+    age: 27,
+    photoUrl: 'https://i.pravatar.cc/400?img=15',
+    areaName: 'Beşiktaş',
+    city: 'İstanbul',
+    lastSeenAt: hoursAgo(4),
+    crossingCount: 2,
+    crossingPeriod: 'Bu hafta',
+    compatibilityPercent: 85,
+    intentionTag: 'Keşfediyorum',
+    isVerified: false,
+    distanceKm: 1.5,
+  },
+  {
+    id: 'cp-004',
+    userId: 'bot-cp-004',
+    name: 'Melis',
+    age: 25,
+    photoUrl: 'https://i.pravatar.cc/400?img=19',
+    areaName: 'Nişantaşı',
+    city: 'İstanbul',
+    lastSeenAt: hoursAgo(6),
+    crossingCount: 4,
+    crossingPeriod: 'Bu hafta',
+    compatibilityPercent: 91,
+    intentionTag: 'Ciddi İlişki',
+    isVerified: true,
+    distanceKm: 0.5,
+  },
+  {
+    id: 'cp-005',
+    userId: 'bot-cp-005',
+    name: 'Aslı',
+    age: 23,
+    photoUrl: 'https://i.pravatar.cc/400?img=22',
+    areaName: 'Cihangir',
+    city: 'İstanbul',
+    lastSeenAt: hoursAgo(1),
+    crossingCount: 7,
+    crossingPeriod: 'Bu hafta',
+    compatibilityPercent: 87,
+    intentionTag: 'Ciddi İlişki',
+    isVerified: true,
+    distanceKm: 0.3,
+  },
+  {
+    id: 'cp-006',
+    userId: 'bot-cp-006',
+    name: 'Pınar',
+    age: 28,
+    photoUrl: 'https://i.pravatar.cc/400?img=26',
+    areaName: 'Moda',
+    city: 'İstanbul',
+    lastSeenAt: daysAgo(1),
+    crossingCount: 2,
+    crossingPeriod: 'Son 2 hafta',
+    compatibilityPercent: 78,
+    intentionTag: 'Keşfediyorum',
+    isVerified: false,
+    distanceKm: 2.1,
+  },
+  {
+    id: 'cp-007',
+    userId: 'bot-cp-007',
+    name: 'Nehir',
+    age: 26,
+    photoUrl: 'https://i.pravatar.cc/400?img=30',
+    areaName: 'Etiler',
+    city: 'İstanbul',
+    lastSeenAt: hoursAgo(8),
+    crossingCount: 3,
+    crossingPeriod: 'Bu hafta',
+    compatibilityPercent: 83,
+    intentionTag: 'Ciddi İlişki',
+    isVerified: true,
+    distanceKm: 1.0,
+  },
+  {
+    id: 'cp-008',
+    userId: 'bot-cp-008',
+    name: 'Simge',
+    age: 25,
+    photoUrl: 'https://i.pravatar.cc/400?img=34',
+    areaName: 'Ortaköy',
+    city: 'İstanbul',
+    lastSeenAt: hoursAgo(3),
+    crossingCount: 6,
+    crossingPeriod: 'Bu hafta',
+    compatibilityPercent: 90,
+    intentionTag: 'Ciddi İlişki',
+    isVerified: true,
+    distanceKm: 0.7,
+  },
+  {
+    id: 'cp-009',
+    userId: 'bot-cp-009',
+    name: 'Tuğçe',
+    age: 24,
+    photoUrl: 'https://i.pravatar.cc/400?img=37',
+    areaName: 'Bebek',
+    city: 'İstanbul',
+    lastSeenAt: daysAgo(2),
+    crossingCount: 1,
+    crossingPeriod: 'Son 2 hafta',
+    compatibilityPercent: 75,
+    intentionTag: 'Emin Değilim',
+    isVerified: false,
+    distanceKm: 1.8,
+  },
+  {
+    id: 'cp-010',
+    userId: 'bot-cp-010',
+    name: 'Yasemin',
+    age: 27,
+    photoUrl: 'https://i.pravatar.cc/400?img=40',
+    areaName: 'Kadıköy',
+    city: 'İstanbul',
+    lastSeenAt: minutesAgo(20),
+    crossingCount: 4,
+    crossingPeriod: 'Bu hafta',
+    compatibilityPercent: 93,
+    intentionTag: 'Ciddi İlişki',
+    isVerified: true,
+    distanceKm: 0.4,
+  },
+];
+
 // ── Dev User's Own Profile ──────────────────────────────────────────
 const devUserProfile = {
   firstName: 'Ari',
@@ -871,7 +1038,35 @@ export function seedDevData(): void {
     hasPermission: true,
   });
 
-  // 7. Override getMatch to resolve from local data (no backend needed)
+  // 7. Crossed Paths
+  useCrossedPathsStore.setState({
+    paths: crossedPaths,
+    totalCount: crossedPaths.length,
+    isLoading: false,
+    fetchPaths: async () => {
+      useCrossedPathsStore.setState({
+        paths: crossedPaths,
+        totalCount: crossedPaths.length,
+        isLoading: false,
+      });
+    },
+    likePath: async (userId: string) => {
+      useCrossedPathsStore.setState((state) => ({
+        paths: state.paths.filter((p) => p.userId !== userId),
+        totalCount: state.totalCount - 1,
+      }));
+      // 25% chance of match
+      return Math.random() < 0.25;
+    },
+    skipPath: async (userId: string) => {
+      useCrossedPathsStore.setState((state) => ({
+        paths: state.paths.filter((p) => p.userId !== userId),
+        totalCount: state.totalCount - 1,
+      }));
+    },
+  });
+
+  // 8. Override getMatch to resolve from local data (no backend needed)
   const originalGetMatch = useMatchStore.getState().getMatch;
   useMatchStore.setState({
     getMatch: async (matchId: string) => {
@@ -1147,6 +1342,38 @@ export function seedDevData(): void {
     },
   });
 
+  // 19. Social Feed — seed with mock posts
+  const mockFeedPosts = socialFeedService.getMockPosts();
+  useSocialFeedStore.setState({
+    posts: mockFeedPosts,
+    filter: 'ONERILEN',
+    selectedTopic: null,
+    isLoading: false,
+    isRefreshing: false,
+    cursor: null,
+    hasMore: false,
+  });
+
+  // Override fetchFeed to return seeded data
+  useSocialFeedStore.setState({
+    fetchFeed: async () => {
+      const { selectedTopic } = useSocialFeedStore.getState();
+      let posts = [...mockFeedPosts];
+      if (selectedTopic) {
+        posts = posts.filter((p) => p.topic === selectedTopic);
+      }
+      useSocialFeedStore.setState({ posts, isLoading: false });
+    },
+    refreshFeed: async () => {
+      const { selectedTopic } = useSocialFeedStore.getState();
+      let posts = [...mockFeedPosts];
+      if (selectedTopic) {
+        posts = posts.filter((p) => p.topic === selectedTopic);
+      }
+      useSocialFeedStore.setState({ posts, isRefreshing: false });
+    },
+  });
+
   if (__DEV__) {
     console.log('[DevSeed] Tüm store\'lar mock data ile dolduruldu!');
     console.log(`  - ${discoveryProfiles.length} keşif profili`);
@@ -1154,6 +1381,8 @@ export function seedDevData(): void {
     console.log(`  - ${conversations.length} sohbet`);
     console.log(`  - ${harmonySessions.length} harmony oturumu`);
     console.log(`  - ${notifications.length} bildirim`);
+    console.log(`  - ${crossedPaths.length} kesişen yol`);
+    console.log(`  - ${mockFeedPosts.length} sosyal akış paylaşımı`);
     console.log('  - API çağrıları mock override edildi');
   }
 }

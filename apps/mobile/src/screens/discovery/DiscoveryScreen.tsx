@@ -247,6 +247,22 @@ const StoriesRow: React.FC<StoriesRowProps> = ({ navigation, userFirstName, user
         onPress={() => navigation.navigate('DailyPicks')}
         testID="story-picks"
       />
+      <StoryBubble
+        label="Kesişenler"
+        initial="📍"
+        ringColor={palette.pink[400]}
+        badgeEmoji="📍"
+        onPress={() => navigation.navigate('CrossedPaths')}
+        testID="story-crossed"
+      />
+      <StoryBubble
+        label="Akış"
+        initial="📰"
+        ringColor="#06B6D4"
+        badgeEmoji="📰"
+        onPress={() => navigation.navigate('SocialFeed')}
+        testID="story-feed"
+      />
       {recentMatches.map((match) => (
         <StoryBubble
           key={match.id}
