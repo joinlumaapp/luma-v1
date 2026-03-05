@@ -8,7 +8,6 @@ import {
   View,
   Text,
   Pressable,
-  TouchableOpacity,
   TextInput,
   StyleSheet,
   Dimensions,
@@ -43,10 +42,8 @@ import type {
 import { useDiscoveryStore } from '../../stores/discoveryStore';
 import { useProfileStore } from '../../stores/profileStore';
 import { useMatchStore } from '../../stores/matchStore';
-import { useMoodStore, MOOD_OPTIONS } from '../../stores/moodStore';
 import { matchService } from '../../services/matchService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
-import { MoodSelector } from './MoodSelector';
 import { MatchAnimation } from '../../components/animations/MatchAnimation';
 import { DiscoveryCard } from '../../components/cards/DiscoveryCard';
 import { CompatibilityBottomSheet } from '../../components/discovery/CompatibilityBottomSheet';
@@ -260,7 +257,7 @@ const StoriesRow: React.FC<StoriesRowProps> = ({ navigation, userFirstName, user
         initial="📰"
         ringColor="#06B6D4"
         badgeEmoji="📰"
-        onPress={() => navigation.navigate('SocialFeed')}
+        onPress={() => navigation.navigate('FeedTab', { screen: 'SocialFeed' })}
         testID="story-feed"
       />
       {recentMatches.map((match) => (
@@ -305,12 +302,6 @@ export const DiscoveryScreen: React.FC = () => {
   const userPhotoUrl = userPhotos && userPhotos.length > 0 ? userPhotos[0] : undefined;
   const canUndo = useDiscoveryStore((s) => s.canUndo);
   const undoLastSwipe = useDiscoveryStore((s) => s.undoLastSwipe);
-  // Mood store — for collapsed chip display
-  const currentMood = useMoodStore((s) => s.currentMood);
-  const isMoodExpired = useMoodStore((s) => s.isMoodExpired);
-  const selectedMoodOption = currentMood ? MOOD_OPTIONS.find((m) => m.type === currentMood) : undefined;
-  const hasMoodActive = !!currentMood && !isMoodExpired();
-
   // ─── Like-with-comment modal state ──────────────────────
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [likeComment, setLikeComment] = useState('');
@@ -328,36 +319,6 @@ export const DiscoveryScreen: React.FC = () => {
     setShowCompatSheet(false);
     setCompatSheetUserId(null);
   }, []);
-
-  // ─── Mood collapse state ──────────────────────────────────
-  const [moodCollapsed, setMoodCollapsed] = useState(false);
-  const moodHeight = useSharedValue(1); // 1 = full height, 0 = collapsed
-  const moodOpacity = useSharedValue(1);
-
-  const moodWrapperStyle = useAnimatedStyle(() => ({
-    maxHeight: interpolate(moodHeight.value, [0, 1], [0, 200]),
-    opacity: moodOpacity.value,
-    overflow: 'hidden' as const,
-  }));
-
-  // When a mood is selected, collapse the selector
-  const prevMoodRef = useRef(currentMood);
-  useEffect(() => {
-    if (currentMood && currentMood !== prevMoodRef.current) {
-      // If user just selected a mood, it cannot be expired — collapse immediately
-      moodHeight.value = withTiming(0, { duration: 250 });
-      moodOpacity.value = withTiming(0, { duration: 180 });
-      setMoodCollapsed(true);
-    }
-    prevMoodRef.current = currentMood;
-  }, [currentMood, moodHeight, moodOpacity]);
-
-  // Expand mood selector
-  const expandMoodSelector = useCallback(() => {
-    moodHeight.value = withTiming(1, { duration: 300 });
-    moodOpacity.value = withTiming(1, { duration: 200 });
-    setMoodCollapsed(false);
-  }, [moodHeight, moodOpacity]);
 
   // ─── Login streak state ─────────────────────────────────
   const [streakData, setStreakData] = useState<LoginStreakResponse | null>(null);
@@ -800,31 +761,6 @@ export const DiscoveryScreen: React.FC = () => {
           </Text>
         </View>
         <View style={styles.headerRight}>
-          {/* Collapsed mood chip — shows selected mood when selector is hidden */}
-          {moodCollapsed && hasMoodActive && selectedMoodOption && (
-            <TouchableOpacity
-              onPress={expandMoodSelector}
-              activeOpacity={0.7}
-              accessibilityLabel={`Mod: ${selectedMoodOption.label}. Genişletmek için dokunun`}
-              accessibilityRole="button"
-              accessibilityHint="Mod seçiciyi tekrar açmak için dokunun"
-            >
-              <View
-                style={[
-                  styles.moodChip,
-                  {
-                    borderColor: selectedMoodOption.color,
-                    backgroundColor: `${selectedMoodOption.color}15`,
-                  },
-                ]}
-              >
-                <Text style={styles.moodChipEmoji}>{selectedMoodOption.emoji}</Text>
-                <Text style={[styles.moodChipLabel, { color: selectedMoodOption.color }]}>
-                  {selectedMoodOption.label}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          )}
           <Pressable
             onPress={() => navigation.navigate('Filter')}
             accessibilityLabel="Filtreleri aç"
@@ -841,12 +777,7 @@ export const DiscoveryScreen: React.FC = () => {
       {/* Stories row — Instagram-style horizontal bubbles */}
       <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} />
 
-      {/* Mood selector — collapses after selection, zIndex keeps it above card stack */}
-      <Animated.View style={[styles.moodWrapper, moodWrapperStyle]}>
-        <MoodSelector />
-      </Animated.View>
-
-      {/* Card stack — overflow hidden prevents cards from covering mood selector */}
+      {/* Card stack */}
       <View style={styles.cardStack}>
         {/* Next card (behind) — animates forward as current card is dragged */}
         {nextCard && (
@@ -1125,11 +1056,6 @@ const styles = StyleSheet.create({
     ...typography.bodyLarge,
     color: colors.text,
   },
-  // ── Mood Wrapper — above card stack ──
-  moodWrapper: {
-    zIndex: 2,
-  },
-
   // ── Card Stack ──
   cardStack: {
     flex: 1,
@@ -1265,24 +1191,6 @@ const styles = StyleSheet.create({
   refreshButtonText: {
     ...typography.button,
     color: colors.text,
-  },
-
-  // ── Collapsed Mood Chip (header) ──
-  moodChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-    borderWidth: 1,
-  },
-  moodChipEmoji: {
-    fontSize: 13,
-    marginRight: 3,
-  },
-  moodChipLabel: {
-    fontSize: 11,
-    fontWeight: '600',
   },
 
   // ── Like-with-comment modal ──

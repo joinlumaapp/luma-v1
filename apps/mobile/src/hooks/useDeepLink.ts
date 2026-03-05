@@ -87,7 +87,7 @@ export const useDeepLink = (): UseDeepLinkReturn => {
         case 'harmony':
           // Harmony Room ekranına yönlendir
           navigation.navigate('MainTabs', {
-            screen: 'HarmonyTab',
+            screen: 'MatchesTab',
             params: {
               screen: 'HarmonyRoom',
               params: { sessionId: route.sessionId, matchId: '' },

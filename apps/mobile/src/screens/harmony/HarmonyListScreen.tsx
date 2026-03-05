@@ -12,7 +12,7 @@ import {
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { HarmonyStackParamList } from '../../navigation/types';
+import type { MatchesStackParamList } from '../../navigation/types';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
@@ -21,7 +21,7 @@ import type { HarmonySession } from '../../stores/harmonyStore';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { formatMatchActivity } from '../../utils/formatters';
 
-type HarmonyNavigationProp = NativeStackNavigationProp<HarmonyStackParamList, 'HarmonyList'>;
+type HarmonyNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'HarmonyList'>;
 
 // Shimmer skeleton card for loading state (consistent with MatchesListScreen)
 const SKELETON_CARDS = 3;
@@ -186,7 +186,7 @@ export const HarmonyListScreen: React.FC = () => {
   );
 
   const handleGoToMatches = () => {
-    navigation.getParent()?.navigate('MatchesTab');
+    navigation.navigate('MatchesList');
   };
 
   const renderEmptyList = () => (

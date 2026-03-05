@@ -34,7 +34,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { HarmonyStackParamList } from '../../navigation/types';
+import type { MatchesStackParamList } from '../../navigation/types';
 import { colors, palette } from '../../theme/colors';
 import { typography, fontSizes } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
@@ -50,8 +50,8 @@ import { IncomingCallOverlay } from '../../components/harmony/IncomingCallOverla
 import { ActiveCallBar } from '../../components/harmony/ActiveCallBar';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 
-type HarmonyRoomNavigationProp = NativeStackNavigationProp<HarmonyStackParamList, 'HarmonyRoom'>;
-type HarmonyRoomRouteProp = RouteProp<HarmonyStackParamList, 'HarmonyRoom'>;
+type HarmonyRoomNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'HarmonyRoom'>;
+type HarmonyRoomRouteProp = RouteProp<MatchesStackParamList, 'HarmonyRoom'>;
 
 // Available reactions
 const REACTIONS: { type: HarmonyReaction; label: string }[] = [

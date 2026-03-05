@@ -30,11 +30,11 @@ export type OnboardingStackParamList = {
   Bio: undefined;
 };
 
-// -- Main Tabs (LOCKED: 4 tabs) --
+// -- Main Tabs (4 tabs) --
 export type MainTabParamList = {
   DiscoveryTab: NavigatorScreenParams<DiscoveryStackParamList>;
   MatchesTab: NavigatorScreenParams<MatchesStackParamList>;
-  HarmonyTab: NavigatorScreenParams<HarmonyStackParamList>;
+  FeedTab: NavigatorScreenParams<FeedStackParamList>;
   ProfileTab: NavigatorScreenParams<ProfileStackParamList>;
 };
 
@@ -48,7 +48,6 @@ export type DiscoveryStackParamList = {
   DailyPicks: undefined;
   WeeklyReport: undefined;
   CrossedPaths: undefined;
-  SocialFeed: undefined;
   Report: { userId: string; userName: string };
 };
 
@@ -66,13 +65,14 @@ export type MatchesStackParamList = {
   EmojiStory: { matchId: string; partnerName: string };
   DatePlanner: { matchId: string; partnerName: string };
   AICoach: { matchId?: string; matchName?: string };
+  HarmonyList: undefined;
+  HarmonyRoom: { sessionId: string; matchId: string };
   Report: { userId: string; userName: string };
 };
 
-// -- Harmony Stack --
-export type HarmonyStackParamList = {
-  HarmonyList: undefined;
-  HarmonyRoom: { sessionId: string; matchId: string };
+// -- Feed Stack --
+export type FeedStackParamList = {
+  SocialFeed: undefined;
 };
 
 // -- Profile Stack --

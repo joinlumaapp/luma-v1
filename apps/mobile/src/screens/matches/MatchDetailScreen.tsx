@@ -75,11 +75,18 @@ export const MatchDetailScreen: React.FC = () => {
 
   const handleStartHarmony = async () => {
     try {
-      await createSession(matchId);
-      Alert.alert('Uyum Odası', 'Uyum Odası oluşturuldu!');
+      const sessionId = await createSession(matchId);
+      navigation.navigate('HarmonyRoom', {
+        sessionId,
+        matchId,
+      });
     } catch {
       Alert.alert('Hata', 'Uyum Odası oluşturulamadı.');
     }
+  };
+
+  const handlePlayGame = () => {
+    navigation.navigate('IcebreakerGame', { matchId });
   };
 
   const handleUnmatch = () => {
@@ -238,6 +245,14 @@ export const MatchDetailScreen: React.FC = () => {
             activeOpacity={0.85}
           >
             <Text style={styles.harmonyButtonText}>{'\uD83C\uDFB5'} Uyum Odası Başlat</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.gamePlayButton}
+            onPress={handlePlayGame}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.gamePlayButtonText}>🎮 Oyun Oyna</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -482,6 +497,19 @@ const styles = StyleSheet.create({
   harmonyButtonText: {
     ...typography.button,
     color: colors.primary,
+  },
+  gamePlayButton: {
+    height: layout.buttonHeight,
+    borderRadius: borderRadius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#8B5CF6',
+    backgroundColor: '#8B5CF620',
+  },
+  gamePlayButtonText: {
+    ...typography.button,
+    color: '#8B5CF6',
   },
   datePlanButton: {
     height: layout.buttonHeight,

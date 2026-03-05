@@ -1,4 +1,4 @@
-// Main tab navigator — LOCKED 4 tabs: Discovery, Matches, Harmony, Profile
+// Main tab navigator — 4 tabs: Discovery, Matches, Feed, Profile
 // Enhanced: default slide_from_right, modal slide_from_bottom, premium tab bar
 // Enhanced: unread message badge on Matches tab
 // Performance: deferred mount for heavy sub-screens
@@ -12,7 +12,7 @@ import type {
   MainTabParamList,
   DiscoveryStackParamList,
   MatchesStackParamList,
-  HarmonyStackParamList,
+  FeedStackParamList,
   ProfileStackParamList,
 } from './types';
 import { useTheme } from '../theme/ThemeContext';
@@ -80,7 +80,7 @@ const DeferredHarmonyRoom = withDeferredMount(HarmonyRoomScreen);
 // Stack navigators for each tab
 const DiscoveryStack = createNativeStackNavigator<DiscoveryStackParamList>();
 const MatchesStack = createNativeStackNavigator<MatchesStackParamList>();
-const HarmonyStack = createNativeStackNavigator<HarmonyStackParamList>();
+const FeedStack = createNativeStackNavigator<FeedStackParamList>();
 const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -89,7 +89,7 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 const TAB_ICONS: Record<string, { active: keyof typeof Ionicons.glyphMap; inactive: keyof typeof Ionicons.glyphMap }> = {
   compass: { active: 'compass', inactive: 'compass-outline' },
   heart: { active: 'heart', inactive: 'heart-outline' },
-  music: { active: 'musical-notes', inactive: 'musical-notes-outline' },
+  feed: { active: 'newspaper', inactive: 'newspaper-outline' },
   user: { active: 'person', inactive: 'person-outline' },
 };
 
@@ -174,11 +174,6 @@ const DiscoveryStackNavigator: React.FC = () => (
       options={{ animation: 'slide_from_right' }}
     />
     <DiscoveryStack.Screen
-      name="SocialFeed"
-      component={SocialFeedScreen}
-      options={{ animation: 'slide_from_right' }}
-    />
-    <DiscoveryStack.Screen
       name="Report"
       component={ReportScreen}
       options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
@@ -234,6 +229,12 @@ const MatchesStackNavigator: React.FC = () => (
       component={AICoachScreen}
       options={{ animation: 'slide_from_bottom' }}
     />
+    <MatchesStack.Screen name="HarmonyList" component={HarmonyListScreen} />
+    <MatchesStack.Screen
+      name="HarmonyRoom"
+      component={DeferredHarmonyRoom}
+      options={{ animation: 'slide_from_bottom' }}
+    />
     <MatchesStack.Screen
       name="Report"
       component={ReportScreen}
@@ -242,21 +243,16 @@ const MatchesStackNavigator: React.FC = () => (
   </MatchesStack.Navigator>
 );
 
-// Harmony tab stack — default slide_from_right, room is modal
-const HarmonyStackNavigator: React.FC = () => (
-  <HarmonyStack.Navigator
+// Feed tab stack — social feed as tab root
+const FeedStackNavigator: React.FC = () => (
+  <FeedStack.Navigator
     screenOptions={{
       headerShown: false,
       animation: 'slide_from_right',
     }}
   >
-    <HarmonyStack.Screen name="HarmonyList" component={HarmonyListScreen} />
-    <HarmonyStack.Screen
-      name="HarmonyRoom"
-      component={DeferredHarmonyRoom}
-      options={{ animation: 'slide_from_bottom' }}
-    />
-  </HarmonyStack.Navigator>
+    <FeedStack.Screen name="SocialFeed" component={SocialFeedScreen} />
+  </FeedStack.Navigator>
 );
 
 // Profile tab stack — default slide_from_right for push screens
@@ -326,15 +322,15 @@ export const MainTabNavigator: React.FC = () => {
         }}
       />
       <Tab.Screen
-        name="HarmonyTab"
-        component={HarmonyStackNavigator}
+        name="FeedTab"
+        component={FeedStackNavigator}
         options={{
-          tabBarLabel: 'Uyum',
+          tabBarLabel: 'Akış',
           tabBarIcon: ({ focused }) => (
-            <TabIcon name="music" focused={focused} />
+            <TabIcon name="feed" focused={focused} />
           ),
-          tabBarAccessibilityLabel: 'Uyum Odası',
-          tabBarButtonTestID: 'tab-harmony',
+          tabBarAccessibilityLabel: 'Sosyal Akış',
+          tabBarButtonTestID: 'tab-feed',
         }}
       />
       <Tab.Screen
