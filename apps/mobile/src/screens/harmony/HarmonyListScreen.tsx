@@ -1,6 +1,6 @@
 // Harmony list screen — active and past Harmony Room sessions
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   FlatList,
   Animated,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { HarmonyStackParamList } from '../../navigation/types';
@@ -76,9 +76,12 @@ export const HarmonyListScreen: React.FC = () => {
   const isLoading = useHarmonyStore((state) => state.isLoading);
   const fetchSessions = useHarmonyStore((state) => state.fetchSessions);
 
-  useEffect(() => {
-    fetchSessions();
-  }, [fetchSessions]);
+  // Re-fetch sessions every time the Uyum tab is focused
+  useFocusEffect(
+    useCallback(() => {
+      fetchSessions();
+    }, [fetchSessions])
+  );
 
   const activeSessions = sessions.filter((s) => s.status === 'active');
 

@@ -1,10 +1,11 @@
 // Profile preview — detailed view of a discovery card profile
-// Enhanced with voice intro, badge showcase, compatibility breakdown, and super like
+// Enhanced with voice intro, badge showcase, compatibility breakdown, interests, and distance
 
 import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
+  Image,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
@@ -17,11 +18,23 @@ import { compatibilityService, type CompatibilityScore } from '../../services/co
 import { VoiceIntroPlayer } from '../../components/profile/VoiceIntro';
 import { BadgeShowcase } from '../../components/badges/BadgeShowcase';
 import { CompatibilityPreviewCard } from './CompatibilityPreviewCard';
-import { colors } from '../../theme/colors';
+import { colors, glassmorphism } from '../../theme/colors';
 import { palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 import { useDiscoveryStore } from '../../stores/discoveryStore';
+import { INTEREST_OPTIONS } from '../../constants/config';
+
+// Interest tag lookup maps
+const INTEREST_EMOJI_MAP: Record<string, string> = {};
+for (const opt of INTEREST_OPTIONS) {
+  INTEREST_EMOJI_MAP[opt.id] = opt.emoji;
+}
+
+const INTEREST_LABEL_MAP: Record<string, string> = {};
+for (const opt of INTEREST_OPTIONS) {
+  INTEREST_LABEL_MAP[opt.id] = opt.label;
+}
 
 type ProfilePreviewRouteProp = RouteProp<DiscoveryStackParamList, 'ProfilePreview'>;
 
@@ -129,15 +142,28 @@ export const ProfilePreviewScreen: React.FC = () => {
         const result = await compatibilityService.getScoreWithUser(userId);
         setCompatibility(result);
       } catch {
-        // Compatibility score not available
+        // Build fallback from discovery profile's compatibilityPercent
+        if (profile && profile.compatibilityPercent > 0) {
+          const fallbackScore: CompatibilityScore = {
+            userId: '',
+            targetUserId: userId,
+            baseScore: profile.compatibilityPercent,
+            deepScore: null,
+            finalScore: profile.compatibilityPercent,
+            level: profile.compatibilityPercent >= 90 ? 'SUPER' : 'NORMAL',
+            isSuperCompatible: profile.compatibilityPercent >= 90,
+            breakdown: {},
+          };
+          setCompatibility(fallbackScore);
+        }
       } finally {
         setLoadingCompat(false);
       }
     };
     fetchCompat();
-  }, [userId]);
+  }, [userId, profile]);
 
-  const handleSwipe = (direction: 'left' | 'right' | 'up') => {
+  const handleSwipe = (direction: 'left' | 'right') => {
     if (profile) {
       swipeAction(direction, profile.id);
     }
@@ -149,7 +175,7 @@ export const ProfilePreviewScreen: React.FC = () => {
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Text style={styles.backIcon}>{'\u2190'}</Text>
+            <Text style={styles.backIcon}>{'←'}</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.emptyContainer}>
@@ -172,7 +198,7 @@ export const ProfilePreviewScreen: React.FC = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backIcon}>{'\u2190'}</Text>
+          <Text style={styles.backIcon}>{'←'}</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Profil</Text>
         <View style={{ width: 40 }} />
@@ -181,12 +207,20 @@ export const ProfilePreviewScreen: React.FC = () => {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Photo area */}
         <View style={styles.photoSection}>
-          <View style={styles.photoPlaceholder}>
-            <Text style={styles.photoInitial}>{profile.name.charAt(0)}</Text>
-          </View>
+          {profile.photoUrls.length > 0 ? (
+            <Image
+              source={{ uri: profile.photoUrls[0] }}
+              style={styles.photoImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.photoPlaceholder}>
+              <Text style={styles.photoInitial}>{profile.name.charAt(0)}</Text>
+            </View>
+          )}
           {profile.isVerified && (
             <View style={styles.verifiedBadge}>
-              <Text style={styles.verifiedIcon}>{'\u2713'}</Text>
+              <Text style={styles.verifiedIcon}>{'✓'}</Text>
             </View>
           )}
         </View>
@@ -194,13 +228,37 @@ export const ProfilePreviewScreen: React.FC = () => {
         {/* Name and basics */}
         <View style={styles.infoSection}>
           <Text style={styles.name}>{profile.name}, {profile.age}</Text>
-          <Text style={styles.city}>{profile.city}</Text>
+          <Text style={styles.city}>
+            {[
+              profile.city,
+              profile.distanceKm != null ? `${profile.distanceKm.toFixed(1)} km` : null,
+            ].filter(Boolean).join(' \u2022 ')}
+          </Text>
 
           {/* Intention tag */}
           <View style={styles.intentionChip}>
             <Text style={styles.intentionText}>{profile.intentionTag}</Text>
           </View>
         </View>
+
+        {/* Interest Tags */}
+        {profile.interestTags && profile.interestTags.length > 0 && (
+          <View style={styles.tagsSection}>
+            <Text style={styles.sectionTitle}>İlgi Alanları</Text>
+            <View style={styles.tagsWrap}>
+              {profile.interestTags.map((tagId) => (
+                <View key={tagId} style={styles.tagChip}>
+                  <Text style={styles.tagEmoji}>
+                    {INTEREST_EMOJI_MAP[tagId] ?? '\u2022'}
+                  </Text>
+                  <Text style={styles.tagLabel}>
+                    {INTEREST_LABEL_MAP[tagId] ?? tagId}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
         {/* Voice Intro Player */}
         {profile.voiceIntroUrl ? (
@@ -288,19 +346,8 @@ export const ProfilePreviewScreen: React.FC = () => {
           accessibilityLabel="Geç"
           accessibilityRole="button"
         >
-          <Text style={styles.passButtonIcon}>X</Text>
+          <Text style={styles.passButtonIcon}>✕</Text>
           <Text style={styles.actionLabel}>Geç</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.superLikeButton}
-          onPress={() => handleSwipe('up')}
-          activeOpacity={0.8}
-          accessibilityLabel="Süper Beğen"
-          accessibilityRole="button"
-        >
-          <Text style={styles.superLikeButtonIcon}>{'\u2605'}</Text>
-          <Text style={styles.actionLabelGold}>Süper</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -310,7 +357,7 @@ export const ProfilePreviewScreen: React.FC = () => {
           accessibilityLabel="Beğen"
           accessibilityRole="button"
         >
-          <Text style={styles.likeButtonIcon}>{'\u2665'}</Text>
+          <Text style={styles.likeButtonIcon}>💜</Text>
           <Text style={styles.actionLabel}>Beğen</Text>
         </TouchableOpacity>
       </View>
@@ -532,21 +579,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.error,
   },
-  superLikeButton: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: palette.gold[500],
-    ...shadows.small,
-  },
-  superLikeButtonIcon: {
-    fontSize: 22,
-    color: palette.gold[500],
-  },
   likeButton: {
     width: 64,
     height: 64,
@@ -567,12 +599,42 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -20,
   },
-  actionLabelGold: {
+
+
+  // Interest tags section
+  tagsSection: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  tagsWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+  },
+  tagChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: glassmorphism.bg,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 5,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: glassmorphism.border,
+  },
+  tagEmoji: {
+    fontSize: 13,
+  },
+  tagLabel: {
     ...typography.captionSmall,
-    color: palette.gold[500],
-    fontWeight: '600',
-    marginTop: 4,
-    position: 'absolute',
-    bottom: -20,
+    color: 'rgba(255, 255, 255, 0.75)',
+    fontWeight: '500',
+  },
+
+  // Photo image
+  photoImage: {
+    width: 160,
+    height: 160,
+    borderRadius: 80,
   },
 });

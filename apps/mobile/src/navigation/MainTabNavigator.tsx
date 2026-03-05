@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { StyleSheet, View, Text, Platform } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type {
@@ -75,19 +76,23 @@ const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
+// Ionicons name map for active/inactive tab states
+const TAB_ICONS: Record<string, { active: keyof typeof Ionicons.glyphMap; inactive: keyof typeof Ionicons.glyphMap }> = {
+  compass: { active: 'compass', inactive: 'compass-outline' },
+  heart: { active: 'heart', inactive: 'heart-outline' },
+  music: { active: 'musical-notes', inactive: 'musical-notes-outline' },
+  user: { active: 'person', inactive: 'person-outline' },
+};
+
 // Tab icon component with 6px active dot indicator
 const TabIcon: React.FC<{ name: string; focused: boolean }> = ({ name, focused }) => {
-  const iconMap: Record<string, string> = {
-    compass: '\u2316',
-    heart: '\u2665',
-    music: '\u266B',
-    user: '\u25C9',
-  };
+  const icons = TAB_ICONS[name];
+  const iconName = icons ? (focused ? icons.active : icons.inactive) : 'help-outline';
+  const iconColor = focused ? '#8B5CF6' : 'rgba(255, 255, 255, 0.5)';
+
   return (
     <View style={styles.tabIconContainer}>
-      <Text style={[styles.tabIcon, focused && styles.tabIconActive]}>
-        {iconMap[name] ?? '?'}
-      </Text>
+      <Ionicons name={iconName} size={24} color={iconColor} />
       {focused && <View style={styles.tabIndicator} />}
     </View>
   );
@@ -325,13 +330,6 @@ const styles = StyleSheet.create({
   tabIconContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  tabIcon: {
-    fontSize: 22,
-    color: 'rgba(255, 255, 255, 0.4)',
-  },
-  tabIconActive: {
-    color: '#8B5CF6',
   },
   tabIndicator: {
     width: 6,

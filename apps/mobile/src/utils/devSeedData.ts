@@ -1126,6 +1126,8 @@ export function seedDevData(): void {
 
   // 16. Override fetchSessions to return seeded harmony data
   useHarmonyStore.setState({
+    sessions: harmonySessions,
+    isLoading: false,
     fetchSessions: async () => {
       useHarmonyStore.setState({
         sessions: harmonySessions,

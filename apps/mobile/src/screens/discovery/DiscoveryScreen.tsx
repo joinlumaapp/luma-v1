@@ -17,6 +17,8 @@ import {
   InteractionManager,
   Modal,
   KeyboardAvoidingView,
+  ScrollView,
+  Image,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -40,6 +42,7 @@ import type {
 } from '../../navigation/types';
 import { useDiscoveryStore } from '../../stores/discoveryStore';
 import { useProfileStore } from '../../stores/profileStore';
+import { useMatchStore } from '../../stores/matchStore';
 import { useMoodStore, MOOD_OPTIONS } from '../../stores/moodStore';
 import { matchService } from '../../services/matchService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
@@ -152,6 +155,116 @@ const ActionButton: React.FC<{
   );
 };
 
+// ─── Story Bubble component — Instagram-style circular avatar with ring ──
+
+const STORY_SIZE = 68;
+const STORY_AVATAR = 60;
+
+interface StoryBubbleProps {
+  label: string;
+  photoUrl?: string;
+  initial: string;
+  ringColor: string;
+  badgeEmoji?: string;
+  onPress: () => void;
+  testID: string;
+}
+
+const StoryBubble: React.FC<StoryBubbleProps> = ({
+  label,
+  photoUrl,
+  initial,
+  ringColor,
+  badgeEmoji,
+  onPress,
+  testID,
+}) => (
+  <Pressable
+    onPress={onPress}
+    accessibilityLabel={label}
+    accessibilityRole="button"
+    testID={testID}
+    style={storyStyles.bubble}
+  >
+    <View style={[storyStyles.ring, { borderColor: ringColor }]}>
+      {photoUrl ? (
+        <Image source={{ uri: photoUrl }} style={storyStyles.avatar} />
+      ) : (
+        <View style={storyStyles.avatarPlaceholder}>
+          <Text style={storyStyles.avatarInitial}>{initial}</Text>
+        </View>
+      )}
+    </View>
+    {badgeEmoji && (
+      <View style={storyStyles.badge}>
+        <Text style={storyStyles.badgeText}>{badgeEmoji}</Text>
+      </View>
+    )}
+    <Text style={storyStyles.label} numberOfLines={1}>{label}</Text>
+  </Pressable>
+);
+
+// ─── Stories Row — horizontal scrollable story bubbles ──
+
+interface StoriesRowProps {
+  navigation: DiscoveryNavProp;
+  userFirstName: string;
+  userPhotoUrl?: string;
+}
+
+const StoriesRow: React.FC<StoriesRowProps> = ({ navigation, userFirstName, userPhotoUrl }) => {
+  const matches = useMatchStore((s) => s.matches);
+  const recentMatches = matches.slice(0, 6);
+
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={storyStyles.scrollContent}
+      style={storyStyles.scrollView}
+    >
+      <StoryBubble
+        label="Sen"
+        photoUrl={userPhotoUrl}
+        initial={userFirstName ? userFirstName[0] : 'L'}
+        ringColor={palette.pink[500]}
+        onPress={() => navigation.navigate('ProfileTab', { screen: 'Profile' })}
+        testID="story-self"
+      />
+      <StoryBubble
+        label="Beğenenler"
+        initial="💜"
+        ringColor={palette.purple[500]}
+        badgeEmoji="💜"
+        onPress={() => navigation.navigate('LikesYou')}
+        testID="story-likes"
+      />
+      <StoryBubble
+        label="Seçimler"
+        initial="⭐"
+        ringColor={palette.gold[500]}
+        badgeEmoji="⭐"
+        onPress={() => navigation.navigate('DailyPicks')}
+        testID="story-picks"
+      />
+      {recentMatches.map((match) => (
+        <StoryBubble
+          key={match.id}
+          label={match.name}
+          photoUrl={match.photoUrl || undefined}
+          initial={match.name ? match.name[0] : '?'}
+          ringColor={match.isNew ? palette.purple[400] : colors.surfaceBorder}
+          onPress={() => navigation.navigate('MatchesTab', {
+            screen: 'MatchDetail',
+            params: { matchId: match.id },
+          })}
+          testID={`story-match-${match.id}`}
+        />
+      ))}
+    </ScrollView>
+  );
+};
+
 // ─── Main Screen ─────────────────────────────────────────────
 
 export const DiscoveryScreen: React.FC = () => {
@@ -172,6 +285,8 @@ export const DiscoveryScreen: React.FC = () => {
   const matchAnimationType = useDiscoveryStore((s) => s.matchAnimationType);
   const dismissMatch = useDiscoveryStore((s) => s.dismissMatch);
   const userFirstName = useProfileStore((s) => s.profile?.firstName ?? '');
+  const userPhotos = useProfileStore((s) => s.profile?.photos);
+  const userPhotoUrl = userPhotos && userPhotos.length > 0 ? userPhotos[0] : undefined;
   const canUndo = useDiscoveryStore((s) => s.canUndo);
   const undoLastSwipe = useDiscoveryStore((s) => s.undoLastSwipe);
   // Mood store — for collapsed chip display
@@ -583,13 +698,23 @@ export const DiscoveryScreen: React.FC = () => {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <View>
+          <View style={styles.headerLeft}>
             <Text style={styles.headerTitle}>{greeting}</Text>
             <Text style={styles.headerSubtitle}>
               Bugün {dailyRemaining} profil kaldı
             </Text>
           </View>
+          <Pressable
+            onPress={() => navigation.navigate('Filter')}
+            accessibilityLabel="Filtreleri aç"
+            accessibilityRole="button"
+          >
+            <View style={styles.filterButton} testID="discovery-filter-btn">
+              <Text style={styles.filterIcon}>{'\u2699'}</Text>
+            </View>
+          </Pressable>
         </View>
+        <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} />
         <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -603,13 +728,23 @@ export const DiscoveryScreen: React.FC = () => {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <View>
+          <View style={styles.headerLeft}>
             <Text style={styles.headerTitle}>{greeting}</Text>
             <Text style={styles.headerSubtitle}>
               Bugün {dailyRemaining} profil kaldı
             </Text>
           </View>
+          <Pressable
+            onPress={() => navigation.navigate('Filter')}
+            accessibilityLabel="Filtreleri aç"
+            accessibilityRole="button"
+          >
+            <View style={styles.filterButton} testID="discovery-filter-btn">
+              <Text style={styles.filterIcon}>{'\u2699'}</Text>
+            </View>
+          </Pressable>
         </View>
+        <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} />
         <View style={styles.emptyContainer}>
           <View style={styles.emptyIconCircle}>
             <Text style={styles.emptyIconLetter}>L</Text>
@@ -642,7 +777,7 @@ export const DiscoveryScreen: React.FC = () => {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
-        <View>
+        <View style={styles.headerLeft}>
           <Text style={styles.headerTitle}>{greeting}</Text>
           <Text style={styles.headerSubtitle}>
             Bugün {dailyRemaining} profil kaldı
@@ -675,36 +810,6 @@ export const DiscoveryScreen: React.FC = () => {
             </TouchableOpacity>
           )}
           <Pressable
-            onPress={() => navigation.navigate('WeeklyReport')}
-            accessibilityLabel="Haftalık rapor"
-            accessibilityRole="button"
-            accessibilityHint="Haftalık uyum raporunu görmek için dokunun"
-          >
-            <View style={styles.headerIconButton} testID="discovery-report-btn">
-              <Text style={styles.headerIconText}>{'\uD83D\uDCCA'}</Text>
-            </View>
-          </Pressable>
-          <Pressable
-            onPress={() => navigation.navigate('LikesYou')}
-            accessibilityLabel="Beğenenler"
-            accessibilityRole="button"
-            accessibilityHint="Seni beğenen profilleri görmek için dokunun"
-          >
-            <View style={styles.headerIconButton} testID="discovery-likes-btn">
-              <Text style={styles.headerIconText}>{'\uD83D\uDC9C'}</Text>
-            </View>
-          </Pressable>
-          <Pressable
-            onPress={() => navigation.navigate('DailyPicks')}
-            accessibilityLabel="Günün seçkileri"
-            accessibilityRole="button"
-            accessibilityHint="Günün özel seçkilerini görmek için dokunun"
-          >
-            <View style={styles.headerIconButton} testID="discovery-picks-btn">
-              <Text style={styles.headerIconText}>{'\u2B50'}</Text>
-            </View>
-          </Pressable>
-          <Pressable
             onPress={() => navigation.navigate('Filter')}
             accessibilityLabel="Filtreleri aç"
             accessibilityRole="button"
@@ -714,11 +819,11 @@ export const DiscoveryScreen: React.FC = () => {
               <Text style={styles.filterIcon}>{'\u2699'}</Text>
             </View>
           </Pressable>
-          <View style={styles.remainingBadge}>
-            <Text style={styles.remainingText}>{dailyRemaining}</Text>
-          </View>
         </View>
       </View>
+
+      {/* Stories row — Instagram-style horizontal bubbles */}
+      <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} />
 
       {/* Mood selector — collapses after selection, zIndex keeps it above card stack */}
       <Animated.View style={[styles.moodWrapper, moodWrapperStyle]}>
@@ -970,6 +1075,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm + 2,
   },
+  headerLeft: {
+    flex: 1,
+  },
   headerTitle: {
     ...typography.h3,
     color: colors.text,
@@ -984,22 +1092,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    flexShrink: 1,
+    flexShrink: 0,
     paddingRight: spacing.xs,
-  },
-  headerIconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-  },
-  headerIconText: {
-    fontSize: 16,
-    color: colors.textSecondary,
   },
   filterButton: {
     width: 40,
@@ -1015,20 +1109,6 @@ const styles = StyleSheet.create({
     ...typography.bodyLarge,
     color: colors.text,
   },
-  remainingBadge: {
-    backgroundColor: colors.primary,
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    minWidth: 28,
-    alignItems: 'center',
-  },
-  remainingText: {
-    fontSize: 11,
-    color: colors.text,
-    fontWeight: '700',
-  },
-
   // ── Mood Wrapper — above card stack ──
   moodWrapper: {
     zIndex: 2,
@@ -1272,5 +1352,73 @@ const styles = StyleSheet.create({
   commentModalSendText: {
     ...typography.button,
     color: '#FFFFFF',
+  },
+});
+
+// ─── Story Styles ──────────────────────────────────────────────
+
+const storyStyles = StyleSheet.create({
+  scrollView: {
+    flexGrow: 0,
+  },
+  scrollContent: {
+    paddingHorizontal: spacing.lg,
+    gap: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  bubble: {
+    alignItems: 'center',
+    width: STORY_SIZE,
+  },
+  ring: {
+    width: STORY_SIZE,
+    height: STORY_SIZE,
+    borderRadius: STORY_SIZE / 2,
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+  },
+  avatar: {
+    width: STORY_AVATAR,
+    height: STORY_AVATAR,
+    borderRadius: STORY_AVATAR / 2,
+  },
+  avatarPlaceholder: {
+    width: STORY_AVATAR,
+    height: STORY_AVATAR,
+    borderRadius: STORY_AVATAR / 2,
+    backgroundColor: colors.surfaceLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarInitial: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.textSecondary,
+  },
+  badge: {
+    position: 'absolute',
+    bottom: 14,
+    right: 0,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: colors.background,
+  },
+  badgeText: {
+    fontSize: 10,
+  },
+  label: {
+    ...typography.captionSmall,
+    color: colors.textSecondary,
+    fontSize: 10,
+    marginTop: 4,
+    textAlign: 'center',
+    width: STORY_SIZE,
   },
 });
