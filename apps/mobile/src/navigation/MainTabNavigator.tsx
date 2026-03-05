@@ -328,13 +328,17 @@ const styles = StyleSheet.create({
   },
   tabIcon: {
     fontSize: 22,
+    color: 'rgba(255, 255, 255, 0.4)',
   },
-  tabIconActive: {},
+  tabIconActive: {
+    color: '#8B5CF6',
+  },
   tabIndicator: {
     width: 6,
     height: 6,
     borderRadius: 3,
     marginTop: 2,
+    backgroundColor: '#8B5CF6',
   },
   // Unread message badge
   unreadBadge: {
@@ -349,6 +353,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 4,
     borderWidth: 1.5,
+    borderColor: '#08080F',
   },
   unreadBadgeText: {
     ...typography.captionSmall,

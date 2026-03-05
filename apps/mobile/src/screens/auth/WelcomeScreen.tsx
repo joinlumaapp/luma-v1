@@ -48,7 +48,7 @@ const BUTTON_START = 2800;
 // Feature list data
 const FEATURES = [
   { icon: '\u{1F512}', text: 'Doğrulanmış Profiller' },
-  { icon: '\u{1F9E0}', text: 'Bilimsel Uyumluluk Analizi' },
+  { icon: '\u{1F9E0}', text: 'Bilimsel Uyum Analizi' },
   { icon: '\u{1F48E}', text: 'Premium Eşleşme Deneyimi' },
 ] as const;
 
@@ -196,7 +196,7 @@ const FloatingOrb: React.FC<{ config: OrbConfig }> = ({ config }) => {
 };
 
 // Tagline with word-by-word stagger fade-in
-const TAGLINE_WORDS = ['Tesadüfen', 'değil.', 'Uyumlulukla.'];
+const TAGLINE_WORDS = ['Tesadüfen', 'değil.', 'Uyumla.'];
 const WORD_STAGGER = 200;
 
 const TaglineWord: React.FC<{ word: string; index: number; startDelay: number }> = ({

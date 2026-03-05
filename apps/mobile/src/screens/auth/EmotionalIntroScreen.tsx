@@ -401,14 +401,14 @@ const EmotionalIntroScreen: React.FC = () => {
 
         {/* Subtext */}
         <Animated.Text style={[styles.subtext, subtextStyle]}>
-          2 dakikalık uyumluluk testi ile başla.
+          2 dakikada uyumunu keşfet.
         </Animated.Text>
       </View>
 
       {/* Bottom auth section */}
       <Animated.View style={[styles.bottomSection, ctaSectionStyle]}>
         <GradientCTAButton
-          label="Uyumluluk Testine Başla"
+          label="Uyum Testine Başla"
           onPress={handleStartTest}
         />
 

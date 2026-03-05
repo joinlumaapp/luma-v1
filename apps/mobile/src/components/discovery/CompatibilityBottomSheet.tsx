@@ -119,7 +119,7 @@ export const CompatibilityBottomSheet: React.FC<CompatibilityBottomSheetProps> =
 
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Uyumluluk Detayı</Text>
+          <Text style={styles.headerTitle}>Uyum Detayı</Text>
           <Pressable onPress={onClose} style={styles.closeButton} accessibilityLabel="Kapat">
             <Text style={styles.closeText}>{'\u2715'}</Text>
           </Pressable>
@@ -140,7 +140,7 @@ export const CompatibilityBottomSheet: React.FC<CompatibilityBottomSheetProps> =
 
           {error && (
             <View style={styles.loadingContainer}>
-              <Text style={styles.errorText}>Uyumluluk bilgisi yüklenemedi.</Text>
+              <Text style={styles.errorText}>Uyum bilgisi yüklenemedi.</Text>
               <Pressable onPress={onClose} style={styles.retryButton}>
                 <Text style={styles.retryText}>Kapat</Text>
               </Pressable>

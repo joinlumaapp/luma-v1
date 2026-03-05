@@ -93,11 +93,8 @@ export const MatchDetailScreen: React.FC = () => {
     );
   };
 
-  const getScoreColor = (score: number): string => {
-    if (score >= 90) return colors.success;
-    if (score >= 70) return colors.accent;
-    if (score >= 50) return colors.warning;
-    return colors.error;
+  const getScoreColor = (_score: number): string => {
+    return colors.primary;
   };
 
   if (isLoading || !selectedMatch) {
@@ -183,13 +180,13 @@ export const MatchDetailScreen: React.FC = () => {
             ]}>
               %{selectedMatch.compatibilityPercent}
             </Text>
-            <Text style={styles.overallScoreLabel}>Genel Uyumluluk</Text>
+            <Text style={styles.overallScoreLabel}>Genel Uyum</Text>
           </View>
         </View>
 
         {/* Compatibility breakdown */}
         <View style={styles.breakdownSection}>
-          <Text style={styles.sectionTitle}>Uyumluluk Analizi</Text>
+          <Text style={styles.sectionTitle}>Uyum Analizi</Text>
           {selectedMatch.compatibilityBreakdown.map((category) => (
             <View key={category.category} style={styles.breakdownRow}>
               <View style={styles.breakdownLabel}>

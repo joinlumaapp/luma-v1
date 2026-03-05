@@ -25,8 +25,8 @@ const CURRENT_STEP = 5;
 const INTENTION_OPTIONS = [
   {
     id: 'serious_relationship',
-    label: 'Uzun Vadeli Uyumluluk',
-    description: 'Uzun vadeli uyumluluk arıyorum.',
+    label: 'Uzun Vadeli Uyum',
+    description: 'Uzun vadeli uyum arıyorum.',
     icon: '***',
     color: colors.secondary,
   },

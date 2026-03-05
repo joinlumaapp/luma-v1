@@ -56,12 +56,21 @@ for (const opt of INTEREST_OPTIONS) {
 
 const MODE_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
   serious_relationship: { label: 'Anlamlı Bağlantı', bg: 'rgba(139, 92, 246, 0.35)', text: palette.purple[300] },
-  exploring: { label: 'Keşfet', bg: 'rgba(236, 72, 153, 0.35)', text: palette.pink[300] },
-  not_sure: { label: 'Keşfet', bg: 'rgba(251, 191, 36, 0.35)', text: palette.gold[300] },
+  exploring: { label: 'Yeni Keşifler', bg: 'rgba(236, 72, 153, 0.35)', text: palette.pink[300] },
+  not_sure: { label: 'Açık Fikirli', bg: 'rgba(251, 191, 36, 0.35)', text: palette.gold[300] },
 };
 
 const getModeStyle = (tag: string) =>
   MODE_CONFIG[tag] ?? MODE_CONFIG.exploring;
+
+// ─── Compatibility explanation based on score range ──────────
+
+const getCompatExplanation = (score: number): string => {
+  if (score >= 90) return 'Benzer düşünce yapısı';
+  if (score >= 80) return 'Güçlü uyum alanları';
+  if (score >= 70) return 'Ortak ilgi alanları';
+  return 'Keşfedilecek farklılıklar';
+};
 
 // ─── Component ────────────────────────────────────────────────
 
@@ -175,11 +184,14 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
           <Pressable
             style={styles.compatArea}
             onPress={() => onCompatTap?.(profile.userId)}
-            accessibilityLabel={`Uyumluluk yüzde ${compatScore}`}
+            accessibilityLabel={`Uyum yüzde ${compatScore}`}
             accessibilityRole="button"
           >
             <Text style={[styles.compatScore, isSuper && styles.compatScoreSuper]}>
               %{compatScore} Uyum
+            </Text>
+            <Text style={styles.compatExplanation}>
+              {getCompatExplanation(compatScore)}
             </Text>
           </Pressable>
         )}
@@ -353,5 +365,11 @@ const styles = StyleSheet.create({
   },
   compatScoreSuper: {
     color: palette.gold[300],
+  },
+  compatExplanation: {
+    fontSize: 12,
+    fontWeight: fontWeights.regular,
+    color: palette.gray[400],
+    letterSpacing: 0.2,
   },
 });

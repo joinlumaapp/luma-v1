@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     paddingLeft: spacing.md,
   },
   chipsContainer: {
-    paddingRight: spacing.md,
+    paddingRight: spacing.lg,
     gap: spacing.sm,
     alignItems: 'center',
   },

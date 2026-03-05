@@ -441,7 +441,7 @@ export const CompatibilityInsightScreen: React.FC = () => {
     return (
       <View style={[styles.container, styles.loadingContainer, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Uyumluluk analizi hazırlanıyor...</Text>
+        <Text style={styles.loadingText}>Uyum analizi hazırlanıyor...</Text>
       </View>
     );
   }
@@ -449,7 +449,7 @@ export const CompatibilityInsightScreen: React.FC = () => {
   if (!compatibilityData) {
     return (
       <View style={[styles.container, styles.loadingContainer, { paddingTop: insets.top }]}>
-        <Text style={styles.errorText}>Uyumluluk verisi yüklenemedi</Text>
+        <Text style={styles.errorText}>Uyum verisi yüklenemedi</Text>
         <TouchableOpacity
           style={styles.retryButton}
           onPress={loadCompatibilityData}
@@ -473,7 +473,7 @@ export const CompatibilityInsightScreen: React.FC = () => {
           >
             <Text style={styles.backText}>{'<'}</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Uyumluluk Analizi</Text>
+          <Text style={styles.headerTitle}>Uyum Analizi</Text>
           <View style={{ width: 40 }} />
         </View>
 

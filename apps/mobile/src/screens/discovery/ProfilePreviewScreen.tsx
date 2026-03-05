@@ -228,7 +228,7 @@ export const ProfilePreviewScreen: React.FC = () => {
 
         {/* Compatibility */}
         <View style={styles.compatSection}>
-          <Text style={styles.sectionTitle}>Uyumluluk</Text>
+          <Text style={styles.sectionTitle}>Uyum</Text>
           {loadingCompat ? (
             <ActivityIndicator size="small" color={colors.primary} />
           ) : compatibility ? (
@@ -245,7 +245,7 @@ export const ProfilePreviewScreen: React.FC = () => {
               </View>
               <View style={styles.compatInfo}>
                 <Text style={styles.compatLevel}>
-                  {compatibility.isSuperCompatible ? 'Süper Uyumluluk!' : 'Normal Uyumluluk'}
+                  {compatibility.isSuperCompatible ? 'Süper Uyumluluk!' : 'Normal Uyum'}
                 </Text>
                 {compatibility.breakdown && Object.keys(compatibility.breakdown).length > 0 && (
                   <Text style={styles.compatDetail}>
@@ -255,14 +255,14 @@ export const ProfilePreviewScreen: React.FC = () => {
               </View>
             </View>
           ) : (
-            <Text style={styles.compatUnavailable}>Uyumluluk skoru henüz hesaplanmadı</Text>
+            <Text style={styles.compatUnavailable}>Uyum skoru henüz hesaplanmadı</Text>
           )}
         </View>
 
         {/* Compatibility Detail Preview Card */}
         {!loadingCompat && compatPreviewData ? (
           <View style={styles.compatDetailSection}>
-            <Text style={styles.sectionTitle}>Uyumluluk Detayları</Text>
+            <Text style={styles.sectionTitle}>Uyum Detayları</Text>
             <CompatibilityPreviewCard data={compatPreviewData} />
           </View>
         ) : null}

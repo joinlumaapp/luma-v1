@@ -29,6 +29,7 @@ const discoveryProfiles = [
     isVerified: true,
     distanceKm: 2.3,
     earnedBadges: ['verified_star', 'social_butterfly'],
+    interestTags: ['books', 'coffee', 'travel', 'nature'],
   },
   {
     id: 'bot-002',
@@ -42,6 +43,7 @@ const discoveryProfiles = [
     isVerified: true,
     distanceKm: 4.1,
     earnedBadges: ['verified_star'],
+    interestTags: ['technology', 'yoga', 'coffee', 'books'],
   },
   {
     id: 'bot-003',
@@ -55,6 +57,7 @@ const discoveryProfiles = [
     isVerified: false,
     distanceKm: 7.5,
     earnedBadges: [],
+    interestTags: ['art', 'photography', 'movies'],
   },
   {
     id: 'bot-004',
@@ -68,6 +71,7 @@ const discoveryProfiles = [
     isVerified: true,
     distanceKm: 12.0,
     earnedBadges: ['verified_star', 'early_bird'],
+    interestTags: ['music', 'books', 'yoga'],
   },
   {
     id: 'bot-005',
@@ -81,6 +85,7 @@ const discoveryProfiles = [
     isVerified: false,
     distanceKm: 3.2,
     earnedBadges: [],
+    interestTags: ['books', 'movies', 'coffee'],
   },
   {
     id: 'bot-006',
@@ -94,6 +99,7 @@ const discoveryProfiles = [
     isVerified: true,
     distanceKm: 5.8,
     earnedBadges: ['globe_trotter'],
+    interestTags: ['travel', 'photography', 'cooking', 'fashion'],
   },
   {
     id: 'bot-007',
@@ -107,6 +113,7 @@ const discoveryProfiles = [
     isVerified: true,
     distanceKm: 8.4,
     earnedBadges: ['verified_star'],
+    interestTags: ['art', 'animals', 'cooking', 'coffee'],
   },
   {
     id: 'bot-008',
@@ -120,6 +127,7 @@ const discoveryProfiles = [
     isVerified: false,
     distanceKm: 6.1,
     earnedBadges: [],
+    interestTags: ['yoga', 'cooking', 'nature', 'dance'],
   },
   {
     id: 'bot-009',
@@ -133,6 +141,7 @@ const discoveryProfiles = [
     isVerified: true,
     distanceKm: 9.2,
     earnedBadges: ['bookworm'],
+    interestTags: ['books', 'music', 'coffee'],
   },
   {
     id: 'bot-010',
@@ -146,6 +155,7 @@ const discoveryProfiles = [
     isVerified: false,
     distanceKm: 11.3,
     earnedBadges: [],
+    interestTags: ['hiking', 'nature', 'books'],
   },
   {
     id: 'bot-011',
@@ -159,6 +169,7 @@ const discoveryProfiles = [
     isVerified: false,
     distanceKm: 4.7,
     earnedBadges: [],
+    interestTags: ['music', 'technology', 'gaming'],
   },
   {
     id: 'bot-012',
@@ -172,6 +183,7 @@ const discoveryProfiles = [
     isVerified: true,
     distanceKm: 13.5,
     earnedBadges: ['verified_star'],
+    interestTags: ['movies', 'books', 'nature'],
   },
   {
     id: 'bot-013',
@@ -185,6 +197,7 @@ const discoveryProfiles = [
     isVerified: false,
     distanceKm: 15.0,
     earnedBadges: [],
+    interestTags: ['technology', 'gaming', 'sports'],
   },
   {
     id: 'bot-014',
@@ -198,6 +211,7 @@ const discoveryProfiles = [
     isVerified: false,
     distanceKm: 3.9,
     earnedBadges: [],
+    interestTags: ['movies', 'music', 'fashion', 'dance'],
   },
   {
     id: 'bot-015',
@@ -211,6 +225,7 @@ const discoveryProfiles = [
     isVerified: false,
     distanceKm: 7.8,
     earnedBadges: [],
+    interestTags: ['dance', 'music', 'coffee'],
   },
 ];
 

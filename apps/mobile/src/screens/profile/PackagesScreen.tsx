@@ -48,7 +48,7 @@ const FEATURE_COMPARISON: FeatureRow[] = [
     },
   },
   {
-    label: 'Uyumluluk Analizi',
+    label: 'Uyum Analizi',
     values: {
       free: 'Temel',
       gold: 'Detaylı',

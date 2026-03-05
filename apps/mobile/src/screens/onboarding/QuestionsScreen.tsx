@@ -467,7 +467,7 @@ export const QuestionsScreen: React.FC = () => {
           <Text style={styles.celebrationEmoji}>{'\uD83C\uDF89'}</Text>
           <Text style={styles.celebrationTitle}>Harika!</Text>
           <Text style={styles.celebrationSubtitle}>
-            Uyumluluk profilin hazırlanıyor...
+            Uyum profilin hazırlanıyor...
           </Text>
           <ActivityIndicator
             size="small"
