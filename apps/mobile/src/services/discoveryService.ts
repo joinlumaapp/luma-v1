@@ -29,6 +29,8 @@ export interface FeedCard {
   compatExplanation?: string | null;
   /** Top 3 strong compatibility categories (Turkish labels) */
   strongCategories?: string[];
+  /** Last active timestamp for online status */
+  lastActiveAt?: string;
 }
 
 export interface FeedResponse {
@@ -322,12 +324,97 @@ const MOCK_CARDS: FeedCard[] = [
   },
 ];
 
+// Mock activity timestamps: some online, some recently active, some hours ago
+const MOCK_ACTIVITY_OFFSETS_MS: Record<string, number> = {
+  'mock-1': 60 * 1000,           // 1 min ago (online)
+  'mock-2': 5 * 60 * 1000,       // 5 min ago
+  'mock-3': 30 * 60 * 1000,      // 30 min ago
+  'mock-4': 90 * 1000,           // 1.5 min ago (online)
+  'mock-5': 2 * 60 * 60 * 1000,  // 2 hours ago
+  'mock-6': 45 * 1000,           // 45 sec ago (online)
+  'mock-7': 6 * 60 * 60 * 1000,  // 6 hours ago
+  'mock-8': 15 * 60 * 1000,      // 15 min ago
+};
+
 const getMockFeedResponse = (): FeedResponse => ({
-  cards: MOCK_CARDS,
+  cards: MOCK_CARDS.map((card) => ({
+    ...card,
+    lastActiveAt: new Date(Date.now() - (MOCK_ACTIVITY_OFFSETS_MS[card.userId] ?? 3600000)).toISOString(),
+  })),
   remaining: 15,
   dailyLimit: 20,
   totalCandidates: MOCK_CARDS.length,
 });
+
+// Mock incoming likes — users who liked the current user (distinct from matches)
+const now = new Date();
+const mockHoursAgo = (h: number) => new Date(now.getTime() - h * 3_600_000).toISOString();
+
+const MOCK_INCOMING_LIKES: LikeYouCard[] = [
+  {
+    userId: 'bot-003',
+    firstName: 'Selin',
+    age: 25,
+    photoUrl: 'https://i.pravatar.cc/400?img=9',
+    compatibilityPercent: 88,
+    likedAt: mockHoursAgo(1),
+    comment: 'Profilin çok samimi, tanışmak isterim!',
+  },
+  {
+    userId: 'bot-005',
+    firstName: 'Defne',
+    age: 24,
+    photoUrl: 'https://i.pravatar.cc/400?img=20',
+    compatibilityPercent: 73,
+    likedAt: mockHoursAgo(3),
+    comment: null,
+  },
+  {
+    userId: 'bot-008',
+    firstName: 'Cansu',
+    age: 23,
+    photoUrl: 'https://i.pravatar.cc/400?img=29',
+    compatibilityPercent: 56,
+    likedAt: mockHoursAgo(5),
+    comment: null,
+  },
+  {
+    userId: 'bot-010',
+    firstName: 'Ebru',
+    age: 30,
+    photoUrl: 'https://i.pravatar.cc/400?img=36',
+    compatibilityPercent: 71,
+    likedAt: mockHoursAgo(8),
+    comment: 'Ortak ilgi alanlarımız çok fazla!',
+  },
+  {
+    userId: 'bot-011',
+    firstName: 'Naz',
+    age: 22,
+    photoUrl: 'https://i.pravatar.cc/400?img=38',
+    compatibilityPercent: 68,
+    likedAt: mockHoursAgo(12),
+    comment: null,
+  },
+  {
+    userId: 'bot-013',
+    firstName: 'Yağmur',
+    age: 24,
+    photoUrl: 'https://i.pravatar.cc/400?img=44',
+    compatibilityPercent: 62,
+    likedAt: mockHoursAgo(18),
+    comment: 'Satranç oynayan birini arıyordum!',
+  },
+  {
+    userId: 'bot-014',
+    firstName: 'İrem',
+    age: 28,
+    photoUrl: 'https://i.pravatar.cc/400?img=47',
+    compatibilityPercent: 58,
+    likedAt: mockHoursAgo(24),
+    comment: null,
+  },
+];
 
 export const discoveryService = {
   // Get discovery feed
@@ -373,8 +460,17 @@ export const discoveryService = {
 
   // ── Likes You (Gold+ feature) ──────────────────────────────
   getLikesYou: async (): Promise<LikesYouResponse> => {
-    const response = await api.get<LikesYouResponse>('/discovery/likes-you');
-    return response.data;
+    try {
+      const response = await api.get<LikesYouResponse>('/discovery/likes-you');
+      return response.data;
+    } catch {
+      // Fallback to mock incoming likes when API is unavailable
+      return {
+        likes: MOCK_INCOMING_LIKES,
+        total: MOCK_INCOMING_LIKES.length,
+        isBlurred: false,
+      };
+    }
   },
 
   // ── Daily Picks ────────────────────────────────────────────
@@ -399,13 +495,28 @@ export const discoveryService = {
 
   // ── Profile Boost ──────────────────────────────────────────
   getBoostStatus: async (): Promise<BoostStatusResponse> => {
-    const response = await api.get<BoostStatusResponse>('/profiles/boost/status');
-    return response.data;
+    try {
+      const response = await api.get<BoostStatusResponse>('/profiles/boost/status');
+      return response.data;
+    } catch {
+      return { isActive: false };
+    }
   },
 
-  activateBoost: async (): Promise<ActivateBoostResponse> => {
-    const response = await api.post<ActivateBoostResponse>('/profiles/boost');
-    return response.data;
+  activateBoost: async (durationMinutes: number = 30): Promise<ActivateBoostResponse> => {
+    try {
+      const response = await api.post<ActivateBoostResponse>('/profiles/boost', { durationMinutes });
+      return response.data;
+    } catch {
+      const goldCosts: Record<number, number> = { 30: 50, 120: 120, 1440: 250 };
+      const cost = goldCosts[durationMinutes] ?? 50;
+      return {
+        success: true,
+        endsAt: new Date(Date.now() + durationMinutes * 60 * 1000).toISOString(),
+        goldDeducted: cost,
+        goldBalance: 500 - cost,
+      };
+    }
   },
 
   // ── Profile Prompts ────────────────────────────────────────

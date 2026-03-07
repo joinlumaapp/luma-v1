@@ -1,7 +1,7 @@
-// SocialFeedScreen — Instagram-style social feed with follow system
-// Features: filter tabs, topic chips, feed cards, follow, photo/video, profanity filter
+// SocialFeedScreen — Instagram-style social feed with post creation system
+// Features: post creation area, post type selector, filter tabs, topic chips, feed cards
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,6 @@ import {
   Platform,
   StyleSheet,
   ActivityIndicator,
-  Animated,
   ScrollView,
   Alert,
   Image,
@@ -26,15 +25,17 @@ import type { FeedStackParamList } from '../../navigation/types';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
-import { useAuthStore, type PackageTier } from '../../stores/authStore';
+import { useAuthStore } from '../../stores/authStore';
 import { useSocialFeedStore } from '../../stores/socialFeedStore';
 import {
   FEED_TOPICS,
+  FEED_POST_TYPES,
   containsProfanity,
   PROFANITY_WARNING,
   type FeedFilter,
   type FeedTopic,
   type FeedPost,
+  type FeedPostType,
 } from '../../services/socialFeedService';
 import { photoService } from '../../services/photoService';
 import { TopicChipRow } from '../../components/feed/TopicChip';
@@ -81,12 +82,48 @@ const FilterTab: React.FC<FilterTabProps> = ({ filter, isActive, onPress }) => {
   );
 };
 
+// ─── Post Type Selector (shown when creation area is tapped) ─
+
+interface PostTypeSelectorProps {
+  visible: boolean;
+  onSelect: (type: FeedPostType) => void;
+  onClose: () => void;
+}
+
+const PostTypeSelector: React.FC<PostTypeSelectorProps> = ({ visible, onSelect, onClose }) => {
+  if (!visible) return null;
+
+  return (
+    <View style={selectorStyles.container}>
+      <View style={selectorStyles.row}>
+        {FEED_POST_TYPES.map((pt) => (
+          <TouchableOpacity
+            key={pt.type}
+            style={selectorStyles.option}
+            onPress={() => onSelect(pt.type)}
+            activeOpacity={0.7}
+          >
+            <View style={[selectorStyles.iconCircle, { backgroundColor: `${pt.color}15` }]}>
+              <Text style={selectorStyles.icon}>{pt.emoji}</Text>
+            </View>
+            <Text style={selectorStyles.label}>{pt.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={selectorStyles.closeBtn}>
+        <Text style={selectorStyles.closeText}>Kapat</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
 // ─── Create Post Modal ────────────────────────────────────────
 
 interface CreatePostModalProps {
   visible: boolean;
+  postType: FeedPostType;
   onClose: () => void;
-  onSubmit: (content: string, topic: FeedTopic, photoUrls: string[], videoUrl: string | null) => void;
+  onSubmit: (content: string, topic: FeedTopic, postType: FeedPostType, photoUrls: string[], videoUrl: string | null, musicTitle: string | null, musicArtist: string | null) => void;
   isCreating: boolean;
 }
 
@@ -94,6 +131,7 @@ const MAX_POST_PHOTOS = 4;
 
 const CreatePostModal: React.FC<CreatePostModalProps> = ({
   visible,
+  postType,
   onClose,
   onSubmit,
   isCreating,
@@ -102,49 +140,56 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
   const [selectedTopic, setSelectedTopic] = useState<FeedTopic>('GUNLUK');
   const [attachedPhotos, setAttachedPhotos] = useState<string[]>([]);
   const [attachedVideo, setAttachedVideo] = useState<string | null>(null);
+  const [musicTitle, setMusicTitle] = useState('');
+  const [musicArtist, setMusicArtist] = useState('');
   const insets = useSafeAreaInsets();
+
+  const postTypeOption = FEED_POST_TYPES.find((pt) => pt.type === postType);
 
   const handleSubmit = useCallback(() => {
     const trimmed = content.trim();
-    if (trimmed.length === 0 && attachedPhotos.length === 0 && !attachedVideo) return;
-    // Profanity check
+    if (trimmed.length === 0 && attachedPhotos.length === 0 && !attachedVideo && postType !== 'music') return;
+    if (postType === 'music' && (!musicTitle.trim() || !musicArtist.trim())) {
+      Alert.alert('Uyarı', 'Şarkı adı ve sanatçı bilgisini gir.');
+      return;
+    }
     if (containsProfanity(trimmed)) {
       Alert.alert('Uyarı', PROFANITY_WARNING);
       return;
     }
-    onSubmit(trimmed, selectedTopic, attachedPhotos, attachedVideo);
+    onSubmit(
+      trimmed,
+      selectedTopic,
+      postType,
+      attachedPhotos,
+      attachedVideo,
+      postType === 'music' ? musicTitle.trim() : null,
+      postType === 'music' ? musicArtist.trim() : null,
+    );
     setContent('');
     setAttachedPhotos([]);
     setAttachedVideo(null);
-  }, [content, selectedTopic, attachedPhotos, attachedVideo, onSubmit]);
+    setMusicTitle('');
+    setMusicArtist('');
+  }, [content, selectedTopic, postType, attachedPhotos, attachedVideo, musicTitle, musicArtist, onSubmit]);
 
   const handleAddPhoto = useCallback(async () => {
     if (attachedPhotos.length >= MAX_POST_PHOTOS) {
       Alert.alert('Limit', `En fazla ${MAX_POST_PHOTOS} fotoğraf ekleyebilirsin.`);
       return;
     }
-    // If there's a video, can't add photos too
-    if (attachedVideo) {
-      Alert.alert('Uyarı', 'Video ve fotoğraf aynı anda eklenemez.');
-      return;
-    }
     const uri = await photoService.pickFromGallery();
     if (uri) {
       setAttachedPhotos((prev) => [...prev, uri]);
     }
-  }, [attachedPhotos, attachedVideo]);
+  }, [attachedPhotos]);
 
   const handleAddVideo = useCallback(async () => {
-    if (attachedPhotos.length > 0) {
-      Alert.alert('Uyarı', 'Video ve fotoğraf aynı anda eklenemez.');
-      return;
-    }
-    // Mock: pick photo as video thumbnail placeholder
     const uri = await photoService.pickFromGallery();
     if (uri) {
       setAttachedVideo(uri);
     }
-  }, [attachedPhotos]);
+  }, []);
 
   const handleRemovePhoto = useCallback((index: number) => {
     setAttachedPhotos((prev) => prev.filter((_, i) => i !== index));
@@ -154,8 +199,19 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
     setAttachedVideo(null);
   }, []);
 
-  const hasContent = content.trim().length > 0 || attachedPhotos.length > 0 || attachedVideo !== null;
+  const hasContent = content.trim().length > 0 || attachedPhotos.length > 0 || attachedVideo !== null || (postType === 'music' && musicTitle.trim().length > 0);
   const canSubmit = hasContent && !isCreating;
+
+  const getPlaceholder = (): string => {
+    switch (postType) {
+      case 'photo': return 'Fotoğrafın hakkında bir şeyler yaz...';
+      case 'video': return 'Video hakkında bir şeyler yaz...';
+      case 'text': return 'Ne düşünüyorsun?';
+      case 'question': return 'Sorunuzu yazın...';
+      case 'music': return 'Şarkı hakkında bir not ekle...';
+      default: return 'Ne düşünüyorsun?';
+    }
+  };
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
@@ -169,7 +225,15 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
             <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
               <Text style={modalStyles.cancelText}>Vazgeç</Text>
             </TouchableOpacity>
-            <Text style={modalStyles.headerTitle}>Yeni Paylaşım</Text>
+            <View style={modalStyles.headerCenter}>
+              <Text style={modalStyles.headerTitle}>Yeni Paylaşım</Text>
+              {postTypeOption && (
+                <View style={[modalStyles.headerBadge, { backgroundColor: `${postTypeOption.color}15` }]}>
+                  <Text style={modalStyles.headerBadgeEmoji}>{postTypeOption.emoji}</Text>
+                  <Text style={[modalStyles.headerBadgeLabel, { color: postTypeOption.color }]}>{postTypeOption.label}</Text>
+                </View>
+              )}
+            </View>
             <TouchableOpacity
               onPress={handleSubmit}
               activeOpacity={0.7}
@@ -219,10 +283,32 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
             ))}
           </ScrollView>
 
+          {/* Music fields */}
+          {postType === 'music' && (
+            <View style={modalStyles.musicFields}>
+              <TextInput
+                style={modalStyles.musicInput}
+                placeholder="Şarkı adı"
+                placeholderTextColor={colors.textTertiary}
+                value={musicTitle}
+                onChangeText={setMusicTitle}
+                maxLength={100}
+              />
+              <TextInput
+                style={modalStyles.musicInput}
+                placeholder="Sanatçı"
+                placeholderTextColor={colors.textTertiary}
+                value={musicArtist}
+                onChangeText={setMusicArtist}
+                maxLength={100}
+              />
+            </View>
+          )}
+
           {/* Text Input */}
           <TextInput
             style={modalStyles.textInput}
-            placeholder="Ne düşünüyorsun?"
+            placeholder={getPlaceholder()}
             placeholderTextColor={colors.textTertiary}
             value={content}
             onChangeText={setContent}
@@ -270,22 +356,26 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
           {/* Bottom bar: media buttons + char count */}
           <View style={modalStyles.bottomBar}>
             <View style={modalStyles.mediaButtons}>
-              <TouchableOpacity
-                style={modalStyles.mediaButton}
-                onPress={handleAddPhoto}
-                activeOpacity={0.7}
-              >
-                <Text style={modalStyles.mediaButtonIcon}>{'\uD83D\uDDBC'}</Text>
-                <Text style={modalStyles.mediaButtonLabel}>Fotoğraf</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={modalStyles.mediaButton}
-                onPress={handleAddVideo}
-                activeOpacity={0.7}
-              >
-                <Text style={modalStyles.mediaButtonIcon}>{'\uD83C\uDFA5'}</Text>
-                <Text style={modalStyles.mediaButtonLabel}>Video</Text>
-              </TouchableOpacity>
+              {(postType === 'photo' || postType === 'text') && (
+                <TouchableOpacity
+                  style={modalStyles.mediaButton}
+                  onPress={handleAddPhoto}
+                  activeOpacity={0.7}
+                >
+                  <Text style={modalStyles.mediaButtonIcon}>{'\uD83D\uDDBC'}</Text>
+                  <Text style={modalStyles.mediaButtonLabel}>Fotoğraf</Text>
+                </TouchableOpacity>
+              )}
+              {postType === 'video' && (
+                <TouchableOpacity
+                  style={modalStyles.mediaButton}
+                  onPress={handleAddVideo}
+                  activeOpacity={0.7}
+                >
+                  <Text style={modalStyles.mediaButtonIcon}>{'\uD83C\uDFA5'}</Text>
+                  <Text style={modalStyles.mediaButtonLabel}>Video</Text>
+                </TouchableOpacity>
+              )}
             </View>
             <Text style={modalStyles.charCount}>{content.length}/500</Text>
           </View>
@@ -309,50 +399,25 @@ const EmptyState: React.FC = () => (
   </View>
 );
 
+// ─── Daily Post Limit ─────────────────────────────────────────
+
+const FREE_DAILY_POST_LIMIT = 1;
+
+const getToday = (): string => new Date().toISOString().slice(0, 10);
+
 // ─── Main Screen ──────────────────────────────────────────────
 
 type FeedNavProp = NativeStackNavigationProp<FeedStackParamList, 'SocialFeed'>;
 
-// Tier hierarchy for premium check
-const TIER_RANK: Record<PackageTier, number> = { free: 0, gold: 1, pro: 2, reserved: 3 };
-
 export const SocialFeedScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<FeedNavProp>();
-  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'free') as PackageTier;
-  const isFreeUser = TIER_RANK[packageTier] < TIER_RANK.gold;
+  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'free');
+  const isFreeUser = packageTier === 'free';
 
-  // Premium gate — Free users see upgrade screen
-  if (isFreeUser) {
-    return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        <View style={styles.headerArea}>
-          <Text style={styles.headerTitle}>Akış</Text>
-        </View>
-        <View style={styles.premiumGate}>
-          <View style={styles.premiumGateIconContainer}>
-            <Text style={styles.premiumGateIcon}>{'\uD83D\uDD12'}</Text>
-          </View>
-          <Text style={styles.premiumGateTitle}>Akış Premium Özelliğidir</Text>
-          <Text style={styles.premiumGateDescription}>
-            Sosyal akışa katılmak, paylaşım yapmak ve topluluğu keşfetmek için Premium veya üstü pakete yükselt.
-          </Text>
-          <TouchableOpacity
-            style={styles.premiumGateButton}
-            onPress={() => {
-              navigation.getParent()?.navigate('ProfileTab', { screen: 'Packages' });
-            }}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.premiumGateButtonText}>Paketi Yükselt</Text>
-          </TouchableOpacity>
-          <Text style={styles.premiumGateHint}>
-            Premium, Supreme ve Reserved üyeleri akışı kullanabilir
-          </Text>
-        </View>
-      </View>
-    );
-  }
+  // Daily post tracking for free users
+  const [dailyPostCount, setDailyPostCount] = useState(0);
+  const [lastPostDate, setLastPostDate] = useState<string | null>(null);
 
   // Store selectors
   const posts = useSocialFeedStore((s) => s.posts);
@@ -370,28 +435,15 @@ export const SocialFeedScreen: React.FC = () => {
   const incrementCommentCount = useSocialFeedStore((s) => s.incrementCommentCount);
   const createPost = useSocialFeedStore((s) => s.createPost);
 
-  // Modal state
+  // State
+  const [showTypeSelector, setShowTypeSelector] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedPostType, setSelectedPostType] = useState<FeedPostType>('text');
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
-
-  // FAB animation
-  const fabScale = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     fetchFeed();
   }, [fetchFeed]);
-
-  // Animate FAB in after load
-  useEffect(() => {
-    if (!isLoading && posts.length >= 0) {
-      Animated.spring(fabScale, {
-        toValue: 1,
-        friction: 5,
-        tension: 100,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [isLoading, posts.length, fabScale]);
 
   const handleRefresh = useCallback(() => {
     refreshFeed();
@@ -444,12 +496,42 @@ export const SocialFeedScreen: React.FC = () => {
     [navigation],
   );
 
+  const handlePostTypeSelect = useCallback((type: FeedPostType) => {
+    // Check daily post limit for free users
+    if (isFreeUser) {
+      const today = getToday();
+      const todayCount = lastPostDate === today ? dailyPostCount : 0;
+      if (todayCount >= FREE_DAILY_POST_LIMIT) {
+        Alert.alert(
+          'Günlük Limit',
+          'Ücretsiz kullanıcılar günde 1 paylaşım yapabilir. Daha fazlası için paketi yükselt.',
+          [
+            { text: 'Tamam', style: 'cancel' },
+            {
+              text: 'Paketi Yükselt',
+              onPress: () => navigation.getParent()?.navigate('ProfileTab', { screen: 'Packages' }),
+            },
+          ],
+        );
+        setShowTypeSelector(false);
+        return;
+      }
+    }
+    setSelectedPostType(type);
+    setShowTypeSelector(false);
+    setShowCreateModal(true);
+  }, [isFreeUser, dailyPostCount, lastPostDate, navigation]);
+
   const handleCreatePost = useCallback(
-    (content: string, topic: FeedTopic, photoUrls: string[], videoUrl: string | null) => {
-      createPost({ content, topic, photoUrls, videoUrl });
+    (content: string, topic: FeedTopic, postType: FeedPostType, photoUrls: string[], videoUrl: string | null, musicTitle: string | null, musicArtist: string | null) => {
+      createPost({ content, topic, postType, photoUrls, videoUrl, musicTitle, musicArtist });
+      // Track daily post count for free users
+      const today = getToday();
+      setDailyPostCount((prev) => (lastPostDate === today ? prev + 1 : 1));
+      setLastPostDate(today);
       setShowCreateModal(false);
     },
-    [createPost],
+    [createPost, lastPostDate],
   );
 
   // Render item
@@ -468,10 +550,29 @@ export const SocialFeedScreen: React.FC = () => {
 
   const keyExtractor = useCallback((item: FeedPost) => item.id, []);
 
-  // Header component (filter tabs + topic chips)
+  // Header component (creation area + filter tabs + topic chips)
   const ListHeader = useCallback(
     () => (
       <View>
+        {/* Post Creation Area */}
+        <TouchableOpacity
+          style={createStyles.container}
+          onPress={() => setShowTypeSelector((prev) => !prev)}
+          activeOpacity={0.8}
+        >
+          <View style={createStyles.avatarPlaceholder}>
+            <Text style={createStyles.avatarIcon}>{'\uD83D\uDC64'}</Text>
+          </View>
+          <Text style={createStyles.promptText}>Bugün ne paylaşmak istersin?</Text>
+        </TouchableOpacity>
+
+        {/* Post Type Selector */}
+        <PostTypeSelector
+          visible={showTypeSelector}
+          onSelect={handlePostTypeSelect}
+          onClose={() => setShowTypeSelector(false)}
+        />
+
         {/* Filter Tabs */}
         <View style={tabStyles.tabRow}>
           {FILTER_TABS.map((tab) => (
@@ -491,7 +592,7 @@ export const SocialFeedScreen: React.FC = () => {
         />
       </View>
     ),
-    [filter, selectedTopic, handleFilterChange, handleTopicChange],
+    [filter, selectedTopic, showTypeSelector, handleFilterChange, handleTopicChange, handlePostTypeSelect],
   );
 
   return (
@@ -525,28 +626,10 @@ export const SocialFeedScreen: React.FC = () => {
         />
       )}
 
-      {/* FAB — Create Post */}
-      <Animated.View
-        style={[
-          styles.fab,
-          {
-            bottom: insets.bottom + spacing.xl,
-            transform: [{ scale: fabScale }],
-          },
-        ]}
-      >
-        <TouchableOpacity
-          onPress={() => setShowCreateModal(true)}
-          activeOpacity={0.8}
-          style={styles.fabTouchable}
-        >
-          <Text style={styles.fabIcon}>+</Text>
-        </TouchableOpacity>
-      </Animated.View>
-
       {/* Create Post Modal */}
       <CreatePostModal
         visible={showCreateModal}
+        postType={selectedPostType}
         onClose={() => setShowCreateModal(false)}
         onSubmit={handleCreatePost}
         isCreating={isCreating}
@@ -563,6 +646,85 @@ export const SocialFeedScreen: React.FC = () => {
   );
 };
 
+// ─── Creation Area Styles ─────────────────────────────────────
+
+const createStyles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    ...shadows.small,
+  },
+  avatarPlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: `${palette.purple[500]}12`,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarIcon: {
+    fontSize: 18,
+  },
+  promptText: {
+    ...typography.body,
+    color: colors.textTertiary,
+    flex: 1,
+    marginLeft: spacing.sm + 2,
+  },
+});
+
+// ─── Post Type Selector Styles ────────────────────────────────
+
+const selectorStyles = StyleSheet.create({
+  container: {
+    backgroundColor: colors.surface,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    ...shadows.small,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  option: {
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  iconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  icon: {
+    fontSize: 22,
+  },
+  label: {
+    ...typography.captionSmall,
+    color: colors.textSecondary,
+    fontWeight: '600',
+  },
+  closeBtn: {
+    alignSelf: 'center',
+    marginTop: spacing.sm,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+  },
+  closeText: {
+    ...typography.caption,
+    color: colors.textTertiary,
+  },
+});
+
 // ─── Screen Styles ────────────────────────────────────────────
 
 const styles = StyleSheet.create({
@@ -570,7 +732,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  // Header
   headerArea: {
     backgroundColor: colors.background,
     paddingHorizontal: spacing.lg,
@@ -580,88 +741,13 @@ const styles = StyleSheet.create({
     ...typography.h3,
     color: colors.text,
   },
-  // Loading
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  // List
   listContent: {
     paddingBottom: spacing.xxl * 2,
-  },
-  // FAB
-  fab: {
-    position: 'absolute',
-    right: spacing.lg,
-    ...shadows.glow,
-  },
-  fabTouchable: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  fabIcon: {
-    fontSize: 28,
-    color: '#FFFFFF',
-    fontWeight: '600',
-    lineHeight: 32,
-  },
-  // Premium gate
-  premiumGate: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xxl,
-  },
-  premiumGateIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.primary + '15',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  premiumGateIcon: {
-    fontSize: 36,
-  },
-  premiumGateTitle: {
-    ...typography.h4,
-    color: colors.text,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  premiumGateDescription: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: spacing.lg,
-  },
-  premiumGateButton: {
-    width: '100%',
-    height: 52,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-    ...shadows.medium,
-  },
-  premiumGateButtonText: {
-    ...typography.button,
-    color: colors.text,
-    fontWeight: '700',
-  },
-  premiumGateHint: {
-    ...typography.caption,
-    color: colors.textTertiary,
-    textAlign: 'center',
   },
 });
 
@@ -721,9 +807,28 @@ const modalStyles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.divider,
   },
+  headerCenter: {
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
   headerTitle: {
     ...typography.body,
     color: colors.text,
+    fontWeight: '600',
+  },
+  headerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.full,
+    gap: 4,
+  },
+  headerBadgeEmoji: {
+    fontSize: 11,
+  },
+  headerBadgeLabel: {
+    fontSize: 11,
     fontWeight: '600',
   },
   cancelText: {
@@ -765,6 +870,21 @@ const modalStyles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
   },
+  musicFields: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    gap: spacing.sm,
+  },
+  musicInput: {
+    ...typography.body,
+    color: colors.text,
+    backgroundColor: colors.surfaceLight,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
   textInput: {
     ...typography.body,
     color: colors.text,
@@ -774,7 +894,6 @@ const modalStyles = StyleSheet.create({
     maxHeight: 180,
     textAlignVertical: 'top',
   },
-  // Media preview
   mediaPreviewRow: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
@@ -817,7 +936,6 @@ const modalStyles = StyleSheet.create({
     fontSize: 18,
     color: '#FFFFFF',
   },
-  // Bottom bar
   bottomBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',

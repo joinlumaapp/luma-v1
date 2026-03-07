@@ -246,8 +246,8 @@ const matches = [
     isVerified: true,
     lastActivity: minutesAgo(5),
     isNew: true,
-
     matchedAt: hoursAgo(2),
+    lastMessage: 'Bugün sahilde yürüyüş yaptım, hava harikaydı!',
   },
   {
     id: 'match-002',
@@ -261,8 +261,8 @@ const matches = [
     isVerified: true,
     lastActivity: minutesAgo(30),
     isNew: true,
-
     matchedAt: hoursAgo(6),
+    lastMessage: 'O kitabı ben de çok sevmiştim!',
   },
   {
     id: 'match-003',
@@ -276,8 +276,8 @@ const matches = [
     isVerified: true,
     lastActivity: hoursAgo(3),
     isNew: false,
-
     matchedAt: daysAgo(1),
+    lastMessage: 'Yarın akşam müsait misin?',
   },
   {
     id: 'match-004',
@@ -291,8 +291,8 @@ const matches = [
     isVerified: true,
     lastActivity: hoursAgo(8),
     isNew: false,
-
     matchedAt: daysAgo(3),
+    lastMessage: null,
   },
   {
     id: 'match-005',
@@ -306,8 +306,8 @@ const matches = [
     isVerified: true,
     lastActivity: daysAgo(1),
     isNew: false,
-
     matchedAt: daysAgo(5),
+    lastMessage: 'Japonya fotoğraflarını görmelisin!',
   },
   {
     id: 'match-006',
@@ -321,8 +321,8 @@ const matches = [
     isVerified: true,
     lastActivity: daysAgo(2),
     isNew: false,
-
     matchedAt: daysAgo(7),
+    lastMessage: null,
   },
 ];
 
@@ -1248,6 +1248,7 @@ export function seedDevData(): void {
               lastActivity: new Date().toISOString(),
               isNew: true,
               matchedAt: new Date().toISOString(),
+              lastMessage: null,
             },
             ...prev.matches,
           ],

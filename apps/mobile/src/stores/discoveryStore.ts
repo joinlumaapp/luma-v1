@@ -28,6 +28,8 @@ export interface DiscoveryProfile {
   compatExplanation?: string | null;
   /** Top 3 strong compatibility categories */
   strongCategories?: string[];
+  /** Last active timestamp for online status */
+  lastActiveAt?: string | null;
 }
 
 // Undo window duration in milliseconds
@@ -98,6 +100,7 @@ const mapFeedCardToProfile = (card: FeedCard): DiscoveryProfile => ({
   interestTags: card.interestTags ?? [],
   compatExplanation: card.compatExplanation ?? null,
   strongCategories: card.strongCategories ?? [],
+  lastActiveAt: card.lastActiveAt ?? null,
 });
 
 export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({

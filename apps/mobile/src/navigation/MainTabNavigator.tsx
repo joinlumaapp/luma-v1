@@ -20,6 +20,7 @@ import { darkTheme } from '../theme/colors';
 import { spacing, layout, borderRadius } from '../theme/spacing';
 import { typography } from '../theme/typography';
 import { useChatStore } from '../stores/chatStore';
+import { usePresenceTracking } from '../hooks/usePresence';
 import { withDeferredMount } from './LazyScreens';
 
 // Discovery screens
@@ -58,6 +59,7 @@ import { FeedProfileScreen } from '../screens/feed/FeedProfileScreen';
 import { WeeklyReportScreen } from '../screens/discovery/WeeklyReportScreen';
 import { CrossedPathsScreen } from '../screens/discovery/CrossedPathsScreen';
 import { SocialFeedScreen } from '../screens/discovery/SocialFeedScreen';
+import { StoryViewerScreen } from '../screens/discovery/StoryViewerScreen';
 
 // Matches extra screens
 import { DatePlannerScreen } from '../screens/matches/DatePlannerScreen';
@@ -132,6 +134,11 @@ const DiscoveryStackNavigator: React.FC = () => (
       name="ProfilePreview"
       component={ProfilePreviewScreen}
       options={{ animation: 'slide_from_bottom' }}
+    />
+    <DiscoveryStack.Screen
+      name="StoryViewer"
+      component={StoryViewerScreen}
+      options={{ animation: 'fade', presentation: 'fullScreenModal' }}
     />
     <DiscoveryStack.Screen
       name="Filter"
@@ -244,6 +251,7 @@ const ProfileStackNavigator: React.FC = () => (
 );
 
 export const MainTabNavigator: React.FC = () => {
+  usePresenceTracking();
   const totalUnread = useChatStore((state) => state.totalUnread);
   return (
     <Tab.Navigator

@@ -6,7 +6,9 @@ import {
   View,
   Text,
   Image,
+  TouchableOpacity,
   TouchableWithoutFeedback,
+  ScrollView,
   StyleSheet,
   FlatList,
   Animated,
@@ -24,9 +26,16 @@ import type { Match } from '../../stores/matchStore';
 import { SlideIn } from '../../components/animations/SlideIn';
 import { PulseGlow } from '../../components/animations/PulseGlow';
 import { useScreenTracking } from '../../hooks/useAnalytics';
-import { formatMatchActivity } from '../../utils/formatters';
+import { formatMatchActivity, formatActivityStatus } from '../../utils/formatters';
 
 type MatchesNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'MatchesList'>;
+
+// Conversation starter suggestions for matches with no messages
+const CONVERSATION_STARTERS = [
+  'Ilk bulusmada kahve mi yemek mi?',
+  'Hafta sonu doga mi sehir mi?',
+  'En sevdigin muzik turu ne?',
+];
 
 // Skeleton shimmer row component
 const SKELETON_ROWS = 5;
@@ -71,9 +80,10 @@ interface MatchCardProps {
   item: Match;
   index: number;
   onPress: (matchId: string) => void;
+  onStarterPress: (matchId: string, name: string, photoUrl: string, text: string) => void;
 }
 
-const MatchCard = memo<MatchCardProps>(({ item, index, onPress }) => {
+const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onStarterPress }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = useCallback(() => {
@@ -143,6 +153,9 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress }) => {
               avatarContent
             )}
             {item.isNew && <View style={styles.newDot} />}
+            {!item.isNew && formatActivityStatus(item.lastActivity)?.isOnline && (
+              <View style={styles.onlineDot} />
+            )}
           </View>
 
           {/* Info */}
@@ -152,7 +165,40 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress }) => {
                 {item.name}, {item.age}
               </Text>
             </View>
-            <Text style={styles.lastActivity}>{formatMatchActivity(item.lastActivity)}</Text>
+            {item.lastMessage ? (
+              <Text style={styles.messagePreview} numberOfLines={1}>
+                {item.lastMessage}
+              </Text>
+            ) : (
+              <>
+                <Text style={styles.messageHint} numberOfLines={1}>
+                  Henuz mesaj yok {'\u2022'} Ilk mesaji gonder
+                </Text>
+                <View style={styles.startersRow}>
+                  {CONVERSATION_STARTERS.map((text, i) => (
+                    <TouchableWithoutFeedback
+                      key={i}
+                      onPress={() => onStarterPress(item.id, item.name, item.photoUrl, text)}
+                    >
+                      <View style={styles.starterChip}>
+                        <Text style={styles.starterText} numberOfLines={1}>{text}</Text>
+                      </View>
+                    </TouchableWithoutFeedback>
+                  ))}
+                </View>
+              </>
+            )}
+            {(() => {
+              const actStatus = formatActivityStatus(item.lastActivity);
+              if (actStatus) {
+                return (
+                  <Text style={[styles.lastActivity, actStatus.isOnline && styles.lastActivityOnline]}>
+                    {actStatus.text}
+                  </Text>
+                );
+              }
+              return <Text style={styles.lastActivity}>{formatMatchActivity(item.lastActivity)}</Text>;
+            })()}
           </View>
 
           {/* Compatibility */}
@@ -176,7 +222,9 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress }) => {
   prev.item.isNew === next.item.isNew &&
   prev.item.compatibilityPercent === next.item.compatibilityPercent &&
   prev.item.lastActivity === next.item.lastActivity &&
-  prev.index === next.index
+  prev.item.lastMessage === next.item.lastMessage &&
+  prev.index === next.index &&
+  prev.onStarterPress === next.onStarterPress
 ));
 
 MatchCard.displayName = 'MatchCard';
@@ -215,17 +263,108 @@ export const MatchesListScreen: React.FC = () => {
     });
   }, [matches, activeFilter]);
 
+  // Matches not talked to today — no lastMessage or last activity not today
+  // Sorted by compatibility descending, capped at 6
+  const notTalkedToday = useMemo(() => {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    return matches
+      .filter((m) => {
+        if (!m.lastMessage) return true;
+        // If last activity is not today, include
+        const activityDate = m.lastActivity ? m.lastActivity.slice(0, 10) : '';
+        return activityDate !== todayStr;
+      })
+      .sort((a, b) => b.compatibilityPercent - a.compatibilityPercent)
+      .slice(0, 6);
+  }, [matches]);
+
+  const handleNudgePress = useCallback(
+    (match: Match) => {
+      markAsRead(match.id);
+      navigation.navigate('Chat', {
+        matchId: match.id,
+        partnerName: match.name,
+        partnerPhotoUrl: match.photoUrl,
+      });
+    },
+    [markAsRead, navigation],
+  );
+
   const handleMatchPress = useCallback((matchId: string) => {
     markAsRead(matchId);
     navigation.navigate('MatchDetail', { matchId });
   }, [markAsRead, navigation]);
 
+  const handleStarterPress = useCallback(
+    (matchId: string, name: string, photoUrl: string, text: string) => {
+      markAsRead(matchId);
+      navigation.navigate('Chat', {
+        matchId,
+        partnerName: name,
+        partnerPhotoUrl: photoUrl,
+        initialMessage: text,
+      });
+    },
+    [markAsRead, navigation],
+  );
+
   const renderMatchItem = useCallback(
     ({ item, index }: { item: Match; index: number }) => (
-      <MatchCard item={item} index={index} onPress={handleMatchPress} />
+      <MatchCard
+        item={item}
+        index={index}
+        onPress={handleMatchPress}
+        onStarterPress={handleStarterPress}
+      />
     ),
-    [handleMatchPress],
+    [handleMatchPress, handleStarterPress],
   );
+
+  const renderNudgeSection = useCallback(() => {
+    if (notTalkedToday.length === 0) return null;
+    return (
+      <View style={styles.nudgeSection}>
+        <Text style={styles.nudgeTitle}>Bugun konusmadigin eslesmelerin</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.nudgeScroll}
+        >
+          {notTalkedToday.map((match) => {
+            const compatColor =
+              match.compatibilityPercent >= 90
+                ? colors.success
+                : match.compatibilityPercent >= 70
+                  ? colors.accent
+                  : colors.textSecondary;
+            return (
+              <TouchableOpacity
+                key={match.id}
+                style={styles.nudgeCard}
+                activeOpacity={0.8}
+                onPress={() => handleNudgePress(match)}
+              >
+                {match.photoUrl ? (
+                  <Image source={{ uri: match.photoUrl }} style={styles.nudgeAvatar} />
+                ) : (
+                  <View style={styles.nudgeAvatarPlaceholder}>
+                    <Text style={styles.nudgeAvatarInitial}>{match.name.charAt(0)}</Text>
+                  </View>
+                )}
+                <Text style={styles.nudgeName} numberOfLines={1}>{match.name}</Text>
+                <Text style={[styles.nudgeCompat, { color: compatColor }]}>
+                  %{match.compatibilityPercent}
+                </Text>
+                <View style={styles.nudgeCta}>
+                  <Text style={styles.nudgeCtaText}>Mesaj Gonder</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+    );
+  }, [notTalkedToday, handleNudgePress]);
 
   // Stable key extractor reference
   const keyExtractor = useCallback((item: Match) => item.id, []);
@@ -308,7 +447,7 @@ export const MatchesListScreen: React.FC = () => {
         keyExtractor={keyExtractor}
         renderItem={renderMatchItem}
         contentContainerStyle={styles.listContent}
-        ListHeaderComponent={null}
+        ListHeaderComponent={renderNudgeSection}
         ListEmptyComponent={renderEmptyList}
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={ItemSeparator}
@@ -373,6 +512,76 @@ const styles = StyleSheet.create({
     color: colors.textInverse,
     fontWeight: '600',
   },
+  // ── Nudge section ("not talked today") ──
+  nudgeSection: {
+    marginBottom: spacing.md,
+    paddingTop: spacing.xs,
+  },
+  nudgeTitle: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+    fontWeight: '600',
+    marginBottom: spacing.sm,
+  },
+  nudgeScroll: {
+    gap: spacing.sm,
+    paddingRight: spacing.sm,
+  },
+  nudgeCard: {
+    width: 100,
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  nudgeAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginBottom: 6,
+  },
+  nudgeAvatarPlaceholder: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.primary + '30',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  nudgeAvatarInitial: {
+    ...typography.bodyLarge,
+    color: colors.primary,
+    fontWeight: '700',
+  },
+  nudgeName: {
+    ...typography.captionSmall,
+    color: colors.text,
+    fontWeight: '600',
+    marginBottom: 2,
+    textAlign: 'center',
+    width: 88,
+  },
+  nudgeCompat: {
+    ...typography.captionSmall,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  nudgeCta: {
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+  },
+  nudgeCtaText: {
+    ...typography.captionSmall,
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 9,
+  },
   listContent: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -431,9 +640,55 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontWeight: '600',
   },
+  messagePreview: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+    marginBottom: 2,
+  },
+  messageHint: {
+    ...typography.bodySmall,
+    color: colors.textTertiary,
+    fontStyle: 'italic',
+    marginBottom: 2,
+  },
+  startersRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 4,
+    marginBottom: 2,
+  },
+  starterChip: {
+    backgroundColor: colors.primary + '18',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: colors.primary + '30',
+  },
+  starterText: {
+    ...typography.captionSmall,
+    color: colors.primary,
+    fontWeight: '500',
+    fontSize: 10,
+  },
   lastActivity: {
     ...typography.caption,
     color: colors.textTertiary,
+  },
+  lastActivityOnline: {
+    color: colors.success,
+  },
+  onlineDot: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: colors.success,
+    borderWidth: 2,
+    borderColor: colors.background,
   },
   compatibilityContainer: {
     alignItems: 'center',

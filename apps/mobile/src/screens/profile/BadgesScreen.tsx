@@ -47,6 +47,11 @@ const BADGE_VISUALS: BadgeVisual[] = [
   { key: 'couple_goal', name: 'Çift Hedefi', icon: '+', color: '#EF4444', hint: 'İlişki modunu aktifleştir' },
   { key: 'explorer', name: 'Kaşif', icon: 'O', color: '#6366F1', hint: '50 profil keşfet' },
   { key: 'deep_match', name: 'Derin Uyum', icon: 'D', color: '#8B5CF6', hint: '45 soruyu tamamla ve bir eşleşmende de tamamlansın' },
+  { key: 'new_member', name: 'Yeni Üye', icon: '✨', color: '#F59E0B', hint: 'Uygulamaya kayıt ol' },
+  { key: 'popular', name: 'Popüler', icon: '🔥', color: '#EF4444', hint: 'Bir paylaşımda 50+ beğeni veya 7 günde 100+ toplam beğeni al' },
+  { key: 'active', name: 'Aktif', icon: '💬', color: '#3B82F6', hint: '10+ paylaşım yap veya 7 gün üst üste aktif ol' },
+  { key: 'photo_lover', name: 'Fotoğraf Tutkunu', icon: '📸', color: '#EC4899', hint: '14 günde 5+ fotoğraf paylaşımı yap' },
+  { key: 'romantic', name: 'Romantik', icon: '❤️', color: '#F43F5E', hint: '14 günde 3+ yazı/soru paylaş ve 20+ beğeni al' },
 ];
 
 // Merged badge data for display

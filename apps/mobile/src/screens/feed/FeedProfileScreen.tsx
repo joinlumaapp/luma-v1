@@ -22,6 +22,7 @@ import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 import { socialFeedService, type FeedPost } from '../../services/socialFeedService';
+import { profileService } from '../../services/profileService';
 import { getCompatibilityPersonality, type CompatibilityPersonality } from '../../utils/formatters';
 
 type FeedProfileRouteProp = RouteProp<FeedStackParamList, 'FeedProfile'>;
@@ -164,6 +165,9 @@ export const FeedProfileScreen: React.FC = () => {
     socialFeedService.getFeed('ONERILEN', null, null).then((res) => {
       setUserPosts(res.posts.filter((p) => p.userId === userId).slice(0, 6));
     });
+
+    // Record profile view
+    profileService.trackProfileView(userId);
 
     return () => clearTimeout(timer);
   }, [userId]);

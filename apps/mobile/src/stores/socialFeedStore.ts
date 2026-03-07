@@ -19,6 +19,7 @@ interface SocialFeedState {
   isCreating: boolean;
   cursor: string | null;
   hasMore: boolean;
+  viewedStoryUserIds: Set<string>;
 
   // Actions
   fetchFeed: () => Promise<void>;
@@ -30,6 +31,7 @@ interface SocialFeedState {
   toggleFollow: (userId: string) => Promise<void>;
   createPost: (data: CreatePostRequest) => Promise<void>;
   incrementCommentCount: (postId: string) => void;
+  markStoryViewed: (userId: string) => void;
 }
 
 export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
@@ -42,6 +44,7 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
   isCreating: false,
   cursor: null,
   hasMore: false,
+  viewedStoryUserIds: new Set<string>(),
 
   // Actions
   fetchFeed: async () => {
@@ -135,25 +138,30 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
   },
 
   toggleFollow: async (userId: string) => {
-    // Optimistic update
-    set((state) => ({
-      posts: state.posts.map((post) =>
+    const { filter } = get();
+    // Find current follow state from first matching post
+    const currentPost = get().posts.find((p) => p.userId === userId);
+    const wasFollowing = currentPost?.isFollowing ?? false;
+
+    // Optimistic update: toggle isFollowing flag on all posts by this user
+    set((state) => {
+      const updatedPosts = state.posts.map((post) =>
         post.userId === userId
-          ? { ...post, isFollowing: !post.isFollowing }
+          ? { ...post, isFollowing: !wasFollowing }
           : post
-      ),
-    }));
+      );
+      // If on TAKIP tab and unfollowing, remove their posts from view
+      if (filter === 'TAKIP' && wasFollowing) {
+        return { posts: updatedPosts.filter((p) => p.userId !== userId) };
+      }
+      return { posts: updatedPosts };
+    });
+
     try {
       await socialFeedService.toggleFollow(userId);
     } catch {
-      // Revert on error
-      set((state) => ({
-        posts: state.posts.map((post) =>
-          post.userId === userId
-            ? { ...post, isFollowing: !post.isFollowing }
-            : post
-        ),
-      }));
+      // Revert on error — re-fetch to get correct state
+      get().fetchFeed();
     }
   },
 
@@ -178,5 +186,13 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
     } catch {
       set({ isCreating: false });
     }
+  },
+
+  markStoryViewed: (userId: string) => {
+    set((state) => {
+      const next = new Set(state.viewedStoryUserIds);
+      next.add(userId);
+      return { viewedStoryUserIds: next };
+    });
   },
 }));

@@ -1,5 +1,5 @@
 // FeedCard — individual post card for Social Feed
-// Features: avatar, follow button, content, photo grid, video thumbnail, actions
+// Features: avatar, distance, content, photo grid, video, music, actions, compatibility badge
 
 import React, { useState, useCallback, useRef } from 'react';
 import {
@@ -10,7 +10,7 @@ import {
   StyleSheet,
   Animated,
 } from 'react-native';
-import { colors } from '../../theme/colors';
+import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 import { FEED_TOPICS, type FeedPost } from '../../services/socialFeedService';
@@ -95,6 +95,41 @@ const MediaSection: React.FC<MediaSectionProps> = ({ photos, videoUrl }) => {
   );
 };
 
+// ─── Music Card ──────────────────────────────────────────────
+
+interface MusicCardProps {
+  title: string;
+  artist: string;
+}
+
+const MusicCard: React.FC<MusicCardProps> = ({ title, artist }) => (
+  <View style={musicStyles.container}>
+    <View style={musicStyles.iconCircle}>
+      <Text style={musicStyles.icon}>{'\uD83C\uDFB5'}</Text>
+    </View>
+    <View style={musicStyles.info}>
+      <Text style={musicStyles.title} numberOfLines={1}>{title}</Text>
+      <Text style={musicStyles.artist} numberOfLines={1}>{artist}</Text>
+    </View>
+    <View style={musicStyles.playBtn}>
+      <Text style={musicStyles.playIcon}>{'▶'}</Text>
+    </View>
+  </View>
+);
+
+// ─── Question Card ───────────────────────────────────────────
+
+interface QuestionCardProps {
+  content: string;
+}
+
+const QuestionCard: React.FC<QuestionCardProps> = ({ content }) => (
+  <View style={questionStyles.container}>
+    <Text style={questionStyles.icon}>{'❓'}</Text>
+    <Text style={questionStyles.text}>{content}</Text>
+  </View>
+);
+
 // ─── FeedCard Component ───────────────────────────────────────
 
 interface FeedCardProps {
@@ -110,6 +145,10 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
   const likeScale = useRef(new Animated.Value(1)).current;
 
   const topicOption = FEED_TOPICS.find((t) => t.type === post.topic);
+
+  const handleFollowPress = useCallback(() => {
+    onFollow(post.userId);
+  }, [onFollow, post.userId]);
 
   const handleLikePress = useCallback(() => {
     Animated.sequence([
@@ -132,10 +171,6 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
     onComment(post.id);
   }, [onComment, post.id]);
 
-  const handleFollowPress = useCallback(() => {
-    onFollow(post.userId);
-  }, [onFollow, post.userId]);
-
   const handleProfilePress = useCallback(() => {
     onProfilePress(post.userId);
   }, [onProfilePress, post.userId]);
@@ -145,12 +180,13 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
   }, []);
 
   const isLongContent = post.content.length > 120;
-  // Don't show follow button on own posts
   const isOwnPost = post.userId === 'dev-user-001';
+  const isQuestion = post.postType === 'question';
+  const isMusic = post.postType === 'music' && post.musicTitle && post.musicArtist;
 
   return (
     <View style={styles.card}>
-      {/* User Row */}
+      {/* ── Top Section: Avatar, Name, Distance ── */}
       <View style={styles.userRow}>
         <TouchableOpacity onPress={handleProfilePress} activeOpacity={0.7}>
           <Image source={{ uri: post.userAvatarUrl }} style={styles.avatar} />
@@ -159,10 +195,15 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
           <View style={styles.nameRow}>
             <Text style={styles.userName}>{post.userName}</Text>
             {post.isVerified && <Text style={styles.verifiedBadge}>{'✓'}</Text>}
+            {post.distance > 0 && (
+              <>
+                <Text style={styles.dotSeparator}>{'•'}</Text>
+                <Text style={styles.distanceText}>{post.distance} km uzakta</Text>
+              </>
+            )}
           </View>
           <Text style={styles.timeText}>{formatTimeAgo(post.createdAt)}</Text>
         </TouchableOpacity>
-        {/* Follow button */}
         {!isOwnPost && (
           <TouchableOpacity
             style={[styles.followButton, post.isFollowing && styles.followButtonActive]}
@@ -170,7 +211,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
             activeOpacity={0.7}
           >
             <Text style={[styles.followButtonText, post.isFollowing && styles.followButtonTextActive]}>
-              {post.isFollowing ? 'Takip' : 'Takip Et'}
+              {post.isFollowing ? 'Takip Ediliyor' : 'Takip Et'}
             </Text>
           </TouchableOpacity>
         )}
@@ -186,27 +227,44 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
         </View>
       )}
 
-      {/* Content */}
-      <TouchableOpacity
-        activeOpacity={0.9}
-        onPress={isLongContent ? toggleExpand : undefined}
-        disabled={!isLongContent}
-      >
-        <Text
-          style={styles.contentText}
-          numberOfLines={expanded ? undefined : 3}
+      {/* ── Middle Section: Content ── */}
+      {isQuestion ? (
+        <QuestionCard content={post.content} />
+      ) : (
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={isLongContent ? toggleExpand : undefined}
+          disabled={!isLongContent}
         >
-          {post.content}
-        </Text>
-        {isLongContent && !expanded && (
-          <Text style={styles.readMore}>devamını oku</Text>
-        )}
-      </TouchableOpacity>
+          <Text
+            style={styles.contentText}
+            numberOfLines={expanded ? undefined : 3}
+          >
+            {post.content}
+          </Text>
+          {isLongContent && !expanded && (
+            <Text style={styles.readMore}>devamını oku</Text>
+          )}
+        </TouchableOpacity>
+      )}
 
       {/* Media (photos + video) */}
       <MediaSection photos={post.photoUrls} videoUrl={post.videoUrl} />
 
-      {/* Action Row */}
+      {/* Music card */}
+      {isMusic && (
+        <MusicCard title={post.musicTitle!} artist={post.musicArtist!} />
+      )}
+
+      {/* Compatibility Badge */}
+      {!isOwnPost && post.compatibilityScore > 0 && (
+        <View style={styles.compatBadge}>
+          <Text style={styles.compatEmoji}>{'\uD83D\uDC9C'}</Text>
+          <Text style={styles.compatText}>{post.compatibilityScore}% Uyum</Text>
+        </View>
+      )}
+
+      {/* ── Bottom Section: Like, Comment, View Profile ── */}
       <View style={styles.actionRow}>
         <TouchableOpacity
           style={styles.actionButton}
@@ -220,7 +278,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
               { transform: [{ scale: likeScale }] },
             ]}
           >
-            {post.isLiked ? '\uD83D\uDC9C' : '\u2661'}
+            {post.isLiked ? '\uD83D\uDC9C' : '♡'}
           </Animated.Text>
           <Text style={[styles.actionCount, post.isLiked && styles.actionCountLiked]}>
             {post.likeCount > 0 ? post.likeCount : ''}
@@ -238,9 +296,17 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionButton} activeOpacity={0.7}>
-          <Text style={styles.actionIcon}>{'\u2197\uFE0F'}</Text>
-        </TouchableOpacity>
+        <View style={{ flex: 1 }} />
+
+        {!isOwnPost && (
+          <TouchableOpacity
+            style={styles.profileButton}
+            onPress={handleProfilePress}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.profileButtonText}>Profili Gör</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -288,6 +354,14 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontWeight: '700',
   },
+  dotSeparator: {
+    fontSize: 10,
+    color: colors.textTertiary,
+  },
+  distanceText: {
+    ...typography.caption,
+    color: colors.textTertiary,
+  },
   timeText: {
     ...typography.caption,
     color: colors.textTertiary,
@@ -313,7 +387,7 @@ const styles = StyleSheet.create({
   followButtonTextActive: {
     color: colors.textSecondary,
   },
-  // Topic badge — now below user row
+  // Topic badge
   topicBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -344,6 +418,26 @@ const styles = StyleSheet.create({
     marginTop: -spacing.xs,
     marginBottom: spacing.sm,
   },
+  // Compatibility badge
+  compatBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: `${palette.purple[500]}12`,
+    paddingHorizontal: spacing.sm + 4,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: borderRadius.full,
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
+  },
+  compatEmoji: {
+    fontSize: 13,
+  },
+  compatText: {
+    ...typography.caption,
+    color: palette.purple[500],
+    fontWeight: '600',
+  },
   // Action row
   actionRow: {
     flexDirection: 'row',
@@ -373,6 +467,18 @@ const styles = StyleSheet.create({
   actionCountLiked: {
     color: colors.primary,
     fontWeight: '600',
+  },
+  profileButton: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  profileButtonText: {
+    ...typography.captionSmall,
+    color: colors.primary,
+    fontWeight: '700',
   },
 });
 
@@ -466,5 +572,81 @@ const mediaStyles = StyleSheet.create({
   tripleSub: {
     flex: 1,
     backgroundColor: colors.surfaceLight,
+  },
+});
+
+// ─── Music Card Styles ────────────────────────────────────────
+
+const musicStyles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: `${palette.purple[500]}08`,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: `${palette.purple[500]}20`,
+  },
+  iconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: `${palette.purple[500]}15`,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  icon: {
+    fontSize: 20,
+  },
+  info: {
+    flex: 1,
+    marginLeft: spacing.sm + 2,
+  },
+  title: {
+    ...typography.body,
+    color: colors.text,
+    fontWeight: '600',
+  },
+  artist: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  playBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  playIcon: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    marginLeft: 2,
+  },
+});
+
+// ─── Question Card Styles ─────────────────────────────────────
+
+const questionStyles = StyleSheet.create({
+  container: {
+    backgroundColor: `${palette.info}08`,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderLeftWidth: 3,
+    borderLeftColor: palette.info,
+  },
+  icon: {
+    fontSize: 20,
+    marginBottom: spacing.xs,
+  },
+  text: {
+    ...typography.body,
+    color: colors.text,
+    lineHeight: 24,
+    fontStyle: 'italic',
   },
 });

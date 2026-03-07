@@ -89,6 +89,41 @@ export const formatMatchActivity = (dateString: string): string => {
 };
 
 /**
+ * Format user activity status for display.
+ * Online (within 2 min) → "Su an aktif"
+ * Recently → "5 dk once aktifti", "1 saat once aktifti"
+ * Today → "Bugun aktifti"
+ * Older → null (don't show)
+ */
+export const formatActivityStatus = (
+  lastActiveAt: string | null | undefined,
+): { text: string; isOnline: boolean } | null => {
+  if (!lastActiveAt) return null;
+  const date = new Date(lastActiveAt);
+  if (isNaN(date.getTime())) return null;
+
+  const diffMs = Date.now() - date.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+  if (diffMins < 2) return { text: 'Su an aktif', isOnline: true };
+  if (diffMins < 60) return { text: `${diffMins} dk once aktifti`, isOnline: false };
+  if (diffHours < 24) return { text: `${diffHours} saat once aktifti`, isOnline: false };
+
+  // Check if today
+  const now = new Date();
+  if (
+    date.getDate() === now.getDate() &&
+    date.getMonth() === now.getMonth() &&
+    date.getFullYear() === now.getFullYear()
+  ) {
+    return { text: 'Bugun aktifti', isOnline: false };
+  }
+
+  return null;
+};
+
+/**
  * Format gold amount with Turkish locale
  */
 export const formatGold = (amount: number): string => {

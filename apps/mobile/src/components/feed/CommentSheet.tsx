@@ -1,4 +1,5 @@
 // CommentSheet — bottom sheet for viewing and adding comments on feed posts
+// Features: comment likes, replies (1-level nesting), profanity filter
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
@@ -19,7 +20,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
-import { socialFeedService, containsProfanity, PROFANITY_WARNING, type FeedComment } from '../../services/socialFeedService';
+import {
+  socialFeedService,
+  containsProfanity,
+  PROFANITY_WARNING,
+  type FeedComment,
+  type CommentReply,
+} from '../../services/socialFeedService';
 
 interface CommentSheetProps {
   visible: boolean;
@@ -41,21 +48,80 @@ const formatTimeAgo = (dateString: string): string => {
   return `${Math.floor(diffMs / 86_400_000)} gun`;
 };
 
-const CommentItem: React.FC<{ comment: FeedComment }> = ({ comment }) => (
-  <View style={styles.commentItem}>
-    <Image source={{ uri: comment.userAvatarUrl }} style={styles.commentAvatar} />
-    <View style={styles.commentContent}>
+// ─── Reply Item ──────────────────────────────────────────────────────
+
+const ReplyItem: React.FC<{ reply: CommentReply }> = ({ reply }) => (
+  <View style={styles.replyItem}>
+    <Image source={{ uri: reply.userAvatarUrl }} style={styles.replyAvatar} />
+    <View style={styles.replyContent}>
       <View style={styles.commentHeader}>
-        <Text style={styles.commentUserName}>{comment.userName}</Text>
-        <Text style={styles.commentTime}>{formatTimeAgo(comment.createdAt)}</Text>
+        <Text style={styles.replyUserName}>{reply.userName}</Text>
+        <Text style={styles.commentTime}>{formatTimeAgo(reply.createdAt)}</Text>
       </View>
-      <Text style={styles.commentText}>{comment.content}</Text>
-      {comment.likeCount > 0 && (
-        <Text style={styles.commentLikes}>{comment.likeCount} begeni</Text>
-      )}
+      <Text style={styles.replyText}>{reply.content}</Text>
     </View>
   </View>
 );
+
+// ─── Comment Item ────────────────────────────────────────────────────
+
+interface CommentItemProps {
+  comment: FeedComment;
+  onLike: (commentId: string) => void;
+  onReply: (commentId: string, userName: string) => void;
+}
+
+const CommentItem: React.FC<CommentItemProps> = ({ comment, onLike, onReply }) => (
+  <View>
+    <View style={styles.commentItem}>
+      <Image source={{ uri: comment.userAvatarUrl }} style={styles.commentAvatar} />
+      <View style={styles.commentContent}>
+        <View style={styles.commentHeader}>
+          <Text style={styles.commentUserName}>{comment.userName}</Text>
+          <Text style={styles.commentTime}>{formatTimeAgo(comment.createdAt)}</Text>
+        </View>
+        <Text style={styles.commentText}>{comment.content}</Text>
+
+        {/* Actions row: like + reply */}
+        <View style={styles.actionsRow}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => onLike(comment.id)}
+            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+          >
+            <Text style={[styles.heartIcon, comment.isLiked && styles.heartIconLiked]}>
+              {comment.isLiked ? '\u2764\uFE0F' : '\u2661'}
+            </Text>
+            {comment.likeCount > 0 && (
+              <Text style={[styles.actionCount, comment.isLiked && styles.actionCountLiked]}>
+                {comment.likeCount}
+              </Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => onReply(comment.id, comment.userName)}
+            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+          >
+            <Text style={styles.replyAction}>Yanitla</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+
+    {/* Nested replies (1 level) */}
+    {comment.replies.length > 0 && (
+      <View style={styles.repliesContainer}>
+        {comment.replies.map((reply) => (
+          <ReplyItem key={reply.id} reply={reply} />
+        ))}
+      </View>
+    )}
+  </View>
+);
+
+// ─── Main Sheet ──────────────────────────────────────────────────────
 
 export const CommentSheet: React.FC<CommentSheetProps> = ({
   visible,
@@ -70,6 +136,9 @@ export const CommentSheet: React.FC<CommentSheetProps> = ({
   const [newComment, setNewComment] = useState('');
   const [isSending, setIsSending] = useState(false);
 
+  // Reply mode state
+  const [replyingTo, setReplyingTo] = useState<{ commentId: string; userName: string } | null>(null);
+
   useEffect(() => {
     if (visible && postId) {
       setIsLoading(true);
@@ -80,31 +149,100 @@ export const CommentSheet: React.FC<CommentSheetProps> = ({
     } else {
       setComments([]);
       setNewComment('');
+      setReplyingTo(null);
     }
   }, [visible, postId]);
 
+  // ── Like a comment ──
+  const handleLikeComment = useCallback((commentId: string) => {
+    // Optimistic toggle
+    setComments((prev) =>
+      prev.map((c) =>
+        c.id === commentId
+          ? {
+              ...c,
+              isLiked: !c.isLiked,
+              likeCount: c.isLiked ? c.likeCount - 1 : c.likeCount + 1,
+            }
+          : c
+      )
+    );
+    socialFeedService.likeComment(commentId).catch(() => {
+      // Revert on error
+      setComments((prev) =>
+        prev.map((c) =>
+          c.id === commentId
+            ? {
+                ...c,
+                isLiked: !c.isLiked,
+                likeCount: c.isLiked ? c.likeCount - 1 : c.likeCount + 1,
+              }
+            : c
+        )
+      );
+    });
+  }, []);
+
+  // ── Start replying ──
+  const handleStartReply = useCallback((commentId: string, userName: string) => {
+    setReplyingTo({ commentId, userName });
+    setNewComment('');
+    setTimeout(() => inputRef.current?.focus(), 100);
+  }, []);
+
+  // ── Cancel reply mode ──
+  const handleCancelReply = useCallback(() => {
+    setReplyingTo(null);
+    setNewComment('');
+  }, []);
+
+  // ── Send comment or reply ──
   const handleSend = useCallback(async () => {
     if (!postId || newComment.trim().length === 0 || isSending) return;
     if (containsProfanity(newComment.trim())) {
-      Alert.alert('Uyarı', PROFANITY_WARNING);
+      Alert.alert('Uyari', PROFANITY_WARNING);
       return;
     }
     setIsSending(true);
     try {
-      const comment = await socialFeedService.addComment(postId, newComment.trim());
-      setComments((prev) => [...prev, comment]);
+      if (replyingTo) {
+        // Sending a reply
+        const reply = await socialFeedService.replyToComment(
+          postId,
+          replyingTo.commentId,
+          newComment.trim()
+        );
+        setComments((prev) =>
+          prev.map((c) =>
+            c.id === replyingTo.commentId
+              ? { ...c, replies: [...c.replies, reply] }
+              : c
+          )
+        );
+        setReplyingTo(null);
+      } else {
+        // Sending a new comment
+        const comment = await socialFeedService.addComment(postId, newComment.trim());
+        setComments((prev) => [...prev, comment]);
+        onCommentAdded(postId);
+      }
       setNewComment('');
-      onCommentAdded(postId);
     } finally {
       setIsSending(false);
     }
-  }, [postId, newComment, isSending, onCommentAdded]);
+  }, [postId, newComment, isSending, onCommentAdded, replyingTo]);
 
   const keyExtractor = useCallback((item: FeedComment) => item.id, []);
 
   const renderComment = useCallback(
-    ({ item }: { item: FeedComment }) => <CommentItem comment={item} />,
-    [],
+    ({ item }: { item: FeedComment }) => (
+      <CommentItem
+        comment={item}
+        onLike={handleLikeComment}
+        onReply={handleStartReply}
+      />
+    ),
+    [handleLikeComment, handleStartReply],
   );
 
   return (
@@ -147,12 +285,24 @@ export const CommentSheet: React.FC<CommentSheetProps> = ({
             />
           )}
 
+          {/* Reply indicator */}
+          {replyingTo && (
+            <View style={styles.replyIndicator}>
+              <Text style={styles.replyIndicatorText}>
+                {replyingTo.userName} kullanicisina yanitliyorsun
+              </Text>
+              <TouchableOpacity onPress={handleCancelReply}>
+                <Text style={styles.replyIndicatorCancel}>{'\u2715'}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           {/* Input bar */}
           <View style={styles.inputBar}>
             <TextInput
               ref={inputRef}
               style={styles.textInput}
-              placeholder="Yorum yaz..."
+              placeholder={replyingTo ? 'Yanit yaz...' : 'Yorum yaz...'}
               placeholderTextColor={colors.textTertiary}
               value={newComment}
               onChangeText={setNewComment}
@@ -249,7 +399,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
   },
-  // Comment item
+
+  // ── Comment item ──
   commentItem: {
     flexDirection: 'row',
     paddingVertical: spacing.sm + 2,
@@ -284,12 +435,96 @@ const styles = StyleSheet.create({
     color: colors.text,
     lineHeight: 20,
   },
-  commentLikes: {
+
+  // ── Actions row (like + reply) ──
+  actionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.lg,
+    marginTop: 6,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  heartIcon: {
+    fontSize: 15,
+    color: colors.textTertiary,
+  },
+  heartIconLiked: {
+    color: colors.error,
+  },
+  actionCount: {
     ...typography.captionSmall,
     color: colors.textTertiary,
-    marginTop: 4,
+    fontWeight: '600',
   },
-  // Input bar
+  actionCountLiked: {
+    color: colors.error,
+  },
+  replyAction: {
+    ...typography.captionSmall,
+    color: colors.textSecondary,
+    fontWeight: '600',
+  },
+
+  // ── Nested replies ──
+  repliesContainer: {
+    marginLeft: 36 + spacing.sm, // align with parent comment content
+    borderLeftWidth: 1.5,
+    borderLeftColor: colors.divider,
+    paddingLeft: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  replyItem: {
+    flexDirection: 'row',
+    paddingVertical: spacing.xs + 2,
+    gap: spacing.xs,
+  },
+  replyAvatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: colors.surfaceLight,
+  },
+  replyContent: {
+    flex: 1,
+  },
+  replyUserName: {
+    ...typography.captionSmall,
+    color: colors.text,
+    fontWeight: '600',
+  },
+  replyText: {
+    ...typography.bodySmall,
+    color: colors.text,
+    lineHeight: 18,
+  },
+
+  // ── Reply indicator ──
+  replyIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xs,
+    backgroundColor: colors.surfaceLight,
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
+  },
+  replyIndicatorText: {
+    ...typography.captionSmall,
+    color: colors.textSecondary,
+  },
+  replyIndicatorCancel: {
+    fontSize: 14,
+    color: colors.textTertiary,
+    fontWeight: '600',
+    paddingHorizontal: spacing.xs,
+  },
+
+  // ── Input bar ──
   inputBar: {
     flexDirection: 'row',
     alignItems: 'flex-end',

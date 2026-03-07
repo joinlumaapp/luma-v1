@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { DiscoveryStackParamList } from '../../navigation/types';
 import { compatibilityService, type CompatibilityScore } from '../../services/compatibilityService';
+import { discoveryService } from '../../services/discoveryService';
 import { VoiceIntroPlayer } from '../../components/profile/VoiceIntro';
 import { BadgeShowcase } from '../../components/badges/BadgeShowcase';
 import { CompatibilityPreviewCard } from './CompatibilityPreviewCard';
@@ -22,8 +23,11 @@ import { colors, glassmorphism } from '../../theme/colors';
 import { palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
-import { useDiscoveryStore } from '../../stores/discoveryStore';
+import { useDiscoveryStore, type DiscoveryProfile } from '../../stores/discoveryStore';
+import { useMatchStore } from '../../stores/matchStore';
+import { matchService } from '../../services/matchService';
 import { INTEREST_OPTIONS } from '../../constants/config';
+import { ActivityStatus } from '../../components/common/ActivityStatus';
 
 // Interest tag lookup maps
 const INTEREST_EMOJI_MAP: Record<string, string> = {};
@@ -131,7 +135,82 @@ export const ProfilePreviewScreen: React.FC = () => {
 
   const cards = useDiscoveryStore((state) => state.cards);
   const swipeAction = useDiscoveryStore((state) => state.swipe);
-  const profile = cards.find((c) => c.id === userId);
+  const cardProfile = cards.find((c) => c.id === userId) ?? null;
+
+  // Fallback: if profile not in discovery cards (e.g. opened from Beğenenler),
+  // build a DiscoveryProfile from the likes data
+  const [likedProfile, setLikedProfile] = useState<DiscoveryProfile | null>(null);
+
+  useEffect(() => {
+    if (cardProfile) return; // Already found in discovery cards
+    let cancelled = false;
+    discoveryService.getLikesYou().then((res) => {
+      if (cancelled) return;
+      const liked = res.likes.find((l) => l.userId === userId);
+      if (liked) {
+        setLikedProfile({
+          id: liked.userId,
+          name: liked.firstName,
+          age: liked.age,
+          city: '',
+          compatibilityPercent: liked.compatibilityPercent,
+          photoUrls: [liked.photoUrl],
+          bio: '',
+          intentionTag: '',
+          isVerified: false,
+        });
+      }
+    });
+    return () => { cancelled = true; };
+  }, [userId, cardProfile]);
+
+  // Fallback: if profile not in discovery cards or likes (e.g. opened from stories),
+  // build a DiscoveryProfile from match data
+  const [matchProfile, setMatchProfile] = useState<DiscoveryProfile | null>(null);
+  const matches = useMatchStore((state) => state.matches);
+
+  useEffect(() => {
+    if (cardProfile || likedProfile) return;
+    let cancelled = false;
+
+    // First check already-loaded matches list
+    const existing = matches.find((m) => m.userId === userId);
+    if (existing) {
+      // Fetch full detail for photos/bio
+      matchService.getMatch(existing.id).then((detail) => {
+        if (cancelled) return;
+        setMatchProfile({
+          id: detail.userId,
+          name: detail.name,
+          age: detail.age,
+          city: detail.city,
+          compatibilityPercent: detail.overallCompatibility,
+          photoUrls: detail.photos.map((p) => p.url),
+          bio: detail.bio,
+          intentionTag: detail.intentionTag,
+          isVerified: detail.isVerified,
+        });
+      }).catch(() => {
+        if (cancelled) return;
+        // Use basic match data as last resort
+        setMatchProfile({
+          id: existing.userId,
+          name: existing.name,
+          age: existing.age,
+          city: existing.city,
+          compatibilityPercent: existing.compatibilityPercent,
+          photoUrls: [existing.photoUrl],
+          bio: '',
+          intentionTag: existing.intentionTag,
+          isVerified: existing.isVerified,
+        });
+      });
+    }
+
+    return () => { cancelled = true; };
+  }, [userId, cardProfile, likedProfile, matches]);
+
+  const profile = cardProfile ?? likedProfile ?? matchProfile;
 
   const [compatibility, setCompatibility] = useState<CompatibilityScore | null>(null);
   const [loadingCompat, setLoadingCompat] = useState(true);
@@ -234,6 +313,9 @@ export const ProfilePreviewScreen: React.FC = () => {
               profile.distanceKm != null ? `${profile.distanceKm.toFixed(1)} km` : null,
             ].filter(Boolean).join(' \u2022 ')}
           </Text>
+
+          {/* Activity status */}
+          <ActivityStatus lastActiveAt={profile.lastActiveAt} variant="full" />
 
           {/* Intention tag */}
           <View style={styles.intentionChip}>

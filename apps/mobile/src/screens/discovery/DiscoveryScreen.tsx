@@ -53,6 +53,8 @@ import { discoveryService } from '../../services/discoveryService';
 import type { LoginStreakResponse } from '../../services/discoveryService';
 import { StreakBanner } from '../../components/streak/StreakBanner';
 import { SUPER_LIKE_CONFIG } from '../../constants/config';
+import { BoostModal } from '../../components/boost/BoostModal';
+import type { BoostStatusResponse } from '../../services/discoveryService';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
@@ -87,6 +89,7 @@ interface StoryBubbleProps {
   initial: string;
   ringColor: string;
   badgeEmoji?: string;
+  isViewed?: boolean;
   onPress: () => void;
   testID: string;
 }
@@ -97,6 +100,7 @@ const StoryBubble: React.FC<StoryBubbleProps> = ({
   initial,
   ringColor,
   badgeEmoji,
+  isViewed,
   onPress,
   testID,
 }) => (
@@ -107,9 +111,16 @@ const StoryBubble: React.FC<StoryBubbleProps> = ({
     testID={testID}
     style={storyStyles.bubble}
   >
-    <View style={[storyStyles.ring, { borderColor: ringColor }]}>
+    <View style={[
+      storyStyles.ring,
+      { borderColor: ringColor },
+      isViewed && storyStyles.ringViewed,
+    ]}>
       {photoUrl ? (
-        <Image source={{ uri: photoUrl }} style={storyStyles.avatar} />
+        <Image
+          source={{ uri: photoUrl }}
+          style={[storyStyles.avatar, isViewed && storyStyles.avatarViewed]}
+        />
       ) : (
         <View style={storyStyles.avatarPlaceholder}>
           <Text style={storyStyles.avatarInitial}>{initial}</Text>
@@ -121,7 +132,9 @@ const StoryBubble: React.FC<StoryBubbleProps> = ({
         <Text style={storyStyles.badgeText}>{badgeEmoji}</Text>
       </View>
     )}
-    <Text style={storyStyles.label} numberOfLines={1}>{label}</Text>
+    <Text style={[storyStyles.label, isViewed && storyStyles.labelViewed]} numberOfLines={1}>
+      {label}
+    </Text>
   </Pressable>
 );
 
@@ -135,8 +148,9 @@ interface StoriesRowProps {
 
 const StoriesRow: React.FC<StoriesRowProps> = ({ navigation, userFirstName, userPhotoUrl }) => {
   const posts = useSocialFeedStore((s) => s.posts);
+  const viewedStoryUserIds = useSocialFeedStore((s) => s.viewedStoryUserIds);
 
-  // Deduplicate followed users by userId
+  // Deduplicate followed users by userId, then sort: unviewed first, viewed after
   const followedUsers = useMemo(() => {
     const seen = new Set<string>();
     const result: { userId: string; name: string; avatarUrl: string }[] = [];
@@ -147,8 +161,13 @@ const StoriesRow: React.FC<StoriesRowProps> = ({ navigation, userFirstName, user
       }
       if (result.length >= 8) break;
     }
-    return result;
-  }, [posts]);
+    // Sort: unviewed stories first, viewed stories after
+    return result.sort((a, b) => {
+      const aViewed = viewedStoryUserIds.has(a.userId) ? 1 : 0;
+      const bViewed = viewedStoryUserIds.has(b.userId) ? 1 : 0;
+      return aViewed - bViewed;
+    });
+  }, [posts, viewedStoryUserIds]);
 
   return (
     <ScrollView
@@ -165,17 +184,25 @@ const StoriesRow: React.FC<StoriesRowProps> = ({ navigation, userFirstName, user
         onPress={() => navigation.navigate('ProfileTab', { screen: 'Profile' })}
         testID="story-self"
       />
-      {followedUsers.map((user) => (
-        <StoryBubble
-          key={user.userId}
-          label={user.name}
-          photoUrl={user.avatarUrl}
-          initial={user.name ? user.name[0] : '?'}
-          ringColor={palette.purple[400]}
-          onPress={() => navigation.navigate('ProfilePreview', { userId: user.userId })}
-          testID={`story-follow-${user.userId}`}
-        />
-      ))}
+      {followedUsers.map((user) => {
+        const isViewed = viewedStoryUserIds.has(user.userId);
+        return (
+          <StoryBubble
+            key={user.userId}
+            label={user.name}
+            photoUrl={user.avatarUrl}
+            initial={user.name ? user.name[0] : '?'}
+            ringColor={isViewed ? palette.purple[800] : palette.purple[400]}
+            isViewed={isViewed}
+            onPress={() => navigation.navigate('StoryViewer', {
+              userId: user.userId,
+              userName: user.name,
+              userAvatarUrl: user.avatarUrl,
+            })}
+            testID={`story-follow-${user.userId}`}
+          />
+        );
+      })}
     </ScrollView>
   );
 };
@@ -249,6 +276,31 @@ export const DiscoveryScreen: React.FC = () => {
   const handleStreakDismiss = useCallback(() => {
     setStreakData(null);
   }, []);
+
+  // ─── Boost state ────────────────────────────────────────
+  const [showBoostModal, setShowBoostModal] = useState(false);
+  const [boostStatus, setBoostStatus] = useState<BoostStatusResponse>({ isActive: false });
+  const [goldBalance, setGoldBalance] = useState(500); // Mock balance
+
+  const boostFetched = useRef(false);
+  useEffect(() => {
+    if (boostFetched.current) return;
+    boostFetched.current = true;
+    discoveryService.getBoostStatus().then(setBoostStatus).catch(() => {});
+  }, []);
+
+  const handleBoostActivate = useCallback(async (durationMinutes: number) => {
+    const result = await discoveryService.activateBoost(durationMinutes);
+    if (result.success) {
+      setBoostStatus({ isActive: true, endsAt: result.endsAt, remainingSeconds: durationMinutes * 60 });
+      setGoldBalance(result.goldBalance);
+    }
+  }, []);
+
+  const handleBoostBuyGold = useCallback(() => {
+    setShowBoostModal(false);
+    navigation.navigate('ProfileTab', { screen: 'Packages' } as never);
+  }, [navigation]);
 
   // ─── Time-based greeting ──────────────────────────────────
   const greeting = useMemo(() => {
@@ -691,6 +743,16 @@ export const DiscoveryScreen: React.FC = () => {
           </View>
           <View style={styles.headerRight}>
             <Pressable
+              onPress={() => setShowBoostModal(true)}
+              accessibilityLabel="Boost"
+              accessibilityRole="button"
+              accessibilityHint="Profilini öne çıkarmak için dokunun"
+            >
+              <View style={[styles.filterButton, boostStatus.isActive && styles.boostButtonActive]} testID="discovery-boost-btn">
+                <Text style={styles.boostIcon}>{'\u26A1'}</Text>
+              </View>
+            </Pressable>
+            <Pressable
               onPress={() => navigation.navigate('Filter')}
               accessibilityLabel="Filtreleri aç"
               accessibilityRole="button"
@@ -732,6 +794,7 @@ export const DiscoveryScreen: React.FC = () => {
                 earnedBadges: nextCard.earnedBadges ?? [],
                 feedScore: 0,
                 interestTags: nextCard.interestTags ?? [],
+                lastActiveAt: nextCard.lastActiveAt ?? null,
               }}
               onCompatTap={handleCompatTap}
             />
@@ -768,6 +831,7 @@ export const DiscoveryScreen: React.FC = () => {
                 earnedBadges: currentCard.earnedBadges ?? [],
                 feedScore: 0,
                 interestTags: currentCard.interestTags ?? [],
+                lastActiveAt: currentCard.lastActiveAt ?? null,
               }}
               onCompatTap={handleCompatTap}
             />
@@ -910,6 +974,16 @@ export const DiscoveryScreen: React.FC = () => {
           onDismiss={handleStreakDismiss}
         />
       )}
+
+      {/* Boost modal */}
+      <BoostModal
+        visible={showBoostModal}
+        onClose={() => setShowBoostModal(false)}
+        goldBalance={goldBalance}
+        boostStatus={boostStatus}
+        onActivate={handleBoostActivate}
+        onBuyGold={handleBoostBuyGold}
+      />
     </View>
   );
 };
@@ -969,6 +1043,13 @@ const styles = StyleSheet.create({
   filterIcon: {
     ...typography.bodyLarge,
     color: colors.text,
+  },
+  boostButtonActive: {
+    borderColor: colors.accent,
+    backgroundColor: colors.accent + '15',
+  },
+  boostIcon: {
+    fontSize: 18,
   },
   // ── Card Stack ──
   cardStack: {
@@ -1248,5 +1329,16 @@ const storyStyles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center',
     width: STORY_SIZE,
+  },
+  // Viewed story styles — dimmed ring and avatar
+  ringViewed: {
+    borderWidth: 1.5,
+    opacity: 0.6,
+  },
+  avatarViewed: {
+    opacity: 0.7,
+  },
+  labelViewed: {
+    opacity: 0.5,
   },
 });

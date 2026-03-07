@@ -1,5 +1,5 @@
 // BoostModal — Profile visibility boost activation modal
-// Shows gold cost, current balance, countdown timer when active, and purchase link
+// Duration selection (30m / 2h / 24h), gold cost, countdown timer, purchase link
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
@@ -23,25 +23,38 @@ interface BoostStatus {
   remainingSeconds?: number;
 }
 
+export interface BoostDuration {
+  minutes: number;
+  label: string;
+  goldCost: number;
+}
+
 interface BoostModalProps {
   visible: boolean;
   onClose: () => void;
   goldBalance: number;
   boostStatus: BoostStatus;
-  onActivate: () => Promise<void>;
+  onActivate: (durationMinutes: number) => Promise<void>;
   onBuyGold?: () => void;
 }
 
 // ─── Constants ──────────────────────────────────────────────────
 
-const BOOST_GOLD_COST = 50;
+export const BOOST_DURATIONS: BoostDuration[] = [
+  { minutes: 30, label: '30 dk', goldCost: 50 },
+  { minutes: 120, label: '2 saat', goldCost: 120 },
+  { minutes: 1440, label: '24 saat', goldCost: 250 },
+];
 
 // ─── Helpers ────────────────────────────────────────────────────
 
-/** Format seconds into MM:SS display */
 const formatCountdown = (totalSeconds: number): string => {
-  const minutes = Math.floor(totalSeconds / 60);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
+  if (hours > 0) {
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 };
 
@@ -57,9 +70,11 @@ export const BoostModal: React.FC<BoostModalProps> = ({
 }) => {
   const [isActivating, setIsActivating] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
-  const hasEnoughGold = goldBalance >= BOOST_GOLD_COST;
+  const selectedDuration = BOOST_DURATIONS[selectedIndex];
+  const hasEnoughGold = goldBalance >= selectedDuration.goldCost;
 
   // Countdown timer for active boost
   useEffect(() => {
@@ -68,7 +83,6 @@ export const BoostModal: React.FC<BoostModalProps> = ({
       return;
     }
 
-    // Calculate initial remaining seconds from endsAt or use provided value
     let initial = boostStatus.remainingSeconds ?? 0;
     if (!initial && boostStatus.endsAt) {
       const endsAt = new Date(boostStatus.endsAt).getTime();
@@ -119,11 +133,11 @@ export const BoostModal: React.FC<BoostModalProps> = ({
     if (isActivating || !hasEnoughGold) return;
     setIsActivating(true);
     try {
-      await onActivate();
+      await onActivate(selectedDuration.minutes);
     } finally {
       setIsActivating(false);
     }
-  }, [isActivating, hasEnoughGold, onActivate]);
+  }, [isActivating, hasEnoughGold, onActivate, selectedDuration.minutes]);
 
   return (
     <Modal
@@ -151,7 +165,7 @@ export const BoostModal: React.FC<BoostModalProps> = ({
           </Animated.View>
 
           {/* Title */}
-          <Text style={styles.title}>Profilini {'Ö'}ne {'Çı'}kar!</Text>
+          <Text style={styles.title}>Profilini {'\u00D6'}ne {'\u00C7\u0131'}kar!</Text>
 
           {/* Active boost: countdown */}
           {boostStatus.isActive ? (
@@ -161,25 +175,58 @@ export const BoostModal: React.FC<BoostModalProps> = ({
                 <Text style={styles.activeLabel}>Boost Aktif</Text>
               </View>
               <Text style={styles.countdownText}>
-                {formatCountdown(remainingSeconds)} kald{'ı'}
+                {formatCountdown(remainingSeconds)} kald{'\u0131'}
               </Text>
               <Text style={styles.activeDescription}>
-                Profiling {'ş'}u anda 10x daha fazla g{'ö'}r{'ü'}nt{'ü'}leniyor
+                Profiling {'\u015F'}u anda 10x daha fazla g{'\u00F6'}r{'\u00FC'}nt{'\u00FC'}leniyor
               </Text>
             </View>
           ) : (
             <>
               {/* Subtitle */}
               <Text style={styles.subtitle}>
-                30 dakika boyunca 10x daha fazla g{'ö'}r{'ü'}n{'ü'}rl{'ü'}k
+                Ke{'\u015F'}fette 10x daha fazla g{'\u00F6'}r{'\u00FC'}n{'\u00FC'}rl{'\u00FC'}k
               </Text>
 
-              {/* Gold cost display */}
-              <View style={styles.costContainer}>
-                <View style={styles.costBadge}>
-                  <Text style={styles.coinIcon}>{'\uD83E\uDE99'}</Text>
-                  <Text style={styles.costText}>{BOOST_GOLD_COST} Gold</Text>
-                </View>
+              {/* Duration selection */}
+              <View style={styles.durationRow}>
+                {BOOST_DURATIONS.map((dur, index) => {
+                  const isSelected = index === selectedIndex;
+                  return (
+                    <TouchableOpacity
+                      key={dur.minutes}
+                      style={[
+                        styles.durationChip,
+                        isSelected && styles.durationChipSelected,
+                      ]}
+                      onPress={() => setSelectedIndex(index)}
+                      activeOpacity={0.7}
+                      accessibilityLabel={`${dur.label} boost`}
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected: isSelected }}
+                    >
+                      <Text
+                        style={[
+                          styles.durationLabel,
+                          isSelected && styles.durationLabelSelected,
+                        ]}
+                      >
+                        {dur.label}
+                      </Text>
+                      <View style={styles.durationCostRow}>
+                        <Text style={styles.coinIconSmall}>{'\uD83E\uDE99'}</Text>
+                        <Text
+                          style={[
+                            styles.durationCost,
+                            isSelected && styles.durationCostSelected,
+                          ]}
+                        >
+                          {dur.goldCost}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
 
               {/* Current balance */}
@@ -202,14 +249,16 @@ export const BoostModal: React.FC<BoostModalProps> = ({
                   onPress={handleActivate}
                   disabled={isActivating}
                   activeOpacity={0.8}
-                  accessibilityLabel="Boost aktifleştir"
+                  accessibilityLabel="Boost aktifle\u015Ftir"
                   accessibilityRole="button"
                   testID="boost-activate-btn"
                 >
                   {isActivating ? (
                     <ActivityIndicator size="small" color={colors.text} />
                   ) : (
-                    <Text style={styles.activateButtonText}>Aktifle{'ş'}tir</Text>
+                    <Text style={styles.activateButtonText}>
+                      {selectedDuration.label} Aktifle{'\u015F'}tir
+                    </Text>
                   )}
                 </TouchableOpacity>
               ) : (
@@ -228,11 +277,11 @@ export const BoostModal: React.FC<BoostModalProps> = ({
                     <TouchableOpacity
                       onPress={onBuyGold}
                       activeOpacity={0.7}
-                      accessibilityLabel="Gold satın al"
+                      accessibilityLabel="Gold sat\u0131n al"
                       accessibilityRole="link"
                       testID="boost-buy-gold-btn"
                     >
-                      <Text style={styles.buyGoldText}>Gold Sat{'ı'}n Al</Text>
+                      <Text style={styles.buyGoldText}>Gold Sat{'\u0131'}n Al</Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -245,11 +294,11 @@ export const BoostModal: React.FC<BoostModalProps> = ({
             onPress={onClose}
             activeOpacity={0.7}
             style={styles.dismissButton}
-            accessibilityLabel="Vazgeç"
+            accessibilityLabel="Vazge\u00E7"
             accessibilityRole="button"
             testID="boost-dismiss-btn"
           >
-            <Text style={styles.dismissText}>Vazge{'ç'}</Text>
+            <Text style={styles.dismissText}>Vazge{'\u00E7'}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -304,6 +353,51 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: spacing.lg,
   },
+  // Duration selection
+  durationRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+    width: '100%',
+  },
+  durationChip: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    borderWidth: 1.5,
+    borderColor: colors.surfaceBorder,
+    backgroundColor: colors.background,
+  },
+  durationChipSelected: {
+    borderColor: colors.accent,
+    backgroundColor: colors.accent + '10',
+  },
+  durationLabel: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  durationLabelSelected: {
+    color: colors.accent,
+  },
+  durationCostRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  coinIconSmall: {
+    fontSize: 14,
+  },
+  durationCost: {
+    ...typography.caption,
+    color: colors.textTertiary,
+    fontWeight: '600',
+  },
+  durationCostSelected: {
+    color: colors.accent,
+  },
   // Active boost section
   activeSection: {
     alignItems: 'center',
@@ -336,29 +430,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.textSecondary,
     textAlign: 'center',
-  },
-  // Cost display
-  costContainer: {
-    marginBottom: spacing.md,
-  },
-  costBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.accent + '15',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: colors.accent + '30',
-  },
-  coinIcon: {
-    fontSize: 20,
-  },
-  costText: {
-    ...typography.bodyLarge,
-    color: colors.accent,
-    fontWeight: '700',
   },
   // Balance
   balanceRow: {

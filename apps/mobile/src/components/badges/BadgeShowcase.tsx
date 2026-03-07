@@ -21,6 +21,11 @@ const BADGE_META: Record<string, BadgeMeta> = {
   couple_goal: { icon: '+', color: '#EF4444', label: 'Cift Hedefi' },
   explorer: { icon: 'O', color: '#6366F1', label: 'Kasif' },
   deep_match: { icon: 'D', color: '#8B5CF6', label: 'Derin Uyum' },
+  new_member: { icon: '✨', color: '#F59E0B', label: 'Yeni Üye' },
+  popular: { icon: '🔥', color: '#EF4444', label: 'Popüler' },
+  active: { icon: '💬', color: '#3B82F6', label: 'Aktif' },
+  photo_lover: { icon: '📸', color: '#EC4899', label: 'Fotoğraf Tutkunu' },
+  romantic: { icon: '❤️', color: '#F43F5E', label: 'Romantik' },
 };
 
 interface BadgeShowcaseProps {

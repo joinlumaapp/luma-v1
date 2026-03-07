@@ -30,6 +30,9 @@ import {
   type ProfileStrengthItem,
   type ProfileVisitorsResponse,
 } from '../../services/profileService';
+import { discoveryService } from '../../services/discoveryService';
+import type { BoostStatusResponse } from '../../services/discoveryService';
+import { BoostModal } from '../../components/boost/BoostModal';
 import { VerifiedBadge } from '../../components/common/VerifiedBadge';
 import { SlideIn } from '../../components/animations/SlideIn';
 import { SubscriptionStatusCard } from '../../components/premium/SubscriptionStatusCard';
@@ -150,6 +153,14 @@ export const ProfileScreen: React.FC = () => {
   // Profile Visitors state
   const [visitorsData, setVisitorsData] = useState<ProfileVisitorsResponse | null>(null);
 
+  // Weekly profile view count
+  const [weeklyViewCount, setWeeklyViewCount] = useState<number | null>(null);
+
+  // Boost state
+  const [boostStatus, setBoostStatus] = useState<BoostStatusResponse>({ isActive: false });
+  const [showBoostModal, setShowBoostModal] = useState(false);
+  const [goldBalance, setGoldBalance] = useState(500);
+
   // Animated completion bar width
   const completionWidthAnim = useRef(new Animated.Value(0)).current;
 
@@ -183,17 +194,52 @@ export const ProfileScreen: React.FC = () => {
     }
   }, []);
 
+  // Fetch weekly view count
+  const fetchWeeklyViews = useCallback(async () => {
+    try {
+      const data = await profileService.getWeeklyViewCount();
+      setWeeklyViewCount(data.count);
+    } catch {
+      // Silently fail
+    }
+  }, []);
+
+  // Fetch boost status
+  const fetchBoostStatus = useCallback(async () => {
+    try {
+      const data = await discoveryService.getBoostStatus();
+      setBoostStatus(data);
+    } catch {
+      // Silently fail
+    }
+  }, []);
+
+  const handleBoostActivate = useCallback(async (durationMinutes: number) => {
+    const result = await discoveryService.activateBoost(durationMinutes);
+    if (result.success) {
+      setBoostStatus({ isActive: true, endsAt: result.endsAt, remainingSeconds: durationMinutes * 60 });
+      setGoldBalance(result.goldBalance);
+    }
+  }, []);
+
+  const handleBoostBuyGold = useCallback(() => {
+    setShowBoostModal(false);
+    navigation.navigate('Packages');
+  }, [navigation]);
+
   useEffect(() => {
     fetchProfile();
     fetchStrength();
     fetchVisitors();
+    fetchWeeklyViews();
+    fetchBoostStatus();
     badgeService
       .getMyBadges()
       .then((earned: UserBadge[]) => {
         setBadges(earned.map((ub) => ({ id: ub.badge.id, name: ub.badge.name, earned: true })));
       })
       .catch(() => {});
-  }, [fetchProfile, fetchStrength, fetchVisitors]);
+  }, [fetchProfile, fetchStrength, fetchVisitors, fetchWeeklyViews, fetchBoostStatus]);
 
   // Animate completion bar when data loads
   useEffect(() => {
@@ -455,6 +501,61 @@ export const ProfileScreen: React.FC = () => {
           </View>
         </SlideIn>
 
+        {/* Weekly Profile Views */}
+        {weeklyViewCount !== null && weeklyViewCount > 0 && (
+          <SlideIn direction="down" delay={250} distance={20}>
+            <View style={styles.weeklyViewsCard}>
+              <View style={styles.weeklyViewsRow}>
+                <View style={styles.weeklyViewsIconCircle}>
+                  <Ionicons name="eye-outline" size={20} color={colors.primary} />
+                </View>
+                <View style={styles.weeklyViewsContent}>
+                  <Text style={styles.weeklyViewsTitle}>Bu hafta profilini görenler</Text>
+                  <Text style={styles.weeklyViewsCount}>
+                    {weeklyViewCount} kişi
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </SlideIn>
+        )}
+
+        {/* Boost Card */}
+        <SlideIn direction="down" delay={275} distance={20}>
+          <TouchableOpacity
+            style={styles.boostCard}
+            onPress={() => setShowBoostModal(true)}
+            activeOpacity={0.8}
+            accessibilityLabel="Profilini öne çıkar"
+            accessibilityRole="button"
+            testID="profile-boost-btn"
+          >
+            <View style={styles.boostRow}>
+              <View style={[styles.weeklyViewsIconCircle, styles.boostIconCircle]}>
+                <Text style={styles.boostIconText}>{'\u26A1'}</Text>
+              </View>
+              <View style={styles.boostContent}>
+                <Text style={styles.boostTitle}>
+                  {boostStatus.isActive ? 'Boost Aktif' : 'Profilini Öne Çıkar'}
+                </Text>
+                <Text style={styles.boostSubtitle}>
+                  {boostStatus.isActive
+                    ? 'Profiling 10x daha fazla görüntüleniyor'
+                    : 'Keşfette 10x daha fazla görünürlük'}
+                </Text>
+              </View>
+              {boostStatus.isActive ? (
+                <View style={styles.boostActiveBadge}>
+                  <View style={styles.boostActiveDot} />
+                  <Text style={styles.boostActiveText}>Aktif</Text>
+                </View>
+              ) : (
+                <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+              )}
+            </View>
+          </TouchableOpacity>
+        </SlideIn>
+
         {/* Bio */}
         <SlideIn direction="down" delay={300} distance={20}>
           <View style={styles.bioCard}>
@@ -692,6 +793,16 @@ export const ProfileScreen: React.FC = () => {
           </View>
         </SlideIn>
       </ScrollView>
+
+      {/* Boost modal */}
+      <BoostModal
+        visible={showBoostModal}
+        onClose={() => setShowBoostModal(false)}
+        goldBalance={goldBalance}
+        boostStatus={boostStatus}
+        onActivate={handleBoostActivate}
+        onBuyGold={handleBoostBuyGold}
+      />
     </View>
   );
 };
@@ -884,6 +995,93 @@ const styles = StyleSheet.create({
     width: 1,
     height: 32,
     backgroundColor: colors.surfaceBorder,
+  },
+  weeklyViewsCard: {
+    marginHorizontal: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  weeklyViewsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  weeklyViewsIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  weeklyViewsContent: {
+    flex: 1,
+  },
+  weeklyViewsTitle: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+    marginBottom: 2,
+  },
+  weeklyViewsCount: {
+    ...typography.bodyLarge,
+    color: colors.text,
+    fontWeight: '700',
+  },
+  // Boost card styles
+  boostCard: {
+    marginHorizontal: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.accent + '25',
+  },
+  boostRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  boostIconCircle: {
+    backgroundColor: colors.accent + '15',
+  },
+  boostIconText: {
+    fontSize: 20,
+  },
+  boostContent: {
+    flex: 1,
+  },
+  boostTitle: {
+    ...typography.body,
+    color: colors.text,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  boostSubtitle: {
+    ...typography.captionSmall,
+    color: colors.textSecondary,
+  },
+  boostActiveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.success + '15',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+  },
+  boostActiveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.success,
+  },
+  boostActiveText: {
+    ...typography.captionSmall,
+    color: colors.success,
+    fontWeight: '600',
   },
   bioCard: {
     marginHorizontal: spacing.lg,

@@ -14,6 +14,7 @@ import { colors, palette, glassmorphism } from '../../theme/colors';
 import { fontWeights } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { INTEREST_OPTIONS } from '../../constants/config';
+import { formatActivityStatus } from '../../utils/formatters';
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -33,6 +34,7 @@ export interface DiscoveryCardProfile {
   earnedBadges: string[];
   feedScore: number;
   interestTags: string[];
+  lastActiveAt?: string | null;
 }
 
 interface DiscoveryCardProps {
@@ -117,6 +119,11 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
           <View style={styles.verifiedBadge}>
             <Text style={styles.verifiedText}>{'\u2713'}</Text>
           </View>
+        )}
+
+        {/* Online status dot — top-right on photo */}
+        {formatActivityStatus(profile.lastActiveAt)?.isOnline && (
+          <View style={styles.onlineDot} />
         )}
 
         {/* Soft gradient at bottom of photo for smooth transition */}
@@ -264,6 +271,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: palette.white,
     fontWeight: fontWeights.bold,
+  },
+
+  // ── Online dot — top-right ──
+  onlineDot: {
+    position: 'absolute',
+    top: spacing.sm + 4,
+    right: spacing.sm + 4,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: colors.success,
+    borderWidth: 2,
+    borderColor: palette.white,
+    zIndex: 2,
   },
 
   // ── Info panel — 38%, 6 rows ──

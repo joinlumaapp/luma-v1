@@ -54,6 +54,7 @@ export type MainTabParamList = {
 export type DiscoveryStackParamList = {
   Discovery: undefined;
   ProfilePreview: { userId: string };
+  StoryViewer: { userId: string; userName: string; userAvatarUrl: string };
   Filter: undefined;
   DailyQuestion: undefined;
   LikesYou: undefined;
@@ -71,7 +72,7 @@ export type MatchesStackParamList = {
   MatchDetail: { matchId: string };
   CompatibilityInsight: { matchId: string; partnerName: string };
   ChatList: undefined;
-  Chat: { matchId: string; partnerName: string; partnerPhotoUrl: string };
+  Chat: { matchId: string; partnerName: string; partnerPhotoUrl: string; initialMessage?: string };
   DatePlanner: { matchId: string; partnerName: string };
   AICoach: { matchId?: string; matchName?: string };
   Report: { userId: string; userName: string };

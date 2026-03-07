@@ -86,10 +86,9 @@ interface LikeCardProps {
   index: number;
   isBlurred: boolean;
   onCardPress: (userId: string) => void;
-  onUpgradePress: () => void;
 }
 
-const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, onCardPress, onUpgradePress }) => {
+const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, onCardPress }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = useCallback(() => {
@@ -111,12 +110,10 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, onCardPress, onU
   }, [scaleAnim]);
 
   const handlePress = useCallback(() => {
-    if (isBlurred) {
-      onUpgradePress();
-    } else {
-      onCardPress(card.userId);
-    }
-  }, [isBlurred, card.userId, onCardPress, onUpgradePress]);
+    // Always route through onCardPress — it handles both
+    // unlocking (consuming a daily view) and upgrade navigation
+    onCardPress(card.userId);
+  }, [card.userId, onCardPress]);
 
   const getCompatColor = (percent: number): string => {
     if (percent >= 90) return colors.success;
@@ -277,17 +274,27 @@ export const LikesYouScreen: React.FC = () => {
 
   // ─── Navigation handlers ────────────────────────────────────
 
+  // Track which user IDs have been unlocked (viewed) today
+  const [unlockedUserIds, setUnlockedUserIds] = useState<Set<string>>(new Set());
+
   const handleCardPress = useCallback((userId: string) => {
+    // Already unlocked this session — open directly without consuming a view
+    if (unlockedUserIds.has(userId)) {
+      navigation.navigate('ProfilePreview', { userId });
+      return;
+    }
     // Check daily view limit
     if (!isUnlimitedViews && viewedToday >= dailyLimit) {
       navigation.navigate('ProfileTab', { screen: 'Packages' });
       return;
     }
+    // Consume a daily view and unlock
     if (!isUnlimitedViews) {
       setViewedToday((prev) => prev + 1);
+      setUnlockedUserIds((prev) => new Set(prev).add(userId));
     }
     navigation.navigate('ProfilePreview', { userId });
-  }, [navigation, isUnlimitedViews, viewedToday, dailyLimit]);
+  }, [navigation, isUnlimitedViews, viewedToday, dailyLimit, unlockedUserIds]);
 
   const handleUpgradePress = useCallback(() => {
     navigation.navigate('ProfileTab', { screen: 'Packages' });
@@ -301,19 +308,19 @@ export const LikesYouScreen: React.FC = () => {
 
   const renderItem = useCallback(
     ({ item, index }: { item: LikeYouCard; index: number }) => {
-      // Beyond daily limit: blur the card
-      const isBeyondLimit = !isUnlimitedViews && index >= dailyLimit;
+      // Card is clear if: premium user OR already unlocked via daily view
+      const isUnlocked = unlockedUserIds.has(item.userId);
+      const cardBlurred = isBlurred && !isUnlocked;
       return (
         <LikeCard
           card={item}
           index={index}
-          isBlurred={isBlurred || isBeyondLimit}
+          isBlurred={cardBlurred}
           onCardPress={handleCardPress}
-          onUpgradePress={handleUpgradePress}
         />
       );
     },
-    [isBlurred, isUnlimitedViews, dailyLimit, handleCardPress, handleUpgradePress],
+    [isBlurred, unlockedUserIds, handleCardPress],
   );
 
   const keyExtractor = useCallback((item: LikeYouCard) => item.userId, []);

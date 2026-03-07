@@ -38,6 +38,8 @@ import {
 import type { ReactionEmoji } from '../../components/chat/MessageReactions';
 import type { ChatMessage } from '../../services/chatService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
+import { presenceService } from '../../services/presenceService';
+import { formatActivityStatus } from '../../utils/formatters';
 
 type ChatNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'Chat'>;
 type ChatRouteProp = RouteProp<MatchesStackParamList, 'Chat'>;
@@ -196,9 +198,9 @@ export const ChatScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const flatListRef = useRef<FlatList>(null);
 
-  const { matchId, partnerName, partnerPhotoUrl: _partnerPhotoUrl } = route.params;
+  const { matchId, partnerName, partnerPhotoUrl: _partnerPhotoUrl, initialMessage } = route.params;
 
-  const [inputText, setInputText] = useState('');
+  const [inputText, setInputText] = useState(initialMessage ?? '');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [showGifPicker, setShowGifPicker] = useState(false);
@@ -226,11 +228,19 @@ export const ChatScreen: React.FC = () => {
   const markAsRead = useChatStore((state) => state.markAsRead);
   const toggleReaction = useChatStore((state) => state.toggleReaction);
 
+  // Partner activity status
+  const [partnerLastActive, setPartnerLastActive] = useState<string | null>(null);
+
   // Defer initial fetch until navigation animation completes
   useEffect(() => {
     const task = InteractionManager.runAfterInteractions(() => {
       fetchMessages(matchId);
       markAsRead(matchId);
+      // Fetch partner presence
+      presenceService.getBatchPresence([matchId]).then((data) => {
+        const presence = data[matchId];
+        if (presence) setPartnerLastActive(presence.lastActiveAt);
+      }).catch(() => {});
     });
     return () => task.cancel();
   }, [matchId, fetchMessages, markAsRead]);
@@ -414,14 +424,27 @@ export const ChatScreen: React.FC = () => {
         </TouchableOpacity>
 
         <View style={styles.headerInfo}>
-          <View style={styles.headerAvatar}>
-            <Text style={styles.headerAvatarText}>{partnerName.charAt(0)}</Text>
+          <View style={styles.headerAvatarWrapper}>
+            <View style={styles.headerAvatar}>
+              <Text style={styles.headerAvatarText}>{partnerName.charAt(0)}</Text>
+            </View>
+            {formatActivityStatus(partnerLastActive)?.isOnline && (
+              <View style={styles.headerOnlineDot} />
+            )}
           </View>
           <View>
             <Text style={styles.headerName}>{partnerName}</Text>
             {isTyping ? (
-              <Text style={styles.headerStatus}>yazıyor...</Text>
-            ) : null}
+              <Text style={styles.headerStatusTyping}>yazıyor...</Text>
+            ) : (() => {
+              const actStatus = formatActivityStatus(partnerLastActive);
+              if (!actStatus) return null;
+              return (
+                <Text style={[styles.headerStatus, actStatus.isOnline && styles.headerStatusOnline]}>
+                  {actStatus.text}
+                </Text>
+              );
+            })()}
           </View>
         </View>
 
@@ -831,9 +854,30 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontWeight: '600',
   },
+  headerAvatarWrapper: {
+    position: 'relative',
+  },
+  headerOnlineDot: {
+    position: 'absolute',
+    bottom: 0,
+    right: -2,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.success,
+    borderWidth: 2,
+    borderColor: colors.background,
+  },
   headerStatus: {
     ...typography.caption,
+    color: colors.textTertiary,
+  },
+  headerStatusTyping: {
+    ...typography.caption,
     color: colors.primary,
+  },
+  headerStatusOnline: {
+    color: colors.success,
   },
   messagesArea: {
     flex: 1,
