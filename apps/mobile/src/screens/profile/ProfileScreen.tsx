@@ -22,7 +22,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 import { useProfileStore } from '../../stores/profileStore';
 import { useAuthStore } from '../../stores/authStore';
-import { useMatchStore } from '../../stores/matchStore';
 import { badgeService } from '../../services/badgeService';
 import type { UserBadge } from '../../services/badgeService';
 import {
@@ -142,8 +141,6 @@ export const ProfileScreen: React.FC = () => {
   const isLoading = useProfileStore((state) => state.isLoading);
   const fetchProfile = useProfileStore((state) => state.fetchProfile);
   const user = useAuthStore((state) => state.user);
-  const totalMatches = useMatchStore((state) => state.totalCount);
-
   const [badges, setBadges] = useState<Array<{ id: string; name: string; earned: boolean }>>([]);
 
   // Profile Strength Meter state

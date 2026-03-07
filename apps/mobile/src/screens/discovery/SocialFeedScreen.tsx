@@ -26,6 +26,7 @@ import type { FeedStackParamList } from '../../navigation/types';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
+import { useAuthStore, type PackageTier } from '../../stores/authStore';
 import { useSocialFeedStore } from '../../stores/socialFeedStore';
 import {
   FEED_TOPICS,
@@ -312,9 +313,46 @@ const EmptyState: React.FC = () => (
 
 type FeedNavProp = NativeStackNavigationProp<FeedStackParamList, 'SocialFeed'>;
 
+// Tier hierarchy for premium check
+const TIER_RANK: Record<PackageTier, number> = { free: 0, gold: 1, pro: 2, reserved: 3 };
+
 export const SocialFeedScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<FeedNavProp>();
+  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'free') as PackageTier;
+  const isFreeUser = TIER_RANK[packageTier] < TIER_RANK.gold;
+
+  // Premium gate — Free users see upgrade screen
+  if (isFreeUser) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={styles.headerArea}>
+          <Text style={styles.headerTitle}>Akış</Text>
+        </View>
+        <View style={styles.premiumGate}>
+          <View style={styles.premiumGateIconContainer}>
+            <Text style={styles.premiumGateIcon}>{'\uD83D\uDD12'}</Text>
+          </View>
+          <Text style={styles.premiumGateTitle}>Akış Premium Özelliğidir</Text>
+          <Text style={styles.premiumGateDescription}>
+            Sosyal akışa katılmak, paylaşım yapmak ve topluluğu keşfetmek için Premium veya üstü pakete yükselt.
+          </Text>
+          <TouchableOpacity
+            style={styles.premiumGateButton}
+            onPress={() => {
+              navigation.getParent()?.navigate('ProfileTab', { screen: 'Packages' });
+            }}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.premiumGateButtonText}>Paketi Yükselt</Text>
+          </TouchableOpacity>
+          <Text style={styles.premiumGateHint}>
+            Premium, Supreme ve Reserved üyeleri akışı kullanabilir
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   // Store selectors
   const posts = useSocialFeedStore((s) => s.posts);
@@ -571,6 +609,59 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '600',
     lineHeight: 32,
+  },
+  // Premium gate
+  premiumGate: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xxl,
+  },
+  premiumGateIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  premiumGateIcon: {
+    fontSize: 36,
+  },
+  premiumGateTitle: {
+    ...typography.h4,
+    color: colors.text,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  premiumGateDescription: {
+    ...typography.body,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: spacing.lg,
+  },
+  premiumGateButton: {
+    width: '100%',
+    height: 52,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+    ...shadows.medium,
+  },
+  premiumGateButtonText: {
+    ...typography.button,
+    color: colors.text,
+    fontWeight: '700',
+  },
+  premiumGateHint: {
+    ...typography.caption,
+    color: colors.textTertiary,
+    textAlign: 'center',
   },
 });
 

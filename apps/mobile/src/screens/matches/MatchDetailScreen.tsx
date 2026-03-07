@@ -20,7 +20,6 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 import { useMatchStore } from '../../stores/matchStore';
-import { useHarmonyStore } from '../../stores/harmonyStore';
 import { useScreenTracking, analyticsService, ANALYTICS_EVENTS } from '../../hooks/useAnalytics';
 
 type MatchDetailNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'MatchDetail'>;
@@ -41,7 +40,6 @@ export const MatchDetailScreen: React.FC = () => {
   const getMatch = useMatchStore((state) => state.getMatch);
   const unmatch = useMatchStore((state) => state.unmatch);
   const clearSelected = useMatchStore((state) => state.clearSelected);
-  const createSession = useHarmonyStore((state) => state.createSession);
 
   useEffect(() => {
     getMatch(matchId);
@@ -71,22 +69,6 @@ export const MatchDetailScreen: React.FC = () => {
       matchId,
       matchName: selectedMatch?.name ?? '',
     });
-  };
-
-  const handleStartHarmony = async () => {
-    try {
-      const sessionId = await createSession(matchId);
-      navigation.navigate('HarmonyRoom', {
-        sessionId,
-        matchId,
-      });
-    } catch {
-      Alert.alert('Hata', 'Uyum Odası oluşturulamadı.');
-    }
-  };
-
-  const handlePlayGame = () => {
-    navigation.navigate('IcebreakerGame', { matchId });
   };
 
   const handleUnmatch = () => {
@@ -237,22 +219,6 @@ export const MatchDetailScreen: React.FC = () => {
             activeOpacity={0.85}
           >
             <Text style={styles.messageButtonText}>{'\uD83D\uDCAC'} Mesaj Gönder</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.harmonyButton}
-            onPress={handleStartHarmony}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.harmonyButtonText}>{'\uD83C\uDFB5'} Uyum Odası Başlat</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.gamePlayButton}
-            onPress={handlePlayGame}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.gamePlayButtonText}>🎮 Oyun Oyna</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -484,32 +450,6 @@ const styles = StyleSheet.create({
     ...typography.button,
     color: colors.text,
     fontWeight: '700',
-  },
-  harmonyButton: {
-    height: layout.buttonHeight,
-    borderRadius: borderRadius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-    backgroundColor: colors.primary + '10',
-  },
-  harmonyButtonText: {
-    ...typography.button,
-    color: colors.primary,
-  },
-  gamePlayButton: {
-    height: layout.buttonHeight,
-    borderRadius: borderRadius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: '#8B5CF6',
-    backgroundColor: '#8B5CF620',
-  },
-  gamePlayButtonText: {
-    ...typography.button,
-    color: '#8B5CF6',
   },
   datePlanButton: {
     height: layout.buttonHeight,

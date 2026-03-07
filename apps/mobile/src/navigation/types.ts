@@ -67,19 +67,13 @@ export type DiscoveryStackParamList = {
 export type MatchesStackParamList = {
   MatchesList: undefined;
   LikesYou: undefined;
+  ProfilePreview: { userId: string };
   MatchDetail: { matchId: string };
   CompatibilityInsight: { matchId: string; partnerName: string };
   ChatList: undefined;
   Chat: { matchId: string; partnerName: string; partnerPhotoUrl: string };
-  IcebreakerGame: { matchId: string };
-  CompatibilityQuiz: { matchId: string; partnerName: string };
-  WordAssociation: { matchId: string; partnerName: string };
-  ImagineGame: { matchId: string; partnerName: string };
-  EmojiStory: { matchId: string; partnerName: string };
   DatePlanner: { matchId: string; partnerName: string };
   AICoach: { matchId?: string; matchName?: string };
-  HarmonyList: undefined;
-  HarmonyRoom: { sessionId: string; matchId: string };
   Report: { userId: string; userName: string };
 };
 

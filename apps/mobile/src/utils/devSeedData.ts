@@ -5,11 +5,11 @@ import { useDiscoveryStore } from '../stores/discoveryStore';
 import { useMatchStore } from '../stores/matchStore';
 import { useChatStore } from '../stores/chatStore';
 import type { ReactionEmoji } from '../services/chatService';
-import { useHarmonyStore } from '../stores/harmonyStore';
 import { useProfileStore } from '../stores/profileStore';
 import { useNotificationStore } from '../stores/notificationStore';
 import { useCrossedPathsStore } from '../stores/crossedPathsStore';
 import { useSocialFeedStore } from '../stores/socialFeedStore';
+import { useAuthStore } from '../stores/authStore';
 import { socialFeedService } from '../services/socialFeedService';
 
 // ── Helper: generate timestamps ─────────────────────────────────────
@@ -246,7 +246,7 @@ const matches = [
     isVerified: true,
     lastActivity: minutesAgo(5),
     isNew: true,
-    hasHarmonyRoom: true,
+
     matchedAt: hoursAgo(2),
   },
   {
@@ -261,7 +261,7 @@ const matches = [
     isVerified: true,
     lastActivity: minutesAgo(30),
     isNew: true,
-    hasHarmonyRoom: false,
+
     matchedAt: hoursAgo(6),
   },
   {
@@ -276,7 +276,7 @@ const matches = [
     isVerified: true,
     lastActivity: hoursAgo(3),
     isNew: false,
-    hasHarmonyRoom: false,
+
     matchedAt: daysAgo(1),
   },
   {
@@ -291,7 +291,7 @@ const matches = [
     isVerified: true,
     lastActivity: hoursAgo(8),
     isNew: false,
-    hasHarmonyRoom: true,
+
     matchedAt: daysAgo(3),
   },
   {
@@ -306,7 +306,7 @@ const matches = [
     isVerified: true,
     lastActivity: daysAgo(1),
     isNew: false,
-    hasHarmonyRoom: false,
+
     matchedAt: daysAgo(5),
   },
   {
@@ -321,7 +321,7 @@ const matches = [
     isVerified: true,
     lastActivity: daysAgo(2),
     isNew: false,
-    hasHarmonyRoom: false,
+
     matchedAt: daysAgo(7),
   },
 ];
@@ -588,56 +588,6 @@ const messages: Record<string, Array<{
   ],
 };
 
-// ── Harmony Sessions ────────────────────────────────────────────────
-const harmonySessions = [
-  {
-    id: 'harmony-001',
-    matchId: 'match-001',
-    matchName: 'Elif',
-    status: 'active' as const,
-    remainingSeconds: 720,
-    totalMinutes: 15,
-    extensions: 0,
-    cards: [
-      { id: 'card-001', type: 'question' as const, text: 'Hayatında en çok neyi değiştirmek isterdin?', isRevealed: true },
-      { id: 'card-002', type: 'question' as const, text: 'İdeal bir hafta sonu nasıl geçerdi?', isRevealed: true },
-      { id: 'card-003', type: 'game' as const, text: '2 Doğru 1 Yanlış: Her biriniz 3 şey söylesin, biri yanlış olsun!', isRevealed: false },
-      { id: 'card-004', type: 'challenge' as const, text: '60 saniye içinde birbirinize 5 iltifat edin!', isRevealed: false },
-      { id: 'card-005', type: 'question' as const, text: 'En son ne zaman gerçekten mutlu hissettin?', isRevealed: false },
-    ],
-    messages: [
-      { id: 'hmsg-001', text: 'Merhaba! Harmony Room çok eğlenceli bir fikir ya.', sender: 'other' as const, timestamp: '14:30', status: 'read' as const },
-      { id: 'hmsg-002', text: 'Evet, kartları açarak sohbet etmek harika!', sender: 'me' as const, timestamp: '14:31', status: 'read' as const },
-      { id: 'hmsg-003', text: 'İlk kartı açtım, çok derin bir soru geldi.', sender: 'other' as const, timestamp: '14:32', status: 'delivered' as const },
-    ],
-    startedAt: minutesAgo(3),
-    compatibilityScore: 94,
-  },
-  {
-    id: 'harmony-002',
-    matchId: 'match-004',
-    matchName: 'Merve',
-    status: 'completed' as const,
-    remainingSeconds: 0,
-    totalMinutes: 15,
-    extensions: 1,
-    cards: [
-      { id: 'card-006', type: 'question' as const, text: 'Seyahat ederken en unutulmaz anın neydi?', isRevealed: true },
-      { id: 'card-007', type: 'question' as const, text: 'Bir süper gücün olsa ne olmasını isterdin?', isRevealed: true },
-      { id: 'card-008', type: 'game' as const, text: 'Kelime Oyunu: Sıra sıra bir harf ekleyerek kelime türetin!', isRevealed: true },
-    ],
-    messages: [
-      { id: 'hmsg-004', text: 'Bu çok güzel bir soru!', sender: 'other' as const, timestamp: '10:15', status: 'read' as const },
-      { id: 'hmsg-005', text: 'Bence en güzel seyahat anım Kapadokya balonlarıydı.', sender: 'me' as const, timestamp: '10:16', status: 'read' as const },
-      { id: 'hmsg-006', text: 'Ben de tam orayı diyecektim!', sender: 'other' as const, timestamp: '10:17', status: 'read' as const },
-      { id: 'hmsg-007', text: 'Süper güç olarak telepati isterdim. Seninki?', sender: 'me' as const, timestamp: '10:20', status: 'read' as const },
-      { id: 'hmsg-008', text: 'Zamanı durdurmak! Güzel anları uzatabilmek için.', sender: 'other' as const, timestamp: '10:21', status: 'read' as const },
-    ],
-    startedAt: daysAgo(2),
-    compatibilityScore: 82,
-  },
-];
-
 // ── Notifications ───────────────────────────────────────────────────
 const notifications = [
   {
@@ -675,15 +625,6 @@ const notifications = [
     data: { badgeId: 'chat_star' },
     isRead: false,
     createdAt: hoursAgo(1),
-  },
-  {
-    id: 'notif-005',
-    type: 'HARMONY',
-    title: 'Harmony Daveti',
-    body: 'Elif seni Harmony Room\'a davet etti!',
-    data: { sessionId: 'harmony-001' },
-    isRead: true,
-    createdAt: minutesAgo(10),
   },
   {
     id: 'notif-006',
@@ -972,6 +913,17 @@ const matchDetails: Record<string, {
 // ── Main Seed Function ──────────────────────────────────────────────
 
 export function seedDevData(): void {
+  // 0. Auth user (dev user — free tier for testing)
+  useAuthStore.setState({
+    isAuthenticated: true,
+    user: {
+      id: 'dev-user-001',
+      phone: '+905551234567',
+      isVerified: true,
+      packageTier: 'free',
+    },
+  });
+
   // 1. Profile (dev user's own profile)
   useProfileStore.setState({
     profile: devUserProfile,
@@ -1029,13 +981,7 @@ export function seedDevData(): void {
     },
   });
 
-  // 5. Harmony sessions
-  useHarmonyStore.setState({
-    sessions: harmonySessions,
-    isLoading: false,
-  });
-
-  // 6. Notifications
+  // 5. Notifications
   useNotificationStore.setState({
     notifications,
     unreadCount: notifications.filter((n) => !n.isRead).length,
@@ -1075,25 +1021,38 @@ export function seedDevData(): void {
   });
 
   // 8. Override getMatch to resolve from local data (no backend needed)
-  const originalGetMatch = useMatchStore.getState().getMatch;
   useMatchStore.setState({
     getMatch: async (matchId: string) => {
-      const match = matches.find((m) => m.id === matchId);
+      // Check seeded matches first
+      const seededMatch = matches.find((m) => m.id === matchId);
       const detail = matchDetails[matchId];
-      if (match && detail) {
+      if (seededMatch && detail) {
         useMatchStore.setState({
           selectedMatch: {
-            ...match,
+            ...seededMatch,
             photos: detail.photos,
             bio: detail.bio,
             compatibilityBreakdown: detail.compatibilityBreakdown,
           },
           isLoading: false,
         });
-      } else {
-        // Fallback to original for unknown IDs
-        await originalGetMatch(matchId);
+        return;
       }
+      // Check dynamically created matches (from swipe)
+      const storeMatch = useMatchStore.getState().matches.find((m) => m.id === matchId);
+      if (storeMatch) {
+        useMatchStore.setState({
+          selectedMatch: {
+            ...storeMatch,
+            photos: [storeMatch.photoUrl],
+            bio: '',
+            compatibilityBreakdown: [],
+          },
+          isLoading: false,
+        });
+        return;
+      }
+      useMatchStore.setState({ isLoading: false });
     },
   });
 
@@ -1136,7 +1095,13 @@ export function seedDevData(): void {
 
   // 11. Override sendMessage for local echo
   useChatStore.setState({
-    sendMessage: async (matchId: string, content: string) => {
+    sendMessage: async (matchId: string, content: string): Promise<boolean> => {
+      // Check message limit (matched conversations are unlimited)
+      const limitInfo = useChatStore.getState().checkMessageLimit(matchId);
+      if (!limitInfo.allowed) {
+        return false;
+      }
+
       useChatStore.setState({ isSending: true });
       const newMsg = {
         id: `msg-dev-${Date.now()}`,
@@ -1149,14 +1114,22 @@ export function seedDevData(): void {
         isRead: true,
         reactions: [],
       };
+      // Only count non-matched messages toward daily limit
+      const isMatchedConversation = useMatchStore.getState().matches.some((m) => m.id === matchId);
+      const today = new Date().toISOString().split('T')[0];
       useChatStore.setState((state) => ({
         messages: {
           ...state.messages,
           [matchId]: [...(state.messages[matchId] ?? []), newMsg],
         },
         isSending: false,
+        ...(isMatchedConversation ? {} : {
+          dailyMessagesSent: (state.lastMessageDate === today ? state.dailyMessagesSent : 0) + 1,
+          lastMessageDate: today,
+        }),
       }));
       useChatStore.getState().updateLastMessage(matchId, content, newMsg.createdAt);
+      return true;
     },
   });
 
@@ -1259,11 +1232,48 @@ export function seedDevData(): void {
 
       if (isMatch) {
         const newMatchId = `match-dev-${Date.now()}`;
+        // Add match to matchStore so MatchDetail can find it
+        useMatchStore.setState((prev) => ({
+          matches: [
+            {
+              id: newMatchId,
+              userId: currentProfile.id,
+              name: currentProfile.name,
+              age: currentProfile.age,
+              city: currentProfile.city,
+              photoUrl: currentProfile.photoUrls[0],
+              compatibilityPercent: currentProfile.compatibilityPercent,
+              intentionTag: currentProfile.intentionTag,
+              isVerified: currentProfile.isVerified,
+              lastActivity: new Date().toISOString(),
+              isNew: true,
+              matchedAt: new Date().toISOString(),
+            },
+            ...prev.matches,
+          ],
+          totalCount: prev.totalCount + 1,
+        }));
+        // Add empty conversation to chatStore
+        useChatStore.setState((prev) => ({
+          conversations: [
+            {
+              matchId: newMatchId,
+              userId: currentProfile.id,
+              name: currentProfile.name,
+              photoUrl: currentProfile.photoUrls[0],
+              lastMessage: '',
+              lastMessageAt: new Date().toISOString(),
+              unreadCount: 0,
+              isOnline: true,
+            },
+            ...prev.conversations,
+          ],
+        }));
         useDiscoveryStore.setState((prev) => ({
           currentIndex: prev.currentIndex + 1,
           showMatchAnimation: true,
           currentMatchId: newMatchId,
-          matchAnimationType: direction === 'up' ? 'super_compatibility' : 'normal',
+          matchAnimationType: 'normal',
           canUndo: false,
           undoTimerId: null,
           lastSwipedProfile: null,
@@ -1327,19 +1337,7 @@ export function seedDevData(): void {
     },
   });
 
-  // 16. Override fetchSessions to return seeded harmony data
-  useHarmonyStore.setState({
-    sessions: harmonySessions,
-    isLoading: false,
-    fetchSessions: async () => {
-      useHarmonyStore.setState({
-        sessions: harmonySessions,
-        isLoading: false,
-      });
-    },
-  });
-
-  // 17. Override fetchProfile to return seeded profile
+  // 16. Override fetchProfile to return seeded profile
   useProfileStore.setState({
     fetchProfile: async () => {
       useProfileStore.setState({
@@ -1387,7 +1385,6 @@ export function seedDevData(): void {
     console.log(`  - ${discoveryProfiles.length} keşif profili`);
     console.log(`  - ${matches.length} eşleşme`);
     console.log(`  - ${conversations.length} sohbet`);
-    console.log(`  - ${harmonySessions.length} harmony oturumu`);
     console.log(`  - ${notifications.length} bildirim`);
     console.log(`  - ${crossedPaths.length} kesişen yol`);
     console.log(`  - ${mockFeedPosts.length} sosyal akış paylaşımı`);

@@ -55,14 +55,6 @@ export const ANALYTICS_EVENTS = {
   CHAT_IMAGE_SENT: 'chat_image_sent',
   CHAT_ICEBREAKER_STARTED: 'chat_icebreaker_started',
 
-  // Harmony
-  HARMONY_SESSION_STARTED: 'harmony_session_started',
-  HARMONY_SESSION_EXTENDED: 'harmony_session_extended',
-  HARMONY_SESSION_ENDED: 'harmony_session_ended',
-  HARMONY_CARD_REVEALED: 'harmony_card_revealed',
-  HARMONY_REACTION_SENT: 'harmony_reaction_sent',
-  HARMONY_MESSAGE_SENT: 'harmony_message_sent',
-
   // Profile
   PROFILE_PHOTO_UPLOADED: 'profile_photo_uploaded',
   PROFILE_EDITED: 'profile_edited',
@@ -111,7 +103,6 @@ type FunnelName =
   | 'registration'
   | 'onboarding'
   | 'first_match'
-  | 'first_harmony'
   | 'conversion';
 
 interface FunnelStep {
@@ -139,11 +130,6 @@ const FUNNEL_DEFINITIONS: Record<FunnelName, FunnelStep[]> = {
     { name: 'Discovery Viewed', event: 'discovery_card_viewed', order: 1 },
     { name: 'First Swipe Right', event: 'discovery_swipe_right', order: 2 },
     { name: 'Match Created', event: 'match_created', order: 3 },
-  ],
-  first_harmony: [
-    { name: 'Match Created', event: 'match_created', order: 1 },
-    { name: 'Harmony Started', event: 'harmony_session_started', order: 2 },
-    { name: 'Harmony Completed', event: 'harmony_session_ended', order: 3 },
   ],
   conversion: [
     { name: 'Payment Screen Viewed', event: 'payment_screen_viewed', order: 1 },

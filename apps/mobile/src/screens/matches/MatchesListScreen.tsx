@@ -151,11 +151,6 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress }) => {
               <Text style={styles.matchName}>
                 {item.name}, {item.age}
               </Text>
-              {item.hasHarmonyRoom && (
-                <View style={styles.harmonyBadge}>
-                  <Text style={styles.harmonyBadgeText}>HR</Text>
-                </View>
-              )}
             </View>
             <Text style={styles.lastActivity}>{formatMatchActivity(item.lastActivity)}</Text>
           </View>
@@ -181,7 +176,6 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress }) => {
   prev.item.isNew === next.item.isNew &&
   prev.item.compatibilityPercent === next.item.compatibilityPercent &&
   prev.item.lastActivity === next.item.lastActivity &&
-  prev.item.hasHarmonyRoom === next.item.hasHarmonyRoom &&
   prev.index === next.index
 ));
 
@@ -202,7 +196,7 @@ export const MatchesListScreen: React.FC = () => {
   const fetchMatches = useMatchStore((state) => state.fetchMatches);
   const markAsRead = useMatchStore((state) => state.markAsRead);
 
-  const [activeFilter, setActiveFilter] = useState<'all' | 'new' | 'harmony'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'new' | 'matched'>('all');
 
   // Defer initial fetch until navigation animation completes
   useEffect(() => {
@@ -216,7 +210,7 @@ export const MatchesListScreen: React.FC = () => {
   const filteredMatches = useMemo(() => {
     return matches.filter((match) => {
       if (activeFilter === 'new') return match.isNew;
-      if (activeFilter === 'harmony') return match.hasHarmonyRoom;
+      if (activeFilter === 'matched') return !match.isNew;
       return true;
     });
   }, [matches, activeFilter]);
@@ -277,12 +271,12 @@ export const MatchesListScreen: React.FC = () => {
         {[
           { key: 'all' as const, label: 'Tümü' },
           { key: 'new' as const, label: 'Yeni' },
+          { key: 'matched' as const, label: '💕 Eşleşenler' },
           { key: 'likes' as const, label: '💜 Beğenenler' },
-          { key: 'harmony' as const, label: 'Uyum Odası' },
         ].map((filter) => (
           <TouchableWithoutFeedback
             key={filter.key}
-            onPress={() => filter.key === 'likes' ? navigation.navigate('LikesYou') : setActiveFilter(filter.key as 'all' | 'new' | 'harmony')}
+            onPress={() => filter.key === 'likes' ? navigation.navigate('LikesYou') : setActiveFilter(filter.key as 'all' | 'new' | 'matched')}
             accessibilityLabel={`${filter.label} filtresi${activeFilter === filter.key ? ', seçili' : ''}`}
             accessibilityRole="button"
             accessibilityState={{ selected: activeFilter === filter.key }}
@@ -436,17 +430,6 @@ const styles = StyleSheet.create({
     ...typography.bodyLarge,
     color: colors.text,
     fontWeight: '600',
-  },
-  harmonyBadge: {
-    backgroundColor: colors.accent + '20',
-    borderRadius: borderRadius.xs,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 1,
-  },
-  harmonyBadgeText: {
-    ...typography.captionSmall,
-    color: colors.accent,
-    fontWeight: '700',
   },
   lastActivity: {
     ...typography.caption,

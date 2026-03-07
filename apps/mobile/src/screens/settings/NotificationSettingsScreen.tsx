@@ -40,11 +40,6 @@ const NOTIFICATION_SETTINGS: NotificationSetting[] = [
     description: 'Yeni mesaj geldiğinde bildirim al',
   },
   {
-    key: 'harmonyInvites',
-    label: 'Harmony Davetleri',
-    description: 'Harmony davetleri ve hatırlatmaları',
-  },
-  {
     key: 'badges',
     label: 'Rozet Bildirimleri',
     description: 'Yeni rozet kazandığında bildirim al',
@@ -59,7 +54,6 @@ const NOTIFICATION_SETTINGS: NotificationSetting[] = [
 const DEFAULT_PREFERENCES: NotificationPreferences = {
   newMatches: true,
   messages: true,
-  harmonyInvites: true,
   badges: true,
   system: true,
   allDisabled: false,

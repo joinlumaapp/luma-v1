@@ -17,7 +17,6 @@ export interface Match {
   isVerified: boolean;
   lastActivity: string;
   isNew: boolean;
-  hasHarmonyRoom: boolean;
   matchedAt: string;
 }
 
@@ -58,7 +57,6 @@ const mapDetailToMatchDetail = (data: MatchDetailResponse): MatchDetail => ({
   isVerified: data.isVerified,
   lastActivity: '',
   isNew: false,
-  hasHarmonyRoom: data.hasHarmonyRoom,
   matchedAt: data.matchedAt,
   photos: data.photos.map((p) => p.url),
   bio: data.bio,

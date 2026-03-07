@@ -39,37 +39,28 @@ interface FeatureRow {
 
 const FEATURE_COMPARISON: FeatureRow[] = [
   {
-    label: 'Günlük Beğeni',
+    label: 'Beğeni Limiti',
     values: {
-      free: '20',
-      gold: '60',
-      pro: '200',
+      free: '20/gün',
+      gold: 'Sınırsız',
+      pro: 'Sınırsız',
       reserved: 'Sınırsız',
     },
   },
   {
-    label: 'Uyum Analizi',
+    label: 'Süper Beğeni',
     values: {
-      free: 'Temel',
-      gold: 'Detaylı',
-      pro: 'Detaylı',
-      reserved: 'Özel Algoritma',
+      free: '1/gün',
+      gold: '5/gün',
+      pro: 'Sınırsız',
+      reserved: 'Sınırsız',
     },
   },
   {
-    label: 'Soru Sayısı',
+    label: 'Geri Al',
     values: {
-      free: '20 Temel',
-      gold: '45 (20+25)',
-      pro: '45 (20+25)',
-      reserved: '45 (20+25)',
-    },
-  },
-  {
-    label: 'Harmony Süresi',
-    values: {
-      free: '30 dk',
-      gold: 'Uzatmalı',
+      free: '-',
+      gold: 'Sınırsız',
       pro: 'Sınırsız',
       reserved: 'Sınırsız',
     },
@@ -84,7 +75,7 @@ const FEATURE_COMPARISON: FeatureRow[] = [
     },
   },
   {
-    label: 'Geri Al',
+    label: 'Reklamsız',
     values: {
       free: '-',
       gold: 'Evet',
@@ -93,7 +84,16 @@ const FEATURE_COMPARISON: FeatureRow[] = [
     },
   },
   {
-    label: 'Öncelikli Gösterim',
+    label: 'Boost Hediye',
+    values: {
+      free: '-',
+      gold: '-',
+      pro: '3/ay',
+      reserved: '5/ay',
+    },
+  },
+  {
+    label: 'Beğenilerin Öncelikli',
     values: {
       free: '-',
       gold: '-',
@@ -111,11 +111,20 @@ const FEATURE_COMPARISON: FeatureRow[] = [
     },
   },
   {
-    label: 'Aylık Uyum Raporu',
+    label: 'Yakın Çevre Profilleri',
     values: {
       free: '-',
       gold: '-',
       pro: 'Evet',
+      reserved: 'Evet',
+    },
+  },
+  {
+    label: 'Özel Rozet',
+    values: {
+      free: '-',
+      gold: '-',
+      pro: '-',
       reserved: 'Evet',
     },
   },

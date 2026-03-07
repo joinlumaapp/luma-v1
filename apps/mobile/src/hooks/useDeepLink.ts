@@ -1,5 +1,5 @@
 // Deep link yönetimi — uygulama içi yönlendirme
-// luma://profile/:userId, luma://match/:matchId, luma://harmony/:sessionId
+// luma://profile/:userId, luma://match/:matchId
 
 import { useEffect, useCallback } from 'react';
 import { Linking } from 'react-native';
@@ -12,7 +12,6 @@ import { DEEP_LINK_SCHEME } from '../constants/appInfo';
 type DeepLinkRoute =
   | { type: 'profile'; userId: string }
   | { type: 'match'; matchId: string }
-  | { type: 'harmony'; sessionId: string }
   | { type: 'unknown' };
 
 /**
@@ -35,8 +34,6 @@ const parseDeepLink = (url: string): DeepLinkRoute => {
         return { type: 'profile', userId: id as string };
       case 'match':
         return { type: 'match', matchId: id as string };
-      case 'harmony':
-        return { type: 'harmony', sessionId: id as string };
       default:
         return { type: 'unknown' };
     }
@@ -80,17 +77,6 @@ export const useDeepLink = (): UseDeepLinkReturn => {
             params: {
               screen: 'MatchDetail',
               params: { matchId: route.matchId },
-            },
-          });
-          break;
-
-        case 'harmony':
-          // Harmony Room ekranına yönlendir
-          navigation.navigate('MainTabs', {
-            screen: 'MatchesTab',
-            params: {
-              screen: 'HarmonyRoom',
-              params: { sessionId: route.sessionId, matchId: '' },
             },
           });
           break;

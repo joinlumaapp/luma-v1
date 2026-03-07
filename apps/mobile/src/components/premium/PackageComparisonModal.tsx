@@ -45,55 +45,69 @@ const TIER_COLORS: Record<PackageTier, string> = {
 
 const TIER_LABELS: Record<PackageTier, string> = {
   free: 'Ücretsiz',
-  gold: 'Gold',
-  pro: 'Pro',
+  gold: 'Premium',
+  pro: 'Supreme',
   reserved: 'Reserved',
 };
 
 const TIER_PRICES: Record<PackageTier, string> = {
   free: '0 TL',
-  gold: '149,99 TL/ay',
-  pro: '299,99 TL/ay',
-  reserved: '999,99 TL/ay',
+  gold: '349,99 TL/ay',
+  pro: '599,99 TL/ay',
+  reserved: '1.299,99 TL/ay',
 };
 
 // Tier order for hierarchy checks
 const TIER_ORDER: PackageTier[] = ['free', 'gold', 'pro', 'reserved'];
 
-// Feature comparison data — each row maps to all 4 tiers
+// Feature comparison data — each row maps to all 4 tiers (Bumble-style layout)
 const FEATURES: ComparisonFeature[] = [
   {
-    label: 'Günlük swipe limiti',
-    free: '20',
-    gold: '60',
-    pro: '200',
+    label: 'Beğeni limiti',
+    free: '20/gün',
+    gold: 'Sınırsız',
+    pro: 'Sınırsız',
     reserved: 'Sınırsız',
   },
   {
-    label: 'Super Like',
+    label: 'Süper Beğeni',
     free: '1/gün',
     gold: '5/gün',
     pro: 'Sınırsız',
     reserved: 'Sınırsız',
   },
   {
-    label: 'Geri Al (Undo)',
+    label: 'Geri al',
+    free: '\u2717',
+    gold: 'Sınırsız',
+    pro: 'Sınırsız',
+    reserved: 'Sınırsız',
+  },
+  {
+    label: 'Kimin beğendiğini gör',
     free: '\u2717',
     gold: '\u2713',
     pro: '\u2713',
     reserved: '\u2713',
   },
   {
-    label: 'Kimin beğendiği',
+    label: 'Reklamsız',
     free: '\u2717',
     gold: '\u2713',
     pro: '\u2713',
     reserved: '\u2713',
   },
   {
-    label: 'Profil ziyaretçileri',
+    label: 'Boost hediye',
     free: '\u2717',
-    gold: '\u2713',
+    gold: '\u2717',
+    pro: '3/ay',
+    reserved: '5/ay',
+  },
+  {
+    label: 'Beğenilerin öncelikli',
+    free: '\u2717',
+    gold: '\u2717',
     pro: '\u2713',
     reserved: '\u2713',
   },
@@ -105,14 +119,42 @@ const FEATURES: ComparisonFeature[] = [
     reserved: '\u2713',
   },
   {
-    label: 'Öncelikli gösterim',
+    label: 'Yakın çevre profilleri',
     free: '\u2717',
     gold: '\u2717',
     pro: '\u2713',
     reserved: '\u2713',
   },
   {
+    label: 'Beğenenleri gör',
+    free: '1/gün',
+    gold: '20/gün',
+    pro: '50/gün',
+    reserved: 'Sınırsız',
+  },
+  {
+    label: 'Sosyal Akış',
+    free: '\u2717',
+    gold: '\u2713',
+    pro: '\u2713',
+    reserved: '\u2713',
+  },
+  {
+    label: 'Günlük mesaj',
+    free: '1/gün',
+    gold: '5/gün',
+    pro: '10/gün',
+    reserved: 'Sınırsız',
+  },
+  {
     label: 'Özel rozet',
+    free: '\u2717',
+    gold: '\u2717',
+    pro: '\u2717',
+    reserved: '\u2713',
+  },
+  {
+    label: 'VIP destek',
     free: '\u2717',
     gold: '\u2717',
     pro: '\u2717',

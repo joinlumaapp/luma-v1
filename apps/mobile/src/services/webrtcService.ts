@@ -1,4 +1,4 @@
-// WebRTC service — manages peer connections for voice/video calls in Harmony Room.
+// WebRTC service — manages peer connections for voice/video calls.
 // Uses dynamic import for react-native-webrtc so the app works even when the package
 // is not installed (all methods become graceful no-ops with __DEV__ logging).
 //

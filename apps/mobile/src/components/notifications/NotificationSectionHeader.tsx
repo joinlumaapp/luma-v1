@@ -19,7 +19,6 @@ const GROUP_ICONS: Record<NotificationGroupKey, string> = {
   NEW_MATCH: '\u2665',     // heart
   MESSAGE: '\u2709',       // envelope
   BADGE: '\u2606',         // star
-  HARMONY: '\u266B',       // music note
   SYSTEM: '\u2699',        // gear
   OTHER: '\u2022',         // bullet
 };
@@ -29,7 +28,6 @@ const GROUP_COLORS: Record<NotificationGroupKey, string> = {
   NEW_MATCH: colors.primary,
   MESSAGE: colors.info,
   BADGE: colors.accent,
-  HARMONY: colors.secondary,
   SYSTEM: colors.textSecondary,
   OTHER: colors.textTertiary,
 };

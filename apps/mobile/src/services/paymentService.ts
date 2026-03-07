@@ -65,15 +65,17 @@ export interface SubscriptionStatusResponse {
   goldBalance: number;
   features: {
     dailySwipes: number;
-    coreQuestions: number;
-    premiumQuestions: number;
-    harmonyMinutes: number;
+    superLikesDaily: number;
+    monthlyBoosts: number;
     monthlyGold: number;
     seeWhoLikesYou: boolean;
     profileBoost: boolean;
     readReceipts: boolean;
     undoSwipe: boolean;
     priorityInFeed: boolean;
+    priorityLikes: boolean;
+    nearbyProfiles: boolean;
+    adFree: boolean;
   };
 }
 

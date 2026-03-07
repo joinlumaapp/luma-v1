@@ -8,6 +8,7 @@ import { StyleSheet, View, Text, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { CommonActions } from '@react-navigation/native';
 import type {
   MainTabParamList,
   DiscoveryStackParamList,
@@ -35,11 +36,6 @@ import { MatchDetailScreen } from '../screens/matches/MatchDetailScreen';
 import { CompatibilityInsightScreen } from '../screens/compatibility/CompatibilityInsightScreen';
 import { ChatListScreen } from '../screens/chat/ChatListScreen';
 import { ChatScreen } from '../screens/chat/ChatScreen';
-import { IcebreakerGameScreen } from '../screens/chat/IcebreakerGame';
-
-// Harmony screens
-import { HarmonyListScreen } from '../screens/harmony/HarmonyListScreen';
-import { HarmonyRoomScreen } from '../screens/harmony/HarmonyRoomScreen';
 
 // Profile screens
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
@@ -67,19 +63,10 @@ import { SocialFeedScreen } from '../screens/discovery/SocialFeedScreen';
 import { DatePlannerScreen } from '../screens/matches/DatePlannerScreen';
 import { AICoachScreen } from '../screens/chat/AICoachScreen';
 
-// Compatibility game screens
-import { CompatibilityQuizScreen } from '../screens/chat/CompatibilityQuizScreen';
-import { WordAssociationScreen } from '../screens/chat/WordAssociationScreen';
-import { ImagineGameScreen } from '../screens/chat/ImagineGameScreen';
-import { EmojiStoryScreen } from '../screens/chat/EmojiStoryScreen';
-
 // ── Deferred Screens ─────────────────────────────────────────
 // Heavy screens that benefit from deferred mount after navigation animation
 const DeferredCompatibilityInsight = withDeferredMount(CompatibilityInsightScreen);
 const DeferredDailyQuestion = withDeferredMount(DailyQuestionScreen);
-const DeferredIcebreakerGame = withDeferredMount(IcebreakerGameScreen);
-const DeferredHarmonyRoom = withDeferredMount(HarmonyRoomScreen);
-
 // Stack navigators for each tab
 const DiscoveryStack = createNativeStackNavigator<DiscoveryStackParamList>();
 const MatchesStack = createNativeStackNavigator<MatchesStackParamList>();
@@ -193,6 +180,11 @@ const MatchesStackNavigator: React.FC = () => (
     }}
   >
     <MatchesStack.Screen name="MatchesList" component={MatchesListScreen} />
+    <MatchesStack.Screen
+      name="ProfilePreview"
+      component={ProfilePreviewScreen}
+      options={{ animation: 'slide_from_bottom' }}
+    />
     <MatchesStack.Screen name="MatchDetail" component={MatchDetailScreen} />
     <MatchesStack.Screen
       name="CompatibilityInsight"
@@ -201,31 +193,6 @@ const MatchesStackNavigator: React.FC = () => (
     />
     <MatchesStack.Screen name="ChatList" component={ChatListScreen} />
     <MatchesStack.Screen name="Chat" component={ChatScreen} />
-    <MatchesStack.Screen
-      name="IcebreakerGame"
-      component={DeferredIcebreakerGame}
-      options={{ animation: 'slide_from_bottom' }}
-    />
-    <MatchesStack.Screen
-      name="CompatibilityQuiz"
-      component={CompatibilityQuizScreen}
-      options={{ animation: 'slide_from_bottom' }}
-    />
-    <MatchesStack.Screen
-      name="WordAssociation"
-      component={WordAssociationScreen}
-      options={{ animation: 'slide_from_bottom' }}
-    />
-    <MatchesStack.Screen
-      name="ImagineGame"
-      component={ImagineGameScreen}
-      options={{ animation: 'slide_from_bottom' }}
-    />
-    <MatchesStack.Screen
-      name="EmojiStory"
-      component={EmojiStoryScreen}
-      options={{ animation: 'slide_from_bottom' }}
-    />
     <MatchesStack.Screen name="DatePlanner" component={DatePlannerScreen} />
     <MatchesStack.Screen
       name="AICoach"
@@ -233,12 +200,6 @@ const MatchesStackNavigator: React.FC = () => (
       options={{ animation: 'slide_from_bottom' }}
     />
     <MatchesStack.Screen name="LikesYou" component={LikesYouScreen} />
-    <MatchesStack.Screen name="HarmonyList" component={HarmonyListScreen} />
-    <MatchesStack.Screen
-      name="HarmonyRoom"
-      component={DeferredHarmonyRoom}
-      options={{ animation: 'slide_from_bottom' }}
-    />
     <MatchesStack.Screen
       name="Report"
       component={ReportScreen}
@@ -286,6 +247,8 @@ export const MainTabNavigator: React.FC = () => {
   const totalUnread = useChatStore((state) => state.totalUnread);
   return (
     <Tab.Navigator
+      initialRouteName="DiscoveryTab"
+      backBehavior="history"
       screenOptions={{
         headerShown: false,
         tabBarStyle: [styles.tabBar, { backgroundColor: darkTheme.tabBarBackground }],
@@ -307,6 +270,20 @@ export const MainTabNavigator: React.FC = () => {
           tabBarAccessibilityLabel: 'Sosyal Akış',
           tabBarButtonTestID: 'tab-feed',
         }}
+        listeners={({ navigation, route }) => ({
+          tabPress: (e) => {
+            const tabState = navigation.getState();
+            const thisRoute = tabState.routes.find((r: { name: string }) => r.name === route.name);
+            const nestedState = (thisRoute as { state?: { index?: number } })?.state;
+            const isDeep = nestedState && nestedState.index !== undefined && nestedState.index > 0;
+            if (isDeep) {
+              e.preventDefault();
+              navigation.dispatch(
+                CommonActions.navigate({ name: 'FeedTab', params: { screen: 'SocialFeed' } })
+              );
+            }
+          },
+        })}
       />
       <Tab.Screen
         name="DiscoveryTab"
@@ -319,6 +296,20 @@ export const MainTabNavigator: React.FC = () => {
           tabBarAccessibilityLabel: 'Keşfet',
           tabBarButtonTestID: 'tab-discovery',
         }}
+        listeners={({ navigation, route }) => ({
+          tabPress: (e) => {
+            const tabState = navigation.getState();
+            const thisRoute = tabState.routes.find((r: { name: string }) => r.name === route.name);
+            const nestedState = (thisRoute as { state?: { index?: number } })?.state;
+            const isDeep = nestedState && nestedState.index !== undefined && nestedState.index > 0;
+            if (isDeep) {
+              e.preventDefault();
+              navigation.dispatch(
+                CommonActions.navigate({ name: 'DiscoveryTab', params: { screen: 'Discovery' } })
+              );
+            }
+          },
+        })}
       />
       <Tab.Screen
         name="MatchesTab"
@@ -335,6 +326,20 @@ export const MainTabNavigator: React.FC = () => {
           tabBarAccessibilityLabel: `Eşleşmeler${totalUnread > 0 ? `, ${totalUnread} okunmamış mesaj` : ''}`,
           tabBarButtonTestID: 'tab-matches',
         }}
+        listeners={({ navigation, route }) => ({
+          tabPress: (e) => {
+            const tabState = navigation.getState();
+            const thisRoute = tabState.routes.find((r: { name: string }) => r.name === route.name);
+            const nestedState = (thisRoute as { state?: { index?: number } })?.state;
+            const isDeep = nestedState && nestedState.index !== undefined && nestedState.index > 0;
+            if (isDeep) {
+              e.preventDefault();
+              navigation.dispatch(
+                CommonActions.navigate({ name: 'MatchesTab', params: { screen: 'MatchesList' } })
+              );
+            }
+          },
+        })}
       />
       <Tab.Screen
         name="ProfileTab"
@@ -347,6 +352,20 @@ export const MainTabNavigator: React.FC = () => {
           tabBarAccessibilityLabel: 'Profil',
           tabBarButtonTestID: 'tab-profile',
         }}
+        listeners={({ navigation, route }) => ({
+          tabPress: (e) => {
+            const tabState = navigation.getState();
+            const thisRoute = tabState.routes.find((r: { name: string }) => r.name === route.name);
+            const nestedState = (thisRoute as { state?: { index?: number } })?.state;
+            const isDeep = nestedState && nestedState.index !== undefined && nestedState.index > 0;
+            if (isDeep) {
+              e.preventDefault();
+              navigation.dispatch(
+                CommonActions.navigate({ name: 'ProfileTab', params: { screen: 'Profile' } })
+              );
+            }
+          },
+        })}
       />
     </Tab.Navigator>
   );

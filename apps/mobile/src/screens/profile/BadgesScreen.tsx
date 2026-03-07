@@ -40,7 +40,7 @@ interface BadgeVisual {
 
 const BADGE_VISUALS: BadgeVisual[] = [
   { key: 'first_spark', name: 'İlk Kıvılcım', icon: '*', color: '#F59E0B', hint: 'İlk eşleşmeni yap' },
-  { key: 'chat_master', name: 'Sohbet Ustası', icon: '#', color: '#3B82F6', hint: '5 Harmony oturumu tamamla' },
+  { key: 'chat_master', name: 'Sohbet Ustası', icon: '#', color: '#3B82F6', hint: '5 eşleşme oluştur' },
   { key: 'question_explorer', name: 'Merak Uzmanı', icon: '?', color: '#8B5CF6', hint: 'Tüm soru kartlarını keşfet' },
   { key: 'soul_mate', name: 'Ruh İkizi', icon: '&', color: '#EC4899', hint: 'Süper uyumluluk eşleşme bul' },
   { key: 'verified_star', name: 'Doğrulanmış Yıldız', icon: 'V', color: '#10B981', hint: 'Selfie doğrulamasını tamamla' },

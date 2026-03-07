@@ -108,7 +108,6 @@ export const SettingsScreen: React.FC = () => {
   // Notification toggles
   const [pushNotifications, setPushNotifications] = useState(true);
   const [matchNotifications, setMatchNotifications] = useState(true);
-  const [harmonyNotifications, setHarmonyNotifications] = useState(true);
 
   // Privacy toggles
   const [showOnlineStatus, setShowOnlineStatus] = useState(true);
@@ -266,14 +265,6 @@ export const SettingsScreen: React.FC = () => {
           onToggle: setMatchNotifications,
         },
         {
-          key: 'harmony_notif',
-          icon: 'H',
-          title: 'Harmony Bildirimleri',
-          type: 'toggle',
-          value: harmonyNotifications,
-          onToggle: setHarmonyNotifications,
-        },
-        {
           key: 'notif_settings',
           icon: 'A',
           title: 'Bildirim Ayarları',
@@ -355,7 +346,7 @@ export const SettingsScreen: React.FC = () => {
           title: 'Gold ne işe yarar?',
           type: 'faq',
           answer:
-            'Gold paketi ile sınırsız beğeni, detaylı uyumluluk analizi, 25 premium soru, Harmony Room süre uzatma ve kimin beğendiğini görme gibi özellikler kazanırsınız.',
+            'Gold paketi ile sınırsız beğeni, detaylı uyumluluk analizi, 25 premium soru, günlük 5 süper beğeni ve kimin beğendiğini görme gibi özellikler kazanırsınız.',
         },
         {
           key: 'faq_super',

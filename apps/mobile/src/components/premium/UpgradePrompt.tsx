@@ -30,7 +30,8 @@ export type PaywallFeature =
   | 'priority'
   | 'who_likes'
   | 'badge'
-  | 'events';
+  | 'events'
+  | 'feed';
 
 interface UpgradePromptProps {
   visible: boolean;
@@ -55,7 +56,7 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
     description:
       'Yanlış yönde kaydırdın mı? Geri Al ile son beğeni kararını geri alabilirsin.',
     minimumTier: 'gold',
-    tierLabel: 'Gold+',
+    tierLabel: 'Premium+',
   },
   super_like: {
     icon: '\u2605', // Star
@@ -63,7 +64,7 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
     description:
       'Süper Beğeni ile özel birinden öne çık! Eşleşme şansın 3 kat artar.',
     minimumTier: 'gold',
-    tierLabel: 'Gold+',
+    tierLabel: 'Premium+',
   },
   visitors: {
     icon: '\u{1F441}', // Eye symbol (text representation)
@@ -71,7 +72,7 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
     description:
       'Profilini kimlerin ziyaret ettiğini gör ve yeni bağlantı fırsatlarını kaçırma.',
     minimumTier: 'gold',
-    tierLabel: 'Gold+',
+    tierLabel: 'Premium+',
   },
   who_likes: {
     icon: '\u2665', // Heart
@@ -79,7 +80,7 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
     description:
       'Seni beğenen kişileri hemen gör ve anında eşleşmeler oluştur.',
     minimumTier: 'gold',
-    tierLabel: 'Gold+',
+    tierLabel: 'Premium+',
   },
   filters: {
     icon: '\u2699', // Gear
@@ -87,7 +88,7 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
     description:
       'Yaş aralığı, mesafe, niyet etiketi ve daha fazlası ile arama sonuçlarını daralt.',
     minimumTier: 'pro',
-    tierLabel: 'Pro',
+    tierLabel: 'Supreme',
   },
   priority: {
     icon: '\u2B06', // Up arrow
@@ -95,7 +96,7 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
     description:
       'Profilin diğer kullanıcılara önce gösterilir. Daha fazla beğeni ve eşleşme kazan.',
     minimumTier: 'pro',
-    tierLabel: 'Pro',
+    tierLabel: 'Supreme',
   },
   badge: {
     icon: '\u2726', // Star-like
@@ -112,6 +113,14 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
       'LUMA Reserved üyelerine özel düzenlenen etkinliklere davet al.',
     minimumTier: 'reserved',
     tierLabel: 'Reserved',
+  },
+  feed: {
+    icon: '\uD83D\uDCF0', // Newspaper
+    title: 'Sosyal Akış',
+    description:
+      'Sosyal akışa katılmak, paylaşım yapmak ve topluluğu keşfetmek için Premium veya üstü pakete yükselt.',
+    minimumTier: 'gold',
+    tierLabel: 'Premium+',
   },
 };
 

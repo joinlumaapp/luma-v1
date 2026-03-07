@@ -19,7 +19,6 @@ export type NotificationGroupKey =
   | 'NEW_MATCH'
   | 'MESSAGE'
   | 'BADGE'
-  | 'HARMONY'
   | 'SYSTEM'
   | 'OTHER';
 
@@ -37,7 +36,6 @@ const getGroupKey = (type: string): NotificationGroupKey => {
   if (typeUpper === 'NEW_MATCH' || typeUpper.includes('MATCH')) return 'NEW_MATCH';
   if (typeUpper === 'MESSAGE' || typeUpper === 'PUSH' || typeUpper.includes('MESAJ')) return 'MESSAGE';
   if (typeUpper === 'BADGE_EARNED' || typeUpper.includes('BADGE') || typeUpper.includes('ROZET')) return 'BADGE';
-  if (typeUpper.includes('HARMONY')) return 'HARMONY';
   if (typeUpper === 'SYSTEM' || typeUpper.includes('SUBSCRIPTION')) return 'SYSTEM';
   return 'OTHER';
 };
@@ -47,7 +45,6 @@ const GROUP_TITLES: Record<NotificationGroupKey, string> = {
   NEW_MATCH: 'Yeni Eşleşmeler',
   MESSAGE: 'Mesajlar',
   BADGE: 'Rozetler',
-  HARMONY: 'Uyum Odası',
   SYSTEM: 'Sistem',
   OTHER: 'Diğer',
 };
@@ -56,7 +53,6 @@ const GROUP_TITLES: Record<NotificationGroupKey, string> = {
 const GROUP_ORDER: NotificationGroupKey[] = [
   'NEW_MATCH',
   'MESSAGE',
-  'HARMONY',
   'BADGE',
   'SYSTEM',
   'OTHER',

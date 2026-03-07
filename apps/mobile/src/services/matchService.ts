@@ -17,7 +17,6 @@ export interface MatchSummary {
   isVerified: boolean;
   lastActivity: string;
   isNew: boolean;
-  hasHarmonyRoom: boolean;
   matchedAt: string;
 }
 
@@ -38,7 +37,6 @@ export interface MatchDetailResponse {
     maxScore: number;
   }>;
   matchedAt: string;
-  hasHarmonyRoom: boolean;
   /** Smart conversation starters based on shared compatibility */
   conversationStarters?: string[];
   /** Intelligent explanation of why this match is compatible */
@@ -60,7 +58,6 @@ interface BackendMatchListItem {
   };
   compatibilityScore: number;
   createdAt: string;
-  hasActiveHarmony: boolean;
 }
 
 interface BackendMatchListResponse {
@@ -86,7 +83,6 @@ interface BackendMatchDetailResponse {
     explanation?: string;
   };
   conversationStarters?: string[];
-  harmonySessions?: Array<{ status: string }>;
   createdAt: string;
 }
 
@@ -108,16 +104,11 @@ const mapBackendToMatchSummary = (raw: BackendMatchListItem): MatchSummary => {
     isVerified: raw.partner.isVerified,
     lastActivity: raw.createdAt,
     isNew,
-    hasHarmonyRoom: raw.hasActiveHarmony,
     matchedAt: raw.createdAt,
   };
 };
 
 const mapBackendToMatchDetail = (raw: BackendMatchDetailResponse): MatchDetailResponse => {
-  const hasHarmonyRoom = (raw.harmonySessions ?? []).some(
-    (s) => s.status === 'ACTIVE' || s.status === 'EXTENDED'
-  );
-
   const compatibilityBreakdown = Object.entries(raw.compatibility.breakdown ?? {}).map(
     ([category, score]) => ({
       category,
@@ -139,7 +130,6 @@ const mapBackendToMatchDetail = (raw: BackendMatchDetailResponse): MatchDetailRe
     overallCompatibility: raw.compatibility.score,
     compatibilityBreakdown,
     matchedAt: raw.createdAt,
-    hasHarmonyRoom,
     conversationStarters: raw.conversationStarters,
     compatibilityExplanation: raw.compatibility.explanation,
   };

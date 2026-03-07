@@ -3,6 +3,9 @@
 import { create } from 'zustand';
 import { chatService } from '../services/chatService';
 import { analyticsService, ANALYTICS_EVENTS } from '../services/analyticsService';
+import { useAuthStore, type PackageTier } from '../stores/authStore';
+import { useMatchStore } from '../stores/matchStore';
+import { MESSAGE_CONFIG } from '../constants/config';
 import type {
   ConversationSummary,
   ChatMessage,
@@ -21,11 +24,16 @@ interface ChatState {
   cursors: Record<string, string | null>;
   totalUnread: number;
 
+  // Message limit state
+  dailyMessagesSent: number;
+  singleMessageCredits: number;
+  lastMessageDate: string; // YYYY-MM-DD
+
   // Actions
   fetchConversations: () => Promise<void>;
   fetchMessages: (matchId: string) => Promise<void>;
   loadMoreMessages: (matchId: string) => Promise<void>;
-  sendMessage: (matchId: string, content: string) => Promise<void>;
+  sendMessage: (matchId: string, content: string) => Promise<boolean>;
   sendImageMessage: (matchId: string, imageUri: string) => Promise<void>;
   sendGifMessage: (matchId: string, gifUrl: string) => Promise<void>;
   sendVoiceMessage: (matchId: string, audioUri: string, duration: number) => Promise<void>;
@@ -35,7 +43,12 @@ interface ChatState {
   updateLastMessage: (matchId: string, content: string, timestamp: string) => void;
   toggleReaction: (matchId: string, messageId: string, emoji: ReactionEmoji) => Promise<void>;
   updateMessageStatus: (matchId: string, messageId: string, status: 'SENT' | 'DELIVERED' | 'READ', readAt?: string) => void;
+  checkMessageLimit: (matchId?: string) => { allowed: boolean; remaining: number; limit: number; isUnlimited: boolean };
+  useSingleMessageCredit: () => boolean;
 }
+
+// Get today's date string for daily reset
+const getTodayString = (): string => new Date().toISOString().split('T')[0];
 
 export const useChatStore = create<ChatState>((set, get) => ({
   // Initial state
@@ -48,6 +61,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
   hasMore: {},
   cursors: {},
   totalUnread: 0,
+
+  // Message limit state
+  dailyMessagesSent: 0,
+  singleMessageCredits: 0,
+  lastMessageDate: getTodayString(),
 
   // Actions
   fetchConversations: async () => {
@@ -120,7 +138,66 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
+  checkMessageLimit: (matchId?: string) => {
+    // Matched conversations are always unlimited
+    if (matchId) {
+      const matches = useMatchStore.getState().matches;
+      const isMatched = matches.some((m) => m.id === matchId);
+      if (isMatched) {
+        return { allowed: true, remaining: -1, limit: -1, isUnlimited: true };
+      }
+    }
+
+    const { dailyMessagesSent, singleMessageCredits, lastMessageDate } = get();
+    const today = getTodayString();
+    const sent = lastMessageDate === today ? dailyMessagesSent : 0;
+
+    const tier = (useAuthStore.getState().user?.packageTier ?? 'free') as PackageTier;
+    const limit = MESSAGE_CONFIG.DAILY_LIMITS[tier];
+    const isUnlimited = limit === -1;
+    const remaining = isUnlimited ? -1 : Math.max(0, limit - sent) + singleMessageCredits;
+    const allowed = isUnlimited || remaining > 0;
+
+    return { allowed, remaining, limit, isUnlimited };
+  },
+
+  useSingleMessageCredit: () => {
+    const { singleMessageCredits } = get();
+    if (singleMessageCredits <= 0) return false;
+    set({ singleMessageCredits: singleMessageCredits - 1 });
+    return true;
+  },
+
   sendMessage: async (matchId, content) => {
+    // Matched conversations are always unlimited
+    const matches = useMatchStore.getState().matches;
+    const isMatchedConversation = matches.some((m) => m.id === matchId);
+
+    if (!isMatchedConversation) {
+      // Daily reset check — only for non-matched conversations
+      const today = getTodayString();
+      const { lastMessageDate, dailyMessagesSent } = get();
+      const currentSent = lastMessageDate === today ? dailyMessagesSent : 0;
+      if (lastMessageDate !== today) {
+        set({ lastMessageDate: today, dailyMessagesSent: 0 });
+      }
+
+      // Message limit gate
+      const tier = (useAuthStore.getState().user?.packageTier ?? 'free') as PackageTier;
+      const limit = MESSAGE_CONFIG.DAILY_LIMITS[tier];
+      const isUnlimited = limit === -1;
+
+      if (!isUnlimited && currentSent >= limit) {
+        const { singleMessageCredits } = get();
+        if (singleMessageCredits > 0) {
+          set({ singleMessageCredits: singleMessageCredits - 1 });
+        } else {
+          set({ isSending: false });
+          return false; // Limit reached
+        }
+      }
+    }
+
     set({ isSending: true });
     try {
       const response = await chatService.sendMessage(matchId, {
@@ -128,6 +205,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         type: 'TEXT',
       });
       analyticsService.track(ANALYTICS_EVENTS.CHAT_MESSAGE_SENT, { matchId });
+      const today = getTodayString();
       set((state) => ({
         messages: {
           ...state.messages,
@@ -137,11 +215,18 @@ export const useChatStore = create<ChatState>((set, get) => ({
           ],
         },
         isSending: false,
+        // Only count non-matched messages toward daily limit
+        ...(isMatchedConversation ? {} : {
+          dailyMessagesSent: (state.lastMessageDate === today ? state.dailyMessagesSent : 0) + 1,
+          lastMessageDate: today,
+        }),
       }));
       // Update last message in conversations
       get().updateLastMessage(matchId, content, response.message.createdAt);
+      return true;
     } catch {
       set({ isSending: false });
+      return false;
     }
   },
 

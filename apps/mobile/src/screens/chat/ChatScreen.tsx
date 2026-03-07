@@ -29,6 +29,7 @@ import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 import { useChatStore } from '../../stores/chatStore';
 import { useAuthStore } from '../../stores/authStore';
+import { MESSAGE_CONFIG } from '../../constants/config';
 import {
   MemoizedMessageBubble,
   MemoizedDateHeader,
@@ -207,6 +208,9 @@ export const ChatScreen: React.FC = () => {
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const currentUserId = useAuthStore((state) => state.user?.id);
+  const checkMessageLimit = useChatStore((state) => state.checkMessageLimit);
+  const messageLimitInfo = checkMessageLimit(matchId);
+  const [showLimitReached, setShowLimitReached] = useState(false);
 
   const messages = useChatStore((state) => state.messages[matchId] ?? EMPTY_MESSAGES);
   const isLoadingMessages = useChatStore((state) => state.isLoadingMessages);
@@ -240,12 +244,17 @@ export const ChatScreen: React.FC = () => {
     }
   }, [messages.length]);
 
-  const handleSend = useCallback(() => {
+  const handleSend = useCallback(async () => {
     const trimmed = inputText.trim();
     if (!trimmed || isSending) return;
 
-    sendMessage(matchId, trimmed);
-    setInputText('');
+    const sent = await sendMessage(matchId, trimmed);
+    if (sent) {
+      setInputText('');
+      setShowLimitReached(false);
+    } else {
+      setShowLimitReached(true);
+    }
   }, [inputText, isSending, matchId, sendMessage]);
 
   // Image picker handler
@@ -416,17 +425,6 @@ export const ChatScreen: React.FC = () => {
           </View>
         </View>
 
-        <TouchableOpacity
-          style={styles.gameButton}
-          onPress={() => navigation.navigate('IcebreakerGame', { matchId })}
-          activeOpacity={0.8}
-          accessibilityLabel="Oyun başlat"
-          accessibilityRole="button"
-          accessibilityHint="Buz kırıcı oyunu başlatmak için dokunun"
-          testID="chat-game-btn"
-        >
-          <Text style={styles.gameButtonText}>Oyun</Text>
-        </TouchableOpacity>
       </View>
 
       {/* Messages */}
@@ -546,6 +544,76 @@ export const ChatScreen: React.FC = () => {
           </View>
         )}
 
+        {/* Message limit banner */}
+        {!messageLimitInfo.isUnlimited && (
+          <View style={styles.messageLimitBanner}>
+            {messageLimitInfo.allowed ? (
+              <Text style={styles.messageLimitText}>
+                Bugün {messageLimitInfo.remaining}/{messageLimitInfo.limit} mesaj hakkın kaldı
+              </Text>
+            ) : (
+              <Text style={styles.messageLimitTextReached}>
+                Günlük mesaj limitine ulaştın
+              </Text>
+            )}
+          </View>
+        )}
+
+        {/* Limit reached — purchase options */}
+        {(showLimitReached || !messageLimitInfo.allowed) && !messageLimitInfo.isUnlimited ? (
+          <View style={[styles.limitReachedArea, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]}>
+            <Text style={styles.limitReachedTitle}>Mesaj limitin doldu</Text>
+            <Text style={styles.limitReachedSubtitle}>
+              Daha fazla mesaj göndermek için aşağıdaki seçenekleri kullan
+            </Text>
+            <TouchableOpacity
+              style={styles.singleMessageButton}
+              onPress={() => {
+                Alert.alert(
+                  'Tek Mesaj Paketi',
+                  `₺${MESSAGE_CONFIG.SINGLE_MESSAGE_PACK_PRICE} karşılığında 1 ekstra mesaj gönder. Gold bakiyenden düşülecek.`,
+                  [
+                    { text: 'İptal', style: 'cancel' },
+                    {
+                      text: 'Satın Al',
+                      onPress: () => {
+                        useChatStore.setState((state) => ({
+                          singleMessageCredits: state.singleMessageCredits + 1,
+                        }));
+                        setShowLimitReached(false);
+                      },
+                    },
+                  ],
+                );
+              }}
+              activeOpacity={0.85}
+              testID="chat-single-message-btn"
+            >
+              <Text style={styles.singleMessageButtonText}>
+                Tek Mesaj Gönder — ₺{MESSAGE_CONFIG.SINGLE_MESSAGE_PACK_PRICE}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.upgradeMessageButton}
+              onPress={() => {
+                navigation.getParent()?.navigate('ProfileTab', { screen: 'Packages' });
+              }}
+              activeOpacity={0.85}
+              testID="chat-upgrade-btn"
+            >
+              <Text style={styles.upgradeMessageButtonText}>Paketi Yükselt</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.goBackButton}
+              onPress={() => navigation.goBack()}
+              activeOpacity={0.85}
+              testID="chat-goback-btn"
+            >
+              <Text style={styles.goBackButtonText}>Geri Dön</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+        <>
         {/* Input area */}
         {!isRecordingVoice && (
         <View style={[styles.inputArea, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]}>
@@ -623,6 +691,8 @@ export const ChatScreen: React.FC = () => {
             </TouchableOpacity>
           )}
         </View>
+        )}
+        </>
         )}
       </KeyboardAvoidingView>
 
@@ -763,16 +833,6 @@ const styles = StyleSheet.create({
   },
   headerStatus: {
     ...typography.caption,
-    color: colors.primary,
-  },
-  gameButton: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.primary + '20',
-  },
-  gameButtonText: {
-    ...typography.buttonSmall,
     color: colors.primary,
   },
   messagesArea: {
@@ -1099,5 +1159,77 @@ const styles = StyleSheet.create({
   fullscreenImage: {
     width: '100%',
     height: '80%',
+  },
+  // Message limit styles
+  messageLimitBanner: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xs,
+    backgroundColor: colors.surface,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.divider,
+    alignItems: 'center',
+  },
+  messageLimitText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+  },
+  messageLimitTextReached: {
+    ...typography.caption,
+    color: colors.error,
+    fontWeight: '600',
+  },
+  limitReachedArea: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  limitReachedTitle: {
+    ...typography.bodyLarge,
+    color: colors.text,
+    fontWeight: '700',
+  },
+  limitReachedSubtitle: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  singleMessageButton: {
+    width: '100%',
+    height: 48,
+    borderRadius: borderRadius.lg,
+    backgroundColor: '#FFD700',
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.small,
+  },
+  singleMessageButtonText: {
+    ...typography.button,
+    color: '#1A1A1A',
+    fontWeight: '700',
+  },
+  upgradeMessageButton: {
+    width: '100%',
+    height: 48,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.small,
+  },
+  upgradeMessageButtonText: {
+    ...typography.button,
+    color: colors.text,
+    fontWeight: '700',
+  },
+  goBackButton: {
+    paddingVertical: spacing.sm,
+  },
+  goBackButtonText: {
+    ...typography.body,
+    color: colors.textTertiary,
   },
 });

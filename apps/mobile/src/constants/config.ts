@@ -70,57 +70,51 @@ export const PACKAGE_TIERS = [
     price: 0,
     features: [
       'Günlük 20 beğeni',
+      '1 Süper Beğeni / gün',
       'Temel uyumluluk skoru',
-      '20 temel soru',
-      'Harmony Room (30 dk)',
+      'Reklamlı deneyim',
     ],
   },
   {
     id: 'gold',
-    name: 'Gold',
-    price: 149.99,
+    name: 'Premium',
+    price: 349.99,
     features: [
-      'Günlük 60 beğeni',
-      'Detaylı uyumluluk analizi',
-      '45 soru (20 temel + 25 premium)',
-      'Harmony Room süre uzatma',
+      'Sınırsız beğeni',
+      '5 Süper Beğeni / gün',
       'Kimin beğendiğini gör',
-      'Geri al özelliği',
+      'Sınırsız geri al',
+      'Reklamsız deneyim',
+      'Sosyal Akış erişimi',
     ],
   },
   {
     id: 'pro',
-    name: 'Pro',
-    price: 299.99,
+    name: 'Supreme',
+    price: 599.99,
     features: [
-      'Gold özelliklerin tümü',
-      'Öncelikli profil gösterimi',
+      'Premium özelliklerin tümü',
+      'Sınırsız Süper Beğeni',
+      'Ayda 3 Boost hediye',
+      'Tüm beğenilerin öncelikli',
       'Gelişmiş filtreler',
-      'Aylık uyumluluk raporu',
-      'Sınırsız Harmony Room',
+      'Yakın çevredeki profiller',
     ],
   },
   {
     id: 'reserved',
     name: 'Reserved',
-    price: 999.99,
+    price: 1299.99,
     features: [
-      'Pro özelliklerin tümü',
+      'Supreme özelliklerin tümü',
+      'Ayda 5 Boost hediye',
       'Özel eşleştirme algoritması',
       'VIP müşteri desteği',
       'Özel etkinlik davetleri',
-      'Rozet ve ödüller',
+      'Özel rozet ve ödüller',
     ],
   },
 ] as const;
-
-// Harmony Room configuration
-export const HARMONY_CONFIG = {
-  DEFAULT_DURATION_MINUTES: 30,
-  EXTENSION_DURATION_MINUTES: 15,
-  MAX_EXTENSIONS: 3,
-  GOLD_EXTENSION_COST: 50,
-} as const;
 
 // Profile configuration
 export const PROFILE_CONFIG = {
@@ -138,4 +132,35 @@ export const DISCOVERY_CONFIG = {
   CARD_STACK_SIZE: 30,
   DEFAULT_DISTANCE_KM: 50,
   MAX_DISTANCE_KM: 200,
+} as const;
+
+// Super Like daily limits per package tier (-1 = unlimited)
+export const SUPER_LIKE_CONFIG = {
+  DAILY_LIMITS: {
+    free: 1,
+    gold: 5,
+    pro: -1,
+    reserved: -1,
+  },
+} as const;
+
+// "Likes You" daily profile view limits per package tier (-1 = unlimited)
+export const LIKES_VIEW_CONFIG = {
+  DAILY_LIMITS: {
+    free: 1,
+    gold: 20,
+    pro: 50,
+    reserved: -1,
+  },
+} as const;
+
+// Message daily limits per package tier (-1 = unlimited)
+export const MESSAGE_CONFIG = {
+  DAILY_LIMITS: {
+    free: 1,
+    gold: 5,
+    pro: 10,
+    reserved: -1,
+  },
+  SINGLE_MESSAGE_PACK_PRICE: 199, // TL — purchased with Gold balance
 } as const;

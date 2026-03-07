@@ -22,10 +22,11 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { DiscoveryStackParamList, MainTabParamList } from '../../navigation/types';
+import type { DiscoveryStackParamList, MatchesStackParamList, MainTabParamList } from '../../navigation/types';
 import { discoveryService } from '../../services/discoveryService';
 import type { LikeYouCard } from '../../services/discoveryService';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore, type PackageTier } from '../../stores/authStore';
+import { LIKES_VIEW_CONFIG } from '../../constants/config';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { SlideIn } from '../../components/animations/SlideIn';
 import { colors } from '../../theme/colors';
@@ -39,7 +40,7 @@ const GRID_PADDING = spacing.lg;
 const CARD_SIZE = (SCREEN_WIDTH - GRID_PADDING * 2 - GRID_GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
 
 type LikesYouNavProp = CompositeNavigationProp<
-  NativeStackNavigationProp<DiscoveryStackParamList, 'LikesYou'>,
+  NativeStackNavigationProp<DiscoveryStackParamList & MatchesStackParamList, 'LikesYou'>,
   BottomTabNavigationProp<MainTabParamList>
 >;
 
@@ -212,14 +213,32 @@ LikeCard.displayName = 'LikeCard';
 
 // ─── Main Screen ──────────────────────────────────────────────
 
+// Helper to get today's date string for daily reset
+const getLikesTodayString = (): string => new Date().toISOString().split('T')[0];
+
 export const LikesYouScreen: React.FC = () => {
   useScreenTracking('LikesYou');
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<LikesYouNavProp>();
 
-  // Auth store — package tier determines blur state
-  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'free');
+  // Auth store — package tier determines blur & view limit
+  const packageTier = (useAuthStore((s) => s.user?.packageTier ?? 'free')) as PackageTier;
   const isBlurred = packageTier === 'free';
+
+  // Daily view limit
+  const dailyLimit = LIKES_VIEW_CONFIG.DAILY_LIMITS[packageTier];
+  const isUnlimitedViews = dailyLimit === -1;
+  const [viewedToday, setViewedToday] = useState(0);
+  const [lastViewDate, setLastViewDate] = useState(getLikesTodayString());
+
+  // Reset count if day changed
+  const today = getLikesTodayString();
+  if (lastViewDate !== today) {
+    setViewedToday(0);
+    setLastViewDate(today);
+  }
+
+  const viewsRemaining = isUnlimitedViews ? -1 : Math.max(0, dailyLimit - viewedToday);
 
   // Local state
   const [likes, setLikes] = useState<LikeYouCard[]>([]);
@@ -259,8 +278,16 @@ export const LikesYouScreen: React.FC = () => {
   // ─── Navigation handlers ────────────────────────────────────
 
   const handleCardPress = useCallback((userId: string) => {
+    // Check daily view limit
+    if (!isUnlimitedViews && viewedToday >= dailyLimit) {
+      navigation.navigate('ProfileTab', { screen: 'Packages' });
+      return;
+    }
+    if (!isUnlimitedViews) {
+      setViewedToday((prev) => prev + 1);
+    }
     navigation.navigate('ProfilePreview', { userId });
-  }, [navigation]);
+  }, [navigation, isUnlimitedViews, viewedToday, dailyLimit]);
 
   const handleUpgradePress = useCallback(() => {
     navigation.navigate('ProfileTab', { screen: 'Packages' });
@@ -273,16 +300,20 @@ export const LikesYouScreen: React.FC = () => {
   // ─── Render helpers ─────────────────────────────────────────
 
   const renderItem = useCallback(
-    ({ item, index }: { item: LikeYouCard; index: number }) => (
-      <LikeCard
-        card={item}
-        index={index}
-        isBlurred={isBlurred}
-        onCardPress={handleCardPress}
-        onUpgradePress={handleUpgradePress}
-      />
-    ),
-    [isBlurred, handleCardPress, handleUpgradePress],
+    ({ item, index }: { item: LikeYouCard; index: number }) => {
+      // Beyond daily limit: blur the card
+      const isBeyondLimit = !isUnlimitedViews && index >= dailyLimit;
+      return (
+        <LikeCard
+          card={item}
+          index={index}
+          isBlurred={isBlurred || isBeyondLimit}
+          onCardPress={handleCardPress}
+          onUpgradePress={handleUpgradePress}
+        />
+      );
+    },
+    [isBlurred, isUnlimitedViews, dailyLimit, handleCardPress, handleUpgradePress],
   );
 
   const keyExtractor = useCallback((item: LikeYouCard) => item.userId, []);
@@ -310,31 +341,55 @@ export const LikesYouScreen: React.FC = () => {
   ), [handleDiscoverPress]);
 
   const renderHeader = useCallback(() => {
-    if (!isBlurred || likes.length === 0) return null;
+    const elements: React.ReactNode[] = [];
 
-    return (
-      <Pressable
-        onPress={handleUpgradePress}
-        style={styles.upgradeBanner}
-        accessibilityLabel="Gold paketine geç"
-        accessibilityRole="button"
-        accessibilityHint="Gold paketine yükseltmek için dokunun"
-      >
-        <View style={styles.upgradeBannerContent}>
-          <Text style={styles.upgradeBannerIcon}>{'\uD83D\uDD13'}</Text>
-          <View style={styles.upgradeBannerTextContainer}>
-            <Text style={styles.upgradeBannerTitle}>Gold&apos;a Geç</Text>
-            <Text style={styles.upgradeBannerSubtitle}>
-              Seni beğenenleri gör ve hemen eşleş
-            </Text>
+    // View limit info banner
+    if (!isUnlimitedViews && likes.length > 0) {
+      elements.push(
+        <View key="limit-banner" style={styles.viewLimitBanner}>
+          <Text style={styles.viewLimitText}>
+            {viewsRemaining > 0
+              ? `Bugün ${viewsRemaining}/${dailyLimit} profil görüntüleme hakkın kaldı`
+              : 'Günlük profil görüntüleme limitine ulaştın'}
+          </Text>
+          {viewsRemaining <= 0 && (
+            <Pressable onPress={handleUpgradePress}>
+              <Text style={styles.viewLimitUpgradeLink}>Paketi Yükselt</Text>
+            </Pressable>
+          )}
+        </View>,
+      );
+    }
+
+    // Upgrade banner for free users
+    if (isBlurred && likes.length > 0) {
+      elements.push(
+        <Pressable
+          key="upgrade-banner"
+          onPress={handleUpgradePress}
+          style={styles.upgradeBanner}
+          accessibilityLabel="Premium paketine geç"
+          accessibilityRole="button"
+          accessibilityHint="Premium paketine yükseltmek için dokunun"
+        >
+          <View style={styles.upgradeBannerContent}>
+            <Text style={styles.upgradeBannerIcon}>{'\uD83D\uDD13'}</Text>
+            <View style={styles.upgradeBannerTextContainer}>
+              <Text style={styles.upgradeBannerTitle}>Premium&apos;a Geç</Text>
+              <Text style={styles.upgradeBannerSubtitle}>
+                Seni beğenenleri gör ve hemen eşleş
+              </Text>
+            </View>
+            <View style={styles.upgradeBannerArrow}>
+              <Text style={styles.upgradeBannerArrowText}>{'\u203A'}</Text>
+            </View>
           </View>
-          <View style={styles.upgradeBannerArrow}>
-            <Text style={styles.upgradeBannerArrowText}>{'\u203A'}</Text>
-          </View>
-        </View>
-      </Pressable>
-    );
-  }, [isBlurred, likes.length, handleUpgradePress]);
+        </Pressable>,
+      );
+    }
+
+    return elements.length > 0 ? <>{elements}</> : null;
+  }, [isBlurred, isUnlimitedViews, likes.length, viewsRemaining, dailyLimit, handleUpgradePress]);
 
   // ─── Skeleton loading state ─────────────────────────────────
 
@@ -463,6 +518,30 @@ const styles = StyleSheet.create({
   countBadgeText: {
     fontSize: 11,
     color: colors.text,
+    fontWeight: '700',
+  },
+
+  // ── View limit banner ──
+  viewLimitBanner: {
+    marginHorizontal: 0,
+    marginBottom: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  viewLimitText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  viewLimitUpgradeLink: {
+    ...typography.caption,
+    color: colors.primary,
     fontWeight: '700',
   },
 

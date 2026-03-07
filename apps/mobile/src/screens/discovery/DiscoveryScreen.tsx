@@ -41,15 +41,18 @@ import type {
 } from '../../navigation/types';
 import { useDiscoveryStore } from '../../stores/discoveryStore';
 import { useProfileStore } from '../../stores/profileStore';
-import { useMatchStore } from '../../stores/matchStore';
+import { useAuthStore, type PackageTier } from '../../stores/authStore';
+import { useSocialFeedStore } from '../../stores/socialFeedStore';
 import { matchService } from '../../services/matchService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { MatchAnimation } from '../../components/animations/MatchAnimation';
 import { DiscoveryCard } from '../../components/cards/DiscoveryCard';
 import { CompatibilityBottomSheet } from '../../components/discovery/CompatibilityBottomSheet';
+import { UpgradePrompt } from '../../components/premium/UpgradePrompt';
 import { discoveryService } from '../../services/discoveryService';
 import type { LoginStreakResponse } from '../../services/discoveryService';
 import { StreakBanner } from '../../components/streak/StreakBanner';
+import { SUPER_LIKE_CONFIG } from '../../constants/config';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
@@ -58,12 +61,13 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // ─── Swipe thresholds ────────────────────────────────────────
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
+const SWIPE_UP_THRESHOLD = SCREEN_HEIGHT * 0.15;
 const VELOCITY_THRESHOLD = 700;
+const VELOCITY_UP_THRESHOLD = 500;
 
 // Spring configs — organic feel (lower stiffness = more bounce, less mechanical)
 const SPRING_BACK = { damping: 14, stiffness: 120, mass: 0.9, overshootClamping: false };
 const SPRING_EXIT = { damping: 18, stiffness: 80, mass: 0.7 };
-const SPRING_BUTTON = { damping: 14, stiffness: 200 };
 
 type DiscoveryNavProp = CompositeNavigationProp<
   NativeStackNavigationProp<DiscoveryStackParamList, 'Discovery'>,
@@ -71,86 +75,6 @@ type DiscoveryNavProp = CompositeNavigationProp<
 >;
 
 // ─── Action Button component — soft circular style (Tinder-inspired) ──
-
-const ActionButton: React.FC<{
-  icon: string;
-  iconSize: number;
-  iconColor: string;
-  glowColor: string;
-  size: number;
-  bgColor: string;
-  borderColor: string;
-  onPress: () => void;
-  hapticStyle?: Haptics.ImpactFeedbackStyle;
-  testID: string;
-  accessibilityLabel: string;
-  accessibilityHint: string;
-}> = ({ icon, iconSize, iconColor, glowColor, size, bgColor, borderColor, onPress, hapticStyle, testID, accessibilityLabel, accessibilityHint }) => {
-  const scale = useSharedValue(1);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  const handlePressIn = () => {
-    scale.value = withSpring(0.85, SPRING_BUTTON);
-  };
-
-  const handlePressOut = () => {
-    scale.value = withSpring(1, SPRING_BUTTON);
-  };
-
-  const handlePress = () => {
-    Haptics.impactAsync(hapticStyle ?? Haptics.ImpactFeedbackStyle.Light);
-    onPress();
-  };
-
-  return (
-    <Pressable
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      onPress={handlePress}
-      accessibilityLabel={accessibilityLabel}
-      accessibilityRole="button"
-      accessibilityHint={accessibilityHint}
-    >
-      <Animated.View
-        testID={testID}
-        style={[
-          {
-            width: size,
-            height: size,
-            borderRadius: size / 2,
-            backgroundColor: bgColor,
-            borderWidth: 1.5,
-            borderColor,
-            justifyContent: 'center' as const,
-            alignItems: 'center' as const,
-          },
-          Platform.select({
-            ios: {
-              shadowColor: glowColor,
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-            },
-            android: { elevation: 4 },
-          }),
-          animatedStyle,
-        ]}
-      >
-        <Text
-          style={[
-            styles.actionBtnIcon,
-            { fontSize: iconSize, color: iconColor },
-          ]}
-        >
-          {icon}
-        </Text>
-      </Animated.View>
-    </Pressable>
-  );
-};
 
 // ─── Story Bubble component — Instagram-style circular avatar with ring ──
 
@@ -210,8 +134,21 @@ interface StoriesRowProps {
 }
 
 const StoriesRow: React.FC<StoriesRowProps> = ({ navigation, userFirstName, userPhotoUrl }) => {
-  const matches = useMatchStore((s) => s.matches);
-  const recentMatches = matches.slice(0, 6);
+  const posts = useSocialFeedStore((s) => s.posts);
+
+  // Deduplicate followed users by userId
+  const followedUsers = useMemo(() => {
+    const seen = new Set<string>();
+    const result: { userId: string; name: string; avatarUrl: string }[] = [];
+    for (const post of posts) {
+      if (post.isFollowing && !seen.has(post.userId)) {
+        seen.add(post.userId);
+        result.push({ userId: post.userId, name: post.userName, avatarUrl: post.userAvatarUrl });
+      }
+      if (result.length >= 8) break;
+    }
+    return result;
+  }, [posts]);
 
   return (
     <ScrollView
@@ -228,18 +165,15 @@ const StoriesRow: React.FC<StoriesRowProps> = ({ navigation, userFirstName, user
         onPress={() => navigation.navigate('ProfileTab', { screen: 'Profile' })}
         testID="story-self"
       />
-      {recentMatches.map((match) => (
+      {followedUsers.map((user) => (
         <StoryBubble
-          key={match.id}
-          label={match.name}
-          photoUrl={match.photoUrl || undefined}
-          initial={match.name ? match.name[0] : '?'}
-          ringColor={match.isNew ? palette.purple[400] : colors.surfaceBorder}
-          onPress={() => navigation.navigate('MatchesTab', {
-            screen: 'MatchDetail',
-            params: { matchId: match.id },
-          })}
-          testID={`story-match-${match.id}`}
+          key={user.userId}
+          label={user.name}
+          photoUrl={user.avatarUrl}
+          initial={user.name ? user.name[0] : '?'}
+          ringColor={palette.purple[400]}
+          onPress={() => navigation.navigate('ProfilePreview', { userId: user.userId })}
+          testID={`story-follow-${user.userId}`}
         />
       ))}
     </ScrollView>
@@ -263,13 +197,21 @@ export const DiscoveryScreen: React.FC = () => {
   const refreshFeed = useDiscoveryStore((s) => s.refreshFeed);
   const showMatchAnimation = useDiscoveryStore((s) => s.showMatchAnimation);
   const currentMatchId = useDiscoveryStore((s) => s.currentMatchId);
-  const matchAnimationType = useDiscoveryStore((s) => s.matchAnimationType);
   const dismissMatch = useDiscoveryStore((s) => s.dismissMatch);
   const userFirstName = useProfileStore((s) => s.profile?.firstName ?? '');
   const userPhotos = useProfileStore((s) => s.profile?.photos);
   const userPhotoUrl = userPhotos && userPhotos.length > 0 ? userPhotos[0] : undefined;
   const canUndo = useDiscoveryStore((s) => s.canUndo);
   const undoLastSwipe = useDiscoveryStore((s) => s.undoLastSwipe);
+
+  // ─── Super Like premium gate ────────────────────────────
+  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'free') as PackageTier;
+  const dailyLimit = SUPER_LIKE_CONFIG.DAILY_LIMITS[packageTier];
+  const isUnlimitedSuperLike = dailyLimit === -1;
+  const [superLikesUsed, setSuperLikesUsed] = useState(0);
+  const superLikesRemaining = isUnlimitedSuperLike ? -1 : dailyLimit - superLikesUsed;
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+
   // ─── Like-with-comment modal state ──────────────────────
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [likeComment, setLikeComment] = useState('');
@@ -404,9 +346,23 @@ export const DiscoveryScreen: React.FC = () => {
   const handleSwipeComplete = useCallback((direction: 'left' | 'right' | 'up') => {
     const card = currentCardRef.current;
     if (card) {
+      if (direction === 'up') {
+        // Gate: check super like allowance
+        if (!isUnlimitedSuperLike && superLikesRemaining <= 0) {
+          setShowUpgradePrompt(true);
+          return; // Card already springs back in gesture
+        }
+        // Animate card out upwards from JS side
+        translateY.value = withSpring(-SCREEN_HEIGHT - 200, SPRING_EXIT);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        if (!isUnlimitedSuperLike) {
+          setSuperLikesUsed((prev) => prev + 1);
+        }
+      }
       swipeAction(direction, card.id);
     }
-  }, [swipeAction]);
+  }, [swipeAction, isUnlimitedSuperLike, superLikesRemaining, translateY]);
+
 
   const handleCardTap = useCallback(() => {
     const card = currentCardRef.current;
@@ -419,17 +375,9 @@ export const DiscoveryScreen: React.FC = () => {
     dismissMatch();
     setMatchConversationStarters([]);
     setMatchExplanation(undefined);
-    if (currentMatchId && matchedCard) {
-      navigation.navigate('MatchesTab', {
-        screen: 'Chat',
-        params: {
-          matchId: currentMatchId,
-          partnerName: matchedCard.name,
-          partnerPhotoUrl: matchedCard.photoUrls?.[0] ?? '',
-        },
-      });
-    }
-  }, [dismissMatch, currentMatchId, matchedCard, navigation]);
+    // Switch to MatchesTab root (Tümü list)
+    navigation.navigate('MatchesTab' as never);
+  }, [dismissMatch, navigation]);
 
   const handleMatchDismiss = useCallback(() => {
     dismissMatch();
@@ -466,6 +414,15 @@ export const DiscoveryScreen: React.FC = () => {
       }
     })
     .onEnd((e) => {
+      // Up swipe (super like) — card springs back first, JS handler decides:
+      // if allowed → animates card up + fires swipe; if blocked → shows paywall
+      if (e.translationY < -SWIPE_UP_THRESHOLD || e.velocityY < -VELOCITY_UP_THRESHOLD) {
+        translateX.value = withSpring(0, SPRING_BACK);
+        translateY.value = withSpring(0, SPRING_BACK);
+        runOnJS(handleSwipeComplete)('up');
+        return;
+      }
+
       // Right swipe (like) — momentum-preserving spring exit
       if (e.translationX > SWIPE_THRESHOLD || e.velocityX > VELOCITY_THRESHOLD) {
         translateX.value = withSpring(SCREEN_WIDTH + 200, {
@@ -609,17 +566,6 @@ export const DiscoveryScreen: React.FC = () => {
 
   // ─── Button handlers ───────────────────────────────────────
 
-  const handlePassPress = useCallback(() => {
-    if (!currentCard) return;
-    translateX.value = withSpring(-SCREEN_WIDTH - 200, SPRING_EXIT);
-    swipeAction('left', currentCard.id);
-  }, [currentCard, swipeAction, translateX]);
-
-  const handleLikePress = useCallback(() => {
-    if (!currentCard) return;
-    setShowCommentModal(true);
-  }, [currentCard]);
-
   const handleLikeWithComment = useCallback(() => {
     if (!currentCard) return;
     const comment = likeComment.trim() || undefined;
@@ -636,6 +582,15 @@ export const DiscoveryScreen: React.FC = () => {
     setShowCommentModal(false);
     setLikeComment('');
   }, [currentCard, swipeAction, translateX]);
+
+  const handleUpgradeDismiss = useCallback(() => {
+    setShowUpgradePrompt(false);
+  }, []);
+
+  const handleUpgradeNavigate = useCallback((_tier: PackageTier) => {
+    setShowUpgradePrompt(false);
+    navigation.navigate('ProfileTab', { screen: 'Packages' } as never);
+  }, [navigation]);
 
   // ─── Loading state ─────────────────────────────────────────
 
@@ -848,37 +803,7 @@ export const DiscoveryScreen: React.FC = () => {
           </Pressable>
         </Animated.View>
 
-        {/* Main action buttons — soft circles with colored icons */}
-        <View style={styles.actions}>
-          <ActionButton
-            icon={'\u2715'}
-            iconSize={26}
-            iconColor="#EF4444"
-            glowColor="rgba(239,68,68,0.4)"
-            size={56}
-            bgColor="rgba(239,68,68,0.12)"
-            borderColor="rgba(239,68,68,0.25)"
-            hapticStyle={Haptics.ImpactFeedbackStyle.Light}
-            onPress={handlePassPress}
-            testID="discovery-pass-btn"
-            accessibilityLabel="Geç"
-            accessibilityHint="Bu profili geçmek için dokunun"
-          />
-          <ActionButton
-            icon={'\u2665'}
-            iconSize={26}
-            iconColor="#9B6BF8"
-            glowColor="rgba(155,107,248,0.4)"
-            size={56}
-            bgColor="rgba(155,107,248,0.12)"
-            borderColor="rgba(155,107,248,0.25)"
-            hapticStyle={Haptics.ImpactFeedbackStyle.Medium}
-            onPress={handleLikePress}
-            testID="discovery-like-btn"
-            accessibilityLabel="Beğen"
-            accessibilityHint="Bu profili beğenmek için dokunun"
-          />
-        </View>
+        {/* Action buttons removed — users swipe directly */}
       </View>
 
       {/* Match celebration overlay — only render when matchedCard exists */}
@@ -888,7 +813,7 @@ export const DiscoveryScreen: React.FC = () => {
           matchName={matchedCard?.name ?? ''}
           userName={userFirstName || undefined}
           compatibilityScore={matchedCard?.compatibilityPercent ?? 0}
-          isSuperCompatible={matchAnimationType === 'super_compatibility'}
+          isSuperCompatible={false}
           conversationStarters={matchConversationStarters}
           compatibilityExplanation={matchExplanation}
           onSendMessage={handleMatchSendMessage}
@@ -966,6 +891,14 @@ export const DiscoveryScreen: React.FC = () => {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* Super Like upgrade prompt */}
+      <UpgradePrompt
+        visible={showUpgradePrompt}
+        feature="super_like"
+        onUpgrade={handleUpgradeNavigate}
+        onDismiss={handleUpgradeDismiss}
+      />
 
       {/* Login streak banner */}
       {streakData && (
@@ -1093,17 +1026,6 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     paddingBottom: Platform.OS === 'ios' ? spacing.xs : spacing.sm,
   },
-  actions: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: spacing.xxl,
-  },
-  actionBtnIcon: {
-    fontWeight: '700',
-  },
-
   // ── Undo Button ──
   undoWrapper: {
     position: 'absolute',

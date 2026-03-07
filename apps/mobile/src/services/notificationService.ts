@@ -42,7 +42,6 @@ export interface RegisterDeviceResponse {
 export interface NotificationPreferences {
   newMatches: boolean;
   messages: boolean;
-  harmonyInvites: boolean;
   badges: boolean;
   system: boolean;
   allDisabled: boolean;

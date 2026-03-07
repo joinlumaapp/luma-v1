@@ -1,157 +1,10 @@
-// WebSocket service for real-time Harmony Room communication
-// Uses Socket.IO client to connect to the backend HarmonyGateway (/harmony namespace)
+// WebSocket service for real-time communication
+// Uses Socket.IO client to connect to the backend
 
 import { io, Socket } from 'socket.io-client';
 import { APP_CONFIG } from '../constants/config';
 
-// ─── Event Constants ──────────────────────────────────────────
-// Matches the event names defined in harmony.gateway.ts
-
-/** Events emitted FROM client TO server */
-export const CLIENT_EVENTS = {
-  JOIN: 'harmony:join',
-  LEAVE: 'harmony:leave',
-  REVEAL_CARD: 'harmony:reveal_card',
-  REACT: 'harmony:react',
-  SEND_MESSAGE: 'harmony:send_message',
-  REQUEST_TIMER: 'harmony:request_timer',
-  TYPING: 'harmony:typing',
-  MESSAGE_READ: 'harmony:message_read',
-  // WebRTC Call Signaling
-  CALL_INITIATE: 'harmony:call_initiate',
-  CALL_ACCEPT: 'harmony:call_accept',
-  CALL_REJECT: 'harmony:call_reject',
-  CALL_END: 'harmony:call_end',
-  WEBRTC_OFFER: 'harmony:webrtc_offer',
-  WEBRTC_ANSWER: 'harmony:webrtc_answer',
-  WEBRTC_ICE_CANDIDATE: 'harmony:webrtc_ice_candidate',
-  // Video Consent
-  VIDEO_CONSENT_REQUEST: 'harmony:video_consent_request',
-  VIDEO_CONSENT_RESPONSE: 'harmony:video_consent_response',
-} as const;
-
-/** Events received FROM server TO client */
-export const SERVER_EVENTS = {
-  USER_JOINED: 'harmony:user_joined',
-  USER_LEFT: 'harmony:user_left',
-  CARD_REVEALED: 'harmony:card_revealed',
-  REACTION: 'harmony:reaction',
-  MESSAGE: 'harmony:message',
-  SESSION_STATE: 'harmony:session_state',
-  SESSION_ENDED: 'harmony:session_ended',
-  TIMER_SYNC: 'harmony:timer_sync',
-  TYPING: 'harmony:typing',
-  READ_RECEIPT: 'harmony:read_receipt',
-  ERROR: 'harmony:error',
-  // WebRTC Call Signaling
-  CALL_INITIATE: 'harmony:call_initiate',
-  CALL_ACCEPT: 'harmony:call_accept',
-  CALL_REJECT: 'harmony:call_reject',
-  CALL_END: 'harmony:call_end',
-  WEBRTC_OFFER: 'harmony:webrtc_offer',
-  WEBRTC_ANSWER: 'harmony:webrtc_answer',
-  WEBRTC_ICE_CANDIDATE: 'harmony:webrtc_ice_candidate',
-  // Video Consent
-  VIDEO_CONSENT_REQUEST: 'harmony:video_consent_request',
-  VIDEO_CONSENT_ACCEPTED: 'harmony:video_consent_accepted',
-  VIDEO_CONSENT_REJECTED: 'harmony:video_consent_rejected',
-} as const;
-
-// ─── Payload Types ────────────────────────────────────────────
-
-/** Reaction types accepted by the backend */
-export type HarmonyReaction = 'love' | 'laugh' | 'think' | 'surprise' | 'agree' | 'disagree';
-
-/** Server -> Client: user joined a session */
-export interface UserJoinedPayload {
-  userId: string;
-  sessionId: string;
-  timestamp: string;
-}
-
-/** Server -> Client: user left a session */
-export interface UserLeftPayload {
-  userId: string;
-  sessionId: string;
-  timestamp: string;
-}
-
-/** Server -> Client: a card was revealed */
-export interface CardRevealedPayload {
-  type: 'question' | 'game';
-  id: string;
-  revealedBy: string;
-  timestamp: string;
-  // Question card fields
-  category?: string;
-  textTr?: string;
-  textEn?: string;
-  // Game card fields
-  nameTr?: string;
-  nameEn?: string;
-  descriptionTr?: string;
-  gameType?: string;
-}
-
-/** Server -> Client: reaction broadcast */
-export interface ReactionPayload {
-  cardId: string;
-  reaction: string;
-  userId: string;
-  timestamp: string;
-}
-
-/** Server -> Client: new message in the session */
-export interface MessagePayload {
-  id: string;
-  senderId: string;
-  content: string;
-  type: 'TEXT' | 'QUESTION_CARD' | 'GAME_CARD' | 'SYSTEM';
-  createdAt: string;
-}
-
-/** Server -> Client: session state on join */
-export interface SessionStatePayload {
-  sessionId: string;
-  status: string;
-  remainingSeconds: number;
-  hasVoiceChat: boolean;
-  hasVideoChat: boolean;
-}
-
-/** Server -> Client: session ended */
-export interface SessionEndedPayload {
-  sessionId: string;
-  reason: string;
-}
-
-/** Server -> Client: timer sync response */
-export interface TimerSyncPayload {
-  sessionId: string;
-  remainingSeconds: number;
-  status: string;
-}
-
-/** Server -> Client: typing indicator */
-export interface TypingPayload {
-  userId: string;
-  isTyping: boolean;
-  timestamp: string;
-}
-
-/** Server -> Client: read receipt */
-export interface ReadReceiptPayload {
-  messageIds: string[];
-  readBy: string;
-  readAt: string;
-}
-
-/** Server -> Client: error */
-export interface ErrorPayload {
-  message: string;
-}
-
-// ─── WebRTC Call Payload Types ──────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────
 
 /** Call type: voice-only or voice+video */
 export type CallType = 'voice' | 'video';
@@ -196,23 +49,37 @@ export interface ICECandidatePayload {
   candidate: string;
 }
 
-/** Server -> Client: video consent request from partner */
-export interface VideoConsentRequestPayload {
-  sessionId: string;
-  requesterId: string;
+/** Server -> Client: error */
+export interface ErrorPayload {
+  message: string;
 }
 
-/** Server -> Client: video consent accepted by partner */
-export interface VideoConsentAcceptedPayload {
-  sessionId: string;
-  acceptedBy: string;
-}
+// ─── Event Constants ──────────────────────────────────────────
 
-/** Server -> Client: video consent rejected by partner */
-export interface VideoConsentRejectedPayload {
-  sessionId: string;
-  rejectedBy: string;
-}
+/** Events emitted FROM client TO server */
+export const CLIENT_EVENTS = {
+  // WebRTC Call Signaling
+  CALL_INITIATE: 'call:initiate',
+  CALL_ACCEPT: 'call:accept',
+  CALL_REJECT: 'call:reject',
+  CALL_END: 'call:end',
+  WEBRTC_OFFER: 'call:webrtc_offer',
+  WEBRTC_ANSWER: 'call:webrtc_answer',
+  WEBRTC_ICE_CANDIDATE: 'call:webrtc_ice_candidate',
+} as const;
+
+/** Events received FROM server TO client */
+export const SERVER_EVENTS = {
+  ERROR: 'error',
+  // WebRTC Call Signaling
+  CALL_INITIATE: 'call:initiate',
+  CALL_ACCEPT: 'call:accept',
+  CALL_REJECT: 'call:reject',
+  CALL_END: 'call:end',
+  WEBRTC_OFFER: 'call:webrtc_offer',
+  WEBRTC_ANSWER: 'call:webrtc_answer',
+  WEBRTC_ICE_CANDIDATE: 'call:webrtc_ice_candidate',
+} as const;
 
 // ─── Socket Service ───────────────────────────────────────────
 
@@ -224,14 +91,8 @@ class SocketService {
   private pendingEmits: Array<{ event: string; data: Record<string, unknown> }> = [];
   private maxPendingEmits = 50;
 
-  /** Session ID to auto-rejoin after reconnection */
-  private activeSessionId: string | null = null;
-
-  /** Callback invoked when auto-rejoin fires after reconnection */
-  private onReconnectCallback: ((sessionId: string) => void) | null = null;
-
   /**
-   * Connect to the Harmony WebSocket gateway.
+   * Connect to the WebSocket gateway.
    * JWT token is sent via the Socket.IO handshake `auth` option.
    */
   connect(token: string): void {
@@ -247,7 +108,7 @@ class SocketService {
       this.socket = null;
     }
 
-    this.socket = io(`${APP_CONFIG.WS_BASE_URL}/harmony`, {
+    this.socket = io(APP_CONFIG.WS_BASE_URL, {
       auth: { token },
       transports: ['websocket'],
       reconnection: true,
@@ -265,8 +126,6 @@ class SocketService {
    * Disconnect from the server and clean up all listeners.
    */
   disconnect(): void {
-    this.activeSessionId = null;
-    this.onReconnectCallback = null;
     this.pendingEmits = [];
     this.reconnectCallbacks = [];
     if (this.socket) {
@@ -277,89 +136,10 @@ class SocketService {
     }
   }
 
-  /**
-   * Set a callback that fires when the socket auto-reconnects
-   * while an active session is tracked. The callback receives the sessionId
-   * so the caller can re-join the session room and re-sync timer.
-   */
-  setReconnectCallback(callback: ((sessionId: string) => void) | null): void {
-    this.onReconnectCallback = callback;
-  }
-
-  // ─── Client -> Server Emitters ──────────────────────────────
-
-  /**
-   * Join a Harmony Room session.
-   * The backend validates participation and activates pending sessions.
-   * Tracks the session ID for auto-rejoin after reconnection.
-   */
-  joinSession(sessionId: string): void {
-    this.activeSessionId = sessionId;
-    this.emit(CLIENT_EVENTS.JOIN, { sessionId });
-  }
-
-  /**
-   * Leave a Harmony Room session.
-   * Notifies the partner before leaving the Socket.IO room.
-   * Clears the active session tracking.
-   */
-  leaveSession(sessionId: string): void {
-    this.activeSessionId = null;
-    this.emit(CLIENT_EVENTS.LEAVE, { sessionId });
-  }
-
-  /**
-   * Reveal a card in the Harmony Room.
-   * Backend verifies card ownership and broadcasts to the room.
-   */
-  revealCard(sessionId: string, cardId: string): void {
-    this.emit(CLIENT_EVENTS.REVEAL_CARD, { sessionId, cardId });
-  }
-
-  /**
-   * Send a reaction to a card.
-   * Valid reactions: love, laugh, think, surprise, agree, disagree
-   */
-  sendReaction(sessionId: string, cardId: string, reaction: HarmonyReaction): void {
-    this.emit(CLIENT_EVENTS.REACT, { sessionId, cardId, reaction });
-  }
-
-  /**
-   * Send a text message in the Harmony Room.
-   * Backend persists the message and broadcasts to the room.
-   */
-  sendMessage(sessionId: string, content: string, type?: 'TEXT' | 'QUESTION_CARD' | 'GAME_CARD' | 'SYSTEM'): void {
-    this.emit(CLIENT_EVENTS.SEND_MESSAGE, { sessionId, content, type });
-  }
-
-  /**
-   * Request the current timer state from the server.
-   * Useful for reconnection sync — server responds with harmony:timer_sync.
-   */
-  requestTimerSync(sessionId: string): void {
-    this.emit(CLIENT_EVENTS.REQUEST_TIMER, { sessionId });
-  }
-
-  /**
-   * Emit typing indicator to the session room.
-   * isTyping: true when user starts typing, false when they stop.
-   */
-  sendTypingIndicator(sessionId: string, isTyping: boolean): void {
-    this.emit(CLIENT_EVENTS.TYPING, { sessionId, isTyping });
-  }
-
-  /**
-   * Send read receipt for viewed messages.
-   * Notifies the partner that messages have been read.
-   */
-  sendReadReceipt(sessionId: string, messageIds: string[]): void {
-    this.emit(CLIENT_EVENTS.MESSAGE_READ, { sessionId, messageIds });
-  }
-
   // ─── WebRTC Call Signaling Emitters ──────────────────────────
 
   /**
-   * Initiate a voice or video call in the Harmony Room.
+   * Initiate a voice or video call.
    * Backend broadcasts call request to the partner.
    */
   initiateCall(sessionId: string, callType: CallType): void {
@@ -368,7 +148,6 @@ class SocketService {
 
   /**
    * Accept an incoming call.
-   * Backend notifies the caller that the call was accepted.
    */
   acceptCall(sessionId: string): void {
     this.emit(CLIENT_EVENTS.CALL_ACCEPT, { sessionId });
@@ -376,7 +155,6 @@ class SocketService {
 
   /**
    * Reject an incoming call.
-   * Backend notifies the caller that the call was rejected.
    */
   rejectCall(sessionId: string, reason?: string): void {
     this.emit(CLIENT_EVENTS.CALL_REJECT, { sessionId, reason });
@@ -384,7 +162,6 @@ class SocketService {
 
   /**
    * End the current call.
-   * Backend notifies the partner that the call has ended.
    */
   endCall(sessionId: string): void {
     this.emit(CLIENT_EVENTS.CALL_END, { sessionId });
@@ -411,33 +188,10 @@ class SocketService {
     this.emit(CLIENT_EVENTS.WEBRTC_ICE_CANDIDATE, { sessionId, candidate });
   }
 
-  // ─── Video Consent ─────────────────────────────────────────
-
-  /**
-   * Send a video consent request to the partner via the signaling server.
-   */
-  sendVideoConsentRequest(sessionId: string, targetUserId: string): void {
-    this.emit(CLIENT_EVENTS.VIDEO_CONSENT_REQUEST, { sessionId, targetUserId });
-  }
-
-  /**
-   * Respond to a video consent request (accept or reject).
-   */
-  sendVideoConsentResponse(sessionId: string, requesterId: string, accepted: boolean): void {
-    this.emit(CLIENT_EVENTS.VIDEO_CONSENT_RESPONSE, { sessionId, requesterId, accepted });
-  }
-
   // ─── Event Listener Management ──────────────────────────────
 
   /**
    * Register a listener for a server event and return a cleanup function.
-   * Preferred for use in services that manage their own listener lifecycle.
-   *
-   * @returns A cleanup function that removes the listener.
-   *
-   * @example
-   * const cleanup = socketService.on('harmony:call_initiate', (data) => { ... });
-   * cleanup(); // removes the listener
    */
   on<T = unknown>(event: string, callback: (data: T) => void): () => void {
     this.onEvent(event, callback);
@@ -446,10 +200,6 @@ class SocketService {
 
   /**
    * Register a listener for a server event.
-   * Use SERVER_EVENTS constants for type-safe event names.
-   *
-   * @example
-   * socketService.onEvent(SERVER_EVENTS.MESSAGE, (data: MessagePayload) => { ... });
    */
   onEvent<T = unknown>(event: string, callback: (data: T) => void): void {
     if (!this.socket) {
@@ -479,7 +229,6 @@ class SocketService {
     if (event) {
       this.socket.removeAllListeners(event);
     } else {
-      // Only remove Harmony-related listeners, keep internal ones
       Object.values(SERVER_EVENTS).forEach((evt) => {
         this.socket?.removeAllListeners(evt);
       });
@@ -490,7 +239,6 @@ class SocketService {
 
   /**
    * Register a callback to be invoked after a successful reconnection.
-   * Useful for re-joining rooms (Harmony sessions, chat conversations).
    * Returns a cleanup function.
    */
   onReconnect(callback: () => void): () => void {
@@ -519,8 +267,7 @@ class SocketService {
   // ─── Internal Helpers ───────────────────────────────────────
 
   /**
-   * Safely emit an event. Queues the event if the socket is temporarily disconnected
-   * (up to maxPendingEmits). The queue is flushed on reconnection.
+   * Safely emit an event. Queues the event if the socket is temporarily disconnected.
    */
   private emit(event: string, data: Record<string, unknown>): void {
     if (!this.socket?.connected) {
@@ -559,16 +306,6 @@ class SocketService {
       this.reconnectAttempts = 0;
       console.log(`[SocketService] Connected (id: ${this.socket?.id})`);
 
-      // Auto-rejoin active session after reconnection
-      if (wasReconnect && this.activeSessionId) {
-        console.log(`[SocketService] Reconnected — auto-rejoining session ${this.activeSessionId}`);
-        this.socket?.emit(CLIENT_EVENTS.JOIN, { sessionId: this.activeSessionId });
-        this.socket?.emit(CLIENT_EVENTS.REQUEST_TIMER, { sessionId: this.activeSessionId });
-        if (this.onReconnectCallback) {
-          this.onReconnectCallback(this.activeSessionId);
-        }
-      }
-
       // Flush queued events and notify generic reconnect subscribers
       if (wasReconnect) {
         this.flushPendingEmits();
@@ -595,7 +332,7 @@ class SocketService {
       );
     });
 
-    // Listen for server-side auth errors
+    // Listen for server-side errors
     this.socket.on(SERVER_EVENTS.ERROR, (...args: unknown[]) => {
       const payload = args[0] as ErrorPayload;
       console.error('[SocketService] Server error:', payload?.message);
