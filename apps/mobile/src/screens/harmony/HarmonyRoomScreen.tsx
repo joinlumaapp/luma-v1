@@ -735,8 +735,8 @@ export const HarmonyRoomScreen: React.FC = () => {
     // Video dual consent listeners
     const onConsentRequest = (data: VideoConsentRequestPayload) => {
       Alert.alert(
-        'Video Arama Istegi',
-        'Partneriniz video arama baslatmak istiyor. Kabul ediyor musunuz?',
+        'Video Arama İsteği',
+        'Partneriniz video arama başlatmak istiyor. Kabul ediyor musunuz?',
         [
           {
             text: 'Reddet',

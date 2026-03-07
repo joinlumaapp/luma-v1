@@ -1,14 +1,13 @@
-// Root navigator — switches between Auth, Onboarding, and Main flows
+// Root navigator — switches between Auth (Landing), Onboarding, and Main flows
+// Flow:
+// 1. Landing (EmotionalIntro) — "Uyum Testine Basla" sets hasStartedOnboarding
+// 2. Onboarding (Gender → ... → Questions → Phone → OTP → Selfie)
+// 3. MainTabs (authenticated + onboarded)
 
-import React, { useState, useEffect } from 'react';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { RootStackParamList } from './types';
 import { useAuth } from '../hooks/useAuth';
-import { colors } from '../theme/colors';
-import { LumaLogo } from '../components/animations/LumaLogo';
-import { SlideIn } from '../components/animations/SlideIn';
 
 import { AuthNavigator } from './AuthNavigator';
 import { OnboardingNavigator } from './OnboardingNavigator';
@@ -16,64 +15,25 @@ import { MainTabNavigator } from './MainTabNavigator';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-/** Gradient stops for the branded splash background */
-const SPLASH_GRADIENT_COLORS: readonly [string, string, ...string[]] = [
-  '#08080F',
-  '#150A30',
-  '#251560',
-];
-
-/** Minimum time (ms) the splash screen stays visible */
-const SPLASH_MIN_DURATION = 2000;
-
 export const RootNavigator: React.FC = () => {
-  const { isAuthenticated, isLoading, isOnboarded } = useAuth();
-  const [splashReady, setSplashReady] = useState(false);
+  const { isAuthenticated, isOnboarded, hasStartedOnboarding } = useAuth();
 
-  useEffect(() => {
-    const timer = setTimeout(() => setSplashReady(true), SPLASH_MIN_DURATION);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (isLoading || !splashReady) {
-    return (
-      <View style={styles.splashContainer}>
-        <LinearGradient
-          colors={SPLASH_GRADIENT_COLORS}
-          style={StyleSheet.absoluteFillObject}
-        />
-        <LumaLogo size={1.5} showTagline />
-        <SlideIn direction="up" delay={900} duration={500} distance={20}>
-          <ActivityIndicator
-            size="large"
-            color={colors.primary}
-            style={styles.splashLoader}
-          />
-        </SlideIn>
-      </View>
-    );
-  }
+  // Determine which flow to show
+  // 1. Authenticated + Onboarded → MainTabs
+  // 2. Started onboarding but not yet done → OnboardingNavigator
+  // 3. Not started → Auth (Landing page)
+  const showMainTabs = isAuthenticated && isOnboarded;
+  const showOnboarding = hasStartedOnboarding && !showMainTabs;
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
-      {!isAuthenticated ? (
-        <Stack.Screen name="Auth" component={AuthNavigator} />
-      ) : !isOnboarded ? (
+      {showMainTabs ? (
+        <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+      ) : showOnboarding ? (
         <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
       ) : (
-        <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+        <Stack.Screen name="Auth" component={AuthNavigator} />
       )}
     </Stack.Navigator>
   );
 };
-
-const styles = StyleSheet.create({
-  splashContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  splashLoader: {
-    marginTop: 40,
-  },
-});

@@ -1,5 +1,5 @@
-// SocialFeedScreen — Litmatch-inspired social feed where users share moments
-// Features: filter tabs, topic chips, feed cards, post creation FAB, pull-to-refresh
+// SocialFeedScreen — Instagram-style social feed with follow system
+// Features: filter tabs, topic chips, feed cards, follow, photo/video, profanity filter
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
@@ -16,21 +16,29 @@ import {
   ActivityIndicator,
   Animated,
   ScrollView,
+  Alert,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { FeedStackParamList } from '../../navigation/types';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 import { useSocialFeedStore } from '../../stores/socialFeedStore';
 import {
   FEED_TOPICS,
+  containsProfanity,
+  PROFANITY_WARNING,
   type FeedFilter,
   type FeedTopic,
   type FeedPost,
 } from '../../services/socialFeedService';
+import { photoService } from '../../services/photoService';
 import { TopicChipRow } from '../../components/feed/TopicChip';
 import { FeedCard } from '../../components/feed/FeedCard';
+import { CommentSheet } from '../../components/feed/CommentSheet';
 
 // ─── Filter Tabs ──────────────────────────────────────────────
 
@@ -77,9 +85,11 @@ const FilterTab: React.FC<FilterTabProps> = ({ filter, isActive, onPress }) => {
 interface CreatePostModalProps {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (content: string, topic: FeedTopic) => void;
+  onSubmit: (content: string, topic: FeedTopic, photoUrls: string[], videoUrl: string | null) => void;
   isCreating: boolean;
 }
+
+const MAX_POST_PHOTOS = 4;
 
 const CreatePostModal: React.FC<CreatePostModalProps> = ({
   visible,
@@ -89,15 +99,62 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
 }) => {
   const [content, setContent] = useState('');
   const [selectedTopic, setSelectedTopic] = useState<FeedTopic>('GUNLUK');
+  const [attachedPhotos, setAttachedPhotos] = useState<string[]>([]);
+  const [attachedVideo, setAttachedVideo] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
 
   const handleSubmit = useCallback(() => {
-    if (content.trim().length === 0) return;
-    onSubmit(content.trim(), selectedTopic);
+    const trimmed = content.trim();
+    if (trimmed.length === 0 && attachedPhotos.length === 0 && !attachedVideo) return;
+    // Profanity check
+    if (containsProfanity(trimmed)) {
+      Alert.alert('Uyarı', PROFANITY_WARNING);
+      return;
+    }
+    onSubmit(trimmed, selectedTopic, attachedPhotos, attachedVideo);
     setContent('');
-  }, [content, selectedTopic, onSubmit]);
+    setAttachedPhotos([]);
+    setAttachedVideo(null);
+  }, [content, selectedTopic, attachedPhotos, attachedVideo, onSubmit]);
 
-  const canSubmit = content.trim().length > 0 && !isCreating;
+  const handleAddPhoto = useCallback(async () => {
+    if (attachedPhotos.length >= MAX_POST_PHOTOS) {
+      Alert.alert('Limit', `En fazla ${MAX_POST_PHOTOS} fotoğraf ekleyebilirsin.`);
+      return;
+    }
+    // If there's a video, can't add photos too
+    if (attachedVideo) {
+      Alert.alert('Uyarı', 'Video ve fotoğraf aynı anda eklenemez.');
+      return;
+    }
+    const uri = await photoService.pickFromGallery();
+    if (uri) {
+      setAttachedPhotos((prev) => [...prev, uri]);
+    }
+  }, [attachedPhotos, attachedVideo]);
+
+  const handleAddVideo = useCallback(async () => {
+    if (attachedPhotos.length > 0) {
+      Alert.alert('Uyarı', 'Video ve fotoğraf aynı anda eklenemez.');
+      return;
+    }
+    // Mock: pick photo as video thumbnail placeholder
+    const uri = await photoService.pickFromGallery();
+    if (uri) {
+      setAttachedVideo(uri);
+    }
+  }, [attachedPhotos]);
+
+  const handleRemovePhoto = useCallback((index: number) => {
+    setAttachedPhotos((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const handleRemoveVideo = useCallback(() => {
+    setAttachedVideo(null);
+  }, []);
+
+  const hasContent = content.trim().length > 0 || attachedPhotos.length > 0 || attachedVideo !== null;
+  const canSubmit = hasContent && !isCreating;
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
@@ -174,8 +231,63 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
             textAlignVertical="top"
           />
 
-          {/* Character Count */}
-          <Text style={modalStyles.charCount}>{content.length}/500</Text>
+          {/* Attached Media Preview */}
+          {(attachedPhotos.length > 0 || attachedVideo) && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={modalStyles.mediaPreviewRow}
+            >
+              {attachedPhotos.map((uri, index) => (
+                <View key={`photo-${index}`} style={modalStyles.mediaThumb}>
+                  <Image source={{ uri }} style={modalStyles.mediaThumbImage} />
+                  <TouchableOpacity
+                    style={modalStyles.mediaRemoveButton}
+                    onPress={() => handleRemovePhoto(index)}
+                  >
+                    <Text style={modalStyles.mediaRemoveText}>X</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+              {attachedVideo && (
+                <View style={modalStyles.mediaThumb}>
+                  <Image source={{ uri: attachedVideo }} style={modalStyles.mediaThumbImage} />
+                  <View style={modalStyles.videoOverlay}>
+                    <Text style={modalStyles.videoOverlayText}>{'▶'}</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={modalStyles.mediaRemoveButton}
+                    onPress={handleRemoveVideo}
+                  >
+                    <Text style={modalStyles.mediaRemoveText}>X</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </ScrollView>
+          )}
+
+          {/* Bottom bar: media buttons + char count */}
+          <View style={modalStyles.bottomBar}>
+            <View style={modalStyles.mediaButtons}>
+              <TouchableOpacity
+                style={modalStyles.mediaButton}
+                onPress={handleAddPhoto}
+                activeOpacity={0.7}
+              >
+                <Text style={modalStyles.mediaButtonIcon}>{'\uD83D\uDDBC'}</Text>
+                <Text style={modalStyles.mediaButtonLabel}>Fotoğraf</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={modalStyles.mediaButton}
+                onPress={handleAddVideo}
+                activeOpacity={0.7}
+              >
+                <Text style={modalStyles.mediaButtonIcon}>{'\uD83C\uDFA5'}</Text>
+                <Text style={modalStyles.mediaButtonLabel}>Video</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={modalStyles.charCount}>{content.length}/500</Text>
+          </View>
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -198,9 +310,11 @@ const EmptyState: React.FC = () => (
 
 // ─── Main Screen ──────────────────────────────────────────────
 
+type FeedNavProp = NativeStackNavigationProp<FeedStackParamList, 'SocialFeed'>;
+
 export const SocialFeedScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
+  const navigation = useNavigation<FeedNavProp>();
 
   // Store selectors
   const posts = useSocialFeedStore((s) => s.posts);
@@ -214,10 +328,13 @@ export const SocialFeedScreen: React.FC = () => {
   const setFilter = useSocialFeedStore((s) => s.setFilter);
   const setTopic = useSocialFeedStore((s) => s.setTopic);
   const toggleLike = useSocialFeedStore((s) => s.toggleLike);
+  const toggleFollow = useSocialFeedStore((s) => s.toggleFollow);
+  const incrementCommentCount = useSocialFeedStore((s) => s.incrementCommentCount);
   const createPost = useSocialFeedStore((s) => s.createPost);
 
   // Modal state
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [commentPostId, setCommentPostId] = useState<string | null>(null);
 
   // FAB animation
   const fabScale = useRef(new Animated.Value(0)).current;
@@ -263,21 +380,39 @@ export const SocialFeedScreen: React.FC = () => {
     [toggleLike],
   );
 
-  const handleComment = useCallback((_postId: string) => {
-    // Comment sheet placeholder — would open bottom sheet
+  const handleComment = useCallback((postId: string) => {
+    setCommentPostId(postId);
   }, []);
 
+  const handleCloseComments = useCallback(() => {
+    setCommentPostId(null);
+  }, []);
+
+  const handleCommentAdded = useCallback((postId: string) => {
+    incrementCommentCount(postId);
+  }, [incrementCommentCount]);
+
+  const handleFollow = useCallback(
+    (userId: string) => {
+      toggleFollow(userId);
+    },
+    [toggleFollow],
+  );
+
+  const handleProfilePress = useCallback(
+    (userId: string) => {
+      navigation.navigate('FeedProfile', { userId });
+    },
+    [navigation],
+  );
+
   const handleCreatePost = useCallback(
-    (content: string, topic: FeedTopic) => {
-      createPost({ content, topic, photoUrls: [] });
+    (content: string, topic: FeedTopic, photoUrls: string[], videoUrl: string | null) => {
+      createPost({ content, topic, photoUrls, videoUrl });
       setShowCreateModal(false);
     },
     [createPost],
   );
-
-  const handleGoBack = useCallback(() => {
-    navigation.goBack();
-  }, [navigation]);
 
   // Render item
   const renderPost = useCallback(
@@ -286,9 +421,11 @@ export const SocialFeedScreen: React.FC = () => {
         post={item}
         onLike={handleLike}
         onComment={handleComment}
+        onFollow={handleFollow}
+        onProfilePress={handleProfilePress}
       />
     ),
-    [handleLike, handleComment],
+    [handleLike, handleComment, handleFollow, handleProfilePress],
   );
 
   const keyExtractor = useCallback((item: FeedPost) => item.id, []);
@@ -321,13 +458,9 @@ export const SocialFeedScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Navigation Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleGoBack} activeOpacity={0.7} style={styles.backButton}>
-          <Text style={styles.backIcon}>{'\u2039'}</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Sosyal Akış</Text>
-        <View style={styles.headerSpacer} />
+      {/* Header */}
+      <View style={styles.headerArea}>
+        <Text style={styles.headerTitle}>Akış</Text>
       </View>
 
       {/* Feed List */}
@@ -380,6 +513,14 @@ export const SocialFeedScreen: React.FC = () => {
         onSubmit={handleCreatePost}
         isCreating={isCreating}
       />
+
+      {/* Comment Sheet */}
+      <CommentSheet
+        visible={commentPostId !== null}
+        postId={commentPostId}
+        onClose={handleCloseComments}
+        onCommentAdded={handleCommentAdded}
+      />
     </View>
   );
 };
@@ -392,34 +533,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   // Header
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
-  },
-  backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.surfaceLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backIcon: {
-    fontSize: 24,
-    color: colors.text,
-    lineHeight: 28,
-    marginTop: -2,
+  headerArea: {
+    backgroundColor: colors.background,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   },
   headerTitle: {
-    ...typography.h4,
+    ...typography.h3,
     color: colors.text,
-    flex: 1,
-    textAlign: 'center',
-  },
-  headerSpacer: {
-    width: 36,
   },
   // Loading
   loadingContainer: {
@@ -447,7 +568,7 @@ const styles = StyleSheet.create({
   },
   fabIcon: {
     fontSize: 28,
-    color: colors.text,
+    color: '#FFFFFF',
     fontWeight: '600',
     lineHeight: 32,
   },
@@ -466,7 +587,7 @@ const tabStyles = StyleSheet.create({
     flex: 1,
     paddingVertical: spacing.sm + 2,
     borderRadius: borderRadius.full,
-    backgroundColor: colors.surfaceLight,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
@@ -558,16 +679,87 @@ const modalStyles = StyleSheet.create({
     color: colors.text,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    minHeight: 120,
-    maxHeight: 200,
+    minHeight: 100,
+    maxHeight: 180,
     textAlignVertical: 'top',
+  },
+  // Media preview
+  mediaPreviewRow: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  mediaThumb: {
+    width: 72,
+    height: 72,
+    borderRadius: borderRadius.md,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  mediaThumbImage: {
+    width: '100%',
+    height: '100%',
+  },
+  mediaRemoveButton: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mediaRemoveText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  videoOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
+  videoOverlayText: {
+    fontSize: 18,
+    color: '#FFFFFF',
+  },
+  // Bottom bar
+  bottomBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
+  },
+  mediaButtons: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  mediaButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.surfaceLight,
+  },
+  mediaButtonIcon: {
+    fontSize: 16,
+  },
+  mediaButtonLabel: {
+    ...typography.captionSmall,
+    color: colors.textSecondary,
+    fontWeight: '600',
   },
   charCount: {
     ...typography.captionSmall,
     color: colors.textTertiary,
-    textAlign: 'right',
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.sm,
   },
 });
 

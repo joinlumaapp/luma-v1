@@ -874,6 +874,12 @@ const devUserProfile = {
   firstName: 'Ari',
   birthDate: '1995-06-15',
   gender: 'male',
+  genderPreference: ['female'],
+  lookingFor: ['serious_relationship'],
+  height: 178,
+  sports: 'often',
+  smoking: 'never',
+  children: 'want',
   intentionTag: 'Ciddi İlişki',
   interestTags: ['technology', 'travel', 'coffee', 'music', 'books'],
   photos: [
@@ -884,6 +890,8 @@ const devUserProfile = {
   bio: 'Girişimci, teknoloji tutkunu. İyi bir kahve eşliğinde derin sohbetlere bayılırım. Seyahat etmeyi, yeni kültürler keşfetmeyi ve hayatı anlamlandırmayı seviyorum.',
   answers: { 1: 3, 2: 4, 3: 2, 4: 5, 5: 1, 6: 3, 7: 4, 8: 2, 9: 5, 10: 3 },
   city: 'İstanbul',
+  job: 'Yazilim Muhendisi',
+  education: 'Bogazici Universitesi',
   isComplete: true,
 };
 

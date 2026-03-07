@@ -1,4 +1,4 @@
-// Premium phone number entry screen with Reanimated animations, gradient background, and haptic feedback
+// Phone number entry screen — cream/beige theme, clean design
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -12,7 +12,6 @@ import {
   Alert,
   ActivityIndicator,
   StatusBar,
-  Dimensions,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -21,24 +20,17 @@ import Animated, {
   withTiming,
   withDelay,
   withSequence,
-  interpolate,
-  interpolateColor,
   Easing,
-  FadeIn,
 } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { authService } from '../../services/authService';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../navigation/types';
-import { colors, palette } from '../../theme/colors';
-import { typography } from '../../theme/typography';
-import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
+import { onboardingColors } from '../../components/onboarding/OnboardingLayout';
+import { spacing, borderRadius, layout } from '../../theme/spacing';
 
 type PhoneEntryNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'PhoneEntry'>;
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const COUNTRY_CODES = [
   { code: '+90', country: 'TR', flag: '\u{1F1F9}\u{1F1F7}' },
@@ -57,68 +49,30 @@ export const PhoneEntryScreen: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
 
-  // Reanimated shared values
-  const contentSlide = useSharedValue(SCREEN_HEIGHT * 0.4);
+  // Entrance animations (fast)
   const contentOpacity = useSharedValue(0);
-  const titleSlide = useSharedValue(-40);
-  const titleOpacity = useSharedValue(0);
-  const subtitleOpacity = useSharedValue(0);
-  const inputRowOpacity = useSharedValue(0);
-  const inputRowSlide = useSharedValue(30);
-  const footerOpacity = useSharedValue(0);
-  const footerSlide = useSharedValue(40);
-  const dropdownHeight = useSharedValue(0);
-  const dropdownOpacity = useSharedValue(0);
-  const inputBorderProgress = useSharedValue(0);
-  const inputGlowOpacity = useSharedValue(0);
+  const contentSlide = useSharedValue(20);
   const buttonScale = useSharedValue(1);
-  const backButtonScale = useSharedValue(1);
 
   const isValid = phoneNumber.length >= 10;
 
-  // Entrance animations on mount
   useEffect(() => {
-    // Title slides in from top
-    titleOpacity.value = withDelay(200, withTiming(1, { duration: 500 }));
-    titleSlide.value = withDelay(200, withSpring(0, { damping: 15, stiffness: 100 }));
+    contentOpacity.value = withTiming(1, { duration: 300, easing: Easing.out(Easing.cubic) });
+    contentSlide.value = withDelay(50, withTiming(0, { duration: 300, easing: Easing.out(Easing.cubic) }));
+  }, [contentOpacity, contentSlide]);
 
-    // Subtitle fades in
-    subtitleOpacity.value = withDelay(400, withTiming(1, { duration: 400 }));
+  const contentAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: contentOpacity.value,
+    transform: [{ translateY: contentSlide.value }],
+  }));
 
-    // Content slides up from bottom
-    contentSlide.value = withDelay(100, withSpring(0, { damping: 18, stiffness: 80 }));
-    contentOpacity.value = withDelay(100, withTiming(1, { duration: 600 }));
-
-    // Input row animates in
-    inputRowOpacity.value = withDelay(500, withTiming(1, { duration: 400 }));
-    inputRowSlide.value = withDelay(500, withSpring(0, { damping: 15, stiffness: 90 }));
-
-    // Footer slides up
-    footerOpacity.value = withDelay(700, withTiming(1, { duration: 400 }));
-    footerSlide.value = withDelay(700, withSpring(0, { damping: 15, stiffness: 90 }));
-  }, [
-    contentSlide, contentOpacity, titleSlide, titleOpacity,
-    subtitleOpacity, inputRowOpacity, inputRowSlide, footerOpacity, footerSlide,
-  ]);
-
-  // Animated border glow for phone input focus
-  useEffect(() => {
-    if (isFocused) {
-      inputBorderProgress.value = withTiming(1, { duration: 300, easing: Easing.out(Easing.cubic) });
-      inputGlowOpacity.value = withTiming(1, { duration: 300 });
-    } else {
-      inputBorderProgress.value = withTiming(0, { duration: 300, easing: Easing.out(Easing.cubic) });
-      inputGlowOpacity.value = withTiming(0, { duration: 300 });
-    }
-  }, [isFocused, inputBorderProgress, inputGlowOpacity]);
+  const buttonAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: buttonScale.value }],
+  }));
 
   const handleSendCode = async () => {
     if (!isValid) return;
-
-    // Haptic feedback on submit
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    // Button press animation
     buttonScale.value = withSequence(
       withTiming(0.95, { duration: 80 }),
       withSpring(1, { damping: 10, stiffness: 200 }),
@@ -138,34 +92,18 @@ export const PhoneEntryScreen: React.FC = () => {
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    backButtonScale.value = withSequence(
-      withTiming(0.9, { duration: 60 }),
-      withSpring(1, { damping: 12, stiffness: 200 }),
-    );
     navigation.goBack();
   };
 
   const toggleCountryPicker = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (showCountryPicker) {
-      // Collapse
-      dropdownHeight.value = withTiming(0, { duration: 250, easing: Easing.out(Easing.cubic) });
-      dropdownOpacity.value = withTiming(0, { duration: 200 });
-      setTimeout(() => setShowCountryPicker(false), 260);
-    } else {
-      // Expand
-      setShowCountryPicker(true);
-      dropdownHeight.value = withSpring(COUNTRY_CODES.length * 56, { damping: 18, stiffness: 120 });
-      dropdownOpacity.value = withDelay(50, withTiming(1, { duration: 200 }));
-    }
+    setShowCountryPicker(!showCountryPicker);
   };
 
   const selectCountry = (country: typeof COUNTRY_CODES[number]) => {
     Haptics.selectionAsync();
     setSelectedCountry(country);
-    dropdownHeight.value = withTiming(0, { duration: 250, easing: Easing.out(Easing.cubic) });
-    dropdownOpacity.value = withTiming(0, { duration: 200 });
-    setTimeout(() => setShowCountryPicker(false), 260);
+    setShowCountryPicker(false);
   };
 
   const formatPhoneDisplay = (value: string): string => {
@@ -175,166 +113,67 @@ export const PhoneEntryScreen: React.FC = () => {
     return `${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)} ${cleaned.slice(6, 10)}`;
   };
 
-  // Animated styles
-  const contentAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: contentSlide.value }],
-    opacity: contentOpacity.value,
-  }));
-
-  const titleAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: titleSlide.value }],
-    opacity: titleOpacity.value,
-  }));
-
-  const subtitleAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: subtitleOpacity.value,
-  }));
-
-  const inputRowAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: inputRowOpacity.value,
-    transform: [{ translateY: inputRowSlide.value }],
-  }));
-
-  const footerAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: footerOpacity.value,
-    transform: [{ translateY: footerSlide.value }],
-  }));
-
-  const dropdownAnimatedStyle = useAnimatedStyle(() => ({
-    height: dropdownHeight.value,
-    opacity: dropdownOpacity.value,
-    overflow: 'hidden' as const,
-  }));
-
-  const phoneInputGlowStyle = useAnimatedStyle(() => ({
-    borderColor: interpolateColor(
-      inputBorderProgress.value,
-      [0, 1],
-      [colors.surfaceBorder, palette.purple[500]],
-    ),
-    shadowOpacity: interpolate(inputBorderProgress.value, [0, 1], [0, 0.5]),
-    shadowRadius: interpolate(inputBorderProgress.value, [0, 1], [0, 12]),
-  }));
-
-  const countrySelectorGlowStyle = useAnimatedStyle(() => {
-    // Country selector gets a subtle glow when phone input is focused
-    const glowAmount = inputBorderProgress.value;
-    return {
-      borderColor: interpolateColor(
-        glowAmount,
-        [0, 1],
-        [colors.surfaceBorder, palette.purple[400] + '80'],
-      ),
-    };
-  });
-
-  const buttonAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: buttonScale.value }],
-  }));
-
-  const backButtonAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: backButtonScale.value }],
-  }));
-
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-
-      {/* Dark gradient background matching WelcomeScreen */}
-      <LinearGradient
-        colors={['#0F0F23', '#1A0A3E', '#2D1B69'] as [string, string, ...string[]]}
-        locations={[0, 0.5, 1]}
-        style={StyleSheet.absoluteFill}
-      />
+      <StatusBar barStyle="dark-content" backgroundColor={onboardingColors.background} translucent />
 
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {/* Header with back button */}
+        {/* Header */}
         <View style={styles.header}>
-          <AnimatedTouchable
+          <TouchableOpacity
             onPress={handleBack}
-            style={[styles.backButton, backButtonAnimatedStyle]}
+            style={styles.backButton}
             accessibilityLabel="Geri"
             accessibilityRole="button"
-            accessibilityHint="Önceki ekrana dönmek için dokunun"
-            testID="phone-entry-back-btn"
-            activeOpacity={0.7}
           >
             <Text style={styles.backText}>{'\u2190'}</Text>
-          </AnimatedTouchable>
+          </TouchableOpacity>
         </View>
 
-        {/* Main content slides up from bottom */}
+        {/* Content */}
         <Animated.View style={[styles.content, contentAnimatedStyle]}>
-          {/* Title slides in from top with fade */}
-          <Animated.Text style={[styles.title, titleAnimatedStyle]}>
-            Telefon Numaranı Gir
-          </Animated.Text>
+          <Text style={styles.title}>Telefon Numaranı Gir</Text>
+          <Text style={styles.subtitle}>
+            Sana bir doğrulama kodu göndereceğiz. Sadece bir dakika!
+          </Text>
 
-          {/* Subtitle fades in */}
-          <Animated.Text style={[styles.subtitle, subtitleAnimatedStyle]}>
-            Sana bir doğrulama kodu göndermemiz için telefon numaranı gir.
-          </Animated.Text>
-
-          {/* Phone input row with animated entrance */}
-          <Animated.View style={[styles.phoneRow, inputRowAnimatedStyle]}>
-            {/* Country code selector */}
-            <AnimatedTouchable
-              style={[styles.countrySelector, countrySelectorGlowStyle]}
+          {/* Phone input row */}
+          <View style={styles.phoneRow}>
+            {/* Country selector */}
+            <TouchableOpacity
+              style={styles.countrySelector}
               onPress={toggleCountryPicker}
-              accessibilityLabel={`Ülke kodu ${selectedCountry.code}`}
-              accessibilityRole="button"
-              accessibilityHint="Ülke kodunu değiştirmek için dokunun"
-              testID="phone-entry-country-btn"
               activeOpacity={0.7}
             >
               <Text style={styles.countryFlag}>{selectedCountry.flag}</Text>
               <Text style={styles.countryCode}>{selectedCountry.code}</Text>
-              <Animated.Text
-                style={[
-                  styles.dropdownArrow,
-                  useAnimatedStyle(() => ({
-                    transform: [{
-                      rotate: `${interpolate(dropdownHeight.value, [0, COUNTRY_CODES.length * 56], [0, 180])}deg`,
-                    }],
-                  })),
-                ]}
-              >
-                {'\u25BE'}
-              </Animated.Text>
-            </AnimatedTouchable>
+              <Text style={styles.dropdownArrow}>{showCountryPicker ? '\u25B4' : '\u25BE'}</Text>
+            </TouchableOpacity>
 
-            {/* Phone number input with purple glow */}
-            <Animated.View
-              style={[
-                styles.phoneInputWrapper,
-                phoneInputGlowStyle,
-              ]}
-            >
+            {/* Phone input */}
+            <View style={[styles.phoneInputWrapper, isFocused && styles.phoneInputFocused]}>
               <TextInput
                 style={styles.phoneInput}
                 value={formatPhoneDisplay(phoneNumber)}
                 onChangeText={(text) => setPhoneNumber(text.replace(/[^0-9]/g, ''))}
                 placeholder="5XX XXX XXXX"
-                placeholderTextColor={colors.textTertiary}
+                placeholderTextColor={onboardingColors.textTertiary}
                 keyboardType="phone-pad"
                 maxLength={14}
                 autoFocus
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 accessibilityLabel="Telefon numarası"
-                accessibilityRole="text"
-                accessibilityHint="Telefon numaranızı girin"
-                testID="phone-entry-input"
               />
-            </Animated.View>
-          </Animated.View>
+            </View>
+          </View>
 
-          {/* Country picker dropdown with smooth expand/collapse */}
+          {/* Country picker dropdown */}
           {showCountryPicker && (
-            <Animated.View style={[styles.countryDropdown, dropdownAnimatedStyle]}>
+            <View style={styles.countryDropdown}>
               {COUNTRY_CODES.map((country) => (
                 <TouchableOpacity
                   key={country.code}
@@ -343,10 +182,6 @@ export const PhoneEntryScreen: React.FC = () => {
                     country.code === selectedCountry.code && styles.countryOptionActive,
                   ]}
                   onPress={() => selectCountry(country)}
-                  accessibilityLabel={`${country.country} ${country.code}`}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: country.code === selectedCountry.code }}
-                  testID={`phone-entry-country-option-${country.country.toLowerCase()}`}
                 >
                   <Text style={styles.countryOptionFlag}>{country.flag}</Text>
                   <Text style={styles.countryOptionText}>
@@ -357,51 +192,40 @@ export const PhoneEntryScreen: React.FC = () => {
                   )}
                 </TouchableOpacity>
               ))}
-            </Animated.View>
+            </View>
           )}
         </Animated.View>
 
-        {/* Submit button with gradient and press animation */}
-        <Animated.View style={[styles.footer, footerAnimatedStyle]}>
+        {/* Footer */}
+        <View style={styles.footer}>
           <AnimatedTouchable
-            style={[styles.submitButtonOuter, buttonAnimatedStyle]}
+            style={[
+              styles.submitButton,
+              (!isValid || isSubmitting) && styles.submitButtonDisabled,
+              buttonAnimatedStyle,
+            ]}
             onPress={handleSendCode}
             disabled={!isValid || isSubmitting}
             activeOpacity={0.9}
             accessibilityLabel="Devam et"
             accessibilityRole="button"
-            accessibilityHint="Doğrulama kodu göndermek için dokunun"
-            accessibilityState={{ disabled: !isValid || isSubmitting }}
-            testID="phone-entry-submit-btn"
           >
-            <LinearGradient
-              colors={
-                isValid && !isSubmitting
-                  ? ([palette.purple[600], palette.pink[500]] as [string, string, ...string[]])
-                  : ([colors.surfaceBorder, colors.surfaceBorder] as [string, string, ...string[]])
-              }
-              start={{ x: 0, y: 0.5 }}
-              end={{ x: 1, y: 0.5 }}
-              style={styles.submitButtonGradient}
-            >
-              {isSubmitting ? (
-                <ActivityIndicator color={colors.text} />
-              ) : (
-                <Text style={[styles.submitButtonText, !isValid && styles.submitButtonTextDisabled]}>
-                  Doğrulama Kodu Gönder
-                </Text>
-              )}
-            </LinearGradient>
+            {isSubmitting ? (
+              <ActivityIndicator color={onboardingColors.buttonText} />
+            ) : (
+              <Text style={[
+                styles.submitButtonText,
+                (!isValid || isSubmitting) && styles.submitButtonTextDisabled,
+              ]}>
+                Doğrulama Kodu Gönder
+              </Text>
+            )}
           </AnimatedTouchable>
 
-          {/* Security note */}
-          <Animated.Text
-            entering={FadeIn.delay(900).duration(400)}
-            style={styles.securityNote}
-          >
+          <Text style={styles.securityNote}>
             Numaranı kimseyle paylaşmıyoruz.
-          </Animated.Text>
-        </Animated.View>
+          </Text>
+        </View>
       </KeyboardAvoidingView>
     </View>
   );
@@ -410,7 +234,7 @@ export const PhoneEntryScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: onboardingColors.background,
   },
   flex: {
     flex: 1,
@@ -424,15 +248,15 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: onboardingColors.surface,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: onboardingColors.surfaceBorder,
   },
   backText: {
     fontSize: 20,
-    color: colors.text,
+    color: onboardingColors.text,
   },
   content: {
     flex: 1,
@@ -440,16 +264,17 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xl,
   },
   title: {
-    ...typography.h2,
-    color: colors.text,
+    fontSize: 28,
+    fontWeight: '700',
+    color: onboardingColors.text,
     marginBottom: spacing.sm,
-    letterSpacing: 0.3,
   },
   subtitle: {
-    ...typography.body,
-    color: colors.textSecondary,
+    fontSize: 15,
+    fontWeight: '400',
+    color: onboardingColors.textSecondary,
     marginBottom: spacing.xl,
-    lineHeight: 24,
+    lineHeight: 22,
   },
   phoneRow: {
     flexDirection: 'row',
@@ -458,110 +283,106 @@ const styles = StyleSheet.create({
   countrySelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: onboardingColors.surface,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     height: layout.inputHeight,
-    gap: spacing.xs,
+    gap: 6,
     borderWidth: 1.5,
-    borderColor: colors.surfaceBorder,
+    borderColor: onboardingColors.surfaceBorder,
   },
   countryFlag: {
     fontSize: 20,
   },
   countryCode: {
-    ...typography.body,
-    color: colors.text,
+    fontSize: 15,
     fontWeight: '600',
+    color: onboardingColors.text,
   },
   dropdownArrow: {
     fontSize: 14,
-    color: colors.textSecondary,
+    color: onboardingColors.textSecondary,
     marginLeft: 2,
   },
   phoneInputWrapper: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: onboardingColors.surface,
     borderRadius: borderRadius.md,
     height: layout.inputHeight,
     borderWidth: 1.5,
-    borderColor: colors.surfaceBorder,
-    shadowColor: palette.purple[500],
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
+    borderColor: onboardingColors.surfaceBorder,
+  },
+  phoneInputFocused: {
+    borderColor: onboardingColors.text,
   },
   phoneInput: {
     flex: 1,
     paddingHorizontal: spacing.md,
-    ...typography.bodyLarge,
-    color: colors.text,
+    fontSize: 17,
+    fontWeight: '500',
+    color: onboardingColors.text,
     letterSpacing: 1.5,
   },
   countryDropdown: {
-    backgroundColor: 'rgba(26, 26, 46, 0.95)',
+    backgroundColor: onboardingColors.surface,
     borderRadius: borderRadius.md,
     marginTop: spacing.sm,
     borderWidth: 1,
-    borderColor: palette.purple[500] + '30',
-    ...shadows.medium,
+    borderColor: onboardingColors.surfaceBorder,
+    overflow: 'hidden',
   },
   countryOption: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
-    height: 56,
+    height: 52,
     gap: spacing.sm,
   },
   countryOptionActive: {
-    backgroundColor: palette.purple[500] + '20',
+    backgroundColor: '#EDE8DF',
   },
   countryOptionFlag: {
     fontSize: 20,
   },
   countryOptionText: {
-    ...typography.body,
-    color: colors.text,
+    fontSize: 15,
+    fontWeight: '400',
+    color: onboardingColors.text,
     flex: 1,
   },
   checkmark: {
     fontSize: 16,
-    color: palette.purple[400],
+    color: onboardingColors.checkGreen,
     fontWeight: '600',
   },
   footer: {
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxl,
+    paddingBottom: Platform.OS === 'ios' ? 48 : 36,
     gap: spacing.md,
   },
-  submitButtonOuter: {
-    borderRadius: borderRadius.lg,
-    overflow: 'hidden',
-    shadowColor: palette.purple[500],
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  submitButtonGradient: {
+  submitButton: {
     height: layout.buttonHeight,
     borderRadius: borderRadius.lg,
+    backgroundColor: onboardingColors.buttonBg,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  submitButtonDisabled: {
+    backgroundColor: onboardingColors.surfaceBorder,
+  },
   submitButtonText: {
-    ...typography.button,
-    color: colors.text,
+    fontSize: 16,
     fontWeight: '600',
-    letterSpacing: 0.5,
+    color: onboardingColors.buttonText,
+    letterSpacing: 0.3,
   },
   submitButtonTextDisabled: {
-    color: colors.textTertiary,
+    color: onboardingColors.textTertiary,
   },
   securityNote: {
-    ...typography.caption,
-    color: colors.textTertiary,
+    fontSize: 13,
+    fontWeight: '400',
+    color: onboardingColors.textTertiary,
     textAlign: 'center',
   },
 });

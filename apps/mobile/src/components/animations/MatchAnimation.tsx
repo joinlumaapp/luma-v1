@@ -280,9 +280,9 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
       >
         <LinearGradient
           colors={[
-            'rgba(8,8,15,0.9)',
-            'rgba(20,10,40,0.95)',
-            'rgba(8,8,15,0.9)',
+            'rgba(245,240,232,0.92)',
+            'rgba(139,92,246,0.15)',
+            'rgba(245,240,232,0.92)',
           ]}
           style={StyleSheet.absoluteFill}
         />

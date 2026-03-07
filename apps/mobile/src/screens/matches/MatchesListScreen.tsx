@@ -6,11 +6,9 @@ import {
   View,
   Text,
   Image,
-  TouchableOpacity,
   TouchableWithoutFeedback,
   StyleSheet,
   FlatList,
-  ScrollView,
   Animated,
   InteractionManager,
 } from 'react-native';
@@ -193,47 +191,6 @@ MatchCard.displayName = 'MatchCard';
 const ItemSeparator = memo(() => <View style={styles.separator} />);
 ItemSeparator.displayName = 'ItemSeparator';
 
-// ─── Games Preview Data ────────────────────────────────────
-const GAMES_PREVIEW = [
-  { type: 'THIS_OR_THAT', title: 'Bu mu O mu?', emoji: '⚖️', color: '#8B5CF6' },
-  { type: 'TWO_TRUTHS_ONE_LIE', title: '2 Doğru 1 Yanlış', emoji: '🤥', color: '#EC4899' },
-  { type: 'RAPID_FIRE', title: 'Hızlı Sorular', emoji: '⚡', color: '#F59E0B' },
-  { type: 'COMPATIBILITY_QUIZ', title: 'Uyum Quizi', emoji: '🧠', color: '#6366F1' },
-  { type: 'WORD_ASSOCIATION', title: 'Kelime Çağrışımı', emoji: '💬', color: '#3B82F6' },
-  { type: 'IMAGINE_GAME', title: 'Hayal Et', emoji: '🌟', color: '#10B981' },
-  { type: 'EMOJI_STORY', title: 'Emoji Hikaye', emoji: '🎨', color: '#A855F7' },
-] as const;
-
-// ─── Games Row — horizontal scroll of game chips ──────────
-const GamesRow = memo<{ onGamePress: () => void }>(({ onGamePress }) => (
-  <View style={styles.gamesSection}>
-    <View style={styles.gamesSectionHeader}>
-      <Text style={styles.gamesSectionTitle}>🎮 Oyunlar</Text>
-      <TouchableOpacity onPress={onGamePress} activeOpacity={0.7}>
-        <Text style={styles.gamesSeeAll}>Tümünü Gör</Text>
-      </TouchableOpacity>
-    </View>
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.gamesRow}
-    >
-      {GAMES_PREVIEW.map((game) => (
-        <TouchableOpacity
-          key={game.type}
-          onPress={onGamePress}
-          activeOpacity={0.7}
-          style={[styles.gameChip, { borderColor: `${game.color}40` }]}
-        >
-          <Text style={styles.gameChipEmoji}>{game.emoji}</Text>
-          <Text style={styles.gameChipTitle}>{game.title}</Text>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
-  </View>
-));
-GamesRow.displayName = 'GamesRow';
-
 export const MatchesListScreen: React.FC = () => {
   useScreenTracking('Matches');
   const navigation = useNavigation<MatchesNavigationProp>();
@@ -268,10 +225,6 @@ export const MatchesListScreen: React.FC = () => {
     markAsRead(matchId);
     navigation.navigate('MatchDetail', { matchId });
   }, [markAsRead, navigation]);
-
-  const handleGamePress = useCallback(() => {
-    navigation.navigate('IcebreakerGame', { matchId: '' });
-  }, [navigation]);
 
   const renderMatchItem = useCallback(
     ({ item, index }: { item: Match; index: number }) => (
@@ -312,9 +265,11 @@ export const MatchesListScreen: React.FC = () => {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Eşleşmeler</Text>
-        <Text style={styles.matchCount}>{totalCount} eşleşme</Text>
+      <View style={styles.darkHeaderArea}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Eşleşmeler</Text>
+          <Text style={styles.matchCount}>{totalCount} eşleşme</Text>
+        </View>
       </View>
 
       {/* Filters */}
@@ -322,11 +277,12 @@ export const MatchesListScreen: React.FC = () => {
         {[
           { key: 'all' as const, label: 'Tümü' },
           { key: 'new' as const, label: 'Yeni' },
+          { key: 'likes' as const, label: '💜 Beğenenler' },
           { key: 'harmony' as const, label: 'Uyum Odası' },
         ].map((filter) => (
           <TouchableWithoutFeedback
             key={filter.key}
-            onPress={() => setActiveFilter(filter.key)}
+            onPress={() => filter.key === 'likes' ? navigation.navigate('LikesYou') : setActiveFilter(filter.key as 'all' | 'new' | 'harmony')}
             accessibilityLabel={`${filter.label} filtresi${activeFilter === filter.key ? ', seçili' : ''}`}
             accessibilityRole="button"
             accessibilityState={{ selected: activeFilter === filter.key }}
@@ -358,7 +314,7 @@ export const MatchesListScreen: React.FC = () => {
         keyExtractor={keyExtractor}
         renderItem={renderMatchItem}
         contentContainerStyle={styles.listContent}
-        ListHeaderComponent={<GamesRow onGamePress={handleGamePress} />}
+        ListHeaderComponent={null}
         ListEmptyComponent={renderEmptyList}
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={ItemSeparator}
@@ -377,6 +333,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  darkHeaderArea: {
+    backgroundColor: colors.background,
+    paddingBottom: spacing.sm,
   },
   header: {
     flexDirection: 'row',
@@ -416,7 +376,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   filterChipTextActive: {
-    color: colors.text,
+    color: colors.textInverse,
     fontWeight: '600',
   },
   listContent: {
@@ -530,46 +490,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   // Games section styles
-  gamesSection: {
-    marginBottom: spacing.md,
-  },
-  gamesSectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  gamesSectionTitle: {
-    ...typography.bodyLarge,
-    color: colors.text,
-    fontWeight: '600',
-  },
-  gamesSeeAll: {
-    ...typography.bodySmall,
-    color: colors.primary,
-  },
-  gamesRow: {
-    gap: spacing.sm,
-    paddingRight: spacing.md,
-  },
-  gameChip: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    alignItems: 'center',
-    minWidth: 96,
-  },
-  gameChipEmoji: {
-    fontSize: 24,
-    marginBottom: 4,
-  },
-  gameChipTitle: {
-    ...typography.captionSmall,
-    color: colors.text,
-    textAlign: 'center',
-  },
   // Skeleton loader styles
   skeletonContainer: {
     paddingHorizontal: spacing.lg,

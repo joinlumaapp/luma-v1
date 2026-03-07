@@ -1,6 +1,6 @@
-// Onboarding step 1/8: Gender selection (cream/beige design)
+// Onboarding step 9/15: Children status — single select
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,54 +18,58 @@ import {
   onboardingColors,
 } from '../../components/onboarding/OnboardingLayout';
 
-type GenderNavigationProp = NativeStackNavigationProp<OnboardingStackParamList, 'Gender'>;
+type NavProp = NativeStackNavigationProp<OnboardingStackParamList, 'Children'>;
 
-type GenderOption = 'male' | 'female';
-
-interface GenderChoice {
-  value: GenderOption;
+interface ChildrenOption {
+  value: string;
   label: string;
 }
 
-const GENDER_OPTIONS: GenderChoice[] = [
-  { value: 'male', label: 'Erkek' },
-  { value: 'female', label: 'Kadın' },
+const CHILDREN_OPTIONS: ChildrenOption[] = [
+  { value: 'have', label: 'Bende var' },
+  { value: 'dont_want', label: 'Çocuk istemiyorum' },
+  { value: 'want_more', label: 'Bende var ama yetmiyor' },
+  { value: 'want', label: 'Olmasını isterim' },
 ];
 
-export const GenderScreen: React.FC = () => {
-  const navigation = useNavigation<GenderNavigationProp>();
-  const [selectedGender, setSelectedGender] = useState<GenderOption | null>(null);
-  const setProfileField = useProfileStore((state) => state.setField);
+export const ChildrenScreen: React.FC = () => {
+  const navigation = useNavigation<NavProp>();
+  const [selected, setSelected] = useState<string | null>(null);
+  const setField = useProfileStore((state) => state.setField);
 
-  const handleContinue = () => {
-    if (selectedGender) {
-      setProfileField('gender', selectedGender);
-      navigation.navigate('WhoToMeet');
+  const handleContinue = useCallback(() => {
+    if (selected) {
+      setField('children', selected);
+      navigation.navigate('CitySelection');
     }
-  };
+  }, [selected, setField, navigation]);
+
+  const handleSkip = useCallback(() => {
+    navigation.navigate('CitySelection');
+  }, [navigation]);
 
   return (
     <OnboardingLayout
-      step={3}
+      step={9}
       totalSteps={15}
-      showBack={false}
-      footer={
-        <ArrowButton onPress={handleContinue} disabled={!selectedGender} />
-      }
+      showBack
+      showSkip
+      onSkip={handleSkip}
+      footer={<ArrowButton onPress={handleContinue} disabled={!selected} />}
     >
-      <Text style={styles.title}>Kendini nasıl tanımlıyorsun?</Text>
+      <Text style={styles.title}>Çocuğun var mı?</Text>
       <Text style={styles.subtitle}>
-        Daha sonra müşteri hizmetleri ile iletişime geçerek bu bilgileri düzeltebilirsin.
+        Bu bilgi profilinde görüntülenecek.
       </Text>
 
       <View style={styles.optionsContainer}>
-        {GENDER_OPTIONS.map((option) => {
-          const isSelected = selectedGender === option.value;
+        {CHILDREN_OPTIONS.map((option) => {
+          const isSelected = selected === option.value;
           return (
             <TouchableOpacity
               key={option.value}
               style={[styles.optionCard, isSelected && styles.optionCardSelected]}
-              onPress={() => setSelectedGender(option.value)}
+              onPress={() => setSelected(option.value)}
               activeOpacity={0.8}
             >
               <Text style={[styles.optionLabel, isSelected && styles.optionLabelSelected]}>

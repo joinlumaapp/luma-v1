@@ -114,6 +114,64 @@ export const getCompatibilityLevel = (percent: number): string => {
 };
 
 /**
+ * Get personality-driven compatibility label with color and emoji
+ * Used on feed profile screens and public profile views
+ */
+export interface CompatibilityPersonality {
+  label: string;
+  description: string;
+  emoji: string;
+  color: string;
+  tier: 'soulmate' | 'very_high' | 'high' | 'explore' | 'independent';
+}
+
+export const getCompatibilityPersonality = (percent: number): CompatibilityPersonality => {
+  if (percent >= 90) {
+    return {
+      label: 'Ruh İkizi',
+      description: 'Düşünce yapınız ve değerleriniz çok benzer!',
+      emoji: '\u2728',
+      color: '#F59E0B',
+      tier: 'soulmate',
+    };
+  }
+  if (percent >= 75) {
+    return {
+      label: 'Çok Uyumlu',
+      description: 'Güçlü ortak noktalarınız var.',
+      emoji: '\uD83D\uDC9C',
+      color: '#8B5CF6',
+      tier: 'very_high',
+    };
+  }
+  if (percent >= 60) {
+    return {
+      label: 'Uyumlu',
+      description: 'Birbirinizi tamamlayan yönleriniz var.',
+      emoji: '\uD83E\uDD1D',
+      color: '#3B82F6',
+      tier: 'high',
+    };
+  }
+  if (percent >= 40) {
+    return {
+      label: 'Keşfedilecek',
+      description: 'Farklılıklarınız ilginç bir dinamik yaratabilir.',
+      emoji: '\uD83D\uDD0D',
+      color: '#8B7355',
+      tier: 'explore',
+    };
+  }
+  return {
+    label: 'Başına Buyruk',
+    description: 'Farklı dünyalardan geliyorsunuz — bu bir zenginlik!',
+    emoji: '\uD83C\uDF0A',
+    color: '#6B7280',
+    tier: 'independent',
+  };
+};
+
+/**
  * Format phone number for display
  */
 export const formatPhoneNumber = (phone: string): string => {

@@ -1,4 +1,4 @@
-// EditProfileScreen — full profile editing: photos, voice intro, name, bio, prompts, gender, intention, city
+// EditProfileScreen — full profile editing: photos, bio, prompts, gender, intention, city
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -26,9 +26,6 @@ import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { PROFILE_CONFIG, INTENTION_TAGS } from '../../constants/config';
 import { useProfileStore } from '../../stores/profileStore';
 import { useAuthStore } from '../../stores/authStore';
-import { VoiceIntroRecorder } from '../../components/profile/VoiceIntro';
-import { voiceIntroService } from '../../services/voiceIntroService';
-import type { VoiceIntroResponse } from '../../services/voiceIntroService';
 import { photoService } from '../../services/photoService';
 import { discoveryService } from '../../services/discoveryService';
 import type { ProfilePrompt } from '../../services/discoveryService';
@@ -82,18 +79,12 @@ export const EditProfileScreen: React.FC = () => {
   const deletePhoto = useProfileStore((state) => state.deletePhoto);
   const user = useAuthStore((state) => state.user);
 
-  const [firstName, setFirstName] = useState(profile.firstName);
   const [bio, setBio] = useState(profile.bio);
   const [gender, setGender] = useState<string>(profile.gender);
   const [selectedIntention, setSelectedIntention] = useState(profile.intentionTag);
   const [city, setCity] = useState(profile.city);
   const [isSaving, setIsSaving] = useState(false);
   const [isPhotoUploading, setIsPhotoUploading] = useState(false);
-
-  // Voice intro state
-  const [voiceIntroData, setVoiceIntroData] = useState<VoiceIntroResponse | null>(null);
-  const [isVoiceIntroLoading, setIsVoiceIntroLoading] = useState(false);
-  const [voiceIntroError, setVoiceIntroError] = useState<string | null>(null);
 
   // Profile prompts state
   const [prompts, setPrompts] = useState<Array<ProfilePrompt | null>>([null, null, null]);
@@ -106,30 +97,11 @@ export const EditProfileScreen: React.FC = () => {
 
   // Sync from store when profile updates externally
   useEffect(() => {
-    setFirstName(profile.firstName);
     setBio(profile.bio);
     setGender(profile.gender);
     setSelectedIntention(profile.intentionTag);
     setCity(profile.city);
-  }, [profile.firstName, profile.bio, profile.gender, profile.intentionTag, profile.city]);
-
-  // Fetch existing voice intro on mount
-  useEffect(() => {
-    const fetchVoiceIntro = async () => {
-      if (!user?.id) return;
-      setIsVoiceIntroLoading(true);
-      setVoiceIntroError(null);
-      try {
-        const data = await voiceIntroService.getVoiceIntro(user.id);
-        setVoiceIntroData(data);
-      } catch {
-        setVoiceIntroError('Sesli tanıtım yüklenemedi.');
-      } finally {
-        setIsVoiceIntroLoading(false);
-      }
-    };
-    fetchVoiceIntro();
-  }, [user?.id]);
+  }, [profile.bio, profile.gender, profile.intentionTag, profile.city]);
 
   // Fetch existing prompts on mount
   useEffect(() => {
@@ -289,7 +261,6 @@ export const EditProfileScreen: React.FC = () => {
     setIsSaving(true);
     try {
       await updateProfile({
-        firstName,
         bio,
         gender,
         intentionTag: selectedIntention,
@@ -301,7 +272,7 @@ export const EditProfileScreen: React.FC = () => {
     } finally {
       setIsSaving(false);
     }
-  }, [firstName, bio, gender, selectedIntention, city, isSaving, updateProfile, navigation]);
+  }, [bio, gender, selectedIntention, city, isSaving, updateProfile, navigation]);
 
   const handleAddPhoto = useCallback(
     (_index: number) => {
@@ -368,41 +339,7 @@ export const EditProfileScreen: React.FC = () => {
     [deletePhoto],
   );
 
-  const handleVoiceRecord = useCallback(async (uri: string) => {
-    setIsVoiceIntroLoading(true);
-    setVoiceIntroError(null);
-    try {
-      const file = {
-        uri,
-        name: 'voice-intro.m4a',
-        type: 'audio/m4a',
-      };
-      const response = await voiceIntroService.uploadVoiceIntro(file, 30);
-      setVoiceIntroData(response);
-    } catch {
-      setVoiceIntroError('Sesli tanıtım yüklenemedi. Lütfen tekrar dene.');
-      Alert.alert('Hata', 'Sesli tanıtım yüklenemedi. Lütfen tekrar dene.');
-    } finally {
-      setIsVoiceIntroLoading(false);
-    }
-  }, []);
-
-  const handleVoiceDelete = useCallback(async () => {
-    setIsVoiceIntroLoading(true);
-    setVoiceIntroError(null);
-    try {
-      await voiceIntroService.deleteVoiceIntro();
-      setVoiceIntroData(null);
-    } catch {
-      setVoiceIntroError('Sesli tanıtım silinemedi.');
-      Alert.alert('Hata', 'Sesli tanıtım silinemedi. Lütfen tekrar dene.');
-    } finally {
-      setIsVoiceIntroLoading(false);
-    }
-  }, []);
-
   const hasChanges =
-    firstName !== profile.firstName ||
     bio !== profile.bio ||
     gender !== profile.gender ||
     selectedIntention !== profile.intentionTag ||
@@ -513,69 +450,6 @@ export const EditProfileScreen: React.FC = () => {
                 );
               })}
             </View>
-          </View>
-
-          {/* Sesli Tanıtım */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Sesli Tanıtım</Text>
-            <Text style={styles.sectionHint}>
-              30 saniyeye kadar sesli tanıtım kaydı oluştur
-            </Text>
-            {isVoiceIntroLoading ? (
-              <View style={styles.voiceIntroLoading}>
-                <ActivityIndicator size="small" color={colors.primary} />
-                <Text style={styles.voiceIntroLoadingText}>Yükleniyor...</Text>
-              </View>
-            ) : voiceIntroError ? (
-              <View style={styles.voiceIntroError}>
-                <Text style={styles.voiceIntroErrorText}>{voiceIntroError}</Text>
-                <TouchableOpacity
-                  onPress={() => {
-                    setVoiceIntroError(null);
-                    if (user?.id) {
-                      setIsVoiceIntroLoading(true);
-                      voiceIntroService
-                        .getVoiceIntro(user.id)
-                        .then((data) => setVoiceIntroData(data))
-                        .catch(() => setVoiceIntroError('Sesli tanıtım yüklenemedi.'))
-                        .finally(() => setIsVoiceIntroLoading(false));
-                    }
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.voiceIntroRetryText}>Tekrar Dene</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <VoiceIntroRecorder
-                existingVoiceIntro={
-                  voiceIntroData
-                    ? {
-                        url: voiceIntroData.voiceIntroUrl,
-                        durationSeconds: voiceIntroData.duration,
-                        createdAt: new Date().toISOString(),
-                      }
-                    : null
-                }
-                onRecord={handleVoiceRecord}
-                onDelete={handleVoiceDelete}
-              />
-            )}
-          </View>
-
-          {/* First Name */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>İsim</Text>
-            <TextInput
-              style={styles.textInput}
-              value={firstName}
-              onChangeText={setFirstName}
-              placeholder="Adın"
-              placeholderTextColor={colors.textTertiary}
-              maxLength={50}
-              autoCapitalize="words"
-              returnKeyType="done"
-            />
           </View>
 
           {/* Bio Section */}
@@ -877,33 +751,6 @@ const styles = StyleSheet.create({
   photoCount: {
     ...typography.caption,
     color: colors.textTertiary,
-  },
-
-  // Voice Intro
-  voiceIntroLoading: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.xl,
-    gap: spacing.sm,
-  },
-  voiceIntroLoadingText: {
-    ...typography.caption,
-    color: colors.textTertiary,
-  },
-  voiceIntroError: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.lg,
-    gap: spacing.sm,
-  },
-  voiceIntroErrorText: {
-    ...typography.caption,
-    color: colors.error,
-  },
-  voiceIntroRetryText: {
-    ...typography.body,
-    color: colors.primary,
-    fontWeight: '600',
   },
 
   // Photo Grid

@@ -5,6 +5,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
+  Image,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
@@ -17,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ProfileStackParamList } from '../../navigation/types';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
+import { Ionicons } from '@expo/vector-icons';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 import { useProfileStore } from '../../stores/profileStore';
 import { useAuthStore } from '../../stores/authStore';
@@ -50,6 +52,42 @@ const calculateAge = (birthDate: string): number => {
   }
   return age;
 };
+
+// Helper: translate profile field values to Turkish display labels
+const translateSports = (v: string): string => {
+  const map: Record<string, string> = { never: 'Asla', sometimes: 'Bazen', often: 'Sik sik' };
+  return map[v] || 'Belirtilmedi';
+};
+const translateSmoking = (v: string): string => {
+  const map: Record<string, string> = { regular: 'Duzenli', tolerate: 'Goz yumarim', never: 'Asla' };
+  return map[v] || 'Belirtilmedi';
+};
+const translateChildren = (v: string): string => {
+  const map: Record<string, string> = {
+    have: 'Var', dont_want: 'Istemiyorum', want_more: 'Var ama yetmiyor', want: 'Olmasini isterim',
+  };
+  return map[v] || 'Belirtilmedi';
+};
+const translateGender = (v: string): string => {
+  const map: Record<string, string> = { male: 'Erkek', female: 'Kadın' };
+  return map[v] || v || 'Belirtilmedi';
+};
+const translateLookingFor = (ids: string[]): string[] => {
+  const map: Record<string, string> = {
+    long_term: 'Uzun süreli ilişki', short_term: 'Kısa süreli ilişki',
+    friendship: 'Arkadaşlık', travel_together: 'Birlikte gezmek',
+    serious_relationship: 'Ciddi ilişki',
+  };
+  return ids.map((id) => map[id] || id);
+};
+
+// Hakkimda row data type
+interface AboutRow {
+  icon: keyof typeof Ionicons.glyphMap;
+  iconBg: string;
+  label: string;
+  value: string;
+}
 
 // Animated count-up number component
 const CountUpStat: React.FC<{ target: number; label: string; suffix?: string }> = ({
@@ -254,19 +292,21 @@ export const ProfileScreen: React.FC = () => {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profil</Text>
-          <TouchableOpacity
-            onPress={handleSettings}
-            style={styles.settingsButton}
-            accessibilityLabel="Ayarlar"
-            accessibilityRole="button"
-            accessibilityHint="Uygulama ayarlarını açmak için dokunun"
-            testID="profile-settings-btn"
-          >
-            <Text style={styles.settingsIcon}>{'\u2699'}</Text>
-          </TouchableOpacity>
+        {/* Dark header */}
+        <View style={styles.darkHeaderArea}>
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Profil</Text>
+            <TouchableOpacity
+              onPress={handleSettings}
+              style={styles.settingsButton}
+              accessibilityLabel="Ayarlar"
+              accessibilityRole="button"
+              accessibilityHint="Uygulama ayarlarını açmak için dokunun"
+              testID="profile-settings-btn"
+            >
+              <Text style={styles.settingsIcon}>{'\u2699'}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Profile card with gradient overlay */}
@@ -280,11 +320,19 @@ export const ProfileScreen: React.FC = () => {
 
             {/* Avatar */}
             <View style={styles.avatarContainer}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {profile.firstName ? profile.firstName.charAt(0) : '?'}
-                </Text>
-              </View>
+              {profile.photos.length > 0 ? (
+                <Image
+                  source={{ uri: profile.photos[0] }}
+                  style={styles.avatarImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>
+                    {profile.firstName ? profile.firstName.charAt(0) : '?'}
+                  </Text>
+                </View>
+              )}
             </View>
 
             {/* Name with VerifiedBadge */}
@@ -400,16 +448,12 @@ export const ProfileScreen: React.FC = () => {
         {/* Stats with count-up animation */}
         <SlideIn direction="down" delay={200} distance={20}>
           <View style={styles.statsCard}>
-            <Text style={styles.sectionTitle}>İstatistikler</Text>
             <View style={styles.statsRow}>
-              <CountUpStat target={totalMatches} label="Eşleşme" />
+              <CountUpStat target={18} label="Gönderi" />
               <View style={styles.statDivider} />
-              <CountUpStat target={0} label="Harmony" />
+              <CountUpStat target={124} label="Takipçi" />
               <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>-</Text>
-                <Text style={styles.statLabel}>Ort. Uyum</Text>
-              </View>
+              <CountUpStat target={87} label="Takip" />
             </View>
           </View>
         </SlideIn>
@@ -419,6 +463,82 @@ export const ProfileScreen: React.FC = () => {
           <View style={styles.bioCard}>
             <Text style={styles.sectionTitle}>Hakkında</Text>
             <Text style={styles.bioText}>{profile.bio || '-'}</Text>
+          </View>
+        </SlideIn>
+
+        {/* Burada olma sebebim — lookingFor chips */}
+        {profile.lookingFor.length > 0 && (
+          <SlideIn direction="down" delay={350} distance={20}>
+            <View style={styles.aboutCard}>
+              <Text style={styles.sectionTitle}>Burada olma sebebim</Text>
+              <View style={styles.chipRow}>
+                {translateLookingFor(profile.lookingFor).map((label) => (
+                  <View key={label} style={styles.lookingForChip}>
+                    <Text style={styles.lookingForChipText}>{label}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </SlideIn>
+        )}
+
+        {/* Hobiler — interest tags */}
+        {profile.interestTags.length > 0 && (
+          <SlideIn direction="down" delay={370} distance={20}>
+            <View style={styles.aboutCard}>
+              <Text style={styles.sectionTitle}>
+                Hobiler ({profile.interestTags.length}/10)
+              </Text>
+              <View style={styles.chipRow}>
+                {profile.interestTags.map((tag) => (
+                  <View key={tag} style={styles.hobbyChip}>
+                    <Text style={styles.hobbyChipText}>{tag}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </SlideIn>
+        )}
+
+        {/* Hakkimda — icon rows (Happn style) */}
+        <SlideIn direction="down" delay={390} distance={20}>
+          <View style={styles.aboutCard}>
+            <Text style={styles.sectionTitle}>Hakkimda</Text>
+            {((): AboutRow[] => {
+              const rows: AboutRow[] = [
+                { icon: 'calendar-outline', iconBg: '#E8D5F5', label: 'Yas', value: profile.birthDate ? `${calculateAge(profile.birthDate)}` : 'Belirtilmedi' },
+                { icon: 'person-outline', iconBg: '#D5E8F5', label: 'Cinsiyet', value: translateGender(profile.gender) },
+                { icon: 'location-outline', iconBg: '#F5E8D5', label: 'Sehir', value: profile.city || 'Belirtilmedi' },
+                { icon: 'briefcase-outline', iconBg: '#D5F5E8', label: 'Is', value: profile.job || 'Belirtilmedi' },
+                { icon: 'school-outline', iconBg: '#F5D5E8', label: 'Egitim', value: profile.education || 'Belirtilmedi' },
+                { icon: 'people-outline', iconBg: '#E8F5D5', label: 'Cocuk', value: profile.children ? translateChildren(profile.children) : 'Belirtilmedi' },
+                { icon: 'flame-outline', iconBg: '#F5E8E8', label: 'Sigara', value: profile.smoking ? translateSmoking(profile.smoking) : 'Belirtilmedi' },
+                { icon: 'resize-outline', iconBg: '#D5D5F5', label: 'Boy', value: profile.height ? `${profile.height} cm` : 'Belirtilmedi' },
+                { icon: 'fitness-outline', iconBg: '#E8D5D5', label: 'Spor', value: profile.sports ? translateSports(profile.sports) : 'Belirtilmedi' },
+              ];
+              return rows;
+            })().map((row) => (
+              <TouchableOpacity
+                key={row.label}
+                style={styles.aboutRow}
+                onPress={handleEditProfile}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.aboutIconCircle, { backgroundColor: row.iconBg }]}>
+                  <Ionicons name={row.icon} size={18} color="#1A1A1A" />
+                </View>
+                <View style={styles.aboutRowContent}>
+                  <Text style={styles.aboutRowLabel}>{row.label}</Text>
+                  <Text style={[
+                    styles.aboutRowValue,
+                    row.value === 'Belirtilmedi' && styles.aboutRowValueEmpty,
+                  ]}>
+                    {row.value}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+              </TouchableOpacity>
+            ))}
           </View>
         </SlideIn>
 
@@ -584,6 +704,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  darkHeaderArea: {
+    backgroundColor: colors.background,
+    paddingBottom: spacing.sm,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -636,6 +760,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary + '30',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 3,
+    borderColor: colors.primary,
+  },
+  avatarImage: {
+    width: layout.avatarXLarge,
+    height: layout.avatarXLarge,
+    borderRadius: layout.avatarXLarge / 2,
     borderWidth: 3,
     borderColor: colors.primary,
   },
@@ -768,6 +899,74 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.textSecondary,
     lineHeight: 24,
+  },
+  // Hakkimda / About section styles
+  aboutCard: {
+    marginHorizontal: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  lookingForChip: {
+    backgroundColor: colors.secondary + '15',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  lookingForChipText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: colors.secondary,
+  },
+  hobbyChip: {
+    backgroundColor: colors.primary + '12',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  hobbyChipText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: colors.primary,
+  },
+  aboutRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surfaceBorder,
+  },
+  aboutIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  aboutRowContent: {
+    flex: 1,
+  },
+  aboutRowLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.textTertiary,
+    marginBottom: 2,
+  },
+  aboutRowValue: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: colors.text,
+  },
+  aboutRowValueEmpty: {
+    color: colors.textTertiary,
+    fontStyle: 'italic',
   },
   badgesCard: {
     marginHorizontal: spacing.lg,

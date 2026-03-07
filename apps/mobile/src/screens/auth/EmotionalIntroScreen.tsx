@@ -1,199 +1,34 @@
-// EmotionalIntroScreen — Single emotional landing page
-// Background: subtle animated gradient, pulsing heart, LUMA logo
+// EmotionalIntroScreen — Happn-style landing page
+// Lila/purple gradient background, couple photo, LUMA logo, Google + Diger secenekler
 // Founder Test Panel: DEV button (top-right) or long-press LUMA logo 3s
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Dimensions,
   TouchableOpacity,
   StatusBar,
   Platform,
   Modal,
   Pressable,
+  ImageBackground,
   Alert,
 } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withDelay,
-  withSpring,
-  withRepeat,
-  withSequence,
-  Easing,
-} from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../stores/authStore';
 import { useTestModeStore } from '../../stores/testModeStore';
+import { useProfileStore } from '../../stores/profileStore';
 import { storage } from '../../utils/storage';
 import { seedDevData } from '../../utils/devSeedData';
-import { palette } from '../../theme/colors';
-import { spacing, borderRadius } from '../../theme/spacing';
+import { spacing } from '../../theme/spacing';
 
 type IntroNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'EmotionalIntro'>;
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-
-// ────────────────────────────────────────────
-// Pulsing Heart — realistic heartbeat rhythm
-// ────────────────────────────────────────────
-
-const PulsingHeart: React.FC = () => {
-  const heartScale = useSharedValue(0.88);
-  const heartOpacity = useSharedValue(0.18);
-  const glowScale = useSharedValue(0.85);
-  const glowOpacity = useSharedValue(0.10);
-
-  useEffect(() => {
-    heartScale.value = withRepeat(
-      withSequence(
-        withTiming(1.14, { duration: 1100, easing: Easing.out(Easing.cubic) }),
-        withTiming(0.94, { duration: 350, easing: Easing.in(Easing.cubic) }),
-        withTiming(1.06, { duration: 280, easing: Easing.out(Easing.cubic) }),
-        withTiming(0.88, { duration: 1200, easing: Easing.inOut(Easing.sin) }),
-      ),
-      -1,
-      false,
-    );
-
-    heartOpacity.value = withRepeat(
-      withSequence(
-        withTiming(0.34, { duration: 1100, easing: Easing.out(Easing.cubic) }),
-        withTiming(0.22, { duration: 350, easing: Easing.in(Easing.cubic) }),
-        withTiming(0.30, { duration: 280, easing: Easing.out(Easing.cubic) }),
-        withTiming(0.18, { duration: 1200, easing: Easing.inOut(Easing.sin) }),
-      ),
-      -1,
-      false,
-    );
-
-    glowScale.value = withRepeat(
-      withSequence(
-        withTiming(1.35, { duration: 1100, easing: Easing.out(Easing.cubic) }),
-        withTiming(0.90, { duration: 350, easing: Easing.in(Easing.cubic) }),
-        withTiming(1.20, { duration: 280, easing: Easing.out(Easing.cubic) }),
-        withTiming(0.85, { duration: 1200, easing: Easing.inOut(Easing.sin) }),
-      ),
-      -1,
-      false,
-    );
-
-    glowOpacity.value = withRepeat(
-      withSequence(
-        withTiming(0.28, { duration: 1100, easing: Easing.out(Easing.cubic) }),
-        withTiming(0.08, { duration: 350, easing: Easing.in(Easing.cubic) }),
-        withTiming(0.20, { duration: 280, easing: Easing.out(Easing.cubic) }),
-        withTiming(0.10, { duration: 1200, easing: Easing.inOut(Easing.sin) }),
-      ),
-      -1,
-      false,
-    );
-  }, [heartScale, heartOpacity, glowScale, glowOpacity]);
-
-  const heartStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: heartScale.value }],
-    opacity: heartOpacity.value,
-  }));
-
-  const heartGlowStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: glowScale.value }],
-    opacity: glowOpacity.value,
-  }));
-
-  return (
-    <View style={styles.heartContainer} pointerEvents="none">
-      <Animated.View style={[styles.heartGlow, heartGlowStyle]} />
-      <Animated.Text style={[styles.heartText, heartStyle]}>
-        {'\u2665'}
-      </Animated.Text>
-    </View>
-  );
-};
-
-// ────────────────────────────────────────────
-// Gradient CTA button with glow + spring press
-// ────────────────────────────────────────────
-
-const GradientCTAButton: React.FC<{
-  label: string;
-  onPress: () => void;
-}> = ({ label, onPress }) => {
-  const pressScale = useSharedValue(1);
-  const ctaGlowOpacity = useSharedValue(0.25);
-  const ctaGlowScale = useSharedValue(1);
-
-  useEffect(() => {
-    ctaGlowOpacity.value = withRepeat(
-      withSequence(
-        withTiming(0.65, { duration: 1800, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0.25, { duration: 1800, easing: Easing.inOut(Easing.sin) }),
-      ),
-      -1,
-      true,
-    );
-    ctaGlowScale.value = withRepeat(
-      withSequence(
-        withTiming(1.08, { duration: 1800, easing: Easing.inOut(Easing.sin) }),
-        withTiming(1.0, { duration: 1800, easing: Easing.inOut(Easing.sin) }),
-      ),
-      -1,
-      true,
-    );
-  }, [ctaGlowOpacity, ctaGlowScale]);
-
-  const handlePressIn = useCallback(() => {
-    pressScale.value = withSpring(0.96, { damping: 15, stiffness: 300 });
-  }, [pressScale]);
-
-  const handlePressOut = useCallback(() => {
-    pressScale.value = withSpring(1, { damping: 12, stiffness: 200 });
-  }, [pressScale]);
-
-  const handlePress = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    onPress();
-  }, [onPress]);
-
-  const buttonStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pressScale.value }],
-  }));
-
-  const ctaGlowStyle = useAnimatedStyle(() => ({
-    opacity: ctaGlowOpacity.value,
-    transform: [{ scale: ctaGlowScale.value }],
-  }));
-
-  return (
-    <Animated.View style={[styles.ctaWrapper, buttonStyle]}>
-      <Animated.View style={[styles.ctaGlowBg, ctaGlowStyle]} />
-      <TouchableOpacity
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        onPress={handlePress}
-        activeOpacity={1}
-        style={styles.ctaTouchable}
-        accessibilityLabel={label}
-        accessibilityRole="button"
-      >
-        <LinearGradient
-          colors={[palette.purple[500], palette.pink[500]] as [string, string]}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={styles.ctaGradient}
-        >
-          <Text style={styles.ctaText}>{label}</Text>
-        </LinearGradient>
-      </TouchableOpacity>
-    </Animated.View>
-  );
-};
 
 // ────────────────────────────────────────────
 // Founder Test Panel (__DEV__ only)
@@ -204,7 +39,9 @@ const FounderTestPanel: React.FC<{
   onClose: () => void;
   onFounderLogin: () => void;
   onNormalTest: () => void;
-}> = ({ visible, onClose, onFounderLogin, onNormalTest }) => (
+  onOnboardingTest: () => void;
+  onReset: () => void;
+}> = ({ visible, onClose, onFounderLogin, onNormalTest, onOnboardingTest, onReset }) => (
   <Modal
     visible={visible}
     transparent
@@ -236,6 +73,19 @@ const FounderTestPanel: React.FC<{
         </TouchableOpacity>
 
         <TouchableOpacity
+          style={[styles.testPanelButton, styles.testPanelButtonOnboarding]}
+          onPress={onOnboardingTest}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.testPanelButtonText}>
+            Onboarding'den Başla
+          </Text>
+          <Text style={styles.testPanelButtonDesc}>
+            Auth atla, Ad ekranından başlat (tam akış testi)
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
           style={[styles.testPanelButton, styles.testPanelButtonOutline]}
           onPress={onNormalTest}
           activeOpacity={0.8}
@@ -248,6 +98,19 @@ const FounderTestPanel: React.FC<{
           </Text>
         </TouchableOpacity>
 
+        <TouchableOpacity
+          style={[styles.testPanelButton, styles.testPanelButtonReset]}
+          onPress={onReset}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.testPanelButtonText}>
+            Sıfırla (Landing'e Dön)
+          </Text>
+          <Text style={styles.testPanelButtonDesc}>
+            Tüm veriyi sil, kayıt ekranından başlat
+          </Text>
+        </TouchableOpacity>
+
         <TouchableOpacity onPress={onClose}>
           <Text style={styles.testPanelCancel}>Kapat</Text>
         </TouchableOpacity>
@@ -257,69 +120,24 @@ const FounderTestPanel: React.FC<{
 );
 
 // ────────────────────────────────────────────
-// Main screen — single emotional landing page
+// Main screen — Happn-style landing
 // ────────────────────────────────────────────
+
+const coupleImage = require('../../../assets/intro/couple-1.png');
 
 const EmotionalIntroScreen: React.FC = () => {
   const navigation = useNavigation<IntroNavigationProp>();
   const [showTestPanel, setShowTestPanel] = useState(false);
 
-  // Animated entrance
-  const logoOpacity = useSharedValue(0);
-  const logoScale = useSharedValue(0.85);
-  const headlineOpacity = useSharedValue(0);
-  const headlineTranslateY = useSharedValue(24);
-  const subtextOpacity = useSharedValue(0);
-  const subtextTranslateY = useSharedValue(16);
-  const ctaOpacity = useSharedValue(0);
-  const ctaTranslateY = useSharedValue(20);
-
-  useEffect(() => {
-    // Staggered entrance animation
-    logoOpacity.value = withDelay(300, withTiming(1, { duration: 900, easing: Easing.out(Easing.cubic) }));
-    logoScale.value = withDelay(300, withTiming(1, { duration: 900, easing: Easing.out(Easing.cubic) }));
-
-    headlineOpacity.value = withDelay(700, withTiming(1, { duration: 800, easing: Easing.out(Easing.cubic) }));
-    headlineTranslateY.value = withDelay(700, withTiming(0, { duration: 800, easing: Easing.out(Easing.cubic) }));
-
-    subtextOpacity.value = withDelay(1000, withTiming(1, { duration: 700, easing: Easing.out(Easing.cubic) }));
-    subtextTranslateY.value = withDelay(1000, withTiming(0, { duration: 700, easing: Easing.out(Easing.cubic) }));
-
-    ctaOpacity.value = withDelay(1400, withTiming(1, { duration: 700, easing: Easing.out(Easing.cubic) }));
-    ctaTranslateY.value = withDelay(1400, withTiming(0, { duration: 700, easing: Easing.out(Easing.cubic) }));
-  }, [logoOpacity, logoScale, headlineOpacity, headlineTranslateY, subtextOpacity, subtextTranslateY, ctaOpacity, ctaTranslateY]);
-
-  const logoStyle = useAnimatedStyle(() => ({
-    opacity: logoOpacity.value,
-    transform: [{ scale: logoScale.value }],
-  }));
-
-  const headlineStyle = useAnimatedStyle(() => ({
-    opacity: headlineOpacity.value,
-    transform: [{ translateY: headlineTranslateY.value }],
-  }));
-
-  const subtextStyle = useAnimatedStyle(() => ({
-    opacity: subtextOpacity.value,
-    transform: [{ translateY: subtextTranslateY.value }],
-  }));
-
-  const ctaSectionStyle = useAnimatedStyle(() => ({
-    opacity: ctaOpacity.value,
-    transform: [{ translateY: ctaTranslateY.value }],
-  }));
-
   // Navigation handlers
-  const handleStartTest = useCallback(() => {
-    navigation.navigate('PhoneEntry');
-  }, [navigation]);
-
-  const handleGoogleAuth = useCallback(() => {
-    Alert.alert(
-      'Google ile Giriş',
-      'Google ile giriş yakında aktif olacak. Şimdilik telefon numaranı ile devam edebilirsin.',
-    );
+  const handleGoogleSignIn = useCallback(() => {
+    Alert.alert('Google ile Bağlan', 'Çok yakında aktif olacak!');
   }, []);
+
+  const handleOtherOptions = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    navigation.navigate('SignUpChoice');
+  }, [navigation]);
 
   const handleLogin = useCallback(() => {
     navigation.navigate('PhoneEntry');
@@ -341,11 +159,36 @@ const EmotionalIntroScreen: React.FC = () => {
     seedDevData();
   }, []);
 
+  const handleOnboardingTest = useCallback(() => {
+    setShowTestPanel(false);
+    // Clear old state first
+    storage.clearAll();
+    useProfileStore.getState().reset();
+    // Set authenticated but NOT onboarded → RootNavigator goes to OnboardingNavigator
+    const { login, setStartedOnboarding } = useAuthStore.getState();
+    login('dev-access-token', 'dev-refresh-token', {
+      id: 'dev-user-001',
+      phone: '+90 555 555 5555',
+      isVerified: true,
+      packageTier: 'reserved',
+    });
+    setStartedOnboarding(true);
+  }, []);
+
   const handleNormalTest = useCallback(() => {
     setShowTestPanel(false);
     useTestModeStore.getState().setTestMode(true);
     navigation.navigate('PhoneEntry');
   }, [navigation]);
+
+  const handleReset = useCallback(() => {
+    setShowTestPanel(false);
+    const { logout } = useAuthStore.getState();
+    logout();
+    storage.clearAll();
+    useProfileStore.getState().reset();
+    useTestModeStore.getState().setTestMode(false);
+  }, []);
 
   const handleLogoLongPress = useCallback(() => {
     if (__DEV__) {
@@ -361,79 +204,77 @@ const EmotionalIntroScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
 
-      {/* Animated gradient background */}
-      <LinearGradient
-        colors={['#07051A', '#120A28', '#1A0E30', '#07051A'] as [string, string, ...string[]]}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
-      />
-
-      {/* Pulsing heart — behind content */}
-      <PulsingHeart />
-
-      {/* DEV test button */}
-      {__DEV__ && (
-        <TouchableOpacity
-          style={styles.devButton}
-          onPress={handleDevPress}
-          activeOpacity={0.7}
+      <ImageBackground
+        source={coupleImage}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        {/* Gradient overlay */}
+        <LinearGradient
+          colors={['rgba(180, 140, 200, 0.3)', 'rgba(160, 110, 180, 0.7)', 'rgba(130, 80, 160, 0.92)']}
+          locations={[0, 0.5, 1]}
+          style={styles.gradientOverlay}
         >
-          <Text style={styles.devButtonText}>DEV</Text>
-        </TouchableOpacity>
-      )}
+          {/* DEV test button */}
+          {__DEV__ && (
+            <TouchableOpacity
+              style={styles.devButton}
+              onPress={handleDevPress}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.devButtonText}>DEV</Text>
+            </TouchableOpacity>
+          )}
 
-      {/* Main content — centered */}
-      <View style={styles.mainContent}>
-        {/* LUMA logo */}
-        <Pressable onLongPress={handleLogoLongPress} delayLongPress={3000}>
-          <Animated.Text style={[styles.logoText, logoStyle]}>
-            LUMA
-          </Animated.Text>
-        </Pressable>
+          {/* Top spacer */}
+          <View style={styles.topSpacer} />
 
-        {/* Headline */}
-        <Animated.Text style={[styles.headline, headlineStyle]}>
-          Seni gerçekten anlayan{'\n'}biriyle tanışmaya{'\n'}hazır mısın?
-        </Animated.Text>
+          {/* Center — LUMA logo */}
+          <View style={styles.logoSection}>
+            <Pressable onLongPress={handleLogoLongPress} delayLongPress={3000}>
+              <Text style={styles.logoText}>LUMA</Text>
+            </Pressable>
+            <Ionicons name="heart" size={20} color="rgba(255,255,255,0.7)" style={styles.heartIcon} />
+          </View>
 
-        {/* Subtext */}
-        <Animated.Text style={[styles.subtext, subtextStyle]}>
-          2 dakikada uyumunu keşfet.
-        </Animated.Text>
-      </View>
+          {/* Bottom section — buttons */}
+          <View style={styles.bottomSection}>
+            {/* Google button */}
+            <TouchableOpacity
+              style={styles.googleButton}
+              onPress={handleGoogleSignIn}
+              activeOpacity={0.9}
+            >
+              <Ionicons name="logo-google" size={20} color="#1A1A1A" />
+              <Text style={styles.googleButtonText}>Google ile bağlan</Text>
+            </TouchableOpacity>
 
-      {/* Bottom auth section */}
-      <Animated.View style={[styles.bottomSection, ctaSectionStyle]}>
-        <GradientCTAButton
-          label="Uyum Testine Başla"
-          onPress={handleStartTest}
-        />
+            {/* Diger secenekler button */}
+            <TouchableOpacity
+              style={styles.otherButton}
+              onPress={handleOtherOptions}
+              activeOpacity={0.9}
+            >
+              <Text style={styles.otherButtonText}>Diğer seçenekler</Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.glassButton}
-          onPress={handleGoogleAuth}
-          activeOpacity={0.8}
-          accessibilityLabel="Google ile devam et"
-          accessibilityRole="button"
-        >
-          <Text style={styles.glassButtonText}>Google ile devam et</Text>
-        </TouchableOpacity>
+            {/* Login link for existing users */}
+            <TouchableOpacity onPress={handleLogin} activeOpacity={0.7}>
+              <Text style={styles.loginText}>
+                {'Zaten hesabın var mı? '}
+                <Text style={styles.loginLink}>Giriş yap</Text>
+              </Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={handleLogin}
-          activeOpacity={0.7}
-          accessibilityLabel="Giriş yap"
-          accessibilityRole="link"
-        >
-          <Text style={styles.loginText}>
-            {'Zaten hesabın var mı? '}
-            <Text style={styles.loginLink}>Giriş yap</Text>
-          </Text>
-        </TouchableOpacity>
-      </Animated.View>
+            {/* Privacy note */}
+            <Text style={styles.privacyText}>
+              Kaydolarak, Genel Kullanım Koşullarımızı ve Gizlilik Politikamızı kabul etmiş olursun.
+            </Text>
+          </View>
+        </LinearGradient>
+      </ImageBackground>
 
       {/* Founder Test Mode modal */}
       {__DEV__ && (
@@ -442,6 +283,8 @@ const EmotionalIntroScreen: React.FC = () => {
           onClose={() => setShowTestPanel(false)}
           onFounderLogin={handleFounderLogin}
           onNormalTest={handleNormalTest}
+          onOnboardingTest={handleOnboardingTest}
+          onReset={handleReset}
         />
       )}
     </View>
@@ -457,226 +300,157 @@ export default EmotionalIntroScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#07051A',
+    backgroundColor: '#1A1A1A',
   },
-  // Pulsing heart
-  heartContainer: {
-    position: 'absolute',
-    top: SCREEN_HEIGHT * 0.22,
-    alignSelf: 'center',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 0,
+  backgroundImage: {
+    flex: 1,
   },
-  heartGlow: {
-    position: 'absolute',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: palette.pink[600],
-    ...Platform.select({
-      ios: {
-        shadowColor: palette.pink[400],
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.7,
-        shadowRadius: 70,
-      },
-      android: {},
-    }),
+  gradientOverlay: {
+    flex: 1,
+    justifyContent: 'space-between',
   },
-  heartText: {
-    fontSize: 140,
-    color: palette.pink[400],
-    textAlign: 'center',
-    lineHeight: 160,
+  topSpacer: {
+    height: Platform.OS === 'ios' ? 80 : 60,
   },
-  // DEV button
+  // DEV button — more visible on dark bg
   devButton: {
     position: 'absolute',
     top: Platform.OS === 'ios' ? 56 : 40,
     right: 20,
     zIndex: 100,
-    backgroundColor: 'rgba(139, 92, 246, 0.25)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.4)',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
   },
   devButtonText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: palette.purple[300],
-    letterSpacing: 1,
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 1.5,
   },
-  // Main content — vertically centered
-  mainContent: {
-    flex: 1,
-    justifyContent: 'center',
+  // LUMA logo section
+  logoSection: {
     alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-    zIndex: 1,
+    justifyContent: 'center',
+    flex: 1,
   },
   logoText: {
-    fontSize: 56,
-    fontWeight: '200',
+    fontSize: 64,
+    fontWeight: '300',
     color: '#FFFFFF',
-    letterSpacing: 24,
-    marginBottom: spacing.xl + spacing.md,
-    ...Platform.select({
-      ios: {
-        textShadowColor: 'rgba(168, 85, 247, 0.5)',
-        textShadowOffset: { width: 0, height: 0 },
-        textShadowRadius: 30,
-      },
-      android: {},
-    }),
+    letterSpacing: 28,
+    textShadowColor: 'rgba(0, 0, 0, 0.25)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
   },
-  headline: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    textAlign: 'center',
-    lineHeight: 42,
-    letterSpacing: -0.3,
-    marginBottom: spacing.lg,
-    ...Platform.select({
-      ios: {
-        textShadowColor: 'rgba(236, 72, 153, 0.2)',
-        textShadowOffset: { width: 0, height: 0 },
-        textShadowRadius: 16,
-      },
-      android: {},
-    }),
-  },
-  subtext: {
-    fontSize: 16,
-    fontWeight: '400',
-    color: 'rgba(255, 255, 255, 0.65)',
-    textAlign: 'center',
-    lineHeight: 24,
-    letterSpacing: 0.2,
+  heartIcon: {
+    marginTop: 8,
   },
   // Bottom section
   bottomSection: {
-    paddingBottom: Platform.OS === 'ios' ? 48 : 36,
     paddingHorizontal: spacing.lg,
+    paddingBottom: Platform.OS === 'ios' ? 48 : 36,
     alignItems: 'center',
-    gap: spacing.md,
-    zIndex: 2,
+    gap: 12,
   },
-  // CTA button
-  ctaWrapper: {
+  // Google button — white, rounded
+  googleButton: {
     width: '100%',
-  },
-  ctaGlowBg: {
-    position: 'absolute',
-    left: '8%',
-    right: '8%',
-    top: -8,
-    bottom: -8,
-    borderRadius: borderRadius.lg,
-    backgroundColor: palette.pink[600],
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 10,
     ...Platform.select({
       ios: {
-        shadowColor: palette.pink[500],
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.6,
-        shadowRadius: 20,
-      },
-      android: {
-        elevation: 10,
-      },
-    }),
-  },
-  ctaTouchable: {
-    width: '100%',
-    borderRadius: 16,
-    overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowColor: palette.purple[500],
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.4,
-        shadowRadius: 14,
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
       },
       android: {
-        elevation: 8,
+        elevation: 6,
       },
     }),
   },
-  ctaGradient: {
-    height: 58,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
+  googleButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1A1A1A',
   },
-  ctaText: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    letterSpacing: 0.4,
-  },
-  // Glass button
-  glassButton: {
+  // Other options button — dark/transparent
+  otherButton: {
     width: '100%',
-    height: 54,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.07)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.14)',
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(30, 30, 30, 0.75)',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
-  glassButtonText: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: 'rgba(255, 255, 255, 0.85)',
-    letterSpacing: 0.2,
+  otherButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   // Login link
   loginText: {
     fontSize: 14,
     fontWeight: '400',
-    color: palette.gray[500],
-    marginTop: spacing.xs,
+    color: 'rgba(255, 255, 255, 0.6)',
   },
   loginLink: {
-    color: palette.pink[400],
-    fontWeight: '600',
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textDecorationLine: 'underline',
+  },
+  // Privacy text
+  privacyText: {
+    fontSize: 11,
+    lineHeight: 16,
+    color: 'rgba(255, 255, 255, 0.55)',
+    textAlign: 'center',
+    paddingHorizontal: spacing.lg,
+    marginTop: 4,
   },
   // Test panel modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
   },
   testPanel: {
     width: '100%',
-    backgroundColor: '#1A1A2E',
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: spacing.lg,
     gap: spacing.md,
     borderWidth: 1,
-    borderColor: palette.purple[800],
+    borderColor: '#E8E3DB',
   },
   testPanelTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: '#1A1A1A',
     textAlign: 'center',
   },
   testPanelSubtitle: {
     fontSize: 13,
     fontWeight: '400',
-    color: palette.gray[500],
+    color: '#6B6B6B',
     textAlign: 'center',
     marginBottom: spacing.sm,
   },
   testPanelButton: {
-    backgroundColor: palette.purple[800],
+    backgroundColor: '#1A1A1A',
     borderRadius: 14,
     padding: spacing.md,
     gap: 4,
@@ -684,7 +458,13 @@ const styles = StyleSheet.create({
   testPanelButtonOutline: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: palette.purple[600],
+    borderColor: '#E8E3DB',
+  },
+  testPanelButtonOnboarding: {
+    backgroundColor: '#7C3AED',
+  },
+  testPanelButtonReset: {
+    backgroundColor: '#DC2626',
   },
   testPanelButtonText: {
     fontSize: 15,
@@ -694,12 +474,12 @@ const styles = StyleSheet.create({
   testPanelButtonDesc: {
     fontSize: 12,
     fontWeight: '400',
-    color: palette.gray[400],
+    color: '#9A9A9A',
   },
   testPanelCancel: {
     fontSize: 14,
     fontWeight: '500',
-    color: palette.gray[500],
+    color: '#6B6B6B',
     textAlign: 'center',
     marginTop: spacing.sm,
   },

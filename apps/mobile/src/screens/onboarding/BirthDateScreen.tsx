@@ -1,47 +1,91 @@
-// Onboarding step 3/7: Birth date picker with 18+ validation
+// Onboarding step 2/11: Birth date picker with zodiac sign — cream/beige theme
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Switch,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import type { OnboardingStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../stores/profileStore';
-import { OnboardingProgress } from '../../components/onboarding/OnboardingProgress';
-import { colors } from '../../theme/colors';
-import { typography } from '../../theme/typography';
-import { spacing, borderRadius, layout } from '../../theme/spacing';
+import {
+  OnboardingLayout,
+  ArrowButton,
+  onboardingColors,
+} from '../../components/onboarding/OnboardingLayout';
 
-type BirthDateNavigationProp = NativeStackNavigationProp<OnboardingStackParamList, 'BirthDate'>;
+type NavProp = NativeStackNavigationProp<OnboardingStackParamList, 'BirthDate'>;
 
-const CURRENT_STEP = 3;
 const MIN_AGE = 18;
-
 const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
 const MONTHS = [
+  'Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz',
+  'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara',
+];
+const MONTH_NAMES_FULL = [
   'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
   'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
 ];
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 80 }, (_, i) => currentYear - MIN_AGE - i);
 
+function getZodiacSign(month: number, day: number): string {
+  // month is 0-indexed (0=Jan, 11=Dec)
+  const signs: Array<[number, number, string]> = [
+    [0, 20, 'Oğlak'],    // Jan 1-20
+    [1, 19, 'Kova'],     // Feb 1-19
+    [2, 20, 'Balık'],    // Mar 1-20
+    [3, 20, 'Koç'],      // Apr 1-20
+    [4, 21, 'Boğa'],     // May 1-21
+    [5, 21, 'İkizler'],  // Jun 1-21
+    [6, 22, 'Yengeç'],   // Jul 1-22
+    [7, 23, 'Aslan'],    // Aug 1-23
+    [8, 23, 'Başak'],    // Sep 1-23
+    [9, 23, 'Terazi'],   // Oct 1-23
+    [10, 22, 'Akrep'],   // Nov 1-22
+    [11, 22, 'Yay'],     // Dec 1-22
+  ];
+  const nextSigns: string[] = [
+    'Kova', 'Balık', 'Koç', 'Boğa', 'İkizler', 'Yengeç',
+    'Aslan', 'Başak', 'Terazi', 'Akrep', 'Yay', 'Oğlak',
+  ];
+
+  const entry = signs[month];
+  if (!entry) return '';
+  if (day <= entry[1]) {
+    return entry[2];
+  }
+  return nextSigns[month] || '';
+}
+
 export const BirthDateScreen: React.FC = () => {
-  const navigation = useNavigation<BirthDateNavigationProp>();
+  const navigation = useNavigation<NavProp>();
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
-  const [error, setError] = useState('');
+  const [showZodiac, setShowZodiac] = useState(true);
   const setProfileField = useProfileStore((state) => state.setField);
 
   const isValid = selectedDay !== null && selectedMonth !== null && selectedYear !== null;
 
-  const calculateAge = (): number => {
-    if (!isValid || selectedDay === null || selectedMonth === null || selectedYear === null) return 0;
+  const zodiacSign = (selectedMonth !== null && selectedDay !== null)
+    ? getZodiacSign(selectedMonth, selectedDay)
+    : '';
+
+  const dateDisplay = isValid
+    ? `${selectedDay} ${MONTH_NAMES_FULL[selectedMonth!]} ${selectedYear}`
+    : '';
+
+  const handleContinue = useCallback(() => {
+    if (!isValid || selectedDay === null || selectedMonth === null || selectedYear === null) return;
+
     const today = new Date();
     const birthDate = new Date(selectedYear, selectedMonth, selectedDay);
     let age = today.getFullYear() - birthDate.getFullYear();
@@ -49,216 +93,199 @@ export const BirthDateScreen: React.FC = () => {
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
       age--;
     }
-    return age;
-  };
 
-  const handleContinue = () => {
-    if (!isValid) return;
-
-    const age = calculateAge();
     if (age < MIN_AGE) {
-      setError(`LUMA'yı kullanabilmek için en az ${MIN_AGE} yaşında olmalısın.`);
+      Alert.alert('Yaş sınırı', `LUMA'yı kullanabilmek için en az ${MIN_AGE} yaşında olmalısın.`);
       return;
     }
 
-    setError('');
-    const birthDate = new Date(selectedYear!, selectedMonth!, selectedDay!);
     setProfileField('birthDate', birthDate.toISOString());
     navigation.navigate('Gender');
-  };
+  }, [isValid, selectedDay, selectedMonth, selectedYear, setProfileField, navigation]);
 
   return (
-    <View style={styles.container}>
-      {/* Progress indicator */}
-      <OnboardingProgress currentStep={CURRENT_STEP} />
+    <OnboardingLayout
+      step={2}
+      totalSteps={15}
+      showBack
+      footer={<ArrowButton onPress={handleContinue} disabled={!isValid} />}
+    >
+      <Text style={styles.title}>Doğum tarihin</Text>
 
-      {/* Content */}
-      <View style={styles.content}>
-        <Text style={styles.title}>Doğum Tarihin</Text>
-        <Text style={styles.subtitle}>
-          Yaşın profilinde görünecek ama doğum tarihin gizli kalacak.
-        </Text>
+      {/* Date display card */}
+      {isValid && (
+        <View style={styles.dateCard}>
+          <Text style={styles.dateText}>{dateDisplay}</Text>
+        </View>
+      )}
 
-        {/* Day selector */}
-        <Text style={styles.label}>Gün</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollRow}>
-          <View style={styles.optionsRow}>
-            {DAYS.map((day) => (
-              <TouchableOpacity
-                key={day}
-                style={[styles.optionChip, selectedDay === day && styles.optionChipActive]}
-                onPress={() => setSelectedDay(day)}
-              >
-                <Text
-                  style={[styles.optionChipText, selectedDay === day && styles.optionChipTextActive]}
-                >
-                  {day}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
+      {/* Day selector */}
+      <Text style={styles.label}>Gün</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollRow}>
+        <View style={styles.chipsRow}>
+          {DAYS.map((day) => (
+            <TouchableOpacity
+              key={day}
+              style={[styles.chip, selectedDay === day && styles.chipActive]}
+              onPress={() => setSelectedDay(day)}
+            >
+              <Text style={[styles.chipText, selectedDay === day && styles.chipTextActive]}>
+                {day}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
 
-        {/* Month selector */}
-        <Text style={styles.label}>Ay</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollRow}>
-          <View style={styles.optionsRow}>
-            {MONTHS.map((month, index) => (
-              <TouchableOpacity
-                key={month}
-                style={[styles.monthChip, selectedMonth === index && styles.optionChipActive]}
-                onPress={() => setSelectedMonth(index)}
-              >
-                <Text
-                  style={[
-                    styles.optionChipText,
-                    selectedMonth === index && styles.optionChipTextActive,
-                  ]}
-                >
-                  {month}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
+      {/* Month selector */}
+      <Text style={styles.label}>Ay</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollRow}>
+        <View style={styles.chipsRow}>
+          {MONTHS.map((month, index) => (
+            <TouchableOpacity
+              key={month}
+              style={[styles.chipWide, selectedMonth === index && styles.chipActive]}
+              onPress={() => setSelectedMonth(index)}
+            >
+              <Text style={[styles.chipText, selectedMonth === index && styles.chipTextActive]}>
+                {month}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
 
-        {/* Year selector */}
-        <Text style={styles.label}>Yıl</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollRow}>
-          <View style={styles.optionsRow}>
-            {YEARS.map((year) => (
-              <TouchableOpacity
-                key={year}
-                style={[styles.optionChip, selectedYear === year && styles.optionChipActive]}
-                onPress={() => setSelectedYear(year)}
-              >
-                <Text
-                  style={[
-                    styles.optionChipText,
-                    selectedYear === year && styles.optionChipTextActive,
-                  ]}
-                >
-                  {year}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
+      {/* Year selector */}
+      <Text style={styles.label}>Yıl</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollRow}>
+        <View style={styles.chipsRow}>
+          {YEARS.map((year) => (
+            <TouchableOpacity
+              key={year}
+              style={[styles.chip, selectedYear === year && styles.chipActive]}
+              onPress={() => setSelectedYear(year)}
+            >
+              <Text style={[styles.chipText, selectedYear === year && styles.chipTextActive]}>
+                {year}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
 
-        {error !== '' && <Text style={styles.errorText}>{error}</Text>}
-      </View>
-
-      {/* Footer */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.continueButton, !isValid && styles.continueButtonDisabled]}
-          onPress={handleContinue}
-          disabled={!isValid}
-          activeOpacity={0.85}
-        >
-          <Text
-            style={[styles.continueButtonText, !isValid && styles.continueButtonTextDisabled]}
-          >
-            Devam
+      {/* Zodiac sign card */}
+      {zodiacSign !== '' && (
+        <View style={styles.zodiacCard}>
+          <Ionicons name="planet-outline" size={20} color={onboardingColors.textSecondary} />
+          <Text style={styles.zodiacText}>
+            Burcun: <Text style={styles.zodiacBold}>{zodiacSign}</Text>. Profilinde
+            gösterilsin mi? Daha sonra...
           </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+          <Switch
+            value={showZodiac}
+            onValueChange={setShowZodiac}
+            trackColor={{ false: onboardingColors.surfaceBorder, true: '#B8A5D0' }}
+            thumbColor={showZodiac ? '#FFFFFF' : '#FFFFFF'}
+          />
+        </View>
+      )}
+    </OnboardingLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-  },
   title: {
-    ...typography.h2,
-    color: colors.text,
-    marginBottom: spacing.sm,
+    fontSize: 28,
+    fontWeight: '700',
+    color: onboardingColors.text,
+    marginBottom: 20,
   },
-  subtitle: {
-    ...typography.body,
-    color: colors.textSecondary,
-    marginBottom: spacing.lg,
+  dateCard: {
+    backgroundColor: onboardingColors.surface,
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderWidth: 2,
+    borderColor: onboardingColors.text,
+    marginBottom: 20,
+    alignSelf: 'flex-start',
+  },
+  dateText: {
+    fontSize: 17,
+    fontWeight: '500',
+    color: onboardingColors.textSecondary,
   },
   label: {
-    ...typography.label,
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-    marginTop: spacing.md,
+    fontSize: 14,
+    fontWeight: '600',
+    color: onboardingColors.textSecondary,
+    marginBottom: 8,
+    marginTop: 12,
   },
   scrollRow: {
     maxHeight: 48,
+    marginBottom: 4,
   },
-  optionsRow: {
+  chipsRow: {
     flexDirection: 'row',
-    gap: spacing.sm,
-    paddingRight: spacing.lg,
+    gap: 8,
+    paddingRight: 20,
   },
-  optionChip: {
+  chip: {
     minWidth: 48,
     height: 40,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.surface,
+    borderRadius: 12,
+    backgroundColor: onboardingColors.surface,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: 14,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
+    borderColor: onboardingColors.surfaceBorder,
   },
-  monthChip: {
-    minWidth: 64,
+  chipWide: {
+    minWidth: 56,
     height: 40,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.surface,
+    borderRadius: 12,
+    backgroundColor: onboardingColors.surface,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: 14,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
+    borderColor: onboardingColors.surfaceBorder,
   },
-  optionChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+  chipActive: {
+    backgroundColor: onboardingColors.selectedBg,
+    borderColor: onboardingColors.selectedBg,
   },
-  optionChipText: {
-    ...typography.bodySmall,
-    color: colors.text,
+  chipText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: onboardingColors.text,
   },
-  optionChipTextActive: {
-    color: colors.text,
+  chipTextActive: {
+    color: onboardingColors.selectedText,
     fontWeight: '600',
   },
-  errorText: {
-    ...typography.bodySmall,
-    color: colors.error,
-    marginTop: spacing.md,
-  },
-  footer: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxl,
-  },
-  continueButton: {
-    backgroundColor: colors.primary,
-    height: layout.buttonHeight,
-    borderRadius: borderRadius.lg,
-    justifyContent: 'center',
+  zodiacCard: {
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: onboardingColors.surface,
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 16,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: onboardingColors.surfaceBorder,
   },
-  continueButtonDisabled: {
-    backgroundColor: colors.surfaceBorder,
+  zodiacText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '400',
+    color: onboardingColors.textSecondary,
+    lineHeight: 20,
   },
-  continueButtonText: {
-    ...typography.button,
-    color: colors.text,
-  },
-  continueButtonTextDisabled: {
-    color: colors.textTertiary,
+  zodiacBold: {
+    fontWeight: '700',
+    color: onboardingColors.text,
   },
 });

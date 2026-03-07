@@ -27,7 +27,9 @@ interface SocialFeedState {
   setFilter: (filter: FeedFilter) => void;
   setTopic: (topic: FeedTopic | null) => void;
   toggleLike: (postId: string) => Promise<void>;
+  toggleFollow: (userId: string) => Promise<void>;
   createPost: (data: CreatePostRequest) => Promise<void>;
+  incrementCommentCount: (postId: string) => void;
 }
 
 export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
@@ -130,6 +132,39 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
         ),
       }));
     }
+  },
+
+  toggleFollow: async (userId: string) => {
+    // Optimistic update
+    set((state) => ({
+      posts: state.posts.map((post) =>
+        post.userId === userId
+          ? { ...post, isFollowing: !post.isFollowing }
+          : post
+      ),
+    }));
+    try {
+      await socialFeedService.toggleFollow(userId);
+    } catch {
+      // Revert on error
+      set((state) => ({
+        posts: state.posts.map((post) =>
+          post.userId === userId
+            ? { ...post, isFollowing: !post.isFollowing }
+            : post
+        ),
+      }));
+    }
+  },
+
+  incrementCommentCount: (postId: string) => {
+    set((state) => ({
+      posts: state.posts.map((post) =>
+        post.id === postId
+          ? { ...post, commentCount: post.commentCount + 1 }
+          : post
+      ),
+    }));
   },
 
   createPost: async (data: CreatePostRequest) => {

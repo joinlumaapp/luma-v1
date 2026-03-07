@@ -1,11 +1,9 @@
-// Onboarding step 2/7: First name input
+// Onboarding step 1/11: First name input — cream/beige theme
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
-  View,
   Text,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
@@ -14,143 +12,89 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { OnboardingStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../stores/profileStore';
-import { OnboardingProgress } from '../../components/onboarding/OnboardingProgress';
-import { colors } from '../../theme/colors';
-import { typography } from '../../theme/typography';
-import { spacing, borderRadius, layout } from '../../theme/spacing';
+import {
+  OnboardingLayout,
+  ArrowButton,
+  onboardingColors,
+} from '../../components/onboarding/OnboardingLayout';
 
-type NameNavigationProp = NativeStackNavigationProp<OnboardingStackParamList, 'Name'>;
-
-const CURRENT_STEP = 2;
+type NavProp = NativeStackNavigationProp<OnboardingStackParamList, 'Name'>;
 
 export const NameScreen: React.FC = () => {
-  const navigation = useNavigation<NameNavigationProp>();
+  const navigation = useNavigation<NavProp>();
   const [name, setName] = useState('');
   const setProfileField = useProfileStore((state) => state.setField);
 
   const isValid = name.trim().length >= 2;
 
-  const handleContinue = () => {
+  const handleContinue = useCallback(() => {
     if (isValid) {
       setProfileField('firstName', name.trim());
       navigation.navigate('BirthDate');
     }
-  };
+  }, [isValid, name, setProfileField, navigation]);
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      {/* Progress indicator */}
-      <OnboardingProgress currentStep={CURRENT_STEP} />
-
-      {/* Content */}
-      <View style={styles.content}>
-        <Text style={styles.title}>Adın ne?</Text>
+      <OnboardingLayout
+        step={1}
+        totalSteps={15}
+        showBack={false}
+        footer={<ArrowButton onPress={handleContinue} disabled={!isValid} />}
+      >
+        <Text style={styles.title}>Adın</Text>
         <Text style={styles.subtitle}>
-          Diğer kullanıcılar seni bu isimle görecek.
+          Profilinde görüntülenecek ve sonradan düzeltemezsin
         </Text>
 
         <TextInput
-          style={styles.input}
+          style={[styles.input, name.length > 0 && styles.inputFocused]}
           value={name}
           onChangeText={setName}
-          placeholder="Adını gir"
-          placeholderTextColor={colors.textTertiary}
+          placeholder="Ad"
+          placeholderTextColor={onboardingColors.textTertiary}
           autoFocus
           maxLength={30}
           autoCapitalize="words"
           returnKeyType="done"
           onSubmitEditing={handleContinue}
-          accessibilityLabel="Adınız"
-          accessibilityHint="Adınızı girin, en az 2 karakter"
-          testID="onboarding-name-input"
         />
-
-        <Text style={styles.hint}>
-          Bu isim daha sonra değiştirilemez.
-        </Text>
-      </View>
-
-      {/* Footer */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.continueButton, !isValid && styles.continueButtonDisabled]}
-          onPress={handleContinue}
-          disabled={!isValid}
-          activeOpacity={0.85}
-          accessibilityLabel="Devam"
-          accessibilityRole="button"
-          accessibilityHint="Sonraki adıma geçmek için dokunun"
-          accessibilityState={{ disabled: !isValid }}
-          testID="onboarding-name-continue-btn"
-        >
-          <Text
-            style={[styles.continueButtonText, !isValid && styles.continueButtonTextDisabled]}
-          >
-            Devam
-          </Text>
-        </TouchableOpacity>
-      </View>
+      </OnboardingLayout>
     </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  flex: {
     flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xxl,
   },
   title: {
-    ...typography.h2,
-    color: colors.text,
-    marginBottom: spacing.sm,
+    fontSize: 28,
+    fontWeight: '700',
+    color: onboardingColors.text,
+    marginBottom: 8,
   },
   subtitle: {
-    ...typography.body,
-    color: colors.textSecondary,
-    marginBottom: spacing.xl,
+    fontSize: 16,
+    color: onboardingColors.textSecondary,
+    marginBottom: 28,
+    lineHeight: 22,
   },
   input: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    height: layout.inputHeight,
-    ...typography.bodyLarge,
-    color: colors.text,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
+    backgroundColor: onboardingColors.surface,
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    height: 56,
+    fontSize: 17,
+    fontWeight: '500',
+    color: onboardingColors.text,
+    borderWidth: 2,
+    borderColor: onboardingColors.surfaceBorder,
   },
-  hint: {
-    ...typography.caption,
-    color: colors.textTertiary,
-    marginTop: spacing.sm,
-  },
-  footer: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxl,
-  },
-  continueButton: {
-    backgroundColor: colors.primary,
-    height: layout.buttonHeight,
-    borderRadius: borderRadius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  continueButtonDisabled: {
-    backgroundColor: colors.surfaceBorder,
-  },
-  continueButtonText: {
-    ...typography.button,
-    color: colors.text,
-  },
-  continueButtonTextDisabled: {
-    color: colors.textTertiary,
+  inputFocused: {
+    borderColor: onboardingColors.text,
   },
 });

@@ -10,7 +10,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { palette, glassmorphism } from '../../theme/colors';
+import { colors, palette, glassmorphism } from '../../theme/colors';
 import { fontWeights } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { INTEREST_OPTIONS } from '../../constants/config';
@@ -55,9 +55,9 @@ for (const opt of INTEREST_OPTIONS) {
 // ─── Mode badge labels ───────────────────────────────────────
 
 const MODE_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
-  serious_relationship: { label: 'Anlamlı Bağlantı', bg: 'rgba(139, 92, 246, 0.35)', text: palette.purple[300] },
-  exploring: { label: 'Yeni Keşifler', bg: 'rgba(236, 72, 153, 0.35)', text: palette.pink[300] },
-  not_sure: { label: 'Açık Fikirli', bg: 'rgba(251, 191, 36, 0.35)', text: palette.gold[300] },
+  serious_relationship: { label: 'Anlamlı Bağlantı', bg: 'rgba(139, 92, 246, 0.15)', text: palette.purple[700] },
+  exploring: { label: 'Yeni Keşifler', bg: 'rgba(236, 72, 153, 0.15)', text: palette.pink[700] },
+  not_sure: { label: 'Açık Fikirli', bg: 'rgba(251, 191, 36, 0.15)', text: palette.gold[700] },
 };
 
 const getModeStyle = (tag: string) =>
@@ -121,7 +121,7 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
 
         {/* Soft gradient at bottom of photo for smooth transition */}
         <LinearGradient
-          colors={['transparent', 'rgba(8,8,15,0.6)', '#0D0D18'] as [string, string, ...string[]]}
+          colors={['transparent', 'rgba(255,255,255,0.6)', colors.surface] as [string, string, ...string[]]}
           locations={[0, 0.55, 1]}
           style={styles.photoGradient}
           pointerEvents="none"
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 24,
     overflow: 'hidden',
-    backgroundColor: '#0D0D18',
+    backgroundColor: colors.surface,
   },
 
   // ── Photo section — 62% ──
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#12121F',
+    backgroundColor: colors.surfaceLight,
   },
   photoInitial: {
     fontSize: 72,
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
   // ── Info panel — 38%, 6 rows ──
   infoPanel: {
     flex: 1 - PHOTO_RATIO,
-    backgroundColor: '#0D0D18',
+    backgroundColor: colors.surface,
     paddingHorizontal: spacing.md + 2,
     paddingTop: 4,
     paddingBottom: 4,
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   nameAge: {
     fontSize: 22,
     fontWeight: fontWeights.bold,
-    color: palette.white,
+    color: colors.text,
     letterSpacing: -0.3,
   },
 
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
   locationText: {
     fontSize: 13,
     fontWeight: fontWeights.regular,
-    color: '#C0C0D0',
+    color: colors.textSecondary,
   },
 
   // ── Row 3: Intention Badge ──
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
   bioText: {
     fontSize: 13,
     fontWeight: fontWeights.regular,
-    color: '#C0C0D0',
+    color: colors.textSecondary,
     lineHeight: 18,
   },
 
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
   tagLabel: {
     fontSize: 10,
     fontWeight: fontWeights.medium,
-    color: 'rgba(255, 255, 255, 0.75)',
+    color: colors.textSecondary,
   },
   tagChipOverflow: {
     borderRadius: borderRadius.full,
@@ -361,15 +361,15 @@ const styles = StyleSheet.create({
   compatScore: {
     fontSize: 18,
     fontWeight: fontWeights.bold,
-    color: palette.purple[300],
+    color: palette.purple[600],
   },
   compatScoreSuper: {
-    color: palette.gold[300],
+    color: palette.gold[600],
   },
   compatExplanation: {
     fontSize: 12,
     fontWeight: fontWeights.regular,
-    color: palette.gray[400],
+    color: colors.textTertiary,
     letterSpacing: 0.2,
   },
 });

@@ -82,10 +82,12 @@ export const SelfieVerificationScreen: React.FC = () => {
 
   const handleContinue = () => {
     setVerified(true);
+    useAuthStore.getState().setOnboarded(true);
   };
 
   const handleSkip = () => {
     useAuthStore.getState().setVerified(true);
+    useAuthStore.getState().setOnboarded(true);
   };
 
   const handleBack = () => {

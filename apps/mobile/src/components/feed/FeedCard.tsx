@@ -1,5 +1,5 @@
 // FeedCard — individual post card for Social Feed
-// Glassmorphism card with avatar, content, photo grid, and action buttons
+// Features: avatar, follow button, content, photo grid, video thumbnail, actions
 
 import React, { useState, useCallback, useRef } from 'react';
 import {
@@ -10,12 +10,12 @@ import {
   StyleSheet,
   Animated,
 } from 'react-native';
-import { colors, glassmorphism } from '../../theme/colors';
+import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 import { FEED_TOPICS, type FeedPost } from '../../services/socialFeedService';
 
-const CARD_PADDING = spacing.md;
+const CARD_PADDING = spacing.lg;
 
 // ─── Time Ago Helper ──────────────────────────────────────────
 
@@ -37,40 +37,58 @@ const formatTimeAgo = (dateString: string): string => {
   });
 };
 
-// ─── Photo Grid ───────────────────────────────────────────────
+// ─── Media Section (photos + video) ──────────────────────────
 
-interface PhotoGridProps {
+interface MediaSectionProps {
   photos: string[];
+  videoUrl: string | null;
 }
 
-const PhotoGrid: React.FC<PhotoGridProps> = ({ photos }) => {
+const MediaSection: React.FC<MediaSectionProps> = ({ photos, videoUrl }) => {
+  // Video thumbnail
+  if (videoUrl) {
+    return (
+      <View style={mediaStyles.videoContainer}>
+        <Image source={{ uri: videoUrl }} style={mediaStyles.videoThumb} />
+        <View style={mediaStyles.playOverlay}>
+          <View style={mediaStyles.playButton}>
+            <Text style={mediaStyles.playIcon}>{'▶'}</Text>
+          </View>
+        </View>
+        <View style={mediaStyles.videoBadge}>
+          <Text style={mediaStyles.videoBadgeText}>Video</Text>
+        </View>
+      </View>
+    );
+  }
+
   if (photos.length === 0) return null;
 
   if (photos.length === 1) {
     return (
-      <View style={photoStyles.singleContainer}>
-        <Image source={{ uri: photos[0] }} style={photoStyles.singlePhoto} />
+      <View style={mediaStyles.singleContainer}>
+        <Image source={{ uri: photos[0] }} style={mediaStyles.singlePhoto} />
       </View>
     );
   }
 
   if (photos.length === 2) {
     return (
-      <View style={photoStyles.doubleContainer}>
+      <View style={mediaStyles.doubleContainer}>
         {photos.map((url, i) => (
-          <Image key={i} source={{ uri: url }} style={photoStyles.doublePhoto} />
+          <Image key={i} source={{ uri: url }} style={mediaStyles.doublePhoto} />
         ))}
       </View>
     );
   }
 
-  // 3+ photos: grid layout
+  // 3+ photos
   return (
-    <View style={photoStyles.tripleContainer}>
-      <Image source={{ uri: photos[0] }} style={photoStyles.tripleMain} />
-      <View style={photoStyles.tripleRight}>
+    <View style={mediaStyles.tripleContainer}>
+      <Image source={{ uri: photos[0] }} style={mediaStyles.tripleMain} />
+      <View style={mediaStyles.tripleRight}>
         {photos.slice(1, 3).map((url, i) => (
-          <Image key={i} source={{ uri: url }} style={photoStyles.tripleSub} />
+          <Image key={i} source={{ uri: url }} style={mediaStyles.tripleSub} />
         ))}
       </View>
     </View>
@@ -83,16 +101,17 @@ interface FeedCardProps {
   post: FeedPost;
   onLike: (postId: string) => void;
   onComment: (postId: string) => void;
+  onFollow: (userId: string) => void;
+  onProfilePress: (userId: string) => void;
 }
 
-export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment }) => {
+export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onFollow, onProfilePress }) => {
   const [expanded, setExpanded] = useState(false);
   const likeScale = useRef(new Animated.Value(1)).current;
 
   const topicOption = FEED_TOPICS.find((t) => t.type === post.topic);
 
   const handleLikePress = useCallback(() => {
-    // Bounce animation
     Animated.sequence([
       Animated.timing(likeScale, {
         toValue: 1.4,
@@ -113,33 +132,59 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment }) =
     onComment(post.id);
   }, [onComment, post.id]);
 
+  const handleFollowPress = useCallback(() => {
+    onFollow(post.userId);
+  }, [onFollow, post.userId]);
+
+  const handleProfilePress = useCallback(() => {
+    onProfilePress(post.userId);
+  }, [onProfilePress, post.userId]);
+
   const toggleExpand = useCallback(() => {
     setExpanded((prev) => !prev);
   }, []);
 
   const isLongContent = post.content.length > 120;
+  // Don't show follow button on own posts
+  const isOwnPost = post.userId === 'dev-user-001';
 
   return (
     <View style={styles.card}>
       {/* User Row */}
       <View style={styles.userRow}>
-        <Image source={{ uri: post.userAvatarUrl }} style={styles.avatar} />
-        <View style={styles.userInfo}>
+        <TouchableOpacity onPress={handleProfilePress} activeOpacity={0.7}>
+          <Image source={{ uri: post.userAvatarUrl }} style={styles.avatar} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.userInfo} onPress={handleProfilePress} activeOpacity={0.7}>
           <View style={styles.nameRow}>
             <Text style={styles.userName}>{post.userName}</Text>
-            {post.isVerified && <Text style={styles.verifiedBadge}>✓</Text>}
+            {post.isVerified && <Text style={styles.verifiedBadge}>{'✓'}</Text>}
           </View>
           <Text style={styles.timeText}>{formatTimeAgo(post.createdAt)}</Text>
-        </View>
-        {topicOption && (
-          <View style={[styles.topicBadge, { backgroundColor: `${topicOption.color}20` }]}>
-            <Text style={styles.topicEmoji}>{topicOption.emoji}</Text>
-            <Text style={[styles.topicLabel, { color: topicOption.color }]}>
-              {topicOption.label}
+        </TouchableOpacity>
+        {/* Follow button */}
+        {!isOwnPost && (
+          <TouchableOpacity
+            style={[styles.followButton, post.isFollowing && styles.followButtonActive]}
+            onPress={handleFollowPress}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.followButtonText, post.isFollowing && styles.followButtonTextActive]}>
+              {post.isFollowing ? 'Takip' : 'Takip Et'}
             </Text>
-          </View>
+          </TouchableOpacity>
         )}
       </View>
+
+      {/* Topic Badge */}
+      {topicOption && (
+        <View style={[styles.topicBadge, { backgroundColor: `${topicOption.color}15` }]}>
+          <Text style={styles.topicEmoji}>{topicOption.emoji}</Text>
+          <Text style={[styles.topicLabel, { color: topicOption.color }]}>
+            {topicOption.label}
+          </Text>
+        </View>
+      )}
 
       {/* Content */}
       <TouchableOpacity
@@ -158,8 +203,8 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment }) =
         )}
       </TouchableOpacity>
 
-      {/* Photo Grid */}
-      <PhotoGrid photos={post.photoUrls} />
+      {/* Media (photos + video) */}
+      <MediaSection photos={post.photoUrls} videoUrl={post.videoUrl} />
 
       {/* Action Row */}
       <View style={styles.actionRow}>
@@ -205,10 +250,8 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment }) =
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: glassmorphism.bg,
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: glassmorphism.border,
     padding: CARD_PADDING,
     marginHorizontal: spacing.md,
     marginBottom: spacing.sm + 4,
@@ -221,9 +264,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm + 2,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     backgroundColor: colors.surfaceLight,
   },
   userInfo: {
@@ -236,41 +279,64 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   userName: {
-    ...typography.bodySmall,
+    ...typography.body,
     color: colors.text,
     fontWeight: '600',
   },
   verifiedBadge: {
-    fontSize: 12,
+    fontSize: 14,
     color: colors.primary,
     fontWeight: '700',
   },
   timeText: {
-    ...typography.captionSmall,
+    ...typography.caption,
     color: colors.textTertiary,
-    marginTop: 1,
+    marginTop: 2,
   },
+  // Follow button
+  followButton: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.primary,
+  },
+  followButtonActive: {
+    backgroundColor: colors.surfaceLight,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  followButtonText: {
+    ...typography.captionSmall,
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  followButtonTextActive: {
+    color: colors.textSecondary,
+  },
+  // Topic badge — now below user row
   topicBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs + 1,
     borderRadius: borderRadius.full,
-    gap: 3,
+    gap: 4,
+    marginBottom: spacing.sm,
   },
   topicEmoji: {
-    fontSize: 12,
+    fontSize: 13,
   },
   topicLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
   },
   // Content
   contentText: {
     ...typography.body,
     color: colors.text,
-    lineHeight: 22,
-    marginBottom: spacing.sm,
+    lineHeight: 24,
+    marginBottom: spacing.md,
   },
   readMore: {
     ...typography.caption,
@@ -282,7 +348,10 @@ const styles = StyleSheet.create({
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: spacing.xs,
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
     gap: spacing.lg,
   },
   actionButton: {
@@ -291,7 +360,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   actionIcon: {
-    fontSize: 18,
+    fontSize: 20,
     color: colors.textSecondary,
   },
   actionIconLiked: {
@@ -307,9 +376,55 @@ const styles = StyleSheet.create({
   },
 });
 
-// ─── Photo Styles ─────────────────────────────────────────────
+// ─── Media Styles ─────────────────────────────────────────────
 
-const photoStyles = StyleSheet.create({
+const mediaStyles = StyleSheet.create({
+  // Video
+  videoContainer: {
+    borderRadius: borderRadius.md,
+    overflow: 'hidden',
+    marginBottom: spacing.sm,
+    height: 220,
+    backgroundColor: colors.surfaceLight,
+  },
+  videoThumb: {
+    width: '100%',
+    height: '100%',
+  },
+  playOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
+  playButton: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  playIcon: {
+    fontSize: 22,
+    color: colors.primary,
+    marginLeft: 3,
+  },
+  videoBadge: {
+    position: 'absolute',
+    top: spacing.sm,
+    right: spacing.sm,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+  },
+  videoBadgeText: {
+    ...typography.captionSmall,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  // Photos
   singleContainer: {
     borderRadius: borderRadius.md,
     overflow: 'hidden',
@@ -317,7 +432,7 @@ const photoStyles = StyleSheet.create({
   },
   singlePhoto: {
     width: '100%',
-    height: 200,
+    height: 220,
     backgroundColor: colors.surfaceLight,
   },
   doubleContainer: {
@@ -329,7 +444,7 @@ const photoStyles = StyleSheet.create({
   },
   doublePhoto: {
     flex: 1,
-    height: 160,
+    height: 180,
     backgroundColor: colors.surfaceLight,
   },
   tripleContainer: {
@@ -338,7 +453,7 @@ const photoStyles = StyleSheet.create({
     overflow: 'hidden',
     gap: spacing.xs,
     marginBottom: spacing.sm,
-    height: 200,
+    height: 220,
   },
   tripleMain: {
     flex: 2,

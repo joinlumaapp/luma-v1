@@ -9,12 +9,20 @@ export interface ProfileData {
   firstName: string;
   birthDate: string;
   gender: string;
+  genderPreference: string[];
+  lookingFor: string[];
+  height: number | null;
+  sports: string;
+  smoking: string;
+  children: string;
   intentionTag: string;
   interestTags: string[];
   photos: string[];
   bio: string;
   answers: Record<number, number>;
   city: string;
+  job: string;
+  education: string;
   isComplete: boolean;
 }
 
@@ -42,12 +50,20 @@ const initialProfile: ProfileData = {
   firstName: '',
   birthDate: '',
   gender: '',
+  genderPreference: [],
+  lookingFor: [],
+  height: null,
+  sports: '',
+  smoking: '',
+  children: '',
   intentionTag: '',
   interestTags: [],
   photos: [],
   bio: '',
   answers: {},
   city: '',
+  job: '',
+  education: '',
   isComplete: false,
 };
 
@@ -56,12 +72,20 @@ const mapResponseToProfile = (data: ProfileResponse): ProfileData => ({
   firstName: data.firstName,
   birthDate: data.birthDate,
   gender: data.gender,
+  genderPreference: Array.isArray((data as { genderPreference?: string[] }).genderPreference) ? (data as { genderPreference?: string[] }).genderPreference! : [],
+  lookingFor: Array.isArray((data as { lookingFor?: string[] }).lookingFor) ? (data as { lookingFor?: string[] }).lookingFor! : [],
+  height: (data as { height?: number | null }).height ?? null,
+  sports: (data as { sports?: string }).sports ?? '',
+  smoking: (data as { smoking?: string }).smoking ?? '',
+  children: (data as { children?: string }).children ?? '',
   intentionTag: data.intentionTag,
   interestTags: Array.isArray((data as { interestTags?: string[] }).interestTags) ? (data as { interestTags?: string[] }).interestTags! : [],
   photos: data.photos.map((p) => p.url),
   bio: data.bio,
   answers: {},
   city: data.city,
+  job: (data as { job?: string }).job ?? '',
+  education: (data as { education?: string }).education ?? '',
   isComplete: data.isComplete,
 });
 

@@ -12,7 +12,8 @@ export type RootStackParamList = {
 // -- Auth Stack --
 export type AuthStackParamList = {
   EmotionalIntro: undefined;
-  Welcome: undefined;
+  SignUpChoice: undefined;
+  Welcome: undefined; // Legacy — not in navigator, kept for type compatibility
   PhoneEntry: undefined;
   OTPVerification: { phoneNumber: string; countryCode: string };
   SelfieVerification: undefined;
@@ -20,13 +21,24 @@ export type AuthStackParamList = {
 
 // -- Onboarding Stack --
 export type OnboardingStackParamList = {
-  ModeSelection: undefined;
-  Questions: undefined;
-  InterestSelection: undefined;
   Name: undefined;
   BirthDate: undefined;
   Gender: undefined;
+  WhoToMeet: undefined;
+  WhatLookingFor: undefined;
+  Height: undefined;
+  Sports: undefined;
+  Smoking: undefined;
+  Children: undefined;
+  CitySelection: undefined;
+  PersonalityIntro: undefined;
+  InterestSelection: undefined;
   Photos: undefined;
+  QuestionsIntro: undefined;
+  Questions: undefined;
+  SelfieVerification: undefined;
+  // Legacy screens (not in navigator, kept for type compatibility)
+  ModeSelection: undefined;
   Bio: undefined;
 };
 
@@ -54,6 +66,7 @@ export type DiscoveryStackParamList = {
 // -- Matches Stack --
 export type MatchesStackParamList = {
   MatchesList: undefined;
+  LikesYou: undefined;
   MatchDetail: { matchId: string };
   CompatibilityInsight: { matchId: string; partnerName: string };
   ChatList: undefined;
@@ -73,6 +86,7 @@ export type MatchesStackParamList = {
 // -- Feed Stack --
 export type FeedStackParamList = {
   SocialFeed: undefined;
+  FeedProfile: { userId: string };
 };
 
 // -- Profile Stack --

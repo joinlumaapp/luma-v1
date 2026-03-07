@@ -19,6 +19,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   isOnboarded: boolean;
+  hasStartedOnboarding: boolean;
   user: AuthUser | null;
 
   // Actions
@@ -27,6 +28,7 @@ interface AuthState {
   setTokens: (accessToken: string, refreshToken: string) => void;
   setVerified: (isVerified: boolean) => void;
   setOnboarded: (isOnboarded: boolean) => void;
+  setStartedOnboarding: (started: boolean) => void;
   setLoading: (isLoading: boolean) => void;
   setUser: (user: AuthUser) => void;
   updatePackageTier: (tier: PackageTier) => void;
@@ -37,8 +39,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   accessToken: null,
   refreshToken: null,
   isAuthenticated: false,
-  isLoading: true,
+  isLoading: false,
   isOnboarded: false,
+  hasStartedOnboarding: false,
   user: null,
 
   // Actions
@@ -66,6 +69,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       refreshToken: null,
       isAuthenticated: false,
       isOnboarded: false,
+      hasStartedOnboarding: false,
       user: null,
       isLoading: false,
     });
@@ -81,6 +85,9 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setOnboarded: (isOnboarded) =>
     set({ isOnboarded }),
+
+  setStartedOnboarding: (started) =>
+    set({ hasStartedOnboarding: started }),
 
   setLoading: (isLoading) =>
     set({ isLoading }),

@@ -140,6 +140,44 @@ export const lightTheme = {
   gradientGold: [palette.gold[300], palette.gold[500]] as readonly string[],
 };
 
+export const creamTheme = {
+  primary: palette.purple[500],
+  primaryLight: palette.purple[400],
+  primaryDark: palette.purple[700],
+  secondary: palette.pink[500],
+  secondaryLight: palette.pink[400],
+  secondaryDark: palette.pink[700],
+  accent: palette.gold[500],
+  accentLight: palette.gold[400],
+  accentDark: palette.gold[700],
+  background: '#F5F0E8',
+  backgroundSecondary: '#EDE8DF',
+  surface: '#FFFFFF',
+  surfaceLight: '#FAF7F2',
+  surfaceBorder: '#E8E0D4',
+  card: '#FFFFFF',
+  inputBg: '#FAF7F2',
+  text: '#2C1810',
+  textSecondary: '#8B7355',
+  textTertiary: '#B8A88A',
+  textInverse: palette.white,
+  border: '#E8E0D4',
+  divider: '#EDE8DF',
+  overlay: 'rgba(0, 0, 0, 0.4)',
+  statusBar: 'dark-content' as const,
+  success: palette.success,
+  error: palette.error,
+  warning: palette.warning,
+  info: palette.info,
+  tabBarBackground: '#F5F0E8',
+  tabBarBorder: '#E8E0D4',
+  tabBarActive: palette.purple[500],
+  tabBarInactive: '#B8A88A',
+  gradientPrimary: ['#9B6BF8', '#EC4899'] as readonly string[],
+  gradientSecondary: ['#8B5CF6', '#5B21B6'] as readonly string[],
+  gradientGold: [palette.gold[400], palette.gold[600]] as readonly string[],
+};
+
 export type ThemeColors = {
   [K in keyof typeof darkTheme]: K extends 'statusBar'
     ? 'light-content' | 'dark-content'
@@ -157,13 +195,13 @@ export type ThemeMode = 'light' | 'dark' | 'system';
 
 // Glassmorphism design tokens
 export const glassmorphism = {
-  bg: 'rgba(20, 20, 34, 0.7)',
-  bgLight: 'rgba(28, 28, 50, 0.5)',
-  bgDark: 'rgba(8, 8, 15, 0.85)',
+  bg: 'rgba(255, 255, 255, 0.7)',
+  bgLight: 'rgba(250, 247, 242, 0.5)',
+  bgDark: 'rgba(245, 240, 232, 0.85)',
   border: 'rgba(139, 92, 246, 0.15)',
   borderActive: 'rgba(139, 92, 246, 0.35)',
   borderGold: 'rgba(251, 191, 36, 0.25)',
 } as const;
 
-// Default theme is dark (backwards compatible)
-export const colors: ThemeColors = darkTheme;
+// Default theme is cream
+export const colors: ThemeColors = creamTheme;

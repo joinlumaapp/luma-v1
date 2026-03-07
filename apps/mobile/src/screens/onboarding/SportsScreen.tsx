@@ -1,6 +1,6 @@
-// Onboarding step 1/8: Gender selection (cream/beige design)
+// Onboarding step 7/15: Sports frequency — single select
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,54 +18,57 @@ import {
   onboardingColors,
 } from '../../components/onboarding/OnboardingLayout';
 
-type GenderNavigationProp = NativeStackNavigationProp<OnboardingStackParamList, 'Gender'>;
+type NavProp = NativeStackNavigationProp<OnboardingStackParamList, 'Sports'>;
 
-type GenderOption = 'male' | 'female';
-
-interface GenderChoice {
-  value: GenderOption;
+interface SportsOption {
+  value: string;
   label: string;
 }
 
-const GENDER_OPTIONS: GenderChoice[] = [
-  { value: 'male', label: 'Erkek' },
-  { value: 'female', label: 'Kadın' },
+const SPORTS_OPTIONS: SportsOption[] = [
+  { value: 'never', label: 'Asla' },
+  { value: 'sometimes', label: 'Bazen' },
+  { value: 'often', label: 'Sık sık' },
 ];
 
-export const GenderScreen: React.FC = () => {
-  const navigation = useNavigation<GenderNavigationProp>();
-  const [selectedGender, setSelectedGender] = useState<GenderOption | null>(null);
-  const setProfileField = useProfileStore((state) => state.setField);
+export const SportsScreen: React.FC = () => {
+  const navigation = useNavigation<NavProp>();
+  const [selected, setSelected] = useState<string | null>(null);
+  const setField = useProfileStore((state) => state.setField);
 
-  const handleContinue = () => {
-    if (selectedGender) {
-      setProfileField('gender', selectedGender);
-      navigation.navigate('WhoToMeet');
+  const handleContinue = useCallback(() => {
+    if (selected) {
+      setField('sports', selected);
+      navigation.navigate('Smoking');
     }
-  };
+  }, [selected, setField, navigation]);
+
+  const handleSkip = useCallback(() => {
+    navigation.navigate('Smoking');
+  }, [navigation]);
 
   return (
     <OnboardingLayout
-      step={3}
+      step={7}
       totalSteps={15}
-      showBack={false}
-      footer={
-        <ArrowButton onPress={handleContinue} disabled={!selectedGender} />
-      }
+      showBack
+      showSkip
+      onSkip={handleSkip}
+      footer={<ArrowButton onPress={handleContinue} disabled={!selected} />}
     >
-      <Text style={styles.title}>Kendini nasıl tanımlıyorsun?</Text>
+      <Text style={styles.title}>Spor yapıyor musun?</Text>
       <Text style={styles.subtitle}>
-        Daha sonra müşteri hizmetleri ile iletişime geçerek bu bilgileri düzeltebilirsin.
+        Hayat tarzını paylaşarak daha uyumlu eşleşmelere ulaşabilirsin.
       </Text>
 
       <View style={styles.optionsContainer}>
-        {GENDER_OPTIONS.map((option) => {
-          const isSelected = selectedGender === option.value;
+        {SPORTS_OPTIONS.map((option) => {
+          const isSelected = selected === option.value;
           return (
             <TouchableOpacity
               key={option.value}
               style={[styles.optionCard, isSelected && styles.optionCardSelected]}
-              onPress={() => setSelectedGender(option.value)}
+              onPress={() => setSelected(option.value)}
               activeOpacity={0.8}
             >
               <Text style={[styles.optionLabel, isSelected && styles.optionLabelSelected]}>

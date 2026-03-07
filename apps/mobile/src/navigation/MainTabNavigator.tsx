@@ -1,4 +1,4 @@
-// Main tab navigator — 4 tabs: Discovery, Matches, Feed, Profile
+// Main tab navigator — 4 tabs: Feed, Discovery, Matches, Profile
 // Enhanced: default slide_from_right, modal slide_from_bottom, premium tab bar
 // Enhanced: unread message badge on Matches tab
 // Performance: deferred mount for heavy sub-screens
@@ -15,7 +15,7 @@ import type {
   FeedStackParamList,
   ProfileStackParamList,
 } from './types';
-import { useTheme } from '../theme/ThemeContext';
+import { darkTheme } from '../theme/colors';
 import { spacing, layout, borderRadius } from '../theme/spacing';
 import { typography } from '../theme/typography';
 import { useChatStore } from '../stores/chatStore';
@@ -54,6 +54,9 @@ import { NotificationSettingsScreen } from '../screens/settings/NotificationSett
 import { PersonalitySelectionScreen } from '../screens/profile/PersonalitySelectionScreen';
 import { ProfileCoachScreen } from '../screens/profile/ProfileCoachScreen';
 import { ReportScreen } from '../screens/moderation/ReportScreen';
+
+// Feed extra screens
+import { FeedProfileScreen } from '../screens/feed/FeedProfileScreen';
 
 // Discovery extra screens
 import { WeeklyReportScreen } from '../screens/discovery/WeeklyReportScreen';
@@ -229,6 +232,7 @@ const MatchesStackNavigator: React.FC = () => (
       component={AICoachScreen}
       options={{ animation: 'slide_from_bottom' }}
     />
+    <MatchesStack.Screen name="LikesYou" component={LikesYouScreen} />
     <MatchesStack.Screen name="HarmonyList" component={HarmonyListScreen} />
     <MatchesStack.Screen
       name="HarmonyRoom"
@@ -252,6 +256,7 @@ const FeedStackNavigator: React.FC = () => (
     }}
   >
     <FeedStack.Screen name="SocialFeed" component={SocialFeedScreen} />
+    <FeedStack.Screen name="FeedProfile" component={FeedProfileScreen} />
   </FeedStack.Navigator>
 );
 
@@ -279,20 +284,30 @@ const ProfileStackNavigator: React.FC = () => (
 
 export const MainTabNavigator: React.FC = () => {
   const totalUnread = useChatStore((state) => state.totalUnread);
-  const { colors } = useTheme();
-
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarStyle: [styles.tabBar, { backgroundColor: colors.tabBarBackground }],
-        tabBarActiveTintColor: colors.tabBarActive,
-        tabBarInactiveTintColor: colors.tabBarInactive,
+        tabBarStyle: [styles.tabBar, { backgroundColor: darkTheme.tabBarBackground }],
+        tabBarActiveTintColor: darkTheme.tabBarActive,
+        tabBarInactiveTintColor: darkTheme.tabBarInactive,
         tabBarLabelStyle: {
           ...typography.tabBar,
         },
       }}
     >
+      <Tab.Screen
+        name="FeedTab"
+        component={FeedStackNavigator}
+        options={{
+          tabBarLabel: 'Akış',
+          tabBarIcon: ({ focused }) => (
+            <TabIcon name="feed" focused={focused} />
+          ),
+          tabBarAccessibilityLabel: 'Sosyal Akış',
+          tabBarButtonTestID: 'tab-feed',
+        }}
+      />
       <Tab.Screen
         name="DiscoveryTab"
         component={DiscoveryStackNavigator}
@@ -319,18 +334,6 @@ export const MainTabNavigator: React.FC = () => {
           ),
           tabBarAccessibilityLabel: `Eşleşmeler${totalUnread > 0 ? `, ${totalUnread} okunmamış mesaj` : ''}`,
           tabBarButtonTestID: 'tab-matches',
-        }}
-      />
-      <Tab.Screen
-        name="FeedTab"
-        component={FeedStackNavigator}
-        options={{
-          tabBarLabel: 'Akış',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name="feed" focused={focused} />
-          ),
-          tabBarAccessibilityLabel: 'Sosyal Akış',
-          tabBarButtonTestID: 'tab-feed',
         }}
       />
       <Tab.Screen

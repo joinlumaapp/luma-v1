@@ -228,38 +228,6 @@ const StoriesRow: React.FC<StoriesRowProps> = ({ navigation, userFirstName, user
         onPress={() => navigation.navigate('ProfileTab', { screen: 'Profile' })}
         testID="story-self"
       />
-      <StoryBubble
-        label="Beğenenler"
-        initial="💜"
-        ringColor={palette.purple[500]}
-        badgeEmoji="💜"
-        onPress={() => navigation.navigate('LikesYou')}
-        testID="story-likes"
-      />
-      <StoryBubble
-        label="Seçimler"
-        initial="⭐"
-        ringColor={palette.gold[500]}
-        badgeEmoji="⭐"
-        onPress={() => navigation.navigate('DailyPicks')}
-        testID="story-picks"
-      />
-      <StoryBubble
-        label="Kesişenler"
-        initial="📍"
-        ringColor={palette.pink[400]}
-        badgeEmoji="📍"
-        onPress={() => navigation.navigate('CrossedPaths')}
-        testID="story-crossed"
-      />
-      <StoryBubble
-        label="Akış"
-        initial="📰"
-        ringColor="#06B6D4"
-        badgeEmoji="📰"
-        onPress={() => navigation.navigate('FeedTab', { screen: 'SocialFeed' })}
-        testID="story-feed"
-      />
       {recentMatches.map((match) => (
         <StoryBubble
           key={match.id}
@@ -674,24 +642,26 @@ export const DiscoveryScreen: React.FC = () => {
   if (isLoading && cards.length === 0) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.headerTitle}>{greeting}</Text>
-            <Text style={styles.headerSubtitle}>
-              Bugün {dailyRemaining} profil kaldı
-            </Text>
-          </View>
-          <Pressable
-            onPress={() => navigation.navigate('Filter')}
-            accessibilityLabel="Filtreleri aç"
-            accessibilityRole="button"
-          >
-            <View style={styles.filterButton} testID="discovery-filter-btn">
-              <Text style={styles.filterIcon}>{'\u2699'}</Text>
+        <View style={styles.darkHeaderArea}>
+          <View style={styles.header}>
+            <View style={styles.headerLeft}>
+              <Text style={styles.headerTitle}>{greeting}</Text>
+              <Text style={styles.headerSubtitle}>
+                Bugün {dailyRemaining} profil kaldı
+              </Text>
             </View>
-          </Pressable>
+            <Pressable
+              onPress={() => navigation.navigate('Filter')}
+              accessibilityLabel="Filtreleri aç"
+              accessibilityRole="button"
+            >
+              <View style={styles.filterButton} testID="discovery-filter-btn">
+                <Text style={styles.filterIcon}>{'\u2699'}</Text>
+              </View>
+            </Pressable>
+          </View>
+          <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} />
         </View>
-        <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} />
         <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -704,24 +674,26 @@ export const DiscoveryScreen: React.FC = () => {
   if (!hasMoreCards) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.headerTitle}>{greeting}</Text>
-            <Text style={styles.headerSubtitle}>
-              Bugün {dailyRemaining} profil kaldı
-            </Text>
-          </View>
-          <Pressable
-            onPress={() => navigation.navigate('Filter')}
-            accessibilityLabel="Filtreleri aç"
-            accessibilityRole="button"
-          >
-            <View style={styles.filterButton} testID="discovery-filter-btn">
-              <Text style={styles.filterIcon}>{'\u2699'}</Text>
+        <View style={styles.darkHeaderArea}>
+          <View style={styles.header}>
+            <View style={styles.headerLeft}>
+              <Text style={styles.headerTitle}>{greeting}</Text>
+              <Text style={styles.headerSubtitle}>
+                Bugün {dailyRemaining} profil kaldı
+              </Text>
             </View>
-          </Pressable>
+            <Pressable
+              onPress={() => navigation.navigate('Filter')}
+              accessibilityLabel="Filtreleri aç"
+              accessibilityRole="button"
+            >
+              <View style={styles.filterButton} testID="discovery-filter-btn">
+                <Text style={styles.filterIcon}>{'\u2699'}</Text>
+              </View>
+            </Pressable>
+          </View>
+          <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} />
         </View>
-        <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} />
         <View style={styles.emptyContainer}>
           <View style={styles.emptyIconCircle}>
             <Text style={styles.emptyIconLetter}>L</Text>
@@ -752,30 +724,33 @@ export const DiscoveryScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text style={styles.headerTitle}>{greeting}</Text>
-          <Text style={styles.headerSubtitle}>
-            Bugün {dailyRemaining} profil kaldı
-          </Text>
+      {/* Dark header area */}
+      <View style={styles.darkHeaderArea}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.headerTitle}>{greeting}</Text>
+            <Text style={styles.headerSubtitle}>
+              Bugün {dailyRemaining} profil kaldı
+            </Text>
+          </View>
+          <View style={styles.headerRight}>
+            <Pressable
+              onPress={() => navigation.navigate('Filter')}
+              accessibilityLabel="Filtreleri aç"
+              accessibilityRole="button"
+              accessibilityHint="Keşif filtrelerini düzenlemek için dokunun"
+            >
+              <View style={styles.filterButton} testID="discovery-filter-btn">
+                <Text style={styles.filterIcon}>{'\u2699'}</Text>
+              </View>
+            </Pressable>
+          </View>
         </View>
-        <View style={styles.headerRight}>
-          <Pressable
-            onPress={() => navigation.navigate('Filter')}
-            accessibilityLabel="Filtreleri aç"
-            accessibilityRole="button"
-            accessibilityHint="Keşif filtrelerini düzenlemek için dokunun"
-          >
-            <View style={styles.filterButton} testID="discovery-filter-btn">
-              <Text style={styles.filterIcon}>{'\u2699'}</Text>
-            </View>
-          </Pressable>
-        </View>
-      </View>
 
-      {/* Stories row — Instagram-style horizontal bubbles */}
-      <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} />
+        {/* Stories row — Instagram-style horizontal bubbles */}
+        <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} />
+      </View>
 
       {/* Card stack */}
       <View style={styles.cardStack}>
@@ -1014,6 +989,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
 
+  // ── Header area (header + stories) ──
+  darkHeaderArea: {
+    backgroundColor: colors.background,
+    paddingBottom: spacing.sm,
+  },
+
   // ── Header ──
   header: {
     flexDirection: 'row',
@@ -1081,7 +1062,7 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: 'rgba(0, 0, 0, 0.06)',
   },
   cardBehind: {
     zIndex: 0,
@@ -1190,7 +1171,7 @@ const styles = StyleSheet.create({
   },
   refreshButtonText: {
     ...typography.button,
-    color: colors.text,
+    color: '#FFFFFF',
   },
 
   // ── Like-with-comment modal ──
@@ -1284,11 +1265,12 @@ const styles = StyleSheet.create({
 const storyStyles = StyleSheet.create({
   scrollView: {
     flexGrow: 0,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     paddingHorizontal: spacing.lg,
     gap: spacing.md,
-    paddingVertical: spacing.xs,
+    paddingVertical: spacing.sm,
   },
   bubble: {
     alignItems: 'center',

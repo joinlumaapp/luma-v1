@@ -1,4 +1,4 @@
-// OTP verification screen — 6-digit code input with auto-focus, resend timer, and rate limiting
+// OTP verification screen — cream/beige theme, 6-digit code input
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  StatusBar,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -18,8 +19,7 @@ import type { AuthStackParamList } from '../../navigation/types';
 import { authService } from '../../services/authService';
 import { useAuthStore } from '../../stores/authStore';
 import { useTestModeStore } from '../../stores/testModeStore';
-import { colors } from '../../theme/colors';
-import { typography } from '../../theme/typography';
+import { onboardingColors } from '../../components/onboarding/OnboardingLayout';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 
 type OTPNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'OTPVerification'>;
@@ -56,12 +56,10 @@ export const OTPVerificationScreen: React.FC = () => {
     return () => clearInterval(interval);
   }, [resendTimer]);
 
-  // Rate limit countdown timer
+  // Rate limit countdown
   useEffect(() => {
     if (rateLimitTimer <= 0) {
-      if (isRateLimited) {
-        setIsRateLimited(false);
-      }
+      if (isRateLimited) setIsRateLimited(false);
       return;
     }
     const interval = setInterval(() => {
@@ -81,16 +79,17 @@ export const OTPVerificationScreen: React.FC = () => {
   const handleVerify = useCallback(async (otpCode: string) => {
     setIsVerifying(true);
     try {
-      // Founder test mode: 000000 auto-verifies without API call
+      // Founder test mode: 000000 auto-verifies
       if (__DEV__ && isTestMode && otpCode === '000000') {
-        const { login } = useAuthStore.getState();
+        const { login, setStartedOnboarding } = useAuthStore.getState();
         login('test-access-token', 'test-refresh-token', {
           id: 'test-user-001',
           phone: phoneNumber,
           isVerified: false,
           packageTier: 'free',
         });
-        navigation.navigate('SelfieVerification');
+        // New user → start onboarding
+        setStartedOnboarding(true);
         return;
       }
 
@@ -105,8 +104,7 @@ export const OTPVerificationScreen: React.FC = () => {
         return;
       }
 
-      // Store tokens and user data
-      const { login } = useAuthStore.getState();
+      const { login, setStartedOnboarding, setOnboarded } = useAuthStore.getState();
       login(result.accessToken, result.refreshToken, {
         id: result.user.id,
         phone: result.user.phone,
@@ -114,10 +112,12 @@ export const OTPVerificationScreen: React.FC = () => {
         packageTier: (result.user.packageTier as 'free' | 'gold' | 'pro' | 'reserved') || 'free',
       });
 
-      // Navigate to selfie verification for new users
-      // For existing users, RootNavigator will handle transition to MainTabs
       if (result.user.isNew) {
-        navigation.navigate('SelfieVerification');
+        // New user → start onboarding (RootNavigator switches automatically)
+        setStartedOnboarding(true);
+      } else {
+        // Existing user → go to MainTabs
+        setOnboarded(true);
       }
     } catch {
       setFailedAttempts((prev) => prev + 1);
@@ -138,7 +138,6 @@ export const OTPVerificationScreen: React.FC = () => {
     newCode[index] = digit.charAt(digit.length - 1);
     setCode(newCode);
 
-    // Move to next input
     if (index < OTP_LENGTH - 1) {
       inputRefs.current[index + 1]?.focus();
       setActiveIndex(index + 1);
@@ -149,7 +148,6 @@ export const OTPVerificationScreen: React.FC = () => {
     if (key === 'Backspace') {
       const newCode = [...code];
       if (code[index] === '' && index > 0) {
-        // Move to previous input and clear it
         newCode[index - 1] = '';
         setCode(newCode);
         inputRefs.current[index - 1]?.focus();
@@ -163,28 +161,22 @@ export const OTPVerificationScreen: React.FC = () => {
 
   const handleResend = async () => {
     if (resendTimer > 0 || isRateLimited) return;
-
     try {
       const result = await authService.register(phoneNumber, countryCode);
-
       setResendCount((prev) => prev + 1);
       setFailedAttempts(0);
-
-      // Use server-provided cooldown or default
       const cooldown = result.cooldownSeconds || RESEND_TIMER_SECONDS;
       setResendTimer(cooldown);
       setCode(Array(OTP_LENGTH).fill(''));
       setActiveIndex(0);
       inputRefs.current[0]?.focus();
     } catch (error: unknown) {
-      // Handle rate limit error from backend
-      const axiosError = error as { response?: { data?: { retryAfterSeconds?: number; remainingAttempts?: number; message?: string } } };
-      const responseData = axiosError?.response?.data;
-
-      if (responseData?.retryAfterSeconds) {
+      const axiosError = error as { response?: { data?: { retryAfterSeconds?: number } } };
+      const retryAfter = axiosError?.response?.data?.retryAfterSeconds;
+      if (retryAfter) {
         setIsRateLimited(true);
-        setRateLimitTimer(responseData.retryAfterSeconds);
-        setResendTimer(responseData.retryAfterSeconds);
+        setRateLimitTimer(retryAfter);
+        setResendTimer(retryAfter);
       } else {
         Alert.alert('Hata', 'Kod gönderilemedi.');
       }
@@ -213,6 +205,8 @@ export const OTPVerificationScreen: React.FC = () => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      <StatusBar barStyle="dark-content" backgroundColor={onboardingColors.background} translucent />
+
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -220,8 +214,6 @@ export const OTPVerificationScreen: React.FC = () => {
           style={styles.backButton}
           accessibilityLabel="Geri"
           accessibilityRole="button"
-          accessibilityHint="Telefon numarası ekranına dönmek için dokunun"
-          testID="otp-back-btn"
         >
           <Text style={styles.backText}>{'<'}</Text>
         </TouchableOpacity>
@@ -236,8 +228,8 @@ export const OTPVerificationScreen: React.FC = () => {
 
         {/* Rate limit warning */}
         {isRateLimited && (
-          <View style={styles.rateLimitBanner}>
-            <Text style={styles.rateLimitText}>
+          <View style={styles.warningBanner}>
+            <Text style={styles.warningText}>
               Çok fazla deneme. {formatTimer(rateLimitTimer)} sonra tekrar deneyebilirsin.
             </Text>
           </View>
@@ -247,7 +239,7 @@ export const OTPVerificationScreen: React.FC = () => {
         {failedAttempts >= 3 && !isRateLimited && (
           <View style={styles.warningBanner}>
             <Text style={styles.warningText}>
-              {5 - failedAttempts} deneme hakkın kaldı. Doğru kodu girdiğinizden emin olun.
+              {5 - failedAttempts} deneme hakkın kaldı.
             </Text>
           </View>
         )}
@@ -262,7 +254,6 @@ export const OTPVerificationScreen: React.FC = () => {
                 styles.otpInput,
                 activeIndex === index && styles.otpInputActive,
                 digit !== '' && styles.otpInputFilled,
-                failedAttempts >= 3 && styles.otpInputError,
               ]}
               value={digit}
               onChangeText={(text) => handleDigitInput(text, index)}
@@ -274,9 +265,6 @@ export const OTPVerificationScreen: React.FC = () => {
               editable={!isVerifying && !isRateLimited}
               selectTextOnFocus
               accessibilityLabel={`Doğrulama kodu ${index + 1}. hane`}
-              accessibilityRole="text"
-              accessibilityHint={`${index + 1}. haneyi giriniz`}
-              testID={`otp-input-${index}`}
             />
           ))}
         </View>
@@ -284,7 +272,7 @@ export const OTPVerificationScreen: React.FC = () => {
         {/* Resend section */}
         <View style={styles.resendContainer}>
           {isRateLimited ? (
-            <Text style={styles.rateLimitTimerText}>
+            <Text style={styles.resendTimerText}>
               Tekrar gönder ({formatTimer(rateLimitTimer)})
             </Text>
           ) : resendTimer > 0 ? (
@@ -292,25 +280,12 @@ export const OTPVerificationScreen: React.FC = () => {
               Tekrar gönder ({formatTimer(resendTimer)})
             </Text>
           ) : remainingResends > 0 ? (
-            <TouchableOpacity
-              onPress={handleResend}
-              accessibilityLabel="Kodu tekrar gönder"
-              accessibilityRole="button"
-              accessibilityHint="Doğrulama kodunu tekrar göndermek için dokunun"
-              testID="otp-resend-btn"
-            >
+            <TouchableOpacity onPress={handleResend}>
               <Text style={styles.resendButton}>Kodu Tekrar Gönder</Text>
             </TouchableOpacity>
           ) : (
-            <Text style={styles.resendExhaustedText}>
+            <Text style={styles.resendTimerText}>
               Maksimum gönderim sayısına ulaşıldı
-            </Text>
-          )}
-
-          {/* Show remaining resend count */}
-          {!isRateLimited && remainingResends > 0 && remainingResends < MAX_RESEND_ATTEMPTS && (
-            <Text style={styles.resendCountText}>
-              {remainingResends} gönderim hakkı kaldı
             </Text>
           )}
         </View>
@@ -323,7 +298,7 @@ export const OTPVerificationScreen: React.FC = () => {
         )}
       </View>
 
-      {/* Manual verify button */}
+      {/* Footer */}
       <View style={styles.footer}>
         <TouchableOpacity
           style={[
@@ -335,9 +310,6 @@ export const OTPVerificationScreen: React.FC = () => {
           activeOpacity={0.85}
           accessibilityLabel="Doğrula"
           accessibilityRole="button"
-          accessibilityHint="Girilen kodu doğrulamak için dokunun"
-          accessibilityState={{ disabled: code.includes('') || isVerifying || isRateLimited }}
-          testID="otp-verify-btn"
         >
           <Text
             style={[
@@ -356,7 +328,7 @@ export const OTPVerificationScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: onboardingColors.background,
   },
   header: {
     paddingTop: 60,
@@ -367,13 +339,16 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.surface,
+    backgroundColor: onboardingColors.surface,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: onboardingColors.surfaceBorder,
   },
   backText: {
-    ...typography.h4,
-    color: colors.text,
+    fontSize: 20,
+    fontWeight: '600',
+    color: onboardingColors.text,
   },
   content: {
     flex: 1,
@@ -381,42 +356,30 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xl,
   },
   title: {
-    ...typography.h2,
-    color: colors.text,
+    fontSize: 28,
+    fontWeight: '700',
+    color: onboardingColors.text,
     marginBottom: spacing.sm,
   },
   subtitle: {
-    ...typography.body,
-    color: colors.textSecondary,
+    fontSize: 15,
+    fontWeight: '400',
+    color: onboardingColors.textSecondary,
     marginBottom: spacing.xl,
-    lineHeight: 24,
+    lineHeight: 22,
   },
-  // Rate limit banner
-  rateLimitBanner: {
-    backgroundColor: colors.error + '20',
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.error + '40',
-  },
-  rateLimitText: {
-    ...typography.bodySmall,
-    color: colors.error,
-    textAlign: 'center',
-  },
-  // Warning banner
   warningBanner: {
-    backgroundColor: colors.warning + '20',
+    backgroundColor: '#FEE2E2',
     borderRadius: borderRadius.md,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.warning + '40',
+    borderColor: '#FECACA',
   },
   warningText: {
-    ...typography.bodySmall,
-    color: colors.warning,
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#DC2626',
     textAlign: 'center',
   },
   otpContainer: {
@@ -429,22 +392,20 @@ const styles = StyleSheet.create({
     width: 48,
     height: 56,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.surface,
+    backgroundColor: onboardingColors.surface,
     borderWidth: 2,
-    borderColor: colors.surfaceBorder,
+    borderColor: onboardingColors.surfaceBorder,
     textAlign: 'center',
-    ...typography.h3,
-    color: colors.text,
+    fontSize: 24,
+    fontWeight: '700',
+    color: onboardingColors.text,
   },
   otpInputActive: {
-    borderColor: colors.primary,
+    borderColor: onboardingColors.text,
   },
   otpInputFilled: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary + '10',
-  },
-  otpInputError: {
-    borderColor: colors.error + '60',
+    borderColor: onboardingColors.text,
+    backgroundColor: '#EDE8DF',
   },
   resendContainer: {
     alignItems: 'center',
@@ -452,55 +413,44 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   resendTimerText: {
-    ...typography.bodySmall,
-    color: colors.textTertiary,
-  },
-  rateLimitTimerText: {
-    ...typography.bodySmall,
-    color: colors.error,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '400',
+    color: onboardingColors.textTertiary,
   },
   resendButton: {
-    ...typography.bodySmall,
-    color: colors.primary,
+    fontSize: 14,
     fontWeight: '600',
-  },
-  resendExhaustedText: {
-    ...typography.bodySmall,
-    color: colors.textTertiary,
-  },
-  resendCountText: {
-    ...typography.caption,
-    color: colors.textTertiary,
-    marginTop: spacing.xs,
+    color: onboardingColors.text,
   },
   verifyingContainer: {
     alignItems: 'center',
     marginTop: spacing.lg,
   },
   verifyingText: {
-    ...typography.body,
-    color: colors.primary,
+    fontSize: 15,
+    fontWeight: '500',
+    color: onboardingColors.textSecondary,
   },
   footer: {
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxl,
+    paddingBottom: Platform.OS === 'ios' ? 48 : 36,
   },
   verifyButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: onboardingColors.buttonBg,
     height: layout.buttonHeight,
     borderRadius: borderRadius.lg,
     justifyContent: 'center',
     alignItems: 'center',
   },
   verifyButtonDisabled: {
-    backgroundColor: colors.surfaceBorder,
+    backgroundColor: onboardingColors.surfaceBorder,
   },
   verifyButtonText: {
-    ...typography.button,
-    color: colors.text,
+    fontSize: 16,
+    fontWeight: '600',
+    color: onboardingColors.buttonText,
   },
   verifyButtonTextDisabled: {
-    color: colors.textTertiary,
+    color: onboardingColors.textTertiary,
   },
 });

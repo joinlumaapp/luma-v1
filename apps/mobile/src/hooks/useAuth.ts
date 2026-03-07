@@ -10,6 +10,7 @@ export interface UseAuthReturn {
   isAuthenticated: boolean;
   isLoading: boolean;
   isOnboarded: boolean;
+  hasStartedOnboarding: boolean;
   user: AuthUser | null;
   accessToken: string | null;
 
@@ -29,6 +30,7 @@ export const useAuth = (): UseAuthReturn => {
     isAuthenticated,
     isLoading,
     isOnboarded,
+    hasStartedOnboarding,
     user,
     accessToken,
     refreshToken,
@@ -41,13 +43,13 @@ export const useAuth = (): UseAuthReturn => {
 
   // Check stored tokens on mount
   useEffect(() => {
-    // Safety timeout — never stay on splash more than 5 seconds
+    // Safety timeout — never stay on splash more than 2 seconds
     const safetyTimer = setTimeout(() => {
       if (useAuthStore.getState().isLoading) {
         if (__DEV__) console.warn('[Auth] Safety timeout — forcing loading=false');
         setLoading(false);
       }
-    }, 5000);
+    }, 2000);
 
     const initAuth = async () => {
       try {
@@ -186,6 +188,7 @@ export const useAuth = (): UseAuthReturn => {
     isAuthenticated,
     isLoading,
     isOnboarded,
+    hasStartedOnboarding,
     user,
     accessToken,
     login,
