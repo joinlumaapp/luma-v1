@@ -171,6 +171,8 @@ const MOCK_MATCH_DETAILS: Record<string, MatchDetailResponse> = {
     photos: [
       { id: 'p1', url: 'https://i.pravatar.cc/400?img=1' },
       { id: 'p2', url: 'https://i.pravatar.cc/400?img=2' },
+      { id: 'p3', url: 'https://i.pravatar.cc/400?img=3' },
+      { id: 'p4', url: 'https://i.pravatar.cc/400?img=4' },
     ],
     bio: 'Kitap kurdu, kahve bağımlısı. Hafta sonları Prens Adaları\'nda bisiklet sürmek benim için terapi.',
     intentionTag: 'Ciddi İlişki',
@@ -194,6 +196,8 @@ const MOCK_MATCH_DETAILS: Record<string, MatchDetailResponse> = {
     photos: [
       { id: 'p1', url: 'https://i.pravatar.cc/400?img=5' },
       { id: 'p2', url: 'https://i.pravatar.cc/400?img=6' },
+      { id: 'p3', url: 'https://i.pravatar.cc/400?img=7' },
+      { id: 'p4', url: 'https://i.pravatar.cc/400?img=8' },
     ],
     bio: 'Yazılım mühendisi, yoga tutkunu. İyi bir sohbet, iyi bir kahve ve iyi bir kitap — hayatın anlamı bu.',
     intentionTag: 'Ciddi İlişki',
@@ -217,6 +221,8 @@ const MOCK_MATCH_DETAILS: Record<string, MatchDetailResponse> = {
     photos: [
       { id: 'p1', url: 'https://i.pravatar.cc/400?img=16' },
       { id: 'p2', url: 'https://i.pravatar.cc/400?img=17' },
+      { id: 'p3', url: 'https://i.pravatar.cc/400?img=18' },
+      { id: 'p4', url: 'https://i.pravatar.cc/400?img=19' },
     ],
     bio: 'Doktor adayı, müzik dinlemeden çalışamam. Konser planlarım her zaman vardır.',
     intentionTag: 'Ciddi İlişki',
@@ -240,6 +246,8 @@ const MOCK_MATCH_DETAILS: Record<string, MatchDetailResponse> = {
     photos: [
       { id: 'p1', url: 'https://i.pravatar.cc/400?img=23' },
       { id: 'p2', url: 'https://i.pravatar.cc/400?img=24' },
+      { id: 'p3', url: 'https://i.pravatar.cc/400?img=27' },
+      { id: 'p4', url: 'https://i.pravatar.cc/400?img=28' },
     ],
     bio: 'Dijital pazarlama uzmanı, seyahat blogcusu. 30 ülke gezdim, hedefim 50!',
     intentionTag: 'Keşfediyorum',
@@ -263,6 +271,8 @@ const MOCK_MATCH_DETAILS: Record<string, MatchDetailResponse> = {
     photos: [
       { id: 'p1', url: 'https://i.pravatar.cc/400?img=25' },
       { id: 'p2', url: 'https://i.pravatar.cc/400?img=26' },
+      { id: 'p3', url: 'https://i.pravatar.cc/400?img=30' },
+      { id: 'p4', url: 'https://i.pravatar.cc/400?img=31' },
     ],
     bio: 'Mimarlık ofisinde çalışıyorum. Kedi annesi x3. Pazar kahvaltılarını çok ciddiye alıyorum.',
     intentionTag: 'Ciddi İlişki',
@@ -286,6 +296,8 @@ const MOCK_MATCH_DETAILS: Record<string, MatchDetailResponse> = {
     photos: [
       { id: 'p1', url: 'https://i.pravatar.cc/400?img=32' },
       { id: 'p2', url: 'https://i.pravatar.cc/400?img=33' },
+      { id: 'p3', url: 'https://i.pravatar.cc/400?img=34' },
+      { id: 'p4', url: 'https://i.pravatar.cc/400?img=35' },
     ],
     bio: 'Avukat, kitap kulüpleri beni hayata bağlayan şey. Caz müziği olmadan bir gün bile geçirmem.',
     intentionTag: 'Ciddi İlişki',
@@ -316,10 +328,37 @@ export const matchService = {
       };
     } catch {
       // Mock fallback with realistic lastActivity timestamps
+      // Preserve local updates from both in-memory store and persisted chat data
+      const { useMatchStore } = require('../stores/matchStore');
+      const { getConversationMeta } = require('./chatPersistence');
+      const currentMatches: MatchSummary[] = useMatchStore.getState().matches;
+      const currentMatchMap = new Map(currentMatches.map((m: MatchSummary) => [m.id, m]));
+
       const mockMatches: MatchSummary[] = Object.values(MOCK_MATCH_DETAILS).map((d, i) => {
         const offsets = [60000, 300000, 1800000, 90000, 7200000, 45000]; // mix of online/recent
         const firstPhoto = d.photos[0];
         const photoUrl = typeof firstPhoto === 'string' ? firstPhoto : (firstPhoto?.url ?? '');
+
+        // Check in-memory store state first, then persisted chat meta
+        const existing = currentMatchMap.get(d.id) as MatchSummary | undefined;
+        const persistedMeta = getConversationMeta(d.id) as { lastMessage: string; lastMessageAt: string } | null;
+        const hasLocalUpdate = existing?.lastMessage != null;
+        const hasPersistedUpdate = persistedMeta != null;
+
+        let lastMessage: string | null;
+        let lastActivity: string;
+
+        if (hasLocalUpdate) {
+          lastMessage = existing.lastMessage;
+          lastActivity = existing.lastActivity;
+        } else if (hasPersistedUpdate) {
+          lastMessage = persistedMeta.lastMessage;
+          lastActivity = persistedMeta.lastMessageAt;
+        } else {
+          lastMessage = i % 2 === 0 ? null : 'Merhaba, nasılsın?';
+          lastActivity = new Date(Date.now() - (offsets[i % offsets.length] ?? 3600000)).toISOString();
+        }
+
         return {
           id: d.id,
           userId: d.userId,
@@ -330,10 +369,10 @@ export const matchService = {
           compatibilityPercent: d.overallCompatibility,
           intentionTag: d.intentionTag,
           isVerified: d.isVerified,
-          lastActivity: new Date(Date.now() - (offsets[i % offsets.length] ?? 3600000)).toISOString(),
+          lastActivity,
           isNew: i < 2,
           matchedAt: d.matchedAt,
-          lastMessage: i % 2 === 0 ? null : 'Merhaba, nasılsın?',
+          lastMessage,
         };
       });
       return { matches: mockMatches, total: mockMatches.length };

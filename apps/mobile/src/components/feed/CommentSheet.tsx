@@ -108,7 +108,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, onLike, onReply, onR
             onPress={() => onReply(comment.id, comment.userName)}
             hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
           >
-            <Text style={styles.replyAction}>Yan\u0131tla</Text>
+            <Text style={styles.replyAction}>Yanıtla</Text>
           </TouchableOpacity>
 
           {/* Reaction emojis */}

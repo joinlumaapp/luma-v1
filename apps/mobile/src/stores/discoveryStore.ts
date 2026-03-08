@@ -38,6 +38,13 @@ export interface DiscoveryProfile {
   lastActiveAt?: string | null;
   /** Match reason labels (e.g. "Ortak Hobi", "Yakınında") */
   matchReasons?: string[];
+  /** Lifestyle details for profile detail view */
+  height?: number | null;
+  smoking?: string;
+  sports?: string;
+  children?: string;
+  job?: string;
+  education?: string;
 }
 
 // Undo window duration in milliseconds
@@ -113,6 +120,12 @@ const mapFeedCardToProfile = (card: FeedCard): DiscoveryProfile => ({
   compatExplanation: card.compatExplanation ?? null,
   strongCategories: card.strongCategories ?? [],
   lastActiveAt: card.lastActiveAt ?? null,
+  height: card.height ?? null,
+  smoking: card.smoking,
+  sports: card.sports,
+  children: card.children,
+  job: card.job,
+  education: card.education,
 });
 
 // ─── Intention tag normalization ─────────────────────────────

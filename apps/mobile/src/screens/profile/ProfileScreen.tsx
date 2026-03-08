@@ -10,6 +10,8 @@ import {
   StyleSheet,
   ScrollView,
   Animated,
+  Modal,
+  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -171,6 +173,7 @@ export const ProfileScreen: React.FC = () => {
   // Boost state
   const [boostStatus, setBoostStatus] = useState<BoostStatusResponse>({ isActive: false });
   const [showBoostModal, setShowBoostModal] = useState(false);
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
   const [goldBalance, setGoldBalance] = useState(500);
 
   // Animated completion bar width
@@ -418,6 +421,105 @@ export const ProfileScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
         </SlideIn>
+
+        {/* Photo Gallery Section */}
+        <SlideIn direction="down" delay={50} distance={20}>
+          <View style={styles.photoGalleryCard}>
+            <View style={styles.photoGalleryHeader}>
+              <Text style={styles.sectionTitle}>Fotoğraflar</Text>
+              <Text style={styles.photoCountText}>
+                {profile.photos.length} fotoğraf
+              </Text>
+            </View>
+            {profile.photos.length > 0 ? (
+              <View style={styles.photoGrid}>
+                {profile.photos.map((photoUri, index) => (
+                  <TouchableOpacity
+                    key={`photo-${index}`}
+                    style={styles.photoGridItem}
+                    onPress={() => setSelectedPhotoIndex(index)}
+                    activeOpacity={0.85}
+                    accessibilityLabel={`Fotoğraf ${index + 1}`}
+                    accessibilityRole="image"
+                  >
+                    <Image
+                      source={{ uri: photoUri }}
+                      style={styles.photoGridImage}
+                      resizeMode="cover"
+                    />
+                    {index === 0 && (
+                      <View style={styles.primaryPhotoBadge}>
+                        <Ionicons name="star" size={10} color="#FFF" />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : (
+              <View style={styles.photoEmptyState}>
+                <Ionicons name="camera-outline" size={32} color={colors.textTertiary} />
+                <Text style={styles.photoEmptyText}>Henüz fotoğraf eklenmedi</Text>
+                <TouchableOpacity
+                  style={styles.photoAddButton}
+                  onPress={handleEditProfile}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.photoAddButtonText}>Fotoğraf Ekle</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </SlideIn>
+
+        {/* Photo Viewer Modal */}
+        {selectedPhotoIndex !== null && (
+          <Modal
+            visible={selectedPhotoIndex !== null}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setSelectedPhotoIndex(null)}
+          >
+            <View style={styles.photoModalOverlay}>
+              <TouchableOpacity
+                style={styles.photoModalClose}
+                onPress={() => setSelectedPhotoIndex(null)}
+                accessibilityLabel="Kapat"
+              >
+                <Ionicons name="close" size={28} color="#FFF" />
+              </TouchableOpacity>
+              <Image
+                source={{ uri: profile.photos[selectedPhotoIndex] }}
+                style={styles.photoModalImage}
+                resizeMode="contain"
+              />
+              <View style={styles.photoModalCounter}>
+                <Text style={styles.photoModalCounterText}>
+                  {selectedPhotoIndex + 1} / {profile.photos.length}
+                </Text>
+              </View>
+              {/* Navigate between photos */}
+              <View style={styles.photoModalNav}>
+                {selectedPhotoIndex > 0 && (
+                  <TouchableOpacity
+                    style={styles.photoModalNavBtn}
+                    onPress={() => setSelectedPhotoIndex(selectedPhotoIndex - 1)}
+                  >
+                    <Ionicons name="chevron-back" size={28} color="#FFF" />
+                  </TouchableOpacity>
+                )}
+                <View style={{ flex: 1 }} />
+                {selectedPhotoIndex < profile.photos.length - 1 && (
+                  <TouchableOpacity
+                    style={styles.photoModalNavBtn}
+                    onPress={() => setSelectedPhotoIndex(selectedPhotoIndex + 1)}
+                  >
+                    <Ionicons name="chevron-forward" size={28} color="#FFF" />
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          </Modal>
+        )}
 
         {/* Profile Strength Meter — Circular Ring */}
         {strengthData && (
@@ -1451,6 +1553,127 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.accent,
     fontWeight: '600',
+  },
+
+  // Photo Gallery styles
+  photoGalleryCard: {
+    marginHorizontal: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  photoGalleryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  photoCountText: {
+    ...typography.bodySmall,
+    color: colors.textTertiary,
+  },
+  photoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  photoGridItem: {
+    width: (Dimensions.get('window').width - spacing.lg * 2 - spacing.md * 2 - spacing.sm * 2) / 3,
+    aspectRatio: 3 / 4,
+    borderRadius: borderRadius.md,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  photoGridImage: {
+    width: '100%',
+    height: '100%',
+  },
+  primaryPhotoBadge: {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: colors.accent,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  photoEmptyState: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
+    gap: spacing.sm,
+  },
+  photoEmptyText: {
+    ...typography.body,
+    color: colors.textTertiary,
+  },
+  photoAddButton: {
+    backgroundColor: colors.primary + '15',
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    marginTop: spacing.xs,
+  },
+  photoAddButtonText: {
+    ...typography.buttonSmall,
+    color: colors.primary,
+  },
+  // Photo Modal styles
+  photoModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  photoModalClose: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  photoModalImage: {
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height * 0.7,
+  },
+  photoModalCounter: {
+    position: 'absolute',
+    bottom: 60,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  photoModalCounterText: {
+    ...typography.bodySmall,
+    color: '#FFF',
+    fontWeight: '600',
+  },
+  photoModalNav: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: Dimensions.get('window').height * 0.45,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+  },
+  photoModalNavBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   // Skeleton styles

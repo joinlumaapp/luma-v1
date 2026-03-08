@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { matchService } from '../services/matchService';
 import type { MatchDetailResponse } from '../services/matchService';
 import { analyticsService, ANALYTICS_EVENTS } from '../services/analyticsService';
+import { getAllConversationMeta } from '../services/chatPersistence';
 
 export interface Match {
   id: string;
@@ -44,6 +45,7 @@ interface MatchState {
   markAsRead: (matchId: string) => void;
   clearSelected: () => void;
   addMatch: (match: Match) => void;
+  updateMatchActivity: (matchId: string, lastMessage: string, lastActivity: string) => void;
 }
 
 // Transform backend MatchDetailResponse to store MatchDetail
@@ -81,8 +83,30 @@ export const useMatchStore = create<MatchState>((set, get) => ({
     set({ isLoading: true });
     try {
       const response = await matchService.getMatches();
+
+      // Preserve lastMessage from current in-memory state and persisted chat meta.
+      // API/mock responses often return lastMessage: null, which would erase
+      // messages the user actually sent during this session.
+      const currentMatches = get().matches;
+      const currentMap = new Map(currentMatches.map((m) => [m.id, m]));
+      const chatMeta = getAllConversationMeta();
+
+      const merged = response.matches.map((m) => {
+        // Priority: current in-memory > persisted chat meta > API response
+        const existing = currentMap.get(m.id);
+        const persisted = chatMeta[m.id];
+
+        if (existing?.lastMessage) {
+          return { ...m, lastMessage: existing.lastMessage, lastActivity: existing.lastActivity };
+        }
+        if (persisted?.lastMessage) {
+          return { ...m, lastMessage: persisted.lastMessage, lastActivity: persisted.lastMessageAt };
+        }
+        return m;
+      });
+
       set({
-        matches: response.matches,
+        matches: merged,
         totalCount: response.total,
         isLoading: false,
       });
@@ -149,5 +173,12 @@ export const useMatchStore = create<MatchState>((set, get) => ({
     set((state) => ({
       matches: [match, ...state.matches],
       totalCount: state.totalCount + 1,
+    })),
+
+  updateMatchActivity: (matchId, lastMessage, lastActivity) =>
+    set((state) => ({
+      matches: state.matches.map((m) =>
+        m.id === matchId ? { ...m, lastMessage, lastActivity } : m
+      ),
     })),
 }));

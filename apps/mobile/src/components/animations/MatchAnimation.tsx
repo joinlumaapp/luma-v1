@@ -35,6 +35,7 @@ interface MatchAnimationProps {
   /** 2-3 smart conversation starters based on shared compatibility */
   conversationStarters?: string[];
   onSendMessage: (prefillMessage?: string) => void;
+  onActivitySuggest?: () => void;
   onClose: () => void;
 }
 
@@ -130,6 +131,7 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
   compatibilityExplanation,
   conversationStarters,
   onSendMessage,
+  onActivitySuggest,
   onClose,
 }) => {
   // Animations
@@ -372,8 +374,8 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
             ]}
           >
             {isSuperCompatible
-              ? 'Süper Uyumlu Eşleşme!'
-              : 'Yeni Eşleşme!'}
+              ? 'Süper Uyumlu LUMA Eşleşmesi!'
+              : 'LUMA Eşleşmesi!'}
           </Animated.Text>
 
           <Text style={styles.subtitle}>
@@ -453,6 +455,18 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
                 ))}
               </View>
             ) : null}
+
+            {onActivitySuggest && (
+              <TouchableOpacity
+                onPress={onActivitySuggest}
+                activeOpacity={0.7}
+                style={styles.activityButton}
+              >
+                <Text style={styles.activityButtonText}>
+                  Aktivite Öner
+                </Text>
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity
               onPress={onClose}
@@ -605,6 +619,20 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     ...typography.button,
     color: colors.text,
+  },
+  activityButton: {
+    width: '100%',
+    height: 48,
+    borderRadius: borderRadius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: colors.primary + '40',
+    backgroundColor: colors.primary + '08',
+  },
+  activityButtonText: {
+    ...typography.button,
+    color: colors.primary,
   },
   secondaryButton: {
     width: '100%',

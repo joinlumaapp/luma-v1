@@ -185,7 +185,7 @@ export const LIKES_VIEW_CONFIG = {
   },
 } as const;
 
-// Wave daily limits per package tier
+// Wave daily limits per package tier (legacy — kept for backward compat)
 export const WAVE_CONFIG = {
   DAILY_LIMITS: {
     free: 3,
@@ -194,6 +194,12 @@ export const WAVE_CONFIG = {
     reserved: 20,
   },
   COIN_COST: 5,
+} as const;
+
+// Paid first message configuration
+export const PAID_MESSAGE_CONFIG = {
+  PRICE_TRY: 199,
+  MAX_LENGTH: 300,
 } as const;
 
 // Message daily limits per package tier (-1 = unlimited)

@@ -48,6 +48,7 @@ import { useNotificationStore } from '../../stores/notificationStore';
 import { matchService } from '../../services/matchService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { MatchAnimation } from '../../components/animations/MatchAnimation';
+// LikeSentToast removed — was too repetitive for users
 import { DiscoveryCard } from '../../components/cards/DiscoveryCard';
 import { CompatibilityBottomSheet } from '../../components/discovery/CompatibilityBottomSheet';
 import { UpgradePrompt } from '../../components/premium/UpgradePrompt';
@@ -55,6 +56,7 @@ import { discoveryService } from '../../services/discoveryService';
 import type { LoginStreakResponse } from '../../services/discoveryService';
 import { StreakBanner } from '../../components/streak/StreakBanner';
 import { SUPER_LIKE_CONFIG, DISCOVERY_CONFIG } from '../../constants/config';
+import { generateCompactReasons } from '../../utils/compatReasons';
 import { BoostModal } from '../../components/boost/BoostModal';
 import type { BoostStatusResponse } from '../../services/discoveryService';
 import { colors, palette } from '../../theme/colors';
@@ -248,6 +250,7 @@ export const DiscoveryScreen: React.FC = () => {
   const userFirstName = useProfileStore((s) => s.profile?.firstName ?? '');
   const userPhotos = useProfileStore((s) => s.profile?.photos);
   const userPhotoUrl = userPhotos && userPhotos.length > 0 ? userPhotos[0] : undefined;
+  const userProfile = useProfileStore((s) => s.profile);
   const canUndo = useDiscoveryStore((s) => s.canUndo);
   const undoLastSwipe = useDiscoveryStore((s) => s.undoLastSwipe);
 
@@ -316,6 +319,8 @@ export const DiscoveryScreen: React.FC = () => {
     boostFetched.current = true;
     discoveryService.getBoostStatus().then(setBoostStatus).catch(() => {});
   }, []);
+
+  // ─── Like sent toast removed (was too repetitive) ─────────
 
   const handleBoostActivate = useCallback(async (durationMinutes: number) => {
     const result = await discoveryService.activateBoost(durationMinutes);
@@ -509,6 +514,24 @@ export const DiscoveryScreen: React.FC = () => {
     setMatchConversationStarters([]);
     setMatchExplanation(undefined);
   }, [dismissMatch]);
+
+  const handleActivitySuggest = useCallback(() => {
+    const card = matchedCard;
+    const matchId = currentMatchId;
+    dismissMatch();
+    setMatchConversationStarters([]);
+    setMatchExplanation(undefined);
+
+    if (card && matchId) {
+      navigation.navigate('MatchesTab', {
+        screen: 'DatePlanner',
+        params: {
+          matchId,
+          partnerName: card.name,
+        },
+      });
+    }
+  }, [dismissMatch, navigation, matchedCard, currentMatchId]);
 
   // ─── Gestures ──────────────────────────────────────────────
 
@@ -974,6 +997,7 @@ export const DiscoveryScreen: React.FC = () => {
                 interestTags: nextCard.interestTags ?? [],
                 lastActiveAt: nextCard.lastActiveAt ?? null,
                 matchReasons: nextCard.matchReasons ?? [],
+                compatReasons: generateCompactReasons(nextCard, userProfile),
               }}
               onCompatTap={handleCompatTap}
             />
@@ -1012,6 +1036,7 @@ export const DiscoveryScreen: React.FC = () => {
                 interestTags: currentCard.interestTags ?? [],
                 lastActiveAt: currentCard.lastActiveAt ?? null,
                 matchReasons: currentCard.matchReasons ?? [],
+                compatReasons: generateCompactReasons(currentCard, userProfile),
               }}
               onCompatTap={handleCompatTap}
             />
@@ -1058,14 +1083,19 @@ export const DiscoveryScreen: React.FC = () => {
           visible={showMatchAnimation && !!matchedCard}
           matchName={matchedCard?.name ?? ''}
           userName={userFirstName || undefined}
+          matchPhotoUrl={matchedCard?.photoUrls[0]}
+          userPhotoUrl={userPhotoUrl}
           compatibilityScore={matchedCard?.compatibilityPercent ?? 0}
-          isSuperCompatible={false}
+          isSuperCompatible={matchedCard ? matchedCard.compatibilityPercent >= 90 : false}
           conversationStarters={matchConversationStarters}
           compatibilityExplanation={matchExplanation}
           onSendMessage={handleMatchSendMessage}
+          onActivitySuggest={handleActivitySuggest}
           onClose={handleMatchDismiss}
         />
       )}
+
+      {/* Like sent feedback toast — removed, was too repetitive */}
 
       {/* Compatibility detail bottom sheet */}
       <CompatibilityBottomSheet

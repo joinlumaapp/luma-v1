@@ -31,6 +31,13 @@ export interface FeedCard {
   strongCategories?: string[];
   /** Last active timestamp for online status */
   lastActiveAt?: string;
+  /** Lifestyle details */
+  height?: number | null;
+  smoking?: string;
+  sports?: string;
+  children?: string;
+  job?: string;
+  education?: string;
 }
 
 export interface FeedResponse {
@@ -77,6 +84,10 @@ export interface LikeYouCard {
   compatibilityPercent: number;
   likedAt: string;
   comment: string | null;
+  /** Distance in km (optional hint for blurred cards) */
+  distanceKm?: number;
+  /** Number of shared interest tags */
+  sharedInterests?: number;
 }
 
 export interface LikesYouResponse {
@@ -186,7 +197,12 @@ const MOCK_CARDS: FeedCard[] = [
     bio: 'Kitap kurdu, kahve bağımlısı. Hayatı keşfetmeyi seven biri.',
     intentionTag: 'serious_relationship',
     compatibility: { score: 92, level: 'super' },
-    photos: [{ url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=260&fit=crop' }],
+    photos: [
+      { url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1517365830460-955ce3ccd263?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1517365830460-955ce3ccd263?w=200&h=260&fit=crop' },
+    ],
     isVerified: true,
     isSelfieVerified: true,
     isFullyVerified: true,
@@ -195,6 +211,12 @@ const MOCK_CARDS: FeedCard[] = [
     interestTags: ['reading', 'coffee', 'travel'],
     compatExplanation: 'Benzer yaşam değerleri ve iletişim tarzı',
     strongCategories: ['İletişim', 'Değerler', 'Yaşam Tarzı'],
+    height: 168,
+    smoking: 'İçmez',
+    sports: 'Yoga',
+    children: 'İstemiyor',
+    job: 'Editör',
+    education: 'İstanbul Üniversitesi',
   },
   {
     userId: 'mock-2',
@@ -204,7 +226,12 @@ const MOCK_CARDS: FeedCard[] = [
     bio: 'Müzik ve sanat hayatımın merkezinde. Gitar çalıyorum.',
     intentionTag: 'exploring',
     compatibility: { score: 85, level: 'normal' },
-    photos: [{ url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&h=260&fit=crop' }],
+    photos: [
+      { url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1496440737103-cd596325d314?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1496440737103-cd596325d314?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1515023115894-bacee46dfc8e?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1515023115894-bacee46dfc8e?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1504730030853-eff311f57d3c?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1504730030853-eff311f57d3c?w=200&h=260&fit=crop' },
+    ],
     isVerified: true,
     isSelfieVerified: true,
     isFullyVerified: false,
@@ -213,6 +240,11 @@ const MOCK_CARDS: FeedCard[] = [
     interestTags: ['music', 'art', 'guitar'],
     compatExplanation: 'Güçlü uyum alanları mevcut',
     strongCategories: ['Hobiler', 'Sanat', 'Sosyallik'],
+    height: 165,
+    smoking: 'Sosyal içici',
+    sports: 'Dans',
+    job: 'Müzisyen',
+    education: 'Hacettepe Üniversitesi',
   },
   {
     userId: 'mock-3',
@@ -222,7 +254,13 @@ const MOCK_CARDS: FeedCard[] = [
     bio: 'Doğa yürüyüşleri, yoga ve sağlıklı yaşam tutkunu.',
     intentionTag: 'serious_relationship',
     compatibility: { score: 78, level: 'normal' },
-    photos: [{ url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&h=260&fit=crop' }],
+    photos: [
+      { url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1519699047748-de8e457a634e?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1519699047748-de8e457a634e?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1464863979621-258859e62245?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1464863979621-258859e62245?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&h=260&fit=crop' },
+    ],
     isVerified: false,
     isSelfieVerified: true,
     isFullyVerified: false,
@@ -231,6 +269,12 @@ const MOCK_CARDS: FeedCard[] = [
     interestTags: ['hiking', 'yoga', 'cooking'],
     compatExplanation: 'Ortak ilgi alanları keşfedilecek',
     strongCategories: ['Sağlık', 'Doğa'],
+    height: 172,
+    smoking: 'İçmez',
+    sports: 'Koşu, Yoga',
+    children: 'Belki ileride',
+    job: 'Diyetisyen',
+    education: 'Ege Üniversitesi',
   },
   {
     userId: 'mock-4',
@@ -240,7 +284,12 @@ const MOCK_CARDS: FeedCard[] = [
     bio: 'Yazılımcı, kedileri sever. Film önerileri konusunda iddialıyım.',
     intentionTag: 'not_sure',
     compatibility: { score: 88, level: 'normal' },
-    photos: [{ url: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=200&h=260&fit=crop' }],
+    photos: [
+      { url: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1521566652839-697aa473761a?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1521566652839-697aa473761a?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=260&fit=crop' },
+    ],
     isVerified: true,
     isSelfieVerified: true,
     isFullyVerified: true,
@@ -249,6 +298,11 @@ const MOCK_CARDS: FeedCard[] = [
     interestTags: ['technology', 'movies', 'cats'],
     compatExplanation: 'Düşünce yapısı ve humor uyumu yüksek',
     strongCategories: ['Humor', 'Teknoloji', 'Eğlence'],
+    height: 163,
+    smoking: 'İçmez',
+    children: 'İstemiyor',
+    job: 'Yazılım Geliştirici',
+    education: 'ODTÜ',
   },
   {
     userId: 'mock-5',
@@ -258,7 +312,11 @@ const MOCK_CARDS: FeedCard[] = [
     bio: 'Fotoğrafçılık, seyahat ve yeni lezzetler keşfetmek benim işim.',
     intentionTag: 'exploring',
     compatibility: { score: 73, level: 'normal' },
-    photos: [{ url: 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=200&h=260&fit=crop' }],
+    photos: [
+      { url: 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1485893086445-ed75865251e0?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1485893086445-ed75865251e0?w=200&h=260&fit=crop' },
+    ],
     isVerified: false,
     isSelfieVerified: false,
     isFullyVerified: false,
@@ -267,6 +325,10 @@ const MOCK_CARDS: FeedCard[] = [
     interestTags: ['photography', 'travel', 'food'],
     compatExplanation: 'Keşfedilecek farklılıklar var',
     strongCategories: ['Macera', 'Yemek'],
+    height: 170,
+    smoking: 'Sosyal içici',
+    sports: 'Yüzme',
+    job: 'Fotoğrafçı',
   },
   {
     userId: 'mock-6',
@@ -276,7 +338,13 @@ const MOCK_CARDS: FeedCard[] = [
     bio: 'Psikoloji öğrencisi. İnsanları anlamak en büyük tutkum.',
     intentionTag: 'serious_relationship',
     compatibility: { score: 95, level: 'super' },
-    photos: [{ url: 'https://images.unsplash.com/photo-1502767089025-6572583495f9?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1502767089025-6572583495f9?w=200&h=260&fit=crop' }],
+    photos: [
+      { url: 'https://images.unsplash.com/photo-1502767089025-6572583495f9?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1502767089025-6572583495f9?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1529232356377-57971f020a94?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1529232356377-57971f020a94?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1500917293891-ef795e70e1f6?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1500917293891-ef795e70e1f6?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1523264653568-d38213651a53?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1523264653568-d38213651a53?w=200&h=260&fit=crop' },
+    ],
     isVerified: true,
     isSelfieVerified: true,
     isFullyVerified: true,
@@ -285,6 +353,11 @@ const MOCK_CARDS: FeedCard[] = [
     interestTags: ['psychology', 'reading', 'meditation'],
     compatExplanation: 'Çok güçlü düşünce ve değer uyumu',
     strongCategories: ['Değerler', 'İletişim', 'Empati'],
+    height: 160,
+    smoking: 'İçmez',
+    children: 'İstiyor',
+    job: 'Psikolog Adayı',
+    education: 'Boğaziçi Üniversitesi',
   },
   {
     userId: 'mock-7',
@@ -294,7 +367,12 @@ const MOCK_CARDS: FeedCard[] = [
     bio: 'Deniz, güneş ve spor. Hayatı dolu dolu yaşıyorum.',
     intentionTag: 'exploring',
     compatibility: { score: 81, level: 'normal' },
-    photos: [{ url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=260&fit=crop' }],
+    photos: [
+      { url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1504439468489-c8920d796a29?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1504439468489-c8920d796a29?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1513379733131-47fc74b45fc7?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1513379733131-47fc74b45fc7?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=200&h=260&fit=crop' },
+    ],
     isVerified: true,
     isSelfieVerified: true,
     isFullyVerified: false,
@@ -303,6 +381,11 @@ const MOCK_CARDS: FeedCard[] = [
     interestTags: ['swimming', 'fitness', 'beach'],
     compatExplanation: 'Aktif yaşam tarzı ortak noktanız',
     strongCategories: ['Spor', 'Enerji', 'Sosyallik'],
+    height: 174,
+    smoking: 'İçmez',
+    sports: 'Yüzme, Fitness',
+    children: 'Belki ileride',
+    job: 'Spor Eğitmeni',
   },
   {
     userId: 'mock-8',
@@ -312,7 +395,12 @@ const MOCK_CARDS: FeedCard[] = [
     bio: 'Mimar. Tasarım, estetik ve yaratıcılık benim dünyam.',
     intentionTag: 'serious_relationship',
     compatibility: { score: 87, level: 'normal' },
-    photos: [{ url: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&h=260&fit=crop' }],
+    photos: [
+      { url: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1514315384763-ba401779410f?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1514315384763-ba401779410f?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1492106087820-71f1a00d2b11?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1492106087820-71f1a00d2b11?w=200&h=260&fit=crop' },
+      { url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&h=260&fit=crop' },
+    ],
     isVerified: true,
     isSelfieVerified: true,
     isFullyVerified: true,
@@ -321,6 +409,11 @@ const MOCK_CARDS: FeedCard[] = [
     interestTags: ['architecture', 'design', 'art'],
     compatExplanation: 'Estetik anlayışı ve vizyon uyumu',
     strongCategories: ['Yaratıcılık', 'Vizyon', 'Estetik'],
+    height: 171,
+    smoking: 'İçmez',
+    sports: 'Pilates',
+    job: 'Mimar',
+    education: 'İTÜ',
   },
 ];
 
@@ -359,6 +452,8 @@ const MOCK_INCOMING_LIKES: LikeYouCard[] = [
     compatibilityPercent: 88,
     likedAt: mockHoursAgo(1),
     comment: 'Profilin çok samimi, tanışmak isterim!',
+    distanceKm: 1.2,
+    sharedInterests: 4,
   },
   {
     userId: 'bot-005',
@@ -368,6 +463,8 @@ const MOCK_INCOMING_LIKES: LikeYouCard[] = [
     compatibilityPercent: 73,
     likedAt: mockHoursAgo(3),
     comment: null,
+    distanceKm: 3.5,
+    sharedInterests: 2,
   },
   {
     userId: 'bot-008',
@@ -377,6 +474,8 @@ const MOCK_INCOMING_LIKES: LikeYouCard[] = [
     compatibilityPercent: 56,
     likedAt: mockHoursAgo(5),
     comment: null,
+    distanceKm: 8.1,
+    sharedInterests: 1,
   },
   {
     userId: 'bot-010',
@@ -386,6 +485,8 @@ const MOCK_INCOMING_LIKES: LikeYouCard[] = [
     compatibilityPercent: 71,
     likedAt: mockHoursAgo(8),
     comment: 'Ortak ilgi alanlarımız çok fazla!',
+    distanceKm: 0.8,
+    sharedInterests: 5,
   },
   {
     userId: 'bot-011',
@@ -395,6 +496,8 @@ const MOCK_INCOMING_LIKES: LikeYouCard[] = [
     compatibilityPercent: 68,
     likedAt: mockHoursAgo(12),
     comment: null,
+    distanceKm: 5.3,
+    sharedInterests: 3,
   },
   {
     userId: 'bot-013',
@@ -404,6 +507,8 @@ const MOCK_INCOMING_LIKES: LikeYouCard[] = [
     compatibilityPercent: 62,
     likedAt: mockHoursAgo(18),
     comment: 'Satranç oynayan birini arıyordum!',
+    distanceKm: 12.4,
+    sharedInterests: 2,
   },
   {
     userId: 'bot-014',
@@ -413,6 +518,19 @@ const MOCK_INCOMING_LIKES: LikeYouCard[] = [
     compatibilityPercent: 58,
     likedAt: mockHoursAgo(24),
     comment: null,
+    distanceKm: 15.7,
+    sharedInterests: 1,
+  },
+  {
+    userId: 'bot-015',
+    firstName: 'Deniz',
+    age: 26,
+    photoUrl: 'https://i.pravatar.cc/400?img=49',
+    compatibilityPercent: 91,
+    likedAt: mockHoursAgo(2),
+    comment: null,
+    distanceKm: 2.1,
+    sharedInterests: 6,
   },
 ];
 

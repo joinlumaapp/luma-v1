@@ -76,8 +76,6 @@ import { NotificationsScreen } from '../screens/notifications/NotificationsScree
 
 // Matches extra screens
 import { DatePlannerScreen } from '../screens/matches/DatePlannerScreen';
-import { AICoachScreen } from '../screens/chat/AICoachScreen';
-
 // ── Deferred Screens ─────────────────────────────────────────
 // Heavy screens that benefit from deferred mount after navigation animation
 const DeferredCompatibilityInsight = withDeferredMount(CompatibilityInsightScreen);
@@ -222,11 +220,6 @@ const MatchesStackNavigator: React.FC = () => (
     <MatchesStack.Screen name="ChatList" component={ChatListScreen} />
     <MatchesStack.Screen name="Chat" component={ChatScreen} />
     <MatchesStack.Screen name="DatePlanner" component={DatePlannerScreen} />
-    <MatchesStack.Screen
-      name="AICoach"
-      component={AICoachScreen}
-      options={{ animation: 'slide_from_bottom' }}
-    />
     <MatchesStack.Screen name="LikesYou" component={LikesYouScreen} />
     <MatchesStack.Screen
       name="Report"

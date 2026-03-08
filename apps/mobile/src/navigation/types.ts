@@ -85,7 +85,6 @@ export type MatchesStackParamList = {
   ChatList: undefined;
   Chat: { matchId: string; partnerName: string; partnerPhotoUrl: string; initialMessage?: string };
   DatePlanner: { matchId: string; partnerName: string };
-  AICoach: { matchId?: string; matchName?: string };
   Report: { userId: string; userName: string };
 };
 

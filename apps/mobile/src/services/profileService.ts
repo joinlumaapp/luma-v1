@@ -149,13 +149,13 @@ export const profileService = {
     const hasAnswers = Object.keys(profile.answers).length >= 20;
 
     const breakdown: ProfileStrengthItem[] = [
-      { key: 'photos', label: 'Foto\u011Fraf ekle', weight: 10, completed: hasPhotos, tip: 'Profiline foto\u011Fraf ekle (+10)' },
-      { key: 'bio', label: 'Biyografi yaz', weight: 10, completed: hasBio, tip: 'Hakk\u0131nda k\u0131sm\u0131n\u0131 doldur (+10)' },
-      { key: 'interests', label: '\u0130lgi alanlar\u0131 ekle', weight: 10, completed: hasInterests, tip: '\u0130lgi alanlar\u0131n\u0131 se\u00E7 (+10)' },
-      { key: 'activity', label: 'Aktiviteye kat\u0131l', weight: 10, completed: hasJoinedActivity, tip: 'Bir aktiviteye kat\u0131l (+10)' },
-      { key: 'feed_post', label: '\u0130lk payla\u015F\u0131m\u0131n\u0131 yap', weight: 10, completed: hasCreatedPost, tip: 'Ak\u0131\u015Fta bir \u015Fey payla\u015F (+10)' },
-      { key: 'verified', label: 'Profili do\u011Frula', weight: 20, completed: isVerified, tip: 'Y\u00FCz do\u011Frulamas\u0131 yap (+20)' },
-      { key: 'questions', label: 'Uyum sorular\u0131n\u0131 tamamla', weight: 30, completed: hasAnswers, tip: 'T\u00FCm uyum sorular\u0131n\u0131 cevapla (+30)' },
+      { key: 'photos', label: 'Fotoğraf ekle', weight: 10, completed: hasPhotos, tip: 'Profiline fotoğraf ekle (+10)' },
+      { key: 'bio', label: 'Biyografi yaz', weight: 10, completed: hasBio, tip: 'Hakkında kısmını doldur (+10)' },
+      { key: 'interests', label: 'İlgi alanları ekle', weight: 10, completed: hasInterests, tip: 'İlgi alanlarını seç (+10)' },
+      { key: 'activity', label: 'Aktiviteye katıl', weight: 10, completed: hasJoinedActivity, tip: 'Bir aktiviteye katıl (+10)' },
+      { key: 'feed_post', label: 'İlk paylaşımını yap', weight: 10, completed: hasCreatedPost, tip: 'Akışta bir şey paylaş (+10)' },
+      { key: 'verified', label: 'Profili doğrula', weight: 20, completed: isVerified, tip: 'Yüz doğrulaması yap (+20)' },
+      { key: 'questions', label: 'Uyum sorularını tamamla', weight: 30, completed: hasAnswers, tip: 'Tüm uyum sorularını cevapla (+30)' },
     ];
 
     const percentage = breakdown.reduce((sum, item) => sum + (item.completed ? item.weight : 0), 0);
@@ -165,11 +165,11 @@ export const profileService = {
     if (percentage === 100) {
       message = '\u2728 Tam Profil';
     } else if (percentage >= 70) {
-      message = 'Profilin g\u00FC\u00E7l\u00FC! Birka\u00E7 ad\u0131m daha.';
+      message = 'Profilin güçlü! Birkaç adım daha.';
     } else if (percentage >= 40) {
-      message = 'Profilini tamamla, daha \u00E7ok g\u00F6r\u00FCn.';
+      message = 'Profilini tamamla, daha çok görün.';
     } else {
-      message = 'Profilini doldurarak ke\u015Ffette \u00F6ne \u00E7\u0131k.';
+      message = 'Profilini doldurarak keşfette öne çık.';
     }
 
     return { percentage, level, message, breakdown };

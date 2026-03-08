@@ -1,5 +1,6 @@
 // Wave service — send quick greetings to nearby users without matching
 // Free: 3/day, Premium+: 20/day, or 5 gold coins per wave
+// Also handles paid first messages (199 TL) for pre-match messaging
 
 import api from './api';
 
@@ -38,6 +39,14 @@ interface SendWaveResponse {
 
 interface RespondWaveResponse {
   chatId: string | null;
+}
+
+// ─── Paid Message Types ──────────────────────────────────────────
+
+export interface PaidMessageResponse {
+  matchId: string;
+  messageId: string;
+  chatCreated: boolean;
 }
 
 // ─── Mock Data ────────────────────────────────────────────────────
@@ -171,6 +180,31 @@ export const waveService = {
       return response.data;
     } catch {
       return { chatId: accept ? `chat_wave_${waveId}` : null };
+    }
+  },
+
+  // ── Paid First Message ─────────────────────────────────────────
+
+  sendPaidMessage: async (
+    receiverId: string,
+    message: string,
+  ): Promise<PaidMessageResponse> => {
+    try {
+      const response = await api.post<PaidMessageResponse>('/messages/paid', {
+        receiverId,
+        message,
+        amount: 199,
+        currency: 'TRY',
+      });
+      return response.data;
+    } catch {
+      // Mock fallback — simulate successful payment and chat creation
+      const mockMatchId = `paid_${Date.now()}`;
+      return {
+        matchId: mockMatchId,
+        messageId: `msg_${Date.now()}`,
+        chatCreated: true,
+      };
     }
   },
 };

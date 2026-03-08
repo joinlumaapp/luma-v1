@@ -33,11 +33,11 @@ const MAX_PARTICIPANTS_OPTIONS = [2, 3, 4, 5, 6];
 
 // Quick suggestion chips for common activity titles
 const QUICK_SUGGESTIONS = [
-  { emoji: '\u2615', label: 'Kahve', title: 'Kahve i\u00E7elim' },
-  { emoji: '\uD83C\uDF7D', label: 'Ak\u015Fam yeme\u011Fi', title: 'Ak\u015Fam yeme\u011Fine \u00E7\u0131kal\u0131m' },
-  { emoji: '\uD83D\uDEB6', label: 'Y\u00FCr\u00FCy\u00FC\u015F', title: 'Y\u00FCr\u00FCy\u00FC\u015F yapal\u0131m' },
-  { emoji: '\uD83C\uDFAC', label: 'Sinema', title: 'Sinemaya gidelim' },
-  { emoji: '\uD83C\uDF7B', label: 'Bar', title: 'Bir \u015Feyler i\u00E7elim' },
+  { emoji: '☕', label: 'Kahve', title: 'Kahve içelim' },
+  { emoji: '🍽', label: 'Akşam yemeği', title: 'Akşam yemeğine çıkalım' },
+  { emoji: '🚶', label: 'Yürüyüş', title: 'Yürüyüş yapalım' },
+  { emoji: '🎬', label: 'Sinema', title: 'Sinemaya gidelim' },
+  { emoji: '🍻', label: 'Bar', title: 'Bir şeyler içelim' },
 ];
 
 // ─── Date Picker (simplified — text input for now) ────────────────
@@ -145,7 +145,7 @@ export const CreateActivityScreen: React.FC = () => {
         </View>
 
         {/* Quick Suggestions */}
-        <Text style={styles.label}>H{'\u0131'}zl{'\u0131'} {'\u00D6'}neri</Text>
+        <Text style={styles.label}>Hızlı Öneri</Text>
         <View style={styles.quickSuggestionsRow}>
           {QUICK_SUGGESTIONS.map((s) => (
             <TouchableOpacity
@@ -155,8 +155,8 @@ export const CreateActivityScreen: React.FC = () => {
                 setTitle(s.title);
                 // Auto-select matching activity type
                 const typeMap: Record<string, ActivityType> = {
-                  'Kahve': 'coffee', 'Ak\u015Fam yeme\u011Fi': 'dinner',
-                  'Y\u00FCr\u00FCy\u00FC\u015F': 'outdoor', 'Sinema': 'culture', 'Bar': 'drinks',
+                  'Kahve': 'coffee', 'Akşam yemeği': 'dinner',
+                  'Yürüyüş': 'outdoor', 'Sinema': 'culture', 'Bar': 'drinks',
                 };
                 const matchedType = typeMap[s.label];
                 if (matchedType) setActivityType(matchedType);
@@ -170,12 +170,12 @@ export const CreateActivityScreen: React.FC = () => {
         </View>
 
         {/* Title */}
-        <Text style={styles.label}>Ba{'\u015Fl\u0131'}k</Text>
+        <Text style={styles.label}>Başlık</Text>
         <TextInput
           style={styles.input}
           value={title}
           onChangeText={setTitle}
-          placeholder="{'\u00D6'}rn: Karak\u00F6y'de kahve i\u00E7elim"
+          placeholder="Örn: Karaköy'de kahve içelim"
           placeholderTextColor={colors.textTertiary}
           maxLength={60}
         />

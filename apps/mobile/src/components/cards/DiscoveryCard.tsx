@@ -36,6 +36,8 @@ export interface DiscoveryCardProfile {
   interestTags: string[];
   lastActiveAt?: string | null;
   matchReasons?: string[];
+  /** Real compatibility reasons generated from shared signals */
+  compatReasons?: string[];
 }
 
 interface DiscoveryCardProps {
@@ -66,13 +68,14 @@ const MODE_CONFIG: Record<string, { label: string; bg: string; text: string }> =
 const getModeStyle = (tag: string) =>
   MODE_CONFIG[tag] ?? MODE_CONFIG.exploring;
 
-// ─── Compatibility explanation based on score range ──────────
+// ─── Fallback compatibility explanation based on score range ─
+// Used only when no real compatReasons are provided
 
-const getCompatExplanations = (score: number): string[] => {
-  if (score >= 90) return ['Ortak ilgi alanlar\u0131', 'Benzer sosyal enerji', '\u0130li\u015Fki beklentisi uyumu'];
-  if (score >= 80) return ['G\u00FC\u00E7l\u00FC uyum alanlar\u0131', 'Benzer ya\u015Fam tarz\u0131'];
-  if (score >= 70) return ['Ortak ilgi alanlar\u0131', 'Ke\u015Ffedilecek benzerlikler'];
-  return ['Ke\u015Ffedilecek farkl\u0131l\u0131klar'];
+const getFallbackExplanations = (score: number): string[] => {
+  if (score >= 90) return ['Ortak ilgi alanları', 'Benzer sosyal enerji'];
+  if (score >= 80) return ['Güçlü uyum alanları', 'Benzer yaşam tarzı'];
+  if (score >= 70) return ['Ortak ilgi alanları'];
+  return ['Keşfedilecek farklılıklar'];
 };
 
 // ─── Component ────────────────────────────────────────────────
@@ -201,24 +204,32 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
           </View>
         )}
 
-        {/* Row 6: Compatibility Score (tappable) */}
-        {profile.compatibility && (
-          <Pressable
-            style={styles.compatArea}
-            onPress={() => onCompatTap?.(profile.userId)}
-            accessibilityLabel={`Uyum yüzde ${compatScore}`}
-            accessibilityRole="button"
-          >
-            <Text style={[styles.compatScore, isSuper && styles.compatScoreSuper]}>
-              %{compatScore} Uyum
-            </Text>
-            {getCompatExplanations(compatScore).map((line) => (
-              <Text key={line} style={styles.compatExplanation}>
-                {'\u2022'} {line}
+        {/* Row 6: Compatibility Score + "Neden uyumlusunuz?" reasons (tappable) */}
+        {profile.compatibility && (() => {
+          const reasons = profile.compatReasons && profile.compatReasons.length > 0
+            ? profile.compatReasons
+            : getFallbackExplanations(compatScore);
+          return (
+            <Pressable
+              style={styles.compatArea}
+              onPress={() => onCompatTap?.(profile.userId)}
+              accessibilityLabel={`Uyum yüzde ${compatScore}`}
+              accessibilityRole="button"
+            >
+              <Text style={[styles.compatScore, isSuper && styles.compatScoreSuper]}>
+                %{compatScore} Uyum
               </Text>
-            ))}
-          </Pressable>
-        )}
+              {reasons.length > 0 && (
+                <Text style={styles.compatReasonTitle}>Neden uyumlusunuz?</Text>
+              )}
+              {reasons.map((line) => (
+                <Text key={line} style={styles.compatExplanation}>
+                  {'\u2022'} {line}
+                </Text>
+              ))}
+            </Pressable>
+          );
+        })()}
       </View>
     </View>
   );
@@ -425,6 +436,15 @@ const styles = StyleSheet.create({
   },
   compatScoreSuper: {
     color: palette.gold[600],
+  },
+  compatReasonTitle: {
+    fontSize: 10,
+    fontWeight: fontWeights.semibold,
+    color: colors.textSecondary,
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+    marginTop: 2,
+    marginBottom: 1,
   },
   compatExplanation: {
     fontSize: 11,

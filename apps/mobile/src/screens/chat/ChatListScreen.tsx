@@ -124,14 +124,16 @@ export const ChatListScreen: React.FC = () => {
   const conversations = useChatStore((state) => state.conversations);
   const isLoading = useChatStore((state) => state.isLoadingConversations);
   const fetchConversations = useChatStore((state) => state.fetchConversations);
+  const hydrateFromStorage = useChatStore((state) => state.hydrateFromStorage);
 
-  // Defer initial fetch until navigation animation completes
+  // Hydrate chat persistence then fetch conversations
   useEffect(() => {
-    const task = InteractionManager.runAfterInteractions(() => {
+    const task = InteractionManager.runAfterInteractions(async () => {
+      await hydrateFromStorage();
       fetchConversations();
     });
     return () => task.cancel();
-  }, [fetchConversations]);
+  }, [fetchConversations, hydrateFromStorage]);
 
   const handleConversationPress = useCallback(
     (matchId: string, partnerName: string, partnerPhotoUrl: string) => {

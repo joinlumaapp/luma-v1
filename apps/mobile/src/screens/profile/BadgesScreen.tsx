@@ -51,9 +51,9 @@ const BADGE_VISUALS: BadgeVisual[] = [
   { key: 'popular', name: 'Popüler', icon: '🔥', color: '#EF4444', hint: 'Bir paylaşımda 50+ beğeni veya 7 günde 100+ toplam beğeni al' },
   { key: 'active', name: 'Aktif', icon: '💬', color: '#3B82F6', hint: '10+ paylaşım yap veya 7 gün üst üste aktif ol' },
   { key: 'photo_lover', name: 'Fotoğraf Tutkunu', icon: '📸', color: '#EC4899', hint: '14 günde 5+ fotoğraf paylaşımı yap' },
-  { key: 'romantic', name: 'Romantik', icon: '\u2764\uFE0F', color: '#F43F5E', hint: '14 g\u00FCnde 3+ yaz\u0131/soru payla\u015F ve 20+ be\u011Feni al' },
-  { key: 'activity_leader', name: 'Etkinlik Lideri', icon: '\uD83C\uDF1F', color: '#F59E0B', hint: '3+ aktivite olu\u015Ftur ve her birine kat\u0131l\u0131mc\u0131 al' },
-  { key: 'social_butterfly', name: 'Sosyal Kelebek', icon: '\uD83E\uDD8B', color: '#A855F7', hint: '10+ farkl\u0131 ki\u015Fiyle mesajla\u015F' },
+  { key: 'romantic', name: 'Romantik', icon: '❤️', color: '#F43F5E', hint: '14 günde 3+ yazı/soru paylaş ve 20+ beğeni al' },
+  { key: 'activity_leader', name: 'Etkinlik Lideri', icon: '🌟', color: '#F59E0B', hint: '3+ aktivite oluştur ve her birine katılımcı al' },
+  { key: 'social_butterfly', name: 'Sosyal Kelebek', icon: '🦋', color: '#A855F7', hint: '10+ farklı kişiyle mesajlaş' },
 ];
 
 // Merged badge data for display

@@ -1,4 +1,5 @@
 // Matches list screen — premium animations, skeleton loader, PulseGlow for high compatibility
+// Tabs: 💞 Eşleşmeler | 💬 Mesajlar | 💜 Beğenenler
 // Performance: InteractionManager, FlatList tuning, memoized components
 
 import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
@@ -14,7 +15,7 @@ import {
   Animated,
   InteractionManager,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MatchesStackParamList } from '../../navigation/types';
@@ -23,12 +24,17 @@ import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { useMatchStore } from '../../stores/matchStore';
 import type { Match } from '../../stores/matchStore';
+import { useChatStore } from '../../stores/chatStore';
+import { getAllConversationMeta } from '../../services/chatPersistence';
 import { SlideIn } from '../../components/animations/SlideIn';
 import { PulseGlow } from '../../components/animations/PulseGlow';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { formatMatchActivity, formatActivityStatus } from '../../utils/formatters';
 
 type MatchesNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'MatchesList'>;
+
+// ─── Tab type ────────────────────────────────────────────────
+type TabKey = 'matches' | 'messages';
 
 // Conversation starter suggestions for matches with no messages
 const CONVERSATION_STARTERS = [
@@ -77,7 +83,7 @@ const SkeletonRow: React.FC<{ index: number }> = ({ index }) => {
   );
 };
 
-// Individual match card with press scale animation — memoized
+// ─── Match card (Eşleşmeler tab) — taps open profile ────────
 interface MatchCardProps {
   item: Match;
   index: number;
@@ -231,6 +237,105 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onStarterPress }
 
 MatchCard.displayName = 'MatchCard';
 
+// ─── Message row (Mesajlar tab) — taps open chat directly ───
+interface MessageRowProps {
+  item: Match;
+  index: number;
+  onPress: (item: Match) => void;
+}
+
+const MessageRow = memo<MessageRowProps>(({ item, index, onPress }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = useCallback(() => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.97,
+      tension: 200,
+      friction: 10,
+      useNativeDriver: true,
+    }).start();
+  }, [scaleAnim]);
+
+  const handlePressOut = useCallback(() => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      tension: 200,
+      friction: 10,
+      useNativeDriver: true,
+    }).start();
+  }, [scaleAnim]);
+
+  const avatarContent = item.photoUrl ? (
+    <Image source={{ uri: item.photoUrl }} style={styles.avatarImage} />
+  ) : (
+    <View style={styles.avatar}>
+      <Text style={styles.avatarText}>{item.name.charAt(0)}</Text>
+    </View>
+  );
+
+  return (
+    <SlideIn direction="right" delay={index * 80} distance={24}>
+      <TouchableWithoutFeedback
+        onPress={() => onPress(item)}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        accessibilityLabel={`${item.name} ile sohbet`}
+        accessibilityRole="button"
+        accessibilityHint="Mesaj ekranını açmak için dokunun"
+      >
+        <Animated.View
+          style={[
+            styles.matchCard,
+            { transform: [{ scale: scaleAnim }] },
+          ]}
+          testID={`message-row-${item.id}`}
+        >
+          {/* Avatar */}
+          <View style={styles.avatarContainer}>
+            {avatarContent}
+            {formatActivityStatus(item.lastActivity)?.isOnline && (
+              <View style={styles.onlineDot} />
+            )}
+          </View>
+
+          {/* Name + last message */}
+          <View style={styles.matchInfo}>
+            <Text style={styles.matchName} numberOfLines={1}>
+              {item.name}
+            </Text>
+            <Text style={styles.messagePreview} numberOfLines={1}>
+              {item.lastMessage}
+            </Text>
+            {(() => {
+              const actStatus = formatActivityStatus(item.lastActivity);
+              if (actStatus) {
+                return (
+                  <Text style={[styles.lastActivity, actStatus.isOnline && styles.lastActivityOnline]}>
+                    {actStatus.text}
+                  </Text>
+                );
+              }
+              return <Text style={styles.lastActivity}>{formatMatchActivity(item.lastActivity)}</Text>;
+            })()}
+          </View>
+
+          {/* Chat icon indicator */}
+          <View style={styles.chatIconContainer}>
+            <Text style={styles.chatIcon}>{'\uD83D\uDCAC'}</Text>
+          </View>
+        </Animated.View>
+      </TouchableWithoutFeedback>
+    </SlideIn>
+  );
+}, (prev, next) => (
+  prev.item.id === next.item.id &&
+  prev.item.lastActivity === next.item.lastActivity &&
+  prev.item.lastMessage === next.item.lastMessage &&
+  prev.index === next.index
+));
+
+MessageRow.displayName = 'MessageRow';
+
 // Memoized separator to avoid creating new component instances on each render
 const ItemSeparator = memo(() => <View style={styles.separator} />);
 ItemSeparator.displayName = 'ItemSeparator';
@@ -245,34 +350,67 @@ export const MatchesListScreen: React.FC = () => {
   const isLoading = useMatchStore((state) => state.isLoading);
   const fetchMatches = useMatchStore((state) => state.fetchMatches);
   const markAsRead = useMatchStore((state) => state.markAsRead);
+  const updateMatchActivity = useMatchStore((state) => state.updateMatchActivity);
+  const hydrateFromStorage = useChatStore((state) => state.hydrateFromStorage);
 
-  const [activeFilter, setActiveFilter] = useState<'all' | 'new' | 'matched'>('all');
+  const [activeTab, setActiveTab] = useState<TabKey>('matches');
 
   // Defer initial fetch until navigation animation completes
+  // Then hydrate chat persistence so lastMessage values survive
   useEffect(() => {
-    const task = InteractionManager.runAfterInteractions(() => {
-      fetchMatches();
+    const task = InteractionManager.runAfterInteractions(async () => {
+      await fetchMatches();
+      // Hydrate chat storage and restore lastMessage from persisted meta
+      await hydrateFromStorage();
+      const meta = getAllConversationMeta();
+      for (const [matchId, entry] of Object.entries(meta)) {
+        if (entry.lastMessage) {
+          updateMatchActivity(matchId, entry.lastMessage, entry.lastMessageAt);
+        }
+      }
     });
     return () => task.cancel();
-  }, [fetchMatches]);
+  }, [fetchMatches, hydrateFromStorage, updateMatchActivity]);
 
-  // Memoize filtered list to avoid recalculation on every render
-  const filteredMatches = useMemo(() => {
-    return matches.filter((match) => {
-      if (activeFilter === 'new') return match.isNew;
-      if (activeFilter === 'matched') return !match.isNew;
-      return true;
-    });
-  }, [matches, activeFilter]);
+  // Restore lastMessage from chat persistence on every screen focus
+  // (e.g. returning from Chat screen after sending a message)
+  useFocusEffect(
+    useCallback(() => {
+      const meta = getAllConversationMeta();
+      for (const [matchId, entry] of Object.entries(meta)) {
+        if (entry.lastMessage) {
+          updateMatchActivity(matchId, entry.lastMessage, entry.lastMessageAt);
+        }
+      }
+    }, [updateMatchActivity]),
+  );
 
-  // Matches not talked to today — no lastMessage or last activity not today
-  // Sorted by compatibility descending, capped at 6
+  // ── Filtered data per tab ────────────────────────────────────
+  const matchesList = useMemo(() => matches, [matches]);
+
+  const conversations = useChatStore((state) => state.conversations);
+
+  const messagesList = useMemo(() => {
+    const convMap = new Map(conversations.map((c) => [c.matchId, c]));
+    return matches
+      .filter((m) => convMap.get(m.id)?.lastMessage || m.lastMessage)
+      .map((m) => {
+        const conv = convMap.get(m.id);
+        return conv?.lastMessage
+          ? { ...m, lastMessage: conv.lastMessage, lastActivity: conv.lastMessageAt }
+          : m;
+      })
+      .sort((a, b) => new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime());
+  }, [matches, conversations]);
+
+  const currentList = activeTab === 'messages' ? messagesList : matchesList;
+
+  // Matches not talked to today — shown only on Eşleşmeler tab
   const notTalkedToday = useMemo(() => {
     const todayStr = new Date().toISOString().slice(0, 10);
     return matches
       .filter((m) => {
         if (!m.lastMessage) return true;
-        // If last activity is not today, include
         const activityDate = m.lastActivity ? m.lastActivity.slice(0, 10) : '';
         return activityDate !== todayStr;
       })
@@ -280,23 +418,15 @@ export const MatchesListScreen: React.FC = () => {
       .slice(0, 6);
   }, [matches]);
 
-  const handleNudgePress = useCallback(
-    (match: Match) => {
-      markAsRead(match.id);
-      navigation.navigate('Chat', {
-        matchId: match.id,
-        partnerName: match.name,
-        partnerPhotoUrl: match.photoUrl,
-      });
-    },
-    [markAsRead, navigation],
-  );
+  // ── Navigation handlers ──────────────────────────────────────
 
+  // Eşleşmeler tab: tap opens profile detail
   const handleMatchPress = useCallback((matchId: string) => {
     markAsRead(matchId);
     navigation.navigate('MatchDetail', { matchId });
   }, [markAsRead, navigation]);
 
+  // Eşleşmeler tab: conversation starter opens chat
   const handleStarterPress = useCallback(
     (matchId: string, name: string, photoUrl: string, text: string) => {
       markAsRead(matchId);
@@ -310,6 +440,33 @@ export const MatchesListScreen: React.FC = () => {
     [markAsRead, navigation],
   );
 
+  // Mesajlar tab: tap opens chat directly
+  const handleMessagePress = useCallback(
+    (match: Match) => {
+      markAsRead(match.id);
+      navigation.navigate('Chat', {
+        matchId: match.id,
+        partnerName: match.name,
+        partnerPhotoUrl: match.photoUrl,
+      });
+    },
+    [markAsRead, navigation],
+  );
+
+  // Nudge section: opens chat
+  const handleNudgePress = useCallback(
+    (match: Match) => {
+      markAsRead(match.id);
+      navigation.navigate('Chat', {
+        matchId: match.id,
+        partnerName: match.name,
+        partnerPhotoUrl: match.photoUrl,
+      });
+    },
+    [markAsRead, navigation],
+  );
+
+  // ── Render items ─────────────────────────────────────────────
   const renderMatchItem = useCallback(
     ({ item, index }: { item: Match; index: number }) => (
       <MatchCard
@@ -322,8 +479,19 @@ export const MatchesListScreen: React.FC = () => {
     [handleMatchPress, handleStarterPress],
   );
 
+  const renderMessageItem = useCallback(
+    ({ item, index }: { item: Match; index: number }) => (
+      <MessageRow
+        item={item}
+        index={index}
+        onPress={handleMessagePress}
+      />
+    ),
+    [handleMessagePress],
+  );
+
   const renderNudgeSection = useCallback(() => {
-    if (notTalkedToday.length === 0) return null;
+    if (activeTab !== 'matches' || notTalkedToday.length === 0) return null;
     return (
       <View style={styles.nudgeSection}>
         <Text style={styles.nudgeTitle}>Bugün konuşmadığın eşleşmelerin</Text>
@@ -366,20 +534,27 @@ export const MatchesListScreen: React.FC = () => {
         </ScrollView>
       </View>
     );
-  }, [notTalkedToday, handleNudgePress]);
+  }, [activeTab, notTalkedToday, handleNudgePress]);
 
   // Stable key extractor reference
   const keyExtractor = useCallback((item: Match) => item.id, []);
 
-  const renderEmptyList = useCallback(() => (
-    <View style={styles.emptyContainer}>
-      <Text style={styles.emptyIcon}>{'<3'}</Text>
-      <Text style={styles.emptyTitle}>Henüz Eşleşmen Yok</Text>
-      <Text style={styles.emptySubtitle}>
-        Keşfet sekmesinde profilleri beğenerek eşleşme oluşturabilirsin.
-      </Text>
-    </View>
-  ), []);
+  const renderEmptyList = useCallback(() => {
+    const isMessages = activeTab === 'messages';
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyIcon}>{isMessages ? '\uD83D\uDCAC' : '\uD83D\uDC9E'}</Text>
+        <Text style={styles.emptyTitle}>
+          {isMessages ? 'Henüz Mesajın Yok' : 'Henüz Eşleşmen Yok'}
+        </Text>
+        <Text style={styles.emptySubtitle}>
+          {isMessages
+            ? 'Eşleşmelerine mesaj göndererek sohbet başlatabilirsin.'
+            : 'Keşfet sekmesinde profilleri beğenerek eşleşme oluşturabilirsin.'}
+        </Text>
+      </View>
+    );
+  }, [activeTab]);
 
   // Shimmer skeleton loader replaces basic ActivityIndicator
   if (isLoading && matches.length === 0) {
@@ -407,47 +582,46 @@ export const MatchesListScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* Filters */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={styles.filterRowContent}>
-        {[
-          { key: 'all' as const, label: 'Tümü' },
-          { key: 'new' as const, label: 'Yeni' },
-          { key: 'matched' as const, label: '💕 Eşleşenler' },
-          { key: 'likes' as const, label: '💜 Beğenenler' },
-        ].map((filter) => (
-          <TouchableWithoutFeedback
-            key={filter.key}
-            onPress={() => filter.key === 'likes' ? navigation.navigate('LikesYou') : setActiveFilter(filter.key as 'all' | 'new' | 'matched')}
-            accessibilityLabel={`${filter.label} filtresi${activeFilter === filter.key ? ', seçili' : ''}`}
-            accessibilityRole="button"
-            accessibilityState={{ selected: activeFilter === filter.key }}
-            accessibilityHint={`${filter.label} filtresini seçmek için dokunun`}
-          >
-            <View
-              style={[
-                styles.filterChip,
-                activeFilter === filter.key && styles.filterChipActive,
-              ]}
-              testID={`matches-filter-${filter.key}`}
+      {/* Tabs: 💞 Eşleşmeler | 💬 Mesajlar | 💜 Beğenenler */}
+      <View style={styles.tabRow}>
+        {([
+          { key: 'matches' as const, label: '\uD83D\uDC9E Eşleşmeler' },
+          { key: 'messages' as const, label: '\uD83D\uDCAC Mesajlar' },
+          { key: 'likes' as const, label: '\uD83D\uDC9C Beğenenler' },
+        ]).map((tab) => {
+          const isActive = tab.key === 'likes' ? false : activeTab === tab.key;
+          return (
+            <TouchableWithoutFeedback
+              key={tab.key}
+              onPress={() => {
+                if (tab.key === 'likes') {
+                  navigation.navigate('LikesYou');
+                } else {
+                  setActiveTab(tab.key);
+                }
+              }}
+              accessibilityLabel={`${tab.label} sekmesi${isActive ? ', seçili' : ''}`}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: isActive }}
             >
-              <Text
-                style={[
-                  styles.filterChipText,
-                  activeFilter === filter.key && styles.filterChipTextActive,
-                ]}
+              <View
+                style={[styles.tabChip, isActive && styles.tabChipActive]}
+                testID={`matches-tab-${tab.key}`}
               >
-                {filter.label}
-              </Text>
-            </View>
-          </TouchableWithoutFeedback>
-        ))}
-      </ScrollView>
+                <Text style={[styles.tabChipText, isActive && styles.tabChipTextActive]}>
+                  {tab.label}
+                </Text>
+              </View>
+            </TouchableWithoutFeedback>
+          );
+        })}
+      </View>
 
-      {/* Match list — performance-tuned FlatList */}
+      {/* List — switches render function based on active tab */}
       <FlatList
-        data={filteredMatches}
+        data={currentList}
         keyExtractor={keyExtractor}
-        renderItem={renderMatchItem}
+        renderItem={activeTab === 'messages' ? renderMessageItem : renderMatchItem}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={renderNudgeSection}
         ListEmptyComponent={renderEmptyList}
@@ -489,22 +663,19 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.textSecondary,
   },
-  filterRow: {
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.md,
-    flexShrink: 0,
-  },
-  filterRowContent: {
+  // ── Tabs ──
+  tabRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    paddingRight: spacing.xxl,
-    gap: spacing.md,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+    gap: spacing.sm,
   },
-  filterChip: {
+  tabChip: {
+    flex: 1,
     backgroundColor: colors.surface,
     borderRadius: borderRadius.full,
-    paddingHorizontal: 20,
     paddingVertical: 10,
     minHeight: 44,
     borderWidth: 1,
@@ -512,17 +683,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  filterChipActive: {
+  tabChipActive: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
   },
-  filterChipText: {
-    fontSize: 15,
+  tabChipText: {
+    fontSize: 13,
     lineHeight: 20,
     color: '#4A3728',
     fontWeight: '600',
   },
-  filterChipTextActive: {
+  tabChipTextActive: {
     color: '#FFFFFF',
     fontWeight: '700',
   },
@@ -596,6 +767,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 9,
   },
+  // ── List ──
   listContent: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -715,6 +887,16 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.textTertiary,
   },
+  // ── Mesajlar tab: chat icon ──
+  chatIconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 40,
+  },
+  chatIcon: {
+    fontSize: 20,
+  },
+  // ── Shared ──
   separator: {
     height: 1,
     backgroundColor: colors.divider,
@@ -741,8 +923,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
   },
-  // Games section styles
-  // Skeleton loader styles
+  // ── Skeleton loader ──
   skeletonContainer: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,

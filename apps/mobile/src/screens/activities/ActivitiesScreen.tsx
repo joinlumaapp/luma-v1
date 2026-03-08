@@ -226,7 +226,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
           {/* Participant details row */}
           <View style={cardStyles.participantDetailsRow}>
             <Text style={cardStyles.participantDetailText}>
-              {activity.participants.length} ki\u015Fi kat\u0131ld\u0131
+              {activity.participants.length} kişi katıldı
             </Text>
             {activity.distanceKm > 0 && (
               <>

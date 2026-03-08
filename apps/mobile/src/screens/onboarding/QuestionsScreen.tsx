@@ -68,11 +68,11 @@ interface NormalizedQuestion {
 const ANALYSIS_DURATION = 2500;
 // Motivational messages shown every 4 questions
 const MOTIVATION_MESSAGES: Record<number, { emoji: string; title: string; subtitle: string }> = {
-  4: { emoji: '\u2728', title: 'Harika gidiyorsun.', subtitle: 'Analizin %20 tamamland\u0131.' },
-  8: { emoji: '\uD83E\uDDE0', title: 'Ger\u00E7ek uyumunu bulmaya yakla\u015F\u0131yoruz.', subtitle: 'Cevaplar\u0131n \u00E7ok de\u011Ferli.' },
-  12: { emoji: '\uD83C\uDFAF', title: 'Biraz daha, \u00E7ok az kald\u0131.', subtitle: 'Uyum profilin \u015Fekilleniyor.' },
-  16: { emoji: '\uD83D\uDE80', title: 'Son sorulara geldik.', subtitle: 'Neredeyse haz\u0131r\u0131z.' },
-  20: { emoji: '\uD83D\uDD2C', title: 'Tebrikler!', subtitle: 'T\u00FCm sorular\u0131 tamamlad\u0131n.' },
+  4: { emoji: '✨', title: 'Harika gidiyorsun.', subtitle: 'Analizin %20 tamamlandı.' },
+  8: { emoji: '🧠', title: 'Gerçek uyumunu bulmaya yaklaşıyoruz.', subtitle: 'Cevapların çok değerli.' },
+  12: { emoji: '🎯', title: 'Biraz daha, çok az kaldı.', subtitle: 'Uyum profilin şekilleniyor.' },
+  16: { emoji: '🚀', title: 'Son sorulara geldik.', subtitle: 'Neredeyse hazırız.' },
+  20: { emoji: '🔬', title: 'Tebrikler!', subtitle: 'Tüm soruları tamamladın.' },
 };
 
 const MOTIVATION_DISPLAY_MS = 2200;
@@ -275,7 +275,7 @@ export const QuestionsScreen: React.FC = () => {
         <Animated.View style={[styles.celebrationContent, phaseAnimStyle]}>
           <Text style={styles.celebrationEmoji}>{'\uD83D\uDD2C'}</Text>
           <Text style={styles.celebrationTitle}>LUMA senin karakterini analiz ediyor...</Text>
-          <Text style={styles.celebrationSubtitle}>Cevaplar\u0131n de\u011Ferlendiriliyor ve en uyumlu profiller belirleniyor.</Text>
+          <Text style={styles.celebrationSubtitle}>Cevapların değerlendiriliyor ve en uyumlu profiller belirleniyor.</Text>
           <ActivityIndicator size="small" color={onboardingColors.text} style={{ marginTop: spacing.lg }} />
         </Animated.View>
       </View>

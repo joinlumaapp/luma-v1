@@ -57,7 +57,8 @@ export type FeatureKey =
   | 'vip_support'
   | 'events'
   | 'messages'
-  | 'waves';
+  | 'waves'
+  | 'paid_message';
 
 // ─── Feature Access Rules ────────────────────────────────────────
 
@@ -169,6 +170,12 @@ export const FEATURE_RULES: Record<FeatureKey, FeatureRule> = {
     labelTr: 'Selam Gönder',
     descriptionTr: 'Yakınındaki kullanıcılara eşleşmeden selam gönder.',
   },
+  paid_message: {
+    minTier: 'free',
+    limits: { free: -1, gold: -1, pro: -1, reserved: -1 },
+    labelTr: 'Ücretli Mesaj',
+    descriptionTr: 'Eşleşmeden önce mesaj gönder — 199 TL.',
+  },
 };
 
 // ─── Convenience Helpers ─────────────────────────────────────────
@@ -217,6 +224,7 @@ export const mapLegacyFeature = (
     messages: 'messages',
     insights: 'compatibility_insights',
     waves: 'waves',
+    paid_message: 'paid_message',
   };
   return mapping[legacy] ?? 'daily_likes';
 };

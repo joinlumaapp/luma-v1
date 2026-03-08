@@ -245,10 +245,13 @@ export const ChatScreen: React.FC = () => {
   // Partner activity status
   const [partnerLastActive, setPartnerLastActive] = useState<string | null>(null);
 
-  // Defer initial fetch until navigation animation completes
+  const hydrateFromStorage = useChatStore((state) => state.hydrateFromStorage);
+
+  // Hydrate persisted messages then fetch from API
   useEffect(() => {
-    const task = InteractionManager.runAfterInteractions(() => {
-      fetchMessages(matchId);
+    const task = InteractionManager.runAfterInteractions(async () => {
+      await hydrateFromStorage();
+      await fetchMessages(matchId);
       markAsRead(matchId);
       // Fetch partner presence
       presenceService.getBatchPresence([matchId]).then((data) => {
@@ -257,7 +260,7 @@ export const ChatScreen: React.FC = () => {
       }).catch(() => {});
     });
     return () => task.cancel();
-  }, [matchId, fetchMessages, markAsRead]);
+  }, [matchId, fetchMessages, markAsRead, hydrateFromStorage]);
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {

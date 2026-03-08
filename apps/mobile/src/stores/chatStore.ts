@@ -1,4 +1,5 @@
 // Chat store — Zustand store for chat/messaging state
+// Messages are persisted via AsyncStorage through chatPersistence layer
 
 import { create } from 'zustand';
 import { chatService } from '../services/chatService';
@@ -6,6 +7,13 @@ import { analyticsService, ANALYTICS_EVENTS } from '../services/analyticsService
 import { useAuthStore, type PackageTier } from '../stores/authStore';
 import { useMatchStore } from '../stores/matchStore';
 import { MESSAGE_CONFIG } from '../constants/config';
+import {
+  hydrateChatStorage,
+  persistMessage,
+  replaceMessageById,
+  getPersistedMessages,
+  getAllConversationMeta,
+} from '../services/chatPersistence';
 import type {
   ConversationSummary,
   ChatMessage,
@@ -23,6 +31,7 @@ interface ChatState {
   hasMore: Record<string, boolean>;
   cursors: Record<string, string | null>;
   totalUnread: number;
+  isHydrated: boolean;
 
   // Message limit state
   dailyMessagesSent: number;
@@ -30,6 +39,7 @@ interface ChatState {
   lastMessageDate: string; // YYYY-MM-DD
 
   // Actions
+  hydrateFromStorage: () => Promise<void>;
   fetchConversations: () => Promise<void>;
   fetchMessages: (matchId: string) => Promise<void>;
   loadMoreMessages: (matchId: string) => Promise<void>;
@@ -61,11 +71,52 @@ export const useChatStore = create<ChatState>((set, get) => ({
   hasMore: {},
   cursors: {},
   totalUnread: 0,
+  isHydrated: false,
 
   // Message limit state
   dailyMessagesSent: 0,
   singleMessageCredits: 0,
   lastMessageDate: getTodayString(),
+
+  // Hydrate persisted messages from AsyncStorage into memory
+  hydrateFromStorage: async () => {
+    if (get().isHydrated) return;
+    await hydrateChatStorage();
+
+    // Load all persisted messages into state
+    const matches = useMatchStore.getState().matches;
+    const messagesMap: Record<string, ChatMessage[]> = {};
+    for (const match of matches) {
+      const msgs = getPersistedMessages(match.id);
+      if (msgs.length > 0) {
+        messagesMap[match.id] = msgs;
+      }
+    }
+
+    // Build conversations from persisted meta
+    const meta = getAllConversationMeta();
+    const conversations: ConversationSummary[] = matches
+      .filter((m) => meta[m.id] != null)
+      .map((m) => ({
+        matchId: m.id,
+        userId: m.userId,
+        name: m.name,
+        photoUrl: m.photoUrl,
+        lastMessage: meta[m.id]?.lastMessage ?? '',
+        lastMessageAt: meta[m.id]?.lastMessageAt ?? '',
+        unreadCount: 0,
+        isOnline: false,
+      }))
+      .sort((a, b) =>
+        new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
+      );
+
+    set({
+      messages: messagesMap,
+      conversations,
+      isHydrated: true,
+    });
+  },
 
   // Actions
   fetchConversations: async () => {
@@ -90,23 +141,41 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({ isLoadingMessages: true });
     try {
       const response = await chatService.getMessages(matchId);
+      // Merge fetched messages with any optimistic messages not yet confirmed
+      set((state) => {
+        const fetchedIds = new Set(response.messages.map((m) => m.id));
+        const localOnly = (state.messages[matchId] ?? []).filter(
+          (m) => (m.id.startsWith('temp-') || m.id.startsWith('local-') || m.id.startsWith('paid-')) && !fetchedIds.has(m.id)
+        );
+        const merged = [...response.messages, ...localOnly].sort(
+          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        return {
+          messages: {
+            ...state.messages,
+            [matchId]: merged,
+          },
+          hasMore: {
+            ...state.hasMore,
+            [matchId]: response.hasMore,
+          },
+          cursors: {
+            ...state.cursors,
+            [matchId]: response.cursor,
+          },
+          isLoadingMessages: false,
+        };
+      });
+    } catch {
+      // Fall back to persisted messages instead of leaving state empty
+      const persisted = getPersistedMessages(matchId);
       set((state) => ({
         messages: {
           ...state.messages,
-          [matchId]: response.messages,
-        },
-        hasMore: {
-          ...state.hasMore,
-          [matchId]: response.hasMore,
-        },
-        cursors: {
-          ...state.cursors,
-          [matchId]: response.cursor,
+          [matchId]: persisted,
         },
         isLoadingMessages: false,
       }));
-    } catch {
-      set({ isLoadingMessages: false });
     }
   },
 
@@ -198,7 +267,38 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }
     }
 
-    set({ isSending: true });
+    // Optimistic UI — show message immediately before API responds
+    const now = new Date().toISOString();
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const userId = useAuthStore.getState().user?.id ?? 'dev-user-001';
+    const optimisticMessage: ChatMessage = {
+      id: tempId,
+      matchId,
+      senderId: userId,
+      content,
+      type: 'TEXT',
+      status: 'SENT',
+      createdAt: now,
+      isRead: false,
+      reactions: [],
+    };
+
+    // Add optimistic message to state immediately
+    set((state) => ({
+      messages: {
+        ...state.messages,
+        [matchId]: [...(state.messages[matchId] ?? []), optimisticMessage],
+      },
+      isSending: true,
+    }));
+
+    // Update match activity and conversations immediately (optimistic)
+    get().updateLastMessage(matchId, content, now);
+    useMatchStore.getState().updateMatchActivity(matchId, content, now);
+
+    // Persist the optimistic message so it survives navigation
+    await persistMessage(matchId, optimisticMessage);
+
     try {
       const response = await chatService.sendMessage(matchId, {
         content,
@@ -206,13 +306,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
       });
       analyticsService.track(ANALYTICS_EVENTS.CHAT_MESSAGE_SENT, { matchId });
       const today = getTodayString();
+
+      // Replace optimistic message with real server/local message
       set((state) => ({
         messages: {
           ...state.messages,
-          [matchId]: [
-            ...(state.messages[matchId] ?? []),
-            response.message,
-          ],
+          [matchId]: (state.messages[matchId] ?? []).map((msg) =>
+            msg.id === tempId ? response.message : msg
+          ),
         },
         isSending: false,
         // Only count non-matched messages toward daily limit
@@ -221,74 +322,133 @@ export const useChatStore = create<ChatState>((set, get) => ({
           lastMessageDate: today,
         }),
       }));
-      // Update last message in conversations
+
+      // Update persistence: replace temp message with confirmed message
+      await replaceMessageById(matchId, tempId, response.message);
+
+      // Update with real timestamp from server
       get().updateLastMessage(matchId, content, response.message.createdAt);
+      useMatchStore.getState().updateMatchActivity(matchId, content, response.message.createdAt);
       return true;
     } catch {
+      // Keep the optimistic message in state and storage — it was already persisted
       set({ isSending: false });
       return false;
     }
   },
 
   sendImageMessage: async (matchId, imageUri) => {
-    set({ isSending: true });
+    const now = new Date().toISOString();
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const userId = useAuthStore.getState().user?.id ?? 'dev-user-001';
+    const optimisticMessage: ChatMessage = {
+      id: tempId, matchId, senderId: userId, content: 'Fotoğraf',
+      type: 'IMAGE', status: 'SENT', mediaUrl: imageUri,
+      createdAt: now, isRead: false, reactions: [],
+    };
+
+    set((state) => ({
+      messages: {
+        ...state.messages,
+        [matchId]: [...(state.messages[matchId] ?? []), optimisticMessage],
+      },
+      isSending: true,
+    }));
+    get().updateLastMessage(matchId, 'Fotoğraf', now);
+    useMatchStore.getState().updateMatchActivity(matchId, 'Fotoğraf', now);
+    await persistMessage(matchId, optimisticMessage);
+
     try {
       const response = await chatService.sendImageMessage(matchId, imageUri);
       analyticsService.track(ANALYTICS_EVENTS.CHAT_IMAGE_SENT, { matchId });
       set((state) => ({
         messages: {
           ...state.messages,
-          [matchId]: [
-            ...(state.messages[matchId] ?? []),
-            response.message,
-          ],
+          [matchId]: (state.messages[matchId] ?? []).map((msg) =>
+            msg.id === tempId ? response.message : msg
+          ),
         },
         isSending: false,
       }));
-      // Update last message in conversations
-      get().updateLastMessage(matchId, 'Fotograf', response.message.createdAt);
+      await replaceMessageById(matchId, tempId, response.message);
     } catch {
       set({ isSending: false });
     }
   },
 
   sendGifMessage: async (matchId, gifUrl) => {
-    set({ isSending: true });
+    const now = new Date().toISOString();
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const userId = useAuthStore.getState().user?.id ?? 'dev-user-001';
+    const optimisticMessage: ChatMessage = {
+      id: tempId, matchId, senderId: userId, content: 'GIF',
+      type: 'GIF', status: 'SENT', mediaUrl: gifUrl,
+      createdAt: now, isRead: false, reactions: [],
+    };
+
+    set((state) => ({
+      messages: {
+        ...state.messages,
+        [matchId]: [...(state.messages[matchId] ?? []), optimisticMessage],
+      },
+      isSending: true,
+    }));
+    get().updateLastMessage(matchId, 'GIF', now);
+    useMatchStore.getState().updateMatchActivity(matchId, 'GIF', now);
+    await persistMessage(matchId, optimisticMessage);
+
     try {
       const response = await chatService.sendGifMessage(matchId, gifUrl);
       analyticsService.track(ANALYTICS_EVENTS.CHAT_MESSAGE_SENT, { matchId, type: 'GIF' });
       set((state) => ({
         messages: {
           ...state.messages,
-          [matchId]: [
-            ...(state.messages[matchId] ?? []),
-            response.message,
-          ],
+          [matchId]: (state.messages[matchId] ?? []).map((msg) =>
+            msg.id === tempId ? response.message : msg
+          ),
         },
         isSending: false,
       }));
-      get().updateLastMessage(matchId, 'GIF', response.message.createdAt);
+      await replaceMessageById(matchId, tempId, response.message);
     } catch {
       set({ isSending: false });
     }
   },
 
   sendVoiceMessage: async (matchId, audioUri, duration) => {
-    set({ isSending: true });
+    const now = new Date().toISOString();
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const userId = useAuthStore.getState().user?.id ?? 'dev-user-001';
+    const optimisticMessage: ChatMessage = {
+      id: tempId, matchId, senderId: userId, content: 'Sesli mesaj',
+      type: 'VOICE', status: 'SENT', mediaUrl: audioUri, mediaDuration: duration,
+      createdAt: now, isRead: false, reactions: [],
+    };
+
+    set((state) => ({
+      messages: {
+        ...state.messages,
+        [matchId]: [...(state.messages[matchId] ?? []), optimisticMessage],
+      },
+      isSending: true,
+    }));
+    get().updateLastMessage(matchId, 'Sesli mesaj', now);
+    useMatchStore.getState().updateMatchActivity(matchId, 'Sesli mesaj', now);
+    await persistMessage(matchId, optimisticMessage);
+
     try {
       const response = await chatService.sendVoiceMessage(matchId, audioUri, duration);
       analyticsService.track(ANALYTICS_EVENTS.CHAT_MESSAGE_SENT, { matchId, type: 'VOICE' });
       set((state) => ({
         messages: {
           ...state.messages,
-          [matchId]: [
-            ...(state.messages[matchId] ?? []),
-            response.message,
-          ],
+          [matchId]: (state.messages[matchId] ?? []).map((msg) =>
+            msg.id === tempId ? response.message : msg
+          ),
         },
         isSending: false,
       }));
-      get().updateLastMessage(matchId, 'Sesli mesaj', response.message.createdAt);
+      await replaceMessageById(matchId, tempId, response.message);
     } catch {
       set({ isSending: false });
     }
@@ -322,6 +482,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
         ],
       },
     }));
+    // Persist incoming message
+    persistMessage(message.matchId, message);
+    // Update match activity
+    get().updateLastMessage(message.matchId, message.content, message.createdAt);
+    useMatchStore.getState().updateMatchActivity(message.matchId, message.content, message.createdAt);
   },
 
   setTyping: (matchId, isTyping) => {
@@ -334,13 +499,39 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   updateLastMessage: (matchId, content, timestamp) => {
-    set((state) => ({
-      conversations: state.conversations.map((conv) =>
-        conv.matchId === matchId
-          ? { ...conv, lastMessage: content, lastMessageAt: timestamp }
-          : conv
-      ),
-    }));
+    set((state) => {
+      // Find or create conversation entry for this match
+      const existingConv = state.conversations.find((c) => c.matchId === matchId);
+      if (existingConv) {
+        return {
+          conversations: state.conversations.map((conv) =>
+            conv.matchId === matchId
+              ? { ...conv, lastMessage: content, lastMessageAt: timestamp }
+              : conv
+          ),
+        };
+      }
+
+      // Create a new conversation entry from match data
+      const match = useMatchStore.getState().matches.find((m) => m.id === matchId);
+      if (match) {
+        const newConv: ConversationSummary = {
+          matchId: match.id,
+          userId: match.userId,
+          name: match.name,
+          photoUrl: match.photoUrl,
+          lastMessage: content,
+          lastMessageAt: timestamp,
+          unreadCount: 0,
+          isOnline: false,
+        };
+        return {
+          conversations: [newConv, ...state.conversations],
+        };
+      }
+
+      return {};
+    });
   },
 
   toggleReaction: async (matchId, messageId, emoji) => {
@@ -354,7 +545,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
           const existingReactions = msg.reactions ?? [];
 
           if (response.action === 'removed') {
-            // Remove the user's reaction; decrease count or remove entry
             const updatedReactions = existingReactions
               .map((r) =>
                 r.emoji === emoji
@@ -366,7 +556,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
           }
 
           if (response.action === 'added') {
-            // Add reaction: find existing emoji group or create new
             const existingIndex = existingReactions.findIndex(
               (r) => r.emoji === emoji
             );
@@ -388,7 +577,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
           }
 
           if (response.action === 'updated') {
-            // Changed emoji: remove hasReacted from old, add/update new
             const withoutOldReact = existingReactions
               .map((r) =>
                 r.hasReacted && r.emoji !== emoji
