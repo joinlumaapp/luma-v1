@@ -172,13 +172,13 @@ export const BoostModal: React.FC<BoostModalProps> = ({
             <View style={styles.activeSection}>
               <View style={styles.activeIndicator}>
                 <View style={styles.activeDot} />
-                <Text style={styles.activeLabel}>Boost Aktif</Text>
+                <Text style={styles.activeLabel}>Öne Çıkarma Aktif</Text>
               </View>
               <Text style={styles.countdownText}>
                 {formatCountdown(remainingSeconds)} kald{'\u0131'}
               </Text>
               <Text style={styles.activeDescription}>
-                Profiling {'\u015F'}u anda 10x daha fazla g{'\u00F6'}r{'\u00FC'}nt{'\u00FC'}leniyor
+                Profilin {'\u015F'}u anda 10x daha fazla g{'\u00F6'}r{'\u00FC'}nt{'\u00FC'}leniyor
               </Text>
             </View>
           ) : (

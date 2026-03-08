@@ -40,7 +40,7 @@ export const formatDate = (dateString: string): string => {
 };
 
 /**
- * Format relative time (e.g., "2 dakika once", "3 saat once")
+ * Format relative time (e.g., "2 dakika önce", "3 saat önce")
  */
 export const formatRelativeTime = (dateString: string): string => {
   const now = new Date();
@@ -51,11 +51,11 @@ export const formatRelativeTime = (dateString: string): string => {
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
 
-  if (diffSecs < 60) return 'Simdi';
-  if (diffMins < 60) return `${diffMins} dakika once`;
-  if (diffHours < 24) return `${diffHours} saat once`;
-  if (diffDays < 7) return `${diffDays} gun once`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} hafta once`;
+  if (diffSecs < 60) return 'Şimdi';
+  if (diffMins < 60) return `${diffMins} dakika önce`;
+  if (diffHours < 24) return `${diffHours} saat önce`;
+  if (diffDays < 7) return `${diffDays} gün önce`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} hafta önce`;
   return formatDate(dateString);
 };
 
@@ -90,9 +90,9 @@ export const formatMatchActivity = (dateString: string): string => {
 
 /**
  * Format user activity status for display.
- * Online (within 2 min) → "Su an aktif"
- * Recently → "5 dk once aktifti", "1 saat once aktifti"
- * Today → "Bugun aktifti"
+ * Online (within 2 min) → "Şu an aktif"
+ * Recently → "5 dk önce aktifti", "1 saat önce aktifti"
+ * Today → "Bugün aktifti"
  * Older → null (don't show)
  */
 export const formatActivityStatus = (
@@ -106,9 +106,9 @@ export const formatActivityStatus = (
   const diffMins = Math.floor(diffMs / (1000 * 60));
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
 
-  if (diffMins < 2) return { text: 'Su an aktif', isOnline: true };
-  if (diffMins < 60) return { text: `${diffMins} dk once aktifti`, isOnline: false };
-  if (diffHours < 24) return { text: `${diffHours} saat once aktifti`, isOnline: false };
+  if (diffMins < 2) return { text: 'Şu an aktif', isOnline: true };
+  if (diffMins < 60) return { text: `${diffMins} dk önce aktifti`, isOnline: false };
+  if (diffHours < 24) return { text: `${diffHours} saat önce aktifti`, isOnline: false };
 
   // Check if today
   const now = new Date();
@@ -117,7 +117,7 @@ export const formatActivityStatus = (
     date.getMonth() === now.getMonth() &&
     date.getFullYear() === now.getFullYear()
   ) {
-    return { text: 'Bugun aktifti', isOnline: false };
+    return { text: 'Bugün aktifti', isOnline: false };
   }
 
   return null;

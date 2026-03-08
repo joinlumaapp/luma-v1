@@ -13,13 +13,13 @@ interface BadgeMeta {
 }
 
 const BADGE_META: Record<string, BadgeMeta> = {
-  first_spark: { icon: '*', color: '#F59E0B', label: 'Ilk Kivilcim' },
-  chat_master: { icon: '#', color: '#3B82F6', label: 'Sohbet Ustasi' },
-  question_explorer: { icon: '?', color: '#8B5CF6', label: 'Merak Uzmani' },
-  soul_mate: { icon: '&', color: '#EC4899', label: 'Ruh Ikizi' },
-  verified_star: { icon: 'V', color: '#10B981', label: 'Dogrulanmis' },
-  couple_goal: { icon: '+', color: '#EF4444', label: 'Cift Hedefi' },
-  explorer: { icon: 'O', color: '#6366F1', label: 'Kasif' },
+  first_spark: { icon: '*', color: '#F59E0B', label: 'İlk Kıvılcım' },
+  chat_master: { icon: '#', color: '#3B82F6', label: 'Sohbet Ustası' },
+  question_explorer: { icon: '?', color: '#8B5CF6', label: 'Merak Uzmanı' },
+  soul_mate: { icon: '&', color: '#EC4899', label: 'Ruh İkizi' },
+  verified_star: { icon: 'V', color: '#10B981', label: 'Doğrulanmış' },
+  couple_goal: { icon: '+', color: '#EF4444', label: 'Çift Hedefi' },
+  explorer: { icon: 'O', color: '#6366F1', label: 'Kaşif' },
   deep_match: { icon: 'D', color: '#8B5CF6', label: 'Derin Uyum' },
   new_member: { icon: '✨', color: '#F59E0B', label: 'Yeni Üye' },
   popular: { icon: '🔥', color: '#EF4444', label: 'Popüler' },

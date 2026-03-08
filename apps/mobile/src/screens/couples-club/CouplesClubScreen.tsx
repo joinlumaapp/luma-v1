@@ -402,7 +402,7 @@ export const CouplesClubScreen: React.FC = () => {
       setNewDescription('');
       setNewLocation('');
       setNewCapacity('');
-      Alert.alert('Basarili', 'Etkinlik olusturuldu!', [{ text: 'Tamam' }]);
+      Alert.alert('Başarılı', 'Etkinlik oluşturuldu!', [{ text: 'Tamam' }]);
     } catch {
       Alert.alert('Hata', 'Etkinlik oluşturulamadı. Lütfen tekrar deneyin.', [
         { text: 'Tamam' },

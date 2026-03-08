@@ -32,10 +32,13 @@ const GRID_GAP = 10;
 const GRID_PADDING = 24;
 const CELL_SIZE = (width - GRID_PADDING * 2 - GRID_GAP * 2) / 3;
 
+// Onboarding shows 6 slots initially; users can add more later in EditProfile
+const ONBOARDING_PHOTO_SLOTS = 6;
+
 export const PhotosScreen: React.FC = () => {
   const navigation = useNavigation<PhotosNavigationProp>();
   const [photoUris, setPhotoUris] = useState<(string | null)[]>(
-    Array.from({ length: PROFILE_CONFIG.MAX_PHOTOS }, () => null)
+    Array.from({ length: ONBOARDING_PHOTO_SLOTS }, () => null)
   );
   const setProfileField = useProfileStore((state) => state.setField);
 

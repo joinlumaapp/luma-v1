@@ -32,9 +32,9 @@ type MatchesNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'M
 
 // Conversation starter suggestions for matches with no messages
 const CONVERSATION_STARTERS = [
-  'Ilk bulusmada kahve mi yemek mi?',
-  'Hafta sonu doga mi sehir mi?',
-  'En sevdigin muzik turu ne?',
+  'İlk buluşmada kahve mi yemek mi?',
+  'Hafta sonu doğa mı şehir mi?',
+  'En sevdiğin müzik türü ne?',
 ];
 
 // Skeleton shimmer row component
@@ -172,7 +172,7 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onStarterPress }
             ) : (
               <>
                 <Text style={styles.messageHint} numberOfLines={1}>
-                  Henuz mesaj yok {'\u2022'} Ilk mesaji gonder
+                  Henüz mesaj yok {'\u2022'} İlk mesajı gönder
                 </Text>
                 <View style={styles.startersRow}>
                   {CONVERSATION_STARTERS.map((text, i) => (
@@ -324,7 +324,7 @@ export const MatchesListScreen: React.FC = () => {
     if (notTalkedToday.length === 0) return null;
     return (
       <View style={styles.nudgeSection}>
-        <Text style={styles.nudgeTitle}>Bugun konusmadigin eslesmelerin</Text>
+        <Text style={styles.nudgeTitle}>Bugün konuşmadığın eşleşmelerin</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -356,7 +356,7 @@ export const MatchesListScreen: React.FC = () => {
                   %{match.compatibilityPercent}
                 </Text>
                 <View style={styles.nudgeCta}>
-                  <Text style={styles.nudgeCtaText}>Mesaj Gonder</Text>
+                  <Text style={styles.nudgeCtaText}>Mesaj Gönder</Text>
                 </View>
               </TouchableOpacity>
             );
@@ -406,7 +406,7 @@ export const MatchesListScreen: React.FC = () => {
       </View>
 
       {/* Filters */}
-      <View style={styles.filterRow}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={styles.filterRowContent}>
         {[
           { key: 'all' as const, label: 'Tümü' },
           { key: 'new' as const, label: 'Yeni' },
@@ -439,7 +439,7 @@ export const MatchesListScreen: React.FC = () => {
             </View>
           </TouchableWithoutFeedback>
         ))}
-      </View>
+      </ScrollView>
 
       {/* Match list — performance-tuned FlatList */}
       <FlatList
@@ -469,14 +469,15 @@ const styles = StyleSheet.create({
   },
   darkHeaderArea: {
     backgroundColor: colors.background,
-    paddingBottom: spacing.sm,
+    paddingBottom: spacing.xs,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
   },
   headerTitle: {
     ...typography.h3,
@@ -487,30 +488,41 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   filterRow: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
     paddingBottom: spacing.md,
-    gap: spacing.sm,
+    flexShrink: 0,
+  },
+  filterRowContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingRight: spacing.xxl,
+    gap: spacing.md,
   },
   filterChip: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    minHeight: 44,
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   filterChipActive: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
   },
   filterChipText: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
+    fontSize: 15,
+    lineHeight: 20,
+    color: '#4A3728',
+    fontWeight: '600',
   },
   filterChipTextActive: {
-    color: colors.textInverse,
-    fontWeight: '600',
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
   // ── Nudge section ("not talked today") ──
   nudgeSection: {

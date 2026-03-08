@@ -831,8 +831,8 @@ const devUserProfile = {
   bio: 'Girişimci, teknoloji tutkunu. İyi bir kahve eşliğinde derin sohbetlere bayılırım. Seyahat etmeyi, yeni kültürler keşfetmeyi ve hayatı anlamlandırmayı seviyorum.',
   answers: { 1: 3, 2: 4, 3: 2, 4: 5, 5: 1, 6: 3, 7: 4, 8: 2, 9: 5, 10: 3 },
   city: 'İstanbul',
-  job: 'Yazilim Muhendisi',
-  education: 'Bogazici Universitesi',
+  job: 'Yazılım Mühendisi',
+  education: 'Boğaziçi Üniversitesi',
   isComplete: true,
 };
 
@@ -932,9 +932,39 @@ export function seedDevData(): void {
     isLoading: false,
   });
 
-  // 2. Discovery feed (15 profiles to swipe)
+  // 2. Discovery feed (15 profiles to swipe) — ranked by compatibility
+  const userTags = new Set(devUserProfile.interestTags);
+  const userIntention = devUserProfile.intentionTag;
+  const INTENTION_MAP: Record<string, string> = {
+    'Ciddi İlişki': 'serious_relationship',
+    'Keşfediyorum': 'exploring',
+    'Emin Değilim': 'not_sure',
+  };
+  const normalizedUserIntention = INTENTION_MAP[userIntention] ?? userIntention;
+
+  const rankedProfiles = discoveryProfiles
+    .map((p) => {
+      const reasons: string[] = [];
+      const pTags = p.interestTags ?? [];
+      const sharedCount = pTags.filter((t: string) => userTags.has(t)).length;
+      if (sharedCount > 0) reasons.push('Ortak Hobi');
+      if (p.distanceKm != null && p.distanceKm <= 5) reasons.push('Yakınında');
+      const pIntention = INTENTION_MAP[p.intentionTag] ?? p.intentionTag;
+      if (pIntention === normalizedUserIntention) reasons.push('Aynı Amaç');
+
+      const compatW = (p.compatibilityPercent ?? 0) * 0.50;
+      const distW = (p.distanceKm != null ? (1 - Math.min(p.distanceKm, 50) / 50) * 100 : 50) * 0.25;
+      const hobbyW = (Math.min(sharedCount / Math.max(userTags.size, 1), 1) * 100) * 0.15;
+      const intentW = (pIntention === normalizedUserIntention ? 100 : 0) * 0.10;
+      const score = compatW + distW + hobbyW + intentW;
+
+      return { ...p, matchReasons: reasons, _score: score };
+    })
+    .sort((a, b) => b._score - a._score)
+    .map(({ _score, ...rest }) => rest);
+
   useDiscoveryStore.setState({
-    cards: discoveryProfiles,
+    cards: rankedProfiles,
     currentIndex: 0,
     dailyRemaining: 20,
     isLoading: false,

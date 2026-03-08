@@ -62,6 +62,7 @@ export interface FeedPost {
   likeCount: number;
   commentCount: number;
   isLiked: boolean;
+  isSaved: boolean;
   createdAt: string;
 }
 
@@ -169,6 +170,7 @@ const MOCK_POSTS: FeedPost[] = [
     likeCount: 42,
     commentCount: 8,
     isLiked: false,
+    isSaved: false,
     createdAt: minutesAgo(12),
   },
   {
@@ -190,6 +192,7 @@ const MOCK_POSTS: FeedPost[] = [
     likeCount: 67,
     commentCount: 23,
     isLiked: true,
+    isSaved: false,
     createdAt: minutesAgo(35),
   },
   {
@@ -211,6 +214,7 @@ const MOCK_POSTS: FeedPost[] = [
     likeCount: 128,
     commentCount: 31,
     isLiked: false,
+    isSaved: false,
     createdAt: hoursAgo(1),
   },
   {
@@ -232,6 +236,7 @@ const MOCK_POSTS: FeedPost[] = [
     likeCount: 53,
     commentCount: 12,
     isLiked: false,
+    isSaved: false,
     createdAt: hoursAgo(2),
   },
   {
@@ -253,6 +258,7 @@ const MOCK_POSTS: FeedPost[] = [
     likeCount: 89,
     commentCount: 45,
     isLiked: true,
+    isSaved: false,
     createdAt: hoursAgo(3),
   },
   {
@@ -274,6 +280,7 @@ const MOCK_POSTS: FeedPost[] = [
     likeCount: 156,
     commentCount: 28,
     isLiked: false,
+    isSaved: false,
     createdAt: hoursAgo(4),
   },
   {
@@ -295,6 +302,7 @@ const MOCK_POSTS: FeedPost[] = [
     likeCount: 34,
     commentCount: 6,
     isLiked: false,
+    isSaved: false,
     createdAt: hoursAgo(5),
   },
   {
@@ -316,6 +324,7 @@ const MOCK_POSTS: FeedPost[] = [
     likeCount: 71,
     commentCount: 15,
     isLiked: false,
+    isSaved: false,
     createdAt: hoursAgo(6),
   },
   {
@@ -337,6 +346,7 @@ const MOCK_POSTS: FeedPost[] = [
     likeCount: 93,
     commentCount: 37,
     isLiked: false,
+    isSaved: false,
     createdAt: hoursAgo(8),
   },
   {
@@ -358,6 +368,7 @@ const MOCK_POSTS: FeedPost[] = [
     likeCount: 45,
     commentCount: 9,
     isLiked: false,
+    isSaved: false,
     createdAt: hoursAgo(10),
   },
   {
@@ -379,6 +390,7 @@ const MOCK_POSTS: FeedPost[] = [
     likeCount: 112,
     commentCount: 42,
     isLiked: true,
+    isSaved: false,
     createdAt: hoursAgo(12),
   },
   {
@@ -400,6 +412,7 @@ const MOCK_POSTS: FeedPost[] = [
     likeCount: 58,
     commentCount: 19,
     isLiked: false,
+    isSaved: false,
     createdAt: hoursAgo(14),
   },
 ];
@@ -488,6 +501,7 @@ export const socialFeedService = {
         likeCount: 0,
         commentCount: 0,
         isLiked: false,
+        isSaved: false,
         createdAt: new Date().toISOString(),
       };
     }
@@ -540,9 +554,9 @@ export const socialFeedService = {
         'Kesinlikle, bunu herkesin bilmesi lazım.',
       ];
       const replyTexts = [
-        'Kesinlikle katiliyorum!',
-        'Cok dogru soyluyorsun.',
-        'Ben de oyle dusunuyorum.',
+        'Kesinlikle katılıyorum!',
+        'Çok doğru söylüyorsun.',
+        'Ben de öyle düşünüyorum.',
       ];
       for (let i = 0; i < count; i++) {
         const commentId = `comment-${postId}-${i}`;

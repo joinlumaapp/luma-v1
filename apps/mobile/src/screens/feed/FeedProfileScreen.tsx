@@ -77,11 +77,11 @@ const MOCK_PROFILES: Record<string, FeedUserProfile> = {
 // Generate a default profile for unknown users
 const getDefaultProfile = (userId: string): FeedUserProfile => ({
   userId,
-  name: 'Kullanici',
+  name: 'Kullanıcı',
   age: 25,
-  city: 'Turkiye',
+  city: 'Türkiye',
   avatarUrl: `https://i.pravatar.cc/150?u=${userId}`,
-  bio: 'Henuz bir sey yazmamis.',
+  bio: 'Henüz bir şey yazmamış.',
   isVerified: false,
   isFollowing: false,
   followerCount: Math.floor(Math.random() * 300) + 20,

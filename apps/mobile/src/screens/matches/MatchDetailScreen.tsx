@@ -152,7 +152,7 @@ export const MatchDetailScreen: React.FC = () => {
             </Text>
             {selectedMatch.isVerified && (
               <View style={styles.verifiedBadge}>
-                <Text style={styles.verifiedText}>Dogrulandi</Text>
+                <Text style={styles.verifiedText}>Doğrulandı</Text>
               </View>
             )}
           </View>

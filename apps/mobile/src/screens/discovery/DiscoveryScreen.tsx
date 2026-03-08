@@ -19,6 +19,7 @@ import {
   ScrollView,
   Image,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -43,6 +44,7 @@ import { useDiscoveryStore } from '../../stores/discoveryStore';
 import { useProfileStore } from '../../stores/profileStore';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
 import { useSocialFeedStore } from '../../stores/socialFeedStore';
+import { useNotificationStore } from '../../stores/notificationStore';
 import { matchService } from '../../services/matchService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { MatchAnimation } from '../../components/animations/MatchAnimation';
@@ -52,7 +54,7 @@ import { UpgradePrompt } from '../../components/premium/UpgradePrompt';
 import { discoveryService } from '../../services/discoveryService';
 import type { LoginStreakResponse } from '../../services/discoveryService';
 import { StreakBanner } from '../../components/streak/StreakBanner';
-import { SUPER_LIKE_CONFIG } from '../../constants/config';
+import { SUPER_LIKE_CONFIG, DISCOVERY_CONFIG } from '../../constants/config';
 import { BoostModal } from '../../components/boost/BoostModal';
 import type { BoostStatusResponse } from '../../services/discoveryService';
 import { colors, palette } from '../../theme/colors';
@@ -231,6 +233,10 @@ export const DiscoveryScreen: React.FC = () => {
   const canUndo = useDiscoveryStore((s) => s.canUndo);
   const undoLastSwipe = useDiscoveryStore((s) => s.undoLastSwipe);
 
+  // Notification badge
+  const notifUnreadCount = useNotificationStore((s) => s.unreadCount);
+  const fetchNotifications = useNotificationStore((s) => s.fetchNotifications);
+
   // ─── Super Like premium gate ────────────────────────────
   const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'free') as PackageTier;
   const dailyLimit = SUPER_LIKE_CONFIG.DAILY_LIMITS[packageTier];
@@ -238,6 +244,10 @@ export const DiscoveryScreen: React.FC = () => {
   const [superLikesUsed, setSuperLikesUsed] = useState(0);
   const superLikesRemaining = isUnlimitedSuperLike ? -1 : dailyLimit - superLikesUsed;
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [upgradeFeature, setUpgradeFeature] = useState<'super_like' | 'boost' | 'daily_likes'>('super_like');
+
+  // ─── Boost access gate ─────────────────────────────────
+  const canUseBoost = packageTier !== 'free';
 
   // ─── Like-with-comment modal state ──────────────────────
   const [showCommentModal, setShowCommentModal] = useState(false);
@@ -347,9 +357,10 @@ export const DiscoveryScreen: React.FC = () => {
   useEffect(() => {
     const task = InteractionManager.runAfterInteractions(() => {
       fetchFeed();
+      fetchNotifications();
     });
     return () => task.cancel();
-  }, [fetchFeed]);
+  }, [fetchFeed, fetchNotifications]);
 
   // Reset card position when index changes
   useEffect(() => {
@@ -395,12 +406,23 @@ export const DiscoveryScreen: React.FC = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   }, []);
 
+  // Tier-aware daily like limit
+  const tierDailyLimit = DISCOVERY_CONFIG.DAILY_LIKES[packageTier];
+  const isUnlimitedLikes = tierDailyLimit === -1;
+
   const handleSwipeComplete = useCallback((direction: 'left' | 'right' | 'up') => {
     const card = currentCardRef.current;
     if (card) {
+      // Gate: daily like limit for right swipes and super likes
+      if ((direction === 'right' || direction === 'up') && !isUnlimitedLikes && dailyRemaining <= 0) {
+        setUpgradeFeature('daily_likes');
+        setShowUpgradePrompt(true);
+        return;
+      }
       if (direction === 'up') {
         // Gate: check super like allowance
         if (!isUnlimitedSuperLike && superLikesRemaining <= 0) {
+          setUpgradeFeature('super_like');
           setShowUpgradePrompt(true);
           return; // Card already springs back in gesture
         }
@@ -413,7 +435,7 @@ export const DiscoveryScreen: React.FC = () => {
       }
       swipeAction(direction, card.id);
     }
-  }, [swipeAction, isUnlimitedSuperLike, superLikesRemaining, translateY]);
+  }, [swipeAction, isUnlimitedSuperLike, superLikesRemaining, translateY, isUnlimitedLikes, dailyRemaining]);
 
 
   const handleCardTap = useCallback(() => {
@@ -654,18 +676,34 @@ export const DiscoveryScreen: React.FC = () => {
             <View style={styles.headerLeft}>
               <Text style={styles.headerTitle}>{greeting}</Text>
               <Text style={styles.headerSubtitle}>
-                Bugün {dailyRemaining} profil kaldı
+                {isUnlimitedLikes ? 'Sınırsız beğeni' : `Bugün ${dailyRemaining} profil kaldı`}
               </Text>
             </View>
-            <Pressable
-              onPress={() => navigation.navigate('Filter')}
-              accessibilityLabel="Filtreleri aç"
-              accessibilityRole="button"
-            >
-              <View style={styles.filterButton} testID="discovery-filter-btn">
-                <Text style={styles.filterIcon}>{'\u2699'}</Text>
-              </View>
-            </Pressable>
+            <View style={styles.headerRight}>
+              <Pressable
+                onPress={() => navigation.navigate('Notifications')}
+                accessibilityLabel={`Bildirimler${notifUnreadCount > 0 ? `, ${notifUnreadCount} okunmamis` : ''}`}
+                accessibilityRole="button"
+              >
+                <View style={styles.filterButton}>
+                  <Ionicons name={notifUnreadCount > 0 ? 'notifications' : 'notifications-outline'} size={18} color={colors.text} />
+                  {notifUnreadCount > 0 && (
+                    <View style={styles.notifBadge}>
+                      <Text style={styles.notifBadgeText}>{notifUnreadCount > 9 ? '9+' : notifUnreadCount}</Text>
+                    </View>
+                  )}
+                </View>
+              </Pressable>
+              <Pressable
+                onPress={() => navigation.navigate('Filter')}
+                accessibilityLabel="Filtreleri aç"
+                accessibilityRole="button"
+              >
+                <View style={styles.filterButton} testID="discovery-filter-btn">
+                  <Text style={styles.filterIcon}>{'\u2699'}</Text>
+                </View>
+              </Pressable>
+            </View>
           </View>
           <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} />
         </View>
@@ -686,18 +724,34 @@ export const DiscoveryScreen: React.FC = () => {
             <View style={styles.headerLeft}>
               <Text style={styles.headerTitle}>{greeting}</Text>
               <Text style={styles.headerSubtitle}>
-                Bugün {dailyRemaining} profil kaldı
+                {isUnlimitedLikes ? 'Sınırsız beğeni' : `Bugün ${dailyRemaining} profil kaldı`}
               </Text>
             </View>
-            <Pressable
-              onPress={() => navigation.navigate('Filter')}
-              accessibilityLabel="Filtreleri aç"
-              accessibilityRole="button"
-            >
-              <View style={styles.filterButton} testID="discovery-filter-btn">
-                <Text style={styles.filterIcon}>{'\u2699'}</Text>
-              </View>
-            </Pressable>
+            <View style={styles.headerRight}>
+              <Pressable
+                onPress={() => navigation.navigate('Notifications')}
+                accessibilityLabel={`Bildirimler${notifUnreadCount > 0 ? `, ${notifUnreadCount} okunmamis` : ''}`}
+                accessibilityRole="button"
+              >
+                <View style={styles.filterButton}>
+                  <Ionicons name={notifUnreadCount > 0 ? 'notifications' : 'notifications-outline'} size={18} color={colors.text} />
+                  {notifUnreadCount > 0 && (
+                    <View style={styles.notifBadge}>
+                      <Text style={styles.notifBadgeText}>{notifUnreadCount > 9 ? '9+' : notifUnreadCount}</Text>
+                    </View>
+                  )}
+                </View>
+              </Pressable>
+              <Pressable
+                onPress={() => navigation.navigate('Filter')}
+                accessibilityLabel="Filtreleri aç"
+                accessibilityRole="button"
+              >
+                <View style={styles.filterButton} testID="discovery-filter-btn">
+                  <Text style={styles.filterIcon}>{'\u2699'}</Text>
+                </View>
+              </Pressable>
+            </View>
           </View>
           <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} />
         </View>
@@ -743,10 +797,31 @@ export const DiscoveryScreen: React.FC = () => {
           </View>
           <View style={styles.headerRight}>
             <Pressable
-              onPress={() => setShowBoostModal(true)}
+              onPress={() => navigation.navigate('Notifications')}
+              accessibilityLabel={`Bildirimler${notifUnreadCount > 0 ? `, ${notifUnreadCount} okunmamis` : ''}`}
+              accessibilityRole="button"
+            >
+              <View style={styles.filterButton}>
+                <Ionicons name={notifUnreadCount > 0 ? 'notifications' : 'notifications-outline'} size={18} color={colors.text} />
+                {notifUnreadCount > 0 && (
+                  <View style={styles.notifBadge}>
+                    <Text style={styles.notifBadgeText}>{notifUnreadCount > 9 ? '9+' : notifUnreadCount}</Text>
+                  </View>
+                )}
+              </View>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                if (canUseBoost) {
+                  setShowBoostModal(true);
+                } else {
+                  setUpgradeFeature('boost');
+                  setShowUpgradePrompt(true);
+                }
+              }}
               accessibilityLabel="Boost"
               accessibilityRole="button"
-              accessibilityHint="Profilini öne çıkarmak için dokunun"
+              accessibilityHint={canUseBoost ? 'Profilini öne çıkarmak için dokunun' : 'Premium pakete yükselt'}
             >
               <View style={[styles.filterButton, boostStatus.isActive && styles.boostButtonActive]} testID="discovery-boost-btn">
                 <Text style={styles.boostIcon}>{'\u26A1'}</Text>
@@ -795,6 +870,7 @@ export const DiscoveryScreen: React.FC = () => {
                 feedScore: 0,
                 interestTags: nextCard.interestTags ?? [],
                 lastActiveAt: nextCard.lastActiveAt ?? null,
+                matchReasons: nextCard.matchReasons ?? [],
               }}
               onCompatTap={handleCompatTap}
             />
@@ -832,6 +908,7 @@ export const DiscoveryScreen: React.FC = () => {
                 feedScore: 0,
                 interestTags: currentCard.interestTags ?? [],
                 lastActiveAt: currentCard.lastActiveAt ?? null,
+                matchReasons: currentCard.matchReasons ?? [],
               }}
               onCompatTap={handleCompatTap}
             />
@@ -956,10 +1033,10 @@ export const DiscoveryScreen: React.FC = () => {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* Super Like upgrade prompt */}
+      {/* Upgrade prompt — dynamic feature */}
       <UpgradePrompt
         visible={showUpgradePrompt}
-        feature="super_like"
+        feature={upgradeFeature}
         onUpgrade={handleUpgradeNavigate}
         onDismiss={handleUpgradeDismiss}
       />
@@ -1050,6 +1127,27 @@ const styles = StyleSheet.create({
   },
   boostIcon: {
     fontSize: 18,
+  },
+  notifBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#EF4444',
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 3,
+    borderWidth: 1.5,
+    borderColor: colors.background,
+  },
+  notifBadgeText: {
+    ...typography.captionSmall,
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 9,
+    lineHeight: 12,
   },
   // ── Card Stack ──
   cardStack: {
@@ -1176,7 +1274,6 @@ const styles = StyleSheet.create({
     ...typography.button,
     color: '#FFFFFF',
   },
-
   // ── Like-with-comment modal ──
   commentModalOverlay: {
     flex: 1,

@@ -99,8 +99,8 @@ const hasAccess = (userTier: PackageTier, requiredTier: RequiredTier): boolean =
 };
 
 const tierDisplayName = (tier: RequiredTier): string => {
-  if (tier === 'gold') return 'Gold';
-  return 'Pro';
+  if (tier === 'gold') return 'Premium';
+  return 'Supreme';
 };
 
 // ── Component ──────────────────────────────────────────────────────
@@ -477,7 +477,7 @@ export const FilterScreen: React.FC = () => {
                     heightEnabled && styles.toggleButtonTextActive,
                   ]}
                 >
-                  {heightEnabled ? 'Aktif' : 'Kapatık'}
+                  {heightEnabled ? 'Aktif' : 'Kapalı'}
                 </Text>
               </TouchableOpacity>
             </View>

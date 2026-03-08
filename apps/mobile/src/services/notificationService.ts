@@ -79,6 +79,25 @@ if (!isExpoGo()) {
   });
 }
 
+// ─── Mock read state tracker (persists across fetches in dev) ────────
+// Tracks which mock notification IDs have been marked as read,
+// and whether "mark all read" has been triggered.
+const mockReadState = {
+  readIds: new Set<string>(),
+  allRead: false,
+  markRead(ids: string[]) {
+    for (const id of ids) this.readIds.add(id);
+  },
+  markAllRead() {
+    this.allRead = true;
+  },
+  isRead(id: string, defaultRead: boolean): boolean {
+    if (this.allRead) return true;
+    if (this.readIds.has(id)) return true;
+    return defaultRead;
+  },
+};
+
 // ─── Service ─────────────────────────────────────────────────────────
 
 export const notificationService = {
@@ -203,25 +222,116 @@ export const notificationService = {
   // ─── Notification CRUD ───────────────────────────────────────────
 
   getNotifications: async (page?: number): Promise<NotificationsResponse> => {
-    const response = await api.get<NotificationsResponse>('/notifications', {
-      params: page !== undefined ? { page } : undefined,
-    });
-    return response.data;
+    try {
+      const response = await api.get<NotificationsResponse>('/notifications', {
+        params: page !== undefined ? { page } : undefined,
+      });
+      return response.data;
+    } catch {
+      // Mock fallback for development — 7 notification types
+      const mockNotifications: Notification[] = [
+        {
+          id: 'notif-001',
+          type: 'PROFILE_LIKE',
+          title: 'Yeni Beğeni',
+          body: 'Elif profilini beğendi',
+          data: { userId: 'bot-001', userName: 'Elif', userPhoto: 'https://i.pravatar.cc/100?img=1' },
+          isRead: false,
+          createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+        },
+        {
+          id: 'notif-002',
+          type: 'NEW_MATCH',
+          title: 'Yeni Eşleşme!',
+          body: 'Zeynep ile eşleştiniz! Hemen mesaj gönderin.',
+          data: { matchId: 'match-002', userId: 'bot-002', userName: 'Zeynep', userPhoto: 'https://i.pravatar.cc/100?img=5' },
+          isRead: false,
+          createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+        },
+        {
+          id: 'notif-003',
+          type: 'NEW_FOLLOWER',
+          title: 'Yeni Takipçi',
+          body: 'Merve seni takip etmeye başladı',
+          data: { userId: 'bot-006', userName: 'Merve', userPhoto: 'https://i.pravatar.cc/100?img=23' },
+          isRead: false,
+          createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+        },
+        {
+          id: 'notif-004',
+          type: 'POST_LIKE',
+          title: 'Gönderi Beğenisi',
+          body: 'Ayşe gönderini beğendi',
+          data: { postId: 'post-001', userId: 'bot-004', userName: 'Ayse', userPhoto: 'https://i.pravatar.cc/100?img=16' },
+          isRead: true,
+          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        },
+        {
+          id: 'notif-005',
+          type: 'POST_COMMENT',
+          title: 'Yeni Yorum',
+          body: 'Buse gönderine yorum yaptı: "Harika bir paylaşım!"',
+          data: { postId: 'post-002', userId: 'bot-007', userName: 'Buse', userPhoto: 'https://i.pravatar.cc/100?img=25' },
+          isRead: false,
+          createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+        },
+        {
+          id: 'notif-006',
+          type: 'COMMENT_REPLY',
+          title: 'Yanıt',
+          body: 'İpek yorumuna yanıt verdi: "Katılıyorum!"',
+          data: { postId: 'post-001', commentId: 'comment-001', userId: 'bot-009', userName: 'Ipek', userPhoto: 'https://i.pravatar.cc/100?img=32' },
+          isRead: true,
+          createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+        },
+        {
+          id: 'notif-007',
+          type: 'MESSAGE',
+          title: 'Yeni Mesaj',
+          body: 'Selin: Merhaba, nasılsın?',
+          data: { matchId: 'match-003', userId: 'bot-010', userName: 'Selin', userPhoto: 'https://i.pravatar.cc/100?img=9' },
+          isRead: false,
+          createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+        },
+      ];
+      // Apply persisted mock read state
+      const withReadState = mockNotifications.map((n) => ({
+        ...n,
+        isRead: mockReadState.isRead(n.id, n.isRead),
+      }));
+      return {
+        notifications: withReadState,
+        total: withReadState.length,
+        unreadCount: withReadState.filter((n) => !n.isRead).length,
+        page: 1,
+        totalPages: 1,
+      };
+    }
   },
 
   markRead: async (notificationIds: string[]): Promise<{ markedRead: number; unreadCount: number }> => {
-    const response = await api.patch<{ markedRead: number; unreadCount: number }>(
-      '/notifications/read',
-      { notificationIds },
-    );
-    return response.data;
+    try {
+      const response = await api.patch<{ markedRead: number; unreadCount: number }>(
+        '/notifications/read',
+        { notificationIds },
+      );
+      return response.data;
+    } catch {
+      mockReadState.markRead(notificationIds);
+      return { markedRead: notificationIds.length, unreadCount: 0 };
+    }
   },
 
   markAllRead: async (): Promise<{ markedRead: number; unreadCount: number }> => {
-    const response = await api.post<{ markedRead: number; unreadCount: number }>(
-      '/notifications/mark-all-read',
-    );
-    return response.data;
+    try {
+      const response = await api.post<{ markedRead: number; unreadCount: number }>(
+        '/notifications/mark-all-read',
+      );
+      return response.data;
+    } catch {
+      mockReadState.markAllRead();
+      return { markedRead: 0, unreadCount: 0 };
+    }
   },
 
   // ─── Preferences ─────────────────────────────────────────────────

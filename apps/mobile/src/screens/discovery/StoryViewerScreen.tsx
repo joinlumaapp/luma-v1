@@ -214,10 +214,28 @@ export const StoryViewerScreen: React.FC = () => {
     }
   }, [activeIndex, clearTimer, startTimer]);
 
+  const isLongPressing = useRef(false);
+
+  const handleLongPress = useCallback(() => {
+    // Pause story on long press
+    isLongPressing.current = true;
+    clearTimer();
+    progressAnim.stopAnimation();
+  }, [clearTimer, progressAnim]);
+
+  const handlePressOut = useCallback(() => {
+    if (isLongPressing.current) {
+      // Resume story after long press release
+      isLongPressing.current = false;
+      startTimer();
+    }
+  }, [startTimer]);
+
   const handleTap = useCallback(
     (evt: { nativeEvent: { locationX: number } }) => {
+      if (isLongPressing.current) return; // Ignore tap on long press release
       const x = evt.nativeEvent.locationX;
-      if (x < SCREEN_WIDTH / 3) {
+      if (x < SCREEN_WIDTH / 2) {
         goPrev();
       } else {
         goNext();
@@ -285,6 +303,9 @@ export const StoryViewerScreen: React.FC = () => {
         style={styles.tapZone}
         activeOpacity={1}
         onPress={handleTap}
+        onLongPress={handleLongPress}
+        onPressOut={handlePressOut}
+        delayLongPress={200}
       >
         {/* Story content */}
         <StoryContent post={currentPost} />
@@ -350,7 +371,7 @@ export const StoryViewerScreen: React.FC = () => {
         </View>
 
         <TouchableOpacity style={styles.profileButton} onPress={handleViewProfile}>
-          <Text style={styles.profileButtonText}>Profili Gor</Text>
+          <Text style={styles.profileButtonText}>Profili Gör</Text>
         </TouchableOpacity>
       </View>
 
@@ -370,7 +391,7 @@ export const StoryViewerScreen: React.FC = () => {
 function getTimeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const minutes = Math.floor(diff / 60_000);
-  if (minutes < 1) return 'az once';
+  if (minutes < 1) return 'az önce';
   if (minutes < 60) return `${minutes}dk`;
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}sa`;

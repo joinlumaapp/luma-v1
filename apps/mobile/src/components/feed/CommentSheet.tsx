@@ -42,10 +42,10 @@ const formatTimeAgo = (dateString: string): string => {
   const diffMin = Math.floor(diffMs / 60_000);
   const diffHour = Math.floor(diffMs / 3_600_000);
 
-  if (diffMin < 1) return 'az once';
+  if (diffMin < 1) return 'az önce';
   if (diffMin < 60) return `${diffMin} dk`;
   if (diffHour < 24) return `${diffHour} sa`;
-  return `${Math.floor(diffMs / 86_400_000)} gun`;
+  return `${Math.floor(diffMs / 86_400_000)} gün`;
 };
 
 // ─── Reply Item ──────────────────────────────────────────────────────
@@ -104,7 +104,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, onLike, onReply }) =
             onPress={() => onReply(comment.id, comment.userName)}
             hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
           >
-            <Text style={styles.replyAction}>Yanitla</Text>
+            <Text style={styles.replyAction}>Yanıtla</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -200,7 +200,7 @@ export const CommentSheet: React.FC<CommentSheetProps> = ({
   const handleSend = useCallback(async () => {
     if (!postId || newComment.trim().length === 0 || isSending) return;
     if (containsProfanity(newComment.trim())) {
-      Alert.alert('Uyari', PROFANITY_WARNING);
+      Alert.alert('Uyarı', PROFANITY_WARNING);
       return;
     }
     setIsSending(true);
@@ -273,7 +273,7 @@ export const CommentSheet: React.FC<CommentSheetProps> = ({
             </View>
           ) : comments.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Henuz yorum yok. Ilk yorumu sen yap!</Text>
+              <Text style={styles.emptyText}>Henüz yorum yok. İlk yorumu sen yap!</Text>
             </View>
           ) : (
             <FlatList
@@ -289,7 +289,7 @@ export const CommentSheet: React.FC<CommentSheetProps> = ({
           {replyingTo && (
             <View style={styles.replyIndicator}>
               <Text style={styles.replyIndicatorText}>
-                {replyingTo.userName} kullanicisina yanitliyorsun
+                {replyingTo.userName} kullanıcısına yanıtlıyorsun
               </Text>
               <TouchableOpacity onPress={handleCancelReply}>
                 <Text style={styles.replyIndicatorCancel}>{'\u2715'}</Text>
@@ -302,7 +302,7 @@ export const CommentSheet: React.FC<CommentSheetProps> = ({
             <TextInput
               ref={inputRef}
               style={styles.textInput}
-              placeholder={replyingTo ? 'Yanit yaz...' : 'Yorum yaz...'}
+              placeholder={replyingTo ? 'Yanıt yaz...' : 'Yorum yaz...'}
               placeholderTextColor={colors.textTertiary}
               value={newComment}
               onChangeText={setNewComment}
@@ -324,7 +324,7 @@ export const CommentSheet: React.FC<CommentSheetProps> = ({
               {isSending ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <Text style={styles.sendButtonText}>Gonder</Text>
+                <Text style={styles.sendButtonText}>Gönder</Text>
               )}
             </TouchableOpacity>
           </View>

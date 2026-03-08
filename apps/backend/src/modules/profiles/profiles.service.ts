@@ -7,7 +7,7 @@ import * as crypto from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UpdateProfileDto, SetIntentionTagDto, ReorderPhotosDto } from './dto';
 
-const MAX_PHOTOS = 6;
+const MAX_PHOTOS = 20;
 const MIN_PHOTOS = 2;
 const MAX_PHOTO_SIZE_MB = 10;
 const MIN_AGE = 18;

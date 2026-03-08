@@ -28,6 +28,7 @@ interface SocialFeedState {
   setFilter: (filter: FeedFilter) => void;
   setTopic: (topic: FeedTopic | null) => void;
   toggleLike: (postId: string) => Promise<void>;
+  toggleSave: (postId: string) => void;
   toggleFollow: (userId: string) => Promise<void>;
   createPost: (data: CreatePostRequest) => Promise<void>;
   incrementCommentCount: (postId: string) => void;
@@ -135,6 +136,16 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
         ),
       }));
     }
+  },
+
+  toggleSave: (postId: string) => {
+    set((state) => ({
+      posts: state.posts.map((post) =>
+        post.id === postId
+          ? { ...post, isSaved: !post.isSaved }
+          : post
+      ),
+    }));
   },
 
   toggleFollow: async (userId: string) => {

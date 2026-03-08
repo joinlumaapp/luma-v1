@@ -35,6 +35,7 @@ export interface DiscoveryCardProfile {
   feedScore: number;
   interestTags: string[];
   lastActiveAt?: string | null;
+  matchReasons?: string[];
 }
 
 interface DiscoveryCardProps {
@@ -90,6 +91,9 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
   // Bio truncated to 60 chars
   const bio = profile.bio ?? '';
   const truncatedBio = bio.length > 60 ? bio.substring(0, 60).trimEnd() + '...' : bio;
+
+  // Match reason labels
+  const matchReasons = profile.matchReasons ?? [];
 
   // Interest tags: show up to 3, plus "+N" overflow
   const allTags = profile.interestTags ?? [];
@@ -147,6 +151,17 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
           <Text style={styles.locationText} numberOfLines={1}>
             {locationText}
           </Text>
+        )}
+
+        {/* Row 2.5: Match Reason Labels */}
+        {matchReasons.length > 0 && (
+          <View style={styles.matchReasonsRow}>
+            {matchReasons.map((reason) => (
+              <View key={reason} style={styles.matchReasonChip}>
+                <Text style={styles.matchReasonText}>{reason}</Text>
+              </View>
+            ))}
+          </View>
         )}
 
         {/* Row 3: Intention Badge */}
@@ -311,6 +326,28 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
+  },
+
+  // ── Row 2.5: Match Reason Labels ──
+  matchReasonsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    flexWrap: 'wrap',
+  },
+  matchReasonChip: {
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+  },
+  matchReasonText: {
+    fontSize: 10,
+    fontWeight: fontWeights.semibold,
+    color: '#059669',
+    letterSpacing: 0.2,
   },
 
   // ── Row 3: Intention Badge ──

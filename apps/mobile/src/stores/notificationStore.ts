@@ -17,6 +17,8 @@ export type { Notification, NotificationPreferences };
 /** Notification group key for section headers */
 export type NotificationGroupKey =
   | 'NEW_MATCH'
+  | 'LIKE'
+  | 'SOCIAL'
   | 'MESSAGE'
   | 'BADGE'
   | 'SYSTEM'
@@ -34,6 +36,8 @@ export interface NotificationGroup {
 const getGroupKey = (type: string): NotificationGroupKey => {
   const typeUpper = type.toUpperCase();
   if (typeUpper === 'NEW_MATCH' || typeUpper.includes('MATCH')) return 'NEW_MATCH';
+  if (typeUpper === 'PROFILE_LIKE') return 'LIKE';
+  if (typeUpper === 'NEW_FOLLOWER' || typeUpper === 'POST_LIKE' || typeUpper === 'POST_COMMENT' || typeUpper === 'COMMENT_REPLY') return 'SOCIAL';
   if (typeUpper === 'MESSAGE' || typeUpper === 'PUSH' || typeUpper.includes('MESAJ')) return 'MESSAGE';
   if (typeUpper === 'BADGE_EARNED' || typeUpper.includes('BADGE') || typeUpper.includes('ROZET')) return 'BADGE';
   if (typeUpper === 'SYSTEM' || typeUpper.includes('SUBSCRIPTION')) return 'SYSTEM';
@@ -42,7 +46,9 @@ const getGroupKey = (type: string): NotificationGroupKey => {
 
 /** Turkish display titles for each group */
 const GROUP_TITLES: Record<NotificationGroupKey, string> = {
-  NEW_MATCH: 'Yeni Eşleşmeler',
+  NEW_MATCH: 'Yeni Eşleşme',
+  LIKE: 'Beğeniler',
+  SOCIAL: 'Sosyal',
   MESSAGE: 'Mesajlar',
   BADGE: 'Rozetler',
   SYSTEM: 'Sistem',
@@ -52,6 +58,8 @@ const GROUP_TITLES: Record<NotificationGroupKey, string> = {
 /** Display order for groups */
 const GROUP_ORDER: NotificationGroupKey[] = [
   'NEW_MATCH',
+  'LIKE',
+  'SOCIAL',
   'MESSAGE',
   'BADGE',
   'SYSTEM',

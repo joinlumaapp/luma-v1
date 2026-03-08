@@ -129,13 +129,13 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, onCardPress }) =
         onPressOut={handlePressOut}
         accessibilityLabel={
           isBlurred
-            ? 'Profili görmek için Gold pakete geçin'
+            ? 'Profili görmek için Premium pakete geçin'
             : `${card.firstName}, ${card.age} yaşında, yüzde ${card.compatibilityPercent} uyum`
         }
         accessibilityRole="button"
         accessibilityHint={
           isBlurred
-            ? "Gold paketine yükseltmek için dokunun"
+            ? "Premium paketine yükseltmek için dokunun"
             : 'Profil önizlemesini görmek için dokunun'
         }
       >
@@ -375,16 +375,16 @@ export const LikesYouScreen: React.FC = () => {
           key="upgrade-banner"
           onPress={handleUpgradePress}
           style={styles.upgradeBanner}
-          accessibilityLabel="Premium paketine geç"
+          accessibilityLabel="Premium paketine yükselt"
           accessibilityRole="button"
           accessibilityHint="Premium paketine yükseltmek için dokunun"
         >
           <View style={styles.upgradeBannerContent}>
             <Text style={styles.upgradeBannerIcon}>{'\uD83D\uDD13'}</Text>
             <View style={styles.upgradeBannerTextContainer}>
-              <Text style={styles.upgradeBannerTitle}>Premium&apos;a Geç</Text>
+              <Text style={styles.upgradeBannerTitle}>Premium&apos;a Y{'\u00FC'}kselt</Text>
               <Text style={styles.upgradeBannerSubtitle}>
-                Seni beğenenleri gör ve hemen eşleş
+                Seni be{'\u011F'}enenleri g{'\u00F6'}r ve hemen e{'\u015F'}le{'\u015F'}
               </Text>
             </View>
             <View style={styles.upgradeBannerArrow}>

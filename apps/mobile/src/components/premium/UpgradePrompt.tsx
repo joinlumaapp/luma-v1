@@ -31,7 +31,12 @@ export type PaywallFeature =
   | 'who_likes'
   | 'badge'
   | 'events'
-  | 'feed';
+  | 'feed'
+  | 'boost'
+  | 'daily_likes'
+  | 'messages'
+  | 'insights'
+  | 'waves';
 
 interface UpgradePromptProps {
   visible: boolean;
@@ -51,74 +56,114 @@ interface FeatureConfig {
 
 const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
   undo: {
-    icon: '\u21A9', // Return arrow
-    title: 'Geri Al Özelliği',
+    icon: '\u21A9',
+    title: 'Geri Al \u00D6zelli\u011Fi',
     description:
-      'Yanlış yönde kaydırdın mı? Geri Al ile son beğeni kararını geri alabilirsin.',
+      'Yanl\u0131\u015F y\u00F6nde kayd\u0131rd\u0131n m\u0131? Geri Al ile son be\u011Feni karar\u0131n\u0131 geri alabilirsin.',
     minimumTier: 'gold',
     tierLabel: 'Premium+',
   },
   super_like: {
-    icon: '\u2605', // Star
-    title: 'Süper Beğeni',
+    icon: '\u2605',
+    title: 'S\u00FCper Be\u011Feni',
     description:
-      'Süper Beğeni ile özel birinden öne çık! Eşleşme şansın 3 kat artar.',
+      'S\u00FCper Be\u011Feni ile \u00F6zel birinden \u00F6ne \u00E7\u0131k! E\u015Fle\u015Fme \u015Fans\u0131n 3 kat artar.',
     minimumTier: 'gold',
     tierLabel: 'Premium+',
   },
   visitors: {
-    icon: '\u{1F441}', // Eye symbol (text representation)
-    title: 'Profil Ziyaretçileri',
+    icon: '\u{1F441}',
+    title: 'Profil Ziyaret\u00E7ileri',
     description:
-      'Profilini kimlerin ziyaret ettiğini gör ve yeni bağlantı fırsatlarını kaçırma.',
+      'Profilini kimlerin ziyaret etti\u011Fini g\u00F6r ve yeni ba\u011Flant\u0131 f\u0131rsatlar\u0131n\u0131 ka\u00E7\u0131rma.',
     minimumTier: 'gold',
     tierLabel: 'Premium+',
   },
   who_likes: {
-    icon: '\u2665', // Heart
-    title: 'Kimin Beğendiği',
+    icon: '\u2665',
+    title: 'Kimin Be\u011Fendi\u011Fi',
     description:
-      'Seni beğenen kişileri hemen gör ve anında eşleşmeler oluştur.',
+      'Seni be\u011Fenen ki\u015Fileri hemen g\u00F6r ve an\u0131nda e\u015Fle\u015Fmeler olu\u015Ftur.',
     minimumTier: 'gold',
     tierLabel: 'Premium+',
   },
   filters: {
-    icon: '\u2699', // Gear
-    title: 'Gelişmiş Filtreler',
+    icon: '\u2699',
+    title: 'Geli\u015Fmi\u015F Filtreler',
     description:
-      'Yaş aralığı, mesafe, niyet etiketi ve daha fazlası ile arama sonuçlarını daralt.',
+      'Ya\u015F aral\u0131\u011F\u0131, mesafe, niyet etiketi ve daha fazlas\u0131 ile arama sonu\u00E7lar\u0131n\u0131 daralt.',
     minimumTier: 'pro',
-    tierLabel: 'Supreme',
+    tierLabel: 'Supreme+',
   },
   priority: {
-    icon: '\u2B06', // Up arrow
-    title: 'Öncelikli Gösterim',
+    icon: '\u2B06',
+    title: '\u00D6ncelikli G\u00F6sterim',
     description:
-      'Profilin diğer kullanıcılara önce gösterilir. Daha fazla beğeni ve eşleşme kazan.',
+      'Profilin di\u011Fer kullan\u0131c\u0131lara \u00F6nce g\u00F6sterilir. Daha fazla be\u011Feni ve e\u015Fle\u015Fme kazan.',
     minimumTier: 'pro',
-    tierLabel: 'Supreme',
+    tierLabel: 'Supreme+',
   },
   badge: {
-    icon: '\u2726', // Star-like
-    title: 'Özel Rozet',
+    icon: '\u2726',
+    title: '\u00D6zel Rozet',
     description:
-      'Reserved üyelerine özel rozet ile profilinde fark yarat.',
+      'S\u0131n\u0131rs\u0131z \u00FCyelerine \u00F6zel rozet ile profilinde fark yarat.',
     minimumTier: 'reserved',
-    tierLabel: 'Reserved',
+    tierLabel: 'S\u0131n\u0131rs\u0131z',
   },
   events: {
-    icon: '\u2606', // Empty star
-    title: 'Özel Etkinlik Davetleri',
+    icon: '\u2606',
+    title: '\u00D6zel Etkinlik Davetleri',
     description:
-      'LUMA Reserved üyelerine özel düzenlenen etkinliklere davet al.',
+      'LUMA S\u0131n\u0131rs\u0131z \u00FCyelerine \u00F6zel d\u00FCzenlenen etkinliklere davet al.',
     minimumTier: 'reserved',
-    tierLabel: 'Reserved',
+    tierLabel: 'S\u0131n\u0131rs\u0131z',
   },
   feed: {
-    icon: '\uD83D\uDCF0', // Newspaper
-    title: 'Sosyal Akış',
+    icon: '\uD83D\uDCF0',
+    title: 'Sosyal Ak\u0131\u015F',
     description:
-      'Sosyal akışa katılmak, paylaşım yapmak ve topluluğu keşfetmek için Premium veya üstü pakete yükselt.',
+      'Daha fazla payla\u015F\u0131m yapmak i\u00E7in paketini y\u00FCkselt.',
+    minimumTier: 'gold',
+    tierLabel: 'Premium+',
+  },
+  boost: {
+    icon: '\u26A1',
+    title: 'Profil Boost',
+    description:
+      'Profilini \u00F6ne \u00E7\u0131kar ve Ke\u015Ffette 10x daha fazla g\u00F6r\u00FCn\u00FCrl\u00FCk kazan.',
+    minimumTier: 'gold',
+    tierLabel: 'Premium+',
+  },
+  daily_likes: {
+    icon: '\u2665',
+    title: 'S\u0131n\u0131rs\u0131z Be\u011Feni',
+    description:
+      'G\u00FCnl\u00FCk be\u011Feni limitini kald\u0131r ve istedi\u011Fin kadar profil be\u011Fen.',
+    minimumTier: 'gold',
+    tierLabel: 'Premium+',
+  },
+  messages: {
+    icon: '\u2709',
+    title: 'Daha Fazla Mesaj',
+    description:
+      'G\u00FCnl\u00FCk mesaj limitini art\u0131r ve daha fazla sohbet ba\u015Flat.',
+    minimumTier: 'gold',
+    tierLabel: 'Premium+',
+  },
+  insights: {
+    icon: '\uD83D\uDD2E',
+    title: 'Detayl\u0131 Uyumluluk Analizi',
+    description:
+      'T\u00FCm uyumluluk boyutlar\u0131n\u0131 detayl\u0131 g\u00F6r ve ili\u015Fkini derinlemesine analiz et.',
+    minimumTier: 'pro',
+    tierLabel: 'Supreme+',
+  },
+  waves: {
+    icon: '\uD83D\uDC4B',
+    title: 'Daha Fazla Selam',
+    description:
+      'Premium ile g\u00FCnde 20 selam g\u00F6nder ve daha fazla sohbet ba\u015Flat.',
     minimumTier: 'gold',
     tierLabel: 'Premium+',
   },

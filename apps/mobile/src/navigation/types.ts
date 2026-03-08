@@ -42,17 +42,19 @@ export type OnboardingStackParamList = {
   Bio: undefined;
 };
 
-// -- Main Tabs (4 tabs) --
+// -- Main Tabs (5 tabs) --
 export type MainTabParamList = {
-  DiscoveryTab: NavigatorScreenParams<DiscoveryStackParamList>;
-  MatchesTab: NavigatorScreenParams<MatchesStackParamList>;
   FeedTab: NavigatorScreenParams<FeedStackParamList>;
+  DiscoveryTab: NavigatorScreenParams<DiscoveryStackParamList>;
+  ActivitiesTab: NavigatorScreenParams<ActivitiesStackParamList>;
+  MatchesTab: NavigatorScreenParams<MatchesStackParamList>;
   ProfileTab: NavigatorScreenParams<ProfileStackParamList>;
 };
 
 // -- Discovery Stack --
 export type DiscoveryStackParamList = {
   Discovery: undefined;
+  Notifications: undefined;
   ProfilePreview: { userId: string };
   StoryViewer: { userId: string; userName: string; userAvatarUrl: string };
   Filter: undefined;
@@ -61,6 +63,7 @@ export type DiscoveryStackParamList = {
   DailyPicks: undefined;
   WeeklyReport: undefined;
   CrossedPaths: undefined;
+  Waves: undefined;
   Report: { userId: string; userName: string };
 };
 
@@ -76,6 +79,14 @@ export type MatchesStackParamList = {
   DatePlanner: { matchId: string; partnerName: string };
   AICoach: { matchId?: string; matchName?: string };
   Report: { userId: string; userName: string };
+};
+
+// -- Activities Stack --
+export type ActivitiesStackParamList = {
+  Activities: undefined;
+  CreateActivity: undefined;
+  ActivityDetail: { activityId: string };
+  ActivityGroupChat: { activityId: string; activityTitle: string };
 };
 
 // -- Feed Stack --

@@ -400,8 +400,8 @@ const EmptyState: React.FC = () => (
 );
 
 // ─── Daily Post Limit ─────────────────────────────────────────
-
-const FREE_DAILY_POST_LIMIT = 1;
+// Import tier-based limits
+import { FEED_POST_CONFIG } from '../../constants/config';
 
 const getToday = (): string => new Date().toISOString().slice(0, 10);
 
@@ -413,7 +413,7 @@ export const SocialFeedScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<FeedNavProp>();
   const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'free');
-  const isFreeUser = packageTier === 'free';
+  // packageTier used for daily post limit gating
 
   // Daily post tracking for free users
   const [dailyPostCount, setDailyPostCount] = useState(0);
@@ -431,6 +431,7 @@ export const SocialFeedScreen: React.FC = () => {
   const setFilter = useSocialFeedStore((s) => s.setFilter);
   const setTopic = useSocialFeedStore((s) => s.setTopic);
   const toggleLike = useSocialFeedStore((s) => s.toggleLike);
+  const toggleSave = useSocialFeedStore((s) => s.toggleSave);
   const toggleFollow = useSocialFeedStore((s) => s.toggleFollow);
   const incrementCommentCount = useSocialFeedStore((s) => s.incrementCommentCount);
   const createPost = useSocialFeedStore((s) => s.createPost);
@@ -470,6 +471,13 @@ export const SocialFeedScreen: React.FC = () => {
     [toggleLike],
   );
 
+  const handleSave = useCallback(
+    (postId: string) => {
+      toggleSave(postId);
+    },
+    [toggleSave],
+  );
+
   const handleComment = useCallback((postId: string) => {
     setCommentPostId(postId);
   }, []);
@@ -497,14 +505,16 @@ export const SocialFeedScreen: React.FC = () => {
   );
 
   const handlePostTypeSelect = useCallback((type: FeedPostType) => {
-    // Check daily post limit for free users
-    if (isFreeUser) {
+    // Check daily post limit based on package tier
+    const tierPostLimit = FEED_POST_CONFIG.DAILY_LIMITS[packageTier as keyof typeof FEED_POST_CONFIG.DAILY_LIMITS];
+    const isUnlimitedPosts = tierPostLimit === -1;
+    if (!isUnlimitedPosts) {
       const today = getToday();
       const todayCount = lastPostDate === today ? dailyPostCount : 0;
-      if (todayCount >= FREE_DAILY_POST_LIMIT) {
+      if (todayCount >= tierPostLimit) {
         Alert.alert(
           'Günlük Limit',
-          'Ücretsiz kullanıcılar günde 1 paylaşım yapabilir. Daha fazlası için paketi yükselt.',
+          `Mevcut paketinde günde ${tierPostLimit} paylaşım yapabilirsin. Daha fazlası için paketi yükselt.`,
           [
             { text: 'Tamam', style: 'cancel' },
             {
@@ -520,7 +530,7 @@ export const SocialFeedScreen: React.FC = () => {
     setSelectedPostType(type);
     setShowTypeSelector(false);
     setShowCreateModal(true);
-  }, [isFreeUser, dailyPostCount, lastPostDate, navigation]);
+  }, [packageTier, dailyPostCount, lastPostDate, navigation]);
 
   const handleCreatePost = useCallback(
     (content: string, topic: FeedTopic, postType: FeedPostType, photoUrls: string[], videoUrl: string | null, musicTitle: string | null, musicArtist: string | null) => {
@@ -541,11 +551,12 @@ export const SocialFeedScreen: React.FC = () => {
         post={item}
         onLike={handleLike}
         onComment={handleComment}
+        onSave={handleSave}
         onFollow={handleFollow}
         onProfilePress={handleProfilePress}
       />
     ),
-    [handleLike, handleComment, handleFollow, handleProfilePress],
+    [handleLike, handleComment, handleSave, handleFollow, handleProfilePress],
   );
 
   const keyExtractor = useCallback((item: FeedPost) => item.id, []);

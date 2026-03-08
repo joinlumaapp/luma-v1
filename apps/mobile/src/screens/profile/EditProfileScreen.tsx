@@ -8,14 +8,15 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  FlatList,
   Alert,
-  Dimensions,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
   Image,
   Modal,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -36,11 +37,8 @@ import type { PromptOption } from '../../constants/promptBank';
 
 type EditProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'EditProfile'>;
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const PHOTO_GRID_GAP = spacing.sm;
-const PHOTO_COLUMNS = 3;
-const PHOTO_SIZE =
-  (SCREEN_WIDTH - spacing.lg * 2 - PHOTO_GRID_GAP * (PHOTO_COLUMNS - 1)) / PHOTO_COLUMNS;
+const GALLERY_PHOTO_WIDTH = 110;
+const GALLERY_PHOTO_HEIGHT = GALLERY_PHOTO_WIDTH * 1.35;
 
 type GenderOption = 'male' | 'female' | 'other';
 
@@ -77,6 +75,8 @@ export const EditProfileScreen: React.FC = () => {
   const updateProfile = useProfileStore((state) => state.updateProfile);
   const uploadPhoto = useProfileStore((state) => state.uploadPhoto);
   const deletePhoto = useProfileStore((state) => state.deletePhoto);
+  const reorderPhotos = useProfileStore((state) => state.reorderPhotos);
+  const setMainPhoto = useProfileStore((state) => state.setMainPhoto);
   const user = useAuthStore((state) => state.user);
 
   const [bio, setBio] = useState(profile.bio);
@@ -195,14 +195,14 @@ export const EditProfileScreen: React.FC = () => {
     try {
       await discoveryService.savePrompts(toSave);
     } catch {
-      Alert.alert('Hata', 'Profil sorulari kaydedilemedi.');
+      Alert.alert('Hata', 'Profil soruları kaydedilemedi.');
     }
   }, [editingPromptIndex, editingPromptAnswer, prompts]);
 
   const handleDeletePrompt = useCallback(
     async (index: number) => {
-      Alert.alert('Soruyu Sil', 'Bu soruyu silmek istediginize emin misiniz?', [
-        { text: 'Iptal', style: 'cancel' },
+      Alert.alert('Soruyu Sil', 'Bu soruyu silmek istediğinize emin misiniz?', [
+        { text: 'İptal', style: 'cancel' },
         {
           text: 'Sil',
           style: 'destructive',
@@ -250,11 +250,32 @@ export const EditProfileScreen: React.FC = () => {
     setEditingPromptAnswer('');
   }, [editingPromptIndex, prompts]);
 
-  // Build photo grid: fill to 6 slots
-  const photos: Array<string | null> = [
-    ...profile.photos,
-    ...Array<null>(Math.max(0, PROFILE_CONFIG.MAX_PHOTOS - profile.photos.length)).fill(null),
-  ];
+  const handleSetMainPhoto = useCallback(
+    (index: number) => {
+      if (index === 0) return;
+      Alert.alert(
+        'Ana Foto Yap',
+        'Bu fotoğrafı ana profil fotoğrafı olarak ayarlamak istiyor musun?',
+        [
+          { text: 'İptal', style: 'cancel' },
+          {
+            text: 'Evet',
+            onPress: () => setMainPhoto(index),
+          },
+        ],
+      );
+    },
+    [setMainPhoto],
+  );
+
+  const handleMovePhoto = useCallback(
+    (index: number, direction: 'left' | 'right') => {
+      const target = direction === 'left' ? index - 1 : index + 1;
+      if (target < 0 || target >= profile.photos.length) return;
+      reorderPhotos(index, target);
+    },
+    [reorderPhotos, profile.photos.length],
+  );
 
   const handleSave = useCallback(async () => {
     if (isSaving) return;
@@ -386,7 +407,7 @@ export const EditProfileScreen: React.FC = () => {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Photos Section */}
+          {/* Photos Section — horizontal gallery */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Fotoğraflar</Text>
@@ -395,61 +416,103 @@ export const EditProfileScreen: React.FC = () => {
               </Text>
             </View>
             <Text style={styles.sectionHint}>
-              İlk fotoğraf ana profil fotoğrafın olur.
+              İlk fotoğraf ana profil fotoğrafın olur. Uzun bas: sıralama seçenekleri.
             </Text>
-            <View style={styles.photoGrid}>
-              {photos.map((photo, index) => {
-                // Show loading indicator on the first empty slot during upload
-                const isUploadSlot =
-                  isPhotoUploading && photo === null && index === profile.photos.length;
-
-                return (
-                  <TouchableOpacity
-                    key={`photo-slot-${index}`}
-                    style={[
-                      styles.photoCell,
-                      photo !== null && styles.photoCellFilled,
-                      index === 0 && photo !== null && styles.photoCellPrimary,
-                    ]}
-                    onPress={() =>
-                      photo !== null ? handleRemovePhoto(index) : handleAddPhoto(index)
-                    }
-                    activeOpacity={0.7}
-                    disabled={isUploadSlot}
-                  >
-                    {photo !== null ? (
-                      <View style={styles.photoContent}>
-                        <Image
-                          source={{ uri: photo }}
-                          style={styles.photoImage}
-                          resizeMode="cover"
-                        />
-                        {/* Primary badge on first photo */}
-                        {index === 0 && (
-                          <View style={styles.primaryBadge}>
-                            <Text style={styles.primaryBadgeText}>Ana</Text>
-                          </View>
-                        )}
-                        {/* Remove button */}
-                        <View style={styles.removeButton}>
-                          <Text style={styles.removeText}>X</Text>
-                        </View>
-                      </View>
-                    ) : isUploadSlot ? (
-                      <View style={styles.addPhotoContent}>
+            <FlatList
+              data={[...profile.photos, isPhotoUploading ? '__uploading__' : '__add__']}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(_, i) => `gallery-${i}`}
+              contentContainerStyle={styles.galleryContainer}
+              renderItem={({ item, index }) => {
+                // Upload indicator slot
+                if (item === '__uploading__') {
+                  return (
+                    <View style={styles.galleryCell}>
+                      <View style={styles.galleryCellEmpty}>
                         <ActivityIndicator size="small" color={colors.primary} />
                         <Text style={styles.addLabel}>Yükleniyor...</Text>
                       </View>
-                    ) : (
-                      <View style={styles.addPhotoContent}>
-                        <Text style={styles.addIcon}>+</Text>
-                        <Text style={styles.addLabel}>Ekle</Text>
+                    </View>
+                  );
+                }
+
+                // Add button slot
+                if (item === '__add__') {
+                  if (profile.photos.length >= PROFILE_CONFIG.MAX_PHOTOS) return null;
+                  return (
+                    <TouchableOpacity
+                      style={styles.galleryCell}
+                      onPress={() => handleAddPhoto(profile.photos.length)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.galleryCellEmpty}>
+                        <Ionicons name="add-circle-outline" size={32} color={colors.primary} />
+                        <Text style={[styles.addLabel, { color: colors.primary }]}>Ekle</Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                }
+
+                // Photo item
+                return (
+                  <TouchableOpacity
+                    style={[
+                      styles.galleryCell,
+                      styles.galleryCellFilled,
+                      index === 0 && styles.galleryCellPrimary,
+                    ]}
+                    onPress={() => handleRemovePhoto(index)}
+                    onLongPress={() => {
+                      const options: Array<{ text: string; onPress?: () => void; style?: 'cancel' | 'destructive' }> = [];
+                      if (index !== 0) {
+                        options.push({ text: 'Ana Foto Yap', onPress: () => handleSetMainPhoto(index) });
+                      }
+                      if (index > 0) {
+                        options.push({ text: 'Sola Taşı', onPress: () => handleMovePhoto(index, 'left') });
+                      }
+                      if (index < profile.photos.length - 1) {
+                        options.push({ text: 'Sağa Taşı', onPress: () => handleMovePhoto(index, 'right') });
+                      }
+                      options.push({
+                        text: 'Sil',
+                        style: 'destructive',
+                        onPress: () => deletePhoto(index),
+                      });
+                      options.push({ text: 'İptal', style: 'cancel' });
+                      Alert.alert('Fotoğraf Seçenekleri', undefined, options);
+                    }}
+                    activeOpacity={0.8}
+                    delayLongPress={300}
+                  >
+                    <Image
+                      source={{ uri: item }}
+                      style={styles.galleryImage}
+                      resizeMode="cover"
+                    />
+                    {/* Primary badge */}
+                    {index === 0 && (
+                      <View style={styles.primaryBadge}>
+                        <Ionicons name="star" size={10} color={colors.text} />
+                        <Text style={styles.primaryBadgeText}>Ana</Text>
                       </View>
                     )}
+                    {/* Order number */}
+                    <View style={styles.orderBadge}>
+                      <Text style={styles.orderBadgeText}>{index + 1}</Text>
+                    </View>
+                    {/* Remove button */}
+                    <TouchableOpacity
+                      style={styles.removeButton}
+                      onPress={() => handleRemovePhoto(index)}
+                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    >
+                      <Ionicons name="close" size={12} color="#FFF" />
+                    </TouchableOpacity>
                   </TouchableOpacity>
                 );
-              })}
-            </View>
+              }}
+            />
           </View>
 
           {/* Bio Section */}
@@ -483,9 +546,9 @@ export const EditProfileScreen: React.FC = () => {
 
           {/* Profil Sorulari (Profile Prompts) */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Profil Sorulari</Text>
+            <Text style={styles.sectionTitle}>Profil Soruları</Text>
             <Text style={styles.sectionHint}>
-              Profilini one cikar! 3 soruya kadar cevap ekleyebilirsin.
+              Profilini öne çıkar! 3 soruya kadar cevap ekleyebilirsin.
             </Text>
             {isPromptsLoading ? (
               <View style={styles.promptsLoading}>
@@ -577,7 +640,7 @@ export const EditProfileScreen: React.FC = () => {
                     onPress={handleCancelEditPrompt}
                     activeOpacity={0.7}
                   >
-                    <Text style={styles.editPromptCancelText}>Iptal</Text>
+                    <Text style={styles.editPromptCancelText}>İptal</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[
@@ -753,34 +816,36 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
   },
 
-  // Photo Grid
-  photoGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: PHOTO_GRID_GAP,
+  // Photo Gallery (horizontal)
+  galleryContainer: {
+    paddingRight: spacing.lg,
+    gap: spacing.sm,
   },
-  photoCell: {
-    width: PHOTO_SIZE,
-    height: PHOTO_SIZE * 1.3,
+  galleryCell: {
+    width: GALLERY_PHOTO_WIDTH,
+    height: GALLERY_PHOTO_HEIGHT,
     borderRadius: borderRadius.md,
+    overflow: 'hidden',
     backgroundColor: colors.surface,
     borderWidth: 2,
     borderColor: colors.surfaceBorder,
     borderStyle: 'dashed',
-    overflow: 'hidden',
   },
-  photoCellFilled: {
+  galleryCellFilled: {
     borderStyle: 'solid',
-    borderColor: colors.primary + '60',
+    borderColor: colors.primary + '40',
   },
-  photoCellPrimary: {
+  galleryCellPrimary: {
     borderColor: colors.primary,
     borderWidth: 2,
   },
-  photoContent: {
+  galleryCellEmpty: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
-  photoImage: {
+  galleryImage: {
     width: '100%',
     height: '100%',
   },
@@ -789,40 +854,44 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: colors.primary + 'CC',
-    paddingVertical: 2,
+    backgroundColor: colors.primary + 'DD',
+    paddingVertical: 3,
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
+    gap: 3,
   },
   primaryBadgeText: {
     ...typography.captionSmall,
     color: colors.text,
     fontWeight: '700',
   },
+  orderBadge: {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  orderBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFF',
+  },
   removeButton: {
     position: 'absolute',
     top: 4,
     right: 4,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     backgroundColor: colors.error,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  removeText: {
-    color: colors.text,
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  addPhotoContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  addIcon: {
-    fontSize: 28,
-    color: colors.textTertiary,
   },
   addLabel: {
     ...typography.captionSmall,

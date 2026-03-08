@@ -136,11 +136,12 @@ interface FeedCardProps {
   post: FeedPost;
   onLike: (postId: string) => void;
   onComment: (postId: string) => void;
+  onSave: (postId: string) => void;
   onFollow: (userId: string) => void;
   onProfilePress: (userId: string) => void;
 }
 
-export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onFollow, onProfilePress }) => {
+export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onSave, onFollow, onProfilePress }) => {
   const [expanded, setExpanded] = useState(false);
   const likeScale = useRef(new Animated.Value(1)).current;
 
@@ -170,6 +171,10 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
   const handleCommentPress = useCallback(() => {
     onComment(post.id);
   }, [onComment, post.id]);
+
+  const handleSavePress = useCallback(() => {
+    onSave(post.id);
+  }, [onSave, post.id]);
 
   const handleProfilePress = useCallback(() => {
     onProfilePress(post.userId);
@@ -243,7 +248,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
             {post.content}
           </Text>
           {isLongContent && !expanded && (
-            <Text style={styles.readMore}>devamını oku</Text>
+            <Text style={styles.readMore}>{'Devamını Oku \u2192'}</Text>
           )}
         </TouchableOpacity>
       )}
@@ -293,6 +298,16 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
           <Text style={styles.actionIcon}>{'\uD83D\uDCAC'}</Text>
           <Text style={styles.actionCount}>
             {post.commentCount > 0 ? post.commentCount : ''}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={handleSavePress}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.actionIcon, post.isSaved && styles.actionIconSaved]}>
+            {post.isSaved ? '\uD83D\uDD16' : '\u2606'}
           </Text>
         </TouchableOpacity>
 
@@ -413,10 +428,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   readMore: {
-    ...typography.caption,
+    fontSize: 14,
     color: colors.primary,
+    fontWeight: '700',
     marginTop: -spacing.xs,
     marginBottom: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   // Compatibility badge
   compatBadge: {
@@ -459,6 +476,9 @@ const styles = StyleSheet.create({
   },
   actionIconLiked: {
     color: colors.primary,
+  },
+  actionIconSaved: {
+    color: palette.gold[600],
   },
   actionCount: {
     ...typography.caption,

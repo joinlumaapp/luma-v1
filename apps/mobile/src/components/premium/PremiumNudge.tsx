@@ -26,33 +26,33 @@ interface NudgeMessage {
 const NUDGE_MESSAGES: NudgeMessage[] = [
   {
     icon: '\u2B50',
-    text: 'Seni begenenleri gormek ister misin?',
-    cta: 'Gold ile ac',
+    text: 'Seni beğenenleri görmek ister misin?',
+    cta: 'Gold ile aç',
   },
   {
     icon: '\u26A1',
-    text: 'Profilini one cikar, 3 kat daha fazla eslesme!',
+    text: 'Profilini öne çıkar, 3 kat daha fazla eşleşme!',
     cta: 'Boost dene',
   },
   {
     icon: '\u2665',
-    text: 'Super Begeni ile fark yaratt! Esleme sansin artar.',
-    cta: 'Kesfet',
+    text: 'Süper Beğeni ile fark yarat! Eşleşme şansın artar.',
+    cta: 'Keşfet',
   },
   {
     icon: '\uD83D\uDD12',
-    text: 'Gelismis filtrelerle tam sana uygun kisileri bul.',
-    cta: 'Pro ile ac',
+    text: 'Gelişmiş filtrelerle tam sana uygun kişileri bul.',
+    cta: 'Pro ile aç',
   },
   {
     icon: '\uD83D\uDEAB',
-    text: 'Reklamsiz, kesintisiz bir deneyim icin yukselt.',
-    cta: 'Planlari gor',
+    text: 'Reklamsız, kesintisiz bir deneyim için yükselt.',
+    cta: 'Planları gör',
   },
   {
     icon: '\uD83D\uDCAB',
-    text: 'Begenerinin oncelikli gosterilmesini ister misin?',
-    cta: 'Simdi yukselt',
+    text: 'Beğenilerinin öncelikli gösterilmesini ister misin?',
+    cta: 'Şimdi yükselt',
   },
 ];
 

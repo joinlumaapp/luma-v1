@@ -1,7 +1,7 @@
 // Profile preview — detailed view of a discovery card profile
 // Enhanced with voice intro, badge showcase, compatibility breakdown, interests, and distance
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  FlatList,
+  Dimensions,
   ActivityIndicator,
+  Alert,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
@@ -28,6 +33,7 @@ import { useMatchStore } from '../../stores/matchStore';
 import { matchService } from '../../services/matchService';
 import { INTEREST_OPTIONS } from '../../constants/config';
 import { ActivityStatus } from '../../components/common/ActivityStatus';
+import { SendWaveModal } from '../../components/waves/SendWaveModal';
 
 // Interest tag lookup maps
 const INTEREST_EMOJI_MAP: Record<string, string> = {};
@@ -242,6 +248,16 @@ export const ProfilePreviewScreen: React.FC = () => {
     fetchCompat();
   }, [userId, profile]);
 
+  const [showWaveModal, setShowWaveModal] = useState(false);
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+
+  const onPhotoScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetX = e.nativeEvent.contentOffset.x;
+    const photoWidth = Dimensions.get('window').width;
+    const index = Math.round(offsetX / photoWidth);
+    setActivePhotoIndex(index);
+  }, []);
+
   const handleSwipe = (direction: 'left' | 'right') => {
     if (profile) {
       swipeAction(direction, profile.id);
@@ -284,25 +300,57 @@ export const ProfilePreviewScreen: React.FC = () => {
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Photo area */}
-        <View style={styles.photoSection}>
-          {profile.photoUrls.length > 0 ? (
-            <Image
-              source={{ uri: profile.photoUrls[0] }}
-              style={styles.photoImage}
-              resizeMode="cover"
+        {/* Photo gallery — full-width horizontal swipe */}
+        {profile.photoUrls.length > 0 ? (
+          <View>
+            <FlatList
+              data={profile.photoUrls}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={onPhotoScroll}
+              keyExtractor={(_, i) => `preview-photo-${i}`}
+              renderItem={({ item }) => (
+                <Image
+                  source={{ uri: item }}
+                  style={styles.galleryFullImage}
+                  resizeMode="cover"
+                />
+              )}
             />
-          ) : (
+            {/* Dot indicators */}
+            {profile.photoUrls.length > 1 && (
+              <View style={styles.dotRow}>
+                {profile.photoUrls.map((_, i) => (
+                  <View
+                    key={i}
+                    style={[
+                      styles.dot,
+                      i === activePhotoIndex && styles.dotActive,
+                    ]}
+                  />
+                ))}
+              </View>
+            )}
+            {/* Photo counter */}
+            <View style={styles.photoCounter}>
+              <Text style={styles.photoCounterText}>
+                {activePhotoIndex + 1}/{profile.photoUrls.length}
+              </Text>
+            </View>
+            {profile.isVerified && (
+              <View style={styles.verifiedBadge}>
+                <Text style={styles.verifiedIcon}>{'\u2713'}</Text>
+              </View>
+            )}
+          </View>
+        ) : (
+          <View style={styles.photoSection}>
             <View style={styles.photoPlaceholder}>
               <Text style={styles.photoInitial}>{profile.name.charAt(0)}</Text>
             </View>
-          )}
-          {profile.isVerified && (
-            <View style={styles.verifiedBadge}>
-              <Text style={styles.verifiedIcon}>{'✓'}</Text>
-            </View>
-          )}
-        </View>
+          </View>
+        )}
 
         {/* Name and basics */}
         <View style={styles.infoSection}>
@@ -433,6 +481,17 @@ export const ProfilePreviewScreen: React.FC = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
+          style={styles.waveButton}
+          onPress={() => setShowWaveModal(true)}
+          activeOpacity={0.8}
+          accessibilityLabel="Selam Gönder"
+          accessibilityRole="button"
+        >
+          <Text style={styles.waveButtonIcon}>👋</Text>
+          <Text style={styles.actionLabel}>Selam</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
           style={styles.likeButton}
           onPress={() => handleSwipe('right')}
           activeOpacity={0.8}
@@ -443,6 +502,18 @@ export const ProfilePreviewScreen: React.FC = () => {
           <Text style={styles.actionLabel}>Beğen</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Send Wave Modal */}
+      <SendWaveModal
+        visible={showWaveModal}
+        receiverId={userId}
+        receiverName={profile.name}
+        onDismiss={() => setShowWaveModal(false)}
+        onWaveSent={() => {
+          setShowWaveModal(false);
+          Alert.alert('Selam Gönderildi! 👋', `${profile.name} adlı kullanıcıya selam gönderdin.`);
+        }}
+      />
     </View>
   );
 };
@@ -495,10 +566,47 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.primary,
   },
+  galleryFullImage: {
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').width * 1.15,
+  },
+  dotRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: spacing.sm,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.textTertiary + '60',
+  },
+  dotActive: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.primary,
+  },
+  photoCounter: {
+    position: 'absolute',
+    top: spacing.sm,
+    right: spacing.md,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+  },
+  photoCounterText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#FFF',
+  },
   verifiedBadge: {
     position: 'absolute',
-    bottom: spacing.xl,
-    right: '35%',
+    top: spacing.sm,
+    left: spacing.md,
     width: 28,
     height: 28,
     borderRadius: 14,
@@ -661,6 +769,20 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.error,
   },
+  waveButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.accent + '60',
+    ...shadows.small,
+  },
+  waveButtonIcon: {
+    fontSize: 24,
+  },
   likeButton: {
     width: 64,
     height: 64,
@@ -713,10 +835,4 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 
-  // Photo image
-  photoImage: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-  },
 });

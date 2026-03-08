@@ -17,6 +17,8 @@ interface NotificationSectionHeaderProps {
 /** Icon for each notification group type */
 const GROUP_ICONS: Record<NotificationGroupKey, string> = {
   NEW_MATCH: '\u2665',     // heart
+  LIKE: '\u2764',          // red heart
+  SOCIAL: '\u2606',        // star
   MESSAGE: '\u2709',       // envelope
   BADGE: '\u2606',         // star
   SYSTEM: '\u2699',        // gear
@@ -26,6 +28,8 @@ const GROUP_ICONS: Record<NotificationGroupKey, string> = {
 /** Accent colors for each group type */
 const GROUP_COLORS: Record<NotificationGroupKey, string> = {
   NEW_MATCH: colors.primary,
+  LIKE: colors.error,
+  SOCIAL: colors.accent,
   MESSAGE: colors.info,
   BADGE: colors.accent,
   SYSTEM: colors.textSecondary,

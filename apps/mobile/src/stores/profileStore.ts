@@ -42,6 +42,8 @@ interface ProfileState {
   updateProfile: (data: Partial<ProfileData>) => Promise<void>;
   uploadPhoto: (uri: string) => Promise<void>;
   deletePhoto: (index: number) => Promise<void>;
+  reorderPhotos: (fromIndex: number, toIndex: number) => Promise<void>;
+  setMainPhoto: (index: number) => Promise<void>;
   calculateCompletion: () => number;
   reset: () => void;
 }
@@ -183,6 +185,37 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     } catch {
       set({ isLoading: false });
     }
+  },
+
+  reorderPhotos: async (fromIndex, toIndex) => {
+    const { profile, _photoIds } = get();
+    const newPhotos = [...profile.photos];
+    const newIds = [..._photoIds];
+
+    // Move item from fromIndex to toIndex
+    const [movedPhoto] = newPhotos.splice(fromIndex, 1);
+    newPhotos.splice(toIndex, 0, movedPhoto);
+    const [movedId] = newIds.splice(fromIndex, 1);
+    newIds.splice(toIndex, 0, movedId);
+
+    set({
+      profile: { ...profile, photos: newPhotos },
+      _photoIds: newIds,
+    });
+
+    // Sync with backend
+    try {
+      await profileService.reorderPhotos(newIds);
+    } catch {
+      // Revert on failure
+      set({ profile: { ...get().profile, photos: profile.photos }, _photoIds });
+    }
+  },
+
+  setMainPhoto: async (index) => {
+    if (index === 0) return; // Already main
+    // Move the selected photo to position 0
+    await get().reorderPhotos(index, 0);
   },
 
   calculateCompletion: () => {

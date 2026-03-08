@@ -52,7 +52,7 @@ const FEATURE_COMPARISON: FeatureRow[] = [
     values: {
       free: '1/gün',
       gold: '5/gün',
-      pro: 'Sınırsız',
+      pro: '10/gün',
       reserved: 'Sınırsız',
     },
   },
@@ -68,10 +68,10 @@ const FEATURE_COMPARISON: FeatureRow[] = [
   {
     label: 'Kimin Beğendiğini Gör',
     values: {
-      free: '-',
-      gold: 'Evet',
-      pro: 'Evet',
-      reserved: 'Evet',
+      free: '1/gün',
+      gold: '20/gün',
+      pro: '50/gün',
+      reserved: 'Sınırsız',
     },
   },
   {
@@ -84,12 +84,30 @@ const FEATURE_COMPARISON: FeatureRow[] = [
     },
   },
   {
-    label: 'Boost Hediye',
+    label: 'Boost',
     values: {
       free: '-',
-      gold: '-',
+      gold: '1/ay',
       pro: '3/ay',
-      reserved: '5/ay',
+      reserved: 'Sınırsız',
+    },
+  },
+  {
+    label: 'Günlük Paylaşım',
+    values: {
+      free: '1/gün',
+      gold: '5/gün',
+      pro: 'Sınırsız',
+      reserved: 'Sınırsız',
+    },
+  },
+  {
+    label: 'Günlük Mesaj',
+    values: {
+      free: '1/gün',
+      gold: '5/gün',
+      pro: '10/gün',
+      reserved: 'Sınırsız',
     },
   },
   {
@@ -111,12 +129,12 @@ const FEATURE_COMPARISON: FeatureRow[] = [
     },
   },
   {
-    label: 'Yakın Çevre Profilleri',
+    label: 'Uyumluluk Detayı',
     values: {
-      free: '-',
-      gold: '-',
-      pro: 'Evet',
-      reserved: 'Evet',
+      free: '4 boyut',
+      gold: '4 boyut',
+      pro: '7 boyut',
+      reserved: '7 boyut',
     },
   },
   {

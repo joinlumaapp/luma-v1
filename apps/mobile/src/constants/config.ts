@@ -103,7 +103,7 @@ export const PACKAGE_TIERS = [
   },
   {
     id: 'reserved',
-    name: 'Reserved',
+    name: 'Sınırsız',
     price: 1299.99,
     features: [
       'Supreme özelliklerin tümü',
@@ -118,7 +118,7 @@ export const PACKAGE_TIERS = [
 
 // Profile configuration
 export const PROFILE_CONFIG = {
-  MAX_PHOTOS: 6,
+  MAX_PHOTOS: 20,
   MIN_PHOTOS: 2,
   MIN_BIO_LENGTH: 10,
   MAX_BIO_LENGTH: 500,
@@ -132,6 +132,13 @@ export const DISCOVERY_CONFIG = {
   CARD_STACK_SIZE: 30,
   DEFAULT_DISTANCE_KM: 50,
   MAX_DISTANCE_KM: 200,
+  /** Per-tier daily like limits (-1 = unlimited) */
+  DAILY_LIKES: {
+    free: 20,
+    gold: -1,
+    pro: -1,
+    reserved: -1,
+  },
 } as const;
 
 // Super Like daily limits per package tier (-1 = unlimited)
@@ -139,7 +146,27 @@ export const SUPER_LIKE_CONFIG = {
   DAILY_LIMITS: {
     free: 1,
     gold: 5,
+    pro: 10,
+    reserved: -1,
+  },
+} as const;
+
+// Feed post daily limits per package tier (-1 = unlimited)
+export const FEED_POST_CONFIG = {
+  DAILY_LIMITS: {
+    free: 1,
+    gold: 5,
     pro: -1,
+    reserved: -1,
+  },
+} as const;
+
+// Boost monthly allowance per tier (-1 = unlimited, 0 = not available)
+export const BOOST_CONFIG = {
+  MONTHLY_LIMITS: {
+    free: 0,
+    gold: 1,
+    pro: 3,
     reserved: -1,
   },
 } as const;
@@ -152,6 +179,17 @@ export const LIKES_VIEW_CONFIG = {
     pro: 50,
     reserved: -1,
   },
+} as const;
+
+// Wave daily limits per package tier
+export const WAVE_CONFIG = {
+  DAILY_LIMITS: {
+    free: 3,
+    gold: 20,
+    pro: 20,
+    reserved: 20,
+  },
+  COIN_COST: 5,
 } as const;
 
 // Message daily limits per package tier (-1 = unlimited)

@@ -1,4 +1,4 @@
-// Main tab navigator — 4 tabs: Feed, Discovery, Matches, Profile
+// Main tab navigator — 5 tabs: Feed, Discovery, Activities, Matches, Profile
 // Enhanced: default slide_from_right, modal slide_from_bottom, premium tab bar
 // Enhanced: unread message badge on Matches tab
 // Performance: deferred mount for heavy sub-screens
@@ -14,6 +14,7 @@ import type {
   DiscoveryStackParamList,
   MatchesStackParamList,
   FeedStackParamList,
+  ActivitiesStackParamList,
   ProfileStackParamList,
 } from './types';
 import { darkTheme } from '../theme/colors';
@@ -61,6 +62,18 @@ import { CrossedPathsScreen } from '../screens/discovery/CrossedPathsScreen';
 import { SocialFeedScreen } from '../screens/discovery/SocialFeedScreen';
 import { StoryViewerScreen } from '../screens/discovery/StoryViewerScreen';
 
+// Activities screens
+import { ActivitiesScreen } from '../screens/activities/ActivitiesScreen';
+import { CreateActivityScreen } from '../screens/activities/CreateActivityScreen';
+import { ActivityDetailScreen } from '../screens/activities/ActivityDetailScreen';
+import { ActivityGroupChatScreen } from '../screens/activities/ActivityGroupChatScreen';
+
+// Waves screen
+import { WavesScreen } from '../screens/waves/WavesScreen';
+
+// Notifications screen
+import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';
+
 // Matches extra screens
 import { DatePlannerScreen } from '../screens/matches/DatePlannerScreen';
 import { AICoachScreen } from '../screens/chat/AICoachScreen';
@@ -73,6 +86,7 @@ const DeferredDailyQuestion = withDeferredMount(DailyQuestionScreen);
 const DiscoveryStack = createNativeStackNavigator<DiscoveryStackParamList>();
 const MatchesStack = createNativeStackNavigator<MatchesStackParamList>();
 const FeedStack = createNativeStackNavigator<FeedStackParamList>();
+const ActivitiesStack = createNativeStackNavigator<ActivitiesStackParamList>();
 const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -82,6 +96,7 @@ const TAB_ICONS: Record<string, { active: keyof typeof Ionicons.glyphMap; inacti
   compass: { active: 'compass', inactive: 'compass-outline' },
   heart: { active: 'heart', inactive: 'heart-outline' },
   feed: { active: 'newspaper', inactive: 'newspaper-outline' },
+  activities: { active: 'flash', inactive: 'flash-outline' },
   user: { active: 'person', inactive: 'person-outline' },
 };
 
@@ -130,6 +145,7 @@ const DiscoveryStackNavigator: React.FC = () => (
     }}
   >
     <DiscoveryStack.Screen name="Discovery" component={DiscoveryScreen} />
+    <DiscoveryStack.Screen name="Notifications" component={NotificationsScreen} />
     <DiscoveryStack.Screen
       name="ProfilePreview"
       component={ProfilePreviewScreen}
@@ -168,6 +184,11 @@ const DiscoveryStackNavigator: React.FC = () => (
     <DiscoveryStack.Screen
       name="CrossedPaths"
       component={CrossedPathsScreen}
+      options={{ animation: 'slide_from_right' }}
+    />
+    <DiscoveryStack.Screen
+      name="Waves"
+      component={WavesScreen}
       options={{ animation: 'slide_from_right' }}
     />
     <DiscoveryStack.Screen
@@ -226,6 +247,25 @@ const FeedStackNavigator: React.FC = () => (
     <FeedStack.Screen name="SocialFeed" component={SocialFeedScreen} />
     <FeedStack.Screen name="FeedProfile" component={FeedProfileScreen} />
   </FeedStack.Navigator>
+);
+
+// Activities tab stack — activities as tab root
+const ActivitiesStackNavigator: React.FC = () => (
+  <ActivitiesStack.Navigator
+    screenOptions={{
+      headerShown: false,
+      animation: 'slide_from_right',
+    }}
+  >
+    <ActivitiesStack.Screen name="Activities" component={ActivitiesScreen} />
+    <ActivitiesStack.Screen
+      name="CreateActivity"
+      component={CreateActivityScreen}
+      options={{ animation: 'slide_from_bottom' }}
+    />
+    <ActivitiesStack.Screen name="ActivityDetail" component={ActivityDetailScreen} />
+    <ActivitiesStack.Screen name="ActivityGroupChat" component={ActivityGroupChatScreen} />
+  </ActivitiesStack.Navigator>
 );
 
 // Profile tab stack — default slide_from_right for push screens
@@ -314,6 +354,32 @@ export const MainTabNavigator: React.FC = () => {
               e.preventDefault();
               navigation.dispatch(
                 CommonActions.navigate({ name: 'DiscoveryTab', params: { screen: 'Discovery' } })
+              );
+            }
+          },
+        })}
+      />
+      <Tab.Screen
+        name="ActivitiesTab"
+        component={ActivitiesStackNavigator}
+        options={{
+          tabBarLabel: 'Aktiviteler',
+          tabBarIcon: ({ focused }) => (
+            <TabIcon name="activities" focused={focused} />
+          ),
+          tabBarAccessibilityLabel: 'Aktiviteler',
+          tabBarButtonTestID: 'tab-activities',
+        }}
+        listeners={({ navigation, route }) => ({
+          tabPress: (e) => {
+            const tabState = navigation.getState();
+            const thisRoute = tabState.routes.find((r: { name: string }) => r.name === route.name);
+            const nestedState = (thisRoute as { state?: { index?: number } })?.state;
+            const isDeep = nestedState && nestedState.index !== undefined && nestedState.index > 0;
+            if (isDeep) {
+              e.preventDefault();
+              navigation.dispatch(
+                CommonActions.navigate({ name: 'ActivitiesTab', params: { screen: 'Activities' } })
               );
             }
           },

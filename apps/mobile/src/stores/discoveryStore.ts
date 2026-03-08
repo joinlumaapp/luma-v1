@@ -6,6 +6,7 @@ import { discoveryService } from '../services/discoveryService';
 import { locationService } from '../services/locationService';
 import { analyticsService, ANALYTICS_EVENTS } from '../services/analyticsService';
 import type { FeedCard } from '../services/discoveryService';
+import { useProfileStore } from './profileStore';
 
 export interface DiscoveryProfile {
   id: string;
@@ -30,6 +31,8 @@ export interface DiscoveryProfile {
   strongCategories?: string[];
   /** Last active timestamp for online status */
   lastActiveAt?: string | null;
+  /** Match reason labels (e.g. "Ortak Hobi", "Yakınında") */
+  matchReasons?: string[];
 }
 
 // Undo window duration in milliseconds
@@ -103,6 +106,62 @@ const mapFeedCardToProfile = (card: FeedCard): DiscoveryProfile => ({
   lastActiveAt: card.lastActiveAt ?? null,
 });
 
+// ─── Intention tag normalization ─────────────────────────────
+const INTENTION_NORMALIZE: Record<string, string> = {
+  'Ciddi İlişki': 'serious_relationship',
+  'Keşfediyorum': 'exploring',
+  'Emin Değilim': 'not_sure',
+};
+const normalizeIntention = (tag: string): string =>
+  INTENTION_NORMALIZE[tag] ?? tag;
+
+// ─── Ranking & match-reason logic ────────────────────────────
+const CLOSE_DISTANCE_KM = 5;
+
+const rankAndLabel = (profiles: DiscoveryProfile[]): DiscoveryProfile[] => {
+  const userProfile = useProfileStore.getState().profile;
+  const userTags = new Set(userProfile.interestTags ?? []);
+  const userIntention = normalizeIntention(userProfile.intentionTag ?? '');
+
+  const scored = profiles.map((p) => {
+    const reasons: string[] = [];
+
+    // Shared hobbies
+    const profileTags = p.interestTags ?? [];
+    const sharedCount = profileTags.filter((t) => userTags.has(t)).length;
+    if (sharedCount > 0) reasons.push('Ortak Hobi');
+
+    // Close distance
+    if (p.distanceKm != null && p.distanceKm <= CLOSE_DISTANCE_KM) {
+      reasons.push('Yakınında');
+    }
+
+    // Same intention
+    const profileIntention = normalizeIntention(p.intentionTag ?? '');
+    if (userIntention && profileIntention === userIntention) {
+      reasons.push('Aynı Amaç');
+    }
+
+    // Composite score: compatibility (50%) + distance (25%) + shared hobbies (15%) + intention match (10%)
+    const compatWeight = (p.compatibilityPercent ?? 0) * 0.50;
+    const maxDist = 50;
+    const distScore = p.distanceKm != null
+      ? (1 - Math.min(p.distanceKm, maxDist) / maxDist) * 100
+      : 50;
+    const distWeight = distScore * 0.25;
+    const hobbyScore = Math.min(sharedCount / Math.max(userTags.size, 1), 1) * 100;
+    const hobbyWeight = hobbyScore * 0.15;
+    const intentionScore = (profileIntention === userIntention) ? 100 : 0;
+    const intentionWeight = intentionScore * 0.10;
+    const totalScore = compatWeight + distWeight + hobbyWeight + intentionWeight;
+
+    return { profile: { ...p, matchReasons: reasons }, totalScore };
+  });
+
+  scored.sort((a, b) => b.totalScore - a.totalScore);
+  return scored.map((s) => s.profile);
+};
+
 export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
   // Initial state
   cards: [],
@@ -142,7 +201,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
     set({ isLoading: true });
     try {
       const response = await discoveryService.getFeed(get().filters);
-      const profiles = response.cards.map(mapFeedCardToProfile);
+      const profiles = rankAndLabel(response.cards.map(mapFeedCardToProfile));
       set({
         cards: profiles,
         currentIndex: 0,

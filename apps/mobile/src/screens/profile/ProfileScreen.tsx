@@ -57,16 +57,16 @@ const calculateAge = (birthDate: string): number => {
 
 // Helper: translate profile field values to Turkish display labels
 const translateSports = (v: string): string => {
-  const map: Record<string, string> = { never: 'Asla', sometimes: 'Bazen', often: 'Sik sik' };
+  const map: Record<string, string> = { never: 'Asla', sometimes: 'Bazen', often: 'Sık sık' };
   return map[v] || 'Belirtilmedi';
 };
 const translateSmoking = (v: string): string => {
-  const map: Record<string, string> = { regular: 'Duzenli', tolerate: 'Goz yumarim', never: 'Asla' };
+  const map: Record<string, string> = { regular: 'Düzenli', tolerate: 'Göz yumarım', never: 'Asla' };
   return map[v] || 'Belirtilmedi';
 };
 const translateChildren = (v: string): string => {
   const map: Record<string, string> = {
-    have: 'Var', dont_want: 'Istemiyorum', want_more: 'Var ama yetmiyor', want: 'Olmasini isterim',
+    have: 'Var', dont_want: 'İstemiyorum', want_more: 'Var ama yetmiyor', want: 'Olmasını isterim',
   };
   return map[v] || 'Belirtilmedi';
 };
@@ -82,6 +82,18 @@ const translateLookingFor = (ids: string[]): string[] => {
   };
   return ids.map((id) => map[id] || id);
 };
+
+const INTEREST_TAG_LABELS: Record<string, string> = {
+  travel: 'Seyahat', music: 'Müzik', sports: 'Spor', cooking: 'Yemek',
+  art: 'Sanat', technology: 'Teknoloji', nature: 'Doğa', books: 'Kitap',
+  movies: 'Film', photography: 'Fotoğrafçılık', dance: 'Dans', yoga: 'Yoga',
+  gaming: 'Oyun', animals: 'Hayvanlar', fashion: 'Moda', football: 'Futbol',
+  hiking: 'Doğa Yürüyüşü', coffee: 'Kahve & Şarap',
+  reading: 'Okuma', meditation: 'Meditasyon', swimming: 'Yüzme',
+  fitness: 'Fitness', beach: 'Plaj', architecture: 'Mimari', design: 'Tasarım',
+  guitar: 'Gitar', psychology: 'Psikoloji', food: 'Yemek', cats: 'Kediler',
+};
+const translateInterestTag = (tag: string): string => INTEREST_TAG_LABELS[tag] || tag;
 
 // Hakkimda row data type
 interface AboutRow {
@@ -536,11 +548,11 @@ export const ProfileScreen: React.FC = () => {
               </View>
               <View style={styles.boostContent}>
                 <Text style={styles.boostTitle}>
-                  {boostStatus.isActive ? 'Boost Aktif' : 'Profilini Öne Çıkar'}
+                  {boostStatus.isActive ? 'Öne Çıkarma Aktif' : 'Profilini Öne Çıkar'}
                 </Text>
                 <Text style={styles.boostSubtitle}>
                   {boostStatus.isActive
-                    ? 'Profiling 10x daha fazla görüntüleniyor'
+                    ? 'Profilin 10x daha fazla görüntüleniyor'
                     : 'Keşfette 10x daha fazla görünürlük'}
                 </Text>
               </View>
@@ -585,12 +597,12 @@ export const ProfileScreen: React.FC = () => {
           <SlideIn direction="down" delay={370} distance={20}>
             <View style={styles.aboutCard}>
               <Text style={styles.sectionTitle}>
-                Hobiler ({profile.interestTags.length}/10)
+                İlgi Alanları ({profile.interestTags.length}/10)
               </Text>
               <View style={styles.chipRow}>
                 {profile.interestTags.map((tag) => (
                   <View key={tag} style={styles.hobbyChip}>
-                    <Text style={styles.hobbyChipText}>{tag}</Text>
+                    <Text style={styles.hobbyChipText}>{translateInterestTag(tag)}</Text>
                   </View>
                 ))}
               </View>
@@ -601,15 +613,15 @@ export const ProfileScreen: React.FC = () => {
         {/* Hakkimda — icon rows (Happn style) */}
         <SlideIn direction="down" delay={390} distance={20}>
           <View style={styles.aboutCard}>
-            <Text style={styles.sectionTitle}>Hakkimda</Text>
+            <Text style={styles.sectionTitle}>Hakkımda</Text>
             {((): AboutRow[] => {
               const rows: AboutRow[] = [
-                { icon: 'calendar-outline', iconBg: '#E8D5F5', label: 'Yas', value: profile.birthDate ? `${calculateAge(profile.birthDate)}` : 'Belirtilmedi' },
+                { icon: 'calendar-outline', iconBg: '#E8D5F5', label: 'Yaş', value: profile.birthDate ? `${calculateAge(profile.birthDate)}` : 'Belirtilmedi' },
                 { icon: 'person-outline', iconBg: '#D5E8F5', label: 'Cinsiyet', value: translateGender(profile.gender) },
-                { icon: 'location-outline', iconBg: '#F5E8D5', label: 'Sehir', value: profile.city || 'Belirtilmedi' },
-                { icon: 'briefcase-outline', iconBg: '#D5F5E8', label: 'Is', value: profile.job || 'Belirtilmedi' },
-                { icon: 'school-outline', iconBg: '#F5D5E8', label: 'Egitim', value: profile.education || 'Belirtilmedi' },
-                { icon: 'people-outline', iconBg: '#E8F5D5', label: 'Cocuk', value: profile.children ? translateChildren(profile.children) : 'Belirtilmedi' },
+                { icon: 'location-outline', iconBg: '#F5E8D5', label: 'Şehir', value: profile.city || 'Belirtilmedi' },
+                { icon: 'briefcase-outline', iconBg: '#D5F5E8', label: 'İş', value: profile.job || 'Belirtilmedi' },
+                { icon: 'school-outline', iconBg: '#F5D5E8', label: 'Eğitim', value: profile.education || 'Belirtilmedi' },
+                { icon: 'people-outline', iconBg: '#E8F5D5', label: 'Çocuk', value: profile.children ? translateChildren(profile.children) : 'Belirtilmedi' },
                 { icon: 'flame-outline', iconBg: '#F5E8E8', label: 'Sigara', value: profile.smoking ? translateSmoking(profile.smoking) : 'Belirtilmedi' },
                 { icon: 'resize-outline', iconBg: '#D5D5F5', label: 'Boy', value: profile.height ? `${profile.height} cm` : 'Belirtilmedi' },
                 { icon: 'fitness-outline', iconBg: '#E8D5D5', label: 'Spor', value: profile.sports ? translateSports(profile.sports) : 'Belirtilmedi' },
@@ -745,7 +757,7 @@ export const ProfileScreen: React.FC = () => {
                 )}
               </View>
 
-              {/* Visitor details (Gold+ only) */}
+              {/* Visitor details (Premium+ only) */}
               {visitorsData.canSeeDetails ? (
                 <View style={styles.visitorsDetailList}>
                   {visitorsData.visitors.slice(0, 3).map((visitor) => {
@@ -772,13 +784,13 @@ export const ProfileScreen: React.FC = () => {
                   style={styles.visitorsUpgradeButton}
                   onPress={handlePackages}
                   activeOpacity={0.85}
-                  accessibilityLabel="Gold paketine yükselt"
+                  accessibilityLabel="Premium paketine yükselt"
                   accessibilityRole="button"
                   accessibilityHint="Paket seçeneklerini görmek için dokunun"
                   testID="profile-upgrade-btn"
                 >
                   <Text style={styles.visitorsUpgradeText}>
-                    Gold&apos;a yükselt ve kimlerin gördüğünü öğren!
+                    {"Premium'a yükselt ve kimlerin gördüğünü öğren!"}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -854,7 +866,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 120,
+    height: 140,
   },
   avatarContainer: {
     position: 'relative',
@@ -862,9 +874,9 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   avatar: {
-    width: layout.avatarXLarge,
-    height: layout.avatarXLarge,
-    borderRadius: layout.avatarXLarge / 2,
+    width: 144,
+    height: 144,
+    borderRadius: 72,
     backgroundColor: colors.primary + '30',
     justifyContent: 'center',
     alignItems: 'center',
@@ -872,9 +884,9 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   avatarImage: {
-    width: layout.avatarXLarge,
-    height: layout.avatarXLarge,
-    borderRadius: layout.avatarXLarge / 2,
+    width: 144,
+    height: 144,
+    borderRadius: 72,
     borderWidth: 3,
     borderColor: colors.primary,
   },
@@ -1427,9 +1439,9 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
   },
   skeletonAvatar: {
-    width: layout.avatarXLarge,
-    height: layout.avatarXLarge,
-    borderRadius: layout.avatarXLarge / 2,
+    width: 144,
+    height: 144,
+    borderRadius: 72,
     backgroundColor: colors.surfaceLight,
   },
   skeletonNameBlock: {
