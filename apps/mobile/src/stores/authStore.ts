@@ -8,6 +8,7 @@ export type PackageTier = 'free' | 'gold' | 'pro' | 'reserved';
 export interface AuthUser {
   id: string;
   phone: string;
+  email?: string;
   isVerified: boolean;
   packageTier: PackageTier;
 }
@@ -32,6 +33,8 @@ interface AuthState {
   setLoading: (isLoading: boolean) => void;
   setUser: (user: AuthUser) => void;
   updatePackageTier: (tier: PackageTier) => void;
+  setEmail: (email: string) => void;
+  setPassword: (password: string) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -99,4 +102,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     set((state) => ({
       user: state.user ? { ...state.user, packageTier: tier } : null,
     })),
+
+  setEmail: (email) =>
+    set((state) => ({
+      user: state.user ? { ...state.user, email } : null,
+    })),
+
+  setPassword: (_password) => {
+    // Password is sent to the API during account creation
+    // Not stored locally for security — handled by backend
+  },
 }));

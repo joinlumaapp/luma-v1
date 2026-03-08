@@ -119,7 +119,7 @@ export const PACKAGE_TIERS = [
 // Profile configuration
 export const PROFILE_CONFIG = {
   MAX_PHOTOS: 20,
-  MIN_PHOTOS: 2,
+  MIN_PHOTOS: 1,
   MIN_BIO_LENGTH: 10,
   MAX_BIO_LENGTH: 500,
   MIN_AGE: 18,
@@ -139,6 +139,10 @@ export const DISCOVERY_CONFIG = {
     pro: -1,
     reserved: -1,
   },
+  /** Batch loading: profiles per batch */
+  BATCH_SIZE: 20,
+  /** Batch cooldown in milliseconds (30 minutes) */
+  BATCH_COOLDOWN_MS: 30 * 60 * 1000,
 } as const;
 
 // Super Like daily limits per package tier (-1 = unlimited)

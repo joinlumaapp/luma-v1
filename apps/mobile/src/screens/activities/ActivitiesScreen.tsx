@@ -221,9 +221,20 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
                 {activity.participants.length}/{activity.maxParticipants}
               </Text>
             </View>
+          </View>
 
+          {/* Participant details row */}
+          <View style={cardStyles.participantDetailsRow}>
+            <Text style={cardStyles.participantDetailText}>
+              {activity.participants.length} ki\u015Fi kat\u0131ld\u0131
+            </Text>
             {activity.distanceKm > 0 && (
-              <Text style={cardStyles.distance}>{activity.distanceKm.toFixed(1)} km</Text>
+              <>
+                <Text style={cardStyles.participantDetailDot}>{'\u2022'}</Text>
+                <Text style={cardStyles.participantDetailText}>
+                  {activity.distanceKm.toFixed(1)} km uzakta
+                </Text>
+              </>
             )}
           </View>
         </View>
@@ -390,6 +401,20 @@ const cardStyles = StyleSheet.create({
   },
   distance: {
     ...typography.captionSmall,
+    color: colors.textTertiary,
+  },
+  participantDetailsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    gap: 6,
+  },
+  participantDetailText: {
+    fontSize: 12,
+    color: colors.textTertiary,
+  },
+  participantDetailDot: {
+    fontSize: 10,
     color: colors.textTertiary,
   },
   actions: {

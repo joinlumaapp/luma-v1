@@ -26,9 +26,9 @@ interface SportsOption {
 }
 
 const SPORTS_OPTIONS: SportsOption[] = [
-  { value: 'never', label: 'Asla' },
-  { value: 'sometimes', label: 'Bazen' },
-  { value: 'often', label: 'Sık sık' },
+  { value: 'never', label: 'Pek yapmam' },
+  { value: 'sometimes', label: 'Ara sıra yaparım' },
+  { value: 'often', label: 'Düzenli yaparım' },
 ];
 
 export const SportsScreen: React.FC = () => {
@@ -56,7 +56,7 @@ export const SportsScreen: React.FC = () => {
       onSkip={handleSkip}
       footer={<ArrowButton onPress={handleContinue} disabled={!selected} />}
     >
-      <Text style={styles.title}>Spor yapıyor musun?</Text>
+      <Text style={styles.title}>Sporla aran nasıl?</Text>
       <Text style={styles.subtitle}>
         Hayat tarzını paylaşarak daha uyumlu eşleşmelere ulaşabilirsin.
       </Text>

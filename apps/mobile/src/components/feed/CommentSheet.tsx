@@ -65,13 +65,17 @@ const ReplyItem: React.FC<{ reply: CommentReply }> = ({ reply }) => (
 
 // ─── Comment Item ────────────────────────────────────────────────────
 
+// Reaction emojis for comments
+const REACTION_EMOJIS = ['\u2764\uFE0F', '\uD83D\uDC4D', '\uD83D\uDD25', '\uD83D\uDE02'];
+
 interface CommentItemProps {
   comment: FeedComment;
   onLike: (commentId: string) => void;
   onReply: (commentId: string, userName: string) => void;
+  onReact: (commentId: string, emoji: string) => void;
 }
 
-const CommentItem: React.FC<CommentItemProps> = ({ comment, onLike, onReply }) => (
+const CommentItem: React.FC<CommentItemProps> = ({ comment, onLike, onReply, onReact }) => (
   <View>
     <View style={styles.commentItem}>
       <Image source={{ uri: comment.userAvatarUrl }} style={styles.commentAvatar} />
@@ -104,8 +108,22 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, onLike, onReply }) =
             onPress={() => onReply(comment.id, comment.userName)}
             hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
           >
-            <Text style={styles.replyAction}>Yanıtla</Text>
+            <Text style={styles.replyAction}>Yan\u0131tla</Text>
           </TouchableOpacity>
+
+          {/* Reaction emojis */}
+          <View style={styles.reactionRow}>
+            {REACTION_EMOJIS.map((emoji) => (
+              <TouchableOpacity
+                key={emoji}
+                onPress={() => onReact(comment.id, emoji)}
+                hitSlop={{ top: 4, bottom: 4, left: 2, right: 2 }}
+                style={styles.reactionButton}
+              >
+                <Text style={styles.reactionEmoji}>{emoji}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
       </View>
     </View>
@@ -232,6 +250,12 @@ export const CommentSheet: React.FC<CommentSheetProps> = ({
     }
   }, [postId, newComment, isSending, onCommentAdded, replyingTo]);
 
+  // ── React to a comment ──
+  const handleReactComment = useCallback((commentId: string, _emoji: string) => {
+    // Reactions are visual feedback — treat as a like
+    handleLikeComment(commentId);
+  }, [handleLikeComment]);
+
   const keyExtractor = useCallback((item: FeedComment) => item.id, []);
 
   const renderComment = useCallback(
@@ -240,9 +264,10 @@ export const CommentSheet: React.FC<CommentSheetProps> = ({
         comment={item}
         onLike={handleLikeComment}
         onReply={handleStartReply}
+        onReact={handleReactComment}
       />
     ),
-    [handleLikeComment, handleStartReply],
+    [handleLikeComment, handleStartReply, handleReactComment],
   );
 
   return (
@@ -467,6 +492,19 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.textSecondary,
     fontWeight: '600',
+  },
+  reactionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    marginLeft: 'auto',
+  },
+  reactionButton: {
+    paddingHorizontal: 3,
+    paddingVertical: 2,
+  },
+  reactionEmoji: {
+    fontSize: 14,
   },
 
   // ── Nested replies ──

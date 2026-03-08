@@ -113,12 +113,23 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       const { page } = get();
       const data = await notificationService.getNotifications(page);
       set((state) => {
-        const merged =
-          page === 1
-            ? data.notifications
-            : [...state.notifications, ...data.notifications];
+        if (page === 1) {
+          // Preserve locally-added notifications not yet on server
+          const serverIds = new Set(data.notifications.map((n) => n.id));
+          const localOnly = state.notifications.filter(
+            (n) => !serverIds.has(n.id) && (n.id.startsWith('match_') || n.id.startsWith('push_')),
+          );
+          const localUnread = localOnly.filter((n) => !n.isRead).length;
+          return {
+            notifications: [...localOnly, ...data.notifications],
+            unreadCount: data.unreadCount + localUnread,
+            total: data.total + localOnly.length,
+            totalPages: data.totalPages,
+            isLoading: false,
+          };
+        }
         return {
-          notifications: merged,
+          notifications: [...state.notifications, ...data.notifications],
           unreadCount: data.unreadCount,
           total: data.total,
           totalPages: data.totalPages,
@@ -177,7 +188,18 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   refresh: async () => {
     const token = useAuthStore.getState().accessToken;
     if (!token) return;
-    set({ page: 1, notifications: [], unreadCount: 0, total: 0, totalPages: 1 });
+    // Preserve locally-added notifications during refresh
+    const localOnly = get().notifications.filter(
+      (n) => n.id.startsWith('match_') || n.id.startsWith('push_'),
+    );
+    const localUnread = localOnly.filter((n) => !n.isRead).length;
+    set({
+      page: 1,
+      notifications: localOnly,
+      unreadCount: localUnread,
+      total: localOnly.length,
+      totalPages: 1,
+    });
     await get().fetchNotifications();
   },
 

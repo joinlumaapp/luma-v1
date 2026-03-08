@@ -2,7 +2,7 @@
 // Mode-aware: 'serious_relationship' → 45 questions, 'exploring' → 20 core only
 // Cream/beige theme matching onboarding flow
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Platform,
+  TouchableOpacity,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -64,7 +65,26 @@ interface NormalizedQuestion {
   isPremium: boolean;
 }
 
-const CELEBRATION_DURATION = 2200;
+const ANALYSIS_DURATION = 2500;
+// Motivational messages shown every 4 questions
+const MOTIVATION_MESSAGES: Record<number, { emoji: string; title: string; subtitle: string }> = {
+  4: { emoji: '\u2728', title: 'Harika gidiyorsun.', subtitle: 'Analizin %20 tamamland\u0131.' },
+  8: { emoji: '\uD83E\uDDE0', title: 'Ger\u00E7ek uyumunu bulmaya yakla\u015F\u0131yoruz.', subtitle: 'Cevaplar\u0131n \u00E7ok de\u011Ferli.' },
+  12: { emoji: '\uD83C\uDFAF', title: 'Biraz daha, \u00E7ok az kald\u0131.', subtitle: 'Uyum profilin \u015Fekilleniyor.' },
+  16: { emoji: '\uD83D\uDE80', title: 'Son sorulara geldik.', subtitle: 'Neredeyse haz\u0131r\u0131z.' },
+  20: { emoji: '\uD83D\uDD2C', title: 'Tebrikler!', subtitle: 'T\u00FCm sorular\u0131 tamamlad\u0131n.' },
+};
+
+const MOTIVATION_DISPLAY_MS = 2200;
+
+// Result screen highlights
+const RESULT_SECTIONS = [
+  { emoji: '\uD83E\uDDE0', title: 'Kişilik Özelliklerin', items: ['Duygusal zekân yüksek', 'İletişime açık bir yapın var', 'Empati yeteneğin güçlü'] },
+  { emoji: '\uD83C\uDFE0', title: 'Yaşam Tercihlerin', items: ['Aktif bir sosyal hayat', 'Dengeyi seven bir yaklaşım', 'Yeni deneyimlere açıklık'] },
+  { emoji: '\uD83D\uDC9C', title: 'Sosyal Tarzın', items: ['Samimi ve içten', 'Küçük gruplarda rahat', 'Dinlemeyi seven bir karakter'] },
+];
+
+type ScreenPhase = 'questions' | 'motivation' | 'analysis' | 'result';
 
 export const QuestionsScreen: React.FC = () => {
   const navigation = useNavigation<QuestionsNavigationProp>();
@@ -76,14 +96,14 @@ export const QuestionsScreen: React.FC = () => {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [questions, setQuestions] = useState<NormalizedQuestion[]>([]);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
-  const [isCompleting, setIsCompleting] = useState(false);
+  const [phase, setPhase] = useState<ScreenPhase>('questions');
   const [cardKey, setCardKey] = useState(0);
 
   const showPremium = selectedMode === 'serious_relationship';
 
   const progressWidth = useSharedValue(0);
-  const celebrationOpacity = useSharedValue(0);
-  const celebrationScale = useSharedValue(0.85);
+  const phaseOpacity = useSharedValue(0);
+  const phaseScale = useSharedValue(0.85);
 
   // Load questions
   useEffect(() => {
@@ -129,56 +149,101 @@ export const QuestionsScreen: React.FC = () => {
     width: `${progressWidth.value}%` as `${number}%`,
   }));
 
+  const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
+    };
+  }, []);
+
+  const showAnalysisAndResult = useCallback(
+    (finalAnswers: Record<string, number>) => {
+      setProfileField('answers', finalAnswers);
+      // Show analysis loading screen
+      setPhase('analysis');
+      phaseOpacity.value = withDelay(100, withTiming(1, { duration: 500 }));
+      phaseScale.value = withDelay(100, withSpring(1, { damping: 12, stiffness: 100 }));
+      setTimeout(() => {
+        // Show result screen
+        phaseOpacity.value = 0;
+        phaseScale.value = 0.85;
+        setPhase('result');
+        phaseOpacity.value = withDelay(100, withTiming(1, { duration: 500 }));
+        phaseScale.value = withDelay(100, withSpring(1, { damping: 12, stiffness: 100 }));
+      }, ANALYSIS_DURATION);
+    },
+    [phaseOpacity, phaseScale, setProfileField],
+  );
+
+  const showMotivation = useCallback(
+    (questionIndex: number, afterAction: () => void) => {
+      const message = MOTIVATION_MESSAGES[questionIndex + 1]; // +1 because index is 0-based but messages keyed by question number
+      if (message) {
+        setPhase('motivation');
+        phaseOpacity.value = withDelay(50, withTiming(1, { duration: 400 }));
+        phaseScale.value = withDelay(50, withSpring(1, { damping: 12, stiffness: 100 }));
+        setTimeout(() => {
+          phaseOpacity.value = 0;
+          phaseScale.value = 0.85;
+          setPhase('questions');
+          afterAction();
+        }, MOTIVATION_DISPLAY_MS);
+      } else {
+        afterAction();
+      }
+    },
+    [phaseOpacity, phaseScale],
+  );
+
   const handleSelectOption = useCallback((idx: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedOption(idx);
-  }, []);
 
-  const showCelebrationAndComplete = useCallback(
-    (finalAnswers: Record<string, number>) => {
-      setIsCompleting(true);
-      celebrationOpacity.value = withDelay(100, withTiming(1, { duration: 500 }));
-      celebrationScale.value = withDelay(100, withSpring(1, { damping: 12, stiffness: 100 }));
-      setTimeout(() => {
-        setProfileField('answers', finalAnswers);
-        navigation.navigate('SelfieVerification');
-      }, CELEBRATION_DURATION);
-    },
-    [celebrationOpacity, celebrationScale, setProfileField, navigation],
-  );
+    // Auto-advance after 400ms
+    if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
+    autoAdvanceTimer.current = setTimeout(() => {
+      if (!currentQuestion) return;
+      const newAnswers = { ...answers, [currentQuestion.id]: idx };
+      setAnswers(newAnswers);
+      setSelectedOption(null);
 
-  const celebrationContainerStyle = useAnimatedStyle(() => ({
-    opacity: celebrationOpacity.value,
-    transform: [{ scale: celebrationScale.value }],
+      if (isLastQuestion) {
+        compatibilityService.submitAnswers(newAnswers).catch(() => {});
+        showAnalysisAndResult(newAnswers);
+      } else {
+        const nextIndex = currentIndex + 1;
+        showMotivation(currentIndex, () => {
+          setCurrentIndex(nextIndex);
+          setCardKey((p) => p + 1);
+        });
+      }
+    }, 400);
+  }, [answers, currentQuestion, isLastQuestion, currentIndex, showAnalysisAndResult, showMotivation]);
+
+  const handleResultContinue = useCallback(() => {
+    navigation.navigate('SelfieVerification');
+  }, [navigation]);
+
+  const phaseAnimStyle = useAnimatedStyle(() => ({
+    opacity: phaseOpacity.value,
+    transform: [{ scale: phaseScale.value }],
   }));
-
-  const handleNext = useCallback(async () => {
-    if (selectedOption === null || !currentQuestion) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    const newAnswers = { ...answers, [currentQuestion.id]: selectedOption };
-    setAnswers(newAnswers);
-    setSelectedOption(null);
-
-    if (isLastQuestion) {
-      try { await compatibilityService.submitAnswers(newAnswers); } catch { /* ok */ }
-      showCelebrationAndComplete(newAnswers);
-    } else {
-      setCurrentIndex((p) => p + 1);
-      setCardKey((p) => p + 1);
-    }
-  }, [selectedOption, answers, currentQuestion, isLastQuestion, showCelebrationAndComplete]);
 
   const handleSkipQuestion = useCallback(async () => {
     setSelectedOption(null);
     if (isLastQuestion) {
       try { await compatibilityService.submitAnswers(answers); } catch { /* ok */ }
-      showCelebrationAndComplete(answers);
+      showAnalysisAndResult(answers);
     } else {
-      setCurrentIndex((p) => p + 1);
-      setCardKey((p) => p + 1);
+      const nextIndex = currentIndex + 1;
+      showMotivation(currentIndex, () => {
+        setCurrentIndex(nextIndex);
+        setCardKey((p) => p + 1);
+      });
     }
-  }, [answers, isLastQuestion, showCelebrationAndComplete]);
+  }, [answers, isLastQuestion, currentIndex, showAnalysisAndResult, showMotivation]);
 
   if (isLoadingQuestions || !currentQuestion) {
     return (
@@ -189,15 +254,59 @@ export const QuestionsScreen: React.FC = () => {
     );
   }
 
-  if (isCompleting) {
+  // Motivation interstitial
+  if (phase === 'motivation') {
+    const msg = MOTIVATION_MESSAGES[currentIndex + 1];
     return (
       <View style={[styles.container, styles.centeredContainer]}>
-        <Animated.View style={[styles.celebrationContent, celebrationContainerStyle]}>
-          <Text style={styles.celebrationEmoji}>{'\uD83C\uDF89'}</Text>
-          <Text style={styles.celebrationTitle}>Harika!</Text>
-          <Text style={styles.celebrationSubtitle}>Uyum profilin hazırlanıyor...</Text>
+        <Animated.View style={[styles.celebrationContent, phaseAnimStyle]}>
+          <Text style={styles.celebrationEmoji}>{msg?.emoji ?? '\u2728'}</Text>
+          <Text style={styles.celebrationTitle}>{msg?.title ?? ''}</Text>
+          <Text style={styles.celebrationSubtitle}>{msg?.subtitle ?? ''}</Text>
+        </Animated.View>
+      </View>
+    );
+  }
+
+  // Analysis loading screen
+  if (phase === 'analysis') {
+    return (
+      <View style={[styles.container, styles.centeredContainer]}>
+        <Animated.View style={[styles.celebrationContent, phaseAnimStyle]}>
+          <Text style={styles.celebrationEmoji}>{'\uD83D\uDD2C'}</Text>
+          <Text style={styles.celebrationTitle}>LUMA senin karakterini analiz ediyor...</Text>
+          <Text style={styles.celebrationSubtitle}>Cevaplar\u0131n de\u011Ferlendiriliyor ve en uyumlu profiller belirleniyor.</Text>
           <ActivityIndicator size="small" color={onboardingColors.text} style={{ marginTop: spacing.lg }} />
         </Animated.View>
+      </View>
+    );
+  }
+
+  // Compatibility result screen
+  if (phase === 'result') {
+    return (
+      <View style={[styles.container, styles.resultContainer]}>
+        <Animated.View style={[styles.resultContent, phaseAnimStyle]}>
+          <Text style={styles.resultEmoji}>{'\uD83C\uDF89'}</Text>
+          <Text style={styles.resultTitle}>Uyum profilin hazır!</Text>
+          <Text style={styles.resultSubtitle}>İşte seni tanımamıza yardımcı olan özellikler:</Text>
+
+          {RESULT_SECTIONS.map((section) => (
+            <View key={section.title} style={styles.resultSection}>
+              <View style={styles.resultSectionHeader}>
+                <Text style={styles.resultSectionEmoji}>{section.emoji}</Text>
+                <Text style={styles.resultSectionTitle}>{section.title}</Text>
+              </View>
+              {section.items.map((item) => (
+                <Text key={item} style={styles.resultItem}>{'\u2022'} {item}</Text>
+              ))}
+            </View>
+          ))}
+        </Animated.View>
+
+        <View style={styles.resultFooter}>
+          <FullWidthButton label="Eşleşmeleri Gör" onPress={handleResultContinue} />
+        </View>
       </View>
     );
   }
@@ -205,7 +314,12 @@ export const QuestionsScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-{/* step label removed */}
+        <View style={styles.headerTopRow}>
+          <Text style={styles.analysisLabel}>Uyum Analizi</Text>
+          <TouchableOpacity onPress={handleSkipQuestion} activeOpacity={0.7} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <Text style={styles.skipTopText}>Atla</Text>
+          </TouchableOpacity>
+        </View>
         <View style={styles.progressContainer}>
           <View style={styles.progressTrack}>
             <Animated.View style={[styles.progressFill, progressBarStyle]} />
@@ -251,16 +365,8 @@ export const QuestionsScreen: React.FC = () => {
         </Animated.View>
       </View>
 
-      <View style={styles.footer}>
-        <FullWidthButton
-          label={isLastQuestion ? 'Tamamla' : 'Sonraki'}
-          onPress={handleNext}
-          disabled={selectedOption === null}
-        />
-        <Pressable onPress={handleSkipQuestion} style={styles.skipButton}>
-          <Text style={styles.skipText}>Bu soruyu atla</Text>
-        </Pressable>
-      </View>
+      {/* Footer spacer — auto-advance handles progression */}
+      <View style={styles.footerSpacer} />
     </View>
   );
 };
@@ -269,6 +375,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: onboardingColors.background },
   centeredContainer: { justifyContent: 'center', alignItems: 'center' },
   header: { paddingHorizontal: spacing.lg, paddingTop: Platform.OS === 'ios' ? 60 : 44, paddingBottom: spacing.md },
+  headerTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
+  analysisLabel: { fontSize: 14, fontWeight: '600', color: onboardingColors.text, letterSpacing: 0.3 },
+  skipTopText: { fontSize: 14, fontWeight: '500', color: onboardingColors.textTertiary },
   step: { fontSize: 13, fontWeight: '500', color: onboardingColors.textTertiary, marginBottom: spacing.sm },
   progressContainer: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   progressTrack: { flex: 1, height: 4, backgroundColor: onboardingColors.progressBg, borderRadius: 2, overflow: 'hidden' },
@@ -287,12 +396,22 @@ const styles = StyleSheet.create({
   optionRadioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: onboardingColors.checkGreen },
   optionText: { fontSize: 15, fontWeight: '400', color: onboardingColors.textSecondary, flex: 1 },
   optionTextSelected: { color: onboardingColors.selectedText, fontWeight: '500' },
-  footer: { paddingHorizontal: spacing.lg, paddingBottom: Platform.OS === 'ios' ? 36 : 24, gap: spacing.sm },
-  skipButton: { height: 40, justifyContent: 'center', alignItems: 'center' },
-  skipText: { fontSize: 14, fontWeight: '400', color: onboardingColors.textTertiary },
+  footerSpacer: { height: Platform.OS === 'ios' ? 36 : 24 },
   loadingText: { fontSize: 15, fontWeight: '400', color: onboardingColors.textSecondary, marginTop: spacing.sm },
   celebrationContent: { alignItems: 'center', paddingHorizontal: spacing.xl },
   celebrationEmoji: { fontSize: 48, marginBottom: spacing.md },
   celebrationTitle: { fontSize: 28, fontWeight: '700', color: onboardingColors.text, textAlign: 'center', marginBottom: spacing.sm },
   celebrationSubtitle: { fontSize: 16, fontWeight: '400', color: onboardingColors.textSecondary, textAlign: 'center', lineHeight: 24 },
+  // Result screen
+  resultContainer: { paddingHorizontal: spacing.lg, paddingTop: Platform.OS === 'ios' ? 60 : 44 },
+  resultContent: { flex: 1, alignItems: 'center', paddingTop: spacing.lg },
+  resultEmoji: { fontSize: 52, marginBottom: spacing.md },
+  resultTitle: { fontSize: 26, fontWeight: '700', color: onboardingColors.text, textAlign: 'center', marginBottom: spacing.sm },
+  resultSubtitle: { fontSize: 15, fontWeight: '400', color: onboardingColors.textSecondary, textAlign: 'center', lineHeight: 22, marginBottom: spacing.lg },
+  resultSection: { width: '100%', backgroundColor: onboardingColors.surface, borderRadius: 16, padding: spacing.md, marginBottom: spacing.sm, borderWidth: 1, borderColor: onboardingColors.surfaceBorder },
+  resultSectionHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm },
+  resultSectionEmoji: { fontSize: 20 },
+  resultSectionTitle: { fontSize: 16, fontWeight: '700', color: onboardingColors.text },
+  resultItem: { fontSize: 14, lineHeight: 22, color: onboardingColors.textSecondary, paddingLeft: 4 },
+  resultFooter: { paddingBottom: Platform.OS === 'ios' ? 36 : 24 },
 });

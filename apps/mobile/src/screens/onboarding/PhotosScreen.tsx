@@ -121,11 +121,9 @@ export const PhotosScreen: React.FC = () => {
         />
       }
     >
-      <Text style={styles.title}>
-        İlk {PROFILE_CONFIG.MIN_PHOTOS} fotoğrafını ekle
-      </Text>
+      <Text style={styles.title}>Fotoğrafını ekle</Text>
       <Text style={styles.subtitle}>
-        İlk fotoğrafın profil fotoğrafın olacak — yüzün net görünmeli. Diğerleri serbest!
+        İlk fotoğrafın profil fotoğrafın olacak — yüzün net görünmeli. Diğerleri isteğe bağlı!
       </Text>
 
       {/* Photo grid */}
@@ -172,15 +170,21 @@ export const PhotosScreen: React.FC = () => {
       </View>
 
       {/* Photo tips */}
-      <View style={styles.tipsRow}>
-        <Ionicons
-          name="sunny-outline"
-          size={18}
-          color={onboardingColors.text}
-        />
-        <Text style={styles.tipsText}>
-          Fotoğraflarını seçmek için tavsiyelerimiz
-        </Text>
+      <View style={styles.tipsContainer}>
+        <View style={styles.tipsHeader}>
+          <Ionicons
+            name="bulb-outline"
+            size={18}
+            color={onboardingColors.text}
+          />
+          <Text style={styles.tipsTitle}>Fotoğraf İpuçları</Text>
+        </View>
+        <View style={styles.tipsList}>
+          <Text style={styles.tipItem}>{'\u2022'} Yüzün net görünmeli</Text>
+          <Text style={styles.tipItem}>{'\u2022'} Güneş gözlüğünden kaçın</Text>
+          <Text style={styles.tipItem}>{'\u2022'} Doğal ışık kullan</Text>
+          <Text style={styles.tipItem}>{'\u2022'} Tek başına olduğun fotoğraflar en iyisi</Text>
+        </View>
       </View>
     </OnboardingLayout>
   );
@@ -263,15 +267,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  tipsRow: {
+  tipsContainer: {
+    marginTop: 24,
+    backgroundColor: onboardingColors.surface,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: onboardingColors.surfaceBorder,
+  },
+  tipsHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 24,
     gap: 8,
+    marginBottom: 10,
   },
-  tipsText: {
+  tipsTitle: {
     fontSize: 15,
-    fontWeight: '500',
+    fontWeight: '600',
     color: onboardingColors.text,
+  },
+  tipsList: {
+    gap: 6,
+  },
+  tipItem: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: onboardingColors.textSecondary,
+    paddingLeft: 4,
   },
 });

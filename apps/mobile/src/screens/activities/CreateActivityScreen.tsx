@@ -31,6 +31,15 @@ const ACTIVITY_TYPES: ActivityType[] = [
 
 const MAX_PARTICIPANTS_OPTIONS = [2, 3, 4, 5, 6];
 
+// Quick suggestion chips for common activity titles
+const QUICK_SUGGESTIONS = [
+  { emoji: '\u2615', label: 'Kahve', title: 'Kahve i\u00E7elim' },
+  { emoji: '\uD83C\uDF7D', label: 'Ak\u015Fam yeme\u011Fi', title: 'Ak\u015Fam yeme\u011Fine \u00E7\u0131kal\u0131m' },
+  { emoji: '\uD83D\uDEB6', label: 'Y\u00FCr\u00FCy\u00FC\u015F', title: 'Y\u00FCr\u00FCy\u00FC\u015F yapal\u0131m' },
+  { emoji: '\uD83C\uDFAC', label: 'Sinema', title: 'Sinemaya gidelim' },
+  { emoji: '\uD83C\uDF7B', label: 'Bar', title: 'Bir \u015Feyler i\u00E7elim' },
+];
+
 // ─── Date Picker (simplified — text input for now) ────────────────
 
 const formatDateForDisplay = (date: Date): string => {
@@ -135,13 +144,38 @@ export const CreateActivityScreen: React.FC = () => {
           })}
         </View>
 
+        {/* Quick Suggestions */}
+        <Text style={styles.label}>H{'\u0131'}zl{'\u0131'} {'\u00D6'}neri</Text>
+        <View style={styles.quickSuggestionsRow}>
+          {QUICK_SUGGESTIONS.map((s) => (
+            <TouchableOpacity
+              key={s.label}
+              style={[styles.quickChip, title === s.title && styles.quickChipActive]}
+              onPress={() => {
+                setTitle(s.title);
+                // Auto-select matching activity type
+                const typeMap: Record<string, ActivityType> = {
+                  'Kahve': 'coffee', 'Ak\u015Fam yeme\u011Fi': 'dinner',
+                  'Y\u00FCr\u00FCy\u00FC\u015F': 'outdoor', 'Sinema': 'culture', 'Bar': 'drinks',
+                };
+                const matchedType = typeMap[s.label];
+                if (matchedType) setActivityType(matchedType);
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.quickChipEmoji}>{s.emoji}</Text>
+              <Text style={[styles.quickChipText, title === s.title && styles.quickChipTextActive]}>{s.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         {/* Title */}
-        <Text style={styles.label}>Başlık</Text>
+        <Text style={styles.label}>Ba{'\u015Fl\u0131'}k</Text>
         <TextInput
           style={styles.input}
           value={title}
           onChangeText={setTitle}
-          placeholder="Örn: Karaköy'de kahve içelim"
+          placeholder="{'\u00D6'}rn: Karak\u00F6y'de kahve i\u00E7elim"
           placeholderTextColor={colors.textTertiary}
           maxLength={60}
         />
@@ -294,6 +328,39 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   typeTextActive: {
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  quickSuggestionsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  quickChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    gap: 6,
+  },
+  quickChipActive: {
+    backgroundColor: colors.primary + '20',
+    borderColor: colors.primary + '50',
+  },
+  quickChipEmoji: {
+    fontSize: 16,
+  },
+  quickChipText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
+  quickChipTextActive: {
     color: colors.primary,
     fontWeight: '600',
   },

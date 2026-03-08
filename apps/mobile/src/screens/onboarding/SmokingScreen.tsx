@@ -26,9 +26,10 @@ interface SmokingOption {
 }
 
 const SMOKING_OPTIONS: SmokingOption[] = [
-  { value: 'regular', label: 'Düzenli olarak' },
-  { value: 'tolerate', label: 'Sevmem ama göz yumarım' },
-  { value: 'never', label: 'Asla' },
+  { value: 'regular', label: 'Evet içiyorum' },
+  { value: 'sometimes', label: 'Ara sıra içerim' },
+  { value: 'never', label: 'İçmem' },
+  { value: 'tolerate', label: 'İçmem ama içenlere karışmam' },
 ];
 
 export const SmokingScreen: React.FC = () => {
@@ -56,7 +57,7 @@ export const SmokingScreen: React.FC = () => {
       onSkip={handleSkip}
       footer={<ArrowButton onPress={handleContinue} disabled={!selected} />}
     >
-      <Text style={styles.title}>Sigara içiyor musun?</Text>
+      <Text style={styles.title}>Sigarayla aran nasıl?</Text>
       <Text style={styles.subtitle}>
         Bu bilgi profilinde görüntülenecek.
       </Text>

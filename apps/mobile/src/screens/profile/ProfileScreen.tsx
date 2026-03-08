@@ -57,16 +57,16 @@ const calculateAge = (birthDate: string): number => {
 
 // Helper: translate profile field values to Turkish display labels
 const translateSports = (v: string): string => {
-  const map: Record<string, string> = { never: 'Asla', sometimes: 'Bazen', often: 'Sık sık' };
+  const map: Record<string, string> = { never: 'Pek yapmam', sometimes: 'Ara sıra', often: 'Düzenli' };
   return map[v] || 'Belirtilmedi';
 };
 const translateSmoking = (v: string): string => {
-  const map: Record<string, string> = { regular: 'Düzenli', tolerate: 'Göz yumarım', never: 'Asla' };
+  const map: Record<string, string> = { regular: 'İçiyor', sometimes: 'Ara sıra', never: 'İçmiyor', tolerate: 'İçmez ama karışmaz' };
   return map[v] || 'Belirtilmedi';
 };
 const translateChildren = (v: string): string => {
   const map: Record<string, string> = {
-    have: 'Var', dont_want: 'İstemiyorum', want_more: 'Var ama yetmiyor', want: 'Olmasını isterim',
+    have: 'Var', no_children: 'Yok', want: 'İleride olabilir', dont_want: 'İstemiyor',
   };
   return map[v] || 'Belirtilmedi';
 };
@@ -479,6 +479,13 @@ export const ProfileScreen: React.FC = () => {
                 >
                   {strengthData.message}
                 </Text>
+
+                {/* Full profile badge */}
+                {strengthData.percentage === 100 && (
+                  <View style={styles.fullProfileBadge}>
+                    <Text style={styles.fullProfileBadgeText}>{'\u2728'} Tam Profil</Text>
+                  </View>
+                )}
               </View>
 
               {/* Missing items tips */}
@@ -1305,6 +1312,20 @@ const styles = StyleSheet.create({
   strengthMessage: {
     ...typography.bodySmall,
     fontWeight: '600',
+  },
+  fullProfileBadge: {
+    backgroundColor: '#10B981' + '20',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    marginTop: spacing.sm,
+    borderWidth: 1,
+    borderColor: '#10B981' + '40',
+  },
+  fullProfileBadgeText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#10B981',
   },
   strengthTipsContainer: {
     backgroundColor: colors.background,

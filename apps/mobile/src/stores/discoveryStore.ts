@@ -1,12 +1,17 @@
 // Discovery store — Zustand store for discovery/swipe state with undo and super like support
 
 import { create } from 'zustand';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DISCOVERY_CONFIG } from '../constants/config';
 import { discoveryService } from '../services/discoveryService';
 import { locationService } from '../services/locationService';
 import { analyticsService, ANALYTICS_EVENTS } from '../services/analyticsService';
 import type { FeedCard } from '../services/discoveryService';
 import { useProfileStore } from './profileStore';
+import { useMatchStore } from './matchStore';
+import { useNotificationStore } from './notificationStore';
+
+const BATCH_COOLDOWN_KEY = 'luma_discovery_batch_cooldown_end';
 
 export interface DiscoveryProfile {
   id: string;
@@ -72,8 +77,12 @@ interface DiscoveryState {
   // Super like state
   showSuperLikeGlow: boolean;
 
+  // Batch cooldown state
+  batchCooldownEnd: number | null;
+
   // Actions
   fetchFeed: () => Promise<void>;
+  checkAndLoadBatch: () => Promise<void>;
   swipe: (direction: 'left' | 'right' | 'up', profileId: string, comment?: string) => Promise<void>;
   undoLastSwipe: () => Promise<void>;
   refreshFeed: () => Promise<void>;
@@ -153,7 +162,13 @@ const rankAndLabel = (profiles: DiscoveryProfile[]): DiscoveryProfile[] => {
     const hobbyWeight = hobbyScore * 0.15;
     const intentionScore = (profileIntention === userIntention) ? 100 : 0;
     const intentionWeight = intentionScore * 0.10;
-    const totalScore = compatWeight + distWeight + hobbyWeight + intentionWeight;
+    let totalScore = compatWeight + distWeight + hobbyWeight + intentionWeight;
+
+    // Profile strength boost: verified + complete profiles rank higher
+    // Verified users get +5, users with bio + interests + photos get up to +5
+    if (p.isVerified) totalScore += 5;
+    const hasCompleteness = (p.bio ? 1 : 0) + ((p.interestTags ?? []).length > 0 ? 1 : 0) + (p.photoUrls?.length > 1 ? 1 : 0);
+    totalScore += (hasCompleteness / 3) * 5;
 
     return { profile: { ...p, matchReasons: reasons }, totalScore };
   });
@@ -196,7 +211,28 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
   // Super like initial state
   showSuperLikeGlow: false,
 
+  // Batch cooldown initial state
+  batchCooldownEnd: null,
+
   // Actions
+  checkAndLoadBatch: async () => {
+    // Check if cooldown has passed; if so, load new batch
+    const stored = await AsyncStorage.getItem(BATCH_COOLDOWN_KEY);
+    const cooldownEnd = stored ? parseInt(stored, 10) : 0;
+
+    if (Date.now() >= cooldownEnd) {
+      // Cooldown passed or never set — load new batch
+      await get().fetchFeed();
+      // Set new cooldown
+      const newCooldownEnd = Date.now() + DISCOVERY_CONFIG.BATCH_COOLDOWN_MS;
+      await AsyncStorage.setItem(BATCH_COOLDOWN_KEY, String(newCooldownEnd));
+      set({ batchCooldownEnd: newCooldownEnd });
+    } else {
+      // Still in cooldown — store the end time for countdown UI
+      set({ batchCooldownEnd: cooldownEnd });
+    }
+  },
+
   fetchFeed: async () => {
     set({ isLoading: true });
     try {
@@ -281,6 +317,38 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
           lastSwipedProfile: null,
         }));
         clearTimeout(timerId);
+
+        // Instantly add match to matches list
+        if (swipedProfile) {
+          useMatchStore.getState().addMatch({
+            id: response.matchId,
+            userId: swipedProfile.id,
+            name: swipedProfile.name,
+            age: swipedProfile.age,
+            city: swipedProfile.city,
+            photoUrl: swipedProfile.photoUrls[0] ?? '',
+            compatibilityPercent: swipedProfile.compatibilityPercent,
+            intentionTag: swipedProfile.intentionTag,
+            isVerified: swipedProfile.isVerified,
+            lastActivity: new Date().toISOString(),
+            isNew: true,
+            matchedAt: new Date().toISOString(),
+            lastMessage: null,
+          });
+        }
+
+        // Create match notification immediately
+        useNotificationStore.getState().addNotification({
+          id: `match_${response.matchId}`,
+          type: 'NEW_MATCH',
+          title: 'Yeni Eşleşme',
+          body: swipedProfile
+            ? `${swipedProfile.name} ile eşleştin!`
+            : 'Yeni bir eşleşmen var!',
+          data: { matchId: response.matchId, profileId },
+          isRead: false,
+          createdAt: new Date().toISOString(),
+        });
       } else {
         set((prev) => ({
           currentIndex: prev.currentIndex + 1,
@@ -324,8 +392,19 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
   },
 
   refreshFeed: async () => {
-    set({ currentIndex: 0, cards: [], isLoading: true });
-    await get().fetchFeed();
+    // Check cooldown before refreshing
+    const stored = await AsyncStorage.getItem(BATCH_COOLDOWN_KEY);
+    const cooldownEnd = stored ? parseInt(stored, 10) : 0;
+
+    if (Date.now() >= cooldownEnd) {
+      set({ currentIndex: 0, cards: [], isLoading: true });
+      await get().fetchFeed();
+      const newCooldownEnd = Date.now() + DISCOVERY_CONFIG.BATCH_COOLDOWN_MS;
+      await AsyncStorage.setItem(BATCH_COOLDOWN_KEY, String(newCooldownEnd));
+      set({ batchCooldownEnd: newCooldownEnd });
+    } else {
+      set({ batchCooldownEnd: cooldownEnd });
+    }
   },
 
   setFilters: (filters) =>

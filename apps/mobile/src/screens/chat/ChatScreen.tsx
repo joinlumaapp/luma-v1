@@ -11,6 +11,7 @@ import {
   StyleSheet,
   FlatList,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
   Animated,
   ActivityIndicator,
@@ -43,6 +44,9 @@ import { formatActivityStatus } from '../../utils/formatters';
 
 type ChatNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'Chat'>;
 type ChatRouteProp = RouteProp<MatchesStackParamList, 'Chat'>;
+
+// Actual chat header height: paddingVertical (16*2) + backButton (40) + borderBottom (1)
+const CHAT_HEADER_HEIGHT = 73;
 
 const formatDateHeader = (dateString: string): string => {
   const date = new Date(dateString);
@@ -197,6 +201,16 @@ export const ChatScreen: React.FC = () => {
   const route = useRoute<ChatRouteProp>();
   const insets = useSafeAreaInsets();
   const flatListRef = useRef<FlatList>(null);
+
+  // Track keyboard visibility to adjust bottom padding
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+    return () => { showSub.remove(); hideSub.remove(); };
+  }, []);
 
   const { matchId, partnerName, partnerPhotoUrl: _partnerPhotoUrl, initialMessage } = route.params;
 
@@ -454,7 +468,7 @@ export const ChatScreen: React.FC = () => {
       <KeyboardAvoidingView
         style={styles.messagesArea}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={insets.top + layout.headerHeight}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top + CHAT_HEADER_HEIGHT : 0}
       >
         {isLoadingMessages && messages.length === 0 ? (
           <View style={styles.loadingContainer}>
@@ -584,7 +598,7 @@ export const ChatScreen: React.FC = () => {
 
         {/* Limit reached — purchase options */}
         {(showLimitReached || !messageLimitInfo.allowed) && !messageLimitInfo.isUnlimited ? (
-          <View style={[styles.limitReachedArea, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]}>
+          <View style={[styles.limitReachedArea, { paddingBottom: keyboardVisible ? spacing.xs : Math.max(insets.bottom, spacing.sm) }]}>
             <Text style={styles.limitReachedTitle}>Mesaj limitin doldu</Text>
             <Text style={styles.limitReachedSubtitle}>
               Daha fazla mesaj göndermek için aşağıdaki seçenekleri kullan
@@ -639,7 +653,7 @@ export const ChatScreen: React.FC = () => {
         <>
         {/* Input area */}
         {!isRecordingVoice && (
-        <View style={[styles.inputArea, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]}>
+        <View style={[styles.inputArea, { paddingBottom: keyboardVisible ? spacing.xs : Math.max(insets.bottom, spacing.sm) }]}>
           {/* Camera/image picker button */}
           <TouchableOpacity
             style={styles.mediaButton}

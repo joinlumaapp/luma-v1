@@ -43,6 +43,7 @@ interface MatchState {
   unmatch: (matchId: string) => Promise<void>;
   markAsRead: (matchId: string) => void;
   clearSelected: () => void;
+  addMatch: (match: Match) => void;
 }
 
 // Transform backend MatchDetailResponse to store MatchDetail
@@ -143,4 +144,10 @@ export const useMatchStore = create<MatchState>((set, get) => ({
 
   clearSelected: () =>
     set({ selectedMatch: null }),
+
+  addMatch: (match) =>
+    set((state) => ({
+      matches: [match, ...state.matches],
+      totalCount: state.totalCount + 1,
+    })),
 }));

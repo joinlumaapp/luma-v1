@@ -16,6 +16,8 @@ export type AuthStackParamList = {
   Welcome: undefined; // Legacy — not in navigator, kept for type compatibility
   PhoneEntry: undefined;
   OTPVerification: { phoneNumber: string; countryCode: string };
+  EmailEntry: undefined;
+  PasswordCreation: undefined;
   SelfieVerification: undefined;
 };
 
@@ -56,7 +58,13 @@ export type DiscoveryStackParamList = {
   Discovery: undefined;
   Notifications: undefined;
   ProfilePreview: { userId: string };
-  StoryViewer: { userId: string; userName: string; userAvatarUrl: string };
+  StoryViewer: {
+    userId: string;
+    userName: string;
+    userAvatarUrl: string;
+    /** Ordered list of all story users for cross-user auto-advance */
+    storyUsers?: Array<{ userId: string; userName: string; userAvatarUrl: string }>;
+  };
   Filter: undefined;
   DailyQuestion: undefined;
   LikesYou: undefined;

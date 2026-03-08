@@ -185,7 +185,7 @@ export const BoostModal: React.FC<BoostModalProps> = ({
             <>
               {/* Subtitle */}
               <Text style={styles.subtitle}>
-                Ke{'\u015F'}fette 10x daha fazla g{'\u00F6'}r{'\u00FC'}n{'\u00FC'}rl{'\u00FC'}k
+                Ke{'\u015F'}fette 10 kat daha fazla ki{'\u015F'}iye g{'\u00F6'}r{'\u00FC'}n.
               </Text>
 
               {/* Duration selection */}

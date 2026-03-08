@@ -47,7 +47,7 @@ export const NameScreen: React.FC = () => {
       >
         <Text style={styles.title}>Adın</Text>
         <Text style={styles.subtitle}>
-          Profilinde görüntülenecek ve sonradan düzeltemezsin
+          Profilinde görünecek adın
         </Text>
 
         <TextInput

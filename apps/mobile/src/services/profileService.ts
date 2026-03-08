@@ -105,8 +105,74 @@ export const profileService = {
 
   // Get profile strength/completeness breakdown
   getProfileStrength: async (): Promise<ProfileStrengthResponse> => {
-    const response = await api.get<ProfileStrengthResponse>('/profiles/strength');
-    return response.data;
+    try {
+      const response = await api.get<ProfileStrengthResponse>('/profiles/strength');
+      return response.data;
+    } catch {
+      // Fallback: compute locally from profile store
+      return profileService.computeLocalStrength();
+    }
+  },
+
+  // Local profile strength computation based on defined scoring weights
+  computeLocalStrength: (): ProfileStrengthResponse => {
+    // Import lazily to avoid circular dependency at module level
+    const { useProfileStore } = require('../stores/profileStore');
+    const { useAuthStore } = require('../stores/authStore');
+    const { useActivityStore } = require('../stores/activityStore');
+    const { useSocialFeedStore } = require('../stores/socialFeedStore');
+
+    const profile = useProfileStore.getState().profile;
+    const user = useAuthStore.getState().user;
+
+    // Check activity participation
+    let hasJoinedActivity = false;
+    try {
+      const activities = useActivityStore.getState().activities;
+      const userId = user?.id;
+      hasJoinedActivity = activities.some((a: { participants: Array<{ userId: string }> }) =>
+        a.participants.some((p: { userId: string }) => p.userId === userId)
+      );
+    } catch { /* store may not be initialized */ }
+
+    // Check if user has created a feed post
+    let hasCreatedPost = false;
+    try {
+      const posts = useSocialFeedStore.getState().posts;
+      hasCreatedPost = posts.some((p: { userId: string }) => p.userId === (user?.id ?? 'dev-user-001'));
+    } catch { /* store may not be initialized */ }
+
+    const hasPhotos = profile.photos.length > 0;
+    const hasBio = profile.bio.length > 0;
+    const hasInterests = profile.interestTags.length > 0;
+    const isVerified = user?.isVerified ?? false;
+    const hasAnswers = Object.keys(profile.answers).length >= 20;
+
+    const breakdown: ProfileStrengthItem[] = [
+      { key: 'photos', label: 'Foto\u011Fraf ekle', weight: 10, completed: hasPhotos, tip: 'Profiline foto\u011Fraf ekle (+10)' },
+      { key: 'bio', label: 'Biyografi yaz', weight: 10, completed: hasBio, tip: 'Hakk\u0131nda k\u0131sm\u0131n\u0131 doldur (+10)' },
+      { key: 'interests', label: '\u0130lgi alanlar\u0131 ekle', weight: 10, completed: hasInterests, tip: '\u0130lgi alanlar\u0131n\u0131 se\u00E7 (+10)' },
+      { key: 'activity', label: 'Aktiviteye kat\u0131l', weight: 10, completed: hasJoinedActivity, tip: 'Bir aktiviteye kat\u0131l (+10)' },
+      { key: 'feed_post', label: '\u0130lk payla\u015F\u0131m\u0131n\u0131 yap', weight: 10, completed: hasCreatedPost, tip: 'Ak\u0131\u015Fta bir \u015Fey payla\u015F (+10)' },
+      { key: 'verified', label: 'Profili do\u011Frula', weight: 20, completed: isVerified, tip: 'Y\u00FCz do\u011Frulamas\u0131 yap (+20)' },
+      { key: 'questions', label: 'Uyum sorular\u0131n\u0131 tamamla', weight: 30, completed: hasAnswers, tip: 'T\u00FCm uyum sorular\u0131n\u0131 cevapla (+30)' },
+    ];
+
+    const percentage = breakdown.reduce((sum, item) => sum + (item.completed ? item.weight : 0), 0);
+    const level: 'low' | 'medium' | 'high' = percentage < 40 ? 'low' : percentage < 70 ? 'medium' : 'high';
+
+    let message: string;
+    if (percentage === 100) {
+      message = '\u2728 Tam Profil';
+    } else if (percentage >= 70) {
+      message = 'Profilin g\u00FC\u00E7l\u00FC! Birka\u00E7 ad\u0131m daha.';
+    } else if (percentage >= 40) {
+      message = 'Profilini tamamla, daha \u00E7ok g\u00F6r\u00FCn.';
+    } else {
+      message = 'Profilini doldurarak ke\u015Ffette \u00F6ne \u00E7\u0131k.';
+    }
+
+    return { percentage, level, message, breakdown };
   },
 
   // Track that current user viewed another user's profile

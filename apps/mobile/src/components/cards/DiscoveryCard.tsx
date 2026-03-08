@@ -68,11 +68,11 @@ const getModeStyle = (tag: string) =>
 
 // ─── Compatibility explanation based on score range ──────────
 
-const getCompatExplanation = (score: number): string => {
-  if (score >= 90) return 'Benzer düşünce yapısı';
-  if (score >= 80) return 'Güçlü uyum alanları';
-  if (score >= 70) return 'Ortak ilgi alanları';
-  return 'Keşfedilecek farklılıklar';
+const getCompatExplanations = (score: number): string[] => {
+  if (score >= 90) return ['Ortak ilgi alanlar\u0131', 'Benzer sosyal enerji', '\u0130li\u015Fki beklentisi uyumu'];
+  if (score >= 80) return ['G\u00FC\u00E7l\u00FC uyum alanlar\u0131', 'Benzer ya\u015Fam tarz\u0131'];
+  if (score >= 70) return ['Ortak ilgi alanlar\u0131', 'Ke\u015Ffedilecek benzerlikler'];
+  return ['Ke\u015Ffedilecek farkl\u0131l\u0131klar'];
 };
 
 // ─── Component ────────────────────────────────────────────────
@@ -212,9 +212,11 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
             <Text style={[styles.compatScore, isSuper && styles.compatScoreSuper]}>
               %{compatScore} Uyum
             </Text>
-            <Text style={styles.compatExplanation}>
-              {getCompatExplanation(compatScore)}
-            </Text>
+            {getCompatExplanations(compatScore).map((line) => (
+              <Text key={line} style={styles.compatExplanation}>
+                {'\u2022'} {line}
+              </Text>
+            ))}
           </Pressable>
         )}
       </View>
@@ -425,9 +427,10 @@ const styles = StyleSheet.create({
     color: palette.gold[600],
   },
   compatExplanation: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: fontWeights.regular,
     color: colors.textTertiary,
-    letterSpacing: 0.2,
+    letterSpacing: 0.1,
+    lineHeight: 16,
   },
 });

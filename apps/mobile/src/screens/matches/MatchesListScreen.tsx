@@ -32,9 +32,11 @@ type MatchesNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'M
 
 // Conversation starter suggestions for matches with no messages
 const CONVERSATION_STARTERS = [
-  'İlk buluşmada kahve mi yemek mi?',
-  'Hafta sonu doğa mı şehir mi?',
-  'En sevdiğin müzik türü ne?',
+  '\u0130lk bulu\u015Fmada kahve mi yemek mi?',
+  'Hafta sonu \u015Fehir mi do\u011Fa m\u0131?',
+  'En sevdi\u011Fin m\u00FCzik t\u00FCr\u00FC?',
+  'Sabah\u00E7\u0131 m\u0131s\u0131n gece ku\u015Fu mu?',
+  'En son izledi\u011Fin dizi?',
 ];
 
 // Skeleton shimmer row component

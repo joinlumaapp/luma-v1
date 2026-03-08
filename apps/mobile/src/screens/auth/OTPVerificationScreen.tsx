@@ -81,15 +81,15 @@ export const OTPVerificationScreen: React.FC = () => {
     try {
       // Founder test mode: 000000 auto-verifies
       if (__DEV__ && isTestMode && otpCode === '000000') {
-        const { login, setStartedOnboarding } = useAuthStore.getState();
+        const { login } = useAuthStore.getState();
         login('test-access-token', 'test-refresh-token', {
           id: 'test-user-001',
           phone: phoneNumber,
           isVerified: false,
           packageTier: 'free',
         });
-        // New user → start onboarding
-        setStartedOnboarding(true);
+        // Test mode → go to email entry for new user flow
+        navigation.navigate('EmailEntry');
         return;
       }
 
@@ -104,7 +104,7 @@ export const OTPVerificationScreen: React.FC = () => {
         return;
       }
 
-      const { login, setStartedOnboarding, setOnboarded } = useAuthStore.getState();
+      const { login, setOnboarded } = useAuthStore.getState();
       login(result.accessToken, result.refreshToken, {
         id: result.user.id,
         phone: result.user.phone,
@@ -113,8 +113,9 @@ export const OTPVerificationScreen: React.FC = () => {
       });
 
       if (result.user.isNew) {
-        // New user → start onboarding (RootNavigator switches automatically)
-        setStartedOnboarding(true);
+        // New user → collect email + password before onboarding
+        navigation.navigate('EmailEntry');
+        return;
       } else {
         // Existing user → go to MainTabs
         setOnboarded(true);

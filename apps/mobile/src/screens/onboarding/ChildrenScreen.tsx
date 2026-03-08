@@ -26,10 +26,10 @@ interface ChildrenOption {
 }
 
 const CHILDREN_OPTIONS: ChildrenOption[] = [
-  { value: 'have', label: 'Bende var' },
+  { value: 'have', label: 'Çocuğum var' },
+  { value: 'no_children', label: 'Çocuğum yok' },
+  { value: 'want', label: 'İleride olabilir' },
   { value: 'dont_want', label: 'Çocuk istemiyorum' },
-  { value: 'want_more', label: 'Bende var ama yetmiyor' },
-  { value: 'want', label: 'Olmasını isterim' },
 ];
 
 export const ChildrenScreen: React.FC = () => {

@@ -152,14 +152,14 @@ const StoriesRow: React.FC<StoriesRowProps> = ({ navigation, userFirstName, user
   const posts = useSocialFeedStore((s) => s.posts);
   const viewedStoryUserIds = useSocialFeedStore((s) => s.viewedStoryUserIds);
 
-  // Deduplicate followed users by userId, then sort: unviewed first, viewed after
+  // Deduplicate followed users by userId; track which have stories
   const followedUsers = useMemo(() => {
     const seen = new Set<string>();
-    const result: { userId: string; name: string; avatarUrl: string }[] = [];
+    const result: { userId: string; name: string; avatarUrl: string; hasStories: boolean }[] = [];
     for (const post of posts) {
       if (post.isFollowing && !seen.has(post.userId)) {
         seen.add(post.userId);
-        result.push({ userId: post.userId, name: post.userName, avatarUrl: post.userAvatarUrl });
+        result.push({ userId: post.userId, name: post.userName, avatarUrl: post.userAvatarUrl, hasStories: true });
       }
       if (result.length >= 8) break;
     }
@@ -170,6 +170,27 @@ const StoriesRow: React.FC<StoriesRowProps> = ({ navigation, userFirstName, user
       return aViewed - bViewed;
     });
   }, [posts, viewedStoryUserIds]);
+
+  // Build the ordered list of story users for cross-user auto-advance
+  const storyUserList = useMemo(() =>
+    followedUsers
+      .filter((u) => u.hasStories)
+      .map((u) => ({ userId: u.userId, userName: u.name, userAvatarUrl: u.avatarUrl })),
+    [followedUsers],
+  );
+
+  const handleBubblePress = useCallback((user: { userId: string; name: string; avatarUrl: string; hasStories: boolean }) => {
+    if (user.hasStories) {
+      navigation.navigate('StoryViewer', {
+        userId: user.userId,
+        userName: user.name,
+        userAvatarUrl: user.avatarUrl,
+        storyUsers: storyUserList,
+      });
+    } else {
+      navigation.navigate('ProfilePreview', { userId: user.userId });
+    }
+  }, [navigation, storyUserList]);
 
   return (
     <ScrollView
@@ -196,11 +217,7 @@ const StoriesRow: React.FC<StoriesRowProps> = ({ navigation, userFirstName, user
             initial={user.name ? user.name[0] : '?'}
             ringColor={isViewed ? palette.purple[800] : palette.purple[400]}
             isViewed={isViewed}
-            onPress={() => navigation.navigate('StoryViewer', {
-              userId: user.userId,
-              userName: user.name,
-              userAvatarUrl: user.avatarUrl,
-            })}
+            onPress={() => handleBubblePress(user)}
             testID={`story-follow-${user.userId}`}
           />
         );
@@ -221,9 +238,10 @@ export const DiscoveryScreen: React.FC = () => {
   const currentIndex = useDiscoveryStore((s) => s.currentIndex);
   const dailyRemaining = useDiscoveryStore((s) => s.dailyRemaining);
   const isLoading = useDiscoveryStore((s) => s.isLoading);
-  const fetchFeed = useDiscoveryStore((s) => s.fetchFeed);
+  const checkAndLoadBatch = useDiscoveryStore((s) => s.checkAndLoadBatch);
   const swipeAction = useDiscoveryStore((s) => s.swipe);
   const refreshFeed = useDiscoveryStore((s) => s.refreshFeed);
+  const batchCooldownEnd = useDiscoveryStore((s) => s.batchCooldownEnd);
   const showMatchAnimation = useDiscoveryStore((s) => s.showMatchAnimation);
   const currentMatchId = useDiscoveryStore((s) => s.currentMatchId);
   const dismissMatch = useDiscoveryStore((s) => s.dismissMatch);
@@ -353,14 +371,31 @@ export const DiscoveryScreen: React.FC = () => {
 
   // ─── Effects ───────────────────────────────────────────────
 
-  // Deferred feed fetch
+  // Deferred feed fetch with batch cooldown check
   useEffect(() => {
     const task = InteractionManager.runAfterInteractions(() => {
-      fetchFeed();
+      checkAndLoadBatch();
       fetchNotifications();
     });
     return () => task.cancel();
-  }, [fetchFeed, fetchNotifications]);
+  }, [checkAndLoadBatch, fetchNotifications]);
+
+  // Countdown timer for batch cooldown
+  const [cooldownRemaining, setCooldownRemaining] = useState(0);
+  useEffect(() => {
+    if (!batchCooldownEnd) { setCooldownRemaining(0); return; }
+    const tick = () => {
+      const remaining = Math.max(0, batchCooldownEnd - Date.now());
+      setCooldownRemaining(remaining);
+      if (remaining <= 0) {
+        // Cooldown finished — auto-load new batch
+        checkAndLoadBatch();
+      }
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [batchCooldownEnd, checkAndLoadBatch]);
 
   // Reset card position when index changes
   useEffect(() => {
@@ -445,13 +480,29 @@ export const DiscoveryScreen: React.FC = () => {
     }
   }, [navigation]);
 
-  const handleMatchSendMessage = useCallback(() => {
+  const handleMatchSendMessage = useCallback((prefillMessage?: string) => {
+    const card = matchedCard;
+    const matchId = currentMatchId;
     dismissMatch();
     setMatchConversationStarters([]);
     setMatchExplanation(undefined);
-    // Switch to MatchesTab root (Tümü list)
-    navigation.navigate('MatchesTab' as never);
-  }, [dismissMatch, navigation]);
+
+    if (card && matchId) {
+      // Navigate directly to the chat screen for this match
+      navigation.navigate('MatchesTab', {
+        screen: 'Chat',
+        params: {
+          matchId,
+          partnerName: card.name,
+          partnerPhotoUrl: card.photoUrls[0] ?? '',
+          ...(prefillMessage ? { initialMessage: prefillMessage } : {}),
+        },
+      });
+    } else {
+      // Fallback: go to matches list if card data is unavailable
+      navigation.navigate('MatchesTab' as never);
+    }
+  }, [dismissMatch, navigation, matchedCard, currentMatchId]);
 
   const handleMatchDismiss = useCallback(() => {
     dismissMatch();
@@ -714,9 +765,14 @@ export const DiscoveryScreen: React.FC = () => {
     );
   }
 
-  // ─── Empty state ───────────────────────────────────────────
+  // ─── Empty state with batch cooldown ────────────────────────
 
   if (!hasMoreCards) {
+    const isCoolingDown = cooldownRemaining > 0;
+    const cooldownMinutes = Math.floor(cooldownRemaining / 60000);
+    const cooldownSeconds = Math.floor((cooldownRemaining % 60000) / 1000);
+    const cooldownDisplay = `${cooldownMinutes}:${cooldownSeconds.toString().padStart(2, '0')}`;
+
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.darkHeaderArea}>
@@ -759,10 +815,26 @@ export const DiscoveryScreen: React.FC = () => {
           <View style={styles.emptyIconCircle}>
             <Text style={styles.emptyIconLetter}>L</Text>
           </View>
-          <Text style={styles.emptyTitle}>Günlük keşfini tamamladın</Text>
-          <Text style={styles.emptySubtitle}>
-            {'En uyumlu insanlar sabırla bulunur.\nYarın yeni profiller seni bekliyor.'}
-          </Text>
+
+          {isCoolingDown ? (
+            <>
+              <Text style={styles.emptyTitle}>Yeni profiller yakında geliyor</Text>
+              <Text style={styles.emptySubtitle}>
+                Yaklaşık 30 dakikada 20 yeni profil görünecek.
+              </Text>
+              <View style={styles.countdownContainer}>
+                <Text style={styles.countdownText}>{cooldownDisplay}</Text>
+              </View>
+            </>
+          ) : (
+            <>
+              <Text style={styles.emptyTitle}>Yeni profiller hazır</Text>
+              <Text style={styles.emptySubtitle}>
+                20 yeni profil seni bekliyor.
+              </Text>
+            </>
+          )}
+
           <Pressable
             onPress={() => refreshFeed()}
             accessibilityLabel="Yenile"
@@ -773,6 +845,37 @@ export const DiscoveryScreen: React.FC = () => {
               <Text style={styles.refreshButtonText}>Yenile</Text>
             </View>
           </Pressable>
+
+          {/* Navigation shortcuts */}
+          <View style={styles.emptyNavRow}>
+            <Pressable
+              style={styles.emptyNavButton}
+              onPress={() => navigation.navigate('FeedTab', { screen: 'SocialFeed' })}
+              accessibilityLabel="Akışa git"
+              accessibilityRole="button"
+            >
+              <Ionicons name="newspaper-outline" size={18} color={colors.textSecondary} />
+              <Text style={styles.emptyNavText}>Akışa Git</Text>
+            </Pressable>
+            <Pressable
+              style={styles.emptyNavButton}
+              onPress={() => navigation.navigate('ActivitiesTab', { screen: 'Activities' })}
+              accessibilityLabel="Aktivitelere git"
+              accessibilityRole="button"
+            >
+              <Ionicons name="flash-outline" size={18} color={colors.textSecondary} />
+              <Text style={styles.emptyNavText}>Aktiviteler</Text>
+            </Pressable>
+            <Pressable
+              style={styles.emptyNavButton}
+              onPress={() => navigation.navigate('MatchesTab', { screen: 'MatchesList' })}
+              accessibilityLabel="Eşleşmelere git"
+              accessibilityRole="button"
+            >
+              <Ionicons name="heart-outline" size={18} color={colors.textSecondary} />
+              <Text style={styles.emptyNavText}>Eşleşmeler</Text>
+            </Pressable>
+          </View>
         </View>
       </View>
     );
@@ -927,6 +1030,8 @@ export const DiscoveryScreen: React.FC = () => {
           </Animated.View>
         </GestureDetector>
       </View>
+
+
 
       {/* Action buttons */}
       <View style={styles.actionsRow}>
@@ -1273,6 +1378,35 @@ const styles = StyleSheet.create({
   refreshButtonText: {
     ...typography.button,
     color: '#FFFFFF',
+  },
+  countdownContainer: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  countdownText: {
+    ...typography.h2,
+    color: colors.primary,
+    fontVariant: ['tabular-nums'],
+  },
+  emptyNavRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginTop: spacing.lg,
+  },
+  emptyNavButton: {
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  emptyNavText: {
+    ...typography.caption,
+    color: colors.textSecondary,
   },
   // ── Like-with-comment modal ──
   commentModalOverlay: {

@@ -7,6 +7,7 @@ import {
   Text,
   Image,
   TouchableOpacity,
+  Pressable,
   StyleSheet,
   Dimensions,
   StatusBar,
@@ -125,12 +126,23 @@ export const StoryViewerScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<StoryViewerNavProp>();
   const route = useRoute<StoryViewerRouteProp>();
-  const { userId, userName, userAvatarUrl } = route.params;
+  const { userId: initialUserId, userName: initialUserName, userAvatarUrl: initialUserAvatar, storyUsers } = route.params;
 
   const posts = useSocialFeedStore((s) => s.posts);
   const markStoryViewed = useSocialFeedStore((s) => s.markStoryViewed);
   const toggleLike = useSocialFeedStore((s) => s.toggleLike);
   const incrementCommentCount = useSocialFeedStore((s) => s.incrementCommentCount);
+
+  // ── Cross-user story queue ──
+  // Determine the starting index in the storyUsers array
+  const userQueue = storyUsers ?? [{ userId: initialUserId, userName: initialUserName, userAvatarUrl: initialUserAvatar }];
+  const initialUserIndex = Math.max(0, userQueue.findIndex((u) => u.userId === initialUserId));
+  const [currentUserIndex, setCurrentUserIndex] = useState(initialUserIndex);
+
+  const currentUser = userQueue[currentUserIndex] ?? userQueue[0];
+  const userId = currentUser.userId;
+  const userName = currentUser.userName;
+  const userAvatarUrl = currentUser.userAvatarUrl;
 
   // Get this user's posts as story items (most recent first)
   const storyItems = React.useMemo(() => {
@@ -142,11 +154,35 @@ export const StoryViewerScreen: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const progressAnim = useRef(new RNAnimated.Value(0)).current;
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hasMarkedViewed = useRef(false);
+  const viewedUsersRef = useRef(new Set<string>());
 
   // Comment sheet state
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
   const isPaused = useRef(false);
+
+  // ── Advance to next user's stories ──
+  const advanceToNextUser = useCallback(() => {
+    // Mark current user as viewed
+    if (!viewedUsersRef.current.has(userId)) {
+      viewedUsersRef.current.add(userId);
+      markStoryViewed(userId);
+    }
+    if (currentUserIndex < userQueue.length - 1) {
+      setCurrentUserIndex((prev) => prev + 1);
+      setActiveIndex(0);
+    } else {
+      // No more users — close viewer
+      navigation.goBack();
+    }
+  }, [userId, currentUserIndex, userQueue.length, markStoryViewed, navigation]);
+
+  // ── Go back to previous user's stories ──
+  const retreatToPrevUser = useCallback(() => {
+    if (currentUserIndex > 0) {
+      setCurrentUserIndex((prev) => prev - 1);
+      setActiveIndex(0);
+    }
+  }, [currentUserIndex]);
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) {
@@ -169,80 +205,85 @@ export const StoryViewerScreen: React.FC = () => {
         if (prev < storyItems.length - 1) {
           return prev + 1;
         }
-        // Last story — mark viewed and close viewer
-        if (!hasMarkedViewed.current) {
-          hasMarkedViewed.current = true;
-          markStoryViewed(userId);
-        }
-        navigation.goBack();
+        // Last story of this user — auto-advance to next user
+        advanceToNextUser();
         return prev;
       });
     }, STORY_DURATION);
-  }, [clearTimer, progressAnim, storyItems.length, navigation, markStoryViewed, userId]);
+  }, [clearTimer, progressAnim, storyItems.length, advanceToNextUser]);
 
   useEffect(() => {
     if (storyItems.length === 0) {
-      // No stories — fall back to profile
-      navigation.replace('ProfilePreview', { userId });
+      // No stories for this user — skip to next user or close
+      advanceToNextUser();
       return;
     }
     startTimer();
     return clearTimer;
-  }, [activeIndex, storyItems.length, startTimer, clearTimer, navigation, userId]);
+  }, [activeIndex, currentUserIndex, storyItems.length, startTimer, clearTimer, advanceToNextUser]);
 
   const goNext = useCallback(() => {
     clearTimer();
     if (activeIndex < storyItems.length - 1) {
       setActiveIndex((prev) => prev + 1);
     } else {
-      // Last story — mark viewed and close
-      if (!hasMarkedViewed.current) {
-        hasMarkedViewed.current = true;
-        markStoryViewed(userId);
-      }
-      navigation.goBack();
+      // Last story of this user — advance to next user on tap
+      advanceToNextUser();
     }
-  }, [activeIndex, storyItems.length, clearTimer, navigation, markStoryViewed, userId]);
+  }, [activeIndex, storyItems.length, clearTimer, advanceToNextUser]);
 
   const goPrev = useCallback(() => {
     clearTimer();
     if (activeIndex > 0) {
       setActiveIndex((prev) => prev - 1);
+    } else if (currentUserIndex > 0) {
+      // First story of this user — go to previous user
+      retreatToPrevUser();
     } else {
-      // Re-start current story
+      // First story of first user — restart current story
       startTimer();
     }
-  }, [activeIndex, clearTimer, startTimer]);
+  }, [activeIndex, currentUserIndex, clearTimer, startTimer, retreatToPrevUser]);
 
+  // ── Instagram-style touch handling ──
   const isLongPressing = useRef(false);
+  const pressStartX = useRef(0);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const LONG_PRESS_THRESHOLD = 200;
 
-  const handleLongPress = useCallback(() => {
-    // Pause story on long press
-    isLongPressing.current = true;
-    clearTimer();
-    progressAnim.stopAnimation();
-  }, [clearTimer, progressAnim]);
+  const handlePressIn = useCallback(
+    (evt: { nativeEvent: { locationX: number } }) => {
+      pressStartX.current = evt.nativeEvent.locationX;
+      isLongPressing.current = false;
+
+      longPressTimer.current = setTimeout(() => {
+        isLongPressing.current = true;
+        clearTimer();
+        progressAnim.stopAnimation();
+      }, LONG_PRESS_THRESHOLD);
+    },
+    [clearTimer, progressAnim],
+  );
 
   const handlePressOut = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+
     if (isLongPressing.current) {
-      // Resume story after long press release
       isLongPressing.current = false;
       startTimer();
+      return;
     }
-  }, [startTimer]);
 
-  const handleTap = useCallback(
-    (evt: { nativeEvent: { locationX: number } }) => {
-      if (isLongPressing.current) return; // Ignore tap on long press release
-      const x = evt.nativeEvent.locationX;
-      if (x < SCREEN_WIDTH / 2) {
-        goPrev();
-      } else {
-        goNext();
-      }
-    },
-    [goNext, goPrev]
-  );
+    const x = pressStartX.current;
+    if (x < SCREEN_WIDTH / 3) {
+      goPrev();
+    } else {
+      goNext();
+    }
+  }, [startTimer, goNext, goPrev]);
 
   // ── Like current story post ──
   const handleLike = useCallback(() => {
@@ -256,7 +297,6 @@ export const StoryViewerScreen: React.FC = () => {
   const handleOpenComments = useCallback(() => {
     const post = storyItems[activeIndex];
     if (!post) return;
-    // Pause the story timer
     clearTimer();
     progressAnim.stopAnimation();
     isPaused.current = true;
@@ -270,7 +310,7 @@ export const StoryViewerScreen: React.FC = () => {
     startTimer();
   }, [startTimer]);
 
-  // ── Comment added — increment count in store ──
+  // ── Comment added ──
   const handleCommentAdded = useCallback((postId: string) => {
     incrementCommentCount(postId);
   }, [incrementCommentCount]);
@@ -291,30 +331,25 @@ export const StoryViewerScreen: React.FC = () => {
     return null;
   }
 
-  // Format time ago
   const timeAgo = getTimeAgo(currentPost.createdAt);
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      {/* Tap zones */}
-      <TouchableOpacity
+      {/* Tap zones — Pressable for reliable press-in/press-out handling */}
+      <Pressable
         style={styles.tapZone}
-        activeOpacity={1}
-        onPress={handleTap}
-        onLongPress={handleLongPress}
+        onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        delayLongPress={200}
       >
-        {/* Story content */}
         <StoryContent post={currentPost} />
-      </TouchableOpacity>
+      </Pressable>
 
       {/* Progress bars */}
       <View style={[styles.progressBar, { top: insets.top + 8 }]}>
         {storyItems.map((_, i) => (
-          <ProgressSegment key={i} index={i} activeIndex={activeIndex} animValue={progressAnim} />
+          <ProgressSegment key={`${userId}-${i}`} index={i} activeIndex={activeIndex} animValue={progressAnim} />
         ))}
       </View>
 
@@ -341,7 +376,6 @@ export const StoryViewerScreen: React.FC = () => {
       {/* Bottom: interactive like/comment + profile */}
       <View style={[styles.footer, { bottom: insets.bottom + 16 }]}>
         <View style={styles.statsChip}>
-          {/* Like button */}
           <TouchableOpacity
             style={styles.statItem}
             onPress={handleLike}
@@ -358,7 +392,6 @@ export const StoryViewerScreen: React.FC = () => {
 
           <View style={styles.statDivider} />
 
-          {/* Comment button */}
           <TouchableOpacity
             style={styles.statItem}
             onPress={handleOpenComments}
