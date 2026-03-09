@@ -1,5 +1,5 @@
 // Matches list screen — premium animations, skeleton loader, PulseGlow for high compatibility
-// Tabs: 💞 Eşleşmeler | 💬 Mesajlar | 💜 Beğenenler
+// Tabs: 💞 Eşleşmeler | 💬 Mesajlar | 💜 Beğenenler | 👀 Seni Kim Gördü
 // Performance: InteractionManager, FlatList tuning, memoized components
 
 import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
@@ -26,6 +26,8 @@ import { useMatchStore } from '../../stores/matchStore';
 import type { Match } from '../../stores/matchStore';
 import { useChatStore } from '../../stores/chatStore';
 import { getAllConversationMeta } from '../../services/chatPersistence';
+import { profileService } from '../../services/profileService';
+import type { ProfileVisitor } from '../../services/profileService';
 import { SlideIn } from '../../components/animations/SlideIn';
 import { PulseGlow } from '../../components/animations/PulseGlow';
 import { useScreenTracking } from '../../hooks/useAnalytics';
@@ -34,7 +36,7 @@ import { formatMatchActivity, formatActivityStatus } from '../../utils/formatter
 type MatchesNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'MatchesList'>;
 
 // ─── Tab type ────────────────────────────────────────────────
-type TabKey = 'matches' | 'messages';
+type TabKey = 'matches' | 'messages' | 'viewers';
 
 // Conversation starter suggestions for matches with no messages
 const CONVERSATION_STARTERS = [
@@ -336,6 +338,64 @@ const MessageRow = memo<MessageRowProps>(({ item, index, onPress }) => {
 
 MessageRow.displayName = 'MessageRow';
 
+// ─── Viewer card (Seni Kim Gördü tab) ────────────────────────
+interface ViewerCardProps {
+  item: ProfileVisitor;
+  index: number;
+}
+
+const ViewerCard = memo<ViewerCardProps>(({ item, index }) => {
+  const timeAgo = useMemo(() => {
+    const diff = Date.now() - new Date(item.viewedAt).getTime();
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    if (hours < 1) return 'Az önce';
+    if (hours < 24) return `${hours} saat önce`;
+    const days = Math.floor(hours / 24);
+    return `${days} gün önce`;
+  }, [item.viewedAt]);
+
+  return (
+    <SlideIn direction="right" delay={index * 80} distance={24}>
+      <View style={styles.matchCard}>
+        {/* Avatar */}
+        <View style={styles.avatarContainer}>
+          {item.isBlurred ? (
+            <View style={[styles.avatar, styles.blurredAvatar]}>
+              <Text style={styles.blurredAvatarText}>?</Text>
+            </View>
+          ) : item.photoUrl ? (
+            <Image source={{ uri: item.photoUrl }} style={styles.avatarImage} />
+          ) : (
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>
+                {item.firstName ? item.firstName.charAt(0) : '?'}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* Info */}
+        <View style={styles.matchInfo}>
+          <Text style={styles.matchName}>
+            {item.isBlurred ? 'Gizli Profil' : item.firstName ?? 'Bilinmeyen'}
+          </Text>
+          <Text style={styles.lastActivity}>{timeAgo}</Text>
+        </View>
+
+        {/* Eye icon */}
+        <View style={styles.chatIconContainer}>
+          <Text style={styles.chatIcon}>{'\uD83D\uDC41\uFE0F'}</Text>
+        </View>
+      </View>
+    </SlideIn>
+  );
+}, (prev, next) => (
+  prev.item.visitorId === next.item.visitorId &&
+  prev.index === next.index
+));
+
+ViewerCard.displayName = 'ViewerCard';
+
 // Memoized separator to avoid creating new component instances on each render
 const ItemSeparator = memo(() => <View style={styles.separator} />);
 ItemSeparator.displayName = 'ItemSeparator';
@@ -354,6 +414,19 @@ export const MatchesListScreen: React.FC = () => {
   const hydrateFromStorage = useChatStore((state) => state.hydrateFromStorage);
 
   const [activeTab, setActiveTab] = useState<TabKey>('matches');
+  const [viewers, setViewers] = useState<ProfileVisitor[]>([]);
+  const [viewersCount, setViewersCount] = useState(0);
+  const tabScrollRef = useRef<ScrollView>(null);
+
+  // Fetch profile visitors
+  useEffect(() => {
+    const fetchViewers = async () => {
+      const data = await profileService.getProfileVisitors();
+      setViewers(data.visitors);
+      setViewersCount(data.totalCount);
+    };
+    fetchViewers();
+  }, []);
 
   // Defer initial fetch until navigation animation completes
   // Then hydrate chat persistence so lastMessage values survive
@@ -404,6 +477,16 @@ export const MatchesListScreen: React.FC = () => {
   }, [matches, conversations]);
 
   const currentList = activeTab === 'messages' ? messagesList : matchesList;
+
+  // ── Viewer render items ───────────────────────────────────────
+  const renderViewerItem = useCallback(
+    ({ item, index }: { item: ProfileVisitor; index: number }) => (
+      <ViewerCard item={item} index={index} />
+    ),
+    [],
+  );
+
+  const viewerKeyExtractor = useCallback((item: ProfileVisitor) => item.visitorId, []);
 
   // Matches not talked to today — shown only on Eşleşmeler tab
   const notTalkedToday = useMemo(() => {
@@ -540,18 +623,29 @@ export const MatchesListScreen: React.FC = () => {
   const keyExtractor = useCallback((item: Match) => item.id, []);
 
   const renderEmptyList = useCallback(() => {
-    const isMessages = activeTab === 'messages';
+    const emptyConfig = {
+      matches: {
+        icon: '\uD83D\uDC9E',
+        title: 'Henüz Eşleşmen Yok',
+        subtitle: 'Keşfet sekmesinde profilleri beğenerek eşleşme oluşturabilirsin.',
+      },
+      messages: {
+        icon: '\uD83D\uDCAC',
+        title: 'Henüz Mesajın Yok',
+        subtitle: 'Eşleşmelerine mesaj göndererek sohbet başlatabilirsin.',
+      },
+      viewers: {
+        icon: '\uD83D\uDC40',
+        title: 'Henüz Kimse Bakmamış',
+        subtitle: 'Profilini zenginleştirerek daha fazla görüntülenme alabilirsin.',
+      },
+    };
+    const cfg = emptyConfig[activeTab];
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyIcon}>{isMessages ? '\uD83D\uDCAC' : '\uD83D\uDC9E'}</Text>
-        <Text style={styles.emptyTitle}>
-          {isMessages ? 'Henüz Mesajın Yok' : 'Henüz Eşleşmen Yok'}
-        </Text>
-        <Text style={styles.emptySubtitle}>
-          {isMessages
-            ? 'Eşleşmelerine mesaj göndererek sohbet başlatabilirsin.'
-            : 'Keşfet sekmesinde profilleri beğenerek eşleşme oluşturabilirsin.'}
-        </Text>
+        <Text style={styles.emptyIcon}>{cfg.icon}</Text>
+        <Text style={styles.emptyTitle}>{cfg.title}</Text>
+        <Text style={styles.emptySubtitle}>{cfg.subtitle}</Text>
       </View>
     );
   }, [activeTab]);
@@ -582,22 +676,35 @@ export const MatchesListScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* Tabs: 💞 Eşleşmeler | 💬 Mesajlar | 💜 Beğenenler */}
-      <View style={styles.tabRow}>
+      {/* Tabs: 💞 Eşleşmeler | 💬 Mesajlar | 💜 Beğenenler | 👀 Seni Kim Gördü */}
+      <ScrollView
+        ref={tabScrollRef}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.tabRow}
+        bounces={false}
+      >
         {([
-          { key: 'matches' as const, label: '\uD83D\uDC9E Eşleşmeler' },
-          { key: 'messages' as const, label: '\uD83D\uDCAC Mesajlar' },
-          { key: 'likes' as const, label: '\uD83D\uDC9C Beğenenler' },
-        ]).map((tab) => {
-          const isActive = tab.key === 'likes' ? false : activeTab === tab.key;
+          { key: 'matches' as const, label: '\uD83D\uDC9E Eşleşmeler', isNav: false },
+          { key: 'messages' as const, label: '\uD83D\uDCAC Mesajlar', isNav: false },
+          { key: 'likes' as const, label: '\uD83D\uDC9C Beğenenler', isNav: true },
+          { key: 'viewers' as const, label: '\uD83D\uDC40 Seni Kim Gördü', isNav: false },
+        ]).map((tab, tabIndex) => {
+          const isActive = tab.isNav ? false : activeTab === tab.key;
           return (
             <TouchableWithoutFeedback
               key={tab.key}
               onPress={() => {
-                if (tab.key === 'likes') {
+                if (tab.isNav) {
                   navigation.navigate('LikesYou');
                 } else {
-                  setActiveTab(tab.key);
+                  setActiveTab(tab.key as TabKey);
+                  // Auto-scroll to show active tab
+                  if (tabIndex >= 2 && tabScrollRef.current) {
+                    tabScrollRef.current.scrollToEnd({ animated: true });
+                  } else if (tabScrollRef.current) {
+                    tabScrollRef.current.scrollTo({ x: 0, animated: true });
+                  }
                 }
               }}
               accessibilityLabel={`${tab.label} sekmesi${isActive ? ', seçili' : ''}`}
@@ -615,25 +722,48 @@ export const MatchesListScreen: React.FC = () => {
             </TouchableWithoutFeedback>
           );
         })}
-      </View>
+      </ScrollView>
 
       {/* List — switches render function based on active tab */}
-      <FlatList
-        data={currentList}
-        keyExtractor={keyExtractor}
-        renderItem={activeTab === 'messages' ? renderMessageItem : renderMatchItem}
-        contentContainerStyle={styles.listContent}
-        ListHeaderComponent={renderNudgeSection}
-        ListEmptyComponent={renderEmptyList}
-        showsVerticalScrollIndicator={false}
-        ItemSeparatorComponent={ItemSeparator}
-        // ── Performance tuning ──
-        initialNumToRender={10}
-        maxToRenderPerBatch={10}
-        windowSize={5}
-        removeClippedSubviews={true}
-        updateCellsBatchingPeriod={50}
-      />
+      {activeTab === 'viewers' ? (
+        <FlatList
+          data={viewers}
+          keyExtractor={viewerKeyExtractor}
+          renderItem={renderViewerItem}
+          contentContainerStyle={styles.listContent}
+          ListHeaderComponent={() => (
+            <View style={styles.viewersHeader}>
+              <Text style={styles.viewersHeaderText}>
+                {viewersCount} kişi profilini görüntüledi
+              </Text>
+            </View>
+          )}
+          ListEmptyComponent={renderEmptyList}
+          showsVerticalScrollIndicator={false}
+          ItemSeparatorComponent={ItemSeparator}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          removeClippedSubviews={true}
+          updateCellsBatchingPeriod={50}
+        />
+      ) : (
+        <FlatList
+          data={currentList}
+          keyExtractor={keyExtractor}
+          renderItem={activeTab === 'messages' ? renderMessageItem : renderMatchItem}
+          contentContainerStyle={styles.listContent}
+          ListHeaderComponent={renderNudgeSection}
+          ListEmptyComponent={renderEmptyList}
+          showsVerticalScrollIndicator={false}
+          ItemSeparatorComponent={ItemSeparator}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          removeClippedSubviews={true}
+          updateCellsBatchingPeriod={50}
+        />
+      )}
     </View>
   );
 };
@@ -673,10 +803,10 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   tabChip: {
-    flex: 1,
     backgroundColor: colors.surface,
     borderRadius: borderRadius.full,
     paddingVertical: 10,
+    paddingHorizontal: spacing.md,
     minHeight: 44,
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
@@ -962,5 +1092,22 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: borderRadius.xs,
     backgroundColor: colors.surfaceLight,
+  },
+  // ── Viewers tab ──
+  viewersHeader: {
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  viewersHeaderText: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+    fontWeight: '600',
+  },
+  blurredAvatar: {
+    backgroundColor: colors.surfaceLight,
+  },
+  blurredAvatarText: {
+    ...typography.h4,
+    color: colors.textTertiary,
   },
 });

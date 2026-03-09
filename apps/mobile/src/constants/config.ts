@@ -129,7 +129,7 @@ export const PROFILE_CONFIG = {
 // Discovery configuration (limits must match backend DAILY_SWIPE_LIMITS)
 export const DISCOVERY_CONFIG = {
   FREE_DAILY_LIKES: 20,
-  CARD_STACK_SIZE: 30,
+  CARD_STACK_SIZE: 60,
   DEFAULT_DISTANCE_KM: 50,
   MAX_DISTANCE_KM: 200,
   /** Per-tier daily like limits (-1 = unlimited) */
@@ -140,7 +140,7 @@ export const DISCOVERY_CONFIG = {
     reserved: -1,
   },
   /** Batch loading: profiles per batch */
-  BATCH_SIZE: 20,
+  BATCH_SIZE: 50,
   /** Batch cooldown in milliseconds (30 minutes) */
   BATCH_COOLDOWN_MS: 30 * 60 * 1000,
 } as const;

@@ -706,6 +706,35 @@ export const DiscoveryScreen: React.FC = () => {
     };
   });
 
+  // Super like overlay (upward swipe — blue/purple wash)
+  const superLikeWashStyle = useAnimatedStyle(() => ({
+    backgroundColor: `rgba(139, 92, 246, ${interpolate(
+      translateY.value,
+      [-SWIPE_UP_THRESHOLD, 0],
+      [0.4, 0],
+      Extrapolation.CLAMP,
+    )})`,
+  }));
+
+  const superLikeIconStyle = useAnimatedStyle(() => {
+    const iconOpacity = interpolate(
+      translateY.value,
+      [-SWIPE_UP_THRESHOLD, -SWIPE_UP_THRESHOLD * 0.5],
+      [1, 0],
+      Extrapolation.CLAMP,
+    );
+    const iconScale = interpolate(
+      translateY.value,
+      [-SWIPE_UP_THRESHOLD, -SWIPE_UP_THRESHOLD * 0.5],
+      [1.2, 0.5],
+      Extrapolation.CLAMP,
+    );
+    return {
+      opacity: iconOpacity,
+      transform: [{ scale: iconScale }],
+    };
+  });
+
   // Undo button
   const undoAnimatedStyle = useAnimatedStyle(() => ({
     opacity: undoOpacity.value,
@@ -843,7 +872,7 @@ export const DiscoveryScreen: React.FC = () => {
             <>
               <Text style={styles.emptyTitle}>Yeni profiller yakında geliyor</Text>
               <Text style={styles.emptySubtitle}>
-                Yaklaşık 30 dakikada 20 yeni profil görünecek.
+                Yaklaşık 30 dakikada 50 yeni profil görünecek.
               </Text>
               <View style={styles.countdownContainer}>
                 <Text style={styles.countdownText}>{cooldownDisplay}</Text>
@@ -853,7 +882,7 @@ export const DiscoveryScreen: React.FC = () => {
             <>
               <Text style={styles.emptyTitle}>Yeni profiller hazır</Text>
               <Text style={styles.emptySubtitle}>
-                20 yeni profil seni bekliyor.
+                50 yeni profil seni bekliyor.
               </Text>
             </>
           )}
@@ -954,6 +983,15 @@ export const DiscoveryScreen: React.FC = () => {
               </View>
             </Pressable>
             <Pressable
+              onPress={() => navigation.navigate('ProfileTab', { screen: 'Packages' } as never)}
+              accessibilityLabel="Premium Paketler"
+              accessibilityRole="button"
+            >
+              <View style={styles.filterButton} testID="discovery-packages-btn">
+                <Ionicons name="diamond-outline" size={18} color={colors.text} />
+              </View>
+            </Pressable>
+            <Pressable
               onPress={() => navigation.navigate('Filter')}
               accessibilityLabel="Filtreleri aç"
               accessibilityRole="button"
@@ -1045,11 +1083,19 @@ export const DiscoveryScreen: React.FC = () => {
             <Animated.View style={[styles.colorWashOverlay, likeWashStyle]} pointerEvents="none">
               <Animated.View style={likeIconStyle}>
                 <Text style={styles.washIconText}>{'\u2713'}</Text>
+                <Text style={styles.washLabelText}>Beğen</Text>
               </Animated.View>
             </Animated.View>
             <Animated.View style={[styles.colorWashOverlay, passWashStyle]} pointerEvents="none">
               <Animated.View style={passIconStyle}>
                 <Text style={styles.washIconText}>{'\u2715'}</Text>
+                <Text style={styles.washLabelText}>Pas</Text>
+              </Animated.View>
+            </Animated.View>
+            <Animated.View style={[styles.colorWashOverlay, superLikeWashStyle]} pointerEvents="none">
+              <Animated.View style={superLikeIconStyle}>
+                <Text style={styles.washIconText}>{'\u2B50'}</Text>
+                <Text style={styles.washLabelText}>Süper</Text>
               </Animated.View>
             </Animated.View>
           </Animated.View>
@@ -1330,6 +1376,17 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 6,
+  },
+  washLabelText: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+    marginTop: 4,
   },
   // ── Action Buttons ──
   actionsRow: {

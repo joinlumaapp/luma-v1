@@ -1,28 +1,26 @@
-// Profile preview — interleaved photo+info layout for discovery detail view
-// Photos alternate with info blocks for a modern, engaging scroll experience
+// Profile preview — uses InterleavedProfileLayout for photo-interleaved scrolling
+// All business logic preserved: discovery/likes/matches fetching, compat score, paid message
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
-  Dimensions,
   ActivityIndicator,
   Alert,
-  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import type { DiscoveryStackParamList } from '../../navigation/types';
 import { compatibilityService, type CompatibilityScore } from '../../services/compatibilityService';
 import { discoveryService } from '../../services/discoveryService';
 import { VoiceIntroPlayer } from '../../components/profile/VoiceIntro';
 import { BadgeShowcase } from '../../components/badges/BadgeShowcase';
 import { CompatibilityPreviewCard } from './CompatibilityPreviewCard';
-import { colors, glassmorphism } from '../../theme/colors';
+import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
+import { colors } from '../../theme/colors';
 import { palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
@@ -38,9 +36,7 @@ import { waveService } from '../../services/waveService';
 import { useChatStore } from '../../stores/chatStore';
 import { useAuthStore } from '../../stores/authStore';
 import type { ChatMessage } from '../../services/chatService';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const PHOTO_HEIGHT = SCREEN_WIDTH * 1.2;
+import { VerifiedBadge } from '../../components/common/VerifiedBadge';
 
 // Interest tag lookup maps
 const INTEREST_EMOJI_MAP: Record<string, string> = {};
@@ -136,39 +132,11 @@ const formatCategoryLabel = (category: string): string => {
   return labelMap[category.toLowerCase()] ?? category;
 };
 
-// ─── Interleaved Photo Component ─────────────────────────────────
-
-interface InterleavedPhotoProps {
-  uri: string;
-  index: number;
-  total: number;
-  onPress: (index: number) => void;
-}
-
-const InterleavedPhoto: React.FC<InterleavedPhotoProps> = ({ uri, index, total, onPress }) => (
-  <TouchableOpacity
-    activeOpacity={0.95}
-    onPress={() => onPress(index)}
-    style={styles.interleavedPhotoContainer}
-  >
-    <Image
-      source={{ uri }}
-      style={styles.interleavedPhoto}
-      resizeMode="cover"
-    />
-    <View style={styles.photoCounterBadge}>
-      <Text style={styles.photoCounterText}>{index + 1}/{total}</Text>
-    </View>
-  </TouchableOpacity>
-);
-
-// ─── Info Card Wrapper ───────────────────────────────────────────
-
-const InfoCard: React.FC<{ children: React.ReactNode; style?: object }> = ({ children, style }) => (
-  <View style={[styles.infoCard, style]}>
-    {children}
-  </View>
-);
+const getCompatColor = (score: number): string => {
+  if (score >= 90) return colors.success;
+  if (score >= 70) return colors.accent;
+  return colors.textSecondary;
+};
 
 export const ProfilePreviewScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -279,7 +247,6 @@ export const ProfilePreviewScreen: React.FC = () => {
 
   const [showPaidMessageModal, setShowPaidMessageModal] = useState(false);
   const currentUserProfile = useProfileStore((s) => s.profile);
-  const [viewerPhotoIndex, setViewerPhotoIndex] = useState<number | null>(null);
 
   const handleSwipe = (direction: 'left' | 'right') => {
     if (profile) {
@@ -288,372 +255,275 @@ export const ProfilePreviewScreen: React.FC = () => {
     navigation.goBack();
   };
 
-  const handlePhotoPress = useCallback((index: number) => {
-    setViewerPhotoIndex(index);
-  }, []);
-
+  // ── Loading state ──
   if (!profile) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
-        <View style={styles.header}>
+        <View style={styles.headerBar}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Text style={styles.backIcon}>{'←'}</Text>
+            <Ionicons name="chevron-back" size={22} color={colors.text} />
           </TouchableOpacity>
+          <Text style={styles.headerTitle}>Profil</Text>
+          <View style={{ width: 40 }} />
         </View>
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Profil bulunamadı</Text>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.emptyText}>Profil yükleniyor...</Text>
         </View>
       </View>
     );
   }
 
-  const getCompatColor = (score: number): string => {
-    if (score >= 90) return colors.success;
-    if (score >= 70) return colors.accent;
-    return colors.textSecondary;
-  };
-
+  // ── Derived data ──
   const compatPreviewData = compatibility ? buildPreviewData(compatibility) : null;
-  const photos = profile.photoUrls;
-  const totalPhotos = photos.length;
+  const compatScore = !loadingCompat && compatibility ? compatibility.finalScore : null;
+  const compatColor = compatScore !== null ? getCompatColor(compatScore) : null;
+  const compatReasons = generateExpandedReasons(profile, currentUserProfile);
 
-  // ── Build final sections array directly ──────────────────────
-  // Photos are interleaved at fixed positions between info blocks.
-  // Layout: Hero → Info → Info → Photo → Info → Info → Photo → ...
+  // Lifestyle detail rows
+  const lifestyleRows: Array<{ icon: string; iconBg: string; label: string; value: string }> = [];
+  if (profile.height) lifestyleRows.push({ icon: 'resize-outline', iconBg: '#D5D5F5', label: 'Boy', value: `${profile.height} cm` });
+  if (profile.job) lifestyleRows.push({ icon: 'briefcase-outline', iconBg: '#D5F5E8', label: 'Meslek', value: profile.job });
+  if (profile.education) lifestyleRows.push({ icon: 'school-outline', iconBg: '#F5D5E8', label: 'Eğitim', value: profile.education });
+  if (profile.sports) lifestyleRows.push({ icon: 'fitness-outline', iconBg: '#E8D5D5', label: 'Spor', value: profile.sports });
+  if (profile.smoking) lifestyleRows.push({ icon: 'flame-outline', iconBg: '#F5E8E8', label: 'Sigara', value: profile.smoking });
+  if (profile.children) lifestyleRows.push({ icon: 'people-outline', iconBg: '#E8F5D5', label: 'Çocuk', value: profile.children });
 
-  const remainingPhotos = photos.slice(1);
-  const sections: React.ReactNode[] = [];
+  // ── Build info sections for interleaving ──
+  // Order: Bio → Lifestyle → Compat module → Interests → Badges → remaining
+  // This creates a story-like scroll: Photo → Bio → Photo → Lifestyle → Photo → Compat → Photo → Interests+Badges
+  const infoSections: React.ReactNode[] = [];
 
-  // ── Hero photo ──
-  if (totalPhotos > 0) {
-    sections.push(
-      <View key="hero-photo" style={styles.heroPhotoContainer}>
-        <TouchableOpacity activeOpacity={0.95} onPress={() => handlePhotoPress(0)}>
-          <Image
-            source={{ uri: photos[0] }}
-            style={styles.heroPhoto}
-            resizeMode="cover"
-          />
-        </TouchableOpacity>
-        {profile.isVerified && (
-          <View style={styles.verifiedBadge}>
-            <Text style={styles.verifiedIcon}>{'\u2713'}</Text>
+  // 1. Hakkinda (Bio) — after hero photo
+  if (profile.bio && profile.bio.length > 0) {
+    infoSections.push(
+      <View key="bio" style={styles.card}>
+        <Text style={styles.sectionTitle}>Hakkında</Text>
+        <Text style={styles.bioText}>{profile.bio}</Text>
+      </View>,
+    );
+  }
+
+  // 2. Yasam Tarzi (Lifestyle) — after 2nd photo
+  if (lifestyleRows.length > 0) {
+    infoSections.push(
+      <View key="lifestyle" style={styles.card}>
+        <Text style={styles.sectionTitle}>Yaşam Tarzı</Text>
+        {lifestyleRows.map((row) => (
+          <View key={row.label} style={styles.aboutRow}>
+            <View style={[styles.aboutIconCircle, { backgroundColor: row.iconBg }]}>
+              <Ionicons name={row.icon as keyof typeof Ionicons.glyphMap} size={18} color="#1A1A1A" />
+            </View>
+            <View style={styles.aboutRowContent}>
+              <Text style={styles.aboutRowLabel}>{row.label}</Text>
+              <Text style={styles.aboutRowValue}>{row.value}</Text>
+            </View>
+          </View>
+        ))}
+      </View>,
+    );
+  }
+
+  // 3. Uyum modulu (Compat reasons + details) — after 3rd photo
+  if (compatReasons.length > 0 || (!loadingCompat && compatPreviewData)) {
+    infoSections.push(
+      <View key="compat-module" style={styles.card}>
+        <Text style={styles.sectionTitle}>Uyum Analizi</Text>
+        {compatReasons.length > 0 && compatReasons.map((reason, idx) => (
+          <View key={idx} style={styles.reasonRow}>
+            <View style={styles.reasonDot} />
+            <Text style={styles.reasonText}>{reason}</Text>
+          </View>
+        ))}
+        {!loadingCompat && compatPreviewData && (
+          <View style={{ marginTop: compatReasons.length > 0 ? spacing.md : 0 }}>
+            <CompatibilityPreviewCard data={compatPreviewData} />
           </View>
         )}
-        <View style={styles.photoCounterBadge}>
-          <Text style={styles.photoCounterText}>1/{totalPhotos}</Text>
-        </View>
-      </View>
-    );
-  } else {
-    sections.push(
-      <View key="hero-placeholder" style={styles.heroPlaceholder}>
-        <Text style={styles.heroPlaceholderText}>{profile.name.charAt(0)}</Text>
-      </View>
+      </View>,
     );
   }
 
-  // Helper: push next remaining photo into sections
-  let _photoIdx = 0;
-  const pushNextPhoto = () => {
-    if (_photoIdx < remainingPhotos.length) {
-      const idx = _photoIdx;
-      _photoIdx++;
-      sections.push(
-        <InterleavedPhoto
-          key={`photo-${idx + 1}`}
-          uri={remainingPhotos[idx]}
-          index={idx + 1}
-          total={totalPhotos}
-          onPress={handlePhotoPress}
-        />
-      );
-    }
-  };
-
-  // ── Section 1: Basic info (always present) ──
-  sections.push(
-    <InfoCard key="basic-info">
-      <Text style={styles.nameText}>{profile.name}, {profile.age}</Text>
-      <View style={styles.basicDetailsRow}>
-        {profile.city ? (
-          <View style={styles.detailChip}>
-            <Text style={styles.detailChipIcon}>{'\uD83D\uDCCD'}</Text>
-            <Text style={styles.detailChipText}>{profile.city}</Text>
-          </View>
-        ) : null}
-        {profile.distanceKm != null && profile.distanceKm > 0 ? (
-          <View style={styles.detailChip}>
-            <Text style={styles.detailChipIcon}>{'\uD83D\uDCCF'}</Text>
-            <Text style={styles.detailChipText}>{profile.distanceKm.toFixed(1)} km</Text>
-          </View>
-        ) : null}
-      </View>
-      <ActivityStatus lastActiveAt={profile.lastActiveAt} variant="full" />
-      {profile.intentionTag ? (
-        <View style={styles.intentionChip}>
-          <Text style={styles.intentionText}>{profile.intentionTag}</Text>
-        </View>
-      ) : null}
-    </InfoCard>
-  );
-
-  // ── Section 2: Compatibility summary ──
-  if (!loadingCompat && compatibility) {
-    const score = compatibility.finalScore;
-    const compatColor = getCompatColor(score);
-    sections.push(
-      <InfoCard key="compat-summary">
-        <View style={styles.compatRow}>
-          <View style={[styles.compatCircle, { borderColor: compatColor }]}>
-            <Text style={[styles.compatScoreText, { color: compatColor }]}>%{score}</Text>
-          </View>
-          <View style={styles.compatTextCol}>
-            <Text style={styles.compatTitle}>
-              {compatibility.isSuperCompatible ? 'Süper Uyumluluk!' : 'Uyum Skoru'}
-            </Text>
-            {compatibility.breakdown && Object.keys(compatibility.breakdown).length > 0 && (
-              <Text style={styles.compatSubtitle}>
-                {Object.keys(compatibility.breakdown).length} kategori analiz edildi
-              </Text>
-            )}
-          </View>
-        </View>
-      </InfoCard>
-    );
-  } else if (loadingCompat) {
-    sections.push(
-      <InfoCard key="compat-loading">
-        <ActivityIndicator size="small" color={colors.primary} />
-      </InfoCard>
-    );
-  }
-
-  // ── PHOTO 2 — after basic info + compat ──
-  pushNextPhoto();
-
-  // ── Section 3: Compatibility reasons ──
-  const compatReasons = profile ? generateExpandedReasons(profile, currentUserProfile) : [];
-  if (compatReasons.length > 0) {
-    sections.push(
-      <InfoCard key="compat-reasons">
-        <Text style={styles.sectionLabel}>Uyumun temel nedenleri</Text>
-        <View style={styles.reasonsList}>
-          {compatReasons.map((reason, idx) => (
-            <View key={idx} style={styles.reasonRow}>
-              <View style={styles.reasonDot} />
-              <Text style={styles.reasonText}>{reason}</Text>
-            </View>
-          ))}
-        </View>
-      </InfoCard>
-    );
-  }
-
-  // ── Section 4: Interests / hobbies ──
+  // 4. Ilgi Alanlari (Interests) — after 4th photo
   if (profile.interestTags && profile.interestTags.length > 0) {
-    sections.push(
-      <InfoCard key="interests">
-        <Text style={styles.sectionLabel}>İlgi Alanları</Text>
-        <View style={styles.tagsWrap}>
-          {profile.interestTags!.map((tagId) => (
-            <View key={tagId} style={styles.tagChip}>
-              <Text style={styles.tagEmoji}>{INTEREST_EMOJI_MAP[tagId] ?? '\u2022'}</Text>
-              <Text style={styles.tagLabel}>{INTEREST_LABEL_MAP[tagId] ?? tagId}</Text>
+    infoSections.push(
+      <View key="interests" style={styles.card}>
+        <Text style={styles.sectionTitle}>İlgi Alanları</Text>
+        <View style={styles.chipRow}>
+          {profile.interestTags.map((tagId) => (
+            <View key={tagId} style={styles.hobbyChip}>
+              <Text style={styles.hobbyChipText}>
+                {INTEREST_EMOJI_MAP[tagId] ? `${INTEREST_EMOJI_MAP[tagId]} ` : ''}
+                {INTEREST_LABEL_MAP[tagId] ?? tagId}
+              </Text>
             </View>
           ))}
         </View>
-      </InfoCard>
+      </View>,
     );
   }
 
-  // ── PHOTO 3 — after compat reasons + interests ──
-  pushNextPhoto();
-
-  // ── Section 5: Bio / About me ──
-  if (profile.bio && profile.bio.length > 0) {
-    sections.push(
-      <InfoCard key="bio">
-        <Text style={styles.sectionLabel}>Hakkında</Text>
-        <Text style={styles.bioText}>{profile.bio}</Text>
-      </InfoCard>
+  // 5. Rozetleri (Badges)
+  if (profile.earnedBadges && profile.earnedBadges.length > 0) {
+    infoSections.push(
+      <View key="badges" style={styles.card}>
+        <Text style={styles.sectionTitle}>Rozetleri</Text>
+        <BadgeShowcase badgeKeys={profile.earnedBadges} size={32} />
+      </View>,
     );
   }
 
-  // ── Section 6: Lifestyle / details card ──
-  const lifestyleItems: Array<{ icon: string; label: string; value: string }> = [];
-  if (profile.height) lifestyleItems.push({ icon: '\uD83D\uDCCF', label: 'Boy', value: `${profile.height} cm` });
-  if (profile.job) lifestyleItems.push({ icon: '\uD83D\uDCBC', label: 'Meslek', value: profile.job });
-  if (profile.education) lifestyleItems.push({ icon: '\uD83C\uDF93', label: 'Eğitim', value: profile.education });
-  if (profile.sports) lifestyleItems.push({ icon: '\uD83C\uDFCB\uFE0F', label: 'Spor', value: profile.sports });
-  if (profile.smoking) lifestyleItems.push({ icon: '\uD83D\uDEAD', label: 'Sigara', value: profile.smoking });
-  if (profile.children) lifestyleItems.push({ icon: '\uD83D\uDC76', label: 'Çocuk', value: profile.children });
-
-  if (lifestyleItems.length > 0) {
-    sections.push(
-      <InfoCard key="lifestyle">
-        <Text style={styles.sectionLabel}>Yaşam Tarzı</Text>
-        <View style={styles.lifestyleGrid}>
-          {lifestyleItems.map((item) => (
-            <View key={item.label} style={styles.lifestyleItem}>
-              <Text style={styles.lifestyleIcon}>{item.icon}</Text>
-              <View style={styles.lifestyleTextCol}>
-                <Text style={styles.lifestyleLabel}>{item.label}</Text>
-                <Text style={styles.lifestyleValue}>{item.value}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-      </InfoCard>
-    );
-  }
-
-  // ── PHOTO 4 — after bio + lifestyle ──
-  pushNextPhoto();
-
-  // ── Section 7: Voice intro ──
+  // 6. Sesini Dinle (Voice intro)
   if (profile.voiceIntroUrl) {
-    sections.push(
-      <InfoCard key="voice">
-        <Text style={styles.sectionLabel}>Sesini Dinle</Text>
+    infoSections.push(
+      <View key="voice" style={styles.card}>
+        <Text style={styles.sectionTitle}>Sesini Dinle</Text>
         <VoiceIntroPlayer
-          voiceIntroUrl={profile.voiceIntroUrl!}
+          voiceIntroUrl={profile.voiceIntroUrl}
           userName={profile.name}
         />
-      </InfoCard>
+      </View>,
     );
   }
 
-  // ── Section 8: Badges ──
-  if (profile.earnedBadges && profile.earnedBadges.length > 0) {
-    sections.push(
-      <InfoCard key="badges">
-        <Text style={styles.sectionLabel}>Rozetleri</Text>
-        <BadgeShowcase badgeKeys={profile.earnedBadges!} size={32} />
-      </InfoCard>
-    );
-  }
-
-  // ── Section 9: Compatibility breakdown details ──
-  if (!loadingCompat && compatPreviewData) {
-    sections.push(
-      <View key="compat-detail" style={styles.compatDetailContainer}>
-        <Text style={styles.sectionLabelPadded}>Uyum Detayları</Text>
-        <CompatibilityPreviewCard data={compatPreviewData} />
-      </View>
-    );
-  }
-
-  // ── Any remaining photos at the end ──
-  while (_photoIdx < remainingPhotos.length) {
-    const idx = _photoIdx;
-    _photoIdx++;
-    sections.push(
-      <InterleavedPhoto
-        key={`photo-${idx + 1}`}
-        uri={remainingPhotos[idx]}
-        index={idx + 1}
-        total={totalPhotos}
-        onPress={handlePhotoPress}
-      />
-    );
-  }
-
-  return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backIcon}>{'←'}</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Profil</Text>
-        <View style={{ width: 40 }} />
+  // ── Top content (identity card + compat score) ──
+  const topContent = (
+    <View style={styles.topContentContainer}>
+      {/* Identity card */}
+      <View style={styles.identityCard}>
+        <View style={styles.nameRow}>
+          <Text style={styles.userName}>{profile.name}, {profile.age}</Text>
+          {profile.isVerified && <VerifiedBadge size="medium" animated />}
+        </View>
+        <View style={styles.cityRow}>
+          {profile.city ? <Text style={styles.userCity}>{profile.city}</Text> : null}
+          {profile.distanceKm != null && profile.distanceKm > 0 ? (
+            <Text style={styles.userDistance}>{profile.distanceKm.toFixed(1)} km</Text>
+          ) : null}
+        </View>
+        <ActivityStatus lastActiveAt={profile.lastActiveAt} variant="full" />
+        {profile.intentionTag ? (
+          <View style={styles.intentionChip}>
+            <Text style={styles.intentionText}>{profile.intentionTag}</Text>
+          </View>
+        ) : null}
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {sections}
-        {/* Spacer for action buttons */}
-        <View style={{ height: 120 }} />
-      </ScrollView>
+      {/* Stats row */}
+      <View style={styles.statsCard}>
+        <View style={styles.statsRow}>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>12</Text>
+            <Text style={styles.statLabel}>Gönderi</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>96</Text>
+            <Text style={styles.statLabel}>Takipçi</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>64</Text>
+            <Text style={styles.statLabel}>Takip</Text>
+          </View>
+        </View>
+      </View>
 
-      {/* Full-screen photo viewer */}
-      {viewerPhotoIndex !== null && (
-        <Modal visible transparent animationType="fade" onRequestClose={() => setViewerPhotoIndex(null)}>
-          <View style={styles.viewerOverlay}>
-            <TouchableOpacity
-              style={styles.viewerClose}
-              onPress={() => setViewerPhotoIndex(null)}
-            >
-              <Text style={styles.viewerCloseIcon}>✕</Text>
-            </TouchableOpacity>
-            <Image
-              source={{ uri: photos[viewerPhotoIndex] }}
-              style={styles.viewerImage}
-              resizeMode="contain"
-            />
-            <View style={styles.viewerCounter}>
-              <Text style={styles.viewerCounterText}>
-                {viewerPhotoIndex + 1} / {totalPhotos}
-              </Text>
+      {/* Weekly views */}
+      <View style={styles.weeklyViewsCard}>
+        <Text style={styles.weeklyViewsLabel}>Bu hafta profilini görenler</Text>
+        <Text style={styles.weeklyViewsCount}>43 kişi</Text>
+      </View>
+
+      {/* Compatibility score */}
+      {compatScore !== null && compatColor !== null && compatibility && (
+        <View style={styles.compatCard}>
+          <View style={styles.compatInlineRow}>
+            <View style={[styles.compatCircle, { borderColor: compatColor }]}>
+              <Text style={[styles.compatScoreText, { color: compatColor }]}>%{compatScore}</Text>
             </View>
-            <View style={styles.viewerNav}>
-              {viewerPhotoIndex > 0 && (
-                <TouchableOpacity
-                  style={styles.viewerNavBtn}
-                  onPress={() => setViewerPhotoIndex(viewerPhotoIndex - 1)}
-                >
-                  <Text style={styles.viewerNavText}>{'‹'}</Text>
-                </TouchableOpacity>
-              )}
-              <View style={{ flex: 1 }} />
-              {viewerPhotoIndex < totalPhotos - 1 && (
-                <TouchableOpacity
-                  style={styles.viewerNavBtn}
-                  onPress={() => setViewerPhotoIndex(viewerPhotoIndex + 1)}
-                >
-                  <Text style={styles.viewerNavText}>{'›'}</Text>
-                </TouchableOpacity>
+            <View style={styles.compatTextCol}>
+              <Text style={styles.compatTitle}>
+                {compatibility.isSuperCompatible ? 'Süper Uyumluluk!' : 'Uyum Skoru'}
+              </Text>
+              {compatibility.breakdown && Object.keys(compatibility.breakdown).length > 0 && (
+                <Text style={styles.compatSubtitle}>
+                  {Object.keys(compatibility.breakdown).length} kategori analiz edildi
+                </Text>
               )}
             </View>
           </View>
-        </Modal>
+        </View>
       )}
+      {loadingCompat && (
+        <View style={styles.compatCard}>
+          <View style={styles.compatInlineRow}>
+            <ActivityIndicator size="small" color={colors.primary} />
+          </View>
+        </View>
+      )}
+    </View>
+  );
 
-      {/* Action buttons */}
-      <View style={[styles.actions, { paddingBottom: insets.bottom + spacing.md }]}>
-        <TouchableOpacity
-          style={styles.passButton}
-          onPress={() => handleSwipe('left')}
-          activeOpacity={0.8}
-          accessibilityLabel="Geç"
-          accessibilityRole="button"
-        >
-          <Text style={styles.passButtonIcon}>✕</Text>
-          <Text style={styles.actionLabel}>Geç</Text>
-        </TouchableOpacity>
+  // ── Header bar ──
+  const headerBar = (
+    <View style={[styles.headerBar, { paddingTop: insets.top }]}>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Ionicons name="chevron-back" size={22} color={colors.text} />
+      </TouchableOpacity>
+      <Text style={styles.headerTitle}>Profil</Text>
+      <View style={{ width: 40 }} />
+    </View>
+  );
 
-        <TouchableOpacity
-          style={styles.paidMsgButton}
-          onPress={() => setShowPaidMessageModal(true)}
-          activeOpacity={0.8}
-          accessibilityLabel="Mesaj Gönder"
-          accessibilityRole="button"
-        >
-          <Text style={styles.paidMsgButtonIcon}>{'\u2709\uFE0F'}</Text>
-          <Text style={styles.actionLabel}>1 Mesaj</Text>
-        </TouchableOpacity>
+  // ── Footer (action buttons) ──
+  const footer = (
+    <View style={[styles.actions, { paddingBottom: insets.bottom + spacing.md }]}>
+      <TouchableOpacity
+        style={styles.passButton}
+        onPress={() => handleSwipe('left')}
+        activeOpacity={0.8}
+        accessibilityLabel="Geç"
+        accessibilityRole="button"
+      >
+        <Text style={styles.passButtonIcon}>{'\u2715'}</Text>
+        <Text style={styles.actionLabel}>Geç</Text>
+      </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.likeButton}
-          onPress={() => handleSwipe('right')}
-          activeOpacity={0.8}
-          accessibilityLabel="Beğen"
-          accessibilityRole="button"
-        >
-          <Text style={styles.likeButtonIcon}>💜</Text>
-          <Text style={styles.actionLabel}>Beğen</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        style={styles.paidMsgButton}
+        onPress={() => setShowPaidMessageModal(true)}
+        activeOpacity={0.8}
+        accessibilityLabel="Mesaj Gönder"
+        accessibilityRole="button"
+      >
+        <Text style={styles.paidMsgButtonIcon}>{'\u2709\uFE0F'}</Text>
+        <Text style={styles.actionLabel}>1 Mesaj</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.likeButton}
+        onPress={() => handleSwipe('right')}
+        activeOpacity={0.8}
+        accessibilityLabel="Beğen"
+        accessibilityRole="button"
+      >
+        <Text style={styles.likeButtonIcon}>{'\uD83D\uDC9C'}</Text>
+        <Text style={styles.actionLabel}>Beğen</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  return (
+    <>
+      <InterleavedProfileLayout
+        photos={profile.photoUrls}
+        topContent={topContent}
+        infoSections={infoSections}
+        headerBar={headerBar}
+        footer={footer}
+        scrollBottomPadding={120}
+      />
 
       {/* Paid First Message Modal */}
       <PaidMessageModal
@@ -665,7 +535,6 @@ export const ProfilePreviewScreen: React.FC = () => {
           setShowPaidMessageModal(false);
           try {
             const result = await waveService.sendPaidMessage(userId, message);
-            // Add match to store so it appears in Matches/Messages
             useMatchStore.getState().addMatch({
               id: result.matchId,
               userId,
@@ -681,7 +550,6 @@ export const ProfilePreviewScreen: React.FC = () => {
               matchedAt: new Date().toISOString(),
               lastMessage: message,
             });
-            // Create a real ChatMessage so it appears in the chat thread and Mesajlar tab
             const now = new Date().toISOString();
             const chatMessage: ChatMessage = {
               id: result.messageId || `paid-${Date.now()}`,
@@ -704,7 +572,7 @@ export const ProfilePreviewScreen: React.FC = () => {
           }
         }}
       />
-    </View>
+    </>
   );
 };
 
@@ -713,12 +581,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
+  headerBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
+    backgroundColor: colors.background,
   },
   backButton: {
     width: 40,
@@ -728,152 +597,88 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  backIcon: {
-    ...typography.bodyLarge,
-    color: colors.text,
-  },
   headerTitle: {
-    ...typography.h4,
+    ...typography.h3,
     color: colors.text,
-  },
-  scrollView: {
-    flex: 1,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    gap: spacing.md,
   },
   emptyText: {
     ...typography.body,
     color: colors.textSecondary,
   },
 
-  // ── Hero photo (first photo, larger) ──
-  heroPhotoContainer: {
-    position: 'relative',
-    marginBottom: spacing.sm,
+  // ── Top content ──
+  topContentContainer: {
+    paddingTop: spacing.md,
   },
-  heroPhoto: {
-    width: SCREEN_WIDTH,
-    height: PHOTO_HEIGHT,
-  },
-  heroPlaceholder: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_WIDTH * 0.8,
-    backgroundColor: colors.primary + '20',
-    justifyContent: 'center',
+  identityCard: {
     alignItems: 'center',
-  },
-  heroPlaceholderText: {
-    fontSize: 72,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  verifiedBadge: {
-    position: 'absolute',
-    top: spacing.sm,
-    left: spacing.md,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  verifiedIcon: {
-    color: '#FFF',
-    fontWeight: '700',
-    fontSize: 14,
-  },
-
-  // ── Interleaved photo (subsequent photos) ──
-  interleavedPhotoContainer: {
-    position: 'relative',
+    paddingVertical: spacing.md,
     marginHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-    borderRadius: borderRadius.xl,
-    overflow: 'hidden',
-    ...shadows.small,
-  },
-  interleavedPhoto: {
-    width: SCREEN_WIDTH - spacing.lg * 2,
-    height: (SCREEN_WIDTH - spacing.lg * 2) * 1.15,
-    borderRadius: borderRadius.xl,
-  },
-  photoCounterBadge: {
-    position: 'absolute',
-    top: spacing.sm,
-    right: spacing.md,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-  },
-  photoCounterText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#FFF',
-  },
-
-  // ── Info card (shared wrapper for all info blocks) ──
-  infoCard: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.lg,
     padding: spacing.md,
-    ...shadows.small,
+    marginBottom: spacing.md,
   },
-
-  // ── Basic identity ──
-  nameText: {
-    ...typography.h2,
-    color: colors.text,
-    marginBottom: spacing.xs,
-  },
-  basicDetailsRow: {
+  nameRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: 2,
+  },
+  userName: {
+    ...typography.h3,
+    color: colors.text,
+  },
+  cityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: spacing.sm,
     marginBottom: spacing.sm,
   },
-  detailChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  detailChipIcon: {
-    fontSize: 13,
-  },
-  detailChipText: {
-    ...typography.bodySmall,
+  userCity: {
+    ...typography.body,
     color: colors.textSecondary,
   },
+  userDistance: {
+    ...typography.body,
+    color: colors.textTertiary,
+  },
   intentionChip: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.primary + '20',
+    backgroundColor: colors.secondary + '20',
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
   },
   intentionText: {
-    ...typography.captionSmall,
-    color: colors.primary,
+    ...typography.bodySmall,
+    color: colors.secondary,
     fontWeight: '600',
   },
 
-  // ── Compatibility summary ──
-  compatRow: {
+  // ── Compat score card ──
+  compatCard: {
+    marginHorizontal: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  compatInlineRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
   },
   compatCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     borderWidth: 3,
     justifyContent: 'center',
     alignItems: 'center',
@@ -896,51 +701,81 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // ── Interests ──
-  sectionLabel: {
-    ...typography.h4,
-    color: colors.text,
-    marginBottom: spacing.sm,
+  // ── Generic card ──
+  card: {
+    marginHorizontal: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
   },
-  sectionLabelPadded: {
-    ...typography.h4,
+  sectionTitle: {
+    ...typography.bodyLarge,
     color: colors.text,
-    marginBottom: spacing.sm,
-    paddingHorizontal: spacing.lg,
+    fontWeight: '700',
+    marginBottom: spacing.md,
   },
-  tagsWrap: {
+  bioText: {
+    ...typography.body,
+    color: colors.textSecondary,
+    lineHeight: 24,
+  },
+
+  // ── Interest chips ──
+  chipRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.xs,
+    gap: 8,
   },
-  tagChip: {
+  hobbyChip: {
+    backgroundColor: colors.primary + '12',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  hobbyChipText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: colors.primary,
+  },
+
+  // ── About/Lifestyle rows ──
+  aboutRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: glassmorphism.bg,
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 5,
-    gap: 4,
-    borderWidth: 1,
-    borderColor: glassmorphism.border,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surfaceBorder,
   },
-  tagEmoji: {
-    fontSize: 13,
+  aboutIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
-  tagLabel: {
-    ...typography.captionSmall,
-    color: 'rgba(255, 255, 255, 0.75)',
+  aboutRowContent: {
+    flex: 1,
+  },
+  aboutRowLabel: {
+    fontSize: 12,
     fontWeight: '500',
+    color: colors.textTertiary,
+    marginBottom: 2,
+  },
+  aboutRowValue: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: colors.text,
   },
 
   // ── Compat reasons ──
-  reasonsList: {
-    gap: spacing.sm,
-  },
   reasonRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: spacing.sm,
+    marginBottom: spacing.sm,
   },
   reasonDot: {
     width: 6,
@@ -957,112 +792,55 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
 
-  // ── Bio ──
-  bioText: {
-    ...typography.body,
-    color: colors.textSecondary,
-    lineHeight: 22,
+  // ── Stats row ──
+  statsCard: {
+    marginHorizontal: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
   },
-
-  // ── Lifestyle card ──
-  lifestyleGrid: {
-    gap: spacing.sm,
-  },
-  lifestyleItem: {
+  statsRow: {
     flexDirection: 'row',
+    justifyContent: 'space-around',
     alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.xs,
   },
-  lifestyleIcon: {
-    fontSize: 18,
-    width: 28,
-    textAlign: 'center',
+  statItem: {
+    alignItems: 'center',
   },
-  lifestyleTextCol: {
-    flex: 1,
-  },
-  lifestyleLabel: {
-    ...typography.captionSmall,
-    color: colors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  lifestyleValue: {
-    ...typography.body,
+  statNumber: {
+    ...typography.h4,
     color: colors.text,
-    fontWeight: '500',
-    marginTop: 1,
-  },
-
-  // ── Compatibility detail ──
-  compatDetailContainer: {
-    marginBottom: spacing.sm,
-    paddingHorizontal: spacing.lg,
-  },
-
-  // ── Full-screen photo viewer ──
-  viewerOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  viewerClose: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  viewerCloseIcon: {
-    fontSize: 18,
-    color: '#FFF',
     fontWeight: '700',
   },
-  viewerImage: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_WIDTH * 1.4,
+  statLabel: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: 2,
   },
-  viewerCounter: {
-    position: 'absolute',
-    bottom: 60,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
+  statDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: colors.divider,
   },
-  viewerCounterText: {
-    ...typography.bodySmall,
-    color: '#FFF',
-    fontWeight: '600',
-  },
-  viewerNav: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: '45%',
+  weeklyViewsCard: {
+    marginHorizontal: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-  },
-  viewerNavBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    justifyContent: 'center',
     alignItems: 'center',
   },
-  viewerNavText: {
-    fontSize: 28,
-    color: '#FFF',
-    fontWeight: '700',
+  weeklyViewsLabel: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+  },
+  weeklyViewsCount: {
+    ...typography.body,
+    color: colors.primary,
+    fontWeight: '600',
   },
 
   // ── Action buttons ──

@@ -429,15 +429,232 @@ const MOCK_ACTIVITY_OFFSETS_MS: Record<string, number> = {
   'mock-8': 15 * 60 * 1000,      // 15 min ago
 };
 
-const getMockFeedResponse = (): FeedResponse => ({
-  cards: MOCK_CARDS.map((card) => ({
-    ...card,
-    lastActiveAt: new Date(Date.now() - (MOCK_ACTIVITY_OFFSETS_MS[card.userId] ?? 3600000)).toISOString(),
-  })),
-  remaining: 15,
-  dailyLimit: 20,
-  totalCandidates: MOCK_CARDS.length,
-});
+// ─── Mock profile generator for 50-card feed ────────────────────
+
+const MOCK_NAMES = [
+  'Elif', 'Zeynep', 'Defne', 'Selin', 'Cansu', 'Ayşe', 'Dila', 'Melis',
+  'Buse', 'Ece', 'İpek', 'Nil', 'Derya', 'Gizem', 'Hazal', 'İrem',
+  'Naz', 'Pelin', 'Rana', 'Simge', 'Tuğçe', 'Yağmur', 'Aslı', 'Başak',
+  'Ceren', 'Damla', 'Ebru', 'Fulya', 'Gülşen', 'Hande', 'Kübra', 'Lale',
+  'Meltem', 'Nehir', 'Özge', 'Pınar', 'Sevgi', 'Tuba', 'Ülkü', 'Vildan',
+];
+
+const MOCK_CITIES = [
+  'İstanbul', 'Ankara', 'İzmir', 'Bursa', 'Antalya', 'Eskişehir',
+  'Trabzon', 'Gaziantep', 'Konya', 'Mersin', 'Kayseri', 'Adana',
+];
+
+const MOCK_BIOS = [
+  'Kitap kurdu, kahve bağımlısı. Hayatı keşfetmeyi seven biri.',
+  'Müzik ve sanat hayatımın merkezinde.',
+  'Doğa yürüyüşleri, yoga ve sağlıklı yaşam tutkunu.',
+  'Film önerileri konusunda iddialıyım. Kedileri severim.',
+  'Fotoğrafçılık, seyahat ve yeni lezzetler keşfetmek benim işim.',
+  'İnsanları anlamak en büyük tutkum.',
+  'Deniz, güneş ve spor. Hayatı dolu dolu yaşıyorum.',
+  'Tasarım, estetik ve yaratıcılık benim dünyam.',
+  'Gitar çalıyorum, konser kaçırmam.',
+  'Yazılım dünyasında kaybolmuş bir ruh.',
+  'Aşçılık benim meditasyonum, mutfakta saatler geçiririm.',
+  'Dağ tırmanışı ve kamp benim kaçışım.',
+  'Podcast dinlemeyi ve uzun yürüyüşleri severim.',
+  'Sanat galerilerinde vakit geçirmeyi çok severim.',
+  'Pilates ve mindfulness ile kendimi buldum.',
+  'Her hafta yeni bir restoran denemek benim ritüelim.',
+  'Çay ve sohbet: basit ama en güzel ikili.',
+  'Biyoloji tutkunu. Doğayı gözlemlemek beni mutlu ediyor.',
+  'Tiyatro sahnesi benim ikinci evim.',
+  'Minimalist yaşam ve sürdürülebilirlik savunucusu.',
+];
+
+const MOCK_JOBS = [
+  'Editör', 'Müzisyen', 'Diyetisyen', 'Yazılım Geliştirici', 'Fotoğrafçı',
+  'Psikolog', 'Spor Eğitmeni', 'Mimar', 'Avukat', 'Doktor', 'Öğretmen',
+  'Grafik Tasarımcı', 'Pazarlama Uzmanı', 'Eczacı', 'Hemşire', 'Muhasebeci',
+  'İç Mimar', 'Sosyolog', 'Gazeteci', 'Çevirmen',
+];
+
+const MOCK_EDUCATIONS = [
+  'İstanbul Üniversitesi', 'Hacettepe Üniversitesi', 'Ege Üniversitesi',
+  'ODTÜ', 'Boğaziçi Üniversitesi', 'İTÜ', 'Bilkent Üniversitesi',
+  'Koç Üniversitesi', 'Sabancı Üniversitesi', 'Ankara Üniversitesi',
+  'Dokuz Eylül Üniversitesi', 'Galatasaray Üniversitesi', 'Marmara Üniversitesi',
+];
+
+const MOCK_INTEREST_POOLS: string[][] = [
+  ['reading', 'coffee', 'travel'],
+  ['music', 'art', 'guitar'],
+  ['hiking', 'yoga', 'cooking'],
+  ['technology', 'movies', 'cats'],
+  ['photography', 'travel', 'food'],
+  ['psychology', 'reading', 'meditation'],
+  ['swimming', 'fitness', 'beach'],
+  ['architecture', 'design', 'art'],
+  ['dancing', 'cinema', 'wine'],
+  ['running', 'nature', 'camping'],
+  ['theatre', 'literature', 'poetry'],
+  ['cooking', 'gardening', 'sustainability'],
+];
+
+const MOCK_COMPAT_EXPLANATIONS = [
+  'Benzer yaşam değerleri ve iletişim tarzı',
+  'Güçlü uyum alanları mevcut',
+  'Ortak ilgi alanları keşfedilecek',
+  'Düşünce yapısı ve humor uyumu yüksek',
+  'Keşfedilecek farklılıklar var',
+  'Çok güçlü düşünce ve değer uyumu',
+  'Aktif yaşam tarzı ortak noktanız',
+  'Estetik anlayışı ve vizyon uyumu',
+  'Hayata bakış açınız benzer',
+  'Enerjiniz birbirini tamamlıyor',
+];
+
+const MOCK_STRONG_CATEGORIES_POOL: string[][] = [
+  ['İletişim', 'Değerler', 'Yaşam Tarzı'],
+  ['Hobiler', 'Sanat', 'Sosyallik'],
+  ['Sağlık', 'Doğa'],
+  ['Humor', 'Teknoloji', 'Eğlence'],
+  ['Macera', 'Yemek'],
+  ['Değerler', 'İletişim', 'Empati'],
+  ['Spor', 'Enerji', 'Sosyallik'],
+  ['Yaratıcılık', 'Vizyon', 'Estetik'],
+  ['Kültür', 'Edebiyat'],
+  ['Kariyer', 'Motivasyon'],
+];
+
+const MOCK_BADGE_POOL = [
+  'first_spark', 'verified_star', 'music_lover', 'tech_savvy',
+  'sports_fan', 'deep_thinker', 'creative_mind', 'bookworm',
+];
+
+const MOCK_SMOKING_OPTIONS = ['İçmez', 'Sosyal içici', 'İçer'];
+const MOCK_SPORTS_OPTIONS = ['Yoga', 'Koşu', 'Yüzme', 'Fitness', 'Pilates', 'Dans', 'Tenis'];
+const MOCK_CHILDREN_OPTIONS = ['İstemiyor', 'İstiyor', 'Belki ileride'];
+const MOCK_INTENTION_TAGS: Array<'serious_relationship' | 'exploring' | 'not_sure'> = [
+  'serious_relationship', 'exploring', 'not_sure',
+];
+
+// Collect all photo URLs from the static MOCK_CARDS for reuse
+const MOCK_PHOTO_POOL = MOCK_CARDS.flatMap((c) => c.photos);
+
+/** Simple seeded-ish picker: deterministic per index so the feed is stable across renders */
+function pickFrom<T>(arr: T[], index: number, offset: number = 0): T {
+  return arr[(index + offset) % arr.length];
+}
+
+function pickMultiple<T>(arr: T[], index: number, min: number, max: number): T[] {
+  const count = min + ((index * 7) % (max - min + 1));
+  const result: T[] = [];
+  for (let i = 0; i < count; i++) {
+    const item = arr[(index * 3 + i * 5) % arr.length];
+    if (!result.includes(item)) {
+      result.push(item);
+    }
+  }
+  // Ensure at least min items
+  while (result.length < min) {
+    const item = arr[(index + result.length) % arr.length];
+    if (!result.includes(item)) result.push(item);
+    else break;
+  }
+  return result;
+}
+
+function generateMockCards(count: number): FeedCard[] {
+  // Start with the original 8 static cards
+  const cards: FeedCard[] = [...MOCK_CARDS];
+
+  for (let i = MOCK_CARDS.length; i < count; i++) {
+    const name = pickFrom(MOCK_NAMES, i, 3);
+    const city = pickFrom(MOCK_CITIES, i, 7);
+    const age = 20 + ((i * 13) % 12); // ages 20-31
+    const score = 60 + ((i * 17) % 38); // scores 60-97
+    const level = score >= 85 ? 'super' : 'normal';
+    const intentionTag = pickFrom(MOCK_INTENTION_TAGS, i, 2);
+
+    // Pick 3-5 photos from the pool
+    const photoCount = 3 + ((i * 11) % 3); // 3, 4, or 5
+    const photos: Array<{ url: string; thumbnailUrl: string }> = [];
+    for (let p = 0; p < photoCount; p++) {
+      photos.push(MOCK_PHOTO_POOL[(i * 3 + p * 7) % MOCK_PHOTO_POOL.length]);
+    }
+
+    const isVerified = i % 3 !== 0;
+    const isSelfieVerified = i % 4 !== 0;
+
+    const badges = pickMultiple(MOCK_BADGE_POOL, i, 0, 2);
+    const interests = pickFrom(MOCK_INTEREST_POOLS, i, 4);
+    const explanation = pickFrom(MOCK_COMPAT_EXPLANATIONS, i, 1);
+    const strongCats = pickFrom(MOCK_STRONG_CATEGORIES_POOL, i, 6);
+
+    cards.push({
+      userId: `mock-${i + 1}`,
+      firstName: name,
+      age,
+      city,
+      bio: pickFrom(MOCK_BIOS, i, 5),
+      intentionTag,
+      compatibility: { score, level },
+      photos,
+      isVerified,
+      isSelfieVerified,
+      isFullyVerified: isVerified && isSelfieVerified,
+      distanceKm: parseFloat((0.5 + ((i * 19) % 200) / 10).toFixed(1)),
+      earnedBadges: badges,
+      interestTags: interests,
+      compatExplanation: explanation,
+      strongCategories: strongCats,
+      height: 155 + ((i * 7) % 25),
+      smoking: pickFrom(MOCK_SMOKING_OPTIONS, i, 0),
+      sports: pickFrom(MOCK_SPORTS_OPTIONS, i, 2),
+      children: pickFrom(MOCK_CHILDREN_OPTIONS, i, 1),
+      job: pickFrom(MOCK_JOBS, i, 3),
+      education: pickFrom(MOCK_EDUCATIONS, i, 4),
+    });
+  }
+
+  return cards;
+}
+
+/** Generate a random-ish activity offset for each mock user */
+function generateActivityOffsets(cards: FeedCard[]): Record<string, number> {
+  const offsets: Record<string, number> = {};
+  const buckets = [
+    45 * 1000,            // online
+    90 * 1000,            // online
+    5 * 60 * 1000,        // 5 min
+    15 * 60 * 1000,       // 15 min
+    30 * 60 * 1000,       // 30 min
+    60 * 60 * 1000,       // 1 hour
+    2 * 60 * 60 * 1000,   // 2 hours
+    6 * 60 * 60 * 1000,   // 6 hours
+  ];
+
+  for (let i = 0; i < cards.length; i++) {
+    const card = cards[i];
+    // Use static MOCK_ACTIVITY_OFFSETS_MS for the original 8 cards
+    if (MOCK_ACTIVITY_OFFSETS_MS[card.userId] !== undefined) {
+      offsets[card.userId] = MOCK_ACTIVITY_OFFSETS_MS[card.userId];
+    } else {
+      offsets[card.userId] = buckets[(i * 3) % buckets.length];
+    }
+  }
+  return offsets;
+}
+
+const getMockFeedResponse = (): FeedResponse => {
+  const cards = generateMockCards(50);
+  const offsets = generateActivityOffsets(cards);
+  return {
+    cards: cards.map((card) => ({
+      ...card,
+      lastActiveAt: new Date(Date.now() - (offsets[card.userId] ?? 3600000)).toISOString(),
+    })),
+    remaining: 0,
+    dailyLimit: 50,
+    totalCandidates: cards.length,
+  };
+};
 
 // Mock incoming likes — users who liked the current user (distinct from matches)
 const now = new Date();

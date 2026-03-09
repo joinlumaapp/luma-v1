@@ -1,5 +1,6 @@
-// Activities screen — list of real-life activities users can join
-// Meetup-inspired social events inside the dating app
+// Activities screen — premium social events feed
+// Visual activity cards with category imagery, facepile avatars,
+// animated filter chips, distance badges, urgency tags, and pop FAB
 
 import React, { useEffect, useCallback, useRef, useState } from 'react';
 import {
@@ -13,29 +14,84 @@ import {
   Image,
   Animated,
   Alert,
+  Dimensions,
+  Easing,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import type { ActivitiesStackParamList } from '../../navigation/types';
 import { useActivityStore } from '../../stores/activityStore';
 import { useAuthStore } from '../../stores/authStore';
-import { ACTIVITY_TYPE_ICONS } from '../../services/activityService';
 import type { Activity, ActivityType } from '../../services/activityService';
-import { colors } from '../../theme/colors';
+import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows, layout } from '../../theme/spacing';
 
 type NavProp = NativeStackNavigationProp<ActivitiesStackParamList, 'Activities'>;
 
-// ─── Helpers ──────────────────────────────────────────────────────
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// ─── Category Visual Config ─────────────────────────────────────────────────
+
+interface CategoryVisual {
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+  gradientColors: [string, string];
+}
+
+const CATEGORY_VISUALS: Record<ActivityType | 'other', CategoryVisual> = {
+  coffee: {
+    icon: 'cafe',
+    color: '#D97706',
+    gradientColors: ['#92400E', '#78350F'],
+  },
+  dinner: {
+    icon: 'restaurant',
+    color: '#EC4899',
+    gradientColors: ['#9D174D', '#831843'],
+  },
+  drinks: {
+    icon: 'wine',
+    color: '#8B5CF6',
+    gradientColors: ['#5B21B6', '#4C1D95'],
+  },
+  outdoor: {
+    icon: 'leaf',
+    color: '#10B981',
+    gradientColors: ['#065F46', '#064E3B'],
+  },
+  sport: {
+    icon: 'football',
+    color: '#3B82F6',
+    gradientColors: ['#1E40AF', '#1E3A8A'],
+  },
+  culture: {
+    icon: 'color-palette',
+    color: '#F59E0B',
+    gradientColors: ['#92400E', '#78350F'],
+  },
+  travel: {
+    icon: 'airplane',
+    color: '#06B6D4',
+    gradientColors: ['#155E75', '#164E63'],
+  },
+  other: {
+    icon: 'sparkles',
+    color: '#8B5CF6',
+    gradientColors: ['#5B21B6', '#4C1D95'],
+  },
+};
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const formatActivityDate = (dateString: string): string => {
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = date.getTime() - now.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
   const timeStr = date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
 
   if (diffDays === 0) return `Bugün ${timeStr}`;
@@ -44,18 +100,114 @@ const formatActivityDate = (dateString: string): string => {
   return `${dayStr} ${timeStr}`;
 };
 
-// ─── Filter Chips ─────────────────────────────────────────────────
+const isStartingSoon = (dateString: string): boolean => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = date.getTime() - now.getTime();
+  const twoHoursMs = 2 * 60 * 60 * 1000;
+  return diffMs > 0 && diffMs <= twoHoursMs;
+};
 
-const FILTER_OPTIONS: Array<{ key: ActivityType | 'all'; label: string }> = [
-  { key: 'all', label: 'Tümü' },
-  { key: 'coffee', label: '☕ Kahve' },
-  { key: 'dinner', label: '🍽️ Yemek' },
-  { key: 'outdoor', label: '🌿 Açık Hava' },
-  { key: 'sport', label: '⚽ Spor' },
-  { key: 'culture', label: '🎭 Kültür' },
-  { key: 'drinks', label: '🍷 İçecek' },
-  { key: 'travel', label: '✈️ Gezi' },
+// ─── Filter Chips with Glow + Bounce ─────────────────────────────────────────
+
+interface FilterOption {
+  key: ActivityType | 'all';
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+}
+
+const FILTER_OPTIONS: FilterOption[] = [
+  { key: 'all', label: 'Tümü', icon: 'apps', color: palette.purple[500] },
+  { key: 'coffee', label: 'Kahve', icon: 'cafe', color: '#D97706' },
+  { key: 'dinner', label: 'Yemek', icon: 'restaurant', color: '#EC4899' },
+  { key: 'sport', label: 'Spor', icon: 'football', color: '#3B82F6' },
+  { key: 'culture', label: 'Kültür', icon: 'color-palette', color: '#F59E0B' },
+  { key: 'outdoor', label: 'Açık Hava', icon: 'leaf', color: '#10B981' },
+  { key: 'drinks', label: 'İçecek', icon: 'wine', color: '#8B5CF6' },
+  { key: 'travel', label: 'Gezi', icon: 'airplane', color: '#06B6D4' },
 ];
+
+interface FilterChipItemProps {
+  item: FilterOption;
+  isActive: boolean;
+  onPress: () => void;
+}
+
+const FilterChipItem: React.FC<FilterChipItemProps> = ({ item, isActive, onPress }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const glowAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (isActive) {
+      // Bounce
+      Animated.sequence([
+        Animated.timing(scaleAnim, { toValue: 0.9, duration: 80, useNativeDriver: true }),
+        Animated.spring(scaleAnim, { toValue: 1, friction: 3, tension: 200, useNativeDriver: true }),
+      ]).start();
+      // Glow pulse
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(glowAnim, { toValue: 1, duration: 1200, useNativeDriver: false }),
+          Animated.timing(glowAnim, { toValue: 0, duration: 1200, useNativeDriver: false }),
+        ])
+      ).start();
+    } else {
+      scaleAnim.setValue(1);
+      glowAnim.setValue(0);
+    }
+  }, [isActive, scaleAnim, glowAnim]);
+
+  const shadowRadius = glowAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 12],
+  });
+
+  const shadowOpacity = glowAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 0.5],
+  });
+
+  // Separate Animated.Views: outer = JS-driven shadow, inner = native-driven transform
+  return (
+    <Animated.View
+      style={
+        isActive
+          ? {
+              shadowColor: item.color,
+              shadowOffset: { width: 0, height: 0 },
+              shadowRadius,
+              shadowOpacity,
+              elevation: 6,
+            }
+          : undefined
+      }
+    >
+      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+        <TouchableOpacity
+          style={[
+            filterStyles.chip,
+            isActive && { backgroundColor: item.color + '20', borderColor: item.color + '60' },
+          ]}
+          onPress={onPress}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name={item.icon}
+            size={16}
+            color={isActive ? item.color : colors.textSecondary}
+          />
+          <Text style={[
+            filterStyles.chipText,
+            isActive && { color: item.color, fontWeight: '700' },
+          ]}>
+            {item.label}
+          </Text>
+        </TouchableOpacity>
+      </Animated.View>
+    </Animated.View>
+  );
+};
 
 interface FilterChipsProps {
   selected: ActivityType | 'all';
@@ -69,20 +221,13 @@ const FilterChips: React.FC<FilterChipsProps> = ({ selected, onSelect }) => (
     keyExtractor={(item) => item.key}
     showsHorizontalScrollIndicator={false}
     contentContainerStyle={filterStyles.container}
-    renderItem={({ item }) => {
-      const isActive = selected === item.key;
-      return (
-        <TouchableOpacity
-          style={[filterStyles.chip, isActive && filterStyles.chipActive]}
-          onPress={() => onSelect(item.key)}
-          activeOpacity={0.7}
-        >
-          <Text style={[filterStyles.chipText, isActive && filterStyles.chipTextActive]}>
-            {item.label}
-          </Text>
-        </TouchableOpacity>
-      );
-    }}
+    renderItem={({ item }) => (
+      <FilterChipItem
+        item={item}
+        isActive={selected === item.key}
+        onPress={() => onSelect(item.key)}
+      />
+    )}
   />
 );
 
@@ -92,36 +237,168 @@ const filterStyles = StyleSheet.create({
     paddingTop: spacing.sm,
     paddingBottom: spacing.md,
     paddingRight: spacing.xxl,
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     backgroundColor: colors.surface,
     borderRadius: borderRadius.full,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingVertical: 10,
     minHeight: 44,
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  chipActive: {
-    backgroundColor: colors.primary + '20',
-    borderColor: colors.primary + '50',
   },
   chipText: {
-    fontSize: 15,
+    fontSize: 14,
     lineHeight: 20,
-    color: '#4A3728',
+    color: colors.textSecondary,
     fontWeight: '600',
-  },
-  chipTextActive: {
-    color: colors.primary,
-    fontWeight: '700',
   },
 });
 
-// ─── Activity Card ────────────────────────────────────────────────
+// ─── Starting Soon Pulsing Tag ───────────────────────────────────────────────
+
+const StartingSoonTag: React.FC = () => {
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 0.6, duration: 800, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+      ])
+    ).start();
+  }, [pulseAnim]);
+
+  return (
+    <View style={tagStyles.container}>
+      <Animated.View style={[tagStyles.dot, { opacity: pulseAnim }]} />
+      <Text style={tagStyles.text}>Yakında Başlıyor</Text>
+    </View>
+  );
+};
+
+const tagStyles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: palette.error + '20',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: palette.error + '30',
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: palette.error,
+  },
+  text: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: palette.error,
+    letterSpacing: 0.3,
+  },
+});
+
+// ─── Facepile Component ──────────────────────────────────────────────────────
+
+interface FacepileProps {
+  participants: Array<{ userId: string; firstName: string; photoUrl: string | null }>;
+  max: number;
+  total: number;
+  maxCapacity: number;
+}
+
+const Facepile: React.FC<FacepileProps> = ({ participants, max, total, maxCapacity }) => {
+  const visible = participants.slice(0, max);
+  const overflow = total - max;
+
+  return (
+    <View style={facepileStyles.container}>
+      {visible.map((p, i) => (
+        <View
+          key={p.userId}
+          style={[
+            facepileStyles.avatar,
+            { marginLeft: i > 0 ? -10 : 0, zIndex: max - i },
+          ]}
+        >
+          {p.photoUrl ? (
+            <Image source={{ uri: p.photoUrl }} style={facepileStyles.photo} />
+          ) : (
+            <View style={facepileStyles.placeholder}>
+              <Text style={facepileStyles.initial}>{p.firstName[0]}</Text>
+            </View>
+          )}
+        </View>
+      ))}
+      {overflow > 0 && (
+        <View style={[facepileStyles.avatar, facepileStyles.overflowBadge, { marginLeft: -10, zIndex: 0 }]}>
+          <Text style={facepileStyles.overflowText}>+{overflow}</Text>
+        </View>
+      )}
+      <Text style={facepileStyles.countText}>{total}/{maxCapacity}</Text>
+    </View>
+  );
+};
+
+const facepileStyles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: colors.surface,
+    overflow: 'hidden',
+  },
+  photo: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 14,
+  },
+  placeholder: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 14,
+    backgroundColor: palette.purple[500] + '30',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  initial: {
+    fontSize: 11,
+    color: palette.purple[400],
+    fontWeight: '700',
+  },
+  overflowBadge: {
+    backgroundColor: colors.surfaceBorder,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  overflowText: {
+    fontSize: 9,
+    color: colors.textSecondary,
+    fontWeight: '700',
+  },
+  countText: {
+    ...typography.caption,
+    color: colors.textTertiary,
+    marginLeft: spacing.sm,
+    fontWeight: '600',
+  },
+});
+
+// ─── Premium Activity Card ───────────────────────────────────────────────────
 
 interface ActivityCardProps {
   activity: Activity;
@@ -132,6 +409,8 @@ interface ActivityCardProps {
   hasJoined: boolean;
 }
 
+const CARD_IMAGE_HEIGHT = 140;
+
 const ActivityCard: React.FC<ActivityCardProps> = ({
   activity,
   onJoin,
@@ -141,349 +420,305 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
   hasJoined,
 }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
   const isFull = activity.participants.length >= activity.maxParticipants;
+  const soon = isStartingSoon(activity.dateTime);
+  const visual = CATEGORY_VISUALS[activity.activityType] ?? CATEGORY_VISUALS.other;
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 350, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 350, useNativeDriver: true }),
+      Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 400, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
     ]).start();
   }, [fadeAnim, slideAnim]);
 
   return (
     <Animated.View
-      style={[cardStyles.container, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
+      style={[
+        cardStyles.container,
+        { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+      ]}
     >
       <TouchableOpacity
-        style={cardStyles.content}
         onPress={() => onPress(activity.id)}
-        activeOpacity={0.7}
+        activeOpacity={0.85}
         accessibilityLabel={`${activity.title}, ${activity.location}`}
         accessibilityRole="button"
       >
-        {/* Creator photo + type badge */}
-        <View style={cardStyles.photoContainer}>
-          {activity.creatorPhotoUrl ? (
-            <Image source={{ uri: activity.creatorPhotoUrl }} style={cardStyles.photo} />
-          ) : (
-            <View style={cardStyles.photoPlaceholder}>
-              <Text style={cardStyles.photoInitial}>
-                {activity.creatorName ? activity.creatorName[0] : '?'}
+        {/* Category header image with gradient overlay */}
+        <View style={cardStyles.imageContainer}>
+          <LinearGradient
+            colors={visual.gradientColors}
+            style={cardStyles.imageGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            {/* Large background icon */}
+            <View style={cardStyles.bgIconContainer}>
+              <Ionicons name={visual.icon} size={80} color="rgba(255,255,255,0.08)" />
+            </View>
+
+            {/* Category badge */}
+            <View style={[cardStyles.categoryBadge, { backgroundColor: visual.color + '30' }]}>
+              <Ionicons name={visual.icon} size={14} color={visual.color} />
+            </View>
+
+            {/* Starting soon tag */}
+            {soon && (
+              <View style={cardStyles.soonTagContainer}>
+                <StartingSoonTag />
+              </View>
+            )}
+
+            {/* Title overlay */}
+            <View style={cardStyles.imageTitleOverlay}>
+              <Text style={cardStyles.imageTitle} numberOfLines={2}>{activity.title}</Text>
+              <Text style={cardStyles.imageCreator}>
+                {activity.creatorName} tarafından
               </Text>
             </View>
-          )}
-          <View style={cardStyles.typeBadge}>
-            <Text style={cardStyles.typeIcon}>
-              {ACTIVITY_TYPE_ICONS[activity.activityType]}
-            </Text>
-          </View>
+          </LinearGradient>
         </View>
 
-        {/* Info */}
-        <View style={cardStyles.info}>
-          <Text style={cardStyles.title} numberOfLines={1}>{activity.title}</Text>
-          <Text style={cardStyles.creator} numberOfLines={1}>
-            {activity.creatorName} tarafından
-          </Text>
-
-          <View style={cardStyles.metaRow}>
-            <Text style={cardStyles.metaIcon}>📍</Text>
-            <Text style={cardStyles.metaText} numberOfLines={1}>{activity.location}</Text>
-          </View>
-
-          <View style={cardStyles.metaRow}>
-            <Text style={cardStyles.metaIcon}>📅</Text>
-            <Text style={cardStyles.metaText}>{formatActivityDate(activity.dateTime)}</Text>
-          </View>
-
-          <View style={cardStyles.bottomRow}>
-            {/* Participant avatars */}
-            <View style={cardStyles.participantsRow}>
-              {activity.participants.slice(0, 4).map((p, i) => (
-                <View
-                  key={p.userId}
-                  style={[
-                    cardStyles.participantAvatar,
-                    { marginLeft: i > 0 ? -8 : 0, zIndex: 10 - i },
-                  ]}
-                >
-                  {p.photoUrl ? (
-                    <Image source={{ uri: p.photoUrl }} style={cardStyles.participantPhoto} />
-                  ) : (
-                    <View style={cardStyles.participantPlaceholder}>
-                      <Text style={cardStyles.participantInitial}>{p.firstName[0]}</Text>
-                    </View>
-                  )}
+        {/* Card body */}
+        <View style={cardStyles.body}>
+          {/* Meta info */}
+          <View style={cardStyles.metaSection}>
+            {/* Location with pin icon */}
+            <View style={cardStyles.metaRow}>
+              <Ionicons name="location" size={14} color={visual.color} />
+              <Text style={cardStyles.metaText} numberOfLines={1}>{activity.location}</Text>
+              {activity.distanceKm > 0 && (
+                <View style={cardStyles.distanceBadge}>
+                  <Text style={cardStyles.distanceText}>
+                    {activity.distanceKm.toFixed(1)} km
+                  </Text>
                 </View>
-              ))}
-              <Text style={cardStyles.participantCount}>
-                {activity.participants.length}/{activity.maxParticipants}
-              </Text>
+              )}
+            </View>
+
+            {/* Date/time */}
+            <View style={cardStyles.metaRow}>
+              <Ionicons name="time-outline" size={14} color={colors.textSecondary} />
+              <Text style={cardStyles.metaText}>{formatActivityDate(activity.dateTime)}</Text>
             </View>
           </View>
 
-          {/* Participant details row */}
-          <View style={cardStyles.participantDetailsRow}>
-            <Text style={cardStyles.participantDetailText}>
-              {activity.participants.length} kişi katıldı
-            </Text>
-            {activity.distanceKm > 0 && (
-              <>
-                <Text style={cardStyles.participantDetailDot}>{'\u2022'}</Text>
-                <Text style={cardStyles.participantDetailText}>
-                  {activity.distanceKm.toFixed(1)} km uzakta
-                </Text>
-              </>
+          {/* Bottom row: facepile + actions */}
+          <View style={cardStyles.bottomRow}>
+            <Facepile
+              participants={activity.participants}
+              max={4}
+              total={activity.participants.length}
+              maxCapacity={activity.maxParticipants}
+            />
+
+            {/* Action buttons */}
+            {!isCurrentUser && (
+              <View style={cardStyles.actions}>
+                {hasJoined ? (
+                  <View style={cardStyles.joinedBadge}>
+                    <Ionicons name="checkmark-circle" size={14} color={colors.success} />
+                    <Text style={cardStyles.joinedText}>Katıldın</Text>
+                  </View>
+                ) : isFull ? (
+                  <View style={cardStyles.fullBadge}>
+                    <Text style={cardStyles.fullText}>Dolu</Text>
+                  </View>
+                ) : (
+                  <>
+                    <TouchableOpacity
+                      style={cardStyles.passBtn}
+                      onPress={() => onPass(activity.id)}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons name="close" size={16} color={colors.textSecondary} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[cardStyles.joinBtn, { backgroundColor: visual.color }]}
+                      onPress={() => onJoin(activity.id)}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons name="add" size={16} color="#FFFFFF" />
+                      <Text style={cardStyles.joinBtnText}>KATIL</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
             )}
           </View>
         </View>
       </TouchableOpacity>
-
-      {/* Action buttons */}
-      {!isCurrentUser && (
-        <View style={cardStyles.actions}>
-          {hasJoined ? (
-            <View style={cardStyles.joinedBadge}>
-              <Text style={cardStyles.joinedText}>Katıldın ✓</Text>
-            </View>
-          ) : isFull ? (
-            <View style={cardStyles.fullBadge}>
-              <Text style={cardStyles.fullText}>Dolu</Text>
-            </View>
-          ) : (
-            <>
-              <TouchableOpacity
-                style={cardStyles.passBtn}
-                onPress={() => onPass(activity.id)}
-                activeOpacity={0.7}
-                accessibilityLabel="Geç"
-              >
-                <Text style={cardStyles.passBtnText}>GEÇ</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={cardStyles.joinBtn}
-                onPress={() => onJoin(activity.id)}
-                activeOpacity={0.7}
-                accessibilityLabel="Katıl"
-              >
-                <Text style={cardStyles.joinBtnText}>KATIL</Text>
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
-      )}
     </Animated.View>
   );
 };
 
 const cardStyles = StyleSheet.create({
   container: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
     marginHorizontal: spacing.md,
     marginBottom: spacing.md,
-    ...shadows.small,
-  },
-  content: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md + 4,
-    paddingBottom: spacing.md,
-    gap: spacing.md,
-  },
-  photoContainer: {
-    position: 'relative',
-  },
-  photo: {
-    width: layout.avatarMedium,
-    height: layout.avatarMedium,
-    borderRadius: layout.avatarMedium / 2,
-    backgroundColor: colors.surfaceBorder,
-  },
-  photoPlaceholder: {
-    width: layout.avatarMedium,
-    height: layout.avatarMedium,
-    borderRadius: layout.avatarMedium / 2,
-    backgroundColor: colors.primary + '20',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  photoInitial: {
-    ...typography.h4,
-    color: colors.primary,
-  },
-  typeBadge: {
-    position: 'absolute',
-    bottom: -4,
-    right: -4,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
     backgroundColor: colors.surface,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: colors.surfaceBorder,
+    ...shadows.medium,
+  },
+
+  // Image header
+  imageContainer: {
+    height: CARD_IMAGE_HEIGHT,
+    overflow: 'hidden',
+  },
+  imageGradient: {
+    flex: 1,
+    position: 'relative',
+    justifyContent: 'flex-end',
+  },
+  bgIconContainer: {
+    position: 'absolute',
+    top: -10,
+    right: -10,
+    opacity: 1,
+  },
+  categoryBadge: {
+    position: 'absolute',
+    top: spacing.sm,
+    left: spacing.sm,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  typeIcon: {
-    fontSize: 11,
+  soonTagContainer: {
+    position: 'absolute',
+    top: spacing.sm,
+    right: spacing.sm,
   },
-  info: {
-    flex: 1,
+  imageTitleOverlay: {
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
   },
-  title: {
+  imageTitle: {
     ...typography.bodyLarge,
-    color: colors.text,
-    fontWeight: '600',
-    marginBottom: 4,
+    color: '#FFFFFF',
+    fontWeight: '700',
+    marginBottom: 2,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
-  creator: {
+  imageCreator: {
     ...typography.caption,
-    color: colors.textTertiary,
-    marginBottom: spacing.sm,
+    color: 'rgba(255,255,255,0.7)',
+  },
+
+  // Body
+  body: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+  },
+  metaSection: {
+    gap: 6,
+    marginBottom: spacing.md,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 6,
-  },
-  metaIcon: {
-    fontSize: 12,
   },
   metaText: {
     ...typography.bodySmall,
     color: colors.textSecondary,
     flex: 1,
   },
+  distanceBadge: {
+    backgroundColor: colors.surfaceBorder,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: borderRadius.full,
+  },
+  distanceText: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    fontWeight: '600',
+  },
+
+  // Bottom row
   bottomRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: spacing.sm,
-  },
-  participantsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  participantAvatar: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: colors.background,
-  },
-  participantPhoto: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 12,
-  },
-  participantPlaceholder: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 12,
-    backgroundColor: colors.primary + '30',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  participantInitial: {
-    fontSize: 10,
-    color: colors.primary,
-    fontWeight: '700',
-  },
-  participantCount: {
-    ...typography.captionSmall,
-    color: colors.textTertiary,
-    marginLeft: spacing.sm,
-  },
-  distance: {
-    ...typography.captionSmall,
-    color: colors.textTertiary,
-  },
-  participantDetailsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-    gap: 6,
-  },
-  participantDetailText: {
-    fontSize: 12,
-    color: colors.textTertiary,
-  },
-  participantDetailDot: {
-    fontSize: 10,
-    color: colors.textTertiary,
   },
   actions: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.md,
     gap: spacing.sm,
+    alignItems: 'center',
   },
   passBtn: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm + 2,
-    borderRadius: borderRadius.full,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
-  },
-  passBtnText: {
-    ...typography.captionSmall,
-    color: colors.textSecondary,
-    fontWeight: '700',
-    letterSpacing: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   joinBtn: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm + 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     borderRadius: borderRadius.full,
-    backgroundColor: colors.primary,
-    ...shadows.glow,
   },
   joinBtnText: {
-    ...typography.captionSmall,
-    color: colors.text,
-    fontWeight: '700',
-    letterSpacing: 1,
+    fontSize: 12,
+    color: '#FFFFFF',
+    fontWeight: '800',
+    letterSpacing: 0.8,
   },
   joinedBadge: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm + 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     borderRadius: borderRadius.full,
-    backgroundColor: colors.success + '20',
+    backgroundColor: colors.success + '15',
     borderWidth: 1,
-    borderColor: colors.success + '40',
+    borderColor: colors.success + '30',
   },
   joinedText: {
-    ...typography.captionSmall,
+    fontSize: 12,
     color: colors.success,
     fontWeight: '700',
   },
   fullBadge: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     borderRadius: borderRadius.full,
     backgroundColor: colors.textTertiary + '15',
   },
   fullText: {
-    ...typography.captionSmall,
+    fontSize: 12,
     color: colors.textTertiary,
     fontWeight: '600',
   },
 });
 
-// ─── Empty State ──────────────────────────────────────────────────
+// ─── Empty State ─────────────────────────────────────────────────────────────
 
 const EmptyState: React.FC = () => (
   <View style={emptyStyles.container}>
-    <View style={emptyStyles.iconCircle}>
-      <Text style={emptyStyles.iconText}>🎯</Text>
-    </View>
+    <LinearGradient
+      colors={[palette.purple[500] + '30', palette.pink[500] + '20']}
+      style={emptyStyles.iconCircle}
+    >
+      <Ionicons name="calendar" size={44} color={palette.purple[400]} />
+    </LinearGradient>
     <Text style={emptyStyles.title}>Henüz aktivite yok</Text>
     <Text style={emptyStyles.subtitle}>
       {'İlk aktiviteyi oluşturarak\ntanışmaya başla!'}
@@ -501,15 +736,9 @@ const emptyStyles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: colors.primary + '20',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.lg,
-    borderWidth: 2,
-    borderColor: colors.primary + '30',
-  },
-  iconText: {
-    fontSize: 44,
   },
   title: {
     ...typography.h3,
@@ -525,7 +754,94 @@ const emptyStyles = StyleSheet.create({
   },
 });
 
-// ─── Main Screen ──────────────────────────────────────────────────
+// ─── Floating Action Button with Pop ─────────────────────────────────────────
+
+interface FABProps {
+  onPress: () => void;
+  bottomOffset: number;
+}
+
+const FAB: React.FC<FABProps> = ({ onPress, bottomOffset }) => {
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    // Initial pop-in
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 4,
+      tension: 180,
+      delay: 300,
+      useNativeDriver: true,
+    }).start();
+
+    // Subtle pulse
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.06, duration: 1500, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
+      ])
+    ).start();
+  }, [scaleAnim, pulseAnim]);
+
+  const combinedScale = Animated.multiply(scaleAnim, pulseAnim);
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, { toValue: 0.85, friction: 5, useNativeDriver: true }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, { toValue: 1, friction: 3, tension: 200, useNativeDriver: true }).start();
+  };
+
+  return (
+    <Animated.View
+      style={[
+        fabStyles.container,
+        { bottom: bottomOffset, transform: [{ scale: combinedScale }] },
+      ]}
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={1}
+        accessibilityLabel="Aktivite Oluştur"
+        accessibilityRole="button"
+      >
+        <LinearGradient
+          colors={[palette.purple[500], palette.pink[500]]}
+          style={fabStyles.gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <Ionicons name="add" size={28} color="#FFFFFF" />
+        </LinearGradient>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
+const fabStyles = StyleSheet.create({
+  container: {
+    position: 'absolute',
+    right: spacing.lg,
+    shadowColor: palette.purple[500],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  gradient: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
+
+// ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export const ActivitiesScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
@@ -564,7 +880,6 @@ export const ActivitiesScreen: React.FC = () => {
             text: 'Grup Sohbetine Git',
             onPress: () => {
               navigation.navigate('ActivityDetail', { activityId });
-              // Small delay to let the detail screen mount, then navigate to chat
               setTimeout(() => {
                 navigation.navigate('ActivityGroupChat', {
                   activityId,
@@ -618,6 +933,7 @@ export const ActivitiesScreen: React.FC = () => {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Aktiviteler</Text>
+        <Text style={styles.headerSubtitle}>Yeni insanlarla tanış</Text>
       </View>
 
       {/* Filter chips */}
@@ -651,15 +967,10 @@ export const ActivitiesScreen: React.FC = () => {
       )}
 
       {/* Floating action button */}
-      <TouchableOpacity
-        style={[styles.fab, { bottom: insets.bottom + 16 }]}
+      <FAB
         onPress={() => navigation.navigate('CreateActivity')}
-        activeOpacity={0.8}
-        accessibilityLabel="Aktivite Oluştur"
-        accessibilityRole="button"
-      >
-        <Text style={styles.fabIcon}>+</Text>
-      </TouchableOpacity>
+        bottomOffset={insets.bottom + 16}
+      />
     </View>
   );
 };
@@ -672,12 +983,17 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
+    paddingBottom: spacing.sm,
   },
   headerTitle: {
     ...typography.h3,
     color: colors.text,
     fontWeight: '700',
+  },
+  headerSubtitle: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+    marginTop: 2,
   },
   loadingContainer: {
     flex: 1,
@@ -692,22 +1008,5 @@ const styles = StyleSheet.create({
   listContent: {
     paddingVertical: spacing.sm,
     paddingBottom: spacing.xxl + 80,
-  },
-  fab: {
-    position: 'absolute',
-    right: spacing.md,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...shadows.glow,
-  },
-  fabIcon: {
-    fontSize: 28,
-    color: colors.text,
-    fontWeight: '600',
-    lineHeight: 30,
   },
 });

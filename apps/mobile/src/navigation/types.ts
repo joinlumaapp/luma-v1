@@ -84,7 +84,7 @@ export type MatchesStackParamList = {
   CompatibilityInsight: { matchId: string; partnerName: string };
   ChatList: undefined;
   Chat: { matchId: string; partnerName: string; partnerPhotoUrl: string; initialMessage?: string };
-  DatePlanner: { matchId: string; partnerName: string };
+  DatePlanner: { matchId: string; partnerName: string; isSuperMatch?: boolean };
   Report: { userId: string; userName: string };
 };
 

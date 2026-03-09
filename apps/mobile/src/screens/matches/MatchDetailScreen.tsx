@@ -1,69 +1,38 @@
-// Match detail screen — interleaved photo+info layout for existing matches
-// Photos alternate with info blocks for an engaging, modern profile scroll
+// Match detail screen — uses shared InterleavedProfileLayout
+// Unified profile layout: photo → info → photo → info pattern
+// All business logic preserved: match fetching, unmatch, send message, date planner
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
-  Alert,
   ActivityIndicator,
-  Dimensions,
-  Modal,
+  Alert,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import type { MatchesStackParamList } from '../../navigation/types';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 import { useMatchStore } from '../../stores/matchStore';
 import { useScreenTracking, analyticsService, ANALYTICS_EVENTS } from '../../hooks/useAnalytics';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const PHOTO_HEIGHT = SCREEN_WIDTH * 1.15;
+import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
+import { VerifiedBadge } from '../../components/common/VerifiedBadge';
 
 type MatchDetailNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'MatchDetail'>;
 type MatchDetailRouteProp = RouteProp<MatchesStackParamList, 'MatchDetail'>;
 
-// ─── Info Card Wrapper ───────────────────────────────────────────
-
-const InfoCard: React.FC<{ children: React.ReactNode; style?: object }> = ({ children, style }) => (
-  <View style={[styles.infoCard, style]}>
-    {children}
-  </View>
-);
-
-// ─── Interleaved Photo ───────────────────────────────────────────
-
-interface InterleavedPhotoProps {
-  uri: string;
-  index: number;
-  total: number;
-  onPress: (index: number) => void;
-}
-
-const InterleavedPhoto: React.FC<InterleavedPhotoProps> = ({ uri, index, total, onPress }) => (
-  <TouchableOpacity
-    activeOpacity={0.95}
-    onPress={() => onPress(index)}
-    style={styles.interleavedPhotoContainer}
-  >
-    <Image
-      source={{ uri }}
-      style={styles.interleavedPhoto}
-      resizeMode="cover"
-    />
-    <View style={styles.photoCounterBadge}>
-      <Text style={styles.photoCounterText}>{index + 1}/{total}</Text>
-    </View>
-  </TouchableOpacity>
-);
+const getScoreColor = (score: number): string => {
+  if (score >= 90) return colors.success;
+  if (score >= 70) return colors.accent;
+  return colors.primary;
+};
 
 export const MatchDetailScreen: React.FC = () => {
   const navigation = useNavigation<MatchDetailNavigationProp>();
@@ -80,8 +49,6 @@ export const MatchDetailScreen: React.FC = () => {
   const unmatch = useMatchStore((state) => state.unmatch);
   const clearSelected = useMatchStore((state) => state.clearSelected);
 
-  const [viewerPhotoIndex, setViewerPhotoIndex] = useState<number | null>(null);
-
   useEffect(() => {
     getMatch(matchId);
     analyticsService.track(ANALYTICS_EVENTS.MATCH_DETAIL_VIEWED, { matchId });
@@ -90,26 +57,22 @@ export const MatchDetailScreen: React.FC = () => {
     };
   }, [matchId, getMatch, clearSelected]);
 
-  const handlePhotoPress = useCallback((index: number) => {
-    setViewerPhotoIndex(index);
-  }, []);
-
-  const handleSendMessage = () => {
+  const handleSendMessage = useCallback(() => {
     navigation.navigate('Chat', {
       matchId,
       partnerName: selectedMatch?.name ?? '',
       partnerPhotoUrl: selectedMatch?.photos?.[0] ?? '',
     });
-  };
+  }, [navigation, matchId, selectedMatch]);
 
-  const handleDatePlanner = () => {
+  const handleDatePlanner = useCallback(() => {
     navigation.navigate('DatePlanner', {
       matchId,
       partnerName: selectedMatch?.name ?? '',
     });
-  };
+  }, [navigation, matchId, selectedMatch]);
 
-  const handleUnmatch = () => {
+  const handleUnmatch = useCallback(() => {
     Alert.alert(
       'Eşleştirmeyi Kaldır',
       'Bu eşleştirmeyi kaldırmak istediğinden emin misin? Bu işlem geri alınamaz.',
@@ -125,14 +88,9 @@ export const MatchDetailScreen: React.FC = () => {
         },
       ]
     );
-  };
+  }, [unmatch, matchId, navigation]);
 
-  const getScoreColor = (score: number): string => {
-    if (score >= 90) return colors.success;
-    if (score >= 70) return colors.accent;
-    return colors.primary;
-  };
-
+  // ── Loading state ──
   if (isLoading || !selectedMatch) {
     return (
       <View style={[styles.container, styles.loadingContainer, { paddingTop: insets.top }]}>
@@ -141,118 +99,102 @@ export const MatchDetailScreen: React.FC = () => {
     );
   }
 
-  const photos = selectedMatch.photos;
-  const totalPhotos = photos.length;
-
-  // Build interleaved sections
-  const sections: React.ReactNode[] = [];
-
-  // ── Section 1: Hero photo ──
-  if (totalPhotos > 0) {
-    sections.push(
-      <View key="hero-photo" style={styles.heroPhotoContainer}>
-        <TouchableOpacity activeOpacity={0.95} onPress={() => handlePhotoPress(0)}>
-          <Image
-            source={{ uri: photos[0] }}
-            style={styles.heroPhoto}
-            resizeMode="cover"
-          />
-        </TouchableOpacity>
-        {totalPhotos > 1 && (
-          <View style={styles.photoCounterBadge}>
-            <Text style={styles.photoCounterText}>1/{totalPhotos}</Text>
-          </View>
-        )}
-      </View>
-    );
-  } else {
-    sections.push(
-      <View key="hero-placeholder" style={styles.heroPlaceholder}>
-        <Text style={styles.heroPlaceholderText}>{selectedMatch.name.charAt(0)}</Text>
-      </View>
-    );
-  }
-
-  // ── Section 2: Basic identity ──
-  sections.push(
-    <InfoCard key="basic-info">
-      <View style={styles.nameRow}>
-        <Text style={styles.nameText}>{selectedMatch.name}, {selectedMatch.age}</Text>
-        {selectedMatch.isVerified && (
-          <View style={styles.verifiedBadge}>
-            <Text style={styles.verifiedText}>Doğrulandı</Text>
-          </View>
-        )}
-      </View>
-      {selectedMatch.city ? (
-        <View style={styles.cityRow}>
-          <Text style={styles.cityIcon}>📍</Text>
-          <Text style={styles.cityText}>{selectedMatch.city}</Text>
-        </View>
-      ) : null}
-      {selectedMatch.intentionTag ? (
-        <View style={styles.intentionChip}>
-          <Text style={styles.intentionText}>{selectedMatch.intentionTag}</Text>
-        </View>
-      ) : null}
-    </InfoCard>
-  );
-
-  // ── Section 3: Second photo ──
-  if (totalPhotos > 1) {
-    sections.push(
-      <InterleavedPhoto key="photo-1" uri={photos[1]} index={1} total={totalPhotos} onPress={handlePhotoPress} />
-    );
-  }
-
-  // ── Section 4: Compatibility score ──
   const compatPercent = selectedMatch.compatibilityPercent;
   const compatColor = getScoreColor(compatPercent);
-  sections.push(
-    <InfoCard key="compat-score">
-      <View style={styles.compatRow}>
-        <View style={[styles.compatCircle, { borderColor: compatColor }]}>
-          <Text style={[styles.compatScoreText, { color: compatColor }]}>%{compatPercent}</Text>
-        </View>
-        <View style={styles.compatTextCol}>
-          <Text style={styles.compatTitle}>Genel Uyum</Text>
-          <Text style={styles.compatSubtitle}>
-            {compatPercent >= 90 ? 'Süper uyumluluk!' : compatPercent >= 70 ? 'Güçlü uyum' : 'Keşfedilecek potansiyel'}
-          </Text>
-        </View>
-      </View>
-    </InfoCard>
+
+  // ── Header bar ──
+  const headerBar = (
+    <View style={[styles.headerBar, { paddingTop: insets.top }]}>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Ionicons name="chevron-back" size={22} color={colors.text} />
+      </TouchableOpacity>
+      <Text style={styles.headerTitle}>Profil</Text>
+      <View style={{ width: 40 }} />
+    </View>
   );
 
-  // ── Section 5: Third photo ──
-  if (totalPhotos > 2) {
-    sections.push(
-      <InterleavedPhoto key="photo-2" uri={photos[2]} index={2} total={totalPhotos} onPress={handlePhotoPress} />
-    );
-  }
+  // ── Top content (identity card + compat score) ──
+  const topContent = (
+    <View style={styles.topContentContainer}>
+      {/* Identity card */}
+      <View style={styles.identityCard}>
+        <View style={styles.nameRow}>
+          <Text style={styles.userName}>{selectedMatch.name}, {selectedMatch.age}</Text>
+          {selectedMatch.isVerified && <VerifiedBadge size="medium" animated />}
+        </View>
+        {selectedMatch.city ? (
+          <Text style={styles.userCity}>{selectedMatch.city}</Text>
+        ) : null}
+        {selectedMatch.intentionTag ? (
+          <View style={styles.intentionChip}>
+            <Text style={styles.intentionText}>{selectedMatch.intentionTag}</Text>
+          </View>
+        ) : null}
+      </View>
 
-  // ── Section 6: Bio ──
+      {/* Stats row */}
+      <View style={styles.statsCard}>
+        <View style={styles.statsRow}>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>15</Text>
+            <Text style={styles.statLabel}>Gönderi</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>108</Text>
+            <Text style={styles.statLabel}>Takipçi</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>73</Text>
+            <Text style={styles.statLabel}>Takip</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Weekly views */}
+      <View style={styles.weeklyViewsCard}>
+        <Text style={styles.weeklyViewsLabel}>Bu hafta profilini görenler</Text>
+        <Text style={styles.weeklyViewsCount}>57 kişi</Text>
+      </View>
+
+      {/* Compatibility score */}
+      <View style={styles.compatCard}>
+        <View style={styles.compatInlineRow}>
+          <View style={[styles.compatCircle, { borderColor: compatColor }]}>
+            <Text style={[styles.compatScoreText, { color: compatColor }]}>%{compatPercent}</Text>
+          </View>
+          <View style={styles.compatTextCol}>
+            <Text style={styles.compatTitle}>
+              {compatPercent >= 90 ? 'Süper Uyumluluk!' : 'Uyum Skoru'}
+            </Text>
+            <Text style={styles.compatSubtitle}>
+              {compatPercent >= 90 ? 'Harika bir eşleşme!' : compatPercent >= 70 ? 'Güçlü uyum' : 'Keşfedilecek potansiyel'}
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+
+  // ── Info sections (interleaved with photos) ──
+  const infoSections: React.ReactNode[] = [];
+
+  // 1. Bio
   if (selectedMatch.bio && selectedMatch.bio.length > 0) {
-    sections.push(
-      <InfoCard key="bio">
-        <Text style={styles.sectionLabel}>Hakkında</Text>
+    infoSections.push(
+      <View key="bio" style={styles.card}>
+        <Text style={styles.sectionTitle}>Hakkında</Text>
         <Text style={styles.bioText}>{selectedMatch.bio}</Text>
-      </InfoCard>
+      </View>,
     );
   }
 
-  // ── Section 7: Fourth photo ──
-  if (totalPhotos > 3) {
-    sections.push(
-      <InterleavedPhoto key="photo-3" uri={photos[3]} index={3} total={totalPhotos} onPress={handlePhotoPress} />
-    );
-  }
-
-  // ── Section 8: Compatibility breakdown ──
+  // 2. Compatibility breakdown
   if (selectedMatch.compatibilityBreakdown.length > 0) {
-    sections.push(
-      <InfoCard key="breakdown">
-        <Text style={styles.sectionLabel}>Uyum Analizi</Text>
+    infoSections.push(
+      <View key="breakdown" style={styles.card}>
+        <Text style={styles.sectionTitle}>Uyum Analizi</Text>
         {selectedMatch.compatibilityBreakdown.map((category) => {
           const catColor = getScoreColor(category.score);
           return (
@@ -272,110 +214,67 @@ export const MatchDetailScreen: React.FC = () => {
             </View>
           );
         })}
-      </InfoCard>
+      </View>,
     );
   }
 
-  // ── Section 9: Remaining photos (5+) ──
-  if (totalPhotos > 4) {
-    photos.slice(4).forEach((uri, idx) => {
-      sections.push(
-        <InterleavedPhoto
-          key={`photo-extra-${idx}`}
-          uri={uri}
-          index={4 + idx}
-          total={totalPhotos}
-          onPress={handlePhotoPress}
-        />
-      );
-    });
+  // 3. Match date info
+  if (selectedMatch.matchedAt) {
+    const matchDate = new Date(selectedMatch.matchedAt);
+    const formattedDate = `${matchDate.getDate()}.${matchDate.getMonth() + 1}.${matchDate.getFullYear()}`;
+    infoSections.push(
+      <View key="match-info" style={styles.card}>
+        <Text style={styles.sectionTitle}>Eşleşme Bilgisi</Text>
+        <View style={styles.matchInfoRow}>
+          <Ionicons name="heart" size={16} color={colors.primary} />
+          <Text style={styles.matchInfoText}>
+            {formattedDate} tarihinde eşleştiniz
+          </Text>
+        </View>
+      </View>,
+    );
   }
 
-  return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Text style={styles.backText}>{'‹'}</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Eşleşme Detayı</Text>
-          <View style={{ width: 40 }} />
-        </View>
+  // ── Footer (action buttons) ──
+  const footer = (
+    <View style={[styles.actions, { paddingBottom: insets.bottom + spacing.md }]}>
+      <TouchableOpacity
+        style={styles.messageButton}
+        onPress={handleSendMessage}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="chatbubble" size={18} color={colors.text} />
+        <Text style={styles.messageButtonText}>Mesaj Gönder</Text>
+      </TouchableOpacity>
 
-        {sections}
+      <TouchableOpacity
+        style={styles.datePlanButton}
+        onPress={handleDatePlanner}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="calendar" size={18} color={colors.accent} />
+        <Text style={styles.datePlanButtonText}>Buluşma Planla</Text>
+      </TouchableOpacity>
 
-        {/* Action buttons */}
-        <View style={styles.actionsSection}>
-          <TouchableOpacity
-            style={styles.messageButton}
-            onPress={handleSendMessage}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.messageButtonText}>💬 Mesaj Gönder</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.datePlanButton}
-            onPress={handleDatePlanner}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.datePlanButtonText}>📅 Buluşma Planla</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.unmatchButton}
-            onPress={handleUnmatch}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.unmatchButtonText}>Eşleştirmeyi Kaldır</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-
-      {/* Full-screen photo viewer */}
-      {viewerPhotoIndex !== null && (
-        <Modal visible transparent animationType="fade" onRequestClose={() => setViewerPhotoIndex(null)}>
-          <View style={styles.viewerOverlay}>
-            <TouchableOpacity
-              style={styles.viewerClose}
-              onPress={() => setViewerPhotoIndex(null)}
-            >
-              <Text style={styles.viewerCloseIcon}>✕</Text>
-            </TouchableOpacity>
-            <Image
-              source={{ uri: photos[viewerPhotoIndex] }}
-              style={styles.viewerImage}
-              resizeMode="contain"
-            />
-            <View style={styles.viewerCounter}>
-              <Text style={styles.viewerCounterText}>
-                {viewerPhotoIndex + 1} / {totalPhotos}
-              </Text>
-            </View>
-            <View style={styles.viewerNav}>
-              {viewerPhotoIndex > 0 && (
-                <TouchableOpacity
-                  style={styles.viewerNavBtn}
-                  onPress={() => setViewerPhotoIndex(viewerPhotoIndex - 1)}
-                >
-                  <Text style={styles.viewerNavText}>{'‹'}</Text>
-                </TouchableOpacity>
-              )}
-              <View style={{ flex: 1 }} />
-              {viewerPhotoIndex < totalPhotos - 1 && (
-                <TouchableOpacity
-                  style={styles.viewerNavBtn}
-                  onPress={() => setViewerPhotoIndex(viewerPhotoIndex + 1)}
-                >
-                  <Text style={styles.viewerNavText}>{'›'}</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        </Modal>
-      )}
+      <TouchableOpacity
+        style={styles.unmatchButton}
+        onPress={handleUnmatch}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.unmatchButtonText}>Eşleştirmeyi Kaldır</Text>
+      </TouchableOpacity>
     </View>
+  );
+
+  return (
+    <InterleavedProfileLayout
+      photos={selectedMatch.photos}
+      topContent={topContent}
+      infoSections={infoSections}
+      headerBar={headerBar}
+      footer={footer}
+      scrollBottomPadding={180}
+    />
   );
 };
 
@@ -388,12 +287,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  header: {
+
+  // ── Header bar ──
+  headerBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.background,
   },
   backButton: {
     width: 40,
@@ -403,119 +305,45 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  backText: {
-    ...typography.h4,
-    color: colors.text,
-  },
   headerTitle: {
-    ...typography.bodyLarge,
+    ...typography.h3,
     color: colors.text,
-    fontWeight: '600',
   },
 
-  // ── Hero photo ──
-  heroPhotoContainer: {
-    position: 'relative',
-    marginBottom: spacing.sm,
+  // ── Top content ──
+  topContentContainer: {
+    paddingTop: spacing.md,
   },
-  heroPhoto: {
-    width: SCREEN_WIDTH,
-    height: PHOTO_HEIGHT,
-  },
-  heroPlaceholder: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_WIDTH * 0.7,
-    backgroundColor: colors.primary + '20',
-    justifyContent: 'center',
+  identityCard: {
     alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  heroPlaceholderText: {
-    fontSize: 64,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-
-  // ── Interleaved photo ──
-  interleavedPhotoContainer: {
-    position: 'relative',
+    paddingVertical: spacing.md,
     marginHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-    borderRadius: borderRadius.xl,
-    overflow: 'hidden',
-    ...shadows.small,
-  },
-  interleavedPhoto: {
-    width: SCREEN_WIDTH - spacing.lg * 2,
-    height: (SCREEN_WIDTH - spacing.lg * 2) * 1.15,
-    borderRadius: borderRadius.xl,
-  },
-  photoCounterBadge: {
-    position: 'absolute',
-    top: spacing.sm,
-    right: spacing.md,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-  },
-  photoCounterText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#FFF',
-  },
-
-  // ── Info card ──
-  infoCard: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.lg,
     padding: spacing.md,
-    ...shadows.small,
+    marginBottom: spacing.md,
   },
-
-  // ── Basic identity ──
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    marginBottom: spacing.xs,
+    marginBottom: 2,
   },
-  nameText: {
+  userName: {
     ...typography.h3,
     color: colors.text,
   },
-  verifiedBadge: {
-    backgroundColor: colors.success + '20',
-    borderRadius: borderRadius.xs,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-  },
-  verifiedText: {
-    ...typography.captionSmall,
-    color: colors.success,
-    fontWeight: '600',
-  },
-  cityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginBottom: spacing.sm,
-  },
-  cityIcon: {
-    fontSize: 13,
-  },
-  cityText: {
+  userCity: {
     ...typography.body,
     color: colors.textSecondary,
+    marginBottom: spacing.sm,
   },
   intentionChip: {
-    alignSelf: 'flex-start',
     backgroundColor: colors.secondary + '20',
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
+    marginTop: spacing.xs,
   },
   intentionText: {
     ...typography.bodySmall,
@@ -523,16 +351,23 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // ── Compatibility ──
-  compatRow: {
+  // ── Compat score card ──
+  compatCard: {
+    marginHorizontal: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  compatInlineRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
   },
   compatCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     borderWidth: 3,
     justifyContent: 'center',
     alignItems: 'center',
@@ -555,11 +390,19 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // ── Bio ──
-  sectionLabel: {
-    ...typography.h4,
+  // ── Generic card ──
+  card: {
+    marginHorizontal: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  sectionTitle: {
+    ...typography.bodyLarge,
     color: colors.text,
-    marginBottom: spacing.sm,
+    fontWeight: '700',
+    marginBottom: spacing.md,
   },
   bioText: {
     ...typography.body,
@@ -595,19 +438,83 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
 
-  // ── Action buttons ──
-  actionsSection: {
+  // ── Match info ──
+  matchInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  matchInfoText: {
+    ...typography.body,
+    color: colors.textSecondary,
+  },
+
+  // ── Stats row ──
+  statsCard: {
+    marginHorizontal: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statNumber: {
+    ...typography.h4,
+    color: colors.text,
+    fontWeight: '700',
+  },
+  statLabel: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  statDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: colors.divider,
+  },
+  weeklyViewsCard: {
+    marginHorizontal: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  weeklyViewsLabel: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+  },
+  weeklyViewsCount: {
+    ...typography.body,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+
+  // ── Action buttons (footer) ──
+  actions: {
+    backgroundColor: colors.background + 'F0',
+    paddingTop: spacing.md,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.xxl,
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   messageButton: {
+    flexDirection: 'row',
     backgroundColor: colors.primary,
     height: layout.buttonHeight,
     borderRadius: borderRadius.lg,
     justifyContent: 'center',
     alignItems: 'center',
+    gap: spacing.sm,
     ...shadows.glow,
   },
   messageButtonText: {
@@ -616,10 +523,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   datePlanButton: {
+    flexDirection: 'row',
     height: layout.buttonHeight,
     borderRadius: borderRadius.lg,
     justifyContent: 'center',
     alignItems: 'center',
+    gap: spacing.sm,
     borderWidth: 1.5,
     borderColor: colors.accent,
     backgroundColor: colors.accent + '10',
@@ -636,69 +545,5 @@ const styles = StyleSheet.create({
   unmatchButtonText: {
     ...typography.bodySmall,
     color: colors.error,
-  },
-
-  // ── Photo viewer ──
-  viewerOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  viewerClose: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  viewerCloseIcon: {
-    fontSize: 18,
-    color: '#FFF',
-    fontWeight: '700',
-  },
-  viewerImage: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_WIDTH * 1.4,
-  },
-  viewerCounter: {
-    position: 'absolute',
-    bottom: 60,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-  },
-  viewerCounterText: {
-    ...typography.bodySmall,
-    color: '#FFF',
-    fontWeight: '600',
-  },
-  viewerNav: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: '45%',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-  },
-  viewerNavBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  viewerNavText: {
-    fontSize: 28,
-    color: '#FFF',
-    fontWeight: '700',
   },
 });

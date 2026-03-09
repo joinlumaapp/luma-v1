@@ -319,8 +319,14 @@ export const MainTabNavigator: React.FC = () => {
             const isDeep = nestedState && nestedState.index !== undefined && nestedState.index > 0;
             if (isDeep) {
               e.preventDefault();
+              const state = navigation.getState();
               navigation.dispatch(
-                CommonActions.navigate({ name: 'FeedTab', params: { screen: 'SocialFeed' } })
+                CommonActions.reset({
+                  ...state,
+                  routes: state.routes.map((r: { name: string; key?: string; state?: unknown }) =>
+                    r.name === route.name ? { ...r, state: undefined } : r
+                  ),
+                })
               );
             }
           },
@@ -345,8 +351,14 @@ export const MainTabNavigator: React.FC = () => {
             const isDeep = nestedState && nestedState.index !== undefined && nestedState.index > 0;
             if (isDeep) {
               e.preventDefault();
+              const state = navigation.getState();
               navigation.dispatch(
-                CommonActions.navigate({ name: 'DiscoveryTab', params: { screen: 'Discovery' } })
+                CommonActions.reset({
+                  ...state,
+                  routes: state.routes.map((r: { name: string; key?: string; state?: unknown }) =>
+                    r.name === route.name ? { ...r, state: undefined } : r
+                  ),
+                })
               );
             }
           },
@@ -371,8 +383,14 @@ export const MainTabNavigator: React.FC = () => {
             const isDeep = nestedState && nestedState.index !== undefined && nestedState.index > 0;
             if (isDeep) {
               e.preventDefault();
+              const state = navigation.getState();
               navigation.dispatch(
-                CommonActions.navigate({ name: 'ActivitiesTab', params: { screen: 'Activities' } })
+                CommonActions.reset({
+                  ...state,
+                  routes: state.routes.map((r: { name: string; key?: string; state?: unknown }) =>
+                    r.name === route.name ? { ...r, state: undefined } : r
+                  ),
+                })
               );
             }
           },
@@ -401,8 +419,14 @@ export const MainTabNavigator: React.FC = () => {
             const isDeep = nestedState && nestedState.index !== undefined && nestedState.index > 0;
             if (isDeep) {
               e.preventDefault();
+              const state = navigation.getState();
               navigation.dispatch(
-                CommonActions.navigate({ name: 'MatchesTab', params: { screen: 'MatchesList' } })
+                CommonActions.reset({
+                  ...state,
+                  routes: state.routes.map((r: { name: string; key?: string; state?: unknown }) =>
+                    r.name === route.name ? { ...r, state: undefined } : r
+                  ),
+                })
               );
             }
           },
@@ -427,8 +451,14 @@ export const MainTabNavigator: React.FC = () => {
             const isDeep = nestedState && nestedState.index !== undefined && nestedState.index > 0;
             if (isDeep) {
               e.preventDefault();
+              const state = navigation.getState();
               navigation.dispatch(
-                CommonActions.navigate({ name: 'ProfileTab', params: { screen: 'Profile' } })
+                CommonActions.reset({
+                  ...state,
+                  routes: state.routes.map((r: { name: string; key?: string; state?: unknown }) =>
+                    r.name === route.name ? { ...r, state: undefined } : r
+                  ),
+                })
               );
             }
           },
