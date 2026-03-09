@@ -30,6 +30,7 @@ import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 import { useChatStore } from '../../stores/chatStore';
 import { useAuthStore } from '../../stores/authStore';
+import { useMatchStore } from '../../stores/matchStore';
 import { MESSAGE_CONFIG } from '../../constants/config';
 import {
   MemoizedMessageBubble,
@@ -213,6 +214,11 @@ export const ChatScreen: React.FC = () => {
   }, []);
 
   const { matchId, partnerName, partnerPhotoUrl: _partnerPhotoUrl, initialMessage } = route.params;
+
+  // Look up partner userId from match store for profile navigation
+  const partnerUserId = useMatchStore(
+    useCallback((state) => state.matches.find((m) => m.id === matchId)?.userId, [matchId]),
+  );
 
   const [inputText, setInputText] = useState(initialMessage ?? '');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -441,15 +447,33 @@ export const ChatScreen: React.FC = () => {
         </TouchableOpacity>
 
         <View style={styles.headerInfo}>
-          <View style={styles.headerAvatarWrapper}>
+          {/* Avatar — tappable to open profile */}
+          <TouchableOpacity
+            onPress={() => {
+              if (partnerUserId) {
+                navigation.navigate('ProfilePreview', { userId: partnerUserId });
+              }
+            }}
+            activeOpacity={0.8}
+            style={styles.headerAvatarWrapper}
+            accessibilityLabel={`${partnerName} profilini aç`}
+            accessibilityRole="button"
+          >
             <View style={styles.headerAvatar}>
               <Text style={styles.headerAvatarText}>{partnerName.charAt(0)}</Text>
             </View>
             {formatActivityStatus(partnerLastActive)?.isOnline && (
               <View style={styles.headerOnlineDot} />
             )}
-          </View>
-          <View>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              if (partnerUserId) {
+                navigation.navigate('ProfilePreview', { userId: partnerUserId });
+              }
+            }}
+            activeOpacity={0.7}
+          >
             <Text style={styles.headerName}>{partnerName}</Text>
             {isTyping ? (
               <Text style={styles.headerStatusTyping}>yazıyor...</Text>
@@ -462,7 +486,7 @@ export const ChatScreen: React.FC = () => {
                 </Text>
               );
             })()}
-          </View>
+          </TouchableOpacity>
         </View>
 
       </View>

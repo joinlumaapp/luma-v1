@@ -73,6 +73,7 @@ export type DiscoveryStackParamList = {
   CrossedPaths: undefined;
   Waves: undefined;
   Report: { userId: string; userName: string };
+  MembershipPlans: undefined;
 };
 
 // -- Matches Stack --
@@ -109,10 +110,12 @@ export type ProfileStackParamList = {
   Settings: undefined;
   Badges: undefined;
   Packages: undefined;
+  JetonMarket: undefined;
   Places: undefined;
   Relationship: undefined;
   CouplesClub: undefined;
   NotificationSettings: undefined;
+  MembershipPlans: undefined;
   PersonalitySelection: undefined;
   ProfileCoach: undefined;
 };

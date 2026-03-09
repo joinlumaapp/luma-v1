@@ -29,6 +29,7 @@ interface MatchAnimationProps {
   userPhotoUrl?: string;
   compatibilityScore: number;
   isSuperCompatible: boolean;
+  isSupremeMember?: boolean;
   compatibilityExplanation?: string;
   conversationStarters?: string[];
   onSendMessage: (prefillMessage?: string) => void;
@@ -52,7 +53,31 @@ interface ParticleConfig {
   isHeart: boolean;
 }
 
-const generateParticles = (isSuper: boolean): ParticleConfig[] => {
+const generateParticles = (isSuper: boolean, isSupreme: boolean): ParticleConfig[] => {
+  if (isSupreme) {
+    const count = 35;
+    const supremeColors = ['#FFD700', '#D4AF37', '#B8860B', '#C5A028', '#FFFFFF'];
+    const centerX = SCREEN_WIDTH / 2;
+    const centerY = SCREEN_HEIGHT / 2;
+
+    return Array.from({ length: count }, (_, i) => {
+      const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.8;
+      const distance = 120 + Math.random() * (SCREEN_WIDTH * 0.6);
+      const endX = centerX + Math.cos(angle) * distance;
+      const endY = centerY + Math.sin(angle) * distance - 100;
+
+      return {
+        startX: centerX - 4,
+        startY: centerY - 4,
+        endX,
+        endY,
+        size: 6 + Math.random() * 10,
+        color: supremeColors[i % supremeColors.length],
+        isHeart: false,
+      };
+    });
+  }
+
   const count = isSuper ? SUPER_PARTICLE_COUNT : NORMAL_PARTICLE_COUNT;
   const baseColors = isSuper
     ? [palette.gold[300], palette.gold[400], palette.gold[500], palette.gold[200], palette.white]
@@ -163,6 +188,7 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
   userPhotoUrl,
   compatibilityScore,
   isSuperCompatible,
+  isSupremeMember,
   compatibilityExplanation,
   conversationStarters,
   onSendMessage,
@@ -191,8 +217,8 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
   const buttonGlow = useRef(new Animated.Value(0)).current;
 
   const particles = useMemo(
-    () => generateParticles(isSuperCompatible),
-    [isSuperCompatible],
+    () => generateParticles(isSuperCompatible, isSupremeMember ?? false),
+    [isSuperCompatible, isSupremeMember],
   );
 
   useEffect(() => {
@@ -215,6 +241,16 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
 
     // Haptic burst on match
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+    if (isSupremeMember) {
+      // Double haptic burst for Supreme
+      setTimeout(() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      }, 200);
+      setTimeout(() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      }, 400);
+    }
 
     // Orchestrated entrance sequence
     Animated.sequence([
@@ -349,6 +385,7 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
   }, [
     visible,
     isSuperCompatible,
+    isSupremeMember,
     overlayOpacity,
     cardScale,
     cardOpacity,
@@ -364,7 +401,7 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
     buttonGlow,
   ]);
 
-  const accentColor = isSuperCompatible ? colors.accent : colors.primary;
+  const accentColor = isSupremeMember ? '#D4AF37' : isSuperCompatible ? colors.accent : colors.primary;
   const userInitials = getInitials(userName);
   const matchInitials = getInitials(matchName);
 
@@ -514,17 +551,26 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
               { transform: [{ scale: titleScale }] },
             ]}
           >
-            {isSuperCompatible
-              ? 'Süper Uyumlu LUMA Eşleşmesi!'
-              : 'LUMA Eşleşmesi!'}
+            {isSupremeMember
+              ? 'Supreme Eşleşme!'
+              : isSuperCompatible
+                ? 'Süper Uyumlu LUMA Eşleşmesi!'
+                : 'LUMA Eşleşmesi!'}
           </Animated.Text>
 
           <Text style={styles.subtitle}>
             Sen ve {matchName} birbirinizi beğendiniz
           </Text>
 
+          {/* Supreme badge */}
+          {isSupremeMember && (
+            <View style={[styles.superBadge, { backgroundColor: 'rgba(212, 175, 55, 0.15)', borderColor: 'rgba(212, 175, 55, 0.4)' }]}>
+              <Text style={[styles.superBadgeText, { color: '#D4AF37' }]}>Supreme Üye</Text>
+            </View>
+          )}
+
           {/* Super badge */}
-          {isSuperCompatible && (
+          {!isSupremeMember && isSuperCompatible && (
             <View style={styles.superBadge}>
               <Text style={styles.superBadgeText}>Süper Uyumlu</Text>
             </View>
@@ -692,19 +738,20 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   photoCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
     borderWidth: 3,
-    backgroundColor: colors.surfaceLight,
+    // Match card background color to fill any subpixel gap between border and image
+    backgroundColor: 'rgba(245, 240, 232, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
   },
   profilePhoto: {
-    width: 66,
-    height: 66,
-    borderRadius: 33,
+    // Absolute fill ensures zero gap between image edge and circle border
+    width: '100%',
+    height: '100%',
   },
   photoName: {
     ...typography.captionSmall,

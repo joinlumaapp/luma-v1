@@ -1,7 +1,7 @@
-// Notifications screen — shows all notification types with grouped sections
-// Tap to navigate to relevant screen (profile, chat, post, etc.)
+// Notifications screen — premium UI grouped by time (Bugun / Bu Hafta / Daha Once)
+// Tap to navigate to relevant screen (profile, chat, post, activity, etc.)
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -22,20 +22,39 @@ import type {
   DiscoveryStackParamList,
   MainTabParamList,
 } from '../../navigation/types';
-import {
-  useNotificationStore,
-  useGroupedNotifications,
-} from '../../stores/notificationStore';
+import { useNotificationStore } from '../../stores/notificationStore';
 import type { Notification } from '../../services/notificationService';
-import { NotificationSectionHeader } from '../../components/notifications/NotificationSectionHeader';
-import { colors } from '../../theme/colors';
+import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
-import { spacing, layout } from '../../theme/spacing';
+import { spacing, borderRadius, layout } from '../../theme/spacing';
 
 type NotificationsNavProp = CompositeNavigationProp<
   NativeStackNavigationProp<DiscoveryStackParamList, 'Notifications'>,
   BottomTabNavigationProp<MainTabParamList>
 >;
+
+// ---- Time period keys ----
+type TimePeriod = 'TODAY' | 'THIS_WEEK' | 'EARLIER';
+
+const TIME_PERIOD_LABELS: Record<TimePeriod, string> = {
+  TODAY: 'Bugün',
+  THIS_WEEK: 'Bu Hafta',
+  EARLIER: 'Daha Önce',
+};
+
+// ---- Time grouping helper ----
+const getTimePeriod = (dateStr: string): TimePeriod => {
+  const now = new Date();
+  const date = new Date(dateStr);
+
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfWeek = new Date(startOfToday);
+  startOfWeek.setDate(startOfWeek.getDate() - 6);
+
+  if (date >= startOfToday) return 'TODAY';
+  if (date >= startOfWeek) return 'THIS_WEEK';
+  return 'EARLIER';
+};
 
 // ---- Time ago helper (Turkish) ----
 const getTimeAgo = (dateStr: string): string => {
@@ -50,51 +69,43 @@ const getTimeAgo = (dateStr: string): string => {
   return `${Math.floor(days / 7)} hafta önce`;
 };
 
-// ---- Action text by notification type (Turkish) ----
-const getActionText = (type: string, body: string): string => {
+// ---- Type icon mapping (Ionicons) ----
+const getTypeIcon = (
+  type: string,
+  data?: Record<string, unknown>,
+): { name: keyof typeof Ionicons.glyphMap; color: string } => {
   switch (type) {
-    case 'PROFILE_LIKE':
-      return 'profilini beğendi';
     case 'NEW_MATCH':
-      return 'ile eşleştiniz!';
-    case 'NEW_FOLLOWER':
-      return 'seni takip etmeye başladı';
-    case 'POST_LIKE':
-      return 'gönderini beğendi';
-    case 'POST_COMMENT':
-      return 'gönderine yorum yaptı';
-    case 'COMMENT_REPLY':
-      return 'yorumuna yanıt verdi';
-    case 'MESSAGE':
-      return 'mesaj gönderdi';
-    default:
-      return body;
-  }
-};
-
-// ---- Type icon mapping ----
-const getTypeIcon = (type: string): { name: keyof typeof Ionicons.glyphMap; color: string } => {
-  switch (type) {
-    case 'PROFILE_LIKE':
-      return { name: 'heart', color: '#EF4444' };
-    case 'NEW_MATCH':
-      return { name: 'sparkles', color: '#8B5CF6' };
+      return { name: 'heart', color: '#8B5CF6' };
     case 'NEW_FOLLOWER':
       return { name: 'person-add', color: '#3B82F6' };
+    case 'PROFILE_LIKE':
+      return { name: 'heart', color: '#EF4444' };
+    case 'NEW_ACTIVITY':
+      return { name: 'sparkles', color: '#F59E0B' };
+    case 'SYSTEM':
+      if (data?.activityTitle) {
+        return { name: 'sparkles', color: '#F59E0B' };
+      }
+      return { name: 'notifications', color: colors.textSecondary };
+    case 'MESSAGE':
+    case 'NEW_MESSAGE':
+      return { name: 'chatbubble', color: '#10B981' };
     case 'POST_LIKE':
       return { name: 'thumbs-up', color: '#F59E0B' };
     case 'POST_COMMENT':
-      return { name: 'chatbubble', color: '#10B981' };
     case 'COMMENT_REPLY':
-      return { name: 'return-down-forward', color: '#10B981' };
-    case 'MESSAGE':
-      return { name: 'mail', color: '#3B82F6' };
+      return { name: 'chatbubble-ellipses', color: '#10B981' };
+    case 'BADGE_EARNED':
+      return { name: 'ribbon', color: '#F59E0B' };
+    case 'SUPER_LIKE':
+      return { name: 'star', color: '#8B5CF6' };
     default:
       return { name: 'notifications', color: colors.textSecondary };
   }
 };
 
-// ---- Extract user name from notification data ----
+// ---- Extract helpers ----
 const getUserName = (notif: Notification): string => {
   return (notif.data?.userName as string) ?? '';
 };
@@ -103,25 +114,68 @@ const getUserPhoto = (notif: Notification): string | null => {
   return (notif.data?.userPhoto as string) ?? null;
 };
 
+// ---- Body text by notification type ----
+const getDisplayText = (notif: Notification): { prefix: string; suffix: string } => {
+  const userName = getUserName(notif);
+  switch (notif.type) {
+    case 'NEW_MATCH':
+      return { prefix: `Sen ve ${userName}`, suffix: ' birbirinizi beğendiniz!' };
+    case 'NEW_FOLLOWER':
+      return { prefix: userName, suffix: ' seni takip etmeye başladı. Profilini keşfet!' };
+    case 'NEW_ACTIVITY':
+    case 'SYSTEM': {
+      const activityTitle = notif.data?.activityTitle as string | undefined;
+      if (activityTitle) {
+        return { prefix: userName, suffix: ` yeni bir aktivite önerdi: ${activityTitle}` };
+      }
+      return { prefix: '', suffix: notif.body };
+    }
+    default:
+      // For all other types, show the body text from data
+      if (notif.body) {
+        return { prefix: userName, suffix: userName ? ` ${notif.body.replace(userName, '').trim()}` : notif.body };
+      }
+      return { prefix: userName, suffix: '' };
+  }
+};
+
+// ---- Time section header ----
+interface TimeSection {
+  period: TimePeriod;
+  unreadCount: number;
+}
+
+const SectionHeader: React.FC<TimeSection> = React.memo(({ period, unreadCount }) => (
+  <View style={styles.sectionHeader}>
+    <Text style={styles.sectionLabel}>{TIME_PERIOD_LABELS[period]}</Text>
+    {unreadCount > 0 && (
+      <View style={styles.sectionBadge}>
+        <Text style={styles.sectionBadgeText}>{unreadCount}</Text>
+      </View>
+    )}
+  </View>
+));
+
+SectionHeader.displayName = 'SectionHeader';
+
 // ---- Notification Item ----
 const NotificationItem: React.FC<{
   notification: Notification;
   onPress: (notification: Notification) => void;
 }> = React.memo(({ notification, onPress }) => {
   const photoUrl = getUserPhoto(notification);
-  const userName = getUserName(notification);
-  const actionText = getActionText(notification.type, notification.body);
   const timeAgo = getTimeAgo(notification.createdAt);
-  const typeIcon = getTypeIcon(notification.type);
+  const typeIcon = getTypeIcon(notification.type, notification.data);
+  const { prefix, suffix } = getDisplayText(notification);
 
   return (
     <Pressable
       style={[styles.notifItem, !notification.isRead && styles.notifItemUnread]}
       onPress={() => onPress(notification)}
-      accessibilityLabel={`${userName} ${actionText}`}
+      accessibilityLabel={`${prefix} ${suffix}`}
       accessibilityRole="button"
     >
-      {/* Avatar */}
+      {/* Avatar with type badge overlay */}
       <View style={styles.avatarContainer}>
         {photoUrl ? (
           <Image source={{ uri: photoUrl }} style={styles.avatar} />
@@ -130,7 +184,6 @@ const NotificationItem: React.FC<{
             <Ionicons name="person" size={20} color={colors.textTertiary} />
           </View>
         )}
-        {/* Type badge icon */}
         <View style={[styles.typeBadge, { backgroundColor: typeIcon.color }]}>
           <Ionicons name={typeIcon.name} size={10} color="#FFFFFF" />
         </View>
@@ -139,9 +192,8 @@ const NotificationItem: React.FC<{
       {/* Content */}
       <View style={styles.notifContent}>
         <Text style={styles.notifText} numberOfLines={2}>
-          <Text style={styles.notifName}>{userName}</Text>
-          {' '}
-          {actionText}
+          {prefix ? <Text style={styles.notifName}>{prefix}</Text> : null}
+          {suffix}
         </Text>
         <Text style={styles.notifTime}>{timeAgo}</Text>
       </View>
@@ -153,6 +205,11 @@ const NotificationItem: React.FC<{
 });
 
 NotificationItem.displayName = 'NotificationItem';
+
+// ---- Flat list row type ----
+type FlatRow =
+  | { type: 'header'; key: string; period: TimePeriod; unreadCount: number }
+  | { type: 'item'; key: string; notification: Notification };
 
 // ---- Main Screen ----
 export const NotificationsScreen: React.FC = () => {
@@ -168,7 +225,6 @@ export const NotificationsScreen: React.FC = () => {
     loadMore,
     notifications,
   } = useNotificationStore();
-  const groups = useGroupedNotifications();
 
   useEffect(() => {
     fetchNotifications();
@@ -180,18 +236,17 @@ export const NotificationsScreen: React.FC = () => {
 
   const handleNotificationPress = useCallback(
     (notif: Notification) => {
-      // Mark as read
       if (!notif.isRead) {
         markRead([notif.id]);
       }
 
-      // Navigate based on type
       const data = notif.data ?? {};
-      // Use parent tab navigator for cross-tab navigation
       const tabNav = navigation.getParent();
+
       switch (notif.type) {
         case 'PROFILE_LIKE':
         case 'NEW_FOLLOWER':
+        case 'SUPER_LIKE':
           if (data.userId) {
             navigation.navigate('ProfilePreview', { userId: data.userId as string });
           }
@@ -205,6 +260,7 @@ export const NotificationsScreen: React.FC = () => {
           }
           break;
         case 'MESSAGE':
+        case 'NEW_MESSAGE':
           if (data.matchId && tabNav) {
             tabNav.navigate('MatchesTab', {
               screen: 'Chat',
@@ -225,6 +281,11 @@ export const NotificationsScreen: React.FC = () => {
             });
           }
           break;
+        case 'SYSTEM':
+          if (data.activityTitle && tabNav) {
+            tabNav.navigate('ActivitiesTab', { screen: 'Activities' });
+          }
+          break;
         default:
           break;
       }
@@ -232,38 +293,49 @@ export const NotificationsScreen: React.FC = () => {
     [navigation, markRead],
   );
 
-  // Build flat list data with section headers
-  const flatData: Array<{ type: 'header' | 'item'; key: string; data: unknown }> = [];
-  for (const group of groups) {
-    flatData.push({
-      type: 'header',
-      key: `header-${group.key}`,
-      data: group,
-    });
-    for (const notif of group.notifications) {
-      flatData.push({
-        type: 'item',
-        key: notif.id,
-        data: notif,
-      });
+  // Build flat data grouped by time period
+  const flatData: FlatRow[] = useMemo(() => {
+    const periods: TimePeriod[] = ['TODAY', 'THIS_WEEK', 'EARLIER'];
+    const grouped = new Map<TimePeriod, Notification[]>();
+
+    for (const period of periods) {
+      grouped.set(period, []);
     }
-  }
+
+    for (const notif of notifications) {
+      const period = getTimePeriod(notif.createdAt);
+      grouped.get(period)?.push(notif);
+    }
+
+    const rows: FlatRow[] = [];
+    for (const period of periods) {
+      const items = grouped.get(period) ?? [];
+      if (items.length === 0) continue;
+
+      const periodUnread = items.filter((n) => !n.isRead).length;
+      rows.push({
+        type: 'header',
+        key: `header-${period}`,
+        period,
+        unreadCount: periodUnread,
+      });
+
+      for (const notif of items) {
+        rows.push({ type: 'item', key: notif.id, notification: notif });
+      }
+    }
+
+    return rows;
+  }, [notifications]);
 
   const renderItem = useCallback(
-    ({ item }: { item: (typeof flatData)[number] }) => {
+    ({ item }: { item: FlatRow }) => {
       if (item.type === 'header') {
-        const group = item.data as { key: string; title: string; unreadCount: number };
-        return (
-          <NotificationSectionHeader
-            groupKey={group.key as Parameters<typeof NotificationSectionHeader>[0]['groupKey']}
-            title={group.title}
-            unreadCount={group.unreadCount}
-          />
-        );
+        return <SectionHeader period={item.period} unreadCount={item.unreadCount} />;
       }
       return (
         <NotificationItem
-          notification={item.data as Notification}
+          notification={item.notification}
           onPress={handleNotificationPress}
         />
       );
@@ -271,7 +343,7 @@ export const NotificationsScreen: React.FC = () => {
     [handleNotificationPress],
   );
 
-  const keyExtractor = useCallback((item: (typeof flatData)[number]) => item.key, []);
+  const keyExtractor = useCallback((item: FlatRow) => item.key, []);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -293,7 +365,8 @@ export const NotificationsScreen: React.FC = () => {
             accessibilityLabel="Tümünü okundu işaretle"
             accessibilityRole="button"
           >
-            <Text style={styles.markAllText}>Tümünü oku</Text>
+            <Ionicons name="checkmark-done" size={16} color={palette.purple[500]} />
+            <Text style={styles.markAllText}>Tümünü Okundu İşaretle</Text>
           </Pressable>
         )}
       </View>
@@ -333,6 +406,7 @@ export const NotificationsScreen: React.FC = () => {
   );
 };
 
+// ---- Styles ----
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -359,12 +433,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   markAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
+    paddingVertical: spacing.sm,
+    backgroundColor: palette.purple[50],
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: palette.purple[200],
   },
   markAllText: {
-    ...typography.bodySmall,
-    color: colors.primary,
+    ...typography.caption,
+    color: palette.purple[500],
     fontWeight: '600',
   },
   loadingContainer: {
@@ -392,6 +473,35 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: spacing.xxl,
+  },
+  // ---- Section Header ----
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  sectionLabel: {
+    ...typography.label,
+    color: colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  sectionBadge: {
+    minWidth: 20,
+    height: 20,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xs + 2,
+  },
+  sectionBadgeText: {
+    ...typography.captionSmall,
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
   // ---- Notification Item ----
   notifItem: {

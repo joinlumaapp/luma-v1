@@ -1,20 +1,25 @@
 // DiscoveryCard — Photo (62%) + Info Panel (38%) layout
 // No gesture handling — parent manages swipe + tap
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
   Image,
   Pressable,
   StyleSheet,
+  Animated,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, palette, glassmorphism } from '../../theme/colors';
 import { fontWeights } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { INTEREST_OPTIONS } from '../../constants/config';
 import { formatActivityStatus } from '../../utils/formatters';
+import { TierIndicator, GOLD_24K } from '../common/SubscriptionBadge';
+import { analyticsService, ANALYTICS_EVENTS } from '../../services/analyticsService';
+import { useDiscoveryStore } from '../../stores/discoveryStore';
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -38,11 +43,13 @@ export interface DiscoveryCardProfile {
   matchReasons?: string[];
   /** Real compatibility reasons generated from shared signals */
   compatReasons?: string[];
+  packageTier?: 'free' | 'gold' | 'pro' | 'reserved';
 }
 
 interface DiscoveryCardProps {
   profile: DiscoveryCardProfile;
   onCompatTap?: (userId: string) => void;
+  onInstantMessage?: (userId: string) => void;
 }
 
 // ─── Interest tag emoji lookup ────────────────────────────────
@@ -80,10 +87,57 @@ const getFallbackExplanations = (score: number): string[] => {
 
 // ─── Component ────────────────────────────────────────────────
 
-const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap }) => {
+const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap, onInstantMessage }) => {
   const compatScore = profile.compatibility?.score ?? 0;
   const isSuper = profile.compatibility?.level === 'super';
   const modeStyle = profile.intentionTag ? getModeStyle(profile.intentionTag) : null;
+  const isSupreme = profile.packageTier === 'reserved';
+
+  // ── Supreme Aura: pulsing gold border opacity ──
+  const auraOpacity = useRef(new Animated.Value(0.4)).current;
+  // ── Elite Uye label fade-out ──
+  const eliteLabelOpacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (!isSupreme) return;
+
+    // Pulse the golden aura border between 0.4 and 0.8 over 3 seconds
+    const pulseAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(auraOpacity, {
+          toValue: 0.8,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(auraOpacity, {
+          toValue: 0.4,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    pulseAnimation.start();
+
+    // Fade out "Elite Uye" label after 2 seconds
+    const fadeTimer = setTimeout(() => {
+      Animated.timing(eliteLabelOpacity, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
+    }, 2000);
+
+    // Track supreme impression
+    analyticsService.track(ANALYTICS_EVENTS.SUPREME_IMPRESSION, {
+      userId: profile.userId,
+    });
+    useDiscoveryStore.getState().trackSupremeImpression();
+
+    return () => {
+      pulseAnimation.stop();
+      clearTimeout(fadeTimer);
+    };
+  }, [isSupreme, profile.userId, auraOpacity, eliteLabelOpacity]);
 
   // Location text: "Istanbul \u2022 4.1 km"
   const locationText = [
@@ -103,7 +157,7 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
   const visibleTags = allTags.slice(0, 2);
   const remainingCount = Math.max(0, allTags.length - 2);
 
-  return (
+  const cardContent = (
     <View style={styles.cardRoot}>
       {/* ── Photo section — 62% ── */}
       <View style={styles.photoSection}>
@@ -135,19 +189,55 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
 
         {/* Soft gradient at bottom of photo for smooth transition */}
         <LinearGradient
-          colors={['transparent', 'rgba(255,255,255,0.6)', colors.surface] as [string, string, ...string[]]}
+          colors={['transparent', colors.background + '99', colors.background] as [string, string, ...string[]]}
           locations={[0, 0.55, 1]}
           style={styles.photoGradient}
           pointerEvents="none"
         />
+
+        {/* Hızlı Mesaj button — bottom-right of photo */}
+        {onInstantMessage && (
+          <Pressable
+            style={styles.instantMessageButton}
+            onPress={() => onInstantMessage(profile.userId)}
+            accessibilityLabel="Hızlı mesaj gönder (20 Jeton)"
+            accessibilityRole="button"
+          >
+            <LinearGradient
+              colors={['#D4AF37', '#B8860B'] as [string, string]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.instantMessageGradient}
+            >
+              <Ionicons name="chatbubble" size={14} color="#FFFFFF" />
+              <Text style={styles.instantMessageText}>Hızlı Mesaj</Text>
+              <View style={styles.instantMessageCost}>
+                <Text style={styles.instantMessageCostText}>20</Text>
+              </View>
+            </LinearGradient>
+          </Pressable>
+        )}
       </View>
 
       {/* ── Info panel — 38%, 6 rows ── */}
       <View style={styles.infoPanel}>
-        {/* Row 1: Name + Age */}
-        <Text style={styles.nameAge} numberOfLines={1}>
-          {profile.firstName}, {profile.age}
-        </Text>
+        {/* Row 1: Name + Age + Tier + Supreme Crown */}
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={styles.nameAge} numberOfLines={1}>
+            {profile.firstName}, {profile.age}
+          </Text>
+          {isSupreme && (
+            <View style={styles.supremeCrownRow}>
+              <Ionicons name="diamond" size={14} color={GOLD_24K.light} />
+              <Animated.Text
+                style={[styles.eliteLabel, { opacity: eliteLabelOpacity }]}
+              >
+                Elite {'\u00DC'}ye
+              </Animated.Text>
+            </View>
+          )}
+          {profile.packageTier && !isSupreme && <TierIndicator tier={profile.packageTier} />}
+        </View>
 
         {/* Row 2: City + Distance */}
         {locationText.length > 0 && (
@@ -233,12 +323,31 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
       </View>
     </View>
   );
+
+  // Wrap supreme profiles in a pulsing golden aura
+  if (isSupreme) {
+    return (
+      <View style={styles.supremeAuraWrapper}>
+        <Animated.View
+          style={[
+            styles.supremeAuraBorder,
+            { opacity: auraOpacity },
+          ]}
+          pointerEvents="none"
+        />
+        {cardContent}
+      </View>
+    );
+  }
+
+  return cardContent;
 };
 
 // ─── Memoization ──────────────────────────────────────────────
 
 export const DiscoveryCard = React.memo(DiscoveryCardInner, (prevProps, nextProps) => {
-  return prevProps.profile.userId === nextProps.profile.userId;
+  return prevProps.profile.userId === nextProps.profile.userId
+    && prevProps.onInstantMessage === nextProps.onInstantMessage;
 });
 
 // ─── Styles ───────────────────────────────────────────────────
@@ -248,19 +357,28 @@ const PHOTO_RATIO = 0.62;
 const styles = StyleSheet.create({
   cardRoot: {
     flex: 1,
-    borderRadius: 24,
+    borderRadius: 20,
     overflow: 'hidden',
-    backgroundColor: colors.surface,
+    // Use cream background instead of white to eliminate subpixel white edge artifacts
+    backgroundColor: colors.background,
   },
 
   // ── Photo section — 62% ──
   photoSection: {
     flex: PHOTO_RATIO,
     position: 'relative',
+    overflow: 'hidden',
+    // Match parent background — no white line between photo and card edge
+    backgroundColor: colors.background,
   },
   photo: {
-    width: '100%',
-    height: '100%',
+    // Absolute fill ensures the image covers the full container
+    // with no subpixel gaps at the border-radius boundary
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   photoPlaceholder: {
     flex: 1,
@@ -311,14 +429,14 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     backgroundColor: colors.success,
     borderWidth: 2,
-    borderColor: palette.white,
+    borderColor: colors.background,
     zIndex: 2,
   },
 
   // ── Info panel — 38%, 6 rows ──
   infoPanel: {
     flex: 1 - PHOTO_RATIO,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
     paddingHorizontal: spacing.md + 2,
     paddingTop: 4,
     paddingBottom: 4,
@@ -452,5 +570,76 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
     letterSpacing: 0.1,
     lineHeight: 16,
+  },
+
+  // ── Hızlı Mesaj button ──
+  instantMessageButton: {
+    position: 'absolute',
+    bottom: spacing.sm + 4,
+    right: spacing.sm + 4,
+    zIndex: 3,
+    borderRadius: 50,
+    overflow: 'hidden',
+    shadowColor: '#D4AF37',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  instantMessageGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    gap: 4,
+    borderRadius: 50,
+  },
+  instantMessageText: {
+    fontSize: 11,
+    fontWeight: fontWeights.bold,
+    color: '#FFFFFF',
+  },
+  instantMessageCost: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    borderRadius: 50,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    overflow: 'hidden',
+  },
+  instantMessageCostText: {
+    fontSize: 9,
+    fontWeight: fontWeights.bold,
+    color: '#FFFFFF',
+  },
+
+  // ── Supreme Aura ──
+  supremeAuraWrapper: {
+    flex: 1,
+    borderRadius: 22,
+    overflow: 'hidden',
+    shadowColor: '#D4AF37',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  supremeAuraBorder: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: '#D4AF37',
+    zIndex: 10,
+  },
+  supremeCrownRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 6,
+    gap: 3,
+  },
+  eliteLabel: {
+    fontSize: 11,
+    fontWeight: fontWeights.semibold,
+    color: '#D4AF37',
+    letterSpacing: 0.3,
   },
 });

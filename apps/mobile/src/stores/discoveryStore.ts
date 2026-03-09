@@ -45,6 +45,8 @@ export interface DiscoveryProfile {
   children?: string;
   job?: string;
   education?: string;
+  /** Subscription tier for badge display */
+  packageTier?: 'free' | 'gold' | 'pro' | 'reserved';
 }
 
 // Undo window duration in milliseconds
@@ -87,6 +89,9 @@ interface DiscoveryState {
   // Batch cooldown state
   batchCooldownEnd: number | null;
 
+  // Supreme impression tracking
+  premiumImpressions: number;
+
   // Actions
   fetchFeed: () => Promise<void>;
   checkAndLoadBatch: () => Promise<void>;
@@ -100,6 +105,7 @@ interface DiscoveryState {
   dismissMatch: () => void;
   clearUndo: () => void;
   dismissSuperLikeGlow: () => void;
+  trackSupremeImpression: () => void;
 }
 
 // Transform backend FeedCard to store DiscoveryProfile
@@ -126,7 +132,37 @@ const mapFeedCardToProfile = (card: FeedCard): DiscoveryProfile => ({
   children: card.children,
   job: card.job,
   education: card.education,
+  packageTier: card.packageTier,
 });
+
+// ─── Supreme Visibility Priority ─────────────────────────────
+// Boosts 'reserved' (Supreme) profiles to the top 5% of the feed stack.
+// Among supreme profiles, higher feedScore wins. Non-supreme order is preserved.
+
+const sortWithSupremePriority = (profiles: DiscoveryProfile[]): DiscoveryProfile[] => {
+  const supreme: DiscoveryProfile[] = [];
+  const regular: DiscoveryProfile[] = [];
+
+  for (const p of profiles) {
+    if (p.packageTier === 'reserved') {
+      supreme.push(p);
+    } else {
+      regular.push(p);
+    }
+  }
+
+  // Sort supreme profiles by compatibilityPercent (used as feedScore proxy) descending
+  supreme.sort((a, b) => (b.compatibilityPercent ?? 0) - (a.compatibilityPercent ?? 0));
+
+  // Top 5% slot count (at least 1 if any supreme profiles exist)
+  const top5Count = Math.max(1, Math.ceil(profiles.length * 0.05));
+
+  // Insert supreme profiles into the top 5% slots, rest of regular follows
+  const supremeToInsert = supreme.slice(0, top5Count);
+  const supremeOverflow = supreme.slice(top5Count);
+
+  return [...supremeToInsert, ...regular, ...supremeOverflow];
+};
 
 // ─── Intention tag normalization ─────────────────────────────
 const INTENTION_NORMALIZE: Record<string, string> = {
@@ -227,6 +263,9 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
   // Batch cooldown initial state
   batchCooldownEnd: null,
 
+  // Supreme impression counter
+  premiumImpressions: 0,
+
   // Actions
   checkAndLoadBatch: async () => {
     // Check if cooldown has passed; if so, load new batch
@@ -250,7 +289,8 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
     set({ isLoading: true });
     try {
       const response = await discoveryService.getFeed(get().filters);
-      const profiles = rankAndLabel(response.cards.map(mapFeedCardToProfile));
+      const ranked = rankAndLabel(response.cards.map(mapFeedCardToProfile));
+      const profiles = sortWithSupremePriority(ranked);
       set({
         cards: profiles,
         currentIndex: 0,
@@ -467,4 +507,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
 
   dismissSuperLikeGlow: () =>
     set({ showSuperLikeGlow: false }),
+
+  trackSupremeImpression: () =>
+    set((state) => ({ premiumImpressions: state.premiumImpressions + 1 })),
 }));

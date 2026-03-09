@@ -38,6 +38,8 @@ export interface FeedCard {
   children?: string;
   job?: string;
   education?: string;
+  /** Subscription tier of the user */
+  packageTier?: 'free' | 'gold' | 'pro' | 'reserved';
 }
 
 export interface FeedResponse {

@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ModerationService } from '../moderation/moderation.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { SendMessageDto } from './dto/send-message.dto';
 import { MessageReactionDto } from './dto/message-reaction.dto';
 
@@ -19,6 +20,7 @@ export class ChatService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly moderationService: ModerationService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   // ─── Conversations ──────────────────────────────────────────
@@ -248,6 +250,17 @@ export class ChatService {
       where: { id: matchId },
       data: { updatedAt: new Date() },
     });
+
+    // Send push notification to the partner (fire-and-forget)
+    const senderProfile = await this.prisma.userProfile.findUnique({
+      where: { userId },
+      select: { firstName: true },
+    });
+    const senderName = senderProfile?.firstName ?? 'Biri';
+    const preview = dto.content.trim().length > 100
+      ? dto.content.trim().substring(0, 97) + '...'
+      : dto.content.trim();
+    this.notificationsService.notifyNewMessage(partnerId, senderName, preview).catch(() => {});
 
     return {
       id: message.id,

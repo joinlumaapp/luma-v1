@@ -296,8 +296,20 @@ function buildInterleavedContent(
   const INFO_SECTION_HEIGHT = 140; // rough average per info section
   const PHOTO_HEIGHT = SCREEN_WIDTH - spacing.lg * 2 + spacing.md * 2; // image + margins
 
+  // Storytelling sequence: Info → Photo → Info → Photo → ...
+  // This keeps the user engaged by showing lifestyle data between photos
   while (infoIdx < infoSections.length || photoIdx < remainingPhotos.length) {
-    // Photo first
+    // Info section first (lifestyle, compat reasons, interests, etc.)
+    if (infoIdx < infoSections.length) {
+      elements.push(
+        <View key={`info-${infoIdx}`}>
+          {infoSections[infoIdx]}
+        </View>,
+      );
+      infoIdx++;
+    }
+
+    // Then photo
     if (photoIdx < remainingPhotos.length) {
       const absolutePhotoIndex = photoIdx + 1;
       const estimatedOffset =
@@ -316,16 +328,6 @@ function buildInterleavedContent(
         />,
       );
       photoIdx++;
-    }
-
-    // Then info section
-    if (infoIdx < infoSections.length) {
-      elements.push(
-        <View key={`info-${infoIdx}`}>
-          {infoSections[infoIdx]}
-        </View>,
-      );
-      infoIdx++;
     }
   }
 
@@ -354,7 +356,7 @@ const styles = StyleSheet.create({
     height: '130%', // extra height for parallax movement
   },
 
-  // Interleaved photo
+  // Interleaved photo — no background color to eliminate white edge artifacts
   interleavedPhotoWrapper: {
     paddingHorizontal: spacing.lg,
     marginVertical: spacing.md,
@@ -363,12 +365,13 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: borderRadius.xl,
     overflow: 'hidden',
-    backgroundColor: colors.surface,
+    // Match app cream background to prevent white hairline at rounded edges
+    backgroundColor: colors.background,
   },
   interleavedImage: {
     width: '100%',
     height: SCREEN_WIDTH - spacing.lg * 2,
-    borderRadius: borderRadius.xl,
+    // No borderRadius on image — parent overflow:hidden handles clipping cleanly
   },
 
   // Full-screen viewer — clean

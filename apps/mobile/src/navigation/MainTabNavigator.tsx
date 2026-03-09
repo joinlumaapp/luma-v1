@@ -3,7 +3,7 @@
 // Enhanced: unread message badge on Matches tab
 // Performance: deferred mount for heavy sub-screens
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, View, Text, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -21,6 +21,8 @@ import { darkTheme } from '../theme/colors';
 import { spacing, layout, borderRadius } from '../theme/spacing';
 import { typography } from '../theme/typography';
 import { useChatStore } from '../stores/chatStore';
+import { useNotificationStore } from '../stores/notificationStore';
+import { NotificationPermissionModal } from '../components/notifications/NotificationPermissionModal';
 import { usePresenceTracking } from '../hooks/usePresence';
 import { withDeferredMount } from './LazyScreens';
 
@@ -49,9 +51,11 @@ import { PlacesScreen } from '../screens/places/PlacesScreen';
 import { RelationshipScreen } from '../screens/relationship/RelationshipScreen';
 import { CouplesClubScreen } from '../screens/couples-club/CouplesClubScreen';
 import { NotificationSettingsScreen } from '../screens/settings/NotificationSettingsScreen';
+import { MembershipPlansScreen } from '../screens/settings/MembershipPlansScreen';
 import { PersonalitySelectionScreen } from '../screens/profile/PersonalitySelectionScreen';
 import { ProfileCoachScreen } from '../screens/profile/ProfileCoachScreen';
 import { ReportScreen } from '../screens/moderation/ReportScreen';
+import { JetonMarketScreen } from '../screens/store/JetonMarketScreen';
 
 // Feed extra screens
 import { FeedProfileScreen } from '../screens/feed/FeedProfileScreen';
@@ -147,7 +151,7 @@ const DiscoveryStackNavigator: React.FC = () => (
     <DiscoveryStack.Screen
       name="ProfilePreview"
       component={ProfilePreviewScreen}
-      options={{ animation: 'slide_from_bottom' }}
+      options={{ animation: 'fade_from_bottom', gestureEnabled: true, gestureDirection: 'vertical' }}
     />
     <DiscoveryStack.Screen
       name="StoryViewer"
@@ -194,6 +198,11 @@ const DiscoveryStackNavigator: React.FC = () => (
       component={ReportScreen}
       options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
     />
+    <DiscoveryStack.Screen
+      name="MembershipPlans"
+      component={MembershipPlansScreen}
+      options={{ animation: 'slide_from_bottom' }}
+    />
   </DiscoveryStack.Navigator>
 );
 
@@ -209,7 +218,7 @@ const MatchesStackNavigator: React.FC = () => (
     <MatchesStack.Screen
       name="ProfilePreview"
       component={ProfilePreviewScreen}
-      options={{ animation: 'slide_from_bottom' }}
+      options={{ animation: 'fade_from_bottom', gestureEnabled: true, gestureDirection: 'vertical' }}
     />
     <MatchesStack.Screen name="MatchDetail" component={MatchDetailScreen} />
     <MatchesStack.Screen
@@ -274,10 +283,12 @@ const ProfileStackNavigator: React.FC = () => (
     <ProfileStack.Screen name="Settings" component={SettingsScreen} />
     <ProfileStack.Screen name="Badges" component={BadgesScreen} />
     <ProfileStack.Screen name="Packages" component={PackagesScreen} />
+    <ProfileStack.Screen name="JetonMarket" component={JetonMarketScreen} />
     <ProfileStack.Screen name="Places" component={PlacesScreen} />
     <ProfileStack.Screen name="Relationship" component={RelationshipScreen} />
     <ProfileStack.Screen name="CouplesClub" component={CouplesClubScreen} />
     <ProfileStack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
+    <ProfileStack.Screen name="MembershipPlans" component={MembershipPlansScreen} />
     <ProfileStack.Screen name="PersonalitySelection" component={PersonalitySelectionScreen} />
     <ProfileStack.Screen name="ProfileCoach" component={ProfileCoachScreen} />
   </ProfileStack.Navigator>
@@ -286,7 +297,24 @@ const ProfileStackNavigator: React.FC = () => (
 export const MainTabNavigator: React.FC = () => {
   usePresenceTracking();
   const totalUnread = useChatStore((state) => state.totalUnread);
+
+  // Notification store integration
+  const notifUnreadCount = useNotificationStore((s) => s.unreadCount);
+  const showPermissionModal = useNotificationStore((s) => s.showPermissionModal);
+  const setupForegroundListener = useNotificationStore((s) => s.setupForegroundListener);
+  const checkAndPromptPermission = useNotificationStore((s) => s.checkAndPromptPermission);
+  const allowPermission = useNotificationStore((s) => s.allowPermission);
+  const dismissPermissionModal = useNotificationStore((s) => s.dismissPermissionModal);
+
+  // Setup foreground listener + permission prompt on mount
+  useEffect(() => {
+    const cleanup = setupForegroundListener();
+    checkAndPromptPermission();
+    return cleanup;
+  }, [setupForegroundListener, checkAndPromptPermission]);
+
   return (
+    <>
     <Tab.Navigator
       initialRouteName="DiscoveryTab"
       backBehavior="history"
@@ -313,17 +341,17 @@ export const MainTabNavigator: React.FC = () => {
         }}
         listeners={({ navigation, route }) => ({
           tabPress: (e) => {
-            const tabState = navigation.getState();
+            const tabState = navigation.getState?.();
+            if (!tabState?.routes) return;
             const thisRoute = tabState.routes.find((r: { name: string }) => r.name === route.name);
             const nestedState = (thisRoute as { state?: { index?: number } })?.state;
             const isDeep = nestedState && nestedState.index !== undefined && nestedState.index > 0;
             if (isDeep) {
               e.preventDefault();
-              const state = navigation.getState();
               navigation.dispatch(
                 CommonActions.reset({
-                  ...state,
-                  routes: state.routes.map((r: { name: string; key?: string; state?: unknown }) =>
+                  ...tabState,
+                  routes: tabState.routes.map((r: { name: string; key?: string; state?: unknown }) =>
                     r.name === route.name ? { ...r, state: undefined } : r
                   ),
                 })
@@ -338,24 +366,28 @@ export const MainTabNavigator: React.FC = () => {
         options={{
           tabBarLabel: 'Keşfet',
           tabBarIcon: ({ focused }) => (
-            <TabIcon name="compass" focused={focused} />
+            <TabIconWithBadge
+              name="compass"
+              focused={focused}
+              badgeCount={notifUnreadCount}
+            />
           ),
-          tabBarAccessibilityLabel: 'Keşfet',
+          tabBarAccessibilityLabel: `Keşfet${notifUnreadCount > 0 ? `, ${notifUnreadCount} bildirim` : ''}`,
           tabBarButtonTestID: 'tab-discovery',
         }}
         listeners={({ navigation, route }) => ({
           tabPress: (e) => {
-            const tabState = navigation.getState();
+            const tabState = navigation.getState?.();
+            if (!tabState?.routes) return;
             const thisRoute = tabState.routes.find((r: { name: string }) => r.name === route.name);
             const nestedState = (thisRoute as { state?: { index?: number } })?.state;
             const isDeep = nestedState && nestedState.index !== undefined && nestedState.index > 0;
             if (isDeep) {
               e.preventDefault();
-              const state = navigation.getState();
               navigation.dispatch(
                 CommonActions.reset({
-                  ...state,
-                  routes: state.routes.map((r: { name: string; key?: string; state?: unknown }) =>
+                  ...tabState,
+                  routes: tabState.routes.map((r: { name: string; key?: string; state?: unknown }) =>
                     r.name === route.name ? { ...r, state: undefined } : r
                   ),
                 })
@@ -377,17 +409,17 @@ export const MainTabNavigator: React.FC = () => {
         }}
         listeners={({ navigation, route }) => ({
           tabPress: (e) => {
-            const tabState = navigation.getState();
+            const tabState = navigation.getState?.();
+            if (!tabState?.routes) return;
             const thisRoute = tabState.routes.find((r: { name: string }) => r.name === route.name);
             const nestedState = (thisRoute as { state?: { index?: number } })?.state;
             const isDeep = nestedState && nestedState.index !== undefined && nestedState.index > 0;
             if (isDeep) {
               e.preventDefault();
-              const state = navigation.getState();
               navigation.dispatch(
                 CommonActions.reset({
-                  ...state,
-                  routes: state.routes.map((r: { name: string; key?: string; state?: unknown }) =>
+                  ...tabState,
+                  routes: tabState.routes.map((r: { name: string; key?: string; state?: unknown }) =>
                     r.name === route.name ? { ...r, state: undefined } : r
                   ),
                 })
@@ -413,17 +445,17 @@ export const MainTabNavigator: React.FC = () => {
         }}
         listeners={({ navigation, route }) => ({
           tabPress: (e) => {
-            const tabState = navigation.getState();
+            const tabState = navigation.getState?.();
+            if (!tabState?.routes) return;
             const thisRoute = tabState.routes.find((r: { name: string }) => r.name === route.name);
             const nestedState = (thisRoute as { state?: { index?: number } })?.state;
             const isDeep = nestedState && nestedState.index !== undefined && nestedState.index > 0;
             if (isDeep) {
               e.preventDefault();
-              const state = navigation.getState();
               navigation.dispatch(
                 CommonActions.reset({
-                  ...state,
-                  routes: state.routes.map((r: { name: string; key?: string; state?: unknown }) =>
+                  ...tabState,
+                  routes: tabState.routes.map((r: { name: string; key?: string; state?: unknown }) =>
                     r.name === route.name ? { ...r, state: undefined } : r
                   ),
                 })
@@ -445,17 +477,17 @@ export const MainTabNavigator: React.FC = () => {
         }}
         listeners={({ navigation, route }) => ({
           tabPress: (e) => {
-            const tabState = navigation.getState();
+            const tabState = navigation.getState?.();
+            if (!tabState?.routes) return;
             const thisRoute = tabState.routes.find((r: { name: string }) => r.name === route.name);
             const nestedState = (thisRoute as { state?: { index?: number } })?.state;
             const isDeep = nestedState && nestedState.index !== undefined && nestedState.index > 0;
             if (isDeep) {
               e.preventDefault();
-              const state = navigation.getState();
               navigation.dispatch(
                 CommonActions.reset({
-                  ...state,
-                  routes: state.routes.map((r: { name: string; key?: string; state?: unknown }) =>
+                  ...tabState,
+                  routes: tabState.routes.map((r: { name: string; key?: string; state?: unknown }) =>
                     r.name === route.name ? { ...r, state: undefined } : r
                   ),
                 })
@@ -465,6 +497,12 @@ export const MainTabNavigator: React.FC = () => {
         })}
       />
     </Tab.Navigator>
+    <NotificationPermissionModal
+      visible={showPermissionModal}
+      onAllow={allowPermission}
+      onDismiss={dismissPermissionModal}
+    />
+    </>
   );
 };
 

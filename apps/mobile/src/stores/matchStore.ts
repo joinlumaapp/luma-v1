@@ -20,6 +20,8 @@ export interface Match {
   isNew: boolean;
   matchedAt: string;
   lastMessage: string | null;
+  /** Subscription tier for badge display */
+  packageTier?: 'free' | 'gold' | 'pro' | 'reserved';
 }
 
 export interface MatchDetail extends Match {

@@ -1,6 +1,6 @@
-// Match detail screen — uses shared InterleavedProfileLayout
-// Unified profile layout: photo → info → photo → info pattern
-// All business logic preserved: match fetching, unmatch, send message, date planner
+// Match detail screen — premium global template
+// Uses InterleavedProfileLayout with seamless sections, minimalist stats,
+// gradient action buttons, and consistent cream background
 
 import React, { useEffect, useCallback } from 'react';
 import {
@@ -11,19 +11,23 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { MatchesStackParamList } from '../../navigation/types';
-import { colors } from '../../theme/colors';
-import { typography } from '../../theme/typography';
-import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
+import { colors, palette } from '../../theme/colors';
+import { fontWeights } from '../../theme/typography';
+import { spacing, borderRadius } from '../../theme/spacing';
 import { useMatchStore } from '../../stores/matchStore';
+import { useCoinStore, SUPER_LIKE_COST, PROFILE_BOOST_COST } from '../../stores/coinStore';
 import { useScreenTracking, analyticsService, ANALYTICS_EVENTS } from '../../hooks/useAnalytics';
 import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
 import { VerifiedBadge } from '../../components/common/VerifiedBadge';
+import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
+import { CoinBalance } from '../../components/common/CoinBalance';
 
 type MatchDetailNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'MatchDetail'>;
 type MatchDetailRouteProp = RouteProp<MatchesStackParamList, 'MatchDetail'>;
@@ -33,6 +37,8 @@ const getScoreColor = (score: number): string => {
   if (score >= 70) return colors.accent;
   return colors.primary;
 };
+
+// ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export const MatchDetailScreen: React.FC = () => {
   const navigation = useNavigation<MatchDetailNavigationProp>();
@@ -72,6 +78,38 @@ export const MatchDetailScreen: React.FC = () => {
     });
   }, [navigation, matchId, selectedMatch]);
 
+  const coinBalance = useCoinStore((state) => state.balance);
+  const sendSuperLike = useCoinStore((state) => state.sendSuperLike);
+  const activateProfileBoost = useCoinStore((state) => state.activateProfileBoost);
+
+  const handleSuperLike = useCallback(async () => {
+    if (coinBalance < SUPER_LIKE_COST) {
+      Alert.alert('Yetersiz Jeton', `Süper Beğeni için ${SUPER_LIKE_COST} Jeton gerekiyor.`, [
+        { text: 'Jeton Al', onPress: () => navigation.navigate('MembershipPlans' as never) },
+        { text: 'Tamam', style: 'cancel' },
+      ]);
+      return;
+    }
+    const success = await sendSuperLike(matchId);
+    if (success) {
+      Alert.alert('Süper Beğeni!', `${selectedMatch?.name} için Süper Beğeni gönderildi.`);
+    }
+  }, [coinBalance, sendSuperLike, matchId, selectedMatch, navigation]);
+
+  const handleBoost = useCallback(async () => {
+    if (coinBalance < PROFILE_BOOST_COST) {
+      Alert.alert('Yetersiz Jeton', `Boost için ${PROFILE_BOOST_COST} Jeton gerekiyor.`, [
+        { text: 'Jeton Al', onPress: () => navigation.navigate('MembershipPlans' as never) },
+        { text: 'Tamam', style: 'cancel' },
+      ]);
+      return;
+    }
+    const success = await activateProfileBoost();
+    if (success) {
+      Alert.alert('Boost Aktif!', 'Profilin 30 dakika boyunca öne çıkarıldı.');
+    }
+  }, [coinBalance, activateProfileBoost, navigation]);
+
   const handleUnmatch = useCallback(() => {
     Alert.alert(
       'Eşleştirmeyi Kaldır',
@@ -109,22 +147,25 @@ export const MatchDetailScreen: React.FC = () => {
         <Ionicons name="chevron-back" size={22} color={colors.text} />
       </TouchableOpacity>
       <Text style={styles.headerTitle}>Profil</Text>
-      <View style={{ width: 40 }} />
+      <CoinBalance size="small" />
     </View>
   );
 
-  // ── Top content (identity card + compat score) ──
+  // ── Top content (identity + compat score — seamless, no card backgrounds) ──
   const topContent = (
-    <View style={styles.topContentContainer}>
-      {/* Identity card */}
-      <View style={styles.identityCard}>
+    <View style={styles.topSection}>
+      {/* Identity — name, age, verified, city, intention */}
+      <View style={styles.identityBlock}>
         <View style={styles.nameRow}>
           <Text style={styles.userName}>{selectedMatch.name}, {selectedMatch.age}</Text>
-          {selectedMatch.isVerified && <VerifiedBadge size="medium" animated />}
+          {selectedMatch.isVerified && <VerifiedBadge size="large" animated />}
+          {selectedMatch.packageTier && <SubscriptionBadge tier={selectedMatch.packageTier} compact />}
         </View>
+
         {selectedMatch.city ? (
-          <Text style={styles.userCity}>{selectedMatch.city}</Text>
+          <Text style={styles.cityText}>{selectedMatch.city}</Text>
         ) : null}
+
         {selectedMatch.intentionTag ? (
           <View style={styles.intentionChip}>
             <Text style={styles.intentionText}>{selectedMatch.intentionTag}</Text>
@@ -132,58 +173,44 @@ export const MatchDetailScreen: React.FC = () => {
         ) : null}
       </View>
 
-      {/* Stats row */}
+      {/* Inline compat score */}
+      <View style={styles.compatInline}>
+        <View style={[styles.compatDot, { backgroundColor: compatColor }]} />
+        <Text style={[styles.compatInlineText, { color: compatColor }]}>
+          %{compatPercent} Uyum
+        </Text>
+        {compatPercent >= 90 && (
+          <Text style={styles.compatSuperLabel}>Süper!</Text>
+        )}
+      </View>
+
+      {/* Stats row — minimalist */}
       <View style={styles.statsCard}>
-        <View style={styles.statsRow}>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>15</Text>
-            <Text style={styles.statLabel}>Gönderi</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>108</Text>
-            <Text style={styles.statLabel}>Takipçi</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>73</Text>
-            <Text style={styles.statLabel}>Takip</Text>
-          </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>15</Text>
+          <Text style={styles.statLabel}>GONDERİ</Text>
         </View>
-      </View>
-
-      {/* Weekly views */}
-      <View style={styles.weeklyViewsCard}>
-        <Text style={styles.weeklyViewsLabel}>Bu hafta profilini görenler</Text>
-        <Text style={styles.weeklyViewsCount}>57 kişi</Text>
-      </View>
-
-      {/* Compatibility score */}
-      <View style={styles.compatCard}>
-        <View style={styles.compatInlineRow}>
-          <View style={[styles.compatCircle, { borderColor: compatColor }]}>
-            <Text style={[styles.compatScoreText, { color: compatColor }]}>%{compatPercent}</Text>
-          </View>
-          <View style={styles.compatTextCol}>
-            <Text style={styles.compatTitle}>
-              {compatPercent >= 90 ? 'Süper Uyumluluk!' : 'Uyum Skoru'}
-            </Text>
-            <Text style={styles.compatSubtitle}>
-              {compatPercent >= 90 ? 'Harika bir eşleşme!' : compatPercent >= 70 ? 'Güçlü uyum' : 'Keşfedilecek potansiyel'}
-            </Text>
-          </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>108</Text>
+          <Text style={styles.statLabel}>TAKİPCİ</Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>73</Text>
+          <Text style={styles.statLabel}>TAKİP</Text>
         </View>
       </View>
     </View>
   );
 
-  // ── Info sections (interleaved with photos) ──
+  // ── Info sections (interleaved with photos) — seamless ──
   const infoSections: React.ReactNode[] = [];
 
   // 1. Bio
   if (selectedMatch.bio && selectedMatch.bio.length > 0) {
     infoSections.push(
-      <View key="bio" style={styles.card}>
+      <View key="bio" style={styles.section}>
         <Text style={styles.sectionTitle}>Hakkında</Text>
         <Text style={styles.bioText}>{selectedMatch.bio}</Text>
       </View>,
@@ -193,7 +220,7 @@ export const MatchDetailScreen: React.FC = () => {
   // 2. Compatibility breakdown
   if (selectedMatch.compatibilityBreakdown.length > 0) {
     infoSections.push(
-      <View key="breakdown" style={styles.card}>
+      <View key="breakdown" style={styles.section}>
         <Text style={styles.sectionTitle}>Uyum Analizi</Text>
         {selectedMatch.compatibilityBreakdown.map((category) => {
           const catColor = getScoreColor(category.score);
@@ -223,8 +250,7 @@ export const MatchDetailScreen: React.FC = () => {
     const matchDate = new Date(selectedMatch.matchedAt);
     const formattedDate = `${matchDate.getDate()}.${matchDate.getMonth() + 1}.${matchDate.getFullYear()}`;
     infoSections.push(
-      <View key="match-info" style={styles.card}>
-        <Text style={styles.sectionTitle}>Eşleşme Bilgisi</Text>
+      <View key="match-info" style={styles.section}>
         <View style={styles.matchInfoRow}>
           <Ionicons name="heart" size={16} color={colors.primary} />
           <Text style={styles.matchInfoText}>
@@ -235,27 +261,83 @@ export const MatchDetailScreen: React.FC = () => {
     );
   }
 
-  // ── Footer (action buttons) ──
+  // ── Footer — gradient action buttons + jeton cost labels ──
   const footer = (
-    <View style={[styles.actions, { paddingBottom: insets.bottom + spacing.md }]}>
-      <TouchableOpacity
-        style={styles.messageButton}
-        onPress={handleSendMessage}
-        activeOpacity={0.85}
-      >
-        <Ionicons name="chatbubble" size={18} color={colors.text} />
-        <Text style={styles.messageButtonText}>Mesaj Gönder</Text>
-      </TouchableOpacity>
+    <View style={[styles.footerContainer, { paddingBottom: insets.bottom + spacing.md }]}>
+      {/* Primary actions row */}
+      <View style={styles.footerActionsRow}>
+        {/* Message — gradient purple */}
+        <TouchableOpacity
+          onPress={handleSendMessage}
+          activeOpacity={0.85}
+          style={styles.footerButtonFlex}
+        >
+          <LinearGradient
+            colors={[palette.purple[500], palette.purple[700]] as [string, string, ...string[]]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.gradientButton}
+          >
+            <Ionicons name="chatbubble" size={16} color="#FFFFFF" />
+            <Text style={styles.gradientButtonText}>Mesaj Gönder</Text>
+          </LinearGradient>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.datePlanButton}
-        onPress={handleDatePlanner}
-        activeOpacity={0.85}
-      >
-        <Ionicons name="calendar" size={18} color={colors.accent} />
-        <Text style={styles.datePlanButtonText}>Buluşma Planla</Text>
-      </TouchableOpacity>
+        {/* Date Plan — outlined with jeton cost */}
+        <TouchableOpacity
+          onPress={handleDatePlanner}
+          activeOpacity={0.85}
+          style={styles.footerButtonFlex}
+        >
+          <View style={styles.outlinedButton}>
+            <Ionicons name="calendar" size={16} color={palette.purple[600]} />
+            <Text style={styles.outlinedButtonText}>Buluşma Planla</Text>
+            <View style={styles.jetonCostChip}>
+              <Text style={styles.jetonCostText}>5 Jeton</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </View>
 
+      {/* Premium actions row — Super Like + Boost */}
+      <View style={styles.footerActionsRow}>
+        {/* Super Like — gold gradient */}
+        <TouchableOpacity
+          onPress={handleSuperLike}
+          activeOpacity={0.85}
+          style={styles.footerButtonFlex}
+        >
+          <LinearGradient
+            colors={['#FFD700', '#D4AF37', '#B8860B'] as [string, string, ...string[]]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.gradientButton}
+          >
+            <Ionicons name="star" size={16} color="#FFFFFF" />
+            <Text style={styles.gradientButtonText}>Süper Beğeni</Text>
+            <View style={styles.jetonCostChipLight}>
+              <Text style={styles.jetonCostTextLight}>{SUPER_LIKE_COST}</Text>
+            </View>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        {/* Boost — lightning */}
+        <TouchableOpacity
+          onPress={handleBoost}
+          activeOpacity={0.85}
+          style={styles.footerButtonFlex}
+        >
+          <View style={styles.boostButton}>
+            <Ionicons name="flash" size={16} color="#D4AF37" />
+            <Text style={styles.boostButtonText}>Boost</Text>
+            <View style={styles.jetonCostChipGold}>
+              <Text style={styles.jetonCostTextGold}>{PROFILE_BOOST_COST}</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </View>
+
+      {/* Unmatch — subtle text */}
       <TouchableOpacity
         style={styles.unmatchButton}
         onPress={handleUnmatch}
@@ -277,6 +359,8 @@ export const MatchDetailScreen: React.FC = () => {
     />
   );
 };
+
+// ─── Styles ──────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: {
@@ -306,106 +390,127 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    ...typography.h3,
+    fontSize: 28,
+    fontWeight: fontWeights.bold,
     color: colors.text,
+    letterSpacing: -0.5,
   },
 
-  // ── Top content ──
-  topContentContainer: {
+  // ── Top section — seamless ──
+  topSection: {
+    paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
+    gap: spacing.md,
   },
-  identityCard: {
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    marginHorizontal: spacing.lg,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
+
+  // ── Identity block ──
+  identityBlock: {
+    gap: 6,
   },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    marginBottom: 2,
   },
   userName: {
-    ...typography.h3,
+    fontSize: 28,
+    fontWeight: fontWeights.bold,
     color: colors.text,
+    letterSpacing: -0.5,
   },
-  userCity: {
-    ...typography.body,
+  cityText: {
+    fontSize: 14,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
-    marginBottom: spacing.sm,
   },
   intentionChip: {
-    backgroundColor: colors.secondary + '20',
+    alignSelf: 'flex-start',
+    backgroundColor: colors.primary + '15',
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    marginTop: spacing.xs,
+    paddingVertical: 5,
   },
   intentionText: {
-    ...typography.bodySmall,
-    color: colors.secondary,
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: fontWeights.semibold,
+    color: colors.primary,
+    letterSpacing: 0.2,
   },
 
-  // ── Compat score card ──
-  compatCard: {
-    marginHorizontal: spacing.lg,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  compatInlineRow: {
+  // ── Inline compat score ──
+  compatInline: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: spacing.sm,
   },
-  compatCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 3,
-    justifyContent: 'center',
-    alignItems: 'center',
+  compatDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
-  compatScoreText: {
-    ...typography.h4,
-    fontWeight: '800',
+  compatInlineText: {
+    fontSize: 17,
+    fontWeight: fontWeights.bold,
   },
-  compatTextCol: {
-    flex: 1,
-  },
-  compatTitle: {
-    ...typography.body,
-    color: colors.text,
-    fontWeight: '600',
-  },
-  compatSubtitle: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-    marginTop: 2,
+  compatSuperLabel: {
+    fontSize: 12,
+    fontWeight: fontWeights.bold,
+    color: colors.accent,
+    backgroundColor: colors.accent + '18',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    overflow: 'hidden',
   },
 
-  // ── Generic card ──
-  card: {
-    marginHorizontal: spacing.lg,
+  // ── Stats card — minimalist ──
+  statsCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
+    paddingVertical: spacing.md,
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statValue: {
+    fontSize: 22,
+    fontWeight: fontWeights.bold,
+    color: colors.text,
+    letterSpacing: -0.3,
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: fontWeights.medium,
+    color: colors.textTertiary,
+    marginTop: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  statDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: colors.surfaceBorder,
+  },
+
+  // ── Sections — seamless, no card background ──
+  section: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   },
   sectionTitle: {
-    ...typography.bodyLarge,
+    fontSize: 18,
+    fontWeight: fontWeights.bold,
     color: colors.text,
-    fontWeight: '700',
+    letterSpacing: -0.2,
     marginBottom: spacing.md,
   },
   bioText: {
-    ...typography.body,
+    fontSize: 15,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     lineHeight: 24,
   },
@@ -420,12 +525,13 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   categoryName: {
-    ...typography.body,
+    fontSize: 15,
+    fontWeight: fontWeights.medium,
     color: colors.text,
   },
   categoryScore: {
-    ...typography.body,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: fontWeights.semibold,
   },
   breakdownBar: {
     height: 6,
@@ -445,105 +551,124 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   matchInfoText: {
-    ...typography.body,
+    fontSize: 15,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
   },
 
-  // ── Stats row ──
-  statsCard: {
-    marginHorizontal: spacing.lg,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statNumber: {
-    ...typography.h4,
-    color: colors.text,
-    fontWeight: '700',
-  },
-  statLabel: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  statDivider: {
-    width: 1,
-    height: 24,
-    backgroundColor: colors.divider,
-  },
-  weeklyViewsCard: {
-    marginHorizontal: spacing.lg,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  weeklyViewsLabel: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-  },
-  weeklyViewsCount: {
-    ...typography.body,
-    color: colors.primary,
-    fontWeight: '600',
-  },
-
-  // ── Action buttons (footer) ──
-  actions: {
+  // ── Footer — action buttons ──
+  footerContainer: {
     backgroundColor: colors.background + 'F0',
     paddingTop: spacing.md,
     paddingHorizontal: spacing.lg,
     gap: spacing.sm,
   },
-  messageButton: {
+  footerActionsRow: {
     flexDirection: 'row',
-    backgroundColor: colors.primary,
-    height: layout.buttonHeight,
-    borderRadius: borderRadius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
     gap: spacing.sm,
-    ...shadows.glow,
   },
-  messageButtonText: {
-    ...typography.button,
-    color: colors.text,
-    fontWeight: '700',
+  footerButtonFlex: {
+    flex: 1,
   },
-  datePlanButton: {
+  gradientButton: {
     flexDirection: 'row',
-    height: layout.buttonHeight,
-    borderRadius: borderRadius.lg,
-    justifyContent: 'center',
     alignItems: 'center',
-    gap: spacing.sm,
+    justifyContent: 'center',
+    gap: 6,
+    borderRadius: borderRadius.md,
+    paddingVertical: 14,
+    overflow: 'hidden',
+  },
+  gradientButtonText: {
+    fontSize: 14,
+    fontWeight: fontWeights.bold,
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
+  },
+  outlinedButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderRadius: borderRadius.md,
+    paddingVertical: 14,
     borderWidth: 1.5,
-    borderColor: colors.accent,
-    backgroundColor: colors.accent + '10',
+    borderColor: palette.purple[500],
+    backgroundColor: 'rgba(139, 92, 246, 0.06)',
   },
-  datePlanButtonText: {
-    ...typography.button,
-    color: colors.accent,
+  outlinedButtonText: {
+    fontSize: 14,
+    fontWeight: fontWeights.bold,
+    color: palette.purple[600],
+    letterSpacing: 0.3,
   },
-  unmatchButton: {
-    height: layout.buttonSmallHeight,
-    justifyContent: 'center',
+  // ── Jeton cost chips ──
+  jetonCostChip: {
+    backgroundColor: palette.purple[500] + '20',
+    borderRadius: 50,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    overflow: 'hidden',
+    marginLeft: 2,
+  },
+  jetonCostText: {
+    fontSize: 9,
+    fontWeight: fontWeights.bold,
+    color: palette.purple[600],
+    letterSpacing: 0.2,
+  },
+  jetonCostChipLight: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    borderRadius: 50,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    overflow: 'hidden',
+  },
+  jetonCostTextLight: {
+    fontSize: 9,
+    fontWeight: fontWeights.bold,
+    color: '#FFFFFF',
+  },
+  jetonCostChipGold: {
+    backgroundColor: 'rgba(212, 175, 55, 0.18)',
+    borderRadius: 50,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    overflow: 'hidden',
+  },
+  jetonCostTextGold: {
+    fontSize: 9,
+    fontWeight: fontWeights.bold,
+    color: '#D4AF37',
+  },
+
+  // ── Boost button ──
+  boostButton: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderRadius: borderRadius.md,
+    paddingVertical: 14,
+    borderWidth: 1.5,
+    borderColor: '#D4AF37',
+    backgroundColor: 'rgba(212, 175, 55, 0.06)',
+    overflow: 'hidden',
+  },
+  boostButtonText: {
+    fontSize: 14,
+    fontWeight: fontWeights.bold,
+    color: '#D4AF37',
+    letterSpacing: 0.3,
+  },
+
+  unmatchButton: {
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
   },
   unmatchButtonText: {
-    ...typography.bodySmall,
+    fontSize: 13,
+    fontWeight: fontWeights.medium,
     color: colors.error,
   },
 });

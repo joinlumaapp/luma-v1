@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BadgesService } from '../badges/badges.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { SwipeDto, SwipeDirection } from './dto';
 import { FeedFilterDto, GenderPreferenceParam } from './dto/feed-filter.dto';
 
@@ -86,6 +87,7 @@ export class DiscoveryService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly badgesService: BadgesService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   /**
@@ -559,8 +561,16 @@ export class DiscoveryService {
         matchId: match.id,
         animationType,
         swipeId: swipeRecord.id,
+        swiperName,
+        targetName,
       };
     });
+
+    // Send push notifications for matches and super likes (outside transaction, fire-and-forget)
+    if (result.isMatch && result.swiperName && result.targetName) {
+      this.notificationsService.notifyNewMatch(dto.targetUserId, result.swiperName).catch(() => {});
+      this.notificationsService.notifyNewMatch(userId, result.targetName).catch(() => {});
+    }
 
     // Award badge checks after swipe (non-blocking)
     this.badgesService.checkAndAwardBadges(userId, 'swipe').catch((err) => this.logger.warn('Badge check failed', err.message));

@@ -85,7 +85,9 @@ type DiscoveryNavProp = CompositeNavigationProp<
 // ─── Story Bubble component — Instagram-style circular avatar with ring ──
 
 const STORY_SIZE = 68;
-const STORY_AVATAR = 60;
+const STORY_BORDER = 2.5;
+// Avatar fills the inner area exactly: ring size minus border on each side
+const STORY_AVATAR = STORY_SIZE - STORY_BORDER * 2;
 
 interface StoryBubbleProps {
   label: string;
@@ -332,7 +334,7 @@ export const DiscoveryScreen: React.FC = () => {
 
   const handleBoostBuyGold = useCallback(() => {
     setShowBoostModal(false);
-    navigation.navigate('ProfileTab', { screen: 'Packages' } as never);
+    navigation.navigate('MembershipPlans');
   }, [navigation]);
 
   // ─── Time-based greeting ──────────────────────────────────
@@ -358,6 +360,7 @@ export const DiscoveryScreen: React.FC = () => {
   const translateY = useSharedValue(0);
   const touchStartY = useSharedValue(SCREEN_HEIGHT / 2);
   const hasPassedThreshold = useSharedValue(false);
+  const cardTapScale = useSharedValue(1);
 
   // Undo button
   const undoOpacity = useSharedValue(0);
@@ -537,8 +540,17 @@ export const DiscoveryScreen: React.FC = () => {
 
   const tapGesture = Gesture.Tap()
     .maxDuration(300)
+    .onStart(() => {
+      // Subtle scale-down feedback on tap
+      cardTapScale.value = withTiming(0.97, { duration: 80 });
+    })
     .onEnd(() => {
+      cardTapScale.value = withSpring(1, { damping: 15, stiffness: 200 });
       runOnJS(handleCardTap)();
+    })
+    .onFinalize(() => {
+      // Ensure scale resets even if gesture is cancelled
+      cardTapScale.value = withSpring(1, { damping: 15, stiffness: 200 });
     });
 
   const panGesture = Gesture.Pan()
@@ -627,6 +639,7 @@ export const DiscoveryScreen: React.FC = () => {
         { translateX: translateX.value },
         { translateY: translateY.value },
         { rotate: `${rotation}deg` },
+        { scale: cardTapScale.value },
       ],
     };
   });
@@ -766,7 +779,7 @@ export const DiscoveryScreen: React.FC = () => {
 
   const handleUpgradeNavigate = useCallback((_tier: PackageTier) => {
     setShowUpgradePrompt(false);
-    navigation.navigate('ProfileTab', { screen: 'Packages' } as never);
+    navigation.navigate('MembershipPlans');
   }, [navigation]);
 
   // ─── Loading state ─────────────────────────────────────────
@@ -983,7 +996,7 @@ export const DiscoveryScreen: React.FC = () => {
               </View>
             </Pressable>
             <Pressable
-              onPress={() => navigation.navigate('ProfileTab', { screen: 'Packages' } as never)}
+              onPress={() => navigation.navigate('MembershipPlans')}
               accessibilityLabel="Premium Paketler"
               accessibilityRole="button"
             >
@@ -1342,7 +1355,7 @@ const styles = StyleSheet.create({
     width: layout.cardWidth,
     height: layout.cardHeight,
     borderRadius: borderRadius.xl,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
     overflow: 'hidden',
     position: 'absolute',
   },
@@ -1601,20 +1614,25 @@ const storyStyles = StyleSheet.create({
     width: STORY_SIZE,
     height: STORY_SIZE,
     borderRadius: STORY_SIZE / 2,
-    borderWidth: 2,
+    borderWidth: STORY_BORDER,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    // Cream fill eliminates any subpixel white artifacts between border and avatar
+    backgroundColor: colors.background,
+    overflow: 'hidden',
   },
   avatar: {
     width: STORY_AVATAR,
     height: STORY_AVATAR,
     borderRadius: STORY_AVATAR / 2,
+    // Ensure image perfectly fills the inner circle with no subpixel gap
+    overflow: 'hidden',
   },
   avatarPlaceholder: {
     width: STORY_AVATAR,
     height: STORY_AVATAR,
     borderRadius: STORY_AVATAR / 2,
+    // Use cream-adjacent color instead of white to avoid artifacts
     backgroundColor: colors.surfaceLight,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1631,7 +1649,8 @@ const storyStyles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: colors.surface,
+    // Use cream background to blend with app canvas
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1.5,
@@ -1651,7 +1670,7 @@ const storyStyles = StyleSheet.create({
   // Viewed story styles — dimmed ring and avatar
   ringViewed: {
     borderWidth: 1.5,
-    opacity: 0.6,
+    borderColor: colors.textTertiary,
   },
   avatarViewed: {
     opacity: 0.7,

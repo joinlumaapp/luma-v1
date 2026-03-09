@@ -182,6 +182,7 @@ export default function App(): React.JSX.Element {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    backgroundColor: '#F5F0E8',
   },
   splash: {
     flex: 1,

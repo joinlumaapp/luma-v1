@@ -32,6 +32,7 @@ import { SlideIn } from '../../components/animations/SlideIn';
 import { PulseGlow } from '../../components/animations/PulseGlow';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { formatMatchActivity, formatActivityStatus } from '../../utils/formatters';
+import { TierIndicator } from '../../components/common/SubscriptionBadge';
 
 type MatchesNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'MatchesList'>;
 
@@ -85,16 +86,70 @@ const SkeletonRow: React.FC<{ index: number }> = ({ index }) => {
   );
 };
 
-// ─── Match card (Eşleşmeler tab) — taps open profile ────────
+// ─── New Match pulsing border animation ──────────────────────
+const NewMatchGlow: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const borderAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(borderAnim, {
+          toValue: 1,
+          duration: 1200,
+          useNativeDriver: false,
+        }),
+        Animated.timing(borderAnim, {
+          toValue: 0,
+          duration: 1200,
+          useNativeDriver: false,
+        }),
+      ]),
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [borderAnim]);
+
+  const borderColor = borderAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.primary + '60', colors.primary],
+  });
+
+  const shadowOpacity = borderAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.1, 0.5],
+  });
+
+  return (
+    <Animated.View
+      style={{
+        borderRadius: layout.avatarMedium / 2 + 3,
+        borderWidth: 2.5,
+        borderColor: borderColor as unknown as string,
+        padding: 1,
+        shadowColor: colors.primary,
+        shadowOffset: { width: 0, height: 0 },
+        shadowRadius: 10,
+        shadowOpacity: shadowOpacity as unknown as number,
+        elevation: 6,
+      }}
+    >
+      {children}
+    </Animated.View>
+  );
+};
+
+// ─── Match card (Eşleşmeler tab) — avatar taps open profile, row taps open detail ────────
 interface MatchCardProps {
   item: Match;
   index: number;
   onPress: (matchId: string) => void;
+  onAvatarPress: (userId: string) => void;
   onStarterPress: (matchId: string, name: string, photoUrl: string, text: string) => void;
 }
 
-const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onStarterPress }) => {
+const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, onStarterPress }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const avatarScaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = useCallback(() => {
     Animated.spring(scaleAnim, {
@@ -114,6 +169,24 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onStarterPress }
     }).start();
   }, [scaleAnim]);
 
+  const handleAvatarPressIn = useCallback(() => {
+    Animated.spring(avatarScaleAnim, {
+      toValue: 0.92,
+      tension: 200,
+      friction: 10,
+      useNativeDriver: true,
+    }).start();
+  }, [avatarScaleAnim]);
+
+  const handleAvatarPressOut = useCallback(() => {
+    Animated.spring(avatarScaleAnim, {
+      toValue: 1,
+      tension: 200,
+      friction: 10,
+      useNativeDriver: true,
+    }).start();
+  }, [avatarScaleAnim]);
+
   const getCompatibilityColor = (percent: number): string => {
     if (percent >= 90) return colors.success;
     if (percent >= 70) return colors.accent;
@@ -130,50 +203,97 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onStarterPress }
     </View>
   );
 
+  // Wrap avatar in pulsing glow for new matches, PulseGlow for super compat
+  const renderAvatar = () => {
+    if (item.isNew) {
+      return (
+        <NewMatchGlow>
+          {isSuperCompatible ? (
+            <PulseGlow
+              color={colors.success}
+              size={layout.avatarMedium}
+              glowRadius={12}
+              duration={2000}
+              style={styles.pulseGlowAvatar}
+            >
+              {avatarContent}
+            </PulseGlow>
+          ) : (
+            avatarContent
+          )}
+        </NewMatchGlow>
+      );
+    }
+    if (isSuperCompatible) {
+      return (
+        <PulseGlow
+          color={colors.success}
+          size={layout.avatarMedium}
+          glowRadius={12}
+          duration={2000}
+          style={styles.pulseGlowAvatar}
+        >
+          {avatarContent}
+        </PulseGlow>
+      );
+    }
+    return avatarContent;
+  };
+
   return (
     <SlideIn direction="right" delay={index * 80} distance={24}>
       <TouchableWithoutFeedback
         onPress={() => onPress(item.id)}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        accessibilityLabel={`${item.name}, ${item.age} yaşında, yüzde ${item.compatibilityPercent} uyum`}
+        accessibilityLabel={`${item.name}, ${item.age} yaşında, yüzde ${item.compatibilityPercent} uyum${item.isNew ? ', yeni eşleşme' : ''}`}
         accessibilityRole="button"
         accessibilityHint="Eşleşme detaylarını görmek için dokunun"
       >
         <Animated.View
           style={[
             styles.matchCard,
+            item.isNew && styles.matchCardNew,
             { transform: [{ scale: scaleAnim }] },
           ]}
           testID={`matches-card-${item.id}`}
         >
-          {/* Avatar with optional PulseGlow for super compatibility */}
-          <View style={styles.avatarContainer}>
-            {isSuperCompatible ? (
-              <PulseGlow
-                color={colors.success}
-                size={layout.avatarMedium}
-                glowRadius={12}
-                duration={2000}
-                style={styles.pulseGlowAvatar}
-              >
-                {avatarContent}
-              </PulseGlow>
-            ) : (
-              avatarContent
-            )}
-            {item.isNew && <View style={styles.newDot} />}
-            {!item.isNew && formatActivityStatus(item.lastActivity)?.isOnline && (
-              <View style={styles.onlineDot} />
-            )}
-          </View>
+          {/* Avatar — tappable to open profile */}
+          <TouchableWithoutFeedback
+            onPress={() => onAvatarPress(item.userId)}
+            onPressIn={handleAvatarPressIn}
+            onPressOut={handleAvatarPressOut}
+            accessibilityLabel={`${item.name} profilini aç`}
+            accessibilityRole="button"
+            accessibilityHint="Profili görmek için fotoğrafa dokunun"
+          >
+            <Animated.View
+              style={[styles.avatarContainer, { transform: [{ scale: avatarScaleAnim }] }]}
+            >
+              {renderAvatar()}
+              {item.isNew && (
+                <View style={styles.newBadge}>
+                  <Text style={styles.newBadgeText}>YENİ</Text>
+                </View>
+              )}
+              {!item.isNew && formatActivityStatus(item.lastActivity)?.isOnline && (
+                <View style={styles.onlineDot} />
+              )}
+            </Animated.View>
+          </TouchableWithoutFeedback>
 
           {/* Info */}
           <View style={styles.matchInfo}>
             <View style={styles.nameRow}>
-              <Text style={styles.matchName}>
+              <Text style={[styles.matchName, item.isNew && styles.matchNameNew]}>
                 {item.name}, {item.age}
               </Text>
+              {item.packageTier && <TierIndicator tier={item.packageTier} />}
+              {item.isNew && (
+                <View style={styles.newInlineBadge}>
+                  <Text style={styles.newInlineBadgeText}>Yeni Eşleşme</Text>
+                </View>
+              )}
             </View>
             {item.lastMessage ? (
               <Text style={styles.messagePreview} numberOfLines={1}>
@@ -239,15 +359,18 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onStarterPress }
 
 MatchCard.displayName = 'MatchCard';
 
-// ─── Message row (Mesajlar tab) — taps open chat directly ───
+// ─── Message row (Mesajlar tab) — avatar taps open profile, row taps open chat ───
 interface MessageRowProps {
   item: Match;
   index: number;
+  unreadCount: number;
   onPress: (item: Match) => void;
+  onAvatarPress: (userId: string) => void;
 }
 
-const MessageRow = memo<MessageRowProps>(({ item, index, onPress }) => {
+const MessageRow = memo<MessageRowProps>(({ item, index, unreadCount, onPress, onAvatarPress }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const avatarScaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = useCallback(() => {
     Animated.spring(scaleAnim, {
@@ -267,6 +390,26 @@ const MessageRow = memo<MessageRowProps>(({ item, index, onPress }) => {
     }).start();
   }, [scaleAnim]);
 
+  const handleAvatarPressIn = useCallback(() => {
+    Animated.spring(avatarScaleAnim, {
+      toValue: 0.92,
+      tension: 200,
+      friction: 10,
+      useNativeDriver: true,
+    }).start();
+  }, [avatarScaleAnim]);
+
+  const handleAvatarPressOut = useCallback(() => {
+    Animated.spring(avatarScaleAnim, {
+      toValue: 1,
+      tension: 200,
+      friction: 10,
+      useNativeDriver: true,
+    }).start();
+  }, [avatarScaleAnim]);
+
+  const hasUnread = unreadCount > 0;
+
   const avatarContent = item.photoUrl ? (
     <Image source={{ uri: item.photoUrl }} style={styles.avatarImage} />
   ) : (
@@ -281,31 +424,58 @@ const MessageRow = memo<MessageRowProps>(({ item, index, onPress }) => {
         onPress={() => onPress(item)}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        accessibilityLabel={`${item.name} ile sohbet`}
+        accessibilityLabel={`${item.name} ile sohbet${hasUnread ? `, ${unreadCount} okunmamış mesaj` : ''}`}
         accessibilityRole="button"
         accessibilityHint="Mesaj ekranını açmak için dokunun"
       >
         <Animated.View
           style={[
             styles.matchCard,
+            hasUnread && styles.matchCardUnread,
             { transform: [{ scale: scaleAnim }] },
           ]}
           testID={`message-row-${item.id}`}
         >
-          {/* Avatar */}
-          <View style={styles.avatarContainer}>
-            {avatarContent}
-            {formatActivityStatus(item.lastActivity)?.isOnline && (
-              <View style={styles.onlineDot} />
-            )}
-          </View>
+          {/* Avatar — tappable to open profile */}
+          <TouchableWithoutFeedback
+            onPress={() => onAvatarPress(item.userId)}
+            onPressIn={handleAvatarPressIn}
+            onPressOut={handleAvatarPressOut}
+            accessibilityLabel={`${item.name} profilini aç`}
+            accessibilityRole="button"
+            accessibilityHint="Profili görmek için fotoğrafa dokunun"
+          >
+            <Animated.View
+              style={[styles.avatarContainer, { transform: [{ scale: avatarScaleAnim }] }]}
+            >
+              {avatarContent}
+              {hasUnread ? (
+                <View style={styles.unreadDot} />
+              ) : formatActivityStatus(item.lastActivity)?.isOnline ? (
+                <View style={styles.onlineDot} />
+              ) : null}
+            </Animated.View>
+          </TouchableWithoutFeedback>
 
           {/* Name + last message */}
           <View style={styles.matchInfo}>
-            <Text style={styles.matchName} numberOfLines={1}>
-              {item.name}
-            </Text>
-            <Text style={styles.messagePreview} numberOfLines={1}>
+            <View style={styles.messageNameRow}>
+              <Text style={[styles.matchName, hasUnread && styles.matchNameUnread]} numberOfLines={1}>
+                {item.name}
+              </Text>
+              {item.packageTier && <TierIndicator tier={item.packageTier} />}
+              {hasUnread && (
+                <View style={styles.unreadCountBadge}>
+                  <Text style={styles.unreadCountText}>
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </Text>
+                </View>
+              )}
+            </View>
+            <Text
+              style={[styles.messagePreview, hasUnread && styles.messagePreviewUnread]}
+              numberOfLines={1}
+            >
               {item.lastMessage}
             </Text>
             {(() => {
@@ -333,7 +503,8 @@ const MessageRow = memo<MessageRowProps>(({ item, index, onPress }) => {
   prev.item.id === next.item.id &&
   prev.item.lastActivity === next.item.lastActivity &&
   prev.item.lastMessage === next.item.lastMessage &&
-  prev.index === next.index
+  prev.index === next.index &&
+  prev.unreadCount === next.unreadCount
 ));
 
 MessageRow.displayName = 'MessageRow';
@@ -416,9 +587,10 @@ export const MatchesListScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabKey>('matches');
   const [viewers, setViewers] = useState<ProfileVisitor[]>([]);
   const [viewersCount, setViewersCount] = useState(0);
+  const [likesYouCount, setLikesYouCount] = useState(0);
   const tabScrollRef = useRef<ScrollView>(null);
 
-  // Fetch profile visitors
+  // Fetch profile visitors + likes-you count
   useEffect(() => {
     const fetchViewers = async () => {
       const data = await profileService.getProfileVisitors();
@@ -426,6 +598,18 @@ export const MatchesListScreen: React.FC = () => {
       setViewersCount(data.totalCount);
     };
     fetchViewers();
+
+    // Fetch pending likes count for badge
+    const fetchLikesCount = async () => {
+      try {
+        const { discoveryService } = await import('../../services/discoveryService');
+        const data = await discoveryService.getLikesYou();
+        setLikesYouCount(data.total);
+      } catch {
+        // Silent fail — badge just won't show
+      }
+    };
+    fetchLikesCount();
   }, []);
 
   // Defer initial fetch until navigation animation completes
@@ -459,9 +643,33 @@ export const MatchesListScreen: React.FC = () => {
   );
 
   // ── Filtered data per tab ────────────────────────────────────
-  const matchesList = useMemo(() => matches, [matches]);
+  // Sort: new (unopened) matches first, then by compatibility desc
+  const matchesList = useMemo(() => {
+    return [...matches].sort((a, b) => {
+      // New matches always on top
+      if (a.isNew && !b.isNew) return -1;
+      if (!a.isNew && b.isNew) return 1;
+      // Within new matches, sort by matchedAt desc
+      if (a.isNew && b.isNew) {
+        return new Date(b.matchedAt).getTime() - new Date(a.matchedAt).getTime();
+      }
+      // Non-new: most recent activity first
+      return new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime();
+    });
+  }, [matches]);
 
   const conversations = useChatStore((state) => state.conversations);
+
+  // Build unread map from conversations for quick lookup
+  const unreadMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const conv of conversations) {
+      if (conv.unreadCount > 0) {
+        map.set(conv.matchId, conv.unreadCount);
+      }
+    }
+    return map;
+  }, [conversations]);
 
   const messagesList = useMemo(() => {
     const convMap = new Map(conversations.map((c) => [c.matchId, c]));
@@ -473,8 +681,16 @@ export const MatchesListScreen: React.FC = () => {
           ? { ...m, lastMessage: conv.lastMessage, lastActivity: conv.lastMessageAt }
           : m;
       })
-      .sort((a, b) => new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime());
-  }, [matches, conversations]);
+      .sort((a, b) => {
+        // Unread messages always on top
+        const aUnread = unreadMap.get(a.id) ?? 0;
+        const bUnread = unreadMap.get(b.id) ?? 0;
+        if (aUnread > 0 && bUnread === 0) return -1;
+        if (aUnread === 0 && bUnread > 0) return 1;
+        // Within same unread status, sort by most recent activity
+        return new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime();
+      });
+  }, [matches, conversations, unreadMap]);
 
   const currentList = activeTab === 'messages' ? messagesList : matchesList;
 
@@ -503,11 +719,16 @@ export const MatchesListScreen: React.FC = () => {
 
   // ── Navigation handlers ──────────────────────────────────────
 
-  // Eşleşmeler tab: tap opens profile detail
+  // Eşleşmeler tab: tap opens match detail
   const handleMatchPress = useCallback((matchId: string) => {
     markAsRead(matchId);
     navigation.navigate('MatchDetail', { matchId });
   }, [markAsRead, navigation]);
+
+  // Avatar tap: open full profile preview
+  const handleProfileOpen = useCallback((userId: string) => {
+    navigation.navigate('ProfilePreview', { userId });
+  }, [navigation]);
 
   // Eşleşmeler tab: conversation starter opens chat
   const handleStarterPress = useCallback(
@@ -556,10 +777,11 @@ export const MatchesListScreen: React.FC = () => {
         item={item}
         index={index}
         onPress={handleMatchPress}
+        onAvatarPress={handleProfileOpen}
         onStarterPress={handleStarterPress}
       />
     ),
-    [handleMatchPress, handleStarterPress],
+    [handleMatchPress, handleProfileOpen, handleStarterPress],
   );
 
   const renderMessageItem = useCallback(
@@ -567,10 +789,12 @@ export const MatchesListScreen: React.FC = () => {
       <MessageRow
         item={item}
         index={index}
+        unreadCount={unreadMap.get(item.id) ?? 0}
         onPress={handleMessagePress}
+        onAvatarPress={handleProfileOpen}
       />
     ),
-    [handleMessagePress],
+    [handleMessagePress, handleProfileOpen, unreadMap],
   );
 
   const renderNudgeSection = useCallback(() => {
@@ -677,12 +901,14 @@ export const MatchesListScreen: React.FC = () => {
       </View>
 
       {/* Tabs: 💞 Eşleşmeler | 💬 Mesajlar | 💜 Beğenenler | 👀 Seni Kim Gördü */}
+      <View style={styles.tabScrollWrapper}>
       <ScrollView
         ref={tabScrollRef}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.tabRow}
         bounces={false}
+        style={styles.tabScrollView}
       >
         {([
           { key: 'matches' as const, label: '\uD83D\uDC9E Eşleşmeler', isNav: false },
@@ -718,11 +944,19 @@ export const MatchesListScreen: React.FC = () => {
                 <Text style={[styles.tabChipText, isActive && styles.tabChipTextActive]}>
                   {tab.label}
                 </Text>
+                {tab.key === 'likes' && likesYouCount > 0 && (
+                  <View style={styles.tabBadge}>
+                    <Text style={styles.tabBadgeText}>
+                      {likesYouCount > 99 ? '99+' : likesYouCount}
+                    </Text>
+                  </View>
+                )}
               </View>
             </TouchableWithoutFeedback>
           );
         })}
       </ScrollView>
+      </View>
 
       {/* List — switches render function based on active tab */}
       {activeTab === 'viewers' ? (
@@ -794,15 +1028,21 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   // ── Tabs ──
+  tabScrollWrapper: {
+    zIndex: 1,
+  },
+  tabScrollView: {
+  },
   tabRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.sm + 8,
     paddingBottom: spacing.md,
     gap: spacing.sm,
   },
   tabChip: {
+    flexDirection: 'row',
     backgroundColor: colors.surface,
     borderRadius: borderRadius.full,
     paddingVertical: 10,
@@ -931,16 +1171,108 @@ const styles = StyleSheet.create({
     ...typography.h4,
     color: colors.primary,
   },
-  newDot: {
+  // New match visual indicators
+  matchCardNew: {
+    backgroundColor: colors.primary + '08',
+    borderRadius: borderRadius.lg,
+    marginHorizontal: -spacing.xs,
+    paddingHorizontal: spacing.xs,
+  },
+  newBadge: {
     position: 'absolute',
-    top: 0,
+    top: -4,
+    right: -6,
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderWidth: 1.5,
+    borderColor: colors.background,
+  },
+  newBadgeText: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  newInlineBadge: {
+    backgroundColor: colors.primary + '20',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderWidth: 1,
+    borderColor: colors.primary + '40',
+  },
+  newInlineBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  matchNameNew: {
+    color: colors.primary,
+  },
+  // Unread message indicators
+  matchCardUnread: {
+    backgroundColor: colors.primary + '06',
+    borderRadius: borderRadius.lg,
+    marginHorizontal: -spacing.xs,
+    paddingHorizontal: spacing.xs,
+  },
+  unreadDot: {
+    position: 'absolute',
+    bottom: 0,
     right: 0,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.success,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: colors.primary,
     borderWidth: 2,
     borderColor: colors.background,
+  },
+  messageNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 2,
+  },
+  matchNameUnread: {
+    fontWeight: '700',
+  },
+  messagePreviewUnread: {
+    color: colors.text,
+    fontWeight: '600',
+  },
+  unreadCountBadge: {
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.full,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 5,
+    marginLeft: spacing.sm,
+  },
+  unreadCountText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  // Tab badge for likes count — inline to avoid Android ScrollView clipping
+  tabBadge: {
+    backgroundColor: '#EF4444',
+    borderRadius: borderRadius.full,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    marginLeft: 6,
+  },
+  tabBadgeText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    lineHeight: 12,
   },
   matchInfo: {
     flex: 1,

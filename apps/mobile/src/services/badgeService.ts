@@ -36,7 +36,7 @@ export interface BadgeProgressResponse {
   earned: number;
 }
 
-// Mock badge progress data (13 badges total: 8 original + 5 new)
+// Mock badge progress data (15 badges total: 8 original + 5 new + 2 supreme)
 const MOCK_BADGE_PROGRESS: BadgeProgressItem[] = [
   { badgeKey: 'first_spark', name: 'İlk Kıvılcım', description: 'İlk eşleşmeni yap', iconUrl: null, isEarned: true, earnedAt: '2026-02-15T10:00:00Z', progress: 100, currentValue: 1, targetValue: 1, goldReward: 10 },
   { badgeKey: 'chat_master', name: 'Sohbet Ustası', description: '5 eşleşme oluştur', iconUrl: null, isEarned: false, earnedAt: null, progress: 60, currentValue: 3, targetValue: 5, goldReward: 20 },
@@ -51,6 +51,8 @@ const MOCK_BADGE_PROGRESS: BadgeProgressItem[] = [
   { badgeKey: 'active', name: 'Aktif', description: '10+ paylaşım yap veya 7 gün üst üste aktif ol', iconUrl: null, isEarned: false, earnedAt: null, progress: 70, currentValue: 7, targetValue: 10, goldReward: 20 },
   { badgeKey: 'photo_lover', name: 'Fotoğraf Tutkunu', description: '14 günde 5+ fotoğraf paylaşımı yap', iconUrl: null, isEarned: false, earnedAt: null, progress: 40, currentValue: 2, targetValue: 5, goldReward: 15 },
   { badgeKey: 'romantic', name: 'Romantik', description: '14 günde 3+ yazı/soru paylaş ve 20+ beğeni al', iconUrl: null, isEarned: false, earnedAt: null, progress: 33, currentValue: 1, targetValue: 3, goldReward: 25 },
+  { badgeKey: 'supreme_founder', name: 'Supreme Kurucu', description: 'Supreme üyelik ile topluluğun kurucu üyesi ol', iconUrl: null, isEarned: true, earnedAt: '2026-02-10T08:00:00Z', progress: 100, currentValue: 1, targetValue: 1, goldReward: 100 },
+  { badgeKey: 'elite_member', name: 'Elite Üye', description: 'Supreme üyelik ile elit statüye eriş', iconUrl: null, isEarned: true, earnedAt: '2026-02-10T08:00:00Z', progress: 100, currentValue: 1, targetValue: 1, goldReward: 75 },
 ];
 
 export const badgeService = {

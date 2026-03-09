@@ -1,13 +1,12 @@
-// FeedProfileScreen — view another user's profile from social feed
-// Basic info visible to all, detailed sections locked behind premium
+// FeedProfileScreen — premium global template for viewing another user's profile from social feed
+// Uses InterleavedProfileLayout with seamless sections, minimalist stats,
+// premium-lock overlay for non-premium users, and consistent cream background
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
-  ScrollView,
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
@@ -19,11 +18,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { FeedStackParamList } from '../../navigation/types';
 import { colors, palette } from '../../theme/colors';
-import { typography } from '../../theme/typography';
-import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
+import { fontWeights } from '../../theme/typography';
+import { spacing, borderRadius } from '../../theme/spacing';
 import { socialFeedService, type FeedPost } from '../../services/socialFeedService';
 import { profileService } from '../../services/profileService';
 import { getCompatibilityPersonality, type CompatibilityPersonality } from '../../utils/formatters';
+import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
+import { VerifiedBadge } from '../../components/common/VerifiedBadge';
+import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
 
 type FeedProfileRouteProp = RouteProp<FeedStackParamList, 'FeedProfile'>;
 type FeedProfileNavProp = NativeStackNavigationProp<FeedStackParamList, 'FeedProfile'>;
@@ -42,15 +44,14 @@ interface FeedUserProfile {
   followingCount: number;
   postCount: number;
   photos: string[];
-  // Compatibility
   compatibilityPercent: number;
-  // Premium-locked fields
   hobbies: string[];
   height: string;
   job: string;
   education: string;
   intentionTag: string;
   zodiacSign: string;
+  packageTier?: 'free' | 'gold' | 'pro' | 'reserved';
 }
 
 const MOCK_PROFILES: Record<string, FeedUserProfile> = {
@@ -62,6 +63,7 @@ const MOCK_PROFILES: Record<string, FeedUserProfile> = {
     compatibilityPercent: 92,
     hobbies: ['Yoga', 'Kitap', 'Seyahat', 'Fotografcilik'],
     height: '168 cm', job: 'Grafik Tasarimci', education: 'Istanbul Universitesi', intentionTag: 'Ciddi Iliski', zodiacSign: 'Basak',
+    packageTier: 'gold',
   },
   'bot-002': {
     userId: 'bot-002', name: 'Zeynep', age: 24, city: 'Ankara',
@@ -71,10 +73,10 @@ const MOCK_PROFILES: Record<string, FeedUserProfile> = {
     compatibilityPercent: 68,
     hobbies: ['Dans', 'Muzik', 'Yuzme', 'Pilates', 'Sinema'],
     height: '172 cm', job: 'Pazarlama Uzmani', education: 'Bilkent Universitesi', intentionTag: 'Kesfediyorum', zodiacSign: 'Ikizler',
+    packageTier: 'reserved',
   },
 };
 
-// Generate a default profile for unknown users
 const getDefaultProfile = (userId: string): FeedUserProfile => ({
   userId,
   name: 'Kullanıcı',
@@ -97,7 +99,14 @@ const getDefaultProfile = (userId: string): FeedUserProfile => ({
   zodiacSign: 'Belirtilmedi',
 });
 
-// Premium lock overlay
+const getScoreColor = (score: number): string => {
+  if (score >= 90) return colors.success;
+  if (score >= 70) return colors.accent;
+  return colors.primary;
+};
+
+// ─── Premium Lock Overlay ────────────────────────────────────────────────────
+
 const PremiumLock: React.FC<{ onPress: () => void }> = ({ onPress }) => (
   <TouchableOpacity style={lockStyles.container} onPress={onPress} activeOpacity={0.8}>
     <LinearGradient
@@ -111,7 +120,7 @@ const PremiumLock: React.FC<{ onPress: () => void }> = ({ onPress }) => (
   </TouchableOpacity>
 );
 
-// ─── Compatibility Badge Card ─────────────────────────────────
+// ─── Compatibility Badge Card — seamless ─────────────────────────────────────
 
 const CompatibilityBadgeCard: React.FC<{ personality: CompatibilityPersonality; percent: number }> = ({ personality, percent }) => (
   <View style={compatStyles.card}>
@@ -127,7 +136,6 @@ const CompatibilityBadgeCard: React.FC<{ personality: CompatibilityPersonality; 
         <Text style={compatStyles.description}>{personality.description}</Text>
       </View>
     </View>
-    {/* Compat bar */}
     <View style={compatStyles.barTrack}>
       <View style={[compatStyles.barFill, { width: `${percent}%`, backgroundColor: personality.color }]} />
     </View>
@@ -137,6 +145,22 @@ const CompatibilityBadgeCard: React.FC<{ personality: CompatibilityPersonality; 
     </View>
   </View>
 );
+
+// ─── Detail Row ──────────────────────────────────────────────────────────────
+
+const DetailRow: React.FC<{ icon: keyof typeof Ionicons.glyphMap; iconBg: string; label: string; value: string }> = ({ icon, iconBg, label, value }) => (
+  <View style={styles.aboutRow}>
+    <View style={[styles.aboutIconCircle, { backgroundColor: iconBg }]}>
+      <Ionicons name={icon} size={18} color={colors.text} />
+    </View>
+    <View style={styles.aboutRowContent}>
+      <Text style={styles.aboutRowLabel}>{label}</Text>
+      <Text style={[styles.aboutRowValue, value === '***' && styles.aboutRowValueLocked]}>{value}</Text>
+    </View>
+  </View>
+);
+
+// ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export const FeedProfileScreen: React.FC = () => {
   const route = useRoute<FeedProfileRouteProp>();
@@ -153,7 +177,6 @@ export const FeedProfileScreen: React.FC = () => {
   const isPremium = false;
 
   useEffect(() => {
-    // Simulate loading
     const timer = setTimeout(() => {
       const found = MOCK_PROFILES[userId] ?? getDefaultProfile(userId);
       setProfile(found);
@@ -161,12 +184,10 @@ export const FeedProfileScreen: React.FC = () => {
       setIsLoading(false);
     }, 300);
 
-    // Fetch user's posts
     socialFeedService.getFeed('ONERILEN', null, null).then((res) => {
       setUserPosts(res.posts.filter((p) => p.userId === userId).slice(0, 6));
     });
 
-    // Record profile view
     profileService.trackProfileView(userId);
 
     return () => clearTimeout(timer);
@@ -182,8 +203,7 @@ export const FeedProfileScreen: React.FC = () => {
   }, [navigation]);
 
   const handlePremiumUpgrade = useCallback(() => {
-    // Navigate to packages — would need to go to ProfileTab > Packages
-    // For now just show the intent
+    // Navigate to packages
   }, []);
 
   if (isLoading || !profile) {
@@ -196,185 +216,217 @@ export const FeedProfileScreen: React.FC = () => {
     );
   }
 
-  return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleGoBack} style={styles.backButton} activeOpacity={0.7}>
-          <Ionicons name="chevron-back" size={22} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{profile.name}</Text>
-        <View style={styles.headerSpacer} />
+  const compatColor = getScoreColor(profile.compatibilityPercent);
+
+  // ── Header bar ──
+  const headerBar = (
+    <View style={[styles.headerBar, { paddingTop: insets.top }]}>
+      <TouchableOpacity onPress={handleGoBack} style={styles.backButton} activeOpacity={0.7}>
+        <Ionicons name="chevron-back" size={22} color={colors.text} />
+      </TouchableOpacity>
+      <Text style={styles.headerTitle}>{profile.name}</Text>
+      <View style={{ width: 40 }} />
+    </View>
+  );
+
+  // ── Top content (identity + stats + follow) ──
+  const topContent = (
+    <View style={styles.topSection}>
+      {/* Identity — name, age, verified, city, job, intention */}
+      <View style={styles.identityBlock}>
+        <View style={styles.nameRow}>
+          <Text style={styles.userName}>{profile.name}, {profile.age}</Text>
+          {profile.isVerified && <VerifiedBadge size="large" animated />}
+          {profile.packageTier && <SubscriptionBadge tier={profile.packageTier} compact />}
+        </View>
+
+        {profile.job && profile.job !== 'Belirtilmedi' && (
+          <Text style={styles.jobTitle}>{profile.job}</Text>
+        )}
+
+        <Text style={styles.cityText}>{profile.city}</Text>
+
+        {profile.intentionTag && (
+          <View style={styles.intentionChip}>
+            <Text style={styles.intentionText}>{profile.intentionTag}</Text>
+          </View>
+        )}
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Profile Header Card */}
-        <View style={styles.profileCard}>
+      {/* Inline compat score */}
+      <View style={styles.compatInline}>
+        <View style={[styles.compatDot, { backgroundColor: compatColor }]} />
+        <Text style={[styles.compatInlineText, { color: compatColor }]}>
+          %{profile.compatibilityPercent} Uyum
+        </Text>
+        {profile.compatibilityPercent >= 90 && (
+          <Text style={styles.compatSuperLabel}>Süper!</Text>
+        )}
+      </View>
+
+      {/* Stats row — minimalist */}
+      <View style={styles.statsCard}>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{profile.postCount}</Text>
+          <Text style={styles.statLabel}>GONDERİ</Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{profile.followerCount}</Text>
+          <Text style={styles.statLabel}>TAKİPCİ</Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{profile.followingCount}</Text>
+          <Text style={styles.statLabel}>TAKİP</Text>
+        </View>
+      </View>
+
+      {/* Follow button — gradient or outlined */}
+      <TouchableOpacity
+        onPress={handleFollow}
+        activeOpacity={0.85}
+        style={styles.followButtonOuter}
+      >
+        {isFollowing ? (
+          <View style={styles.outlinedButton}>
+            <Ionicons name="checkmark" size={16} color={palette.purple[600]} />
+            <Text style={styles.outlinedButtonText}>Takip Ediyorsun</Text>
+          </View>
+        ) : (
           <LinearGradient
-            colors={[palette.purple[700] + '50', 'transparent'] as [string, string, ...string[]]}
-            style={styles.profileGradient}
-          />
-
-          {/* Avatar */}
-          <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} />
-
-          {/* Name + verified */}
-          <View style={styles.nameRow}>
-            <Text style={styles.userName}>{profile.name}, {profile.age}</Text>
-            {profile.isVerified && (
-              <Ionicons name="checkmark-circle" size={18} color={colors.primary} />
-            )}
-          </View>
-          <Text style={styles.userCity}>{profile.city}</Text>
-
-          {/* Stats row */}
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{profile.postCount}</Text>
-              <Text style={styles.statLabel}>Gonderi</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{profile.followerCount}</Text>
-              <Text style={styles.statLabel}>Takipci</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{profile.followingCount}</Text>
-              <Text style={styles.statLabel}>Takip</Text>
-            </View>
-          </View>
-
-          {/* Follow button */}
-          <TouchableOpacity
-            style={[styles.followButton, isFollowing && styles.followButtonActive]}
-            onPress={handleFollow}
-            activeOpacity={0.7}
+            colors={[palette.purple[500], palette.purple[700]] as [string, string, ...string[]]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.gradientButton}
           >
-            <Text style={[styles.followButtonText, isFollowing && styles.followButtonTextActive]}>
-              {isFollowing ? 'Takip Ediyorsun' : 'Takip Et'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Compatibility Badge */}
-        <CompatibilityBadgeCard personality={getCompatibilityPersonality(profile.compatibilityPercent)} percent={profile.compatibilityPercent} />
-
-        {/* Bio — visible to all */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Hakkinda</Text>
-          <Text style={styles.bioText}>{profile.bio}</Text>
-        </View>
-
-        {/* Photos — visible to all */}
-        {profile.photos.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Fotograflar</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photosRow}>
-              {profile.photos.map((uri, i) => (
-                <Image key={i} source={{ uri }} style={styles.photoThumb} />
-              ))}
-            </ScrollView>
-          </View>
+            <Ionicons name="person-add" size={16} color="#FFFFFF" />
+            <Text style={styles.gradientButtonText}>Takip Et</Text>
+          </LinearGradient>
         )}
-
-        {/* Recent Posts — visible to all */}
-        {userPosts.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Son Paylasimlar</Text>
-            {userPosts.map((post) => (
-              <View key={post.id} style={styles.miniPost}>
-                <Text style={styles.miniPostContent} numberOfLines={2}>{post.content}</Text>
-                <View style={styles.miniPostStats}>
-                  <Text style={styles.miniPostStat}>{'\u2661'} {post.likeCount}</Text>
-                  <Text style={styles.miniPostStat}>{'\uD83D\uDCAC'} {post.commentCount}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* Premium-locked sections */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Detayli Bilgiler</Text>
-
-          {isPremium ? (
-            // Full details for premium users
-            <View style={styles.detailsGrid}>
-              <DetailRow icon="resize-outline" label="Boy" value={profile.height} />
-              <DetailRow icon="briefcase-outline" label="Is" value={profile.job} />
-              <DetailRow icon="school-outline" label="Egitim" value={profile.education} />
-              <DetailRow icon="heart-outline" label="Amac" value={profile.intentionTag} />
-              <DetailRow icon="star-outline" label="Burc" value={profile.zodiacSign} />
-            </View>
-          ) : (
-            // Blurred preview + premium CTA
-            <View style={styles.lockedContainer}>
-              <View style={styles.detailsGrid}>
-                <DetailRow icon="resize-outline" label="Boy" value="***" />
-                <DetailRow icon="briefcase-outline" label="Is" value="***" />
-                <DetailRow icon="school-outline" label="Egitim" value="***" />
-              </View>
-              <PremiumLock onPress={handlePremiumUpgrade} />
-            </View>
-          )}
-        </View>
-
-        {/* Hobbies — partially visible, full list premium */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Hobiler</Text>
-          <View style={styles.chipRow}>
-            {profile.hobbies.slice(0, isPremium ? profile.hobbies.length : 2).map((hobby) => (
-              <View key={hobby} style={styles.hobbyChip}>
-                <Text style={styles.hobbyChipText}>{hobby}</Text>
-              </View>
-            ))}
-            {!isPremium && profile.hobbies.length > 2 && (
-              <TouchableOpacity style={styles.premiumChip} onPress={handlePremiumUpgrade} activeOpacity={0.7}>
-                <Ionicons name="lock-closed" size={12} color={colors.accent} />
-                <Text style={styles.premiumChipText}>+{profile.hobbies.length - 2} daha</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
-        {/* Premium CTA banner */}
-        {!isPremium && (
-          <TouchableOpacity style={styles.premiumBanner} onPress={handlePremiumUpgrade} activeOpacity={0.85}>
-            <LinearGradient
-              colors={[palette.purple[600], palette.purple[800]] as [string, string, ...string[]]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.premiumBannerGradient}
-            >
-              <Ionicons name="diamond" size={22} color="#FFFFFF" />
-              <View style={styles.premiumBannerText}>
-                <Text style={styles.premiumBannerTitle}>Premium ile tam profili gor</Text>
-                <Text style={styles.premiumBannerSubtitle}>Boy, is, egitim, burc ve tum hobiler</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
-            </LinearGradient>
-          </TouchableOpacity>
-        )}
-      </ScrollView>
+      </TouchableOpacity>
     </View>
+  );
+
+  // ── Info sections — seamless, interleaved with photos ──
+  const infoSections: React.ReactNode[] = [];
+
+  // 1. Bio — visible to all
+  if (profile.bio) {
+    infoSections.push(
+      <View key="bio" style={styles.section}>
+        <Text style={styles.sectionTitle}>Hakkında</Text>
+        <Text style={styles.bioText}>{profile.bio}</Text>
+      </View>,
+    );
+  }
+
+  // 2. Compatibility badge card
+  infoSections.push(
+    <View key="compat" style={styles.section}>
+      <CompatibilityBadgeCard
+        personality={getCompatibilityPersonality(profile.compatibilityPercent)}
+        percent={profile.compatibilityPercent}
+      />
+    </View>,
+  );
+
+  // 3. Recent posts — visible to all
+  if (userPosts.length > 0) {
+    infoSections.push(
+      <View key="posts" style={styles.section}>
+        <Text style={styles.sectionTitle}>Son Paylaşımlar</Text>
+        {userPosts.map((post) => (
+          <View key={post.id} style={styles.miniPost}>
+            <Text style={styles.miniPostContent} numberOfLines={2}>{post.content}</Text>
+            <View style={styles.miniPostStats}>
+              <Text style={styles.miniPostStat}>{'\u2661'} {post.likeCount}</Text>
+              <Text style={styles.miniPostStat}>{'\uD83D\uDCAC'} {post.commentCount}</Text>
+            </View>
+          </View>
+        ))}
+      </View>,
+    );
+  }
+
+  // 4. Detailed info — premium-locked
+  infoSections.push(
+    <View key="details" style={styles.section}>
+      <Text style={styles.sectionTitle}>Detaylı Bilgiler</Text>
+      {isPremium ? (
+        <View style={styles.detailsGrid}>
+          <DetailRow icon="resize-outline" iconBg="rgba(139, 92, 246, 0.10)" label="Boy" value={profile.height} />
+          <DetailRow icon="briefcase-outline" iconBg="rgba(16, 185, 129, 0.10)" label="İş" value={profile.job} />
+          <DetailRow icon="school-outline" iconBg="rgba(236, 72, 153, 0.10)" label="Eğitim" value={profile.education} />
+          <DetailRow icon="heart-outline" iconBg="rgba(245, 158, 11, 0.10)" label="Amaç" value={profile.intentionTag} />
+          <DetailRow icon="star-outline" iconBg="rgba(59, 130, 246, 0.10)" label="Burç" value={profile.zodiacSign} />
+        </View>
+      ) : (
+        <View style={styles.lockedContainer}>
+          <View style={styles.detailsGrid}>
+            <DetailRow icon="resize-outline" iconBg="rgba(139, 92, 246, 0.10)" label="Boy" value="***" />
+            <DetailRow icon="briefcase-outline" iconBg="rgba(16, 185, 129, 0.10)" label="İş" value="***" />
+            <DetailRow icon="school-outline" iconBg="rgba(236, 72, 153, 0.10)" label="Eğitim" value="***" />
+          </View>
+          <PremiumLock onPress={handlePremiumUpgrade} />
+        </View>
+      )}
+    </View>,
+  );
+
+  // 5. Hobbies — partially visible
+  infoSections.push(
+    <View key="hobbies" style={styles.section}>
+      <Text style={styles.sectionTitle}>Hobiler</Text>
+      <View style={styles.chipRow}>
+        {profile.hobbies.slice(0, isPremium ? profile.hobbies.length : 2).map((hobby) => (
+          <View key={hobby} style={styles.hobbyChip}>
+            <Text style={styles.hobbyChipText}>{hobby}</Text>
+          </View>
+        ))}
+        {!isPremium && profile.hobbies.length > 2 && (
+          <TouchableOpacity style={styles.premiumChip} onPress={handlePremiumUpgrade} activeOpacity={0.7}>
+            <Ionicons name="lock-closed" size={12} color={colors.accent} />
+            <Text style={styles.premiumChipText}>+{profile.hobbies.length - 2} daha</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>,
+  );
+
+  // 6. Premium CTA banner (only for non-premium)
+  if (!isPremium) {
+    infoSections.push(
+      <TouchableOpacity key="premium-cta" style={styles.premiumBanner} onPress={handlePremiumUpgrade} activeOpacity={0.85}>
+        <LinearGradient
+          colors={[palette.purple[600], palette.purple[800]] as [string, string, ...string[]]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.premiumBannerGradient}
+        >
+          <Ionicons name="diamond" size={22} color="#FFFFFF" />
+          <View style={styles.premiumBannerTextCol}>
+            <Text style={styles.premiumBannerTitle}>Premium ile tam profili gör</Text>
+            <Text style={styles.premiumBannerSubtitle}>Boy, iş, eğitim, burç ve tüm hobiler</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
+        </LinearGradient>
+      </TouchableOpacity>,
+    );
+  }
+
+  return (
+    <InterleavedProfileLayout
+      photos={profile.photos.length > 0 ? profile.photos : [profile.avatarUrl]}
+      topContent={topContent}
+      infoSections={infoSections}
+      headerBar={headerBar}
+      scrollBottomPadding={spacing.xl * 2}
+    />
   );
 };
 
-// Detail row component
-const DetailRow: React.FC<{ icon: keyof typeof Ionicons.glyphMap; label: string; value: string }> = ({ icon, label, value }) => (
-  <View style={styles.detailRow}>
-    <View style={styles.detailIconCircle}>
-      <Ionicons name={icon} size={16} color={colors.text} />
-    </View>
-    <View style={styles.detailContent}>
-      <Text style={styles.detailLabel}>{label}</Text>
-      <Text style={[styles.detailValue, value === '***' && styles.detailValueLocked]}>{value}</Text>
-    </View>
-  </View>
-);
-
-// ─── Styles ──────────────────────────────────────────────────
+// ─── Styles ──────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: {
@@ -386,155 +438,250 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  header: {
+
+  // ── Header bar ──
+  headerBar: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
+    backgroundColor: colors.background,
   },
   backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.surfaceLight,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
-    ...typography.bodyLarge,
+    fontSize: 28,
+    fontWeight: fontWeights.bold,
     color: colors.text,
-    fontWeight: '600',
-    flex: 1,
-    textAlign: 'center',
-  },
-  headerSpacer: { width: 36 },
-  scrollContent: {
-    paddingBottom: spacing.xxl * 2,
+    letterSpacing: -0.5,
   },
 
-  // Profile card
-  profileCard: {
-    alignItems: 'center',
-    paddingVertical: spacing.lg,
-    marginHorizontal: spacing.lg,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.xl,
-    marginBottom: spacing.md,
-    overflow: 'hidden',
-    ...shadows.medium,
+  // ── Top section — seamless ──
+  topSection: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    gap: spacing.md,
   },
-  profileGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 100,
-  },
-  avatar: {
-    width: layout.avatarXLarge,
-    height: layout.avatarXLarge,
-    borderRadius: layout.avatarXLarge / 2,
-    borderWidth: 3,
-    borderColor: colors.primary,
-    marginBottom: spacing.md,
-    zIndex: 1,
+
+  // ── Identity block ──
+  identityBlock: {
+    gap: 6,
   },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-    marginBottom: 2,
+    gap: spacing.sm,
   },
   userName: {
-    ...typography.h3,
+    fontSize: 28,
+    fontWeight: fontWeights.bold,
     color: colors.text,
+    letterSpacing: -0.5,
   },
-  userCity: {
-    ...typography.body,
+  jobTitle: {
+    fontSize: 15,
+    fontWeight: fontWeights.semibold,
+    color: palette.purple[600],
+    letterSpacing: 0.1,
+  },
+  cityText: {
+    fontSize: 14,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
-    marginBottom: spacing.md,
   },
-  statsRow: {
+  intentionChip: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.primary + '15',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 5,
+  },
+  intentionText: {
+    fontSize: 12,
+    fontWeight: fontWeights.semibold,
+    color: colors.primary,
+    letterSpacing: 0.2,
+  },
+
+  // ── Inline compat score ──
+  compatInline: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.lg,
-    marginBottom: spacing.lg,
+    gap: spacing.sm,
   },
-  statItem: { alignItems: 'center' },
+  compatDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  compatInlineText: {
+    fontSize: 17,
+    fontWeight: fontWeights.bold,
+  },
+  compatSuperLabel: {
+    fontSize: 12,
+    fontWeight: fontWeights.bold,
+    color: colors.accent,
+    backgroundColor: colors.accent + '18',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    overflow: 'hidden',
+  },
+
+  // ── Stats card — minimalist ──
+  statsCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.md,
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
   statValue: {
-    ...typography.bodyLarge,
+    fontSize: 22,
+    fontWeight: fontWeights.bold,
     color: colors.text,
-    fontWeight: '700',
+    letterSpacing: -0.3,
   },
   statLabel: {
-    ...typography.captionSmall,
+    fontSize: 11,
+    fontWeight: fontWeights.medium,
     color: colors.textTertiary,
+    marginTop: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   statDivider: {
     width: 1,
     height: 28,
     backgroundColor: colors.surfaceBorder,
   },
-  followButton: {
-    backgroundColor: colors.primary,
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.xl + spacing.md,
-    paddingVertical: spacing.sm + 2,
+
+  // ── Follow button ──
+  followButtonOuter: {
+    // just a wrapper
   },
-  followButtonActive: {
-    backgroundColor: colors.surfaceLight,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
+  gradientButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderRadius: borderRadius.md,
+    paddingVertical: 14,
+    overflow: 'hidden',
   },
-  followButtonText: {
-    ...typography.button,
+  gradientButtonText: {
+    fontSize: 14,
+    fontWeight: fontWeights.bold,
     color: '#FFFFFF',
+    letterSpacing: 0.3,
   },
-  followButtonTextActive: {
-    color: colors.textSecondary,
+  outlinedButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderRadius: borderRadius.md,
+    paddingVertical: 14,
+    borderWidth: 1.5,
+    borderColor: palette.purple[500],
+    backgroundColor: 'rgba(139, 92, 246, 0.06)',
+  },
+  outlinedButtonText: {
+    fontSize: 14,
+    fontWeight: fontWeights.bold,
+    color: palette.purple[600],
+    letterSpacing: 0.3,
   },
 
-  // Sections
+  // ── Sections — seamless, no card background ──
   section: {
-    marginHorizontal: spacing.lg,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   },
   sectionTitle: {
-    ...typography.bodyLarge,
+    fontSize: 18,
+    fontWeight: fontWeights.bold,
     color: colors.text,
-    fontWeight: '600',
-    marginBottom: spacing.sm,
+    letterSpacing: -0.2,
+    marginBottom: spacing.md,
   },
   bioText: {
-    ...typography.body,
+    fontSize: 15,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: 24,
   },
 
-  // Photos
-  photosRow: {
-    gap: spacing.sm,
+  // ── About rows (detail rows) ──
+  detailsGrid: {
+    gap: 2,
   },
-  photoThumb: {
-    width: 120,
-    height: 160,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.surfaceLight,
+  aboutRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surfaceBorder + '80',
+  },
+  aboutIconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  aboutRowContent: {
+    flex: 1,
+  },
+  aboutRowLabel: {
+    fontSize: 11,
+    fontWeight: fontWeights.medium,
+    color: colors.textTertiary,
+    marginBottom: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  aboutRowValue: {
+    fontSize: 15,
+    fontWeight: fontWeights.medium,
+    color: colors.text,
+  },
+  aboutRowValueLocked: {
+    color: colors.textTertiary,
+    letterSpacing: 4,
   },
 
-  // Mini posts
+  // ── Premium locked container ──
+  lockedContainer: {
+    position: 'relative',
+    overflow: 'hidden',
+  },
+
+  // ── Mini posts ──
   miniPost: {
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
+    borderBottomColor: colors.surfaceBorder + '80',
   },
   miniPostContent: {
-    ...typography.body,
+    fontSize: 15,
+    fontWeight: fontWeights.regular,
     color: colors.text,
-    lineHeight: 20,
+    lineHeight: 22,
     marginBottom: spacing.xs,
   },
   miniPostStats: {
@@ -542,63 +689,29 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   miniPostStat: {
-    ...typography.captionSmall,
+    fontSize: 11,
+    fontWeight: fontWeights.medium,
     color: colors.textTertiary,
   },
 
-  // Details
-  lockedContainer: {
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  detailsGrid: {
-    gap: spacing.xs,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    gap: spacing.sm,
-  },
-  detailIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.surfaceLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  detailContent: { flex: 1 },
-  detailLabel: {
-    ...typography.captionSmall,
-    color: colors.textTertiary,
-  },
-  detailValue: {
-    ...typography.body,
-    color: colors.text,
-    fontWeight: '500',
-  },
-  detailValueLocked: {
-    color: colors.textTertiary,
-    letterSpacing: 4,
-  },
-
-  // Hobbies
+  // ── Chips ──
   chipRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.sm,
+    gap: 8,
   },
   hobbyChip: {
-    backgroundColor: colors.primary + '12',
+    backgroundColor: 'rgba(139, 92, 246, 0.08)',
     borderRadius: borderRadius.full,
     paddingHorizontal: 14,
     paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.15)',
   },
   hobbyChipText: {
     fontSize: 13,
-    fontWeight: '500',
-    color: colors.primary,
+    fontWeight: fontWeights.medium,
+    color: palette.purple[600],
   },
   premiumChip: {
     flexDirection: 'row',
@@ -613,16 +726,15 @@ const styles = StyleSheet.create({
   },
   premiumChipText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: fontWeights.semibold,
     color: colors.accent,
   },
 
-  // Premium banner
+  // ── Premium CTA banner ──
   premiumBanner: {
     marginHorizontal: spacing.lg,
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
-    marginBottom: spacing.md,
   },
   premiumBannerGradient: {
     flexDirection: 'row',
@@ -630,20 +742,21 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.md,
   },
-  premiumBannerText: { flex: 1 },
+  premiumBannerTextCol: { flex: 1 },
   premiumBannerTitle: {
-    ...typography.body,
+    fontSize: 15,
+    fontWeight: fontWeights.bold,
     color: '#FFFFFF',
-    fontWeight: '700',
   },
   premiumBannerSubtitle: {
-    ...typography.captionSmall,
+    fontSize: 11,
+    fontWeight: fontWeights.regular,
     color: 'rgba(255,255,255,0.7)',
     marginTop: 2,
   },
 });
 
-// ─── Premium Lock Styles ──────────────────────────────────────
+// ─── Premium Lock Styles ─────────────────────────────────────────────────────
 
 const lockStyles = StyleSheet.create({
   container: {
@@ -671,28 +784,22 @@ const lockStyles = StyleSheet.create({
     borderColor: colors.accent + '30',
   },
   text: {
-    ...typography.captionSmall,
+    fontSize: 11,
+    fontWeight: fontWeights.bold,
     color: colors.accent,
-    fontWeight: '700',
   },
 });
 
-// ─── Compatibility Badge Styles ──────────────────────────────
+// ─── Compatibility Badge Styles — seamless ───────────────────────────────────
 
 const compatStyles = StyleSheet.create({
   card: {
-    marginHorizontal: spacing.lg,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    ...shadows.small,
+    gap: spacing.sm,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    marginBottom: spacing.md,
   },
   ring: {
     width: 56,
@@ -704,7 +811,7 @@ const compatStyles = StyleSheet.create({
   },
   ringPercent: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: fontWeights.bold,
   },
   headerInfo: {
     flex: 1,
@@ -719,19 +826,19 @@ const compatStyles = StyleSheet.create({
     fontSize: 18,
   },
   label: {
-    ...typography.bodyLarge,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: fontWeights.bold,
   },
   description: {
-    ...typography.caption,
+    fontSize: 12,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     lineHeight: 18,
   },
   barTrack: {
     height: 6,
     borderRadius: 3,
-    backgroundColor: colors.surfaceLight,
-    marginBottom: spacing.xs,
+    backgroundColor: colors.surfaceBorder,
   },
   barFill: {
     height: 6,
@@ -742,7 +849,8 @@ const compatStyles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   tierLabel: {
-    ...typography.captionSmall,
+    fontSize: 10,
+    fontWeight: fontWeights.medium,
     color: colors.textTertiary,
   },
 });

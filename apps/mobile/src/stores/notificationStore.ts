@@ -74,6 +74,7 @@ interface NotificationState {
   unreadCount: number;
   isLoading: boolean;
   hasPermission: boolean;
+  showPermissionModal: boolean;
   page: number;
   totalPages: number;
   total: number;
@@ -88,6 +89,9 @@ interface NotificationState {
   requestPermission: () => Promise<boolean>;
   registerDevice: () => Promise<void>;
   setupForegroundListener: () => () => void;
+  checkAndPromptPermission: () => Promise<void>;
+  dismissPermissionModal: () => void;
+  allowPermission: () => Promise<void>;
 }
 
 export const useNotificationStore = create<NotificationState>((set, get) => ({
@@ -96,6 +100,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   unreadCount: 0,
   isLoading: false,
   hasPermission: false,
+  showPermissionModal: false,
   page: 1,
   totalPages: 1,
   total: 0,
@@ -214,6 +219,9 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     try {
       const result = await notificationService.requestPermission();
       set({ hasPermission: result.granted });
+      if (result.granted) {
+        await get().registerDevice();
+      }
       return result.granted;
     } catch (error) {
       if (__DEV__) {
@@ -249,6 +257,44 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         console.error('[BildirimStore] Cihaz kaydi basarisiz:', error);
       }
     }
+  },
+
+  checkAndPromptPermission: async () => {
+    const { hasPermission, showPermissionModal } = get();
+    if (hasPermission || showPermissionModal) return;
+
+    try {
+      const result = await notificationService.requestPermission();
+      if (result.granted) {
+        set({ hasPermission: true });
+        await get().registerDevice();
+      } else {
+        set({ showPermissionModal: true });
+      }
+    } catch (error) {
+      if (__DEV__) {
+        console.error('[BildirimStore] Izin kontrolu basarisiz:', error);
+      }
+      set({ showPermissionModal: true });
+    }
+  },
+
+  dismissPermissionModal: () => {
+    set({ showPermissionModal: false });
+  },
+
+  allowPermission: async () => {
+    try {
+      const granted = await get().requestPermission();
+      if (granted) {
+        await get().registerDevice();
+      }
+    } catch (error) {
+      if (__DEV__) {
+        console.error('[BildirimStore] Izin verme basarisiz:', error);
+      }
+    }
+    set({ showPermissionModal: false });
   },
 
   /**

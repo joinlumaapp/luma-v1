@@ -1,7 +1,8 @@
-// Profile preview — uses InterleavedProfileLayout for photo-interleaved scrolling
-// All business logic preserved: discovery/likes/matches fetching, compat score, paid message
+// Profile preview — premium storytelling layout with glassmorphic action buttons
+// Interleaved photo + lifestyle flow: Photo → Name → Lifestyle → Photo → Compat → Photo → Interests → Photo
+// Sticky glassmorphic action buttons (Pass / Message / Like) with colored glows
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,7 +10,10 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  Animated,
+  Pressable,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,10 +24,9 @@ import { VoiceIntroPlayer } from '../../components/profile/VoiceIntro';
 import { BadgeShowcase } from '../../components/badges/BadgeShowcase';
 import { CompatibilityPreviewCard } from './CompatibilityPreviewCard';
 import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
-import { colors } from '../../theme/colors';
-import { palette } from '../../theme/colors';
+import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
-import { spacing, borderRadius, shadows } from '../../theme/spacing';
+import { spacing, borderRadius } from '../../theme/spacing';
 import { useDiscoveryStore, type DiscoveryProfile } from '../../stores/discoveryStore';
 import { useMatchStore } from '../../stores/matchStore';
 import { matchService } from '../../services/matchService';
@@ -37,6 +40,7 @@ import { useChatStore } from '../../stores/chatStore';
 import { useAuthStore } from '../../stores/authStore';
 import type { ChatMessage } from '../../services/chatService';
 import { VerifiedBadge } from '../../components/common/VerifiedBadge';
+import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
 
 // Interest tag lookup maps
 const INTEREST_EMOJI_MAP: Record<string, string> = {};
@@ -137,6 +141,168 @@ const getCompatColor = (score: number): string => {
   if (score >= 70) return colors.accent;
   return colors.textSecondary;
 };
+
+// ─── Glassmorphic Action Button — zero-artifact, HD glass ────────────────────
+//
+// Architecture: 3 layers
+//   1. Outer Animated.View — holds the colored glow shadow (JS-driven, animated on press)
+//   2. Inner Animated.View — holds scale transform (native-driven, spring)
+//   3. Pressable > BlurView — the frosted glass surface with thin border
+//
+// Key: BlurView has NO backgroundColor (prevents white stain artifacts).
+// The glass tint comes purely from the blur + a separate overlay View with low-opacity fill.
+// The 1px border uses rgba white at 0.2 for the glass-edge highlight.
+
+interface GlassActionButtonProps {
+  icon: keyof typeof Ionicons.glyphMap;
+  iconSize: number;
+  glowColor: string;
+  size: number;
+  onPress: () => void;
+  accessibilityLabel: string;
+}
+
+const GlassActionButton: React.FC<GlassActionButtonProps> = ({
+  icon,
+  iconSize,
+  glowColor,
+  size,
+  onPress,
+  accessibilityLabel,
+}) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const glowAnim = useRef(new Animated.Value(0)).current;
+
+  const handlePressIn = useCallback(() => {
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: 0.88,
+        tension: 200,
+        friction: 10,
+        useNativeDriver: true,
+      }),
+      Animated.timing(glowAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: false,
+      }),
+    ]).start();
+  }, [scaleAnim, glowAnim]);
+
+  const handlePressOut = useCallback(() => {
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 200,
+        friction: 10,
+        useNativeDriver: true,
+      }),
+      Animated.timing(glowAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: false,
+      }),
+    ]).start();
+  }, [scaleAnim, glowAnim]);
+
+  // Animated inner glow overlay opacity (colored tint on press)
+  const innerGlowOpacity = glowAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 0.18],
+  });
+
+  // Animated shadow for outer glow
+  const shadowOpacity = glowAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.12, 0.55],
+  });
+
+  const shadowRadius = glowAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [6, 22],
+  });
+
+  const half = size / 2;
+
+  return (
+    // Layer 1: Shadow glow (JS-driven animated values)
+    <Animated.View
+      style={{
+        shadowColor: glowColor,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: shadowOpacity as unknown as number,
+        shadowRadius: shadowRadius as unknown as number,
+        elevation: 6,
+        borderRadius: half,
+      }}
+    >
+      {/* Layer 2: Scale transform (native-driven) */}
+      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+        <Pressable
+          onPress={onPress}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          accessibilityLabel={accessibilityLabel}
+          accessibilityRole="button"
+          style={{
+            width: size,
+            height: size,
+            borderRadius: half,
+            overflow: 'hidden',
+            // Thin glass edge — 1px white border at low opacity
+            borderWidth: 1,
+            borderColor: 'rgba(255, 255, 255, 0.20)',
+          }}
+        >
+          {/* Layer 3a: Frosted glass blur — NO backgroundColor to prevent stains */}
+          <BlurView
+            intensity={50}
+            tint="default"
+            experimentalBlurMethod="dimezisBlurView"
+            style={glassButtonStyles.blurFill}
+          >
+            {/* Semi-transparent glass tint overlay (static) */}
+            <View style={glassButtonStyles.glassTint} />
+
+            {/* Animated inner glow overlay (visible on press) */}
+            <Animated.View
+              style={[
+                glassButtonStyles.innerGlow,
+                {
+                  backgroundColor: glowColor,
+                  opacity: innerGlowOpacity as unknown as number,
+                },
+              ]}
+              pointerEvents="none"
+            />
+
+            {/* Icon — crisp, no extra shadows */}
+            <Ionicons name={icon} size={iconSize} color={glowColor} />
+          </BlurView>
+        </Pressable>
+      </Animated.View>
+    </Animated.View>
+  );
+};
+
+// Separated styles for the glass button internals (not in main StyleSheet to keep clean)
+const glassButtonStyles = StyleSheet.create({
+  blurFill: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  glassTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  innerGlow: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 9999,
+  },
+});
+
+// ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export const ProfilePreviewScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -280,79 +446,72 @@ export const ProfilePreviewScreen: React.FC = () => {
   const compatColor = compatScore !== null ? getCompatColor(compatScore) : null;
   const compatReasons = generateExpandedReasons(profile, currentUserProfile);
 
-  // Lifestyle detail rows
-  const lifestyleRows: Array<{ icon: string; iconBg: string; label: string; value: string }> = [];
-  if (profile.height) lifestyleRows.push({ icon: 'resize-outline', iconBg: '#D5D5F5', label: 'Boy', value: `${profile.height} cm` });
-  if (profile.job) lifestyleRows.push({ icon: 'briefcase-outline', iconBg: '#D5F5E8', label: 'Meslek', value: profile.job });
-  if (profile.education) lifestyleRows.push({ icon: 'school-outline', iconBg: '#F5D5E8', label: 'Eğitim', value: profile.education });
-  if (profile.sports) lifestyleRows.push({ icon: 'fitness-outline', iconBg: '#E8D5D5', label: 'Spor', value: profile.sports });
-  if (profile.smoking) lifestyleRows.push({ icon: 'flame-outline', iconBg: '#F5E8E8', label: 'Sigara', value: profile.smoking });
-  if (profile.children) lifestyleRows.push({ icon: 'people-outline', iconBg: '#E8F5D5', label: 'Çocuk', value: profile.children });
+  // ── Build info sections for the new storytelling sequence ──
+  // Block 1: Main Photo + Name/Age Header → handled by hero + topContent
+  // Block 2: Lifestyle Icons (no borders)
+  // Block 3: 2nd Photo (automatic via interleaving)
+  // Block 4: Compatibility Reasons
+  // Block 5: 3rd Photo (automatic)
+  // Block 6: Interests
+  // Block 7: 4th Photo (automatic)
+  // + Badges, Voice, Compat module
 
-  // ── Build info sections for interleaving ──
-  // Order: Bio → Lifestyle → Compat module → Interests → Badges → remaining
-  // This creates a story-like scroll: Photo → Bio → Photo → Lifestyle → Photo → Compat → Photo → Interests+Badges
   const infoSections: React.ReactNode[] = [];
 
-  // 1. Hakkinda (Bio) — after hero photo
-  if (profile.bio && profile.bio.length > 0) {
-    infoSections.push(
-      <View key="bio" style={styles.card}>
-        <Text style={styles.sectionTitle}>Hakkında</Text>
-        <Text style={styles.bioText}>{profile.bio}</Text>
-      </View>,
-    );
-  }
+  // Block 2: Lifestyle (clean icon + text rows, no box borders)
+  const lifestyleItems: Array<{ icon: keyof typeof Ionicons.glyphMap; value: string }> = [];
+  if (profile.job) lifestyleItems.push({ icon: 'briefcase-outline', value: profile.job });
+  if (profile.education) lifestyleItems.push({ icon: 'school-outline', value: profile.education });
+  if (profile.height) lifestyleItems.push({ icon: 'resize-outline', value: `${profile.height} cm` });
+  if (profile.sports) lifestyleItems.push({ icon: 'fitness-outline', value: profile.sports });
+  if (profile.smoking) lifestyleItems.push({ icon: 'flame-outline', value: profile.smoking });
+  if (profile.children) lifestyleItems.push({ icon: 'people-outline', value: profile.children });
 
-  // 2. Yasam Tarzi (Lifestyle) — after 2nd photo
-  if (lifestyleRows.length > 0) {
+  if (lifestyleItems.length > 0 || (profile.bio && profile.bio.length > 0)) {
     infoSections.push(
-      <View key="lifestyle" style={styles.card}>
-        <Text style={styles.sectionTitle}>Yaşam Tarzı</Text>
-        {lifestyleRows.map((row) => (
-          <View key={row.label} style={styles.aboutRow}>
-            <View style={[styles.aboutIconCircle, { backgroundColor: row.iconBg }]}>
-              <Ionicons name={row.icon as keyof typeof Ionicons.glyphMap} size={18} color="#1A1A1A" />
-            </View>
-            <View style={styles.aboutRowContent}>
-              <Text style={styles.aboutRowLabel}>{row.label}</Text>
-              <Text style={styles.aboutRowValue}>{row.value}</Text>
-            </View>
-          </View>
-        ))}
-      </View>,
-    );
-  }
-
-  // 3. Uyum modulu (Compat reasons + details) — after 3rd photo
-  if (compatReasons.length > 0 || (!loadingCompat && compatPreviewData)) {
-    infoSections.push(
-      <View key="compat-module" style={styles.card}>
-        <Text style={styles.sectionTitle}>Uyum Analizi</Text>
-        {compatReasons.length > 0 && compatReasons.map((reason, idx) => (
-          <View key={idx} style={styles.reasonRow}>
-            <View style={styles.reasonDot} />
-            <Text style={styles.reasonText}>{reason}</Text>
-          </View>
-        ))}
-        {!loadingCompat && compatPreviewData && (
-          <View style={{ marginTop: compatReasons.length > 0 ? spacing.md : 0 }}>
-            <CompatibilityPreviewCard data={compatPreviewData} />
+      <View key="lifestyle-block" style={styles.seamlessSection}>
+        {/* Bio blends directly into the background */}
+        {profile.bio && profile.bio.length > 0 && (
+          <Text style={styles.bioText}>{profile.bio}</Text>
+        )}
+        {lifestyleItems.length > 0 && (
+          <View style={styles.lifestyleGrid}>
+            {lifestyleItems.map((item) => (
+              <View key={item.icon} style={styles.lifestyleItem}>
+                <Ionicons name={item.icon} size={18} color={colors.textSecondary} />
+                <Text style={styles.lifestyleValue}>{item.value}</Text>
+              </View>
+            ))}
           </View>
         )}
       </View>,
     );
   }
 
-  // 4. Ilgi Alanlari (Interests) — after 4th photo
+  // Block 4: Compatibility Reasons (elegant bullet points)
+  if (compatReasons.length > 0) {
+    infoSections.push(
+      <View key="compat-reasons" style={styles.seamlessSection}>
+        <Text style={styles.sectionLabel}>Uyum Nedenleri</Text>
+        {compatReasons.map((reason, idx) => (
+          <View key={idx} style={styles.reasonRow}>
+            <View style={styles.reasonAccent} />
+            <Text style={styles.reasonText}>{reason}</Text>
+          </View>
+        ))}
+      </View>,
+    );
+  }
+
+  // Block 6: Interests (clean tags)
   if (profile.interestTags && profile.interestTags.length > 0) {
     infoSections.push(
-      <View key="interests" style={styles.card}>
-        <Text style={styles.sectionTitle}>İlgi Alanları</Text>
-        <View style={styles.chipRow}>
+      <View key="interests" style={styles.seamlessSection}>
+        <Text style={styles.sectionLabel}>İlgi Alanları</Text>
+        <View style={styles.tagsRow}>
           {profile.interestTags.map((tagId) => (
-            <View key={tagId} style={styles.hobbyChip}>
-              <Text style={styles.hobbyChipText}>
+            <View key={tagId} style={styles.tagChip}>
+              <Text style={styles.tagText}>
                 {INTEREST_EMOJI_MAP[tagId] ? `${INTEREST_EMOJI_MAP[tagId]} ` : ''}
                 {INTEREST_LABEL_MAP[tagId] ?? tagId}
               </Text>
@@ -363,21 +522,30 @@ export const ProfilePreviewScreen: React.FC = () => {
     );
   }
 
-  // 5. Rozetleri (Badges)
+  // Compat detail module
+  if (!loadingCompat && compatPreviewData) {
+    infoSections.push(
+      <View key="compat-module" style={styles.seamlessSection}>
+        <CompatibilityPreviewCard data={compatPreviewData} />
+      </View>,
+    );
+  }
+
+  // Badges
   if (profile.earnedBadges && profile.earnedBadges.length > 0) {
     infoSections.push(
-      <View key="badges" style={styles.card}>
-        <Text style={styles.sectionTitle}>Rozetleri</Text>
+      <View key="badges" style={styles.seamlessSection}>
+        <Text style={styles.sectionLabel}>Rozetleri</Text>
         <BadgeShowcase badgeKeys={profile.earnedBadges} size={32} />
       </View>,
     );
   }
 
-  // 6. Sesini Dinle (Voice intro)
+  // Voice intro
   if (profile.voiceIntroUrl) {
     infoSections.push(
-      <View key="voice" style={styles.card}>
-        <Text style={styles.sectionTitle}>Sesini Dinle</Text>
+      <View key="voice" style={styles.seamlessSection}>
+        <Text style={styles.sectionLabel}>Sesini Dinle</Text>
         <VoiceIntroPlayer
           voiceIntroUrl={profile.voiceIntroUrl}
           userName={profile.name}
@@ -386,22 +554,38 @@ export const ProfilePreviewScreen: React.FC = () => {
     );
   }
 
-  // ── Top content (identity card + compat score) ──
+  // ── Top content (identity + stats — matches own profile template) ──
   const topContent = (
-    <View style={styles.topContentContainer}>
-      {/* Identity card */}
-      <View style={styles.identityCard}>
+    <View style={styles.topSection}>
+      {/* Identity block */}
+      <View style={styles.identityBlock}>
         <View style={styles.nameRow}>
           <Text style={styles.userName}>{profile.name}, {profile.age}</Text>
-          {profile.isVerified && <VerifiedBadge size="medium" animated />}
+          {profile.isVerified && <VerifiedBadge size="large" animated />}
+          {profile.packageTier && <SubscriptionBadge tier={profile.packageTier} compact />}
         </View>
-        <View style={styles.cityRow}>
-          {profile.city ? <Text style={styles.userCity}>{profile.city}</Text> : null}
+
+        {/* Job title — purple, like own profile */}
+        {profile.job ? (
+          <Text style={styles.jobTitle}>{profile.job}</Text>
+        ) : null}
+
+        {/* City + distance */}
+        <View style={styles.metaRow}>
+          {profile.city ? (
+            <Text style={styles.cityText}>{profile.city}</Text>
+          ) : null}
           {profile.distanceKm != null && profile.distanceKm > 0 ? (
-            <Text style={styles.userDistance}>{profile.distanceKm.toFixed(1)} km</Text>
+            <Text style={styles.metaDot}>{'\u2022'}</Text>
+          ) : null}
+          {profile.distanceKm != null && profile.distanceKm > 0 ? (
+            <Text style={styles.cityText}>{profile.distanceKm.toFixed(1)} km</Text>
           ) : null}
         </View>
+
         <ActivityStatus lastActiveAt={profile.lastActiveAt} variant="full" />
+
+        {/* Intention chip */}
         {profile.intentionTag ? (
           <View style={styles.intentionChip}>
             <Text style={styles.intentionText}>{profile.intentionTag}</Text>
@@ -409,59 +593,39 @@ export const ProfilePreviewScreen: React.FC = () => {
         ) : null}
       </View>
 
-      {/* Stats row */}
-      <View style={styles.statsCard}>
-        <View style={styles.statsRow}>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>12</Text>
-            <Text style={styles.statLabel}>Gönderi</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>96</Text>
-            <Text style={styles.statLabel}>Takipçi</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>64</Text>
-            <Text style={styles.statLabel}>Takip</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Weekly views */}
-      <View style={styles.weeklyViewsCard}>
-        <Text style={styles.weeklyViewsLabel}>Bu hafta profilini görenler</Text>
-        <Text style={styles.weeklyViewsCount}>43 kişi</Text>
-      </View>
-
-      {/* Compatibility score */}
-      {compatScore !== null && compatColor !== null && compatibility && (
-        <View style={styles.compatCard}>
-          <View style={styles.compatInlineRow}>
-            <View style={[styles.compatCircle, { borderColor: compatColor }]}>
-              <Text style={[styles.compatScoreText, { color: compatColor }]}>%{compatScore}</Text>
-            </View>
-            <View style={styles.compatTextCol}>
-              <Text style={styles.compatTitle}>
-                {compatibility.isSuperCompatible ? 'Süper Uyumluluk!' : 'Uyum Skoru'}
-              </Text>
-              {compatibility.breakdown && Object.keys(compatibility.breakdown).length > 0 && (
-                <Text style={styles.compatSubtitle}>
-                  {Object.keys(compatibility.breakdown).length} kategori analiz edildi
-                </Text>
-              )}
-            </View>
-          </View>
+      {/* Inline compat score */}
+      {compatScore !== null && compatColor !== null && (
+        <View style={styles.compatInline}>
+          <View style={[styles.compatDot, { backgroundColor: compatColor }]} />
+          <Text style={[styles.compatInlineText, { color: compatColor }]}>
+            %{compatScore} Uyum
+          </Text>
+          {compatibility?.isSuperCompatible && (
+            <Text style={styles.compatSuperLabel}>Süper!</Text>
+          )}
         </View>
       )}
       {loadingCompat && (
-        <View style={styles.compatCard}>
-          <View style={styles.compatInlineRow}>
-            <ActivityIndicator size="small" color={colors.primary} />
-          </View>
-        </View>
+        <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: spacing.sm }} />
       )}
+
+      {/* Stats card — minimalist, same as own profile */}
+      <View style={styles.statsCard}>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>15</Text>
+          <Text style={styles.statLabel}>GONDERİ</Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>108</Text>
+          <Text style={styles.statLabel}>TAKİPCİ</Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>73</Text>
+          <Text style={styles.statLabel}>TAKİP</Text>
+        </View>
+      </View>
     </View>
   );
 
@@ -476,41 +640,38 @@ export const ProfilePreviewScreen: React.FC = () => {
     </View>
   );
 
-  // ── Footer (action buttons) ──
+  // ── Footer: Premium glassmorphic action buttons (icon-only, no text) ──
   const footer = (
-    <View style={[styles.actions, { paddingBottom: insets.bottom + spacing.md }]}>
-      <TouchableOpacity
-        style={styles.passButton}
+    <View style={[styles.actionsBar, { paddingBottom: insets.bottom + spacing.sm }]}>
+      {/* Pass — deep red glow */}
+      <GlassActionButton
+        icon="close"
+        iconSize={28}
+        glowColor="#DC2626"
+        size={62}
         onPress={() => handleSwipe('left')}
-        activeOpacity={0.8}
         accessibilityLabel="Geç"
-        accessibilityRole="button"
-      >
-        <Text style={styles.passButtonIcon}>{'\u2715'}</Text>
-        <Text style={styles.actionLabel}>Geç</Text>
-      </TouchableOpacity>
+      />
 
-      <TouchableOpacity
-        style={styles.paidMsgButton}
+      {/* Message — premium blue glow */}
+      <GlassActionButton
+        icon="mail-outline"
+        iconSize={22}
+        glowColor="#3B82F6"
+        size={50}
         onPress={() => setShowPaidMessageModal(true)}
-        activeOpacity={0.8}
         accessibilityLabel="Mesaj Gönder"
-        accessibilityRole="button"
-      >
-        <Text style={styles.paidMsgButtonIcon}>{'\u2709\uFE0F'}</Text>
-        <Text style={styles.actionLabel}>1 Mesaj</Text>
-      </TouchableOpacity>
+      />
 
-      <TouchableOpacity
-        style={styles.likeButton}
+      {/* Like — purple glow */}
+      <GlassActionButton
+        icon="heart"
+        iconSize={28}
+        glowColor={palette.purple[500]}
+        size={62}
         onPress={() => handleSwipe('right')}
-        activeOpacity={0.8}
         accessibilityLabel="Beğen"
-        accessibilityRole="button"
-      >
-        <Text style={styles.likeButtonIcon}>{'\uD83D\uDC9C'}</Text>
-        <Text style={styles.actionLabel}>Beğen</Text>
-      </TouchableOpacity>
+      />
     </View>
   );
 
@@ -576,6 +737,8 @@ export const ProfilePreviewScreen: React.FC = () => {
   );
 };
 
+// ─── Styles ──────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -598,8 +761,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    ...typography.h3,
+    fontSize: 28,
+    fontWeight: '700',
     color: colors.text,
+    letterSpacing: -0.5,
   },
   emptyContainer: {
     flex: 1,
@@ -612,178 +777,176 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
 
-  // ── Top content ──
-  topContentContainer: {
+  // ── Top section — matches own profile template ──
+  topSection: {
+    paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
+    gap: spacing.md,
   },
-  identityCard: {
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    marginHorizontal: spacing.lg,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
+
+  // ── Identity block ──
+  identityBlock: {
+    gap: 6,
   },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    marginBottom: 2,
   },
   userName: {
-    ...typography.h3,
+    fontSize: 28,
+    fontWeight: '700',
     color: colors.text,
+    letterSpacing: -0.5,
   },
-  cityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
+  jobTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: palette.purple[600],
+    letterSpacing: 0.1,
   },
-  userCity: {
-    ...typography.body,
+  cityText: {
+    fontSize: 14,
+    fontWeight: '400',
     color: colors.textSecondary,
   },
-  userDistance: {
-    ...typography.body,
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  metaDot: {
+    fontSize: 14,
     color: colors.textTertiary,
   },
   intentionChip: {
-    backgroundColor: colors.secondary + '20',
+    alignSelf: 'flex-start',
+    backgroundColor: colors.primary + '15',
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    marginTop: spacing.xs,
+    paddingVertical: 5,
   },
   intentionText: {
-    ...typography.bodySmall,
-    color: colors.secondary,
+    fontSize: 12,
     fontWeight: '600',
+    color: colors.primary,
+    letterSpacing: 0.2,
   },
 
-  // ── Compat score card ──
-  compatCard: {
-    marginHorizontal: spacing.lg,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  compatInlineRow: {
+  // ── Inline compat score ──
+  compatInline: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: spacing.sm,
   },
-  compatCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 3,
-    justifyContent: 'center',
-    alignItems: 'center',
+  compatDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
-  compatScoreText: {
-    ...typography.h4,
-    fontWeight: '800',
+  compatInlineText: {
+    fontSize: 17,
+    fontWeight: '700',
   },
-  compatTextCol: {
-    flex: 1,
-  },
-  compatTitle: {
-    ...typography.body,
-    color: colors.text,
-    fontWeight: '600',
-  },
-  compatSubtitle: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-    marginTop: 2,
+  compatSuperLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.accent,
+    backgroundColor: colors.accent + '18',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    overflow: 'hidden',
   },
 
-  // ── Generic card ──
-  card: {
-    marginHorizontal: spacing.lg,
+  // ── Stats card — minimalist (matches own profile) ──
+  statsCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
+    paddingVertical: spacing.md,
   },
-  sectionTitle: {
-    ...typography.bodyLarge,
-    color: colors.text,
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statValue: {
+    fontSize: 22,
     fontWeight: '700',
+    color: colors.text,
+    letterSpacing: -0.3,
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: colors.textTertiary,
+    marginTop: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  statDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: colors.surfaceBorder,
+  },
+
+  // ── Seamless sections (no card background — part of the cream canvas) ──
+  seamlessSection: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
     marginBottom: spacing.md,
   },
+
+  // ── Bio ──
   bioText: {
     ...typography.body,
     color: colors.textSecondary,
     lineHeight: 24,
+    marginBottom: spacing.md,
   },
 
-  // ── Interest chips ──
-  chipRow: {
+  // ── Lifestyle (clean icon + text, no borders) ──
+  lifestyleGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: spacing.md,
   },
-  hobbyChip: {
-    backgroundColor: colors.primary + '12',
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  hobbyChipText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: colors.primary,
-  },
-
-  // ── About/Lifestyle rows ──
-  aboutRow: {
+  lifestyleItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceBorder,
+    gap: 8,
+    minWidth: '40%',
+    paddingVertical: 6,
   },
-  aboutIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  aboutRowContent: {
-    flex: 1,
-  },
-  aboutRowLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: colors.textTertiary,
-    marginBottom: 2,
-  },
-  aboutRowValue: {
-    fontSize: 15,
+  lifestyleValue: {
+    fontSize: 14,
     fontWeight: '500',
     color: colors.text,
   },
 
-  // ── Compat reasons ──
+  // ── Compatibility reasons (elegant bullets) ──
   reasonRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: spacing.sm,
-    marginBottom: spacing.sm,
+    marginBottom: 12,
   },
-  reasonDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+  reasonAccent: {
+    width: 3,
+    height: 18,
+    borderRadius: 1.5,
     backgroundColor: colors.primary,
-    marginTop: 7,
-    opacity: 0.6,
+    marginTop: 3,
+    opacity: 0.5,
   },
   reasonText: {
     ...typography.body,
@@ -792,118 +955,36 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
 
-  // ── Stats row ──
-  statsCard: {
-    marginHorizontal: spacing.lg,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  statsRow: {
+  // ── Interest tags ──
+  tagsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
   },
-  statItem: {
-    alignItems: 'center',
+  tagChip: {
+    backgroundColor: colors.primary + '10',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
   },
-  statNumber: {
-    ...typography.h4,
-    color: colors.text,
-    fontWeight: '700',
-  },
-  statLabel: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  statDivider: {
-    width: 1,
-    height: 24,
-    backgroundColor: colors.divider,
-  },
-  weeklyViewsCard: {
-    marginHorizontal: spacing.lg,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  weeklyViewsLabel: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-  },
-  weeklyViewsCount: {
-    ...typography.body,
+  tagText: {
+    fontSize: 13,
+    fontWeight: '500',
     color: colors.primary,
-    fontWeight: '600',
   },
 
-  // ── Action buttons ──
-  actions: {
+  // ── Sticky action buttons bar — floats above content ──
+  actionsBar: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
-    gap: spacing.xl,
-    paddingTop: spacing.md,
-    backgroundColor: colors.background + 'F0',
-  },
-  passButton: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: colors.error + '60',
-    ...shadows.small,
-  },
-  passButtonIcon: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: colors.error,
-  },
-  paidMsgButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: colors.primary + '50',
-    ...shadows.small,
-  },
-  paidMsgButtonIcon: {
-    fontSize: 22,
-  },
-  likeButton: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...shadows.medium,
-  },
-  likeButtonIcon: {
-    fontSize: 26,
-    color: colors.text,
-  },
-  actionLabel: {
-    ...typography.captionSmall,
-    color: colors.textSecondary,
-    marginTop: 4,
-    position: 'absolute',
-    bottom: -20,
+    alignItems: 'flex-end',
+    gap: 28,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
+    backgroundColor: 'transparent',
   },
 });

@@ -370,8 +370,8 @@ export class NotificationsService {
   async notifyNewMatch(userId: string, matcherName: string) {
     return this.sendPushNotification(
       userId,
-      'Yeni eslesmeler!',
-      `${matcherName} seninle eslesti`,
+      'Eslesme Oldu!',
+      `Sen ve ${matcherName} birbirinizi begendiniz!`,
       { type: 'NEW_MATCH', matcherName },
       'NEW_MATCH',
     );
@@ -456,6 +456,32 @@ export class NotificationsService {
       `${requesterName} sana iliski istegi gonderdi`,
       { type: 'RELATIONSHIP_REQUEST', requesterName },
       'RELATIONSHIP_REQUEST',
+    );
+  }
+
+  /**
+   * Notify user of a new follower.
+   */
+  async notifyNewFollower(userId: string, followerName: string) {
+    return this.sendPushNotification(
+      userId,
+      'Yeni Takipci',
+      `${followerName} seni takip etmeye basladi. Profilini kesfet!`,
+      { type: 'SYSTEM', followerName },
+      'SYSTEM',
+    );
+  }
+
+  /**
+   * Notify user of a new activity suggestion from a match.
+   */
+  async notifyNewActivity(userId: string, creatorName: string, activityTitle: string) {
+    return this.sendPushNotification(
+      userId,
+      'Yeni Aktivite',
+      `${creatorName} yeni bir aktivite onerdi: ${activityTitle}`,
+      { type: 'SYSTEM', creatorName, activityTitle },
+      'SYSTEM',
     );
   }
 }

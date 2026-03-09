@@ -1,15 +1,64 @@
 // Circular avatar with image or fallback initial and optional verified badge
 
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet, ViewStyle } from 'react-native';
 import { colors } from '../../theme/colors';
 import { layout } from '../../theme/spacing';
+import { PackageTier } from '../../stores/authStore';
 
 interface AvatarProps {
   uri?: string;
   name?: string;
   size?: number;
   showVerified?: boolean;
+  packageTier?: PackageTier;
+}
+
+const GOLD_BORDER_COLOR = '#C5A028';
+const GOLD_GLOW_COLOR = '#D4AF37';
+const PURPLE_BORDER_COLOR = '#8B5CF6';
+
+function getTierRingStyle(
+  tier: PackageTier | undefined,
+  size: number,
+): ViewStyle | null {
+  if (tier === 'reserved') {
+    const outerSize = size + 6;
+    return {
+      width: outerSize,
+      height: outerSize,
+      borderRadius: outerSize / 2,
+      borderWidth: 2,
+      borderColor: GOLD_BORDER_COLOR,
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: GOLD_GLOW_COLOR,
+      shadowOpacity: 0.5,
+      shadowRadius: 10,
+      shadowOffset: { width: 0, height: 0 },
+      elevation: 6,
+    };
+  }
+
+  if (tier === 'gold' || tier === 'pro') {
+    const outerSize = size + 5;
+    return {
+      width: outerSize,
+      height: outerSize,
+      borderRadius: outerSize / 2,
+      borderWidth: 1.5,
+      borderColor: PURPLE_BORDER_COLOR,
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: PURPLE_BORDER_COLOR,
+      shadowOpacity: 0.3,
+      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 0 },
+      elevation: 3,
+    };
+  }
+
+  return null;
 }
 
 export const Avatar: React.FC<AvatarProps> = ({
@@ -17,12 +66,14 @@ export const Avatar: React.FC<AvatarProps> = ({
   name,
   size = layout.avatarMedium,
   showVerified = false,
+  packageTier,
 }) => {
   const initial = name ? name.charAt(0).toUpperCase() : '?';
   const fontSize = size * 0.4;
   const badgeSize = Math.max(size * 0.3, 16);
+  const tierRingStyle = getTierRingStyle(packageTier, size);
 
-  return (
+  const avatarContent = (
     <View style={[styles.container, { width: size, height: size }]}>
       {uri ? (
         <Image
@@ -71,6 +122,12 @@ export const Avatar: React.FC<AvatarProps> = ({
       ) : null}
     </View>
   );
+
+  if (tierRingStyle) {
+    return <View style={tierRingStyle}>{avatarContent}</View>;
+  }
+
+  return avatarContent;
 };
 
 const styles = StyleSheet.create({

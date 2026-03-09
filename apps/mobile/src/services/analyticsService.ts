@@ -44,6 +44,7 @@ export const ANALYTICS_EVENTS = {
   DISCOVERY_UNDO: 'discovery_undo',
   DISCOVERY_DAILY_LIMIT_HIT: 'discovery_daily_limit_hit',
   DISCOVERY_FILTER_CHANGED: 'discovery_filter_changed',
+  SUPREME_IMPRESSION: 'supreme_impression',
 
   // Matches
   MATCH_CREATED: 'match_created',

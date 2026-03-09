@@ -1,16 +1,18 @@
 // Chat list screen — all conversations with last message preview
 // Performance: InteractionManager, memoized components, FlatList tuning
 
-import React, { useEffect, useCallback, memo } from 'react';
+import React, { useEffect, useCallback, useMemo, useRef, memo } from 'react';
 import {
   View,
   Text,
   Image,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   StyleSheet,
   FlatList,
   ActivityIndicator,
   InteractionManager,
+  Animated,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -41,67 +43,93 @@ const formatTimestamp = (dateString: string): string => {
   return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
 };
 
-// Memoized conversation card — prevents re-renders when other conversations change
+// Memoized conversation card — avatar opens profile, rest opens chat
 interface ConversationCardProps {
   item: ConversationSummary;
   onPress: (matchId: string, name: string, photoUrl: string) => void;
+  onAvatarPress: (userId: string) => void;
 }
 
-const MemoizedConversationCard = memo<ConversationCardProps>(({ item, onPress }) => (
-  <TouchableOpacity
-    style={styles.conversationCard}
-    onPress={() => onPress(item.matchId, item.name, item.photoUrl)}
-    activeOpacity={0.7}
-  >
-    {/* Avatar */}
-    <View style={styles.avatarContainer}>
-      {item.photoUrl ? (
-        <Image source={{ uri: item.photoUrl }} style={styles.avatarImage} />
-      ) : (
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{item.name.charAt(0)}</Text>
-        </View>
-      )}
-      {item.isOnline && <View style={styles.onlineDot} />}
-    </View>
+const MemoizedConversationCard = memo<ConversationCardProps>(({ item, onPress, onAvatarPress }) => {
+  const avatarScaleAnim = useRef(new Animated.Value(1)).current;
 
-    {/* Message preview */}
-    <View style={styles.messagePreview}>
-      <View style={styles.nameRow}>
-        <Text
-          style={[
-            styles.contactName,
-            item.unreadCount > 0 && styles.contactNameUnread,
-          ]}
-          numberOfLines={1}
-        >
-          {item.name}
-        </Text>
-        <Text style={styles.timestamp}>
-          {formatTimestamp(item.lastMessageAt)}
-        </Text>
+  const handleAvatarPressIn = useCallback(() => {
+    Animated.spring(avatarScaleAnim, {
+      toValue: 0.92, tension: 200, friction: 10, useNativeDriver: true,
+    }).start();
+  }, [avatarScaleAnim]);
+
+  const handleAvatarPressOut = useCallback(() => {
+    Animated.spring(avatarScaleAnim, {
+      toValue: 1, tension: 200, friction: 10, useNativeDriver: true,
+    }).start();
+  }, [avatarScaleAnim]);
+
+  return (
+    <TouchableOpacity
+      style={styles.conversationCard}
+      onPress={() => onPress(item.matchId, item.name, item.photoUrl)}
+      activeOpacity={0.7}
+    >
+      {/* Avatar — tappable to open profile */}
+      <TouchableWithoutFeedback
+        onPress={() => onAvatarPress(item.userId)}
+        onPressIn={handleAvatarPressIn}
+        onPressOut={handleAvatarPressOut}
+        accessibilityLabel={`${item.name} profilini aç`}
+        accessibilityRole="button"
+        accessibilityHint="Profili görmek için fotoğrafa dokunun"
+      >
+        <Animated.View style={[styles.avatarContainer, { transform: [{ scale: avatarScaleAnim }] }]}>
+          {item.photoUrl ? (
+            <Image source={{ uri: item.photoUrl }} style={styles.avatarImage} />
+          ) : (
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{item.name.charAt(0)}</Text>
+            </View>
+          )}
+          {item.isOnline && <View style={styles.onlineDot} />}
+        </Animated.View>
+      </TouchableWithoutFeedback>
+
+      {/* Message preview */}
+      <View style={styles.messagePreview}>
+        <View style={styles.nameRow}>
+          <Text
+            style={[
+              styles.contactName,
+              item.unreadCount > 0 && styles.contactNameUnread,
+            ]}
+            numberOfLines={1}
+          >
+            {item.name}
+          </Text>
+          <Text style={styles.timestamp}>
+            {formatTimestamp(item.lastMessageAt)}
+          </Text>
+        </View>
+        <View style={styles.lastMessageRow}>
+          <Text
+            style={[
+              styles.lastMessage,
+              item.unreadCount > 0 && styles.lastMessageUnread,
+            ]}
+            numberOfLines={1}
+          >
+            {item.lastMessage || 'Henüz mesaj yok'}
+          </Text>
+          {item.unreadCount > 0 && (
+            <View style={styles.unreadBadge}>
+              <Text style={styles.unreadCount}>
+                {item.unreadCount > 99 ? '99+' : item.unreadCount}
+              </Text>
+            </View>
+          )}
+        </View>
       </View>
-      <View style={styles.lastMessageRow}>
-        <Text
-          style={[
-            styles.lastMessage,
-            item.unreadCount > 0 && styles.lastMessageUnread,
-          ]}
-          numberOfLines={1}
-        >
-          {item.lastMessage || 'Henüz mesaj yok'}
-        </Text>
-        {item.unreadCount > 0 && (
-          <View style={styles.unreadBadge}>
-            <Text style={styles.unreadCount}>
-              {item.unreadCount > 99 ? '99+' : item.unreadCount}
-            </Text>
-          </View>
-        )}
-      </View>
-    </View>
-  </TouchableOpacity>
-), (prev, next) => (
+    </TouchableOpacity>
+  );
+}, (prev, next) => (
   prev.item.matchId === next.item.matchId &&
   prev.item.lastMessage === next.item.lastMessage &&
   prev.item.lastMessageAt === next.item.lastMessageAt &&
@@ -135,6 +163,15 @@ export const ChatListScreen: React.FC = () => {
     return () => task.cancel();
   }, [fetchConversations, hydrateFromStorage]);
 
+  // Sort: unread conversations first, then by most recent
+  const sortedConversations = useMemo(() => {
+    return [...conversations].sort((a, b) => {
+      if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
+      if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
+      return new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime();
+    });
+  }, [conversations]);
+
   const handleConversationPress = useCallback(
     (matchId: string, partnerName: string, partnerPhotoUrl: string) => {
       navigation.navigate('Chat', { matchId, partnerName, partnerPhotoUrl });
@@ -142,11 +179,22 @@ export const ChatListScreen: React.FC = () => {
     [navigation]
   );
 
+  const handleAvatarPress = useCallback(
+    (userId: string) => {
+      navigation.navigate('ProfilePreview', { userId });
+    },
+    [navigation]
+  );
+
   const renderConversationItem = useCallback(
     ({ item }: { item: ConversationSummary }) => (
-      <MemoizedConversationCard item={item} onPress={handleConversationPress} />
+      <MemoizedConversationCard
+        item={item}
+        onPress={handleConversationPress}
+        onAvatarPress={handleAvatarPress}
+      />
     ),
-    [handleConversationPress],
+    [handleConversationPress, handleAvatarPress],
   );
 
   // Stable key extractor reference
@@ -181,9 +229,9 @@ export const ChatListScreen: React.FC = () => {
         <View style={styles.headerSpacer} />
       </View>
 
-      {/* Conversation list — performance-tuned FlatList */}
+      {/* Conversation list — performance-tuned FlatList, unread first */}
       <FlatList
-        data={conversations}
+        data={sortedConversations}
         keyExtractor={keyExtractor}
         renderItem={renderConversationItem}
         contentContainerStyle={styles.listContent}
