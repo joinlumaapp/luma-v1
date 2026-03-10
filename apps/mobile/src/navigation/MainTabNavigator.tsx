@@ -228,6 +228,11 @@ const MatchesStackNavigator: React.FC = () => (
     />
     <MatchesStack.Screen name="ChatList" component={ChatListScreen} />
     <MatchesStack.Screen name="Chat" component={ChatScreen} />
+    <MatchesStack.Screen
+      name="JetonMarket"
+      component={JetonMarketScreen}
+      options={{ animation: 'slide_from_bottom' }}
+    />
     <MatchesStack.Screen name="DatePlanner" component={DatePlannerScreen} />
     <MatchesStack.Screen name="LikesYou" component={LikesYouScreen} />
     <MatchesStack.Screen

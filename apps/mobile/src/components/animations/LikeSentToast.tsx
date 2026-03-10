@@ -135,6 +135,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 12,
     elevation: 6,
+    overflow: 'hidden',
   },
   heartDot: {
     width: 8,

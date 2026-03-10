@@ -8,9 +8,9 @@
     "scheme": "luma",
     "icon": "./assets/icon.png",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/splash-logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0F0F23"
+      "backgroundColor": "#3D1B5B"
     },
     "updates": {
       "enabled": false

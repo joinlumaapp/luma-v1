@@ -31,6 +31,7 @@ import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 import { useChatStore } from '../../stores/chatStore';
 import { useAuthStore } from '../../stores/authStore';
 import { useMatchStore } from '../../stores/matchStore';
+import { useCoinStore, INSTANT_MESSAGE_COST } from '../../stores/coinStore';
 import { MESSAGE_CONFIG } from '../../constants/config';
 import {
   MemoizedMessageBubble,
@@ -277,9 +278,35 @@ export const ChatScreen: React.FC = () => {
     }
   }, [messages.length]);
 
+  const coinBalance = useCoinStore((state) => state.balance);
+  const sendInstantMessage = useCoinStore((state) => state.sendInstantMessage);
+  const packageTier = useAuthStore((state) => state.user?.packageTier ?? 'free');
+  const isPremiumTier = packageTier !== 'free';
+
   const handleSend = useCallback(async () => {
     const trimmed = inputText.trim();
     if (!trimmed || isSending) return;
+
+    // Free users must spend Jeton to send messages (premium users send free)
+    if (!isPremiumTier) {
+      if (coinBalance < INSTANT_MESSAGE_COST) {
+        Alert.alert(
+          'Yetersiz Jeton',
+          `Mesaj göndermek için ${INSTANT_MESSAGE_COST} Jeton gerekli. Jeton Mağazası'na gitmek ister misin?`,
+          [
+            { text: 'Vazgeç', style: 'cancel' },
+            {
+              text: 'Jeton Al',
+              onPress: () => navigation.navigate('JetonMarket'),
+            },
+          ],
+        );
+        return;
+      }
+
+      const spent = await sendInstantMessage(matchId);
+      if (!spent) return;
+    }
 
     const sent = await sendMessage(matchId, trimmed);
     if (sent) {
@@ -288,7 +315,7 @@ export const ChatScreen: React.FC = () => {
     } else {
       setShowLimitReached(true);
     }
-  }, [inputText, isSending, matchId, sendMessage]);
+  }, [inputText, isSending, matchId, sendMessage, isPremiumTier, coinBalance, sendInstantMessage, navigation]);
 
   // Image picker handler
   const handlePickImage = useCallback(async () => {

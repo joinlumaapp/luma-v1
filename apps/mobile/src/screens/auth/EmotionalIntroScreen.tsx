@@ -1,6 +1,6 @@
 // EmotionalIntroScreen — Happn-style landing page
-// Lila/purple gradient background, couple photo, LUMA logo, Google + Diger secenekler
-// Founder Test Panel: DEV button (top-right) or long-press LUMA logo 3s
+// Lila/purple gradient background, LUMA logo, Google + Diger secenekler
+// Founder Test Panel: long-press LUMA logo 3s to open
 
 import React, { useState, useCallback } from 'react';
 import {
@@ -12,7 +12,6 @@ import {
   Platform,
   Modal,
   Pressable,
-  ImageBackground,
   Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -123,8 +122,6 @@ const FounderTestPanel: React.FC<{
 // Main screen — Happn-style landing
 // ────────────────────────────────────────────
 
-const coupleImage = require('../../../assets/intro/couple-1.png');
-
 const EmotionalIntroScreen: React.FC = () => {
   const navigation = useNavigation<IntroNavigationProp>();
   const [showTestPanel, setShowTestPanel] = useState(false);
@@ -161,10 +158,8 @@ const EmotionalIntroScreen: React.FC = () => {
 
   const handleOnboardingTest = useCallback(() => {
     setShowTestPanel(false);
-    // Clear old state first
     storage.clearAll();
     useProfileStore.getState().reset();
-    // Set authenticated but NOT onboarded → RootNavigator goes to OnboardingNavigator
     const { login, setStartedOnboarding } = useAuthStore.getState();
     login('dev-access-token', 'dev-refresh-token', {
       id: 'dev-user-001',
@@ -197,84 +192,76 @@ const EmotionalIntroScreen: React.FC = () => {
     }
   }, []);
 
-  const handleDevPress = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setShowTestPanel(true);
-  }, []);
-
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
 
-      <ImageBackground
-        source={coupleImage}
-        style={styles.backgroundImage}
-        resizeMode="cover"
+      {/* Full-screen gradient background */}
+      <LinearGradient
+        colors={['rgba(180, 140, 200, 0.3)', 'rgba(160, 110, 180, 0.7)', 'rgba(130, 80, 160, 0.92)']}
+        locations={[0, 0.5, 1]}
+        style={styles.gradientBackground}
       >
-        {/* Gradient overlay */}
-        <LinearGradient
-          colors={['rgba(180, 140, 200, 0.3)', 'rgba(160, 110, 180, 0.7)', 'rgba(130, 80, 160, 0.92)']}
-          locations={[0, 0.5, 1]}
-          style={styles.gradientOverlay}
-        >
-          {/* DEV test button */}
-          {__DEV__ && (
-            <TouchableOpacity
-              style={styles.devButton}
-              onPress={handleDevPress}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.devButtonText}>DEV</Text>
-            </TouchableOpacity>
-          )}
+        {/* DEV test button */}
+        {__DEV__ && (
+          <TouchableOpacity
+            style={styles.devButton}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              setShowTestPanel(true);
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.devButtonText}>DEV</Text>
+          </TouchableOpacity>
+        )}
 
-          {/* Top spacer */}
-          <View style={styles.topSpacer} />
+        {/* Top spacer */}
+        <View style={styles.topSpacer} />
 
-          {/* Center — LUMA logo */}
-          <View style={styles.logoSection}>
-            <Pressable onLongPress={handleLogoLongPress} delayLongPress={3000}>
-              <Text style={styles.logoText}>LUMA</Text>
-            </Pressable>
-            <Ionicons name="heart" size={20} color="rgba(255,255,255,0.7)" style={styles.heartIcon} />
-          </View>
+        {/* Center — LUMA logo */}
+        <View style={styles.logoSection}>
+          <Pressable onLongPress={handleLogoLongPress} delayLongPress={3000}>
+            <Text style={styles.logoText}>LUMA</Text>
+          </Pressable>
+          <Ionicons name="heart" size={20} color="rgba(255,255,255,0.7)" style={styles.heartIcon} />
+        </View>
 
-          {/* Bottom section — buttons */}
-          <View style={styles.bottomSection}>
-            {/* Google button */}
-            <TouchableOpacity
-              style={styles.googleButton}
-              onPress={handleGoogleSignIn}
-              activeOpacity={0.9}
-            >
-              <Ionicons name="logo-google" size={20} color="#1A1A1A" />
-              <Text style={styles.googleButtonText}>Google ile bağlan</Text>
-            </TouchableOpacity>
+        {/* Bottom section — buttons */}
+        <View style={styles.bottomSection}>
+          {/* Google button */}
+          <TouchableOpacity
+            style={styles.googleButton}
+            onPress={handleGoogleSignIn}
+            activeOpacity={0.9}
+          >
+            <Ionicons name="logo-google" size={20} color="#1A1A1A" />
+            <Text style={styles.googleButtonText}>Google ile bağlan</Text>
+          </TouchableOpacity>
 
-            {/* Diger secenekler button */}
-            <TouchableOpacity
-              style={styles.otherButton}
-              onPress={handleOtherOptions}
-              activeOpacity={0.9}
-            >
-              <Text style={styles.otherButtonText}>Diğer seçenekler</Text>
-            </TouchableOpacity>
+          {/* Diger secenekler button */}
+          <TouchableOpacity
+            style={styles.otherButton}
+            onPress={handleOtherOptions}
+            activeOpacity={0.9}
+          >
+            <Text style={styles.otherButtonText}>Diğer seçenekler</Text>
+          </TouchableOpacity>
 
-            {/* Login link for existing users */}
-            <TouchableOpacity onPress={handleLogin} activeOpacity={0.7}>
-              <Text style={styles.loginText}>
-                {'Zaten hesabın var mı? '}
-                <Text style={styles.loginLink}>Giriş yap</Text>
-              </Text>
-            </TouchableOpacity>
-
-            {/* Privacy note */}
-            <Text style={styles.privacyText}>
-              Kaydolarak, Genel Kullanım Koşullarımızı ve Gizlilik Politikamızı kabul etmiş olursun.
+          {/* Login link for existing users */}
+          <TouchableOpacity onPress={handleLogin} activeOpacity={0.7}>
+            <Text style={styles.loginText}>
+              {'Zaten hesabın var mı? '}
+              <Text style={styles.loginLink}>Giriş yap</Text>
             </Text>
-          </View>
-        </LinearGradient>
-      </ImageBackground>
+          </TouchableOpacity>
+
+          {/* Privacy note */}
+          <Text style={styles.privacyText}>
+            Kaydolarak, Genel Kullanım Koşullarımızı ve Gizlilik Politikamızı kabul etmiş olursun.
+          </Text>
+        </View>
+      </LinearGradient>
 
       {/* Founder Test Mode modal */}
       {__DEV__ && (
@@ -302,17 +289,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1A1A1A',
   },
-  backgroundImage: {
-    flex: 1,
-  },
-  gradientOverlay: {
+  gradientBackground: {
     flex: 1,
     justifyContent: 'space-between',
   },
-  topSpacer: {
-    height: Platform.OS === 'ios' ? 80 : 60,
-  },
-  // DEV button — more visible on dark bg
   devButton: {
     position: 'absolute',
     top: Platform.OS === 'ios' ? 56 : 40,
@@ -330,6 +310,9 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: 1.5,
+  },
+  topSpacer: {
+    height: Platform.OS === 'ios' ? 80 : 60,
   },
   // LUMA logo section
   logoSection: {

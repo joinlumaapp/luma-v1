@@ -487,8 +487,12 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
       dailyRemaining: Math.max(0, state.dailyRemaining - 1),
     })),
 
-  resetDaily: () =>
-    set({ dailyRemaining: DISCOVERY_CONFIG.FREE_DAILY_LIKES }),
+  resetDaily: () => {
+    // Use tier-based limit; imports from authStore at call-time to avoid circular deps
+    const tier = (require('../stores/authStore').useAuthStore.getState().user?.packageTier ?? 'free') as keyof typeof DISCOVERY_CONFIG.DAILY_LIKES;
+    const limit = DISCOVERY_CONFIG.DAILY_LIKES[tier];
+    set({ dailyRemaining: limit === -1 ? 9999 : limit });
+  },
 
   dismissMatch: () =>
     set({

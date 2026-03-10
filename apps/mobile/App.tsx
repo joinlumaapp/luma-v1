@@ -2,7 +2,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, AppState, StatusBar as RNStatusBar, StyleSheet, View } from 'react-native';
+import { AppState, StatusBar as RNStatusBar, StyleSheet } from 'react-native';
+import { LoadingScreen } from './src/components/common/LoadingScreen';
 import type { AppStateStatus } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -153,13 +154,9 @@ export default function App(): React.JSX.Element {
     };
   }, []);
 
-  // Wait for storage to load before rendering the app
+  // Wait for storage to load — show animated LUMA splash
   if (!storageReady) {
-    return (
-      <View style={styles.splash}>
-        <ActivityIndicator size="large" color="#8B5CF6" />
-      </View>
-    );
+    return <LoadingScreen />;
   }
 
   return (
@@ -182,12 +179,6 @@ export default function App(): React.JSX.Element {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#F5F0E8',
-  },
-  splash: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5F0E8',
+    backgroundColor: '#3D1B5B',
   },
 });

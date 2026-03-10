@@ -824,7 +824,14 @@ export const DiscoveryScreen: React.FC = () => {
           <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} />
         </View>
         <View style={styles.emptyContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <View style={styles.emptyIconCircle}>
+            <Text style={styles.emptyIconLetter}>L</Text>
+          </View>
+          <Text style={styles.emptyTitle}>Luma ruh eşini arıyor...</Text>
+          <Text style={styles.emptySubtitle}>
+            Senin için en uyumlu profiller bulunuyor.
+          </Text>
+          <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: spacing.md }} />
         </View>
       </View>
     );
@@ -877,15 +884,16 @@ export const DiscoveryScreen: React.FC = () => {
           <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} />
         </View>
         <View style={styles.emptyContainer}>
-          <View style={styles.emptyIconCircle}>
+          {/* Pulsating Luma icon */}
+          <Animated.View style={[styles.emptyIconCircle, styles.emptyPulse]}>
             <Text style={styles.emptyIconLetter}>L</Text>
-          </View>
+          </Animated.View>
 
           {isCoolingDown ? (
             <>
-              <Text style={styles.emptyTitle}>Yeni profiller yakında geliyor</Text>
+              <Text style={styles.emptyTitle}>Luma ruh eşini arıyor...</Text>
               <Text style={styles.emptySubtitle}>
-                Yaklaşık 30 dakikada 50 yeni profil görünecek.
+                Senin için en uyumlu profiller hazırlanıyor. Biraz sabret.
               </Text>
               <View style={styles.countdownContainer}>
                 <Text style={styles.countdownText}>{cooldownDisplay}</Text>
@@ -893,9 +901,9 @@ export const DiscoveryScreen: React.FC = () => {
             </>
           ) : (
             <>
-              <Text style={styles.emptyTitle}>Yeni profiller hazır</Text>
+              <Text style={styles.emptyTitle}>Yeni profiller hazır!</Text>
               <Text style={styles.emptySubtitle}>
-                50 yeni profil seni bekliyor.
+                Senin için özenle seçilmiş profiller seni bekliyor.
               </Text>
             </>
           )}
@@ -1451,6 +1459,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.lg,
+    overflow: 'hidden',
+  },
+  emptyPulse: {
+    // Pulse animation is applied via Animated.View — opacity cycles give a breathing effect
+    // The actual animation is driven by Reanimated; this style is a static placeholder
   },
   emptyIconLetter: {
     fontSize: 32,

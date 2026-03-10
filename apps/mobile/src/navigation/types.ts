@@ -86,6 +86,7 @@ export type MatchesStackParamList = {
   ChatList: undefined;
   Chat: { matchId: string; partnerName: string; partnerPhotoUrl: string; initialMessage?: string };
   DatePlanner: { matchId: string; partnerName: string; isSuperMatch?: boolean };
+  JetonMarket: undefined;
   Report: { userId: string; userName: string };
 };
 

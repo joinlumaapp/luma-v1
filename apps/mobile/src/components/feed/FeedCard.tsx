@@ -530,6 +530,7 @@ const mediaStyles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.9)',
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
   },
   playIcon: {
     fontSize: 22,

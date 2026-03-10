@@ -37,6 +37,7 @@ function getTierRingStyle(
       shadowRadius: 10,
       shadowOffset: { width: 0, height: 0 },
       elevation: 6,
+      overflow: 'hidden',
     };
   }
 
@@ -55,6 +56,7 @@ function getTierRingStyle(
       shadowRadius: 6,
       shadowOffset: { width: 0, height: 0 },
       elevation: 3,
+      overflow: 'hidden',
     };
   }
 

@@ -909,6 +909,7 @@ function createDynamicStyles(c: ThemeColors) {
       padding: spacing.lg,
       width: '100%',
       maxWidth: 340,
+      overflow: 'hidden',
     },
     modalTitle: {
       ...typography.h4,

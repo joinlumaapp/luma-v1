@@ -85,7 +85,7 @@ export const MatchDetailScreen: React.FC = () => {
   const handleSuperLike = useCallback(async () => {
     if (coinBalance < SUPER_LIKE_COST) {
       Alert.alert('Yetersiz Jeton', `Süper Beğeni için ${SUPER_LIKE_COST} Jeton gerekiyor.`, [
-        { text: 'Jeton Al', onPress: () => navigation.navigate('MembershipPlans' as never) },
+        { text: 'Jeton Al', onPress: () => navigation.navigate('JetonMarket') },
         { text: 'Tamam', style: 'cancel' },
       ]);
       return;
@@ -99,7 +99,7 @@ export const MatchDetailScreen: React.FC = () => {
   const handleBoost = useCallback(async () => {
     if (coinBalance < PROFILE_BOOST_COST) {
       Alert.alert('Yetersiz Jeton', `Boost için ${PROFILE_BOOST_COST} Jeton gerekiyor.`, [
-        { text: 'Jeton Al', onPress: () => navigation.navigate('MembershipPlans' as never) },
+        { text: 'Jeton Al', onPress: () => navigation.navigate('JetonMarket') },
         { text: 'Tamam', style: 'cancel' },
       ]);
       return;

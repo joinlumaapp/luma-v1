@@ -11,9 +11,12 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors } from '../../theme/colors';
+import { colors, glassmorphism } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
+import { Ionicons } from '@expo/vector-icons';
+
+const SCREEN_BG = '#FDF9F0';
 import { PACKAGE_TIERS } from '../../constants/config';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
 import { paymentService } from '../../services/paymentService';
@@ -259,7 +262,7 @@ export const PackagesScreen: React.FC = () => {
           style={styles.backButton}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Text style={styles.backText}>{'<'}</Text>
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Paketler</Text>
         <View style={styles.headerSpacer} />
@@ -441,34 +444,30 @@ export const PackagesScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: SCREEN_BG,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
     height: layout.headerHeight,
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.surface,
+    backgroundColor: glassmorphism.bg,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  backText: {
-    ...typography.h4,
-    color: colors.text,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: glassmorphism.border,
   },
   headerTitle: {
-    ...typography.bodyLarge,
+    ...typography.h4,
     color: colors.text,
-    fontWeight: '600',
+    flex: 1,
+    marginLeft: spacing.sm,
   },
   headerSpacer: {
     width: 40,
@@ -494,7 +493,7 @@ const styles = StyleSheet.create({
 
   // Package card
   packageCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
     marginBottom: spacing.md,
@@ -630,7 +629,7 @@ const styles = StyleSheet.create({
   // Comparison grid
   comparisonSection: {
     marginTop: spacing.lg,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
     borderRadius: borderRadius.xl,
     padding: spacing.md,
     overflow: 'hidden',
