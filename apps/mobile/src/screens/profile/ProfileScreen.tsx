@@ -286,7 +286,7 @@ export const ProfileScreen: React.FC = () => {
 
   const handleBoostBuyGold = useCallback(() => {
     setShowBoostModal(false);
-    navigation.navigate('Packages');
+    navigation.navigate('MembershipPlans');
   }, [navigation]);
 
   useEffect(() => {
@@ -496,7 +496,7 @@ export const ProfileScreen: React.FC = () => {
         {/* Premium — gold shimmer */}
         <View style={styles.actionButtonFlex}>
           <GoldShimmerButton
-            onPress={() => navigation.navigate('Packages')}
+            onPress={() => navigation.navigate('MembershipPlans')}
             label="Premium"
             icon="diamond"
           />

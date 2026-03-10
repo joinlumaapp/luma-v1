@@ -17,22 +17,38 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, palette, glassmorphism } from '../../theme/colors';
+import { palette } from '../../theme/colors';
 import { typography, fontWeights, fontSizes } from '../../theme/typography';
-import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
+import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
 import { useCoinStore, COIN_PACKS, type CoinPack } from '../../stores/coinStore';
 import { CoinBalance } from '../../components/common/CoinBalance';
 
 // ─── Constants ───────────────────────────────────────────────────────
 
-const SCREEN_BG = '#FDF9F0';
+const SCREEN_BG = '#3D1B5B';
 
 const GOLD_24K = {
   light: '#FFD700',
   medium: '#D4AF37',
   dark: '#B8860B',
   border: '#C5A028',
+} as const;
+
+// Dark theme glass tokens
+const GLASS = {
+  bg: 'rgba(255,255,255,0.06)',
+  border: 'rgba(255,255,255,0.12)',
+  borderSubtle: 'rgba(255,255,255,0.08)',
+  textPrimary: '#FFFFFF',
+  textSecondary: 'rgba(255,255,255,0.6)',
+  textTertiary: 'rgba(255,255,255,0.4)',
+  textMuted: 'rgba(255,255,255,0.3)',
+  textHalf: 'rgba(255,255,255,0.5)',
+  textBody: 'rgba(255,255,255,0.85)',
+  divider: 'rgba(255,255,255,0.08)',
+  goldAccent: '#D4AF37',
+  purpleAccent: '#A78BFA',
 } as const;
 
 type ActiveTab = 'packages' | 'coins';
@@ -167,9 +183,9 @@ const FeatureRow: React.FC<FeatureRowProps> = ({ label, status, detail, accentCo
       case 'included':
         return { name: 'checkmark-circle', color: accentColor };
       case 'excluded':
-        return { name: 'close-circle', color: palette.gray[400] };
+        return { name: 'close-circle', color: GLASS.textMuted };
       case 'locked':
-        return { name: 'lock-closed', color: palette.gray[400] };
+        return { name: 'lock-closed', color: GLASS.textMuted };
     }
   };
 
@@ -201,6 +217,7 @@ const featureStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 6,
+    paddingRight: 8,
     gap: spacing.sm,
   },
   textContainer: {
@@ -211,15 +228,19 @@ const featureStyles = StyleSheet.create({
   },
   label: {
     ...typography.bodySmall,
-    color: colors.text,
+    color: GLASS.textBody,
     flex: 1,
   },
   labelMuted: {
-    color: palette.gray[400],
+    color: GLASS.textMuted,
   },
   detail: {
     ...typography.caption,
     fontWeight: fontWeights.semibold,
+    flexShrink: 0,
+    marginLeft: spacing.md,
+    textAlign: 'right',
+    paddingRight: 2,
   },
 });
 
@@ -234,19 +255,6 @@ interface TierCardProps {
 const SupremeCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
   <View style={[cardStyles.cardOuter, cardStyles.supremeShadow]}>
     <View style={[cardStyles.card, cardStyles.supremeCard]}>
-      {/* "En Populer" badge */}
-      <View style={cardStyles.popularBadge}>
-        <LinearGradient
-          colors={[GOLD_24K.light, GOLD_24K.medium]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={cardStyles.popularBadgeGradient}
-        >
-          <Ionicons name="star" size={12} color={palette.white} />
-          <Text style={cardStyles.popularBadgeText}>En Popüler</Text>
-        </LinearGradient>
-      </View>
-
       {/* Header */}
       <View style={cardStyles.cardHeader}>
         <View style={cardStyles.tierIconContainer}>
@@ -258,27 +266,37 @@ const SupremeCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
           </LinearGradient>
         </View>
         <View style={cardStyles.tierInfo}>
-          <Text style={[cardStyles.tierName, { color: GOLD_24K.medium }]}>Supreme</Text>
+          <Text style={[cardStyles.tierName, { color: GLASS.goldAccent }]}>Supreme</Text>
           <Text style={cardStyles.tierSubtitle}>Elite deneyim</Text>
         </View>
-        <View style={cardStyles.priceContainer}>
-          <Text style={[cardStyles.price, { color: GOLD_24K.dark }]}>₺249</Text>
+        <View style={cardStyles.priceRight}>
+          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>₺599</Text>
           <Text style={cardStyles.pricePeriod}>/ay</Text>
+          {/* "En Populer" badge — below price */}
+          <LinearGradient
+            colors={['#F9D423', GLASS.goldAccent]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={cardStyles.popularBadgeGradient}
+          >
+            <Ionicons name="star" size={10} color={palette.white} />
+            <Text style={cardStyles.popularBadgeText}>En Popüler</Text>
+          </LinearGradient>
         </View>
       </View>
 
       {/* Current plan badge */}
       {isCurrentPlan && (
-        <View style={[cardStyles.currentBadge, { backgroundColor: GOLD_24K.light + '20' }]}>
-          <Ionicons name="checkmark-circle" size={16} color={GOLD_24K.medium} />
-          <Text style={[cardStyles.currentBadgeText, { color: GOLD_24K.medium }]}>
+        <View style={[cardStyles.currentBadge, { backgroundColor: 'rgba(212,175,55,0.15)' }]}>
+          <Ionicons name="checkmark-circle" size={16} color={GLASS.goldAccent} />
+          <Text style={[cardStyles.currentBadgeText, { color: GLASS.goldAccent }]}>
             Mevcut Plan
           </Text>
         </View>
       )}
 
       {/* Divider */}
-      <View style={[cardStyles.divider, { borderColor: GOLD_24K.border + '30' }]} />
+      <View style={[cardStyles.divider, { borderColor: GLASS.divider }]} />
 
       {/* Features */}
       <View style={cardStyles.featureList}>
@@ -288,7 +306,7 @@ const SupremeCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
             label={feature.label}
             status={feature.supreme}
             detail={feature.supremeDetail}
-            accentColor={GOLD_24K.medium}
+            accentColor={GLASS.goldAccent}
           />
         ))}
       </View>
@@ -303,12 +321,12 @@ const SupremeCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
           accessibilityLabel="Supreme planına yükselt"
         >
           <LinearGradient
-            colors={[GOLD_24K.light, GOLD_24K.medium, GOLD_24K.dark]}
+            colors={['#F9D423', GLASS.goldAccent]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={cardStyles.ctaGradient}
           >
-            <Text style={cardStyles.ctaText}>Supreme'e Yükselt</Text>
+            <Text style={cardStyles.ctaTextDark}>Supreme'e Yükselt</Text>
           </LinearGradient>
         </TouchableOpacity>
       )}
@@ -324,34 +342,34 @@ const PremiumCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
       <View style={cardStyles.cardHeader}>
         <View style={cardStyles.tierIconContainer}>
           <LinearGradient
-            colors={[palette.purple[400], palette.purple[700]]}
+            colors={['#A78BFA', '#8B5CF6']}
             style={cardStyles.tierIcon}
           >
             <Ionicons name="rocket" size={24} color={palette.white} />
           </LinearGradient>
         </View>
         <View style={cardStyles.tierInfo}>
-          <Text style={[cardStyles.tierName, { color: palette.purple[600] }]}>Premium</Text>
+          <Text style={[cardStyles.tierName, { color: GLASS.purpleAccent }]}>Premium</Text>
           <Text style={cardStyles.tierSubtitle}>Tam erişim</Text>
         </View>
         <View style={cardStyles.priceContainer}>
-          <Text style={[cardStyles.price, { color: palette.purple[700] }]}>₺99</Text>
+          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>₺349</Text>
           <Text style={cardStyles.pricePeriod}>/ay</Text>
         </View>
       </View>
 
       {/* Current plan badge */}
       {isCurrentPlan && (
-        <View style={[cardStyles.currentBadge, { backgroundColor: palette.purple[50] }]}>
-          <Ionicons name="checkmark-circle" size={16} color={palette.purple[500]} />
-          <Text style={[cardStyles.currentBadgeText, { color: palette.purple[500] }]}>
+        <View style={[cardStyles.currentBadge, { backgroundColor: 'rgba(167,139,250,0.15)' }]}>
+          <Ionicons name="checkmark-circle" size={16} color={GLASS.purpleAccent} />
+          <Text style={[cardStyles.currentBadgeText, { color: GLASS.purpleAccent }]}>
             Mevcut Plan
           </Text>
         </View>
       )}
 
       {/* Divider */}
-      <View style={[cardStyles.divider, { borderColor: palette.purple[100] }]} />
+      <View style={[cardStyles.divider, { borderColor: GLASS.divider }]} />
 
       {/* Features */}
       <View style={cardStyles.featureList}>
@@ -361,7 +379,7 @@ const PremiumCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
             label={feature.label}
             status={feature.premium}
             detail={feature.premiumDetail}
-            accentColor={palette.purple[500]}
+            accentColor={GLASS.purpleAccent}
           />
         ))}
       </View>
@@ -376,7 +394,7 @@ const PremiumCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
           accessibilityLabel="Premium planına yükselt"
         >
           <LinearGradient
-            colors={[palette.purple[400], palette.purple[600], palette.purple[700]]}
+            colors={['#A78BFA', '#8B5CF6']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={cardStyles.ctaGradient}
@@ -396,25 +414,25 @@ const FreeCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
       {/* Header */}
       <View style={cardStyles.cardHeader}>
         <View style={cardStyles.tierIconContainer}>
-          <View style={[cardStyles.tierIcon, { backgroundColor: palette.gray[200] }]}>
-            <Ionicons name="person" size={24} color={palette.gray[600]} />
+          <View style={[cardStyles.tierIcon, { backgroundColor: 'rgba(255,255,255,0.08)' }]}>
+            <Ionicons name="person" size={24} color={GLASS.textHalf} />
           </View>
         </View>
         <View style={cardStyles.tierInfo}>
-          <Text style={[cardStyles.tierName, { color: palette.gray[700] }]}>Ücretsiz</Text>
+          <Text style={[cardStyles.tierName, { color: GLASS.textHalf }]}>Ücretsiz</Text>
           <Text style={cardStyles.tierSubtitle}>Temel özellikler</Text>
         </View>
         <View style={cardStyles.priceContainer}>
-          <Text style={[cardStyles.price, { color: palette.gray[600] }]}>₺0</Text>
+          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>₺0</Text>
           <Text style={cardStyles.pricePeriod}>/ay</Text>
         </View>
       </View>
 
       {/* Current plan badge */}
       {isCurrentPlan && (
-        <View style={[cardStyles.currentBadge, { backgroundColor: palette.gray[100] }]}>
-          <Ionicons name="checkmark-circle" size={16} color={palette.gray[500]} />
-          <Text style={[cardStyles.currentBadgeText, { color: palette.gray[500] }]}>
+        <View style={[cardStyles.currentBadge, { backgroundColor: 'rgba(255,255,255,0.08)' }]}>
+          <Ionicons name="checkmark-circle" size={16} color={GLASS.textHalf} />
+          <Text style={[cardStyles.currentBadgeText, { color: GLASS.textHalf }]}>
             Mevcut Plan
           </Text>
         </View>
@@ -422,14 +440,14 @@ const FreeCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
 
       {/* Ad indicator */}
       <View style={cardStyles.adIndicator}>
-        <Ionicons name="videocam-outline" size={16} color={palette.gray[500]} />
+        <Ionicons name="videocam-outline" size={16} color={GLASS.textHalf} />
         <Text style={cardStyles.adIndicatorText}>
           Devam etmek için reklam izle
         </Text>
       </View>
 
       {/* Divider */}
-      <View style={[cardStyles.divider, { borderColor: palette.gray[200] }]} />
+      <View style={[cardStyles.divider, { borderColor: GLASS.divider }]} />
 
       {/* Features */}
       <View style={cardStyles.featureList}>
@@ -439,7 +457,7 @@ const FreeCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
             label={feature.label}
             status={feature.free}
             detail={feature.freeDetail}
-            accentColor={palette.gray[600]}
+            accentColor={GLASS.textTertiary}
           />
         ))}
       </View>
@@ -470,7 +488,7 @@ const CoinStack: React.FC<{ count: number }> = ({ count }) => {
       {Array.from({ length: stackCount }).map((_, index) => (
         <LinearGradient
           key={index}
-          colors={[GOLD_24K.light, GOLD_24K.medium, GOLD_24K.dark]}
+          colors={['#F9D423', GLASS.goldAccent, '#B8860B']}
           style={[
             coinStackStyles.coin,
             {
@@ -504,8 +522,8 @@ const coinStackStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: GOLD_24K.border,
-    shadowColor: GOLD_24K.light,
+    borderColor: GLASS.goldAccent,
+    shadowColor: GLASS.goldAccent,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.5,
     shadowRadius: 6,
@@ -532,7 +550,7 @@ const CoinPackCard: React.FC<{
     {pack.bestValue && (
       <View style={coinCardStyles.badge}>
         <LinearGradient
-          colors={[GOLD_24K.light, GOLD_24K.medium]}
+          colors={['#F9D423', GLASS.goldAccent]}
           style={coinCardStyles.badgeGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
@@ -546,7 +564,7 @@ const CoinPackCard: React.FC<{
     {pack.coins === 500 && (
       <View style={coinCardStyles.badge}>
         <LinearGradient
-          colors={[palette.purple[500], palette.purple[700]]}
+          colors={['#F9D423', GLASS.goldAccent]}
           style={coinCardStyles.badgeGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
@@ -556,7 +574,7 @@ const CoinPackCard: React.FC<{
       </View>
     )}
 
-    <View style={coinCardStyles.content}>
+    <View style={[coinCardStyles.content, (pack.bestValue || pack.coins === 500) && { paddingTop: spacing.md }]}>
       <CoinStack count={pack.coins} />
 
       <View style={coinCardStyles.info}>
@@ -575,13 +593,13 @@ const CoinPackCard: React.FC<{
       disabled={isLoading}
     >
       <LinearGradient
-        colors={[GOLD_24K.light, GOLD_24K.medium]}
+        colors={['#F9D423', GLASS.goldAccent]}
         style={coinCardStyles.buyGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
         {isLoading ? (
-          <ActivityIndicator size="small" color="#FFFFFF" />
+          <ActivityIndicator size="small" color="#1A1A1A" />
         ) : (
           <Text style={coinCardStyles.buyText}>Satın Al</Text>
         )}
@@ -592,14 +610,12 @@ const CoinPackCard: React.FC<{
 
 const coinCardStyles = StyleSheet.create({
   card: {
-    backgroundColor: glassmorphism.bg,
-    borderRadius: borderRadius.xl,
+    backgroundColor: GLASS.bg,
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: glassmorphism.borderGold,
-    padding: spacing.lg,
+    borderColor: GLASS.border,
+    padding: 20,
     marginBottom: spacing.md,
-    overflow: 'hidden',
-    ...shadows.medium,
   },
   badge: {
     position: 'absolute',
@@ -614,7 +630,6 @@ const coinCardStyles = StyleSheet.create({
     paddingHorizontal: spacing.sm + 2,
     paddingVertical: spacing.xs,
     borderBottomLeftRadius: borderRadius.md,
-    overflow: 'hidden',
   },
   badgeText: {
     ...typography.captionSmall,
@@ -633,37 +648,33 @@ const coinCardStyles = StyleSheet.create({
     flex: 1,
   },
   amount: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: fontWeights.bold,
-    color: '#2C1810',
+    color: GLASS.textPrimary,
   },
   label: {
     ...typography.bodySmall,
-    color: '#8B7355',
+    color: GLASS.textHalf,
     marginBottom: spacing.xs,
   },
   price: {
     ...typography.h4,
-    color: GOLD_24K.dark,
+    color: GLASS.goldAccent,
     fontWeight: fontWeights.bold,
   },
   buyButton: {
-    borderRadius: borderRadius.md,
-    overflow: 'hidden',
+    borderRadius: 28,
   },
   buyGradient: {
-    height: 48,
+    height: 52,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: borderRadius.md,
+    borderRadius: 28,
   },
   buyText: {
     ...typography.button,
-    color: '#FFFFFF',
+    color: '#1A1A1A',
     fontWeight: fontWeights.bold,
-    textShadowColor: 'rgba(0,0,0,0.15)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
   },
 });
 
@@ -757,7 +768,7 @@ export const MembershipPlansScreen: React.FC = () => {
           accessibilityLabel="Geri"
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons name="arrow-back" size={24} color={GLASS.textPrimary} />
         </TouchableOpacity>
         <Text style={screenStyles.headerTitle}>Üyelik & Jeton</Text>
         <CoinBalance size="small" onPress={() => setActiveTab('coins')} />
@@ -776,7 +787,7 @@ export const MembershipPlansScreen: React.FC = () => {
           <Ionicons
             name="ribbon"
             size={18}
-            color={activeTab === 'packages' ? palette.purple[600] : palette.gray[400]}
+            color={activeTab === 'packages' ? GLASS.goldAccent : GLASS.textHalf}
           />
           <Text
             style={[
@@ -791,7 +802,7 @@ export const MembershipPlansScreen: React.FC = () => {
         <TouchableOpacity
           style={[
             screenStyles.tab,
-            activeTab === 'coins' && screenStyles.tabActiveGold,
+            activeTab === 'coins' && screenStyles.tabActive,
           ]}
           onPress={() => setActiveTab('coins')}
           activeOpacity={0.7}
@@ -800,7 +811,7 @@ export const MembershipPlansScreen: React.FC = () => {
           <Text
             style={[
               screenStyles.tabText,
-              activeTab === 'coins' && screenStyles.tabTextActiveGold,
+              activeTab === 'coins' && screenStyles.tabTextActive,
             ]}
           >
             Jetonlar
@@ -869,7 +880,7 @@ export const MembershipPlansScreen: React.FC = () => {
             {/* Ad reward section */}
             <View style={screenStyles.adSection}>
               <View style={screenStyles.adHeader}>
-                <Ionicons name="play-circle" size={28} color={palette.purple[500]} />
+                <Ionicons name="play-circle" size={28} color={GLASS.goldAccent} />
                 <View style={screenStyles.adHeaderText}>
                   <Text style={screenStyles.adTitle}>Reklam İzle</Text>
                   <Text style={screenStyles.adSubtitle}>5-10 Jeton kazan</Text>
@@ -878,7 +889,7 @@ export const MembershipPlansScreen: React.FC = () => {
 
               {adCooldown > 0 ? (
                 <View style={screenStyles.cooldownContainer}>
-                  <Ionicons name="time-outline" size={20} color="#8B7355" />
+                  <Ionicons name="time-outline" size={20} color={GLASS.textHalf} />
                   <Text style={screenStyles.cooldownText}>
                     Sonraki reklam: {formatCooldown(adCooldown)}
                   </Text>
@@ -891,16 +902,16 @@ export const MembershipPlansScreen: React.FC = () => {
                   disabled={coinLoading}
                 >
                   <LinearGradient
-                    colors={[palette.purple[500], palette.purple[700]]}
+                    colors={['#F9D423', GLASS.goldAccent]}
                     style={screenStyles.adButtonGradient}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                   >
                     {coinLoading ? (
-                      <ActivityIndicator size="small" color="#FFFFFF" />
+                      <ActivityIndicator size="small" color="#1A1A1A" />
                     ) : (
                       <>
-                        <Ionicons name="play" size={18} color="#FFFFFF" />
+                        <Ionicons name="play" size={18} color="#1A1A1A" />
                         <Text style={screenStyles.adButtonText}>Reklam İzle ve Kazan</Text>
                       </>
                     )}
@@ -933,22 +944,20 @@ const screenStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
+    paddingRight: spacing.md + 4,
     height: layout.headerHeight,
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: glassmorphism.bg,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: glassmorphism.border,
   },
   headerTitle: {
     ...typography.h4,
-    color: colors.text,
+    color: GLASS.textPrimary,
     flex: 1,
     marginLeft: spacing.sm,
   },
@@ -958,12 +967,11 @@ const screenStyles = StyleSheet.create({
     marginHorizontal: spacing.md,
     marginTop: spacing.xs,
     marginBottom: spacing.sm,
-    backgroundColor: glassmorphism.bg,
+    backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: 50,
     padding: 3,
     borderWidth: 1,
-    borderColor: glassmorphism.border,
-    overflow: 'hidden',
+    borderColor: GLASS.border,
   },
   tab: {
     flex: 1,
@@ -973,28 +981,20 @@ const screenStyles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 50,
     gap: 6,
-    overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'transparent',
   },
   tabActive: {
-    backgroundColor: palette.purple[50],
-    borderColor: palette.purple[200],
-  },
-  tabActiveGold: {
-    backgroundColor: GOLD_24K.light + '18',
-    borderColor: GOLD_24K.border + '40',
+    backgroundColor: 'rgba(212,175,55,0.2)',
+    borderColor: 'rgba(212,175,55,0.4)',
   },
   tabText: {
     fontSize: fontSizes.sm,
     fontWeight: fontWeights.semibold,
-    color: palette.gray[400],
+    color: GLASS.textHalf,
   },
   tabTextActive: {
-    color: palette.purple[600],
-  },
-  tabTextActiveGold: {
-    color: GOLD_24K.dark,
+    color: GLASS.goldAccent,
   },
   tabCoinEmoji: {
     fontSize: 16,
@@ -1005,19 +1005,19 @@ const screenStyles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: 20,
     paddingTop: spacing.sm,
   },
   subtitle: {
     ...typography.body,
-    color: colors.textSecondary,
+    color: GLASS.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.lg,
     paddingHorizontal: spacing.md,
   },
   disclaimer: {
     ...typography.caption,
-    color: colors.textTertiary,
+    color: 'rgba(255,255,255,0.35)',
     textAlign: 'center',
     marginTop: spacing.lg,
     paddingHorizontal: spacing.lg,
@@ -1027,25 +1027,23 @@ const screenStyles = StyleSheet.create({
   // ── Coin Section ──
   coinSectionTitle: {
     ...typography.h3,
-    color: '#2C1810',
+    color: GLASS.textPrimary,
     marginBottom: spacing.xs,
   },
   coinSectionSubtitle: {
     ...typography.bodySmall,
-    color: '#8B7355',
+    color: GLASS.textHalf,
     marginBottom: spacing.lg,
   },
 
   // ── Ad section ──
   adSection: {
-    backgroundColor: glassmorphism.bg,
-    borderRadius: borderRadius.xl,
+    backgroundColor: GLASS.bg,
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: glassmorphism.border,
-    padding: spacing.lg,
+    borderColor: GLASS.border,
+    padding: 20,
     marginTop: spacing.sm,
-    overflow: 'hidden',
-    ...shadows.small,
   },
   adHeader: {
     flexDirection: 'row',
@@ -1058,27 +1056,26 @@ const screenStyles = StyleSheet.create({
   },
   adTitle: {
     ...typography.h4,
-    color: '#2C1810',
+    color: GLASS.textPrimary,
   },
   adSubtitle: {
     ...typography.caption,
-    color: '#8B7355',
+    color: GLASS.textHalf,
   },
   adButton: {
-    borderRadius: borderRadius.md,
-    overflow: 'hidden',
+    borderRadius: 28,
   },
   adButtonGradient: {
-    height: 48,
+    height: 52,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: spacing.sm,
-    borderRadius: borderRadius.md,
+    borderRadius: 28,
   },
   adButtonText: {
     ...typography.button,
-    color: '#FFFFFF',
+    color: '#1A1A1A',
     fontWeight: fontWeights.bold,
   },
   cooldownContainer: {
@@ -1087,13 +1084,13 @@ const screenStyles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing.sm,
     paddingVertical: spacing.md,
-    backgroundColor: 'rgba(245, 240, 232, 0.6)',
+    paddingHorizontal: spacing.sm,
+    backgroundColor: GLASS.bg,
     borderRadius: borderRadius.md,
-    overflow: 'hidden',
   },
   cooldownText: {
     ...typography.body,
-    color: '#8B7355',
+    color: GLASS.textHalf,
     fontWeight: fontWeights.medium,
   },
 });
@@ -1105,60 +1102,58 @@ const cardStyles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   card: {
-    borderRadius: borderRadius.xl,
-    overflow: 'hidden',
-    padding: spacing.md,
+    borderRadius: 24,
+    padding: 20,
   },
 
-  // Supreme card — golden glassmorphism
+  // Supreme card — gold glassmorphism
   supremeCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    backgroundColor: GLASS.bg,
     borderWidth: 1.5,
-    borderColor: GOLD_24K.border + '40',
+    borderColor: 'rgba(212,175,55,0.3)',
   },
   supremeShadow: {
-    shadowColor: GOLD_24K.medium,
+    shadowColor: GLASS.goldAccent,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
     elevation: 8,
   },
 
   // Premium card — purple glassmorphism
   premiumCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: GLASS.bg,
     borderWidth: 1,
-    borderColor: glassmorphism.border,
+    borderColor: 'rgba(139,92,246,0.25)',
   },
   premiumShadow: {
-    ...shadows.medium,
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
   },
 
-  // Free card — simple, muted
+  // Free card — subtle glassmorphism
   freeCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.65)',
+    backgroundColor: GLASS.bg,
     borderWidth: 1,
-    borderColor: palette.gray[200],
+    borderColor: GLASS.borderSubtle,
   },
   freeShadow: {
-    ...shadows.small,
+    // No shadow for free tier
   },
 
-  // "En Populer" badge
-  popularBadge: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    zIndex: 10,
-  },
+  // "En Populer" badge — inline below price
   popularBadgeGradient: {
     flexDirection: 'row',
     alignItems: 'center',
+    alignSelf: 'flex-end',
     gap: 4,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 50,
-    overflow: 'hidden',
+    marginTop: 4,
   },
   popularBadgeText: {
     ...typography.captionSmall,
@@ -1171,6 +1166,12 @@ const cardStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: spacing.sm,
+  },
+  priceRight: {
+    alignItems: 'flex-end',
+    paddingRight: 2,
+    flexShrink: 0,
+    minWidth: 70,
   },
   tierIconContainer: {
     marginRight: spacing.sm,
@@ -1192,12 +1193,14 @@ const cardStyles = StyleSheet.create({
   },
   tierSubtitle: {
     ...typography.caption,
-    color: colors.textSecondary,
+    color: GLASS.textTertiary,
     marginTop: 2,
   },
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'baseline',
+    flexShrink: 0,
+    paddingRight: 2,
   },
   price: {
     fontSize: fontSizes['2xl'],
@@ -1206,7 +1209,7 @@ const cardStyles = StyleSheet.create({
   },
   pricePeriod: {
     ...typography.caption,
-    color: colors.textSecondary,
+    color: GLASS.textTertiary,
     marginLeft: 2,
   },
 
@@ -1219,7 +1222,6 @@ const cardStyles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 50,
-    overflow: 'hidden',
     marginBottom: spacing.sm,
   },
   currentBadgeText: {
@@ -1232,17 +1234,16 @@ const cardStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: palette.gray[100],
+    backgroundColor: 'rgba(255,255,255,0.06)',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: borderRadius.sm,
     alignSelf: 'flex-start',
     marginBottom: spacing.sm,
-    overflow: 'hidden',
   },
   adIndicatorText: {
     ...typography.captionSmall,
-    color: palette.gray[500],
+    color: GLASS.textHalf,
     fontWeight: fontWeights.medium,
   },
 
@@ -1259,31 +1260,36 @@ const cardStyles = StyleSheet.create({
 
   // CTA buttons
   ctaContainer: {
-    borderRadius: borderRadius.md,
-    overflow: 'hidden',
+    borderRadius: 28,
   },
   ctaGradient: {
-    height: layout.buttonHeight,
+    height: 56,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: borderRadius.md,
+    borderRadius: 28,
   },
   ctaText: {
     ...typography.button,
     color: palette.white,
     fontWeight: fontWeights.bold,
   },
+  ctaTextDark: {
+    ...typography.button,
+    color: '#1A1A1A',
+    fontWeight: fontWeights.bold,
+  },
   ctaOutlined: {
-    height: layout.buttonHeight,
+    height: 56,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: palette.gray[300],
-    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.15)',
   },
   ctaOutlinedText: {
     ...typography.button,
-    color: palette.gray[600],
+    color: GLASS.textPrimary,
     fontWeight: fontWeights.semibold,
   },
 });

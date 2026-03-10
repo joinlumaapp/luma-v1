@@ -7,7 +7,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useCoinStore } from '../../stores/coinStore';
 import { fontWeights } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
-import { glassmorphism } from '../../theme/colors';
 
 interface CoinBalanceProps {
   size?: 'small' | 'medium';
@@ -60,15 +59,14 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: glassmorphism.bg,
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
     borderWidth: 1,
-    borderColor: glassmorphism.borderGold,
+    borderColor: 'rgba(184, 134, 11, 0.2)',
     gap: spacing.xs,
-    overflow: 'hidden',
   },
   containerSmall: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md + 6,
+    paddingVertical: spacing.xs + 2,
     borderRadius: borderRadius.full,
   },
   containerMedium: {

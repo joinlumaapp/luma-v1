@@ -109,7 +109,7 @@ const PackCard: React.FC<{
       </View>
     )}
 
-    <View style={packCardStyles.content}>
+    <View style={[packCardStyles.content, pack.bestValue && { paddingTop: spacing.md }]}>
       <CoinStack count={pack.coins} />
 
       <View style={packCardStyles.info}>
