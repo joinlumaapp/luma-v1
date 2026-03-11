@@ -104,6 +104,12 @@ const MemoizedConversationCard = memo<ConversationCardProps>(({ item, onPress, o
           >
             {item.name}
           </Text>
+          {/* Supreme gold heart badge */}
+          {item.packageTier === 'reserved' && (
+            <View style={styles.supremeBadge} accessibilityLabel="Supreme üye">
+              <Text style={styles.supremeBadgeIcon}>{'\u2764'}</Text>
+            </View>
+          )}
           <Text style={styles.timestamp}>
             {formatTimestamp(item.lastMessageAt)}
           </Text>
@@ -134,7 +140,8 @@ const MemoizedConversationCard = memo<ConversationCardProps>(({ item, onPress, o
   prev.item.lastMessage === next.item.lastMessage &&
   prev.item.lastMessageAt === next.item.lastMessageAt &&
   prev.item.unreadCount === next.item.unreadCount &&
-  prev.item.isOnline === next.item.isOnline
+  prev.item.isOnline === next.item.isOnline &&
+  prev.item.packageTier === next.item.packageTier
 ));
 
 MemoizedConversationCard.displayName = 'MemoizedConversationCard';
@@ -326,6 +333,24 @@ const styles = StyleSheet.create({
     backgroundColor: colors.success,
     borderWidth: 2,
     borderColor: colors.background,
+  },
+  supremeBadge: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#D4AF37',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 4,
+    shadowColor: '#D4AF37',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  supremeBadgeIcon: {
+    fontSize: 9,
+    color: '#FFFFFF',
   },
   messagePreview: {
     flex: 1,

@@ -12,6 +12,7 @@ import { useAuth } from '../hooks/useAuth';
 import { AuthNavigator } from './AuthNavigator';
 import { OnboardingNavigator } from './OnboardingNavigator';
 import { MainTabNavigator } from './MainTabNavigator';
+import { SupremeCelebrationScreen } from '../screens/premium/SupremeCelebrationScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -34,6 +35,17 @@ export const RootNavigator: React.FC = () => {
       ) : (
         <Stack.Screen name="Auth" component={AuthNavigator} />
       )}
+
+      {/* Full-screen modal — Supreme celebration overlay */}
+      <Stack.Screen
+        name="SupremeCelebration"
+        component={SupremeCelebrationScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'fade',
+          gestureEnabled: false,
+        }}
+      />
     </Stack.Navigator>
   );
 };

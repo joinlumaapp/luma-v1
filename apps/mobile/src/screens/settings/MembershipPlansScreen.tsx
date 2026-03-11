@@ -163,6 +163,13 @@ const FEATURES: TierFeature[] = [
     premium: 'included',
     supreme: 'included',
   },
+  {
+    label: 'Öncelikli Görünürlük',
+    free: 'locked',
+    premium: 'locked',
+    supreme: 'included',
+    supremeDetail: 'İlk gösterilen ✨',
+  },
 ];
 
 // Map PackageTier to plan category
@@ -800,7 +807,13 @@ export const MembershipPlansScreen: React.FC = () => {
                 });
 
                 useAuthStore.getState().updatePackageTier(result.packageTier as PackageTier);
-                Alert.alert('Başarılı!', `${planLabel} aboneliğiniz aktif edildi!`);
+
+                // Supreme → luxury celebration screen; others → simple alert
+                if (plan === 'supreme') {
+                  navigation.navigate('SupremeCelebration' as never);
+                } else {
+                  Alert.alert('Başarılı!', `${planLabel} aboneliğiniz aktif edildi!`);
+                }
               } catch (error: unknown) {
                 const message = error instanceof Error ? error.message : '';
                 // Do not show error if user cancelled

@@ -20,6 +20,7 @@ export interface ConversationSummary {
   lastMessageAt: string;
   unreadCount: number;
   isOnline: boolean;
+  packageTier?: 'free' | 'gold' | 'pro' | 'reserved';
 }
 
 export interface ConversationsResponse {
