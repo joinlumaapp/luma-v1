@@ -700,6 +700,12 @@ export const DailyQuestionScreen: React.FC = () => {
       <View style={[styles.container, styles.centerContent, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Günün sorusu yükleniyor...</Text>
+        <TouchableOpacity
+          style={{ marginTop: 24 }}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={[styles.retryText, { color: colors.textSecondary }]}>Geri Dön</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -713,6 +719,12 @@ export const DailyQuestionScreen: React.FC = () => {
         <Text style={styles.errorText}>Soru yüklenemedi</Text>
         <TouchableOpacity style={styles.retryButton} onPress={loadData}>
           <Text style={styles.retryText}>Tekrar Dene</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{ marginTop: 12 }}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={[styles.retryText, { color: colors.textSecondary }]}>Geri Dön</Text>
         </TouchableOpacity>
       </View>
     );

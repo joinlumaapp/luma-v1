@@ -28,20 +28,33 @@ export const AD_REWARD_MAX = 10;
 export const INSTANT_MESSAGE_COST = 20;
 export const PROFILE_BOOST_COST = 100;
 export const SUPER_LIKE_COST = 25; // aligned with GOLD_COSTS.SUPER_LIKE in @luma/shared
+export const EXTRA_LIKES_COST = 15;        // Buy 5 extra likes
+export const PROFILE_HIGHLIGHT_COST = 10;  // Highlight profile for 1 hour
+export const PRIORITY_MESSAGE_COST = 30;   // Priority message (shown first)
 
 // ── Earn rewards ──
+export const WELCOME_BONUS = 100;              // New user gift
 export const DAILY_CHECKIN_REWARD = 5;
-export const PROFILE_COMPLETION_REWARD = 50;
+export const PROFILE_COMPLETION_REWARD = 100;  // Increased from 50
 export const ACTIVITY_CREATION_REWARD = 10;
+export const DAILY_QUESTION_REWARD = 10;       // Answer daily question
+export const REFERRAL_REWARD = 50;             // Invite a friend
+export const STREAK_MILESTONE_REWARD = 25;     // 7-day, 14-day, 30-day streak
 
 // ── Boost duration ──
 export const BOOST_DURATION_MS = 30 * 60 * 1000; // 30 minutes
+
+// ── Extra likes config ──
+export const EXTRA_LIKES_COUNT = 5;
 
 // ── Persistence keys ──
 const STORAGE_KEYS = {
   BALANCE: 'coin.balance',
   LAST_DAILY_CHECKIN: 'coin.lastDailyCheckin',
   TRANSACTIONS: 'coin.transactions',
+  HAS_CLAIMED_WELCOME_BONUS: 'coin.hasClaimedWelcomeBonus',
+  LAST_DAILY_QUESTION: 'coin.lastDailyQuestion',
+  STREAK_MILESTONES_CLAIMED: 'coin.streakMilestonesClaimed',
 } as const;
 
 interface CoinTransaction {
@@ -59,6 +72,9 @@ interface CoinState {
   adCooldownUntil: number | null;
   lastDailyCheckin: string | null;  // ISO date string of last daily checkin
   boostActiveUntil: number | null;  // timestamp when boost expires
+  hasClaimedWelcomeBonus: boolean;
+  lastDailyQuestion: string | null; // ISO date string of last daily question reward
+  streakMilestonesClaimed: number[]; // milestone days already claimed (e.g. [7, 14])
 
   // Actions
   fetchBalance: () => Promise<void>;
@@ -73,11 +89,16 @@ interface CoinState {
   claimDailyCheckin: () => boolean;
   claimProfileCompletion: () => void;
   claimActivityCreation: () => void;
+  claimWelcomeBonus: () => boolean;
+  claimDailyQuestionReward: () => boolean;
+  claimReferralReward: () => void;
+  claimStreakMilestone: (milestone: number) => boolean;
 
   // Spend actions
   sendInstantMessage: (recipientId: string) => Promise<boolean>;
   activateProfileBoost: () => Promise<boolean>;
   sendSuperLike: (targetId: string) => Promise<boolean>;
+  purchaseExtraLikes: () => boolean;
 
   // Utility
   isBoostActive: () => boolean;
@@ -130,6 +151,42 @@ function loadPersistedTransactions(): CoinTransaction[] {
   }
 }
 
+/** Load persisted welcome bonus flag */
+function loadPersistedWelcomeBonus(): boolean {
+  return storage.getString(STORAGE_KEYS.HAS_CLAIMED_WELCOME_BONUS) === 'true';
+}
+
+/** Persist welcome bonus claimed flag */
+function persistWelcomeBonus(): void {
+  storage.setString(STORAGE_KEYS.HAS_CLAIMED_WELCOME_BONUS, 'true');
+}
+
+/** Load persisted last daily question date */
+function loadPersistedLastDailyQuestion(): string | null {
+  return storage.getString(STORAGE_KEYS.LAST_DAILY_QUESTION) ?? null;
+}
+
+/** Persist last daily question date */
+function persistLastDailyQuestion(date: string): void {
+  storage.setString(STORAGE_KEYS.LAST_DAILY_QUESTION, date);
+}
+
+/** Load persisted streak milestones */
+function loadPersistedStreakMilestones(): number[] {
+  const raw = storage.getString(STORAGE_KEYS.STREAK_MILESTONES_CLAIMED);
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw) as number[];
+  } catch {
+    return [];
+  }
+}
+
+/** Persist streak milestones */
+function persistStreakMilestones(milestones: number[]): void {
+  storage.setString(STORAGE_KEYS.STREAK_MILESTONES_CLAIMED, JSON.stringify(milestones));
+}
+
 export const useCoinStore = create<CoinState>((set, get) => ({
   // Initial state — 0 default, will be hydrated from storage/API in fetchBalance
   balance: 0,
@@ -138,6 +195,9 @@ export const useCoinStore = create<CoinState>((set, get) => ({
   adCooldownUntil: null,
   lastDailyCheckin: null,
   boostActiveUntil: null,
+  hasClaimedWelcomeBonus: loadPersistedWelcomeBonus(),
+  lastDailyQuestion: loadPersistedLastDailyQuestion(),
+  streakMilestonesClaimed: loadPersistedStreakMilestones(),
 
   // Actions
   fetchBalance: async () => {
@@ -482,5 +542,145 @@ export const useCoinStore = create<CoinState>((set, get) => ({
     const { lastDailyCheckin } = get();
     const today = new Date().toISOString().split('T')[0];
     return lastDailyCheckin !== today;
+  },
+
+  claimWelcomeBonus: (): boolean => {
+    const { hasClaimedWelcomeBonus } = get();
+    if (hasClaimedWelcomeBonus) return false;
+
+    const transaction: CoinTransaction = {
+      id: generateId(),
+      amount: WELCOME_BONUS,
+      type: 'earn',
+      reason: 'Hos geldin hediyesi',
+      timestamp: Date.now(),
+    };
+
+    const newBalance = get().balance + WELCOME_BONUS;
+    const newTransactions = [transaction, ...get().transactions];
+
+    set({
+      balance: newBalance,
+      hasClaimedWelcomeBonus: true,
+      transactions: newTransactions,
+    });
+
+    persistBalance(newBalance);
+    persistWelcomeBonus();
+    persistTransactions(newTransactions);
+
+    return true;
+  },
+
+  claimDailyQuestionReward: (): boolean => {
+    const { lastDailyQuestion } = get();
+    const today = new Date().toISOString().split('T')[0];
+    if (lastDailyQuestion === today) return false;
+
+    const transaction: CoinTransaction = {
+      id: generateId(),
+      amount: DAILY_QUESTION_REWARD,
+      type: 'earn',
+      reason: 'Gunluk soru odulu',
+      timestamp: Date.now(),
+    };
+
+    const newBalance = get().balance + DAILY_QUESTION_REWARD;
+    const newTransactions = [transaction, ...get().transactions];
+
+    set({
+      balance: newBalance,
+      lastDailyQuestion: today,
+      transactions: newTransactions,
+    });
+
+    persistBalance(newBalance);
+    persistLastDailyQuestion(today);
+    persistTransactions(newTransactions);
+
+    return true;
+  },
+
+  claimReferralReward: (): void => {
+    const transaction: CoinTransaction = {
+      id: generateId(),
+      amount: REFERRAL_REWARD,
+      type: 'earn',
+      reason: 'Arkadas davet odulu',
+      timestamp: Date.now(),
+    };
+
+    const newBalance = get().balance + REFERRAL_REWARD;
+    const newTransactions = [transaction, ...get().transactions];
+
+    set({
+      balance: newBalance,
+      transactions: newTransactions,
+    });
+
+    persistBalance(newBalance);
+    persistTransactions(newTransactions);
+  },
+
+  claimStreakMilestone: (milestone: number): boolean => {
+    const { streakMilestonesClaimed } = get();
+    if (streakMilestonesClaimed.includes(milestone)) return false;
+
+    const transaction: CoinTransaction = {
+      id: generateId(),
+      amount: STREAK_MILESTONE_REWARD,
+      type: 'earn',
+      reason: `${milestone} gunluk seri odulu`,
+      timestamp: Date.now(),
+    };
+
+    const newBalance = get().balance + STREAK_MILESTONE_REWARD;
+    const newMilestones = [...streakMilestonesClaimed, milestone];
+    const newTransactions = [transaction, ...get().transactions];
+
+    set({
+      balance: newBalance,
+      streakMilestonesClaimed: newMilestones,
+      transactions: newTransactions,
+    });
+
+    persistBalance(newBalance);
+    persistStreakMilestones(newMilestones);
+    persistTransactions(newTransactions);
+
+    return true;
+  },
+
+  purchaseExtraLikes: (): boolean => {
+    const { balance } = get();
+    if (balance < EXTRA_LIKES_COST) return false;
+
+    const transaction: CoinTransaction = {
+      id: generateId(),
+      amount: -EXTRA_LIKES_COST,
+      type: 'spend',
+      reason: `${EXTRA_LIKES_COUNT} ek begeni`,
+      timestamp: Date.now(),
+    };
+
+    const newBalance = balance - EXTRA_LIKES_COST;
+    const newTransactions = [transaction, ...get().transactions];
+
+    set({
+      balance: newBalance,
+      transactions: newTransactions,
+    });
+
+    persistBalance(newBalance);
+    persistTransactions(newTransactions);
+
+    // Add extra likes to discovery store
+    const { useDiscoveryStore } = require('./discoveryStore');
+    const discoveryState = useDiscoveryStore.getState();
+    useDiscoveryStore.setState({
+      dailyRemaining: discoveryState.dailyRemaining + EXTRA_LIKES_COUNT,
+    });
+
+    return true;
   },
 }));

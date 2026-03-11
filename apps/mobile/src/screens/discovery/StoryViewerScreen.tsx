@@ -328,6 +328,7 @@ export const StoryViewerScreen: React.FC = () => {
   const currentPost = storyItems[activeIndex];
 
   if (!currentPost) {
+    navigation.goBack();
     return null;
   }
 

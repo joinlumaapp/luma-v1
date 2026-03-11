@@ -2,8 +2,15 @@
 
 import { create } from 'zustand';
 import { analyticsService, ANALYTICS_EVENTS } from '../services/analyticsService';
+import { storage } from '../utils/storage';
 
 export type PackageTier = 'free' | 'gold' | 'pro' | 'reserved';
+
+/** Duration of the Gold trial for new phone-registered users (48 hours in ms) */
+const TRIAL_DURATION_MS = 48 * 60 * 60 * 1000;
+
+/** Storage key for persisting trial expiry timestamp */
+const TRIAL_EXPIRY_KEY = 'auth.trialExpiresAt';
 
 export interface AuthUser {
   id: string;
@@ -22,6 +29,7 @@ interface AuthState {
   isOnboarded: boolean;
   hasStartedOnboarding: boolean;
   user: AuthUser | null;
+  trialExpiresAt: number | null;
 
   // Actions
   login: (accessToken: string, refreshToken: string, user: AuthUser) => void;
@@ -35,9 +43,12 @@ interface AuthState {
   updatePackageTier: (tier: PackageTier) => void;
   setEmail: (email: string) => void;
   setPassword: (password: string) => void;
+  activateTrial: () => void;
+  checkTrialExpiry: () => boolean;
+  loadTrialState: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   // Initial state
   accessToken: null,
   refreshToken: null,
@@ -46,6 +57,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   isOnboarded: false,
   hasStartedOnboarding: false,
   user: null,
+  trialExpiresAt: null,
 
   // Actions
   login: (accessToken, refreshToken, user) => {
@@ -67,6 +79,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: () => {
     analyticsService.track(ANALYTICS_EVENTS.AUTH_LOGOUT);
     analyticsService.reset();
+    storage.delete(TRIAL_EXPIRY_KEY);
     set({
       accessToken: null,
       refreshToken: null,
@@ -75,6 +88,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       hasStartedOnboarding: false,
       user: null,
       isLoading: false,
+      trialExpiresAt: null,
     });
   },
 
@@ -111,5 +125,47 @@ export const useAuthStore = create<AuthState>((set) => ({
   setPassword: (_password) => {
     // Password is sent to the API during account creation
     // Not stored locally for security — handled by backend
+  },
+
+  activateTrial: () => {
+    const expiresAt = Date.now() + TRIAL_DURATION_MS;
+    storage.setNumber(TRIAL_EXPIRY_KEY, expiresAt);
+    set((state) => ({
+      trialExpiresAt: expiresAt,
+      user: state.user ? { ...state.user, packageTier: 'gold' as PackageTier } : null,
+    }));
+  },
+
+  checkTrialExpiry: () => {
+    const { trialExpiresAt, user } = get();
+    if (!trialExpiresAt || !user) return false;
+
+    if (Date.now() >= trialExpiresAt) {
+      // Trial expired — revert to free tier
+      storage.delete(TRIAL_EXPIRY_KEY);
+      set({
+        trialExpiresAt: null,
+        user: { ...user, packageTier: 'free' },
+      });
+      return true; // expired
+    }
+    return false; // still active
+  },
+
+  loadTrialState: () => {
+    const saved = storage.getNumber(TRIAL_EXPIRY_KEY);
+    if (saved && saved > Date.now()) {
+      set((state) => ({
+        trialExpiresAt: saved,
+        user: state.user ? { ...state.user, packageTier: 'gold' as PackageTier } : null,
+      }));
+    } else if (saved) {
+      // Persisted trial has expired — clean up
+      storage.delete(TRIAL_EXPIRY_KEY);
+      set((state) => ({
+        trialExpiresAt: null,
+        user: state.user ? { ...state.user, packageTier: 'free' as PackageTier } : null,
+      }));
+    }
   },
 }));

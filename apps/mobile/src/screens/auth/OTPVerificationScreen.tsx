@@ -19,6 +19,7 @@ import type { AuthStackParamList } from '../../navigation/types';
 import { authService } from '../../services/authService';
 import { useAuthStore } from '../../stores/authStore';
 import { useTestModeStore } from '../../stores/testModeStore';
+import { useCoinStore } from '../../stores/coinStore';
 import { onboardingColors } from '../../components/onboarding/OnboardingLayout';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 
@@ -81,13 +82,17 @@ export const OTPVerificationScreen: React.FC = () => {
     try {
       // Founder test mode: 000000 auto-verifies
       if (__DEV__ && isTestMode && otpCode === '000000') {
-        const { login } = useAuthStore.getState();
+        const { login, activateTrial } = useAuthStore.getState();
         login('test-access-token', 'test-refresh-token', {
           id: 'test-user-001',
           phone: phoneNumber,
           isVerified: false,
           packageTier: 'free',
         });
+        // Activate 48-hour Gold trial for new test user
+        activateTrial();
+        // Award welcome bonus Jeton
+        useCoinStore.getState().claimWelcomeBonus();
         // Test mode → go to email entry for new user flow
         navigation.navigate('EmailEntry');
         return;
@@ -104,7 +109,7 @@ export const OTPVerificationScreen: React.FC = () => {
         return;
       }
 
-      const { login, setOnboarded } = useAuthStore.getState();
+      const { login, setOnboarded, activateTrial } = useAuthStore.getState();
       login(result.accessToken, result.refreshToken, {
         id: result.user.id,
         phone: result.user.phone,
@@ -113,6 +118,14 @@ export const OTPVerificationScreen: React.FC = () => {
       });
 
       if (result.user.isNew) {
+        // Activate 48-hour Gold trial for new phone-registered users
+        activateTrial();
+        // Award welcome bonus Jeton
+        useCoinStore.getState().claimWelcomeBonus();
+        Alert.alert(
+          'Hosgeldin!',
+          '48 saatlik Premium deneyimin basladi! Gold ozelliklerin keyfini cikar.\n\nHos geldin hediyesi: 100 Jeton!',
+        );
         // New user → collect email + password before onboarding
         navigation.navigate('EmailEntry');
         return;

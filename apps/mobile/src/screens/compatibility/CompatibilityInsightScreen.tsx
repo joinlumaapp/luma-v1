@@ -443,6 +443,12 @@ export const CompatibilityInsightScreen: React.FC = () => {
       <View style={[styles.container, styles.loadingContainer, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Uyum analizi hazırlanıyor...</Text>
+        <TouchableOpacity
+          style={{ marginTop: 24 }}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={[styles.retryText, { color: colors.textSecondary }]}>Geri Dön</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -456,6 +462,12 @@ export const CompatibilityInsightScreen: React.FC = () => {
           onPress={loadCompatibilityData}
         >
           <Text style={styles.retryText}>Tekrar Dene</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.retryButton, { marginTop: 12, backgroundColor: 'transparent' }]}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={[styles.retryText, { color: colors.textSecondary }]}>Geri Dön</Text>
         </TouchableOpacity>
       </View>
     );

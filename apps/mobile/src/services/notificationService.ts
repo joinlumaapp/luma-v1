@@ -563,3 +563,393 @@ export async function cancelDatePlanReminder(planId: string): Promise<void> {
     }
   }
 }
+
+// ─── FOMO & Engagement Notifications ──────────────────────────────────
+
+/** Notification identifier prefixes for FOMO / engagement notifications */
+const FOMO_PREFIX = 'luma_fomo_';
+const WEEKLY_CONTENT_PREFIX = 'luma_weekly_';
+const MATCH_URGENCY_PREFIX = 'luma_matchurgency_';
+
+// ── Helper: cancel all notifications by prefix ───────────────────────
+
+async function cancelNotificationsByPrefix(prefix: string): Promise<void> {
+  try {
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    const ids = scheduled
+      .filter((n) => n.identifier.startsWith(prefix))
+      .map((n) => n.identifier);
+
+    for (const id of ids) {
+      await Notifications.cancelScheduledNotificationAsync(id);
+    }
+  } catch (error) {
+    if (__DEV__) {
+      console.error(`[Notifications] Prefix iptal hatası (${prefix}):`, error);
+    }
+  }
+}
+
+// ── Helper: schedule a single local notification ─────────────────────
+
+interface ScheduleLocalNotificationOptions {
+  identifier: string;
+  title: string;
+  body: string;
+  data: Record<string, unknown>;
+  trigger: Notifications.NotificationTriggerInput;
+}
+
+async function scheduleLocalNotification(
+  options: ScheduleLocalNotificationOptions,
+): Promise<void> {
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: options.title,
+      body: options.body,
+      data: options.data,
+      sound: true,
+    },
+    trigger: options.trigger,
+    identifier: options.identifier,
+  });
+}
+
+// ─── 1. FOMO Daily & Inactivity Notifications ────────────────────────
+
+/**
+ * Schedule FOMO notifications that create urgency:
+ * - Every day at 20:00: curated profiles reminder
+ * - 12h after last open: someone liked you teaser
+ * - Saturday 09:00: weekend bonus
+ * - Sunday 20:00: weekly report ready
+ *
+ * Call on every app foreground + after login (same as re-engagement).
+ */
+export async function scheduleFomoNotifications(): Promise<void> {
+  if (isExpoGo()) {
+    if (__DEV__) {
+      console.log('[FOMO] Expo Go — atlanıyor');
+    }
+    return;
+  }
+
+  try {
+    await cancelNotificationsByPrefix(FOMO_PREFIX);
+
+    // Daily 20:00 — curated profiles
+    await scheduleLocalNotification({
+      identifier: `${FOMO_PREFIX}daily_evening`,
+      title: 'LUMA',
+      body: 'Bu akşam sana özel seçilmiş profiller var! Kaçırma 💜',
+      data: { type: 'FOMO', subtype: 'daily_evening' },
+      trigger: {
+        type: SchedulableTriggerInputTypes.DAILY,
+        hour: 20,
+        minute: 0,
+      },
+    });
+
+    // 12 hours of inactivity — someone liked you
+    await scheduleLocalNotification({
+      identifier: `${FOMO_PREFIX}inactivity_12h`,
+      title: 'LUMA',
+      body: 'Bugün seni 3 kişi beğendi! Kim olduklarını merak etmiyor musun? 👀',
+      data: { type: 'FOMO', subtype: 'inactivity_12h' },
+      trigger: {
+        type: SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 43200, // 12 hours
+      },
+    });
+
+    // Saturday 09:00 — weekend bonus
+    await scheduleLocalNotification({
+      identifier: `${FOMO_PREFIX}weekend_bonus`,
+      title: 'LUMA',
+      body: 'Hafta sonu bonusu aktif! Bugün 2x beğeni hakkın var 🎉',
+      data: { type: 'FOMO', subtype: 'weekend_bonus' },
+      trigger: {
+        type: SchedulableTriggerInputTypes.WEEKLY,
+        weekday: 7, // Saturday (1=Sun … 7=Sat)
+        hour: 9,
+        minute: 0,
+      },
+    });
+
+    // Sunday 20:00 — weekly report
+    await scheduleLocalNotification({
+      identifier: `${FOMO_PREFIX}weekly_report`,
+      title: 'LUMA',
+      body: 'Haftalık raporun hazır! Bu hafta nasıl geçti bir bak 📊',
+      data: { type: 'FOMO', subtype: 'weekly_report' },
+      trigger: {
+        type: SchedulableTriggerInputTypes.WEEKLY,
+        weekday: 1, // Sunday (1=Sun)
+        hour: 20,
+        minute: 0,
+      },
+    });
+
+    if (__DEV__) {
+      console.log('[FOMO] 4 bildirim planlandı (daily 20:00, 12h inactivity, sat bonus, sun report)');
+    }
+  } catch (error) {
+    if (__DEV__) {
+      console.error('[FOMO] Planlama hatası:', error);
+    }
+  }
+}
+
+// ─── 2. Match Urgency Notifications ──────────────────────────────────
+
+/**
+ * Send an immediate notification when someone super-likes the user.
+ */
+export async function notifySuperLike(): Promise<void> {
+  if (isExpoGo()) return;
+
+  try {
+    await scheduleLocalNotification({
+      identifier: `${MATCH_URGENCY_PREFIX}superlike_${Date.now()}`,
+      title: 'LUMA',
+      body: 'Birisi seni süper beğendi! 🔥 Kim olduğunu gör',
+      data: { type: 'MATCH_URGENCY', subtype: 'super_like' },
+      trigger: null as unknown as Notifications.NotificationTriggerInput, // immediate
+    });
+  } catch (error) {
+    if (__DEV__) {
+      console.error('[MatchUrgency] Super like bildirim hatası:', error);
+    }
+  }
+}
+
+/**
+ * Schedule a reminder when a match hasn't been messaged after 24 hours.
+ * Call this when a new match is created.
+ *
+ * @param matchId - Unique match identifier
+ * @param partnerName - The matched user's display name
+ */
+export async function scheduleMatchNudge(
+  matchId: string,
+  partnerName: string,
+): Promise<void> {
+  if (isExpoGo()) return;
+
+  try {
+    // 24h — no message yet
+    await scheduleLocalNotification({
+      identifier: `${MATCH_URGENCY_PREFIX}${matchId}_24h`,
+      title: 'LUMA',
+      body: `${partnerName} ile eşleştin ama henüz konuşmadınız. İlk adımı at!`,
+      data: { type: 'MATCH_URGENCY', subtype: 'no_message_24h', matchId },
+      trigger: {
+        type: SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 86400, // 24 hours
+      },
+    });
+
+    // 48h — match is waiting
+    await scheduleLocalNotification({
+      identifier: `${MATCH_URGENCY_PREFIX}${matchId}_48h`,
+      title: 'LUMA',
+      body: 'Eşleşmen seni bekliyor, bir mesaj gönder 💬',
+      data: { type: 'MATCH_URGENCY', subtype: 'no_response_48h', matchId },
+      trigger: {
+        type: SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 172800, // 48 hours
+      },
+    });
+
+    if (__DEV__) {
+      console.log(`[MatchUrgency] ${partnerName} için 24h/48h nudge planlandı`);
+    }
+  } catch (error) {
+    if (__DEV__) {
+      console.error('[MatchUrgency] Planlama hatası:', error);
+    }
+  }
+}
+
+/**
+ * Cancel match nudge notifications (e.g. when the user sends a message).
+ */
+export async function cancelMatchNudge(matchId: string): Promise<void> {
+  try {
+    await Notifications.cancelScheduledNotificationAsync(
+      `${MATCH_URGENCY_PREFIX}${matchId}_24h`,
+    );
+    await Notifications.cancelScheduledNotificationAsync(
+      `${MATCH_URGENCY_PREFIX}${matchId}_48h`,
+    );
+  } catch (error) {
+    if (__DEV__) {
+      console.error('[MatchUrgency] İptal hatası:', error);
+    }
+  }
+}
+
+// ─── 3. Weekly Content Schedule Notifications ────────────────────────
+
+/**
+ * Schedule recurring weekly content notifications:
+ * - Monday 10:00 — new weekly selections
+ * - Wednesday 19:00 — most compatible profile
+ * - Friday 18:00 — weekend plans
+ * - Saturday 09:00 — 2x like bonus
+ * - Sunday 20:00 — weekly report
+ *
+ * Call on app foreground + after login. Cancels previous schedules first.
+ */
+export async function scheduleWeeklyContentNotifications(): Promise<void> {
+  if (isExpoGo()) {
+    if (__DEV__) {
+      console.log('[WeeklyContent] Expo Go — atlanıyor');
+    }
+    return;
+  }
+
+  try {
+    await cancelNotificationsByPrefix(WEEKLY_CONTENT_PREFIX);
+
+    const weeklySchedule: Array<{
+      id: string;
+      weekday: number; // 1=Sun 2=Mon … 7=Sat
+      hour: number;
+      minute: number;
+      body: string;
+      subtype: string;
+    }> = [
+      {
+        id: 'mon_selections',
+        weekday: 2, // Monday
+        hour: 10,
+        minute: 0,
+        body: 'Yeni haftalık seçkilerin hazır!',
+        subtype: 'monday_selections',
+      },
+      {
+        id: 'wed_compatible',
+        weekday: 4, // Wednesday
+        hour: 19,
+        minute: 0,
+        body: 'Bu haftanın en uyumlu profili seni bekliyor',
+        subtype: 'wednesday_compatible',
+      },
+      {
+        id: 'fri_plans',
+        weekday: 6, // Friday
+        hour: 18,
+        minute: 0,
+        body: 'Hafta sonu planları yapmaya ne dersin? 🌟',
+        subtype: 'friday_plans',
+      },
+      {
+        id: 'sat_bonus',
+        weekday: 7, // Saturday
+        hour: 9,
+        minute: 0,
+        body: '2x beğeni bonusu aktif! Bugün şansını dene',
+        subtype: 'saturday_bonus',
+      },
+      {
+        id: 'sun_report',
+        weekday: 1, // Sunday
+        hour: 20,
+        minute: 0,
+        body: 'Haftalık raporun hazır 📊',
+        subtype: 'sunday_report',
+      },
+    ];
+
+    for (const item of weeklySchedule) {
+      await scheduleLocalNotification({
+        identifier: `${WEEKLY_CONTENT_PREFIX}${item.id}`,
+        title: 'LUMA',
+        body: item.body,
+        data: { type: 'WEEKLY_CONTENT', subtype: item.subtype },
+        trigger: {
+          type: SchedulableTriggerInputTypes.WEEKLY,
+          weekday: item.weekday,
+          hour: item.hour,
+          minute: item.minute,
+        },
+      });
+    }
+
+    if (__DEV__) {
+      console.log('[WeeklyContent] 5 haftalık bildirim planlandı (Mon-Sun)');
+    }
+  } catch (error) {
+    if (__DEV__) {
+      console.error('[WeeklyContent] Planlama hatası:', error);
+    }
+  }
+}
+
+// ─── 4. "Seni Kaçıranlar" Premium Upsell Notification ───────────────
+
+/** Notification identifier for missed-likes premium upsell */
+const MISSED_LIKES_PREFIX = 'luma_missedlikes_';
+
+/**
+ * Schedule a "seni kaçıranlar" notification ~2 hours after
+ * the user's daily likes run out. This drives premium conversion.
+ *
+ * Call this when the daily like quota reaches zero.
+ */
+export async function scheduleMissedLikesNotification(): Promise<void> {
+  if (isExpoGo()) return;
+
+  try {
+    // Cancel any previous missed-likes notification
+    await cancelNotificationsByPrefix(MISSED_LIKES_PREFIX);
+
+    await scheduleLocalNotification({
+      identifier: `${MISSED_LIKES_PREFIX}upsell`,
+      title: 'LUMA',
+      body: 'Dün beğeni hakkın dolduğunda seni beğenen 2 kişi vardı. Premium ile hiç kaçırma!',
+      data: { type: 'MISSED_LIKES', subtype: 'premium_upsell' },
+      trigger: {
+        type: SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 7200, // 2 hours after likes run out
+      },
+    });
+
+    if (__DEV__) {
+      console.log('[MissedLikes] Premium upsell bildirimi 2 saat sonra planlandı');
+    }
+  } catch (error) {
+    if (__DEV__) {
+      console.error('[MissedLikes] Planlama hatası:', error);
+    }
+  }
+}
+
+// ─── Master Scheduler ────────────────────────────────────────────────
+
+/**
+ * Schedule ALL engagement notifications at once.
+ * Call on every app foreground and after login.
+ * This bundles re-engagement, FOMO, and weekly content schedules.
+ */
+export async function scheduleAllEngagementNotifications(): Promise<void> {
+  await Promise.all([
+    scheduleReEngagementNotifications(),
+    scheduleFomoNotifications(),
+    scheduleWeeklyContentNotifications(),
+  ]);
+}
+
+/**
+ * Cancel ALL scheduled engagement notifications (e.g. on logout).
+ */
+export async function cancelAllEngagementNotifications(): Promise<void> {
+  await Promise.all([
+    cancelNotificationsByPrefix(RE_ENGAGEMENT_PREFIX),
+    cancelNotificationsByPrefix(FOMO_PREFIX),
+    cancelNotificationsByPrefix(WEEKLY_CONTENT_PREFIX),
+    cancelNotificationsByPrefix(MATCH_URGENCY_PREFIX),
+    cancelNotificationsByPrefix(MISSED_LIKES_PREFIX),
+  ]);
+}

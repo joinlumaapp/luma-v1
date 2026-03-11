@@ -44,6 +44,12 @@ interface UpgradePromptProps {
   feature: PaywallFeature;
   onUpgrade: (tier: PackageTier) => void;
   onDismiss: () => void;
+  /** Optional secondary action (e.g. buy extra likes with Jeton) */
+  secondaryAction?: {
+    label: string;
+    onPress: () => void;
+    disabled?: boolean;
+  };
 }
 
 // Feature configuration: icon, Turkish explanation, minimum tier
@@ -193,6 +199,7 @@ export const UpgradePrompt: React.FC<UpgradePromptProps> = ({
   feature,
   onUpgrade,
   onDismiss,
+  secondaryAction,
 }) => {
   const insets = useSafeAreaInsets();
   const config = FEATURE_MAP[feature];
@@ -289,6 +296,28 @@ export const UpgradePrompt: React.FC<UpgradePromptProps> = ({
               />
             </LinearGradient>
           </TouchableOpacity>
+
+          {/* Secondary action (e.g. buy extra likes) */}
+          {secondaryAction && (
+            <TouchableOpacity
+              style={[
+                styles.secondaryButton,
+                secondaryAction.disabled && styles.secondaryButtonDisabled,
+              ]}
+              onPress={secondaryAction.onPress}
+              disabled={secondaryAction.disabled}
+              activeOpacity={0.85}
+            >
+              <Text
+                style={[
+                  styles.secondaryButtonText,
+                  secondaryAction.disabled && styles.secondaryButtonTextDisabled,
+                ]}
+              >
+                {secondaryAction.label}
+              </Text>
+            </TouchableOpacity>
+          )}
 
           {/* Dismiss */}
           <TouchableOpacity
@@ -398,6 +427,28 @@ const styles = StyleSheet.create({
     width: 60,
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
     transform: [{ skewX: '-20deg' }],
+  },
+  secondaryButton: {
+    width: '100%',
+    height: layout.buttonHeight,
+    borderRadius: borderRadius.md,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  secondaryButtonDisabled: {
+    borderColor: colors.surfaceBorder,
+    opacity: 0.5,
+  },
+  secondaryButtonText: {
+    ...typography.button,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  secondaryButtonTextDisabled: {
+    color: colors.textTertiary,
   },
   dismissButton: {
     paddingVertical: spacing.sm,

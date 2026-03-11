@@ -19,6 +19,7 @@ import {
   ScrollView,
   Image,
   AppState,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
@@ -46,6 +47,7 @@ import { useProfileStore } from '../../stores/profileStore';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
 import { useSocialFeedStore } from '../../stores/socialFeedStore';
 import { useNotificationStore } from '../../stores/notificationStore';
+import { useCoinStore, EXTRA_LIKES_COST, EXTRA_LIKES_COUNT } from '../../stores/coinStore';
 import { matchService } from '../../services/matchService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { MatchAnimation } from '../../components/animations/MatchAnimation';
@@ -53,6 +55,7 @@ import { MatchAnimation } from '../../components/animations/MatchAnimation';
 import { DiscoveryCard } from '../../components/cards/DiscoveryCard';
 import { CompatibilityBottomSheet } from '../../components/discovery/CompatibilityBottomSheet';
 import { UpgradePrompt } from '../../components/premium/UpgradePrompt';
+import { TrialBanner } from '../../components/premium/TrialBanner';
 import { discoveryService } from '../../services/discoveryService';
 import type { LoginStreakResponse } from '../../services/discoveryService';
 import { StreakBanner } from '../../components/streak/StreakBanner';
@@ -231,6 +234,23 @@ const StoriesRow: React.FC<StoriesRowProps> = ({ navigation, userFirstName, user
   );
 };
 
+// ─── FOMO helpers ────────────────────────────────────────────
+
+/** Deterministic mock "likes you" count based on day — returns 3-15 */
+const getMockLikesYouCount = (): number => {
+  const dayOfYear = Math.floor(
+    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000,
+  );
+  return 3 + (dayOfYear * 7 + 11) % 13; // 3..15 range, changes daily
+};
+
+/** Milliseconds until midnight for countdown display */
+const getMsUntilMidnight = (): number => {
+  const now = new Date();
+  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+  return midnight.getTime() - now.getTime();
+};
+
 // ─── Main Screen ─────────────────────────────────────────────
 
 export const DiscoveryScreen: React.FC = () => {
@@ -257,6 +277,8 @@ export const DiscoveryScreen: React.FC = () => {
   const canUndo = useDiscoveryStore((s) => s.canUndo);
   const undoLastSwipe = useDiscoveryStore((s) => s.undoLastSwipe);
   const totalCandidates = useDiscoveryStore((s) => s.totalCandidates);
+  const coinBalance = useCoinStore((s) => s.balance);
+  const purchaseExtraLikes = useCoinStore((s) => s.purchaseExtraLikes);
 
   // Notification badge
   const notifUnreadCount = useNotificationStore((s) => s.unreadCount);
@@ -337,6 +359,27 @@ export const DiscoveryScreen: React.FC = () => {
     discoveryService.getBoostStatus().then(setBoostStatus).catch(() => {});
   }, []);
 
+  // ─── FOMO engagement state ──────────────────────────────
+  const isFreeTier = packageTier === 'free';
+  const mockLikesYouCount = useMemo(() => getMockLikesYouCount(), []);
+  const isSaturdayBonus = DISCOVERY_CONFIG.IS_SATURDAY_BONUS;
+
+  // FOMO: midnight countdown + teaser pulse (declared here, effects after hasMoreCards)
+  const [midnightMs, setMidnightMs] = useState(getMsUntilMidnight());
+  const teaserPulse = useSharedValue(0);
+  const midnightHours = Math.floor(midnightMs / 3600000);
+  const midnightMinutes = Math.floor((midnightMs % 3600000) / 60000);
+  const midnightDisplay = `${midnightHours} saat ${midnightMinutes} dk`;
+
+  const teaserBorderStyle = useAnimatedStyle(() => ({
+    borderColor: `rgba(245, 158, 11, ${interpolate(teaserPulse.value, [0, 1], [0.3, 0.9])})`,
+    shadowOpacity: interpolate(teaserPulse.value, [0, 1], [0.1, 0.4]),
+  }));
+
+  const handleLikesYouTap = useCallback(() => {
+    navigation.navigate('LikesYou' as never);
+  }, [navigation]);
+
   // ─── Like sent toast removed (was too repetitive) ─────────
 
   const handleBoostActivate = useCallback(async (durationMinutes: number) => {
@@ -352,19 +395,6 @@ export const DiscoveryScreen: React.FC = () => {
     navigation.navigate('MembershipPlans');
   }, [navigation]);
 
-  // ─── Time-based greeting ──────────────────────────────────
-  const greeting = useMemo(() => {
-    const hour = new Date().getHours();
-    let base: string;
-    if (hour < 12) {
-      base = 'Günaydın';
-    } else if (hour < 18) {
-      base = 'Merhaba';
-    } else {
-      base = 'İyi akşamlar';
-    }
-    return userFirstName ? `${base}, ${userFirstName}` : base;
-  }, [userFirstName]);
 
   // Match detail state
   const [matchConversationStarters, setMatchConversationStarters] = useState<string[]>([]);
@@ -391,6 +421,31 @@ export const DiscoveryScreen: React.FC = () => {
   // ─── Stable refs for gesture callbacks ─────────────────────
   const currentCardRef = useRef(currentCard);
   currentCardRef.current = currentCard;
+
+  // ─── FOMO effects (need hasMoreCards) ──────────────────────
+
+  // Midnight countdown — ticks only in empty state
+  useEffect(() => {
+    if (hasMoreCards) return;
+    const interval = setInterval(() => {
+      setMidnightMs(getMsUntilMidnight());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [hasMoreCards]);
+
+  // Teaser card pulsing gold border — free users in empty state
+  useEffect(() => {
+    if (!hasMoreCards && isFreeTier) {
+      const pulse = (): void => {
+        teaserPulse.value = withTiming(1, { duration: 1200 }, () => {
+          teaserPulse.value = withTiming(0, { duration: 1200 }, () => {
+            runOnJS(pulse)();
+          });
+        });
+      };
+      pulse();
+    }
+  }, [hasMoreCards, isFreeTier, teaserPulse]);
 
   // ─── Effects ───────────────────────────────────────────────
 
@@ -797,6 +852,25 @@ export const DiscoveryScreen: React.FC = () => {
     navigation.navigate('MembershipPlans');
   }, [navigation]);
 
+  const handleBuyExtraLikes = useCallback(() => {
+    const success = purchaseExtraLikes();
+    if (success) {
+      setShowUpgradePrompt(false);
+    } else {
+      Alert.alert('Yetersiz Jeton', 'Ek begeni almak icin yeterli jetonun yok.');
+    }
+  }, [purchaseExtraLikes]);
+
+  // Build secondary action for daily_likes upgrade prompt
+  const extraLikesSecondaryAction = useMemo(() => {
+    if (upgradeFeature !== 'daily_likes') return undefined;
+    return {
+      label: `${EXTRA_LIKES_COUNT} ek begeni al — ${EXTRA_LIKES_COST} Jeton`,
+      onPress: handleBuyExtraLikes,
+      disabled: coinBalance < EXTRA_LIKES_COST,
+    };
+  }, [upgradeFeature, coinBalance, handleBuyExtraLikes]);
+
   // ─── Loading state ─────────────────────────────────────────
 
   if (isLoading && cards.length === 0) {
@@ -805,7 +879,7 @@ export const DiscoveryScreen: React.FC = () => {
         <View style={styles.darkHeaderArea}>
           <View style={styles.header}>
             <View style={styles.headerLeft}>
-              <Text style={styles.headerTitle}>{greeting}</Text>
+              <Text style={styles.headerTitle}>{'LUMA'}</Text>
               <Text style={styles.headerSubtitle}>
                 {isUnlimitedLikes ? 'Sınırsız beğeni' : `Bugün ${dailyRemaining} profil kaldı`}
               </Text>
@@ -836,6 +910,7 @@ export const DiscoveryScreen: React.FC = () => {
               </Pressable>
             </View>
           </View>
+          <TrialBanner />
           <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} />
         </View>
         <View style={styles.emptyContainer}>
@@ -865,7 +940,7 @@ export const DiscoveryScreen: React.FC = () => {
         <View style={styles.darkHeaderArea}>
           <View style={styles.header}>
             <View style={styles.headerLeft}>
-              <Text style={styles.headerTitle}>{greeting}</Text>
+              <Text style={styles.headerTitle}>{'LUMA'}</Text>
               <Text style={styles.headerSubtitle}>
                 {isUnlimitedLikes ? 'Sınırsız beğeni' : `Bugün ${dailyRemaining} profil kaldı`}
               </Text>
@@ -896,9 +971,40 @@ export const DiscoveryScreen: React.FC = () => {
               </Pressable>
             </View>
           </View>
+          <TrialBanner />
           <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} />
         </View>
         <View style={styles.emptyContainer}>
+          {/* "Seni Begeneler" teaser card — free users only */}
+          {isFreeTier && (
+            <Pressable
+              onPress={handleLikesYouTap}
+              accessibilityLabel="Seni begenen profilleri gor"
+              accessibilityRole="button"
+              testID="discovery-teaser-card"
+            >
+              <Animated.View style={[styles.teaserCard, teaserBorderStyle]}>
+                {/* Blurred mock profile circles */}
+                <View style={styles.teaserAvatarRow}>
+                  <View style={[styles.teaserAvatar, { backgroundColor: palette.purple[400] + '60' }]}>
+                    <Text style={styles.teaserAvatarText}>?</Text>
+                  </View>
+                  <View style={[styles.teaserAvatar, { backgroundColor: palette.pink[400] + '60', marginLeft: -12 }]}>
+                    <Text style={styles.teaserAvatarText}>?</Text>
+                  </View>
+                  <View style={[styles.teaserAvatar, { backgroundColor: palette.gold[400] + '60', marginLeft: -12 }]}>
+                    <Text style={styles.teaserAvatarText}>?</Text>
+                  </View>
+                </View>
+                <Text style={styles.teaserTitle}>Seni begenen 3+ kisi var</Text>
+                <Text style={styles.teaserSubtitle}>Kim oldugunu gormek icin dokun</Text>
+                <View style={styles.teaserArrow}>
+                  <Ionicons name="chevron-forward" size={16} color={palette.gold[400]} />
+                </View>
+              </Animated.View>
+            </Pressable>
+          )}
+
           {/* Pulsating Luma icon */}
           <Animated.View style={[styles.emptyIconCircle, styles.emptyPulse]}>
             <Text style={styles.emptyIconLetter}>L</Text>
@@ -906,9 +1012,9 @@ export const DiscoveryScreen: React.FC = () => {
 
           {isCoolingDown ? (
             <>
-              <Text style={styles.emptyTitle}>Luma ruh eşini arıyor...</Text>
+              <Text style={styles.emptyTitle}>Luma ruh esini ariyor...</Text>
               <Text style={styles.emptySubtitle}>
-                Senin için en uyumlu profiller hazırlanıyor. Biraz sabret.
+                Senin icin en uyumlu profiller hazirlaniyor. Biraz sabret.
               </Text>
               <View style={styles.countdownContainer}>
                 <Text style={styles.countdownText}>{cooldownDisplay}</Text>
@@ -916,34 +1022,51 @@ export const DiscoveryScreen: React.FC = () => {
             </>
           ) : (
             <>
-              <Text style={styles.emptyTitle}>Yeni profiller hazır!</Text>
+              <Text style={styles.emptyTitle}>Yeni profiller hazir!</Text>
               <Text style={styles.emptySubtitle}>
-                Senin için özenle seçilmiş profiller seni bekliyor.
+                Senin icin ozenle secilmis profiller seni bekliyor.
               </Text>
             </>
+          )}
+
+          {/* Daily reset countdown — free users */}
+          {isFreeTier && dailyRemaining <= 0 && (
+            <View style={styles.dailyResetContainer}>
+              <Ionicons name="time-outline" size={14} color={colors.textSecondary} />
+              <Text style={styles.dailyResetText}>
+                Begeni hakkin {midnightDisplay} sonra yenileniyor
+              </Text>
+            </View>
           )}
 
           <Pressable
             onPress={() => refreshFeed()}
             accessibilityLabel="Yenile"
             accessibilityRole="button"
-            accessibilityHint="Yeni profilleri yüklemek için dokunun"
+            accessibilityHint="Yeni profilleri yuklemek icin dokunun"
           >
             <View style={styles.refreshButton} testID="discovery-refresh-btn">
               <Text style={styles.refreshButtonText}>Yenile</Text>
             </View>
           </Pressable>
 
+          {/* Missed connection hint — free users only */}
+          {isFreeTier && dailyRemaining <= 0 && (
+            <Text style={styles.missedConnectionText}>
+              Bugun begeni hakkin doldugunda seni begenen 2 kisi vardi
+            </Text>
+          )}
+
           {/* Navigation shortcuts */}
           <View style={styles.emptyNavRow}>
             <Pressable
               style={styles.emptyNavButton}
               onPress={() => navigation.navigate('FeedTab', { screen: 'SocialFeed' })}
-              accessibilityLabel="Akışa git"
+              accessibilityLabel="Akisa git"
               accessibilityRole="button"
             >
               <Ionicons name="newspaper-outline" size={18} color={colors.textSecondary} />
-              <Text style={styles.emptyNavText}>Akışa Git</Text>
+              <Text style={styles.emptyNavText}>Akisa Git</Text>
             </Pressable>
             <Pressable
               style={styles.emptyNavButton}
@@ -957,11 +1080,11 @@ export const DiscoveryScreen: React.FC = () => {
             <Pressable
               style={styles.emptyNavButton}
               onPress={() => navigation.navigate('MatchesTab', { screen: 'MatchesList' })}
-              accessibilityLabel="Eşleşmelere git"
+              accessibilityLabel="Eslesmelere git"
               accessibilityRole="button"
             >
               <Ionicons name="heart-outline" size={18} color={colors.textSecondary} />
-              <Text style={styles.emptyNavText}>Eşleşmeler</Text>
+              <Text style={styles.emptyNavText}>Eslesmeler</Text>
             </Pressable>
           </View>
         </View>
@@ -981,12 +1104,26 @@ export const DiscoveryScreen: React.FC = () => {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={styles.headerTitle}>{greeting}</Text>
+            <Text style={styles.headerTitle}>{'LUMA'}</Text>
             <Text style={styles.headerSubtitle}>
               Bugün {dailyRemaining} profil kaldı
             </Text>
           </View>
           <View style={styles.headerRight}>
+            {/* FOMO "likes you" badge — free users only */}
+            {isFreeTier && mockLikesYouCount > 0 && (
+              <Pressable
+                onPress={handleLikesYouTap}
+                accessibilityLabel={`${mockLikesYouCount} kisi seni begendi`}
+                accessibilityRole="button"
+                testID="discovery-fomo-likes-badge"
+              >
+                <View style={styles.fomoLikesBadge}>
+                  <Text style={styles.fomoLikesEmoji}>{'\uD83D\uDD25'}</Text>
+                  <Text style={styles.fomoLikesText}>{mockLikesYouCount} begeni</Text>
+                </View>
+              </Pressable>
+            )}
             {/* Persistent streak badge — always visible when streak > 0 */}
             {persistentStreakCount > 0 && (
               <Pressable
@@ -1061,9 +1198,21 @@ export const DiscoveryScreen: React.FC = () => {
           </View>
         </View>
 
+        {/* Trial banner — shows remaining Gold trial time */}
+        <TrialBanner />
+
         {/* Stories row — Instagram-style horizontal bubbles */}
         <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} />
       </View>
+
+      {/* Saturday 2x bonus banner */}
+      {isSaturdayBonus && isFreeTier && (
+        <View style={styles.saturdayBanner} testID="discovery-saturday-banner">
+          <Text style={styles.saturdayBannerText}>
+            Hafta sonu bonusu! 2x begeni hakki {'\uD83C\uDF89'}
+          </Text>
+        </View>
+      )}
 
       {/* Card stack */}
       <View style={styles.cardStack}>
@@ -1292,6 +1441,7 @@ export const DiscoveryScreen: React.FC = () => {
         feature={upgradeFeature}
         onUpgrade={handleUpgradeNavigate}
         onDismiss={handleUpgradeDismiss}
+        secondaryAction={extraLikesSecondaryAction}
       />
 
       {/* Login streak banner */}
@@ -1610,6 +1760,26 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textSecondary,
   },
+  // ── FOMO header badge ──
+  fomoLikesBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(239,68,68,0.12)', borderRadius: 14, paddingHorizontal: 8, paddingVertical: 4, gap: 3, borderWidth: 1, borderColor: 'rgba(239,68,68,0.25)' },
+  fomoLikesEmoji: { fontSize: 12 },
+  fomoLikesText: { fontSize: 12, fontWeight: '700', color: '#EF4444', letterSpacing: 0.2 },
+  // ── Saturday banner ──
+  saturdayBanner: { backgroundColor: palette.gold[500] + '18', borderWidth: 1, borderColor: palette.gold[500] + '30', borderRadius: borderRadius.md, marginHorizontal: spacing.lg, marginBottom: spacing.xs, paddingVertical: spacing.xs + 2, paddingHorizontal: spacing.md, alignItems: 'center' },
+  saturdayBannerText: { ...typography.caption, color: palette.gold[400], fontWeight: '700', letterSpacing: 0.3 },
+  // ── Teaser card ──
+  teaserCard: { backgroundColor: colors.surface, borderRadius: borderRadius.xl, borderWidth: 2, paddingVertical: spacing.lg, paddingHorizontal: spacing.xl, alignItems: 'center', marginBottom: spacing.lg, width: SCREEN_WIDTH - spacing.xxl * 2, shadowColor: palette.gold[500], shadowOffset: { width: 0, height: 4 }, shadowRadius: 12, elevation: 6 },
+  teaserAvatarRow: { flexDirection: 'row', marginBottom: spacing.sm },
+  teaserAvatar: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: colors.surface },
+  teaserAvatarText: { fontSize: 18, fontWeight: '700', color: colors.textTertiary },
+  teaserTitle: { ...typography.bodyLarge, color: colors.text, fontWeight: '700', marginBottom: 4 },
+  teaserSubtitle: { ...typography.caption, color: colors.textSecondary },
+  teaserArrow: { position: 'absolute', right: spacing.md, top: '50%' },
+  // ── Daily reset countdown ──
+  dailyResetContainer: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.xs, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: borderRadius.md },
+  dailyResetText: { ...typography.caption, color: colors.textSecondary },
+  // ── Missed connection hint ──
+  missedConnectionText: { ...typography.caption, color: colors.textTertiary, textAlign: 'center', marginTop: spacing.md, fontStyle: 'italic', paddingHorizontal: spacing.lg },
   // ── Like-with-comment modal ──
   commentModalOverlay: {
     flex: 1,

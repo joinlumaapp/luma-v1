@@ -56,14 +56,15 @@ const GLASS = {
 /** Maps UI plan selection to the PackageTier used by iapService */
 const PLAN_TO_TIER: Record<string, PackageTier> = {
   supreme: 'reserved',
-  premium: 'pro',
+  premium: 'gold',
 };
 
 /** Maps coin pack IDs to App Store / Play Store product IDs */
 const PACK_ID_TO_PRODUCT: Record<string, string> = {
-  pack_100: 'com.luma.dating.gold.100',
-  pack_500: 'com.luma.dating.gold.500',
-  pack_1000: 'com.luma.dating.gold.1000',
+  gold_50: 'com.luma.dating.gold.50',
+  gold_150: 'com.luma.dating.gold.150',
+  gold_500: 'com.luma.dating.gold.500',
+  gold_1000: 'com.luma.dating.gold.1000',
 };
 
 type ActiveTab = 'packages' | 'coins';
@@ -81,32 +82,15 @@ interface TierFeature {
   supremeDetail?: string;
 }
 
+// Values aligned with PACKAGE_FEATURES in @luma/shared and config.ts
 const FEATURES: TierFeature[] = [
   {
     label: 'Günlük Beğeni',
     free: 'included',
     premium: 'included',
     supreme: 'included',
-    freeDetail: '250 (50/saat)',
-    premiumDetail: '1.000',
-    supremeDetail: 'Sınırsız',
-  },
-  {
-    label: 'Paylaşım',
-    free: 'included',
-    premium: 'included',
-    supreme: 'included',
-    freeDetail: '5',
-    premiumDetail: 'Sınırsız',
-    supremeDetail: 'Sınırsız',
-  },
-  {
-    label: 'Aktivite Planı',
-    free: 'included',
-    premium: 'included',
-    supreme: 'included',
-    freeDetail: '1',
-    premiumDetail: 'Sınırsız',
+    freeDetail: '20',
+    premiumDetail: '60',
     supremeDetail: 'Sınırsız',
   },
   {
@@ -114,29 +98,29 @@ const FEATURES: TierFeature[] = [
     free: 'included',
     premium: 'included',
     supreme: 'included',
-    freeDetail: '1',
-    premiumDetail: '10',
-    supremeDetail: '20',
+    freeDetail: '1/gün',
+    premiumDetail: '5/gün',
+    supremeDetail: 'Sınırsız',
   },
   {
     label: 'Direkt Mesaj',
     free: 'included',
     premium: 'included',
     supreme: 'included',
-    freeDetail: '1',
-    premiumDetail: '5',
-    supremeDetail: '10',
+    freeDetail: '1/gün',
+    premiumDetail: '5/gün',
+    supremeDetail: 'Sınırsız',
   },
   {
-    label: 'Günlük Boost',
+    label: 'Aylık Jeton',
     free: 'excluded',
     premium: 'included',
     supreme: 'included',
-    premiumDetail: '1 Saat',
-    supremeDetail: '2 Saat',
+    premiumDetail: '50',
+    supremeDetail: '500',
   },
   {
-    label: 'Reklamsız Deneyim',
+    label: 'Kimin Beğendiğini Gör',
     free: 'excluded',
     premium: 'included',
     supreme: 'included',
@@ -146,26 +130,37 @@ const FEATURES: TierFeature[] = [
     free: 'excluded',
     premium: 'included',
     supreme: 'included',
-    premiumDetail: 'Sınırsız',
+  },
+  {
+    label: 'Boost',
+    free: 'excluded',
+    premium: 'included',
+    supreme: 'included',
+    premiumDetail: '1/ay',
     supremeDetail: 'Sınırsız',
   },
   {
-    label: 'Öncelikli Beğeniler',
+    label: 'Reklamsız Deneyim',
+    free: 'excluded',
+    premium: 'included',
+    supreme: 'included',
+  },
+  {
+    label: 'Öncelikli Gösterim',
     free: 'locked',
     premium: 'locked',
     supreme: 'included',
-    supremeDetail: 'İlk görünen',
+  },
+  {
+    label: 'Gelişmiş Filtreler',
+    free: 'locked',
+    premium: 'locked',
+    supreme: 'included',
   },
   {
     label: 'Profilimi Kim Gördü',
     free: 'locked',
-    premium: 'locked',
-    supreme: 'included',
-  },
-  {
-    label: 'Gelişmiş Arama Filtreleri',
-    free: 'locked',
-    premium: 'locked',
+    premium: 'included',
     supreme: 'included',
   },
 ];

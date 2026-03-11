@@ -23,9 +23,10 @@ import { glassmorphism, palette } from '../../theme/colors';
 
 /** Maps coin pack IDs to App Store / Play Store product IDs */
 const PACK_ID_TO_PRODUCT: Record<string, string> = {
-  pack_100: 'com.luma.dating.gold.100',
-  pack_500: 'com.luma.dating.gold.500',
-  pack_1000: 'com.luma.dating.gold.1000',
+  gold_50: 'com.luma.dating.gold.50',
+  gold_150: 'com.luma.dating.gold.150',
+  gold_500: 'com.luma.dating.gold.500',
+  gold_1000: 'com.luma.dating.gold.1000',
 };
 
 const GOLD_24K = {

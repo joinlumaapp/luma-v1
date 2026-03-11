@@ -126,19 +126,39 @@ export const PROFILE_CONFIG = {
   MAX_AGE: 99,
 } as const;
 
+// Saturday bonus multiplier — doubles free tier likes on Saturdays
+const isSaturday = (): boolean => new Date().getDay() === 6;
+
+// Base daily like limits per tier (before any bonuses)
+const BASE_DAILY_LIKES = {
+  free: 20,
+  gold: 60,
+  pro: 200,
+  reserved: 999999,
+} as const;
+
+/** Returns tier daily likes with Saturday 2x bonus applied to free tier */
+export const getDailyLikesForTier = (tier: keyof typeof BASE_DAILY_LIKES): number => {
+  const base = BASE_DAILY_LIKES[tier];
+  if (tier === 'free' && isSaturday()) return base * 2;
+  return base;
+};
+
 // Discovery configuration (limits must match backend DAILY_SWIPE_LIMITS)
 export const DISCOVERY_CONFIG = {
-  FREE_DAILY_LIKES: 20,
+  FREE_DAILY_LIKES: isSaturday() ? 40 : 20,
   CARD_STACK_SIZE: 60,
   DEFAULT_DISTANCE_KM: 50,
   MAX_DISTANCE_KM: 200,
   /** Per-tier daily like limits — must match PACKAGE_FEATURES in @luma/shared */
   DAILY_LIKES: {
-    free: 20,
+    free: isSaturday() ? 40 : 20,
     gold: 60,
     pro: 200,
     reserved: 999999,
   },
+  /** Whether Saturday 2x bonus is currently active */
+  IS_SATURDAY_BONUS: isSaturday(),
   /** Batch loading: profiles per batch */
   BATCH_SIZE: 50,
   /** Batch cooldown in milliseconds (30 minutes) */

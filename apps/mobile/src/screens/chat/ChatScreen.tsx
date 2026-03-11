@@ -288,26 +288,8 @@ export const ChatScreen: React.FC = () => {
     const trimmed = inputText.trim();
     if (!trimmed || isSending) return;
 
-    // Free users must spend Jeton to send messages (premium users send free)
-    if (!isPremiumTier) {
-      if (coinBalance < INSTANT_MESSAGE_COST) {
-        Alert.alert(
-          'Yetersiz Jeton',
-          `Mesaj göndermek için ${INSTANT_MESSAGE_COST} Jeton gerekli. Jeton Mağazası'na gitmek ister misin?`,
-          [
-            { text: 'Vazgeç', style: 'cancel' },
-            {
-              text: 'Jeton Al',
-              onPress: () => navigation.navigate('JetonMarket'),
-            },
-          ],
-        );
-        return;
-      }
-
-      const spent = await sendInstantMessage(matchId);
-      if (!spent) return;
-    }
+    // Free users: matched chats are free, only DMs to non-matches cost Jeton
+    // Since ChatScreen is only reachable from matched conversations, messages are free
 
     const sent = await sendMessage(matchId, trimmed);
     if (sent) {
