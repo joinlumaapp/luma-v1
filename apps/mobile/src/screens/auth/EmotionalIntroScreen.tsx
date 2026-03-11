@@ -13,6 +13,7 @@ import {
   Modal,
   Pressable,
   Alert,
+  Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -229,14 +230,14 @@ const EmotionalIntroScreen: React.FC = () => {
 
         {/* Bottom section — buttons */}
         <View style={styles.bottomSection}>
-          {/* Google button */}
+          {/* Google button — disabled until Google Auth is implemented */}
           <TouchableOpacity
-            style={styles.googleButton}
+            style={[styles.googleButton, styles.googleButtonDisabled]}
             onPress={handleGoogleSignIn}
             activeOpacity={0.9}
           >
             <Ionicons name="logo-google" size={20} color="#1A1A1A" />
-            <Text style={styles.googleButtonText}>Google ile bağlan</Text>
+            <Text style={styles.googleButtonText}>Google ile baglan (Cok yakinda)</Text>
           </TouchableOpacity>
 
           {/* Diger secenekler button */}
@@ -256,9 +257,25 @@ const EmotionalIntroScreen: React.FC = () => {
             </Text>
           </TouchableOpacity>
 
-          {/* Privacy note */}
+          {/* Privacy note — with tappable legal links */}
           <Text style={styles.privacyText}>
-            Kaydolarak, Genel Kullanım Koşullarımızı ve Gizlilik Politikamızı kabul etmiş olursun.
+            {'Kaydolarak, '}
+            <Text
+              style={styles.privacyLink}
+              onPress={() => Linking.openURL('https://luma.dating/terms')}
+              accessibilityRole="link"
+            >
+              Genel Kullanim Kosullarimizi
+            </Text>
+            {' ve '}
+            <Text
+              style={styles.privacyLink}
+              onPress={() => Linking.openURL('https://luma.dating/privacy')}
+              accessibilityRole="link"
+            >
+              Gizlilik Politikamizi
+            </Text>
+            {' kabul etmis olursun.'}
           </Text>
         </View>
       </LinearGradient>
@@ -393,6 +410,10 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     textDecorationLine: 'underline',
   },
+  // Google button disabled state
+  googleButtonDisabled: {
+    opacity: 0.5,
+  },
   // Privacy text
   privacyText: {
     fontSize: 11,
@@ -401,6 +422,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: spacing.lg,
     marginTop: 4,
+  },
+  privacyLink: {
+    textDecorationLine: 'underline' as const,
+    color: 'rgba(255, 255, 255, 0.75)',
   },
   // Test panel modal
   modalOverlay: {

@@ -63,14 +63,14 @@ export const SignUpChoiceScreen: React.FC = () => {
 
       {/* Buttons */}
       <View style={styles.footer}>
-        {/* Google button */}
+        {/* Google button — disabled until Google Auth is implemented */}
         <TouchableOpacity
-          style={styles.googleButton}
+          style={[styles.googleButton, styles.googleButtonDisabled]}
           onPress={handleGoogle}
           activeOpacity={0.7}
         >
           <Ionicons name="logo-google" size={20} color={onboardingColors.text} />
-          <Text style={styles.googleButtonText}>Google ile devam et</Text>
+          <Text style={styles.googleButtonText}>Google ile baglan (Cok yakinda)</Text>
         </TouchableOpacity>
 
         {/* Phone button */}
@@ -148,6 +148,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: onboardingColors.text,
+  },
+  googleButtonDisabled: {
+    opacity: 0.5,
   },
   phoneButton: {
     flexDirection: 'row',

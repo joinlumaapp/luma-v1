@@ -23,6 +23,8 @@ import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
 import { useCoinStore, COIN_PACKS, type CoinPack } from '../../stores/coinStore';
 import { CoinBalance } from '../../components/common/CoinBalance';
+import { iapService } from '../../services/iapService';
+import { paymentService } from '../../services/paymentService';
 
 // ─── Constants ───────────────────────────────────────────────────────
 
@@ -50,6 +52,19 @@ const GLASS = {
   goldAccent: '#D4AF37',
   purpleAccent: '#A78BFA',
 } as const;
+
+/** Maps UI plan selection to the PackageTier used by iapService */
+const PLAN_TO_TIER: Record<string, PackageTier> = {
+  supreme: 'reserved',
+  premium: 'pro',
+};
+
+/** Maps coin pack IDs to App Store / Play Store product IDs */
+const PACK_ID_TO_PRODUCT: Record<string, string> = {
+  pack_100: 'com.luma.dating.gold.100',
+  pack_500: 'com.luma.dating.gold.500',
+  pack_1000: 'com.luma.dating.gold.1000',
+};
 
 type ActiveTab = 'packages' | 'coins';
 
@@ -689,8 +704,11 @@ export const MembershipPlansScreen: React.FC = () => {
   // Tab state
   const [activeTab, setActiveTab] = useState<ActiveTab>('packages');
 
+  // Purchase loading state
+  const [isPurchasing, setIsPurchasing] = useState(false);
+
   // Coin store
-  const { isLoading: coinLoading, purchaseCoins, watchAd, isAdAvailable } =
+  const { isLoading: coinLoading, watchAd, isAdAvailable } =
     useCoinStore();
   const adCooldownUntil = useCoinStore((state) => state.adCooldownUntil);
   const [adCooldown, setAdCooldown] = useState(0);
@@ -719,36 +737,140 @@ export const MembershipPlansScreen: React.FC = () => {
   };
 
   const handleSelectPlan = useCallback((plan: 'free' | 'premium' | 'supreme') => {
+    if (isPurchasing) return;
+
     if (plan === 'free') {
       Alert.alert(
         'Plan Değişikliği',
         'Ücretsiz plana geçmek istediğinize emin misiniz? Mevcut premium özelliklerinizi kaybedeceksiniz.',
         [
           { text: 'Vazgeç', style: 'cancel' },
-          { text: 'Onayla', style: 'destructive', onPress: () => { /* TODO: downgrade */ } },
+          {
+            text: 'Onayla',
+            style: 'destructive',
+            onPress: async () => {
+              setIsPurchasing(true);
+              try {
+                await paymentService.cancelSubscription();
+                useAuthStore.getState().updatePackageTier('free');
+                Alert.alert('Başarılı', 'Ücretsiz plana geçiş yapıldı.');
+              } catch (error: unknown) {
+                const message = error instanceof Error ? error.message : '';
+                if (__DEV__) {
+                  console.warn('[MembershipPlans] Downgrade failed:', message);
+                }
+                Alert.alert('Hata', 'Plan değişikliği başarısız oldu. Lütfen tekrar deneyin.');
+              } finally {
+                setIsPurchasing(false);
+              }
+            },
+          },
         ],
       );
     } else {
+      const planLabel = plan === 'supreme' ? 'Supreme' : 'Premium';
+      const tier = PLAN_TO_TIER[plan];
+      if (!tier) return;
+
       Alert.alert(
-        'Ödeme',
-        plan === 'supreme'
-          ? 'Supreme planı için ödeme sayfasına yönlendirileceksiniz.'
-          : 'Premium planı için ödeme sayfasına yönlendirileceksiniz.',
-        [{ text: 'Tamam' }],
+        'Paket Yükseltme',
+        `${planLabel} planına yükseltmek istiyor musunuz?`,
+        [
+          { text: 'Vazgeç', style: 'cancel' },
+          {
+            text: 'Yükselt',
+            onPress: async () => {
+              setIsPurchasing(true);
+              try {
+                // Initialize IAP connection
+                const status = await iapService.initIAP();
+                if (__DEV__ && status.isMockMode) {
+                  console.log('[MembershipPlans] IAP mock mode — using dev receipt');
+                }
+
+                // Request purchase from store (or mock in dev)
+                const purchase = await iapService.purchaseSubscription(tier);
+
+                if (__DEV__) {
+                  console.log(
+                    `[MembershipPlans] Purchase complete — product: ${purchase.productId}, platform: ${purchase.platform}`,
+                  );
+                }
+
+                // Send receipt to backend for validation
+                const result = await paymentService.subscribe({
+                  packageTier: tier,
+                  platform: purchase.platform,
+                  receipt: purchase.receipt,
+                });
+
+                useAuthStore.getState().updatePackageTier(result.packageTier as PackageTier);
+                Alert.alert('Başarılı!', `${planLabel} aboneliğiniz aktif edildi!`);
+              } catch (error: unknown) {
+                const message = error instanceof Error ? error.message : '';
+                // Do not show error if user cancelled
+                if (message.includes('cancelled')) return;
+                Alert.alert('Hata', 'Ödeme işlemi başarısız oldu. Lütfen tekrar deneyin.');
+              } finally {
+                setIsPurchasing(false);
+              }
+            },
+          },
+        ],
       );
     }
-  }, []);
+  }, [isPurchasing]);
 
   const handlePurchaseCoins = useCallback(
     async (packId: string) => {
-      const success = await purchaseCoins(packId);
-      if (success) {
-        Alert.alert('Başarılı!', 'Jetonlar hesabına eklendi.');
-      } else {
-        Alert.alert('Hata', 'Satın alma başarısız oldu. Tekrar deneyin.');
+      if (isPurchasing) return;
+
+      const productId = PACK_ID_TO_PRODUCT[packId];
+      if (!productId) {
+        Alert.alert('Hata', 'Geçersiz jeton paketi.');
+        return;
+      }
+
+      const pack = COIN_PACKS.find((p) => p.id === packId);
+      if (!pack) return;
+
+      setIsPurchasing(true);
+      try {
+        // Initialize IAP connection
+        const status = await iapService.initIAP();
+        if (__DEV__ && status.isMockMode) {
+          console.log('[MembershipPlans] IAP mock mode — using dev receipt for gold');
+        }
+
+        // Request gold purchase from store
+        const purchase = await iapService.purchaseGold(productId);
+
+        if (__DEV__) {
+          console.log(
+            `[MembershipPlans] Gold purchase complete — product: ${purchase.productId}, platform: ${purchase.platform}`,
+          );
+        }
+
+        // Send receipt to backend for validation and balance update
+        const result = await paymentService.purchaseGold({
+          packageId: packId,
+          receipt: purchase.receipt,
+          platform: purchase.platform,
+        });
+
+        // Update local coin balance
+        useCoinStore.getState().earnCoins(result.goldAdded, `${pack.coins} Jeton paketi satın alımı`);
+
+        Alert.alert('Başarılı!', `${result.goldAdded} Jeton hesabınıza eklendi.`);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : '';
+        if (message.includes('cancelled')) return;
+        Alert.alert('Hata', 'Jeton satın alma başarısız oldu. Lütfen tekrar deneyin.');
+      } finally {
+        setIsPurchasing(false);
       }
     },
-    [purchaseCoins],
+    [isPurchasing],
   );
 
   const handleWatchAd = useCallback(async () => {
@@ -873,7 +995,7 @@ export const MembershipPlansScreen: React.FC = () => {
                 key={pack.id}
                 pack={pack}
                 onPurchase={handlePurchaseCoins}
-                isLoading={coinLoading}
+                isLoading={isPurchasing}
               />
             ))}
 

@@ -80,10 +80,10 @@ export const PACKAGE_TIERS = [
     name: 'Premium',
     price: 349.99,
     features: [
-      'Sınırsız beğeni',
+      'Günlük 60 beğeni',
       '5 Süper Beğeni / gün',
       'Kimin beğendiğini gör',
-      'Sınırsız geri al',
+      'Geri al',
       'Reklamsız deneyim',
       'Sosyal Akış erişimi',
     ],
@@ -132,12 +132,12 @@ export const DISCOVERY_CONFIG = {
   CARD_STACK_SIZE: 60,
   DEFAULT_DISTANCE_KM: 50,
   MAX_DISTANCE_KM: 200,
-  /** Per-tier daily like limits (-1 = unlimited) */
+  /** Per-tier daily like limits — must match PACKAGE_FEATURES in @luma/shared */
   DAILY_LIKES: {
     free: 20,
-    gold: -1,
-    pro: -1,
-    reserved: -1,
+    gold: 60,
+    pro: 200,
+    reserved: 999999,
   },
   /** Batch loading: profiles per batch */
   BATCH_SIZE: 50,

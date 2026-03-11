@@ -15,9 +15,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { useCoinStore, COIN_PACKS, type CoinPack } from '../../stores/coinStore';
+import { iapService } from '../../services/iapService';
+import { paymentService } from '../../services/paymentService';
 import { typography, fontWeights } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 import { glassmorphism, palette } from '../../theme/colors';
+
+/** Maps coin pack IDs to App Store / Play Store product IDs */
+const PACK_ID_TO_PRODUCT: Record<string, string> = {
+  pack_100: 'com.luma.dating.gold.100',
+  pack_500: 'com.luma.dating.gold.500',
+  pack_1000: 'com.luma.dating.gold.1000',
+};
 
 const GOLD_24K = {
   light: '#FFD700',
@@ -219,9 +228,10 @@ const packCardStyles = StyleSheet.create({
 // ── Main Screen ──────────────────────────────────────────────
 export const JetonMarketScreen: React.FC = () => {
   const navigation = useNavigation();
-  const { balance, isLoading, purchaseCoins, watchAd, isAdAvailable } =
+  const { balance, isLoading, watchAd, isAdAvailable } =
     useCoinStore();
 
+  const [isPurchasing, setIsPurchasing] = useState(false);
   const [adCooldown, setAdCooldown] = useState(0);
   const adCooldownUntil = useCoinStore((state) => state.adCooldownUntil);
 
@@ -250,14 +260,54 @@ export const JetonMarketScreen: React.FC = () => {
 
   const handlePurchase = useCallback(
     async (packId: string) => {
-      const success = await purchaseCoins(packId);
-      if (success) {
-        Alert.alert('Basarili!', 'Jetonlar hesabina eklendi.');
-      } else {
-        Alert.alert('Hata', 'Satin alma basarisiz oldu. Tekrar deneyin.');
+      if (isPurchasing) return;
+
+      const productId = PACK_ID_TO_PRODUCT[packId];
+      if (!productId) {
+        Alert.alert('Hata', 'Geçersiz jeton paketi.');
+        return;
+      }
+
+      const pack = COIN_PACKS.find((p) => p.id === packId);
+      if (!pack) return;
+
+      setIsPurchasing(true);
+      try {
+        // Initialize IAP connection
+        const status = await iapService.initIAP();
+        if (__DEV__ && status.isMockMode) {
+          console.log('[JetonMarket] IAP mock mode — using dev receipt for gold');
+        }
+
+        // Request gold purchase from store
+        const purchase = await iapService.purchaseGold(productId);
+
+        if (__DEV__) {
+          console.log(
+            `[JetonMarket] Gold purchase complete — product: ${purchase.productId}, platform: ${purchase.platform}`,
+          );
+        }
+
+        // Send receipt to backend for validation and balance update
+        const result = await paymentService.purchaseGold({
+          packageId: packId,
+          receipt: purchase.receipt,
+          platform: purchase.platform,
+        });
+
+        // Update local coin balance
+        useCoinStore.getState().earnCoins(result.goldAdded, `${pack.coins} Jeton paketi satın alımı`);
+
+        Alert.alert('Başarılı!', `${result.goldAdded} Jeton hesabınıza eklendi.`);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : '';
+        if (message.includes('cancelled')) return;
+        Alert.alert('Hata', 'Jeton satın alma başarısız oldu. Lütfen tekrar deneyin.');
+      } finally {
+        setIsPurchasing(false);
       }
     },
-    [purchaseCoins],
+    [isPurchasing],
   );
 
   const handleWatchAd = useCallback(async () => {
@@ -309,7 +359,7 @@ export const JetonMarketScreen: React.FC = () => {
               key={pack.id}
               pack={pack}
               onPurchase={handlePurchase}
-              isLoading={isLoading}
+              isLoading={isPurchasing}
             />
           ))}
 

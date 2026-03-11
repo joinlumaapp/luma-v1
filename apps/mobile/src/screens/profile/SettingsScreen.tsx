@@ -1,6 +1,6 @@
 // SettingsScreen — SectionList with Hesap, Bildirimler, Gizlilik, Görünüm, Yardım Merkezi, Hakkında, Tehlike Bölgesi
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -22,6 +22,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ProfileStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../stores/authStore';
 import { authService } from '../../services/authService';
+import { iapService } from '../../services/iapService';
+import { paymentService } from '../../services/paymentService';
 import { storage } from '../../utils/storage';
 import { useTheme } from '../../theme/ThemeContext';
 import type { ThemeColors, ThemeMode } from '../../theme/colors';
@@ -105,15 +107,122 @@ export const SettingsScreen: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const { colors, themeMode, setThemeMode } = useTheme();
 
-  // Notification toggles
-  const [pushNotifications, setPushNotifications] = useState(true);
-  const [matchNotifications, setMatchNotifications] = useState(true);
+  // Notification toggles — persisted via storage utility
+  const [pushNotifications, setPushNotificationsRaw] = useState(true);
+  const [matchNotifications, setMatchNotificationsRaw] = useState(true);
 
-  // Privacy toggles
-  const [showOnlineStatus, setShowOnlineStatus] = useState(true);
-  const [showDistance, setShowDistance] = useState(true);
-  const [showAge, setShowAge] = useState(true);
+  // Privacy toggles — persisted via storage utility
+  const [showOnlineStatus, setShowOnlineStatusRaw] = useState(true);
+  const [showDistance, setShowDistanceRaw] = useState(true);
+  const [showAge, setShowAgeRaw] = useState(true);
   const [isIncognito, setIsIncognito] = useState(false);
+
+  // Storage keys for toggle persistence
+  const TOGGLE_KEYS = useMemo(() => ({
+    pushNotifications: 'settings.pushNotifications',
+    matchNotifications: 'settings.matchNotifications',
+    showOnlineStatus: 'settings.showOnlineStatus',
+    showDistance: 'settings.showDistance',
+    showAge: 'settings.showAge',
+  }), []);
+
+  // Load persisted toggle values on mount
+  useEffect(() => {
+    const pushVal = storage.getString(TOGGLE_KEYS.pushNotifications);
+    if (pushVal !== null) setPushNotificationsRaw(pushVal !== '0');
+
+    const matchVal = storage.getString(TOGGLE_KEYS.matchNotifications);
+    if (matchVal !== null) setMatchNotificationsRaw(matchVal !== '0');
+
+    const onlineVal = storage.getString(TOGGLE_KEYS.showOnlineStatus);
+    if (onlineVal !== null) setShowOnlineStatusRaw(onlineVal !== '0');
+
+    const distVal = storage.getString(TOGGLE_KEYS.showDistance);
+    if (distVal !== null) setShowDistanceRaw(distVal !== '0');
+
+    const ageVal = storage.getString(TOGGLE_KEYS.showAge);
+    if (ageVal !== null) setShowAgeRaw(ageVal !== '0');
+  }, [TOGGLE_KEYS]);
+
+  // Wrapper setters that persist to AsyncStorage
+  const setPushNotifications = useCallback((val: boolean) => {
+    setPushNotificationsRaw(val);
+    storage.setString(TOGGLE_KEYS.pushNotifications, val ? '1' : '0');
+  }, [TOGGLE_KEYS]);
+
+  const setMatchNotifications = useCallback((val: boolean) => {
+    setMatchNotificationsRaw(val);
+    storage.setString(TOGGLE_KEYS.matchNotifications, val ? '1' : '0');
+  }, [TOGGLE_KEYS]);
+
+  const setShowOnlineStatus = useCallback((val: boolean) => {
+    setShowOnlineStatusRaw(val);
+    storage.setString(TOGGLE_KEYS.showOnlineStatus, val ? '1' : '0');
+  }, [TOGGLE_KEYS]);
+
+  const setShowDistance = useCallback((val: boolean) => {
+    setShowDistanceRaw(val);
+    storage.setString(TOGGLE_KEYS.showDistance, val ? '1' : '0');
+  }, [TOGGLE_KEYS]);
+
+  const setShowAge = useCallback((val: boolean) => {
+    setShowAgeRaw(val);
+    storage.setString(TOGGLE_KEYS.showAge, val ? '1' : '0');
+  }, [TOGGLE_KEYS]);
+
+  // Restore purchases loading state
+  const [isRestoring, setIsRestoring] = useState(false);
+  // Cancel subscription loading state
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const updatePackageTier = useAuthStore((state) => state.updatePackageTier);
+
+  const handleRestorePurchases = useCallback(async () => {
+    setIsRestoring(true);
+    try {
+      const result = await iapService.restorePurchases();
+      if (result) {
+        // Validate the restored receipt with the backend
+        await paymentService.validateReceipt({
+          receipt: result.receipt,
+          platform: result.platform,
+        });
+        Alert.alert('Başarılı', 'Satın alımlarınız başarıyla geri yüklendi.');
+      } else {
+        Alert.alert('Bilgi', 'Geri yüklenecek bir satın alım bulunamadı.');
+      }
+    } catch {
+      Alert.alert('Hata', 'Satın alımlar geri yüklenirken bir sorun oluştu. Lütfen tekrar deneyin.');
+    } finally {
+      setIsRestoring(false);
+    }
+  }, []);
+
+  const handleCancelSubscription = useCallback(() => {
+    Alert.alert(
+      'Aboneliği İptal Et',
+      'Aboneliğinizi iptal etmek istediğinizden emin misiniz? Mevcut dönem sonuna kadar özelliklerinizi kullanmaya devam edebilirsiniz.',
+      [
+        { text: 'Vazgeç', style: 'cancel' },
+        {
+          text: 'İptal Et',
+          style: 'destructive',
+          onPress: async () => {
+            setIsCancelling(true);
+            try {
+              await paymentService.cancelSubscription();
+              updatePackageTier('free');
+              Alert.alert('Başarılı', 'Aboneliğiniz başarıyla iptal edildi.');
+            } catch {
+              Alert.alert('Hata', 'Abonelik iptal edilirken bir sorun oluştu. Lütfen tekrar deneyin.');
+            } finally {
+              setIsCancelling(false);
+            }
+          },
+        },
+      ],
+    );
+  }, [updatePackageTier]);
 
   const handleIncognitoToggle = useCallback((value: boolean) => {
     const packageTier = useAuthStore.getState().user?.packageTier ?? 'FREE';
@@ -243,6 +352,26 @@ export const SettingsScreen: React.FC = () => {
           type: 'navigation',
           onPress: () => navigation.navigate('Packages'),
         },
+        {
+          key: 'restore_purchases',
+          icon: 'Y',
+          title: isRestoring ? 'Geri yükleniyor...' : 'Satın Alımları Geri Yükle',
+          type: 'action',
+          onPress: handleRestorePurchases,
+        },
+        // Show cancel subscription only for paid tiers
+        ...((user?.packageTier ?? 'free') !== 'free'
+          ? [
+              {
+                key: 'cancel_subscription',
+                icon: 'I',
+                title: isCancelling ? 'İptal ediliyor...' : 'Aboneliği İptal Et',
+                type: 'action' as const,
+                destructive: true,
+                onPress: handleCancelSubscription,
+              },
+            ]
+          : []),
       ],
     },
     {

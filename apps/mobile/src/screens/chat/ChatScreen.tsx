@@ -282,6 +282,7 @@ export const ChatScreen: React.FC = () => {
   const sendInstantMessage = useCoinStore((state) => state.sendInstantMessage);
   const packageTier = useAuthStore((state) => state.user?.packageTier ?? 'free');
   const isPremiumTier = packageTier !== 'free';
+  const showReadReceipts = packageTier === 'pro' || packageTier === 'reserved';
 
   const handleSend = useCallback(async () => {
     const trimmed = inputText.trim();
@@ -444,6 +445,7 @@ export const ChatScreen: React.FC = () => {
         message={message}
         isMine={isMine}
         isLastInBlock={item.isLastInBlock}
+        showReadReceipts={showReadReceipts}
         onReact={handleReaction}
         onImagePress={handleImagePress}
       />

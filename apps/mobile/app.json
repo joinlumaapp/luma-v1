@@ -33,7 +33,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0F0F23"
+        "backgroundColor": "#F5B0C0"
       },
       "softwareKeyboardLayoutMode": "resize",
       "package": "com.luma.app",
@@ -57,7 +57,7 @@
         "expo-notifications",
         {
           "icon": "./assets/icon.png",
-          "color": "#0F0F23"
+          "color": "#3D1B5B"
         }
       ],
       [

@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Animated,
   Easing,
+  Share,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -481,7 +482,13 @@ export const ProfileScreen: React.FC = () => {
 
         {/* Share — outlined */}
         <TouchableOpacity
-          onPress={() => {}}
+          onPress={() => {
+            const userId = user?.id ?? '';
+            Share.share({
+              message: `LUMA'da profilime goz at! https://luma.dating/profile/${userId}`,
+              title: 'LUMA Profil',
+            }).catch(() => {});
+          }}
           activeOpacity={0.85}
           style={styles.actionButtonFlex}
           accessibilityLabel="Profili paylas"

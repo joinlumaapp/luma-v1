@@ -1,7 +1,9 @@
 // Notification API service — list, mark read, register push device, preferences
+// Includes local re-engagement scheduling and date plan reminders
 
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
+import { SchedulableTriggerInputTypes } from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import api from './api';
@@ -66,17 +68,24 @@ type CleanupFunction = () => void;
 
 // ─── Configure notification handler (foreground display) ─────────────
 // Skip in Expo Go — the native module is not fully available there.
+// Wrapped in try-catch to prevent module-level crash that causes white screen.
 
-if (!isExpoGo()) {
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: true,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    }),
-  });
+try {
+  if (!isExpoGo()) {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
+  }
+} catch (error) {
+  if (__DEV__) {
+    console.warn('[NotificationService] setNotificationHandler failed:', error);
+  }
 }
 
 // ─── Mock read state tracker (persists across fetches in dev) ────────
@@ -353,3 +362,204 @@ export const notificationService = {
     return response.data;
   },
 };
+
+// ─── Re-engagement Local Notifications ────────────────────────────────
+
+/** Notification identifier prefix for re-engagement notifications */
+const RE_ENGAGEMENT_PREFIX = 'luma_reengagement_';
+
+/** Time intervals in seconds for re-engagement notifications */
+const RE_ENGAGEMENT_INTERVALS = {
+  /** 24 hours */
+  DAY_1: 86400,
+  /** 3 days */
+  DAY_3: 259200,
+  /** 7 days */
+  DAY_7: 604800,
+} as const;
+
+/**
+ * Schedule local re-engagement push notifications.
+ * Cancels all previously scheduled notifications first, then schedules:
+ * - 24h: "Seni bekleyen yeni profiller var!"
+ * - 3 days: "3 gundur gorusemedik! Seni begenen X kisi var."
+ * - 7 days: "Seni ozledik! Yeni eslesme firsatlarini kacirma."
+ *
+ * Call this every time the app comes to foreground (AppState 'active')
+ * and after successful login.
+ */
+export async function scheduleReEngagementNotifications(): Promise<void> {
+  if (isExpoGo()) {
+    if (__DEV__) {
+      console.log('[ReEngagement] Expo Go — local notifications atlanıyor');
+    }
+    return;
+  }
+
+  try {
+    // Cancel all previously scheduled re-engagement notifications
+    await cancelReEngagementNotifications();
+
+    // 24h — new profiles waiting
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'LUMA',
+        body: 'Seni bekleyen yeni profiller var! \uD83D\uDC40',
+        data: { type: 'RE_ENGAGEMENT', tier: 'day_1' },
+        sound: true,
+      },
+      trigger: {
+        type: SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: RE_ENGAGEMENT_INTERVALS.DAY_1,
+      },
+      identifier: `${RE_ENGAGEMENT_PREFIX}day_1`,
+    });
+
+    // 3 days — people liked you
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'LUMA',
+        body: '3 g\u00FCnd\u00FCr g\u00F6r\u00FC\u015Femedik! Seni be\u011Fenen ki\u015Filer var.',
+        data: { type: 'RE_ENGAGEMENT', tier: 'day_3' },
+        sound: true,
+      },
+      trigger: {
+        type: SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: RE_ENGAGEMENT_INTERVALS.DAY_3,
+      },
+      identifier: `${RE_ENGAGEMENT_PREFIX}day_3`,
+    });
+
+    // 7 days — we miss you
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'LUMA',
+        body: 'Seni \u00F6zledik! Yeni e\u015Fle\u015Fme f\u0131rsatlar\u0131n\u0131 ka\u00E7\u0131rma.',
+        data: { type: 'RE_ENGAGEMENT', tier: 'day_7' },
+        sound: true,
+      },
+      trigger: {
+        type: SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: RE_ENGAGEMENT_INTERVALS.DAY_7,
+      },
+      identifier: `${RE_ENGAGEMENT_PREFIX}day_7`,
+    });
+
+    if (__DEV__) {
+      console.log('[ReEngagement] 3 bildirim planlandı (24h, 3d, 7d)');
+    }
+  } catch (error) {
+    if (__DEV__) {
+      console.error('[ReEngagement] Planlama hatası:', error);
+    }
+  }
+}
+
+/**
+ * Cancel all previously scheduled re-engagement notifications.
+ */
+async function cancelReEngagementNotifications(): Promise<void> {
+  try {
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    const reEngagementIds = scheduled
+      .filter((n) => n.identifier.startsWith(RE_ENGAGEMENT_PREFIX))
+      .map((n) => n.identifier);
+
+    for (const id of reEngagementIds) {
+      await Notifications.cancelScheduledNotificationAsync(id);
+    }
+  } catch (error) {
+    if (__DEV__) {
+      console.error('[ReEngagement] İptal hatası:', error);
+    }
+  }
+}
+
+// ─── Date Plan Reminder Notifications ─────────────────────────────────
+
+/** Notification identifier prefix for date plan reminders */
+const DATE_PLAN_PREFIX = 'luma_dateplan_';
+
+/**
+ * Schedule local reminder notifications for an accepted date plan.
+ * - 1 hour before: "{name} ile bulusmana 1 saat kaldi!"
+ * - At the time: "Bulusma zamani! {name} seni bekliyor"
+ *
+ * @param planId - Unique plan identifier for cancellation tracking
+ * @param partnerName - Name of the date partner
+ * @param dateIso - ISO date string of the scheduled date plan
+ */
+export async function scheduleDatePlanReminder(
+  planId: string,
+  partnerName: string,
+  dateIso: string,
+): Promise<void> {
+  if (isExpoGo()) {
+    if (__DEV__) {
+      console.log('[DateReminder] Expo Go — hatırlatıcı atlanıyor');
+    }
+    return;
+  }
+
+  try {
+    const dateMs = new Date(dateIso).getTime();
+    const now = Date.now();
+
+    // 1 hour before
+    const oneHourBeforeMs = dateMs - 3600000;
+    if (oneHourBeforeMs > now) {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: 'LUMA',
+          body: `${partnerName} ile bulu\u015Fmana 1 saat kald\u0131!`,
+          data: { type: 'DATE_PLAN_REMINDER', planId, timing: '1h_before' },
+          sound: true,
+        },
+        trigger: {
+          type: SchedulableTriggerInputTypes.DATE,
+          date: new Date(oneHourBeforeMs),
+        },
+        identifier: `${DATE_PLAN_PREFIX}${planId}_1h`,
+      });
+    }
+
+    // At the exact time
+    if (dateMs > now) {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: 'LUMA',
+          body: `Bulu\u015Fma zaman\u0131! ${partnerName} seni bekliyor \uD83D\uDC9C`,
+          data: { type: 'DATE_PLAN_REMINDER', planId, timing: 'at_time' },
+          sound: true,
+        },
+        trigger: {
+          type: SchedulableTriggerInputTypes.DATE,
+          date: new Date(dateMs),
+        },
+        identifier: `${DATE_PLAN_PREFIX}${planId}_at`,
+      });
+    }
+
+    if (__DEV__) {
+      console.log(`[DateReminder] ${partnerName} için hatırlatıcılar planlandı`);
+    }
+  } catch (error) {
+    if (__DEV__) {
+      console.error('[DateReminder] Planlama hatası:', error);
+    }
+  }
+}
+
+/**
+ * Cancel date plan reminders for a specific plan (e.g. when plan is cancelled).
+ */
+export async function cancelDatePlanReminder(planId: string): Promise<void> {
+  try {
+    await Notifications.cancelScheduledNotificationAsync(`${DATE_PLAN_PREFIX}${planId}_1h`);
+    await Notifications.cancelScheduledNotificationAsync(`${DATE_PLAN_PREFIX}${planId}_at`);
+  } catch (error) {
+    if (__DEV__) {
+      console.error('[DateReminder] İptal hatası:', error);
+    }
+  }
+}

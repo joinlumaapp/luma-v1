@@ -1,5 +1,5 @@
-// Splash / Loading screen — LUMA heart logo on powder pink background
-// Features: centered logo, spring entrance, sweeping glint animation after 1s delay
+// Splash / Loading screen — 3D LUMA heart logo on deep purple background
+// Features: centered HD logo, spring entrance, gentle pulse while loading, sweeping glint
 
 import React, { useEffect, useRef } from 'react';
 import {
@@ -13,8 +13,8 @@ import {
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-// Logo dimensions — sized elegantly for safe area
-const LOGO_SIZE = SCREEN_WIDTH * 0.45;
+// Logo sized at ~40% of screen width for elegant presentation
+const LOGO_SIZE = SCREEN_WIDTH * 0.40;
 
 const splashLogo = require('../../../assets/splash-logo.png');
 
@@ -22,8 +22,9 @@ const splashLogo = require('../../../assets/splash-logo.png');
 const SPLASH_BG = '#3D1B5B';
 
 export const LoadingScreen: React.FC = () => {
-  const logoScale = useRef(new Animated.Value(0.7)).current;
+  const logoScale = useRef(new Animated.Value(0.6)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
+  const pulseScale = useRef(new Animated.Value(1)).current;
   const glintX = useRef(new Animated.Value(-LOGO_SIZE)).current;
   const glintOpacity = useRef(new Animated.Value(0)).current;
 
@@ -32,41 +33,70 @@ export const LoadingScreen: React.FC = () => {
     Animated.parallel([
       Animated.spring(logoScale, {
         toValue: 1,
-        tension: 50,
-        friction: 7,
+        tension: 40,
+        friction: 6,
         useNativeDriver: true,
       }),
       Animated.timing(logoOpacity, {
         toValue: 1,
-        duration: 500,
+        duration: 600,
+        easing: Easing.out(Easing.ease),
         useNativeDriver: true,
       }),
-    ]).start();
+    ]).start(() => {
+      // Phase 2: Subtle pulse animation (loops while loading)
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseScale, {
+            toValue: 1.06,
+            duration: 1200,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseScale, {
+            toValue: 1,
+            duration: 1200,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ]),
+      ).start();
+    });
 
-    // Phase 2: Glint sweep after 1s delay
+    // Phase 3: Glint sweep after 1.2s delay
     const glintTimer = setTimeout(() => {
       glintOpacity.setValue(1);
       Animated.timing(glintX, {
         toValue: LOGO_SIZE * 1.5,
-        duration: 800,
+        duration: 900,
         easing: Easing.inOut(Easing.ease),
         useNativeDriver: true,
       }).start(() => {
         glintOpacity.setValue(0);
       });
-    }, 1000);
+    }, 1200);
 
     return () => clearTimeout(glintTimer);
-  }, [logoScale, logoOpacity, glintX, glintOpacity]);
+  }, [logoScale, logoOpacity, pulseScale, glintX, glintOpacity]);
 
   return (
     <View style={styles.container}>
-      {/* Logo with spring entrance */}
+      {/* Subtle radial glow behind logo */}
+      <Animated.View
+        style={[
+          styles.glow,
+          { opacity: logoOpacity },
+        ]}
+      />
+
+      {/* Logo with spring entrance + pulse */}
       <Animated.View
         style={[
           styles.logoWrapper,
           {
-            transform: [{ scale: logoScale }],
+            transform: [
+              { scale: Animated.multiply(logoScale, pulseScale) },
+            ],
             opacity: logoOpacity,
           },
         ]}
@@ -105,6 +135,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  // Soft radial glow behind the logo
+  glow: {
+    position: 'absolute',
+    width: LOGO_SIZE * 2,
+    height: LOGO_SIZE * 2,
+    borderRadius: LOGO_SIZE,
+    backgroundColor: 'rgba(200, 120, 180, 0.12)',
+  },
   logoWrapper: {
     width: LOGO_SIZE,
     height: LOGO_SIZE,
@@ -120,12 +158,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -LOGO_SIZE * 0.2,
     left: 0,
-    width: LOGO_SIZE * 0.15,
+    width: LOGO_SIZE * 0.12,
     height: LOGO_SIZE * 1.5,
   },
   glintLine: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.35)',
-    borderRadius: LOGO_SIZE * 0.05,
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    borderRadius: LOGO_SIZE * 0.04,
   },
 });

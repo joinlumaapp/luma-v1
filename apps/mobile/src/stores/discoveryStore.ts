@@ -89,6 +89,9 @@ interface DiscoveryState {
   // Batch cooldown state
   batchCooldownEnd: number | null;
 
+  // Total candidates count for FOMO display
+  totalCandidates: number;
+
   // Supreme impression tracking
   premiumImpressions: number;
 
@@ -263,6 +266,9 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
   // Batch cooldown initial state
   batchCooldownEnd: null,
 
+  // Total candidates for FOMO banner
+  totalCandidates: 0,
+
   // Supreme impression counter
   premiumImpressions: 0,
 
@@ -295,6 +301,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
         cards: profiles,
         currentIndex: 0,
         dailyRemaining: response.remaining,
+        totalCandidates: response.totalCandidates,
         isLoading: false,
       });
     } catch {

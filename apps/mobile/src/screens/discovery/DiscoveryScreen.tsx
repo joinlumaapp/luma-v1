@@ -18,6 +18,7 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Image,
+  AppState,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
@@ -255,6 +256,7 @@ export const DiscoveryScreen: React.FC = () => {
   const userProfile = useProfileStore((s) => s.profile);
   const canUndo = useDiscoveryStore((s) => s.canUndo);
   const undoLastSwipe = useDiscoveryStore((s) => s.undoLastSwipe);
+  const totalCandidates = useDiscoveryStore((s) => s.totalCandidates);
 
   // Notification badge
   const notifUnreadCount = useNotificationStore((s) => s.unreadCount);
@@ -271,6 +273,9 @@ export const DiscoveryScreen: React.FC = () => {
 
   // ─── Boost access gate ─────────────────────────────────
   const canUseBoost = packageTier !== 'free';
+
+  // ─── Undo access gate — Gold+ only ────────────────────
+  const canUseUndo = packageTier !== 'free';
 
   // ─── Like-with-comment modal state ──────────────────────
   const [showCommentModal, setShowCommentModal] = useState(false);
@@ -292,12 +297,16 @@ export const DiscoveryScreen: React.FC = () => {
 
   // ─── Login streak state ─────────────────────────────────
   const [streakData, setStreakData] = useState<LoginStreakResponse | null>(null);
+  const [persistentStreakCount, setPersistentStreakCount] = useState<number>(0);
+  const [showStreakTooltip, setShowStreakTooltip] = useState(false);
   const streakRecorded = useRef(false);
 
   useEffect(() => {
     if (streakRecorded.current) return;
     streakRecorded.current = true;
     discoveryService.recordLogin().then((data) => {
+      // Always store the streak count for the persistent badge
+      setPersistentStreakCount(data.currentStreak);
       if (data.goldAwarded > 0) {
         setStreakData(data);
       }
@@ -308,6 +317,12 @@ export const DiscoveryScreen: React.FC = () => {
 
   const handleStreakDismiss = useCallback(() => {
     setStreakData(null);
+  }, []);
+
+  const handleStreakBadgeTap = useCallback(() => {
+    setShowStreakTooltip((prev) => !prev);
+    // Auto-hide tooltip after 3 seconds
+    setTimeout(() => setShowStreakTooltip(false), 3000);
   }, []);
 
   // ─── Boost state ────────────────────────────────────────
@@ -972,6 +987,27 @@ export const DiscoveryScreen: React.FC = () => {
             </Text>
           </View>
           <View style={styles.headerRight}>
+            {/* Persistent streak badge — always visible when streak > 0 */}
+            {persistentStreakCount > 0 && (
+              <Pressable
+                onPress={handleStreakBadgeTap}
+                accessibilityLabel={`${persistentStreakCount} gunluk giris serisi`}
+                accessibilityRole="button"
+                testID="discovery-streak-badge"
+              >
+                <View style={styles.streakBadge}>
+                  <Text style={styles.streakBadgeEmoji}>{'\uD83D\uDD25'}</Text>
+                  <Text style={styles.streakBadgeCount}>{persistentStreakCount}</Text>
+                </View>
+                {showStreakTooltip && (
+                  <View style={styles.streakTooltip}>
+                    <Text style={styles.streakTooltipText}>
+                      {persistentStreakCount} gunluk seri!
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+            )}
             <Pressable
               onPress={() => navigation.navigate('Notifications')}
               accessibilityLabel={`Bildirimler${notifUnreadCount > 0 ? `, ${notifUnreadCount} okunmamis` : ''}`}
@@ -1127,19 +1163,34 @@ export const DiscoveryScreen: React.FC = () => {
 
       {/* Action buttons */}
       <View style={styles.actionsRow}>
-        {/* Undo button */}
-        <Animated.View style={[styles.undoWrapper, undoAnimatedStyle]}>
-          <Pressable
-            onPress={() => { if (canUndo) { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); undoLastSwipe(); } }}
-            accessibilityLabel="Geri al"
-            accessibilityRole="button"
-            accessibilityHint="Son kaydırma işlemini geri almak için dokunun"
-          >
-            <View style={styles.undoButton} testID="discovery-undo-btn">
-              <Text style={styles.undoIcon}>{'\u21A9'}</Text>
-            </View>
-          </Pressable>
-        </Animated.View>
+        {/* Undo button — Gold+ only */}
+        {canUseUndo ? (
+          <Animated.View style={[styles.undoWrapper, undoAnimatedStyle]}>
+            <Pressable
+              onPress={() => { if (canUndo) { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); undoLastSwipe(); } }}
+              accessibilityLabel="Geri al"
+              accessibilityRole="button"
+              accessibilityHint="Son kaydırma işlemini geri almak için dokunun"
+            >
+              <View style={styles.undoButton} testID="discovery-undo-btn">
+                <Text style={styles.undoIcon}>{'\u21A9'}</Text>
+              </View>
+            </Pressable>
+          </Animated.View>
+        ) : (
+          <Animated.View style={[styles.undoWrapper, undoAnimatedStyle]}>
+            <Pressable
+              onPress={() => { setUpgradeFeature('super_like'); setShowUpgradePrompt(true); }}
+              accessibilityLabel="Geri al — Premium özellik"
+              accessibilityRole="button"
+              accessibilityHint="Geri alma özelliği için Premium'a yükseltin"
+            >
+              <View style={[styles.undoButton, { opacity: 0.5 }]} testID="discovery-undo-btn-locked">
+                <Text style={styles.undoIcon}>{'\u21A9'}</Text>
+              </View>
+            </Pressable>
+          </Animated.View>
+        )}
 
         {/* Action buttons removed — users swipe directly */}
       </View>
@@ -1329,6 +1380,44 @@ const styles = StyleSheet.create({
   },
   boostIcon: {
     fontSize: 18,
+  },
+  // ── Persistent streak badge ──
+  streakBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 149, 0, 0.12)',
+    borderRadius: 14,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    gap: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 149, 0, 0.25)',
+  },
+  streakBadgeEmoji: {
+    fontSize: 13,
+  },
+  streakBadgeCount: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FF9500',
+    letterSpacing: 0.2,
+  },
+  streakTooltip: {
+    position: 'absolute',
+    top: 38,
+    left: -20,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    zIndex: 200,
+    minWidth: 100,
+  },
+  streakTooltipText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    textAlign: 'center',
   },
   notifBadge: {
     position: 'absolute',

@@ -57,6 +57,8 @@ interface MessageBubbleProps {
   isMine: boolean;
   /** When true, show the delivery/read status indicator below the bubble */
   isLastInBlock: boolean;
+  /** Tier-gated: only Pro and Reserved users see read receipts */
+  showReadReceipts?: boolean;
   onReact: (messageId: string, emoji: ReactionEmoji) => void;
   onImagePress: (mediaUrl: string) => void;
 }
@@ -81,6 +83,7 @@ function areMessageBubblePropsEqual(
     prev.mediaUrl === next.mediaUrl &&
     prevProps.isMine === nextProps.isMine &&
     prevProps.isLastInBlock === nextProps.isLastInBlock &&
+    prevProps.showReadReceipts === nextProps.showReadReceipts &&
     prev.reactions.length === next.reactions.length &&
     prev.reactions.every(
       (r, i) =>
@@ -92,7 +95,7 @@ function areMessageBubblePropsEqual(
 }
 
 export const MemoizedMessageBubble = memo<MessageBubbleProps>(
-  ({ message, isMine, isLastInBlock, onReact, onImagePress }) => {
+  ({ message, isMine, isLastInBlock, showReadReceipts = true, onReact, onImagePress }) => {
     const handleReact = useCallback(
       (_messageId: string, emoji: ReactionEmoji) => {
         onReact(message.id, emoji);
@@ -106,8 +109,8 @@ export const MemoizedMessageBubble = memo<MessageBubbleProps>(
       }
     }, [message.mediaUrl, onImagePress]);
 
-    // Whether to show the read receipt indicator below the bubble
-    const showReadReceipt = isMine && isLastInBlock;
+    // Whether to show the read receipt indicator below the bubble (tier-gated)
+    const showReadReceipt = isMine && isLastInBlock && showReadReceipts;
 
     // Image messages
     if (message.type === 'IMAGE' && message.mediaUrl) {

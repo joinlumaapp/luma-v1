@@ -45,8 +45,8 @@ const FEATURE_COMPARISON: FeatureRow[] = [
     label: 'Beğeni Limiti',
     values: {
       free: '20/gün',
-      gold: 'Sınırsız',
-      pro: 'Sınırsız',
+      gold: '60/gün',
+      pro: '200/gün',
       reserved: 'Sınırsız',
     },
   },
