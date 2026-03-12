@@ -5,3 +5,8 @@ export {
   DEFAULT_PREFERENCES,
 } from './update-preferences.dto';
 export type { NotificationPreferences } from './update-preferences.dto';
+export {
+  SendNotificationDto,
+  SendBatchNotificationDto,
+  SendNotificationType,
+} from './send-notification.dto';

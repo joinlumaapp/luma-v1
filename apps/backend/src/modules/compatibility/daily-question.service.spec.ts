@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { DailyQuestionService } from './daily-question.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { LumaCacheService } from '../cache/cache.service';
 
 describe('DailyQuestionService', () => {
   let service: DailyQuestionService;
@@ -19,7 +20,18 @@ describe('DailyQuestionService', () => {
       findMany: jest.fn(),
       create: jest.fn(),
     },
+    userAnswer: {
+      upsert: jest.fn(),
+    },
     match: { findMany: jest.fn() },
+  };
+
+  const mockCacheService = {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(undefined),
+    del: jest.fn().mockResolvedValue(undefined),
+    invalidatePattern: jest.fn().mockResolvedValue(undefined),
+    isRedisConnected: jest.fn().mockReturnValue(false),
   };
 
   beforeEach(async () => {
@@ -29,6 +41,7 @@ describe('DailyQuestionService', () => {
       providers: [
         DailyQuestionService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: LumaCacheService, useValue: mockCacheService },
       ],
     }).compile();
 
@@ -117,13 +130,14 @@ describe('DailyQuestionService', () => {
     const questionId = 'q-1';
     const optionId = 'opt-1';
 
-    it('should save answer successfully', async () => {
+    it('should save answer successfully and sync to main answers', async () => {
       mockPrisma.compatibilityQuestion.findFirst.mockResolvedValue({
         id: questionId,
         options: [{ id: optionId }, { id: 'opt-2' }],
       });
       mockPrisma.dailyQuestionAnswer.findUnique.mockResolvedValue(null);
       mockPrisma.dailyQuestionAnswer.create.mockResolvedValue({});
+      mockPrisma.userAnswer.upsert.mockResolvedValue({});
 
       const result = await service.answerDailyQuestion(
         userId,
@@ -140,6 +154,15 @@ describe('DailyQuestionService', () => {
           optionId,
         }),
       });
+      // Verify main answer was also synced
+      expect(mockPrisma.userAnswer.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { userId_questionId: { userId, questionId } },
+          create: expect.objectContaining({ userId, questionId, optionId }),
+        }),
+      );
+      // Verify cache invalidation was called
+      expect(mockCacheService.invalidatePattern).toHaveBeenCalled();
     });
 
     it('should throw BadRequestException when question is not today question', async () => {

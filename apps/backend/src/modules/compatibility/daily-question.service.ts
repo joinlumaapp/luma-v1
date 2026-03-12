@@ -6,8 +6,10 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { LumaCacheService } from '../cache/cache.service';
 
 // LOCKED: 45 questions total — daily rotation cycles through all 45
 const TOTAL_QUESTION_COUNT = 45;
@@ -56,7 +58,12 @@ export interface StreakResponse {
 
 @Injectable()
 export class DailyQuestionService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(DailyQuestionService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cacheService: LumaCacheService,
+  ) {}
 
   /**
    * Get today's daily question for a user.
@@ -178,7 +185,7 @@ export class DailyQuestionService {
       );
     }
 
-    // Save the answer
+    // Save the daily answer
     await this.prisma.dailyQuestionAnswer.create({
       data: {
         userId,
@@ -188,6 +195,27 @@ export class DailyQuestionService {
         // createdAt is auto-set by @default(now())
       },
     });
+
+    // Also upsert the main compatibility answer so daily answers
+    // contribute to the overall compatibility scoring between users.
+    await this.prisma.userAnswer.upsert({
+      where: {
+        userId_questionId: { userId, questionId },
+      },
+      create: {
+        userId,
+        questionId,
+        optionId,
+      },
+      update: {
+        optionId,
+        answeredAt: new Date(),
+      },
+    });
+
+    // Invalidate cached compatibility scores for this user since their
+    // answer may have changed, affecting pairwise scores with matches.
+    await this.invalidateUserCompatibilityCache(userId);
 
     return { saved: true, dayNumber };
   }
@@ -529,6 +557,19 @@ export class DailyQuestionService {
     const now = new Date();
     const diffMs = now.getTime() - EPOCH_DATE.getTime();
     return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  }
+
+  /**
+   * Invalidate all cached compatibility scores for a user.
+   * Called when a daily answer changes the user's main answer set.
+   */
+  private async invalidateUserCompatibilityCache(userId: string): Promise<void> {
+    try {
+      await this.cacheService.invalidatePattern(`compat:*${userId}*`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.warn(`Failed to invalidate cache for ${userId}: ${message}`);
+    }
   }
 
   /**

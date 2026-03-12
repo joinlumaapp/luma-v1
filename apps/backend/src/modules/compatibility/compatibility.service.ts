@@ -3,9 +3,11 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BadgesService } from '../badges/badges.service';
+import { LumaCacheService, CACHE_KEYS, CACHE_TTL } from '../cache/cache.service';
 import { SubmitAnswerDto, SubmitAnswersBulkDto } from './dto';
 
 // LOCKED: 2 Compatibility Levels
@@ -19,6 +21,24 @@ const MAX_DISPLAY_SCORE = 97;
 
 // Staleness threshold for cached scores — recalculate after 24 hours
 const SCORE_STALENESS_MS = 24 * 60 * 60 * 1000;
+
+// Redis cache TTL for compatibility scores (24 hours in seconds)
+const SCORE_CACHE_TTL = 86400;
+
+// ─── Scoring Constants ────────────────────────────────────────
+// Points awarded based on answer proximity (option order distance)
+const EXACT_MATCH_POINTS = 100;
+const ADJACENT_MATCH_POINTS = 70;   // 1 step apart
+const TWO_STEP_MATCH_POINTS = 40;   // 2 steps apart
+const FAR_MATCH_POINTS = 10;        // 3+ steps apart
+
+// Core questions weighted 2x compared to premium questions
+const CORE_WEIGHT_MULTIPLIER = 2;
+const PREMIUM_WEIGHT_MULTIPLIER = 1;
+
+// Bonus percentages for profile alignment
+const INTENTION_TAG_BONUS_PERCENT = 10; // +10% for matching intention tags
+const SAME_CITY_BONUS_PERCENT = 5;      // +5% for same city
 
 // Turkish labels for compatibility dimension categories
 const DIMENSION_LABELS_TR: Record<string, string> = {
@@ -37,6 +57,22 @@ const DIMENSION_LABELS_TR: Record<string, string> = {
   INTIMACY: 'Yakinlik',
   GROWTH_MINDSET: 'Gelisim Odaklilik',
   CORE_FEARS: 'Temel Kaygilar',
+  // Lowercase variants for consistent lookup
+  communication: 'Iletisim Tarzi',
+  life_goals: 'Yasam Hedefleri',
+  values: 'Degerler',
+  lifestyle: 'Yasam Tarzi',
+  emotional_intelligence: 'Duygusal Zeka',
+  relationship_expectations: 'Iliski Beklentileri',
+  social_compatibility: 'Sosyal Uyum',
+  attachment_style: 'Baglanma Tarzi',
+  love_language: 'Sevgi Dili',
+  conflict_style: 'Catisma Yaklasimi',
+  future_vision: 'Gelecek Vizyonu',
+  intellectual: 'Entelektuel Uyum',
+  intimacy: 'Yakinlik',
+  growth_mindset: 'Gelisim Odaklilik',
+  core_fears: 'Temel Kaygilar',
 };
 
 // Conversation starter templates per category (Turkish)
@@ -81,6 +117,90 @@ const CONVERSATION_STARTERS_TR: Record<string, string[]> = {
     'Bir anlasmazlik yasandiginda nasil tepki verirsiniz?',
     'Cozum odakli misiniz yoksa once duygulari mi konusursunuz?',
   ],
+  FUTURE_VISION: [
+    'Gelecege dair en buyuk hayaliniz ne?',
+    'Hayatinizda neyi degistirmek isterdiniz?',
+  ],
+  INTELLECTUAL: [
+    'Yeni bir sey ogrenmeyi sever misiniz?',
+    'Hangi konularda tutkulu sayilirsiniz?',
+  ],
+  INTIMACY: [
+    'Yakinlik sizin icin ne anlam tasiyor?',
+    'Bir iliskide fiziksel ve duygusal yakinlik dengesi nasil olmali?',
+  ],
+  GROWTH_MINDSET: [
+    'Kendinizi gelistirmek icin neler yapiyorsunuz?',
+    'Hatalarinizdan nasil ders cikarirsiniz?',
+  ],
+  CORE_FEARS: [
+    'Bir iliskide sizi en cok ne endiselendirir?',
+    'Guven konusunda nasil hissediyorsunuz?',
+  ],
+};
+
+// Turkish reason templates based on category scores
+const REASON_TEMPLATES_TR: Record<string, { high: string; medium: string }> = {
+  communication: {
+    high: 'Iletisim tarzlariniz cok uyumlu',
+    medium: 'Iletisim konusunda birbirinizi tamamliyorsunuz',
+  },
+  life_goals: {
+    high: 'Yasam hedefleriniz ortusuyor',
+    medium: 'Benzer yasam hedeflerine sahipsiniz',
+  },
+  values: {
+    high: 'Temel degerleriniz ayni noktada',
+    medium: 'Ortak degerleriniz var',
+  },
+  lifestyle: {
+    high: 'Yasam tarzlariniz birbiriyle uyumlu',
+    medium: 'Birbirinize denk bir yasam tempoinuz var',
+  },
+  emotional_intelligence: {
+    high: 'Duygusal zeka seviyeniz birbirine cok yakin',
+    medium: 'Duygusal anlayisiniz uyumlu',
+  },
+  relationship_expectations: {
+    high: 'Iliski beklentileriniz neredeyse ayni',
+    medium: 'Iliskide ortak beklentileriniz var',
+  },
+  social_compatibility: {
+    high: 'Sosyal uyumunuz mukemmel',
+    medium: 'Sosyal dunyalariniz birbirine yakin',
+  },
+  attachment_style: {
+    high: 'Baglanma tarzlariniz birbirine cok uygun',
+    medium: 'Guven ve yakinlik konusunda birbirinizi tamamliyorsunuz',
+  },
+  love_language: {
+    high: 'Sevgi dilleriniz ortusuyor',
+    medium: 'Sevgiyi ifade bicimleriniz uyumlu',
+  },
+  conflict_style: {
+    high: 'Catisma cozme yaklasimlariniz benzer',
+    medium: 'Sorunlara birlikte yaklasabilirsiniz',
+  },
+  future_vision: {
+    high: 'Gelecek vizyonunuz ortak bir noktada bulusuyor',
+    medium: 'Gelecege benzer gozlerle bakiyorsunuz',
+  },
+  intellectual: {
+    high: 'Entelektuel uyumunuz harika',
+    medium: 'Dusunce dunya size yakin',
+  },
+  intimacy: {
+    high: 'Yakinlik anlayisiniz birbirinize cok uygun',
+    medium: 'Yakinlik konusunda uyumlu bir ciftsiniz',
+  },
+  growth_mindset: {
+    high: 'Birlikte gelismeye cok uygunsunuz',
+    medium: 'Gelisim odakli bakis aciniz ortak',
+  },
+  core_fears: {
+    high: 'Temel kaygilariniz benzer, birbirinizi anlayabilirsiniz',
+    medium: 'Endiselerinizi paylasarak baglarinizi guclendirirsiniz',
+  },
 };
 
 // Categories where balanced opposites are beneficial (complementary pairing)
@@ -92,11 +212,66 @@ const COMPLEMENTARY_CATEGORIES = new Set([
   'attachment_style',     // Anxious + secure pairing is well-documented
 ]);
 
+// Compatibility level label thresholds (before display clamping)
+interface LevelLabelInfo {
+  label: string;
+  minScore: number;
+}
+
+const LEVEL_LABELS: LevelLabelInfo[] = [
+  { label: 'Yuksek Uyum', minScore: 80 },
+  { label: 'Iyi Uyum', minScore: 60 },
+  { label: 'Orta Uyum', minScore: 40 },
+  { label: 'Dusuk Uyum', minScore: 0 },
+];
+
+// ─── Internal type for answer data during scoring ─────────────
+interface AnswerData {
+  optionOrder: number;     // 0-based order of the selected option
+  optionCount: number;     // total number of options for this question
+  value: number;           // normalized 0-1 value
+  weight: number;          // question weight from DB
+  category: string;        // question category
+  isPremium: boolean;      // whether this is a premium question
+}
+
+// ─── Internal type for category score accumulation ────────────
+interface CategoryAccumulator {
+  totalPoints: number;
+  maxPoints: number;
+  count: number;
+}
+
+// ─── Cached score shape stored in Redis ───────────────────────
+interface CachedCompatibilityScore {
+  userId: string;
+  targetUserId: string;
+  baseScore: number;
+  deepScore: number | null;
+  finalScore: number;
+  level: string;
+  levelLabel: string;
+  isSuperCompatible: boolean;
+  breakdown: Record<string, number>;
+  categoryScores: Array<{
+    category: string;
+    categoryLabel: string;
+    score: number;
+    matchedQuestions: number;
+  }>;
+  topReasons: string[];
+  bonuses: { intentionTagMatch: number; sameCityBonus: number; totalBonus: number };
+  commonQuestions: number;
+}
+
 @Injectable()
 export class CompatibilityService {
+  private readonly logger = new Logger(CompatibilityService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly badgesService: BadgesService,
+    private readonly cacheService: LumaCacheService,
   ) {}
 
   /**
@@ -229,6 +404,9 @@ export class CompatibilityService {
       },
     });
 
+    // Invalidate cached compatibility scores for this user
+    await this.invalidateUserCompatibilityCache(userId);
+
     // Count total answers for progress tracking
     const answeredCount = await this.prisma.userAnswer.count({
       where: { userId },
@@ -313,6 +491,9 @@ export class CompatibilityService {
       ),
     );
 
+    // Invalidate cached compatibility scores for this user
+    await this.invalidateUserCompatibilityCache(userId);
+
     // Count total answers for progress tracking
     const answeredCount = await this.prisma.userAnswer.count({
       where: { userId },
@@ -368,6 +549,7 @@ export class CompatibilityService {
   /**
    * Get compatibility score between current user and another user.
    * Returns one of 2 compatibility levels (LOCKED: Normal / Super).
+   * Uses Redis cache with 24h TTL for performance.
    */
   async getScoreWithUser(userId: string, targetUserId: string) {
     // Guard: prevent self-comparison
@@ -378,13 +560,19 @@ export class CompatibilityService {
     // Enforce daily compatibility check limit per tier
     await this.checkDailyCompatibilityLimit(userId);
 
-    // Check if score is already computed
+    // Check Redis cache first
+    const { first, second } = this.orderIds(userId, targetUserId);
+    const cacheKey = CACHE_KEYS.compatScore(first, second);
+    const cached = await this.cacheService.get<CachedCompatibilityScore>(cacheKey);
+    if (cached) {
+      this.logger.debug(`Cache hit for compatibility ${first}:${second}`);
+      return cached;
+    }
+
+    // Check if score is already computed in DB
     const existingScore = await this.prisma.compatibilityScore.findUnique({
       where: {
-        userAId_userBId: {
-          userAId: this.orderIds(userId, targetUserId).first,
-          userBId: this.orderIds(userId, targetUserId).second,
-        },
+        userAId_userBId: { userAId: first, userBId: second },
       },
     });
 
@@ -394,7 +582,10 @@ export class CompatibilityService {
       if (age > SCORE_STALENESS_MS) {
         return this.calculateAndStoreScore(userId, targetUserId);
       }
-      return this.formatScoreResponse(userId, targetUserId, existingScore);
+      const response = this.formatScoreResponse(userId, targetUserId, existingScore);
+      // Cache the response
+      await this.cacheService.set(cacheKey, response, SCORE_CACHE_TTL);
+      return response;
     }
 
     // Calculate score
@@ -403,152 +594,211 @@ export class CompatibilityService {
 
   /**
    * Calculate pairwise compatibility score between two users.
-   * Core algorithm: Weighted answer similarity across categories.
+   *
+   * Algorithm:
+   * 1. Fetch both users' answers with option order information
+   * 2. For each common question, calculate points based on answer distance:
+   *    - Exact match: 100 points
+   *    - 1 step apart: 70 points
+   *    - 2 steps apart: 40 points
+   *    - 3+ steps apart: 10 points
+   * 3. Core questions (Q1-Q20) are weighted 2x compared to premium (Q21-Q45)
+   * 4. Calculate per-category sub-scores
+   * 5. Apply bonuses: +10% intention tag match, +5% same city
+   * 6. Determine compatibility level (NORMAL / SUPER)
+   * 7. Cache result in Redis with 24h TTL
    */
   async calculateAndStoreScore(userAId: string, userBId: string) {
     // Order IDs consistently for storage
     const { first, second } = this.orderIds(userAId, userBId);
 
-    // Get both users' answers with question weights
+    // Get both users' answers with question details and option orders
     const [answersA, answersB] = await Promise.all([
       this.prisma.userAnswer.findMany({
         where: { userId: first },
         include: {
-          question: true,
+          question: {
+            include: {
+              options: {
+                orderBy: { order: 'asc' },
+                select: { id: true, order: true, value: true },
+              },
+            },
+          },
           option: true,
         },
       }),
       this.prisma.userAnswer.findMany({
         where: { userId: second },
         include: {
-          question: true,
+          question: {
+            include: {
+              options: {
+                orderBy: { order: 'asc' },
+                select: { id: true, order: true, value: true },
+              },
+            },
+          },
           option: true,
         },
       }),
     ]);
 
-    // Create answer maps: questionId -> option value
-    interface AnswerData {
-      value: number;
-      weight: number;
-      category: string;
-      isPremium: boolean;
+    // Create answer maps: questionId -> AnswerData
+    const mapA = new Map<string, AnswerData>();
+    for (const a of answersA) {
+      const q = a.question as { weight: number; category: string; isPremium: boolean; options: Array<{ id: string; order: number; value: number }> };
+      const opt = a.option as { value: number; order: number };
+      mapA.set(a.questionId, {
+        optionOrder: opt.order,
+        optionCount: q.options.length,
+        value: opt.value,
+        weight: q.weight,
+        category: q.category,
+        isPremium: q.isPremium,
+      });
     }
-    const mapA = new Map<string, AnswerData>(
-      answersA.map((a: { questionId: string; option: { value: number }; question: { weight: number; category: string; isPremium: boolean } }) => [
-        a.questionId,
-        { value: a.option.value, weight: a.question.weight, category: a.question.category, isPremium: a.question.isPremium },
-      ]),
-    );
-    const mapB = new Map<string, AnswerData>(
-      answersB.map((a: { questionId: string; option: { value: number }; question: { weight: number; category: string; isPremium: boolean } }) => [
-        a.questionId,
-        { value: a.option.value, weight: a.question.weight, category: a.question.category, isPremium: a.question.isPremium },
-      ]),
-    );
+
+    const mapB = new Map<string, AnswerData>();
+    for (const b of answersB) {
+      const q = b.question as { weight: number; category: string; isPremium: boolean; options: Array<{ id: string; order: number; value: number }> };
+      const opt = b.option as { value: number; order: number };
+      mapB.set(b.questionId, {
+        optionOrder: opt.order,
+        optionCount: q.options.length,
+        value: opt.value,
+        weight: q.weight,
+        category: q.category,
+        isPremium: q.isPremium,
+      });
+    }
 
     // Find common questions (both users answered)
     const commonQuestionIds = [...mapA.keys()].filter((id) => mapB.has(id));
 
     if (commonQuestionIds.length === 0) {
-      return {
+      const emptyResponse: CachedCompatibilityScore = {
         userId: userAId,
         targetUserId: userBId,
         baseScore: MIN_DISPLAY_SCORE,
         deepScore: null,
         finalScore: MIN_DISPLAY_SCORE,
         level: 'NORMAL',
+        levelLabel: 'Orta Uyum',
+        isSuperCompatible: false,
         breakdown: {},
+        categoryScores: [],
+        topReasons: [],
+        bonuses: { intentionTagMatch: 0, sameCityBonus: 0, totalBonus: 0 },
         commonQuestions: 0,
       };
+      return emptyResponse;
     }
 
-    // Calculate scores per category
-    const categoryScores: Record<string, { total: number; weight: number; count: number }> = {};
-    let coreTotal = 0;
-    let coreWeight = 0;
-    let premiumTotal = 0;
-    let premiumWeight = 0;
+    // Calculate scores per category using step-based scoring
+    const categoryAccumulators: Record<string, CategoryAccumulator> = {};
+    let coreWeightedPoints = 0;
+    let coreMaxPoints = 0;
+    let premiumWeightedPoints = 0;
+    let premiumMaxPoints = 0;
 
     for (const qId of commonQuestionIds) {
       const a = mapA.get(qId)!;
       const b = mapB.get(qId)!;
 
-      // Compatibility score: similarity OR complementary depending on category
-      // Complementary categories: balanced opposites can score HIGHER than similar answers
-      // This detects "anxious+secure", "introvert+extrovert" type pairings
-      const rawSimilarity = 1 - Math.abs(a.value - b.value);
-      let similarity: number;
-      if (COMPLEMENTARY_CATEGORIES.has(a.category)) {
-        // Complementary pairing: moderate differences score highest (sweet spot at ~0.4 difference)
-        // Pure similarity: 1.0 -> 0.85, moderate diff: 0.4 -> 1.0, extreme diff: 1.0 -> 0.7
-        const diff = Math.abs(a.value - b.value);
-        const complementBonus = diff > 0.2 && diff < 0.7 ? 0.15 : 0;
-        similarity = Math.max(0.4, rawSimilarity) + complementBonus;
-        similarity = Math.min(1.0, similarity);
+      // Calculate step distance between answers
+      const stepDistance = Math.abs(a.optionOrder - b.optionOrder);
+
+      // Award points based on proximity
+      let rawPoints: number;
+      if (stepDistance === 0) {
+        rawPoints = EXACT_MATCH_POINTS;
+      } else if (stepDistance === 1) {
+        rawPoints = ADJACENT_MATCH_POINTS;
+      } else if (stepDistance === 2) {
+        rawPoints = TWO_STEP_MATCH_POINTS;
       } else {
-        similarity = rawSimilarity;
+        rawPoints = FAR_MATCH_POINTS;
       }
-      const weightedScore = similarity * a.weight;
+
+      // Apply complementary category bonus for moderate differences
+      if (COMPLEMENTARY_CATEGORIES.has(a.category) && stepDistance >= 1 && stepDistance <= 2) {
+        // Moderate differences in complementary categories get a bonus
+        rawPoints = Math.min(EXACT_MATCH_POINTS, rawPoints + 15);
+      }
+
+      // Apply tier-based weight multiplier: core questions count 2x
+      const tierMultiplier = a.isPremium ? PREMIUM_WEIGHT_MULTIPLIER : CORE_WEIGHT_MULTIPLIER;
+      const weightedPoints = rawPoints * a.weight * tierMultiplier;
+      const maxPossible = EXACT_MATCH_POINTS * a.weight * tierMultiplier;
 
       // Accumulate category scores
-      if (!categoryScores[a.category]) {
-        categoryScores[a.category] = { total: 0, weight: 0, count: 0 };
+      if (!categoryAccumulators[a.category]) {
+        categoryAccumulators[a.category] = { totalPoints: 0, maxPoints: 0, count: 0 };
       }
-      categoryScores[a.category].total += weightedScore;
-      categoryScores[a.category].weight += a.weight;
-      categoryScores[a.category].count++;
+      categoryAccumulators[a.category].totalPoints += weightedPoints;
+      categoryAccumulators[a.category].maxPoints += maxPossible;
+      categoryAccumulators[a.category].count++;
 
       // Accumulate totals separately for core and premium
       if (a.isPremium) {
-        premiumTotal += weightedScore;
-        premiumWeight += a.weight;
+        premiumWeightedPoints += weightedPoints;
+        premiumMaxPoints += maxPossible;
       } else {
-        coreTotal += weightedScore;
-        coreWeight += a.weight;
+        coreWeightedPoints += weightedPoints;
+        coreMaxPoints += maxPossible;
       }
     }
 
-    // Intention tag alignment bonus
+    // Fetch both user profiles for bonus calculation
     const [userAProfile, userBProfile] = await Promise.all([
       this.prisma.userProfile.findUnique({
         where: { userId: first },
-        select: { intentionTag: true },
+        select: { intentionTag: true, city: true },
       }),
       this.prisma.userProfile.findUnique({
         where: { userId: second },
-        select: { intentionTag: true },
+        select: { intentionTag: true, city: true },
       }),
     ]);
 
+    // Calculate bonus percentages
     let intentionBonus = 0;
-    if (userAProfile?.intentionTag && userBProfile?.intentionTag) {
-      if (userAProfile.intentionTag === userBProfile.intentionTag) {
-        intentionBonus = 3; // Same intention: +3 points to final score
-      } else {
-        intentionBonus = -1; // Different intention: slight penalty
-      }
+    if (
+      userAProfile?.intentionTag &&
+      userBProfile?.intentionTag &&
+      userAProfile.intentionTag === userBProfile.intentionTag
+    ) {
+      intentionBonus = INTENTION_TAG_BONUS_PERCENT;
     }
 
+    let cityBonus = 0;
+    if (
+      userAProfile?.city &&
+      userBProfile?.city &&
+      userAProfile.city.toLowerCase() === userBProfile.city.toLowerCase()
+    ) {
+      cityBonus = SAME_CITY_BONUS_PERCENT;
+    }
+
+    const totalBonus = intentionBonus + cityBonus;
+
     // Calculate raw percentage scores (0-100 range)
-    const rawBaseScore = coreWeight > 0
-      ? (coreTotal / coreWeight) * 100
+    const rawBaseScore = coreMaxPoints > 0
+      ? (coreWeightedPoints / coreMaxPoints) * 100
       : 0;
 
-    const hasPremiumAnswers = premiumWeight > 0;
-
-    // Deep score = combined score from ALL questions (core + premium)
-    const allWeight = coreWeight + premiumWeight;
-    const allTotal = coreTotal + premiumTotal;
-    const rawDeepScore = hasPremiumAnswers && allWeight > 0
-      ? (allTotal / allWeight) * 100
+    const hasPremiumAnswers = premiumMaxPoints > 0;
+    const allPoints = coreWeightedPoints + premiumWeightedPoints;
+    const allMax = coreMaxPoints + premiumMaxPoints;
+    const rawDeepScore = hasPremiumAnswers && allMax > 0
+      ? (allPoints / allMax) * 100
       : null;
 
     // MASTER BRIEF: Premium NEVER changes displayed score, only ranking visibility
-    // finalScore is ALWAYS based on core answers only
-    // deepScore is stored separately for ranking and Deep Match features
+    // finalScore is ALWAYS based on core answers only, plus bonuses
     const rawFinalScore = rawBaseScore;
-    const rawFinalScoreWithIntent = rawFinalScore + intentionBonus;
+    const rawFinalScoreWithBonuses = Math.min(100, rawFinalScore + totalBonus);
 
     // Clamp all scores to display range [47-97] — no 100%, minimum 47
     const clampScore = (raw: number): number =>
@@ -556,15 +806,32 @@ export class CompatibilityService {
 
     const baseScore = clampScore(rawBaseScore);
     const deepScore = rawDeepScore !== null ? clampScore(rawDeepScore) : null;
-    const finalScore = clampScore(rawFinalScoreWithIntent);
+    const finalScore = clampScore(rawFinalScoreWithBonuses);
 
-    // Category breakdown (computed before level determination)
+    // Category breakdown
     const breakdown: Record<string, number> = {};
-    for (const [cat, data] of Object.entries(categoryScores)) {
-      breakdown[cat] = data.weight > 0
-        ? Math.round((data.total / data.weight) * 100)
+    const categoryScores: Array<{
+      category: string;
+      categoryLabel: string;
+      score: number;
+      matchedQuestions: number;
+    }> = [];
+
+    for (const [cat, data] of Object.entries(categoryAccumulators)) {
+      const catScore = data.maxPoints > 0
+        ? Math.round((data.totalPoints / data.maxPoints) * 100)
         : 0;
+      breakdown[cat] = catScore;
+      categoryScores.push({
+        category: cat,
+        categoryLabel: DIMENSION_LABELS_TR[cat] ?? cat,
+        score: catScore,
+        matchedQuestions: data.count,
+      });
     }
+
+    // Sort category scores by score descending
+    categoryScores.sort((a, b) => b.score - a.score);
 
     // SUPER compatibility requires multi-criteria (per shared types spec):
     // - finalScore >= 90
@@ -579,7 +846,13 @@ export class CompatibilityService {
       highDimensionCount >= 3
     ) ? 'SUPER' : 'NORMAL';
 
-    // Store/update the score
+    // Determine display-friendly level label
+    const levelLabel = this.getLevelLabel(rawFinalScoreWithBonuses);
+
+    // Generate top 3 compatibility reasons in Turkish
+    const topReasons = this.getTopCompatibilityReasons(categoryScores, intentionBonus, cityBonus);
+
+    // Store/update the score in DB
     const score = await this.prisma.compatibilityScore.upsert({
       where: {
         userAId_userBId: { userAId: first, userBId: second },
@@ -610,7 +883,107 @@ export class CompatibilityService {
       ]);
     }
 
-    return this.formatScoreResponse(userAId, userBId, score);
+    const response: CachedCompatibilityScore = {
+      userId: userAId,
+      targetUserId: userBId,
+      baseScore: score.baseScore,
+      deepScore: score.deepScore,
+      finalScore: score.finalScore,
+      level: score.level,
+      levelLabel,
+      isSuperCompatible: score.level === 'SUPER',
+      breakdown: (score.dimensionScores ?? {}) as Record<string, number>,
+      categoryScores,
+      topReasons,
+      bonuses: {
+        intentionTagMatch: intentionBonus,
+        sameCityBonus: cityBonus,
+        totalBonus,
+      },
+      commonQuestions: commonQuestionIds.length,
+    };
+
+    // Cache the result in Redis with 24h TTL
+    const cacheKey = CACHE_KEYS.compatScore(first, second);
+    await this.cacheService.set(cacheKey, response, SCORE_CACHE_TTL);
+
+    return response;
+  }
+
+  /**
+   * Get top 3 compatibility reasons in Turkish.
+   * Based on highest-scoring categories and any active bonuses.
+   */
+  getTopCompatibilityReasons(
+    categoryScores: Array<{ category: string; score: number }>,
+    intentionBonus: number,
+    cityBonus: number,
+  ): string[] {
+    const reasons: string[] = [];
+
+    // Add top category-based reasons (highest scoring categories first)
+    const sorted = [...categoryScores].sort((a, b) => b.score - a.score);
+
+    for (const cat of sorted) {
+      if (reasons.length >= 3) break;
+
+      const templates = REASON_TEMPLATES_TR[cat.category];
+      if (!templates) continue;
+
+      if (cat.score >= 75) {
+        reasons.push(templates.high);
+      } else if (cat.score >= 50) {
+        reasons.push(templates.medium);
+      }
+    }
+
+    // Add bonus-based reasons if there is room
+    if (reasons.length < 3 && intentionBonus > 0) {
+      reasons.push('Ayni iliski niyetine sahipsiniz');
+    }
+
+    if (reasons.length < 3 && cityBonus > 0) {
+      reasons.push('Ayni sehirde yasiyorsunuz');
+    }
+
+    // Fallback reasons if not enough data
+    if (reasons.length === 0) {
+      reasons.push('Ortak sorulari yanıtlayarak uyumunuzu kesfedebilirsiniz');
+    }
+
+    return reasons.slice(0, 3);
+  }
+
+  /**
+   * Get category-level compatibility scores between two users.
+   * Returns an array of CategoryScore objects sorted by score descending.
+   */
+  async getCategoryScores(
+    userId: string,
+    targetUserId: string,
+  ): Promise<Array<{ category: string; categoryLabel: string; score: number; matchedQuestions: number }>> {
+    const { first, second } = this.orderIds(userId, targetUserId);
+
+    // Try to get from existing stored score
+    const existingScore = await this.prisma.compatibilityScore.findUnique({
+      where: { userAId_userBId: { userAId: first, userBId: second } },
+    });
+
+    if (existingScore?.dimensionScores) {
+      const dimensions = existingScore.dimensionScores as Record<string, number>;
+      return Object.entries(dimensions)
+        .map(([category, score]) => ({
+          category,
+          categoryLabel: DIMENSION_LABELS_TR[category] ?? category,
+          score,
+          matchedQuestions: 0, // not stored in DB, would need recalculation for exact count
+        }))
+        .sort((a, b) => b.score - a.score);
+    }
+
+    // If no stored score, calculate fresh
+    const result = await this.calculateAndStoreScore(userId, targetUserId);
+    return result.categoryScores;
   }
 
   /**
@@ -678,9 +1051,11 @@ export class CompatibilityService {
   ): Promise<{
     score: number;
     level: 'NORMAL' | 'SUPER';
+    levelLabel: string;
     strongAreas: Array<{ category: string; labelTr: string; description: string }>;
     differences: Array<{ category: string; labelTr: string; description: string }>;
     conversationStarters: string[];
+    topReasons: string[];
   }> {
     if (userId === targetUserId) {
       throw new BadRequestException('Kendinizle uyumluluk detayi goruntuleyemezsiniz');
@@ -703,6 +1078,9 @@ export class CompatibilityService {
     const finalScore = existingScore?.finalScore ?? MIN_DISPLAY_SCORE;
     const level = (existingScore?.level ?? 'NORMAL') as 'NORMAL' | 'SUPER';
     const dimensionScores = (existingScore?.dimensionScores ?? {}) as Record<string, number>;
+
+    // Determine level label from raw score
+    const levelLabel = this.getLevelLabel(finalScore);
 
     // Partition dimensions into strong areas and differences
     const strongAreas: Array<{ category: string; labelTr: string; description: string }> = [];
@@ -749,12 +1127,19 @@ export class CompatibilityService {
       differences,
     );
 
+    // Generate top reasons
+    const catScores = Object.entries(dimensionScores)
+      .map(([category, score]) => ({ category, score }));
+    const topReasons = this.getTopCompatibilityReasons(catScores, 0, 0);
+
     return {
       score: finalScore,
       level,
+      levelLabel,
       strongAreas,
       differences,
       conversationStarters,
+      topReasons,
     };
   }
 
@@ -765,6 +1150,18 @@ export class CompatibilityService {
    */
   private orderIds(a: string, b: string): { first: string; second: string } {
     return a < b ? { first: a, second: b } : { first: b, second: a };
+  }
+
+  /**
+   * Get Turkish level label based on raw score before clamping.
+   */
+  private getLevelLabel(rawScore: number): string {
+    for (const lvl of LEVEL_LABELS) {
+      if (rawScore >= lvl.minScore) {
+        return lvl.label;
+      }
+    }
+    return 'Dusuk Uyum';
   }
 
   private formatScoreResponse(
@@ -779,6 +1176,19 @@ export class CompatibilityService {
       updatedAt?: Date;
     },
   ) {
+    const dimensions = (score.dimensionScores ?? {}) as Record<string, number>;
+    const categoryScores = Object.entries(dimensions)
+      .map(([category, catScore]) => ({
+        category,
+        categoryLabel: DIMENSION_LABELS_TR[category] ?? category,
+        score: catScore,
+        matchedQuestions: 0,
+      }))
+      .sort((a, b) => b.score - a.score);
+
+    const catScoresForReasons = Object.entries(dimensions)
+      .map(([category, catScore]) => ({ category, score: catScore }));
+
     return {
       userId,
       targetUserId,
@@ -786,8 +1196,13 @@ export class CompatibilityService {
       deepScore: score.deepScore,
       finalScore: score.finalScore,
       level: score.level,
+      levelLabel: this.getLevelLabel(score.finalScore),
       isSuperCompatible: score.level === 'SUPER',
       breakdown: score.dimensionScores ?? {},
+      categoryScores,
+      topReasons: this.getTopCompatibilityReasons(catScoresForReasons, 0, 0),
+      bonuses: { intentionTagMatch: 0, sameCityBonus: 0, totalBonus: 0 },
+      commonQuestions: 0,
     };
   }
 
@@ -803,9 +1218,15 @@ export class CompatibilityService {
     const starters: string[] = [];
     const usedCategories = new Set<string>();
 
+    // Normalize category keys — try both UPPER and lower variants
+    const getStarters = (category: string): string[] | undefined => {
+      return CONVERSATION_STARTERS_TR[category] ??
+             CONVERSATION_STARTERS_TR[category.toUpperCase()];
+    };
+
     // Add 1-2 starters from strong areas
     for (const area of strongAreas.slice(0, 2)) {
-      const categoryStarters = CONVERSATION_STARTERS_TR[area.category];
+      const categoryStarters = getStarters(area.category);
       if (categoryStarters && categoryStarters.length > 0 && !usedCategories.has(area.category)) {
         starters.push(categoryStarters[0]);
         usedCategories.add(area.category);
@@ -814,7 +1235,7 @@ export class CompatibilityService {
 
     // Add 1 starter from differences (to explore different perspectives)
     for (const diff of differences.slice(0, 1)) {
-      const categoryStarters = CONVERSATION_STARTERS_TR[diff.category];
+      const categoryStarters = getStarters(diff.category);
       if (categoryStarters && categoryStarters.length > 1 && !usedCategories.has(diff.category)) {
         starters.push(categoryStarters[1]);
         usedCategories.add(diff.category);
@@ -830,7 +1251,7 @@ export class CompatibilityService {
         if (starters.length >= 3) break;
         if (usedCategories.has(category)) continue;
 
-        const categoryStarters = CONVERSATION_STARTERS_TR[category];
+        const categoryStarters = getStarters(category);
         if (categoryStarters && categoryStarters.length > 0) {
           starters.push(categoryStarters[0]);
           usedCategories.add(category);
@@ -848,5 +1269,18 @@ export class CompatibilityService {
     }
 
     return starters.slice(0, 5);
+  }
+
+  /**
+   * Invalidate all cached compatibility scores for a given user.
+   * Called when a user submits or updates answers.
+   */
+  private async invalidateUserCompatibilityCache(userId: string): Promise<void> {
+    try {
+      await this.cacheService.invalidatePattern(`compat:*${userId}*`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.warn(`Failed to invalidate compatibility cache for ${userId}: ${message}`);
+    }
   }
 }

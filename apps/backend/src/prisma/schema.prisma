@@ -1121,6 +1121,22 @@ model DailyPick {
 }
 
 // ============================================================
+// SUBSYSTEM: Feed Views (Anti-repeat pattern for discovery)
+// Tracks which profiles were shown to prevent re-showing within 24h
+// ============================================================
+
+model FeedView {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  viewedUserId String   @map("viewed_user_id") @db.Uuid
+  viewedAt     DateTime @default(now()) @map("viewed_at")
+
+  @@index([userId, viewedAt])
+  @@index([userId, viewedUserId])
+  @@map("feed_views")
+}
+
+// ============================================================
 // SUBSYSTEM: Date Plans (In-app date planner between matches)
 // ============================================================
 

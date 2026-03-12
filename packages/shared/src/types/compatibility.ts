@@ -47,6 +47,46 @@ export enum CompatibilityLevel {
   SUPER = 'SUPER',
 }
 
+// Extended compatibility level labels for UI display (Turkish)
+export enum CompatibilityLevelLabel {
+  YUKSEK_UYUM = 'Yüksek Uyum',   // 80%+
+  IYI_UYUM = 'İyi Uyum',          // 60-79%
+  ORTA_UYUM = 'Orta Uyum',        // 40-59%
+  DUSUK_UYUM = 'Düşük Uyum',      // <40%
+}
+
+// Full compatibility result returned from scoring algorithm
+export interface CompatibilityResult {
+  userId: string;
+  targetUserId: string;
+  score: number;                    // 0-100 final score
+  level: CompatibilityLevel;        // NORMAL or SUPER (LOCKED: 2 levels)
+  levelLabel: CompatibilityLevelLabel; // Turkish display label
+  baseScore: number;                // core questions score
+  deepScore: number | null;         // all questions score (null if no premium answers)
+  categoryScores: CategoryScore[];  // per-category breakdown
+  topReasons: string[];             // top 3 reasons in Turkish
+  bonuses: CompatibilityBonuses;    // bonus points breakdown
+  commonQuestions: number;           // number of questions both users answered
+  isSuperCompatible: boolean;       // shorthand for level === SUPER
+}
+
+// Per-category compatibility breakdown
+export interface CategoryScore {
+  category: QuestionCategory;
+  categoryLabel: string;            // Turkish display label
+  score: number;                    // 0-100
+  matchedQuestions: number;         // questions both answered in this category
+  totalQuestions: number;           // total questions in this category
+}
+
+// Bonus points applied to compatibility score
+export interface CompatibilityBonuses {
+  intentionTagMatch: number;        // +10% for same intention, 0 otherwise
+  sameCityBonus: number;            // +5% for same city, 0 otherwise
+  totalBonus: number;               // sum of all bonuses
+}
+
 // Question categories mapping to psychological dimensions
 export enum QuestionCategory {
   // Core Questions (Q1-Q20)
@@ -78,4 +118,24 @@ export const SUPER_COMPATIBILITY_THRESHOLD = {
   minimumDimensionScore: 60,
   requiredHighDimensions: 3,
   highDimensionThreshold: 90,
+} as const;
+
+// Scoring constants for the compatibility algorithm
+export const SCORING_CONSTANTS = {
+  // Points awarded based on answer proximity (option order distance)
+  EXACT_MATCH_POINTS: 100,
+  ADJACENT_MATCH_POINTS: 70,     // 1 step apart
+  TWO_STEP_MATCH_POINTS: 40,     // 2 steps apart
+  FAR_MATCH_POINTS: 10,          // 3+ steps apart
+
+  // Core questions are weighted 2x compared to premium
+  CORE_QUESTION_WEIGHT_MULTIPLIER: 2,
+  PREMIUM_QUESTION_WEIGHT_MULTIPLIER: 1,
+
+  // Bonus percentages
+  INTENTION_TAG_MATCH_BONUS: 10,  // +10% for matching intention tags
+  SAME_CITY_BONUS: 5,             // +5% for same city
+
+  // Redis cache TTL for computed scores (24 hours)
+  SCORE_CACHE_TTL_SECONDS: 86400,
 } as const;

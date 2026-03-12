@@ -1,5 +1,6 @@
 // Discovery API service — feed, swipe, undo, and super like operations
 
+import { API_ROUTES } from '@luma/shared';
 import api from './api';
 
 export interface FeedCard {
@@ -757,7 +758,7 @@ export const discoveryService = {
   // Get discovery feed
   getFeed: async (filters?: FeedFilters): Promise<FeedResponse> => {
     try {
-      const response = await api.get<FeedResponse>('/discovery/feed', {
+      const response = await api.get<FeedResponse>(API_ROUTES.DISCOVERY.GET_FEED, {
         params: filters,
       });
       return response.data;
@@ -770,7 +771,7 @@ export const discoveryService = {
   // Swipe on a profile (like, pass, or super_like)
   swipe: async (data: SwipeRequest): Promise<SwipeResponse> => {
     try {
-      const response = await api.post<SwipeResponse>('/discovery/swipe', data);
+      const response = await api.post<SwipeResponse>(API_ROUTES.DISCOVERY.SWIPE, data);
       return response.data;
     } catch {
       // Mock swipe response — simulate occasional matches on likes
@@ -788,7 +789,7 @@ export const discoveryService = {
   // Undo last swipe within 5-second window
   undoSwipe: async (): Promise<UndoSwipeResponse> => {
     try {
-      const response = await api.post<UndoSwipeResponse>('/discovery/undo');
+      const response = await api.post<UndoSwipeResponse>(API_ROUTES.DISCOVERY.UNDO);
       return response.data;
     } catch {
       return { undone: true, targetUserId: '' };

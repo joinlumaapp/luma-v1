@@ -1,6 +1,7 @@
 // Profile API service — CRUD operations for user profile
 
-import api from './api';
+import { API_ROUTES } from '@luma/shared';
+import api, { buildUrl } from './api';
 import type { ProfileData } from '../stores/profileStore';
 
 export interface ProfileResponse {
@@ -55,13 +56,13 @@ export interface ProfileVisitorsResponse {
 export const profileService = {
   // Get current user profile
   getProfile: async (): Promise<ProfileResponse> => {
-    const response = await api.get<ProfileResponse>('/profiles/me');
+    const response = await api.get<ProfileResponse>(API_ROUTES.PROFILE.GET);
     return response.data;
   },
 
   // Update profile fields
   updateProfile: async (data: Partial<ProfileData>): Promise<ProfileResponse> => {
-    const response = await api.patch<ProfileResponse>('/profiles/me', data);
+    const response = await api.patch<ProfileResponse>(API_ROUTES.PROFILE.UPDATE, data);
     return response.data;
   },
 
@@ -79,7 +80,7 @@ export const profileService = {
     formData.append('order', String(order));
 
     const response = await api.post<{ id: string; url: string }>(
-      '/profiles/photos',
+      API_ROUTES.PROFILE.UPLOAD_PHOTO,
       formData,
       {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -90,23 +91,23 @@ export const profileService = {
 
   // Delete a photo
   deletePhoto: async (photoId: string): Promise<void> => {
-    await api.delete(`/profiles/photos/${photoId}`);
+    await api.delete(buildUrl(API_ROUTES.PROFILE.DELETE_PHOTO, { photoId }));
   },
 
   // Reorder photos
   reorderPhotos: async (photoIds: string[]): Promise<void> => {
-    await api.patch('/profiles/photos/reorder', { photoIds });
+    await api.patch(API_ROUTES.PROFILE.REORDER_PHOTOS, { photoIds });
   },
 
   // Set intention tag
   setIntentionTag: async (tag: string): Promise<void> => {
-    await api.patch('/profiles/intention-tag', { intentionTag: tag });
+    await api.patch(API_ROUTES.PROFILE.SET_INTENTION, { intentionTag: tag });
   },
 
   // Get profile strength/completeness breakdown
   getProfileStrength: async (): Promise<ProfileStrengthResponse> => {
     try {
-      const response = await api.get<ProfileStrengthResponse>('/profiles/strength');
+      const response = await api.get<ProfileStrengthResponse>(API_ROUTES.PROFILE.STRENGTH);
       return response.data;
     } catch {
       // Fallback: compute locally from profile store
@@ -178,7 +179,7 @@ export const profileService = {
   // Track that current user viewed another user's profile
   trackProfileView: async (targetUserId: string): Promise<void> => {
     try {
-      await api.post(`/profiles/view/${targetUserId}`);
+      await api.post(buildUrl(API_ROUTES.PROFILE.TRACK_VIEW, { targetUserId }));
     } catch {
       // Silently fail — view tracking is non-critical
     }
@@ -187,7 +188,7 @@ export const profileService = {
   // Get recent profile visitors
   getProfileVisitors: async (): Promise<ProfileVisitorsResponse> => {
     try {
-      const response = await api.get<ProfileVisitorsResponse>('/profiles/visitors');
+      const response = await api.get<ProfileVisitorsResponse>(API_ROUTES.PROFILE.VISITORS);
       return response.data;
     } catch {
       // Mock fallback for development

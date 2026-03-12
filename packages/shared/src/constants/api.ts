@@ -125,6 +125,7 @@ export const API_ROUTES = {
   // Notifications
   NOTIFICATIONS: {
     GET_ALL: '/notifications',
+    BADGE_COUNT: '/notifications/badge-count',
     MARK_READ: '/notifications/read',
     MARK_ALL_READ: '/notifications/mark-all-read',
     GET_PREFERENCES: '/notifications/preferences',

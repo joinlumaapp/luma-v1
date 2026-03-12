@@ -1,5 +1,6 @@
 // Auth API service — register, verify, login, logout, refresh, delete
 
+import { API_ROUTES } from '@luma/shared';
 import api from './api';
 
 export interface RegisterResponse {
@@ -51,13 +52,13 @@ export interface MeResponse {
 export const authService = {
   // Send SMS verification code (register or re-send OTP)
   register: async (phone: string, countryCode: string): Promise<RegisterResponse> => {
-    const response = await api.post<RegisterResponse>('/auth/register', { phone, countryCode });
+    const response = await api.post<RegisterResponse>(API_ROUTES.AUTH.REGISTER, { phone, countryCode });
     return response.data;
   },
 
   // Verify SMS OTP code
   verifySms: async (phone: string, code: string): Promise<VerifySmsResponse> => {
-    const response = await api.post<VerifySmsResponse>('/auth/verify-sms', {
+    const response = await api.post<VerifySmsResponse>(API_ROUTES.AUTH.VERIFY_SMS, {
       phone,
       code,
     });
@@ -74,7 +75,7 @@ export const authService = {
     } as unknown as Blob);
 
     const response = await api.post<{ isVerified: boolean }>(
-      '/auth/verify-selfie',
+      API_ROUTES.AUTH.VERIFY_SELFIE,
       formData,
       {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -85,18 +86,18 @@ export const authService = {
 
   // Login with existing credentials (phone + OTP)
   login: async (phone: string, code: string): Promise<VerifySmsResponse> => {
-    const response = await api.post<VerifySmsResponse>('/auth/login', { phone, code });
+    const response = await api.post<VerifySmsResponse>(API_ROUTES.AUTH.LOGIN, { phone, code });
     return response.data;
   },
 
   // Logout (invalidate tokens)
   logout: async (): Promise<void> => {
-    await api.post('/auth/logout');
+    await api.post(API_ROUTES.AUTH.LOGOUT);
   },
 
   // Refresh access token
   refreshToken: async (refreshToken: string): Promise<RefreshTokenResponse> => {
-    const response = await api.post<RefreshTokenResponse>('/auth/refresh-token', {
+    const response = await api.post<RefreshTokenResponse>(API_ROUTES.AUTH.REFRESH_TOKEN, {
       refreshToken,
     });
     return response.data;
@@ -110,6 +111,12 @@ export const authService = {
 
   // Delete account permanently
   deleteAccount: async (): Promise<void> => {
-    await api.delete('/auth/delete-account');
+    await api.delete(API_ROUTES.AUTH.DELETE_ACCOUNT);
+  },
+
+  // Export user data (GDPR)
+  exportData: async (): Promise<Record<string, unknown>> => {
+    const response = await api.get<Record<string, unknown>>(API_ROUTES.AUTH.EXPORT_DATA);
+    return response.data;
   },
 };

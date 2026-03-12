@@ -5,31 +5,34 @@ import { PrismaService } from '../../prisma/prisma.service';
 const TURKISH_DAY_NAMES: Record<number, string> = {
   0: 'Pazar',
   1: 'Pazartesi',
-  2: 'Sal\u0131',
-  3: '\u00c7ar\u015famba',
-  4: 'Per\u015fembe',
+  2: 'Sali',
+  3: 'Carsamba',
+  4: 'Persembe',
   5: 'Cuma',
   6: 'Cumartesi',
 };
 
 // Turkish category labels for top category display
 const CATEGORY_LABELS_TR: Record<string, string> = {
-  COMMUNICATION: '\u0130leti\u015fim Tarz\u0131',
-  LIFE_GOALS: 'Ya\u015fam Hedefleri',
-  VALUES: 'De\u011ferler',
-  LIFESTYLE: 'Ya\u015fam Tarz\u0131',
+  COMMUNICATION: 'Iletisim Tarzi',
+  LIFE_GOALS: 'Yasam Hedefleri',
+  VALUES: 'Degerler',
+  LIFESTYLE: 'Yasam Tarzi',
   EMOTIONAL_INTELLIGENCE: 'Duygusal Zeka',
-  RELATIONSHIP_EXPECTATIONS: '\u0130li\u015fki Beklentileri',
+  RELATIONSHIP_EXPECTATIONS: 'Iliski Beklentileri',
   SOCIAL_COMPATIBILITY: 'Sosyal Uyum',
-  ATTACHMENT_STYLE: 'Ba\u011flanma Tarz\u0131',
+  ATTACHMENT_STYLE: 'Baglanma Tarzi',
   LOVE_LANGUAGE: 'Sevgi Dili',
-  CONFLICT_STYLE: '\u00c7at\u0131\u015fma Yakla\u015f\u0131m\u0131',
+  CONFLICT_STYLE: 'Catisma Yaklasimi',
   FUTURE_VISION: 'Gelecek Vizyonu',
-  INTELLECTUAL: 'Entelekt\u00fcel Uyum',
-  INTIMACY: 'Yak\u0131nl\u0131k',
-  GROWTH_MINDSET: 'Geli\u015fim Odakl\u0131l\u0131k',
-  CORE_FEARS: 'Temel Kayg\u0131lar',
+  INTELLECTUAL: 'Entelektuel Uyum',
+  INTIMACY: 'Yakinlik',
+  GROWTH_MINDSET: 'Gelisim Odaklilik',
+  CORE_FEARS: 'Temel Kaygilar',
 };
+
+// Maximum number of trending interests to return
+const MAX_TRENDING_INTERESTS = 10;
 
 export interface WeeklyReportResponse {
   weekStart: string;
@@ -41,7 +44,24 @@ export interface WeeklyReportResponse {
   messagesExchanged: number;
   mostActiveDay: string | null;
   likeRate: number;
+  likesReceived: number;
+  topCompatibilityMatch: TopCompatMatchInfo | null;
+  trendingInterests: TrendingInterest[];
   insights: string[];
+}
+
+/** Info about the highest-compatibility match of the week */
+interface TopCompatMatchInfo {
+  userId: string;
+  firstName: string;
+  compatibilityScore: number;
+  matchedAt: string;
+}
+
+/** A trending interest tag in the user's area */
+interface TrendingInterest {
+  tag: string;
+  count: number;
 }
 
 @Injectable()
@@ -68,12 +88,29 @@ export class WeeklyReportService {
       return this.generateWeeklyReport(userId);
     }
 
-    return this.formatReport(latestReport);
+    // For stored reports, augment with live data for new fields
+    const weekStart = latestReport.weekStart;
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+
+    const [likesReceived, topMatch, trendingInterests] = await Promise.all([
+      this.getLikesReceivedCount(userId, weekStart, weekEnd),
+      this.getTopCompatibilityMatch(userId, weekStart, weekEnd),
+      this.getTrendingInterestsInArea(userId),
+    ]);
+
+    return {
+      ...this.formatReport(latestReport),
+      likesReceived,
+      topCompatibilityMatch: topMatch,
+      trendingInterests,
+    };
   }
 
   /**
    * Generate a weekly report for the user based on the last 7 days of activity.
-   * If a report already exists for this week, returns the existing one.
+   * Includes: profiles seen, likes given/received, matches made,
+   * top compatibility match of the week, and trending interests in area.
    */
   async generateWeeklyReport(userId: string): Promise<WeeklyReportResponse> {
     const weekStart = this.getLastMonday();
@@ -86,7 +123,21 @@ export class WeeklyReportService {
     });
 
     if (existingReport) {
-      return this.formatReport(existingReport);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 7);
+
+      const [likesReceived, topMatch, trendingInterests] = await Promise.all([
+        this.getLikesReceivedCount(userId, weekStart, weekEnd),
+        this.getTopCompatibilityMatch(userId, weekStart, weekEnd),
+        this.getTrendingInterestsInArea(userId),
+      ]);
+
+      return {
+        ...this.formatReport(existingReport),
+        likesReceived,
+        topCompatibilityMatch: topMatch,
+        trendingInterests,
+      };
     }
 
     // Calculate the end of the reporting period (7 days from weekStart)
@@ -102,8 +153,11 @@ export class WeeklyReportService {
       messageCount,
       swipesByDay,
       topCategoryResult,
+      likesReceived,
+      topMatch,
+      trendingInterests,
     ] = await Promise.all([
-      // Total swipes in the period
+      // Total swipes (profiles seen) in the period
       this.prisma.swipe.count({
         where: {
           swiperId: userId,
@@ -111,11 +165,11 @@ export class WeeklyReportService {
         },
       }),
 
-      // Total likes in the period
+      // Total likes given in the period
       this.prisma.swipe.count({
         where: {
           swiperId: userId,
-          action: 'LIKE',
+          action: { in: ['LIKE', 'SUPER_LIKE'] },
           createdAt: { gte: weekStart, lt: weekEnd },
         },
       }),
@@ -156,6 +210,15 @@ export class WeeklyReportService {
 
       // Top compatibility category from user answers
       this.getTopCategory(userId),
+
+      // Likes received in the period
+      this.getLikesReceivedCount(userId, weekStart, weekEnd),
+
+      // Top compatibility match of the week
+      this.getTopCompatibilityMatch(userId, weekStart, weekEnd),
+
+      // Trending interests in user's area
+      this.getTrendingInterestsInArea(userId),
     ]);
 
     // Calculate average compatibility from matches
@@ -193,7 +256,12 @@ export class WeeklyReportService {
       `Weekly report generated for user ${userId} — week of ${weekStart.toISOString().slice(0, 10)}`,
     );
 
-    return this.formatReport(report);
+    return {
+      ...this.formatReport(report),
+      likesReceived,
+      topCompatibilityMatch: topMatch,
+      trendingInterests,
+    };
   }
 
   // ─── Private Helpers ───────────────────────────────────────────
@@ -205,7 +273,7 @@ export class WeeklyReportService {
   private getLastMonday(): Date {
     const now = new Date();
     const day = now.getDay(); // 0 = Sunday, 1 = Monday, ...
-    const diff = day === 0 ? 6 : day - 1; // Days since last Monday
+    const diff = day === 0 ? 6 : day - 1;
     const monday = new Date(now);
     monday.setDate(monday.getDate() - diff);
     monday.setHours(0, 0, 0, 0);
@@ -276,8 +344,117 @@ export class WeeklyReportService {
   }
 
   /**
+   * Count likes received by the user during the reporting period.
+   */
+  private async getLikesReceivedCount(
+    userId: string,
+    weekStart: Date,
+    weekEnd: Date,
+  ): Promise<number> {
+    return this.prisma.swipe.count({
+      where: {
+        targetId: userId,
+        action: { in: ['LIKE', 'SUPER_LIKE'] },
+        createdAt: { gte: weekStart, lt: weekEnd },
+      },
+    });
+  }
+
+  /**
+   * Get the top compatibility match of the week.
+   * Returns the match with the highest compatibility score created this week.
+   */
+  private async getTopCompatibilityMatch(
+    userId: string,
+    weekStart: Date,
+    weekEnd: Date,
+  ): Promise<TopCompatMatchInfo | null> {
+    const topMatch = await this.prisma.match.findFirst({
+      where: {
+        OR: [{ userAId: userId }, { userBId: userId }],
+        createdAt: { gte: weekStart, lt: weekEnd },
+      },
+      orderBy: { compatibilityScore: 'desc' },
+      select: {
+        userAId: true,
+        userBId: true,
+        compatibilityScore: true,
+        createdAt: true,
+      },
+    });
+
+    if (!topMatch) return null;
+
+    // Get the partner's profile
+    const partnerId = topMatch.userAId === userId
+      ? topMatch.userBId
+      : topMatch.userAId;
+
+    const partnerProfile = await this.prisma.userProfile.findUnique({
+      where: { userId: partnerId },
+      select: { firstName: true },
+    });
+
+    return {
+      userId: partnerId,
+      firstName: partnerProfile?.firstName ?? '',
+      compatibilityScore: topMatch.compatibilityScore,
+      matchedAt: topMatch.createdAt.toISOString(),
+    };
+  }
+
+  /**
+   * Get trending interest tags in the user's area (same city).
+   * Returns the top N most popular interest tags among active users
+   * in the same city as the current user.
+   */
+  private async getTrendingInterestsInArea(userId: string): Promise<TrendingInterest[]> {
+    // Get user's city
+    const userProfile = await this.prisma.userProfile.findUnique({
+      where: { userId },
+      select: { city: true },
+    });
+
+    if (!userProfile?.city) return [];
+
+    // Get interest tags from active users in the same city
+    const profiles = await this.prisma.userProfile.findMany({
+      where: {
+        city: userProfile.city,
+        isComplete: true,
+        userId: { not: userId },
+        user: {
+          isActive: true,
+          deletedAt: null,
+        },
+        interestTags: { isEmpty: false },
+      },
+      select: { interestTags: true },
+      take: 500, // cap to avoid scanning too many records
+    });
+
+    // Count interest tag frequency
+    const tagCounts = new Map<string, number>();
+    for (const profile of profiles) {
+      for (const tag of profile.interestTags) {
+        tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+      }
+    }
+
+    // Sort by frequency and take top N
+    const trending: TrendingInterest[] = [...tagCounts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, MAX_TRENDING_INTERESTS)
+      .map(([tag, count]) => ({ tag, count }));
+
+    return trending;
+  }
+
+  /**
    * Format a WeeklyReport database record into the API response shape.
    * Includes calculated likeRate and rule-based Turkish insights.
+   * Note: likesReceived, topCompatibilityMatch, and trendingInterests
+   * are computed separately and merged by the caller.
    */
   private formatReport(report: {
     weekStart: Date;
@@ -288,7 +465,7 @@ export class WeeklyReportService {
     topCategory: string | null;
     messagesExchanged: number;
     mostActiveDay: string | null;
-  }): WeeklyReportResponse {
+  }): Omit<WeeklyReportResponse, 'likesReceived' | 'topCompatibilityMatch' | 'trendingInterests'> {
     const likeRate =
       report.totalSwipes > 0
         ? Math.round((report.totalLikes / report.totalSwipes) * 10000) / 100
@@ -299,6 +476,7 @@ export class WeeklyReportService {
       totalMatches: report.totalMatches,
       messagesExchanged: report.messagesExchanged,
       avgCompatibility: report.avgCompatibility,
+      totalSwipes: report.totalSwipes,
     });
 
     // Translate top category to Turkish label
@@ -322,60 +500,81 @@ export class WeeklyReportService {
 
   /**
    * Generate rule-based Turkish insight sentences based on weekly activity.
-   * Returns 2-3 actionable insights.
+   * Returns 2-4 actionable insights covering engagement, match quality,
+   * messaging, and compatibility trends.
    */
   private generateInsights(params: {
     likeRate: number;
     totalMatches: number;
     messagesExchanged: number;
     avgCompatibility: number;
+    totalSwipes: number;
   }): string[] {
     const insights: string[] = [];
 
     // Like rate insights
     if (params.likeRate > 50) {
       insights.push(
-        'Se\u00e7ici davran\u0131yorsun \u2014 bu kaliteli e\u015fle\u015fmelere yol a\u00e7ar',
+        'Secici davraniyorsun — bu kaliteli eslesmelere yol acar',
       );
     } else if (params.likeRate < 20 && params.likeRate > 0) {
       insights.push(
-        'Daha a\u00e7\u0131k ol \u2014 farkl\u0131 profillere \u015fans ver',
+        'Daha acik ol — farkli profillere sans ver',
       );
     }
 
     // Match count insights
     if (params.totalMatches > 3) {
       insights.push(
-        `Harika bir hafta! ${params.totalMatches} yeni e\u015fle\u015fme kazand\u0131n`,
+        `Harika bir hafta! ${params.totalMatches} yeni eslesme kazandin`,
       );
-    } else if (params.totalMatches === 0) {
+    } else if (params.totalMatches === 0 && params.totalSwipes > 0) {
       insights.push(
-        'Bu hafta e\u015fle\u015fme olmad\u0131 \u2014 profilini g\u00fcncellemeyi dene',
+        'Bu hafta eslesme olmadi — profilini guncellemeyi dene',
       );
     }
 
     // Message activity insight
     if (params.messagesExchanged > 20) {
       insights.push(
-        'Aktif sohbet ediyorsun \u2014 bu e\u015fle\u015fmeleri g\u00fc\u00e7lendirir',
+        'Aktif sohbet ediyorsun — bu eslesmeleri guclendirir',
+      );
+    } else if (params.messagesExchanged === 0 && params.totalMatches > 0) {
+      insights.push(
+        'Eslesmelerine mesaj gonder — ilk adimi at!',
       );
     }
 
     // Compatibility insight
     if (params.avgCompatibility > 80) {
       insights.push(
-        'Y\u00fcksek uyumlu profillerle e\u015fle\u015fiyorsun',
+        'Yuksek uyumlu profillerle eslesiyorsun — harika secimler',
+      );
+    } else if (params.avgCompatibility > 0 && params.avgCompatibility < 50) {
+      insights.push(
+        'Uyumluluk sorularini tamamla — daha isabetli eslesmelere ulasirsun',
+      );
+    }
+
+    // Activity level insight
+    if (params.totalSwipes === 0) {
+      insights.push(
+        'Bu hafta hic kesfetmedin — duzenli kullanim eslesme sansini artirir',
+      );
+    } else if (params.totalSwipes > 50) {
+      insights.push(
+        'Aktif bir kesfetme haftasi gecirdin — bu momentum senin icin iyi',
       );
     }
 
     // Ensure at least one insight is always returned
     if (insights.length === 0) {
       insights.push(
-        'Ke\u015ffetmeye devam et \u2014 do\u011fru ki\u015fi seni bekliyor',
+        'Kesfetmeye devam et — dogru kisi seni bekliyor',
       );
     }
 
-    // Cap at 3 insights
-    return insights.slice(0, 3);
+    // Cap at 4 insights
+    return insights.slice(0, 4);
   }
 }

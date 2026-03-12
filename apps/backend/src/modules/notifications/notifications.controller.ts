@@ -34,6 +34,13 @@ export class NotificationsController {
     return this.notificationsService.getNotifications(userId, pageNum);
   }
 
+  @Get('badge-count')
+  @ApiOperation({ summary: 'Get unread notification badge count' })
+  async getBadgeCount(@CurrentUser('sub') userId: string) {
+    const count = await this.notificationsService.getBadgeCount(userId);
+    return { unreadCount: count };
+  }
+
   @Patch('read')
   @ApiOperation({ summary: 'Mark specific notifications as read' })
   async markRead(

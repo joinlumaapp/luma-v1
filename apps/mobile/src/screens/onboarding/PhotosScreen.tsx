@@ -1,8 +1,9 @@
-// Onboarding step 7/8: Photo selection grid (cream/beige design)
-// Local-only mode: photos are picked and stored as URIs, uploaded after registration
-// Reference: refs/6.jpeg — "Ilk 2 fotografini ekle"
+// Onboarding step 13/15: Photo selection grid (cream/beige design)
+// Local-only mode: photos are picked, compressed and stored as URIs, uploaded after registration
+// Features: gallery + camera picker, compression with progress, fade-in animation,
+// gold border on main photo, file size display, min 1 / max 6 validation
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,13 +12,24 @@ import {
   Dimensions,
   Image,
   Alert,
+  Platform,
+  ActivityIndicator,
 } from 'react-native';
+import Animated, {
+  FadeIn,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  Easing,
+} from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import type { OnboardingStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../stores/profileStore';
 import { photoService } from '../../services/photoService';
+import type { CompressedImage } from '../../services/photoService';
 import { PROFILE_CONFIG } from '../../constants/config';
 import {
   OnboardingLayout,
@@ -35,78 +47,220 @@ const CELL_SIZE = (width - GRID_PADDING * 2 - GRID_GAP * 2) / 3;
 // Onboarding shows 6 slots initially; users can add more later in EditProfile
 const ONBOARDING_PHOTO_SLOTS = 6;
 
+// Gold accent for main photo border
+const GOLD_ACCENT = '#C4A882';
+const GOLD_ACCENT_LIGHT = 'rgba(196, 168, 130, 0.15)';
+
+interface PhotoSlot {
+  uri: string;
+  compressed: CompressedImage | null;
+}
+
 export const PhotosScreen: React.FC = () => {
   const navigation = useNavigation<PhotosNavigationProp>();
-  const [photoUris, setPhotoUris] = useState<(string | null)[]>(
+  const [photoSlots, setPhotoSlots] = useState<(PhotoSlot | null)[]>(
     Array.from({ length: ONBOARDING_PHOTO_SLOTS }, () => null)
   );
+  const [compressingIndex, setCompressingIndex] = useState<number | null>(null);
   const setProfileField = useProfileStore((state) => state.setField);
 
-  const selectedCount = photoUris.filter((u) => u !== null).length;
-  const isValid = photoUris[0] !== null && selectedCount >= PROFILE_CONFIG.MIN_PHOTOS;
+  // Animation value for the continue button
+  const buttonScale = useSharedValue(1);
+  const buttonAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: buttonScale.value }],
+  }));
 
-  const showPickerOptions = (index: number) => {
+  const selectedCount = photoSlots.filter((s) => s !== null).length;
+  const isValid = photoSlots[0] !== null && selectedCount >= PROFILE_CONFIG.MIN_PHOTOS;
+
+  const processPhoto = useCallback(async (uri: string, index: number) => {
+    setCompressingIndex(index);
+    try {
+      const compressed = await photoService.compressImage(uri);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setPhotoSlots((prev) => {
+        const next = [...prev];
+        next[index] = { uri: compressed.uri, compressed };
+        return next;
+      });
+    } catch {
+      Alert.alert(
+        'Hata',
+        'Fotograf isleniremedi. Lutfen tekrar deneyin.',
+        [{ text: 'Tamam' }],
+      );
+    } finally {
+      setCompressingIndex(null);
+    }
+  }, []);
+
+  const showPickerOptions = useCallback((index: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     Alert.alert(
-      index === 0 ? 'Profil Fotoğrafı' : 'Fotoğraf Ekle',
+      index === 0 ? 'Profil Fotografi' : 'Fotograf Ekle',
       index === 0
-        ? 'Profil fotoğrafın için yüzünün net göründüğü bir fotoğraf seç.'
-        : 'Fotoğraf kaynağını seçin',
+        ? 'Profil fotografin icin yuzunun net gorundugu bir fotograf sec.'
+        : 'Fotograf kaynagini secin',
       [
-        { text: 'Galeri', onPress: () => handlePickFromGallery(index) },
-        { text: 'Kamera', onPress: () => handleTakePhoto(index) },
-        { text: 'İptal', style: 'cancel' },
+        {
+          text: 'Galeriden Sec',
+          onPress: () => handlePickFromGallery(index),
+        },
+        {
+          text: 'Kamera',
+          onPress: () => handleTakePhoto(index),
+        },
+        { text: 'Iptal', style: 'cancel' },
       ],
     );
-  };
+  }, []);
 
-  const handlePickFromGallery = async (index: number) => {
+  const handlePickFromGallery = useCallback(async (index: number) => {
     const uri = await photoService.pickFromGallery();
     if (uri) {
-      setPhotoUris((prev) => {
-        const next = [...prev];
-        next[index] = uri;
-        return next;
-      });
+      await processPhoto(uri, index);
     }
-  };
+  }, [processPhoto]);
 
-  const handleTakePhoto = async (index: number) => {
+  const handleTakePhoto = useCallback(async (index: number) => {
     const uri = await photoService.takePhoto();
     if (uri) {
-      setPhotoUris((prev) => {
-        const next = [...prev];
-        next[index] = uri;
-        return next;
-      });
+      await processPhoto(uri, index);
     }
-  };
+  }, [processPhoto]);
 
-  const handleRemovePhoto = (index: number) => {
-    if (!photoUris[index]) return;
+  const handleRemovePhoto = useCallback((index: number) => {
+    if (!photoSlots[index]) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
     if (index === 0) {
       Alert.alert(
-        'Profil Fotoğrafı',
-        'Profil fotoğrafını değiştirmek ister misin?',
+        'Profil Fotografi',
+        'Profil fotografini degistirmek ister misin?',
         [
-          { text: 'İptal', style: 'cancel' },
-          { text: 'Değiştir', onPress: () => showPickerOptions(0) },
+          { text: 'Iptal', style: 'cancel' },
+          {
+            text: 'Degistir',
+            onPress: () => showPickerOptions(0),
+          },
+          {
+            text: 'Kaldir',
+            style: 'destructive',
+            onPress: () => {
+              setPhotoSlots((prev) => {
+                const next = [...prev];
+                next[0] = null;
+                return next;
+              });
+            },
+          },
         ],
       );
       return;
     }
-    setPhotoUris((prev) => {
+    setPhotoSlots((prev) => {
       const next = [...prev];
       next[index] = null;
       return next;
     });
-  };
+  }, [photoSlots, showPickerOptions]);
 
-  const handleContinue = () => {
+  const handleContinue = useCallback(() => {
     if (isValid) {
-      const uris = photoUris.filter((u): u is string => u !== null);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      buttonScale.value = withSpring(0.95, { damping: 15 }, () => {
+        buttonScale.value = withSpring(1, { damping: 12 });
+      });
+      const uris = photoSlots
+        .filter((s): s is PhotoSlot => s !== null)
+        .map((s) => s.uri);
       setProfileField('photos', uris);
       navigation.navigate('QuestionsIntro');
     }
+  }, [isValid, photoSlots, setProfileField, navigation, buttonScale]);
+
+  const renderPhotoCell = (slot: PhotoSlot | null, index: number) => {
+    const isMain = index === 0;
+    const isCompressing = compressingIndex === index;
+
+    return (
+      <TouchableOpacity
+        key={index}
+        style={[
+          styles.photoCell,
+          isMain && styles.photoCellMain,
+          isMain && slot && styles.photoCellMainFilled,
+        ]}
+        onPress={() =>
+          slot ? handleRemovePhoto(index) : showPickerOptions(index)
+        }
+        activeOpacity={0.7}
+        accessibilityLabel={
+          slot
+            ? `Fotograf ${index + 1}, kaldirmak icin dokun`
+            : isMain
+              ? 'Profil fotografi ekle'
+              : `Fotograf ${index + 1} ekle`
+        }
+        accessibilityRole="button"
+      >
+        {isCompressing ? (
+          <View style={styles.compressingContent}>
+            <ActivityIndicator size="small" color={onboardingColors.text} />
+            <Text style={styles.compressingText}>Isleniyor...</Text>
+          </View>
+        ) : slot ? (
+          <Animated.View
+            entering={FadeIn.duration(400).easing(Easing.out(Easing.cubic))}
+            style={styles.photoContent}
+          >
+            <Image
+              source={{ uri: slot.uri }}
+              style={styles.photoImage}
+              resizeMode="cover"
+            />
+            {/* Remove button */}
+            <TouchableOpacity
+              style={styles.removeButton}
+              onPress={() => handleRemovePhoto(index)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="close" size={14} color="#FFFFFF" />
+            </TouchableOpacity>
+
+            {/* Main photo badge */}
+            {isMain && (
+              <View style={styles.mainBadge}>
+                <Ionicons name="star" size={10} color={GOLD_ACCENT} />
+                <Text style={styles.mainBadgeText}>Profil</Text>
+              </View>
+            )}
+
+            {/* File size indicator */}
+            {slot.compressed && slot.compressed.size > 0 && (
+              <View style={styles.fileSizeBadge}>
+                <Text style={styles.fileSizeText}>
+                  {photoService.formatFileSize(slot.compressed.size)}
+                </Text>
+              </View>
+            )}
+          </Animated.View>
+        ) : (
+          <View style={styles.addPhotoContent}>
+            <View style={[styles.addIconCircle, isMain && styles.addIconCircleMain]}>
+              <Ionicons
+                name={isMain ? 'person-outline' : 'add'}
+                size={isMain ? 24 : 22}
+                color={isMain ? GOLD_ACCENT : onboardingColors.textTertiary}
+              />
+            </View>
+            {isMain && (
+              <Text style={styles.profileSlotLabel}>Profil fotografi</Text>
+            )}
+          </View>
+        )}
+      </TouchableOpacity>
+    );
   };
 
   return (
@@ -114,59 +268,40 @@ export const PhotosScreen: React.FC = () => {
       step={13}
       totalSteps={15}
       footer={
-        <FullWidthButton
-          label="Devam et"
-          onPress={handleContinue}
-          disabled={!isValid}
-        />
+        <Animated.View style={buttonAnimStyle}>
+          <FullWidthButton
+            label={
+              selectedCount === 0
+                ? 'En az 1 fotograf ekle'
+                : `Devam et (${selectedCount}/6)`
+            }
+            onPress={handleContinue}
+            disabled={!isValid}
+          />
+        </Animated.View>
       }
     >
-      <Text style={styles.title}>Fotoğrafını ekle</Text>
+      <Text style={styles.title}>Fotografini ekle</Text>
       <Text style={styles.subtitle}>
-        İlk fotoğrafın profil fotoğrafın olacak — yüzün net görünmeli. Diğerleri isteğe bağlı!
+        Ilk fotografin profil fotografin olacak — yuzun net gorunmeli.{'\n'}
+        Digerleri istege bagli!
       </Text>
+
+      {/* Photo count indicator */}
+      <View style={styles.countRow}>
+        <Text style={styles.countText}>
+          {selectedCount} / {ONBOARDING_PHOTO_SLOTS} fotograf
+        </Text>
+        {selectedCount >= PROFILE_CONFIG.MIN_PHOTOS && (
+          <Animated.View entering={FadeIn.duration(300)}>
+            <Ionicons name="checkmark-circle" size={18} color={onboardingColors.checkGreen} />
+          </Animated.View>
+        )}
+      </View>
 
       {/* Photo grid */}
       <View style={styles.photoGrid}>
-        {photoUris.map((uri, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[styles.photoCell, index === 0 && styles.photoCellProfile]}
-            onPress={() =>
-              uri ? handleRemovePhoto(index) : showPickerOptions(index)
-            }
-            activeOpacity={0.7}
-          >
-            {uri ? (
-              <View style={styles.photoContent}>
-                <Image
-                  source={{ uri }}
-                  style={styles.photoImage}
-                  resizeMode="cover"
-                />
-                <View style={styles.removeButton}>
-                  <Ionicons name="close" size={14} color="#FFFFFF" />
-                </View>
-                {index === 0 && (
-                  <View style={styles.profileBadge}>
-                    <Text style={styles.profileBadgeText}>Profil</Text>
-                  </View>
-                )}
-              </View>
-            ) : (
-              <View style={styles.addPhotoContent}>
-                <Ionicons
-                  name={index === 0 ? 'person-outline' : 'image-outline'}
-                  size={index === 0 ? 32 : 28}
-                  color={index === 0 ? onboardingColors.text : onboardingColors.textTertiary}
-                />
-                {index === 0 && (
-                  <Text style={styles.profileSlotLabel}>Profil fotoğrafı</Text>
-                )}
-              </View>
-            )}
-          </TouchableOpacity>
-        ))}
+        {photoSlots.map((slot, index) => renderPhotoCell(slot, index))}
       </View>
 
       {/* Photo tips */}
@@ -177,13 +312,13 @@ export const PhotosScreen: React.FC = () => {
             size={18}
             color={onboardingColors.text}
           />
-          <Text style={styles.tipsTitle}>Fotoğraf İpuçları</Text>
+          <Text style={styles.tipsTitle}>Fotograf Ipuclari</Text>
         </View>
         <View style={styles.tipsList}>
-          <Text style={styles.tipItem}>{'\u2022'} Yüzün net görünmeli</Text>
-          <Text style={styles.tipItem}>{'\u2022'} Güneş gözlüğünden kaçın</Text>
-          <Text style={styles.tipItem}>{'\u2022'} Doğal ışık kullan</Text>
-          <Text style={styles.tipItem}>{'\u2022'} Tek başına olduğun fotoğraflar en iyisi</Text>
+          <Text style={styles.tipItem}>{'\u2022'} Yuzun net gorunmeli</Text>
+          <Text style={styles.tipItem}>{'\u2022'} Gunes gozlugundan kacin</Text>
+          <Text style={styles.tipItem}>{'\u2022'} Dogal isik kullan</Text>
+          <Text style={styles.tipItem}>{'\u2022'} Tek basina oldugun fotograflar en iyisi</Text>
         </View>
       </View>
     </OnboardingLayout>
@@ -196,12 +331,26 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: onboardingColors.text,
     marginBottom: 8,
+    ...Platform.select({ android: { includeFontPadding: false } }),
   },
   subtitle: {
     fontSize: 15,
     lineHeight: 22,
     color: onboardingColors.textSecondary,
-    marginBottom: 24,
+    marginBottom: 16,
+    ...Platform.select({ android: { includeFontPadding: false } }),
+  },
+  countRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  countText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: onboardingColors.textSecondary,
+    ...Platform.select({ android: { includeFontPadding: false } }),
   },
   photoGrid: {
     flexDirection: 'row',
@@ -213,9 +362,28 @@ const styles = StyleSheet.create({
     height: CELL_SIZE * 1.25,
     borderRadius: 16,
     backgroundColor: onboardingColors.surface,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: onboardingColors.surfaceBorder,
     overflow: 'hidden',
+  },
+  photoCellMain: {
+    borderWidth: 2,
+    borderColor: GOLD_ACCENT,
+    borderStyle: 'dashed',
+  },
+  photoCellMainFilled: {
+    borderStyle: 'solid',
+    borderColor: GOLD_ACCENT,
+    borderWidth: 2.5,
+    ...Platform.select({
+      ios: {
+        shadowColor: GOLD_ACCENT,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 6,
+      },
+      android: { elevation: 4 },
+    }),
   },
   photoContent: {
     flex: 1,
@@ -229,43 +397,84 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 6,
     right: 6,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  photoCellProfile: {
-    borderColor: onboardingColors.text,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-  },
-  profileBadge: {
+  mainBadge: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    paddingVertical: 4,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingVertical: 4,
   },
-  profileBadgeText: {
+  mainBadgeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: GOLD_ACCENT,
+    ...Platform.select({ android: { includeFontPadding: false } }),
   },
-  profileSlotLabel: {
-    fontSize: 11,
+  fileSizeBadge: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  fileSizeText: {
+    fontSize: 9,
     fontWeight: '600',
-    color: onboardingColors.text,
-    marginTop: 4,
-    textAlign: 'center',
+    color: '#FFFFFF',
+    ...Platform.select({ android: { includeFontPadding: false } }),
   },
   addPhotoContent: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 6,
+  },
+  addIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: onboardingColors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addIconCircleMain: {
+    backgroundColor: GOLD_ACCENT_LIGHT,
+    borderWidth: 1.5,
+    borderColor: GOLD_ACCENT,
+    borderStyle: 'dashed',
+  },
+  profileSlotLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: GOLD_ACCENT,
+    textAlign: 'center',
+    ...Platform.select({ android: { includeFontPadding: false } }),
+  },
+  compressingContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+  },
+  compressingText: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: onboardingColors.textSecondary,
+    ...Platform.select({ android: { includeFontPadding: false } }),
   },
   tipsContainer: {
     marginTop: 24,
@@ -285,6 +494,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: onboardingColors.text,
+    ...Platform.select({ android: { includeFontPadding: false } }),
   },
   tipsList: {
     gap: 6,
@@ -294,5 +504,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: onboardingColors.textSecondary,
     paddingLeft: 4,
+    ...Platform.select({ android: { includeFontPadding: false } }),
   },
 });

@@ -1,7 +1,8 @@
 // Match API service — get matches, match details
 // Maps backend response shapes to mobile-expected interfaces
 
-import api from './api';
+import { API_ROUTES } from '@luma/shared';
+import api, { buildUrl } from './api';
 
 // ─── Mobile-Facing Interfaces ────────────────────────────────────────
 
@@ -320,7 +321,7 @@ export const matchService = {
   // Get all matches
   getMatches: async (): Promise<{ matches: MatchSummary[]; total: number }> => {
     try {
-      const response = await api.get<BackendMatchListResponse>('/matches');
+      const response = await api.get<BackendMatchListResponse>(API_ROUTES.MATCHES.GET_ALL);
       const data = response.data;
       return {
         matches: data.matches.map(mapBackendToMatchSummary),
@@ -382,7 +383,7 @@ export const matchService = {
   // Get match detail
   getMatch: async (matchId: string): Promise<MatchDetailResponse> => {
     try {
-      const response = await api.get<BackendMatchDetailResponse>(`/matches/${matchId}`);
+      const response = await api.get<BackendMatchDetailResponse>(buildUrl(API_ROUTES.MATCHES.GET_ONE, { id: matchId }));
       return mapBackendToMatchDetail(response.data);
     } catch {
       // Fallback: build from MOCK_MATCH_DETAILS
@@ -394,7 +395,7 @@ export const matchService = {
 
   // Unmatch — remove a match
   unmatch: async (matchId: string): Promise<void> => {
-    await api.delete(`/matches/${matchId}`);
+    await api.delete(buildUrl(API_ROUTES.MATCHES.UNMATCH, { id: matchId }));
   },
 
   // ── Date Plans ────────────────────────────────────────────

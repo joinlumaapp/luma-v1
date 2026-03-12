@@ -1,7 +1,8 @@
 // Chat API service — conversations and messages
 // Uses AsyncStorage persistence layer so messages survive app restarts
 
-import api from './api';
+import { API_ROUTES } from '@luma/shared';
+import api, { buildUrl } from './api';
 import {
   getPersistedMessages,
   persistMessage,
@@ -84,7 +85,7 @@ export const chatService = {
   // Falls back to building conversation list from persisted message meta
   getConversations: async (): Promise<ConversationsResponse> => {
     try {
-      const response = await api.get<ConversationsResponse>('/chat/conversations');
+      const response = await api.get<ConversationsResponse>(API_ROUTES.CHAT.GET_CONVERSATIONS);
       return response.data;
     } catch {
       // Build conversations from local persistence meta + match store
@@ -127,7 +128,7 @@ export const chatService = {
 
     try {
       const response = await api.get<MessagesResponse>(
-        `/chat/conversations/${matchId}/messages`,
+        buildUrl(API_ROUTES.CHAT.GET_MESSAGES, { matchId }),
         {
           params: { cursor, limit: limit ?? 30 },
         }
@@ -171,7 +172,7 @@ export const chatService = {
   ): Promise<SendMessageResponse> => {
     try {
       const response = await api.post<SendMessageResponse>(
-        `/chat/conversations/${matchId}/messages`,
+        buildUrl(API_ROUTES.CHAT.SEND_MESSAGE, { matchId }),
         data
       );
       // Persist the confirmed message
@@ -204,7 +205,7 @@ export const chatService = {
   // Mark conversation as read
   markAsRead: async (matchId: string): Promise<void> => {
     try {
-      await api.post(`/chat/conversations/${matchId}/read`);
+      await api.post(buildUrl(API_ROUTES.CHAT.MARK_READ, { matchId }));
     } catch {
       // Silently fail — non-critical
     }
@@ -239,7 +240,7 @@ export const chatService = {
 
       // Send message with uploaded image URL
       const response = await api.post<SendMessageResponse>(
-        `/chat/conversations/${matchId}/messages`,
+        buildUrl(API_ROUTES.CHAT.SEND_MESSAGE, { matchId }),
         {
           content: 'Fotoğraf',
           type: 'IMAGE',
@@ -277,7 +278,7 @@ export const chatService = {
   ): Promise<SendMessageResponse> => {
     try {
       const response = await api.post<SendMessageResponse>(
-        `/chat/conversations/${matchId}/messages`,
+        buildUrl(API_ROUTES.CHAT.SEND_MESSAGE, { matchId }),
         {
           content: 'GIF',
           type: 'GIF',
@@ -330,7 +331,7 @@ export const chatService = {
       );
 
       const response = await api.post<SendMessageResponse>(
-        `/chat/conversations/${matchId}/messages`,
+        buildUrl(API_ROUTES.CHAT.SEND_MESSAGE, { matchId }),
         {
           content: 'Sesli mesaj',
           type: 'VOICE',
@@ -368,7 +369,7 @@ export const chatService = {
     emoji: string,
   ): Promise<ReactionResponse> => {
     const response = await api.post<ReactionResponse>(
-      `/chat/messages/${messageId}/react`,
+      buildUrl(API_ROUTES.REACTIONS.TOGGLE, { messageId }),
       { emoji },
     );
     return response.data;

@@ -24,17 +24,19 @@ export class DiscoveryController {
   ) {}
 
   @Get('feed')
-  @ApiOperation({ summary: 'Get discovery card feed with optional filters' })
+  @ApiOperation({ summary: 'Get discovery card feed with optional filters and cursor-based pagination' })
   @ApiQuery({ name: 'genderPreference', required: false, enum: ['male', 'female', 'all'] })
   @ApiQuery({ name: 'minAge', required: false, type: Number })
   @ApiQuery({ name: 'maxAge', required: false, type: Number })
   @ApiQuery({ name: 'maxDistance', required: false, type: Number })
   @ApiQuery({ name: 'intentionTags', required: false, type: String, description: 'Comma-separated intention tags' })
+  @ApiQuery({ name: 'cursor', required: false, type: String, description: 'Pagination cursor from previous response' })
   async getFeed(
     @CurrentUser('sub') userId: string,
     @Query() filters: FeedFilterDto,
+    @Query('cursor') cursor?: string,
   ) {
-    return this.discoveryService.getFeed(userId, filters);
+    return this.discoveryService.getDiscoveryFeed(userId, filters, cursor);
   }
 
   @Post('swipe')
@@ -55,7 +57,7 @@ export class DiscoveryController {
     return this.discoveryService.undoSwipe(userId);
   }
 
-  // ── Likes You (Seni Beğenenler) ─────────────────────────────
+  // ── Likes You (Seni Begeneler) ─────────────────────────────
 
   @Get('likes-you')
   @ApiOperation({ summary: 'Get users who liked you (blurred for Free, clear for Gold+)' })
@@ -63,10 +65,10 @@ export class DiscoveryController {
     return this.discoveryService.getLikesYou(userId);
   }
 
-  // ── Daily Picks (Günün Seçkileri) ───────────────────────────
+  // ── Daily Picks (Gunun Seckileri) ───────────────────────────
 
   @Get('daily-picks')
-  @ApiOperation({ summary: 'Get 10 daily curated high-compatibility profiles' })
+  @ApiOperation({ summary: 'Get daily curated high-compatibility profiles (top 10, refreshed at midnight)' })
   async getDailyPicks(@CurrentUser('sub') userId: string) {
     return this.discoveryService.getDailyPicks(userId);
   }
@@ -83,7 +85,7 @@ export class DiscoveryController {
   // ── Weekly Report (Haftalik Rapor) ────────────────────────────
 
   @Get('weekly-report')
-  @ApiOperation({ summary: 'Get weekly compatibility report with activity insights' })
+  @ApiOperation({ summary: 'Get weekly compatibility report with activity insights and trending interests' })
   async getWeeklyReport(@CurrentUser('sub') userId: string) {
     return this.weeklyReportService.getWeeklyReport(userId);
   }

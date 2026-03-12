@@ -16,6 +16,19 @@ export enum NotificationType {
   RELATIONSHIP_REQUEST = 'RELATIONSHIP_REQUEST',
 }
 
+/**
+ * App-level notification action hints.
+ * Used in the `data.action` field for client-side deep-link routing.
+ */
+export enum NotificationAction {
+  DAILY_PICKS = 'daily_picks',
+  BOOST_ACTIVE = 'boost_active',
+  INACTIVE_REMINDER = 'inactive_reminder',
+  MATCH_EXPIRING = 'match_expiring',
+  COMPATIBILITY_UPDATE = 'compatibility_update',
+  ANNOUNCEMENT = 'announcement',
+}
+
 export interface Notification {
   id: string;
   userId: string;
@@ -34,6 +47,9 @@ export interface NotificationPreferences {
   badges: boolean;
   system: boolean;
   allDisabled: boolean;
+  quietHoursStart: string;
+  quietHoursEnd: string;
+  timezone: string;
 }
 
 export interface DeviceRegistration {
@@ -49,4 +65,29 @@ export interface NotificationPaginatedResponse {
   unreadCount: number;
   page: number;
   totalPages: number;
+}
+
+/**
+ * Result returned by the push notification send flow.
+ */
+export interface PushSendResult {
+  sent: boolean;
+  stored: boolean;
+  notificationId?: string;
+  deviceCount?: number;
+  reason?: 'disabled_by_preference' | 'quiet_hours' | 'rate_limited' | 'no_active_devices';
+}
+
+/**
+ * Result from a batch notification send.
+ */
+export interface BatchSendResult {
+  total: number;
+  sent: number;
+  failed: number;
+  results: Array<{
+    userId: string;
+    sent: boolean;
+    reason?: string;
+  }>;
 }
