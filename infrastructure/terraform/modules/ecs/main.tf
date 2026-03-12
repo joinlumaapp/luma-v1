@@ -12,6 +12,7 @@ resource "aws_ecs_cluster" "main" {
   tags = {
     Name        = "${var.project}-${var.environment}-cluster"
     Environment = var.environment
+    Project     = var.project
   }
 }
 
@@ -32,6 +33,7 @@ resource "aws_iam_role" "ecs_execution" {
 
   tags = {
     Environment = var.environment
+    Project     = var.project
   }
 }
 
@@ -40,7 +42,7 @@ resource "aws_iam_role_policy_attachment" "ecs_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-# Allow pulling secrets from SSM/Secrets Manager
+# Allow pulling secrets from SSM Parameter Store and Secrets Manager
 resource "aws_iam_role_policy" "ecs_execution_secrets" {
   name = "${var.project}-${var.environment}-ecs-secrets"
   role = aws_iam_role.ecs_execution.id
@@ -52,9 +54,28 @@ resource "aws_iam_role_policy" "ecs_execution_secrets" {
         Effect = "Allow"
         Action = [
           "ssm:GetParameters",
+          "ssm:GetParameter"
+        ]
+        Resource = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/${var.environment}/*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
           "secretsmanager:GetSecretValue"
         ]
-        Resource = "arn:aws:ssm:${var.aws_region}:*:parameter/${var.project}/${var.environment}/*"
+        Resource = "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:${var.project}/${var.environment}/*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt"
+        ]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "kms:ViaService" = "ssm.${var.aws_region}.amazonaws.com"
+          }
+        }
       }
     ]
   })
@@ -77,10 +98,11 @@ resource "aws_iam_role" "ecs_task" {
 
   tags = {
     Environment = var.environment
+    Project     = var.project
   }
 }
 
-# S3 access for photo uploads
+# S3 access for photo uploads, Rekognition for moderation, SES for email
 resource "aws_iam_role_policy" "ecs_task_s3" {
   name = "${var.project}-${var.environment}-ecs-s3"
   role = aws_iam_role.ecs_task.id
@@ -97,8 +119,12 @@ resource "aws_iam_role_policy" "ecs_task_s3" {
           "s3:ListBucket"
         ]
         Resource = [
-          "arn:aws:s3:::${var.project}-*-${var.environment}",
-          "arn:aws:s3:::${var.project}-*-${var.environment}/*"
+          "arn:aws:s3:::${var.project}-photos-${var.environment}",
+          "arn:aws:s3:::${var.project}-photos-${var.environment}/*",
+          "arn:aws:s3:::${var.project}-voice-${var.environment}",
+          "arn:aws:s3:::${var.project}-voice-${var.environment}/*",
+          "arn:aws:s3:::${var.project}-assets-${var.environment}",
+          "arn:aws:s3:::${var.project}-assets-${var.environment}/*"
         ]
       },
       {
@@ -146,6 +172,7 @@ resource "aws_security_group" "ecs" {
   tags = {
     Name        = "${var.project}-${var.environment}-ecs-sg"
     Environment = var.environment
+    Project     = var.project
   }
 
   lifecycle {
@@ -160,6 +187,7 @@ resource "aws_cloudwatch_log_group" "backend" {
 
   tags = {
     Environment = var.environment
+    Project     = var.project
   }
 }
 
@@ -183,18 +211,32 @@ resource "aws_ecs_task_definition" "backend" {
     }]
 
     environment = [
-      { name = "NODE_ENV", value = var.environment },
+      { name = "NODE_ENV", value = var.environment == "production" ? "production" : "staging" },
       { name = "PORT", value = "3000" },
+      { name = "APP_NAME", value = var.project },
       { name = "JWT_ACCESS_EXPIRY", value = "15m" },
       { name = "JWT_REFRESH_EXPIRY", value = "7d" },
       { name = "JWT_REFRESH_EXPIRY_DAYS", value = "7" },
+      { name = "THROTTLE_TTL", value = "60" },
+      { name = "THROTTLE_LIMIT", value = var.environment == "production" ? "100" : "200" },
+      { name = "CORS_ORIGINS", value = var.cors_origins },
+      { name = "AWS_REGION", value = var.aws_region },
+      { name = "S3_BUCKET_NAME", value = "${var.project}-photos-${var.environment}" },
+      { name = "CLOUDFRONT_URL", value = var.cloudfront_url },
     ]
 
     secrets = [
       { name = "DATABASE_URL", valueFrom = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/${var.environment}/database-url" },
       { name = "REDIS_URL", valueFrom = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/${var.environment}/redis-url" },
+      { name = "ELASTICSEARCH_URL", valueFrom = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/${var.environment}/elasticsearch-url" },
       { name = "JWT_SECRET", valueFrom = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/${var.environment}/jwt-secret" },
       { name = "JWT_REFRESH_SECRET", valueFrom = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/${var.environment}/jwt-refresh-secret" },
+      { name = "NETGSM_USERCODE", valueFrom = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/${var.environment}/netgsm-usercode" },
+      { name = "NETGSM_PASSWORD", valueFrom = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/${var.environment}/netgsm-password" },
+      { name = "FIREBASE_PROJECT_ID", valueFrom = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/${var.environment}/firebase-project-id" },
+      { name = "FIREBASE_PRIVATE_KEY", valueFrom = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/${var.environment}/firebase-private-key" },
+      { name = "SENTRY_DSN", valueFrom = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/${var.environment}/sentry-dsn" },
+      { name = "REVENUECAT_API_KEY", valueFrom = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/${var.environment}/revenuecat-api-key" },
     ]
 
     logConfiguration = {
@@ -211,12 +253,13 @@ resource "aws_ecs_task_definition" "backend" {
       interval    = 30
       timeout     = 5
       retries     = 3
-      startPeriod = 15
+      startPeriod = 30
     }
   }])
 
   tags = {
     Environment = var.environment
+    Project     = var.project
   }
 }
 
@@ -254,10 +297,11 @@ resource "aws_ecs_service" "backend" {
 
   tags = {
     Environment = var.environment
+    Project     = var.project
   }
 
   lifecycle {
-    ignore_changes = [desired_count]
+    ignore_changes = [desired_count, task_definition]
   }
 }
 

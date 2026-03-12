@@ -68,8 +68,28 @@ variable "db_password" {
   sensitive = true
 }
 
-# ─── Redis ─────────────────────────────────────────────────
+# ─── Redis ───────────────────────────────────────────────
 variable "redis_node_type" {
   type    = string
   default = "cache.r6g.large"
+}
+
+# ─── Domain ──────────────────────────────────────────────
+variable "domain_name" {
+  description = "Root domain for DNS records (e.g., luma.dating)"
+  type        = string
+  default     = ""
+}
+
+variable "create_dns_certificate" {
+  description = "Whether to create and validate an ACM certificate via Route 53 DNS"
+  type        = bool
+  default     = false
+}
+
+# ─── Monitoring ──────────────────────────────────────────
+variable "alert_email" {
+  description = "Email address for CloudWatch alarm notifications"
+  type        = string
+  default     = ""
 }

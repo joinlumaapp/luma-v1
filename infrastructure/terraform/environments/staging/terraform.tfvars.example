@@ -5,8 +5,14 @@
 aws_region         = "eu-west-1"
 availability_zones = ["eu-west-1a", "eu-west-1b"]
 
-# Database (required — no default for password)
+# Database (required -- no default for password)
 db_password = "CHANGE_ME_staging_secure_password"
 
-# ACM Certificate (optional — leave empty to skip HTTPS)
+# ACM Certificate (optional -- leave empty to skip HTTPS)
 # certificate_arn = "arn:aws:acm:eu-west-1:123456789:certificate/xxx"
+
+# Domain (optional -- leave empty to skip Route 53 records)
+# domain_name = "luma.dating"
+
+# Monitoring (optional -- leave empty to skip email alerts)
+# alert_email = "devops@luma.dating"

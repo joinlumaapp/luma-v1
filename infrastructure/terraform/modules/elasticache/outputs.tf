@@ -6,6 +6,10 @@ output "redis_url" {
   value = "redis://${aws_elasticache_replication_group.main.primary_endpoint_address}:6379"
 }
 
+output "replication_group_id" {
+  value = aws_elasticache_replication_group.main.replication_group_id
+}
+
 output "security_group_id" {
   value = aws_security_group.redis.id
 }

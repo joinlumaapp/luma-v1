@@ -1,6 +1,10 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import * as admin from 'firebase-admin';
+import {
+  getFirebaseApp,
+  getFirebaseMessaging,
+  isFirebaseConfigured,
+} from '../../common/providers/firebase.provider';
 import { PrismaService } from '../../prisma/prisma.service';
 
 // ────────────────────────────────────────────────────────────────────
@@ -86,7 +90,7 @@ const RETRYABLE_ERRORS = new Set([
 /**
  * Firebase Cloud Messaging provider.
  *
- * Wraps firebase-admin SDK for push notification delivery.
+ * Uses the centralized Firebase Admin SDK from common/providers/firebase.provider.
  * When Firebase credentials are not configured:
  * - In development: logs the notification and returns a mock messageId.
  * - In production: throws an error on initialization.
@@ -105,38 +109,18 @@ export class FirebaseProvider implements OnModuleInit {
   private firebaseApp: admin.app.App | null = null;
 
   constructor(
-    private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
   ) {}
 
   onModuleInit(): void {
-    const projectId = this.configService.get<string>('FIREBASE_PROJECT_ID');
-    const privateKey = this.configService.get<string>('FIREBASE_PRIVATE_KEY');
-    const clientEmail = this.configService.get<string>('FIREBASE_CLIENT_EMAIL');
-    const nodeEnv = this.configService.get<string>('NODE_ENV');
+    this.firebaseApp = getFirebaseApp();
+    this.isConfigured = isFirebaseConfigured();
 
-    if (projectId && privateKey && clientEmail) {
-      this.firebaseApp = admin.initializeApp({
-        credential: admin.credential.cert({
-          projectId,
-          privateKey: privateKey.replace(/\\n/g, '\n'),
-          clientEmail,
-        }),
-      });
-      this.isConfigured = true;
-      this.logger.log(
-        `Firebase yapilandirildi — proje: ${projectId}`,
-      );
-    } else if (nodeEnv === 'production') {
-      throw new Error(
-        'Firebase credentials are required in production. ' +
-        'Set FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY, and FIREBASE_CLIENT_EMAIL environment variables.',
-      );
+    if (this.isConfigured) {
+      this.logger.log('Firebase Cloud Messaging ready (using centralized provider)');
     } else {
-      this.isConfigured = false;
       this.logger.warn(
-        'Firebase yapilandirilmadi — push bildirimler sadece loglanacak. ' +
-        'FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY ve FIREBASE_CLIENT_EMAIL ortam degiskenlerini ayarlayin.',
+        'Firebase not configured — push notifications will be mocked in development.',
       );
     }
   }

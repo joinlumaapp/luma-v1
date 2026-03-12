@@ -17,3 +17,15 @@ output "task_definition_arn" {
 output "security_group_id" {
   value = aws_security_group.ecs.id
 }
+
+output "log_group_name" {
+  value = aws_cloudwatch_log_group.backend.name
+}
+
+output "execution_role_arn" {
+  value = aws_iam_role.ecs_execution.arn
+}
+
+output "task_role_arn" {
+  value = aws_iam_role.ecs_task.arn
+}

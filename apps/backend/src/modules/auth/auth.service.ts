@@ -682,7 +682,9 @@ export class AuthService {
   }
 
   /**
-   * Send SMS OTP via the SmsProvider (Twilio in production, console log in dev).
+   * Send SMS OTP via the SmsProvider.
+   * Uses Netgsm for Turkish (+90) numbers, Twilio for international,
+   * with automatic fallback and retry logic.
    */
   private async sendSmsOtp(phone: string, code: string): Promise<void> {
     try {

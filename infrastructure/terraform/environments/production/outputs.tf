@@ -40,7 +40,37 @@ output "cloudfront_domain" {
   value       = module.s3_cloudfront.cloudfront_domain_name
 }
 
+output "assets_cloudfront_domain" {
+  description = "CloudFront CDN domain for app assets"
+  value       = module.s3_cloudfront.assets_cloudfront_domain_name
+}
+
 output "photos_bucket" {
   description = "S3 bucket for photos"
   value       = module.s3_cloudfront.photos_bucket_name
+}
+
+output "assets_bucket" {
+  description = "S3 bucket for app assets"
+  value       = module.s3_cloudfront.assets_bucket_name
+}
+
+output "monitoring_dashboard" {
+  description = "CloudWatch dashboard name"
+  value       = module.monitoring.dashboard_name
+}
+
+output "api_domain" {
+  description = "API FQDN (if domain configured)"
+  value       = module.route53.api_fqdn
+}
+
+output "cdn_domain" {
+  description = "CDN FQDN (if domain configured)"
+  value       = module.route53.cdn_fqdn
+}
+
+output "vpc_id" {
+  description = "VPC ID"
+  value       = module.vpc.vpc_id
 }

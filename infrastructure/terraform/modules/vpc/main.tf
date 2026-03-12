@@ -20,6 +20,7 @@ resource "aws_internet_gateway" "main" {
   tags = {
     Name        = "${var.project}-${var.environment}-igw"
     Environment = var.environment
+    Project     = var.project
   }
 }
 

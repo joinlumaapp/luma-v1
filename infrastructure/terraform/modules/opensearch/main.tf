@@ -76,5 +76,21 @@ resource "aws_opensearch_domain" "main" {
   tags = {
     Name        = "${var.project}-${var.environment}-opensearch"
     Environment = var.environment
+    Project     = var.project
   }
+}
+
+# ─── Access Policy ──────────────────────────────────────────
+resource "aws_opensearch_domain_policy" "main" {
+  domain_name = aws_opensearch_domain.main.domain_name
+
+  access_policies = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { AWS = "*" }
+      Action    = "es:*"
+      Resource  = "${aws_opensearch_domain.main.arn}/*"
+    }]
+  })
 }

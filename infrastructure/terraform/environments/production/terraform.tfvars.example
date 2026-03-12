@@ -8,5 +8,12 @@ availability_zones = ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
 # Database (required)
 db_password = "CHANGE_ME_production_very_secure_password"
 
-# ACM Certificate (required for production)
+# ACM Certificate (required for production HTTPS)
 certificate_arn = "arn:aws:acm:eu-west-1:ACCOUNT_ID:certificate/CERTIFICATE_ID"
+
+# Domain (optional -- set to enable Route 53 DNS records)
+# domain_name            = "luma.dating"
+# create_dns_certificate = true
+
+# Monitoring (recommended for production)
+# alert_email = "devops@luma.dating"

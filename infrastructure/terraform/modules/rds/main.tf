@@ -8,6 +8,7 @@ resource "aws_db_subnet_group" "main" {
   tags = {
     Name        = "${var.project}-${var.environment}-db-subnet"
     Environment = var.environment
+    Project     = var.project
   }
 }
 
@@ -34,6 +35,7 @@ resource "aws_security_group" "rds" {
   tags = {
     Name        = "${var.project}-${var.environment}-rds-sg"
     Environment = var.environment
+    Project     = var.project
   }
 
   lifecycle {
@@ -76,6 +78,7 @@ resource "aws_db_instance" "main" {
   tags = {
     Name        = "${var.project}-${var.environment}-postgres"
     Environment = var.environment
+    Project     = var.project
   }
 }
 

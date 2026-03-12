@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   S3Client,
@@ -10,14 +10,25 @@ import { getSignedUrl as s3GetSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import * as path from 'path';
+import { ImageProcessorService } from './image-processor.service';
 
 // ─── Types ───────────────────────────────────────────────────
+
+/** Result returned after a generic file upload. */
+export interface FileUploadResult {
+  /** Public URL for the uploaded file (CloudFront or S3). */
+  url: string;
+  /** S3 object key (used for deletion or signed URL generation). */
+  key: string;
+  /** File size in bytes. */
+  size: number;
+}
 
 /** Result returned after a successful photo upload. */
 export interface PhotoUploadResult {
   /** Public URL for the full-size photo (CloudFront or S3). */
   url: string;
-  /** Public URL for the thumbnail (same key, different convention — caller resizes). */
+  /** Public URL for the thumbnail. */
   thumbnailUrl: string;
   /** S3 object key (used for deletion or signed URL generation). */
   key: string;
@@ -29,6 +40,16 @@ export interface VoiceUploadResult {
   url: string;
   /** S3 object key (used for deletion or signed URL generation). */
   key: string;
+  /** Duration in seconds (estimated from file size if not provided). */
+  duration: number;
+}
+
+/** Options for generic file upload. */
+export interface UploadFileOptions {
+  /** Content type (MIME). Defaults to 'application/octet-stream'. */
+  contentType?: string;
+  /** Cache-Control header. Defaults to immutable. */
+  cacheControl?: string;
 }
 
 // ─── Constants ───────────────────────────────────────────────
@@ -41,6 +62,12 @@ export const MAX_PHOTO_SIZE = 10 * 1024 * 1024;
 
 /** Maximum voice intro file size: 5 MB. */
 export const MAX_VOICE_SIZE = 5 * 1024 * 1024;
+
+/** Maximum voice intro duration: 30 seconds. */
+const MAX_VOICE_DURATION_SECONDS = 30;
+
+/** Approximate bitrate for M4A audio (128 kbps) for duration estimation. */
+const M4A_BITRATE_BYTES_PER_SECOND = 16_000;
 
 /** Allowed photo MIME types. */
 export const ALLOWED_PHOTO_TYPES = [
@@ -56,6 +83,9 @@ const MIME_TO_EXT: Record<string, string> = {
   'image/png': 'png',
   'image/webp': 'webp',
   'image/heic': 'heic',
+  'audio/mp4': 'm4a',
+  'audio/m4a': 'm4a',
+  'audio/aac': 'aac',
 };
 
 /** Local uploads directory for dev fallback. */
@@ -64,8 +94,9 @@ const LOCAL_UPLOADS_DIR = path.resolve(process.cwd(), 'uploads');
 /**
  * StorageService — S3/CloudFront-backed file storage for LUMA V1.
  *
- * Handles photo and voice intro uploads to AWS S3.
+ * Handles photo, voice intro, and generic file uploads to AWS S3.
  * Returns CloudFront CDN URLs when configured, otherwise raw S3 URLs.
+ * Uses ImageProcessorService for photo resizing and thumbnail generation.
  *
  * Graceful fallback: when AWS credentials are not configured and
  * NODE_ENV is "development" or "test", files are saved to a local
@@ -81,7 +112,10 @@ export class StorageService {
   private readonly cloudfrontUrl: string;
   private readonly isLocalMode: boolean;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly imageProcessor: ImageProcessorService,
+  ) {
     this.region = this.configService.get<string>('AWS_REGION', 'eu-west-1');
     this.bucket = this.configService.get<string>('AWS_S3_BUCKET', 'luma-photos-dev');
     this.voiceBucket = this.configService.get<string>('AWS_S3_VOICE_BUCKET', 'luma-voice-dev');
@@ -99,7 +133,7 @@ export class StorageService {
       this.s3Client = null;
       this.logger.warn(
         'AWS credentials not configured — running in local storage mode. ' +
-        'Files will be saved to the uploads/ directory.',
+          'Files will be saved to the uploads/ directory.',
       );
       this.ensureLocalUploadDirs();
     } else {
@@ -117,7 +151,86 @@ export class StorageService {
   // ─── Public API ─────────────────────────────────────────────
 
   /**
-   * Upload a photo to S3 (or local filesystem in dev mode).
+   * Upload a file buffer to S3.
+   *
+   * Generates a unique filename using UUID + original extension.
+   * Sets proper content-type and returns the public URL, key, and size.
+   */
+  async uploadFile(
+    file: Buffer,
+    targetPath: string,
+    options?: UploadFileOptions,
+  ): Promise<FileUploadResult> {
+    const contentType = options?.contentType ?? 'application/octet-stream';
+    const cacheControl = options?.cacheControl ?? 'max-age=31536000, immutable';
+
+    if (file.length === 0) {
+      throw new BadRequestException('File is empty');
+    }
+
+    const ext = this.getExtensionFromMime(contentType);
+    const fileId = uuidv4();
+    const key = `${targetPath}/${fileId}.${ext}`;
+
+    if (this.isLocalMode) {
+      return this.uploadFileLocally(key, file);
+    }
+
+    await this.putObject(this.bucket, key, file, contentType, cacheControl);
+
+    const url = this.buildPublicUrl(this.bucket, key);
+    this.logger.debug(`File uploaded: ${key} (${file.length} bytes)`);
+
+    return { url, key, size: file.length };
+  }
+
+  /**
+   * Upload a profile photo with automatic resizing and thumbnail generation.
+   *
+   * - Validates the image (format, dimensions, size)
+   * - Resizes to max 1200x1200 (preserving aspect ratio)
+   * - Generates a 200x200 thumbnail (smart crop)
+   * - Strips EXIF data for privacy
+   * - Converts to JPEG
+   * - Uploads both to S3
+   *
+   * Bucket structure: photos/{userId}/{uuid}.jpg, thumbnails/{userId}/{uuid}.jpg
+   */
+  async uploadProfilePhoto(
+    userId: string,
+    file: Buffer,
+    position: number,
+  ): Promise<PhotoUploadResult> {
+    // Validate and process the image
+    const processed = await this.imageProcessor.processProfilePhoto(file);
+    const thumbnail = await this.imageProcessor.generateThumbnail(file);
+
+    const fileId = uuidv4();
+    const photoKey = `photos/${userId}/${fileId}.jpg`;
+    const thumbnailKey = `thumbnails/${userId}/${fileId}.jpg`;
+
+    if (this.isLocalMode) {
+      return this.uploadPhotoLocally(photoKey, thumbnailKey, processed.buffer, thumbnail.buffer);
+    }
+
+    // Upload full-size photo and thumbnail in parallel
+    await Promise.all([
+      this.putObject(this.bucket, photoKey, processed.buffer, 'image/jpeg'),
+      this.putObject(this.bucket, thumbnailKey, thumbnail.buffer, 'image/jpeg'),
+    ]);
+
+    const url = this.buildPublicUrl(this.bucket, photoKey);
+    const thumbnailUrl = this.buildPublicUrl(this.bucket, thumbnailKey);
+
+    this.logger.debug(
+      `Profile photo uploaded: ${photoKey} (${processed.size} bytes, pos: ${position})`,
+    );
+
+    return { url, thumbnailUrl, key: photoKey };
+  }
+
+  /**
+   * Upload a photo to S3 (legacy method — no resizing, for backward compatibility).
    *
    * Generates a unique key under `photos/{userId}/{uuid}.{ext}`.
    * Returns the public CDN URL, a thumbnail URL, and the object key.
@@ -132,10 +245,10 @@ export class StorageService {
     const ext = MIME_TO_EXT[mimeType] || 'jpg';
     const fileId = uuidv4();
     const key = `photos/${userId}/${fileId}.${ext}`;
-    const thumbnailKey = `photos/${userId}/${fileId}_thumb.${ext}`;
+    const thumbnailKey = `thumbnails/${userId}/${fileId}.${ext}`;
 
     if (this.isLocalMode) {
-      return this.uploadPhotoLocally(key, thumbnailKey, file);
+      return this.uploadPhotoLegacyLocally(key, thumbnailKey, file);
     }
 
     await this.putObject(this.bucket, key, file, mimeType);
@@ -151,36 +264,48 @@ export class StorageService {
   /**
    * Upload a voice intro to S3 (or local filesystem in dev mode).
    *
-   * Generates a unique key under `voice/{userId}/{uuid}.m4a`.
-   * Returns the public URL and the object key.
+   * Validates file size (max 5 MB) and estimates duration.
+   * Max 30 seconds allowed.
+   *
+   * Bucket structure: voice/{userId}/{uuid}.m4a
    */
   async uploadVoiceIntro(
     userId: string,
-    file: Buffer,
+    audioBuffer: Buffer,
   ): Promise<VoiceUploadResult> {
-    this.validateVoiceInput(file);
+    this.validateVoiceInput(audioBuffer);
+
+    // Estimate duration from file size (approximate for M4A)
+    const estimatedDuration = Math.round(audioBuffer.length / M4A_BITRATE_BYTES_PER_SECOND);
+    if (estimatedDuration > MAX_VOICE_DURATION_SECONDS) {
+      throw new BadRequestException(
+        `Voice intro exceeds maximum duration of ${MAX_VOICE_DURATION_SECONDS} seconds ` +
+          `(estimated: ${estimatedDuration}s)`,
+      );
+    }
 
     const fileId = uuidv4();
     const key = `voice/${userId}/${fileId}.m4a`;
 
     if (this.isLocalMode) {
-      return this.uploadVoiceLocally(key, file);
+      const result = this.uploadVoiceLocally(key, audioBuffer);
+      return { ...result, duration: estimatedDuration };
     }
 
-    await this.putObject(this.voiceBucket, key, file, 'audio/mp4');
+    await this.putObject(this.voiceBucket, key, audioBuffer, 'audio/mp4');
 
     const url = this.buildPublicUrl(this.voiceBucket, key);
 
-    this.logger.debug(`Voice intro uploaded: ${key} (${file.length} bytes)`);
+    this.logger.debug(`Voice intro uploaded: ${key} (${audioBuffer.length} bytes, ~${estimatedDuration}s)`);
 
-    return { url, key };
+    return { url, key, duration: estimatedDuration };
   }
 
   /**
    * Delete a file from S3 by its object key.
    *
    * Determines the correct bucket from the key prefix:
-   *   - `photos/` -> photo bucket
+   *   - `photos/` or `thumbnails/` -> photo bucket
    *   - `voice/`  -> voice bucket
    */
   async deleteFile(key: string): Promise<void> {
@@ -236,23 +361,35 @@ export class StorageService {
 
   private validatePhotoInput(file: Buffer, mimeType: string): void {
     if (file.length === 0) {
-      throw new Error('Photo file is empty');
+      throw new BadRequestException('Photo file is empty');
     }
     if (file.length > MAX_PHOTO_SIZE) {
-      throw new Error(`Photo exceeds maximum size of ${MAX_PHOTO_SIZE / (1024 * 1024)} MB`);
+      throw new BadRequestException(
+        `Photo exceeds maximum size of ${MAX_PHOTO_SIZE / (1024 * 1024)} MB`,
+      );
     }
-    if (!ALLOWED_PHOTO_TYPES.includes(mimeType as typeof ALLOWED_PHOTO_TYPES[number])) {
-      throw new Error(`Unsupported photo type: ${mimeType}. Allowed: ${ALLOWED_PHOTO_TYPES.join(', ')}`);
+    if (!ALLOWED_PHOTO_TYPES.includes(mimeType as (typeof ALLOWED_PHOTO_TYPES)[number])) {
+      throw new BadRequestException(
+        `Unsupported photo type: ${mimeType}. Allowed: ${ALLOWED_PHOTO_TYPES.join(', ')}`,
+      );
     }
   }
 
   private validateVoiceInput(file: Buffer): void {
     if (file.length === 0) {
-      throw new Error('Voice file is empty');
+      throw new BadRequestException('Voice file is empty');
     }
     if (file.length > MAX_VOICE_SIZE) {
-      throw new Error(`Voice file exceeds maximum size of ${MAX_VOICE_SIZE / (1024 * 1024)} MB`);
+      throw new BadRequestException(
+        `Voice file exceeds maximum size of ${MAX_VOICE_SIZE / (1024 * 1024)} MB`,
+      );
     }
+  }
+
+  // ─── Helpers ───────────────────────────────────────────────
+
+  private getExtensionFromMime(mimeType: string): string {
+    return MIME_TO_EXT[mimeType] ?? 'bin';
   }
 
   // ─── S3 Helpers ─────────────────────────────────────────────
@@ -262,6 +399,7 @@ export class StorageService {
     key: string,
     body: Buffer,
     contentType: string,
+    cacheControl?: string,
   ): Promise<void> {
     try {
       await this.s3Client!.send(
@@ -270,7 +408,7 @@ export class StorageService {
           Key: key,
           Body: body,
           ContentType: contentType,
-          CacheControl: 'max-age=31536000, immutable',
+          CacheControl: cacheControl ?? 'max-age=31536000, immutable',
         }),
       );
     } catch (err) {
@@ -306,17 +444,52 @@ export class StorageService {
 
   private ensureLocalUploadDirs(): void {
     try {
-      const photosDir = path.join(LOCAL_UPLOADS_DIR, 'photos');
-      const voiceDir = path.join(LOCAL_UPLOADS_DIR, 'voice');
-      fs.mkdirSync(photosDir, { recursive: true });
-      fs.mkdirSync(voiceDir, { recursive: true });
+      const dirs = ['photos', 'thumbnails', 'voice'];
+      for (const dir of dirs) {
+        fs.mkdirSync(path.join(LOCAL_UPLOADS_DIR, dir), { recursive: true });
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       this.logger.warn(`Could not create local upload directories: ${message}`);
     }
   }
 
+  private uploadFileLocally(key: string, file: Buffer): FileUploadResult {
+    const filePath = path.join(LOCAL_UPLOADS_DIR, key);
+    const dir = path.dirname(filePath);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(filePath, file);
+
+    const url = `file://${filePath}`;
+    this.logger.debug(`File saved locally: ${filePath} (${file.length} bytes)`);
+
+    return { url, key, size: file.length };
+  }
+
   private uploadPhotoLocally(
+    photoKey: string,
+    thumbnailKey: string,
+    photoBuffer: Buffer,
+    thumbnailBuffer: Buffer,
+  ): PhotoUploadResult {
+    const photoPath = path.join(LOCAL_UPLOADS_DIR, photoKey);
+    const thumbPath = path.join(LOCAL_UPLOADS_DIR, thumbnailKey);
+
+    fs.mkdirSync(path.dirname(photoPath), { recursive: true });
+    fs.mkdirSync(path.dirname(thumbPath), { recursive: true });
+
+    fs.writeFileSync(photoPath, photoBuffer);
+    fs.writeFileSync(thumbPath, thumbnailBuffer);
+
+    const url = `file://${photoPath}`;
+    const thumbnailUrl = `file://${thumbPath}`;
+
+    this.logger.debug(`Profile photo saved locally: ${photoPath} (${photoBuffer.length} bytes)`);
+
+    return { url, thumbnailUrl, key: photoKey };
+  }
+
+  private uploadPhotoLegacyLocally(
     key: string,
     thumbnailKey: string,
     file: Buffer,
@@ -334,7 +507,7 @@ export class StorageService {
     return { url, thumbnailUrl, key };
   }
 
-  private uploadVoiceLocally(key: string, file: Buffer): VoiceUploadResult {
+  private uploadVoiceLocally(key: string, file: Buffer): Omit<VoiceUploadResult, 'duration'> {
     const filePath = path.join(LOCAL_UPLOADS_DIR, key);
     const dir = path.dirname(filePath);
     fs.mkdirSync(dir, { recursive: true });

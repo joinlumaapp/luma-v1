@@ -33,6 +33,7 @@ resource "aws_security_group" "redis" {
   tags = {
     Name        = "${var.project}-${var.environment}-redis-sg"
     Environment = var.environment
+    Project     = var.project
   }
 
   lifecycle {
@@ -80,5 +81,6 @@ resource "aws_elasticache_replication_group" "main" {
   tags = {
     Name        = "${var.project}-${var.environment}-redis"
     Environment = var.environment
+    Project     = var.project
   }
 }

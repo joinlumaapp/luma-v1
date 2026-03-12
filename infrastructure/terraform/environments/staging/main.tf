@@ -15,6 +15,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.5"
+    }
   }
 
   # Uncomment once S3 backend is provisioned:
@@ -85,12 +89,15 @@ module "ecs" {
   alb_security_group_id = module.alb.security_group_id
   target_group_arn      = module.alb.target_group_arn
   ecr_repository_url    = module.ecr.repository_url
+  cloudfront_url        = "https://${module.s3_cloudfront.cloudfront_domain_name}"
 
   cpu           = var.backend_cpu
   memory        = var.backend_memory
   desired_count = var.backend_desired_count
   min_count     = var.backend_min_count
   max_count     = var.backend_max_count
+
+  depends_on = [module.secrets]
 }
 
 # ─── RDS ───────────────────────────────────────────────────
@@ -137,4 +144,55 @@ module "s3_cloudfront" {
 
   project     = local.project
   environment = local.environment
+}
+
+# ─── Secrets Manager + SSM Parameters ─────────────────────
+module "secrets" {
+  source = "../../modules/secrets"
+
+  project     = local.project
+  environment = local.environment
+
+  db_host           = module.rds.address
+  db_name           = var.db_name
+  db_username       = var.db_username
+  db_password       = var.db_password
+  database_url      = module.rds.database_url
+  redis_url         = module.elasticache.redis_url
+  elasticsearch_url = "https://${module.opensearch.endpoint}"
+}
+
+# ─── CloudWatch Monitoring ────────────────────────────────
+module "monitoring" {
+  source = "../../modules/monitoring"
+
+  project     = local.project
+  environment = local.environment
+  aws_region  = var.aws_region
+
+  alert_email = var.alert_email
+
+  ecs_cluster_name   = module.ecs.cluster_name
+  ecs_service_name   = module.ecs.service_name
+  ecs_log_group_name = module.ecs.log_group_name
+
+  alb_arn_suffix            = module.alb.alb_arn_suffix
+  target_group_arn_suffix   = module.alb.target_group_arn_suffix
+
+  rds_instance_id            = module.rds.instance_id
+  redis_replication_group_id = module.elasticache.replication_group_id
+}
+
+# ─── Route 53 (optional) ──────────────────────────────────
+module "route53" {
+  source = "../../modules/route53"
+
+  project     = local.project
+  environment = local.environment
+
+  domain_name            = var.domain_name
+  create_certificate     = false
+  alb_dns_name           = module.alb.alb_dns_name
+  alb_zone_id            = module.alb.alb_zone_id
+  cloudfront_domain_name = module.s3_cloudfront.cloudfront_domain_name
 }

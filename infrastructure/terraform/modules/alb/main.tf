@@ -32,6 +32,7 @@ resource "aws_security_group" "alb" {
   tags = {
     Name        = "${var.project}-${var.environment}-alb-sg"
     Environment = var.environment
+    Project     = var.project
   }
 
   lifecycle {
@@ -51,6 +52,7 @@ resource "aws_lb" "main" {
   tags = {
     Name        = "${var.project}-${var.environment}-alb"
     Environment = var.environment
+    Project     = var.project
   }
 }
 
@@ -74,9 +76,16 @@ resource "aws_lb_target_group" "backend" {
     matcher             = "200"
   }
 
+  stickiness {
+    type            = "lb_cookie"
+    cookie_duration = 86400
+    enabled         = false
+  }
+
   tags = {
     Name        = "${var.project}-${var.environment}-backend-tg"
     Environment = var.environment
+    Project     = var.project
   }
 }
 
@@ -87,13 +96,18 @@ resource "aws_lb_listener" "http" {
   protocol          = "HTTP"
 
   default_action {
-    type = "redirect"
+    type = var.certificate_arn != "" ? "redirect" : "forward"
 
-    redirect {
-      port        = "443"
-      protocol    = "HTTPS"
-      status_code = "HTTP_301"
+    dynamic "redirect" {
+      for_each = var.certificate_arn != "" ? [1] : []
+      content {
+        port        = "443"
+        protocol    = "HTTPS"
+        status_code = "HTTP_301"
+      }
     }
+
+    target_group_arn = var.certificate_arn == "" ? aws_lb_target_group.backend.arn : null
   }
 }
 

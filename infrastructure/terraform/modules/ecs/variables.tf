@@ -54,3 +54,15 @@ variable "max_count" {
   type    = number
   default = 6
 }
+
+variable "cors_origins" {
+  description = "Comma-separated CORS origins"
+  type        = string
+  default     = "*"
+}
+
+variable "cloudfront_url" {
+  description = "CloudFront distribution URL for photo delivery"
+  type        = string
+  default     = ""
+}

@@ -69,8 +69,22 @@ variable "db_password" {
   sensitive = true
 }
 
-# ─── Redis ─────────────────────────────────────────────────
+# ─── Redis ───────────────────────────────────────────────
 variable "redis_node_type" {
   type    = string
   default = "cache.t3.micro"
+}
+
+# ─── Domain (optional) ──────────────────────────────────
+variable "domain_name" {
+  description = "Root domain for DNS records (e.g., luma.dating). Leave empty to skip."
+  type        = string
+  default     = ""
+}
+
+# ─── Monitoring ──────────────────────────────────────────
+variable "alert_email" {
+  description = "Email address for CloudWatch alarm notifications"
+  type        = string
+  default     = ""
 }
