@@ -171,7 +171,7 @@ const FEATURE_COMPARISON: FeatureRow[] = [
 
 const formatPrice = (price: number): string => {
   if (price === 0) return 'Ücretsiz';
-  return `₺${price.toFixed(2)}`;
+  return `${price.toFixed(2)}₺`;
 };
 
 export const PackagesScreen: React.FC = () => {
@@ -317,7 +317,6 @@ export const PackagesScreen: React.FC = () => {
                 <View style={styles.priceContainer}>
                   {pkg.price > 0 ? (
                     <View style={styles.priceRow}>
-                      <Text style={styles.priceCurrency}>₺</Text>
                       <Text style={styles.priceAmount}>
                         {pkg.price.toFixed(2).split('.')[0]}
                       </Text>
@@ -325,11 +324,12 @@ export const PackagesScreen: React.FC = () => {
                         <Text style={styles.priceDecimal}>
                           ,{pkg.price.toFixed(2).split('.')[1]}
                         </Text>
+                        <Text style={styles.priceCurrency}>₺</Text>
                         <Text style={styles.pricePeriod}>/ay</Text>
                       </View>
                     </View>
                   ) : (
-                    <Text style={styles.freeText}>₺0</Text>
+                    <Text style={styles.freeText}>0₺</Text>
                   )}
                 </View>
               </View>
@@ -375,7 +375,7 @@ export const PackagesScreen: React.FC = () => {
           {/* Column headers */}
           <View style={styles.comparisonHeaderRow}>
             <View style={styles.comparisonLabelCell}>
-              <Text style={styles.comparisonLabelHeader}>Özellik</Text>
+              <Text style={styles.comparisonLabelHeader}>OZELLIK</Text>
             </View>
             {TIER_ORDER.map((tier) => {
               const pkg = PACKAGE_TIERS.find((p) => p.id === tier);
@@ -550,10 +550,10 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   priceCurrency: {
-    ...typography.body,
+    ...typography.bodySmall,
     color: colors.text,
     fontWeight: '600',
-    marginTop: 2,
+    marginLeft: 1,
   },
   priceAmount: {
     ...typography.h2,
@@ -657,7 +657,7 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.textTertiary,
     fontWeight: '600',
-    textTransform: 'uppercase',
+    includeFontPadding: false,
   },
   comparisonColumnHeader: {
     ...typography.captionSmall,

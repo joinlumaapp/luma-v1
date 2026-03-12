@@ -147,7 +147,7 @@ interface TimeSection {
 
 const SectionHeader: React.FC<TimeSection> = React.memo(({ period, unreadCount }) => (
   <View style={styles.sectionHeader}>
-    <Text style={styles.sectionLabel}>{TIME_PERIOD_LABELS[period]}</Text>
+    <Text style={styles.sectionLabel}>{TIME_PERIOD_LABELS[period].toUpperCase()}</Text>
     {unreadCount > 0 && (
       <View style={styles.sectionBadge}>
         <Text style={styles.sectionBadgeText}>{unreadCount}</Text>
@@ -486,8 +486,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     ...typography.label,
     color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    includeFontPadding: false,
   },
   sectionBadge: {
     minWidth: 20,

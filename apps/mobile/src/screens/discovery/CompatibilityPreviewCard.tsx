@@ -260,7 +260,7 @@ export const CompatibilityPreviewCard: React.FC<CompatibilityPreviewCardProps> =
       {/* Shared values / interests */}
       {displayedValues.length > 0 && (
         <View style={styles.valuesSection}>
-          <Text style={styles.sectionLabel}>Ortak Değerler</Text>
+          <Text style={styles.sectionLabel}>ORTAK DEĞERLER</Text>
           <View style={styles.valuesRow}>
             {displayedValues.map((value, index) => (
               <ValueChip
@@ -276,7 +276,7 @@ export const CompatibilityPreviewCard: React.FC<CompatibilityPreviewCardProps> =
       {/* Common question answers */}
       {displayedAnswers.length > 0 && (
         <View style={styles.commonSection}>
-          <Text style={styles.sectionLabel}>Ortak Noktalarınız</Text>
+          <Text style={styles.sectionLabel}>ORTAK NOKTALARINIZ</Text>
           {displayedAnswers.map((answer, index) => (
             <View key={index} style={styles.commonAnswer}>
               <Text style={styles.commonDot}>{'\u2022'}</Text>
@@ -390,8 +390,7 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
     fontWeight: '600',
     marginBottom: spacing.xs,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    includeFontPadding: false,
   },
   valuesRow: {
     flexDirection: 'row',

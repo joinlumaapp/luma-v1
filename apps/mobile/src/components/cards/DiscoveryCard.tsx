@@ -187,10 +187,10 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
           <View style={styles.onlineDot} />
         )}
 
-        {/* Soft gradient at bottom of photo for smooth transition */}
+        {/* Ultra-smooth dark gradient for clean text readability */}
         <LinearGradient
-          colors={['transparent', colors.background + '99', colors.background] as [string, string, ...string[]]}
-          locations={[0, 0.55, 1]}
+          colors={['transparent', colors.background + '40', colors.background + 'B3', colors.background] as [string, string, ...string[]]}
+          locations={[0, 0.4, 0.75, 1]}
           style={styles.photoGradient}
           pointerEvents="none"
         />
@@ -310,7 +310,7 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
                 %{compatScore} Uyum
               </Text>
               {reasons.length > 0 && (
-                <Text style={styles.compatReasonTitle}>Neden uyumlusunuz?</Text>
+                <Text style={styles.compatReasonTitle}>NEDEN UYUMLUSUNUZ?</Text>
               )}
               {reasons.map((line) => (
                 <Text key={line} style={styles.compatExplanation}>
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: fontWeights.bold,
     color: colors.text,
-    letterSpacing: -0.3,
+    paddingRight: 4,
   },
 
   // ── Row 2: City + Distance ──
@@ -478,7 +478,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: fontWeights.semibold,
     color: '#059669',
-    letterSpacing: 0.2,
   },
 
   // ── Row 3: Intention Badge ──
@@ -491,7 +490,6 @@ const styles = StyleSheet.create({
   modeBadgeText: {
     fontSize: 11,
     fontWeight: fontWeights.semibold,
-    letterSpacing: 0.2,
   },
 
   // ── Row 4: 1-line Bio ──
@@ -551,6 +549,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: fontWeights.bold,
     color: palette.purple[600],
+    paddingRight: 2,
   },
   compatScoreSuper: {
     color: palette.gold[600],
@@ -559,16 +558,14 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: fontWeights.semibold,
     color: colors.textSecondary,
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
     marginTop: 2,
     marginBottom: 1,
+    includeFontPadding: false,
   },
   compatExplanation: {
     fontSize: 11,
     fontWeight: fontWeights.regular,
     color: colors.textTertiary,
-    letterSpacing: 0.1,
     lineHeight: 16,
   },
 
@@ -640,6 +637,5 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: fontWeights.semibold,
     color: '#D4AF37',
-    letterSpacing: 0.3,
   },
 });

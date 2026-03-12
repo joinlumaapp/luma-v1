@@ -1,6 +1,8 @@
-// EditProfileScreen — full profile editing: photos, bio, prompts, gender, intention, city
+// EditProfileScreen — premium profile editing with photo grid, bio, basic info,
+// interests, lifestyle, voice intro, and gold gradient save button.
+// Cream theme (#F5F0E8 bg, #D4AF37 gold, #2C1810 text)
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,363 +10,297 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  FlatList,
   Alert,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
   Image,
-  Modal,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ProfileStackParamList } from '../../navigation/types';
-import { colors } from '../../theme/colors';
-import { typography } from '../../theme/typography';
-import { spacing, borderRadius, layout } from '../../theme/spacing';
-import { PROFILE_CONFIG, INTENTION_TAGS } from '../../constants/config';
+import { colors, palette } from '../../theme/colors';
+import { fontWeights } from '../../theme/typography';
+import { spacing, borderRadius, shadows } from '../../theme/spacing';
+import { INTEREST_OPTIONS } from '../../constants/config';
 import { useProfileStore } from '../../stores/profileStore';
-import { useAuthStore } from '../../stores/authStore';
 import { photoService } from '../../services/photoService';
-import { discoveryService } from '../../services/discoveryService';
-import type { ProfilePrompt } from '../../services/discoveryService';
-import { PromptCard } from '../../components/prompts/PromptCard';
-import { PromptPickerSheet } from '../../components/prompts/PromptPickerSheet';
-import { MAX_PROMPTS, MAX_PROMPT_ANSWER_LENGTH } from '../../constants/promptBank';
-import type { PromptOption } from '../../constants/promptBank';
 
 type EditProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'EditProfile'>;
 
-const GALLERY_PHOTO_WIDTH = 110;
-const GALLERY_PHOTO_HEIGHT = GALLERY_PHOTO_WIDTH * 1.35;
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const GRID_PADDING = 24;
+const GRID_GAP = 10;
+const PHOTO_CELL_WIDTH = (SCREEN_WIDTH - GRID_PADDING * 2 - GRID_GAP * 2) / 3;
+const PHOTO_CELL_HEIGHT = PHOTO_CELL_WIDTH * 1.3;
+const PHOTO_SLOTS = 6;
 
-type GenderOption = 'male' | 'female' | 'other';
+const MAX_BIO_LENGTH = 300;
+const MAX_INTERESTS = 10;
 
-interface GenderChip {
-  value: GenderOption;
+// ── Turkish city list ──────────────────────────────────────────────────────
+const TURKISH_CITIES: string[] = [
+  'Istanbul', 'Ankara', 'Izmir', 'Antalya', 'Bursa', 'Adana',
+  'Konya', 'Gaziantep', 'Mersin', 'Diyarbakir', 'Kayseri',
+  'Eskisehir', 'Samsun', 'Trabzon', 'Mugla', 'Denizli',
+  'Sakarya', 'Malatya', 'Kahramanmaras', 'Erzurum',
+];
+
+// ── Smoking options ────────────────────────────────────────────────────────
+interface LifestyleOption {
+  value: string;
   label: string;
 }
 
-const GENDER_CHIPS: GenderChip[] = [
-  { value: 'male', label: 'Erkek' },
-  { value: 'female', label: 'Kadın' },
-  { value: 'other', label: 'Diğer' },
+const SMOKING_OPTIONS: LifestyleOption[] = [
+  { value: 'never', label: 'Icmiyor' },
+  { value: 'sometimes', label: 'Ara sira' },
+  { value: 'regular', label: 'Iciyor' },
+  { value: 'tolerate', label: 'Icmez ama karismaz' },
 ];
 
-const formatBirthDate = (dateStr: string): string => {
-  if (!dateStr) return '-';
-  try {
-    const date = new Date(dateStr);
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}.${month}.${year}`;
-  } catch {
-    return dateStr;
+const EXERCISE_OPTIONS: LifestyleOption[] = [
+  { value: 'never', label: 'Pek yapmam' },
+  { value: 'sometimes', label: 'Ara sira' },
+  { value: 'often', label: 'Duzenli' },
+];
+
+const CHILDREN_OPTIONS: LifestyleOption[] = [
+  { value: 'have', label: 'Var' },
+  { value: 'no_children', label: 'Yok' },
+  { value: 'want', label: 'Ileride olabilir' },
+  { value: 'dont_want', label: 'Istemiyor' },
+];
+
+// ── Age calculator ─────────────────────────────────────────────────────────
+const calculateAge = (birthDate: string): number => {
+  if (!birthDate) return 0;
+  const birth = new Date(birthDate);
+  const now = new Date();
+  let age = now.getFullYear() - birth.getFullYear();
+  const monthDiff = now.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) {
+    age--;
   }
+  return age;
 };
+
+// ── Height values ──────────────────────────────────────────────────────────
+const HEIGHT_VALUES: number[] = [];
+for (let i = 140; i <= 220; i++) {
+  HEIGHT_VALUES.push(i);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── Main Component ─────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
 
 export const EditProfileScreen: React.FC = () => {
   const navigation = useNavigation<EditProfileNavigationProp>();
   const insets = useSafeAreaInsets();
+  const scrollRef = useRef<ScrollView>(null);
 
+  // Store
   const profile = useProfileStore((state) => state.profile);
-  const isLoading = useProfileStore((state) => state.isLoading);
   const updateProfile = useProfileStore((state) => state.updateProfile);
   const uploadPhoto = useProfileStore((state) => state.uploadPhoto);
   const deletePhoto = useProfileStore((state) => state.deletePhoto);
-  const reorderPhotos = useProfileStore((state) => state.reorderPhotos);
   const setMainPhoto = useProfileStore((state) => state.setMainPhoto);
-  const user = useAuthStore((state) => state.user);
 
+  // Local state
   const [bio, setBio] = useState(profile.bio);
-  const [gender, setGender] = useState<string>(profile.gender);
-  const [selectedIntention, setSelectedIntention] = useState(profile.intentionTag);
   const [city, setCity] = useState(profile.city);
+  const [height, setHeight] = useState<number | null>(profile.height);
+  const [smoking, setSmoking] = useState(profile.smoking);
+  const [exercise, setExercise] = useState(profile.sports);
+  const [children, setChildren] = useState(profile.children);
+  const [selectedInterests, setSelectedInterests] = useState<string[]>(profile.interestTags);
   const [isSaving, setIsSaving] = useState(false);
   const [isPhotoUploading, setIsPhotoUploading] = useState(false);
+  const [showCityPicker, setShowCityPicker] = useState(false);
+  const [showHeightPicker, setShowHeightPicker] = useState(false);
 
-  // Profile prompts state
-  const [prompts, setPrompts] = useState<Array<ProfilePrompt | null>>([null, null, null]);
-  const [isPromptsLoading, setIsPromptsLoading] = useState(false);
-  const [isPromptPickerVisible, setIsPromptPickerVisible] = useState(false);
-  const [activePromptSlot, setActivePromptSlot] = useState<number>(0);
-  const [editingPromptIndex, setEditingPromptIndex] = useState<number | null>(null);
-  const [editingPromptAnswer, setEditingPromptAnswer] = useState('');
-  const [isEditPromptModalVisible, setIsEditPromptModalVisible] = useState(false);
-
-  // Sync from store when profile updates externally
+  // Sync from store on external changes
   useEffect(() => {
     setBio(profile.bio);
-    setGender(profile.gender);
-    setSelectedIntention(profile.intentionTag);
     setCity(profile.city);
-  }, [profile.bio, profile.gender, profile.intentionTag, profile.city]);
+    setHeight(profile.height);
+    setSmoking(profile.smoking);
+    setExercise(profile.sports);
+    setChildren(profile.children);
+    setSelectedInterests(profile.interestTags);
+  }, [
+    profile.bio, profile.city, profile.height, profile.smoking,
+    profile.sports, profile.children, profile.interestTags,
+  ]);
 
-  // Fetch existing prompts on mount
-  useEffect(() => {
-    const fetchPrompts = async () => {
-      if (!user?.id) return;
-      setIsPromptsLoading(true);
-      try {
-        const data = await discoveryService.getPrompts(user.id);
-        const slots: Array<ProfilePrompt | null> = [null, null, null];
-        data.forEach((p, i) => {
-          if (i < MAX_PROMPTS) {
-            slots[i] = p;
-          }
-        });
-        setPrompts(slots);
-      } catch {
-        // Silently fail — user can still add prompts
-      } finally {
-        setIsPromptsLoading(false);
-      }
-    };
-    fetchPrompts();
-  }, [user?.id]);
-
-  // Prompt handlers
-  const usedPromptIds: string[] = prompts
-    .filter((p): p is ProfilePrompt => p !== null)
-    .map((p) => p.question);
-
-  const handleOpenPromptPicker = useCallback((slotIndex: number) => {
-    setActivePromptSlot(slotIndex);
-    setIsPromptPickerVisible(true);
-  }, []);
-
-  const handleSelectPrompt = useCallback(
-    (promptOption: PromptOption) => {
-      setIsPromptPickerVisible(false);
-      // Open the edit modal for the selected prompt
-      setEditingPromptIndex(activePromptSlot);
-      setEditingPromptAnswer('');
-      // Temporarily set the prompt with empty answer so we know the question
-      const updated = [...prompts];
-      updated[activePromptSlot] = {
-        question: promptOption.textTr,
-        answer: '',
-        order: activePromptSlot,
-      };
-      setPrompts(updated);
-      setIsEditPromptModalVisible(true);
-    },
-    [activePromptSlot, prompts],
-  );
-
-  const handleEditPrompt = useCallback(
+  // ── Photo handlers ─────────────────────────────────────────────────────
+  const handlePhotoSlotPress = useCallback(
     (index: number) => {
-      const prompt = prompts[index];
-      if (!prompt) return;
-      setEditingPromptIndex(index);
-      setEditingPromptAnswer(prompt.answer);
-      setIsEditPromptModalVisible(true);
-    },
-    [prompts],
-  );
+      // If there is a photo at this index
+      if (index < profile.photos.length) {
+        const options: Array<{
+          text: string;
+          onPress?: () => void;
+          style?: 'cancel' | 'destructive';
+        }> = [];
 
-  const handleSavePromptAnswer = useCallback(async () => {
-    if (editingPromptIndex === null) return;
-    const prompt = prompts[editingPromptIndex];
-    if (!prompt) return;
-
-    const trimmedAnswer = editingPromptAnswer.trim();
-    if (trimmedAnswer.length === 0) {
-      Alert.alert('Hata', 'Lutfen bir cevap yaz.');
-      return;
-    }
-
-    const updated = [...prompts];
-    updated[editingPromptIndex] = {
-      ...prompt,
-      answer: trimmedAnswer,
-      order: editingPromptIndex,
-    };
-    setPrompts(updated);
-    setIsEditPromptModalVisible(false);
-    setEditingPromptIndex(null);
-    setEditingPromptAnswer('');
-
-    // Save to backend
-    const toSave = updated
-      .filter((p): p is ProfilePrompt => p !== null && p.answer.length > 0)
-      .map((p, i) => ({ ...p, order: i }));
-    try {
-      await discoveryService.savePrompts(toSave);
-    } catch {
-      Alert.alert('Hata', 'Profil soruları kaydedilemedi.');
-    }
-  }, [editingPromptIndex, editingPromptAnswer, prompts]);
-
-  const handleDeletePrompt = useCallback(
-    async (index: number) => {
-      Alert.alert('Soruyu Sil', 'Bu soruyu silmek istediğinize emin misiniz?', [
-        { text: 'İptal', style: 'cancel' },
-        {
+        if (index !== 0) {
+          options.push({
+            text: 'Ana Foto Yap',
+            onPress: () => setMainPhoto(index),
+          });
+        }
+        options.push({
           text: 'Sil',
           style: 'destructive',
-          onPress: async () => {
-            const updated = [...prompts];
-            updated[index] = null;
-            // Compact: shift non-null prompts to the beginning
-            const compacted: Array<ProfilePrompt | null> = [null, null, null];
-            let ci = 0;
-            for (const p of updated) {
-              if (p !== null) {
-                compacted[ci] = { ...p, order: ci };
-                ci++;
-              }
-            }
-            setPrompts(compacted);
+          onPress: () => {
+            Alert.alert(
+              'Fotografi Sil',
+              'Bu fotografi silmek istediginden emin misin?',
+              [
+                { text: 'Iptal', style: 'cancel' },
+                {
+                  text: 'Sil',
+                  style: 'destructive',
+                  onPress: () => deletePhoto(index),
+                },
+              ],
+            );
+          },
+        });
+        options.push({ text: 'Iptal', style: 'cancel' });
+        Alert.alert('Fotograf Secenekleri', undefined, options);
+        return;
+      }
 
-            const toSave = compacted
-              .filter((p): p is ProfilePrompt => p !== null && p.answer.length > 0)
-              .map((p, i) => ({ ...p, order: i }));
-            try {
-              await discoveryService.savePrompts(toSave);
-            } catch {
-              Alert.alert('Hata', 'Soru silinemedi.');
+      // Empty slot — add photo
+      if (isPhotoUploading) return;
+
+      Alert.alert('Fotograf Ekle', 'Fotograf kaynagini sec', [
+        {
+          text: 'Kamera',
+          onPress: async () => {
+            const uri = await photoService.takePhoto();
+            if (uri) {
+              setIsPhotoUploading(true);
+              try {
+                await uploadPhoto(uri);
+              } catch {
+                Alert.alert('Hata', 'Fotograf yuklenemedi.');
+              } finally {
+                setIsPhotoUploading(false);
+              }
             }
           },
         },
+        {
+          text: 'Galeriden Sec',
+          onPress: async () => {
+            const uri = await photoService.pickFromGallery();
+            if (uri) {
+              setIsPhotoUploading(true);
+              try {
+                await uploadPhoto(uri);
+              } catch {
+                Alert.alert('Hata', 'Fotograf yuklenemedi.');
+              } finally {
+                setIsPhotoUploading(false);
+              }
+            }
+          },
+        },
+        { text: 'Iptal', style: 'cancel' },
       ]);
     },
-    [prompts],
+    [profile.photos.length, isPhotoUploading, uploadPhoto, deletePhoto, setMainPhoto],
   );
 
-  const handleCancelEditPrompt = useCallback(() => {
-    // If the prompt has no answer (just selected, not yet saved), remove it
-    if (editingPromptIndex !== null) {
-      const prompt = prompts[editingPromptIndex];
-      if (prompt && prompt.answer.length === 0) {
-        const updated = [...prompts];
-        updated[editingPromptIndex] = null;
-        setPrompts(updated);
-      }
-    }
-    setIsEditPromptModalVisible(false);
-    setEditingPromptIndex(null);
-    setEditingPromptAnswer('');
-  }, [editingPromptIndex, prompts]);
-
-  const handleSetMainPhoto = useCallback(
-    (index: number) => {
-      if (index === 0) return;
-      Alert.alert(
-        'Ana Foto Yap',
-        'Bu fotoğrafı ana profil fotoğrafı olarak ayarlamak istiyor musun?',
-        [
-          { text: 'İptal', style: 'cancel' },
-          {
-            text: 'Evet',
-            onPress: () => setMainPhoto(index),
-          },
-        ],
-      );
+  // ── Interest tag toggle ────────────────────────────────────────────────
+  const toggleInterest = useCallback(
+    (tagId: string) => {
+      setSelectedInterests((prev) => {
+        if (prev.includes(tagId)) {
+          return prev.filter((t) => t !== tagId);
+        }
+        if (prev.length >= MAX_INTERESTS) {
+          Alert.alert('Limit', `En fazla ${MAX_INTERESTS} ilgi alani secebilirsin.`);
+          return prev;
+        }
+        return [...prev, tagId];
+      });
     },
-    [setMainPhoto],
+    [],
   );
 
-  const handleMovePhoto = useCallback(
-    (index: number, direction: 'left' | 'right') => {
-      const target = direction === 'left' ? index - 1 : index + 1;
-      if (target < 0 || target >= profile.photos.length) return;
-      reorderPhotos(index, target);
+  // ── Lifestyle picker toggle ────────────────────────────────────────────
+  const cycleOption = useCallback(
+    (
+      options: LifestyleOption[],
+      currentValue: string,
+      setter: (value: string) => void,
+    ) => {
+      const currentIndex = options.findIndex((o) => o.value === currentValue);
+      const nextIndex = (currentIndex + 1) % options.length;
+      setter(options[nextIndex].value);
     },
-    [reorderPhotos, profile.photos.length],
+    [],
   );
 
+  const getOptionLabel = (options: LifestyleOption[], value: string): string => {
+    const found = options.find((o) => o.value === value);
+    return found ? found.label : 'Sec';
+  };
+
+  // ── Save handler ───────────────────────────────────────────────────────
   const handleSave = useCallback(async () => {
     if (isSaving) return;
     setIsSaving(true);
     try {
       await updateProfile({
         bio,
-        gender,
-        intentionTag: selectedIntention,
         city,
+        height,
+        smoking,
+        sports: exercise,
+        children,
+        interestTags: selectedInterests,
       });
       navigation.goBack();
     } catch {
-      Alert.alert('Hata', 'Profil güncellenemedi. Lütfen tekrar dene.');
+      Alert.alert('Hata', 'Profil guncellenemedi. Lutfen tekrar dene.');
     } finally {
       setIsSaving(false);
     }
-  }, [bio, gender, selectedIntention, city, isSaving, updateProfile, navigation]);
-
-  const handleAddPhoto = useCallback(
-    (_index: number) => {
-      if (isPhotoUploading) return;
-
-      const processSelectedPhoto = async (uri: string | null) => {
-        if (!uri) return;
-        setIsPhotoUploading(true);
-        try {
-          await uploadPhoto(uri);
-        } catch {
-          Alert.alert('Hata', 'Fotoğraf yüklenemedi. Lütfen tekrar dene.');
-        } finally {
-          setIsPhotoUploading(false);
-        }
-      };
-
-      Alert.alert(
-        'Fotoğraf Ekle',
-        'Fotoğraf kaynağını seç',
-        [
-          {
-            text: 'Kamera',
-            onPress: async () => {
-              const uri = await photoService.takePhoto();
-              await processSelectedPhoto(uri);
-            },
-          },
-          {
-            text: 'Galeriden Seç',
-            onPress: async () => {
-              const uri = await photoService.pickFromGallery();
-              await processSelectedPhoto(uri);
-            },
-          },
-          {
-            text: 'İptal',
-            style: 'cancel',
-          },
-        ],
-        { cancelable: true },
-      );
-    },
-    [isPhotoUploading, uploadPhoto],
-  );
-
-  const handleRemovePhoto = useCallback(
-    async (index: number) => {
-      Alert.alert('Fotoğrafı Sil', 'Bu fotoğrafı silmek istediğinden emin misin?', [
-        { text: 'İptal', style: 'cancel' },
-        {
-          text: 'Sil',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deletePhoto(index);
-            } catch {
-              Alert.alert('Hata', 'Fotoğraf silinemedi.');
-            }
-          },
-        },
-      ]);
-    },
-    [deletePhoto],
-  );
+  }, [
+    bio, city, height, smoking, exercise, children, selectedInterests,
+    isSaving, updateProfile, navigation,
+  ]);
 
   const hasChanges =
     bio !== profile.bio ||
-    gender !== profile.gender ||
-    selectedIntention !== profile.intentionTag ||
-    city !== profile.city;
+    city !== profile.city ||
+    height !== profile.height ||
+    smoking !== profile.smoking ||
+    exercise !== profile.sports ||
+    children !== profile.children ||
+    JSON.stringify(selectedInterests) !== JSON.stringify(profile.interestTags);
+
+  const age = calculateAge(profile.birthDate);
+
+  // ── Build photo grid data (always 6 slots) ────────────────────────────
+  const photoSlots: Array<string | null> = [];
+  for (let i = 0; i < PHOTO_SLOTS; i++) {
+    photoSlots.push(i < profile.photos.length ? profile.photos[i] : null);
+  }
+
+  // ═════════════════════════════════════════════════════════════════════════
+  // ── Render ─────────────────────────────────────────────────────────────
+  // ═════════════════════════════════════════════════════════════════════════
 
   return (
     <KeyboardAvoidingView
@@ -373,166 +309,118 @@ export const EditProfileScreen: React.FC = () => {
       keyboardVerticalOffset={0}
     >
       <View style={[styles.container, { paddingTop: insets.top }]}>
-        {/* Header */}
+        {/* ── Header ──────────────────────────────────────────────────── */}
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
+            style={styles.headerBackButton}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityLabel="Geri"
+            accessibilityRole="button"
           >
-            <Text style={styles.cancelText}>İptal</Text>
+            <Ionicons name="chevron-back" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Profili Düzenle</Text>
-          <TouchableOpacity
-            onPress={handleSave}
-            disabled={isSaving || !hasChanges}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            {isSaving ? (
-              <ActivityIndicator size="small" color={colors.primary} />
-            ) : (
-              <Text
-                style={[
-                  styles.saveText,
-                  (!hasChanges || isLoading) && styles.saveTextDisabled,
-                ]}
-              >
-                Kaydet
-              </Text>
-            )}
-          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Profili Duzenle</Text>
+          <View style={styles.headerSpacer} />
         </View>
 
         <ScrollView
+          ref={scrollRef}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: insets.bottom + 100 },
+          ]}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Photos Section — horizontal gallery */}
+          {/* ── Fotograflar (3x2 grid) ────────────────────────────────── */}
           <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Fotoğraflar</Text>
-              <Text style={styles.photoCount}>
-                {profile.photos.length}/{PROFILE_CONFIG.MAX_PHOTOS}
-              </Text>
-            </View>
+            <Text style={styles.sectionTitle}>Fotograflar</Text>
             <Text style={styles.sectionHint}>
-              İlk fotoğraf ana profil fotoğrafın olur. Uzun bas: sıralama seçenekleri.
+              Ilk fotograf profil fotografin olacak. En az 2, en fazla 6 fotograf ekle.
             </Text>
-            <FlatList
-              data={[...profile.photos, isPhotoUploading ? '__uploading__' : '__add__']}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={(_, i) => `gallery-${i}`}
-              contentContainerStyle={styles.galleryContainer}
-              renderItem={({ item, index }) => {
-                // Upload indicator slot
-                if (item === '__uploading__') {
-                  return (
-                    <View style={styles.galleryCell}>
-                      <View style={styles.galleryCellEmpty}>
-                        <ActivityIndicator size="small" color={colors.primary} />
-                        <Text style={styles.addLabel}>Yükleniyor...</Text>
-                      </View>
-                    </View>
-                  );
-                }
+            <View style={styles.photoGrid}>
+              {photoSlots.map((uri, index) => {
+                const isMain = index === 0 && uri !== null;
+                const isUploading = isPhotoUploading && index === profile.photos.length;
 
-                // Add button slot
-                if (item === '__add__') {
-                  if (profile.photos.length >= PROFILE_CONFIG.MAX_PHOTOS) return null;
-                  return (
-                    <TouchableOpacity
-                      style={styles.galleryCell}
-                      onPress={() => handleAddPhoto(profile.photos.length)}
-                      activeOpacity={0.7}
-                    >
-                      <View style={styles.galleryCellEmpty}>
-                        <Ionicons name="add-circle-outline" size={32} color={colors.primary} />
-                        <Text style={[styles.addLabel, { color: colors.primary }]}>Ekle</Text>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                }
-
-                // Photo item
                 return (
                   <TouchableOpacity
+                    key={`photo-slot-${index}`}
                     style={[
-                      styles.galleryCell,
-                      styles.galleryCellFilled,
-                      index === 0 && styles.galleryCellPrimary,
+                      styles.photoCell,
+                      isMain && styles.photoCellMain,
                     ]}
-                    onPress={() => handleRemovePhoto(index)}
-                    onLongPress={() => {
-                      const options: Array<{ text: string; onPress?: () => void; style?: 'cancel' | 'destructive' }> = [];
-                      if (index !== 0) {
-                        options.push({ text: 'Ana Foto Yap', onPress: () => handleSetMainPhoto(index) });
-                      }
-                      if (index > 0) {
-                        options.push({ text: 'Sola Taşı', onPress: () => handleMovePhoto(index, 'left') });
-                      }
-                      if (index < profile.photos.length - 1) {
-                        options.push({ text: 'Sağa Taşı', onPress: () => handleMovePhoto(index, 'right') });
-                      }
-                      options.push({
-                        text: 'Sil',
-                        style: 'destructive',
-                        onPress: () => deletePhoto(index),
-                      });
-                      options.push({ text: 'İptal', style: 'cancel' });
-                      Alert.alert('Fotoğraf Seçenekleri', undefined, options);
-                    }}
-                    activeOpacity={0.8}
-                    delayLongPress={300}
+                    onPress={() => handlePhotoSlotPress(index)}
+                    activeOpacity={0.7}
+                    accessibilityLabel={
+                      uri
+                        ? `Fotograf ${index + 1}, duzenlemek icin dokun`
+                        : `Fotograf ekle, slot ${index + 1}`
+                    }
+                    accessibilityRole="button"
                   >
-                    <Image
-                      source={{ uri: item }}
-                      style={styles.galleryImage}
-                      resizeMode="cover"
-                    />
-                    {/* Primary badge */}
-                    {index === 0 && (
-                      <View style={styles.primaryBadge}>
-                        <Ionicons name="star" size={10} color={colors.text} />
-                        <Text style={styles.primaryBadgeText}>Ana</Text>
+                    {uri ? (
+                      <View style={styles.photoContent}>
+                        <Image
+                          source={{ uri }}
+                          style={styles.photoImage}
+                          resizeMode="cover"
+                        />
+                        {/* Remove button */}
+                        <View style={styles.photoRemoveButton}>
+                          <Ionicons name="close" size={12} color="#FFFFFF" />
+                        </View>
+                        {/* Main photo badge */}
+                        {isMain && (
+                          <View style={styles.photoMainBadge}>
+                            <Ionicons name="star" size={10} color="#FFFFFF" />
+                            <Text style={styles.photoMainBadgeText}>Ana</Text>
+                          </View>
+                        )}
+                        {/* Order number */}
+                        <View style={styles.photoOrderBadge}>
+                          <Text style={styles.photoOrderText}>{index + 1}</Text>
+                        </View>
+                      </View>
+                    ) : isUploading ? (
+                      <View style={styles.photoEmptyContent}>
+                        <ActivityIndicator size="small" color={palette.gold[500]} />
+                        <Text style={styles.photoUploadingText}>Yukleniyor...</Text>
+                      </View>
+                    ) : (
+                      <View style={styles.photoEmptyContent}>
+                        <Ionicons
+                          name="add"
+                          size={28}
+                          color={colors.textTertiary}
+                        />
                       </View>
                     )}
-                    {/* Order number */}
-                    <View style={styles.orderBadge}>
-                      <Text style={styles.orderBadgeText}>{index + 1}</Text>
-                    </View>
-                    {/* Remove button */}
-                    <TouchableOpacity
-                      style={styles.removeButton}
-                      onPress={() => handleRemovePhoto(index)}
-                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                    >
-                      <Ionicons name="close" size={12} color="#FFF" />
-                    </TouchableOpacity>
                   </TouchableOpacity>
                 );
-              }}
-            />
+              })}
+            </View>
           </View>
 
-          {/* Bio Section */}
+          {/* ── Hakkimda (Bio) ────────────────────────────────────────── */}
           <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Hakkında</Text>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Hakkimda</Text>
               <Text
                 style={[
-                  styles.charCount,
-                  bio.length >= PROFILE_CONFIG.MAX_BIO_LENGTH && styles.charCountLimit,
+                  styles.charCounter,
+                  bio.length >= MAX_BIO_LENGTH && styles.charCounterLimit,
                 ]}
               >
-                {bio.length}/{PROFILE_CONFIG.MAX_BIO_LENGTH}
+                {bio.length}/{MAX_BIO_LENGTH}
               </Text>
             </View>
             <TextInput
               style={styles.bioInput}
               value={bio}
               onChangeText={(text) => {
-                if (text.length <= PROFILE_CONFIG.MAX_BIO_LENGTH) {
+                if (text.length <= MAX_BIO_LENGTH) {
                   setBio(text);
                 }
               }}
@@ -540,213 +428,333 @@ export const EditProfileScreen: React.FC = () => {
               placeholderTextColor={colors.textTertiary}
               multiline
               textAlignVertical="top"
-              maxLength={PROFILE_CONFIG.MAX_BIO_LENGTH}
+              maxLength={MAX_BIO_LENGTH}
             />
           </View>
 
-          {/* Profil Sorulari (Profile Prompts) */}
+          {/* ── Temel Bilgiler ────────────────────────────────────────── */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Profil Soruları</Text>
-            <Text style={styles.sectionHint}>
-              Profilini öne çıkar! 3 soruya kadar cevap ekleyebilirsin.
-            </Text>
-            {isPromptsLoading ? (
-              <View style={styles.promptsLoading}>
-                <ActivityIndicator size="small" color={colors.primary} />
+            <Text style={styles.sectionTitle}>Temel Bilgiler</Text>
+
+            {/* Name (read-only) */}
+            <View style={styles.infoRow}>
+              <View style={styles.infoIconCircle}>
+                <Ionicons name="person-outline" size={18} color={colors.text} />
               </View>
-            ) : (
-              <View style={styles.promptSlots}>
-                {prompts.map((prompt, index) => {
-                  if (prompt !== null && prompt.answer.length > 0) {
-                    return (
-                      <View key={`prompt-${index}`} style={styles.promptSlotWrapper}>
-                        <PromptCard
-                          question={prompt.question}
-                          answer={prompt.answer}
-                          showEditIcon
-                          onEdit={() => handleEditPrompt(index)}
-                        />
-                        <TouchableOpacity
-                          style={styles.promptDeleteButton}
-                          onPress={() => handleDeletePrompt(index)}
-                          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                          activeOpacity={0.7}
-                        >
-                          <Text style={styles.promptDeleteText}>Sil</Text>
-                        </TouchableOpacity>
-                      </View>
-                    );
-                  }
-                  return (
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Isim</Text>
+                <Text style={styles.infoValue}>{profile.firstName || '-'}</Text>
+              </View>
+              <View style={styles.readOnlyTag}>
+                <Text style={styles.readOnlyTagText}>Degistirilemez</Text>
+              </View>
+            </View>
+
+            {/* Age (read-only, from birthdate) */}
+            <View style={styles.infoRow}>
+              <View style={styles.infoIconCircle}>
+                <Ionicons name="calendar-outline" size={18} color={colors.text} />
+              </View>
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Yas</Text>
+                <Text style={styles.infoValue}>{age > 0 ? `${age}` : '-'}</Text>
+              </View>
+              <View style={styles.readOnlyTag}>
+                <Text style={styles.readOnlyTagText}>Degistirilemez</Text>
+              </View>
+            </View>
+
+            {/* City (editable picker) */}
+            <TouchableOpacity
+              style={styles.infoRow}
+              onPress={() => setShowCityPicker(!showCityPicker)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.infoIconCircle}>
+                <Ionicons name="location-outline" size={18} color={colors.text} />
+              </View>
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Sehir</Text>
+                <Text style={[styles.infoValue, !city && styles.infoValuePlaceholder]}>
+                  {city || 'Sehir sec'}
+                </Text>
+              </View>
+              <Ionicons
+                name={showCityPicker ? 'chevron-up' : 'chevron-down'}
+                size={18}
+                color={colors.textTertiary}
+              />
+            </TouchableOpacity>
+
+            {/* City picker dropdown */}
+            {showCityPicker && (
+              <View style={styles.pickerDropdown}>
+                <ScrollView
+                  style={styles.pickerScroll}
+                  nestedScrollEnabled
+                  showsVerticalScrollIndicator={false}
+                >
+                  {TURKISH_CITIES.map((c) => (
                     <TouchableOpacity
-                      key={`prompt-empty-${index}`}
-                      style={styles.promptEmptySlot}
-                      onPress={() => handleOpenPromptPicker(index)}
+                      key={c}
+                      style={[
+                        styles.pickerItem,
+                        city === c && styles.pickerItemSelected,
+                      ]}
+                      onPress={() => {
+                        setCity(c);
+                        setShowCityPicker(false);
+                      }}
                       activeOpacity={0.7}
                     >
-                      <Text style={styles.promptEmptyIcon}>+</Text>
-                      <Text style={styles.promptEmptyText}>Soru Ekle</Text>
+                      <Text
+                        style={[
+                          styles.pickerItemText,
+                          city === c && styles.pickerItemTextSelected,
+                        ]}
+                      >
+                        {c}
+                      </Text>
+                      {city === c && (
+                        <Ionicons name="checkmark" size={18} color={palette.gold[500]} />
+                      )}
                     </TouchableOpacity>
-                  );
-                })}
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+
+            {/* Height (editable) */}
+            <TouchableOpacity
+              style={styles.infoRow}
+              onPress={() => setShowHeightPicker(!showHeightPicker)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.infoIconCircle}>
+                <Ionicons name="resize-outline" size={18} color={colors.text} />
+              </View>
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Boy</Text>
+                <Text style={[styles.infoValue, !height && styles.infoValuePlaceholder]}>
+                  {height ? `${height} cm` : 'Boy sec'}
+                </Text>
+              </View>
+              <Ionicons
+                name={showHeightPicker ? 'chevron-up' : 'chevron-down'}
+                size={18}
+                color={colors.textTertiary}
+              />
+            </TouchableOpacity>
+
+            {/* Height picker dropdown */}
+            {showHeightPicker && (
+              <View style={styles.pickerDropdown}>
+                <ScrollView
+                  style={styles.pickerScroll}
+                  nestedScrollEnabled
+                  showsVerticalScrollIndicator={false}
+                >
+                  {HEIGHT_VALUES.map((h) => (
+                    <TouchableOpacity
+                      key={h}
+                      style={[
+                        styles.pickerItem,
+                        height === h && styles.pickerItemSelected,
+                      ]}
+                      onPress={() => {
+                        setHeight(h);
+                        setShowHeightPicker(false);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={[
+                          styles.pickerItemText,
+                          height === h && styles.pickerItemTextSelected,
+                        ]}
+                      >
+                        {h} cm
+                      </Text>
+                      {height === h && (
+                        <Ionicons name="checkmark" size={18} color={palette.gold[500]} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
               </View>
             )}
           </View>
 
-          {/* Prompt Picker Sheet */}
-          <PromptPickerSheet
-            visible={isPromptPickerVisible}
-            onSelect={handleSelectPrompt}
-            onClose={() => setIsPromptPickerVisible(false)}
-            usedPromptIds={usedPromptIds}
-          />
-
-          {/* Edit Prompt Answer Modal */}
-          <Modal
-            transparent
-            visible={isEditPromptModalVisible}
-            animationType="fade"
-            statusBarTranslucent
-            onRequestClose={handleCancelEditPrompt}
-          >
-            <View style={styles.editPromptOverlay}>
-              <View style={styles.editPromptSheet}>
-                <Text style={styles.editPromptTitle}>
-                  {editingPromptIndex !== null && prompts[editingPromptIndex]
-                    ? prompts[editingPromptIndex]?.question
-                    : ''}
-                </Text>
-                <TextInput
-                  style={styles.editPromptInput}
-                  value={editingPromptAnswer}
-                  onChangeText={(text) => {
-                    if (text.length <= MAX_PROMPT_ANSWER_LENGTH) {
-                      setEditingPromptAnswer(text);
-                    }
-                  }}
-                  placeholder="Cevabini yaz..."
-                  placeholderTextColor={colors.textTertiary}
-                  multiline
-                  textAlignVertical="top"
-                  maxLength={MAX_PROMPT_ANSWER_LENGTH}
-                  autoFocus
-                />
-                <Text style={styles.editPromptCharCount}>
-                  {editingPromptAnswer.length}/{MAX_PROMPT_ANSWER_LENGTH}
-                </Text>
-                <View style={styles.editPromptActions}>
-                  <TouchableOpacity
-                    style={styles.editPromptCancelButton}
-                    onPress={handleCancelEditPrompt}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.editPromptCancelText}>İptal</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.editPromptSaveButton,
-                      editingPromptAnswer.trim().length === 0 && styles.editPromptSaveDisabled,
-                    ]}
-                    onPress={handleSavePromptAnswer}
-                    disabled={editingPromptAnswer.trim().length === 0}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.editPromptSaveText}>Kaydet</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </Modal>
-
-          {/* Gender Chips */}
+          {/* ── Ilgi Alanlari ─────────────────────────────────────────── */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Cinsiyet</Text>
-            <View style={styles.chipRow}>
-              {GENDER_CHIPS.map((chip) => {
-                const isSelected = gender === chip.value;
-                return (
-                  <TouchableOpacity
-                    key={chip.value}
-                    style={[styles.chip, isSelected && styles.chipActive]}
-                    onPress={() => setGender(chip.value)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={[styles.chipLabel, isSelected && styles.chipLabelActive]}>
-                      {chip.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          {/* Intention Tag Selector */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Ne Arıyorsun?</Text>
-            <View style={styles.intentionOptions}>
-              {INTENTION_TAGS.map((tag) => {
-                const isSelected = selectedIntention === tag.id;
-                return (
-                  <TouchableOpacity
-                    key={tag.id}
-                    style={[styles.intentionOption, isSelected && styles.intentionOptionActive]}
-                    onPress={() => setSelectedIntention(tag.id)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.intentionContent}>
-                      <View
-                        style={[
-                          styles.intentionRadio,
-                          isSelected && styles.intentionRadioActive,
-                        ]}
-                      >
-                        {isSelected && <View style={styles.intentionRadioDot} />}
-                      </View>
-                      <Text
-                        style={[
-                          styles.intentionLabel,
-                          isSelected && styles.intentionLabelActive,
-                        ]}
-                      >
-                        {tag.label}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          {/* City Input */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Şehir</Text>
-            <TextInput
-              style={styles.textInput}
-              value={city}
-              onChangeText={setCity}
-              placeholder="Şehrini gir"
-              placeholderTextColor={colors.textTertiary}
-              maxLength={100}
-              autoCapitalize="words"
-              returnKeyType="done"
-            />
-          </View>
-
-          {/* Birth Date (non-editable) */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Doğum Tarihi</Text>
-            <View style={styles.readOnlyField}>
-              <Text style={styles.readOnlyText}>
-                {formatBirthDate(profile.birthDate)}
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Ilgi Alanlari</Text>
+              <Text style={styles.charCounter}>
+                {selectedInterests.length}/{MAX_INTERESTS}
               </Text>
-              <Text style={styles.readOnlyHint}>Doğum tarihi değiştirilemez</Text>
             </View>
+            <View style={styles.interestGrid}>
+              {INTEREST_OPTIONS.map((option) => {
+                const isSelected = selectedInterests.includes(option.id);
+                return (
+                  <TouchableOpacity
+                    key={option.id}
+                    style={[
+                      styles.interestChip,
+                      isSelected && styles.interestChipSelected,
+                    ]}
+                    onPress={() => toggleInterest(option.id)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.interestEmoji}>{option.emoji}</Text>
+                    <Text
+                      style={[
+                        styles.interestLabel,
+                        isSelected && styles.interestLabelSelected,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                    {isSelected && (
+                      <Ionicons name="close-circle" size={16} color={palette.gold[600]} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* ── Yasam Tarzi ───────────────────────────────────────────── */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Yasam Tarzi</Text>
+
+            {/* Smoking */}
+            <TouchableOpacity
+              style={styles.lifestyleRow}
+              onPress={() => cycleOption(SMOKING_OPTIONS, smoking, setSmoking)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.infoIconCircle, { backgroundColor: 'rgba(239, 68, 68, 0.10)' }]}>
+                <Ionicons name="flame-outline" size={18} color={colors.text} />
+              </View>
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Sigara</Text>
+                <Text style={[styles.infoValue, !smoking && styles.infoValuePlaceholder]}>
+                  {smoking ? getOptionLabel(SMOKING_OPTIONS, smoking) : 'Sec'}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+            </TouchableOpacity>
+
+            {/* Exercise */}
+            <TouchableOpacity
+              style={styles.lifestyleRow}
+              onPress={() => cycleOption(EXERCISE_OPTIONS, exercise, setExercise)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.infoIconCircle, { backgroundColor: 'rgba(59, 130, 246, 0.10)' }]}>
+                <Ionicons name="fitness-outline" size={18} color={colors.text} />
+              </View>
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Spor</Text>
+                <Text style={[styles.infoValue, !exercise && styles.infoValuePlaceholder]}>
+                  {exercise ? getOptionLabel(EXERCISE_OPTIONS, exercise) : 'Sec'}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+            </TouchableOpacity>
+
+            {/* Children */}
+            <TouchableOpacity
+              style={[styles.lifestyleRow, styles.lifestyleRowLast]}
+              onPress={() => cycleOption(CHILDREN_OPTIONS, children, setChildren)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.infoIconCircle, { backgroundColor: 'rgba(16, 185, 129, 0.10)' }]}>
+                <Ionicons name="people-outline" size={18} color={colors.text} />
+              </View>
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Cocuk</Text>
+                <Text style={[styles.infoValue, !children && styles.infoValuePlaceholder]}>
+                  {children ? getOptionLabel(CHILDREN_OPTIONS, children) : 'Sec'}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+            </TouchableOpacity>
+          </View>
+
+          {/* ── Ses Tanitimi ──────────────────────────────────────────── */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Ses Tanitimi</Text>
+            <Text style={styles.sectionHint}>
+              Sesini kaydet ve profilini daha kisisel hale getir.
+            </Text>
+            <TouchableOpacity
+              style={styles.voiceButton}
+              onPress={() => {
+                Alert.alert(
+                  'Yakin Zamanda',
+                  'Ses tanitimi ozelligi yakin zamanda aktif olacak.',
+                );
+              }}
+              activeOpacity={0.7}
+              accessibilityLabel="Ses tanitimi kaydet"
+              accessibilityRole="button"
+            >
+              <View style={styles.voiceIconCircle}>
+                <Ionicons name="mic-outline" size={22} color={palette.gold[600]} />
+              </View>
+              <View style={styles.voiceContent}>
+                <Text style={styles.voiceTitle}>Ses Kaydi Ekle</Text>
+                <Text style={styles.voiceSubtitle}>30 saniyeye kadar sesli tanitim</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+            </TouchableOpacity>
           </View>
         </ScrollView>
+
+        {/* ── Save Button (Gold Gradient, fixed bottom) ───────────────── */}
+        <View style={[styles.saveContainer, { paddingBottom: insets.bottom + spacing.md }]}>
+          <TouchableOpacity
+            onPress={handleSave}
+            disabled={isSaving || !hasChanges}
+            activeOpacity={0.85}
+            style={[
+              styles.saveButtonOuter,
+              (!hasChanges && !isSaving) && styles.saveButtonDisabled,
+            ]}
+            accessibilityLabel="Degisiklikleri kaydet"
+            accessibilityRole="button"
+          >
+            <LinearGradient
+              colors={
+                hasChanges
+                  ? [palette.gold[400], palette.gold[600]] as [string, string, ...string[]]
+                  : [palette.gray[300], palette.gray[400]] as [string, string, ...string[]]
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.saveButtonGradient}
+            >
+              {isSaving ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <>
+                  <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+                  <Text style={styles.saveButtonText}>Kaydet</Text>
+                </>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
 };
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── Styles ──────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
 
 const styles = StyleSheet.create({
   flex: {
@@ -756,387 +764,386 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+
+  // ── Header ──
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    height: 56,
     borderBottomWidth: 1,
     borderBottomColor: colors.divider,
-    height: layout.headerHeight,
   },
-  cancelText: {
-    ...typography.body,
-    color: colors.textSecondary,
+  headerBackButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerTitle: {
-    ...typography.bodyLarge,
+    fontSize: 18,
+    fontWeight: fontWeights.semibold,
     color: colors.text,
-    fontWeight: '600',
+    includeFontPadding: false,
   },
-  saveText: {
-    ...typography.body,
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  saveTextDisabled: {
-    opacity: 0.4,
-  },
-  scrollContent: {
-    paddingBottom: spacing.xxl,
+  headerSpacer: {
+    width: 40,
   },
 
-  // Sections
+  // ── ScrollView ──
+  scrollContent: {
+    paddingTop: spacing.sm,
+  },
+
+  // ── Sections ──
   section: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingHorizontal: GRID_PADDING,
+    paddingVertical: spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: colors.divider,
   },
-  sectionHeader: {
+  sectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.sm,
   },
   sectionTitle: {
-    ...typography.bodyLarge,
+    fontSize: 18,
+    fontWeight: fontWeights.bold,
     color: colors.text,
-    fontWeight: '600',
+    letterSpacing: -0.2,
     marginBottom: spacing.sm,
+    includeFontPadding: false,
   },
   sectionHint: {
-    ...typography.caption,
+    fontSize: 13,
+    fontWeight: fontWeights.regular,
     color: colors.textTertiary,
     marginBottom: spacing.md,
-  },
-  photoCount: {
-    ...typography.caption,
-    color: colors.textTertiary,
+    lineHeight: 18,
+    includeFontPadding: false,
   },
 
-  // Photo Gallery (horizontal)
-  galleryContainer: {
-    paddingRight: spacing.lg,
-    gap: spacing.sm,
+  // ── Photo Grid (3x2) ──
+  photoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: GRID_GAP,
   },
-  galleryCell: {
-    width: GALLERY_PHOTO_WIDTH,
-    height: GALLERY_PHOTO_HEIGHT,
-    borderRadius: borderRadius.md,
-    overflow: 'hidden',
+  photoCell: {
+    width: PHOTO_CELL_WIDTH,
+    height: PHOTO_CELL_HEIGHT,
+    borderRadius: borderRadius.lg,
     backgroundColor: colors.surface,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: colors.surfaceBorder,
     borderStyle: 'dashed',
+    overflow: 'hidden',
   },
-  galleryCellFilled: {
+  photoCellMain: {
+    borderColor: palette.gold[500],
+    borderWidth: 2.5,
     borderStyle: 'solid',
-    borderColor: colors.primary + '40',
   },
-  galleryCellPrimary: {
-    borderColor: colors.primary,
-    borderWidth: 2,
-  },
-  galleryCellEmpty: {
+  photoContent: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: spacing.xs,
   },
-  galleryImage: {
+  photoImage: {
     width: '100%',
     height: '100%',
   },
-  primaryBadge: {
+  photoRemoveButton: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  photoMainBadge: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: colors.primary + 'DD',
-    paddingVertical: 3,
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 3,
+    backgroundColor: palette.gold[500] + 'DD',
+    paddingVertical: 3,
   },
-  primaryBadgeText: {
-    ...typography.captionSmall,
-    color: colors.text,
-    fontWeight: '700',
+  photoMainBadgeText: {
+    fontSize: 10,
+    fontWeight: fontWeights.bold,
+    color: '#FFFFFF',
+    includeFontPadding: false,
   },
-  orderBadge: {
+  photoOrderBadge: {
     position: 'absolute',
-    top: 4,
-    left: 4,
+    top: 6,
+    left: 6,
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  orderBadgeText: {
+  photoOrderText: {
     fontSize: 10,
-    fontWeight: '700',
-    color: '#FFF',
+    fontWeight: fontWeights.bold,
+    color: '#FFFFFF',
+    includeFontPadding: false,
   },
-  removeButton: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: colors.error,
+  photoEmptyContent: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 4,
   },
-  addLabel: {
-    ...typography.captionSmall,
+  photoUploadingText: {
+    fontSize: 10,
+    fontWeight: fontWeights.medium,
     color: colors.textTertiary,
+    includeFontPadding: false,
   },
 
-  // Text Input
-  textInput: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    ...typography.body,
-    color: colors.text,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-    height: layout.inputHeight,
-  },
-
-  // Bio
-  charCount: {
-    ...typography.caption,
+  // ── Bio ──
+  charCounter: {
+    fontSize: 12,
+    fontWeight: fontWeights.regular,
     color: colors.textTertiary,
+    includeFontPadding: false,
   },
-  charCountLimit: {
-    color: colors.error,
+  charCounterLimit: {
+    color: palette.error,
   },
   bioInput: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.md,
-    ...typography.body,
+    fontSize: 15,
+    fontWeight: fontWeights.regular,
     color: colors.text,
     minHeight: 120,
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
-  },
-
-  // Gender Chips
-  chipRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  chip: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: colors.surfaceBorder,
-  },
-  chipActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary + '10',
-  },
-  chipLabel: {
-    ...typography.body,
-    color: colors.text,
-  },
-  chipLabelActive: {
-    fontWeight: '600',
-    color: colors.primary,
-  },
-
-  // Intention Tags
-  intentionOptions: {
-    gap: spacing.sm,
-  },
-  intentionOption: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    borderWidth: 2,
-    borderColor: colors.surfaceBorder,
-  },
-  intentionOptionActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary + '10',
-  },
-  intentionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  intentionRadio: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: colors.surfaceBorder,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  intentionRadioActive: {
-    borderColor: colors.primary,
-  },
-  intentionRadioDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.primary,
-  },
-  intentionLabel: {
-    ...typography.body,
-    color: colors.text,
-  },
-  intentionLabelActive: {
-    fontWeight: '600',
-    color: colors.primary,
-  },
-
-  // Read-only field (birth date)
-  readOnlyField: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-    opacity: 0.7,
-  },
-  readOnlyText: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-  readOnlyHint: {
-    ...typography.caption,
-    color: colors.textTertiary,
-    marginTop: spacing.xs,
-  },
-
-  // Profile Prompts
-  promptsLoading: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.xl,
-  },
-  promptSlots: {
-    gap: spacing.sm,
-  },
-  promptSlotWrapper: {
-    position: 'relative',
-  },
-  promptDeleteButton: {
-    position: 'absolute',
-    bottom: spacing.sm,
-    right: spacing.sm,
-  },
-  promptDeleteText: {
-    ...typography.captionSmall,
-    color: colors.error,
-    fontWeight: '600',
-  },
-  promptEmptySlot: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.lg,
-    borderWidth: 2,
-    borderColor: colors.surfaceBorder,
-    borderStyle: 'dashed',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.sm,
-    minHeight: 64,
-  },
-  promptEmptyIcon: {
-    fontSize: 20,
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  promptEmptyText: {
-    ...typography.body,
-    color: colors.primary,
-    fontWeight: '500',
-  },
-
-  // Edit Prompt Modal
-  editPromptOverlay: {
-    flex: 1,
-    backgroundColor: colors.overlay,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.lg,
-  },
-  editPromptSheet: {
-    backgroundColor: colors.background,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    width: '100%',
-    maxWidth: 400,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-  },
-  editPromptTitle: {
-    ...typography.bodyLarge,
-    color: colors.textSecondary,
-    fontStyle: 'italic',
-    marginBottom: spacing.md,
-  },
-  editPromptInput: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    ...typography.body,
-    color: colors.text,
-    minHeight: 100,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
+    includeFontPadding: false,
     textAlignVertical: 'top',
   },
-  editPromptCharCount: {
-    ...typography.caption,
-    color: colors.textTertiary,
-    textAlign: 'right',
-    marginTop: spacing.xs,
-  },
-  editPromptActions: {
+
+  // ── Info rows ──
+  infoRow: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: spacing.sm,
-    marginTop: spacing.md,
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surfaceBorder + '80',
   },
-  editPromptCancelButton: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
+  infoIconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(139, 92, 246, 0.10)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  infoContent: {
+    flex: 1,
+  },
+  infoLabel: {
+    fontSize: 11,
+    fontWeight: fontWeights.medium,
+    color: colors.textTertiary,
+    marginBottom: 2,
+    includeFontPadding: false,
+  },
+  infoValue: {
+    fontSize: 15,
+    fontWeight: fontWeights.medium,
+    color: colors.text,
+    includeFontPadding: false,
+  },
+  infoValuePlaceholder: {
+    color: colors.textTertiary,
+    fontStyle: 'italic',
+  },
+  readOnlyTag: {
+    backgroundColor: colors.surfaceBorder,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  readOnlyTagText: {
+    fontSize: 10,
+    fontWeight: fontWeights.medium,
+    color: colors.textTertiary,
+    includeFontPadding: false,
+  },
+
+  // ── Picker dropdown ──
+  pickerDropdown: {
     backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
+    marginTop: spacing.sm,
+    overflow: 'hidden',
+    ...shadows.small,
   },
-  editPromptCancelText: {
-    ...typography.button,
-    color: colors.textSecondary,
+  pickerScroll: {
+    maxHeight: 200,
   },
-  editPromptSaveButton: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.primary,
+  pickerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surfaceBorder + '60',
   },
-  editPromptSaveDisabled: {
-    opacity: 0.4,
+  pickerItemSelected: {
+    backgroundColor: palette.gold[500] + '10',
   },
-  editPromptSaveText: {
-    ...typography.button,
+  pickerItemText: {
+    fontSize: 15,
+    fontWeight: fontWeights.regular,
     color: colors.text,
+    includeFontPadding: false,
+  },
+  pickerItemTextSelected: {
+    fontWeight: fontWeights.semibold,
+    color: palette.gold[600],
+  },
+
+  // ── Interests ──
+  interestGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  interestChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1.5,
+    borderColor: colors.surfaceBorder,
+  },
+  interestChipSelected: {
+    borderColor: palette.gold[500],
+    backgroundColor: palette.gold[500] + '10',
+  },
+  interestEmoji: {
+    fontSize: 16,
+    includeFontPadding: false,
+  },
+  interestLabel: {
+    fontSize: 13,
+    fontWeight: fontWeights.medium,
+    color: colors.text,
+    includeFontPadding: false,
+  },
+  interestLabelSelected: {
+    fontWeight: fontWeights.semibold,
+    color: palette.gold[700],
+  },
+
+  // ── Lifestyle rows ──
+  lifestyleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surfaceBorder + '80',
+  },
+  lifestyleRowLast: {
+    borderBottomWidth: 0,
+  },
+
+  // ── Voice intro ──
+  voiceButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    ...shadows.small,
+  },
+  voiceIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: palette.gold[500] + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  voiceContent: {
+    flex: 1,
+  },
+  voiceTitle: {
+    fontSize: 15,
+    fontWeight: fontWeights.semibold,
+    color: colors.text,
+    marginBottom: 2,
+    includeFontPadding: false,
+  },
+  voiceSubtitle: {
+    fontSize: 12,
+    fontWeight: fontWeights.regular,
+    color: colors.textSecondary,
+    includeFontPadding: false,
+  },
+
+  // ── Save button (fixed bottom) ──
+  saveContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: GRID_PADDING,
+    paddingTop: spacing.md,
+    backgroundColor: colors.background,
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
+  },
+  saveButtonOuter: {
+    borderRadius: borderRadius.md,
+    overflow: 'hidden',
+    ...shadows.medium,
+    shadowColor: palette.gold[500],
+    shadowOpacity: 0.3,
+  },
+  saveButtonDisabled: {
+    opacity: 0.6,
+    shadowOpacity: 0,
+  },
+  saveButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+  },
+  saveButtonText: {
+    fontSize: 16,
+    fontWeight: fontWeights.bold,
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
+    includeFontPadding: false,
   },
 });

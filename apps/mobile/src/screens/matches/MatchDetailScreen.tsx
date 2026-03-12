@@ -487,8 +487,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
     marginTop: 2,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    includeFontPadding: false,
   },
   statDivider: {
     width: 1,

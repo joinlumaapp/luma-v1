@@ -165,7 +165,7 @@ export const PaidMessageModal: React.FC<PaidMessageModalProps> = ({
 
               {/* Message preview */}
               <View style={styles.messagePreview}>
-                <Text style={styles.messagePreviewLabel}>Mesajın:</Text>
+                <Text style={styles.messagePreviewLabel}>MESAJIN:</Text>
                 <Text style={styles.messagePreviewText} numberOfLines={3}>
                   {message}
                 </Text>
@@ -334,8 +334,7 @@ const styles = StyleSheet.create({
   messagePreviewLabel: {
     ...typography.captionSmall,
     color: colors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    includeFontPadding: false,
     marginBottom: spacing.xs,
   },
   messagePreviewText: {

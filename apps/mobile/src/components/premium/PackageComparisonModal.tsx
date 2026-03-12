@@ -51,10 +51,10 @@ const TIER_LABELS: Record<PackageTier, string> = {
 };
 
 const TIER_PRICES: Record<PackageTier, string> = {
-  free: '0 TL',
-  gold: '349,99 TL/ay',
-  pro: '599,99 TL/ay',
-  reserved: '1.299,99 TL/ay',
+  free: '0₺',
+  gold: '349,99₺/ay',
+  pro: '599,99₺/ay',
+  reserved: '1.299,99₺/ay',
 };
 
 // Tier order for hierarchy checks
@@ -230,7 +230,7 @@ export const PackageComparisonModal: React.FC<PackageComparisonModalProps> = ({
             {/* Column headers — tier names + prices */}
             <View style={styles.tableHeaderRow}>
               <View style={styles.featureLabelCell}>
-                <Text style={styles.featureLabelHeader}>Özellik</Text>
+                <Text style={styles.featureLabelHeader}>ÖZELLİK</Text>
               </View>
               {TIER_ORDER.map((tier) => {
                 const isRecommended = tier === RECOMMENDED_TIER;
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.textTertiary,
     fontWeight: '600',
-    textTransform: 'uppercase',
+    includeFontPadding: false,
   },
   tierHeaderCell: {
     flex: 1,

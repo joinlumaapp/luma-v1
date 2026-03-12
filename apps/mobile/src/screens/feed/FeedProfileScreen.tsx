@@ -154,7 +154,7 @@ const DetailRow: React.FC<{ icon: keyof typeof Ionicons.glyphMap; iconBg: string
       <Ionicons name={icon} size={18} color={colors.text} />
     </View>
     <View style={styles.aboutRowContent}>
-      <Text style={styles.aboutRowLabel}>{label}</Text>
+      <Text style={styles.aboutRowLabel}>{label.toUpperCase()}</Text>
       <Text style={[styles.aboutRowValue, value === '***' && styles.aboutRowValueLocked]}>{value}</Text>
     </View>
   </View>
@@ -560,8 +560,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
     marginTop: 2,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    includeFontPadding: false,
   },
   statDivider: {
     width: 1,
@@ -652,8 +651,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
     marginBottom: 2,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    includeFontPadding: false,
   },
   aboutRowValue: {
     fontSize: 15,

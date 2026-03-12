@@ -1,12 +1,16 @@
-// CoinBalance — inline gold coin emoji + balance display
+// CoinBalance — premium jeton pill: cream bg, matte gold border, black text
+// Uses Ionicons instead of emoji for predictable sizing on Android
 // Tappable — navigates to MembershipPlans screen
 
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, View, StyleSheet, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { useCoinStore } from '../../stores/coinStore';
 import { fontWeights } from '../../theme/typography';
-import { spacing, borderRadius, shadows } from '../../theme/spacing';
+
+const TEXT_BLACK = '#1A1A1A';
+const GOLD = '#D4AF37';
 
 interface CoinBalanceProps {
   size?: 'small' | 'medium';
@@ -21,13 +25,12 @@ export const CoinBalance: React.FC<CoinBalanceProps> = ({
   const balance = useCoinStore((state) => state.balance);
 
   const isSmall = size === 'small';
-  const fontSize = isSmall ? 14 : 18;
+  const iconSize = isSmall ? 16 : 20;
 
   const handlePress = () => {
     if (onPress) {
       onPress();
     } else {
-      // Navigate to MembershipPlans (Jetonlar tab is integrated there)
       (navigation as { navigate: (screen: string, params?: Record<string, unknown>) => void })
         .navigate('MembershipPlans');
     }
@@ -35,48 +38,75 @@ export const CoinBalance: React.FC<CoinBalanceProps> = ({
 
   return (
     <TouchableOpacity
-      style={[
-        styles.container,
-        isSmall ? styles.containerSmall : styles.containerMedium,
-      ]}
       onPress={handlePress}
       activeOpacity={0.8}
       accessibilityLabel={`${balance} Jeton bakiyesi`}
       accessibilityRole="button"
+      style={styles.touchable}
     >
-      {/* Gold coin emoji */}
-      <Text style={{ fontSize: isSmall ? 14 : 20 }}>{'\uD83E\uDE99'}</Text>
-
-      {/* Balance number */}
-      <Text style={[styles.balanceText, { fontSize }]}>
-        {balance.toLocaleString('tr-TR')}
-      </Text>
+      <View style={[styles.pill, isSmall ? styles.pillSmall : styles.pillMedium]}>
+        <Ionicons name="wallet" size={iconSize} color={GOLD} />
+        <Text
+          style={[styles.balanceText, isSmall ? styles.balanceSmall : styles.balanceMedium]}
+          allowFontScaling={false}
+          numberOfLines={1}
+        >
+          {balance.toLocaleString('tr-TR')}
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  touchable: {
+    flexShrink: 0,
+  },
+  pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
-    borderWidth: 1,
-    borderColor: 'rgba(184, 134, 11, 0.2)',
-    gap: spacing.xs,
+    justifyContent: 'center',
+    backgroundColor: '#FFF8E7',
+    borderWidth: 1.5,
+    borderColor: GOLD,
+    ...Platform.select({
+      ios: {
+        shadowColor: GOLD,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.18,
+        shadowRadius: 6,
+      },
+      android: {},
+    }),
   },
-  containerSmall: {
-    paddingHorizontal: spacing.md + 6,
-    paddingVertical: spacing.xs + 2,
-    borderRadius: borderRadius.full,
+  pillSmall: {
+    height: 36,
+    paddingLeft: 14,
+    paddingRight: 26,
+    borderRadius: 18,
+    gap: 6,
+    minWidth: 95,
   },
-  containerMedium: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.lg,
-    ...shadows.small,
+  pillMedium: {
+    height: 44,
+    paddingLeft: 18,
+    paddingRight: 30,
+    borderRadius: 22,
+    gap: 8,
   },
   balanceText: {
-    color: '#B8860B',
+    color: TEXT_BLACK,
     fontWeight: fontWeights.bold,
+    includeFontPadding: false,
+  },
+  balanceSmall: {
+    fontSize: 14,
+    lineHeight: 20,
+    paddingRight: 4,
+  },
+  balanceMedium: {
+    fontSize: 18,
+    lineHeight: 24,
+    paddingRight: 4,
   },
 });

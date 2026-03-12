@@ -206,7 +206,7 @@ function DateWheelPicker({ selectedDate, onDateChange }: DateWheelPickerProps) {
   return (
     <View style={pickerStyles.container}>
       {/* Day selector — horizontal scroll */}
-      <Text style={pickerStyles.label}>Tarih</Text>
+      <Text style={pickerStyles.label}>TARİH</Text>
       <ScrollView
         ref={dayScrollRef}
         horizontal
@@ -233,7 +233,7 @@ function DateWheelPicker({ selectedDate, onDateChange }: DateWheelPickerProps) {
       </ScrollView>
 
       {/* Time selector — hour + minute */}
-      <Text style={[pickerStyles.label, { marginTop: spacing.md }]}>Saat</Text>
+      <Text style={[pickerStyles.label, { marginTop: spacing.md }]}>SAAT</Text>
       <View style={pickerStyles.timeRow}>
         {/* Hours */}
         <ScrollView
@@ -296,8 +296,7 @@ const pickerStyles = StyleSheet.create({
     color: colors.textSecondary,
     fontWeight: '600',
     marginBottom: spacing.sm,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    includeFontPadding: false,
   },
   dayRow: {
     gap: spacing.sm,
@@ -540,7 +539,7 @@ const SuggestionRow: React.FC<{
   <View style={styles.suggestionsContainer}>
     <View style={styles.suggestionsHeader}>
       <Ionicons name="sparkles" size={14} color={palette.gold[400]} />
-      <Text style={styles.suggestionsTitle}>Trendy Mekanlar</Text>
+      <Text style={styles.suggestionsTitle}>TRENDY MEKANLAR</Text>
     </View>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.suggestionsRow}>
       {places.map((place) => {
@@ -814,7 +813,7 @@ export const DatePlannerScreen: React.FC = () => {
           keyboardShouldPersistTaps="handled"
         >
           {/* Activity presets */}
-          <Text style={styles.sectionLabel}>Aktivite Seç</Text>
+          <Text style={styles.sectionLabel}>AKTİVİTE SEÇ</Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -1039,8 +1038,7 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textSecondary,
     fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    includeFontPadding: false,
     marginBottom: spacing.sm,
   },
 
@@ -1088,8 +1086,7 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: palette.gold[400],
     fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    includeFontPadding: false,
   },
   suggestionsRow: {
     gap: spacing.sm,

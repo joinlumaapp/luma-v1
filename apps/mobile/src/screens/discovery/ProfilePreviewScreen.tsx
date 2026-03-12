@@ -492,7 +492,7 @@ export const ProfilePreviewScreen: React.FC = () => {
   if (compatReasons.length > 0) {
     infoSections.push(
       <View key="compat-reasons" style={styles.seamlessSection}>
-        <Text style={styles.sectionLabel}>Uyum Nedenleri</Text>
+        <Text style={styles.sectionLabel}>UYUM NEDENLERİ</Text>
         {compatReasons.map((reason, idx) => (
           <View key={idx} style={styles.reasonRow}>
             <View style={styles.reasonAccent} />
@@ -507,7 +507,7 @@ export const ProfilePreviewScreen: React.FC = () => {
   if (profile.interestTags && profile.interestTags.length > 0) {
     infoSections.push(
       <View key="interests" style={styles.seamlessSection}>
-        <Text style={styles.sectionLabel}>İlgi Alanları</Text>
+        <Text style={styles.sectionLabel}>İLGİ ALANLARI</Text>
         <View style={styles.tagsRow}>
           {profile.interestTags.map((tagId) => (
             <View key={tagId} style={styles.tagChip}>
@@ -535,7 +535,7 @@ export const ProfilePreviewScreen: React.FC = () => {
   if (profile.earnedBadges && profile.earnedBadges.length > 0) {
     infoSections.push(
       <View key="badges" style={styles.seamlessSection}>
-        <Text style={styles.sectionLabel}>Rozetleri</Text>
+        <Text style={styles.sectionLabel}>ROZETLERİ</Text>
         <BadgeShowcase badgeKeys={profile.earnedBadges} size={32} />
       </View>,
     );
@@ -545,7 +545,7 @@ export const ProfilePreviewScreen: React.FC = () => {
   if (profile.voiceIntroUrl) {
     infoSections.push(
       <View key="voice" style={styles.seamlessSection}>
-        <Text style={styles.sectionLabel}>Sesini Dinle</Text>
+        <Text style={styles.sectionLabel}>SESİNİ DİNLE</Text>
         <VoiceIntroPlayer
           voiceIntroUrl={profile.voiceIntroUrl}
           userName={profile.name}
@@ -883,8 +883,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: colors.textTertiary,
     marginTop: 2,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    includeFontPadding: false,
   },
   statDivider: {
     width: 1,
@@ -901,8 +900,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: colors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    includeFontPadding: false,
     marginBottom: spacing.md,
   },
 

@@ -14,10 +14,10 @@ export interface CoinPack {
 
 // Pricing aligned with GOLD_PACKS_TRY in @luma/shared/types/package.ts
 export const COIN_PACKS: CoinPack[] = [
-  { id: 'gold_50', coins: 50, price: '₺29,99' },
-  { id: 'gold_150', coins: 150, price: '₺79,99' },
-  { id: 'gold_500', coins: 500, price: '₺199,99', bestValue: true },
-  { id: 'gold_1000', coins: 1000, price: '₺349,99' },
+  { id: 'gold_50', coins: 50, price: '29,99₺' },
+  { id: 'gold_150', coins: 150, price: '79,99₺' },
+  { id: 'gold_500', coins: 500, price: '199,99₺', bestValue: true },
+  { id: 'gold_1000', coins: 1000, price: '349,99₺' },
 ];
 
 export const DM_COST = 50;

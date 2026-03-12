@@ -45,7 +45,7 @@ import { ChatScreen } from '../screens/chat/ChatScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { EditProfileScreen } from '../screens/profile/EditProfileScreen';
 import { SettingsScreen } from '../screens/profile/SettingsScreen';
-import { BadgesScreen } from '../screens/profile/BadgesScreen';
+import { BadgesScreen } from '../screens/badges/BadgesScreen';
 import { PackagesScreen } from '../screens/profile/PackagesScreen';
 import { PlacesScreen } from '../screens/places/PlacesScreen';
 import { RelationshipScreen } from '../screens/relationship/RelationshipScreen';
@@ -54,6 +54,9 @@ import { NotificationSettingsScreen } from '../screens/settings/NotificationSett
 import { MembershipPlansScreen } from '../screens/settings/MembershipPlansScreen';
 import { PersonalitySelectionScreen } from '../screens/profile/PersonalitySelectionScreen';
 import { ProfileCoachScreen } from '../screens/profile/ProfileCoachScreen';
+import { BlockedUsersScreen } from '../screens/settings/BlockedUsersScreen';
+import { AccountDeletionScreen } from '../screens/settings/AccountDeletionScreen';
+import { PrivacyPolicyScreen } from '../screens/settings/PrivacyPolicyScreen';
 import { ReportScreen } from '../screens/moderation/ReportScreen';
 import { JetonMarketScreen } from '../screens/store/JetonMarketScreen';
 
@@ -296,6 +299,9 @@ const ProfileStackNavigator: React.FC = () => (
     <ProfileStack.Screen name="MembershipPlans" component={MembershipPlansScreen} />
     <ProfileStack.Screen name="PersonalitySelection" component={PersonalitySelectionScreen} />
     <ProfileStack.Screen name="ProfileCoach" component={ProfileCoachScreen} />
+    <ProfileStack.Screen name="BlockedUsers" component={BlockedUsersScreen} />
+    <ProfileStack.Screen name="AccountDeletion" component={AccountDeletionScreen} />
+    <ProfileStack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
   </ProfileStack.Navigator>
 );
 

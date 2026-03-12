@@ -287,7 +287,7 @@ const SupremeCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
           <Text style={cardStyles.tierSubtitle}>Elite deneyim</Text>
         </View>
         <View style={cardStyles.priceRight}>
-          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>₺599</Text>
+          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>{'599₺'}</Text>
           <Text style={cardStyles.pricePeriod}>/ay</Text>
           {/* "En Populer" badge — below price */}
           <LinearGradient
@@ -370,7 +370,7 @@ const PremiumCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
           <Text style={cardStyles.tierSubtitle}>Tam erişim</Text>
         </View>
         <View style={cardStyles.priceContainer}>
-          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>₺349</Text>
+          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>{'349₺'}</Text>
           <Text style={cardStyles.pricePeriod}>/ay</Text>
         </View>
       </View>
@@ -440,7 +440,7 @@ const FreeCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
           <Text style={cardStyles.tierSubtitle}>Temel özellikler</Text>
         </View>
         <View style={cardStyles.priceContainer}>
-          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>₺0</Text>
+          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>{'0₺'}</Text>
           <Text style={cardStyles.pricePeriod}>/ay</Text>
         </View>
       </View>
@@ -573,7 +573,7 @@ const CoinPackCard: React.FC<{
           end={{ x: 1, y: 0 }}
         >
           <Ionicons name="star" size={10} color={palette.white} />
-          <Text style={coinCardStyles.badgeText}>En İyi Değer</Text>
+          <Text style={coinCardStyles.badgeText}>EN IYI DEGER</Text>
         </LinearGradient>
       </View>
     )}
@@ -586,7 +586,7 @@ const CoinPackCard: React.FC<{
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
         >
-          <Text style={coinCardStyles.badgeText}>Popüler</Text>
+          <Text style={coinCardStyles.badgeText}>POPULER</Text>
         </LinearGradient>
       </View>
     )}
@@ -652,8 +652,7 @@ const coinCardStyles = StyleSheet.create({
     ...typography.captionSmall,
     color: '#FFFFFF',
     fontWeight: fontWeights.bold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    includeFontPadding: false,
   },
   content: {
     flexDirection: 'row',
@@ -666,6 +665,7 @@ const coinCardStyles = StyleSheet.create({
   },
   amount: {
     fontSize: 36,
+    lineHeight: 48,
     fontWeight: fontWeights.bold,
     color: GLASS.textPrimary,
   },
@@ -1073,9 +1073,10 @@ const screenStyles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingRight: spacing.md + 4,
+    paddingLeft: spacing.md,
+    paddingRight: spacing.lg,
     height: layout.headerHeight,
+    gap: spacing.sm,
   },
   backButton: {
     width: 40,
@@ -1089,7 +1090,9 @@ const screenStyles = StyleSheet.create({
     ...typography.h4,
     color: GLASS.textPrimary,
     flex: 1,
+    flexShrink: 1,
     marginLeft: spacing.sm,
+    marginRight: spacing.sm,
   },
   // ── Tab bar ──
   tabBar: {
@@ -1299,9 +1302,10 @@ const cardStyles = StyleSheet.create({
   },
   priceRight: {
     alignItems: 'flex-end',
-    paddingRight: 2,
+    paddingHorizontal: 12,
+    paddingBottom: 6,
     flexShrink: 0,
-    minWidth: 70,
+    minWidth: 100,
   },
   tierIconContainer: {
     marginRight: spacing.sm,
@@ -1319,7 +1323,8 @@ const cardStyles = StyleSheet.create({
   tierName: {
     fontSize: fontSizes.xl,
     fontWeight: fontWeights.bold,
-    lineHeight: 24,
+    lineHeight: 28,
+    paddingRight: 4,
   },
   tierSubtitle: {
     ...typography.caption,
@@ -1330,17 +1335,22 @@ const cardStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'baseline',
     flexShrink: 0,
-    paddingRight: 2,
+    paddingHorizontal: 12,
+    paddingBottom: 6,
   },
   price: {
     fontSize: fontSizes['2xl'],
     fontWeight: fontWeights.bold,
-    lineHeight: 32,
+    lineHeight: 38,
+    includeFontPadding: false,
+    paddingHorizontal: 6,
   },
   pricePeriod: {
     ...typography.caption,
     color: GLASS.textTertiary,
-    marginLeft: 2,
+    marginLeft: 4,
+    lineHeight: 20,
+    includeFontPadding: false,
   },
 
   // Current plan badge

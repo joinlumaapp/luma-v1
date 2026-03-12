@@ -130,10 +130,12 @@ const CountUpStat: React.FC<{ target: number; label: string; suffix?: string }> 
 
   return (
     <View style={styles.statItem}>
-      <Text style={styles.statValue}>
+      <Text style={styles.statValue} numberOfLines={1}>
         {displayValue}{suffix ?? ''}
       </Text>
-      <Text style={styles.statLabel}>{label}</Text>
+      <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+        {label}
+      </Text>
     </View>
   );
 };
@@ -395,6 +397,12 @@ export const ProfileScreen: React.FC = () => {
         >
           <SubscriptionBadge tier={packageTier} />
         </TouchableOpacity>
+        {packageTier === 'reserved' && (
+          <View style={styles.supremeHeaderBadge}>
+            <Ionicons name="diamond" size={12} color="#D4AF37" />
+            <Text style={styles.supremeHeaderBadgeText}>SUPREME</Text>
+          </View>
+        )}
       </View>
       <View style={styles.headerRight}>
         <CoinBalance size="small" />
@@ -451,11 +459,11 @@ export const ProfileScreen: React.FC = () => {
 
       {/* Stats row — minimalist: bold numbers, light labels */}
       <View style={styles.statsCard}>
-        <CountUpStat target={18} label="Gonderi" />
+        <CountUpStat target={18} label="GONDERI" />
         <View style={styles.statDivider} />
-        <CountUpStat target={124} label="Takipci" />
+        <CountUpStat target={124} label="TAKIPCI" />
         <View style={styles.statDivider} />
-        <CountUpStat target={87} label="Takip" />
+        <CountUpStat target={87} label="TAKIP" />
       </View>
 
       {/* Action buttons row */}
@@ -752,17 +760,37 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
+    flex: 1,
+    flexShrink: 1,
   },
   headerTitle: {
     fontSize: 28,
+    lineHeight: 38,
     fontWeight: fontWeights.bold,
     color: colors.text,
-    letterSpacing: -0.5,
+  },
+  supremeHeaderBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(212, 175, 55, 0.12)',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.3)',
+  },
+  supremeHeaderBadgeText: {
+    fontSize: 10,
+    fontWeight: fontWeights.bold,
+    color: '#D4AF37',
+    letterSpacing: 1.5,
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
+    flexShrink: 0,
   },
   settingsButton: {
     width: 42,
@@ -788,13 +816,14 @@ const styles = StyleSheet.create({
   nameVerifiedRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: 12,
   },
   userName: {
     fontSize: 28,
+    lineHeight: 40,
     fontWeight: fontWeights.bold,
     color: colors.text,
-    letterSpacing: -0.5,
+    paddingRight: 4,
   },
   strengthPill: {
     borderWidth: 1.5,
@@ -831,33 +860,39 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
-  // ── Stats card — minimalist ──
+  // ── Stats card ──
   statsCard: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
     alignItems: 'center',
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.md + 2,
+    paddingHorizontal: spacing.xl,
     ...shadows.small,
   },
   statItem: {
     alignItems: 'center',
+    justifyContent: 'center',
     flex: 1,
+    paddingHorizontal: 8,
   },
   statValue: {
-    fontSize: 22,
+    fontSize: 24,
+    lineHeight: 32,
     fontWeight: fontWeights.bold,
     color: colors.text,
-    letterSpacing: -0.3,
+    textAlign: 'center',
+    includeFontPadding: false,
+    paddingHorizontal: 2,
   },
   statLabel: {
-    fontSize: 11,
-    fontWeight: fontWeights.medium,
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: fontWeights.semibold,
     color: colors.textTertiary,
-    marginTop: 2,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    marginTop: 4,
+    textAlign: 'center',
+    includeFontPadding: false,
   },
   statDivider: {
     width: 1,
@@ -884,6 +919,7 @@ const styles = StyleSheet.create({
   },
   gradientButtonText: {
     fontSize: 13,
+    lineHeight: 20,
     fontWeight: fontWeights.bold,
     color: '#FFFFFF',
     letterSpacing: 0.3,
@@ -923,6 +959,7 @@ const styles = StyleSheet.create({
   },
   premiumButtonText: {
     fontSize: 13,
+    lineHeight: 20,
     fontWeight: fontWeights.bold,
     color: '#FFFFFF',
     letterSpacing: 0.3,
@@ -1052,8 +1089,6 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
     marginBottom: 2,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   aboutRowValue: {
     fontSize: 15,

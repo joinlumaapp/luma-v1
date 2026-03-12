@@ -1,4 +1,5 @@
-// SettingsScreen — SectionList with Hesap, Bildirimler, Gizlilik, Görünüm, Yardım Merkezi, Hakkında, Tehlike Bölgesi
+// SettingsScreen — Premium glassmorphism design with Ionicons, Supreme section, clean categories
+// Categories: Hesap Ayarlari, Supreme Avantajlarim, Bildirimler, Gizlilik ve Guvenlik, Destek, Gorunum, Tehlike Bolgesi
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
@@ -9,19 +10,17 @@ import {
   SectionList,
   Alert,
   Switch,
-  Modal,
-  ActivityIndicator,
   Linking,
   LayoutAnimation,
   Platform,
   UIManager,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ProfileStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../stores/authStore';
-import { authService } from '../../services/authService';
 import { iapService } from '../../services/iapService';
 import { paymentService } from '../../services/paymentService';
 import { storage } from '../../utils/storage';
@@ -38,14 +37,15 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 
 type SettingsNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'Settings'>;
 
-// Types for section items
-type SettingItemType = 'navigation' | 'toggle' | 'action' | 'display' | 'faq' | 'theme';
+// ── Types ────────────────────────────────────────────────────────
+type SettingItemType = 'navigation' | 'toggle' | 'action' | 'display' | 'faq' | 'theme' | 'supreme_feature';
 
 interface BaseSettingItem {
   key: string;
-  icon: string;
+  icon: keyof typeof Ionicons.glyphMap;
   title: string;
   type: SettingItemType;
+  subtitle?: string;
 }
 
 interface NavigationSettingItem extends BaseSettingItem {
@@ -67,7 +67,6 @@ interface ActionSettingItem extends BaseSettingItem {
 
 interface DisplaySettingItem extends BaseSettingItem {
   type: 'display';
-  subtitle?: string;
 }
 
 interface FAQSettingItem extends BaseSettingItem {
@@ -79,25 +78,36 @@ interface ThemeSettingItem extends BaseSettingItem {
   type: 'theme';
 }
 
+interface SupremeFeatureItem extends BaseSettingItem {
+  type: 'supreme_feature';
+  active: boolean;
+}
+
 type SettingItem =
   | NavigationSettingItem
   | ToggleSettingItem
   | ActionSettingItem
   | DisplaySettingItem
   | FAQSettingItem
-  | ThemeSettingItem;
+  | ThemeSettingItem
+  | SupremeFeatureItem;
 
 interface SettingSection {
   title: string;
+  icon?: keyof typeof Ionicons.glyphMap;
+  accentColor?: string;
   data: SettingItem[];
 }
 
 // Theme option labels (Turkish)
-const THEME_OPTIONS: { mode: ThemeMode; label: string }[] = [
-  { mode: 'light', label: 'Açık' },
-  { mode: 'dark', label: 'Koyu' },
-  { mode: 'system', label: 'Sistem' },
+const THEME_OPTIONS: { mode: ThemeMode; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { mode: 'light', label: 'Acik', icon: 'sunny-outline' },
+  { mode: 'dark', label: 'Koyu', icon: 'moon-outline' },
+  { mode: 'system', label: 'Sistem', icon: 'phone-portrait-outline' },
 ];
+
+// Supreme gold constant
+const SUPREME_GOLD = '#D4AF37';
 
 export const SettingsScreen: React.FC = () => {
   useScreenTracking('Settings');
@@ -107,74 +117,63 @@ export const SettingsScreen: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const { colors, themeMode, setThemeMode } = useTheme();
 
-  // Notification toggles — persisted via storage utility
+  const packageTier = user?.packageTier ?? 'free';
+  const isSupreme = packageTier === 'reserved';
+
+  // ── Notification toggles ──────────────────────────────────────
   const [pushNotifications, setPushNotificationsRaw] = useState(true);
   const [matchNotifications, setMatchNotificationsRaw] = useState(true);
+  const [messageNotifications, setMessageNotificationsRaw] = useState(true);
+  const [appAnnouncements, setAppAnnouncementsRaw] = useState(true);
 
-  // Privacy toggles — persisted via storage utility
+  // ── Privacy toggles ──────────────────────────────────────────
   const [showOnlineStatus, setShowOnlineStatusRaw] = useState(true);
   const [showDistance, setShowDistanceRaw] = useState(true);
-  const [showAge, setShowAgeRaw] = useState(true);
   const [isIncognito, setIsIncognito] = useState(false);
 
-  // Storage keys for toggle persistence
+  // Storage keys
   const TOGGLE_KEYS = useMemo(() => ({
     pushNotifications: 'settings.pushNotifications',
     matchNotifications: 'settings.matchNotifications',
+    messageNotifications: 'settings.messageNotifications',
+    appAnnouncements: 'settings.appAnnouncements',
     showOnlineStatus: 'settings.showOnlineStatus',
     showDistance: 'settings.showDistance',
-    showAge: 'settings.showAge',
   }), []);
 
-  // Load persisted toggle values on mount
+  // Load persisted values
   useEffect(() => {
-    const pushVal = storage.getString(TOGGLE_KEYS.pushNotifications);
-    if (pushVal !== null) setPushNotificationsRaw(pushVal !== '0');
-
-    const matchVal = storage.getString(TOGGLE_KEYS.matchNotifications);
-    if (matchVal !== null) setMatchNotificationsRaw(matchVal !== '0');
-
-    const onlineVal = storage.getString(TOGGLE_KEYS.showOnlineStatus);
-    if (onlineVal !== null) setShowOnlineStatusRaw(onlineVal !== '0');
-
-    const distVal = storage.getString(TOGGLE_KEYS.showDistance);
-    if (distVal !== null) setShowDistanceRaw(distVal !== '0');
-
-    const ageVal = storage.getString(TOGGLE_KEYS.showAge);
-    if (ageVal !== null) setShowAgeRaw(ageVal !== '0');
+    const load = (key: string, setter: (v: boolean) => void) => {
+      const val = storage.getString(key);
+      if (val !== null) setter(val !== '0');
+    };
+    load(TOGGLE_KEYS.pushNotifications, setPushNotificationsRaw);
+    load(TOGGLE_KEYS.matchNotifications, setMatchNotificationsRaw);
+    load(TOGGLE_KEYS.messageNotifications, setMessageNotificationsRaw);
+    load(TOGGLE_KEYS.appAnnouncements, setAppAnnouncementsRaw);
+    load(TOGGLE_KEYS.showOnlineStatus, setShowOnlineStatusRaw);
+    load(TOGGLE_KEYS.showDistance, setShowDistanceRaw);
   }, [TOGGLE_KEYS]);
 
-  // Wrapper setters that persist to AsyncStorage
-  const setPushNotifications = useCallback((val: boolean) => {
-    setPushNotificationsRaw(val);
-    storage.setString(TOGGLE_KEYS.pushNotifications, val ? '1' : '0');
-  }, [TOGGLE_KEYS]);
+  // Persisted setters
+  const makeSetter = useCallback(
+    (key: string, rawSetter: (v: boolean) => void) => (val: boolean) => {
+      rawSetter(val);
+      storage.setString(key, val ? '1' : '0');
+    },
+    [],
+  );
 
-  const setMatchNotifications = useCallback((val: boolean) => {
-    setMatchNotificationsRaw(val);
-    storage.setString(TOGGLE_KEYS.matchNotifications, val ? '1' : '0');
-  }, [TOGGLE_KEYS]);
+  const setPushNotifications = useMemo(() => makeSetter(TOGGLE_KEYS.pushNotifications, setPushNotificationsRaw), [makeSetter, TOGGLE_KEYS]);
+  const setMatchNotifications = useMemo(() => makeSetter(TOGGLE_KEYS.matchNotifications, setMatchNotificationsRaw), [makeSetter, TOGGLE_KEYS]);
+  const setMessageNotifications = useMemo(() => makeSetter(TOGGLE_KEYS.messageNotifications, setMessageNotificationsRaw), [makeSetter, TOGGLE_KEYS]);
+  const setAppAnnouncements = useMemo(() => makeSetter(TOGGLE_KEYS.appAnnouncements, setAppAnnouncementsRaw), [makeSetter, TOGGLE_KEYS]);
+  const setShowOnlineStatus = useMemo(() => makeSetter(TOGGLE_KEYS.showOnlineStatus, setShowOnlineStatusRaw), [makeSetter, TOGGLE_KEYS]);
+  const setShowDistance = useMemo(() => makeSetter(TOGGLE_KEYS.showDistance, setShowDistanceRaw), [makeSetter, TOGGLE_KEYS]);
 
-  const setShowOnlineStatus = useCallback((val: boolean) => {
-    setShowOnlineStatusRaw(val);
-    storage.setString(TOGGLE_KEYS.showOnlineStatus, val ? '1' : '0');
-  }, [TOGGLE_KEYS]);
-
-  const setShowDistance = useCallback((val: boolean) => {
-    setShowDistanceRaw(val);
-    storage.setString(TOGGLE_KEYS.showDistance, val ? '1' : '0');
-  }, [TOGGLE_KEYS]);
-
-  const setShowAge = useCallback((val: boolean) => {
-    setShowAgeRaw(val);
-    storage.setString(TOGGLE_KEYS.showAge, val ? '1' : '0');
-  }, [TOGGLE_KEYS]);
-
-  // Restore purchases loading state
+  // ── Restore / Cancel ──────────────────────────────────────────
   const [isRestoring, setIsRestoring] = useState(false);
-  // Cancel subscription loading state
   const [isCancelling, setIsCancelling] = useState(false);
-
   const updatePackageTier = useAuthStore((state) => state.updatePackageTier);
 
   const handleRestorePurchases = useCallback(async () => {
@@ -182,17 +181,13 @@ export const SettingsScreen: React.FC = () => {
     try {
       const result = await iapService.restorePurchases();
       if (result) {
-        // Validate the restored receipt with the backend
-        await paymentService.validateReceipt({
-          receipt: result.receipt,
-          platform: result.platform,
-        });
-        Alert.alert('Başarılı', 'Satın alımlarınız başarıyla geri yüklendi.');
+        await paymentService.validateReceipt({ receipt: result.receipt, platform: result.platform });
+        Alert.alert('Basarili', 'Satin alimlariniz basariyla geri yuklendi.');
       } else {
-        Alert.alert('Bilgi', 'Geri yüklenecek bir satın alım bulunamadı.');
+        Alert.alert('Bilgi', 'Geri yuklenecek bir satin alim bulunamadi.');
       }
     } catch {
-      Alert.alert('Hata', 'Satın alımlar geri yüklenirken bir sorun oluştu. Lütfen tekrar deneyin.');
+      Alert.alert('Hata', 'Satin alimlar geri yuklenirken bir sorun olustu.');
     } finally {
       setIsRestoring(false);
     }
@@ -200,21 +195,21 @@ export const SettingsScreen: React.FC = () => {
 
   const handleCancelSubscription = useCallback(() => {
     Alert.alert(
-      'Aboneliği İptal Et',
-      'Aboneliğinizi iptal etmek istediğinizden emin misiniz? Mevcut dönem sonuna kadar özelliklerinizi kullanmaya devam edebilirsiniz.',
+      'Aboneligi Iptal Et',
+      'Aboneliginizi iptal etmek istediginizden emin misiniz?',
       [
-        { text: 'Vazgeç', style: 'cancel' },
+        { text: 'Vazgec', style: 'cancel' },
         {
-          text: 'İptal Et',
+          text: 'Iptal Et',
           style: 'destructive',
           onPress: async () => {
             setIsCancelling(true);
             try {
               await paymentService.cancelSubscription();
               updatePackageTier('free');
-              Alert.alert('Başarılı', 'Aboneliğiniz başarıyla iptal edildi.');
+              Alert.alert('Basarili', 'Aboneliginiz basariyla iptal edildi.');
             } catch {
-              Alert.alert('Hata', 'Abonelik iptal edilirken bir sorun oluştu. Lütfen tekrar deneyin.');
+              Alert.alert('Hata', 'Abonelik iptal edilirken bir sorun olustu.');
             } finally {
               setIsCancelling(false);
             }
@@ -225,355 +220,398 @@ export const SettingsScreen: React.FC = () => {
   }, [updatePackageTier]);
 
   const handleIncognitoToggle = useCallback((value: boolean) => {
-    const packageTier = useAuthStore.getState().user?.packageTier ?? 'FREE';
-    if (value && packageTier === 'FREE') {
-      Alert.alert('Gold Gerekli', 'Gizli mod için Gold veya üzeri paket gereklidir.');
+    const tier = useAuthStore.getState().user?.packageTier ?? 'free';
+    if (value && tier === 'free') {
+      Alert.alert('Gold Gerekli', 'Gizli mod icin Gold veya uzeri paket gereklidir.');
       return;
     }
     setIsIncognito(value);
-    // Fire and forget — non-blocking
     import('../../services/discoveryService').then(({ discoveryService }) => {
-      discoveryService.toggleIncognito(value).catch(() => {
-        setIsIncognito(!value); // revert on error
-      });
+      discoveryService.toggleIncognito(value).catch(() => setIsIncognito(!value));
     });
   }, []);
 
-  // FAQ expanded state
+  // ── FAQ ────────────────────────────────────────────────────────
   const [expandedFAQKey, setExpandedFAQKey] = useState<string | null>(null);
-
-  // Delete confirmation modal — 2-step
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const handleLogout = useCallback(() => {
-    Alert.alert(
-      'Çıkış Yap',
-      'Hesabından çıkmak istediğinden emin misin?',
-      [
-        { text: 'İptal', style: 'cancel' },
-        {
-          text: 'Çıkış Yap',
-          style: 'destructive',
-          onPress: () => {
-            logout();
-          },
-        },
-      ],
-    );
-  }, [logout]);
-
-  const handleOpenDeleteModal = useCallback(() => {
-    setDeleteStep(1);
-    setDeleteModalVisible(true);
-  }, []);
-
-  const handleDeleteStep1Confirm = useCallback(() => {
-    setDeleteStep(2);
-  }, []);
-
-  const handleDeleteAccount = useCallback(async () => {
-    setIsDeleting(true);
-    try {
-      await authService.deleteAccount();
-      setDeleteModalVisible(false);
-      setDeleteStep(1);
-      const logoutAction = useAuthStore.getState().logout;
-      logoutAction();
-    } catch {
-      Alert.alert('Hata', 'Hesap silinemedi. Lütfen tekrar dene.');
-    } finally {
-      setIsDeleting(false);
-    }
-  }, []);
 
   const handleToggleFAQ = useCallback((key: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setExpandedFAQKey((prev) => (prev === key ? null : key));
   }, []);
 
+  const handleLogout = useCallback(() => {
+    Alert.alert(
+      'Cikis Yap',
+      'Hesabindan cikmak istediginize emin misiniz?',
+      [
+        { text: 'Iptal', style: 'cancel' },
+        { text: 'Cikis Yap', style: 'destructive', onPress: () => logout() },
+      ],
+    );
+  }, [logout]);
+
   const handleContactUs = useCallback(() => {
     Linking.openURL('mailto:destek@luma.dating').catch(() => {
-      Alert.alert('Hata', 'E-posta uygulaması açılamadı.');
+      Alert.alert('Hata', 'E-posta uygulamasi acilamadi.');
     });
   }, []);
 
   const handleOpenTerms = useCallback(() => {
-    Linking.openURL('https://luma.dating/terms').catch(() => {
-      Alert.alert('Hata', 'Sayfa açılamadı.');
-    });
-  }, []);
-
-  const handleOpenPrivacy = useCallback(() => {
-    Linking.openURL('https://luma.dating/privacy').catch(() => {
-      Alert.alert('Hata', 'Sayfa açılamadı.');
-    });
+    Linking.openURL('https://luma.dating/terms').catch(() => {});
   }, []);
 
   const setOnboarded = useAuthStore((state) => state.setOnboarded);
 
-  // DEV: Reset onboarding to re-test questions flow
   const handleResetOnboarding = useCallback(() => {
-    Alert.alert(
-      'Onboarding Sıfırla',
-      'Onboarding adımlarını tekrar görmek istiyor musun?',
-      [
-        { text: 'İptal', style: 'cancel' },
-        {
-          text: 'Sıfırla',
-          onPress: async () => {
-            await storage.clearOnboarded();
-            setOnboarded(false);
-          },
+    Alert.alert('Onboarding Sifirla', 'Onboarding adimlarini tekrar gormek istiyor musun?', [
+      { text: 'Iptal', style: 'cancel' },
+      {
+        text: 'Sifirla',
+        onPress: async () => {
+          await storage.clearOnboarded();
+          setOnboarded(false);
         },
-      ],
-    );
+      },
+    ]);
   }, [setOnboarded]);
 
-  // Format phone for display
+  // ── Sections ──────────────────────────────────────────────────
   const phoneDisplay = user?.phone ?? '-';
+  const emailDisplay = user?.email ?? 'Belirtilmedi';
 
   const sections: SettingSection[] = [
+    // 1. Hesap Ayarlari
     {
-      title: 'Hesap',
+      title: 'Hesap Ayarlari',
+      icon: 'person-outline',
       data: [
         {
+          key: 'edit_profile',
+          icon: 'create-outline',
+          title: 'Profil Duzenle',
+          type: 'navigation',
+          onPress: () => navigation.navigate('EditProfile'),
+        },
+        {
           key: 'phone',
-          icon: 'P',
-          title: 'Telefon Numarası',
+          icon: 'call-outline',
+          title: 'Telefon Numarasi',
           type: 'display',
           subtitle: phoneDisplay,
         },
         {
+          key: 'email',
+          icon: 'mail-outline',
+          title: 'E-posta',
+          type: 'display',
+          subtitle: emailDisplay,
+        },
+        {
           key: 'packages',
-          icon: 'S',
+          icon: 'diamond-outline',
           title: 'Paketler ve Abonelik',
           type: 'navigation',
-          onPress: () => navigation.navigate('Packages'),
+          onPress: () => navigation.navigate('MembershipPlans'),
         },
         {
           key: 'restore_purchases',
-          icon: 'Y',
-          title: isRestoring ? 'Geri yükleniyor...' : 'Satın Alımları Geri Yükle',
+          icon: 'refresh-outline',
+          title: isRestoring ? 'Geri yukleniyor...' : 'Satin Alimlari Geri Yukle',
           type: 'action',
           onPress: handleRestorePurchases,
         },
-        // Show cancel subscription only for paid tiers
-        ...((user?.packageTier ?? 'free') !== 'free'
-          ? [
-              {
-                key: 'cancel_subscription',
-                icon: 'I',
-                title: isCancelling ? 'İptal ediliyor...' : 'Aboneliği İptal Et',
-                type: 'action' as const,
-                destructive: true,
-                onPress: handleCancelSubscription,
-              },
-            ]
+        ...((packageTier !== 'free')
+          ? [{
+              key: 'cancel_subscription',
+              icon: 'close-circle-outline' as keyof typeof Ionicons.glyphMap,
+              title: isCancelling ? 'Iptal ediliyor...' : 'Aboneligi Iptal Et',
+              type: 'action' as const,
+              destructive: true,
+              onPress: handleCancelSubscription,
+            }]
           : []),
       ],
     },
-    {
-      title: 'Bildirimler',
+
+    // 2. Supreme Avantajlarim (only for Supreme members)
+    ...(isSupreme ? [{
+      title: 'Supreme Avantajlarim',
+      icon: 'diamond' as keyof typeof Ionicons.glyphMap,
+      accentColor: SUPREME_GOLD,
       data: [
         {
-          key: 'push',
-          icon: 'B',
-          title: 'Push Bildirimleri',
-          type: 'toggle',
-          value: pushNotifications,
-          onToggle: setPushNotifications,
+          key: 'supreme_likes',
+          icon: 'heart' as keyof typeof Ionicons.glyphMap,
+          title: 'Sinirsiz Begeni',
+          type: 'supreme_feature' as const,
+          active: true,
         },
         {
+          key: 'supreme_super_likes',
+          icon: 'star' as keyof typeof Ionicons.glyphMap,
+          title: 'Sinirsiz Super Begeni',
+          type: 'supreme_feature' as const,
+          active: true,
+        },
+        {
+          key: 'supreme_visibility',
+          icon: 'eye' as keyof typeof Ionicons.glyphMap,
+          title: 'Oncelikli Gorunurluk',
+          type: 'supreme_feature' as const,
+          active: true,
+        },
+        {
+          key: 'supreme_compat',
+          icon: 'analytics' as keyof typeof Ionicons.glyphMap,
+          title: 'Detayli Uyumluluk Analizi',
+          type: 'supreme_feature' as const,
+          active: true,
+        },
+        {
+          key: 'supreme_undo',
+          icon: 'arrow-undo' as keyof typeof Ionicons.glyphMap,
+          title: 'Geri Alma',
+          type: 'supreme_feature' as const,
+          active: true,
+        },
+        {
+          key: 'supreme_incognito',
+          icon: 'eye-off' as keyof typeof Ionicons.glyphMap,
+          title: 'Gizli Mod',
+          type: 'supreme_feature' as const,
+          active: true,
+        },
+        {
+          key: 'supreme_aura',
+          icon: 'sparkles' as keyof typeof Ionicons.glyphMap,
+          title: 'Altin Aura Efekti',
+          type: 'supreme_feature' as const,
+          active: true,
+        },
+        {
+          key: 'supreme_badge',
+          icon: 'shield-checkmark' as keyof typeof Ionicons.glyphMap,
+          title: 'Supreme Rozeti',
+          type: 'supreme_feature' as const,
+          active: true,
+        },
+      ],
+    }] : []),
+
+    // 3. Bildirimler
+    {
+      title: 'Bildirimler',
+      icon: 'notifications-outline',
+      data: [
+        {
           key: 'match_notif',
-          icon: 'E',
-          title: 'Eşleşme Bildirimleri',
+          icon: 'heart-outline',
+          title: 'Yeni Eslesmeler',
           type: 'toggle',
           value: matchNotifications,
           onToggle: setMatchNotifications,
         },
         {
+          key: 'msg_notif',
+          icon: 'chatbubble-outline',
+          title: 'Mesajlar',
+          type: 'toggle',
+          value: messageNotifications,
+          onToggle: setMessageNotifications,
+        },
+        {
+          key: 'push',
+          icon: 'megaphone-outline',
+          title: 'Uygulama Duyurulari',
+          type: 'toggle',
+          value: appAnnouncements,
+          onToggle: setAppAnnouncements,
+        },
+        {
+          key: 'push_master',
+          icon: 'notifications-off-outline',
+          title: 'Tum Bildirimler',
+          type: 'toggle',
+          value: pushNotifications,
+          onToggle: setPushNotifications,
+        },
+        {
           key: 'notif_settings',
-          icon: 'A',
-          title: 'Bildirim Ayarları',
+          icon: 'options-outline',
+          title: 'Detayli Bildirim Ayarlari',
           type: 'navigation',
           onPress: () => navigation.navigate('NotificationSettings'),
         },
       ],
     },
+
+    // 4. Gizlilik ve Guvenlik
     {
-      title: 'Gizlilik',
+      title: 'Gizlilik ve Guvenlik',
+      icon: 'shield-outline',
       data: [
         {
           key: 'online_status',
-          icon: 'C',
-          title: 'Çevrimiçi Durumu Göster',
+          icon: 'ellipse',
+          title: 'Cevrimici Durumu Goster',
           type: 'toggle',
           value: showOnlineStatus,
           onToggle: setShowOnlineStatus,
         },
         {
           key: 'distance',
-          icon: 'M',
-          title: 'Mesafeyi Göster',
+          icon: 'location-outline',
+          title: 'Mesafeyi Goster',
           type: 'toggle',
           value: showDistance,
           onToggle: setShowDistance,
         },
         {
-          key: 'age',
-          icon: 'Y',
-          title: 'Yaşı Göster',
-          type: 'toggle',
-          value: showAge,
-          onToggle: setShowAge,
-        },
-        {
           key: 'incognito',
-          icon: 'G',
+          icon: 'eye-off-outline',
           title: 'Gizli Mod',
-          type: 'toggle' as const,
+          type: 'toggle',
           value: isIncognito,
           onToggle: handleIncognitoToggle,
+          subtitle: packageTier === 'free' ? 'Gold+ gerekli' : undefined,
+        },
+        {
+          key: 'blocked',
+          icon: 'ban-outline',
+          title: 'Engellenen Kullanicilar',
+          type: 'navigation',
+          onPress: () => navigation.navigate('BlockedUsers'),
+        },
+        {
+          key: 'freeze',
+          icon: 'snow-outline',
+          title: 'Hesabi Dondur',
+          type: 'action',
+          onPress: () => Alert.alert('Hesabi Dondur', 'Hesabinizi gecici olarak dondurmak istediginize emin misiniz?', [
+            { text: 'Vazgec', style: 'cancel' },
+            { text: 'Dondur', style: 'destructive', onPress: () => Alert.alert('Bilgi', 'Bu ozellik yakinda aktif olacak.') },
+          ]),
         },
       ],
     },
+
+    // 5. Destek
     {
-      title: 'Görünüm',
+      title: 'Destek',
+      icon: 'help-circle-outline',
       data: [
-        {
-          key: 'theme_selector',
-          icon: 'T',
-          title: 'Tema',
-          type: 'theme',
-        },
-      ],
-    },
-    {
-      title: 'Yardım Merkezi',
-      data: [
-        {
-          key: 'faq_delete',
-          icon: '?',
-          title: 'Hesabımı nasıl silebilirim?',
-          type: 'faq',
-          answer:
-            'Ayarlar ekranının en altındaki "Tehlike Bölgesi" bölümünden "Hesabı Sil" butonuna tıklayarak hesabınızı kalıcı olarak silebilirsiniz. Bu işlem geri alınamaz.',
-        },
         {
           key: 'faq_matching',
-          icon: '?',
-          title: 'Eşleşme nasıl oluyor?',
+          icon: 'help-outline',
+          title: 'Esleme nasil oluyor?',
           type: 'faq',
-          answer:
-            'LUMA, 45 soruya verdiğiniz yanıtları analiz ederek sizinle uyumlu kişileri bulur. Karşılıklı beğeni durumunda eşleşmiş olursunuz ve sohbet başlatabilirsiniz.',
+          answer: 'LUMA, 45 soruya verdiginiz yanitlari analiz ederek sizinle uyumlu kisileri bulur. Karsilikli begeni durumunda eslesmis olursunuz.',
         },
         {
           key: 'faq_gold',
-          icon: '?',
-          title: 'Gold ne işe yarar?',
+          icon: 'help-outline',
+          title: 'Gold ne ise yarar?',
           type: 'faq',
-          answer:
-            'Gold paketi ile sınırsız beğeni, detaylı uyumluluk analizi, 25 premium soru, günlük 5 süper beğeni ve kimin beğendiğini görme gibi özellikler kazanırsınız.',
+          answer: 'Gold paketi ile sinirsiz begeni, detayli uyumluluk analizi, 25 premium soru, gunluk 5 super begeni ve kimin begendigini gorme gibi ozellikler kazanirsiniz.',
         },
         {
-          key: 'faq_super',
-          icon: '?',
-          title: 'Süper Uyumluluk nedir?',
+          key: 'faq_delete',
+          icon: 'help-outline',
+          title: 'Hesabimi nasil silebilirim?',
           type: 'faq',
-          answer:
-            'Süper Uyumluluk, iki kullanıcının uyumluluk skorunun %85 ve üzerinde olduğu özel eşleşme durumudur. Bu eşleşmelerde özel animasyonlar ve öncelikli bildirimler gösterilir.',
+          answer: 'En alttaki "Hesabi Sil" butonuna dokunarak hesabinizi kalici olarak silebilirsiniz. Bu islem geri alinamaz.',
         },
         {
           key: 'faq_verify',
-          icon: '?',
-          title: 'Profil doğrulama nasıl yapılır?',
+          icon: 'help-outline',
+          title: 'Profil dogrulama nasil yapilir?',
           type: 'faq',
-          answer:
-            'Profil doğrulama için selfie çekim adımından geçmeniz gerekiyor. Yüzünüzün net görünür olduğu bir selfie çekerek kimliğinizi doğrulayın. Doğrulanmış profiller mavi tik alır.',
+          answer: 'Selfie cekim adiminda yuzunuzun net gorundugu bir selfie cekerek dogrulama yapabilirsiniz. Dogrulanmis profiller mavi tik alir.',
         },
-      ],
-    },
-    {
-      title: 'Hakkında',
-      data: [
         {
           key: 'contact',
-          icon: 'D',
-          title: 'Bize Ulaşın',
+          icon: 'mail-outline',
+          title: 'Bize Ulasin',
           type: 'navigation',
           onPress: handleContactUs,
         },
         {
           key: 'terms',
-          icon: 'K',
-          title: 'Kullanım Koşulları',
+          icon: 'document-text-outline',
+          title: 'Kullanim Kosullari',
           type: 'navigation',
           onPress: handleOpenTerms,
         },
         {
           key: 'privacy',
-          icon: 'G',
-          title: 'Gizlilik Politikası',
+          icon: 'lock-closed-outline',
+          title: 'Gizlilik Politikasi',
           type: 'navigation',
-          onPress: handleOpenPrivacy,
+          onPress: () => navigation.navigate('PrivacyPolicy'),
+        },
+        {
+          key: 'kvkk',
+          icon: 'shield-outline',
+          title: 'KVKK Aydinlatma Metni',
+          type: 'navigation',
+          onPress: () => navigation.navigate('PrivacyPolicy'),
         },
       ],
     },
-    // DEV-only section — visible only in development builds
-    ...(__DEV__
-      ? [
-          {
-            title: 'Geliştirici',
-            data: [
-              {
-                key: 'reset_onboarding',
-                icon: 'R',
-                title: 'Onboarding Tekrar Gör',
-                type: 'action' as const,
-                onPress: handleResetOnboarding,
-              },
-            ],
-          },
-        ]
-      : []),
+
+    // 6. Gorunum
     {
-      title: 'Tehlike Bölgesi',
+      title: 'Gorunum',
+      icon: 'color-palette-outline',
       data: [
         {
-          key: 'logout',
-          icon: 'X',
-          title: 'Çıkış Yap',
-          type: 'action',
-          destructive: true,
-          onPress: handleLogout,
+          key: 'theme_selector',
+          icon: 'contrast-outline',
+          title: 'Tema',
+          type: 'theme',
         },
+      ],
+    },
+
+    // DEV section
+    ...(__DEV__ ? [{
+      title: 'Gelistirici',
+      icon: 'code-slash-outline' as keyof typeof Ionicons.glyphMap,
+      data: [{
+        key: 'reset_onboarding',
+        icon: 'refresh-circle-outline' as keyof typeof Ionicons.glyphMap,
+        title: 'Onboarding Tekrar Gor',
+        type: 'action' as const,
+        onPress: handleResetOnboarding,
+      }],
+    }] : []),
+
+    // 7. Tehlike Bolgesi
+    {
+      title: 'Tehlike Bolgesi',
+      icon: 'warning-outline',
+      accentColor: colors.error,
+      data: [
         {
           key: 'delete',
-          icon: '!',
-          title: 'Hesabı Sil',
+          icon: 'trash-outline',
+          title: 'Hesabimi Sil',
           type: 'action',
           destructive: true,
-          onPress: handleOpenDeleteModal,
+          onPress: () => navigation.navigate('AccountDeletion'),
         },
       ],
     },
   ];
 
-  // Dynamic styles based on current theme colors
   const dynamicStyles = useMemo(() => createDynamicStyles(colors), [colors]);
+
+  // ── Render functions ──────────────────────────────────────────
 
   const renderThemeSelector = () => (
     <View style={dynamicStyles.themeContainer}>
-      <View style={dynamicStyles.settingLeft}>
-        <View style={dynamicStyles.iconContainer}>
-          <Text style={dynamicStyles.iconText}>T</Text>
-        </View>
-        <Text style={dynamicStyles.settingLabel}>Tema</Text>
-      </View>
       <View style={dynamicStyles.themeOptions}>
-        {THEME_OPTIONS.map(({ mode, label }) => {
+        {THEME_OPTIONS.map(({ mode, label, icon }) => {
           const isSelected = themeMode === mode;
           return (
             <TouchableOpacity
@@ -585,12 +623,15 @@ export const SettingsScreen: React.FC = () => {
               onPress={() => setThemeMode(mode)}
               activeOpacity={0.7}
             >
-              <Text
-                style={[
-                  dynamicStyles.themeOptionText,
-                  isSelected && dynamicStyles.themeOptionTextSelected,
-                ]}
-              >
+              <Ionicons
+                name={icon}
+                size={16}
+                color={isSelected ? colors.primary : colors.textTertiary}
+              />
+              <Text style={[
+                dynamicStyles.themeOptionText,
+                isSelected && dynamicStyles.themeOptionTextSelected,
+              ]}>
                 {label}
               </Text>
             </TouchableOpacity>
@@ -601,24 +642,38 @@ export const SettingsScreen: React.FC = () => {
   );
 
   const renderItem = ({ item }: { item: SettingItem }) => {
-    // Theme selector row
-    if (item.type === 'theme') {
-      return renderThemeSelector();
+    if (item.type === 'theme') return renderThemeSelector();
+
+    // Supreme feature row
+    if (item.type === 'supreme_feature') {
+      return (
+        <View style={dynamicStyles.settingRow}>
+          <View style={dynamicStyles.settingLeft}>
+            <View style={[dynamicStyles.iconContainer, dynamicStyles.iconContainerSupreme]}>
+              <Ionicons name={item.icon} size={16} color={SUPREME_GOLD} />
+            </View>
+            <Text style={dynamicStyles.settingLabel}>{item.title}</Text>
+          </View>
+          <View style={dynamicStyles.supremeActiveTag}>
+            <Text style={dynamicStyles.supremeActiveText}>Aktif</Text>
+          </View>
+        </View>
+      );
     }
 
-    // Display-only row (non-pressable)
+    // Display-only row
     if (item.type === 'display') {
       return (
         <View style={dynamicStyles.settingRow}>
           <View style={dynamicStyles.settingLeft}>
             <View style={dynamicStyles.iconContainer}>
-              <Text style={dynamicStyles.iconText}>{item.icon}</Text>
+              <Ionicons name={item.icon} size={16} color={colors.textSecondary} />
             </View>
             <View style={dynamicStyles.displayTextContainer}>
               <Text style={dynamicStyles.settingLabel}>{item.title}</Text>
-              {item.subtitle ? (
+              {item.subtitle && (
                 <Text style={dynamicStyles.displaySubtitle}>{item.subtitle}</Text>
-              ) : null}
+              )}
             </View>
           </View>
         </View>
@@ -637,11 +692,15 @@ export const SettingsScreen: React.FC = () => {
           >
             <View style={dynamicStyles.settingLeft}>
               <View style={dynamicStyles.iconContainer}>
-                <Text style={dynamicStyles.iconText}>{item.icon}</Text>
+                <Ionicons name={item.icon} size={16} color={colors.textSecondary} />
               </View>
-              <Text style={dynamicStyles.settingLabel}>{item.title}</Text>
+              <Text style={[dynamicStyles.settingLabel, { flex: 1 }]}>{item.title}</Text>
             </View>
-            <Text style={dynamicStyles.chevron}>{isExpanded ? '\u2303' : '>'}</Text>
+            <Ionicons
+              name={isExpanded ? 'chevron-up' : 'chevron-down'}
+              size={16}
+              color={colors.textTertiary}
+            />
           </TouchableOpacity>
           {isExpanded && (
             <View style={dynamicStyles.faqAnswerContainer}>
@@ -658,9 +717,14 @@ export const SettingsScreen: React.FC = () => {
         <View style={dynamicStyles.settingRow}>
           <View style={dynamicStyles.settingLeft}>
             <View style={dynamicStyles.iconContainer}>
-              <Text style={dynamicStyles.iconText}>{item.icon}</Text>
+              <Ionicons name={item.icon} size={16} color={colors.textSecondary} />
             </View>
-            <Text style={dynamicStyles.settingLabel}>{item.title}</Text>
+            <View style={dynamicStyles.displayTextContainer}>
+              <Text style={dynamicStyles.settingLabel}>{item.title}</Text>
+              {item.subtitle && (
+                <Text style={dynamicStyles.displaySubtitle}>{item.subtitle}</Text>
+              )}
+            </View>
           </View>
           <Switch
             value={item.value}
@@ -682,51 +746,67 @@ export const SettingsScreen: React.FC = () => {
         activeOpacity={0.7}
       >
         <View style={dynamicStyles.settingLeft}>
-          <View
-            style={[
-              dynamicStyles.iconContainer,
-              isDestructive && dynamicStyles.iconContainerDestructive,
-            ]}
-          >
-            <Text
-              style={[dynamicStyles.iconText, isDestructive && dynamicStyles.iconTextDestructive]}
-            >
-              {item.icon}
-            </Text>
+          <View style={[
+            dynamicStyles.iconContainer,
+            isDestructive && dynamicStyles.iconContainerDestructive,
+          ]}>
+            <Ionicons
+              name={item.icon}
+              size={16}
+              color={isDestructive ? colors.error : colors.textSecondary}
+            />
           </View>
-          <Text
-            style={[
-              dynamicStyles.settingLabel,
-              isDestructive && dynamicStyles.settingLabelDestructive,
-            ]}
-          >
+          <Text style={[
+            dynamicStyles.settingLabel,
+            isDestructive && dynamicStyles.settingLabelDestructive,
+          ]}>
             {item.title}
           </Text>
         </View>
         {item.type === 'navigation' && (
-          <Text style={dynamicStyles.chevron}>{'>'}</Text>
+          <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />
         )}
       </TouchableOpacity>
     );
   };
 
-  const renderSectionHeader = ({ section }: { section: SettingSection }) => (
-    <View style={dynamicStyles.sectionHeaderContainer}>
-      <Text
-        style={[
-          dynamicStyles.sectionTitle,
-          section.title === 'Tehlike Bölgesi' && dynamicStyles.sectionTitleDanger,
-        ]}
-      >
-        {section.title}
-      </Text>
-    </View>
-  );
+  const renderSectionHeader = ({ section }: { section: SettingSection }) => {
+    const isSupremeSection = section.title === 'Supreme Avantajlarim';
+    const isDanger = section.title === 'Tehlike Bolgesi';
+    const iconColor = isSupremeSection ? SUPREME_GOLD : isDanger ? colors.error : colors.textTertiary;
+
+    return (
+      <View style={dynamicStyles.sectionHeaderContainer}>
+        <View style={dynamicStyles.sectionHeaderRow}>
+          {section.icon && (
+            <Ionicons name={section.icon} size={14} color={iconColor} />
+          )}
+          <Text style={[
+            dynamicStyles.sectionTitle,
+            isSupremeSection && dynamicStyles.sectionTitleSupreme,
+            isDanger && dynamicStyles.sectionTitleDanger,
+          ]}>
+            {section.title.toUpperCase()}
+          </Text>
+        </View>
+      </View>
+    );
+  };
 
   const renderSectionFooter = () => <View style={staticStyles.sectionFooter} />;
 
   const renderFooter = () => (
     <View style={staticStyles.footer}>
+      {/* Logout button — subtle red tint */}
+      <TouchableOpacity
+        style={dynamicStyles.logoutButton}
+        onPress={handleLogout}
+        activeOpacity={0.7}
+      >
+        <Ionicons name="log-out-outline" size={18} color={colors.error} />
+        <Text style={dynamicStyles.logoutText}>Cikis Yap</Text>
+      </TouchableOpacity>
+
       <Text style={dynamicStyles.footerVersion}>LUMA v1.0.0</Text>
     </View>
   );
@@ -740,7 +820,7 @@ export const SettingsScreen: React.FC = () => {
           style={dynamicStyles.backButton}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Text style={dynamicStyles.backText}>{'<'}</Text>
+          <Ionicons name="chevron-back" size={22} color={colors.text} />
         </TouchableOpacity>
         <Text style={dynamicStyles.headerTitle}>Ayarlar</Text>
         <View style={staticStyles.headerSpacer} />
@@ -759,83 +839,11 @@ export const SettingsScreen: React.FC = () => {
         stickySectionHeadersEnabled={false}
       />
 
-      {/* Delete Account Confirmation Modal — 2 Step */}
-      <Modal
-        visible={deleteModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => {
-          setDeleteModalVisible(false);
-          setDeleteStep(1);
-        }}
-      >
-        <View style={dynamicStyles.modalOverlay}>
-          <View style={dynamicStyles.modalContainer}>
-            {deleteStep === 1 ? (
-              <>
-                <Text style={dynamicStyles.modalTitle}>Hesabı Sil</Text>
-                <Text style={dynamicStyles.modalMessage}>
-                  Hesabınızı silmek istediğinizden emin misiniz?{'\n\n'}
-                  Tüm verileriniz, eşleşmeleriniz ve sohbetleriniz silinecek.
-                </Text>
-                <View style={staticStyles.modalActions}>
-                  <TouchableOpacity
-                    style={dynamicStyles.modalCancelButton}
-                    onPress={() => {
-                      setDeleteModalVisible(false);
-                      setDeleteStep(1);
-                    }}
-                  >
-                    <Text style={dynamicStyles.modalCancelText}>İptal</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={dynamicStyles.modalDeleteButton}
-                    onPress={handleDeleteStep1Confirm}
-                  >
-                    <Text style={dynamicStyles.modalDeleteText}>Devam Et</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            ) : (
-              <>
-                <Text style={dynamicStyles.modalTitle}>Son Uyarı!</Text>
-                <Text style={dynamicStyles.modalMessage}>
-                  Bu işlem geri alınamaz!{'\n\n'}
-                  Hesabınız ve tüm verileriniz kalıcı olarak silinecektir.
-                </Text>
-                <View style={staticStyles.modalActions}>
-                  <TouchableOpacity
-                    style={dynamicStyles.modalCancelButton}
-                    onPress={() => {
-                      setDeleteModalVisible(false);
-                      setDeleteStep(1);
-                    }}
-                    disabled={isDeleting}
-                  >
-                    <Text style={dynamicStyles.modalCancelText}>Vazgeç</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={dynamicStyles.modalDeleteButton}
-                    onPress={handleDeleteAccount}
-                    disabled={isDeleting}
-                  >
-                    {isDeleting ? (
-                      <ActivityIndicator size="small" color={colors.text} />
-                    ) : (
-                      <Text style={dynamicStyles.modalDeleteText}>Hesabı Sil</Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </>
-            )}
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };
 
-// Static styles that never change with theme
+// ── Static styles ───────────────────────────────────────────────
 const staticStyles = StyleSheet.create({
   sectionFooter: {
     height: spacing.xs,
@@ -843,6 +851,7 @@ const staticStyles = StyleSheet.create({
   footer: {
     paddingVertical: spacing.xl,
     alignItems: 'center',
+    gap: spacing.lg,
   },
   headerSpacer: {
     width: 40,
@@ -850,13 +859,9 @@ const staticStyles = StyleSheet.create({
   listContent: {
     paddingBottom: spacing.xxl,
   },
-  modalActions: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
 });
 
-// Dynamic styles factory — creates StyleSheet based on current theme colors
+// ── Dynamic styles factory ──────────────────────────────────────
 function createDynamicStyles(c: ThemeColors) {
   return StyleSheet.create({
     container: {
@@ -869,8 +874,6 @@ function createDynamicStyles(c: ThemeColors) {
       alignItems: 'center',
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.md,
-      borderBottomWidth: 1,
-      borderBottomColor: c.divider,
       height: layout.headerHeight,
     },
     backButton: {
@@ -880,10 +883,8 @@ function createDynamicStyles(c: ThemeColors) {
       backgroundColor: c.surface,
       justifyContent: 'center',
       alignItems: 'center',
-    },
-    backText: {
-      ...typography.h4,
-      color: c.text,
+      borderWidth: 1,
+      borderColor: c.surfaceBorder,
     },
     headerTitle: {
       ...typography.bodyLarge,
@@ -891,31 +892,44 @@ function createDynamicStyles(c: ThemeColors) {
       fontWeight: '600',
     },
 
-    // Section
+    // Section header
     sectionHeaderContainer: {
       paddingHorizontal: spacing.lg,
-      paddingTop: spacing.lg,
+      paddingTop: spacing.lg + spacing.sm,
       paddingBottom: spacing.sm,
       backgroundColor: c.background,
     },
+    sectionHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs + 2,
+    },
     sectionTitle: {
-      ...typography.label,
+      ...typography.caption,
       color: c.textTertiary,
-      textTransform: 'uppercase',
-      letterSpacing: 1,
+      includeFontPadding: false,
+      fontWeight: '600',
+    },
+    sectionTitleSupreme: {
+      color: SUPREME_GOLD,
     },
     sectionTitleDanger: {
       color: c.error,
     },
 
-    // Setting row
+    // Setting row — glassmorphism card feel
     settingRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingVertical: spacing.md,
+      paddingVertical: spacing.md - 2,
       paddingHorizontal: spacing.lg,
-      backgroundColor: c.background,
+      marginHorizontal: spacing.md,
+      marginVertical: 2,
+      backgroundColor: c.surface,
+      borderRadius: borderRadius.md,
+      borderWidth: 1,
+      borderColor: c.surfaceBorder,
       minHeight: 52,
     },
     settingLeft: {
@@ -925,37 +939,28 @@ function createDynamicStyles(c: ThemeColors) {
       gap: spacing.md,
     },
     iconContainer: {
-      width: 36,
-      height: 36,
-      borderRadius: borderRadius.sm,
-      backgroundColor: c.surface,
+      width: 34,
+      height: 34,
+      borderRadius: borderRadius.sm + 2,
+      backgroundColor: c.surfaceLight,
       justifyContent: 'center',
       alignItems: 'center',
     },
     iconContainerDestructive: {
-      backgroundColor: c.error + '15',
+      backgroundColor: c.error + '12',
     },
-    iconText: {
-      ...typography.body,
-      color: c.textSecondary,
-      fontWeight: '600',
-    },
-    iconTextDestructive: {
-      color: c.error,
+    iconContainerSupreme: {
+      backgroundColor: SUPREME_GOLD + '15',
+      borderWidth: 1,
+      borderColor: SUPREME_GOLD + '25',
     },
     settingLabel: {
       ...typography.body,
       color: c.text,
-      flex: 1,
     },
     settingLabelDestructive: {
       color: c.error,
       fontWeight: '600',
-    },
-    chevron: {
-      ...typography.body,
-      color: c.textTertiary,
-      marginLeft: spacing.sm,
     },
 
     // Display-only row
@@ -963,17 +968,40 @@ function createDynamicStyles(c: ThemeColors) {
       flex: 1,
     },
     displaySubtitle: {
-      ...typography.bodySmall,
+      ...typography.caption,
       color: c.textSecondary,
-      marginTop: 2,
+      marginTop: 1,
+    },
+
+    // Supreme active tag
+    supremeActiveTag: {
+      backgroundColor: SUPREME_GOLD + '18',
+      borderRadius: borderRadius.full,
+      paddingHorizontal: spacing.sm + 2,
+      paddingVertical: 3,
+      borderWidth: 1,
+      borderColor: SUPREME_GOLD + '30',
+    },
+    supremeActiveText: {
+      ...typography.captionSmall,
+      color: SUPREME_GOLD,
+      fontWeight: '700',
+      letterSpacing: 0.3,
     },
 
     // FAQ answer
     faqAnswerContainer: {
-      paddingHorizontal: spacing.lg,
-      paddingLeft: spacing.lg + 36 + spacing.md,
+      paddingHorizontal: spacing.lg + spacing.md,
+      paddingLeft: spacing.lg + 34 + spacing.md + spacing.md,
       paddingBottom: spacing.md,
-      backgroundColor: c.background,
+      marginHorizontal: spacing.md,
+      backgroundColor: c.surface,
+      borderBottomLeftRadius: borderRadius.md,
+      borderBottomRightRadius: borderRadius.md,
+      marginTop: -4,
+      borderWidth: 1,
+      borderTopWidth: 0,
+      borderColor: c.surfaceBorder,
     },
     faqAnswerText: {
       ...typography.bodySmall,
@@ -985,36 +1013,61 @@ function createDynamicStyles(c: ThemeColors) {
     themeContainer: {
       paddingVertical: spacing.md,
       paddingHorizontal: spacing.lg,
-      backgroundColor: c.background,
-      minHeight: 52,
+      marginHorizontal: spacing.md,
+      backgroundColor: c.surface,
+      borderRadius: borderRadius.md,
+      borderWidth: 1,
+      borderColor: c.surfaceBorder,
+      marginVertical: 2,
     },
     themeOptions: {
       flexDirection: 'row',
-      marginTop: spacing.sm,
-      marginLeft: 36 + spacing.md,
       gap: spacing.sm,
     },
     themeOption: {
       flex: 1,
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.md,
+      flexDirection: 'row',
+      paddingVertical: spacing.sm + 2,
+      paddingHorizontal: spacing.sm,
       borderRadius: borderRadius.md,
       borderWidth: 1,
       borderColor: c.surfaceBorder,
-      backgroundColor: c.surface,
+      backgroundColor: c.surfaceLight,
       alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.xs,
     },
     themeOptionSelected: {
       borderColor: c.primary,
-      backgroundColor: c.primary + '20',
+      backgroundColor: c.primary + '15',
     },
     themeOptionText: {
-      ...typography.buttonSmall,
+      ...typography.caption,
       color: c.textSecondary,
+      fontWeight: '500',
     },
     themeOptionTextSelected: {
       color: c.primary,
       fontWeight: '700',
+    },
+
+    // Logout button
+    logoutButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.xl,
+      borderRadius: borderRadius.lg,
+      backgroundColor: c.error + '0A',
+      borderWidth: 1,
+      borderColor: c.error + '20',
+      minWidth: 200,
+    },
+    logoutText: {
+      ...typography.button,
+      color: c.error,
     },
 
     // Footer
@@ -1024,57 +1077,5 @@ function createDynamicStyles(c: ThemeColors) {
       letterSpacing: 1,
     },
 
-    // Modal
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: c.overlay,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingHorizontal: spacing.lg,
-    },
-    modalContainer: {
-      backgroundColor: c.surface,
-      borderRadius: borderRadius.xl,
-      padding: spacing.lg,
-      width: '100%',
-      maxWidth: 340,
-      overflow: 'hidden',
-    },
-    modalTitle: {
-      ...typography.h4,
-      color: c.error,
-      fontWeight: '700',
-      marginBottom: spacing.md,
-      textAlign: 'center',
-    },
-    modalMessage: {
-      ...typography.body,
-      color: c.textSecondary,
-      textAlign: 'center',
-      marginBottom: spacing.lg,
-      lineHeight: 22,
-    },
-    modalCancelButton: {
-      flex: 1,
-      backgroundColor: c.surfaceBorder,
-      borderRadius: borderRadius.md,
-      paddingVertical: spacing.md,
-      alignItems: 'center',
-    },
-    modalCancelText: {
-      ...typography.button,
-      color: c.text,
-    },
-    modalDeleteButton: {
-      flex: 1,
-      backgroundColor: c.error,
-      borderRadius: borderRadius.md,
-      paddingVertical: spacing.md,
-      alignItems: 'center',
-    },
-    modalDeleteText: {
-      ...typography.button,
-      color: c.text,
-    },
   });
 }

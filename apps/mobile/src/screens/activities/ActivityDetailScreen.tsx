@@ -158,14 +158,14 @@ export const ActivityDetailScreen: React.FC = () => {
         {/* Description */}
         {activity.description ? (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Açıklama</Text>
+            <Text style={styles.sectionTitle}>ACIKLAMA</Text>
             <Text style={styles.description}>{activity.description}</Text>
           </View>
         ) : null}
 
         {/* Details */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Detaylar</Text>
+          <Text style={styles.sectionTitle}>DETAYLAR</Text>
 
           <View style={styles.detailRow}>
             <Text style={styles.detailIcon}>📍</Text>
@@ -208,7 +208,7 @@ export const ActivityDetailScreen: React.FC = () => {
         {/* Participants */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
-            Katılımcılar ({activity.participants.length})
+            KATILIMCILAR ({activity.participants.length})
           </Text>
 
           {activity.participants.map((p) => (
@@ -379,8 +379,7 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
     fontWeight: '600',
     marginBottom: spacing.md,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    includeFontPadding: false,
   },
   description: {
     ...typography.body,

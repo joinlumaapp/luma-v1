@@ -114,7 +114,7 @@ const PackCard: React.FC<{
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
         >
-          <Text style={packCardStyles.badgeText}>En Avantajli</Text>
+          <Text style={packCardStyles.badgeText}>EN AVANTAJLI</Text>
         </LinearGradient>
       </View>
     )}
@@ -179,8 +179,7 @@ const packCardStyles = StyleSheet.create({
     ...typography.captionSmall,
     color: '#FFFFFF',
     fontWeight: fontWeights.bold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    includeFontPadding: false,
   },
   content: {
     flexDirection: 'row',

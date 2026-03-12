@@ -114,7 +114,7 @@ const SupremeBadge: React.FC<{ compact: boolean }> = ({ compact }) => {
           <Ionicons name="diamond" size={iconSz} color={GOLD_24K.light} />
 
           {/* Supreme text */}
-          <Text style={[badgeStyles.supremeLabel, { fontSize: fs }]}>Supreme</Text>
+          <Text style={[badgeStyles.supremeLabel, { fontSize: fs }]}>SUPREME</Text>
 
           {/* Sparkle icon */}
           <Text style={[badgeStyles.sparkle, { fontSize: iconSz - 1 }]}>{'\u2728'}</Text>
@@ -227,8 +227,7 @@ const badgeStyles = StyleSheet.create({
   supremeLabel: {
     fontWeight: '800',
     color: GOLD_24K.light,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
+    includeFontPadding: false,
   },
   sparkle: {
     marginLeft: -1,

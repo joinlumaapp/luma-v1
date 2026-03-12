@@ -120,6 +120,9 @@ export type ProfileStackParamList = {
   MembershipPlans: undefined;
   PersonalitySelection: undefined;
   ProfileCoach: undefined;
+  BlockedUsers: undefined;
+  AccountDeletion: undefined;
+  PrivacyPolicy: undefined;
 };
 
 // Utility types for screen props

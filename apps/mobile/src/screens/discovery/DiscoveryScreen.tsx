@@ -1106,45 +1106,11 @@ export const DiscoveryScreen: React.FC = () => {
           <View style={styles.headerLeft}>
             <Text style={styles.headerTitle}>{'LUMA'}</Text>
             <Text style={styles.headerSubtitle}>
-              Bugün {dailyRemaining} profil kaldı
+              {isUnlimitedLikes ? 'Sınırsız beğeni' : `Bugün ${dailyRemaining} profil kaldı`}
             </Text>
           </View>
           <View style={styles.headerRight}>
-            {/* FOMO "likes you" badge — free users only */}
-            {isFreeTier && mockLikesYouCount > 0 && (
-              <Pressable
-                onPress={handleLikesYouTap}
-                accessibilityLabel={`${mockLikesYouCount} kisi seni begendi`}
-                accessibilityRole="button"
-                testID="discovery-fomo-likes-badge"
-              >
-                <View style={styles.fomoLikesBadge}>
-                  <Text style={styles.fomoLikesEmoji}>{'\uD83D\uDD25'}</Text>
-                  <Text style={styles.fomoLikesText}>{mockLikesYouCount} begeni</Text>
-                </View>
-              </Pressable>
-            )}
-            {/* Persistent streak badge — always visible when streak > 0 */}
-            {persistentStreakCount > 0 && (
-              <Pressable
-                onPress={handleStreakBadgeTap}
-                accessibilityLabel={`${persistentStreakCount} gunluk giris serisi`}
-                accessibilityRole="button"
-                testID="discovery-streak-badge"
-              >
-                <View style={styles.streakBadge}>
-                  <Text style={styles.streakBadgeEmoji}>{'\uD83D\uDD25'}</Text>
-                  <Text style={styles.streakBadgeCount}>{persistentStreakCount}</Text>
-                </View>
-                {showStreakTooltip && (
-                  <View style={styles.streakTooltip}>
-                    <Text style={styles.streakTooltipText}>
-                      {persistentStreakCount} gunluk seri!
-                    </Text>
-                  </View>
-                )}
-              </Pressable>
-            )}
+            {/* FOMO + Streak badges removed — clean header */}
             <Pressable
               onPress={() => navigation.navigate('Notifications')}
               accessibilityLabel={`Bildirimler${notifUnreadCount > 0 ? `, ${notifUnreadCount} okunmamis` : ''}`}
@@ -1174,15 +1140,6 @@ export const DiscoveryScreen: React.FC = () => {
             >
               <View style={[styles.filterButton, boostStatus.isActive && styles.boostButtonActive]} testID="discovery-boost-btn">
                 <Text style={styles.boostIcon}>{'\u26A1'}</Text>
-              </View>
-            </Pressable>
-            <Pressable
-              onPress={() => navigation.navigate('MembershipPlans')}
-              accessibilityLabel="Premium Paketler"
-              accessibilityRole="button"
-            >
-              <View style={styles.filterButton} testID="discovery-packages-btn">
-                <Ionicons name="diamond-outline" size={18} color={colors.text} />
               </View>
             </Pressable>
             <Pressable
@@ -1289,19 +1246,19 @@ export const DiscoveryScreen: React.FC = () => {
             <Animated.View style={[styles.colorWashOverlay, likeWashStyle]} pointerEvents="none">
               <Animated.View style={likeIconStyle}>
                 <Text style={styles.washIconText}>{'\u2713'}</Text>
-                <Text style={styles.washLabelText}>Beğen</Text>
+                <Text style={styles.washLabelText}>BEĞEN</Text>
               </Animated.View>
             </Animated.View>
             <Animated.View style={[styles.colorWashOverlay, passWashStyle]} pointerEvents="none">
               <Animated.View style={passIconStyle}>
                 <Text style={styles.washIconText}>{'\u2715'}</Text>
-                <Text style={styles.washLabelText}>Pas</Text>
+                <Text style={styles.washLabelText}>PAS</Text>
               </Animated.View>
             </Animated.View>
             <Animated.View style={[styles.colorWashOverlay, superLikeWashStyle]} pointerEvents="none">
               <Animated.View style={superLikeIconStyle}>
                 <Text style={styles.washIconText}>{'\u2B50'}</Text>
-                <Text style={styles.washLabelText}>Süper</Text>
+                <Text style={styles.washLabelText}>SÜPER</Text>
               </Animated.View>
             </Animated.View>
           </Animated.View>
@@ -1354,6 +1311,7 @@ export const DiscoveryScreen: React.FC = () => {
           userPhotoUrl={userPhotoUrl}
           compatibilityScore={matchedCard?.compatibilityPercent ?? 0}
           isSuperCompatible={matchedCard ? matchedCard.compatibilityPercent >= 90 : false}
+          isSupremeMember={matchedCard?.packageTier === 'reserved' || packageTier === 'reserved'}
           conversationStarters={matchConversationStarters}
           compatibilityExplanation={matchExplanation}
           onSendMessage={handleMatchSendMessage}
@@ -1506,14 +1464,14 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    flexShrink: 0,
-    paddingRight: spacing.xs,
+    gap: spacing.xs,
+    flexShrink: 1,
+    zIndex: 100,
   },
   filterButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1554,14 +1512,20 @@ const styles = StyleSheet.create({
   },
   streakTooltip: {
     position: 'absolute',
-    top: 38,
+    bottom: 38,
     left: -20,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     zIndex: 200,
-    minWidth: 100,
+    minWidth: 120,
+    // Subtle shadow for floating look
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 10,
   },
   streakTooltipText: {
     fontSize: 12,
@@ -1641,8 +1605,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '800',
     color: '#FFFFFF',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
+    includeFontPadding: false,
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,

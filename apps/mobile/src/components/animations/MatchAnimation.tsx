@@ -565,14 +565,14 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
           {/* Supreme badge */}
           {isSupremeMember && (
             <View style={[styles.superBadge, { backgroundColor: 'rgba(212, 175, 55, 0.15)', borderColor: 'rgba(212, 175, 55, 0.4)' }]}>
-              <Text style={[styles.superBadgeText, { color: '#D4AF37' }]}>Supreme Üye</Text>
+              <Text style={[styles.superBadgeText, { color: '#D4AF37' }]}>SUPREME ÜYE</Text>
             </View>
           )}
 
           {/* Super badge */}
           {!isSupremeMember && isSuperCompatible && (
             <View style={styles.superBadge}>
-              <Text style={styles.superBadgeText}>Süper Uyumlu</Text>
+              <Text style={styles.superBadgeText}>SÜPER UYUMLU</Text>
             </View>
           )}
 
@@ -647,7 +647,7 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
             {/* Conversation starters */}
             {conversationStarters && conversationStarters.length > 0 ? (
               <View style={styles.startersContainer}>
-                <Text style={styles.startersLabel}>Konuşma başlat:</Text>
+                <Text style={styles.startersLabel}>KONUŞMA BAŞLAT:</Text>
                 {conversationStarters.map((starter, idx) => (
                   <TouchableOpacity
                     key={`starter-${idx}`}
@@ -802,8 +802,7 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.accent,
     fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
+    includeFontPadding: false,
   },
   // ── Score circle ───────────────────────────────────
   scoreCircle: {
@@ -904,8 +903,7 @@ const styles = StyleSheet.create({
   startersLabel: {
     ...typography.captionSmall,
     color: colors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    includeFontPadding: false,
     marginBottom: spacing.xs,
   },
   starterChip: {
