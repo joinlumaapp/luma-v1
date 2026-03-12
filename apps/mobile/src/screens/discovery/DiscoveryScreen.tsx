@@ -18,7 +18,6 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Image,
-  AppState,
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -236,14 +235,6 @@ const StoriesRow: React.FC<StoriesRowProps> = ({ navigation, userFirstName, user
 
 // ─── FOMO helpers ────────────────────────────────────────────
 
-/** Deterministic mock "likes you" count based on day — returns 3-15 */
-const getMockLikesYouCount = (): number => {
-  const dayOfYear = Math.floor(
-    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000,
-  );
-  return 3 + (dayOfYear * 7 + 11) % 13; // 3..15 range, changes daily
-};
-
 /** Milliseconds until midnight for countdown display */
 const getMsUntilMidnight = (): number => {
   const now = new Date();
@@ -276,7 +267,6 @@ export const DiscoveryScreen: React.FC = () => {
   const userProfile = useProfileStore((s) => s.profile);
   const canUndo = useDiscoveryStore((s) => s.canUndo);
   const undoLastSwipe = useDiscoveryStore((s) => s.undoLastSwipe);
-  const totalCandidates = useDiscoveryStore((s) => s.totalCandidates);
   const coinBalance = useCoinStore((s) => s.balance);
   const purchaseExtraLikes = useCoinStore((s) => s.purchaseExtraLikes);
 
@@ -319,8 +309,7 @@ export const DiscoveryScreen: React.FC = () => {
 
   // ─── Login streak state ─────────────────────────────────
   const [streakData, setStreakData] = useState<LoginStreakResponse | null>(null);
-  const [persistentStreakCount, setPersistentStreakCount] = useState<number>(0);
-  const [showStreakTooltip, setShowStreakTooltip] = useState(false);
+  const [_persistentStreakCount, setPersistentStreakCount] = useState<number>(0);
   const streakRecorded = useRef(false);
 
   useEffect(() => {
@@ -341,12 +330,6 @@ export const DiscoveryScreen: React.FC = () => {
     setStreakData(null);
   }, []);
 
-  const handleStreakBadgeTap = useCallback(() => {
-    setShowStreakTooltip((prev) => !prev);
-    // Auto-hide tooltip after 3 seconds
-    setTimeout(() => setShowStreakTooltip(false), 3000);
-  }, []);
-
   // ─── Boost state ────────────────────────────────────────
   const [showBoostModal, setShowBoostModal] = useState(false);
   const [boostStatus, setBoostStatus] = useState<BoostStatusResponse>({ isActive: false });
@@ -361,7 +344,6 @@ export const DiscoveryScreen: React.FC = () => {
 
   // ─── FOMO engagement state ──────────────────────────────
   const isFreeTier = packageTier === 'free';
-  const mockLikesYouCount = useMemo(() => getMockLikesYouCount(), []);
   const isSaturdayBonus = DISCOVERY_CONFIG.IS_SATURDAY_BONUS;
 
   // FOMO: midnight countdown + teaser pulse (declared here, effects after hasMoreCards)
@@ -521,7 +503,7 @@ export const DiscoveryScreen: React.FC = () => {
 
   // Tier-aware daily like limit
   const tierDailyLimit = DISCOVERY_CONFIG.DAILY_LIKES[packageTier];
-  const isUnlimitedLikes = tierDailyLimit === -1;
+  const isUnlimitedLikes = (tierDailyLimit as number) === -1;
 
   const handleSwipeComplete = useCallback((direction: 'left' | 'right' | 'up') => {
     const card = currentCardRef.current;

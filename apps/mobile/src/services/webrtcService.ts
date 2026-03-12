@@ -8,16 +8,9 @@
 
 import {
   socketService,
-  SERVER_EVENTS,
   type CallType,
-  type CallInitiatePayload,
-  type CallAcceptPayload,
-  type CallRejectPayload,
-  type CallEndPayload,
-  type WebRTCOfferPayload,
-  type WebRTCAnswerPayload,
-  type ICECandidatePayload,
 } from './socketService';
+import { WS_EVENTS } from '@luma/shared/src/constants/api';
 
 // Re-export types from the module declaration for internal use.
 // These are resolved via apps/mobile/src/types/declarations.d.ts.
@@ -177,8 +170,8 @@ class WebRTCService {
 
     // Incoming call
     cleanups.push(
-      socketService.on<CallInitiatePayload>(
-        SERVER_EVENTS.CALL_INITIATE,
+      socketService.on(
+        WS_EVENTS.CALL_INITIATE,
         (data) => {
           if (this.callState !== 'idle') {
             // Already in a call — auto-reject the incoming call
@@ -206,8 +199,8 @@ class WebRTCService {
 
     // Call accepted — caller side: create peer connection and send offer
     cleanups.push(
-      socketService.on<CallAcceptPayload>(
-        SERVER_EVENTS.CALL_ACCEPT,
+      socketService.on(
+        WS_EVENTS.CALL_ACCEPT,
         (_data) => {
           if (this.callState !== 'outgoing') return;
 
@@ -231,8 +224,8 @@ class WebRTCService {
 
     // Call rejected
     cleanups.push(
-      socketService.on<CallRejectPayload>(
-        SERVER_EVENTS.CALL_REJECT,
+      socketService.on(
+        WS_EVENTS.CALL_REJECT,
         (data) => {
           if (this.callState !== 'outgoing') return;
 
@@ -245,8 +238,8 @@ class WebRTCService {
 
     // Call ended
     cleanups.push(
-      socketService.on<CallEndPayload>(
-        SERVER_EVENTS.CALL_END,
+      socketService.on(
+        WS_EVENTS.CALL_END,
         (_data) => {
           if (this.callState === 'idle') return;
 
@@ -259,8 +252,8 @@ class WebRTCService {
 
     // WebRTC SDP offer received (callee side)
     cleanups.push(
-      socketService.on<WebRTCOfferPayload>(
-        SERVER_EVENTS.WEBRTC_OFFER,
+      socketService.on(
+        WS_EVENTS.WEBRTC_OFFER,
         (data) => {
           this.handleRemoteOffer(data.sdp);
         },
@@ -269,8 +262,8 @@ class WebRTCService {
 
     // WebRTC SDP answer received (caller side)
     cleanups.push(
-      socketService.on<WebRTCAnswerPayload>(
-        SERVER_EVENTS.WEBRTC_ANSWER,
+      socketService.on(
+        WS_EVENTS.WEBRTC_ANSWER,
         (data) => {
           this.handleRemoteAnswer(data.sdp);
         },
@@ -279,8 +272,8 @@ class WebRTCService {
 
     // ICE candidate received
     cleanups.push(
-      socketService.on<ICECandidatePayload>(
-        SERVER_EVENTS.WEBRTC_ICE_CANDIDATE,
+      socketService.on(
+        WS_EVENTS.WEBRTC_ICE_CANDIDATE,
         (data) => {
           this.handleRemoteIceCandidate(data.candidate);
         },

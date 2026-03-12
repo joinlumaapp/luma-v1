@@ -14,7 +14,6 @@ import {
   InteractionManager,
   ScrollView,
   Animated,
-  Dimensions,
   Platform,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -33,8 +32,6 @@ import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 
 type DatePlannerRouteProp = RouteProp<MatchesStackParamList, 'DatePlanner'>;
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ─── Activity Presets ────────────────────────────────────────────────────────
 

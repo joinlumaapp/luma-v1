@@ -6,6 +6,7 @@ import {
 import { ChatService } from './chat.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ModerationService } from '../moderation/moderation.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { ReactionEmojiValue } from './dto/message-reaction.dto';
 
 describe('ChatService', () => {
@@ -29,6 +30,9 @@ describe('ChatService', () => {
       update: jest.fn(),
       delete: jest.fn(),
     },
+    userProfile: {
+      findUnique: jest.fn(),
+    },
   };
 
   const mockModerationService = {
@@ -39,14 +43,23 @@ describe('ChatService', () => {
     isBlocked: jest.fn().mockResolvedValue(false),
   };
 
+  const mockNotificationsService = {
+    notifyNewMessage: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     jest.resetAllMocks();
+
+    // Reset default mocks
+    mockModerationService.isBlocked.mockResolvedValue(false);
+    mockNotificationsService.notifyNewMessage.mockResolvedValue(undefined);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ChatService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: ModerationService, useValue: mockModerationService },
+        { provide: NotificationsService, useValue: mockNotificationsService },
       ],
     }).compile();
 
@@ -506,6 +519,197 @@ describe('ChatService', () => {
         where: { id: matchId },
         data: { updatedAt: expect.any(Date) },
       });
+    });
+
+    it('should throw ForbiddenException when sender is blocked by recipient', async () => {
+      mockPrisma.match.findUnique.mockResolvedValue({
+        userAId: userId,
+        userBId: 'partner-1',
+        isActive: true,
+      });
+      mockModerationService.isBlocked.mockResolvedValue(true);
+
+      await expect(
+        service.sendMessage(userId, matchId, { content: 'Hello' }),
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(mockModerationService.isBlocked).toHaveBeenCalledWith(userId, 'partner-1');
+    });
+
+    it('should call isBlocked with correct user pair when user is userB', async () => {
+      mockPrisma.match.findUnique.mockResolvedValue({
+        userAId: 'partner-1',
+        userBId: userId,
+        isActive: true,
+      });
+      mockModerationService.isBlocked.mockResolvedValue(true);
+
+      await expect(
+        service.sendMessage(userId, matchId, { content: 'Hello' }),
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(mockModerationService.isBlocked).toHaveBeenCalledWith(userId, 'partner-1');
+    });
+
+    it('should send push notification to partner after message creation', async () => {
+      mockPrisma.match.findUnique.mockResolvedValue({
+        userAId: userId,
+        userBId: 'partner-1',
+        isActive: true,
+      });
+      mockPrisma.chatMessage.create.mockResolvedValue({
+        id: 'msg-notif',
+        senderId: userId,
+        content: 'Merhaba!',
+        type: 'TEXT',
+        status: 'SENT',
+        mediaUrl: null,
+        createdAt: new Date(),
+      });
+      mockPrisma.match.update.mockResolvedValue({});
+      mockPrisma.userProfile.findUnique.mockResolvedValue({ firstName: 'Ali' });
+
+      await service.sendMessage(userId, matchId, { content: 'Merhaba!' });
+
+      expect(mockNotificationsService.notifyNewMessage).toHaveBeenCalledWith(
+        'partner-1',
+        'Ali',
+        'Merhaba!',
+      );
+    });
+
+    it('should truncate long message in notification preview', async () => {
+      const longMessage = 'A'.repeat(150);
+      mockPrisma.match.findUnique.mockResolvedValue({
+        userAId: userId,
+        userBId: 'partner-1',
+        isActive: true,
+      });
+      mockPrisma.chatMessage.create.mockResolvedValue({
+        id: 'msg-long',
+        senderId: userId,
+        content: longMessage,
+        type: 'TEXT',
+        status: 'SENT',
+        mediaUrl: null,
+        createdAt: new Date(),
+      });
+      mockPrisma.match.update.mockResolvedValue({});
+      mockPrisma.userProfile.findUnique.mockResolvedValue({ firstName: 'Ali' });
+
+      await service.sendMessage(userId, matchId, { content: longMessage });
+
+      const notifyCall = mockNotificationsService.notifyNewMessage.mock.calls[0];
+      expect(notifyCall[2].length).toBeLessThanOrEqual(100);
+      expect(notifyCall[2]).toContain('...');
+    });
+
+    it('should use fallback sender name when profile does not exist', async () => {
+      mockPrisma.match.findUnique.mockResolvedValue({
+        userAId: userId,
+        userBId: 'partner-1',
+        isActive: true,
+      });
+      mockPrisma.chatMessage.create.mockResolvedValue({
+        id: 'msg-no-profile',
+        senderId: userId,
+        content: 'Test',
+        type: 'TEXT',
+        status: 'SENT',
+        mediaUrl: null,
+        createdAt: new Date(),
+      });
+      mockPrisma.match.update.mockResolvedValue({});
+      mockPrisma.userProfile.findUnique.mockResolvedValue(null);
+
+      await service.sendMessage(userId, matchId, { content: 'Test' });
+
+      expect(mockNotificationsService.notifyNewMessage).toHaveBeenCalledWith(
+        'partner-1',
+        'Biri',
+        'Test',
+      );
+    });
+
+    it('should not fail when notification sending throws', async () => {
+      mockPrisma.match.findUnique.mockResolvedValue({
+        userAId: userId,
+        userBId: 'partner-1',
+        isActive: true,
+      });
+      mockPrisma.chatMessage.create.mockResolvedValue({
+        id: 'msg-notif-fail',
+        senderId: userId,
+        content: 'Test',
+        type: 'TEXT',
+        status: 'SENT',
+        mediaUrl: null,
+        createdAt: new Date(),
+      });
+      mockPrisma.match.update.mockResolvedValue({});
+      mockPrisma.userProfile.findUnique.mockResolvedValue({ firstName: 'Ali' });
+      mockNotificationsService.notifyNewMessage.mockRejectedValue(new Error('Push failed'));
+
+      // Should not throw even though notification failed
+      const result = await service.sendMessage(userId, matchId, { content: 'Test' });
+
+      expect(result.id).toBe('msg-notif-fail');
+    });
+
+    it('should persist message with default TEXT type when type not provided', async () => {
+      mockPrisma.match.findUnique.mockResolvedValue({
+        userAId: userId,
+        userBId: 'partner-1',
+        isActive: true,
+      });
+      mockPrisma.chatMessage.create.mockResolvedValue({
+        id: 'msg-default',
+        senderId: userId,
+        content: 'Hello',
+        type: 'TEXT',
+        status: 'SENT',
+        mediaUrl: null,
+        createdAt: new Date(),
+      });
+      mockPrisma.match.update.mockResolvedValue({});
+
+      await service.sendMessage(userId, matchId, { content: 'Hello' });
+
+      expect(mockPrisma.chatMessage.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            type: 'TEXT',
+          }),
+        }),
+      );
+    });
+
+    it('should set null mediaUrl when not provided', async () => {
+      mockPrisma.match.findUnique.mockResolvedValue({
+        userAId: userId,
+        userBId: 'partner-1',
+        isActive: true,
+      });
+      mockPrisma.chatMessage.create.mockResolvedValue({
+        id: 'msg-no-media',
+        senderId: userId,
+        content: 'Text only',
+        type: 'TEXT',
+        status: 'SENT',
+        mediaUrl: null,
+        createdAt: new Date(),
+      });
+      mockPrisma.match.update.mockResolvedValue({});
+
+      await service.sendMessage(userId, matchId, { content: 'Text only' });
+
+      expect(mockPrisma.chatMessage.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            mediaUrl: null,
+          }),
+        }),
+      );
     });
   });
 

@@ -10,6 +10,8 @@ import type { FeedCard } from '../services/discoveryService';
 import { useProfileStore } from './profileStore';
 import { useMatchStore } from './matchStore';
 import { useNotificationStore } from './notificationStore';
+import { parseApiError } from '../services/api';
+import type { AxiosError } from 'axios';
 
 const BATCH_COOLDOWN_KEY = 'luma_discovery_batch_cooldown_end';
 
@@ -95,6 +97,9 @@ interface DiscoveryState {
   // Supreme impression tracking
   premiumImpressions: number;
 
+  // Error state
+  error: string | null;
+
   // Actions
   fetchFeed: () => Promise<void>;
   checkAndLoadBatch: () => Promise<void>;
@@ -109,6 +114,7 @@ interface DiscoveryState {
   clearUndo: () => void;
   dismissSuperLikeGlow: () => void;
   trackSupremeImpression: () => void;
+  clearError: () => void;
 }
 
 // Transform backend FeedCard to store DiscoveryProfile
@@ -272,6 +278,9 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
   // Supreme impression counter
   premiumImpressions: 0,
 
+  // Error state
+  error: null,
+
   // Actions
   checkAndLoadBatch: async () => {
     // Check if cooldown has passed; if so, load new batch
@@ -292,7 +301,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
   },
 
   fetchFeed: async () => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
       const response = await discoveryService.getFeed(get().filters);
       const ranked = rankAndLabel(response.cards.map(mapFeedCardToProfile));
@@ -303,9 +312,14 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
         dailyRemaining: response.remaining,
         totalCandidates: response.totalCandidates,
         isLoading: false,
+        error: null,
       });
-    } catch {
-      set({ isLoading: false });
+    } catch (error: unknown) {
+      if (__DEV__) {
+        console.warn('Kesif akisi yukleme basarisiz, servis mock fallback kullanilacak:', error);
+      }
+      const apiError = parseApiError(error as AxiosError);
+      set({ isLoading: false, error: apiError.userMessage });
     }
   },
 
@@ -498,7 +512,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
     // Use tier-based limit; imports from authStore at call-time to avoid circular deps
     const tier = (require('../stores/authStore').useAuthStore.getState().user?.packageTier ?? 'free') as keyof typeof DISCOVERY_CONFIG.DAILY_LIKES;
     const limit = DISCOVERY_CONFIG.DAILY_LIKES[tier];
-    set({ dailyRemaining: limit === -1 ? 9999 : limit });
+    set({ dailyRemaining: (limit as number) === -1 ? 9999 : limit });
   },
 
   dismissMatch: () =>
@@ -521,4 +535,6 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
 
   trackSupremeImpression: () =>
     set((state) => ({ premiumImpressions: state.premiumImpressions + 1 })),
+
+  clearError: () => set({ error: null }),
 }));

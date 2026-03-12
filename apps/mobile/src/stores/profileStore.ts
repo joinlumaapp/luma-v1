@@ -4,6 +4,8 @@ import { create } from 'zustand';
 import { profileService } from '../services/profileService';
 import type { ProfileResponse } from '../services/profileService';
 import { PROFILE_CONFIG } from '../constants/config';
+import { parseApiError } from '../services/api';
+import type { AxiosError } from 'axios';
 
 export interface ProfileData {
   firstName: string;
@@ -31,6 +33,7 @@ interface ProfileState {
   profile: ProfileData;
   isLoading: boolean;
   completionPercent: number;
+  error: string | null;
   // Internal: photo IDs from backend for deletion/reorder operations
   _photoIds: string[];
 
@@ -46,6 +49,7 @@ interface ProfileState {
   setMainPhoto: (index: number) => Promise<void>;
   calculateCompletion: () => number;
   reset: () => void;
+  clearError: () => void;
 }
 
 const initialProfile: ProfileData = {
@@ -96,6 +100,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   profile: { ...initialProfile },
   isLoading: false,
   completionPercent: 0,
+  error: null,
   _photoIds: [],
 
   // Actions
@@ -116,7 +121,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     })),
 
   fetchProfile: async () => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
       const data = await profileService.getProfile();
       const profile = mapResponseToProfile(data);
@@ -126,14 +131,19 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         _photoIds: photoIds,
         completionPercent: data.completionPercent,
         isLoading: false,
+        error: null,
       });
-    } catch {
-      set({ isLoading: false });
+    } catch (error: unknown) {
+      if (__DEV__) {
+        console.warn('Profil yukleme basarisiz:', error);
+      }
+      const apiError = parseApiError(error as AxiosError);
+      set({ isLoading: false, error: apiError.userMessage });
     }
   },
 
   updateProfile: async (data) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
       const response = await profileService.updateProfile(data);
       const profile = mapResponseToProfile(response);
@@ -143,14 +153,25 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         _photoIds: photoIds,
         completionPercent: response.completionPercent,
         isLoading: false,
+        error: null,
       });
-    } catch {
-      set({ isLoading: false });
+    } catch (error: unknown) {
+      if (__DEV__) {
+        console.warn('Profil guncelleme basarisiz:', error);
+        // In dev, apply changes locally anyway
+        set((state) => ({
+          profile: { ...state.profile, ...data },
+          isLoading: false,
+        }));
+      } else {
+        const apiError = parseApiError(error as AxiosError);
+        set({ isLoading: false, error: apiError.userMessage });
+      }
     }
   },
 
   uploadPhoto: async (uri) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
       const order = get().profile.photos.length;
       const response = await profileService.uploadPhoto(uri, order);
@@ -161,14 +182,29 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         },
         _photoIds: [...state._photoIds, response.id],
         isLoading: false,
+        error: null,
       }));
-    } catch {
-      set({ isLoading: false });
+    } catch (error: unknown) {
+      if (__DEV__) {
+        console.warn('Fotograf yukleme basarisiz:', error);
+        // In dev, add the local URI directly
+        set((state) => ({
+          profile: {
+            ...state.profile,
+            photos: [...state.profile.photos, uri],
+          },
+          _photoIds: [...state._photoIds, `local-${Date.now()}`],
+          isLoading: false,
+        }));
+      } else {
+        const apiError = parseApiError(error as AxiosError);
+        set({ isLoading: false, error: apiError.userMessage });
+      }
     }
   },
 
   deletePhoto: async (index) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
       const photoId = get()._photoIds[index];
       if (photoId) {
@@ -182,8 +218,22 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         _photoIds: state._photoIds.filter((_, i) => i !== index),
         isLoading: false,
       }));
-    } catch {
-      set({ isLoading: false });
+    } catch (error: unknown) {
+      if (__DEV__) {
+        console.warn('Fotograf silme basarisiz:', error);
+        // In dev, remove locally anyway
+        set((state) => ({
+          profile: {
+            ...state.profile,
+            photos: state.profile.photos.filter((_, i) => i !== index),
+          },
+          _photoIds: state._photoIds.filter((_, i) => i !== index),
+          isLoading: false,
+        }));
+      } else {
+        const apiError = parseApiError(error as AxiosError);
+        set({ isLoading: false, error: apiError.userMessage });
+      }
     }
   },
 
@@ -239,6 +289,9 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       profile: { ...initialProfile },
       isLoading: false,
       completionPercent: 0,
+      error: null,
       _photoIds: [],
     }),
+
+  clearError: () => set({ error: null }),
 }));

@@ -302,6 +302,7 @@ model CompatibilityScore {
   @@index([userAId])
   @@index([userBId])
   @@index([finalScore])
+  @@index([level, finalScore]) // Discovery: find Super matches sorted by score
   @@map("compatibility_scores")
 }
 
@@ -437,6 +438,7 @@ model HarmonySession {
   @@index([matchId])
   @@index([userAId, status])
   @@index([userBId, status])
+  @@index([status, endsAt]) // Cleanup: find expired active sessions
   @@map("harmony_sessions")
 }
 
@@ -748,6 +750,7 @@ model Subscription {
 
   @@index([userId, isActive])
   @@index([expiryDate])
+  @@index([userId, packageTier, isActive]) // Payments: current active subscription tier
   @@map("subscriptions")
 }
 
@@ -791,6 +794,7 @@ model GoldTransaction {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+  @@index([userId, type, createdAt]) // Payments: filter by transaction type
   @@map("gold_transactions")
 }
 

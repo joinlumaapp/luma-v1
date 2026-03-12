@@ -3,8 +3,9 @@
 // 5 Game Cards, Badge Definitions, 10 Demo Users with Profiles,
 // Photos, Answers, Matches, Chat Messages, and Badge Awards
 
-import { PrismaClient, QuestionCategory, PackageTier, IntentionTag, Gender, SwipeAction, MatchAnimationType, CompatibilityLevel, ChatMessageType, ChatMessageStatus } from '@prisma/client';
+import { PrismaClient, QuestionCategory, PackageTier, IntentionTag, Gender, SwipeAction, MatchAnimationType, CompatibilityLevel, ChatMessageType, ChatMessageStatus, NotificationType, PaymentPlatform, GoldTransactionType } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { randomBetween, randomPickN, INTEREST_TAGS, TURKISH_CITIES } from './seed-utils';
 
 const prisma = new PrismaClient();
 
@@ -311,6 +312,84 @@ const USER_BADGE_AWARDS: Record<number, string[]> = {
   9: ['first_spark', 'soul_mate'],                              // Kaan
 };
 
+// Interest tags per user (indices into INTEREST_TAGS)
+const USER_INTEREST_TAGS: string[][] = [
+  ['Kitap', 'Kahve', 'Seyahat', 'Felsefe', 'Siir', 'Yuzme'],          // Elif
+  ['Teknoloji', 'Dagcilik', 'Kahve', 'Kosu', 'Spor', 'Podcast'],       // Ahmet
+  ['Gitar', 'Muzik', 'Sanat', 'Resim', 'Dans', 'Fotograf'],            // Zeynep
+  ['Muzik', 'Seyahat', 'Kahve', 'Film', 'Felsefe', 'Piyano'],          // Can
+  ['Tasarim', 'Sanat', 'Film', 'Kahve', 'Hayvan Sevgisi', 'Fotograf'], // Selin
+  ['Dalga Sorfu', 'Spor', 'Doga', 'Kamp', 'Yuzme', 'Bisiklet'],        // Burak
+  ['Kitap', 'Yemek Yapma', 'Gonullu Calisma', 'Yoga', 'Bilim'],        // Defne
+  ['Teknoloji', 'Yemek Yapma', 'Seyahat', 'Podcast', 'Basketbol'],      // Emre
+  ['Yoga', 'Kitap', 'Siir', 'Film', 'Meditasyon', 'Pilates'],           // Ece
+  ['Fotograf', 'Sanat', 'Film', 'Seyahat', 'Tasarim', 'Tarih'],         // Kaan
+];
+
+// Profile prompts per user (Hinge-style question-answer pairs)
+const USER_PROFILE_PROMPTS: Array<Array<{ question: string; answer: string }>> = [
+  // Elif
+  [
+    { question: 'Beni en iyi anlatan sey', answer: 'Elinde her zaman bir kitap ve bir fincan kahve olan biri' },
+    { question: 'Ideal Cumartesi', answer: 'Sahilde yuruyus, ardinda kitapci turu ve aksamustu bir kafe' },
+    { question: 'Hayalim', answer: 'Dunyayi gezip her ulkeden bir kitap toplamak' },
+  ],
+  // Ahmet
+  [
+    { question: 'Beni gulduren sey', answer: 'Kodun ilk seferde calismasi (cok nadir oluyor)' },
+    { question: 'Haftasonu plani', answer: 'Sabah erken kalkip dag zirve tirmani, aksam aci kahve esliginde belgesel' },
+    { question: 'Seni etkilemek icin', answer: 'Yildizlarin altinda kamp yapar ve teleskopla gokyuzunu gosteririm' },
+  ],
+  // Zeynep
+  [
+    { question: 'Muzik zevkim', answer: 'Indie rock, Turkce alternatif ve bazen gece 3te klasik muzik' },
+    { question: 'En sevdigim sanat', answer: 'Soyut resimler ciziyorum, her biri bir duyguyu anlatiyor' },
+    { question: 'Benden bekleme', answer: 'Plan yapmami, ben anin insaniyim!' },
+  ],
+  // Can
+  [
+    { question: 'Sahne disinda ben', answer: 'Jazz piyanistiyim ama evde sukut da bir muzikal' },
+    { question: 'Ruh halim', answer: 'Bossa nova gibi: sakin, sicak ve biraz melankolik' },
+    { question: 'Birlikte yapalim', answer: 'Plak dukkanlarinda kaybolalim, sonra bir kafede canlarin anlamini tartisalim' },
+  ],
+  // Selin
+  [
+    { question: 'Beni tanimlayan renk', answer: 'Lavanta moru — sakin gorunur ama derinligi vardir' },
+    { question: 'Kedilerim', answer: 'Pamuk ve Bulut, hayatimin anlami, onlar olmadan eksigim' },
+    { question: 'Iyi tasarim', answer: 'Bir logo degil, duygu aktaran gorsel bir hikaye' },
+  ],
+  // Burak
+  [
+    { question: 'Gunun en iyi ani', answer: 'Sabah 6da dalgalarin ustunde olmak, dunya henuz uyurken' },
+    { question: 'Motivasyonum', answer: 'Dogayla bas basa her gun yeni bir macera' },
+    { question: 'Seni gotururum', answer: 'Antalya sahilinde sorf dersi, sonra gun batiminda mangal' },
+  ],
+  // Defne
+  [
+    { question: 'Neden tip', answer: 'Bir cocugun gulumsemsini geri getirmek dunyanin en guzel duygusu' },
+    { question: 'Mutfagim', answer: 'Anneannemden ogredigim yemekler, ozellikle ev mantisi' },
+    { question: 'Bende farkli olan', answer: 'Sabah 5te kalkip ders calisan ama hafta sonu brunch yapmadan cikamayan biri' },
+  ],
+  // Emre
+  [
+    { question: 'Startup hayati', answer: 'Kaos ve yaraticilik bir arada, her gun farkli bir meydan okuma' },
+    { question: 'En iyi yemegim', answer: 'Ev yapimi levrekli risotto — tarifi ozel, paylasim sartli' },
+    { question: 'Gelecek plani', answer: 'Sirketimi buyutmek ama hayattan da keyif almak' },
+  ],
+  // Ece
+  [
+    { question: 'Ikilemi cozme yontemi', answer: 'Bir yoga seansinda veya kitap okurken cozum kendilginden gelir' },
+    { question: 'Favori mekanlari', answer: 'Sessiz kafeler, antikaci dukkanlari ve sahaf' },
+    { question: 'Ideal partner', answer: 'Zeki sohbet edebilen, sessizlikten rahatsiz olmayan biri' },
+  ],
+  // Kaan
+  [
+    { question: 'Her kare bir hikaye', answer: 'Sokak fotografciliginda insanlarin gormedigi detaylari yakalarim' },
+    { question: 'Perspektif', answer: 'Herkesin gordugunun otesinde ne oldugunu merak ederim' },
+    { question: 'Birlikte yapilacak', answer: 'Balaatta kaybolalim, renkli sokaklarda fotograf cekelim' },
+  ],
+];
+
 // ============================================================
 // MAIN SEED FUNCTION
 // ============================================================
@@ -349,6 +428,14 @@ async function seedDemoData(): Promise<void> {
     prisma.harmonyUsedCard.deleteMany(),
     prisma.harmonySession.deleteMany(),
     prisma.dailyQuestionAnswer.deleteMany(),
+    prisma.datePlan.deleteMany(),
+    prisma.weeklyReport.deleteMany(),
+    prisma.loginStreak.deleteMany(),
+    prisma.profilePrompt.deleteMany(),
+    prisma.profileBoost.deleteMany(),
+    prisma.dailyPick.deleteMany(),
+    prisma.feedView.deleteMany(),
+    prisma.dailySwipeCount.deleteMany(),
     prisma.swipe.deleteMany(),
     prisma.match.deleteMany(),
     prisma.compatibilityScore.deleteMany(),
@@ -359,11 +446,13 @@ async function seedDemoData(): Promise<void> {
     prisma.notification.deleteMany(),
     prisma.deviceToken.deleteMany(),
     prisma.goldTransaction.deleteMany(),
+    prisma.iapReceipt.deleteMany(),
     prisma.subscription.deleteMany(),
     prisma.block.deleteMany(),
     prisma.report.deleteMany(),
     prisma.placeMemory.deleteMany(),
     prisma.placeCheckIn.deleteMany(),
+    prisma.discoveredPlace.deleteMany(),
     prisma.coupleBadge.deleteMany(),
     prisma.couplesClubParticipant.deleteMany(),
     prisma.relationship.deleteMany(),
@@ -373,7 +462,7 @@ async function seedDemoData(): Promise<void> {
     prisma.user.deleteMany(),
   ]);
 
-  // 1. Create users
+  // 1. Create users (with interest tags and profile prompts)
   const userIds = await seedDemoUsers();
   console.log(`  ${userIds.length} demo users created`);
 
@@ -396,6 +485,30 @@ async function seedDemoData(): Promise<void> {
   // 6. Create notification preferences
   await seedDemoNotificationPrefs(userIds);
   console.log('  Notification preferences seeded');
+
+  // 7. Create demo notifications
+  await seedDemoNotifications(userIds, matchIds);
+  console.log('  Demo notifications seeded');
+
+  // 8. Create demo subscriptions for paid users
+  await seedDemoSubscriptions(userIds);
+  console.log('  Demo subscriptions seeded');
+
+  // 9. Create login streaks
+  await seedDemoLoginStreaks(userIds);
+  console.log('  Login streaks seeded');
+
+  // 10. Create profile prompts
+  await seedDemoProfilePrompts(userIds);
+  console.log('  Profile prompts seeded');
+
+  // 11. Create demo gold transactions
+  await seedDemoGoldTransactions(userIds);
+  console.log('  Gold transactions seeded');
+
+  // 12. Create demo discovered places
+  await seedDemoPlaces(userIds);
+  console.log('  Discovered places seeded');
 }
 
 // ============================================================
@@ -430,6 +543,7 @@ async function seedDemoUsers(): Promise<string[]> {
             isComplete: true,
             lastActiveAt: new Date(),
             locationUpdatedAt: new Date(),
+            interestTags: USER_INTEREST_TAGS[DEMO_USERS.indexOf(demo)] ?? [],
           },
         },
       },
@@ -1418,6 +1532,360 @@ async function seedBadgeDefinitions(): Promise<void> {
   }
 
   console.log(`  ${badges.length} badges seeded`);
+}
+
+// ============================================================
+// NOTIFICATIONS SEEDER
+// ============================================================
+
+async function seedDemoNotifications(userIds: string[], matchIds: string[]): Promise<void> {
+  const now = new Date();
+
+  const notifications: Array<{
+    userId: string;
+    type: NotificationType;
+    title: string;
+    body: string;
+    data: Record<string, string> | null;
+    isRead: boolean;
+    createdAt: Date;
+  }> = [];
+
+  // Match notifications for all matched users
+  for (let i = 0; i < MATCH_PAIRS.length; i++) {
+    const pair = MATCH_PAIRS[i];
+    const userAName = DEMO_USERS[pair.userAIdx].firstName;
+    const userBName = DEMO_USERS[pair.userBIdx].firstName;
+    const matchId = matchIds[i];
+
+    notifications.push({
+      userId: userIds[pair.userAIdx],
+      type: NotificationType.NEW_MATCH,
+      title: 'Yeni Eslesme!',
+      body: `${userBName} ile eslestiniz! Simdi sohbet baslatin.`,
+      data: { matchId },
+      isRead: true,
+      createdAt: new Date(now.getTime() - (5 - i) * 24 * 60 * 60 * 1000),
+    });
+
+    notifications.push({
+      userId: userIds[pair.userBIdx],
+      type: NotificationType.NEW_MATCH,
+      title: 'Yeni Eslesme!',
+      body: `${userAName} ile eslestiniz! Simdi sohbet baslatin.`,
+      data: { matchId },
+      isRead: true,
+      createdAt: new Date(now.getTime() - (5 - i) * 24 * 60 * 60 * 1000),
+    });
+  }
+
+  // Message notifications for recent messages
+  for (let i = 0; i < MATCH_PAIRS.length; i++) {
+    const pair = MATCH_PAIRS[i];
+    const matchId = matchIds[i];
+    const userBName = DEMO_USERS[pair.userBIdx].firstName;
+
+    notifications.push({
+      userId: userIds[pair.userAIdx],
+      type: NotificationType.NEW_MESSAGE,
+      title: `${userBName}`,
+      body: `${userBName}: Yeni mesajiniz var`,
+      data: { matchId },
+      isRead: i < 3,
+      createdAt: new Date(now.getTime() - i * 3600000),
+    });
+  }
+
+  // Badge earned notifications
+  notifications.push({
+    userId: userIds[0],
+    type: NotificationType.BADGE_EARNED,
+    title: 'Yeni Rozet Kazandiniz!',
+    body: 'Merak Uzmani rozetini kazandiniz! +10 Gold odullendirildiniz.',
+    data: { badgeKey: 'question_explorer' },
+    isRead: true,
+    createdAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+  });
+
+  // Super like notification
+  notifications.push({
+    userId: userIds[4],
+    type: NotificationType.SUPER_LIKE,
+    title: 'Super Begeni!',
+    body: 'Biri sizi super begendi! Kimligini gormek icin Gold paketine yukseltin.',
+    data: null,
+    isRead: false,
+    createdAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
+  });
+
+  // System notification
+  for (const userId of userIds) {
+    notifications.push({
+      userId,
+      type: NotificationType.SYSTEM,
+      title: 'LUMA\'ya Hos Geldiniz!',
+      body: 'Profilinizi tamamlayin ve eslesmeler bulmaya baslayin. Uyumluluk sorularini yanitlamayi unutmayin!',
+      data: null,
+      isRead: true,
+      createdAt: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000),
+    });
+  }
+
+  // Harmony invite notifications
+  notifications.push({
+    userId: userIds[1],
+    type: NotificationType.HARMONY_INVITE,
+    title: 'Harmony Daveti',
+    body: `${DEMO_USERS[0].firstName} sizi Harmony oturumuna davet ediyor!`,
+    data: { matchId: matchIds[0] },
+    isRead: false,
+    createdAt: new Date(now.getTime() - 1 * 60 * 60 * 1000),
+  });
+
+  // Subscription expiring
+  notifications.push({
+    userId: userIds[0],
+    type: NotificationType.SUBSCRIPTION_EXPIRING,
+    title: 'Abonelik Hatirlatmasi',
+    body: 'Pro aboneliginiz 3 gun icinde sona eriyor. Yenilemeyi unutmayin!',
+    data: null,
+    isRead: false,
+    createdAt: new Date(now.getTime() - 12 * 60 * 60 * 1000),
+  });
+
+  await prisma.notification.createMany({ data: notifications });
+}
+
+// ============================================================
+// SUBSCRIPTIONS SEEDER
+// ============================================================
+
+async function seedDemoSubscriptions(userIds: string[]): Promise<void> {
+  const now = new Date();
+  const subscriptions: Array<{
+    userId: string;
+    packageTier: PackageTier;
+    platform: PaymentPlatform;
+    productId: string;
+    startDate: Date;
+    expiryDate: Date;
+    isActive: boolean;
+    autoRenew: boolean;
+  }> = [];
+
+  for (let i = 0; i < DEMO_USERS.length; i++) {
+    const demo = DEMO_USERS[i];
+    if (demo.packageTier === PackageTier.FREE) continue;
+
+    const startDate = new Date(now.getTime() - 25 * 24 * 60 * 60 * 1000);
+    const expiryDate = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000);
+
+    const productIdMap: Record<string, string> = {
+      [PackageTier.GOLD]: 'com.luma.gold.monthly',
+      [PackageTier.PRO]: 'com.luma.pro.monthly',
+      [PackageTier.RESERVED]: 'com.luma.reserved.monthly',
+    };
+
+    subscriptions.push({
+      userId: userIds[i],
+      packageTier: demo.packageTier,
+      platform: i % 2 === 0 ? PaymentPlatform.APPLE : PaymentPlatform.GOOGLE,
+      productId: productIdMap[demo.packageTier] ?? 'com.luma.gold.monthly',
+      startDate,
+      expiryDate,
+      isActive: true,
+      autoRenew: true,
+    });
+  }
+
+  await prisma.subscription.createMany({ data: subscriptions });
+}
+
+// ============================================================
+// LOGIN STREAKS SEEDER
+// ============================================================
+
+async function seedDemoLoginStreaks(userIds: string[]): Promise<void> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const streaks = userIds.map((userId, idx) => {
+    const currentStreak = randomBetween(1, 14);
+    const longestStreak = Math.max(currentStreak, randomBetween(currentStreak, 30));
+    return {
+      userId,
+      currentStreak,
+      longestStreak,
+      lastLoginDate: today,
+      totalGoldEarned: currentStreak * 2,
+    };
+  });
+
+  await prisma.loginStreak.createMany({ data: streaks });
+}
+
+// ============================================================
+// PROFILE PROMPTS SEEDER
+// ============================================================
+
+async function seedDemoProfilePrompts(userIds: string[]): Promise<void> {
+  for (let i = 0; i < userIds.length; i++) {
+    const prompts = USER_PROFILE_PROMPTS[i];
+    if (!prompts) continue;
+
+    for (let order = 0; order < prompts.length; order++) {
+      const prompt = prompts[order];
+      await prisma.profilePrompt.create({
+        data: {
+          userId: userIds[i],
+          question: prompt.question,
+          answer: prompt.answer,
+          order,
+        },
+      });
+    }
+  }
+}
+
+// ============================================================
+// GOLD TRANSACTIONS SEEDER
+// ============================================================
+
+async function seedDemoGoldTransactions(userIds: string[]): Promise<void> {
+  const now = new Date();
+  const transactions: Array<{
+    userId: string;
+    type: GoldTransactionType;
+    amount: number;
+    balance: number;
+    description: string;
+    createdAt: Date;
+  }> = [];
+
+  for (let i = 0; i < DEMO_USERS.length; i++) {
+    const demo = DEMO_USERS[i];
+    const userId = userIds[i];
+    let runningBalance = 0;
+
+    // Initial subscription allocation (if paid user)
+    if (demo.packageTier !== PackageTier.FREE) {
+      const allocation = demo.packageTier === PackageTier.PRO ? 150
+        : demo.packageTier === PackageTier.RESERVED ? 500
+        : 50;
+      runningBalance += allocation;
+      transactions.push({
+        userId,
+        type: GoldTransactionType.SUBSCRIPTION_ALLOCATION,
+        amount: allocation,
+        balance: runningBalance,
+        description: `${demo.packageTier} paketi aylik Gold tahsisi`,
+        createdAt: new Date(now.getTime() - 25 * 24 * 60 * 60 * 1000),
+      });
+    }
+
+    // Badge reward
+    transactions.push({
+      userId,
+      type: GoldTransactionType.BADGE_REWARD,
+      amount: 5,
+      balance: runningBalance + 5,
+      description: 'Ilk Kivilcim rozeti odulu',
+      createdAt: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000),
+    });
+    runningBalance += 5;
+
+    // Some users have streak rewards
+    if (i < 5) {
+      transactions.push({
+        userId,
+        type: GoldTransactionType.STREAK_REWARD,
+        amount: 10,
+        balance: runningBalance + 10,
+        description: '7 gun giris serisi odulu',
+        createdAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+      });
+      runningBalance += 10;
+    }
+
+    // Some spending for paid users
+    if (demo.goldBalance > 50 && i < 4) {
+      transactions.push({
+        userId,
+        type: GoldTransactionType.SUPER_LIKE,
+        amount: -25,
+        balance: runningBalance - 25,
+        description: 'Super Begeni gonderildi',
+        createdAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
+      });
+      runningBalance -= 25;
+    }
+  }
+
+  await prisma.goldTransaction.createMany({ data: transactions });
+}
+
+// ============================================================
+// DISCOVERED PLACES SEEDER
+// ============================================================
+
+async function seedDemoPlaces(userIds: string[]): Promise<void> {
+  const places = [
+    { name: 'Bebek Sahili', address: 'Bebek, Istanbul', latitude: 41.0765, longitude: 29.0433, category: 'park' },
+    { name: 'Kadikoy Carsisi', address: 'Kadikoy, Istanbul', latitude: 41.0028, longitude: 29.0234, category: 'market' },
+    { name: 'Petra Roasting Co.', address: 'Galata, Istanbul', latitude: 41.0242, longitude: 28.9749, category: 'cafe' },
+    { name: 'Ataturk Orman Ciftligi', address: 'Yenimahalle, Ankara', latitude: 39.9700, longitude: 32.8081, category: 'park' },
+    { name: 'Kordon Boyu', address: 'Alsancak, Izmir', latitude: 38.4349, longitude: 27.1436, category: 'promenade' },
+  ];
+
+  const createdPlaces = [];
+  for (const place of places) {
+    const created = await prisma.discoveredPlace.create({ data: place });
+    createdPlaces.push(created);
+  }
+
+  // Check-ins for matched users
+  const now = new Date();
+  // Elif & Ahmet check in to Bebek Sahili
+  await prisma.placeCheckIn.create({
+    data: {
+      placeId: createdPlaces[0].id,
+      userId: userIds[0],
+      checkedInAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000),
+    },
+  });
+  await prisma.placeCheckIn.create({
+    data: {
+      placeId: createdPlaces[0].id,
+      userId: userIds[1],
+      checkedInAt: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000),
+    },
+  });
+
+  // Add a memory
+  await prisma.placeMemory.create({
+    data: {
+      placeId: createdPlaces[0].id,
+      userId: userIds[0],
+      note: 'Ilk bulusmamiz burada oldu, harika bir gun batimiydi.',
+      createdAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
+    },
+  });
+
+  // Selin & Kaan check in to Kadikoy
+  await prisma.placeCheckIn.create({
+    data: {
+      placeId: createdPlaces[1].id,
+      userId: userIds[4],
+      checkedInAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
+    },
+  });
+  await prisma.placeCheckIn.create({
+    data: {
+      placeId: createdPlaces[1].id,
+      userId: userIds[9],
+      checkedInAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
+    },
+  });
 }
 
 // ============================================================

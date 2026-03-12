@@ -3,6 +3,8 @@
 
 import { create } from 'zustand';
 import { chatService } from '../services/chatService';
+import { socketService } from '../services/socketService';
+import type { ChatMessagePayload, ChatTypingPayload, ChatReadPayload } from '../services/socketService';
 import { analyticsService, ANALYTICS_EVENTS } from '../services/analyticsService';
 import { useAuthStore, type PackageTier } from '../stores/authStore';
 import { useMatchStore } from '../stores/matchStore';
@@ -14,6 +16,8 @@ import {
   getPersistedMessages,
   getAllConversationMeta,
 } from '../services/chatPersistence';
+import { parseApiError } from '../services/api';
+import type { AxiosError } from 'axios';
 import type {
   ConversationSummary,
   ChatMessage,
@@ -32,6 +36,10 @@ interface ChatState {
   cursors: Record<string, string | null>;
   totalUnread: number;
   isHydrated: boolean;
+  error: string | null;
+
+  // Socket cleanup functions
+  _socketCleanups: Array<() => void>;
 
   // Message limit state
   dailyMessagesSent: number;
@@ -55,6 +63,9 @@ interface ChatState {
   updateMessageStatus: (matchId: string, messageId: string, status: 'SENT' | 'DELIVERED' | 'READ', readAt?: string) => void;
   checkMessageLimit: (matchId?: string) => { allowed: boolean; remaining: number; limit: number; isUnlimited: boolean };
   useSingleMessageCredit: () => boolean;
+  connectSocketListeners: () => void;
+  disconnectSocketListeners: () => void;
+  clearError: () => void;
 }
 
 // Get today's date string for daily reset
@@ -72,6 +83,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
   cursors: {},
   totalUnread: 0,
   isHydrated: false,
+  error: null,
+
+  // Socket cleanup functions
+  _socketCleanups: [],
 
   // Message limit state
   dailyMessagesSent: 0,
@@ -120,7 +135,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   // Actions
   fetchConversations: async () => {
-    set({ isLoadingConversations: true });
+    set({ isLoadingConversations: true, error: null });
     try {
       const response = await chatService.getConversations();
       const totalUnread = response.conversations.reduce(
@@ -131,9 +146,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
         conversations: response.conversations,
         isLoadingConversations: false,
         totalUnread,
+        error: null,
       });
-    } catch {
-      set({ isLoadingConversations: false });
+    } catch (error: unknown) {
+      if (__DEV__) {
+        console.warn('Sohbet listesi yukleme basarisiz, servis fallback kullanilacak:', error);
+      }
+      const apiError = parseApiError(error as AxiosError);
+      set({ isLoadingConversations: false, error: apiError.userMessage });
     }
   },
 
@@ -640,4 +660,92 @@ export const useChatStore = create<ChatState>((set, get) => ({
       };
     });
   },
+
+  // ─── Socket Listeners ───────────────────────────────────────
+  connectSocketListeners: () => {
+    const { _socketCleanups } = get();
+
+    // Clean up existing listeners first
+    for (const cleanup of _socketCleanups) {
+      cleanup();
+    }
+
+    const cleanups: Array<() => void> = [];
+
+    // Listen for incoming messages via WebSocket
+    const cleanupMessage = socketService.on('chat:message', (payload: ChatMessagePayload) => {
+      const userId = useAuthStore.getState().user?.id;
+      // Ignore own messages (already handled optimistically)
+      if (payload.senderId === userId) return;
+
+      const message: ChatMessage = {
+        id: payload.id,
+        matchId: payload.matchId,
+        senderId: payload.senderId,
+        content: payload.content,
+        type: payload.type,
+        status: 'DELIVERED',
+        mediaUrl: payload.mediaUrl,
+        mediaDuration: payload.mediaDuration,
+        createdAt: payload.createdAt,
+        isRead: false,
+        reactions: [],
+      };
+
+      get().addIncomingMessage(message);
+    });
+    cleanups.push(cleanupMessage);
+
+    // Listen for typing indicators
+    const cleanupTyping = socketService.on('chat:typing', (payload: ChatTypingPayload) => {
+      get().setTyping(payload.matchId, true);
+    });
+    cleanups.push(cleanupTyping);
+
+    // Listen for stop-typing indicators
+    const cleanupStopTyping = socketService.on('chat:stop_typing', (payload: ChatTypingPayload) => {
+      get().setTyping(payload.matchId, false);
+    });
+    cleanups.push(cleanupStopTyping);
+
+    // Listen for read receipts
+    const cleanupRead = socketService.on('chat:read', (payload: ChatReadPayload) => {
+      const { messages } = get();
+      const matchMessages = messages[payload.matchId];
+      if (!matchMessages) return;
+
+      // Mark all own sent messages as READ
+      const userId = useAuthStore.getState().user?.id;
+      set((state) => ({
+        messages: {
+          ...state.messages,
+          [payload.matchId]: (state.messages[payload.matchId] ?? []).map((msg) => {
+            if (msg.senderId === userId && msg.status !== 'READ') {
+              return { ...msg, status: 'READ' as const, readAt: payload.timestamp, isRead: true };
+            }
+            return msg;
+          }),
+        },
+      }));
+    });
+    cleanups.push(cleanupRead);
+
+    // Re-fetch conversations on reconnect to catch missed messages
+    const cleanupReconnect = socketService.onReconnect(() => {
+      get().fetchConversations();
+    });
+    cleanups.push(cleanupReconnect);
+
+    set({ _socketCleanups: cleanups });
+  },
+
+  disconnectSocketListeners: () => {
+    const { _socketCleanups } = get();
+    for (const cleanup of _socketCleanups) {
+      cleanup();
+    }
+    set({ _socketCleanups: [] });
+  },
+
+  clearError: () => set({ error: null }),
 }));

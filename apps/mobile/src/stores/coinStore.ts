@@ -1,9 +1,13 @@
 // Coin (Jeton) store — Zustand store for in-app currency
+// Connected to real payment APIs with graceful dev fallback
 // Persists balance and daily check-in state to AsyncStorage via storage utility
 
 import { create } from 'zustand';
 import { storage } from '../utils/storage';
-import { api } from '../services/api';
+import { api, parseApiError } from '../services/api';
+import { paymentService } from '../services/paymentService';
+import { iapService } from '../services/iapService';
+import type { AxiosError } from 'axios';
 
 export interface CoinPack {
   id: string;
@@ -68,6 +72,7 @@ interface CoinTransaction {
 interface CoinState {
   balance: number;
   isLoading: boolean;
+  error: string | null;
   transactions: CoinTransaction[];
   adCooldownUntil: number | null;
   lastDailyCheckin: string | null;  // ISO date string of last daily checkin
@@ -103,6 +108,7 @@ interface CoinState {
   // Utility
   isBoostActive: () => boolean;
   isDailyCheckinAvailable: () => boolean;
+  clearError: () => void;
 }
 
 const generateId = (): string =>
@@ -191,6 +197,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
   // Initial state — 0 default, will be hydrated from storage/API in fetchBalance
   balance: 0,
   isLoading: false,
+  error: null,
   transactions: [],
   adCooldownUntil: null,
   lastDailyCheckin: null,
@@ -201,7 +208,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
 
   // Actions
   fetchBalance: async () => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
 
     // 1. Immediately hydrate from local persistence (synchronous via cache)
     const persistedBalance = loadPersistedBalance();
@@ -228,6 +235,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
         balance: apiBalance,
         lastDailyCheckin: apiCheckin,
         isLoading: false,
+        error: null,
       });
 
       // Sync API values back to local persistence
@@ -237,18 +245,24 @@ export const useCoinStore = create<CoinState>((set, get) => ({
       }
     } catch {
       // API unavailable (dev mode / offline) — keep persisted local values
+      if (__DEV__) {
+        console.warn('Bakiye API cevrimdisi, yerel degerler korunuyor');
+      }
       set({ isLoading: false });
     }
   },
 
   spendCoins: async (amount: number, reason: string): Promise<boolean> => {
     const { balance } = get();
-    if (balance < amount) return false;
+    if (balance < amount) {
+      set({ error: 'Yetersiz jeton bakiyesi.' });
+      return false;
+    }
 
-    set({ isLoading: true });
-    // Mock API call
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    set({ isLoading: true, error: null });
 
+    // Optimistic update — deduct immediately
+    const newBalance = balance - amount;
     const transaction: CoinTransaction = {
       id: generateId(),
       amount: -amount,
@@ -256,20 +270,37 @@ export const useCoinStore = create<CoinState>((set, get) => ({
       reason,
       timestamp: Date.now(),
     };
-
-    const newBalance = balance - amount;
     const newTransactions = [transaction, ...get().transactions];
 
-    set({
-      balance: newBalance,
-      isLoading: false,
-      transactions: newTransactions,
-    });
-
+    set({ balance: newBalance, transactions: newTransactions });
     persistBalance(newBalance);
     persistTransactions(newTransactions);
 
-    return true;
+    try {
+      const response = await api.post<{ newBalance: number }>('/users/me/gold/spend', {
+        amount,
+        reason,
+      });
+      // Sync with server balance
+      set({ balance: response.data.newBalance, isLoading: false });
+      persistBalance(response.data.newBalance);
+      return true;
+    } catch (error: unknown) {
+      if (__DEV__) {
+        console.warn('Jeton harcama API basarisiz, yerel deger korunuyor:', error);
+        set({ isLoading: false });
+        return true;
+      }
+      // Revert optimistic update
+      set({
+        balance,
+        transactions: get().transactions.filter((t) => t.id !== transaction.id),
+        isLoading: false,
+        error: parseApiError(error as AxiosError).userMessage,
+      });
+      persistBalance(balance);
+      return false;
+    }
   },
 
   earnCoins: (amount: number, source: string) => {
@@ -291,72 +322,151 @@ export const useCoinStore = create<CoinState>((set, get) => ({
 
     persistBalance(newBalance);
     persistTransactions(newTransactions);
+
+    // Sync earn to API (fire-and-forget)
+    api.post('/users/me/gold/earn', { amount, source }).catch(() => {
+      if (__DEV__) {
+        console.warn('Jeton kazanma API senkronizasyonu basarisiz');
+      }
+    });
   },
 
   purchaseCoins: async (packId: string): Promise<boolean> => {
     const pack = COIN_PACKS.find((p) => p.id === packId);
     if (!pack) return false;
 
-    set({ isLoading: true });
-    // Mock IAP flow
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    set({ isLoading: true, error: null });
 
-    const transaction: CoinTransaction = {
-      id: generateId(),
-      amount: pack.coins,
-      type: 'purchase',
-      reason: `${pack.coins} Jeton paketi`,
-      timestamp: Date.now(),
-    };
+    try {
+      // 1. Initiate IAP purchase through native store
+      const iapResult = await iapService.purchaseGold(
+        `com.luma.dating.gold.${pack.coins}`,
+      );
 
-    const newBalance = get().balance + pack.coins;
-    const newTransactions = [transaction, ...get().transactions];
+      // 2. Validate receipt with backend
+      const response = await paymentService.purchaseGold({
+        packageId: packId,
+        receipt: iapResult.receipt,
+        platform: iapResult.platform,
+      });
 
-    set({
-      balance: newBalance,
-      isLoading: false,
-      transactions: newTransactions,
-    });
+      const transaction: CoinTransaction = {
+        id: generateId(),
+        amount: response.goldAdded,
+        type: 'purchase',
+        reason: `${response.goldAdded} Jeton paketi`,
+        timestamp: Date.now(),
+      };
 
-    persistBalance(newBalance);
-    persistTransactions(newTransactions);
+      const newTransactions = [transaction, ...get().transactions];
 
-    return true;
+      set({
+        balance: response.newBalance,
+        isLoading: false,
+        transactions: newTransactions,
+        error: null,
+      });
+
+      persistBalance(response.newBalance);
+      persistTransactions(newTransactions);
+
+      return true;
+    } catch (error: unknown) {
+      if (__DEV__) {
+        console.warn('Jeton satin alma basarisiz, mock fallback kullaniliyor:', error);
+        // Dev fallback — simulate purchase
+        const transaction: CoinTransaction = {
+          id: generateId(),
+          amount: pack.coins,
+          type: 'purchase',
+          reason: `${pack.coins} Jeton paketi`,
+          timestamp: Date.now(),
+        };
+
+        const newBalance = get().balance + pack.coins;
+        const newTransactions = [transaction, ...get().transactions];
+
+        set({
+          balance: newBalance,
+          isLoading: false,
+          transactions: newTransactions,
+          error: null,
+        });
+
+        persistBalance(newBalance);
+        persistTransactions(newTransactions);
+        return true;
+      }
+
+      const message = error instanceof Error ? error.message : 'Satin alma basarisiz';
+      set({ isLoading: false, error: message });
+      return false;
+    }
   },
 
   watchAd: async (): Promise<number> => {
-    set({ isLoading: true });
-    // Mock ad watching delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    set({ isLoading: true, error: null });
 
-    const reward =
-      AD_REWARD_MIN +
-      Math.floor(Math.random() * (AD_REWARD_MAX - AD_REWARD_MIN + 1));
+    try {
+      // Call API for ad reward (server validates ad completion)
+      const response = await api.post<{ reward: number; newBalance: number }>(
+        '/users/me/gold/ad-reward',
+      );
 
-    const transaction: CoinTransaction = {
-      id: generateId(),
-      amount: reward,
-      type: 'earn',
-      reason: 'Reklam izleme odulu',
-      timestamp: Date.now(),
-    };
+      const reward = response.data.reward;
+      const transaction: CoinTransaction = {
+        id: generateId(),
+        amount: reward,
+        type: 'earn',
+        reason: 'Reklam izleme odulu',
+        timestamp: Date.now(),
+      };
 
-    const newBalance = get().balance + reward;
-    const newTransactions = [transaction, ...get().transactions];
+      const newTransactions = [transaction, ...get().transactions];
 
-    set({
-      balance: newBalance,
-      isLoading: false,
-      transactions: newTransactions,
-    });
+      set({
+        balance: response.data.newBalance,
+        isLoading: false,
+        transactions: newTransactions,
+      });
 
-    persistBalance(newBalance);
-    persistTransactions(newTransactions);
+      persistBalance(response.data.newBalance);
+      persistTransactions(newTransactions);
 
-    // Start cooldown (30 minutes)
-    get().startAdCooldown();
+      get().startAdCooldown();
+      return reward;
+    } catch {
+      if (__DEV__) {
+        console.warn('Reklam odulu API basarisiz, mock fallback kullaniliyor');
+      }
+      // Dev fallback — random reward
+      const reward =
+        AD_REWARD_MIN +
+        Math.floor(Math.random() * (AD_REWARD_MAX - AD_REWARD_MIN + 1));
 
-    return reward;
+      const transaction: CoinTransaction = {
+        id: generateId(),
+        amount: reward,
+        type: 'earn',
+        reason: 'Reklam izleme odulu',
+        timestamp: Date.now(),
+      };
+
+      const newBalance = get().balance + reward;
+      const newTransactions = [transaction, ...get().transactions];
+
+      set({
+        balance: newBalance,
+        isLoading: false,
+        transactions: newTransactions,
+      });
+
+      persistBalance(newBalance);
+      persistTransactions(newTransactions);
+
+      get().startAdCooldown();
+      return reward;
+    }
   },
 
   startAdCooldown: () => {
@@ -379,7 +489,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
       id: generateId(),
       amount: DAILY_CHECKIN_REWARD,
       type: 'earn',
-      reason: 'Günlük giriş ödülü',
+      reason: 'Gunluk giris odulu',
       timestamp: Date.now(),
     };
 
@@ -396,6 +506,13 @@ export const useCoinStore = create<CoinState>((set, get) => ({
     persistLastCheckin(today);
     persistTransactions(newTransactions);
 
+    // Sync with API (fire-and-forget)
+    api.post('/users/me/gold/daily-checkin').catch(() => {
+      if (__DEV__) {
+        console.warn('Gunluk giris API senkronizasyonu basarisiz');
+      }
+    });
+
     return true;
   },
 
@@ -404,7 +521,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
       id: generateId(),
       amount: PROFILE_COMPLETION_REWARD,
       type: 'earn',
-      reason: 'Profil tamamlama ödülü',
+      reason: 'Profil tamamlama odulu',
       timestamp: Date.now(),
     };
 
@@ -418,6 +535,12 @@ export const useCoinStore = create<CoinState>((set, get) => ({
 
     persistBalance(newBalance);
     persistTransactions(newTransactions);
+
+    // Sync with API
+    api.post('/users/me/gold/earn', {
+      amount: PROFILE_COMPLETION_REWARD,
+      source: 'profile_completion',
+    }).catch(() => {});
   },
 
   claimActivityCreation: () => {
@@ -425,7 +548,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
       id: generateId(),
       amount: ACTIVITY_CREATION_REWARD,
       type: 'earn',
-      reason: 'Aktivite oluşturma ödülü',
+      reason: 'Aktivite olusturma odulu',
       timestamp: Date.now(),
     };
 
@@ -439,97 +562,177 @@ export const useCoinStore = create<CoinState>((set, get) => ({
 
     persistBalance(newBalance);
     persistTransactions(newTransactions);
+
+    // Sync with API
+    api.post('/users/me/gold/earn', {
+      amount: ACTIVITY_CREATION_REWARD,
+      source: 'activity_creation',
+    }).catch(() => {});
   },
 
   sendInstantMessage: async (recipientId: string): Promise<boolean> => {
     const { balance } = get();
-    if (balance < INSTANT_MESSAGE_COST) return false;
+    if (balance < INSTANT_MESSAGE_COST) {
+      set({ error: 'Hizli mesaj gonderme icin yetersiz jeton.' });
+      return false;
+    }
 
-    set({ isLoading: true });
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    set({ isLoading: true, error: null });
 
+    // Optimistic deduction
+    const newBalance = balance - INSTANT_MESSAGE_COST;
     const transaction: CoinTransaction = {
       id: generateId(),
       amount: -INSTANT_MESSAGE_COST,
       type: 'spend',
-      reason: `Hızlı mesaj: ${recipientId}`,
+      reason: `Hizli mesaj: ${recipientId}`,
       timestamp: Date.now(),
     };
-
-    const newBalance = balance - INSTANT_MESSAGE_COST;
     const newTransactions = [transaction, ...get().transactions];
 
-    set({
-      balance: newBalance,
-      isLoading: false,
-      transactions: newTransactions,
-    });
-
+    set({ balance: newBalance, transactions: newTransactions });
     persistBalance(newBalance);
     persistTransactions(newTransactions);
 
-    return true;
+    try {
+      const response = await api.post<{ newBalance: number }>('/users/me/gold/spend', {
+        amount: INSTANT_MESSAGE_COST,
+        reason: `instant_message:${recipientId}`,
+      });
+      set({ balance: response.data.newBalance, isLoading: false });
+      persistBalance(response.data.newBalance);
+      return true;
+    } catch (error: unknown) {
+      if (__DEV__) {
+        console.warn('Hizli mesaj harcama API basarisiz:', error);
+        set({ isLoading: false });
+        return true;
+      }
+      // Revert
+      set({
+        balance,
+        transactions: get().transactions.filter((t) => t.id !== transaction.id),
+        isLoading: false,
+        error: parseApiError(error as AxiosError).userMessage,
+      });
+      persistBalance(balance);
+      return false;
+    }
   },
 
   activateProfileBoost: async (): Promise<boolean> => {
     const { balance } = get();
-    if (balance < PROFILE_BOOST_COST) return false;
+    if (balance < PROFILE_BOOST_COST) {
+      set({ error: 'Profil Boost icin yetersiz jeton.' });
+      return false;
+    }
 
-    set({ isLoading: true });
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    set({ isLoading: true, error: null });
 
-    const transaction: CoinTransaction = {
-      id: generateId(),
-      amount: -PROFILE_BOOST_COST,
-      type: 'spend',
-      reason: 'Profil Boost (30 dakika)',
-      timestamp: Date.now(),
-    };
+    try {
+      const response = await api.post<{ newBalance: number; endsAt: string }>(
+        '/profiles/boost',
+        { durationMinutes: 30 },
+      );
 
-    const newBalance = balance - PROFILE_BOOST_COST;
-    const newTransactions = [transaction, ...get().transactions];
+      const transaction: CoinTransaction = {
+        id: generateId(),
+        amount: -PROFILE_BOOST_COST,
+        type: 'spend',
+        reason: 'Profil Boost (30 dakika)',
+        timestamp: Date.now(),
+      };
+      const newTransactions = [transaction, ...get().transactions];
 
-    set({
-      balance: newBalance,
-      isLoading: false,
-      boostActiveUntil: Date.now() + BOOST_DURATION_MS,
-      transactions: newTransactions,
-    });
+      set({
+        balance: response.data.newBalance,
+        isLoading: false,
+        boostActiveUntil: new Date(response.data.endsAt).getTime(),
+        transactions: newTransactions,
+      });
 
-    persistBalance(newBalance);
-    persistTransactions(newTransactions);
+      persistBalance(response.data.newBalance);
+      persistTransactions(newTransactions);
+      return true;
+    } catch (error: unknown) {
+      if (__DEV__) {
+        console.warn('Boost API basarisiz, mock fallback kullaniliyor:', error);
+        const transaction: CoinTransaction = {
+          id: generateId(),
+          amount: -PROFILE_BOOST_COST,
+          type: 'spend',
+          reason: 'Profil Boost (30 dakika)',
+          timestamp: Date.now(),
+        };
+        const newBalance = balance - PROFILE_BOOST_COST;
+        const newTransactions = [transaction, ...get().transactions];
 
-    return true;
+        set({
+          balance: newBalance,
+          isLoading: false,
+          boostActiveUntil: Date.now() + BOOST_DURATION_MS,
+          transactions: newTransactions,
+        });
+        persistBalance(newBalance);
+        persistTransactions(newTransactions);
+        return true;
+      }
+      set({
+        isLoading: false,
+        error: parseApiError(error as AxiosError).userMessage,
+      });
+      return false;
+    }
   },
 
   sendSuperLike: async (targetId: string): Promise<boolean> => {
     const { balance } = get();
-    if (balance < SUPER_LIKE_COST) return false;
+    if (balance < SUPER_LIKE_COST) {
+      set({ error: 'Super Begeni icin yetersiz jeton.' });
+      return false;
+    }
 
-    set({ isLoading: true });
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    set({ isLoading: true, error: null });
 
+    // Optimistic deduction
+    const newBalance = balance - SUPER_LIKE_COST;
     const transaction: CoinTransaction = {
       id: generateId(),
       amount: -SUPER_LIKE_COST,
       type: 'spend',
-      reason: `Süper Beğeni: ${targetId}`,
+      reason: `Super Begeni: ${targetId}`,
       timestamp: Date.now(),
     };
-
-    const newBalance = balance - SUPER_LIKE_COST;
     const newTransactions = [transaction, ...get().transactions];
 
-    set({
-      balance: newBalance,
-      isLoading: false,
-      transactions: newTransactions,
-    });
-
+    set({ balance: newBalance, transactions: newTransactions });
     persistBalance(newBalance);
     persistTransactions(newTransactions);
 
-    return true;
+    try {
+      const response = await api.post<{ newBalance: number }>('/users/me/gold/spend', {
+        amount: SUPER_LIKE_COST,
+        reason: `super_like:${targetId}`,
+      });
+      set({ balance: response.data.newBalance, isLoading: false });
+      persistBalance(response.data.newBalance);
+      return true;
+    } catch (error: unknown) {
+      if (__DEV__) {
+        console.warn('Super Begeni harcama API basarisiz:', error);
+        set({ isLoading: false });
+        return true;
+      }
+      // Revert
+      set({
+        balance,
+        transactions: get().transactions.filter((t) => t.id !== transaction.id),
+        isLoading: false,
+        error: parseApiError(error as AxiosError).userMessage,
+      });
+      persistBalance(balance);
+      return false;
+    }
   },
 
   isBoostActive: (): boolean => {
@@ -569,6 +772,12 @@ export const useCoinStore = create<CoinState>((set, get) => ({
     persistWelcomeBonus();
     persistTransactions(newTransactions);
 
+    // Sync with API
+    api.post('/users/me/gold/earn', {
+      amount: WELCOME_BONUS,
+      source: 'welcome_bonus',
+    }).catch(() => {});
+
     return true;
   },
 
@@ -598,6 +807,12 @@ export const useCoinStore = create<CoinState>((set, get) => ({
     persistLastDailyQuestion(today);
     persistTransactions(newTransactions);
 
+    // Sync with API
+    api.post('/users/me/gold/earn', {
+      amount: DAILY_QUESTION_REWARD,
+      source: 'daily_question',
+    }).catch(() => {});
+
     return true;
   },
 
@@ -620,6 +835,12 @@ export const useCoinStore = create<CoinState>((set, get) => ({
 
     persistBalance(newBalance);
     persistTransactions(newTransactions);
+
+    // Sync with API
+    api.post('/users/me/gold/earn', {
+      amount: REFERRAL_REWARD,
+      source: 'referral',
+    }).catch(() => {});
   },
 
   claimStreakMilestone: (milestone: number): boolean => {
@@ -647,6 +868,12 @@ export const useCoinStore = create<CoinState>((set, get) => ({
     persistBalance(newBalance);
     persistStreakMilestones(newMilestones);
     persistTransactions(newTransactions);
+
+    // Sync with API
+    api.post('/users/me/gold/earn', {
+      amount: STREAK_MILESTONE_REWARD,
+      source: `streak_milestone_${milestone}`,
+    }).catch(() => {});
 
     return true;
   },
@@ -681,6 +908,14 @@ export const useCoinStore = create<CoinState>((set, get) => ({
       dailyRemaining: discoveryState.dailyRemaining + EXTRA_LIKES_COUNT,
     });
 
+    // Sync spend with API (fire-and-forget)
+    api.post('/users/me/gold/spend', {
+      amount: EXTRA_LIKES_COST,
+      reason: 'extra_likes',
+    }).catch(() => {});
+
     return true;
   },
+
+  clearError: () => set({ error: null }),
 }));

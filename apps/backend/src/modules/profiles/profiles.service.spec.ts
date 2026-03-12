@@ -95,10 +95,42 @@ describe('ProfilesService', () => {
     update: jest.fn(),
   };
 
+  const mockPrismaProfilePrompt = {
+    findMany: jest.fn(),
+    count: jest.fn(),
+    create: jest.fn(),
+    deleteMany: jest.fn(),
+  };
+
+  const mockPrismaProfileBoost = {
+    findFirst: jest.fn(),
+    create: jest.fn(),
+  };
+
+  const mockPrismaLoginStreak = {
+    findUnique: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+  };
+
+  const mockPrismaGoldTransaction = {
+    create: jest.fn(),
+  };
+
+  const mockPrismaUserAnswer = {
+    count: jest.fn(),
+  };
+
   const mockPrisma = {
     user: mockPrismaUser,
     userProfile: mockPrismaUserProfile,
     userPhoto: mockPrismaUserPhoto,
+    profilePrompt: mockPrismaProfilePrompt,
+    profileBoost: mockPrismaProfileBoost,
+    loginStreak: mockPrismaLoginStreak,
+    goldTransaction: mockPrismaGoldTransaction,
+    userAnswer: mockPrismaUserAnswer,
+    $transaction: jest.fn(),
   };
 
   // ─── Setup ────────────────────────────────────────────────────────
@@ -576,15 +608,15 @@ describe('ProfilesService', () => {
       expect(result).toBeDefined();
     });
 
-    it('should throw BadRequestException when user already has 6 photos', async () => {
-      mockPrismaUserPhoto.count.mockResolvedValue(6);
+    it('should throw BadRequestException when user already has max photos', async () => {
+      mockPrismaUserPhoto.count.mockResolvedValue(20);
 
       await expect(
         service.uploadPhoto('user-uuid-1', validFile),
       ).rejects.toThrow(BadRequestException);
       await expect(
         service.uploadPhoto('user-uuid-1', validFile),
-      ).rejects.toThrow('6');
+      ).rejects.toThrow('20');
     });
 
     it('should set first photo as primary (order=0, isPrimary=true)', async () => {
@@ -966,6 +998,416 @@ describe('ProfilesService', () => {
       expect(mockPrismaUserProfile.findUnique).toHaveBeenCalledWith({
         where: { userId: 'some-user-id' },
       });
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════
+  // UPDATE PROFILE — interestTags validation
+  // ═══════════════════════════════════════════════════════════════════
+
+  describe('updateProfile() — interestTags', () => {
+    it('should throw BadRequestException when more than 10 interest tags', async () => {
+      const user = createMockUser();
+      mockPrismaUser.findUnique.mockResolvedValue(user);
+
+      const tags = Array.from({ length: 11 }, (_, i) => `tag-${i}`);
+
+      await expect(
+        service.updateProfile('user-uuid-1', { interestTags: tags }),
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.updateProfile('user-uuid-1', { interestTags: tags }),
+      ).rejects.toThrow('10 ilgi alani');
+    });
+
+    it('should accept exactly 10 interest tags', async () => {
+      const user = createMockUser({ isSmsVerified: true });
+      const profile = createMockProfile();
+      mockPrismaUser.findUnique.mockResolvedValue(user);
+      mockPrismaUserProfile.upsert.mockResolvedValue(profile);
+      mockPrismaUserPhoto.findMany.mockResolvedValue([]);
+
+      const tags = Array.from({ length: 10 }, (_, i) => `tag-${i}`);
+
+      const result = await service.updateProfile('user-uuid-1', { interestTags: tags });
+
+      expect(result).toBeDefined();
+    });
+
+    it('should accept empty interest tags array', async () => {
+      const user = createMockUser({ isSmsVerified: true });
+      const profile = createMockProfile();
+      mockPrismaUser.findUnique.mockResolvedValue(user);
+      mockPrismaUserProfile.upsert.mockResolvedValue(profile);
+      mockPrismaUserPhoto.findMany.mockResolvedValue([]);
+
+      const result = await service.updateProfile('user-uuid-1', { interestTags: [] });
+
+      expect(result).toBeDefined();
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════
+  // UPDATE LOCATION
+  // ═══════════════════════════════════════════════════════════════════
+
+  describe('updateLocation()', () => {
+    it('should update location coordinates successfully', async () => {
+      mockPrismaUserProfile.findUnique.mockResolvedValue(createMockProfile());
+      mockPrismaUserProfile.update.mockResolvedValue({});
+
+      const result = await service.updateLocation('user-uuid-1', 41.0082, 28.9784);
+
+      expect(result.updated).toBe(true);
+      expect(mockPrismaUserProfile.update).toHaveBeenCalledWith({
+        where: { userId: 'user-uuid-1' },
+        data: expect.objectContaining({
+          latitude: 41.0082,
+          longitude: 28.9784,
+          locationUpdatedAt: expect.any(Date),
+          lastActiveAt: expect.any(Date),
+        }),
+      });
+    });
+
+    it('should throw NotFoundException when profile does not exist', async () => {
+      mockPrismaUserProfile.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.updateLocation('user-uuid-1', 41.0, 29.0),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════
+  // UPLOAD PHOTO — additional MAX_PHOTOS boundary
+  // ═══════════════════════════════════════════════════════════════════
+
+  describe('uploadPhoto() — boundary cases', () => {
+    const validFile = {
+      mimetype: 'image/jpeg',
+      size: 2 * 1024 * 1024,
+      buffer: Buffer.from('fake-image-data'),
+      originalname: 'photo.jpg',
+    };
+
+    it('should allow upload when user has MAX_PHOTOS - 1 photos', async () => {
+      mockPrismaUserPhoto.count.mockResolvedValue(19); // MAX_PHOTOS is 20
+      mockPrismaUserPhoto.create.mockResolvedValue(createMockPhoto({ order: 19, isPrimary: false }));
+
+      const result = await service.uploadPhoto('user-uuid-1', validFile);
+
+      expect(result).toBeDefined();
+      expect(result.order).toBe(19);
+    });
+
+    it('should reject upload when user has exactly MAX_PHOTOS photos', async () => {
+      mockPrismaUserPhoto.count.mockResolvedValue(20);
+
+      await expect(
+        service.uploadPhoto('user-uuid-1', validFile),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SAVE PROMPTS
+  // ═══════════════════════════════════════════════════════════════════
+
+  describe('savePrompts()', () => {
+    it('should throw BadRequestException when more than 3 prompts', async () => {
+      const prompts = Array.from({ length: 4 }, (_, i) => ({
+        question: `Question ${i}`,
+        answer: `Answer ${i}`,
+        order: i,
+      }));
+
+      await expect(
+        service.savePrompts('user-uuid-1', prompts),
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.savePrompts('user-uuid-1', prompts),
+      ).rejects.toThrow('3 profil sorusu');
+    });
+
+    it('should throw BadRequestException for empty question', async () => {
+      await expect(
+        service.savePrompts('user-uuid-1', [
+          { question: '', answer: 'Answer', order: 0 },
+        ]),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException for question longer than 200 chars', async () => {
+      await expect(
+        service.savePrompts('user-uuid-1', [
+          { question: 'A'.repeat(201), answer: 'Answer', order: 0 },
+        ]),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException for empty answer', async () => {
+      await expect(
+        service.savePrompts('user-uuid-1', [
+          { question: 'Question', answer: '', order: 0 },
+        ]),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException for answer longer than 300 chars', async () => {
+      await expect(
+        service.savePrompts('user-uuid-1', [
+          { question: 'Question', answer: 'A'.repeat(301), order: 0 },
+        ]),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException for invalid order value', async () => {
+      await expect(
+        service.savePrompts('user-uuid-1', [
+          { question: 'Question', answer: 'Answer', order: 3 },
+        ]),
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.savePrompts('user-uuid-1', [
+          { question: 'Question', answer: 'Answer', order: -1 },
+        ]),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════
+  // TOGGLE INCOGNITO
+  // ═══════════════════════════════════════════════════════════════════
+
+  describe('toggleIncognito()', () => {
+    it('should enable incognito for Gold user', async () => {
+      mockPrismaUser.findUnique.mockResolvedValue({ packageTier: 'GOLD' });
+      mockPrismaUserProfile.update.mockResolvedValue({});
+
+      const result = await service.toggleIncognito('user-uuid-1', true);
+
+      expect(result.isIncognito).toBe(true);
+      expect(mockPrismaUserProfile.update).toHaveBeenCalledWith({
+        where: { userId: 'user-uuid-1' },
+        data: { isIncognito: true },
+      });
+    });
+
+    it('should disable incognito for any user', async () => {
+      mockPrismaUser.findUnique.mockResolvedValue({ packageTier: 'FREE' });
+      mockPrismaUserProfile.update.mockResolvedValue({});
+
+      const result = await service.toggleIncognito('user-uuid-1', false);
+
+      expect(result.isIncognito).toBe(false);
+    });
+
+    it('should throw BadRequestException for FREE user enabling incognito', async () => {
+      mockPrismaUser.findUnique.mockResolvedValue({ packageTier: 'FREE' });
+
+      await expect(
+        service.toggleIncognito('user-uuid-1', true),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should allow PRO user to enable incognito', async () => {
+      mockPrismaUser.findUnique.mockResolvedValue({ packageTier: 'PRO' });
+      mockPrismaUserProfile.update.mockResolvedValue({});
+
+      const result = await service.toggleIncognito('user-uuid-1', true);
+
+      expect(result.isIncognito).toBe(true);
+    });
+
+    it('should allow RESERVED user to enable incognito', async () => {
+      mockPrismaUser.findUnique.mockResolvedValue({ packageTier: 'RESERVED' });
+      mockPrismaUserProfile.update.mockResolvedValue({});
+
+      const result = await service.toggleIncognito('user-uuid-1', true);
+
+      expect(result.isIncognito).toBe(true);
+    });
+
+    it('should throw BadRequestException when user does not exist', async () => {
+      mockPrismaUser.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.toggleIncognito('invalid-user', true),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════
+  // TRACK PROFILE VIEW
+  // ═══════════════════════════════════════════════════════════════════
+
+  describe('trackProfileView()', () => {
+    it('should not record self-view', async () => {
+      await service.trackProfileView('user-uuid-1', 'user-uuid-1');
+
+      // No error thrown, just silently returns
+    });
+
+    it('should record a profile view successfully', async () => {
+      // Should not throw
+      await service.trackProfileView('viewer-1', 'viewed-1');
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════
+  // UPDATE PERSONALITY
+  // ═══════════════════════════════════════════════════════════════════
+
+  describe('updatePersonality()', () => {
+    it('should update MBTI type successfully', async () => {
+      mockPrismaUserProfile.findUnique.mockResolvedValue(createMockProfile());
+      mockPrismaUserProfile.update.mockResolvedValue({
+        mbtiType: 'INTJ',
+        enneagramType: null,
+      });
+
+      const result = await service.updatePersonality('user-uuid-1', 'intj');
+
+      expect(result.mbtiType).toBe('INTJ');
+      expect(result.message).toBe('Kisilik tipi guncellendi');
+    });
+
+    it('should throw BadRequestException for invalid MBTI type', async () => {
+      await expect(
+        service.updatePersonality('user-uuid-1', 'XXXX'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should update enneagram type successfully', async () => {
+      mockPrismaUserProfile.findUnique.mockResolvedValue(createMockProfile());
+      mockPrismaUserProfile.update.mockResolvedValue({
+        mbtiType: null,
+        enneagramType: '5',
+      });
+
+      const result = await service.updatePersonality('user-uuid-1', undefined, '5');
+
+      expect(result.enneagramType).toBe('5');
+    });
+
+    it('should throw BadRequestException for invalid enneagram type', async () => {
+      await expect(
+        service.updatePersonality('user-uuid-1', undefined, '10'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException when neither mbti nor enneagram provided', async () => {
+      await expect(
+        service.updatePersonality('user-uuid-1'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw NotFoundException when profile does not exist', async () => {
+      mockPrismaUserProfile.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.updatePersonality('user-uuid-1', 'INTJ'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should accept all 16 valid MBTI types', async () => {
+      const validTypes = [
+        'INTJ', 'INTP', 'ENTJ', 'ENTP',
+        'INFJ', 'INFP', 'ENFJ', 'ENFP',
+        'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ',
+        'ISTP', 'ISFP', 'ESTP', 'ESFP',
+      ];
+
+      for (const mbti of validTypes) {
+        mockPrismaUserProfile.findUnique.mockResolvedValue(createMockProfile());
+        mockPrismaUserProfile.update.mockResolvedValue({
+          mbtiType: mbti,
+          enneagramType: null,
+        });
+
+        const result = await service.updatePersonality('user-uuid-1', mbti.toLowerCase());
+
+        expect(result.mbtiType).toBe(mbti);
+      }
+    });
+
+    it('should accept enneagram types 1-9', async () => {
+      for (let i = 1; i <= 9; i++) {
+        mockPrismaUserProfile.findUnique.mockResolvedValue(createMockProfile());
+        mockPrismaUserProfile.update.mockResolvedValue({
+          mbtiType: null,
+          enneagramType: String(i),
+        });
+
+        const result = await service.updatePersonality('user-uuid-1', undefined, String(i));
+
+        expect(result.enneagramType).toBe(String(i));
+      }
+    });
+
+    it('should update both MBTI and enneagram at once', async () => {
+      mockPrismaUserProfile.findUnique.mockResolvedValue(createMockProfile());
+      mockPrismaUserProfile.update.mockResolvedValue({
+        mbtiType: 'ENFP',
+        enneagramType: '7',
+      });
+
+      const result = await service.updatePersonality('user-uuid-1', 'enfp', '7');
+
+      expect(result.mbtiType).toBe('ENFP');
+      expect(result.enneagramType).toBe('7');
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════
+  // GET PROFILE — edge cases for profileCompletion
+  // ═══════════════════════════════════════════════════════════════════
+
+  describe('getProfile() — completion edge cases', () => {
+    it('should count bio with exactly 10 chars as complete', async () => {
+      const user = createMockUser({
+        isSmsVerified: true,
+        isSelfieVerified: false,
+        profile: createMockProfile({ bio: '1234567890', city: 'Istanbul', intentionTag: 'EXPLORING' }),
+        photos: [createMockPhoto(), createMockPhoto({ id: 'p2', order: 1, isPrimary: false })],
+      });
+      mockPrismaUser.findUnique.mockResolvedValue(user);
+
+      const result = await service.getProfile('user-uuid-1');
+
+      // smsVerified(1) + profile(1) + bio>=10(1) + city(1) + intentionTag(1) + photos>=2(1) = 6/7
+      expect(result.profileCompletion).toBe(Math.round((6 / 7) * 100));
+    });
+
+    it('should not count bio with 9 chars as complete', async () => {
+      const user = createMockUser({
+        isSmsVerified: true,
+        isSelfieVerified: false,
+        profile: createMockProfile({ bio: '123456789', city: 'Istanbul', intentionTag: 'EXPLORING' }),
+        photos: [createMockPhoto(), createMockPhoto({ id: 'p2', order: 1, isPrimary: false })],
+      });
+      mockPrismaUser.findUnique.mockResolvedValue(user);
+
+      const result = await service.getProfile('user-uuid-1');
+
+      // smsVerified(1) + profile(1) + bio<10(0) + city(1) + intentionTag(1) + photos>=2(1) = 5/7
+      expect(result.profileCompletion).toBe(Math.round((5 / 7) * 100));
+    });
+
+    it('should not count single photo as complete', async () => {
+      const user = createMockUser({
+        isSmsVerified: true,
+        isSelfieVerified: true,
+        profile: createMockProfile({ bio: 'A long enough bio text', city: 'Istanbul', intentionTag: 'EXPLORING' }),
+        photos: [createMockPhoto()],
+      });
+      mockPrismaUser.findUnique.mockResolvedValue(user);
+
+      const result = await service.getProfile('user-uuid-1');
+
+      // smsVerified(1) + selfieVerified(1) + profile(1) + bio>=10(1) + city(1) + intentionTag(1) + photos<2(0) = 6/7
+      expect(result.profileCompletion).toBe(Math.round((6 / 7) * 100));
     });
   });
 });

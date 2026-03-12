@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
-  ScrollView,
   Image,
   TouchableOpacity,
   Modal,

@@ -6,6 +6,15 @@ import { io, Socket } from 'socket.io-client';
 import { APP_CONFIG } from '../constants/config';
 import { WS_EVENTS } from '@luma/shared/src/constants/api';
 
+// ─── Manager Event Emitter ───────────────────────────────────
+// Socket.IO Manager is not directly importable in this bundler config.
+// Define a minimal interface for the reconnection events we listen to.
+
+interface ManagerEventEmitter {
+  on(event: 'reconnect_attempt', cb: (attempt: number) => void): void;
+  on(event: 'reconnect_failed', cb: () => void): void;
+}
+
 // ─── Connection State ────────────────────────────────────────
 
 export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting';
@@ -144,6 +153,13 @@ export interface ServerEventMap {
   'user:offline': PresencePayload;
   'match:expired': MatchExpiredPayload;
   'chat:error': ServerErrorPayload;
+  [WS_EVENTS.CALL_INITIATE]: CallInitiatePayload;
+  [WS_EVENTS.CALL_ACCEPT]: CallAcceptPayload;
+  [WS_EVENTS.CALL_REJECT]: CallRejectPayload;
+  [WS_EVENTS.CALL_END]: CallEndPayload;
+  [WS_EVENTS.WEBRTC_OFFER]: WebRTCOfferPayload;
+  [WS_EVENTS.WEBRTC_ANSWER]: WebRTCAnswerPayload;
+  [WS_EVENTS.WEBRTC_ICE_CANDIDATE]: ICECandidatePayload;
 }
 
 // ─── Queued Emit Item ────────────────────────────────────────
@@ -201,7 +217,6 @@ class SocketService {
       reconnectionAttempts: this.maxReconnectAttempts,
       reconnectionDelay: this.baseReconnectDelay,
       reconnectionDelayMax: this.maxReconnectDelay,
-      randomizationFactor: 0.5,
       timeout: 15000,
       autoConnect: true,
     });
@@ -511,7 +526,7 @@ class SocketService {
       }
     });
 
-    this.chatSocket.on('disconnect', (reason: string) => {
+    this.chatSocket.on('disconnect', (reason) => {
       console.log(`[SocketService] Baglanti kesildi - sebep: ${reason}`);
 
       // If server closed connection, set disconnected. Otherwise, set reconnecting.
@@ -522,7 +537,9 @@ class SocketService {
       }
     });
 
-    this.chatSocket.io.on('reconnect_attempt', (attempt: number) => {
+    const manager = this.chatSocket.io as unknown as ManagerEventEmitter;
+
+    manager.on('reconnect_attempt', (attempt: number) => {
       this.reconnectAttempts = attempt;
       this.setConnectionState('reconnecting');
       console.log(
@@ -530,21 +547,22 @@ class SocketService {
       );
     });
 
-    this.chatSocket.io.on('reconnect_failed', () => {
+    manager.on('reconnect_failed', () => {
       this.setConnectionState('disconnected');
       console.error('[SocketService] Yeniden baglanti basarisiz - tum denemeler tukendi');
     });
 
-    this.chatSocket.on('connect_error', (error: Error) => {
+    this.chatSocket.on('connect_error', (error) => {
       this.reconnectAttempts += 1;
       console.warn(
         `[SocketService] Baglanti hatasi (deneme ${this.reconnectAttempts}/${this.maxReconnectAttempts}):`,
-        error.message,
+        (error as Error).message,
       );
     });
 
     // Server-side errors
-    this.chatSocket.on('chat:error', (payload: ServerErrorPayload) => {
+    this.chatSocket.on('chat:error' as string, (...args: unknown[]) => {
+      const payload = args[0] as ServerErrorPayload;
       console.error('[SocketService] Sunucu hatasi:', payload.message);
     });
   }

@@ -14,7 +14,6 @@ import {
   Image,
   Animated,
   Alert,
-  Dimensions,
   Easing,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -28,11 +27,9 @@ import { useAuthStore } from '../../stores/authStore';
 import type { Activity, ActivityType } from '../../services/activityService';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
-import { spacing, borderRadius, shadows, layout } from '../../theme/spacing';
+import { spacing, borderRadius, shadows } from '../../theme/spacing';
 
 type NavProp = NativeStackNavigationProp<ActivitiesStackParamList, 'Activities'>;
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ─── Category Visual Config ─────────────────────────────────────────────────
 

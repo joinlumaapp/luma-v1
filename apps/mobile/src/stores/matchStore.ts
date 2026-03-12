@@ -5,6 +5,8 @@ import { matchService } from '../services/matchService';
 import type { MatchDetailResponse } from '../services/matchService';
 import { analyticsService, ANALYTICS_EVENTS } from '../services/analyticsService';
 import { getAllConversationMeta } from '../services/chatPersistence';
+import { parseApiError } from '../services/api';
+import type { AxiosError } from 'axios';
 
 export interface Match {
   id: string;
@@ -39,6 +41,7 @@ interface MatchState {
   selectedMatch: MatchDetail | null;
   isLoading: boolean;
   totalCount: number;
+  error: string | null;
 
   // Actions
   fetchMatches: () => Promise<void>;
@@ -48,6 +51,7 @@ interface MatchState {
   clearSelected: () => void;
   addMatch: (match: Match) => void;
   updateMatchActivity: (matchId: string, lastMessage: string, lastActivity: string) => void;
+  clearError: () => void;
 }
 
 // Transform backend MatchDetailResponse to store MatchDetail
@@ -79,10 +83,11 @@ export const useMatchStore = create<MatchState>((set, get) => ({
   selectedMatch: null,
   isLoading: false,
   totalCount: 0,
+  error: null,
 
   // Actions
   fetchMatches: async () => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
       const response = await matchService.getMatches();
 
@@ -111,9 +116,14 @@ export const useMatchStore = create<MatchState>((set, get) => ({
         matches: merged,
         totalCount: response.total,
         isLoading: false,
+        error: null,
       });
-    } catch {
-      set({ isLoading: false });
+    } catch (error: unknown) {
+      if (__DEV__) {
+        console.warn('Eslesmeler yukleme basarisiz, servis mock fallback kullanilacak:', error);
+      }
+      const apiError = parseApiError(error as AxiosError);
+      set({ isLoading: false, error: apiError.userMessage });
     }
   },
 
@@ -156,8 +166,19 @@ export const useMatchStore = create<MatchState>((set, get) => ({
         selectedMatch: state.selectedMatch?.id === matchId ? null : state.selectedMatch,
         totalCount: state.totalCount - 1,
       }));
-    } catch {
-      // Handle error
+    } catch (error: unknown) {
+      if (__DEV__) {
+        console.warn('Eslestirme kaldirma basarisiz:', error);
+        // In dev, still remove locally
+        set((state) => ({
+          matches: state.matches.filter((m) => m.id !== matchId),
+          selectedMatch: state.selectedMatch?.id === matchId ? null : state.selectedMatch,
+          totalCount: state.totalCount - 1,
+        }));
+      } else {
+        const apiError = parseApiError(error as AxiosError);
+        set({ error: apiError.userMessage });
+      }
     }
   },
 
@@ -183,4 +204,6 @@ export const useMatchStore = create<MatchState>((set, get) => ({
         m.id === matchId ? { ...m, lastMessage, lastActivity } : m
       ),
     })),
+
+  clearError: () => set({ error: null }),
 }));

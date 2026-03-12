@@ -31,7 +31,7 @@ import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 import { useChatStore } from '../../stores/chatStore';
 import { useAuthStore } from '../../stores/authStore';
 import { useMatchStore } from '../../stores/matchStore';
-import { useCoinStore, INSTANT_MESSAGE_COST } from '../../stores/coinStore';
+import { useCoinStore } from '../../stores/coinStore';
 import { MESSAGE_CONFIG } from '../../constants/config';
 import {
   MemoizedMessageBubble,

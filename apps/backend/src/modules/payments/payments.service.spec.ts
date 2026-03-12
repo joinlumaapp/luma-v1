@@ -19,6 +19,7 @@ const mockPrisma = {
   },
   goldTransaction: {
     create: jest.fn(),
+    findFirst: jest.fn(),
     findMany: jest.fn(),
     count: jest.fn(),
   },
@@ -621,6 +622,314 @@ describe('PaymentsService', () => {
         expect(result.purchased).toBe(true);
         expect(result.packageId).toBe(packId);
       }
+    });
+
+    it('should credit correct total gold including bonus for gold_150', async () => {
+      mockPrisma.iapReceipt.findUnique.mockResolvedValue(null);
+      mockPrisma.$transaction.mockImplementation(async (fn: (tx: typeof mockPrisma) => Promise<number>) => {
+        mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 100 });
+        return fn(mockPrisma);
+      });
+
+      const result = await service.purchaseGold('u1', {
+        packageId: 'gold_150',
+        platform: 'apple',
+        receipt: 'receipt-150',
+      });
+
+      expect(result.purchased).toBe(true);
+      expect(result.goldAdded).toBe(160); // 150 + 10 bonus
+      expect(result.newBalance).toBe(260); // 100 + 160
+    });
+
+    it('should credit correct total gold including bonus for gold_1000', async () => {
+      mockPrisma.iapReceipt.findUnique.mockResolvedValue(null);
+      mockPrisma.$transaction.mockImplementation(async (fn: (tx: typeof mockPrisma) => Promise<number>) => {
+        mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 0 });
+        return fn(mockPrisma);
+      });
+
+      const result = await service.purchaseGold('u1', {
+        packageId: 'gold_1000',
+        platform: 'apple',
+        receipt: 'receipt-1000',
+      });
+
+      expect(result.purchased).toBe(true);
+      expect(result.goldAdded).toBe(1150); // 1000 + 150 bonus
+    });
+
+    it('should return TRY price in result', async () => {
+      mockPrisma.iapReceipt.findUnique.mockResolvedValue(null);
+      mockPrisma.$transaction.mockImplementation(async (fn: (tx: typeof mockPrisma) => Promise<number>) => {
+        mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 0 });
+        return fn(mockPrisma);
+      });
+
+      const result = await service.purchaseGold('u1', {
+        packageId: 'gold_50',
+        platform: 'apple',
+        receipt: 'receipt-50',
+      });
+
+      expect(result.priceTry).toBe(29.99);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // validateReceipt()
+  // ═══════════════════════════════════════════════════════════════
+
+  describe('validateReceipt()', () => {
+    it('should return valid result for valid receipt', async () => {
+      const result = await service.validateReceipt('u1', {
+        platform: 'apple',
+        receipt: 'valid-receipt',
+      });
+
+      expect(result.valid).toBe(true);
+      expect(result.transactionId).toBeDefined();
+      expect(result.productId).toBeDefined();
+    });
+
+    it('should return invalid result for invalid receipt', async () => {
+      mockReceiptValidator.validateReceipt.mockResolvedValueOnce({
+        isValid: false,
+        transactionId: null,
+        productId: null,
+      });
+
+      const result = await service.validateReceipt('u1', {
+        platform: 'apple',
+        receipt: 'invalid-receipt',
+      });
+
+      expect(result.valid).toBe(false);
+    });
+
+    it('should pass google platform correctly', async () => {
+      await service.validateReceipt('u1', {
+        platform: 'google',
+        receipt: 'google-receipt',
+      });
+
+      expect(mockReceiptValidator.validateReceipt).toHaveBeenCalledWith(
+        'GOOGLE',
+        'google-receipt',
+        'com.luma.dating',
+        undefined,
+      );
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // getTransactionHistory()
+  // ═══════════════════════════════════════════════════════════════
+
+  describe('getTransactionHistory()', () => {
+    it('should return both gold transactions and subscriptions', async () => {
+      mockPrisma.goldTransaction.findMany.mockResolvedValue([
+        { id: 'tx1', type: 'PURCHASE', amount: 50, balance: 50, description: 'Gold', createdAt: new Date() },
+      ]);
+      mockPrisma.subscription.findMany.mockResolvedValue([
+        { id: 'sub1', packageTier: 'GOLD', platform: 'APPLE', isActive: true, createdAt: new Date() },
+      ]);
+      mockPrisma.goldTransaction.count.mockResolvedValue(1);
+
+      const result = await service.getTransactionHistory('u1', 1, 20);
+
+      expect(result.goldTransactions).toHaveLength(1);
+      expect(result.subscriptions).toHaveLength(1);
+      expect(result.pagination.page).toBe(1);
+      expect(result.pagination.total).toBe(1);
+    });
+
+    it('should clamp pagination limits', async () => {
+      mockPrisma.goldTransaction.findMany.mockResolvedValue([]);
+      mockPrisma.subscription.findMany.mockResolvedValue([]);
+      mockPrisma.goldTransaction.count.mockResolvedValue(0);
+
+      const result = await service.getTransactionHistory('u1', -1, 999);
+
+      expect(result.pagination.page).toBe(1);
+      expect(result.pagination.limit).toBe(50);
+    });
+
+    it('should return empty results for user with no history', async () => {
+      mockPrisma.goldTransaction.findMany.mockResolvedValue([]);
+      mockPrisma.subscription.findMany.mockResolvedValue([]);
+      mockPrisma.goldTransaction.count.mockResolvedValue(0);
+
+      const result = await service.getTransactionHistory('u1', 1, 20);
+
+      expect(result.goldTransactions).toEqual([]);
+      expect(result.subscriptions).toEqual([]);
+      expect(result.pagination.totalPages).toBe(0);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // purchaseOneTime()
+  // ═══════════════════════════════════════════════════════════════
+
+  describe('purchaseOneTime()', () => {
+    it('should throw BadRequestException for invalid product', async () => {
+      await expect(
+        service.purchaseOneTime('u1', 'invalid_product', 'apple', 'receipt'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException for invalid receipt', async () => {
+      mockReceiptValidator.validateReceipt.mockResolvedValueOnce({
+        isValid: false,
+        transactionId: null,
+      });
+
+      await expect(
+        service.purchaseOneTime('u1', 'deep_analysis', 'apple', 'bad-receipt'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException for duplicate receipt', async () => {
+      mockPrisma.iapReceipt.findUnique.mockResolvedValue({ id: 'existing' });
+
+      await expect(
+        service.purchaseOneTime('u1', 'deep_analysis', 'apple', 'duplicate-receipt'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should successfully purchase a one-time product', async () => {
+      mockPrisma.iapReceipt.findUnique.mockResolvedValue(null);
+      mockPrisma.$transaction.mockImplementation(async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
+        mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 50 });
+        await fn(mockPrisma);
+      });
+
+      const result = await service.purchaseOneTime('u1', 'deep_analysis', 'apple', 'receipt');
+
+      expect(result.purchased).toBe(true);
+      expect(result.productId).toBe('deep_analysis');
+      expect(result.priceTry).toBe(69);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // hasOneTimePurchase()
+  // ═══════════════════════════════════════════════════════════════
+
+  describe('hasOneTimePurchase()', () => {
+    it('should return true when purchase exists', async () => {
+      mockPrisma.goldTransaction.findFirst.mockResolvedValue({ id: 'tx1' });
+
+      const result = await service.hasOneTimePurchase('u1', 'deep_analysis');
+
+      expect(result).toBe(true);
+    });
+
+    it('should return false when no purchase exists', async () => {
+      mockPrisma.goldTransaction.findFirst.mockResolvedValue(null);
+
+      const result = await service.hasOneTimePurchase('u1', 'deep_analysis');
+
+      expect(result).toBe(false);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // subscribe() — additional edge cases
+  // ═══════════════════════════════════════════════════════════════
+
+  describe('subscribe() — receipt validation', () => {
+    it('should throw BadRequestException for invalid receipt', async () => {
+      mockPrisma.subscription.findFirst.mockResolvedValue(null);
+      mockReceiptValidator.validateReceipt.mockResolvedValueOnce({
+        isValid: false,
+        transactionId: null,
+      });
+
+      await expect(
+        service.subscribe('u1', {
+          packageTier: PackageTier.GOLD,
+          platform: 'apple',
+          receipt: 'invalid-receipt',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should successfully subscribe to GOLD tier', async () => {
+      mockPrisma.subscription.findFirst.mockResolvedValue(null);
+      mockPrisma.iapReceipt.findUnique.mockResolvedValue(null);
+      const subExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      mockPrisma.$transaction.mockImplementation(async (fn: (tx: typeof mockPrisma) => Promise<unknown>) => {
+        mockPrisma.subscription.create.mockResolvedValue({
+          id: 'sub-new',
+          expiryDate: subExpiry,
+        });
+        mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 0 });
+        return fn(mockPrisma);
+      });
+
+      const result = await service.subscribe('u1', {
+        packageTier: PackageTier.GOLD,
+        platform: 'apple',
+        receipt: 'valid-receipt',
+      });
+
+      expect(result.subscribed).toBe(true);
+      expect(result.packageTier).toBe('gold');
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // spendGold() — all actions
+  // ═══════════════════════════════════════════════════════════════
+
+  describe('spendGold() — all valid actions', () => {
+    it('should correctly charge for super_like (25 gold)', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 100 });
+      mockPrisma.$transaction.mockImplementation(async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
+        await fn(mockPrisma);
+      });
+
+      const result = await service.spendGold('u1', { action: 'super_like' });
+
+      expect(result.goldSpent).toBe(25);
+      expect(result.newBalance).toBe(75);
+      expect(result.action).toBe('super_like');
+    });
+
+    it('should reject spend when balance is exactly at the cost', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 25 });
+      mockPrisma.$transaction.mockImplementation(async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
+        await fn(mockPrisma);
+      });
+
+      const result = await service.spendGold('u1', { action: 'super_like' });
+
+      expect(result.spent).toBe(true);
+      expect(result.newBalance).toBe(0);
+    });
+
+    it('should reject when balance is 1 below cost', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 24 });
+
+      await expect(
+        service.spendGold('u1', { action: 'super_like' }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should include referenceId when provided', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 100 });
+      mockPrisma.$transaction.mockImplementation(async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
+        await fn(mockPrisma);
+      });
+
+      const result = await service.spendGold('u1', {
+        action: 'super_like',
+        referenceId: 'target-user-123',
+      });
+
+      expect(result.spent).toBe(true);
     });
   });
 });
