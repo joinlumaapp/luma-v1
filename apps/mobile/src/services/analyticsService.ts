@@ -28,8 +28,6 @@ type AsyncStorageType = import('@react-native-async-storage/async-storage').Asyn
 let AsyncStorageModule: AsyncStorageType | null = null;
 
 const OFFLINE_QUEUE_KEY = '@luma:analytics:offline_queue';
-const SESSION_ID_KEY = '@luma:analytics:session_id';
-
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface UserTraits {

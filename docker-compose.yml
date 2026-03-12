@@ -1,8 +1,13 @@
-# LUMA V1 — Development Environment
+# ─────────────────────────────────────────────────────────
+# LUMA V1 — Local Development Environment
 # Usage: docker compose up -d
+# Logs:  docker compose logs -f backend
+# Stop:  docker compose down
+# Reset: docker compose down -v  (deletes volumes)
+# ─────────────────────────────────────────────────────────
 
 services:
-  # ─── PostgreSQL Database ─────────────────────────
+  # ─── PostgreSQL Database ─────────────────────────────
   postgres:
     image: postgres:16-alpine
     container_name: luma-postgres
@@ -33,31 +38,38 @@ services:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U luma -d luma_dev']
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
     networks:
       - luma-network
 
-  # ─── Redis Cache ─────────────────────────────────
+  # ─── Redis Cache ─────────────────────────────────────
   redis:
     image: redis:7-alpine
     container_name: luma-redis
     restart: unless-stopped
-    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
+    command: >
+      redis-server
+      --maxmemory 128mb
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
+      --appendfsync everysec
     ports:
       - '6379:6379'
     volumes:
       - redis_data:/data
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
     networks:
       - luma-network
 
-  # ─── Elasticsearch (Discovery Search) ────────────
+  # ─── Elasticsearch (Discovery Search) ────────────────
   elasticsearch:
     image: elasticsearch:8.12.0
     container_name: luma-elasticsearch
@@ -65,20 +77,22 @@ services:
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
       - 'ES_JAVA_OPTS=-Xms256m -Xmx256m'
     ports:
       - '9200:9200'
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
     healthcheck:
-      test: ['CMD-SHELL', 'curl -s http://localhost:9200/_cluster/health | grep -q "status"']
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      test: ['CMD-SHELL', 'curl -sf http://localhost:9200/_cluster/health | grep -q "status"']
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     networks:
       - luma-network
 
-  # ─── Backend API (Development) ───────────────────
+  # ─── Backend API (Development) ───────────────────────
   backend:
     build:
       context: .
@@ -90,7 +104,7 @@ services:
     command: npx nest start --watch
     ports:
       - '3000:3000'
-      - '9229:9229'
+      - '9229:9229'  # Node.js debug port
     environment:
       NODE_ENV: development
       PORT: 3000
@@ -102,9 +116,15 @@ services:
       JWT_ACCESS_EXPIRY: 15m
       JWT_REFRESH_EXPIRY: 7d
       JWT_REFRESH_EXPIRY_DAYS: '7'
+      CORS_ORIGINS: http://localhost:3000,http://localhost:8081
+      THROTTLE_TTL: '60'
+      THROTTLE_LIMIT: '100'
     volumes:
+      # Source mounts for hot-reload (delegated for macOS performance)
       - ./apps/backend/src:/app/apps/backend/src:delegated
       - ./packages/shared/src:/app/packages/shared/src:delegated
+      # Prisma schema for migrations in dev
+      - ./apps/backend/src/prisma:/app/apps/backend/src/prisma:delegated
     depends_on:
       postgres:
         condition: service_healthy
@@ -115,16 +135,19 @@ services:
     healthcheck:
       test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3000/api/v1/health/ping']
       interval: 30s
-      timeout: 3s
-      retries: 3
-      start_period: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
     networks:
       - luma-network
 
 volumes:
   postgres_data:
+    driver: local
   redis_data:
+    driver: local
   elasticsearch_data:
+    driver: local
 
 networks:
   luma-network:

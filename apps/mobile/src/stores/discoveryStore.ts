@@ -334,10 +334,10 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
 
       // Track swipe event
       const swipeEvent = direction === 'right'
-        ? ANALYTICS_EVENTS.DISCOVERY_SWIPE_RIGHT
+        ? ANALYTICS_EVENTS.CARD_LIKED
         : direction === 'up'
-          ? ANALYTICS_EVENTS.DISCOVERY_SUPER_LIKE
-          : ANALYTICS_EVENTS.DISCOVERY_SWIPE_LEFT;
+          ? ANALYTICS_EVENTS.CARD_SUPERLIKED
+          : ANALYTICS_EVENTS.CARD_PASSED;
       const currentState = get();
       analyticsService.track(swipeEvent, {
         cardId: currentState.cards[currentState.currentIndex]?.id ?? profileId,

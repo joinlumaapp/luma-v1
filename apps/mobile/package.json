@@ -9,7 +9,9 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "eslint . --ext .ts,.tsx",
-    "type-check": "tsc --noEmit"
+    "type-check": "NODE_OPTIONS='--max-old-space-size=4096' tsc --noEmit",
+    "typecheck": "NODE_OPTIONS='--max-old-space-size=4096' tsc --noEmit",
+    "typecheck:watch": "NODE_OPTIONS='--max-old-space-size=4096' tsc --noEmit --watch"
   },
   "dependencies": {
     "@luma/shared": "*",

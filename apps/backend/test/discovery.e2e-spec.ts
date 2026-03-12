@@ -18,7 +18,9 @@ import {
   createTestApp,
   TEST_USER,
   TEST_USER_2,
-} from './test-helpers';
+  cleanupTestData,
+  createMockFeedCard,
+} from './helpers';
 
 describe('Discovery E2E — /api/v1/discovery', () => {
   let app: INestApplication;

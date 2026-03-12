@@ -20,7 +20,8 @@ import { AuthService } from '../src/modules/auth/auth.service';
 import {
   createTestApp,
   TEST_USER,
-} from './test-helpers';
+  cleanupTestData,
+} from './helpers';
 
 describe('Auth E2E — /api/v1/auth', () => {
   let app: INestApplication;

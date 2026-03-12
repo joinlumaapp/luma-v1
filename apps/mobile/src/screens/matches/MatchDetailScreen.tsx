@@ -57,7 +57,7 @@ export const MatchDetailScreen: React.FC = () => {
 
   useEffect(() => {
     getMatch(matchId);
-    analyticsService.track(ANALYTICS_EVENTS.MATCH_DETAIL_VIEWED, { matchId });
+    analyticsService.track(ANALYTICS_EVENTS.MATCH_VIEWED, { matchId });
     return () => {
       clearSelected();
     };

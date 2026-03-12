@@ -19,7 +19,9 @@ import { ProfilesService } from '../src/modules/profiles/profiles.service';
 import {
   createTestApp,
   TEST_USER,
-} from './test-helpers';
+  cleanupTestData,
+  createMockProfile,
+} from './helpers';
 
 describe('Profile E2E — /api/v1/profiles', () => {
   let app: INestApplication;

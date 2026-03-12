@@ -7,6 +7,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { SentryModule } from './common/sentry/sentry.module';
 import { SentryInterceptor } from './common/sentry/sentry.interceptor';
+import configuration from './config/configuration';
 
 // Core modules
 import { PrismaModule } from './prisma/prisma.module';
@@ -41,10 +42,11 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
 
 @Module({
   imports: [
-    // Configuration (global)
+    // Configuration (global) — validated via config/configuration.ts
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
+      load: [configuration],
     }),
 
     // JWT (global — required by JwtAuthGuard used across all modules)

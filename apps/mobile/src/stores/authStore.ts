@@ -220,7 +220,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     socketService.disconnect();
 
     // Track analytics
-    analyticsService.track(ANALYTICS_EVENTS.AUTH_LOGOUT);
+    analyticsService.track(ANALYTICS_EVENTS.LOGOUT);
     analyticsService.reset();
 
     // Clear persisted data

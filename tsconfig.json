@@ -1,4 +1,12 @@
 {
-  "compilerOptions": {},
-  "extends": "expo/tsconfig.base"
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "."
+  },
+  "references": [
+    { "path": "packages/shared" },
+    { "path": "apps/mobile" },
+    { "path": "apps/backend" }
+  ],
+  "files": []
 }

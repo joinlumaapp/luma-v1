@@ -160,7 +160,7 @@ export const useMatchStore = create<MatchState>((set, get) => ({
   unmatch: async (matchId) => {
     try {
       await matchService.unmatch(matchId);
-      analyticsService.track(ANALYTICS_EVENTS.MATCH_UNMATCHED, { matchId });
+      analyticsService.track(ANALYTICS_EVENTS.UNMATCH, { matchId });
       set((state) => ({
         matches: state.matches.filter((m) => m.id !== matchId),
         selectedMatch: state.selectedMatch?.id === matchId ? null : state.selectedMatch,

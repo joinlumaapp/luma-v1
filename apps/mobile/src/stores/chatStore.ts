@@ -324,7 +324,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         content,
         type: 'TEXT',
       });
-      analyticsService.track(ANALYTICS_EVENTS.CHAT_MESSAGE_SENT, { matchId });
+      analyticsService.track(ANALYTICS_EVENTS.MESSAGE_SENT, { matchId });
       const today = getTodayString();
 
       // Replace optimistic message with real server/local message
@@ -380,7 +380,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     try {
       const response = await chatService.sendImageMessage(matchId, imageUri);
-      analyticsService.track(ANALYTICS_EVENTS.CHAT_IMAGE_SENT, { matchId });
+      analyticsService.track(ANALYTICS_EVENTS.IMAGE_SENT, { matchId });
       set((state) => ({
         messages: {
           ...state.messages,
@@ -419,7 +419,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     try {
       const response = await chatService.sendGifMessage(matchId, gifUrl);
-      analyticsService.track(ANALYTICS_EVENTS.CHAT_MESSAGE_SENT, { matchId, type: 'GIF' });
+      analyticsService.track(ANALYTICS_EVENTS.MESSAGE_SENT, { matchId, type: 'GIF' });
       set((state) => ({
         messages: {
           ...state.messages,
@@ -458,7 +458,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     try {
       const response = await chatService.sendVoiceMessage(matchId, audioUri, duration);
-      analyticsService.track(ANALYTICS_EVENTS.CHAT_MESSAGE_SENT, { matchId, type: 'VOICE' });
+      analyticsService.track(ANALYTICS_EVENTS.MESSAGE_SENT, { matchId, type: 'VOICE' });
       set((state) => ({
         messages: {
           ...state.messages,

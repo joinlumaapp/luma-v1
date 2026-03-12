@@ -18,7 +18,10 @@ import { ChatService } from '../src/modules/chat/chat.service';
 import {
   createTestApp,
   TEST_USER,
-} from './test-helpers';
+  cleanupTestData,
+  createMockConversation,
+  createMockMessage,
+} from './helpers';
 
 describe('Chat E2E — /api/v1/chat', () => {
   let app: INestApplication;

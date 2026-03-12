@@ -7,11 +7,15 @@
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "noEmit": true,
+    "skipLibCheck": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./node_modules/.cache/tsbuildinfo",
     "paths": {
       "@/*": ["./src/*"],
-      "@luma/shared": ["../../packages/shared/src"]
+      "@luma/shared": ["../../packages/shared/src"],
+      "@luma/shared/*": ["../../packages/shared/src/*"]
     }
   },
   "include": ["src/**/*", "App.tsx"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "babel.config.js", "metro.config.js", "jest.config.js"]
 }
