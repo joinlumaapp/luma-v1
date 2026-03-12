@@ -4,7 +4,17 @@
     "appVersionSource": "remote"
   },
   "build": {
+    "base": {
+      "node": "20.11.0",
+      "env": {
+        "SENTRY_DSN": "",
+        "MIXPANEL_TOKEN": "",
+        "REVENUECAT_API_KEY_IOS": "",
+        "REVENUECAT_API_KEY_ANDROID": ""
+      }
+    },
     "development": {
+      "extends": "base",
       "developmentClient": true,
       "distribution": "internal",
       "ios": {
@@ -16,11 +26,13 @@
         "gradleCommand": ":app:assembleDebug"
       },
       "env": {
-        "APP_ENV": "development"
+        "APP_ENV": "development",
+        "API_URL": "http://localhost:3000"
       },
       "channel": "development"
     },
     "preview": {
+      "extends": "base",
       "distribution": "internal",
       "ios": {
         "buildConfiguration": "Release"
@@ -29,11 +41,13 @@
         "buildType": "apk"
       },
       "env": {
-        "APP_ENV": "preview"
+        "APP_ENV": "preview",
+        "API_URL": "https://api-preview.luma.dating"
       },
       "channel": "preview"
     },
     "production": {
+      "extends": "base",
       "distribution": "store",
       "ios": {
         "buildConfiguration": "Release",
@@ -44,7 +58,8 @@
         "autoIncrement": true
       },
       "env": {
-        "APP_ENV": "production"
+        "APP_ENV": "production",
+        "API_URL": "https://api.luma.dating"
       },
       "channel": "production"
     }
@@ -58,7 +73,8 @@
       },
       "android": {
         "serviceAccountKeyPath": "./google-services-key.json",
-        "track": "internal"
+        "track": "internal",
+        "releaseStatus": "draft"
       }
     }
   }

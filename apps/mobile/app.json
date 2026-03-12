@@ -17,7 +17,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.luma.app",
+      "bundleIdentifier": "com.luma.dating",
       "buildNumber": "1",
       "icon": "./assets/icon.png",
       "infoPlist": {
@@ -36,7 +36,7 @@
         "backgroundColor": "#F5B0C0"
       },
       "softwareKeyboardLayoutMode": "resize",
-      "package": "com.luma.app",
+      "package": "com.luma.dating",
       "versionCode": 1,
       "permissions": [
         "CAMERA",

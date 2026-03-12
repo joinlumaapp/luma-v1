@@ -1,7 +1,11 @@
 // Network store — Zustand store for connectivity monitoring via NetInfo
+// Debounced offline detection to avoid UI flicker on flaky connections
 
 import { create } from 'zustand';
 import NetInfo, { type NetInfoState } from '@react-native-community/netinfo';
+
+/** Debounce delay for going offline (ms). Going online is immediate. */
+const OFFLINE_DEBOUNCE_MS = 1500;
 
 interface NetworkState {
   /** Whether the device has an active network connection */
@@ -20,6 +24,8 @@ interface NetworkState {
   clearWasOffline: () => void;
 }
 
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
 export const useNetworkStore = create<NetworkState>((set, get) => ({
   isConnected: true,
   isInternetReachable: true,
@@ -29,21 +35,47 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
   startMonitoring: () => {
     const unsubscribe = NetInfo.addEventListener((state: NetInfoState) => {
       const prev = get();
-      const isConnected = state.isConnected ?? false;
+      const isNowConnected = state.isConnected ?? false;
 
-      // wasOffline tracks whether we were previously disconnected so consumers
-      // can trigger reconnection flows. It becomes true when we lose connection
-      // and stays true until the consumer reads and clears it after reconnecting.
-      const wasOffline = !isConnected ? true : prev.wasOffline;
+      if (isNowConnected) {
+        // Going online — apply immediately for fast UX feedback
+        if (debounceTimer) {
+          clearTimeout(debounceTimer);
+          debounceTimer = null;
+        }
 
-      set({
-        isConnected,
-        isInternetReachable: state.isInternetReachable,
-        connectionType: state.type,
-        wasOffline,
-      });
+        set({
+          isConnected: true,
+          isInternetReachable: state.isInternetReachable,
+          connectionType: state.type,
+          // Keep wasOffline true if it was already set — consumer must clear it
+          wasOffline: prev.wasOffline,
+        });
+      } else {
+        // Going offline — debounce to avoid flicker
+        if (debounceTimer) {
+          clearTimeout(debounceTimer);
+        }
+
+        debounceTimer = setTimeout(() => {
+          set({
+            isConnected: false,
+            isInternetReachable: false,
+            connectionType: state.type,
+            wasOffline: true,
+          });
+          debounceTimer = null;
+        }, OFFLINE_DEBOUNCE_MS);
+      }
     });
-    return unsubscribe;
+
+    return () => {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+        debounceTimer = null;
+      }
+      unsubscribe();
+    };
   },
 
   clearWasOffline: () => {

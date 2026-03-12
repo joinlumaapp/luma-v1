@@ -162,6 +162,13 @@ export const API_ROUTES = {
   REACTIONS: {
     TOGGLE: '/chat/messages/:messageId/react',   // POST
   },
+  // Subsystem 19: Analytics
+  ANALYTICS: {
+    BATCH_EVENTS: '/analytics/events',          // POST — receive client event batch
+    DASHBOARD: '/analytics/dashboard',          // GET — admin dashboard stats
+    RETENTION: '/analytics/retention',          // GET — retention cohorts
+    USER_FUNNEL: '/analytics/funnel/:userId',   // GET — single user funnel
+  },
 } as const;
 
 // WebSocket events

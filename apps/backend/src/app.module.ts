@@ -36,6 +36,8 @@ import { SearchModule } from './modules/search/search.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { CacheModule } from './modules/cache/cache.module';
 import { StorageModule } from './modules/storage/storage.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
 
 @Module({
   imports: [
@@ -106,6 +108,8 @@ import { StorageModule } from './modules/storage/storage.module';
     ChatModule,              // 1-on-1 messaging
     CacheModule,             // Global Redis cache layer
     StorageModule,           // S3/CloudFront photo & voice storage
+    AdminModule,             // Admin dashboard & moderation panel
+    AnalyticsModule,         // Subsystem 19: Analytics, Metrics & Insights
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

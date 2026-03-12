@@ -11,6 +11,7 @@ import { useAuthStore } from '../stores/authStore';
 import { linkingConfig } from '../services/deepLinkService';
 import { useNotificationHandler } from '../hooks/useNotificationHandler';
 import { InAppNotificationBanner } from '../components/common/InAppNotificationBanner';
+import { NetworkProvider } from '../providers/NetworkProvider';
 
 // ─── Navigation ref — dışarıdan erişim için (bildirim handler vb.) ────
 export let navigationRef: NavigationContainerRef<RootStackParamList> | null = null;
@@ -48,19 +49,21 @@ export const Navigation: React.FC = () => {
   );
 
   return (
-    <NavigationContainer
-      ref={navRef}
-      theme={navigationTheme}
-      linking={linkingConfig}
-      onReady={() => {
-        // Global ref'i ayarla — hook dışı erişim için
-        navigationRef = navRef.current;
-      }}
-    >
-      <RootNavigator />
-      {/* Ön plan bildirim banner'ı — tüm ekranların üzerinde */}
-      {isAuthenticated && <InAppNotificationBanner />}
-    </NavigationContainer>
+    <NetworkProvider>
+      <NavigationContainer
+        ref={navRef}
+        theme={navigationTheme}
+        linking={linkingConfig}
+        onReady={() => {
+          // Global ref'i ayarla — hook dışı erişim için
+          navigationRef = navRef.current;
+        }}
+      >
+        <RootNavigator />
+        {/* Ön plan bildirim banner'ı — tüm ekranların üzerinde */}
+        {isAuthenticated && <InAppNotificationBanner />}
+      </NavigationContainer>
+    </NetworkProvider>
   );
 };
 

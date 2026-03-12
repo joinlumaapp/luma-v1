@@ -6,7 +6,37 @@ import { APP_CONFIG } from '../constants/config';
 import { useAuthStore } from '../stores/authStore';
 import { useNetworkStore } from '../stores/networkStore';
 import { requestQueue } from './requestQueue';
+import { offlineQueue, type OfflineActionType } from './offlineQueue';
 import { storage } from '../utils/storage';
+
+// ── Queueable URL patterns → OfflineActionType mapping ──────────────
+// When offline, write requests matching these patterns are queued
+// with an optimistic response instead of failing.
+
+const QUEUEABLE_PATTERNS: Array<{ pattern: RegExp; actionType: OfflineActionType }> = [
+  { pattern: /\/discovery\/like/, actionType: 'like' },
+  { pattern: /\/discovery\/pass/, actionType: 'pass' },
+  { pattern: /\/discovery\/superlike/, actionType: 'superlike' },
+  { pattern: /\/discovery\/undo/, actionType: 'undo_swipe' },
+  { pattern: /\/chat\/.*\/messages/, actionType: 'send_message' },
+  { pattern: /\/chat\/.*\/react/, actionType: 'react_message' },
+  { pattern: /\/profile\/me/, actionType: 'update_profile' },
+  { pattern: /\/users\/.*\/report/, actionType: 'report_user' },
+  { pattern: /\/users\/.*\/block/, actionType: 'block_user' },
+];
+
+/**
+ * Check if a URL matches a queueable action pattern.
+ * Returns the OfflineActionType if matched, undefined otherwise.
+ */
+function getQueueableActionType(url: string): OfflineActionType | undefined {
+  for (const { pattern, actionType } of QUEUEABLE_PATTERNS) {
+    if (pattern.test(url)) {
+      return actionType;
+    }
+  }
+  return undefined;
+}
 
 // ── Turkish user-facing error messages ─────────────────────────────────
 
@@ -84,7 +114,7 @@ export const api = axios.create({
   },
 });
 
-// ── Request interceptor — auto-attach JWT token ────────────────────────
+// ── Request interceptor — auto-attach JWT token & pre-flight offline check ──
 
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
@@ -92,6 +122,35 @@ api.interceptors.request.use(
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Pre-flight offline check for queueable write actions
+    // Queue immediately instead of waiting for the network timeout
+    const isOffline = !useNetworkStore.getState().isConnected;
+    const method = config.method?.toLowerCase();
+    if (isOffline && method && ['post', 'patch', 'put', 'delete'].includes(method)) {
+      const url = config.url ?? '';
+      const actionType = getQueueableActionType(url);
+      if (actionType) {
+        const upperMethod = method.toUpperCase() as 'POST' | 'PATCH' | 'PUT' | 'DELETE';
+        const payload = config.data as Record<string, unknown> | undefined;
+        await offlineQueue.enqueue(actionType, upperMethod, url, payload);
+
+        // Cancel the request by returning a custom adapter response
+        // This prevents the network call from being attempted at all
+        return {
+          ...config,
+          adapter: () =>
+            Promise.resolve({
+              data: { _queued: true, _actionType: actionType },
+              status: 0,
+              statusText: 'queued-preflight',
+              headers: {},
+              config,
+            }),
+        } as InternalAxiosRequestConfig;
+      }
+    }
+
     return config;
   },
   (error: AxiosError) => {
@@ -195,13 +254,27 @@ api.interceptors.response.use(
       const config = error.config;
       const method = config?.method?.toLowerCase();
       if (config && method && ['post', 'patch', 'put', 'delete'].includes(method)) {
-        requestQueue.add(
-          method.toUpperCase() as 'POST' | 'PATCH' | 'PUT' | 'DELETE',
-          config.url ?? '',
-          config.data as unknown,
-        );
-        // Return a resolved promise so callers don't crash
-        return Promise.resolve({ data: null, status: 0, statusText: 'queued', headers: {}, config });
+        const url = config.url ?? '';
+        const upperMethod = method.toUpperCase() as 'POST' | 'PATCH' | 'PUT' | 'DELETE';
+        const payload = config.data as Record<string, unknown> | undefined;
+
+        // Try to enqueue to the persistent offlineQueue if it matches a known action type
+        const actionType = getQueueableActionType(url);
+        if (actionType) {
+          offlineQueue.enqueue(actionType, upperMethod, url, payload);
+        } else {
+          // Fallback to the legacy requestQueue for non-categorized writes
+          requestQueue.add(upperMethod, url, payload);
+        }
+
+        // Return an optimistic resolved promise so callers don't crash
+        return Promise.resolve({
+          data: { _queued: true, _actionType: actionType ?? 'unknown' },
+          status: 0,
+          statusText: 'queued',
+          headers: {},
+          config,
+        });
       }
     }
 

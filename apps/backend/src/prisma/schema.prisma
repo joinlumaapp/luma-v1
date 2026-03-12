@@ -74,6 +74,7 @@ model User {
   loginStreak            LoginStreak?
   datePlans              DatePlan[]
   weeklyReports          WeeklyReport[]
+  analyticsEvents        AnalyticsEvent[]
 
   @@map("users")
 }
@@ -1195,4 +1196,31 @@ model WeeklyReport {
   @@unique([userId, weekStart])
   @@index([userId])
   @@map("weekly_reports")
+}
+
+// ============================================================
+// SUBSYSTEM 19: Analytics Events
+// Client and server-side event storage for metrics, funnels,
+// retention cohorts, and dashboard aggregation.
+// ============================================================
+
+model AnalyticsEvent {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  event           String   @db.VarChar(100)
+  properties      Json     @default("{}")
+  sessionId       String   @map("session_id") @db.VarChar(50)
+  platform        String   @db.VarChar(20)
+  appVersion      String   @map("app_version") @db.VarChar(20)
+  clientTimestamp  DateTime @map("client_timestamp")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([event])
+  @@index([createdAt])
+  @@index([userId, event])
+  @@index([event, createdAt])
+  @@map("analytics_events")
 }

@@ -70,3 +70,7 @@ export { socketService } from './socketService';
 
 // Request queue (offline support)
 export { requestQueue } from './requestQueue';
+
+// Offline queue (persistent offline action queue)
+export { offlineQueue } from './offlineQueue';
+export type { OfflineActionType, OfflineAction } from './offlineQueue';

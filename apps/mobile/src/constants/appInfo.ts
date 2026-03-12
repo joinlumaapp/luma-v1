@@ -8,7 +8,7 @@ export const APP_DISPLAY_NAME = 'LUMA - Ruh Esin Bul' as const;
 export const APP_TAGLINE = 'Gerçekten uyumlu insanlarla tanışma platformu' as const;
 export const APP_VERSION = '1.0.0' as const;
 export const BUILD_NUMBER = '1' as const;
-export const APP_IDENTIFIER = 'com.luma.app' as const;
+export const APP_IDENTIFIER = 'com.luma.dating' as const;
 export const APP_SCHEME = 'luma' as const;
 
 // --- Version metadata ---
@@ -37,7 +37,7 @@ export const DATA_DELETION_URL = 'https://luma.dating/veri-silme' as const;
 // --- Store URLs ---
 export const STORE_URLS = {
   APPLE: 'https://apps.apple.com/tr/app/luma-dating/id0000000000',
-  GOOGLE: 'https://play.google.com/store/apps/details?id=com.luma.app',
+  GOOGLE: 'https://play.google.com/store/apps/details?id=com.luma.dating',
 } as const;
 
 /**
@@ -66,6 +66,16 @@ export const SOCIAL_LINKS = {
   LINKEDIN: 'https://linkedin.com/company/lumaapp',
   WEBSITE: 'https://luma.dating',
 } as const;
+
+// --- Minimum supported OS versions ---
+export const MINIMUM_OS_VERSION = {
+  IOS: '15.0',
+  ANDROID_SDK: 29, // Android 10
+  ANDROID_DISPLAY: '10',
+} as const;
+
+// --- Website ---
+export const WEBSITE_URL = 'https://luma.dating' as const;
 
 // --- Deep link schema ---
 export const DEEP_LINK_SCHEME = APP_SCHEME;
