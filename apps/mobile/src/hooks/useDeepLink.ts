@@ -1,96 +1,161 @@
-// Deep link yönetimi — uygulama içi yönlendirme
-// luma://profile/:userId, luma://match/:matchId
+// Deep link yonetimi — uygulama ici yonlendirme
+// Genisletilmis rotalar: match, chat, profile, discovery, daily-picks, badges, settings, membership
 
 import { useEffect, useCallback } from 'react';
 import { Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../navigation/types';
-import { DEEP_LINK_SCHEME } from '../constants/appInfo';
-
-/** Desteklenen deep link rotaları */
-type DeepLinkRoute =
-  | { type: 'profile'; userId: string }
-  | { type: 'match'; matchId: string }
-  | { type: 'unknown' };
-
-/**
- * Deep link URL'sini ayrıştırarak rota bilgisine dönüştürür.
- */
-const parseDeepLink = (url: string): DeepLinkRoute => {
-  try {
-    // luma://profile/abc123 veya https://luma.dating/profile/abc123
-    const cleanUrl = url.replace(`${DEEP_LINK_SCHEME}://`, '');
-    const segments = cleanUrl.split('/').filter(Boolean);
-
-    if (segments.length < 2) {
-      return { type: 'unknown' };
-    }
-
-    const [route, id] = segments;
-
-    switch (route) {
-      case 'profile':
-        return { type: 'profile', userId: id as string };
-      case 'match':
-        return { type: 'match', matchId: id as string };
-      default:
-        return { type: 'unknown' };
-    }
-  } catch {
-    return { type: 'unknown' };
-  }
-};
+import { parseDeepLink } from '../services/deepLinkService';
+import type { ParsedDeepLink } from '../services/deepLinkService';
 
 interface UseDeepLinkReturn {
-  /** Deep link URL'sini elle işle */
+  /** Deep link URL'sini elle isle */
   handleDeepLink: (url: string) => void;
 }
 
 /**
  * Deep link dinleyici hook'u.
- * Uygulama açıkken ve kapalıyken gelen deep link'leri yakalar ve ilgili ekrana yönlendirir.
+ * Uygulama acikken ve kapaliyken gelen deep link'leri yakalar ve ilgili ekrana yonlendirir.
+ *
+ * Desteklenen rotalar:
+ * - luma://match/:matchId           -> MatchDetailScreen
+ * - luma://chat/:conversationId     -> ChatScreen
+ * - luma://profile/:userId          -> ProfilePreviewScreen
+ * - luma://discovery                -> DiscoveryScreen
+ * - luma://daily-picks              -> DailyPicksScreen
+ * - luma://badges                   -> BadgesScreen
+ * - luma://settings                 -> SettingsScreen
+ * - luma://membership               -> MembershipPlansScreen
+ * - luma://likes                    -> LikesYouScreen
+ * - luma://compatibility/:matchId   -> CompatibilityInsightScreen
  */
 export const useDeepLink = (): UseDeepLinkReturn => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
-  const handleDeepLink = useCallback(
-    (url: string) => {
-      const route = parseDeepLink(url);
+  const navigateToParsed = useCallback(
+    (parsed: ParsedDeepLink) => {
+      if (!parsed) return;
 
-      switch (route.type) {
-        case 'profile':
-          // Profil önizleme ekranına yönlendir
-          navigation.navigate('MainTabs', {
-            screen: 'DiscoveryTab',
-            params: {
-              screen: 'ProfilePreview',
-              params: { userId: route.userId },
-            },
-          });
-          break;
-
-        case 'match':
-          // Eşleşme detay ekranına yönlendir
+      switch (parsed.screen) {
+        case 'MatchDetail':
           navigation.navigate('MainTabs', {
             screen: 'MatchesTab',
             params: {
               screen: 'MatchDetail',
-              params: { matchId: route.matchId },
+              params: parsed.params,
             },
           });
           break;
 
-        case 'unknown':
-          // Bilinmeyen rota — sessizce yoksay
+        case 'Chat':
+          navigation.navigate('MainTabs', {
+            screen: 'MatchesTab',
+            params: {
+              screen: 'Chat',
+              params: parsed.params,
+            },
+          });
+          break;
+
+        case 'ProfilePreview':
+          navigation.navigate('MainTabs', {
+            screen: 'DiscoveryTab',
+            params: {
+              screen: 'ProfilePreview',
+              params: parsed.params,
+            },
+          });
+          break;
+
+        case 'Discovery':
+          navigation.navigate('MainTabs', {
+            screen: 'DiscoveryTab',
+            params: {
+              screen: 'Discovery',
+              params: undefined,
+            },
+          });
+          break;
+
+        case 'DailyPicks':
+          navigation.navigate('MainTabs', {
+            screen: 'DiscoveryTab',
+            params: {
+              screen: 'DailyPicks',
+              params: undefined,
+            },
+          });
+          break;
+
+        case 'Badges':
+          navigation.navigate('MainTabs', {
+            screen: 'ProfileTab',
+            params: {
+              screen: 'Badges',
+              params: undefined,
+            },
+          });
+          break;
+
+        case 'Settings':
+          navigation.navigate('MainTabs', {
+            screen: 'ProfileTab',
+            params: {
+              screen: 'Settings',
+              params: undefined,
+            },
+          });
+          break;
+
+        case 'MembershipPlans':
+          navigation.navigate('MainTabs', {
+            screen: 'ProfileTab',
+            params: {
+              screen: 'MembershipPlans',
+              params: undefined,
+            },
+          });
+          break;
+
+        case 'LikesYou':
+          navigation.navigate('MainTabs', {
+            screen: 'DiscoveryTab',
+            params: {
+              screen: 'LikesYou',
+              params: undefined,
+            },
+          });
+          break;
+
+        case 'CompatibilityInsight':
+          navigation.navigate('MainTabs', {
+            screen: 'MatchesTab',
+            params: {
+              screen: 'CompatibilityInsight',
+              params: parsed.params,
+            },
+          });
           break;
       }
     },
     [navigation],
   );
 
+  const handleDeepLink = useCallback(
+    (url: string) => {
+      const parsed = parseDeepLink(url);
+      if (parsed) {
+        navigateToParsed(parsed);
+      } else if (__DEV__) {
+        console.warn(`[DeepLink] Bilinmeyen veya gecersiz URL: ${url}`);
+      }
+    },
+    [navigateToParsed],
+  );
+
   useEffect(() => {
-    // Uygulama kapalıyken açılan deep link (cold start)
+    // Uygulama kapaliyken acilan deep link (cold start)
     const getInitialLink = async (): Promise<void> => {
       const initialUrl = await Linking.getInitialURL();
       if (initialUrl) {
@@ -100,7 +165,7 @@ export const useDeepLink = (): UseDeepLinkReturn => {
 
     getInitialLink();
 
-    // Uygulama açıkken gelen deep link (warm start)
+    // Uygulama acikken gelen deep link (warm start)
     const subscription = Linking.addEventListener('url', (event: { url: string }) => {
       handleDeepLink(event.url);
     });

@@ -4,6 +4,7 @@
 import { Platform, AppState } from 'react-native';
 import { create } from 'zustand';
 import { notificationService } from '../services/notificationService';
+import { handleForegroundNotification } from '../services/notificationHandlerService';
 import { useAuthStore } from './authStore';
 import type {
   Notification,
@@ -323,6 +324,9 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
           isRead: false,
           createdAt: new Date().toISOString(),
         });
+
+        // On plan bildirimi icin in-app banner goster
+        handleForegroundNotification(notification);
       },
     );
 

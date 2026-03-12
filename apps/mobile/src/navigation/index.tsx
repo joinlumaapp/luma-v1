@@ -1,12 +1,30 @@
 // Navigation entry point
+// Deep link yapılandırması, bildirim yönlendirmesi ve in-app banner entegrasyonu
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
+import type { NavigationContainerRef } from '@react-navigation/native';
 import { RootNavigator } from './RootNavigator';
+import type { RootStackParamList } from './types';
 import { useTheme } from '../theme/ThemeContext';
+import { useAuthStore } from '../stores/authStore';
+import { linkingConfig } from '../services/deepLinkService';
+import { useNotificationHandler } from '../hooks/useNotificationHandler';
+import { InAppNotificationBanner } from '../components/common/InAppNotificationBanner';
+
+// ─── Navigation ref — dışarıdan erişim için (bildirim handler vb.) ────
+export let navigationRef: NavigationContainerRef<RootStackParamList> | null = null;
 
 export const Navigation: React.FC = () => {
   const { isDark, colors } = useTheme();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const navRef = useRef<NavigationContainerRef<RootStackParamList>>(null);
+
+  // Bildirim handler — izin, token kaydı, yönlendirme
+  useNotificationHandler({
+    navigationRef: navRef.current,
+    isAuthenticated,
+  });
 
   const navigationTheme = useMemo(
     () => ({
@@ -30,8 +48,18 @@ export const Navigation: React.FC = () => {
   );
 
   return (
-    <NavigationContainer theme={navigationTheme}>
+    <NavigationContainer
+      ref={navRef}
+      theme={navigationTheme}
+      linking={linkingConfig}
+      onReady={() => {
+        // Global ref'i ayarla — hook dışı erişim için
+        navigationRef = navRef.current;
+      }}
+    >
       <RootNavigator />
+      {/* Ön plan bildirim banner'ı — tüm ekranların üzerinde */}
+      {isAuthenticated && <InAppNotificationBanner />}
     </NavigationContainer>
   );
 };

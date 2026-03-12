@@ -13,10 +13,11 @@ import { AuthNavigator } from './AuthNavigator';
 import { OnboardingNavigator } from './OnboardingNavigator';
 import { MainTabNavigator } from './MainTabNavigator';
 import { SupremeCelebrationScreen } from '../screens/premium/SupremeCelebrationScreen';
+import { ErrorBoundary } from '../components/common/ErrorBoundary';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-export const RootNavigator: React.FC = () => {
+const RootNavigatorInner: React.FC = () => {
   const { isAuthenticated, isOnboarded, hasStartedOnboarding } = useAuth();
 
   // Determine which flow to show
@@ -49,3 +50,9 @@ export const RootNavigator: React.FC = () => {
     </Stack.Navigator>
   );
 };
+
+export const RootNavigator: React.FC = () => (
+  <ErrorBoundary>
+    <RootNavigatorInner />
+  </ErrorBoundary>
+);

@@ -13,6 +13,8 @@ import { PrismaModule } from './prisma/prisma.module';
 
 // Middleware
 import { RequestLoggerMiddleware } from './middleware/request-logger.middleware';
+import { SecurityHeadersMiddleware } from './middleware/security-headers.middleware';
+import { RateLimitMiddleware } from './middleware/rate-limit.middleware';
 
 // Feature modules (Subsystems 1-19)
 import { AuthModule } from './modules/auth/auth.module';
@@ -113,6 +115,13 @@ import { StorageModule } from './modules/storage/storage.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
+    // Security headers — applied to all routes first
+    consumer.apply(SecurityHeadersMiddleware).forRoutes('*');
+
+    // Redis-based rate limiting — applied to all routes
+    consumer.apply(RateLimitMiddleware).forRoutes('*');
+
+    // Request logging — applied to all routes
     consumer.apply(RequestLoggerMiddleware).forRoutes('*');
   }
 }

@@ -5,7 +5,6 @@ import React, { useEffect, useCallback, useMemo, useRef, memo } from 'react';
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
   TouchableWithoutFeedback,
   StyleSheet,
@@ -13,7 +12,9 @@ import {
   ActivityIndicator,
   InteractionManager,
   Animated,
+  RefreshControl,
 } from 'react-native';
+import { CachedAvatar } from '../../components/common/CachedAvatar';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -81,13 +82,11 @@ const MemoizedConversationCard = memo<ConversationCardProps>(({ item, onPress, o
         accessibilityHint="Profili görmek için fotoğrafa dokunun"
       >
         <Animated.View style={[styles.avatarContainer, { transform: [{ scale: avatarScaleAnim }] }]}>
-          {item.photoUrl ? (
-            <Image source={{ uri: item.photoUrl }} style={styles.avatarImage} />
-          ) : (
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{item.name.charAt(0)}</Text>
-            </View>
-          )}
+          <CachedAvatar
+            uri={item.photoUrl}
+            size={layout.avatarMedium}
+            name={item.name}
+          />
           {item.isOnline && <View style={styles.onlineDot} />}
         </Animated.View>
       </TouchableWithoutFeedback>
@@ -245,8 +244,16 @@ export const ChatListScreen: React.FC = () => {
         ListEmptyComponent={renderEmptyList}
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={ChatListSeparator}
-        onRefresh={fetchConversations}
-        refreshing={isLoading}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={fetchConversations}
+            tintColor="#D4AF37"
+            colors={['#D4AF37']}
+            title="Guncelleniyor..."
+            titleColor={colors.textSecondary}
+          />
+        }
         // ── Performance tuning ──
         initialNumToRender={12}
         maxToRenderPerBatch={10}

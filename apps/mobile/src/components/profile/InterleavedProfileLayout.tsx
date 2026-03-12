@@ -8,6 +8,7 @@ import {
   Dimensions,
   StatusBar,
   Animated,
+  type RefreshControlProps,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -36,6 +37,8 @@ interface InterleavedProfileLayoutProps {
   footer?: React.ReactNode;
   /** Extra bottom padding for scroll content (to account for footer height) */
   scrollBottomPadding?: number;
+  /** Optional RefreshControl element for pull-to-refresh */
+  refreshControl?: React.ReactElement<RefreshControlProps>;
 }
 
 // ─── Full-Screen Photo Viewer ────────────────────────────────────────────────
@@ -206,6 +209,7 @@ export function InterleavedProfileLayout({
   headerBar,
   footer,
   scrollBottomPadding = 0,
+  refreshControl,
 }: InterleavedProfileLayoutProps) {
   const [viewerVisible, setViewerVisible] = useState(false);
   const [viewerInitialIndex, setViewerInitialIndex] = useState(0);
@@ -239,6 +243,7 @@ export function InterleavedProfileLayout({
         contentContainerStyle={{ paddingBottom: scrollBottomPadding }}
         showsVerticalScrollIndicator={false}
         bounces
+        refreshControl={refreshControl}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: true },

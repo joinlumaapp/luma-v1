@@ -1,7 +1,10 @@
 // Error boundary — catches React errors and shows Turkish fallback UI
+// Class component (required for error boundaries)
+// Logs componentStack for debugging, reports to console (and future analytics)
 
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
@@ -9,6 +12,7 @@ import { spacing, borderRadius } from '../../theme/spacing';
 interface ErrorBoundaryProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;
+  onError?: (error: Error, componentStack: string) => void;
 }
 
 interface ErrorBoundaryState {
@@ -27,10 +31,14 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-    // TODO: Hata raporlama servisine gönder
-    if (__DEV__) {
-      console.error('ErrorBoundary yakaladı:', error, errorInfo);
-    }
+    const componentStack = errorInfo.componentStack ?? '';
+
+    // Log full error + component stack for debugging
+    console.error('[ErrorBoundary] Hata yakalandi:', error.message);
+    console.error('[ErrorBoundary] Component stack:', componentStack);
+
+    // Future: send to analytics / Sentry
+    this.props.onError?.(error, componentStack);
   }
 
   handleRetry = (): void => {
@@ -44,11 +52,13 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
       }
 
       return (
-        <View style={styles.container}>
-          <Text style={styles.icon}>{'!'}</Text>
-          <Text style={styles.title}>Bir hata oluştu</Text>
+        <View style={styles.container} accessibilityRole="alert">
+          <View style={styles.iconContainer}>
+            <Ionicons name="warning-outline" size={56} color={colors.accent} />
+          </View>
+          <Text style={styles.title}>Bir seyler ters gitti</Text>
           <Text style={styles.message}>
-            Beklenmeyen bir sorun meydana geldi. Lütfen tekrar deneyin.
+            Beklenmeyen bir sorun meydana geldi. Lutfen tekrar deneyin.
           </Text>
           {__DEV__ && this.state.error && (
             <Text style={styles.errorDetail} numberOfLines={5}>
@@ -59,7 +69,10 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
             style={styles.retryButton}
             onPress={this.handleRetry}
             activeOpacity={0.8}
+            accessibilityLabel="Tekrar Dene"
+            accessibilityRole="button"
           >
+            <Ionicons name="refresh-outline" size={18} color="#FFFFFF" style={styles.retryIcon} />
             <Text style={styles.retryButtonText}>Tekrar Dene</Text>
           </TouchableOpacity>
         </View>
@@ -78,24 +91,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.xxl,
   },
-  icon: {
-    fontSize: 64,
-    color: colors.error,
+  iconContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: colors.surfaceLight,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: spacing.lg,
-    fontWeight: '700',
   },
   title: {
     ...typography.h3,
     color: colors.text,
     marginBottom: spacing.sm,
     textAlign: 'center',
+    includeFontPadding: false,
   },
   message: {
     ...typography.body,
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.lg,
-    lineHeight: 22,
+    includeFontPadding: false,
   },
   errorDetail: {
     ...typography.caption,
@@ -107,15 +124,22 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     width: '100%',
     overflow: 'hidden',
+    includeFontPadding: false,
   },
   retryButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.accent,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  retryIcon: {
+    marginRight: spacing.sm,
   },
   retryButtonText: {
     ...typography.button,
-    color: colors.text,
+    color: '#FFFFFF',
+    includeFontPadding: false,
   },
 });

@@ -14,7 +14,9 @@ import {
   FlatList,
   Animated,
   InteractionManager,
+  RefreshControl,
 } from 'react-native';
+import { CachedAvatar } from '../../components/common/CachedAvatar';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -195,12 +197,12 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
 
   const isSuperCompatible = item.compatibilityPercent >= 90;
 
-  const avatarContent = item.photoUrl ? (
-    <Image source={{ uri: item.photoUrl }} style={styles.avatarImage} />
-  ) : (
-    <View style={styles.avatar}>
-      <Text style={styles.avatarText}>{item.name.charAt(0)}</Text>
-    </View>
+  const avatarContent = (
+    <CachedAvatar
+      uri={item.photoUrl}
+      size={layout.avatarMedium}
+      name={item.name}
+    />
   );
 
   // Wrap avatar in pulsing glow for new matches, PulseGlow for super compat
@@ -410,12 +412,12 @@ const MessageRow = memo<MessageRowProps>(({ item, index, unreadCount, onPress, o
 
   const hasUnread = unreadCount > 0;
 
-  const avatarContent = item.photoUrl ? (
-    <Image source={{ uri: item.photoUrl }} style={styles.avatarImage} />
-  ) : (
-    <View style={styles.avatar}>
-      <Text style={styles.avatarText}>{item.name.charAt(0)}</Text>
-    </View>
+  const avatarContent = (
+    <CachedAvatar
+      uri={item.photoUrl}
+      size={layout.avatarMedium}
+      name={item.name}
+    />
   );
 
   return (
@@ -588,6 +590,7 @@ export const MatchesListScreen: React.FC = () => {
   const [viewers, setViewers] = useState<ProfileVisitor[]>([]);
   const [viewersCount, setViewersCount] = useState(0);
   const [likesYouCount, setLikesYouCount] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const tabScrollRef = useRef<ScrollView>(null);
 
   // Fetch profile visitors + likes-you count
@@ -641,6 +644,17 @@ export const MatchesListScreen: React.FC = () => {
       }
     }, [updateMatchActivity]),
   );
+
+  // Pull-to-refresh handler
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await fetchMatches();
+      await hydrateFromStorage();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [fetchMatches, hydrateFromStorage]);
 
   // ── Filtered data per tab ────────────────────────────────────
   // Sort: new (unopened) matches first, then by compatibility desc
@@ -975,6 +989,16 @@ export const MatchesListScreen: React.FC = () => {
           ListEmptyComponent={renderEmptyList}
           showsVerticalScrollIndicator={false}
           ItemSeparatorComponent={ItemSeparator}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              tintColor="#D4AF37"
+              colors={['#D4AF37']}
+              title="Guncelleniyor..."
+              titleColor={colors.textSecondary}
+            />
+          }
           initialNumToRender={10}
           maxToRenderPerBatch={10}
           windowSize={5}
@@ -991,6 +1015,16 @@ export const MatchesListScreen: React.FC = () => {
           ListEmptyComponent={renderEmptyList}
           showsVerticalScrollIndicator={false}
           ItemSeparatorComponent={ItemSeparator}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              tintColor="#D4AF37"
+              colors={['#D4AF37']}
+              title="Guncelleniyor..."
+              titleColor={colors.textSecondary}
+            />
+          }
           initialNumToRender={10}
           maxToRenderPerBatch={10}
           windowSize={5}

@@ -10,6 +10,7 @@ import {
   Animated,
   Easing,
   Share,
+  RefreshControl,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -239,6 +240,9 @@ export const ProfileScreen: React.FC = () => {
   const [showBoostModal, setShowBoostModal] = useState(false);
   const [goldBalance, setGoldBalance] = useState(500);
 
+  // Pull-to-refresh state
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   // Skeleton shimmer for loading state
   const shimmerAnim = useRef(new Animated.Value(0.3)).current;
 
@@ -291,6 +295,21 @@ export const ProfileScreen: React.FC = () => {
     setShowBoostModal(false);
     navigation.navigate('MembershipPlans');
   }, [navigation]);
+
+  // Pull-to-refresh handler — re-fetches all profile data
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        fetchProfile(),
+        fetchStrength(),
+        fetchWeeklyViews(),
+        fetchBoostStatus(),
+      ]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [fetchProfile, fetchStrength, fetchWeeklyViews, fetchBoostStatus]);
 
   useEffect(() => {
     fetchProfile();
@@ -722,6 +741,16 @@ export const ProfileScreen: React.FC = () => {
         infoSections={infoSections}
         headerBar={headerBar}
         scrollBottomPadding={spacing.xl * 2}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor="#D4AF37"
+            colors={['#D4AF37']}
+            title="Guncelleniyor..."
+            titleColor={colors.textSecondary}
+          />
+        }
       />
 
       {/* Boost modal */}

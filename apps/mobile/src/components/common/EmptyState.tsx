@@ -1,18 +1,22 @@
-// Reusable empty state with icon, title, subtitle, optional action, and fade-in animation
+// Reusable empty state with Ionicons icon, title, subtitle, optional action, and fade-in animation
+// Props: { icon, title, subtitle, actionLabel?, onAction? }
+// Centered with Ionicons icon, Turkish text, optional gold action button
 
 import React, { useEffect, useRef } from 'react';
 import {
+  View,
   Text,
   TouchableOpacity,
   StyleSheet,
   Animated,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 
 interface EmptyStateProps {
-  icon: string;
+  icon: keyof typeof Ionicons.glyphMap;
   title: string;
   subtitle?: string;
   actionLabel?: string;
@@ -55,7 +59,9 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         },
       ]}
     >
-      <Text style={styles.icon}>{icon}</Text>
+      <View style={styles.iconContainer}>
+        <Ionicons name={icon} size={48} color={colors.textTertiary} />
+      </View>
       <Text style={styles.title}>{title}</Text>
       {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       {actionLabel && onAction ? (
@@ -80,8 +86,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.xxl,
   },
-  icon: {
-    fontSize: 64,
+  iconContainer: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: colors.surfaceLight,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: spacing.lg,
   },
   title: {
@@ -89,15 +100,17 @@ const styles = StyleSheet.create({
     color: colors.text,
     textAlign: 'center',
     marginBottom: spacing.sm,
+    includeFontPadding: false,
   },
   subtitle: {
     ...typography.body,
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.lg,
+    includeFontPadding: false,
   },
   actionButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.accent,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.xl,
     height: layout.buttonSmallHeight,
@@ -106,6 +119,7 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     ...typography.button,
-    color: colors.text,
+    color: '#FFFFFF',
+    includeFontPadding: false,
   },
 });

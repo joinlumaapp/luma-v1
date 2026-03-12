@@ -5,7 +5,6 @@ import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
-  Image,
   Pressable,
   StyleSheet,
   Animated,
@@ -20,6 +19,7 @@ import { formatActivityStatus } from '../../utils/formatters';
 import { TierIndicator, GOLD_24K } from '../common/SubscriptionBadge';
 import { analyticsService, ANALYTICS_EVENTS } from '../../services/analyticsService';
 import { useDiscoveryStore } from '../../stores/discoveryStore';
+import { CachedImage } from '../common/CachedImage';
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -162,10 +162,13 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
       {/* ── Photo section — 62% ── */}
       <View style={styles.photoSection}>
         {profile.photoUrl ? (
-          <Image
-            source={{ uri: profile.photoUrl }}
+          <CachedImage
+            uri={profile.photoUrl}
             style={styles.photo}
-            resizeMode="cover"
+            contentFit="cover"
+            priority="high"
+            transition={300}
+            accessibilityLabel={`${profile.firstName} profil fotografi`}
           />
         ) : (
           <View style={styles.photoPlaceholder}>

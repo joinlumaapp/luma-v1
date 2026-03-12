@@ -19,6 +19,7 @@ import {
   ScrollView,
   Image,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
@@ -288,6 +289,17 @@ export const DiscoveryScreen: React.FC = () => {
 
   // ─── Undo access gate — Gold+ only ────────────────────
   const canUseUndo = packageTier !== 'free';
+
+  // ─── Pull-to-refresh state ──────────────────────────────
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const handlePullRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await checkAndLoadBatch();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [checkAndLoadBatch]);
 
   // ─── Like-with-comment modal state ──────────────────────
   const [showCommentModal, setShowCommentModal] = useState(false);
@@ -1081,6 +1093,20 @@ export const DiscoveryScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <ScrollView
+        contentContainerStyle={styles.refreshScrollContent}
+        scrollEnabled={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handlePullRefresh}
+            tintColor="#D4AF37"
+            colors={['#D4AF37']}
+            title="Yeni profiller yukleniyor..."
+            titleColor={colors.textSecondary}
+          />
+        }
+      >
       {/* Dark header area */}
       <View style={styles.darkHeaderArea}>
         {/* Header */}
@@ -1282,6 +1308,7 @@ export const DiscoveryScreen: React.FC = () => {
 
         {/* Action buttons removed — users swipe directly */}
       </View>
+      </ScrollView>
 
       {/* Match celebration overlay — only render when matchedCard exists */}
       {(!showMatchAnimation || matchedCard) && (
@@ -1414,6 +1441,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  refreshScrollContent: {
+    flex: 1,
   },
 
   // ── Header area (header + stories) ──
