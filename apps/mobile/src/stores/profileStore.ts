@@ -6,6 +6,13 @@ import type { ProfileResponse } from '../services/profileService';
 import { PROFILE_CONFIG } from '../constants/config';
 import { parseApiError } from '../services/api';
 import type { AxiosError } from 'axios';
+import { videoService } from '../services/videoService';
+
+export interface ProfileVideoData {
+  url: string;
+  thumbnailUrl: string;
+  duration: number;
+}
 
 export interface ProfileData {
   firstName: string;
@@ -26,6 +33,8 @@ export interface ProfileData {
   job: string;
   education: string;
   isComplete: boolean;
+  /** Profile video (10-30 seconds) */
+  profileVideo: ProfileVideoData | null;
 }
 
 interface ProfileState {
@@ -36,6 +45,9 @@ interface ProfileState {
   error: string | null;
   // Internal: photo IDs from backend for deletion/reorder operations
   _photoIds: string[];
+  // Video upload state
+  isVideoUploading: boolean;
+  videoUploadProgress: number;
 
   // Actions
   setField: (key: string, value: unknown) => void;
@@ -47,6 +59,8 @@ interface ProfileState {
   deletePhoto: (index: number) => Promise<void>;
   reorderPhotos: (fromIndex: number, toIndex: number) => Promise<void>;
   setMainPhoto: (index: number) => Promise<void>;
+  uploadVideo: (uri: string) => Promise<void>;
+  deleteVideo: () => Promise<void>;
   calculateCompletion: () => number;
   reset: () => void;
   clearError: () => void;
@@ -71,29 +85,38 @@ const initialProfile: ProfileData = {
   job: '',
   education: '',
   isComplete: false,
+  profileVideo: null,
 };
 
 // Transform backend ProfileResponse to store ProfileData
-const mapResponseToProfile = (data: ProfileResponse): ProfileData => ({
-  firstName: data.firstName,
-  birthDate: data.birthDate,
-  gender: data.gender,
-  genderPreference: Array.isArray((data as { genderPreference?: string[] }).genderPreference) ? (data as { genderPreference?: string[] }).genderPreference! : [],
-  lookingFor: Array.isArray((data as { lookingFor?: string[] }).lookingFor) ? (data as { lookingFor?: string[] }).lookingFor! : [],
-  height: (data as { height?: number | null }).height ?? null,
-  sports: (data as { sports?: string }).sports ?? '',
-  smoking: (data as { smoking?: string }).smoking ?? '',
-  children: (data as { children?: string }).children ?? '',
-  intentionTag: data.intentionTag,
-  interestTags: Array.isArray((data as { interestTags?: string[] }).interestTags) ? (data as { interestTags?: string[] }).interestTags! : [],
-  photos: data.photos.map((p) => p.url),
-  bio: data.bio,
-  answers: {},
-  city: data.city,
-  job: (data as { job?: string }).job ?? '',
-  education: (data as { education?: string }).education ?? '',
-  isComplete: data.isComplete,
-});
+const mapResponseToProfile = (data: ProfileResponse): ProfileData => {
+  const videoData = (data as { profileVideo?: { url: string; thumbnailUrl: string; duration: number } | null }).profileVideo ?? null;
+  return {
+    firstName: data.firstName,
+    birthDate: data.birthDate,
+    gender: data.gender,
+    genderPreference: Array.isArray((data as { genderPreference?: string[] }).genderPreference) ? (data as { genderPreference?: string[] }).genderPreference! : [],
+    lookingFor: Array.isArray((data as { lookingFor?: string[] }).lookingFor) ? (data as { lookingFor?: string[] }).lookingFor! : [],
+    height: (data as { height?: number | null }).height ?? null,
+    sports: (data as { sports?: string }).sports ?? '',
+    smoking: (data as { smoking?: string }).smoking ?? '',
+    children: (data as { children?: string }).children ?? '',
+    intentionTag: data.intentionTag,
+    interestTags: Array.isArray((data as { interestTags?: string[] }).interestTags) ? (data as { interestTags?: string[] }).interestTags! : [],
+    photos: data.photos.map((p) => p.url),
+    bio: data.bio,
+    answers: {},
+    city: data.city,
+    job: (data as { job?: string }).job ?? '',
+    education: (data as { education?: string }).education ?? '',
+    isComplete: data.isComplete,
+    profileVideo: videoData ? {
+      url: videoData.url,
+      thumbnailUrl: videoData.thumbnailUrl,
+      duration: videoData.duration,
+    } : null,
+  };
+};
 
 export const useProfileStore = create<ProfileState>((set, get) => ({
   // Initial state
@@ -102,6 +125,8 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   completionPercent: 0,
   error: null,
   _photoIds: [],
+  isVideoUploading: false,
+  videoUploadProgress: 0,
 
   // Actions
   setField: (key, value) =>
@@ -268,6 +293,75 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     await get().reorderPhotos(index, 0);
   },
 
+  uploadVideo: async (uri) => {
+    set({ isVideoUploading: true, videoUploadProgress: 0, error: null });
+    try {
+      const response = await videoService.uploadProfileVideo(uri, (percent) => {
+        set({ videoUploadProgress: percent });
+      });
+      set((state) => ({
+        profile: {
+          ...state.profile,
+          profileVideo: {
+            url: response.url,
+            thumbnailUrl: response.thumbnailUrl,
+            duration: response.duration,
+          },
+        },
+        isVideoUploading: false,
+        videoUploadProgress: 100,
+      }));
+    } catch (error: unknown) {
+      if (__DEV__) {
+        console.warn('Video yukleme basarisiz:', error);
+        // In dev, save local URI as fallback
+        set((state) => ({
+          profile: {
+            ...state.profile,
+            profileVideo: {
+              url: uri,
+              thumbnailUrl: '',
+              duration: 0,
+            },
+          },
+          isVideoUploading: false,
+          videoUploadProgress: 0,
+        }));
+      } else {
+        const apiError = parseApiError(error as AxiosError);
+        set({ isVideoUploading: false, videoUploadProgress: 0, error: apiError.userMessage });
+      }
+    }
+  },
+
+  deleteVideo: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      await videoService.deleteProfileVideo();
+      set((state) => ({
+        profile: {
+          ...state.profile,
+          profileVideo: null,
+        },
+        isLoading: false,
+      }));
+    } catch (error: unknown) {
+      if (__DEV__) {
+        console.warn('Video silme basarisiz:', error);
+        set((state) => ({
+          profile: {
+            ...state.profile,
+            profileVideo: null,
+          },
+          isLoading: false,
+        }));
+      } else {
+        const apiError = parseApiError(error as AxiosError);
+        set({ isLoading: false, error: apiError.userMessage });
+      }
+    }
+  },
+
   calculateCompletion: () => {
     const { profile } = get();
     let filled = 0;
@@ -291,6 +385,8 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       completionPercent: 0,
       error: null,
       _photoIds: [],
+      isVideoUploading: false,
+      videoUploadProgress: 0,
     }),
 
   clearError: () => set({ error: null }),

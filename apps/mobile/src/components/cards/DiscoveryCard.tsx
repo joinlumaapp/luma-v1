@@ -20,6 +20,7 @@ import { TierIndicator, GOLD_24K } from '../common/SubscriptionBadge';
 import { analyticsService, ANALYTICS_EVENTS } from '../../services/analyticsService';
 import { useDiscoveryStore } from '../../stores/discoveryStore';
 import { CachedImage } from '../common/CachedImage';
+import { VideoProfile } from '../profile/VideoProfile';
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -44,12 +45,20 @@ export interface DiscoveryCardProfile {
   /** Real compatibility reasons generated from shared signals */
   compatReasons?: string[];
   packageTier?: 'free' | 'gold' | 'pro' | 'reserved';
+  /** Profile video data */
+  profileVideo?: {
+    url: string;
+    thumbnailUrl: string;
+    duration: number;
+  } | null;
 }
 
 interface DiscoveryCardProps {
   profile: DiscoveryCardProfile;
   onCompatTap?: (userId: string) => void;
   onInstantMessage?: (userId: string) => void;
+  /** Whether this card is the active/visible card (for video auto-play) */
+  isActiveCard?: boolean;
 }
 
 // ─── Interest tag emoji lookup ────────────────────────────────
@@ -87,7 +96,8 @@ const getFallbackExplanations = (score: number): string[] => {
 
 // ─── Component ────────────────────────────────────────────────
 
-const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap, onInstantMessage }) => {
+const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap, onInstantMessage, isActiveCard = false }) => {
+  const hasVideo = !!profile.profileVideo?.url;
   const compatScore = profile.compatibility?.score ?? 0;
   const isSuper = profile.compatibility?.level === 'super';
   const modeStyle = profile.intentionTag ? getModeStyle(profile.intentionTag) : null;
@@ -159,9 +169,20 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
 
   const cardContent = (
     <View style={styles.cardRoot}>
-      {/* ── Photo section — 62% ── */}
+      {/* ── Photo/Video section — 62% ── */}
       <View style={styles.photoSection}>
-        {profile.photoUrl ? (
+        {hasVideo ? (
+          <VideoProfile
+            videoUrl={profile.profileVideo!.url}
+            thumbnailUrl={profile.profileVideo!.thumbnailUrl}
+            fallbackPhotoUrl={profile.photoUrl}
+            duration={profile.profileVideo!.duration}
+            isVisible={isActiveCard}
+            height={undefined}
+            showBadge
+            compact
+          />
+        ) : profile.photoUrl ? (
           <CachedImage
             uri={profile.photoUrl}
             style={styles.photo}
@@ -360,7 +381,8 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
 
 export const DiscoveryCard = React.memo(DiscoveryCardInner, (prevProps, nextProps) => {
   return prevProps.profile.userId === nextProps.profile.userId
-    && prevProps.onInstantMessage === nextProps.onInstantMessage;
+    && prevProps.onInstantMessage === nextProps.onInstantMessage
+    && prevProps.isActiveCard === nextProps.isActiveCard;
 });
 
 // ─── Styles ───────────────────────────────────────────────────

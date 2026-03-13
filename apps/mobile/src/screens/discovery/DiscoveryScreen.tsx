@@ -66,6 +66,14 @@ import { generateCompactReasons } from '../../utils/compatReasons';
 import { BoostModal } from '../../components/boost/BoostModal';
 import type { BoostStatusResponse } from '../../services/discoveryService';
 import { StoryRing } from '../../components/stories/StoryRing';
+import {
+  DailyRewardModal,
+  DailyChallenge,
+  LikesTeaser,
+  FlashBoost,
+  AchievementToast,
+} from '../../components/engagement';
+import { useEngagementStore } from '../../stores/engagementStore';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
@@ -232,6 +240,62 @@ export const DiscoveryScreen: React.FC = () => {
   const superLikesRemaining = isUnlimitedSuperLike ? -1 : dailyLimit - superLikesUsed;
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [upgradeFeature, setUpgradeFeature] = useState<'super_like' | 'boost' | 'daily_likes'>('super_like');
+
+  // ─── Engagement system ──────────────────────────────────
+  const showDailyRewardModal = useEngagementStore((s) => s.showDailyRewardModal);
+  const initDailyReward = useEngagementStore((s) => s.initDailyReward);
+  const initDailyChallenge = useEngagementStore((s) => s.initDailyChallenge);
+  const hydrateEngagement = useEngagementStore((s) => s.hydrate);
+  const triggerFlashBoost = useEngagementStore((s) => s.triggerFlashBoost);
+  const incrementChallenge = useEngagementStore((s) => s.incrementChallengeProgress);
+  const checkAchievement = useEngagementStore((s) => s.checkAchievement);
+  const likesTeaserCount = useEngagementStore((s) => s.likesTeaserCount);
+
+  // Initialize engagement systems on mount
+  useEffect(() => {
+    hydrateEngagement();
+    initDailyReward();
+    initDailyChallenge();
+
+    // Randomly trigger flash boost (20% chance, once per day)
+    const shouldTrigger = Math.random() < 0.2;
+    if (shouldTrigger) {
+      const delay = 30000 + Math.random() * 120000; // 30s to 2.5min after mount
+      const timer = setTimeout(() => triggerFlashBoost(), delay);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Track profile exploration for challenges and achievements
+  const profilesExplored = useRef(0);
+
+  const handleDailyRewardDismiss = useCallback(() => {
+    // Nothing extra needed — store handles dismiss
+  }, []);
+
+  const handleFlashBoostPurchase = useCallback(() => {
+    // Boost activated via flash discount
+  }, []);
+
+  const handleFlashBoostDismiss = useCallback(() => {
+    // Flash boost dismissed
+  }, []);
+
+  const handleLikesTeaserPress = useCallback(() => {
+    if (packageTier === 'free') {
+      setUpgradeFeature('daily_likes');
+      setShowUpgradePrompt(true);
+    } else {
+      // Gold+ users can see who liked them
+      // Navigate to matches tab — use type assertion for cross-tab navigation
+      (navigation as { navigate: (screen: string) => void }).navigate('MatchesTab');
+    }
+  }, [packageTier, navigation]);
+
+  const handleAchievementToastPress = useCallback(() => {
+    navigation.navigate('ProfileTab', { screen: 'Badges' } as never);
+  }, [navigation]);
 
   // ─── Boost access gate ─────────────────────────────────
   const canUseBoost = packageTier !== 'free';
@@ -495,8 +559,13 @@ export const DiscoveryScreen: React.FC = () => {
         }
       }
       swipeAction(direction, card.id);
+
+      // Track for daily challenge + achievements
+      profilesExplored.current += 1;
+      incrementChallenge('explore_profiles');
+      checkAchievement('profiles_explored', profilesExplored.current);
     }
-  }, [swipeAction, isUnlimitedSuperLike, superLikesRemaining, translateY, isUnlimitedLikes, dailyRemaining]);
+  }, [swipeAction, isUnlimitedSuperLike, superLikesRemaining, translateY, isUnlimitedLikes, dailyRemaining, incrementChallenge, checkAchievement]);
 
 
   const handleCardTap = useCallback(() => {
@@ -1120,6 +1189,11 @@ export const DiscoveryScreen: React.FC = () => {
         {/* Trial banner — shows remaining Gold trial time */}
         <TrialBanner />
 
+        {/* Likes teaser — blurred grid of who liked you */}
+        {likesTeaserCount > 0 && (
+          <LikesTeaser onPress={handleLikesTeaserPress} />
+        )}
+
         {/* Stories row — Instagram-style horizontal bubbles */}
         <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} />
       </View>
@@ -1418,6 +1492,26 @@ export const DiscoveryScreen: React.FC = () => {
         onActivate={handleBoostActivate}
         onBuyGold={handleBoostBuyGold}
       />
+
+      {/* ── Engagement Overlays ── */}
+
+      {/* Daily reward modal — shows on first open each day */}
+      <DailyRewardModal
+        visible={showDailyRewardModal}
+        onDismiss={handleDailyRewardDismiss}
+      />
+
+      {/* Daily challenge floating pill */}
+      <DailyChallenge variant="pill" />
+
+      {/* Flash boost time-limited offer */}
+      <FlashBoost
+        onPurchase={handleFlashBoostPurchase}
+        onDismiss={handleFlashBoostDismiss}
+      />
+
+      {/* Achievement toast */}
+      <AchievementToast onPress={handleAchievementToastPress} />
     </View>
   );
 };

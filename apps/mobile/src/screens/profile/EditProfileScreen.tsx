@@ -29,6 +29,9 @@ import { spacing, borderRadius, shadows } from '../../theme/spacing';
 import { INTEREST_OPTIONS } from '../../constants/config';
 import { useProfileStore } from '../../stores/profileStore';
 import { photoService } from '../../services/photoService';
+import { VideoRecorder } from '../../components/profile/VideoRecorder';
+import { VideoProfile } from '../../components/profile/VideoProfile';
+import type { VideoMetadata } from '../../services/videoService';
 
 type EditProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'EditProfile'>;
 
@@ -110,6 +113,10 @@ export const EditProfileScreen: React.FC = () => {
   const uploadPhoto = useProfileStore((state) => state.uploadPhoto);
   const deletePhoto = useProfileStore((state) => state.deletePhoto);
   const setMainPhoto = useProfileStore((state) => state.setMainPhoto);
+  const uploadVideo = useProfileStore((state) => state.uploadVideo);
+  const deleteVideoAction = useProfileStore((state) => state.deleteVideo);
+  const isVideoUploading = useProfileStore((state) => state.isVideoUploading);
+  const videoUploadProgress = useProfileStore((state) => state.videoUploadProgress);
 
   // Local state
   const [bio, setBio] = useState(profile.bio);
@@ -123,6 +130,8 @@ export const EditProfileScreen: React.FC = () => {
   const [isPhotoUploading, setIsPhotoUploading] = useState(false);
   const [showCityPicker, setShowCityPicker] = useState(false);
   const [showHeightPicker, setShowHeightPicker] = useState(false);
+  const [showVideoRecorder, setShowVideoRecorder] = useState(false);
+  const [showVideoPreview, setShowVideoPreview] = useState(false);
 
   // Sync from store on external changes
   useEffect(() => {
@@ -237,6 +246,39 @@ export const EditProfileScreen: React.FC = () => {
     [],
   );
 
+  // ── Video handlers ────────────────────────────────────────────────────
+  const handleVideoReady = useCallback(
+    async (video: VideoMetadata) => {
+      try {
+        await uploadVideo(video.uri);
+      } catch {
+        Alert.alert('Hata', 'Video yuklenemedi. Lutfen tekrar deneyin.');
+      }
+    },
+    [uploadVideo],
+  );
+
+  const handleDeleteVideo = useCallback(() => {
+    Alert.alert(
+      'Videoyu Sil',
+      'Profil videosunu silmek istediginizden emin misiniz?',
+      [
+        { text: 'Iptal', style: 'cancel' },
+        {
+          text: 'Sil',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteVideoAction();
+            } catch {
+              Alert.alert('Hata', 'Video silinemedi. Lutfen tekrar deneyin.');
+            }
+          },
+        },
+      ],
+    );
+  }, [deleteVideoAction]);
+
   // ── Lifestyle picker toggle ────────────────────────────────────────────
   const cycleOption = useCallback(
     (
@@ -333,6 +375,101 @@ export const EditProfileScreen: React.FC = () => {
           ]}
           keyboardShouldPersistTaps="handled"
         >
+          {/* ── Profil Videosu ─────────────────────────────────────────── */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Profil Videosu</Text>
+            <Text style={styles.sectionHint}>
+              10-30 saniyelik bir video ile profilini canlandir!
+            </Text>
+
+            {isVideoUploading ? (
+              <View style={styles.videoUploadingContainer}>
+                <ActivityIndicator size="small" color={palette.gold[500]} />
+                <Text style={styles.videoUploadingText}>
+                  Yukleniyor... %{videoUploadProgress}
+                </Text>
+                <View style={styles.videoProgressBarBg}>
+                  <View
+                    style={[
+                      styles.videoProgressBarFill,
+                      { width: `${videoUploadProgress}%` },
+                    ]}
+                  />
+                </View>
+              </View>
+            ) : profile.profileVideo ? (
+              <View style={styles.videoPreviewContainer}>
+                <TouchableOpacity
+                  style={styles.videoThumbnailWrap}
+                  onPress={() => setShowVideoPreview(!showVideoPreview)}
+                  activeOpacity={0.8}
+                  accessibilityLabel="Profil videosunu oynat"
+                  accessibilityRole="button"
+                >
+                  {showVideoPreview ? (
+                    <VideoProfile
+                      videoUrl={profile.profileVideo.url}
+                      thumbnailUrl={profile.profileVideo.thumbnailUrl}
+                      duration={profile.profileVideo.duration}
+                      isVisible={showVideoPreview}
+                      height={200}
+                    />
+                  ) : (
+                    <View style={styles.videoThumbnailPlaceholder}>
+                      {profile.profileVideo.thumbnailUrl ? (
+                        <Image
+                          source={{ uri: profile.profileVideo.thumbnailUrl }}
+                          style={styles.videoThumbnailImage}
+                          resizeMode="cover"
+                        />
+                      ) : null}
+                      <View style={styles.videoPlayOverlay}>
+                        <Ionicons name="play-circle" size={48} color={palette.white} />
+                      </View>
+                      <View style={styles.videoDurationTag}>
+                        <Text style={styles.videoDurationText}>
+                          {Math.round(profile.profileVideo.duration)}s
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+                </TouchableOpacity>
+
+                <View style={styles.videoActionsRow}>
+                  <TouchableOpacity
+                    style={styles.videoActionButton}
+                    onPress={() => setShowVideoRecorder(true)}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="swap-horizontal" size={16} color={palette.gold[600]} />
+                    <Text style={styles.videoActionText}>Degistir</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.videoActionButton, styles.videoActionDelete]}
+                    onPress={handleDeleteVideo}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="trash-outline" size={16} color={palette.error} />
+                    <Text style={[styles.videoActionText, { color: palette.error }]}>Sil</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.videoAddButton}
+                onPress={() => setShowVideoRecorder(true)}
+                activeOpacity={0.7}
+                accessibilityLabel="Profil videosu ekle"
+                accessibilityRole="button"
+              >
+                <View style={styles.videoAddIconCircle}>
+                  <Ionicons name="videocam-outline" size={26} color={palette.gold[600]} />
+                </View>
+                <Text style={styles.videoAddText}>Video Ekle</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
           {/* ── Fotograflar (3x2 grid) ────────────────────────────────── */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Fotograflar</Text>
@@ -748,6 +885,12 @@ export const EditProfileScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </View>
+      {/* ── Video Recorder Modal ──────────────────────────────────── */}
+      <VideoRecorder
+        visible={showVideoRecorder}
+        onDismiss={() => setShowVideoRecorder(false)}
+        onVideoReady={handleVideoReady}
+      />
     </KeyboardAvoidingView>
   );
 };
@@ -1106,6 +1249,120 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
+    includeFontPadding: false,
+  },
+
+  // ── Video section ──
+  videoUploadingContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing.lg,
+    gap: spacing.sm,
+  },
+  videoUploadingText: {
+    fontSize: 13,
+    fontWeight: fontWeights.medium,
+    color: palette.gold[600],
+    includeFontPadding: false,
+  },
+  videoProgressBarBg: {
+    width: '100%',
+    height: 4,
+    backgroundColor: colors.surfaceBorder,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  videoProgressBarFill: {
+    height: '100%',
+    backgroundColor: '#D4AF37',
+    borderRadius: 2,
+  },
+  videoPreviewContainer: {
+    gap: spacing.sm,
+  },
+  videoThumbnailWrap: {
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+    backgroundColor: colors.surface,
+  },
+  videoThumbnailPlaceholder: {
+    width: '100%',
+    height: 200,
+    backgroundColor: colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  videoThumbnailImage: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  videoPlayOverlay: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  videoDurationTag: {
+    position: 'absolute',
+    bottom: spacing.sm,
+    right: spacing.sm,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  videoDurationText: {
+    fontSize: 11,
+    fontWeight: fontWeights.semibold,
+    color: '#FFFFFF',
+    includeFontPadding: false,
+  },
+  videoActionsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  videoActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  videoActionDelete: {
+    borderColor: palette.error + '30',
+    backgroundColor: palette.error + '08',
+  },
+  videoActionText: {
+    fontSize: 13,
+    fontWeight: fontWeights.semibold,
+    color: palette.gold[600],
+    includeFontPadding: false,
+  },
+  videoAddButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    borderWidth: 1.5,
+    borderColor: palette.gold[500] + '40',
+    borderStyle: 'dashed',
+  },
+  videoAddIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: palette.gold[500] + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  videoAddText: {
+    fontSize: 16,
+    fontWeight: fontWeights.semibold,
+    color: palette.gold[600],
     includeFontPadding: false,
   },
 

@@ -37,6 +37,7 @@ import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
 import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { CoinBalance } from '../../components/common/CoinBalance';
+import { DailyChallenge, WeeklyLeaderboard } from '../../components/engagement';
 
 type ProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'Profile'>;
 
@@ -731,6 +732,25 @@ export const ProfileScreen: React.FC = () => {
         )}
       </View>
     </TouchableOpacity>,
+  );
+
+  // 7. Daily Challenge card
+  infoSections.push(
+    <View key="daily-challenge" style={{ marginTop: spacing.sm }}>
+      <DailyChallenge variant="card" />
+    </View>,
+  );
+
+  // 8. Weekly Leaderboard
+  infoSections.push(
+    <View key="weekly-leaderboard" style={{ marginTop: spacing.sm }}>
+      <WeeklyLeaderboard
+        onProfilePress={(_userId: string) => {
+          // Navigate to profile preview — cross-stack navigation
+          (navigation as unknown as { push: (screen: string, params: Record<string, string>) => void }).push('ProfilePreview', { userId: _userId });
+        }}
+      />
+    </View>,
   );
 
   return (

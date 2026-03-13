@@ -35,6 +35,8 @@ import { PulseGlow } from '../../components/animations/PulseGlow';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { formatMatchActivity, formatActivityStatus } from '../../utils/formatters';
 import { TierIndicator } from '../../components/common/SubscriptionBadge';
+import { MatchCountdown } from '../../components/engagement/MatchCountdown';
+import { useEngagementStore } from '../../stores/engagementStore';
 
 type MatchesNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'MatchesList'>;
 
@@ -331,6 +333,10 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
               }
               return <Text style={styles.lastActivity}>{formatMatchActivity(item.lastActivity)}</Text>;
             })()}
+            {/* Match countdown timer for new matches without messages */}
+            {item.isNew && !item.lastMessage && (
+              <MatchCountdown matchId={item.id} variant="inline" />
+            )}
           </View>
 
           {/* Compatibility */}
@@ -631,6 +637,18 @@ export const MatchesListScreen: React.FC = () => {
     });
     return () => task.cancel();
   }, [fetchMatches, hydrateFromStorage, updateMatchActivity]);
+
+  // Set match countdowns for new matches that don't have messages
+  const setMatchCountdown = useEngagementStore((s) => s.setMatchCountdown);
+  const matchCountdowns = useEngagementStore((s) => s.matchCountdowns);
+
+  useEffect(() => {
+    for (const match of matches) {
+      if (match.isNew && !match.lastMessage && !matchCountdowns[match.id]) {
+        setMatchCountdown(match.id);
+      }
+    }
+  }, [matches, matchCountdowns, setMatchCountdown]);
 
   // Restore lastMessage from chat persistence on every screen focus
   // (e.g. returning from Chat screen after sending a message)

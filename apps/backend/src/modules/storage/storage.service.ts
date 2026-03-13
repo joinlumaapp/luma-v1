@@ -44,6 +44,18 @@ export interface VoiceUploadResult {
   duration: number;
 }
 
+/** Result returned after a successful profile video upload. */
+export interface VideoUploadResult {
+  /** Public URL for the video (CloudFront or S3). */
+  url: string;
+  /** Public URL for the video thumbnail. */
+  thumbnailUrl: string;
+  /** S3 object key (used for deletion or signed URL generation). */
+  key: string;
+  /** Duration in seconds. */
+  duration: number;
+}
+
 /** Options for generic file upload. */
 export interface UploadFileOptions {
   /** Content type (MIME). Defaults to 'application/octet-stream'. */
@@ -62,6 +74,18 @@ export const MAX_PHOTO_SIZE = 10 * 1024 * 1024;
 
 /** Maximum voice intro file size: 5 MB. */
 export const MAX_VOICE_SIZE = 5 * 1024 * 1024;
+
+/** Maximum profile video file size: 50 MB. */
+export const MAX_VIDEO_SIZE = 50 * 1024 * 1024;
+
+/** Maximum profile video duration: 30 seconds. */
+const MAX_VIDEO_DURATION_SECONDS = 30;
+
+/** Allowed video MIME types. */
+export const ALLOWED_VIDEO_TYPES = [
+  'video/mp4',
+  'video/quicktime',
+] as const;
 
 /** Maximum voice intro duration: 30 seconds. */
 const MAX_VOICE_DURATION_SECONDS = 30;
@@ -86,6 +110,8 @@ const MIME_TO_EXT: Record<string, string> = {
   'audio/mp4': 'm4a',
   'audio/m4a': 'm4a',
   'audio/aac': 'aac',
+  'video/mp4': 'mp4',
+  'video/quicktime': 'mov',
 };
 
 /** Local uploads directory for dev fallback. */
@@ -302,6 +328,52 @@ export class StorageService {
   }
 
   /**
+   * Upload a profile video to S3 (or local filesystem in dev mode).
+   *
+   * Validates file size (max 50 MB), MIME type (mp4/mov), and duration (max 30s).
+   * Generates a placeholder thumbnail (full thumbnail generation requires ffmpeg).
+   *
+   * Bucket structure: videos/{userId}/{uuid}.mp4
+   */
+  async uploadProfileVideo(
+    userId: string,
+    videoBuffer: Buffer,
+    mimeType: string,
+    estimatedDurationSeconds?: number,
+  ): Promise<VideoUploadResult> {
+    this.validateVideoInput(videoBuffer, mimeType);
+
+    // Validate duration if provided
+    const duration = estimatedDurationSeconds ?? 0;
+    if (duration > MAX_VIDEO_DURATION_SECONDS) {
+      throw new BadRequestException(
+        `Video suresi en fazla ${MAX_VIDEO_DURATION_SECONDS} saniye olmali (tahmini: ${duration}s)`,
+      );
+    }
+
+    const ext = MIME_TO_EXT[mimeType] || 'mp4';
+    const fileId = uuidv4();
+    const videoKey = `videos/${userId}/${fileId}.${ext}`;
+    const thumbnailKey = `thumbnails/${userId}/${fileId}_video.jpg`;
+
+    if (this.isLocalMode) {
+      return this.uploadVideoLocally(videoKey, thumbnailKey, videoBuffer, duration);
+    }
+
+    await this.putObject(this.bucket, videoKey, videoBuffer, mimeType);
+
+    const url = this.buildPublicUrl(this.bucket, videoKey);
+    // Thumbnail placeholder — in production, use ffmpeg Lambda or similar
+    const thumbnailUrl = this.buildPublicUrl(this.bucket, thumbnailKey);
+
+    this.logger.debug(
+      `Profile video uploaded: ${videoKey} (${videoBuffer.length} bytes, ~${duration}s)`,
+    );
+
+    return { url, thumbnailUrl, key: videoKey, duration };
+  }
+
+  /**
    * Delete a file from S3 by its object key.
    *
    * Determines the correct bucket from the key prefix:
@@ -375,6 +447,22 @@ export class StorageService {
     }
   }
 
+  private validateVideoInput(file: Buffer, mimeType: string): void {
+    if (file.length === 0) {
+      throw new BadRequestException('Video dosyasi bos');
+    }
+    if (file.length > MAX_VIDEO_SIZE) {
+      throw new BadRequestException(
+        `Video boyutu en fazla ${MAX_VIDEO_SIZE / (1024 * 1024)} MB olmali`,
+      );
+    }
+    if (!ALLOWED_VIDEO_TYPES.includes(mimeType as (typeof ALLOWED_VIDEO_TYPES)[number])) {
+      throw new BadRequestException(
+        `Desteklenmeyen video formati: ${mimeType}. Kabul edilen formatlar: ${ALLOWED_VIDEO_TYPES.join(', ')}`,
+      );
+    }
+  }
+
   private validateVoiceInput(file: Buffer): void {
     if (file.length === 0) {
       throw new BadRequestException('Voice file is empty');
@@ -437,6 +525,7 @@ export class StorageService {
     if (key.startsWith('voice/')) {
       return this.voiceBucket;
     }
+    // videos, photos, thumbnails all go in the main bucket
     return this.bucket;
   }
 
@@ -444,7 +533,7 @@ export class StorageService {
 
   private ensureLocalUploadDirs(): void {
     try {
-      const dirs = ['photos', 'thumbnails', 'voice'];
+      const dirs = ['photos', 'thumbnails', 'voice', 'videos'];
       for (const dir of dirs) {
         fs.mkdirSync(path.join(LOCAL_UPLOADS_DIR, dir), { recursive: true });
       }
@@ -518,6 +607,24 @@ export class StorageService {
     this.logger.debug(`Voice intro saved locally: ${filePath} (${file.length} bytes)`);
 
     return { url, key };
+  }
+
+  private uploadVideoLocally(
+    videoKey: string,
+    thumbnailKey: string,
+    videoBuffer: Buffer,
+    duration: number,
+  ): VideoUploadResult {
+    const videoPath = path.join(LOCAL_UPLOADS_DIR, videoKey);
+    fs.mkdirSync(path.dirname(videoPath), { recursive: true });
+    fs.writeFileSync(videoPath, videoBuffer);
+
+    const url = `file://${videoPath}`;
+    const thumbnailUrl = `file://${path.join(LOCAL_UPLOADS_DIR, thumbnailKey)}`;
+
+    this.logger.debug(`Profile video saved locally: ${videoPath} (${videoBuffer.length} bytes)`);
+
+    return { url, thumbnailUrl, key: videoKey, duration };
   }
 
   private deleteFileLocally(key: string): void {

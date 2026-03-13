@@ -86,6 +86,7 @@ export type MatchesStackParamList = {
   CompatibilityInsight: { matchId: string; partnerName: string };
   ChatList: undefined;
   Chat: { matchId: string; partnerName: string; partnerPhotoUrl: string; initialMessage?: string };
+  Call: { matchId: string; partnerName: string; callType: 'voice' | 'video' };
   DatePlanner: { matchId: string; partnerName: string; isSuperMatch?: boolean };
   JetonMarket: undefined;
   Report: { userId: string; userName: string };

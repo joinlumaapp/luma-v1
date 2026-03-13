@@ -41,6 +41,7 @@ import { useAuthStore } from '../../stores/authStore';
 import type { ChatMessage } from '../../services/chatService';
 import { VerifiedBadge } from '../../components/common/VerifiedBadge';
 import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
+import { VideoProfile } from '../../components/profile/VideoProfile';
 
 // Interest tag lookup maps
 const INTEREST_EMOJI_MAP: Record<string, string> = {};
@@ -457,6 +458,24 @@ export const ProfilePreviewScreen: React.FC = () => {
   // + Badges, Voice, Compat module
 
   const infoSections: React.ReactNode[] = [];
+
+  // Block 0: Profile Video (above everything else)
+  if (profile.videoUrl) {
+    infoSections.push(
+      <View key="video-profile" style={styles.seamlessSection}>
+        <Text style={styles.sectionLabel}>VIDEO PROFIL</Text>
+        <VideoProfile
+          videoUrl={profile.videoUrl}
+          thumbnailUrl={profile.videoThumbnailUrl}
+          fallbackPhotoUrl={profile.photoUrls[0]}
+          duration={profile.videoDuration}
+          isVisible
+          height={360}
+          showBadge={false}
+        />
+      </View>,
+    );
+  }
 
   // Block 2: Lifestyle (clean icon + text rows, no box borders)
   const lifestyleItems: Array<{ icon: keyof typeof Ionicons.glyphMap; value: string }> = [];

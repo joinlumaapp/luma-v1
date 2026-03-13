@@ -65,6 +65,12 @@ export interface DiscoveryProfile {
   packageTier?: 'free' | 'gold' | 'pro' | 'reserved';
   /** Profile prompts (Hinge-style question + answer) */
   prompts?: Array<{ id: string; question: string; answer: string; order: number }>;
+  /** Profile video URL */
+  videoUrl?: string;
+  /** Profile video thumbnail URL */
+  videoThumbnailUrl?: string;
+  /** Profile video duration in seconds */
+  videoDuration?: number;
 }
 
 // Undo window duration in milliseconds

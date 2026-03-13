@@ -32,6 +32,7 @@ import { useChatStore } from '../../stores/chatStore';
 import { useAuthStore } from '../../stores/authStore';
 import { useMatchStore } from '../../stores/matchStore';
 import { useCoinStore } from '../../stores/coinStore';
+import { useCallStore, type RemoteCallUser } from '../../stores/callStore';
 import { MESSAGE_CONFIG } from '../../constants/config';
 import {
   MemoizedMessageBubble,
@@ -284,6 +285,20 @@ export const ChatScreen: React.FC = () => {
   const isPremiumTier = packageTier !== 'free';
   const showReadReceipts = packageTier === 'pro' || packageTier === 'reserved';
 
+  // Call feature
+  const startCall = useCallStore((state) => state.startCall);
+  const callState = useCallStore((state) => state.callState);
+  const handleStartCall = useCallback((type: 'voice' | 'video') => {
+    const remoteUserInfo: RemoteCallUser = {
+      id: partnerUserId ?? matchId,
+      name: partnerName,
+      avatar: '',
+    };
+    startCall(matchId, type, remoteUserInfo);
+    navigation.navigate('Call', { matchId, partnerName, callType: type });
+  }, [startCall, matchId, partnerName, partnerUserId, navigation]);
+  const isInCall = callState !== 'idle';
+
   const handleSend = useCallback(async () => {
     const trimmed = inputText.trim();
     if (!trimmed || isSending) return;
@@ -499,6 +514,31 @@ export const ChatScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
+        {/* Call buttons */}
+        <View style={styles.callButtons}>
+          <TouchableOpacity
+            onPress={() => handleStartCall('voice')}
+            disabled={isInCall}
+            activeOpacity={0.7}
+            accessibilityLabel="Sesli arama baslat"
+            accessibilityRole="button"
+            testID="chat-voice-call-btn"
+            style={[styles.callButton, isInCall && styles.callButtonDisabled]}
+          >
+            <Text style={styles.callButtonText}>{'\uD83D\uDCDE'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleStartCall('video')}
+            disabled={isInCall}
+            activeOpacity={0.7}
+            accessibilityLabel="Goruntulu arama baslat"
+            accessibilityRole="button"
+            testID="chat-video-call-btn"
+            style={[styles.callButton, isInCall && styles.callButtonDisabled]}
+          >
+            <Text style={styles.callButtonText}>{'\uD83C\uDFA5'}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Messages */}
@@ -890,6 +930,27 @@ const styles = StyleSheet.create({
   },
   headerStatusOnline: {
     color: colors.success,
+  },
+  callButtons: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+    marginLeft: 'auto',
+  },
+  callButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  callButtonDisabled: {
+    opacity: 0.4,
+  },
+  callButtonText: {
+    fontSize: 16,
   },
   messagesArea: {
     flex: 1,

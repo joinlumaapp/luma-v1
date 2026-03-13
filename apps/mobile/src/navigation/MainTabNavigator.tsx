@@ -83,6 +83,9 @@ import { NotificationsScreen } from '../screens/notifications/NotificationsScree
 
 // Matches extra screens
 import { DatePlannerScreen } from '../screens/matches/DatePlannerScreen';
+import { CallScreen } from '../screens/chat/CallScreen';
+import { IncomingCallOverlay } from '../components/chat/IncomingCallOverlay';
+import { MinimizedCallBar } from '../components/chat/MinimizedCallBar';
 // ── Deferred Screens ─────────────────────────────────────────
 // Heavy screens that benefit from deferred mount after navigation animation
 const DeferredCompatibilityInsight = withDeferredMount(CompatibilityInsightScreen);
@@ -231,6 +234,11 @@ const MatchesStackNavigator: React.FC = () => (
     />
     <MatchesStack.Screen name="ChatList" component={ChatListScreen} />
     <MatchesStack.Screen name="Chat" component={ChatScreen} />
+    <MatchesStack.Screen
+      name="Call"
+      component={CallScreen}
+      options={{ animation: 'fade_from_bottom', gestureEnabled: false }}
+    />
     <MatchesStack.Screen
       name="JetonMarket"
       component={JetonMarketScreen}
@@ -513,6 +521,8 @@ export const MainTabNavigator: React.FC = () => {
       onAllow={allowPermission}
       onDismiss={dismissPermissionModal}
     />
+    <IncomingCallOverlay />
+    <MinimizedCallBar />
     </>
   );
 };
