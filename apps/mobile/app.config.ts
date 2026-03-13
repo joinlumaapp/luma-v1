@@ -151,7 +151,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           'LUMA, profil doğrulama ve fotoğraf çekmek için kameranıza erişim istiyor.',
       },
     ],
-    'expo-haptics',
   ],
 
   experiments: {
