@@ -250,9 +250,14 @@ export const ChatScreen: React.FC = () => {
   const sendMessage = useChatStore((state) => state.sendMessage);
   const sendImageMessage = useChatStore((state) => state.sendImageMessage);
   const sendGifMessage = useChatStore((state) => state.sendGifMessage);
-  const sendVoiceMessage = useChatStore((state) => state.sendVoiceMessage);
+  // Voice message sending disabled until expo-av integration
+  // const sendVoiceMessage = useChatStore((state) => state.sendVoiceMessage);
   const markAsRead = useChatStore((state) => state.markAsRead);
   const toggleReaction = useChatStore((state) => state.toggleReaction);
+  const retryMessage = useChatStore((state) => state.retryMessage);
+
+  // Unmatch action from match store
+  const unmatch = useMatchStore((state) => state.unmatch);
 
   // Partner activity status
   const [partnerLastActive, setPartnerLastActive] = useState<string | null>(null);
@@ -359,14 +364,15 @@ export const ChatScreen: React.FC = () => {
     setShowGifPicker(false);
   }, [matchId, sendGifMessage]);
 
-  // Voice recording handlers
-  const handleVoiceRecordStart = useCallback(() => {
-    setIsRecordingVoice(true);
-    setRecordingDuration(0);
-    recordingTimerRef.current = setInterval(() => {
-      setRecordingDuration((prev) => prev + 1);
-    }, 1000);
-  }, []);
+  // Voice recording start handler — disabled until expo-av integration
+  // To re-enable: uncomment and wire to mic button onPress
+  // const handleVoiceRecordStart = useCallback(() => {
+  //   setIsRecordingVoice(true);
+  //   setRecordingDuration(0);
+  //   recordingTimerRef.current = setInterval(() => {
+  //     setRecordingDuration((prev) => prev + 1);
+  //   }, 1000);
+  // }, []);
 
   const handleVoiceRecordStop = useCallback(async () => {
     setIsRecordingVoice(false);
@@ -374,14 +380,10 @@ export const ChatScreen: React.FC = () => {
       clearInterval(recordingTimerRef.current);
       recordingTimerRef.current = null;
     }
-    // Voice recording requires expo-av which is optional
-    // The recording URI and duration would come from the recorder
-    // For now, this sets up the UI flow — actual recording uses expo-av
-    if (recordingDuration > 0) {
-      // Placeholder until expo-av integration provides real audioUri
-      sendVoiceMessage(matchId, 'placeholder://audio', recordingDuration);
-    }
-  }, [recordingDuration, matchId, sendVoiceMessage]);
+    // TODO: Integrate expo-av for real voice recording
+    // Voice recording is disabled until expo-av provides a real audioUri.
+    // Do NOT send placeholder data to the server.
+  }, []);
 
   const handleVoiceRecordCancel = useCallback(() => {
     setIsRecordingVoice(false);
@@ -410,6 +412,60 @@ export const ChatScreen: React.FC = () => {
     },
     [matchId, toggleReaction],
   );
+
+  // Retry failed message handler (Issue 1)
+  const handleRetryMessage = useCallback((messageId: string) => {
+    retryMessage(matchId, messageId);
+  }, [matchId, retryMessage]);
+
+  // "..." menu handler — unmatch, report, date planner (Issues 3 & 5)
+  const handleOpenMenu = useCallback(() => {
+    Alert.alert(
+      'Secenekler',
+      undefined,
+      [
+        {
+          text: 'Bulusma Planlayici',
+          onPress: () => {
+            navigation.navigate('DatePlanner', { matchId, partnerName });
+          },
+        },
+        {
+          text: 'Eslasmeyi Kaldir',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              'Eslasmeyi Kaldir',
+              `${partnerName} ile eslasmeyi kaldirmak istediginize emin misiniz? Bu islem geri alinamaz.`,
+              [
+                { text: 'Vazgec', style: 'cancel' },
+                {
+                  text: 'Kaldir',
+                  style: 'destructive',
+                  onPress: async () => {
+                    await unmatch(matchId);
+                    navigation.goBack();
+                  },
+                },
+              ],
+            );
+          },
+        },
+        {
+          text: 'Engelle ve Bildir',
+          style: 'destructive',
+          onPress: () => {
+            if (partnerUserId) {
+              navigation.navigate('Report', { userId: partnerUserId, userName: partnerName });
+            } else {
+              Alert.alert('Hata', 'Kullanici bilgisi bulunamadi.');
+            }
+          },
+        },
+        { text: 'Vazgec', style: 'cancel' },
+      ],
+    );
+  }, [matchId, partnerName, partnerUserId, navigation, unmatch]);
 
   // Memoize grouped items to avoid recalculation on unrelated state changes
   const groupedItems = useMemo(() => groupMessagesByDate(messages), [messages]);
@@ -441,6 +497,33 @@ export const ChatScreen: React.FC = () => {
       return <MemoizedSystemMessage content={message.content} />;
     }
 
+    // Failed message: show red indicator and tap-to-retry
+    if (message.status === 'FAILED' && isMine) {
+      return (
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => handleRetryMessage(message.id)}
+          accessibilityLabel="Mesaj gonderilemedi, tekrar denemek icin dokunun"
+          accessibilityRole="button"
+        >
+          <View style={failedStyles.wrapper}>
+            <MemoizedMessageBubble
+              message={message}
+              isMine={isMine}
+              isLastInBlock={item.isLastInBlock}
+              showReadReceipts={showReadReceipts}
+              onReact={handleReaction}
+              onImagePress={handleImagePress}
+            />
+            <View style={failedStyles.indicator}>
+              <Text style={failedStyles.icon}>{'\u26A0'}</Text>
+              <Text style={failedStyles.text}>Gonderilemedi. Tekrar denemek icin dokunun.</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      );
+    }
+
     return (
       <MemoizedMessageBubble
         message={message}
@@ -451,7 +534,7 @@ export const ChatScreen: React.FC = () => {
         onImagePress={handleImagePress}
       />
     );
-  }, [currentUserId, handleReaction, handleImagePress]);
+  }, [currentUserId, handleReaction, handleImagePress, handleRetryMessage, showReadReceipts]);
 
   const getItemKey = (
     item: GroupedItem,
@@ -519,7 +602,7 @@ export const ChatScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Call buttons */}
+        {/* Call buttons + menu */}
         <View style={styles.callButtons}>
           <TouchableOpacity
             onPress={() => handleStartCall('voice')}
@@ -542,6 +625,28 @@ export const ChatScreen: React.FC = () => {
             style={[styles.callButton, isInCall && styles.callButtonDisabled]}
           >
             <Text style={styles.callButtonText}>{'\uD83C\uDFA5'}</Text>
+          </TouchableOpacity>
+          {/* Date Planner shortcut (Issue 5) */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('DatePlanner', { matchId, partnerName })}
+            activeOpacity={0.7}
+            accessibilityLabel="Bulusma planlayici"
+            accessibilityRole="button"
+            testID="chat-date-planner-btn"
+            style={styles.callButton}
+          >
+            <Text style={styles.callButtonText}>{'\uD83D\uDCC5'}</Text>
+          </TouchableOpacity>
+          {/* More options menu (Issue 3) */}
+          <TouchableOpacity
+            onPress={handleOpenMenu}
+            activeOpacity={0.7}
+            accessibilityLabel="Daha fazla secenek"
+            accessibilityRole="button"
+            testID="chat-more-options-btn"
+            style={styles.callButton}
+          >
+            <Text style={styles.moreButtonText}>{'\u22EE'}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -797,13 +902,14 @@ export const ChatScreen: React.FC = () => {
               )}
             </TouchableOpacity>
           ) : (
+            // TODO: Integrate expo-av for real voice recording
             <TouchableOpacity
-              style={styles.micButton}
-              onPress={handleVoiceRecordStart}
+              style={[styles.micButton, styles.micButtonDisabled]}
+              onPress={() => Alert.alert('Yakinda', 'Sesli mesaj ozelligi yakinda aktif olacak.')}
               activeOpacity={0.7}
-              accessibilityLabel="Sesli mesaj kaydet"
+              accessibilityLabel="Sesli mesaj — yakinda"
               accessibilityRole="button"
-              accessibilityHint="Sesli mesaj kaydetmek için dokunun"
+              accessibilityHint="Sesli mesaj ozelligi henuz aktif degil"
               testID="chat-mic-btn"
             >
               <Text style={styles.micButtonText}>{'\uD83C\uDF99'}</Text>
@@ -956,6 +1062,12 @@ const styles = StyleSheet.create({
   },
   callButtonText: {
     fontSize: 16,
+  },
+  moreButtonText: {
+    fontSize: 20,
+    color: colors.text,
+    fontWeight: '700',
+    lineHeight: 22,
   },
   messagesArea: {
     flex: 1,
@@ -1123,6 +1235,9 @@ const styles = StyleSheet.create({
   micButtonText: {
     fontSize: 20,
   },
+  micButtonDisabled: {
+    opacity: 0.4,
+  },
   // Voice recording bar
   voiceRecordingBar: {
     flexDirection: 'row',
@@ -1284,5 +1399,29 @@ const styles = StyleSheet.create({
   goBackButtonText: {
     ...typography.body,
     color: colors.textTertiary,
+  },
+});
+
+// Failed message indicator styles (Issue 1)
+const failedStyles = StyleSheet.create({
+  wrapper: {
+    alignSelf: 'flex-end',
+    maxWidth: '80%',
+  },
+  indicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 4,
+    marginTop: 2,
+    paddingRight: 4,
+  },
+  icon: {
+    fontSize: 12,
+    color: colors.error,
+  },
+  text: {
+    ...typography.captionSmall,
+    color: colors.error,
   },
 });

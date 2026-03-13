@@ -266,7 +266,7 @@ export const PhotosScreen: React.FC = () => {
   return (
     <OnboardingLayout
       step={13}
-      totalSteps={15}
+      totalSteps={17}
       footer={
         <Animated.View style={buttonAnimStyle}>
           <FullWidthButton

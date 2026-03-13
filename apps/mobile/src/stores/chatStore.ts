@@ -60,7 +60,8 @@ interface ChatState {
   setTyping: (matchId: string, isTyping: boolean) => void;
   updateLastMessage: (matchId: string, content: string, timestamp: string) => void;
   toggleReaction: (matchId: string, messageId: string, emoji: ReactionEmoji) => Promise<void>;
-  updateMessageStatus: (matchId: string, messageId: string, status: 'SENT' | 'DELIVERED' | 'READ', readAt?: string) => void;
+  retryMessage: (matchId: string, messageId: string) => Promise<boolean>;
+  updateMessageStatus: (matchId: string, messageId: string, status: 'SENT' | 'DELIVERED' | 'READ' | 'FAILED', readAt?: string) => void;
   checkMessageLimit: (matchId?: string) => { allowed: boolean; remaining: number; limit: number; isUnlimited: boolean };
   useSingleMessageCredit: () => boolean;
   connectSocketListeners: () => void;
@@ -351,8 +352,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
       useMatchStore.getState().updateMatchActivity(matchId, content, response.message.createdAt);
       return true;
     } catch {
-      // Keep the optimistic message in state and storage — it was already persisted
-      set({ isSending: false });
+      // Mark the optimistic message as failed so the UI can show a retry option
+      set((state) => ({
+        messages: {
+          ...state.messages,
+          [matchId]: (state.messages[matchId] ?? []).map((msg) =>
+            msg.id === tempId ? { ...msg, status: 'FAILED' as const } : msg
+          ),
+        },
+        isSending: false,
+      }));
       return false;
     }
   },
@@ -477,6 +486,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
   markAsRead: async (matchId) => {
     try {
       await chatService.markAsRead(matchId);
+
+      // Notify the other party in real-time via WebSocket
+      socketService.markRead(matchId);
+
       set((state) => ({
         conversations: state.conversations.map((conv) =>
           conv.matchId === matchId ? { ...conv, unreadCount: 0 } : conv
@@ -638,6 +651,25 @@ export const useChatStore = create<ChatState>((set, get) => ({
     } catch {
       // Handle error silently
     }
+  },
+
+  retryMessage: async (matchId, messageId) => {
+    const { messages } = get();
+    const failedMessage = (messages[matchId] ?? []).find(
+      (msg) => msg.id === messageId && msg.status === 'FAILED'
+    );
+    if (!failedMessage) return false;
+
+    // Remove the failed message from state
+    set((state) => ({
+      messages: {
+        ...state.messages,
+        [matchId]: (state.messages[matchId] ?? []).filter((msg) => msg.id !== messageId),
+      },
+    }));
+
+    // Re-send via the normal sendMessage flow
+    return get().sendMessage(matchId, failedMessage.content);
   },
 
   updateMessageStatus: (matchId, messageId, status, readAt) => {

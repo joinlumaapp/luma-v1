@@ -20,6 +20,7 @@ import {
   Alert,
   RefreshControl,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
@@ -248,6 +249,45 @@ export const DiscoveryScreen: React.FC = () => {
   const isUnlimitedSuperLike = dailyLimit === -1;
   const [superLikesUsed, setSuperLikesUsed] = useState(0);
   const superLikesRemaining = isUnlimitedSuperLike ? -1 : dailyLimit - superLikesUsed;
+
+  // Persist superLikesUsed to AsyncStorage with date key — survives app restart
+  const getSuperLikeStorageKey = useCallback(() => {
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    return `discovery.superLikes.${today}`;
+  }, []);
+
+  // Load persisted super like count on mount
+  useEffect(() => {
+    const loadSuperLikes = async () => {
+      try {
+        const key = getSuperLikeStorageKey();
+        const stored = await AsyncStorage.getItem(key);
+        if (stored !== null) {
+          setSuperLikesUsed(parseInt(stored, 10));
+        } else {
+          // New day — reset count
+          setSuperLikesUsed(0);
+        }
+      } catch {
+        // AsyncStorage error — keep default 0
+      }
+    };
+    loadSuperLikes();
+  }, [getSuperLikeStorageKey]);
+
+  // Save super like count whenever it changes
+  const updateSuperLikesUsed = useCallback(
+    async (newCount: number) => {
+      setSuperLikesUsed(newCount);
+      try {
+        const key = getSuperLikeStorageKey();
+        await AsyncStorage.setItem(key, String(newCount));
+      } catch {
+        // Ignore AsyncStorage write errors
+      }
+    },
+    [getSuperLikeStorageKey],
+  );
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [upgradeFeature, setUpgradeFeature] = useState<'super_like' | 'boost' | 'daily_likes'>('super_like');
 
@@ -292,16 +332,15 @@ export const DiscoveryScreen: React.FC = () => {
     // Flash boost dismissed
   }, []);
 
-  const handleLikesTeaserPress = useCallback(() => {
-    if (packageTier === 'free') {
-      setUpgradeFeature('daily_likes');
-      setShowUpgradePrompt(true);
-    } else {
-      // Gold+ users can see who liked them
-      // Navigate to matches tab — use type assertion for cross-tab navigation
-      (navigation as { navigate: (screen: string) => void }).navigate('MatchesTab');
-    }
-  }, [packageTier, navigation]);
+  const handleLikesTeaserPressPremium = useCallback(() => {
+    // Gold+ users can see who liked them — navigate to LikesYou screen
+    navigation.navigate('LikesYou' as never);
+  }, [navigation]);
+
+  const handleLikesTeaserPressFree = useCallback(() => {
+    // Free users get upsell to MembershipPlans
+    navigation.navigate('MembershipPlans' as never);
+  }, [navigation]);
 
   const handleAchievementToastPress = useCallback(() => {
     navigation.navigate('ProfileTab', { screen: 'Badges' } as never);
@@ -565,7 +604,7 @@ export const DiscoveryScreen: React.FC = () => {
         translateY.value = withSpring(-SCREEN_HEIGHT - 200, SPRING_EXIT);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         if (!isUnlimitedSuperLike) {
-          setSuperLikesUsed((prev) => prev + 1);
+          updateSuperLikesUsed(superLikesUsed + 1);
         }
       }
       swipeAction(direction, card.id);
@@ -575,7 +614,7 @@ export const DiscoveryScreen: React.FC = () => {
       incrementChallenge('explore_profiles');
       checkAchievement('profiles_explored', profilesExplored.current);
     }
-  }, [swipeAction, isUnlimitedSuperLike, superLikesRemaining, translateY, isUnlimitedLikes, dailyRemaining, incrementChallenge, checkAchievement]);
+  }, [swipeAction, isUnlimitedSuperLike, superLikesRemaining, superLikesUsed, updateSuperLikesUsed, translateY, isUnlimitedLikes, dailyRemaining, incrementChallenge, checkAchievement]);
 
 
   const handleCardTap = useCallback(() => {
@@ -1068,11 +1107,18 @@ export const DiscoveryScreen: React.FC = () => {
 
           <Pressable
             onPress={() => refreshFeed()}
+            disabled={cooldownRemaining > 0}
             accessibilityLabel="Yenile"
             accessibilityRole="button"
             accessibilityHint="Yeni profilleri yuklemek icin dokunun"
           >
-            <View style={styles.refreshButton} testID="discovery-refresh-btn">
+            <View
+              style={[
+                styles.refreshButton,
+                cooldownRemaining > 0 && { opacity: 0.5 },
+              ]}
+              testID="discovery-refresh-btn"
+            >
               <Text style={styles.refreshButtonText}>Yenile</Text>
             </View>
           </Pressable>
@@ -1201,7 +1247,7 @@ export const DiscoveryScreen: React.FC = () => {
 
         {/* Likes teaser — blurred grid of who liked you */}
         {likesTeaserCount > 0 && (
-          <LikesTeaser onPress={handleLikesTeaserPress} />
+          <LikesTeaser onPressPremium={handleLikesTeaserPressPremium} onPressFree={handleLikesTeaserPressFree} />
         )}
 
         {/* Stories row — Instagram-style horizontal bubbles */}

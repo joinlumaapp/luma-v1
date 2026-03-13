@@ -20,6 +20,7 @@ import {
   MATCH_EXTEND_COST,
   MATCH_COUNTDOWN_MS,
 } from '../../stores/engagementStore';
+import { useMatchStore } from '../../stores/matchStore';
 
 interface MatchCountdownProps {
   matchId: string;
@@ -76,6 +77,8 @@ export const MatchCountdown: React.FC<MatchCountdownProps> = ({
 }) => {
   const getTimeRemaining = useEngagementStore((s) => s.getMatchTimeRemaining);
   const extendCountdown = useEngagementStore((s) => s.extendMatchCountdown);
+  const removeMatchCountdown = useEngagementStore((s) => s.removeMatchCountdown);
+  const unmatch = useMatchStore((s) => s.unmatch);
   const [remaining, setRemaining] = useState(() => getTimeRemaining(matchId));
   const [expired, setExpired] = useState(false);
 
@@ -87,12 +90,17 @@ export const MatchCountdown: React.FC<MatchCountdownProps> = ({
 
       if (timeLeft <= 0 && !expired) {
         setExpired(true);
+        // Remove the expired match from the list and clean up countdown
+        removeMatchCountdown(matchId);
+        unmatch(matchId).catch(() => {
+          if (__DEV__) console.warn('Suresi dolan eslestirme kaldirma basarisiz');
+        });
         if (onExpired) onExpired();
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [matchId, getTimeRemaining, expired, onExpired]);
+  }, [matchId, getTimeRemaining, expired, onExpired, removeMatchCountdown, unmatch]);
 
   const handleExtend = useCallback(async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

@@ -125,7 +125,8 @@ export type ProfileStackParamList = {
   ProfileCoach: undefined;
   BlockedUsers: undefined;
   AccountDeletion: undefined;
-  PrivacyPolicy: undefined;
+  PrivacyPolicy: { type?: 'privacy' | 'kvkk' };
+  Questions: { editMode?: boolean };
 };
 
 // Utility types for screen props

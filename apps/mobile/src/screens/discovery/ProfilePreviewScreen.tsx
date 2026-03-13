@@ -38,6 +38,7 @@ import { PaidMessageModal } from '../../components/messaging/PaidMessageModal';
 import { waveService } from '../../services/waveService';
 import { useChatStore } from '../../stores/chatStore';
 import { useAuthStore } from '../../stores/authStore';
+import { useScreenTracking } from '../../hooks/useAnalytics';
 import type { ChatMessage } from '../../services/chatService';
 import { VerifiedBadge } from '../../components/common/VerifiedBadge';
 import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
@@ -306,6 +307,8 @@ const glassButtonStyles = StyleSheet.create({
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export const ProfilePreviewScreen: React.FC = () => {
+  useScreenTracking('ProfilePreview');
+
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const route = useRoute<ProfilePreviewRouteProp>();

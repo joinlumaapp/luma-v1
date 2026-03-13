@@ -21,6 +21,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ProfileStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../stores/authStore';
+import { useProfileStore } from '../../stores/profileStore';
 import { iapService } from '../../services/iapService';
 import { paymentService } from '../../services/paymentService';
 import { storage } from '../../utils/storage';
@@ -129,7 +130,13 @@ export const SettingsScreen: React.FC = () => {
   // ── Privacy toggles ──────────────────────────────────────────
   const [showOnlineStatus, setShowOnlineStatusRaw] = useState(true);
   const [showDistance, setShowDistanceRaw] = useState(true);
-  const [isIncognito, setIsIncognito] = useState(false);
+  const profileIncognito = useProfileStore((s) => s.profile?.isIncognito ?? false);
+  const [isIncognito, setIsIncognito] = useState(profileIncognito);
+
+  // Sync incognito state when profile store changes (e.g. after fetch)
+  useEffect(() => {
+    setIsIncognito(profileIncognito);
+  }, [profileIncognito]);
 
   // Storage keys
   const TOGGLE_KEYS = useMemo(() => ({
@@ -170,6 +177,78 @@ export const SettingsScreen: React.FC = () => {
   const setAppAnnouncements = useMemo(() => makeSetter(TOGGLE_KEYS.appAnnouncements, setAppAnnouncementsRaw), [makeSetter, TOGGLE_KEYS]);
   const setShowOnlineStatus = useMemo(() => makeSetter(TOGGLE_KEYS.showOnlineStatus, setShowOnlineStatusRaw), [makeSetter, TOGGLE_KEYS]);
   const setShowDistance = useMemo(() => makeSetter(TOGGLE_KEYS.showDistance, setShowDistanceRaw), [makeSetter, TOGGLE_KEYS]);
+
+  // ── Freeze Account ──────────────────────────────────────────
+  const [isAccountFrozen, setIsAccountFrozen] = useState(false);
+  const [isFreezing, setIsFreezing] = useState(false);
+
+  const handleFreezeAccount = useCallback(() => {
+    if (isAccountFrozen) {
+      // Unfreeze flow
+      Alert.alert(
+        'Hesabi Aktif Et',
+        'Hesabinizi tekrar aktif hale getirmek istediginizden emin misiniz?',
+        [
+          { text: 'Vazgec', style: 'cancel' },
+          {
+            text: 'Aktif Et',
+            onPress: async () => {
+              setIsFreezing(true);
+              try {
+                await import('../../services/profileService').then(({ profileService }) =>
+                  profileService.updateProfile({ isComplete: true })
+                );
+                setIsAccountFrozen(false);
+                Alert.alert('Basarili', 'Hesabiniz tekrar aktif hale getirildi.');
+              } catch {
+                if (__DEV__) {
+                  setIsAccountFrozen(false);
+                  Alert.alert('Basarili', 'Hesabiniz tekrar aktif hale getirildi.');
+                } else {
+                  Alert.alert('Hata', 'Hesap aktif edilirken bir sorun olustu.');
+                }
+              } finally {
+                setIsFreezing(false);
+              }
+            },
+          },
+        ],
+      );
+      return;
+    }
+
+    // Freeze flow
+    Alert.alert(
+      'Hesabi Dondur',
+      'Hesabinizi dondurmak istediginizden emin misiniz? Dondurma suresince profiliniz gizlenir.',
+      [
+        { text: 'Vazgec', style: 'cancel' },
+        {
+          text: 'Dondur',
+          style: 'destructive',
+          onPress: async () => {
+            setIsFreezing(true);
+            try {
+              await import('../../services/profileService').then(({ profileService }) =>
+                profileService.updateProfile({ isComplete: false })
+              );
+              setIsAccountFrozen(true);
+              Alert.alert('Hesap Donduruldu', 'Profiliniz artik gizli. Istediginiz zaman tekrar aktif edebilirsiniz.');
+            } catch {
+              if (__DEV__) {
+                setIsAccountFrozen(true);
+                Alert.alert('Hesap Donduruldu', 'Profiliniz artik gizli. Istediginiz zaman tekrar aktif edebilirsiniz.');
+              } else {
+                Alert.alert('Hata', 'Hesap dondurulurken bir sorun olustu.');
+              }
+            } finally {
+              setIsFreezing(false);
+            }
+          },
+        },
+      ],
+    );
+  }, [isAccountFrozen]);
 
   // ── Restore / Cancel ──────────────────────────────────────────
   const [isRestoring, setIsRestoring] = useState(false);
@@ -291,6 +370,14 @@ export const SettingsScreen: React.FC = () => {
           title: 'Profil Duzenle',
           type: 'navigation',
           onPress: () => navigation.navigate('EditProfile'),
+        },
+        {
+          key: 'edit_answers',
+          icon: 'chatbubbles-outline',
+          title: 'Cevaplarimi Duzenle',
+          subtitle: 'Uyumluluk sorularini tekrar yanitla',
+          type: 'navigation',
+          onPress: () => navigation.navigate('Questions', { editMode: true }),
         },
         {
           key: 'phone',
@@ -484,13 +571,14 @@ export const SettingsScreen: React.FC = () => {
         },
         {
           key: 'freeze',
-          icon: 'snow-outline',
-          title: 'Hesabi Dondur',
+          icon: isAccountFrozen ? 'play-outline' : 'snow-outline',
+          title: isFreezing
+            ? 'Isleniyor...'
+            : isAccountFrozen
+              ? 'Hesap Donduruldu — Aktif Et'
+              : 'Hesabi Dondur',
           type: 'action',
-          onPress: () => Alert.alert('Hesabi Dondur', 'Hesabinizi gecici olarak dondurmak istediginize emin misiniz?', [
-            { text: 'Vazgec', style: 'cancel' },
-            { text: 'Dondur', style: 'destructive', onPress: () => Alert.alert('Bilgi', 'Bu ozellik yakinda aktif olacak.') },
-          ]),
+          onPress: handleFreezeAccount,
         },
       ],
     },
@@ -547,14 +635,14 @@ export const SettingsScreen: React.FC = () => {
           icon: 'lock-closed-outline',
           title: 'Gizlilik Politikasi',
           type: 'navigation',
-          onPress: () => navigation.navigate('PrivacyPolicy'),
+          onPress: () => navigation.navigate('PrivacyPolicy', { type: 'privacy' }),
         },
         {
           key: 'kvkk',
           icon: 'shield-outline',
           title: 'KVKK Aydinlatma Metni',
           type: 'navigation',
-          onPress: () => navigation.navigate('PrivacyPolicy'),
+          onPress: () => navigation.navigate('PrivacyPolicy', { type: 'kvkk' }),
         },
       ],
     },

@@ -37,6 +37,14 @@ export type NotificationRouteType =
   | 'RELATIONSHIP_REQUEST'
   | 'subscription_expiring'
   | 'SUBSCRIPTION_EXPIRING'
+  | 'new_follower'
+  | 'NEW_FOLLOWER'
+  | 'post_like'
+  | 'POST_LIKE'
+  | 'post_comment'
+  | 'POST_COMMENT'
+  | 'comment_reply'
+  | 'COMMENT_REPLY'
   | 'system'
   | 'SYSTEM';
 
@@ -213,6 +221,13 @@ export function mapNotificationToScreen(
       }
       return null;
     }
+
+    // Sosyal bildirimler — SocialFeed ekranina yonlendir
+    case 'NEW_FOLLOWER':
+    case 'POST_LIKE':
+    case 'POST_COMMENT':
+    case 'COMMENT_REPLY':
+      return { screen: 'SocialFeed', params: undefined };
 
     // Re-engagement ve FOMO bildirimleri
     case 'RE_ENGAGEMENT':

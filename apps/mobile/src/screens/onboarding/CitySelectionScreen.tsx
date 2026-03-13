@@ -68,7 +68,7 @@ export const CitySelectionScreen: React.FC = () => {
     >
       <OnboardingLayout
         step={10}
-        totalSteps={15}
+        totalSteps={17}
         showBack
         showSkip
         onSkip={handleSkip}

@@ -168,6 +168,13 @@ export const EditProfileScreen: React.FC = () => {
           text: 'Sil',
           style: 'destructive',
           onPress: () => {
+            if (profile.photos.length <= 2) {
+              Alert.alert(
+                'Silinemez',
+                'En az 2 fotograf gereklidir. Silmek icin once yeni fotograf ekleyin.',
+              );
+              return;
+            }
             Alert.alert(
               'Fotografi Sil',
               'Bu fotografi silmek istediginden emin misin?',

@@ -16,7 +16,6 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { AuthStackParamList } from '../../navigation/types';
-import { authService } from '../../services/authService';
 import { useAuthStore } from '../../stores/authStore';
 import { useTestModeStore } from '../../stores/testModeStore';
 import { useCoinStore } from '../../stores/coinStore';
@@ -93,31 +92,29 @@ export const OTPVerificationScreen: React.FC = () => {
         activateTrial();
         // Award welcome bonus Jeton
         useCoinStore.getState().claimWelcomeBonus();
-        // Test mode → go to email entry for new user flow
+        // Test mode -> go to email entry for new user flow
         navigation.navigate('EmailEntry');
         return;
       }
 
-      const result = await authService.verifySms(phoneNumber, otpCode);
+      // Use authStore.verifyOTP which handles analytics identify, socket connect,
+      // token persistence, dev fallback, and token refresh timer
+      const verified = await useAuthStore.getState().verifyOTP(phoneNumber, otpCode);
 
-      if (!result.verified) {
+      if (!verified) {
         setFailedAttempts((prev) => prev + 1);
-        Alert.alert('Hata', 'Kod geçersiz. Tekrar deneyin.');
+        Alert.alert('Hata', 'Kod gecersiz. Tekrar deneyin.');
         setCode(Array(OTP_LENGTH).fill(''));
         setActiveIndex(0);
         inputRefs.current[0]?.focus();
         return;
       }
 
-      const { login, setOnboarded, activateTrial } = useAuthStore.getState();
-      login(result.accessToken, result.refreshToken, {
-        id: result.user.id,
-        phone: result.user.phone,
-        isVerified: result.user.isVerified,
-        packageTier: (result.user.packageTier as 'free' | 'gold' | 'pro' | 'reserved') || 'free',
-      });
+      // verifyOTP succeeded — check if user is new (not yet onboarded)
+      const { isOnboarded, user, activateTrial } = useAuthStore.getState();
+      const isNewUser = !isOnboarded && !user?.isVerified;
 
-      if (result.user.isNew) {
+      if (isNewUser) {
         // Activate 48-hour Gold trial for new phone-registered users
         activateTrial();
         // Award welcome bonus Jeton
@@ -126,16 +123,16 @@ export const OTPVerificationScreen: React.FC = () => {
           'Hosgeldin!',
           '48 saatlik Premium deneyimin basladi! Gold ozelliklerin keyfini cikar.\n\nHos geldin hediyesi: 100 Jeton!',
         );
-        // New user → collect email + password before onboarding
+        // New user -> collect email + password before onboarding
         navigation.navigate('EmailEntry');
         return;
-      } else {
-        // Existing user → go to MainTabs
-        setOnboarded(true);
       }
+
+      // Existing user -> go to MainTabs
+      useAuthStore.getState().setOnboarded(true);
     } catch {
       setFailedAttempts((prev) => prev + 1);
-      Alert.alert('Hata', 'Kod geçersiz. Tekrar deneyin.');
+      Alert.alert('Hata', 'Kod gecersiz. Tekrar deneyin.');
       setCode(Array(OTP_LENGTH).fill(''));
       setActiveIndex(0);
       inputRefs.current[0]?.focus();
@@ -176,14 +173,19 @@ export const OTPVerificationScreen: React.FC = () => {
   const handleResend = async () => {
     if (resendTimer > 0 || isRateLimited) return;
     try {
-      const result = await authService.register(phoneNumber, countryCode);
-      setResendCount((prev) => prev + 1);
-      setFailedAttempts(0);
-      const cooldown = result.cooldownSeconds || RESEND_TIMER_SECONDS;
-      setResendTimer(cooldown);
-      setCode(Array(OTP_LENGTH).fill(''));
-      setActiveIndex(0);
-      inputRefs.current[0]?.focus();
+      // Use authStore.sendOTP to keep cooldown and attempts state in sync
+      const success = await useAuthStore.getState().sendOTP(phoneNumber, countryCode);
+      if (success) {
+        setResendCount((prev) => prev + 1);
+        setFailedAttempts(0);
+        const { otpCooldownSeconds } = useAuthStore.getState();
+        setResendTimer(otpCooldownSeconds || RESEND_TIMER_SECONDS);
+        setCode(Array(OTP_LENGTH).fill(''));
+        setActiveIndex(0);
+        inputRefs.current[0]?.focus();
+      } else {
+        Alert.alert('Hata', 'Kod gonderilemedi.');
+      }
     } catch (error: unknown) {
       const axiosError = error as { response?: { data?: { retryAfterSeconds?: number } } };
       const retryAfter = axiosError?.response?.data?.retryAfterSeconds;
@@ -192,7 +194,7 @@ export const OTPVerificationScreen: React.FC = () => {
         setRateLimitTimer(retryAfter);
         setResendTimer(retryAfter);
       } else {
-        Alert.alert('Hata', 'Kod gönderilemedi.');
+        Alert.alert('Hata', 'Kod gonderilemedi.');
       }
     }
   };

@@ -19,6 +19,7 @@ export type ParsedDeepLink =
   | { screen: 'MembershipPlans'; params: undefined }
   | { screen: 'LikesYou'; params: undefined }
   | { screen: 'CompatibilityInsight'; params: { matchId: string; partnerName: string } }
+  | { screen: 'SocialFeed'; params: undefined }
   | null;
 
 // ─── URL Parsing ─────────────────────────────────────────────────────
@@ -98,6 +99,7 @@ export function parseDeepLink(url: string): ParsedDeepLink {
         return { screen: 'Settings', params: undefined };
 
       case 'membership':
+      case 'membership-plans':
         return { screen: 'MembershipPlans', params: undefined };
 
       case 'likes':
@@ -270,6 +272,16 @@ export function navigateToScreen(
         },
       });
       break;
+
+    case 'SocialFeed':
+      navigationRef.navigate('MainTabs', {
+        screen: 'FeedTab',
+        params: {
+          screen: 'SocialFeed',
+          params: undefined,
+        },
+      });
+      break;
   }
 }
 
@@ -295,7 +307,6 @@ export const linkingConfig = {
               ProfilePreview: 'profile/:userId',
               DailyPicks: 'daily-picks',
               LikesYou: 'likes',
-              MembershipPlans: 'membership',
             },
           },
           MatchesTab: {

@@ -22,6 +22,7 @@ import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 import { compatibilityService } from '../../services/compatibilityService';
 import { useAuthStore } from '../../stores/authStore';
+import { useScreenTracking } from '../../hooks/useAnalytics';
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -333,6 +334,8 @@ const radarStyles = StyleSheet.create({
 // ─── Main Screen Component ────────────────────────────────────
 
 export const CompatibilityInsightScreen: React.FC = () => {
+  useScreenTracking('CompatibilityInsight');
+
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<ScreenRouteProp>();
   const insets = useSafeAreaInsets();

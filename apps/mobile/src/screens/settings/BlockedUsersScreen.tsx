@@ -1,7 +1,7 @@
 // BlockedUsersScreen — List of blocked users with unblock functionality
 // Premium minimalist design consistent with LUMA settings UI
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,8 @@ import type { ThemeColors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { useScreenTracking } from '../../hooks/useAnalytics';
+import api, { buildUrl } from '../../services/api';
+import { API_ROUTES } from '@luma/shared';
 
 // ── Types ────────────────────────────────────────────────────────
 interface BlockedUser {
@@ -28,8 +30,13 @@ interface BlockedUser {
   blockedAt: string;
 }
 
-// Placeholder data — replace with real API call
-const MOCK_BLOCKED_USERS: BlockedUser[] = [];
+// DEV mock data — used only when API call fails in __DEV__ mode
+const DEV_MOCK_BLOCKED_USERS: BlockedUser[] = __DEV__
+  ? [
+      { id: 'mock-1', name: 'Test Kullanici 1', avatarUrl: null, blockedAt: '2026-02-15T10:00:00Z' },
+      { id: 'mock-2', name: 'Test Kullanici 2', avatarUrl: null, blockedAt: '2026-03-01T14:30:00Z' },
+    ]
+  : [];
 
 export const BlockedUsersScreen: React.FC = () => {
   useScreenTracking('BlockedUsers');
@@ -37,9 +44,30 @@ export const BlockedUsersScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
 
-  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>(MOCK_BLOCKED_USERS);
+  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   const [unblockingId, setUnblockingId] = useState<string | null>(null);
-  const [isLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch blocked users on mount
+  useEffect(() => {
+    const fetchBlockedUsers = async () => {
+      setIsLoading(true);
+      try {
+        const response = await api.get<BlockedUser[]>(API_ROUTES.MODERATION.BLOCKED_LIST);
+        setBlockedUsers(response.data);
+      } catch {
+        if (__DEV__) {
+          console.warn('[BlockedUsers] API cagirisi basarisiz, mock veri kullaniliyor');
+          setBlockedUsers(DEV_MOCK_BLOCKED_USERS);
+        } else {
+          Alert.alert('Hata', 'Engellenen kullanicilar yuklenirken bir sorun olustu.');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    void fetchBlockedUsers();
+  }, []);
 
   const dynamicStyles = useMemo(() => createDynamicStyles(colors), [colors]);
 
@@ -54,10 +82,15 @@ export const BlockedUsersScreen: React.FC = () => {
           onPress: async () => {
             setUnblockingId(user.id);
             try {
-              // TODO: await userService.unblockUser(user.id);
+              await api.delete(buildUrl(API_ROUTES.MODERATION.UNBLOCK, { userId: user.id }));
               setBlockedUsers((prev) => prev.filter((u) => u.id !== user.id));
             } catch {
-              Alert.alert('Hata', 'Engel kaldirilamadi. Lutfen tekrar deneyin.');
+              if (__DEV__) {
+                console.warn('[BlockedUsers] Engel kaldirma API basarisiz, yerel olarak kaldiriliyor');
+                setBlockedUsers((prev) => prev.filter((u) => u.id !== user.id));
+              } else {
+                Alert.alert('Hata', 'Engel kaldirilamadi. Lutfen tekrar deneyin.');
+              }
             } finally {
               setUnblockingId(null);
             }

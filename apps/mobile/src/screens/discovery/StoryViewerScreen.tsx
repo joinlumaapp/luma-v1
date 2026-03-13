@@ -16,6 +16,7 @@ import {
   Animated as RNAnimated,
   Platform,
   KeyboardAvoidingView,
+  Share,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -431,6 +432,17 @@ export const StoryViewerScreen: React.FC = () => {
     navigation.navigate('ProfilePreview', { userId: currentUser.userId });
   }, [clearTimer, navigation, currentUser]);
 
+  // ── Share ──
+  const handleShare = useCallback(async () => {
+    try {
+      await Share.share({
+        message: `LUMA'da bu profili incele! luma://profile/${currentUser.userId}`,
+      });
+    } catch {
+      // User cancelled or share failed — no action needed
+    }
+  }, [currentUser.userId]);
+
   // ── Close ──
   const handleClose = useCallback(() => {
     clearTimer();
@@ -574,7 +586,7 @@ export const StoryViewerScreen: React.FC = () => {
               />
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.shareButton}>
+            <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
               <Ionicons name="paper-plane-outline" size={24} color="#FFFFFF" />
             </TouchableOpacity>
           </View>

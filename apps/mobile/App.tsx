@@ -8,7 +8,9 @@ import {
   StyleSheet,
   View,
   Text,
+  TouchableOpacity,
 } from 'react-native';
+import * as Updates from 'expo-updates';
 import type { AppStateStatus } from 'react-native';
 import type { ReactNode, ErrorInfo } from 'react';
 
@@ -55,17 +57,36 @@ class AppErrorBoundary extends Component<
     }
   }
 
+  handleRetry = (): void => {
+    this.setState({ hasError: false, error: null });
+  };
+
+  handleRestart = async (): Promise<void> => {
+    try {
+      await Updates.reloadAsync();
+    } catch {
+      // expo-updates may not be available in dev — fallback to retry
+      this.setState({ hasError: false, error: null });
+    }
+  };
+
   render(): ReactNode {
     if (this.state.hasError) {
       return (
         <View style={errorStyles.container}>
           <Text style={errorStyles.title}>LUMA</Text>
           <Text style={errorStyles.subtitle}>
-            Uygulama yüklenirken bir hata oluştu
+            Uygulama yuklenirken bir hata olustu
           </Text>
           <Text style={errorStyles.detail}>
             {this.state.error?.message ?? 'Bilinmeyen hata'}
           </Text>
+          <TouchableOpacity style={errorStyles.retryButton} onPress={this.handleRetry}>
+            <Text style={errorStyles.retryButtonText}>Tekrar Dene</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={errorStyles.restartButton} onPress={this.handleRestart}>
+            <Text style={errorStyles.restartButtonText}>Uygulamayi Yeniden Baslat</Text>
+          </TouchableOpacity>
         </View>
       );
     }
@@ -98,6 +119,32 @@ const errorStyles = StyleSheet.create({
     color: '#B090D0',
     textAlign: 'center',
     fontFamily: 'monospace',
+  },
+  retryButton: {
+    marginTop: 24,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  retryButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#3D1B5B',
+  },
+  restartButton: {
+    marginTop: 12,
+    backgroundColor: 'transparent',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E0D0F0',
+  },
+  restartButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#E0D0F0',
   },
 });
 

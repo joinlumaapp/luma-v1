@@ -85,7 +85,7 @@ export const WhatLookingForScreen: React.FC = () => {
   return (
     <OnboardingLayout
       step={5}
-      totalSteps={15}
+      totalSteps={17}
       showBack
       showSkip
       onSkip={handleSkip}

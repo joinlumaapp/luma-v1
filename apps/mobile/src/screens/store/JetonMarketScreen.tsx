@@ -15,8 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { useCoinStore, COIN_PACKS, type CoinPack } from '../../stores/coinStore';
-import { iapService } from '../../services/iapService';
-import { paymentService } from '../../services/paymentService';
+// iapService and paymentService are used internally by coinStore.purchaseCoins
 import { typography, fontWeights } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 import { glassmorphism, palette } from '../../theme/colors';
@@ -273,32 +272,16 @@ export const JetonMarketScreen: React.FC = () => {
 
       setIsPurchasing(true);
       try {
-        // Initialize IAP connection
-        const status = await iapService.initIAP();
-        if (__DEV__ && status.isMockMode) {
-          console.log('[JetonMarket] IAP mock mode — using dev receipt for gold');
+        // Use coinStore.purchaseCoins which handles IAP, receipt validation,
+        // and balance update in a single flow — avoids double-credit risk
+        const success = await useCoinStore.getState().purchaseCoins(packId);
+
+        if (!success) {
+          Alert.alert('Hata', 'Jeton satin alma basarisiz oldu. Lutfen tekrar deneyin.');
+          return;
         }
 
-        // Request gold purchase from store
-        const purchase = await iapService.purchaseGold(productId);
-
-        if (__DEV__) {
-          console.log(
-            `[JetonMarket] Gold purchase complete — product: ${purchase.productId}, platform: ${purchase.platform}`,
-          );
-        }
-
-        // Send receipt to backend for validation and balance update
-        const result = await paymentService.purchaseGold({
-          packageId: packId,
-          receipt: purchase.receipt,
-          platform: purchase.platform,
-        });
-
-        // Update local coin balance
-        useCoinStore.getState().earnCoins(result.goldAdded, `${pack.coins} Jeton paketi satın alımı`);
-
-        Alert.alert('Başarılı!', `${result.goldAdded} Jeton hesabınıza eklendi.`);
+        Alert.alert('Basarili!', `${pack.coins} Jeton hesabiniza eklendi.`);
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : '';
         if (message.includes('cancelled')) return;

@@ -23,7 +23,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { authService } from '../../services/authService';
+import { useAuthStore } from '../../stores/authStore';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../navigation/types';
@@ -81,10 +81,14 @@ export const PhoneEntryScreen: React.FC = () => {
     setIsSubmitting(true);
     try {
       const fullNumber = `${selectedCountry.code}${phoneNumber}`;
-      await authService.register(fullNumber, selectedCountry.code);
-      navigation.navigate('OTPVerification', { phoneNumber: fullNumber, countryCode: selectedCountry.code });
+      const success = await useAuthStore.getState().sendOTP(fullNumber, selectedCountry.code);
+      if (success) {
+        navigation.navigate('OTPVerification', { phoneNumber: fullNumber, countryCode: selectedCountry.code });
+      } else {
+        Alert.alert('Hata', 'SMS gonderilemedi. Tekrar deneyin.');
+      }
     } catch {
-      Alert.alert('Hata', 'SMS gönderilemedi. Tekrar deneyin.');
+      Alert.alert('Hata', 'SMS gonderilemedi. Tekrar deneyin.');
     } finally {
       setIsSubmitting(false);
     }

@@ -6,7 +6,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 
-export type MessageStatusType = 'SENT' | 'DELIVERED' | 'READ';
+export type MessageStatusType = 'SENT' | 'DELIVERED' | 'READ' | 'FAILED';
 
 interface MessageStatusProps {
   status: MessageStatusType;
@@ -20,6 +20,12 @@ interface MessageStatusProps {
  */
 export const MessageStatus: React.FC<MessageStatusProps> = ({ status }) => {
   switch (status) {
+    case 'FAILED':
+      return (
+        <View style={styles.container}>
+          <Text style={[styles.checkText, styles.failedColor]}>{'\u26A0'}</Text>
+        </View>
+      );
     case 'READ':
       return (
         <View style={styles.container}>
@@ -60,5 +66,8 @@ const styles = StyleSheet.create({
   },
   readColor: {
     color: colors.primary,
+  },
+  failedColor: {
+    color: colors.error,
   },
 });

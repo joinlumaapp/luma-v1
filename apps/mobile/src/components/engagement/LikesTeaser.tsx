@@ -20,10 +20,15 @@ import { useEngagementStore } from '../../stores/engagementStore';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
 
 interface LikesTeaserProps {
-  onPress: () => void;
+  /** Handler for premium users — typically navigates to LikesYou screen */
+  onPressPremium?: () => void;
+  /** Handler for free users — typically navigates to MembershipPlans (upsell) */
+  onPressFree?: () => void;
+  /** Fallback handler when tier-specific handlers are not provided */
+  onPress?: () => void;
 }
 
-export const LikesTeaser: React.FC<LikesTeaserProps> = ({ onPress }) => {
+export const LikesTeaser: React.FC<LikesTeaserProps> = ({ onPressPremium, onPressFree, onPress }) => {
   const count = useEngagementStore((s) => s.likesTeaserCount);
   const profiles = useEngagementStore((s) => s.likesTeaserProfiles);
   const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'free') as PackageTier;
@@ -70,7 +75,13 @@ export const LikesTeaser: React.FC<LikesTeaserProps> = ({ onPress }) => {
 
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    onPress();
+    if (isPremium && onPressPremium) {
+      onPressPremium();
+    } else if (!isPremium && onPressFree) {
+      onPressFree();
+    } else if (onPress) {
+      onPress();
+    }
   };
 
   const displayProfiles = profiles.slice(0, 3);

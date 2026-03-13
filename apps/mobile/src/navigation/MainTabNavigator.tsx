@@ -59,6 +59,7 @@ import { ProfileCoachScreen } from '../screens/profile/ProfileCoachScreen';
 import { BlockedUsersScreen } from '../screens/settings/BlockedUsersScreen';
 import { AccountDeletionScreen } from '../screens/settings/AccountDeletionScreen';
 import { PrivacyPolicyScreen } from '../screens/settings/PrivacyPolicyScreen';
+import { QuestionsScreen } from '../screens/onboarding/QuestionsScreen';
 import { ReportScreen } from '../screens/moderation/ReportScreen';
 import { JetonMarketScreen } from '../screens/store/JetonMarketScreen';
 
@@ -323,6 +324,7 @@ const ProfileStackNavigator: React.FC = () => (
     <ProfileStack.Screen name="BlockedUsers" component={BlockedUsersScreen} />
     <ProfileStack.Screen name="AccountDeletion" component={AccountDeletionScreen} />
     <ProfileStack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+    <ProfileStack.Screen name="Questions" component={QuestionsScreen} />
   </ProfileStack.Navigator>
 );
 

@@ -13,8 +13,9 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme/ThemeContext';
 import type { ThemeColors } from '../../theme/colors';
@@ -24,6 +25,7 @@ import type { ProfileStackParamList } from '../../navigation/types';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 
 type PrivacyNavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
+type PrivacyRouteProp = RouteProp<ProfileStackParamList, 'PrivacyPolicy'>;
 
 // ── Policy Sections ──────────────────────────────────────────────
 interface PolicySection {
@@ -101,11 +103,81 @@ const POLICY_SECTIONS: PolicySection[] = [
   },
 ];
 
+// ── KVKK-specific Sections ──────────────────────────────────────────
+const KVKK_SECTIONS: PolicySection[] = [
+  {
+    title: 'Veri Sorumlusu',
+    icon: 'business-outline',
+    content:
+      'LUMA Teknoloji A.S. ("LUMA") olarak, 6698 sayili Kisisel Verilerin Korunmasi Kanunu ' +
+      '("KVKK") kapsaminda veri sorumlusu sifatiyla kisisel verilerinizi islemekteyiz.\n\n' +
+      'Veri Sorumlusu: LUMA Teknoloji A.S.\n' +
+      'Adres: Istanbul, Turkiye\n' +
+      'Irtibat: kvkk@luma.dating',
+  },
+  {
+    title: 'Kisisel Verilerin Islenmesi',
+    icon: 'document-text-outline',
+    content:
+      'KVKK\'nin 5. ve 6. maddeleri uyarinca kisisel verileriniz asagidaki hukuki sebeplerle islenmektedir:\n\n' +
+      '- Acik rizaniz (profil bilgileri, fotograf, konum)\n' +
+      '- Sozlesmenin ifasi (hesap olusturma, eslestirme hizmeti)\n' +
+      '- Hukuki yukumluluk (yasal saklama gereklilikleri)\n' +
+      '- Mesru menfaat (hizmet iyilestirme, guvenlik)\n\n' +
+      'Ozel nitelikli kisisel veriler (biyometrik veri gibi) yalnizca acik rizaniz ile islenir.',
+  },
+  {
+    title: 'Verilerin Aktarilmasi',
+    icon: 'swap-horizontal-outline',
+    content:
+      'Kisisel verileriniz KVKK\'nin 8. ve 9. maddeleri kapsaminda:\n\n' +
+      '- Yurt icinde: Hizmet saglayicilari, is ortaklari ve yetkili kamu kurumlarina\n' +
+      '- Yurt disinda: Yeterli korumaya sahip ulkelere veya taahhutname ile\n\n' +
+      'aktarilabilir. Tum aktarimlar KVKK\'nin ongordugu guvenlik onlemleri alinarak yapilir.',
+  },
+  {
+    title: 'KVKK Kapsamindaki Haklariniz',
+    icon: 'shield-checkmark-outline',
+    content:
+      'KVKK\'nin 11. maddesi uyarinca asagidaki haklara sahipsiniz:\n\n' +
+      '- Kisisel verilerinizin islenip islenmedigini ogrenme\n' +
+      '- Islenmisse buna iliskin bilgi talep etme\n' +
+      '- Isleme amacini ve amaca uygun kullanilip kullanilmadigini ogrenme\n' +
+      '- Yurt icinde veya disinda aktarilip aktarilmadigini ogrenme\n' +
+      '- Eksik veya yanlis islenmisse duzeltilmesini isteme\n' +
+      '- KVKK\'nin 7. maddesi cercevesinde silinmesini veya yok edilmesini isteme\n' +
+      '- Duzeltme/silme islemlerinin aktarildigi ucuncu kisilere bildirilmesini isteme\n' +
+      '- Islenen verilerin munhasiran otomatik sistemler ile analiz edilmesi suretiyle aleyhinize bir sonucun ortaya cikmasina itiraz etme\n' +
+      '- Kanuna aykiri islenmesi sebebiyle zarara ugramaniz halinde zararin giderilmesini talep etme',
+  },
+  {
+    title: 'Basvuru Yontemi',
+    icon: 'mail-outline',
+    content:
+      'KVKK kapsamindaki haklarinizi kullanmak icin:\n\n' +
+      'E-posta: kvkk@luma.dating\n' +
+      'Posta: LUMA Teknoloji A.S., Istanbul, Turkiye\n\n' +
+      'Basvurular en gec 30 gun icinde ucretsiz olarak yanitlanacaktir. ' +
+      'Islemin ayrica bir maliyet gerektirmesi halinde Kisisel Verileri Koruma Kurulu ' +
+      'tarafindan belirlenen tarife uzerinden ucret alinabilir.\n\n' +
+      'Son guncelleme: 12 Mart 2026',
+  },
+];
+
 export const PrivacyPolicyScreen: React.FC = () => {
   useScreenTracking('PrivacyPolicy');
   const navigation = useNavigation<PrivacyNavigationProp>();
+  const route = useRoute<PrivacyRouteProp>();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
+
+  const pageType = route.params?.type ?? 'privacy';
+  const isKvkk = pageType === 'kvkk';
+  const sections = isKvkk ? KVKK_SECTIONS : POLICY_SECTIONS;
+  const headerTitle = isKvkk ? 'KVKK Aydinlatma Metni' : 'Gizlilik Politikasi';
+  const introText = isKvkk
+    ? 'Bu aydinlatma metni, 6698 sayili Kisisel Verilerin Korunmasi Kanunu ("KVKK") kapsaminda kisisel verilerinizin islenmesine iliskin bilgilendirme amaci tasimaktadir.'
+    : 'LUMA olarak gizliliginize onem veriyoruz. Bu politika, kisisel verilerinizin nasil toplandigi, islendigi ve korundugunun aciklanmasidir.';
 
   const [isExporting, setIsExporting] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
@@ -146,7 +218,7 @@ export const PrivacyPolicyScreen: React.FC = () => {
         >
           <Ionicons name="chevron-back" size={22} color={colors.text} />
         </TouchableOpacity>
-        <Text style={dynamicStyles.headerTitle}>Gizlilik Politikasi</Text>
+        <Text style={dynamicStyles.headerTitle}>{headerTitle}</Text>
         <View style={staticStyles.headerSpacer} />
       </View>
 
@@ -159,13 +231,12 @@ export const PrivacyPolicyScreen: React.FC = () => {
         <View style={dynamicStyles.introCard}>
           <Ionicons name="lock-closed" size={20} color={colors.primary} />
           <Text style={dynamicStyles.introText}>
-            LUMA olarak gizliliginize onem veriyoruz. Bu politika, kisisel verilerinizin
-            nasil toplandigi, islendigi ve korundugunun aciklanmasidir.
+            {introText}
           </Text>
         </View>
 
         {/* Accordion sections */}
-        {POLICY_SECTIONS.map((section, index) => {
+        {sections.map((section, index) => {
           const isExpanded = expandedIndex === index;
           return (
             <View key={section.title} style={dynamicStyles.sectionCard}>

@@ -20,6 +20,7 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 import type { RootStackParamList } from '../../navigation/types';
+import { useScreenTracking } from '../../hooks/useAnalytics';
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -106,6 +107,8 @@ const tierDisplayName = (tier: RequiredTier): string => {
 // ── Component ──────────────────────────────────────────────────────
 
 export const FilterScreen: React.FC = () => {
+  useScreenTracking('Filter');
+
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
   const filters = useDiscoveryStore((state) => state.filters);
