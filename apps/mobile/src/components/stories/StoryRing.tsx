@@ -85,6 +85,7 @@ export const StoryRing: React.FC<StoryRingProps> = ({
       return () => pulse.stop();
     } else {
       pulseAnim.setValue(1);
+      return undefined;
     }
   }, [isSeen, hasStories, isOwnStory, pulseAnim]);
 

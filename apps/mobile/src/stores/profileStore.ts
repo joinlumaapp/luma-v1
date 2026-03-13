@@ -35,6 +35,10 @@ export interface ProfileData {
   isComplete: boolean;
   /** Profile video (10-30 seconds) */
   profileVideo: ProfileVideoData | null;
+  /** Incognito mode — hides user from discovery feed */
+  isIncognito: boolean;
+  /** Timestamp (ms) when incognito expires, null = indefinite while active */
+  incognitoExpiresAt: number | null;
 }
 
 interface ProfileState {
@@ -86,6 +90,8 @@ const initialProfile: ProfileData = {
   education: '',
   isComplete: false,
   profileVideo: null,
+  isIncognito: false,
+  incognitoExpiresAt: null,
 };
 
 // Transform backend ProfileResponse to store ProfileData
@@ -115,6 +121,8 @@ const mapResponseToProfile = (data: ProfileResponse): ProfileData => {
       thumbnailUrl: videoData.thumbnailUrl,
       duration: videoData.duration,
     } : null,
+    isIncognito: (data as { isIncognito?: boolean }).isIncognito ?? false,
+    incognitoExpiresAt: (data as { incognitoExpiresAt?: number | null }).incognitoExpiresAt ?? null,
   };
 };
 

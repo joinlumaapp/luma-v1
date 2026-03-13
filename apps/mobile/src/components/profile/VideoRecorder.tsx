@@ -12,7 +12,6 @@ import {
   ActivityIndicator,
   Animated,
   Alert,
-  Dimensions,
 } from 'react-native';
 import { Video, ResizeMode } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
@@ -33,8 +32,6 @@ interface VideoRecorderProps {
   /** Called when video is ready for upload — receives the local video URI */
   onVideoReady: (video: VideoMetadata) => void;
 }
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // ─── Component ───────────────────────────────────────────────
 

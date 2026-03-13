@@ -10,7 +10,6 @@ import {
   StyleSheet,
   ActivityIndicator,
   Animated,
-  Dimensions,
 } from 'react-native';
 import { Video, ResizeMode, type AVPlaybackStatus } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
@@ -42,8 +41,6 @@ interface VideoProfileProps {
   /** Called when video starts playing */
   onPlay?: () => void;
 }
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ─── Component ───────────────────────────────────────────────
 

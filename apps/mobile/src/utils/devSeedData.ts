@@ -834,6 +834,9 @@ const devUserProfile = {
   job: 'Yazılım Mühendisi',
   education: 'Boğaziçi Üniversitesi',
   isComplete: true,
+  profileVideo: null,
+  isIncognito: false,
+  incognitoExpiresAt: null,
 };
 
 // ── Match Detail Data (compatibility breakdown) ────────────────────

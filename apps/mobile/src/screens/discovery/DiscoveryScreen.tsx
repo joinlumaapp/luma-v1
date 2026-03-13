@@ -17,7 +17,6 @@ import {
   Modal,
   KeyboardAvoidingView,
   ScrollView,
-  Image,
   Alert,
   RefreshControl,
 } from 'react-native';
@@ -46,7 +45,6 @@ import { useDiscoveryStore } from '../../stores/discoveryStore';
 import { useLocation } from '../../hooks/useLocation';
 import { useProfileStore } from '../../stores/profileStore';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
-import { useSocialFeedStore } from '../../stores/socialFeedStore';
 import { useStoryStore } from '../../stores/storyStore';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { useCoinStore, EXTRA_LIKES_COST, EXTRA_LIKES_COUNT } from '../../stores/coinStore';
@@ -1318,7 +1316,7 @@ export const DiscoveryScreen: React.FC = () => {
                     `Geri alma icin ${UNDO_JETON_COST_UI} jeton gerekli. Jeton satin al.`,
                     [
                       { text: 'Vazgec', style: 'cancel' },
-                      { text: 'Jeton Al', onPress: () => navigation.navigate('Discover', { screen: 'Discovery' } as never) },
+                      { text: 'Jeton Al', onPress: () => navigation.navigate('ProfileTab', { screen: 'MembershipPlans' } as never) },
                     ],
                   );
                   return;
@@ -1349,7 +1347,7 @@ export const DiscoveryScreen: React.FC = () => {
                   'Geri alma ozelligi icin Gold veya uzeri paket gereklidir.',
                   [
                     { text: 'Vazgec', style: 'cancel' },
-                    { text: 'Paketleri Gor', onPress: () => navigation.navigate('Discover', { screen: 'Discovery' } as never) },
+                    { text: 'Paketleri Gor', onPress: () => navigation.navigate('ProfileTab', { screen: 'MembershipPlans' } as never) },
                   ],
                 );
               }}

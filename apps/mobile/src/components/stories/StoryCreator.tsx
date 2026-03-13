@@ -22,7 +22,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, palette } from '../../theme/colors';
+import { palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { useStoryStore } from '../../stores/storyStore';
@@ -91,11 +91,11 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
   const isCreating = useStoryStore((s) => s.isCreating);
 
   // ── Image state ──
-  const [imageUri, setImageUri] = useState<string | null>(initialImageUri ?? null);
+  const [imageUri] = useState<string | null>(initialImageUri ?? null);
 
   // ── Tool state ──
   const [activeMode, setActiveMode] = useState<ToolMode>('none');
-  const [selectedColor, setSelectedColor] = useState(COLOR_PRESETS[0]);
+  const [selectedColor, setSelectedColor] = useState<string>(COLOR_PRESETS[0]);
   const [selectedBrushSize, setSelectedBrushSize] = useState<number>(BRUSH_SIZES[1]);
 
   // ── Text overlays ──

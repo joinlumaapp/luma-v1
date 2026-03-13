@@ -26,7 +26,7 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { DiscoveryStackParamList, MainTabParamList } from '../../navigation/types';
 import { useStoryStore } from '../../stores/storyStore';
 import type { Story, StoryOverlay } from '../../services/storyService';
-import { colors, palette } from '../../theme/colors';
+import { palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 
@@ -227,7 +227,7 @@ export const StoryViewerScreen: React.FC = () => {
 
   // Reply state
   const [replyText, setReplyText] = useState('');
-  const [isReplyFocused, setIsReplyFocused] = useState(false);
+  const [_isReplyFocused, setIsReplyFocused] = useState(false);
 
   // Double-tap like animation
   const [showHeart, setShowHeart] = useState(false);
