@@ -214,7 +214,8 @@ export const chatService = {
   // Send an image message in a conversation
   sendImageMessage: async (
     matchId: string,
-    imageUri: string
+    imageUri: string,
+    onUploadProgress?: (progressEvent: { loaded: number; total?: number }) => void,
   ): Promise<SendMessageResponse> => {
     try {
       // Create form data for image upload
@@ -235,6 +236,7 @@ export const chatService = {
         formData,
         {
           headers: { 'Content-Type': 'multipart/form-data' },
+          onUploadProgress,
         }
       );
 

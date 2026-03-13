@@ -61,6 +61,7 @@ export function useNotificationHandler(
   // Cold start bildirim verisi icin ref
   const pendingNotificationData = useRef<Record<string, unknown> | null>(null);
   const isSetupDone = useRef(false);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ─── Bildirim izni iste ve cihaz kaydet ─────────────────────────────
 
@@ -138,7 +139,17 @@ export function useNotificationHandler(
         handleNotificationTap(navigationRef, data);
       } else {
         // Navigator henuz hazir degil — cold start durumu
+        // Store and retry after a short delay in case navigation becomes ready soon
         pendingNotificationData.current = data;
+
+        const retryTimer = setTimeout(() => {
+          if (pendingNotificationData.current && navigationRef?.isReady()) {
+            handleNotificationTap(navigationRef, pendingNotificationData.current);
+            pendingNotificationData.current = null;
+          }
+        }, 500);
+
+        retryTimerRef.current = retryTimer;
       }
     });
 
@@ -177,6 +188,10 @@ export function useNotificationHandler(
     return () => {
       isSetupDone.current = false;
       pendingNotificationData.current = null;
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+      }
     };
   }, []);
 

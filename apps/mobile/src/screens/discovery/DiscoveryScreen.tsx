@@ -48,7 +48,7 @@ import { useProfileStore } from '../../stores/profileStore';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
 import { useStoryStore } from '../../stores/storyStore';
 import { useNotificationStore } from '../../stores/notificationStore';
-import { useCoinStore, EXTRA_LIKES_COST, EXTRA_LIKES_COUNT } from '../../stores/coinStore';
+import { useCoinStore, EXTRA_LIKES_COST, EXTRA_LIKES_COUNT, SUPER_LIKE_COST } from '../../stores/coinStore';
 import { matchService } from '../../services/matchService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { MatchAnimation } from '../../components/animations/MatchAnimation';
@@ -596,8 +596,36 @@ export const DiscoveryScreen: React.FC = () => {
       if (direction === 'up') {
         // Gate: check super like allowance
         if (!isUnlimitedSuperLike && superLikesRemaining <= 0) {
-          setUpgradeFeature('super_like');
-          setShowUpgradePrompt(true);
+          const coinBalance = useCoinStore.getState().balance;
+          Alert.alert(
+            'Super Like Limitin Doldu',
+            `Gunluk Super Like hakkin bitti. Jeton ile gonderebilir veya paketin yukseltebilirsin.`,
+            [
+              { text: 'Vazgec', style: 'cancel' },
+              {
+                text: `Jeton ile Gonder (${SUPER_LIKE_COST} jeton)`,
+                onPress: async () => {
+                  if (coinBalance < SUPER_LIKE_COST) {
+                    Alert.alert('Yetersiz Jeton', `Super Like icin ${SUPER_LIKE_COST} jeton gerekli. Mevcut bakiyen: ${coinBalance} jeton.`);
+                    return;
+                  }
+                  const success = await useCoinStore.getState().sendSuperLike(card.id);
+                  if (success) {
+                    translateY.value = withSpring(-SCREEN_HEIGHT - 200, SPRING_EXIT);
+                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                    swipeAction('up', card.id);
+                  }
+                },
+              },
+              {
+                text: 'Paketi Yukselt',
+                onPress: () => {
+                  setUpgradeFeature('super_like');
+                  setShowUpgradePrompt(true);
+                },
+              },
+            ],
+          );
           return; // Card already springs back in gesture
         }
         // Animate card out upwards from JS side

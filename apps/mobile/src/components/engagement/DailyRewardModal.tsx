@@ -167,9 +167,9 @@ export const DailyRewardModal: React.FC<DailyRewardModalProps> = ({
             end={{ x: 1, y: 1 }}
             style={styles.header}
           >
-            <Text style={styles.headerTitle}>Bugunku Oduln</Text>
+            <Text style={styles.headerTitle}>Bugünkü Ödülün</Text>
             <Text style={styles.headerSubtitle}>
-              {isMultiplied ? `${STREAK_MULTIPLIER}x Seri Carpani Aktif!` : 'Her gun gel, daha cok kazan!'}
+              {isMultiplied ? `${STREAK_MULTIPLIER}x Seri Çarpanı Aktif!` : 'Her gün gel, daha çok kazan!'}
             </Text>
           </LinearGradient>
 
@@ -212,7 +212,7 @@ export const DailyRewardModal: React.FC<DailyRewardModalProps> = ({
                     )}
                   </View>
                   <Text style={styles.dayLabel}>
-                    {reward.day === 7 ? 'BUYUK' : `G${reward.day}`}
+                    {reward.day === 7 ? 'BÜYÜK' : `G${reward.day}`}
                   </Text>
                 </View>
               );
@@ -241,13 +241,13 @@ export const DailyRewardModal: React.FC<DailyRewardModalProps> = ({
             {todayReward.isDay7 && (
               <View style={styles.bonusBadge}>
                 <Ionicons name="flash" size={14} color={palette.gold[400]} />
-                <Text style={styles.bonusText}>+ 1 Ucretsiz Boost</Text>
+                <Text style={styles.bonusText}>+ 1 Ücretsiz Boost</Text>
               </View>
             )}
 
             {isMultiplied && (
               <Text style={styles.multiplierText}>
-                {STREAK_MULTIPLIER}x Seri Carpani
+                {STREAK_MULTIPLIER}x Seri Çarpanı
               </Text>
             )}
           </View>
@@ -257,8 +257,8 @@ export const DailyRewardModal: React.FC<DailyRewardModalProps> = ({
             <Ionicons name="flame" size={18} color={palette.gold[500]} />
             <Text style={styles.streakText}>
               {dailyStreak > 0
-                ? `${dailyStreak} haftalik seri`
-                : 'Her gun gir, seri olustur!'}
+                ? `${dailyStreak} haftalık seri`
+                : 'Her gün gir, seri oluştur!'}
             </Text>
           </View>
 
@@ -270,7 +270,7 @@ export const DailyRewardModal: React.FC<DailyRewardModalProps> = ({
               end={{ x: 1, y: 0 }}
               style={styles.claimButton}
             >
-              <Text style={styles.claimButtonText}>Odulu Topla</Text>
+              <Text style={styles.claimButtonText}>Ödülü Topla</Text>
             </LinearGradient>
           </Pressable>
         </Animated.View>

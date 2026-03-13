@@ -37,6 +37,7 @@ interface ChatState {
   totalUnread: number;
   isHydrated: boolean;
   error: string | null;
+  imageUploadProgress: number | null;
 
   // Socket cleanup functions
   _socketCleanups: Array<() => void>;
@@ -67,6 +68,7 @@ interface ChatState {
   connectSocketListeners: () => void;
   disconnectSocketListeners: () => void;
   clearError: () => void;
+  clearImageUploadProgress: () => void;
 }
 
 // Get today's date string for daily reset
@@ -85,6 +87,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   totalUnread: 0,
   isHydrated: false,
   error: null,
+  imageUploadProgress: null,
 
   // Socket cleanup functions
   _socketCleanups: [],
@@ -228,6 +231,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
+  // Reserved for future: paid DM to non-matched users. Currently all chats are match-only,
+  // so the matchId branch always returns unlimited. The daily-limit logic below will activate
+  // when non-match messaging is introduced.
   checkMessageLimit: (matchId?: string) => {
     // Matched conversations are always unlimited
     if (matchId) {
@@ -388,7 +394,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
     await persistMessage(matchId, optimisticMessage);
 
     try {
-      const response = await chatService.sendImageMessage(matchId, imageUri);
+      set({ imageUploadProgress: 0 });
+      const onUploadProgress = (progressEvent: { loaded: number; total?: number }) => {
+        if (progressEvent.total) {
+          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          set({ imageUploadProgress: percent });
+        }
+      };
+      const response = await chatService.sendImageMessage(matchId, imageUri, onUploadProgress);
       analyticsService.track(ANALYTICS_EVENTS.IMAGE_SENT, { matchId });
       set((state) => ({
         messages: {
@@ -398,10 +411,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
           ),
         },
         isSending: false,
+        imageUploadProgress: null,
       }));
       await replaceMessageById(matchId, tempId, response.message);
     } catch {
-      set({ isSending: false });
+      set({ isSending: false, imageUploadProgress: null });
     }
   },
 
@@ -780,4 +794,5 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   clearError: () => set({ error: null }),
+  clearImageUploadProgress: () => set({ imageUploadProgress: null }),
 }));

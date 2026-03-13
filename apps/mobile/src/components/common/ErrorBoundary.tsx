@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
+import { sentryService } from '../../services/sentryService';
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -37,7 +38,8 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     console.error('[ErrorBoundary] Hata yakalandi:', error.message);
     console.error('[ErrorBoundary] Component stack:', componentStack);
 
-    // Future: send to analytics / Sentry
+    // Report to Sentry for production error tracking
+    sentryService.captureException(error, { componentStack });
     this.props.onError?.(error, componentStack);
   }
 
@@ -56,9 +58,9 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
           <View style={styles.iconContainer}>
             <Ionicons name="warning-outline" size={56} color={colors.accent} />
           </View>
-          <Text style={styles.title}>Bir seyler ters gitti</Text>
+          <Text style={styles.title}>Bir şeyler ters gitti</Text>
           <Text style={styles.message}>
-            Beklenmeyen bir sorun meydana geldi. Lutfen tekrar deneyin.
+            Beklenmeyen bir sorun meydana geldi. Lütfen tekrar deneyin.
           </Text>
           {__DEV__ && this.state.error && (
             <Text style={styles.errorDetail} numberOfLines={5}>

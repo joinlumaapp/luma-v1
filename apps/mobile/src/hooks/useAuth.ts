@@ -1,6 +1,6 @@
 // Custom hook wrapping authStore for auth operations
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuthStore, type AuthUser, type PackageTier } from '../stores/authStore';
 import { authService } from '../services/authService';
 import { storage } from '../utils/storage';
@@ -23,6 +23,8 @@ export interface UseAuthReturn {
   refreshAuth: () => Promise<void>;
   isPackageTier: (tier: PackageTier) => boolean;
   isPremium: boolean;
+  /** Session restore loading message — shown when safety timeout is approaching */
+  sessionRestoreMessage: string | null;
 }
 
 export const useAuth = (): UseAuthReturn => {
@@ -41,15 +43,25 @@ export const useAuth = (): UseAuthReturn => {
   const setLoading = useAuthStore((state) => state.setLoading);
   const setOnboarded = useAuthStore((state) => state.setOnboarded);
 
+  const [sessionRestoreMessage, setSessionRestoreMessage] = useState<string | null>(null);
+
   // Check stored tokens on mount
   useEffect(() => {
-    // Safety timeout — never stay on splash more than 2 seconds
+    // Show loading indicator after 1.5s so user knows app is working
+    const messageTimer = setTimeout(() => {
+      if (useAuthStore.getState().isLoading) {
+        setSessionRestoreMessage('Oturum geri yükleniyor...');
+      }
+    }, 1500);
+
+    // Safety timeout — never stay on splash more than 5 seconds
     const safetyTimer = setTimeout(() => {
       if (useAuthStore.getState().isLoading) {
         if (__DEV__) console.warn('[Auth] Safety timeout — forcing loading=false');
         setLoading(false);
+        setSessionRestoreMessage(null);
       }
-    }, 2000);
+    }, 5000);
 
     const initAuth = async () => {
       try {
@@ -102,7 +114,10 @@ export const useAuth = (): UseAuthReturn => {
     };
     initAuth();
 
-    return () => clearTimeout(safetyTimer);
+    return () => {
+      clearTimeout(messageTimer);
+      clearTimeout(safetyTimer);
+    };
   }, []);
 
   const register = useCallback(async (phone: string, countryCode = '+90'): Promise<boolean> => {
@@ -199,5 +214,6 @@ export const useAuth = (): UseAuthReturn => {
     refreshAuth,
     isPackageTier,
     isPremium,
+    sessionRestoreMessage,
   };
 };

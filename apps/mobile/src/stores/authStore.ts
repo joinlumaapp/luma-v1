@@ -225,6 +225,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     // Clear persisted data
     storage.delete(TRIAL_EXPIRY_KEY);
+    await storage.clearOnboarded();
     await storage.clearTokens();
 
     // Call API to invalidate server-side session

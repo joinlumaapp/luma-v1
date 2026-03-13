@@ -26,8 +26,8 @@ type OTPNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'OTPVerif
 type OTPRouteProp = RouteProp<AuthStackParamList, 'OTPVerification'>;
 
 const OTP_LENGTH = 6;
-const RESEND_TIMER_SECONDS = 60;
-const MAX_RESEND_ATTEMPTS = 3;
+const DEFAULT_RESEND_TIMER_SECONDS = 60;
+const DEFAULT_MAX_RESEND_ATTEMPTS = 5;
 
 export const OTPVerificationScreen: React.FC = () => {
   const navigation = useNavigation<OTPNavigationProp>();
@@ -35,10 +35,14 @@ export const OTPVerificationScreen: React.FC = () => {
   const { phoneNumber, countryCode } = route.params;
 
   const isTestMode = useTestModeStore((state) => state.isTestMode);
+  const storeOtpCooldown = useAuthStore((state) => state.otpCooldownSeconds);
+  const storeOtpRemainingAttempts = useAuthStore((state) => state.otpRemainingAttempts);
+  const initialCooldown = storeOtpCooldown > 0 ? storeOtpCooldown : DEFAULT_RESEND_TIMER_SECONDS;
+  const maxResendAttempts = storeOtpRemainingAttempts > 0 ? storeOtpRemainingAttempts : DEFAULT_MAX_RESEND_ATTEMPTS;
 
   const [code, setCode] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [activeIndex, setActiveIndex] = useState(0);
-  const [resendTimer, setResendTimer] = useState(RESEND_TIMER_SECONDS);
+  const [resendTimer, setResendTimer] = useState(initialCooldown);
   const [isVerifying, setIsVerifying] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [resendCount, setResendCount] = useState(0);
@@ -179,7 +183,7 @@ export const OTPVerificationScreen: React.FC = () => {
         setResendCount((prev) => prev + 1);
         setFailedAttempts(0);
         const { otpCooldownSeconds } = useAuthStore.getState();
-        setResendTimer(otpCooldownSeconds || RESEND_TIMER_SECONDS);
+        setResendTimer(otpCooldownSeconds || DEFAULT_RESEND_TIMER_SECONDS);
         setCode(Array(OTP_LENGTH).fill(''));
         setActiveIndex(0);
         inputRefs.current[0]?.focus();
@@ -214,7 +218,7 @@ export const OTPVerificationScreen: React.FC = () => {
     '$1 $2 *** $4'
   );
 
-  const remainingResends = MAX_RESEND_ATTEMPTS - resendCount;
+  const remainingResends = maxResendAttempts - resendCount;
 
   return (
     <KeyboardAvoidingView

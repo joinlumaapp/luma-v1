@@ -23,6 +23,7 @@ interface CallStoreState {
   isMuted: boolean;
   isSpeaker: boolean;
   isCameraOff: boolean;
+  isFrontCamera: boolean;
   callDuration: number;
   callQuality: CallQuality;
   isMinimized: boolean;
@@ -54,6 +55,7 @@ const initialState = {
   isMuted: false,
   isSpeaker: false,
   isCameraOff: false,
+  isFrontCamera: true,
   callDuration: 0,
   callQuality: 'excellent' as CallQuality,
   isMinimized: false,
@@ -77,6 +79,7 @@ export const useCallStore = create<CallStoreState>((set, get) => ({
       isMuted: false,
       isSpeaker: false,
       isCameraOff: false,
+      isFrontCamera: true,
       callDuration: 0,
       isMinimized: false,
     });
@@ -97,6 +100,7 @@ export const useCallStore = create<CallStoreState>((set, get) => ({
       isMuted: false,
       isSpeaker: false,
       isCameraOff: false,
+      isFrontCamera: true,
       callDuration: 0,
       isMinimized: false,
     });
@@ -149,10 +153,16 @@ export const useCallStore = create<CallStoreState>((set, get) => ({
   },
 
   flipCamera: () => {
-    // Camera flip requires native module (react-native-webrtc switchCamera)
-    // This is a placeholder — the webrtcService can be extended for this
+    // Toggle front/back camera state.
+    // Actual WebRTC camera switch requires mediaStream track manipulation
+    // via react-native-webrtc's switchCamera() on the video track.
+    // For now we toggle the boolean; wire up the native call when
+    // webrtcService exposes switchCamera().
+    const newIsFront = !get().isFrontCamera;
+    set({ isFrontCamera: newIsFront });
+
     if (__DEV__) {
-      console.log('[CallStore] flipCamera — requires native switchCamera support');
+      console.log(`[CallStore] flipCamera — isFrontCamera: ${newIsFront}`);
     }
   },
 

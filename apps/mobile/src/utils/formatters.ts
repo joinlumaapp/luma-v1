@@ -30,28 +30,10 @@ export const formatDistance = (distanceKm: number): string => {
 };
 
 /**
- * Format distance in Turkish with "uzaginda" suffix — used for card display
- * Returns null if distanceKm is null/undefined (don't show distance)
+ * Format distance in Turkish with "uzaginda" suffix — used for card display.
+ * Re-exported from locationService to maintain a single source of truth.
  */
-export const formatDistanceTurkish = (distanceKm: number | null | undefined): string | null => {
-  if (distanceKm == null) return null;
-
-  if (distanceKm < 1) {
-    const meters = Math.round(distanceKm * 1000);
-    const rounded = Math.max(100, Math.round(meters / 100) * 100);
-    return `${rounded} m uzaginda`;
-  }
-  if (distanceKm < 10) {
-    return `${distanceKm.toFixed(1)} km uzaginda`;
-  }
-  if (distanceKm < 50) {
-    return `${Math.round(distanceKm)} km uzaginda`;
-  }
-  if (distanceKm < 100) {
-    return 'Ayni sehirde';
-  }
-  return `${Math.round(distanceKm)} km uzaginda`;
-};
+export { formatDistanceTr as formatDistanceTurkish } from '../services/locationService';
 
 /**
  * Format a date to Turkish locale

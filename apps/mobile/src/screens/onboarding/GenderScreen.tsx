@@ -48,7 +48,7 @@ export const GenderScreen: React.FC = () => {
     <OnboardingLayout
       step={3}
       totalSteps={17}
-      showBack={false}
+      showBack={true}
       footer={
         <ArrowButton onPress={handleContinue} disabled={!selectedGender} />
       }

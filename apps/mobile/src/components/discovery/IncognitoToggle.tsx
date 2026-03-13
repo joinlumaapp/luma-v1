@@ -108,7 +108,7 @@ export const IncognitoToggle: React.FC<IncognitoToggleProps> = ({ onLockedPress 
           <Ionicons name="lock-closed" size={16} color={palette.gray[400]} />
           <Text style={styles.labelLocked}>Gizli Mod</Text>
           <View style={styles.upsellBadge}>
-            <Text style={styles.upsellText}>Pro ile ac</Text>
+            <Text style={styles.upsellText}>Pro ile aç</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -151,7 +151,7 @@ export const IncognitoToggle: React.FC<IncognitoToggleProps> = ({ onLockedPress 
       {showExplanation && (
         <Animated.View style={[styles.explanation, { opacity: explanationOpacity }]}>
           <Text style={styles.explanationText}>
-            Kesif akisinda gorunmezsiniz. Eslesmeleriniz sizi gormeye devam eder.
+            Keşif akışında görünmezsiniz. Eşleşmeleriniz sizi görmeye devam eder.
           </Text>
         </Animated.View>
       )}

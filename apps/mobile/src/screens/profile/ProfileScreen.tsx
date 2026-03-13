@@ -23,6 +23,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 import { useProfileStore } from '../../stores/profileStore';
 import { useAuthStore } from '../../stores/authStore';
+import { useCoinStore } from '../../stores/coinStore';
 import { badgeService } from '../../services/badgeService';
 import type { UserBadge } from '../../services/badgeService';
 import {
@@ -223,7 +224,7 @@ export const ProfileScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
 
   const profile = useProfileStore((state) => state.profile);
-  useProfileStore((state) => state.completionPercent);
+  const completionPercent = useProfileStore((state) => state.completionPercent);
   const isLoading = useProfileStore((state) => state.isLoading);
   const fetchProfile = useProfileStore((state) => state.fetchProfile);
   const user = useAuthStore((state) => state.user);
@@ -239,7 +240,7 @@ export const ProfileScreen: React.FC = () => {
   // Boost state
   const [boostStatus, setBoostStatus] = useState<BoostStatusResponse>({ isActive: false });
   const [showBoostModal, setShowBoostModal] = useState(false);
-  const [goldBalance, setGoldBalance] = useState(500);
+  const goldBalance = useCoinStore((s) => s.balance);
 
   // Pull-to-refresh state
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -288,7 +289,8 @@ export const ProfileScreen: React.FC = () => {
     const result = await discoveryService.activateBoost(durationMinutes);
     if (result.success) {
       setBoostStatus({ isActive: true, endsAt: result.endsAt, remainingSeconds: durationMinutes * 60 });
-      setGoldBalance(result.goldBalance);
+      // Balance is updated automatically via coinStore.fetchBalance or API response
+      useCoinStore.getState().fetchBalance();
     }
   }, []);
 
@@ -466,6 +468,16 @@ export const ProfileScreen: React.FC = () => {
 
         {/* City */}
         <Text style={styles.cityText}>{profile.city || '-'}</Text>
+
+        {/* Profile completion bar */}
+        {completionPercent < 100 && (
+          <TouchableOpacity onPress={handleEditProfile} activeOpacity={0.7} style={styles.completionBarContainer}>
+            <View style={styles.completionBarTrack}>
+              <View style={[styles.completionBarFill, { width: `${completionPercent}%` }]} />
+            </View>
+            <Text style={styles.completionBarText}>Profil %{completionPercent} tamamlandi</Text>
+          </TouchableOpacity>
+        )}
 
         {/* Intention chip */}
         {intentionConfig && (
@@ -895,6 +907,26 @@ const styles = StyleSheet.create({
   cityText: {
     fontSize: 14,
     fontWeight: fontWeights.regular,
+    color: colors.textSecondary,
+  },
+  completionBarContainer: {
+    gap: 4,
+    marginTop: 4,
+  },
+  completionBarTrack: {
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.surfaceBorder,
+    overflow: 'hidden',
+  },
+  completionBarFill: {
+    height: '100%',
+    borderRadius: 2,
+    backgroundColor: palette.purple[500],
+  },
+  completionBarText: {
+    fontSize: 12,
+    fontWeight: fontWeights.medium,
     color: colors.textSecondary,
   },
   intentionChip: {

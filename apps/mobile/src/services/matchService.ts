@@ -330,6 +330,8 @@ export const matchService = {
     } catch {
       // Mock fallback with realistic lastActivity timestamps
       // Preserve local updates from both in-memory store and persisted chat data
+      // Lazy require to avoid circular dependency: matchStore imports matchService,
+      // so a top-level import here would create a circular module resolution loop.
       const { useMatchStore } = require('../stores/matchStore');
       const { getConversationMeta } = require('./chatPersistence');
       const currentMatches: MatchSummary[] = useMatchStore.getState().matches;

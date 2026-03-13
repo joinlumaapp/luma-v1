@@ -103,6 +103,13 @@ const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
+/** Safe accessor for nested navigator state — avoids fragile `as` type assertions */
+function getNestedStateIndex(
+  route: { state?: { index?: number } } | undefined,
+): number | undefined {
+  return route?.state?.index;
+}
+
 // Ionicons name map for active/inactive tab states
 const TAB_ICONS: Record<string, { active: keyof typeof Ionicons.glyphMap; inactive: keyof typeof Ionicons.glyphMap }> = {
   compass: { active: 'compass', inactive: 'compass-outline' },
@@ -396,8 +403,8 @@ export const MainTabNavigator: React.FC = () => {
             const tabState = navigation.getState?.();
             if (!tabState?.routes) return;
             const thisRoute = tabState.routes.find((r: { name: string }) => r.name === route.name);
-            const nestedState = (thisRoute as { state?: { index?: number } })?.state;
-            const isDeep = nestedState && nestedState.index !== undefined && nestedState.index > 0;
+            const nestedIndex = getNestedStateIndex(thisRoute);
+            const isDeep = nestedIndex !== undefined && nestedIndex > 0;
             if (isDeep) {
               e.preventDefault();
               navigation.dispatch(
@@ -432,8 +439,8 @@ export const MainTabNavigator: React.FC = () => {
             const tabState = navigation.getState?.();
             if (!tabState?.routes) return;
             const thisRoute = tabState.routes.find((r: { name: string }) => r.name === route.name);
-            const nestedState = (thisRoute as { state?: { index?: number } })?.state;
-            const isDeep = nestedState && nestedState.index !== undefined && nestedState.index > 0;
+            const nestedIndex = getNestedStateIndex(thisRoute);
+            const isDeep = nestedIndex !== undefined && nestedIndex > 0;
             if (isDeep) {
               e.preventDefault();
               navigation.dispatch(
@@ -464,8 +471,8 @@ export const MainTabNavigator: React.FC = () => {
             const tabState = navigation.getState?.();
             if (!tabState?.routes) return;
             const thisRoute = tabState.routes.find((r: { name: string }) => r.name === route.name);
-            const nestedState = (thisRoute as { state?: { index?: number } })?.state;
-            const isDeep = nestedState && nestedState.index !== undefined && nestedState.index > 0;
+            const nestedIndex = getNestedStateIndex(thisRoute);
+            const isDeep = nestedIndex !== undefined && nestedIndex > 0;
             if (isDeep) {
               e.preventDefault();
               navigation.dispatch(
@@ -500,8 +507,8 @@ export const MainTabNavigator: React.FC = () => {
             const tabState = navigation.getState?.();
             if (!tabState?.routes) return;
             const thisRoute = tabState.routes.find((r: { name: string }) => r.name === route.name);
-            const nestedState = (thisRoute as { state?: { index?: number } })?.state;
-            const isDeep = nestedState && nestedState.index !== undefined && nestedState.index > 0;
+            const nestedIndex = getNestedStateIndex(thisRoute);
+            const isDeep = nestedIndex !== undefined && nestedIndex > 0;
             if (isDeep) {
               e.preventDefault();
               navigation.dispatch(
@@ -532,8 +539,8 @@ export const MainTabNavigator: React.FC = () => {
             const tabState = navigation.getState?.();
             if (!tabState?.routes) return;
             const thisRoute = tabState.routes.find((r: { name: string }) => r.name === route.name);
-            const nestedState = (thisRoute as { state?: { index?: number } })?.state;
-            const isDeep = nestedState && nestedState.index !== undefined && nestedState.index > 0;
+            const nestedIndex = getNestedStateIndex(thisRoute);
+            const isDeep = nestedIndex !== undefined && nestedIndex > 0;
             if (isDeep) {
               e.preventDefault();
               navigation.dispatch(

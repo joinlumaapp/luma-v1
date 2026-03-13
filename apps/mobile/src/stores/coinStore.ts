@@ -903,6 +903,8 @@ export const useCoinStore = create<CoinState>((set, get) => ({
     persistTransactions(newTransactions);
 
     // Add extra likes to discovery store
+    // Lazy require to avoid circular dependency: discoveryStore imports coinStore
+    // for cost constants, so a top-level import here would create a circular loop.
     const { useDiscoveryStore } = require('./discoveryStore');
     const discoveryState = useDiscoveryStore.getState();
     useDiscoveryStore.setState({

@@ -21,7 +21,6 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ProfileStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../stores/authStore';
-import { useProfileStore } from '../../stores/profileStore';
 import { iapService } from '../../services/iapService';
 import { paymentService } from '../../services/paymentService';
 import { storage } from '../../utils/storage';
@@ -30,6 +29,7 @@ import type { ThemeColors, ThemeMode } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { useScreenTracking } from '../../hooks/useAnalytics';
+import { IncognitoToggle } from '../../components/discovery/IncognitoToggle';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -130,14 +130,6 @@ export const SettingsScreen: React.FC = () => {
   // ── Privacy toggles ──────────────────────────────────────────
   const [showOnlineStatus, setShowOnlineStatusRaw] = useState(true);
   const [showDistance, setShowDistanceRaw] = useState(true);
-  const profileIncognito = useProfileStore((s) => s.profile?.isIncognito ?? false);
-  const [isIncognito, setIsIncognito] = useState(profileIncognito);
-
-  // Sync incognito state when profile store changes (e.g. after fetch)
-  useEffect(() => {
-    setIsIncognito(profileIncognito);
-  }, [profileIncognito]);
-
   // Storage keys
   const TOGGLE_KEYS = useMemo(() => ({
     pushNotifications: 'settings.pushNotifications',
@@ -298,17 +290,9 @@ export const SettingsScreen: React.FC = () => {
     );
   }, [updatePackageTier]);
 
-  const handleIncognitoToggle = useCallback((value: boolean) => {
-    const tier = useAuthStore.getState().user?.packageTier ?? 'free';
-    if (value && tier === 'free') {
-      Alert.alert('Gold Gerekli', 'Gizli mod icin Gold veya uzeri paket gereklidir.');
-      return;
-    }
-    setIsIncognito(value);
-    import('../../services/discoveryService').then(({ discoveryService }) => {
-      discoveryService.toggleIncognito(value).catch(() => setIsIncognito(!value));
-    });
-  }, []);
+  const handleIncognitoLockedPress = useCallback(() => {
+    navigation.navigate('MembershipPlans');
+  }, [navigation]);
 
   // ── FAQ ────────────────────────────────────────────────────────
   const [expandedFAQKey, setExpandedFAQKey] = useState<string | null>(null);
@@ -557,10 +541,7 @@ export const SettingsScreen: React.FC = () => {
           key: 'incognito',
           icon: 'eye-off-outline',
           title: 'Gizli Mod',
-          type: 'toggle',
-          value: isIncognito,
-          onToggle: handleIncognitoToggle,
-          subtitle: packageTier === 'free' ? 'Gold+ gerekli' : undefined,
+          type: 'display',
         },
         {
           key: 'blocked',
@@ -730,6 +711,15 @@ export const SettingsScreen: React.FC = () => {
   );
 
   const renderItem = ({ item }: { item: SettingItem }) => {
+    // Render the dedicated IncognitoToggle component for the incognito row
+    if (item.key === 'incognito') {
+      return (
+        <View style={dynamicStyles.settingRow}>
+          <IncognitoToggle onLockedPress={handleIncognitoLockedPress} />
+        </View>
+      );
+    }
+
     if (item.type === 'theme') return renderThemeSelector();
 
     // Supreme feature row

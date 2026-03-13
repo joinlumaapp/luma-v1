@@ -25,7 +25,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MatchesStackParamList } from '../../navigation/types';
-import { colors } from '../../theme/colors';
+import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 import { useChatStore } from '../../stores/chatStore';
@@ -217,7 +217,29 @@ export const ChatScreen: React.FC = () => {
     return () => { showSub.remove(); hideSub.remove(); };
   }, []);
 
-  const { matchId, partnerName, partnerPhotoUrl: _partnerPhotoUrl, initialMessage } = route.params;
+  const { matchId, partnerName: rawPartnerName, partnerPhotoUrl: _partnerPhotoUrl, initialMessage } = route.params;
+
+  // When opened via deep link, partnerName/partnerPhotoUrl may be empty.
+  // Fall back to match store data so the header always shows correct info.
+  const matchData = useMatchStore(
+    useCallback((state) => state.matches.find((m) => m.id === matchId), [matchId]),
+  );
+  const partnerName = rawPartnerName || matchData?.name || '';
+  const [isLoadingPartner, setIsLoadingPartner] = useState(!partnerName);
+
+  // If partner info is missing (deep link), try fetching matches
+  useEffect(() => {
+    if (!partnerName && !matchData) {
+      const matchStore = useMatchStore.getState();
+      if (matchStore.matches.length === 0) {
+        matchStore.fetchMatches().finally(() => setIsLoadingPartner(false));
+      } else {
+        setIsLoadingPartner(false);
+      }
+    } else {
+      setIsLoadingPartner(false);
+    }
+  }, [partnerName, matchData]);
 
   // Typing indicator — emits typing events to partner via WebSocket
   const { onTextChange: onTypingChange, stopTyping } = useTypingIndicator({ matchId });
@@ -243,6 +265,7 @@ export const ChatScreen: React.FC = () => {
   const messages = useChatStore((state) => state.messages[matchId] ?? EMPTY_MESSAGES);
   const isLoadingMessages = useChatStore((state) => state.isLoadingMessages);
   const isSending = useChatStore((state) => state.isSending);
+  const imageUploadProgress = useChatStore((state) => state.imageUploadProgress);
   const isTyping = useChatStore((state) => state.typingUsers[matchId] ?? false);
   const hasMore = useChatStore((state) => state.hasMore[matchId] ?? false);
   const fetchMessages = useChatStore((state) => state.fetchMessages);
@@ -544,6 +567,15 @@ export const ChatScreen: React.FC = () => {
     return item.data.id;
   };
 
+  // Show loading state while resolving partner info from deep link
+  if (isLoadingPartner) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top, justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Chat header with partner info */}
@@ -679,6 +711,7 @@ export const ChatScreen: React.FC = () => {
             renderItem={renderItem}
             contentContainerStyle={styles.messagesList}
             showsVerticalScrollIndicator={false}
+            onEndReached={handleLoadMore}
             onEndReachedThreshold={0.3}
             inverted={false}
             // ── Performance tuning ──
@@ -705,6 +738,16 @@ export const ChatScreen: React.FC = () => {
 
         {/* Typing indicator */}
         {isTyping && <TypingIndicator partnerName={partnerName} />}
+
+        {/* Image upload progress bar */}
+        {imageUploadProgress !== null && (
+          <View style={styles.uploadProgressContainer}>
+            <View style={styles.uploadProgressTrack}>
+              <View style={[styles.uploadProgressFill, { width: `${imageUploadProgress}%` }]} />
+            </View>
+            <Text style={styles.uploadProgressText}>Yukleniyor %{imageUploadProgress}</Text>
+          </View>
+        )}
 
         {/* Image preview bar */}
         {imagePreview && (
@@ -1186,6 +1229,30 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   // Image preview bar
+  uploadProgressContainer: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    backgroundColor: colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
+    gap: 4,
+  },
+  uploadProgressTrack: {
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.surfaceBorder,
+    overflow: 'hidden',
+  },
+  uploadProgressFill: {
+    height: '100%',
+    borderRadius: 2,
+    backgroundColor: palette.purple[500],
+  },
+  uploadProgressText: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
   imagePreviewBar: {
     flexDirection: 'row',
     alignItems: 'center',
