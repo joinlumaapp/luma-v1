@@ -705,7 +705,7 @@ const getMockFeedResponse = (): FeedResponse => {
       ...card,
       lastActiveAt: new Date(Date.now() - (offsets[card.userId] ?? 3600000)).toISOString(),
     })),
-    remaining: 0,
+    remaining: 20,
     dailyLimit: 50,
     totalCandidates: cards.length,
   };

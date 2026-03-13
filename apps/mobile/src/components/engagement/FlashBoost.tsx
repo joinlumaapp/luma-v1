@@ -8,8 +8,11 @@ import {
   Pressable,
   StyleSheet,
   Animated,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { palette } from '../../theme/colors';
@@ -38,6 +41,7 @@ export const FlashBoost: React.FC<FlashBoostProps> = ({
   onPurchase,
   onDismiss,
 }) => {
+  const navigation = useNavigation<NativeStackNavigationProp<Record<string, undefined>>>();
   const showFlashBoost = useEngagementStore((s) => s.showFlashBoost);
   const expiresAt = useEngagementStore((s) => s.flashBoostExpiresAt);
   const dismissFlash = useEngagementStore((s) => s.dismissFlashBoost);
@@ -96,7 +100,23 @@ export const FlashBoost: React.FC<FlashBoostProps> = ({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     // The discounted boost uses spendCoins directly at half price
     const balance = useCoinStore.getState().balance;
-    if (balance < DISCOUNTED_COST) return;
+    if (balance < DISCOUNTED_COST) {
+      Alert.alert(
+        'Yetersiz Jeton',
+        `Flash Boost icin ${DISCOUNTED_COST} jeton gerekli.`,
+        [
+          { text: 'Vazgec', style: 'cancel' },
+          {
+            text: 'Jeton Al',
+            onPress: () => {
+              dismissFlash();
+              (navigation as NativeStackNavigationProp<Record<string, undefined>>).navigate('JetonMarket' as never);
+            },
+          },
+        ],
+      );
+      return;
+    }
 
     const success = await useCoinStore.getState().spendCoins(
       DISCOUNTED_COST,
@@ -106,7 +126,7 @@ export const FlashBoost: React.FC<FlashBoostProps> = ({
       onPurchase();
       dismissFlash();
     }
-  }, [onPurchase, dismissFlash]);
+  }, [onPurchase, dismissFlash, navigation]);
 
   const handleDismiss = useCallback(() => {
     Animated.timing(slideAnim, {

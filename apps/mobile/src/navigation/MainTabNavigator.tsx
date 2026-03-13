@@ -24,6 +24,8 @@ import { useChatStore } from '../stores/chatStore';
 import { useNotificationStore } from '../stores/notificationStore';
 import { NotificationPermissionModal } from '../components/notifications/NotificationPermissionModal';
 import { usePresenceTracking } from '../hooks/usePresence';
+import { useSocket } from '../hooks/useSocket';
+import { setupCallStoreListeners } from '../stores/callStore';
 import { withDeferredMount } from './LazyScreens';
 
 // Discovery screens
@@ -68,6 +70,7 @@ import { WeeklyReportScreen } from '../screens/discovery/WeeklyReportScreen';
 import { CrossedPathsScreen } from '../screens/discovery/CrossedPathsScreen';
 import { SocialFeedScreen } from '../screens/discovery/SocialFeedScreen';
 import { StoryViewerScreen } from '../screens/discovery/StoryViewerScreen';
+import { StoryCreator } from '../components/stories/StoryCreator';
 
 // Activities screens
 import { ActivitiesScreen } from '../screens/activities/ActivitiesScreen';
@@ -209,6 +212,11 @@ const DiscoveryStackNavigator: React.FC = () => (
       component={MembershipPlansScreen}
       options={{ animation: 'slide_from_bottom' }}
     />
+    <DiscoveryStack.Screen
+      name="StoryCreator"
+      component={StoryCreator}
+      options={{ animation: 'slide_from_bottom', presentation: 'fullScreenModal' }}
+    />
   </DiscoveryStack.Navigator>
 );
 
@@ -250,6 +258,11 @@ const MatchesStackNavigator: React.FC = () => (
       name="Report"
       component={ReportScreen}
       options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+    />
+    <MatchesStack.Screen
+      name="MembershipPlans"
+      component={MembershipPlansScreen}
+      options={{ animation: 'slide_from_bottom' }}
     />
   </MatchesStack.Navigator>
 );
@@ -315,6 +328,24 @@ const ProfileStackNavigator: React.FC = () => (
 
 export const MainTabNavigator: React.FC = () => {
   usePresenceTracking();
+
+  // Socket lifecycle — connect/disconnect on foreground/background/network changes
+  useSocket();
+
+  // Chat socket listeners — incoming messages, typing, read receipts
+  useEffect(() => {
+    useChatStore.getState().connectSocketListeners();
+    return () => {
+      useChatStore.getState().disconnectSocketListeners();
+    };
+  }, []);
+
+  // Call store listeners — WebRTC event bridge
+  useEffect(() => {
+    const cleanup = setupCallStoreListeners();
+    return cleanup;
+  }, []);
+
   const totalUnread = useChatStore((state) => state.totalUnread);
 
   // Notification store integration

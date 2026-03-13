@@ -101,9 +101,10 @@ interface StoriesRowProps {
   navigation: DiscoveryNavProp;
   userFirstName: string;
   userPhotoUrl?: string;
+  currentUserId: string | undefined;
 }
 
-const StoriesRow: React.FC<StoriesRowProps> = ({ navigation, userFirstName, userPhotoUrl }) => {
+const StoriesRow: React.FC<StoriesRowProps> = ({ navigation, userFirstName, userPhotoUrl, currentUserId }) => {
   const orderedStoryUsers = useStoryStore((s) => s.getOrderedStoryUsers());
   const fetchStories = useStoryStore((s) => s.fetchStories);
   const myStories = useStoryStore((s) => s.myStories);
@@ -136,16 +137,15 @@ const StoriesRow: React.FC<StoriesRowProps> = ({ navigation, userFirstName, user
     if (myStories.length > 0) {
       // View own stories
       navigation.navigate('StoryViewer', {
-        userId: 'dev-user-001',
+        userId: currentUserId ?? '',
         userName: userFirstName,
         userAvatarUrl: userPhotoUrl ?? '',
       });
     } else {
-      // Open story creator — for now navigate to profile
-      // TODO: Navigate to StoryCreator when added to navigation
-      navigation.navigate('ProfileTab', { screen: 'Profile' });
+      // Open story creator
+      navigation.navigate('StoryCreator');
     }
-  }, [myStories, navigation, userFirstName, userPhotoUrl]);
+  }, [myStories, navigation, userFirstName, userPhotoUrl, currentUserId]);
 
   return (
     <ScrollView
@@ -215,6 +215,8 @@ export const DiscoveryScreen: React.FC = () => {
   const updateLocation = useDiscoveryStore((s) => s.updateLocation);
   const coinBalance = useCoinStore((s) => s.balance);
   const purchaseExtraLikes = useCoinStore((s) => s.purchaseExtraLikes);
+  const swipeError = useDiscoveryStore((s) => s.error);
+  const clearError = useDiscoveryStore((s) => s.clearError);
 
   // GPS location — 10-minute cache, foreground auto-refresh
   const { latitude, longitude } = useLocation();
@@ -226,9 +228,19 @@ export const DiscoveryScreen: React.FC = () => {
     }
   }, [latitude, longitude, updateLocation]);
 
+  // Show swipe error as Alert and clear it
+  useEffect(() => {
+    if (swipeError) {
+      Alert.alert('Hata', swipeError, [{ text: 'Tamam', onPress: clearError }]);
+    }
+  }, [swipeError, clearError]);
+
   // Notification badge
   const notifUnreadCount = useNotificationStore((s) => s.unreadCount);
   const fetchNotifications = useNotificationStore((s) => s.fetchNotifications);
+
+  // ─── Auth user info ────────────────────────────────────
+  const currentUserId = useAuthStore((s) => s.user?.id);
 
   // ─── Super Like premium gate ────────────────────────────
   const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'free') as PackageTier;
@@ -926,7 +938,7 @@ export const DiscoveryScreen: React.FC = () => {
             </View>
           </View>
           <TrialBanner />
-          <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} />
+          <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} currentUserId={currentUserId} />
         </View>
         <View style={styles.emptyContainer}>
           <View style={styles.emptyIconCircle}>
@@ -987,7 +999,7 @@ export const DiscoveryScreen: React.FC = () => {
             </View>
           </View>
           <TrialBanner />
-          <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} />
+          <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} currentUserId={currentUserId} />
         </View>
         <View style={styles.emptyContainer}>
           {/* "Seni Begeneler" teaser card — free users only */}
@@ -1193,7 +1205,7 @@ export const DiscoveryScreen: React.FC = () => {
         )}
 
         {/* Stories row — Instagram-style horizontal bubbles */}
-        <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} />
+        <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} currentUserId={currentUserId} />
       </View>
 
       {/* Saturday 2x bonus banner */}

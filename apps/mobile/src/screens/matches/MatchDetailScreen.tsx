@@ -22,7 +22,7 @@ import { colors, palette } from '../../theme/colors';
 import { fontWeights } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { useMatchStore } from '../../stores/matchStore';
-import { useCoinStore, SUPER_LIKE_COST, PROFILE_BOOST_COST } from '../../stores/coinStore';
+// coinStore import removed — Super Like / Boost buttons no longer shown on match detail
 import { useScreenTracking, analyticsService, ANALYTICS_EVENTS } from '../../hooks/useAnalytics';
 import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
 import { VerifiedBadge } from '../../components/common/VerifiedBadge';
@@ -77,38 +77,6 @@ export const MatchDetailScreen: React.FC = () => {
       partnerName: selectedMatch?.name ?? '',
     });
   }, [navigation, matchId, selectedMatch]);
-
-  const coinBalance = useCoinStore((state) => state.balance);
-  const sendSuperLike = useCoinStore((state) => state.sendSuperLike);
-  const activateProfileBoost = useCoinStore((state) => state.activateProfileBoost);
-
-  const handleSuperLike = useCallback(async () => {
-    if (coinBalance < SUPER_LIKE_COST) {
-      Alert.alert('Yetersiz Jeton', `Süper Beğeni için ${SUPER_LIKE_COST} Jeton gerekiyor.`, [
-        { text: 'Jeton Al', onPress: () => navigation.navigate('JetonMarket') },
-        { text: 'Tamam', style: 'cancel' },
-      ]);
-      return;
-    }
-    const success = await sendSuperLike(matchId);
-    if (success) {
-      Alert.alert('Süper Beğeni!', `${selectedMatch?.name} için Süper Beğeni gönderildi.`);
-    }
-  }, [coinBalance, sendSuperLike, matchId, selectedMatch, navigation]);
-
-  const handleBoost = useCallback(async () => {
-    if (coinBalance < PROFILE_BOOST_COST) {
-      Alert.alert('Yetersiz Jeton', `Boost için ${PROFILE_BOOST_COST} Jeton gerekiyor.`, [
-        { text: 'Jeton Al', onPress: () => navigation.navigate('JetonMarket') },
-        { text: 'Tamam', style: 'cancel' },
-      ]);
-      return;
-    }
-    const success = await activateProfileBoost();
-    if (success) {
-      Alert.alert('Boost Aktif!', 'Profilin 30 dakika boyunca öne çıkarıldı.');
-    }
-  }, [coinBalance, activateProfileBoost, navigation]);
 
   const handleUnmatch = useCallback(() => {
     Alert.alert(
@@ -184,21 +152,25 @@ export const MatchDetailScreen: React.FC = () => {
         )}
       </View>
 
-      {/* Stats row — minimalist */}
+      {/* Stats row — dating-relevant */}
       <View style={styles.statsCard}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>15</Text>
-          <Text style={styles.statLabel}>GONDERİ</Text>
+          <Text style={styles.statValue}>%{compatPercent}</Text>
+          <Text style={styles.statLabel}>UYUM SKORU</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>108</Text>
-          <Text style={styles.statLabel}>TAKİPCİ</Text>
+          <Text style={styles.statValue}>{selectedMatch.compatibilityBreakdown.filter((c) => c.score >= 70).length}</Text>
+          <Text style={styles.statLabel}>ORTAK ILGI</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>73</Text>
-          <Text style={styles.statLabel}>TAKİP</Text>
+          <Text style={styles.statValue}>
+            {selectedMatch.matchedAt
+              ? `${Math.max(1, Math.floor((Date.now() - new Date(selectedMatch.matchedAt).getTime()) / (1000 * 60 * 60 * 24)))}g`
+              : '-'}
+          </Text>
+          <Text style={styles.statLabel}>ESLESME</Text>
         </View>
       </View>
     </View>
@@ -294,44 +266,6 @@ export const MatchDetailScreen: React.FC = () => {
             <Text style={styles.outlinedButtonText}>Buluşma Planla</Text>
             <View style={styles.jetonCostChip}>
               <Text style={styles.jetonCostText}>5 Jeton</Text>
-            </View>
-          </View>
-        </TouchableOpacity>
-      </View>
-
-      {/* Premium actions row — Super Like + Boost */}
-      <View style={styles.footerActionsRow}>
-        {/* Super Like — gold gradient */}
-        <TouchableOpacity
-          onPress={handleSuperLike}
-          activeOpacity={0.85}
-          style={styles.footerButtonFlex}
-        >
-          <LinearGradient
-            colors={['#FFD700', '#D4AF37', '#B8860B'] as [string, string, ...string[]]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.gradientButton}
-          >
-            <Ionicons name="star" size={16} color="#FFFFFF" />
-            <Text style={styles.gradientButtonText}>Süper Beğeni</Text>
-            <View style={styles.jetonCostChipLight}>
-              <Text style={styles.jetonCostTextLight}>{SUPER_LIKE_COST}</Text>
-            </View>
-          </LinearGradient>
-        </TouchableOpacity>
-
-        {/* Boost — lightning */}
-        <TouchableOpacity
-          onPress={handleBoost}
-          activeOpacity={0.85}
-          style={styles.footerButtonFlex}
-        >
-          <View style={styles.boostButton}>
-            <Ionicons name="flash" size={16} color="#D4AF37" />
-            <Text style={styles.boostButtonText}>Boost</Text>
-            <View style={styles.jetonCostChipGold}>
-              <Text style={styles.jetonCostTextGold}>{PROFILE_BOOST_COST}</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -616,51 +550,6 @@ const styles = StyleSheet.create({
     color: palette.purple[600],
     letterSpacing: 0.2,
   },
-  jetonCostChipLight: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    borderRadius: 50,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    overflow: 'hidden',
-  },
-  jetonCostTextLight: {
-    fontSize: 9,
-    fontWeight: fontWeights.bold,
-    color: '#FFFFFF',
-  },
-  jetonCostChipGold: {
-    backgroundColor: 'rgba(212, 175, 55, 0.18)',
-    borderRadius: 50,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    overflow: 'hidden',
-  },
-  jetonCostTextGold: {
-    fontSize: 9,
-    fontWeight: fontWeights.bold,
-    color: '#D4AF37',
-  },
-
-  // ── Boost button ──
-  boostButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    borderRadius: borderRadius.md,
-    paddingVertical: 14,
-    borderWidth: 1.5,
-    borderColor: '#D4AF37',
-    backgroundColor: 'rgba(212, 175, 55, 0.06)',
-    overflow: 'hidden',
-  },
-  boostButtonText: {
-    fontSize: 14,
-    fontWeight: fontWeights.bold,
-    color: '#D4AF37',
-    letterSpacing: 0.3,
-  },
-
   unmatchButton: {
     alignItems: 'center',
     paddingVertical: spacing.sm,

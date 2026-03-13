@@ -94,9 +94,9 @@ export const MatchCountdown: React.FC<MatchCountdownProps> = ({
     return () => clearInterval(interval);
   }, [matchId, getTimeRemaining, expired, onExpired]);
 
-  const handleExtend = useCallback(() => {
+  const handleExtend = useCallback(async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const success = extendCountdown(matchId);
+    const success = await extendCountdown(matchId);
     if (success) {
       setExpired(false);
       setRemaining(getTimeRemaining(matchId));

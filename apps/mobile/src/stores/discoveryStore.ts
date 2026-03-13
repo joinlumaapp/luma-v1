@@ -468,8 +468,21 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
           lastSwipeDirection: direction,
         }));
       }
-    } catch {
-      // Handle error silently
+    } catch (error: unknown) {
+      // The API call failed before currentIndex or dailyRemaining were updated,
+      // so the card is still visible at its current position. We only need to
+      // surface the error so the UI can display a toast/banner.
+      set({
+        error: 'Swipe gonderilemedi. Lutfen tekrar dene.',
+        canUndo: false,
+        undoTimerId: null,
+        lastSwipedProfile: null,
+        lastSwipeDirection: null,
+      });
+
+      if (__DEV__) {
+        console.warn('Swipe basarisiz:', error);
+      }
     }
   },
 

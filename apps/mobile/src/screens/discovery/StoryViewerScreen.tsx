@@ -24,6 +24,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { DiscoveryStackParamList, MainTabParamList } from '../../navigation/types';
+import { useAuthStore } from '../../stores/authStore';
 import { useStoryStore } from '../../stores/storyStore';
 import type { Story, StoryOverlay } from '../../services/storyService';
 import { palette } from '../../theme/colors';
@@ -452,7 +453,8 @@ export const StoryViewerScreen: React.FC = () => {
   }
 
   const timeAgo = getTimeAgo(currentStory.createdAt);
-  const isOwnStory = false; // TODO: Compare with authStore userId
+  const authUserId = useAuthStore((s) => s.user?.id);
+  const isOwnStory = currentUser.userId === authUserId;
 
   return (
     <View style={styles.container}>

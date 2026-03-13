@@ -36,13 +36,13 @@ export type OnboardingStackParamList = {
   CitySelection: undefined;
   PersonalityIntro: undefined;
   InterestSelection: undefined;
+  Bio: undefined;
   Photos: undefined;
   QuestionsIntro: undefined;
   Questions: undefined;
   SelfieVerification: undefined;
   // Legacy screens (not in navigator, kept for type compatibility)
   ModeSelection: undefined;
-  Bio: undefined;
 };
 
 // -- Main Tabs (5 tabs) --
@@ -75,6 +75,7 @@ export type DiscoveryStackParamList = {
   Waves: undefined;
   Report: { userId: string; userName: string };
   MembershipPlans: undefined;
+  StoryCreator: undefined;
 };
 
 // -- Matches Stack --
@@ -89,6 +90,7 @@ export type MatchesStackParamList = {
   Call: { matchId: string; partnerName: string; callType: 'voice' | 'video' };
   DatePlanner: { matchId: string; partnerName: string; isSuperMatch?: boolean };
   JetonMarket: undefined;
+  MembershipPlans: undefined;
   Report: { userId: string; userName: string };
 };
 

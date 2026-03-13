@@ -61,7 +61,13 @@ export const AccountDeletionScreen: React.FC = () => {
   const handleSendOtp = useCallback(async () => {
     setIsSendingOtp(true);
     try {
-      // TODO: await authService.sendDeletionOtp();
+      const user = useAuthStore.getState().user;
+      if (!user?.phone) {
+        Alert.alert('Hata', 'Telefon numarasi bulunamadi.');
+        return;
+      }
+      // Re-use the existing register endpoint to send an OTP to the user's phone
+      await authService.register(user.phone, '+90');
       setOtpSent(true);
       setStep('confirm_otp');
     } catch {
@@ -71,12 +77,39 @@ export const AccountDeletionScreen: React.FC = () => {
     }
   }, []);
 
-  const handleVerifyAndShowFinal = useCallback(() => {
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+
+  const handleVerifyAndShowFinal = useCallback(async () => {
     if (otpCode.length < 6) {
       Alert.alert('Hata', 'Lutfen 6 haneli dogrulama kodunu girin.');
       return;
     }
-    setShowFinalModal(true);
+
+    setIsVerifyingOtp(true);
+    try {
+      const user = useAuthStore.getState().user;
+      if (!user?.phone) {
+        Alert.alert('Hata', 'Telefon numarasi bulunamadi.');
+        return;
+      }
+      // Verify the OTP code through the SMS verification endpoint
+      const result = await authService.verifySms(user.phone, otpCode);
+      if (!result.verified) {
+        Alert.alert('Hata', 'Dogrulama kodu yanlis. Lutfen tekrar deneyin.');
+        return;
+      }
+      setShowFinalModal(true);
+    } catch {
+      if (__DEV__) {
+        // Allow proceeding in development mode for testing
+        console.warn('OTP dogrulama basarisiz, gelistirme modunda devam ediliyor');
+        setShowFinalModal(true);
+        return;
+      }
+      Alert.alert('Hata', 'Dogrulama kodu dogrulanamadi. Lutfen tekrar deneyin.');
+    } finally {
+      setIsVerifyingOtp(false);
+    }
   }, [otpCode]);
 
   const handleDeleteAccount = useCallback(async () => {
@@ -224,13 +257,17 @@ export const AccountDeletionScreen: React.FC = () => {
         <TouchableOpacity
           style={[
             dynamicStyles.deleteButton,
-            otpCode.length < 6 && dynamicStyles.primaryButtonDisabled,
+            (otpCode.length < 6 || isVerifyingOtp) && dynamicStyles.primaryButtonDisabled,
           ]}
           onPress={handleVerifyAndShowFinal}
-          disabled={otpCode.length < 6}
+          disabled={otpCode.length < 6 || isVerifyingOtp}
           activeOpacity={0.7}
         >
-          <Text style={dynamicStyles.deleteButtonText}>Dogrula ve Devam Et</Text>
+          {isVerifyingOtp ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={dynamicStyles.deleteButtonText}>Dogrula ve Devam Et</Text>
+          )}
         </TouchableOpacity>
       </View>
     </ScrollView>

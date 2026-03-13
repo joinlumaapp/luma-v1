@@ -685,7 +685,7 @@ export const CompatibilityInsightScreen: React.FC = () => {
               <TouchableOpacity
                 style={styles.premiumCtaButton}
                 activeOpacity={0.85}
-                onPress={() => navigation.navigate('MatchesList')}
+                onPress={() => navigation.navigate('MembershipPlans')}
               >
                 <Text style={styles.premiumCtaButtonText}>
                   Supreme'a Yükselt

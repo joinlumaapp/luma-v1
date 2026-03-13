@@ -42,6 +42,7 @@ import {
 import type { ReactionEmoji } from '../../components/chat/MessageReactions';
 import type { ChatMessage } from '../../services/chatService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
+import { useTypingIndicator } from '../../hooks/useTypingIndicator';
 import { presenceService } from '../../services/presenceService';
 import { formatActivityStatus } from '../../utils/formatters';
 import { GiphyPicker } from '../../components/chat/GiphyPicker';
@@ -218,6 +219,9 @@ export const ChatScreen: React.FC = () => {
 
   const { matchId, partnerName, partnerPhotoUrl: _partnerPhotoUrl, initialMessage } = route.params;
 
+  // Typing indicator — emits typing events to partner via WebSocket
+  const { onTextChange: onTypingChange, stopTyping } = useTypingIndicator({ matchId });
+
   // Look up partner userId from match store for profile navigation
   const partnerUserId = useMatchStore(
     useCallback((state) => state.matches.find((m) => m.id === matchId)?.userId, [matchId]),
@@ -310,10 +314,11 @@ export const ChatScreen: React.FC = () => {
     if (sent) {
       setInputText('');
       setShowLimitReached(false);
+      stopTyping();
     } else {
       setShowLimitReached(true);
     }
-  }, [inputText, isSending, matchId, sendMessage, isPremiumTier, coinBalance, sendInstantMessage, navigation]);
+  }, [inputText, isSending, matchId, sendMessage, isPremiumTier, coinBalance, sendInstantMessage, navigation, stopTyping]);
 
   // Image picker handler
   const handlePickImage = useCallback(async () => {
@@ -759,7 +764,7 @@ export const ChatScreen: React.FC = () => {
             <TextInput
               style={styles.textInput}
               value={inputText}
-              onChangeText={setInputText}
+              onChangeText={(text) => { setInputText(text); onTypingChange(); }}
               placeholder="Mesaj yaz..."
               placeholderTextColor={colors.textTertiary}
               multiline

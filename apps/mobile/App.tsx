@@ -18,7 +18,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Navigation } from './src/navigation';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { ToastProvider, useToast } from './src/components/common/Toast';
-import { OfflineBanner } from './src/components/common/OfflineBanner';
 import { useNetworkStore } from './src/stores/networkStore';
 import { useAuthStore } from './src/stores/authStore';
 import { useNotificationStore } from './src/stores/notificationStore';
@@ -254,7 +253,6 @@ export default function App(): React.JSX.Element {
               <NotificationInitializer />
               <TrialExpiryChecker />
               <Navigation />
-              <OfflineBanner />
             </ToastProvider>
           </ThemeProvider>
         </SafeAreaProvider>

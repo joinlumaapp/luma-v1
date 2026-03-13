@@ -477,13 +477,13 @@ export const ProfileScreen: React.FC = () => {
         )}
       </View>
 
-      {/* Stats row — minimalist: bold numbers, light labels */}
+      {/* Stats row — dating-relevant */}
       <View style={styles.statsCard}>
-        <CountUpStat target={18} label="GONDERI" />
+        <CountUpStat target={strengthData?.percentage ?? 0} label="PROFIL GUCU" suffix="%" />
         <View style={styles.statDivider} />
-        <CountUpStat target={124} label="TAKIPCI" />
+        <CountUpStat target={profile.interestTags.length} label="ILGI ALANI" />
         <View style={styles.statDivider} />
-        <CountUpStat target={87} label="TAKIP" />
+        <CountUpStat target={weeklyViewCount ?? 0} label="HAFTALIK GORUNTULENME" />
       </View>
 
       {/* Action buttons row */}

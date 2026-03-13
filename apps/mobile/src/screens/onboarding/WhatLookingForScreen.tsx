@@ -34,9 +34,25 @@ const LOOKING_FOR_OPTIONS: LookingForOption[] = [
   { id: 'travel_together', label: 'Birlikte gezmek' },
 ];
 
+/**
+ * Map the user's lookingFor selections to the best-matching IntentionTag.
+ * Locked intention tags: serious_relationship, exploring, not_sure
+ */
+function deriveIntentionTag(selections: Set<string>): string {
+  if (selections.has('long_term')) {
+    return 'serious_relationship';
+  }
+  if (selections.has('short_term') || selections.has('travel_together')) {
+    return 'exploring';
+  }
+  // friendship-only or any other combination
+  return 'not_sure';
+}
+
 export const WhatLookingForScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
   const setField = useProfileStore((state) => state.setField);
+  const setIntentionTag = useProfileStore((state) => state.setIntentionTag);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const handleToggle = useCallback((id: string) => {
@@ -55,8 +71,10 @@ export const WhatLookingForScreen: React.FC = () => {
   const handleContinue = useCallback(() => {
     if (selected.size === 0) return;
     setField('lookingFor', Array.from(selected));
+    // Derive and persist the intentionTag from the user's lookingFor selections
+    setIntentionTag(deriveIntentionTag(selected));
     navigation.navigate('Height');
-  }, [selected, setField, navigation]);
+  }, [selected, setField, setIntentionTag, navigation]);
 
   const handleSkip = useCallback(() => {
     navigation.navigate('Height');

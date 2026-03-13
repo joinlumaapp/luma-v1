@@ -124,6 +124,7 @@ const STORAGE_KEYS = {
   CHALLENGE_ID: 'engagement.challengeId',
   CHALLENGE_PROGRESS: 'engagement.challengeProgress',
   CHALLENGE_COMPLETED: 'engagement.challengeCompleted',
+  CHALLENGE_REWARD_CLAIMED: 'engagement.challengeRewardClaimed',
   ACHIEVEMENTS_UNLOCKED: 'engagement.achievementsUnlocked',
   FLASH_BOOST_SHOWN_DATE: 'engagement.flashBoostShownDate',
   MATCH_COUNTDOWNS: 'engagement.matchCountdowns',
@@ -146,6 +147,7 @@ interface EngagementState {
   currentChallenge: DailyChallengeDefinition | null;
   challengeProgress: number;
   challengeCompleted: boolean;
+  challengeRewardClaimed: boolean;
   challengeDate: string | null;
 
   // Likes Teaser
@@ -194,7 +196,7 @@ interface EngagementState {
 
   // Match Countdown
   setMatchCountdown: (matchId: string) => void;
-  extendMatchCountdown: (matchId: string) => boolean;
+  extendMatchCountdown: (matchId: string) => Promise<boolean>;
   removeMatchCountdown: (matchId: string) => void;
   getMatchTimeRemaining: (matchId: string) => number;
   isMatchExpired: (matchId: string) => boolean;
@@ -221,6 +223,7 @@ export const useEngagementStore = create<EngagementState>((set, get) => ({
   currentChallenge: null,
   challengeProgress: 0,
   challengeCompleted: false,
+  challengeRewardClaimed: false,
   challengeDate: null,
 
   likesTeaserCount: 0,
@@ -253,6 +256,7 @@ export const useEngagementStore = create<EngagementState>((set, get) => ({
     const challengeId = storage.getString(STORAGE_KEYS.CHALLENGE_ID) ?? null;
     const challengeProgress = storage.getNumber(STORAGE_KEYS.CHALLENGE_PROGRESS) ?? 0;
     const challengeCompleted = storage.getString(STORAGE_KEYS.CHALLENGE_COMPLETED) === 'true';
+    const challengeRewardClaimed = storage.getString(STORAGE_KEYS.CHALLENGE_REWARD_CLAIMED) === 'true';
 
     const achievementsRaw = storage.getString(STORAGE_KEYS.ACHIEVEMENTS_UNLOCKED);
     const achievements: string[] = achievementsRaw ? JSON.parse(achievementsRaw) : [];
@@ -275,6 +279,7 @@ export const useEngagementStore = create<EngagementState>((set, get) => ({
       currentChallenge,
       challengeProgress: challengeDate === todayStr() ? challengeProgress : 0,
       challengeCompleted: challengeDate === todayStr() ? challengeCompleted : false,
+      challengeRewardClaimed: challengeDate === todayStr() ? challengeRewardClaimed : false,
       challengeDate,
       unlockedAchievements: achievements,
       flashBoostShownToday: flashDate === todayStr(),
@@ -382,6 +387,7 @@ export const useEngagementStore = create<EngagementState>((set, get) => ({
       currentChallenge: challenge,
       challengeProgress: 0,
       challengeCompleted: false,
+      challengeRewardClaimed: false,
       challengeDate: today,
     });
 
@@ -418,8 +424,12 @@ export const useEngagementStore = create<EngagementState>((set, get) => ({
   },
 
   claimChallengeReward: () => {
-    const { currentChallenge, challengeCompleted } = get();
-    if (!currentChallenge || !challengeCompleted) return 0;
+    const { currentChallenge, challengeCompleted, challengeRewardClaimed } = get();
+    if (!currentChallenge || !challengeCompleted || challengeRewardClaimed) return 0;
+
+    // Mark as claimed before awarding to prevent double claims
+    set({ challengeRewardClaimed: true });
+    storage.setString(STORAGE_KEYS.CHALLENGE_REWARD_CLAIMED, 'true');
 
     const reward = currentChallenge.reward;
 
@@ -474,7 +484,7 @@ export const useEngagementStore = create<EngagementState>((set, get) => ({
     storage.setString(STORAGE_KEYS.MATCH_COUNTDOWNS, JSON.stringify(updated));
   },
 
-  extendMatchCountdown: (matchId) => {
+  extendMatchCountdown: async (matchId) => {
     const { matchCountdowns } = get();
     const current = matchCountdowns[matchId];
     if (!current) return false;
@@ -484,7 +494,7 @@ export const useEngagementStore = create<EngagementState>((set, get) => ({
     const coinState = useCoinStore.getState();
     if (coinState.balance < MATCH_EXTEND_COST) return false;
 
-    const spent = coinState.spendCoins(MATCH_EXTEND_COST, `Esleme suresi uzatma: ${matchId}`);
+    const spent = await coinState.spendCoins(MATCH_EXTEND_COST, `Esleme suresi uzatma: ${matchId}`);
     if (!spent) return false;
 
     const newExpiry = current + MATCH_COUNTDOWN_MS;

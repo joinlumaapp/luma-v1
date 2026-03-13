@@ -161,11 +161,11 @@ export const InterestSelectionScreen: React.FC = () => {
   const handleContinue = useCallback(() => {
     if (selected.size < MIN_INTERESTS) return;
     setInterestTags(Array.from(selected));
-    navigation.navigate('Photos');
+    navigation.navigate('Bio');
   }, [selected, setInterestTags, navigation]);
 
   const handleSkip = useCallback(() => {
-    navigation.navigate('Photos');
+    navigation.navigate('Bio');
   }, [navigation]);
 
   const isValid = selected.size >= MIN_INTERESTS;

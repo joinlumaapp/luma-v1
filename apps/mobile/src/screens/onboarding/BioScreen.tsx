@@ -1,4 +1,5 @@
-// Onboarding step 7/7: Bio text input with character counter
+// Onboarding Bio step: Bio text input with character counter
+// Positioned after InterestSelection, before Photos in the onboarding flow.
 
 import React, { useState } from 'react';
 import {
@@ -10,15 +11,19 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { OnboardingStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../stores/profileStore';
-import { useAuthStore } from '../../stores/authStore';
 import { OnboardingProgress } from '../../components/onboarding/OnboardingProgress';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { PROFILE_CONFIG } from '../../constants/config';
 
-const CURRENT_STEP = 7;
+type NavProp = NativeStackNavigationProp<OnboardingStackParamList, 'Bio'>;
+
+const CURRENT_STEP = 13;
 
 const BIO_PROMPTS = [
   'Boş zamanlarında ne yapmayı seversin?',
@@ -27,9 +32,9 @@ const BIO_PROMPTS = [
 ];
 
 export const BioScreen: React.FC = () => {
+  const navigation = useNavigation<NavProp>();
   const [bio, setBio] = useState('');
   const setProfileField = useProfileStore((state) => state.setField);
-  const setOnboarded = useAuthStore((state) => state.setOnboarded);
 
   const trimmedBio = bio.trim();
   const charCount = bio.length;
@@ -41,11 +46,11 @@ export const BioScreen: React.FC = () => {
     if (isValidBio) {
       setProfileField('bio', trimmedBio);
     }
-    setOnboarded(true);
+    navigation.navigate('Photos');
   };
 
   const handleSkip = () => {
-    setOnboarded(true);
+    navigation.navigate('Photos');
   };
 
   return (
