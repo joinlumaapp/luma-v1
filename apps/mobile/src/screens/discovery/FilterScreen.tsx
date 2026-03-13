@@ -119,7 +119,10 @@ export const FilterScreen: React.FC = () => {
   );
   const [minAge, setMinAge] = useState<string>(String(filters.minAge));
   const [maxAge, setMaxAge] = useState<string>(String(filters.maxAge));
-  const [maxDistance, setMaxDistance] = useState<string>(String(filters.maxDistance));
+  const [maxDistance, setMaxDistance] = useState<number>(filters.maxDistance);
+  const [cityWideMode, setCityWideMode] = useState<boolean>(
+    filters.maxDistance >= DISCOVERY_CONFIG.MAX_DISTANCE_KM
+  );
   const [selectedTags, setSelectedTags] = useState<string[]>([...filters.intentionTags]);
 
   // ── New filter state ──
@@ -192,11 +195,9 @@ export const FilterScreen: React.FC = () => {
       parsedMinAge,
       65
     );
-    const parsedDistance = clamp(
-      parseInt(maxDistance, 10) || DISCOVERY_CONFIG.DEFAULT_DISTANCE_KM,
-      1,
-      DISCOVERY_CONFIG.MAX_DISTANCE_KM
-    );
+    const parsedDistance = cityWideMode
+      ? DISCOVERY_CONFIG.MAX_DISTANCE_KM
+      : clamp(maxDistance, 1, DISCOVERY_CONFIG.MAX_DISTANCE_KM);
 
     // Parse height values only if height filter is enabled and user has Pro access
     let heightFilter: { min: number; max: number } | null = null;
@@ -227,6 +228,7 @@ export const FilterScreen: React.FC = () => {
     minAge,
     maxAge,
     maxDistance,
+    cityWideMode,
     selectedTags,
     heightEnabled,
     heightMin,
@@ -246,7 +248,8 @@ export const FilterScreen: React.FC = () => {
     setGenderPreference('all');
     setMinAge(String(PROFILE_CONFIG.MIN_AGE));
     setMaxAge('40');
-    setMaxDistance(String(DISCOVERY_CONFIG.DEFAULT_DISTANCE_KM));
+    setMaxDistance(DISCOVERY_CONFIG.DEFAULT_DISTANCE_KM);
+    setCityWideMode(false);
     setSelectedTags([]);
     setHeightMin(String(HEIGHT_MIN));
     setHeightMax(String(HEIGHT_MAX));
@@ -412,19 +415,59 @@ export const FilterScreen: React.FC = () => {
 
         {/* ── Distance ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Mesafe (1-200 km)</Text>
-          <View style={styles.distanceRow}>
-            <TextInput
-              style={styles.distanceInput}
-              value={maxDistance}
-              onChangeText={setMaxDistance}
-              keyboardType="number-pad"
-              maxLength={3}
-              placeholderTextColor={colors.textTertiary}
-              placeholder="50"
-            />
-            <Text style={styles.distanceUnit}>km</Text>
+          <View style={styles.distanceTitleRow}>
+            <Text style={styles.sectionTitle}>Maksimum Mesafe</Text>
+            <Text style={styles.distanceValueLabel}>
+              {cityWideMode ? 'Sehir geneli' : `${maxDistance} km icinde`}
+            </Text>
           </View>
+
+          {/* Quick-pick distance buttons */}
+          {!cityWideMode && (
+            <View style={styles.distanceQuickPicks}>
+              {[5, 10, 25, 50, 100].map((km) => {
+                const isActive = maxDistance === km;
+                return (
+                  <TouchableOpacity
+                    key={km}
+                    style={[styles.distancePickChip, isActive && styles.distancePickChipActive]}
+                    onPress={() => setMaxDistance(km)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.distancePickText, isActive && styles.distancePickTextActive]}>
+                      {km} km
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+
+          {/* City-wide toggle */}
+          <TouchableOpacity
+            style={[
+              styles.cityWideToggle,
+              cityWideMode && styles.cityWideToggleActive,
+            ]}
+            onPress={() => {
+              setCityWideMode((prev) => !prev);
+              if (!cityWideMode) {
+                setMaxDistance(DISCOVERY_CONFIG.MAX_DISTANCE_KM);
+              } else {
+                setMaxDistance(DISCOVERY_CONFIG.DEFAULT_DISTANCE_KM);
+              }
+            }}
+            activeOpacity={0.8}
+          >
+            <Text
+              style={[
+                styles.cityWideToggleText,
+                cityWideMode && styles.cityWideToggleTextActive,
+              ]}
+            >
+              Sehir geneli (mesafe limiti yok)
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* ── Intention tags ── */}
@@ -770,26 +813,64 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
   },
   // Distance
-  distanceRow: {
+  distanceTitleRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: spacing.md,
   },
-  distanceInput: {
-    ...typography.bodyLarge,
-    color: colors.text,
+  distanceValueLabel: {
+    ...typography.bodySmall,
+    color: colors.primary,
+    fontWeight: '600',
+    includeFontPadding: false,
+  },
+  distanceQuickPicks: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  distancePickChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
     borderWidth: 1.5,
     borderColor: colors.surfaceBorder,
-    paddingHorizontal: spacing.md,
-    height: layout.inputHeight,
-    width: 120,
-    textAlign: 'center',
   },
-  distanceUnit: {
-    ...typography.bodyLarge,
+  distancePickChipActive: {
+    backgroundColor: colors.primary + '20',
+    borderColor: colors.primary,
+  },
+  distancePickText: {
+    ...typography.bodySmall,
     color: colors.textSecondary,
+    includeFontPadding: false,
+  },
+  distancePickTextActive: {
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  cityWideToggle: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.surfaceBorder,
+    alignSelf: 'flex-start',
+  },
+  cityWideToggleActive: {
+    backgroundColor: colors.primary + '20',
+    borderColor: colors.primary,
+  },
+  cityWideToggleText: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+    includeFontPadding: false,
+  },
+  cityWideToggleTextActive: {
+    color: colors.primary,
+    fontWeight: '600',
   },
   // Intention chips
   chipGroup: {

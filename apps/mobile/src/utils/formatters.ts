@@ -15,16 +15,42 @@ export const formatAge = (birthDate: string): number => {
 };
 
 /**
- * Format distance in kilometers
+ * Format distance in kilometers (compact, no suffix — used for card badges)
  */
 export const formatDistance = (distanceKm: number): string => {
   if (distanceKm < 1) {
-    return '< 1 km';
+    const meters = Math.round(distanceKm * 1000);
+    const rounded = Math.max(100, Math.round(meters / 100) * 100);
+    return `${rounded} m`;
   }
   if (distanceKm < 10) {
     return `${distanceKm.toFixed(1)} km`;
   }
   return `${Math.round(distanceKm)} km`;
+};
+
+/**
+ * Format distance in Turkish with "uzaginda" suffix — used for card display
+ * Returns null if distanceKm is null/undefined (don't show distance)
+ */
+export const formatDistanceTurkish = (distanceKm: number | null | undefined): string | null => {
+  if (distanceKm == null) return null;
+
+  if (distanceKm < 1) {
+    const meters = Math.round(distanceKm * 1000);
+    const rounded = Math.max(100, Math.round(meters / 100) * 100);
+    return `${rounded} m uzaginda`;
+  }
+  if (distanceKm < 10) {
+    return `${distanceKm.toFixed(1)} km uzaginda`;
+  }
+  if (distanceKm < 50) {
+    return `${Math.round(distanceKm)} km uzaginda`;
+  }
+  if (distanceKm < 100) {
+    return 'Ayni sehirde';
+  }
+  return `${Math.round(distanceKm)} km uzaginda`;
 };
 
 /**

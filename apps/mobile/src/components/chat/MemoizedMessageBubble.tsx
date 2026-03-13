@@ -2,7 +2,7 @@
 // with custom equality check to prevent expensive re-renders during scrolling
 
 import React, { memo, useCallback } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet, Platform } from 'react-native';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
@@ -135,6 +135,47 @@ export const MemoizedMessageBubble = memo<MessageBubbleProps>(
               showStatus={showReadReceipt}
               onPress={handleImagePress}
             />
+          </MessageReactionWrapper>
+          {showReadReceipt && (
+            <View style={styles.readReceiptContainer}>
+              <MessageStatus status={message.status} />
+            </View>
+          )}
+        </View>
+      );
+    }
+
+    // GIF messages — auto-playing, no bubble background, rounded corners
+    if (message.type === 'GIF' && message.mediaUrl) {
+      return (
+        <View
+          style={[
+            styles.messageBubbleContainer,
+            isMine ? styles.messageBubbleContainerRight : styles.messageBubbleContainerLeft,
+          ]}
+        >
+          <MessageReactionWrapper
+            messageId={message.id}
+            isOwnMessage={isMine}
+            reactions={message.reactions ?? []}
+            onReact={handleReact}
+          >
+            <View style={styles.gifMessageContainer}>
+              <Image
+                source={{ uri: message.mediaUrl }}
+                style={styles.gifImage}
+                resizeMode="cover"
+              />
+              <View style={styles.gifFooter}>
+                <Text style={styles.gifLabel}>GIF</Text>
+                <Text style={styles.gifTime}>
+                  {formatMessageTime(message.createdAt)}
+                </Text>
+              </View>
+              <View style={styles.gifAttribution}>
+                <Text style={styles.gifAttributionText}>Powered by GIPHY</Text>
+              </View>
+            </View>
           </MessageReactionWrapper>
           {showReadReceipt && (
             <View style={styles.readReceiptContainer}>
@@ -278,6 +319,47 @@ const styles = StyleSheet.create({
   },
   messageTimeTheirs: {
     color: colors.textTertiary,
+  },
+  // GIF message styles
+  gifMessageContainer: {
+    maxWidth: 250,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+    backgroundColor: colors.surface,
+  },
+  gifImage: {
+    width: 250,
+    height: 180,
+    borderTopLeftRadius: borderRadius.lg,
+    borderTopRightRadius: borderRadius.lg,
+  },
+  gifFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+  },
+  gifLabel: {
+    ...typography.captionSmall,
+    color: colors.primary,
+    fontWeight: '700',
+    ...(Platform.OS === 'android' ? { includeFontPadding: false } : {}),
+  },
+  gifTime: {
+    ...typography.captionSmall,
+    color: colors.textTertiary,
+    ...(Platform.OS === 'android' ? { includeFontPadding: false } : {}),
+  },
+  gifAttribution: {
+    paddingHorizontal: spacing.sm,
+    paddingBottom: 4,
+  },
+  gifAttributionText: {
+    fontSize: 8,
+    color: colors.textTertiary,
+    opacity: 0.6,
+    ...(Platform.OS === 'android' ? { includeFontPadding: false } : {}),
   },
   // Read receipt positioned below the bubble, right-aligned
   readReceiptContainer: {

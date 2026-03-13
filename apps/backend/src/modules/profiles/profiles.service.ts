@@ -554,12 +554,25 @@ export class ProfilesService {
   /**
    * Update the user's geolocation coordinates.
    * Called periodically from the mobile client.
+   * Validates latitude (-90 to 90) and longitude (-180 to 180).
    */
   async updateLocation(
     userId: string,
     latitude: number,
     longitude: number,
   ): Promise<{ updated: true }> {
+    // Validate coordinate bounds
+    if (latitude < -90 || latitude > 90) {
+      throw new BadRequestException(
+        'Gecersiz enlem degeri. Enlem -90 ile 90 arasinda olmalidir.',
+      );
+    }
+    if (longitude < -180 || longitude > 180) {
+      throw new BadRequestException(
+        'Gecersiz boylam degeri. Boylam -180 ile 180 arasinda olmalidir.',
+      );
+    }
+
     const profile = await this.prisma.userProfile.findUnique({
       where: { userId },
     });

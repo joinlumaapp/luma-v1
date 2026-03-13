@@ -35,6 +35,7 @@ export const SUPER_LIKE_COST = 25; // aligned with GOLD_COSTS.SUPER_LIKE in @lum
 export const EXTRA_LIKES_COST = 15;        // Buy 5 extra likes
 export const PROFILE_HIGHLIGHT_COST = 10;  // Highlight profile for 1 hour
 export const PRIORITY_MESSAGE_COST = 30;   // Priority message (shown first)
+export const UNDO_SWIPE_COST = 5;          // Extra undo beyond daily free limit
 
 // ── Earn rewards ──
 export const WELCOME_BONUS = 100;              // New user gift

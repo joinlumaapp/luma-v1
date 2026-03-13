@@ -43,9 +43,11 @@ import type {
   MainTabParamList,
 } from '../../navigation/types';
 import { useDiscoveryStore } from '../../stores/discoveryStore';
+import { useLocation } from '../../hooks/useLocation';
 import { useProfileStore } from '../../stores/profileStore';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
 import { useSocialFeedStore } from '../../stores/socialFeedStore';
+import { useStoryStore } from '../../stores/storyStore';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { useCoinStore, EXTRA_LIKES_COST, EXTRA_LIKES_COUNT } from '../../stores/coinStore';
 import { matchService } from '../../services/matchService';
@@ -63,6 +65,7 @@ import { SUPER_LIKE_CONFIG, DISCOVERY_CONFIG } from '../../constants/config';
 import { generateCompactReasons } from '../../utils/compatReasons';
 import { BoostModal } from '../../components/boost/BoostModal';
 import type { BoostStatusResponse } from '../../services/discoveryService';
+import { StoryRing } from '../../components/stories/StoryRing';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
@@ -86,69 +89,7 @@ type DiscoveryNavProp = CompositeNavigationProp<
 
 // ─── Action Button component — soft circular style (Tinder-inspired) ──
 
-// ─── Story Bubble component — Instagram-style circular avatar with ring ──
-
-const STORY_SIZE = 68;
-const STORY_BORDER = 2.5;
-// Avatar fills the inner area exactly: ring size minus border on each side
-const STORY_AVATAR = STORY_SIZE - STORY_BORDER * 2;
-
-interface StoryBubbleProps {
-  label: string;
-  photoUrl?: string;
-  initial: string;
-  ringColor: string;
-  badgeEmoji?: string;
-  isViewed?: boolean;
-  onPress: () => void;
-  testID: string;
-}
-
-const StoryBubble: React.FC<StoryBubbleProps> = ({
-  label,
-  photoUrl,
-  initial,
-  ringColor,
-  badgeEmoji,
-  isViewed,
-  onPress,
-  testID,
-}) => (
-  <Pressable
-    onPress={onPress}
-    accessibilityLabel={label}
-    accessibilityRole="button"
-    testID={testID}
-    style={storyStyles.bubble}
-  >
-    <View style={[
-      storyStyles.ring,
-      { borderColor: ringColor },
-      isViewed && storyStyles.ringViewed,
-    ]}>
-      {photoUrl ? (
-        <Image
-          source={{ uri: photoUrl }}
-          style={[storyStyles.avatar, isViewed && storyStyles.avatarViewed]}
-        />
-      ) : (
-        <View style={storyStyles.avatarPlaceholder}>
-          <Text style={storyStyles.avatarInitial}>{initial}</Text>
-        </View>
-      )}
-    </View>
-    {badgeEmoji && (
-      <View style={storyStyles.badge}>
-        <Text style={storyStyles.badgeText}>{badgeEmoji}</Text>
-      </View>
-    )}
-    <Text style={[storyStyles.label, isViewed && storyStyles.labelViewed]} numberOfLines={1}>
-      {label}
-    </Text>
-  </Pressable>
-);
-
-// ─── Stories Row — horizontal scrollable story bubbles ──
+// ─── Stories Row — Instagram-quality story rings using StoryRing + storyStore ──
 
 interface StoriesRowProps {
   navigation: DiscoveryNavProp;
@@ -157,48 +98,48 @@ interface StoriesRowProps {
 }
 
 const StoriesRow: React.FC<StoriesRowProps> = ({ navigation, userFirstName, userPhotoUrl }) => {
-  const posts = useSocialFeedStore((s) => s.posts);
-  const viewedStoryUserIds = useSocialFeedStore((s) => s.viewedStoryUserIds);
+  const orderedStoryUsers = useStoryStore((s) => s.getOrderedStoryUsers());
+  const fetchStories = useStoryStore((s) => s.fetchStories);
+  const myStories = useStoryStore((s) => s.myStories);
 
-  // Deduplicate followed users by userId; track which have stories
-  const followedUsers = useMemo(() => {
-    const seen = new Set<string>();
-    const result: { userId: string; name: string; avatarUrl: string; hasStories: boolean }[] = [];
-    for (const post of posts) {
-      if (post.isFollowing && !seen.has(post.userId)) {
-        seen.add(post.userId);
-        result.push({ userId: post.userId, name: post.userName, avatarUrl: post.userAvatarUrl, hasStories: true });
-      }
-      if (result.length >= 8) break;
-    }
-    // Sort: unviewed stories first, viewed stories after
-    return result.sort((a, b) => {
-      const aViewed = viewedStoryUserIds.has(a.userId) ? 1 : 0;
-      const bViewed = viewedStoryUserIds.has(b.userId) ? 1 : 0;
-      return aViewed - bViewed;
-    });
-  }, [posts, viewedStoryUserIds]);
+  // Fetch stories on mount
+  useEffect(() => {
+    fetchStories();
+  }, [fetchStories]);
 
-  // Build the ordered list of story users for cross-user auto-advance
+  // Build the ordered list for cross-user auto-advance in viewer
   const storyUserList = useMemo(() =>
-    followedUsers
-      .filter((u) => u.hasStories)
-      .map((u) => ({ userId: u.userId, userName: u.name, userAvatarUrl: u.avatarUrl })),
-    [followedUsers],
+    orderedStoryUsers.map((u) => ({
+      userId: u.userId,
+      userName: u.userName,
+      userAvatarUrl: u.userAvatarUrl,
+    })),
+    [orderedStoryUsers],
   );
 
-  const handleBubblePress = useCallback((user: { userId: string; name: string; avatarUrl: string; hasStories: boolean }) => {
-    if (user.hasStories) {
+  const handleUserStoryPress = useCallback((user: typeof orderedStoryUsers[number]) => {
+    navigation.navigate('StoryViewer', {
+      userId: user.userId,
+      userName: user.userName,
+      userAvatarUrl: user.userAvatarUrl,
+      storyUsers: storyUserList,
+    });
+  }, [navigation, storyUserList]);
+
+  const handleOwnStoryPress = useCallback(() => {
+    if (myStories.length > 0) {
+      // View own stories
       navigation.navigate('StoryViewer', {
-        userId: user.userId,
-        userName: user.name,
-        userAvatarUrl: user.avatarUrl,
-        storyUsers: storyUserList,
+        userId: 'dev-user-001',
+        userName: userFirstName,
+        userAvatarUrl: userPhotoUrl ?? '',
       });
     } else {
-      navigation.navigate('ProfilePreview', { userId: user.userId });
+      // Open story creator — for now navigate to profile
+      // TODO: Navigate to StoryCreator when added to navigation
+      navigation.navigate('ProfileTab', { screen: 'Profile' });
     }
-  }, [navigation, storyUserList]);
+  }, [myStories, navigation, userFirstName, userPhotoUrl]);
 
   return (
     <ScrollView
@@ -207,29 +148,25 @@ const StoriesRow: React.FC<StoriesRowProps> = ({ navigation, userFirstName, user
       contentContainerStyle={storyStyles.scrollContent}
       style={storyStyles.scrollView}
     >
-      <StoryBubble
-        label="Sen"
-        photoUrl={userPhotoUrl}
-        initial={userFirstName ? userFirstName[0] : 'L'}
-        ringColor={palette.pink[500]}
-        onPress={() => navigation.navigate('ProfileTab', { screen: 'Profile' })}
+      <StoryRing
+        userName={userFirstName || 'Sen'}
+        avatarUrl={userPhotoUrl}
+        isOwnStory
+        hasStories={myStories.length > 0}
+        onPress={handleOwnStoryPress}
         testID="story-self"
       />
-      {followedUsers.map((user) => {
-        const isViewed = viewedStoryUserIds.has(user.userId);
-        return (
-          <StoryBubble
-            key={user.userId}
-            label={user.name}
-            photoUrl={user.avatarUrl}
-            initial={user.name ? user.name[0] : '?'}
-            ringColor={isViewed ? palette.purple[800] : palette.purple[400]}
-            isViewed={isViewed}
-            onPress={() => handleBubblePress(user)}
-            testID={`story-follow-${user.userId}`}
-          />
-        );
-      })}
+      {orderedStoryUsers.map((user) => (
+        <StoryRing
+          key={user.userId}
+          userName={user.userName}
+          avatarUrl={user.userAvatarUrl}
+          isSeen={!user.hasUnseenStories}
+          hasStories={user.stories.length > 0}
+          onPress={() => handleUserStoryPress(user)}
+          testID={`story-user-${user.userId}`}
+        />
+      ))}
     </ScrollView>
   );
 };
@@ -268,8 +205,20 @@ export const DiscoveryScreen: React.FC = () => {
   const userProfile = useProfileStore((s) => s.profile);
   const canUndo = useDiscoveryStore((s) => s.canUndo);
   const undoLastSwipe = useDiscoveryStore((s) => s.undoLastSwipe);
+  const undosUsedToday = useDiscoveryStore((s) => s.undosUsedToday);
+  const updateLocation = useDiscoveryStore((s) => s.updateLocation);
   const coinBalance = useCoinStore((s) => s.balance);
   const purchaseExtraLikes = useCoinStore((s) => s.purchaseExtraLikes);
+
+  // GPS location — 10-minute cache, foreground auto-refresh
+  const { latitude, longitude } = useLocation();
+
+  // Sync location to store whenever coordinates change
+  useEffect(() => {
+    if (latitude != null && longitude != null) {
+      updateLocation();
+    }
+  }, [latitude, longitude, updateLocation]);
 
   // Notification badge
   const notifUnreadCount = useNotificationStore((s) => s.unreadCount);
@@ -287,8 +236,13 @@ export const DiscoveryScreen: React.FC = () => {
   // ─── Boost access gate ─────────────────────────────────
   const canUseBoost = packageTier !== 'free';
 
-  // ─── Undo access gate — Gold+ only ────────────────────
+  // ─── Undo access gate — tier-based daily limits ─────────
   const canUseUndo = packageTier !== 'free';
+  const undoDailyLimits: Record<PackageTier, number> = { free: 0, gold: 1, pro: 3, reserved: 999999 };
+  const undoDailyLimit = undoDailyLimits[packageTier];
+  const hasFreeUndoRemaining = undosUsedToday < undoDailyLimit;
+  const undoNeedsJeton = canUseUndo && !hasFreeUndoRemaining;
+  const UNDO_JETON_COST_UI = 5;
 
   // ─── Pull-to-refresh state ──────────────────────────────
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -1277,30 +1231,63 @@ export const DiscoveryScreen: React.FC = () => {
 
       {/* Action buttons */}
       <View style={styles.actionsRow}>
-        {/* Undo button — Gold+ only */}
+        {/* Undo button — tier-based with jeton cost */}
         {canUseUndo ? (
           <Animated.View style={[styles.undoWrapper, undoAnimatedStyle]}>
             <Pressable
-              onPress={() => { if (canUndo) { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); undoLastSwipe(); } }}
-              accessibilityLabel="Geri al"
+              onPress={() => {
+                if (!canUndo) return;
+                // Check if jeton is needed and insufficient
+                if (undoNeedsJeton && coinBalance < UNDO_JETON_COST_UI) {
+                  Alert.alert(
+                    'Yetersiz Jeton',
+                    `Geri alma icin ${UNDO_JETON_COST_UI} jeton gerekli. Jeton satin al.`,
+                    [
+                      { text: 'Vazgec', style: 'cancel' },
+                      { text: 'Jeton Al', onPress: () => navigation.navigate('Discover', { screen: 'Discovery' } as never) },
+                    ],
+                  );
+                  return;
+                }
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                undoLastSwipe();
+              }}
+              accessibilityLabel={undoNeedsJeton ? `Geri al — ${UNDO_JETON_COST_UI} jeton` : 'Geri al'}
               accessibilityRole="button"
-              accessibilityHint="Son kaydırma işlemini geri almak için dokunun"
+              accessibilityHint="Son kaydirma islemini geri almak icin dokunun"
             >
               <View style={styles.undoButton} testID="discovery-undo-btn">
-                <Text style={styles.undoIcon}>{'\u21A9'}</Text>
+                <Ionicons name="arrow-undo" size={20} color={palette.gold[500]} />
+                {undoNeedsJeton && (
+                  <View style={styles.undoJetonBadge}>
+                    <Text style={styles.undoJetonText}>{UNDO_JETON_COST_UI}</Text>
+                  </View>
+                )}
               </View>
             </Pressable>
           </Animated.View>
         ) : (
           <Animated.View style={[styles.undoWrapper, undoAnimatedStyle]}>
             <Pressable
-              onPress={() => { setUpgradeFeature('super_like'); setShowUpgradePrompt(true); }}
-              accessibilityLabel="Geri al — Premium özellik"
+              onPress={() => {
+                Alert.alert(
+                  'Premium Ozellik',
+                  'Geri alma ozelligi icin Gold veya uzeri paket gereklidir.',
+                  [
+                    { text: 'Vazgec', style: 'cancel' },
+                    { text: 'Paketleri Gor', onPress: () => navigation.navigate('Discover', { screen: 'Discovery' } as never) },
+                  ],
+                );
+              }}
+              accessibilityLabel="Geri al — Premium ozellik"
               accessibilityRole="button"
-              accessibilityHint="Geri alma özelliği için Premium'a yükseltin"
+              accessibilityHint="Geri alma ozelligi icin Premium'a yukseltin"
             >
               <View style={[styles.undoButton, { opacity: 0.5 }]} testID="discovery-undo-btn-locked">
-                <Text style={styles.undoIcon}>{'\u21A9'}</Text>
+                <Ionicons name="arrow-undo" size={20} color={palette.gold[500]} />
+                <View style={styles.undoLockBadge}>
+                  <Ionicons name="lock-closed" size={8} color="#fff" />
+                </View>
               </View>
             </Pressable>
           </Animated.View>
@@ -1650,10 +1637,33 @@ const styles = StyleSheet.create({
     borderColor: palette.gold[500],
     ...shadows.medium,
   },
-  undoIcon: {
-    fontSize: 18,
-    color: palette.gold[500],
-    fontWeight: '700',
+  undoJetonBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: palette.gold[500],
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 3,
+  },
+  undoJetonText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#fff',
+  },
+  undoLockBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 7,
+    width: 14,
+    height: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   // ── Empty/Loading States ──
@@ -1852,77 +1862,5 @@ const storyStyles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     gap: spacing.md,
     paddingVertical: spacing.sm,
-  },
-  bubble: {
-    alignItems: 'center',
-    width: STORY_SIZE,
-  },
-  ring: {
-    width: STORY_SIZE,
-    height: STORY_SIZE,
-    borderRadius: STORY_SIZE / 2,
-    borderWidth: STORY_BORDER,
-    justifyContent: 'center',
-    alignItems: 'center',
-    // Cream fill eliminates any subpixel white artifacts between border and avatar
-    backgroundColor: colors.background,
-    overflow: 'hidden',
-  },
-  avatar: {
-    width: STORY_AVATAR,
-    height: STORY_AVATAR,
-    borderRadius: STORY_AVATAR / 2,
-    // Ensure image perfectly fills the inner circle with no subpixel gap
-    overflow: 'hidden',
-  },
-  avatarPlaceholder: {
-    width: STORY_AVATAR,
-    height: STORY_AVATAR,
-    borderRadius: STORY_AVATAR / 2,
-    // Use cream-adjacent color instead of white to avoid artifacts
-    backgroundColor: colors.surfaceLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarInitial: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.textSecondary,
-  },
-  badge: {
-    position: 'absolute',
-    bottom: 14,
-    right: 0,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    // Use cream background to blend with app canvas
-    backgroundColor: colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: colors.background,
-  },
-  badgeText: {
-    fontSize: 10,
-  },
-  label: {
-    ...typography.captionSmall,
-    color: colors.textSecondary,
-    fontSize: 10,
-    marginTop: 4,
-    textAlign: 'center',
-    width: STORY_SIZE,
-  },
-  // Viewed story styles — dimmed ring and avatar
-  ringViewed: {
-    borderWidth: 1.5,
-    borderColor: colors.textTertiary,
-  },
-  avatarViewed: {
-    opacity: 0.7,
-  },
-  labelViewed: {
-    opacity: 0.5,
   },
 });

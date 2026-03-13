@@ -23,7 +23,7 @@ export class SendMessageDto {
 
   @ApiPropertyOptional({
     description: 'Message type',
-    enum: ['TEXT', 'IMAGE'],
+    enum: ['TEXT', 'IMAGE', 'GIF', 'VOICE'],
     default: 'TEXT',
   })
   @IsOptional()

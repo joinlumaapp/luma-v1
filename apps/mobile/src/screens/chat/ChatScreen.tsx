@@ -43,6 +43,7 @@ import type { ChatMessage } from '../../services/chatService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { presenceService } from '../../services/presenceService';
 import { formatActivityStatus } from '../../utils/formatters';
+import { GiphyPicker } from '../../components/chat/GiphyPicker';
 
 type ChatNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'Chat'>;
 type ChatRouteProp = RouteProp<MatchesStackParamList, 'Chat'>;
@@ -225,7 +226,6 @@ export const ChatScreen: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [showGifPicker, setShowGifPicker] = useState(false);
-  const [gifSearchQuery, setGifSearchQuery] = useState('');
   const [isRecordingVoice, setIsRecordingVoice] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -337,7 +337,6 @@ export const ChatScreen: React.FC = () => {
   const handleGifSelect = useCallback((gifUrl: string) => {
     sendGifMessage(matchId, gifUrl);
     setShowGifPicker(false);
-    setGifSearchQuery('');
   }, [matchId, sendGifMessage]);
 
   // Voice recording handlers
@@ -771,7 +770,7 @@ export const ChatScreen: React.FC = () => {
         )}
       </KeyboardAvoidingView>
 
-      {/* GIF picker modal */}
+      {/* GIF picker modal — Giphy integration */}
       <Modal
         visible={showGifPicker}
         transparent
@@ -779,49 +778,10 @@ export const ChatScreen: React.FC = () => {
         onRequestClose={() => setShowGifPicker(false)}
       >
         <View style={styles.gifPickerOverlay}>
-          <View style={styles.gifPickerContainer}>
-            <View style={styles.gifPickerHeader}>
-              <Text style={styles.gifPickerTitle}>GIF Gönder</Text>
-              <TouchableOpacity
-                onPress={() => { setShowGifPicker(false); setGifSearchQuery(''); }}
-                accessibilityLabel="Kapat"
-                accessibilityRole="button"
-                testID="chat-gif-close-btn"
-              >
-                <Text style={styles.gifPickerClose}>{'\u2715'}</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.gifSearchContainer}>
-              <TextInput
-                style={styles.gifSearchInput}
-                value={gifSearchQuery}
-                onChangeText={setGifSearchQuery}
-                placeholder="GIF ara..."
-                placeholderTextColor={colors.textTertiary}
-                autoFocus
-                testID="chat-gif-search-input"
-              />
-            </View>
-            <View style={styles.gifPlaceholder}>
-              <Text style={styles.gifPlaceholderText}>
-                GIF arama Giphy/Tenor API entegrasyonu ile çalışacak.
-              </Text>
-              <Text style={styles.gifPlaceholderSubtext}>
-                API anahtarı eklendikten sonra burada GIF sonuçları görünecek.
-              </Text>
-              {gifSearchQuery.length > 0 && (
-                <TouchableOpacity
-                  style={styles.gifDemoButton}
-                  onPress={() => handleGifSelect(`https://media.giphy.com/demo/${encodeURIComponent(gifSearchQuery)}.gif`)}
-                  accessibilityLabel="Demo GIF gönder"
-                  accessibilityRole="button"
-                  testID="chat-gif-demo-btn"
-                >
-                  <Text style={styles.gifDemoButtonText}>Demo GIF Gönder</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
+          <GiphyPicker
+            onSelect={handleGifSelect}
+            onClose={() => setShowGifPicker(false)}
+          />
         </View>
       </Modal>
 
@@ -1155,80 +1115,11 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontWeight: '700',
   },
-  // GIF picker modal
+  // GIF picker modal overlay
   gifPickerOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'flex-end',
-  },
-  gifPickerContainer: {
-    backgroundColor: colors.background,
-    borderTopLeftRadius: borderRadius.xl,
-    borderTopRightRadius: borderRadius.xl,
-    maxHeight: '70%',
-    minHeight: 300,
-  },
-  gifPickerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
-  },
-  gifPickerTitle: {
-    ...typography.bodyLarge,
-    color: colors.text,
-    fontWeight: '600',
-  },
-  gifPickerClose: {
-    fontSize: 18,
-    color: colors.textSecondary,
-  },
-  gifSearchContainer: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-  },
-  gifSearchInput: {
-    ...typography.body,
-    color: colors.text,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  gifPlaceholder: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xxl,
-    paddingBottom: spacing.xxl,
-  },
-  gifPlaceholderText: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  gifPlaceholderSubtext: {
-    ...typography.caption,
-    color: colors.textTertiary,
-    textAlign: 'center',
-  },
-  gifDemoButton: {
-    marginTop: spacing.md,
-    backgroundColor: colors.primary,
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-  },
-  gifDemoButtonText: {
-    ...typography.bodySmall,
-    color: colors.text,
-    fontWeight: '600',
   },
   // Fullscreen image viewer
   fullscreenOverlay: {

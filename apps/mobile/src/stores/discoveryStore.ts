@@ -12,8 +12,22 @@ import { useMatchStore } from './matchStore';
 import { useNotificationStore } from './notificationStore';
 import { parseApiError } from '../services/api';
 import type { AxiosError } from 'axios';
+import type { PackageTier } from './authStore';
 
 const BATCH_COOLDOWN_KEY = 'luma_discovery_batch_cooldown_end';
+const UNDO_DAILY_KEY = 'luma_undo_daily_count';
+const UNDO_DAILY_DATE_KEY = 'luma_undo_daily_date';
+
+// Daily free undo limits per package tier
+const DAILY_UNDO_LIMITS: Record<PackageTier, number> = {
+  free: 0,
+  gold: 1,
+  pro: 3,
+  reserved: 999999, // Unlimited
+};
+
+// Jeton cost per extra undo beyond the free daily allowance
+export const UNDO_JETON_COST = 5;
 
 export interface DiscoveryProfile {
   id: string;
@@ -49,6 +63,8 @@ export interface DiscoveryProfile {
   education?: string;
   /** Subscription tier for badge display */
   packageTier?: 'free' | 'gold' | 'pro' | 'reserved';
+  /** Profile prompts (Hinge-style question + answer) */
+  prompts?: Array<{ id: string; question: string; answer: string; order: number }>;
 }
 
 // Undo window duration in milliseconds
@@ -84,6 +100,8 @@ interface DiscoveryState {
   canUndo: boolean;
   undoTimerId: ReturnType<typeof setTimeout> | null;
   lastSwipedProfile: DiscoveryProfile | null;
+  lastSwipeDirection: 'left' | 'right' | 'up' | null;
+  undosUsedToday: number;
 
   // Super like state
   showSuperLikeGlow: boolean;
@@ -265,6 +283,8 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
   canUndo: false,
   undoTimerId: null,
   lastSwipedProfile: null,
+  lastSwipeDirection: null,
+  undosUsedToday: 0,
 
   // Super like initial state
   showSuperLikeGlow: false,
@@ -303,7 +323,16 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
   fetchFeed: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await discoveryService.getFeed(get().filters);
+      const { filters, userLocation } = get();
+      // Include user coordinates in the feed request for distance-based filtering
+      const feedFilters = {
+        ...filters,
+        ...(userLocation ? {
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude,
+        } : {}),
+      };
+      const response = await discoveryService.getFeed(feedFilters);
       const ranked = rankAndLabel(response.cards.map(mapFeedCardToProfile));
       const profiles = sortWithSupremePriority(ranked);
       set({
@@ -364,7 +393,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
 
       // Start the 5-second undo window timer
       const timerId = setTimeout(() => {
-        set({ canUndo: false, undoTimerId: null, lastSwipedProfile: null });
+        set({ canUndo: false, undoTimerId: null, lastSwipedProfile: null, lastSwipeDirection: null });
       }, UNDO_WINDOW_MS);
 
       // Show super like glow effect
@@ -389,6 +418,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
           canUndo: false, // No undo for matches
           undoTimerId: null,
           lastSwipedProfile: null,
+          lastSwipeDirection: null,
         }));
         clearTimeout(timerId);
 
@@ -429,6 +459,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
           canUndo: true,
           undoTimerId: timerId,
           lastSwipedProfile: swipedProfile,
+          lastSwipeDirection: direction,
         }));
       }
     } catch {
@@ -440,10 +471,51 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
     const state = get();
     if (!state.canUndo || !state.lastSwipedProfile) return;
 
+    // Get package tier for undo limit check
+    const tier = (require('../stores/authStore').useAuthStore.getState().user?.packageTier ?? 'free') as PackageTier;
+    const dailyFreeLimit = DAILY_UNDO_LIMITS[tier];
+
+    // Free users cannot undo at all
+    if (tier === 'free') {
+      set({ canUndo: false, undoTimerId: null, lastSwipedProfile: null, lastSwipeDirection: null });
+      return;
+    }
+
+    // Check if daily free undo is available
+    const todayStr = new Date().toISOString().split('T')[0];
+    const storedDate = await AsyncStorage.getItem(UNDO_DAILY_DATE_KEY);
+    let undosUsed = state.undosUsedToday;
+
+    // Reset counter if it is a new day
+    if (storedDate !== todayStr) {
+      undosUsed = 0;
+      await AsyncStorage.setItem(UNDO_DAILY_DATE_KEY, todayStr);
+      await AsyncStorage.setItem(UNDO_DAILY_KEY, '0');
+    }
+
+    const hasFreeUndo = undosUsed < dailyFreeLimit;
+
+    // If no free undo remaining, deduct jetons
+    if (!hasFreeUndo) {
+      const coinStore = require('../stores/coinStore').useCoinStore;
+      const { balance, spendCoins } = coinStore.getState();
+      if (balance < UNDO_JETON_COST) {
+        // Not enough jetons — clear undo state
+        set({ canUndo: false, undoTimerId: null, lastSwipedProfile: null, lastSwipeDirection: null });
+        return;
+      }
+      const spent = await spendCoins(UNDO_JETON_COST, 'Geri alma (undo)');
+      if (!spent) {
+        set({ canUndo: false, undoTimerId: null, lastSwipedProfile: null, lastSwipeDirection: null });
+        return;
+      }
+    }
+
     try {
       await discoveryService.undoSwipe();
       analyticsService.track(ANALYTICS_EVENTS.DISCOVERY_UNDO, {
         cardId: state.lastSwipedProfile.id,
+        paidWithJeton: !hasFreeUndo,
       });
 
       // Clear the undo timer
@@ -451,17 +523,23 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
         clearTimeout(state.undoTimerId);
       }
 
+      // Update daily undo counter
+      const newUndosUsed = undosUsed + 1;
+      await AsyncStorage.setItem(UNDO_DAILY_KEY, String(newUndosUsed));
+
       // Re-insert the card by decrementing currentIndex
       set((prev) => ({
         currentIndex: Math.max(0, prev.currentIndex - 1),
         canUndo: false,
         undoTimerId: null,
         lastSwipedProfile: null,
+        lastSwipeDirection: null,
         dailyRemaining: prev.dailyRemaining + 1,
+        undosUsedToday: newUndosUsed,
       }));
     } catch {
       // Undo failed (likely expired), clear the undo state
-      set({ canUndo: false, undoTimerId: null, lastSwipedProfile: null });
+      set({ canUndo: false, undoTimerId: null, lastSwipedProfile: null, lastSwipeDirection: null });
     }
   },
 
@@ -512,7 +590,10 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
     // Use tier-based limit; imports from authStore at call-time to avoid circular deps
     const tier = (require('../stores/authStore').useAuthStore.getState().user?.packageTier ?? 'free') as keyof typeof DISCOVERY_CONFIG.DAILY_LIKES;
     const limit = DISCOVERY_CONFIG.DAILY_LIKES[tier];
-    set({ dailyRemaining: (limit as number) === -1 ? 9999 : limit });
+    set({ dailyRemaining: (limit as number) === -1 ? 9999 : limit, undosUsedToday: 0 });
+    // Persist reset
+    AsyncStorage.setItem(UNDO_DAILY_KEY, '0').catch(() => {});
+    AsyncStorage.setItem(UNDO_DAILY_DATE_KEY, new Date().toISOString().split('T')[0]).catch(() => {});
   },
 
   dismissMatch: () =>
@@ -527,7 +608,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
     if (state.undoTimerId) {
       clearTimeout(state.undoTimerId);
     }
-    set({ canUndo: false, undoTimerId: null, lastSwipedProfile: null });
+    set({ canUndo: false, undoTimerId: null, lastSwipedProfile: null, lastSwipeDirection: null });
   },
 
   dismissSuperLikeGlow: () =>

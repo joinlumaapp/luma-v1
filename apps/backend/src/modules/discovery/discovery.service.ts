@@ -77,14 +77,20 @@ const BOOST_DURATION_MINUTES = 30;
 const BOOST_SCORE_MULTIPLIER = 3;
 
 // ─── Smart Feed Scoring Weights (per spec) ─────────────────────
+// Distance proximity contributes 15% — closer users rank higher.
+// Other weights reduced proportionally to accommodate distance.
 const SCORE_WEIGHTS = {
-  COMPATIBILITY: 0.40,          // Compatibility score contribution
-  PROFILE_COMPLETENESS: 0.15,   // Profile completeness bonus
-  ACTIVITY: 0.15,               // Recent activity score
-  PHOTO_COUNT: 0.10,            // Photo count factor
+  COMPATIBILITY: 0.35,          // Compatibility score contribution
+  DISTANCE: 0.15,               // Geographic proximity bonus (closer = higher)
+  PROFILE_COMPLETENESS: 0.12,   // Profile completeness bonus
+  ACTIVITY: 0.13,               // Recent activity score
+  PHOTO_COUNT: 0.08,            // Photo count factor
   MUTUAL_INTERESTS: 0.10,       // Mutual interest tag overlap
-  VERIFICATION: 0.10,           // Verified selfie users boosted
+  VERIFICATION: 0.07,           // Verified selfie users boosted
 };
+
+// Maximum distance in km used as reference for distance scoring (50 km)
+const DISTANCE_SCORING_MAX_KM = 50;
 
 // New user boost: accounts created within this many days get a boost
 const NEW_USER_BOOST_DAYS = 7;
@@ -309,9 +315,12 @@ export class DiscoveryService {
     const maxAge = filters?.maxAge ?? DEFAULT_MAX_AGE;
     const maxDistanceKm = filters?.maxDistance ?? DEFAULT_MAX_DISTANCE_KM;
 
-    const userLat = user.profile.latitude;
-    const userLon = user.profile.longitude;
-    const hasUserLocation = userLat !== null && userLon !== null;
+    // Prefer real-time coordinates from the request over stored profile location.
+    // This ensures fresh GPS data is used when the mobile client sends it.
+    const userLat = filters?.latitude ?? user.profile.latitude;
+    const userLon = filters?.longitude ?? user.profile.longitude;
+    const hasUserLocation = userLat !== null && userLat !== undefined
+      && userLon !== null && userLon !== undefined;
 
     const filteredCandidates: Array<{
       profile: (typeof candidates)[number];
@@ -412,6 +421,7 @@ export class DiscoveryService {
 
       let feedScore = this.calculateFeedScore({
         compatibilityScore: score?.finalScore ?? 0,
+        distanceKm,
         lastActiveAt: profile.lastActiveAt,
         isComplete: profile.isComplete,
         bioLength: profile.bio?.length ?? 0,
@@ -1104,6 +1114,7 @@ export class DiscoveryService {
    */
   private calculateFeedScore(params: {
     compatibilityScore: number;
+    distanceKm: number | null;
     lastActiveAt: Date | null;
     isComplete: boolean;
     bioLength: number;
@@ -1112,10 +1123,20 @@ export class DiscoveryService {
     isVerified: boolean;
     mutualInterestRatio: number;
   }): number {
-    // 1. Compatibility score (0-100, direct mapping) — weight 40%
+    // 1. Compatibility score (0-100, direct mapping) — weight 35%
     const compatibilityComponent = params.compatibilityScore;
 
-    // 2. Profile completeness (0-100) — weight 15%
+    // 1b. Distance proximity (0-100, closer = higher) — weight 15%
+    // If no distance data, use neutral score of 50
+    let distanceComponent = 50;
+    if (params.distanceKm !== null) {
+      distanceComponent = Math.max(
+        0,
+        (1 - Math.min(params.distanceKm, DISTANCE_SCORING_MAX_KM) / DISTANCE_SCORING_MAX_KM) * 100,
+      );
+    }
+
+    // 2. Profile completeness (0-100) — weight 12%
     let completenessComponent = 0;
     if (params.isComplete) completenessComponent += 40;
     if (params.bioLength > 0) completenessComponent += 20;
@@ -1161,6 +1182,7 @@ export class DiscoveryService {
     // Compute weighted composite score
     const totalScore =
       compatibilityComponent * SCORE_WEIGHTS.COMPATIBILITY +
+      distanceComponent * SCORE_WEIGHTS.DISTANCE +
       completenessComponent * SCORE_WEIGHTS.PROFILE_COMPLETENESS +
       activityComponent * SCORE_WEIGHTS.ACTIVITY +
       photoComponent * SCORE_WEIGHTS.PHOTO_COUNT +

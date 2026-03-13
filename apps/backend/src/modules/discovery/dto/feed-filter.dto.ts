@@ -3,6 +3,7 @@ import {
   IsOptional,
   IsEnum,
   IsInt,
+  IsNumber,
   Min,
   Max,
   IsArray,
@@ -75,4 +76,28 @@ export class FeedFilterDto {
   @IsArray()
   @IsString({ each: true })
   intentionTags?: string[];
+
+  @ApiPropertyOptional({
+    description: 'User current latitude for real-time distance calculation',
+    minimum: -90,
+    maximum: 90,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(-90)
+  @Max(90)
+  latitude?: number;
+
+  @ApiPropertyOptional({
+    description: 'User current longitude for real-time distance calculation',
+    minimum: -180,
+    maximum: 180,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(-180)
+  @Max(180)
+  longitude?: number;
 }

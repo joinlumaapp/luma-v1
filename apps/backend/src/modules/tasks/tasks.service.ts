@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RelationshipsService } from '../relationships/relationships.service';
+import { StoriesService } from '../stories/stories.service';
 
 /**
  * Scheduled tasks (cron jobs) for LUMA V1.
@@ -15,6 +16,7 @@ import { RelationshipsService } from '../relationships/relationships.service';
  * 7. Clean old expired verifications
  * 8. Clean old daily swipe counts
  * 9. Auto-end expired relationship deactivations (48-hour deadline)
+ * 10. Clean up expired stories (24-hour TTL)
  */
 @Injectable()
 export class TasksService {
@@ -23,6 +25,7 @@ export class TasksService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly relationshipsService: RelationshipsService,
+    private readonly storiesService: StoriesService,
   ) {}
 
   // ─── 1. End Expired Harmony Sessions ─────────────────────────
@@ -201,6 +204,17 @@ export class TasksService {
 
     if (endedCount > 0) {
       this.logger.log(`Auto-ended ${endedCount} expired relationship deactivation(s)`);
+    }
+  }
+
+  // ─── 10. Clean Up Expired Stories ──────────────────────────────
+  // Runs every 30 minutes — soft-deletes stories older than 24 hours
+  @Cron('*/30 * * * *')
+  async cleanupExpiredStories(): Promise<void> {
+    const cleanedCount = await this.storiesService.cleanupExpiredStories();
+
+    if (cleanedCount > 0) {
+      this.logger.log(`Cleaned up ${cleanedCount} expired story/stories`);
     }
   }
 }

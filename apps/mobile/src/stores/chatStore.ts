@@ -419,7 +419,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     try {
       const response = await chatService.sendGifMessage(matchId, gifUrl);
-      analyticsService.track(ANALYTICS_EVENTS.MESSAGE_SENT, { matchId, type: 'GIF' });
+      analyticsService.track(ANALYTICS_EVENTS.GIF_SENT, { matchId });
       set((state) => ({
         messages: {
           ...state.messages,

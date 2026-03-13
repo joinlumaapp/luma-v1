@@ -1,33 +1,38 @@
-// Story viewer — full-screen Instagram-style story viewer
-// Shows user's feed posts as story items with auto-advance and manual tap navigation
+// StoryViewerScreen — Instagram-quality full-screen story viewer
+// Features: progress bars, tap left/right, long press pause, swipe between users,
+// reply input, view count, double-tap like heart animation, smooth transitions
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   Text,
   Image,
   TouchableOpacity,
   Pressable,
+  TextInput,
   StyleSheet,
   Dimensions,
   StatusBar,
   Animated as RNAnimated,
+  Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { DiscoveryStackParamList, MainTabParamList } from '../../navigation/types';
-import { useSocialFeedStore } from '../../stores/socialFeedStore';
-import type { FeedPost } from '../../services/socialFeedService';
-import { CommentSheet } from '../../components/feed/CommentSheet';
-import { colors } from '../../theme/colors';
+import { useStoryStore } from '../../stores/storyStore';
+import type { Story, StoryOverlay } from '../../services/storyService';
+import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const STORY_DURATION = 6000; // 6 seconds per story item
+const IMAGE_STORY_DURATION = 5000; // 5 seconds per image
+const VIDEO_STORY_DURATION = 15000; // 15 seconds for video (future)
 
 type StoryViewerRouteProp = RouteProp<DiscoveryStackParamList, 'StoryViewer'>;
 type StoryViewerNavProp = CompositeNavigationProp<
@@ -68,54 +73,106 @@ const ProgressSegment: React.FC<ProgressSegmentProps> = ({ index, activeIndex, a
   );
 };
 
+// ─── Heart Animation Component ──────────────────────────────────────
+
+const HeartAnimation: React.FC<{ visible: boolean; onFinish: () => void }> = ({
+  visible,
+  onFinish,
+}) => {
+  const scale = useRef(new RNAnimated.Value(0)).current;
+  const opacity = useRef(new RNAnimated.Value(0)).current;
+
+  useEffect(() => {
+    if (visible) {
+      scale.setValue(0);
+      opacity.setValue(1);
+      RNAnimated.sequence([
+        RNAnimated.spring(scale, {
+          toValue: 1,
+          friction: 3,
+          tension: 100,
+          useNativeDriver: true,
+        }),
+        RNAnimated.timing(opacity, {
+          toValue: 0,
+          duration: 400,
+          delay: 200,
+          useNativeDriver: true,
+        }),
+      ]).start(() => onFinish());
+    }
+  }, [visible, scale, opacity, onFinish]);
+
+  if (!visible) return null;
+
+  return (
+    <RNAnimated.View
+      style={[
+        styles.heartContainer,
+        {
+          transform: [{ scale }],
+          opacity,
+        },
+      ]}
+      pointerEvents="none"
+    >
+      <Text style={styles.heartEmoji}>{'\u2764\uFE0F'}</Text>
+    </RNAnimated.View>
+  );
+};
+
 // ─── Story Content Renderer ──────────────────────────────────────────
 
-const StoryContent: React.FC<{ post: FeedPost }> = ({ post }) => {
-  if (post.postType === 'photo' && post.photoUrls.length > 0) {
-    return (
-      <View style={styles.contentContainer}>
-        <Image source={{ uri: post.photoUrls[0] }} style={styles.fullImage} resizeMode="cover" />
-        {post.content ? (
-          <View style={styles.captionOverlay}>
-            <Text style={styles.captionText}>{post.content}</Text>
-          </View>
-        ) : null}
-      </View>
-    );
-  }
-
-  if (post.postType === 'video' && post.videoUrl) {
-    return (
-      <View style={styles.contentContainer}>
-        <View style={styles.videoPlaceholder}>
-          <Text style={styles.videoIcon}>{'\uD83C\uDFA5'}</Text>
-          <Text style={styles.videoLabel}>Video</Text>
-        </View>
-        {post.content ? (
-          <View style={styles.captionOverlay}>
-            <Text style={styles.captionText}>{post.content}</Text>
-          </View>
-        ) : null}
-      </View>
-    );
-  }
-
-  if (post.postType === 'music') {
-    return (
-      <View style={[styles.contentContainer, styles.textContentBg]}>
-        <Text style={styles.musicIcon}>{'\uD83C\uDFB5'}</Text>
-        {post.musicTitle && <Text style={styles.musicTitle}>{post.musicTitle}</Text>}
-        {post.musicArtist && <Text style={styles.musicArtist}>{post.musicArtist}</Text>}
-        {post.content ? <Text style={styles.textContent}>{post.content}</Text> : null}
-      </View>
-    );
-  }
-
-  // text, question, or fallback
+const StoryContent: React.FC<{ story: Story }> = ({ story }) => {
   return (
-    <View style={[styles.contentContainer, styles.textContentBg]}>
-      {post.postType === 'question' && <Text style={styles.questionIcon}>{'?'}</Text>}
-      <Text style={styles.textContent}>{post.content}</Text>
+    <View style={styles.contentContainer}>
+      <Image source={{ uri: story.mediaUrl }} style={styles.fullImage} resizeMode="cover" />
+
+      {/* Render text overlays */}
+      {story.overlays
+        .filter((o): o is StoryOverlay & { content: string } => o.type === 'text' && !!o.content)
+        .map((overlay, idx) => (
+          <View
+            key={`text-${idx}`}
+            style={[
+              styles.textOverlay,
+              {
+                left: overlay.x * SCREEN_WIDTH - 80,
+                top: overlay.y * SCREEN_HEIGHT,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.overlayText,
+                {
+                  fontSize: overlay.fontSize ?? 20,
+                  color: overlay.color ?? '#FFFFFF',
+                },
+              ]}
+            >
+              {overlay.content}
+            </Text>
+          </View>
+        ))}
+
+      {/* Render sticker overlays */}
+      {story.overlays
+        .filter((o): o is StoryOverlay & { emoji: string } => o.type === 'sticker' && !!o.emoji)
+        .map((overlay, idx) => (
+          <Text
+            key={`sticker-${idx}`}
+            style={[
+              styles.stickerEmoji,
+              {
+                left: overlay.x * SCREEN_WIDTH - 20,
+                top: overlay.y * SCREEN_HEIGHT,
+              },
+            ]}
+          >
+            {overlay.emoji}
+          </Text>
+        ))}
     </View>
   );
 };
@@ -126,57 +183,80 @@ export const StoryViewerScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<StoryViewerNavProp>();
   const route = useRoute<StoryViewerRouteProp>();
-  const { userId: initialUserId, userName: initialUserName, userAvatarUrl: initialUserAvatar, storyUsers } = route.params;
+  const { userId: initialUserId, userName: initialUserName, userAvatarUrl: initialUserAvatar, storyUsers: storyUsersParam } = route.params;
 
-  const posts = useSocialFeedStore((s) => s.posts);
-  const markStoryViewed = useSocialFeedStore((s) => s.markStoryViewed);
-  const toggleLike = useSocialFeedStore((s) => s.toggleLike);
-  const incrementCommentCount = useSocialFeedStore((s) => s.incrementCommentCount);
+  // Story store
+  const storyUsers = useStoryStore((s) => s.storyUsers);
+  const markAsSeen = useStoryStore((s) => s.markAsSeen);
+  const toggleLike = useStoryStore((s) => s.toggleLike);
 
-  // ── Cross-user story queue ──
-  // Determine the starting index in the storyUsers array
-  const userQueue = storyUsers ?? [{ userId: initialUserId, userName: initialUserName, userAvatarUrl: initialUserAvatar }];
+  // Build user queue from store data or route params
+  const userQueue = useMemo(() => {
+    if (storyUsers.length > 0) {
+      return storyUsers.map((u) => ({
+        userId: u.userId,
+        userName: u.userName,
+        userAvatarUrl: u.userAvatarUrl,
+        stories: u.stories,
+      }));
+    }
+    // Fallback to route params
+    return storyUsersParam?.map((u) => ({
+      userId: u.userId,
+      userName: u.userName,
+      userAvatarUrl: u.userAvatarUrl,
+      stories: [] as Story[],
+    })) ?? [{
+      userId: initialUserId,
+      userName: initialUserName,
+      userAvatarUrl: initialUserAvatar,
+      stories: [] as Story[],
+    }];
+  }, [storyUsers, storyUsersParam, initialUserId, initialUserName, initialUserAvatar]);
+
   const initialUserIndex = Math.max(0, userQueue.findIndex((u) => u.userId === initialUserId));
   const [currentUserIndex, setCurrentUserIndex] = useState(initialUserIndex);
 
   const currentUser = userQueue[currentUserIndex] ?? userQueue[0];
-  const userId = currentUser.userId;
-  const userName = currentUser.userName;
-  const userAvatarUrl = currentUser.userAvatarUrl;
-
-  // Get this user's posts as story items (most recent first)
-  const storyItems = React.useMemo(() => {
-    return posts
-      .filter((p) => p.userId === userId)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [posts, userId]);
+  const currentStories = currentUser?.stories ?? [];
 
   const [activeIndex, setActiveIndex] = useState(0);
   const progressAnim = useRef(new RNAnimated.Value(0)).current;
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const viewedUsersRef = useRef(new Set<string>());
+  const animRef = useRef<RNAnimated.CompositeAnimation | null>(null);
 
-  // Comment sheet state
-  const [commentPostId, setCommentPostId] = useState<string | null>(null);
+  // Reply state
+  const [replyText, setReplyText] = useState('');
+  const [isReplyFocused, setIsReplyFocused] = useState(false);
+
+  // Double-tap like animation
+  const [showHeart, setShowHeart] = useState(false);
+  const lastTapTime = useRef(0);
+  const DOUBLE_TAP_DELAY = 300;
+
+  // Long press state
+  const isLongPressing = useRef(false);
+  const pressStartX = useRef(0);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const LONG_PRESS_THRESHOLD = 200;
+
+  // Paused state for reply/long-press
   const isPaused = useRef(false);
 
-  // ── Advance to next user's stories ──
+  // ── Get current story ──
+  const currentStory = currentStories[activeIndex];
+
+  // ── Advance to next user ──
   const advanceToNextUser = useCallback(() => {
-    // Mark current user as viewed
-    if (!viewedUsersRef.current.has(userId)) {
-      viewedUsersRef.current.add(userId);
-      markStoryViewed(userId);
-    }
     if (currentUserIndex < userQueue.length - 1) {
       setCurrentUserIndex((prev) => prev + 1);
       setActiveIndex(0);
     } else {
-      // No more users — close viewer
       navigation.goBack();
     }
-  }, [userId, currentUserIndex, userQueue.length, markStoryViewed, navigation]);
+  }, [currentUserIndex, userQueue.length, navigation]);
 
-  // ── Go back to previous user's stories ──
+  // ── Retreat to previous user ──
   const retreatToPrevUser = useCallback(() => {
     if (currentUserIndex > 0) {
       setCurrentUserIndex((prev) => prev - 1);
@@ -189,68 +269,81 @@ export const StoryViewerScreen: React.FC = () => {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
+    if (animRef.current) {
+      animRef.current.stop();
+      animRef.current = null;
+    }
+  }, []);
+
+  const getDuration = useCallback((story?: Story) => {
+    if (!story) return IMAGE_STORY_DURATION;
+    return story.mediaType === 'video' ? VIDEO_STORY_DURATION : IMAGE_STORY_DURATION;
   }, []);
 
   const startTimer = useCallback(() => {
     clearTimer();
     progressAnim.setValue(0);
-    RNAnimated.timing(progressAnim, {
+
+    const duration = getDuration(currentStories[activeIndex]);
+
+    const anim = RNAnimated.timing(progressAnim, {
       toValue: 1,
-      duration: STORY_DURATION,
+      duration,
       useNativeDriver: false,
-    }).start();
+    });
+    animRef.current = anim;
+    anim.start();
 
     timerRef.current = setTimeout(() => {
-      setActiveIndex((prev) => {
-        if (prev < storyItems.length - 1) {
-          return prev + 1;
-        }
-        // Last story of this user — auto-advance to next user
+      if (activeIndex < currentStories.length - 1) {
+        setActiveIndex((prev) => prev + 1);
+      } else {
         advanceToNextUser();
-        return prev;
-      });
-    }, STORY_DURATION);
-  }, [clearTimer, progressAnim, storyItems.length, advanceToNextUser]);
+      }
+    }, duration);
+  }, [clearTimer, progressAnim, activeIndex, currentStories, getDuration, advanceToNextUser]);
 
+  // ── Mark story as seen when it becomes active ──
   useEffect(() => {
-    if (storyItems.length === 0) {
-      // No stories for this user — skip to next user or close
+    if (currentStory) {
+      markAsSeen(currentStory.id);
+    }
+  }, [currentStory, markAsSeen]);
+
+  // ── Start/restart timer on index or user change ──
+  useEffect(() => {
+    if (currentStories.length === 0) {
       advanceToNextUser();
       return;
     }
-    startTimer();
+    if (!isPaused.current) {
+      startTimer();
+    }
     return clearTimer;
-  }, [activeIndex, currentUserIndex, storyItems.length, startTimer, clearTimer, advanceToNextUser]);
+  }, [activeIndex, currentUserIndex, currentStories.length, startTimer, clearTimer, advanceToNextUser]);
 
+  // ── Navigation handlers ──
   const goNext = useCallback(() => {
     clearTimer();
-    if (activeIndex < storyItems.length - 1) {
+    if (activeIndex < currentStories.length - 1) {
       setActiveIndex((prev) => prev + 1);
     } else {
-      // Last story of this user — advance to next user on tap
       advanceToNextUser();
     }
-  }, [activeIndex, storyItems.length, clearTimer, advanceToNextUser]);
+  }, [activeIndex, currentStories.length, clearTimer, advanceToNextUser]);
 
   const goPrev = useCallback(() => {
     clearTimer();
     if (activeIndex > 0) {
       setActiveIndex((prev) => prev - 1);
     } else if (currentUserIndex > 0) {
-      // First story of this user — go to previous user
       retreatToPrevUser();
     } else {
-      // First story of first user — restart current story
       startTimer();
     }
   }, [activeIndex, currentUserIndex, clearTimer, startTimer, retreatToPrevUser]);
 
-  // ── Instagram-style touch handling ──
-  const isLongPressing = useRef(false);
-  const pressStartX = useRef(0);
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const LONG_PRESS_THRESHOLD = 200;
-
+  // ── Touch handling (tap left/right + long press pause + double tap like) ──
   const handlePressIn = useCallback(
     (evt: { nativeEvent: { locationX: number } }) => {
       pressStartX.current = evt.nativeEvent.locationX;
@@ -258,6 +351,7 @@ export const StoryViewerScreen: React.FC = () => {
 
       longPressTimer.current = setTimeout(() => {
         isLongPressing.current = true;
+        isPaused.current = true;
         clearTimer();
         progressAnim.stopAnimation();
       }, LONG_PRESS_THRESHOLD);
@@ -271,151 +365,219 @@ export const StoryViewerScreen: React.FC = () => {
       longPressTimer.current = null;
     }
 
+    // Resume from long press
     if (isLongPressing.current) {
       isLongPressing.current = false;
+      isPaused.current = false;
       startTimer();
       return;
     }
 
-    const x = pressStartX.current;
-    if (x < SCREEN_WIDTH / 3) {
-      goPrev();
-    } else {
-      goNext();
+    // Check for double tap
+    const now = Date.now();
+    if (now - lastTapTime.current < DOUBLE_TAP_DELAY) {
+      // Double tap — trigger like
+      if (currentStory) {
+        toggleLike(currentStory.id);
+        setShowHeart(true);
+      }
+      lastTapTime.current = 0;
+      return;
     }
-  }, [startTimer, goNext, goPrev]);
+    lastTapTime.current = now;
 
-  // ── Like current story post ──
-  const handleLike = useCallback(() => {
-    const post = storyItems[activeIndex];
-    if (post) {
-      toggleLike(post.id);
-    }
-  }, [storyItems, activeIndex, toggleLike]);
+    // Single tap — navigate left/right (with slight delay to detect double tap)
+    setTimeout(() => {
+      if (lastTapTime.current !== now) return; // Was a double tap
+      const x = pressStartX.current;
+      if (x < SCREEN_WIDTH / 3) {
+        goPrev();
+      } else {
+        goNext();
+      }
+    }, DOUBLE_TAP_DELAY);
+  }, [startTimer, goNext, goPrev, currentStory, toggleLike]);
 
-  // ── Open comments for current story post ──
-  const handleOpenComments = useCallback(() => {
-    const post = storyItems[activeIndex];
-    if (!post) return;
-    clearTimer();
-    progressAnim.stopAnimation();
-    isPaused.current = true;
-    setCommentPostId(post.id);
-  }, [storyItems, activeIndex, clearTimer, progressAnim]);
-
-  // ── Close comments and resume story ──
-  const handleCloseComments = useCallback(() => {
-    setCommentPostId(null);
+  // ── Reply handler ──
+  const handleReplySubmit = useCallback(async () => {
+    if (!replyText.trim() || !currentStory) return;
+    const storyStore = useStoryStore.getState();
+    await storyStore.replyToStory(currentStory.id, replyText.trim());
+    setReplyText('');
+    setIsReplyFocused(false);
     isPaused.current = false;
     startTimer();
-  }, [startTimer]);
+  }, [replyText, currentStory, startTimer]);
 
-  // ── Comment added ──
-  const handleCommentAdded = useCallback((postId: string) => {
-    incrementCommentCount(postId);
-  }, [incrementCommentCount]);
+  const handleReplyFocus = useCallback(() => {
+    setIsReplyFocused(true);
+    isPaused.current = true;
+    clearTimer();
+    progressAnim.stopAnimation();
+  }, [clearTimer, progressAnim]);
 
+  const handleReplyBlur = useCallback(() => {
+    setIsReplyFocused(false);
+    if (!replyText.trim()) {
+      isPaused.current = false;
+      startTimer();
+    }
+  }, [replyText, startTimer]);
+
+  // ── View profile ──
   const handleViewProfile = useCallback(() => {
     clearTimer();
-    navigation.navigate('ProfilePreview', { userId });
-  }, [clearTimer, navigation, userId]);
+    navigation.navigate('ProfilePreview', { userId: currentUser.userId });
+  }, [clearTimer, navigation, currentUser]);
 
+  // ── Close ──
   const handleClose = useCallback(() => {
     clearTimer();
     navigation.goBack();
   }, [clearTimer, navigation]);
 
-  const currentPost = storyItems[activeIndex];
-
-  if (!currentPost) {
-    navigation.goBack();
-    return null;
+  // ── No stories available ──
+  if (!currentStory) {
+    return (
+      <View style={styles.container}>
+        <StatusBar barStyle="light-content" />
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Hikaye bulunamadi</Text>
+          <TouchableOpacity style={styles.emptyCloseButton} onPress={handleClose}>
+            <Text style={styles.emptyCloseText}>Kapat</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
   }
 
-  const timeAgo = getTimeAgo(currentPost.createdAt);
+  const timeAgo = getTimeAgo(currentStory.createdAt);
+  const isOwnStory = false; // TODO: Compare with authStore userId
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      {/* Tap zones — Pressable for reliable press-in/press-out handling */}
+      {/* Tap zones */}
       <Pressable
         style={styles.tapZone}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
       >
-        <StoryContent post={currentPost} />
+        <StoryContent story={currentStory} />
       </Pressable>
+
+      {/* Heart animation */}
+      <HeartAnimation visible={showHeart} onFinish={() => setShowHeart(false)} />
 
       {/* Progress bars */}
       <View style={[styles.progressBar, { top: insets.top + 8 }]}>
-        {storyItems.map((_, i) => (
-          <ProgressSegment key={`${userId}-${i}`} index={i} activeIndex={activeIndex} animValue={progressAnim} />
+        {currentStories.map((_, i) => (
+          <ProgressSegment
+            key={`${currentUser.userId}-${i}`}
+            index={i}
+            activeIndex={activeIndex}
+            animValue={progressAnim}
+          />
         ))}
       </View>
 
       {/* Header: avatar, name, time, close */}
       <View style={[styles.header, { top: insets.top + 20 }]}>
         <TouchableOpacity style={styles.headerUser} onPress={handleViewProfile}>
-          {userAvatarUrl ? (
-            <Image source={{ uri: userAvatarUrl }} style={styles.headerAvatar} />
+          {currentUser.userAvatarUrl ? (
+            <Image source={{ uri: currentUser.userAvatarUrl }} style={styles.headerAvatar} />
           ) : (
             <View style={styles.headerAvatarPlaceholder}>
               <Text style={styles.headerAvatarInitial}>
-                {userName ? userName[0] : '?'}
+                {currentUser.userName ? currentUser.userName[0] : '?'}
               </Text>
             </View>
           )}
-          <Text style={styles.headerName}>{userName}</Text>
-          <Text style={styles.headerTime}>{timeAgo}</Text>
+          <View>
+            <Text style={styles.headerName}>{currentUser.userName}</Text>
+            <Text style={styles.headerTime}>{timeAgo}</Text>
+          </View>
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-          <Text style={styles.closeIcon}>{'\u2715'}</Text>
-        </TouchableOpacity>
-      </View>
 
-      {/* Bottom: interactive like/comment + profile */}
-      <View style={[styles.footer, { bottom: insets.bottom + 16 }]}>
-        <View style={styles.statsChip}>
-          <TouchableOpacity
-            style={styles.statItem}
-            onPress={handleLike}
-            activeOpacity={0.7}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Text style={styles.statIcon}>
-              {currentPost.isLiked ? '\u2764\uFE0F' : '\u2661'}
-            </Text>
-            <Text style={[styles.statCount, currentPost.isLiked && styles.statCountLiked]}>
-              {currentPost.likeCount}
-            </Text>
-          </TouchableOpacity>
-
-          <View style={styles.statDivider} />
-
-          <TouchableOpacity
-            style={styles.statItem}
-            onPress={handleOpenComments}
-            activeOpacity={0.7}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Text style={styles.statIcon}>{'\uD83D\uDCAC'}</Text>
-            <Text style={styles.statCount}>{currentPost.commentCount}</Text>
+        <View style={styles.headerActions}>
+          {/* View count for own stories */}
+          {isOwnStory && (
+            <View style={styles.viewCount}>
+              <Ionicons name="eye-outline" size={16} color="rgba(255,255,255,0.8)" />
+              <Text style={styles.viewCountText}>{currentStory.viewCount}</Text>
+            </View>
+          )}
+          <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+            <Ionicons name="close" size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
-
-        <TouchableOpacity style={styles.profileButton} onPress={handleViewProfile}>
-          <Text style={styles.profileButtonText}>Profili Gör</Text>
-        </TouchableOpacity>
       </View>
 
-      {/* Comment Sheet */}
-      <CommentSheet
-        visible={commentPostId !== null}
-        postId={commentPostId}
-        onClose={handleCloseComments}
-        onCommentAdded={handleCommentAdded}
-      />
+      {/* Bottom: Reply input or stats */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={[styles.footer, { bottom: insets.bottom + 12 }]}
+      >
+        {isOwnStory ? (
+          // Own story — show viewer count
+          <View style={styles.ownStoryFooter}>
+            <TouchableOpacity style={styles.viewersButton}>
+              <Ionicons name="eye-outline" size={18} color="#FFFFFF" />
+              <Text style={styles.viewersButtonText}>
+                {currentStory.viewCount} goruntulenme
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          // Other user's story — reply input + like
+          <View style={styles.replyRow}>
+            <View style={styles.replyInputContainer}>
+              <TextInput
+                style={styles.replyInput}
+                placeholder="Yanit gonder..."
+                placeholderTextColor="rgba(255,255,255,0.5)"
+                value={replyText}
+                onChangeText={setReplyText}
+                onFocus={handleReplyFocus}
+                onBlur={handleReplyBlur}
+                returnKeyType="send"
+                onSubmitEditing={handleReplySubmit}
+              />
+              {replyText.trim().length > 0 && (
+                <TouchableOpacity
+                  style={styles.replySendButton}
+                  onPress={handleReplySubmit}
+                >
+                  <Ionicons name="send" size={18} color={palette.gold[500]} />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <TouchableOpacity
+              style={styles.likeButton}
+              onPress={() => {
+                if (currentStory) {
+                  toggleLike(currentStory.id);
+                  if (!currentStory.isLiked) {
+                    setShowHeart(true);
+                  }
+                }
+              }}
+            >
+              <Ionicons
+                name={currentStory.isLiked ? 'heart' : 'heart-outline'}
+                size={26}
+                color={currentStory.isLiked ? '#FF3B30' : '#FFFFFF'}
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.shareButton}>
+              <Ionicons name="paper-plane-outline" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+        )}
+      </KeyboardAvoidingView>
     </View>
   );
 };
@@ -425,7 +587,7 @@ export const StoryViewerScreen: React.FC = () => {
 function getTimeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const minutes = Math.floor(diff / 60_000);
-  if (minutes < 1) return 'az önce';
+  if (minutes < 1) return 'az once';
   if (minutes < 60) return `${minutes}dk`;
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}sa`;
@@ -453,63 +615,39 @@ const styles = StyleSheet.create({
     height: SCREEN_HEIGHT,
     position: 'absolute',
   },
-  captionOverlay: {
+
+  // Text/sticker overlays
+  textOverlay: {
     position: 'absolute',
-    bottom: 120,
-    left: spacing.lg,
-    right: spacing.lg,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
+    padding: spacing.sm,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderRadius: borderRadius.sm,
+    maxWidth: SCREEN_WIDTH * 0.7,
   },
-  captionText: {
-    ...typography.body,
-    color: '#fff',
+  overlayText: {
+    fontWeight: '700',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
     textAlign: 'center',
   },
-  textContentBg: {
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing.xl,
+  stickerEmoji: {
+    position: 'absolute',
+    fontSize: 40,
   },
-  textContent: {
-    ...typography.h4,
-    color: '#fff',
-    textAlign: 'center',
-    lineHeight: 28,
-  },
-  questionIcon: {
-    fontSize: 48,
-    color: colors.primary,
-    marginBottom: spacing.md,
-    fontWeight: '800',
-  },
-  musicIcon: {
-    fontSize: 48,
-    marginBottom: spacing.md,
-  },
-  musicTitle: {
-    ...typography.h3,
-    color: '#fff',
-    textAlign: 'center',
-    marginBottom: spacing.xs,
-  },
-  musicArtist: {
-    ...typography.body,
-    color: 'rgba(255,255,255,0.7)',
-    textAlign: 'center',
-    marginBottom: spacing.lg,
-  },
-  videoPlaceholder: {
-    alignItems: 'center',
+
+  // Heart animation
+  heartContainer: {
+    position: 'absolute',
+    top: SCREEN_HEIGHT / 2 - 50,
+    left: SCREEN_WIDTH / 2 - 50,
+    width: 100,
+    height: 100,
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  videoIcon: {
-    fontSize: 64,
-    marginBottom: spacing.sm,
-  },
-  videoLabel: {
-    ...typography.body,
-    color: 'rgba(255,255,255,0.7)',
+  heartEmoji: {
+    fontSize: 80,
   },
 
   // Progress bar
@@ -549,16 +687,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 1,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.4)',
   },
   headerAvatarPlaceholder: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -577,70 +715,118 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: 'rgba(255,255,255,0.6)',
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  viewCount: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: borderRadius.full,
+  },
+  viewCountText: {
+    ...typography.captionSmall,
+    color: 'rgba(255,255,255,0.8)',
+    fontWeight: '600',
+  },
   closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: 'rgba(255,255,255,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  closeIcon: {
-    fontSize: 16,
-    color: '#fff',
-    fontWeight: '600',
   },
 
   // Footer
   footer: {
     position: 'absolute',
-    left: spacing.lg,
-    right: spacing.lg,
-    alignItems: 'center',
-    gap: spacing.md,
+    left: spacing.md,
+    right: spacing.md,
   },
-  statsChip: {
+
+  // Reply row (for other users' stories)
+  replyRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    gap: spacing.sm,
+  },
+  replyInputContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.12)',
     borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: spacing.md,
+    height: 44,
+  },
+  replyInput: {
+    flex: 1,
+    ...typography.bodySmall,
+    color: '#FFFFFF',
+    paddingVertical: 0,
+  },
+  replySendButton: {
+    marginLeft: spacing.sm,
+  },
+  likeButton: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  shareButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // Own story footer
+  ownStoryFooter: {
+    alignItems: 'center',
+  },
+  viewersButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: 'rgba(255,255,255,0.12)',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
-    gap: spacing.md,
-  },
-  statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  statIcon: {
-    fontSize: 16,
-  },
-  statCount: {
-    ...typography.body,
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 15,
-  },
-  statCountLiked: {
-    color: '#FF6B6B',
-  },
-  statDivider: {
-    width: 1,
-    height: 16,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-  },
-  profileButton: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: borderRadius.full,
+  },
+  viewersButtonText: {
+    ...typography.bodySmall,
+    color: '#FFFFFF',
+    fontWeight: '500',
+  },
+
+  // Empty state
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: spacing.lg,
+  },
+  emptyText: {
+    ...typography.body,
+    color: 'rgba(255,255,255,0.5)',
+  },
+  emptyCloseButton: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.sm,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderRadius: borderRadius.full,
   },
-  profileButtonText: {
-    ...typography.bodySmall,
-    color: '#fff',
-    fontWeight: '600',
+  emptyCloseText: {
+    ...typography.button,
+    color: '#FFFFFF',
   },
 });

@@ -61,6 +61,7 @@ export const AnalyticsEvent = {
   MESSAGE_READ: 'chat_message_read',
   CONVERSATION_OPENED: 'chat_conversation_opened',
   IMAGE_SENT: 'chat_image_sent',
+  GIF_SENT: 'chat_gif_sent',
   ICEBREAKER_STARTED: 'chat_icebreaker_started',
 
   // Profile

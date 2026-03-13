@@ -257,9 +257,20 @@ export class ChatService {
       select: { firstName: true },
     });
     const senderName = senderProfile?.firstName ?? 'Biri';
-    const preview = dto.content.trim().length > 100
-      ? dto.content.trim().substring(0, 97) + '...'
-      : dto.content.trim();
+
+    // Use type-aware preview text for non-text messages
+    let preview: string;
+    if (messageType === 'GIF') {
+      preview = 'GIF gonderdi';
+    } else if (messageType === 'IMAGE') {
+      preview = 'Fotograf gonderdi';
+    } else if (messageType === 'VOICE') {
+      preview = 'Sesli mesaj gonderdi';
+    } else {
+      preview = dto.content.trim().length > 100
+        ? dto.content.trim().substring(0, 97) + '...'
+        : dto.content.trim();
+    }
     this.notificationsService.notifyNewMessage(partnerId, senderName, preview).catch(() => {});
 
     return {

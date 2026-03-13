@@ -15,7 +15,7 @@ import { colors, palette, glassmorphism } from '../../theme/colors';
 import { fontWeights } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { INTEREST_OPTIONS } from '../../constants/config';
-import { formatActivityStatus } from '../../utils/formatters';
+import { formatActivityStatus, formatDistanceTurkish } from '../../utils/formatters';
 import { TierIndicator, GOLD_24K } from '../common/SubscriptionBadge';
 import { analyticsService, ANALYTICS_EVENTS } from '../../services/analyticsService';
 import { useDiscoveryStore } from '../../stores/discoveryStore';
@@ -139,11 +139,11 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
     };
   }, [isSupreme, profile.userId, auraOpacity, eliteLabelOpacity]);
 
-  // Location text: "Istanbul \u2022 4.1 km"
-  const locationText = [
-    profile.city,
-    profile.distanceKm != null ? profile.distanceKm.toFixed(1) + ' km' : null,
-  ].filter(Boolean).join(' \u2022 ');
+  // Turkish distance label (e.g. "2.3 km uzaginda", "Ayni sehirde", or null)
+  const distanceLabel = formatDistanceTurkish(profile.distanceKm);
+
+  // Location text: "Istanbul" (city only — distance is shown separately with pin icon)
+  const cityText = profile.city ?? '';
 
   // Bio truncated to 60 chars
   const bio = profile.bio ?? '';
@@ -242,11 +242,21 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
           {profile.packageTier && !isSupreme && <TierIndicator tier={profile.packageTier} />}
         </View>
 
-        {/* Row 2: City + Distance */}
-        {locationText.length > 0 && (
-          <Text style={styles.locationText} numberOfLines={1}>
-            {locationText}
-          </Text>
+        {/* Row 2: City + Distance with gold pin */}
+        {(cityText.length > 0 || distanceLabel) && (
+          <View style={styles.locationRow}>
+            {cityText.length > 0 && (
+              <Text style={styles.locationText} numberOfLines={1}>
+                {cityText}
+              </Text>
+            )}
+            {distanceLabel && (
+              <View style={styles.distanceBadge}>
+                <Ionicons name="location" size={11} color="#D4AF37" />
+                <Text style={styles.distanceText}>{distanceLabel}</Text>
+              </View>
+            )}
+          </View>
         )}
 
         {/* Row 2.5: Match Reason Labels */}
@@ -456,10 +466,31 @@ const styles = StyleSheet.create({
   },
 
   // ── Row 2: City + Distance ──
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   locationText: {
     fontSize: 13,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
+    includeFontPadding: false,
+  },
+  distanceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    backgroundColor: 'rgba(212, 175, 55, 0.10)',
+    borderRadius: 8,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+  },
+  distanceText: {
+    fontSize: 11,
+    fontWeight: fontWeights.medium,
+    color: '#D4AF37',
+    includeFontPadding: false,
   },
 
   // ── Row 2.5: Match Reason Labels ──

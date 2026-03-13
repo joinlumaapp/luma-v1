@@ -6,12 +6,14 @@ export const APP_CONFIG: {
   readonly API_BASE_URL: string;
   readonly WS_BASE_URL: string;
   readonly MIXPANEL_TOKEN: string;
+  readonly GIPHY_API_KEY: string;
 } = {
   APP_NAME: 'LUMA',
   APP_VERSION: '0.1.0',
   API_BASE_URL: __DEV__ ? 'http://localhost:3000' : 'https://api.luma.dating',
   WS_BASE_URL: __DEV__ ? 'ws://localhost:3000' : 'wss://api.luma.dating',
   MIXPANEL_TOKEN: '', // Set via environment or build config — empty string disables Mixpanel
+  GIPHY_API_KEY: '', // Set via environment — falls back to Giphy public beta key in giphyService
 };
 
 // LOCKED architecture constants — do not modify

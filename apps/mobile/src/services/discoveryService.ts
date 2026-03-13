@@ -41,6 +41,8 @@ export interface FeedCard {
   education?: string;
   /** Subscription tier of the user */
   packageTier?: 'free' | 'gold' | 'pro' | 'reserved';
+  /** Profile prompts (Hinge-style question + answer) */
+  prompts?: Array<{ id: string; question: string; answer: string; order: number }>;
 }
 
 export interface FeedResponse {
@@ -54,6 +56,15 @@ export interface SwipeRequest {
   targetUserId: string;
   direction: 'like' | 'pass' | 'super_like';
   comment?: string; // optional comment attached to LIKE
+  /** Icebreaker context — sent when user comments on a photo or prompt */
+  icebreaker?: {
+    message: string;
+    targetType: 'photo' | 'prompt';
+    targetId: string;
+    promptQuestion?: string;
+    promptAnswer?: string;
+    photoUrl?: string;
+  };
 }
 
 export interface SwipeResponse {
@@ -75,6 +86,10 @@ export interface FeedFilters {
   maxAge?: number;
   maxDistance?: number;
   intentionTags?: string[];
+  /** User's current latitude for distance-based sorting/filtering */
+  latitude?: number;
+  /** User's current longitude for distance-based sorting/filtering */
+  longitude?: number;
 }
 
 // ─── Likes You ─────────────────────────────────────────────────
@@ -220,6 +235,10 @@ const MOCK_CARDS: FeedCard[] = [
     children: 'İstemiyor',
     job: 'Editör',
     education: 'İstanbul Üniversitesi',
+    prompts: [
+      { id: 'p1-1', question: 'En iyi seyahat anim...', answer: 'Kapadokya\'da balon turu sirasinda gun dogumunu izlemek', order: 0 },
+      { id: 'p1-2', question: 'Beni gulduren sey...', answer: 'Iyi bir stand-up ve arkadaslarimla sacma muhabbetler', order: 1 },
+    ],
   },
   {
     userId: 'mock-2',
@@ -248,6 +267,11 @@ const MOCK_CARDS: FeedCard[] = [
     sports: 'Dans',
     job: 'Müzisyen',
     education: 'Hacettepe Üniversitesi',
+    prompts: [
+      { id: 'p2-1', question: 'Hayatimda vazgecemedegim...', answer: 'Gitar calmak — her aksam en az yarim saat', order: 0 },
+      { id: 'p2-2', question: 'Ilk bulusmada...', answer: 'Mutlaka canli muzik olan bir mekan secerim', order: 1 },
+      { id: 'p2-3', question: 'En cok deger verdigim...', answer: 'Samimiyet ve yaraticilik', order: 2 },
+    ],
   },
   {
     userId: 'mock-3',
@@ -530,6 +554,16 @@ const MOCK_BADGE_POOL = [
   'sports_fan', 'deep_thinker', 'creative_mind', 'bookworm',
 ];
 
+// Mock prompts pool for generated cards
+const MOCK_PROMPT_POOL: Array<{ question: string; answers: string[] }> = [
+  { question: 'En iyi seyahat anim...', answers: ['Japonya\'da kiraz cicekleri altinda yuruyu\u015f', 'Yunanistan\'da gece yuzme', 'Kapadokya\'da balon turu'] },
+  { question: 'Beni gulduren sey...', answers: ['Kara mizah ve spontane anlar', 'Kedilerin sacma hareketleri', 'Arkadaslarimla eski anilari anlatmak'] },
+  { question: 'Ilk bulusmada...', answers: ['Guzel bir kafede uzun sohbet', 'Yuruyus yapmayi tercih ederim', 'Canli muzik olan bir mekan'] },
+  { question: 'Hayatimda vazgecemedegim...', answers: ['Sabah kahvesi rituelim', 'Haftada bir yeni tarif denemek', 'Aksam yuruyusleri'] },
+  { question: 'En cok deger verdigim...', answers: ['Durust iletisim', 'Birlikte gulmek', 'Kisisel alan ve saygi'] },
+  { question: 'Hafta sonu planim genelde...', answers: ['Brunch + kitap + kafe', 'Dogada yuruyus veya bisiklet', 'Arkadaslarla bulusma'] },
+];
+
 const MOCK_SMOKING_OPTIONS = ['İçmez', 'Sosyal içici', 'İçer'];
 const MOCK_SPORTS_OPTIONS = ['Yoga', 'Koşu', 'Yüzme', 'Fitness', 'Pilates', 'Dans', 'Tenis'];
 const MOCK_CHILDREN_OPTIONS = ['İstemiyor', 'İstiyor', 'Belki ileride'];
@@ -613,6 +647,24 @@ function generateMockCards(count: number): FeedCard[] {
       children: pickFrom(MOCK_CHILDREN_OPTIONS, i, 1),
       job: pickFrom(MOCK_JOBS, i, 3),
       education: pickFrom(MOCK_EDUCATIONS, i, 4),
+      // ~60% of generated profiles have prompts (1-3)
+      ...(i % 5 !== 0 ? {
+        prompts: (() => {
+          const promptCount = 1 + ((i * 3) % 3); // 1, 2, or 3
+          const prompts: Array<{ id: string; question: string; answer: string; order: number }> = [];
+          for (let p = 0; p < promptCount; p++) {
+            const pool = MOCK_PROMPT_POOL[(i + p * 2) % MOCK_PROMPT_POOL.length];
+            const answer = pool.answers[(i + p) % pool.answers.length];
+            prompts.push({
+              id: `gen-p-${i}-${p}`,
+              question: pool.question,
+              answer,
+              order: p,
+            });
+          }
+          return prompts;
+        })(),
+      } : {}),
     });
   }
 
