@@ -71,7 +71,7 @@ export const PACKAGE_TIERS = [
     name: 'Ücretsiz',
     price: 0,
     features: [
-      'Günlük 20 beğeni',
+      'Sınırsız beğeni',
       '1 Süper Beğeni / gün',
       'Temel uyumluluk skoru',
       'Reklamlı deneyim',
@@ -82,8 +82,8 @@ export const PACKAGE_TIERS = [
     name: 'Premium',
     price: 349.99,
     features: [
-      'Günlük 60 beğeni',
-      '5 Süper Beğeni / gün',
+      'Sınırsız beğeni',
+      '10 Süper Beğeni / gün',
       'Kimin beğendiğini gör',
       'Geri al',
       'Reklamsız deneyim',
@@ -133,9 +133,9 @@ const isSaturday = (): boolean => new Date().getDay() === 6;
 
 // Base daily like limits per tier (before any bonuses)
 const BASE_DAILY_LIKES = {
-  free: 20,
-  gold: 60,
-  pro: 200,
+  free: 999999,
+  gold: 999999,
+  pro: 999999,
   reserved: 999999,
 } as const;
 
@@ -148,15 +148,15 @@ export const getDailyLikesForTier = (tier: keyof typeof BASE_DAILY_LIKES): numbe
 
 // Discovery configuration (limits must match backend DAILY_SWIPE_LIMITS)
 export const DISCOVERY_CONFIG = {
-  FREE_DAILY_LIKES: isSaturday() ? 40 : 20,
+  FREE_DAILY_LIKES: 999999,
   CARD_STACK_SIZE: 60,
   DEFAULT_DISTANCE_KM: 50,
   MAX_DISTANCE_KM: 200,
   /** Per-tier daily like limits — must match PACKAGE_FEATURES in @luma/shared */
   DAILY_LIKES: {
-    free: isSaturday() ? 40 : 20,
-    gold: 60,
-    pro: 200,
+    free: 999999,
+    gold: 999999,
+    pro: 999999,
     reserved: 999999,
   },
   /** Whether Saturday 2x bonus is currently active */
@@ -171,7 +171,7 @@ export const DISCOVERY_CONFIG = {
 export const SUPER_LIKE_CONFIG = {
   DAILY_LIMITS: {
     free: 1,
-    gold: 5,
+    gold: 10,
     pro: 10,
     reserved: -1,
   },
@@ -191,8 +191,8 @@ export const FEED_POST_CONFIG = {
 export const BOOST_CONFIG = {
   MONTHLY_LIMITS: {
     free: 0,
-    gold: 1,
-    pro: 3,
+    gold: 4,
+    pro: 4,
     reserved: -1,
   },
 } as const;
@@ -220,7 +220,7 @@ export const WAVE_CONFIG = {
 
 // Paid first message configuration
 export const PAID_MESSAGE_CONFIG = {
-  PRICE_TRY: 199,
+  PRICE_JETON: 150,
   MAX_LENGTH: 300,
 } as const;
 
@@ -228,9 +228,9 @@ export const PAID_MESSAGE_CONFIG = {
 export const MESSAGE_CONFIG = {
   DAILY_LIMITS: {
     free: 1,
-    gold: 5,
+    gold: 10,
     pro: 10,
     reserved: -1,
   },
-  SINGLE_MESSAGE_PACK_PRICE: 199, // TL — purchased with Gold balance
+  SINGLE_MESSAGE_PACK_PRICE: 150, // Jeton — purchased with Gold balance
 } as const;

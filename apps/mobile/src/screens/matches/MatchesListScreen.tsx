@@ -1013,7 +1013,7 @@ export const MatchesListScreen: React.FC = () => {
               onRefresh={handleRefresh}
               tintColor="#D4AF37"
               colors={['#D4AF37']}
-              title="Guncelleniyor..."
+              title="Güncelleniyor..."
               titleColor={colors.textSecondary}
             />
           }
@@ -1039,7 +1039,7 @@ export const MatchesListScreen: React.FC = () => {
               onRefresh={handleRefresh}
               tintColor="#D4AF37"
               colors={['#D4AF37']}
-              title="Guncelleniyor..."
+              title="Güncelleniyor..."
               titleColor={colors.textSecondary}
             />
           }

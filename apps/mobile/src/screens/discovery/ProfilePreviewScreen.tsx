@@ -14,6 +14,7 @@ import {
   Pressable,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -631,21 +632,21 @@ export const ProfilePreviewScreen: React.FC = () => {
         <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: spacing.sm }} />
       )}
 
-      {/* Stats card — minimalist, same as own profile */}
+      {/* Stats card — social metrics (Akış feed integration) */}
       <View style={styles.statsCard}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>15</Text>
-          <Text style={styles.statLabel}>GONDERİ</Text>
+          <Text style={styles.statValue} numberOfLines={1}>15</Text>
+          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>GONDERİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>108</Text>
-          <Text style={styles.statLabel}>TAKİPCİ</Text>
+          <Text style={styles.statValue} numberOfLines={1}>108</Text>
+          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>TAKİPCİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>73</Text>
-          <Text style={styles.statLabel}>TAKİP</Text>
+          <Text style={styles.statValue} numberOfLines={1}>73</Text>
+          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>TAKİP</Text>
         </View>
       </View>
     </View>
@@ -664,7 +665,12 @@ export const ProfilePreviewScreen: React.FC = () => {
 
   // ── Footer: Premium glassmorphic action buttons (icon-only, no text) ──
   const footer = (
-    <View style={[styles.actionsBar, { paddingBottom: insets.bottom + spacing.sm }]}>
+    <LinearGradient
+      colors={['transparent', colors.background + 'CC', colors.background] as [string, string, ...string[]]}
+      locations={[0, 0.4, 0.7]}
+      style={[styles.actionsBar, { paddingBottom: insets.bottom + spacing.sm }]}
+      pointerEvents="box-none"
+    >
       {/* Pass — deep red glow */}
       <GlassActionButton
         icon="close"
@@ -694,7 +700,7 @@ export const ProfilePreviewScreen: React.FC = () => {
         onPress={() => handleSwipe('right')}
         accessibilityLabel="Beğen"
       />
-    </View>
+    </LinearGradient>
   );
 
   return (
@@ -878,34 +884,40 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.full,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    overflow: 'hidden',
   },
 
   // ── Stats card — minimalist (matches own profile) ──
   statsCard: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
     alignItems: 'center',
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.md + 4,
+    paddingHorizontal: spacing.md,
+    overflow: 'visible',
   },
   statItem: {
     alignItems: 'center',
+    justifyContent: 'center',
     flex: 1,
+    paddingHorizontal: 4,
   },
   statValue: {
     fontSize: 22,
     fontWeight: '700',
     color: colors.text,
-    letterSpacing: -0.3,
+    textAlign: 'center',
+    paddingHorizontal: 2,
+    paddingVertical: 2,
   },
   statLabel: {
     fontSize: 11,
     fontWeight: '500',
     color: colors.textTertiary,
     marginTop: 2,
-    includeFontPadding: false,
+    textAlign: 'center',
+    paddingHorizontal: 2,
+    paddingVertical: 1,
   },
   statDivider: {
     width: 1,
@@ -924,6 +936,7 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
     includeFontPadding: false,
     marginBottom: spacing.md,
+    letterSpacing: 0.3,
   },
 
   // ── Bio ──
@@ -1003,8 +1016,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-end',
     gap: 28,
-    paddingTop: spacing.lg,
+    paddingTop: 40,
     paddingBottom: spacing.md,
-    backgroundColor: 'transparent',
   },
 });

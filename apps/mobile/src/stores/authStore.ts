@@ -51,6 +51,7 @@ interface AuthState {
   // Actions
   sendOTP: (phone: string, countryCode: string) => Promise<boolean>;
   verifyOTP: (phone: string, code: string) => Promise<boolean>;
+  verifySelfie: (selfieBase64: string) => Promise<{ verified: boolean; status: string }>;
   login: (accessToken: string, refreshToken: string, user: AuthUser) => void;
   logout: () => Promise<void>;
   refreshTokens: () => Promise<boolean>;
@@ -181,6 +182,33 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const apiError = parseApiError(error as AxiosError);
       set({ isLoading: false, error: apiError.userMessage });
       return false;
+    }
+  },
+
+  // ─── Verify Selfie ──────────────────────────────────────────
+  verifySelfie: async (selfieBase64: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await authService.verifySelfie(selfieBase64);
+      set((state) => ({
+        isLoading: false,
+        user: state.user ? { ...state.user, isVerified: response.verified } : null,
+        error: null,
+      }));
+      return response;
+    } catch (error: unknown) {
+      if (__DEV__) {
+        console.warn('Selfie dogrulama basarisiz, gelistirme modunda devam ediliyor:', error);
+        set((state) => ({
+          isLoading: false,
+          user: state.user ? { ...state.user, isVerified: true } : null,
+          error: null,
+        }));
+        return { verified: true, status: 'Dev mode: otomatik onaylandi' };
+      }
+      const apiError = parseApiError(error as AxiosError);
+      set({ isLoading: false, error: apiError.userMessage });
+      return { verified: false, status: apiError.userMessage };
     }
   },
 

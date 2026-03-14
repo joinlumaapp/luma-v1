@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
 import { useColorScheme } from 'react-native';
-import { creamTheme, type ThemeColors, type ThemeMode } from './colors';
+import { creamTheme, darkTheme, lightTheme, type ThemeColors, type ThemeMode } from './colors';
 import { storage } from '../utils/storage';
 
 interface ThemeContextType {
@@ -42,8 +42,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return themeMode === 'dark';
   }, [themeMode, systemColorScheme]);
 
-  // Always use cream theme — dark/light toggle disabled for now
-  const currentColors = useMemo(() => creamTheme as ThemeColors, []);
+  const currentColors = useMemo<ThemeColors>(
+    () => (isDark ? darkTheme : creamTheme),
+    [isDark],
+  );
 
   const value = useMemo<ThemeContextType>(
     () => ({

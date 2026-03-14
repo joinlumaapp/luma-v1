@@ -1,6 +1,6 @@
 // Wave service — send quick greetings to nearby users without matching
 // Free: 3/day, Premium+: 20/day, or 5 gold coins per wave
-// Also handles paid first messages (199 TL) for pre-match messaging
+// Also handles paid first messages (150 Jeton) for pre-match messaging
 
 import api from './api';
 
@@ -193,8 +193,8 @@ export const waveService = {
       const response = await api.post<PaidMessageResponse>('/messages/paid', {
         receiverId,
         message,
-        amount: 199,
-        currency: 'TRY',
+        amount: 150,
+        currency: 'JETON',
       });
       return response.data;
     } catch {

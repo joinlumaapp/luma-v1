@@ -100,6 +100,7 @@ export type ActivitiesStackParamList = {
   CreateActivity: undefined;
   ActivityDetail: { activityId: string };
   ActivityGroupChat: { activityId: string; activityTitle: string };
+  IcebreakerRoom: { roomId: string };
 };
 
 // -- Feed Stack --
@@ -119,6 +120,7 @@ export type ProfileStackParamList = {
   Places: undefined;
   Relationship: undefined;
   CouplesClub: undefined;
+  SafetyCenter: undefined;
   NotificationSettings: undefined;
   MembershipPlans: undefined;
   PersonalitySelection: undefined;

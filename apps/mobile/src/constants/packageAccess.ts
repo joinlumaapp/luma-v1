@@ -76,13 +76,13 @@ interface FeatureRule {
 export const FEATURE_RULES: Record<FeatureKey, FeatureRule> = {
   daily_likes: {
     minTier: 'free',
-    limits: { free: 20, gold: -1, pro: -1, reserved: -1 },
+    limits: { free: -1, gold: -1, pro: -1, reserved: -1 },
     labelTr: 'Günlük Beğeni',
-    descriptionTr: 'Premium ile sınırsız beğeni hakkı kazan.',
+    descriptionTr: 'Sınırsız beğeni hakkı.',
   },
   super_like: {
     minTier: 'free',
-    limits: { free: 1, gold: 5, pro: 10, reserved: -1 },
+    limits: { free: 1, gold: 10, pro: 10, reserved: -1 },
     labelTr: 'Süper Beğeni',
     descriptionTr: 'Süper Beğeni ile öne çık! Eşleşme şansın 3 kat artar.',
   },
@@ -112,7 +112,7 @@ export const FEATURE_RULES: Record<FeatureKey, FeatureRule> = {
   },
   boost: {
     minTier: 'gold',
-    limits: { free: 0, gold: 1, pro: 3, reserved: -1 },
+    limits: { free: 0, gold: 4, pro: 4, reserved: -1 },
     labelTr: 'Boost',
     descriptionTr: 'Profilini öne çıkar ve 10x daha fazla görünürlük kazan.',
   },
@@ -160,7 +160,7 @@ export const FEATURE_RULES: Record<FeatureKey, FeatureRule> = {
   },
   messages: {
     minTier: 'free',
-    limits: { free: 1, gold: 5, pro: 10, reserved: -1 },
+    limits: { free: 1, gold: 10, pro: 10, reserved: -1 },
     labelTr: 'Günlük Mesaj',
     descriptionTr: 'Daha fazla mesaj göndermek için paketini yükselt.',
   },
@@ -174,7 +174,7 @@ export const FEATURE_RULES: Record<FeatureKey, FeatureRule> = {
     minTier: 'free',
     limits: { free: -1, gold: -1, pro: -1, reserved: -1 },
     labelTr: 'Ücretli Mesaj',
-    descriptionTr: 'Eşleşmeden önce mesaj gönder — 199 TL.',
+    descriptionTr: 'Eşleşmeden önce mesaj gönder — 150 Jeton.',
   },
 };
 

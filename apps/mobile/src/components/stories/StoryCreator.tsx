@@ -164,7 +164,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
     // In production, use expo-image-picker
     // For now, use a placeholder
     Alert.alert(
-      'Fotograf Sec',
+      'Fotoğraf Seç',
       'Galeriden fotograf secmek icin expo-image-picker entegrasyonu gereklidir.',
       [
         { text: 'Tamam', style: 'default' },
@@ -263,7 +263,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
   const handleClose = useCallback(() => {
     if (imageUri || textOverlays.length > 0 || stickerOverlays.length > 0) {
       Alert.alert(
-        'Vazgec',
+        'Vazgeç',
         'Hikayeni kaydetmeden cikmak istedigin kesin mi?',
         [
           { text: 'Kaldir', style: 'cancel' },
@@ -284,9 +284,9 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
         <View style={styles.emptyState}>
           <TouchableOpacity style={styles.selectImageButton} onPress={handleSelectImage}>
             <Ionicons name="camera-outline" size={48} color={palette.gold[500]} />
-            <Text style={styles.selectImageText}>Fotograf Sec veya Cek</Text>
+            <Text style={styles.selectImageText}>Fotoğraf Seç veya Çek</Text>
             <Text style={styles.selectImageHint}>
-              Galerinden sec veya kamerayla cek
+              Galerinden seç veya kamerayla çek
             </Text>
           </TouchableOpacity>
 
@@ -532,7 +532,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
       {showStickerPicker && (
         <View style={[styles.stickerPicker, { bottom: insets.bottom + 80 }]}>
           <View style={styles.stickerPickerHeader}>
-            <Text style={styles.stickerPickerTitle}>Cikartma Sec</Text>
+            <Text style={styles.stickerPickerTitle}>Çıkartma Seç</Text>
             <TouchableOpacity
               onPress={() => {
                 setShowStickerPicker(false);

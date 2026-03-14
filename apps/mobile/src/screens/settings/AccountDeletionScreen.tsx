@@ -321,7 +321,7 @@ export const AccountDeletionScreen: React.FC = () => {
                 onPress={() => setShowFinalModal(false)}
                 disabled={isDeleting}
               >
-                <Text style={dynamicStyles.modalCancelText}>Vazgec</Text>
+                <Text style={dynamicStyles.modalCancelText}>Vazgeç</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={dynamicStyles.modalDeleteButton}

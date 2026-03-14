@@ -168,7 +168,7 @@ export const PromptPickerSheet: React.FC<PromptPickerSheetProps> = ({
 
           {/* Title */}
           <View style={styles.titleRow}>
-            <Text style={styles.title}>Soru Sec</Text>
+            <Text style={styles.title}>Soru Seç</Text>
             <TouchableOpacity onPress={handleClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
               <Text style={styles.closeText}>Kapat</Text>
             </TouchableOpacity>
@@ -195,7 +195,7 @@ export const PromptPickerSheet: React.FC<PromptPickerSheetProps> = ({
                   selectedCategory === null && styles.categoryChipTextActive,
                 ]}
               >
-                Tumunu Goster
+                Tümünü Göster
               </Text>
             </TouchableOpacity>
             {PROMPT_CATEGORIES.map((cat) => (

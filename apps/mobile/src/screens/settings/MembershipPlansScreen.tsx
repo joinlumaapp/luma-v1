@@ -89,8 +89,8 @@ const FEATURES: TierFeature[] = [
     free: 'included',
     premium: 'included',
     supreme: 'included',
-    freeDetail: '20',
-    premiumDetail: '60',
+    freeDetail: 'Sınırsız',
+    premiumDetail: 'Sınırsız',
     supremeDetail: 'Sınırsız',
   },
   {
@@ -99,7 +99,7 @@ const FEATURES: TierFeature[] = [
     premium: 'included',
     supreme: 'included',
     freeDetail: '1/gün',
-    premiumDetail: '5/gün',
+    premiumDetail: '10/gün',
     supremeDetail: 'Sınırsız',
   },
   {
@@ -108,7 +108,7 @@ const FEATURES: TierFeature[] = [
     premium: 'included',
     supreme: 'included',
     freeDetail: '1/gün',
-    premiumDetail: '5/gün',
+    premiumDetail: '10/gün',
     supremeDetail: 'Sınırsız',
   },
   {
@@ -116,7 +116,7 @@ const FEATURES: TierFeature[] = [
     free: 'excluded',
     premium: 'included',
     supreme: 'included',
-    premiumDetail: '50',
+    premiumDetail: '250',
     supremeDetail: '500',
   },
   {
@@ -136,7 +136,7 @@ const FEATURES: TierFeature[] = [
     free: 'excluded',
     premium: 'included',
     supreme: 'included',
-    premiumDetail: '1/ay',
+    premiumDetail: '4/ay',
     supremeDetail: 'Sınırsız',
   },
   {

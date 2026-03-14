@@ -105,7 +105,7 @@ export const FlashBoost: React.FC<FlashBoostProps> = ({
         'Yetersiz Jeton',
         `Flash Boost icin ${DISCOUNTED_COST} jeton gerekli.`,
         [
-          { text: 'Vazgec', style: 'cancel' },
+          { text: 'Vazgeç', style: 'cancel' },
           {
             text: 'Jeton Al',
             onPress: () => {

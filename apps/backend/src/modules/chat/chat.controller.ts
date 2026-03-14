@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
   Param,
   Query,
@@ -10,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { ChatService } from './chat.service';
+import { ChatGateway } from './chat.gateway';
 import { SendMessageDto } from './dto/send-message.dto';
 import { MessageReactionDto } from './dto/message-reaction.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -20,7 +22,10 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 @UseGuards(JwtAuthGuard)
 @Controller('chat')
 export class ChatController {
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly chatGateway: ChatGateway,
+  ) {}
 
   @Get('conversations')
   @ApiOperation({ summary: 'Get all conversations for current user' })
@@ -69,5 +74,24 @@ export class ChatController {
     @Body() dto: MessageReactionDto,
   ) {
     return this.chatService.reactToMessage(userId, messageId, dto);
+  }
+
+  @Delete('messages/:messageId')
+  @ApiOperation({ summary: 'Delete (unsend) a message — soft-delete, sender only' })
+  async deleteMessage(
+    @CurrentUser('sub') userId: string,
+    @Param('messageId') messageId: string,
+  ) {
+    const result = await this.chatService.deleteMessage(userId, messageId);
+
+    // Notify the conversation room in real-time so the other user sees the deletion
+    this.chatGateway.broadcastToRoom(result.matchId, 'chat:message_deleted', {
+      messageId: result.messageId,
+      matchId: result.matchId,
+      deletedBy: userId,
+      timestamp: new Date().toISOString(),
+    });
+
+    return result;
   }
 }

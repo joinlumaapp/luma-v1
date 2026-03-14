@@ -3,6 +3,7 @@ import {
   BadRequestException,
   NotFoundException,
   ConflictException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateReportDto, ReportReasonDto } from './dto/report.dto';
@@ -31,6 +32,8 @@ const REPORT_THRESHOLD_SUSPEND = 10;
 
 @Injectable()
 export class ModerationService {
+  private readonly logger = new Logger(ModerationService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   // ─── Report ─────────────────────────────────────────────────
@@ -317,6 +320,160 @@ export class ModerationService {
     return {
       blockedUsers,
       total: blockedUsers.length,
+    };
+  }
+
+  // ─── Photo Moderation ────────────────────────────────────────
+
+  /**
+   * Approve a photo (admin/moderator only).
+   * Sets isApproved to true so the photo becomes visible in public feeds.
+   */
+  async approvePhoto(
+    photoId: string,
+    adminUserId: string,
+  ): Promise<{
+    photoId: string;
+    userId: string;
+    isApproved: boolean;
+    message: string;
+  }> {
+    const photo = await this.prisma.userPhoto.findUnique({
+      where: { id: photoId },
+      select: { id: true, userId: true, isApproved: true },
+    });
+
+    if (!photo) {
+      throw new NotFoundException('Fotograf bulunamadi');
+    }
+
+    if (photo.isApproved) {
+      return {
+        photoId: photo.id,
+        userId: photo.userId,
+        isApproved: true,
+        message: 'Fotograf zaten onaylanmis',
+      };
+    }
+
+    await this.prisma.userPhoto.update({
+      where: { id: photoId },
+      data: { isApproved: true },
+    });
+
+    this.logger.log(
+      `Photo ${photoId} approved by admin ${adminUserId} for user ${photo.userId}`,
+    );
+
+    return {
+      photoId: photo.id,
+      userId: photo.userId,
+      isApproved: true,
+      message: 'Fotograf basariyla onaylandi',
+    };
+  }
+
+  /**
+   * Reject a photo (admin/moderator only).
+   * Deletes the photo record and reorders remaining photos.
+   */
+  async rejectPhoto(
+    photoId: string,
+    adminUserId: string,
+    reason?: string,
+  ): Promise<{
+    photoId: string;
+    userId: string;
+    deleted: boolean;
+    message: string;
+  }> {
+    const photo = await this.prisma.userPhoto.findUnique({
+      where: { id: photoId },
+      select: { id: true, userId: true },
+    });
+
+    if (!photo) {
+      throw new NotFoundException('Fotograf bulunamadi');
+    }
+
+    // Delete the rejected photo
+    await this.prisma.userPhoto.delete({
+      where: { id: photoId },
+    });
+
+    // Reorder remaining photos for the user
+    const remainingPhotos = await this.prisma.userPhoto.findMany({
+      where: { userId: photo.userId },
+      orderBy: { order: 'asc' },
+    });
+
+    for (let i = 0; i < remainingPhotos.length; i++) {
+      await this.prisma.userPhoto.update({
+        where: { id: remainingPhotos[i].id },
+        data: {
+          order: i,
+          isPrimary: i === 0,
+        },
+      });
+    }
+
+    this.logger.log(
+      `Photo ${photoId} rejected by admin ${adminUserId} for user ${photo.userId}` +
+      (reason ? ` — reason: ${reason}` : ''),
+    );
+
+    return {
+      photoId,
+      userId: photo.userId,
+      deleted: true,
+      message: 'Fotograf reddedildi ve silindi',
+    };
+  }
+
+  /**
+   * Get all photos pending moderation review (admin only).
+   */
+  async getPendingPhotos(
+    limit = 50,
+    offset = 0,
+  ): Promise<{
+    photos: Array<{
+      photoId: string;
+      userId: string;
+      url: string;
+      thumbnailUrl: string | null;
+      createdAt: string;
+    }>;
+    total: number;
+  }> {
+    const [photos, total] = await Promise.all([
+      this.prisma.userPhoto.findMany({
+        where: { isApproved: false },
+        orderBy: { createdAt: 'asc' },
+        take: limit,
+        skip: offset,
+        select: {
+          id: true,
+          userId: true,
+          url: true,
+          thumbnailUrl: true,
+          createdAt: true,
+        },
+      }),
+      this.prisma.userPhoto.count({
+        where: { isApproved: false },
+      }),
+    ]);
+
+    return {
+      photos: photos.map((p) => ({
+        photoId: p.id,
+        userId: p.userId,
+        url: p.url,
+        thumbnailUrl: p.thumbnailUrl,
+        createdAt: p.createdAt.toISOString(),
+      })),
+      total,
     };
   }
 }

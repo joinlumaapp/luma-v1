@@ -10,11 +10,13 @@ import { Reflector } from '@nestjs/core';
 import { JwtService, TokenExpiredError } from '@nestjs/jwt';
 import { Request } from 'express';
 import Redis from 'ioredis';
+import { createHash } from 'crypto';
 
 export const IS_PUBLIC_KEY = 'isPublic';
 
-/** Prefix for blacklisted (logged-out) tokens in Redis */
-const TOKEN_BLACKLIST_PREFIX = 'token:blacklist:';
+/** Prefix for blacklisted (logged-out) tokens in Redis.
+ *  Must include the 'luma:' namespace used by LumaCacheService. */
+const TOKEN_BLACKLIST_PREFIX = 'luma:token:blacklist:';
 
 interface JwtTokenPayload {
   sub: string;
@@ -135,12 +137,11 @@ export class JwtAuthGuard implements CanActivate {
   }
 
   /**
-   * Simple hash function for token keys.
-   * Uses the last 32 chars of the token as a fingerprint
-   * (JWT signatures are unique per token).
+   * SHA-256 hash of the token, matching the approach used in auth.service.ts.
+   * Ensures blacklist lookups use the same key format as blacklist writes.
    */
   private hashToken(token: string): string {
-    return token.slice(-32);
+    return createHash('sha256').update(token).digest('hex');
   }
 
   private extractTokenFromHeader(request: Request): string | undefined {

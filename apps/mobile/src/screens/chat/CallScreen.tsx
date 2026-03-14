@@ -351,7 +351,7 @@ export const CallScreen: React.FC = () => {
           <View style={styles.endCallRow}>
             <ControlButton
               icon={'\uD83D\uDCF5'}
-              label="Iptal Et"
+              label="İptal Et"
               onPress={handleEndCall}
               variant="danger"
               size="large"

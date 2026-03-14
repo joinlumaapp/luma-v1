@@ -250,7 +250,7 @@ export const ChatListScreen: React.FC = () => {
             onRefresh={fetchConversations}
             tintColor="#D4AF37"
             colors={['#D4AF37']}
-            title="Guncelleniyor..."
+            title="Güncelleniyor..."
             titleColor={colors.textSecondary}
           />
         }

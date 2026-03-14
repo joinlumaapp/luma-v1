@@ -106,9 +106,13 @@ interface StoriesRowProps {
 }
 
 const StoriesRow: React.FC<StoriesRowProps> = ({ navigation, userFirstName, userPhotoUrl, currentUserId }) => {
-  const orderedStoryUsers = useStoryStore((s) => s.getOrderedStoryUsers());
+  const storyUsers = useStoryStore((s) => s.storyUsers);
+  const getOrderedStoryUsers = useStoryStore((s) => s.getOrderedStoryUsers);
   const fetchStories = useStoryStore((s) => s.fetchStories);
   const myStories = useStoryStore((s) => s.myStories);
+
+  // Derive ordered list from stable storyUsers reference
+  const orderedStoryUsers = useMemo(() => getOrderedStoryUsers(), [storyUsers, getOrderedStoryUsers]);
 
   // Fetch stories on mount
   useEffect(() => {
@@ -599,14 +603,14 @@ export const DiscoveryScreen: React.FC = () => {
           const coinBalance = useCoinStore.getState().balance;
           Alert.alert(
             'Super Like Limitin Doldu',
-            `Gunluk Super Like hakkin bitti. Jeton ile gonderebilir veya paketin yukseltebilirsin.`,
+            `Günlük Super Like hakkın bitti. Jeton ile gönderebilir veya paketini yükseltebilirsin.`,
             [
-              { text: 'Vazgec', style: 'cancel' },
+              { text: 'Vazgeç', style: 'cancel' },
               {
-                text: `Jeton ile Gonder (${SUPER_LIKE_COST} jeton)`,
+                text: `Jeton ile Gönder (${SUPER_LIKE_COST} jeton)`,
                 onPress: async () => {
                   if (coinBalance < SUPER_LIKE_COST) {
-                    Alert.alert('Yetersiz Jeton', `Super Like icin ${SUPER_LIKE_COST} jeton gerekli. Mevcut bakiyen: ${coinBalance} jeton.`);
+                    Alert.alert('Yetersiz Jeton', `Super Like için ${SUPER_LIKE_COST} jeton gerekli. Mevcut bakiyen: ${coinBalance} jeton.`);
                     return;
                   }
                   const success = await useCoinStore.getState().sendSuperLike(card.id);
@@ -951,7 +955,7 @@ export const DiscoveryScreen: React.FC = () => {
     if (success) {
       setShowUpgradePrompt(false);
     } else {
-      Alert.alert('Yetersiz Jeton', 'Ek begeni almak icin yeterli jetonun yok.');
+      Alert.alert('Yetersiz Jeton', 'Ek beğeni almak için yeterli jetonun yok.');
     }
   }, [purchaseExtraLikes]);
 
@@ -987,7 +991,7 @@ export const DiscoveryScreen: React.FC = () => {
                 <View style={styles.filterButton}>
                   <Ionicons name={notifUnreadCount > 0 ? 'notifications' : 'notifications-outline'} size={18} color={colors.text} />
                   {notifUnreadCount > 0 && (
-                    <View style={styles.notifBadge}>
+                    <View style={styles.notifBadge} pointerEvents="none">
                       <Text style={styles.notifBadgeText}>{notifUnreadCount > 9 ? '9+' : notifUnreadCount}</Text>
                     </View>
                   )}
@@ -1048,7 +1052,7 @@ export const DiscoveryScreen: React.FC = () => {
                 <View style={styles.filterButton}>
                   <Ionicons name={notifUnreadCount > 0 ? 'notifications' : 'notifications-outline'} size={18} color={colors.text} />
                   {notifUnreadCount > 0 && (
-                    <View style={styles.notifBadge}>
+                    <View style={styles.notifBadge} pointerEvents="none">
                       <Text style={styles.notifBadgeText}>{notifUnreadCount > 9 ? '9+' : notifUnreadCount}</Text>
                     </View>
                   )}
@@ -1090,8 +1094,8 @@ export const DiscoveryScreen: React.FC = () => {
                     <Text style={styles.teaserAvatarText}>?</Text>
                   </View>
                 </View>
-                <Text style={styles.teaserTitle}>Seni begenen 3+ kisi var</Text>
-                <Text style={styles.teaserSubtitle}>Kim oldugunu gormek icin dokun</Text>
+                <Text style={styles.teaserTitle}>Seni beğenen 3+ kişi var</Text>
+                <Text style={styles.teaserSubtitle}>Kim olduğunu görmek için dokun</Text>
                 <View style={styles.teaserArrow}>
                   <Ionicons name="chevron-forward" size={16} color={palette.gold[400]} />
                 </View>
@@ -1106,9 +1110,9 @@ export const DiscoveryScreen: React.FC = () => {
 
           {isCoolingDown ? (
             <>
-              <Text style={styles.emptyTitle}>Luma ruh esini ariyor...</Text>
+              <Text style={styles.emptyTitle}>Luma ruh eşini arıyor...</Text>
               <Text style={styles.emptySubtitle}>
-                Senin icin en uyumlu profiller hazirlaniyor. Biraz sabret.
+                Senin için en uyumlu profiller hazırlanıyor. Biraz sabret.
               </Text>
               <View style={styles.countdownContainer}>
                 <Text style={styles.countdownText}>{cooldownDisplay}</Text>
@@ -1116,9 +1120,9 @@ export const DiscoveryScreen: React.FC = () => {
             </>
           ) : (
             <>
-              <Text style={styles.emptyTitle}>Yeni profiller hazir!</Text>
+              <Text style={styles.emptyTitle}>Yeni profiller hazır!</Text>
               <Text style={styles.emptySubtitle}>
-                Senin icin ozenle secilmis profiller seni bekliyor.
+                Senin için özenle seçilmiş profiller seni bekliyor.
               </Text>
             </>
           )}
@@ -1138,7 +1142,7 @@ export const DiscoveryScreen: React.FC = () => {
             disabled={cooldownRemaining > 0}
             accessibilityLabel="Yenile"
             accessibilityRole="button"
-            accessibilityHint="Yeni profilleri yuklemek icin dokunun"
+            accessibilityHint="Yeni profilleri yüklemek için dokunun"
           >
             <View
               style={[
@@ -1249,12 +1253,13 @@ export const DiscoveryScreen: React.FC = () => {
                   setShowUpgradePrompt(true);
                 }
               }}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
               accessibilityLabel="Boost"
               accessibilityRole="button"
               accessibilityHint={canUseBoost ? 'Profilini öne çıkarmak için dokunun' : 'Premium pakete yükselt'}
             >
               <View style={[styles.filterButton, boostStatus.isActive && styles.boostButtonActive]} testID="discovery-boost-btn">
-                <Text style={styles.boostIcon}>{'\u26A1'}</Text>
+                <Ionicons name="flash" size={18} color={colors.primary} />
               </View>
             </Pressable>
             <Pressable
@@ -1399,9 +1404,9 @@ export const DiscoveryScreen: React.FC = () => {
                 if (undoNeedsJeton && coinBalance < UNDO_JETON_COST_UI) {
                   Alert.alert(
                     'Yetersiz Jeton',
-                    `Geri alma icin ${UNDO_JETON_COST_UI} jeton gerekli. Jeton satin al.`,
+                    `Geri alma için ${UNDO_JETON_COST_UI} jeton gerekli. Jeton satın al.`,
                     [
-                      { text: 'Vazgec', style: 'cancel' },
+                      { text: 'Vazgeç', style: 'cancel' },
                       { text: 'Jeton Al', onPress: () => navigation.navigate('ProfileTab', { screen: 'MembershipPlans' } as never) },
                     ],
                   );
@@ -1412,7 +1417,7 @@ export const DiscoveryScreen: React.FC = () => {
               }}
               accessibilityLabel={undoNeedsJeton ? `Geri al — ${UNDO_JETON_COST_UI} jeton` : 'Geri al'}
               accessibilityRole="button"
-              accessibilityHint="Son kaydirma islemini geri almak icin dokunun"
+              accessibilityHint="Son kaydırma işlemini geri almak için dokunun"
             >
               <View style={styles.undoButton} testID="discovery-undo-btn">
                 <Ionicons name="arrow-undo" size={20} color={palette.gold[500]} />
@@ -1429,17 +1434,17 @@ export const DiscoveryScreen: React.FC = () => {
             <Pressable
               onPress={() => {
                 Alert.alert(
-                  'Premium Ozellik',
-                  'Geri alma ozelligi icin Gold veya uzeri paket gereklidir.',
+                  'Premium Özellik',
+                  'Geri alma özelliği için Gold veya üzeri paket gereklidir.',
                   [
-                    { text: 'Vazgec', style: 'cancel' },
-                    { text: 'Paketleri Gor', onPress: () => navigation.navigate('ProfileTab', { screen: 'MembershipPlans' } as never) },
+                    { text: 'Vazgeç', style: 'cancel' },
+                    { text: 'Paketleri Gör', onPress: () => navigation.navigate('ProfileTab', { screen: 'MembershipPlans' } as never) },
                   ],
                 );
               }}
-              accessibilityLabel="Geri al — Premium ozellik"
+              accessibilityLabel="Geri al — Premium özellik"
               accessibilityRole="button"
-              accessibilityHint="Geri alma ozelligi icin Premium'a yukseltin"
+              accessibilityHint="Geri alma özelliği için Premium'a yükseltin"
             >
               <View style={[styles.undoButton, { opacity: 0.5 }]} testID="discovery-undo-btn-locked">
                 <Ionicons name="arrow-undo" size={20} color={palette.gold[500]} />
@@ -1627,6 +1632,7 @@ const styles = StyleSheet.create({
   },
   headerLeft: {
     flex: 1,
+    flexShrink: 1,
   },
   headerTitle: {
     ...typography.h3,
@@ -1641,8 +1647,8 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-    flexShrink: 1,
+    gap: spacing.sm,
+    flexShrink: 0,
     zIndex: 100,
   },
   filterButton: {
@@ -1660,11 +1666,8 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   boostButtonActive: {
-    borderColor: colors.accent,
-    backgroundColor: colors.accent + '15',
-  },
-  boostIcon: {
-    fontSize: 18,
+    borderColor: colors.primary,
+    backgroundColor: colors.primary + '15',
   },
   // ── Persistent streak badge ──
   streakBadge: {

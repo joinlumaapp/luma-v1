@@ -39,67 +39,67 @@ const POLICY_SECTIONS: PolicySection[] = [
     title: 'Veri Toplama',
     icon: 'folder-outline',
     content:
-      'LUMA uygulamasi, size en iyi deneyimi sunabilmek icin asagidaki verileri toplar:\n\n' +
-      '- Kimlik bilgileri (ad, soyad, dogum tarihi)\n' +
-      '- Iletisim bilgileri (telefon numarasi, e-posta adresi)\n' +
-      '- Profil bilgileri (fotograflar, biyografi, ilgi alanlari)\n' +
-      '- Konum bilgisi (yakininizdaki kisileri gostermek icin)\n' +
-      '- Cihaz bilgileri (isletim sistemi, cihaz modeli)\n' +
-      '- Kullanim verileri (uygulama ici etkilesimler, tercihler)\n\n' +
-      'Tum veriler gizlilik odakli bir yaklasimla toplanir ve islemin amaci disinda kullanilmaz.',
+      'LUMA uygulaması, size en iyi deneyimi sunabilmek için aşağıdaki verileri toplar:\n\n' +
+      '- Kimlik bilgileri (ad, soyad, doğum tarihi)\n' +
+      '- İletişim bilgileri (telefon numarası, e-posta adresi)\n' +
+      '- Profil bilgileri (fotoğraflar, biyografi, ilgi alanları)\n' +
+      '- Konum bilgisi (yakınızndaki kişileri göstermek için)\n' +
+      '- Cihaz bilgileri (işletim sistemi, cihaz modeli)\n' +
+      '- Kullanım verileri (uygulama içi etkileşimler, tercihler)\n\n' +
+      'Tüm veriler gizlilik odaklı bir yaklaşımla toplanır ve işlemin amacı dışında kullanılmaz.',
   },
   {
-    title: 'Veri Isleme',
+    title: 'Veri İşleme',
     icon: 'cog-outline',
     content:
-      'Toplanan veriler asagidaki amaclarla islenir:\n\n' +
-      '- Uyumluluk analizi ve eslestirme algoritmasi\n' +
-      '- Profil dogrulama ve guvenlik kontrolleri\n' +
-      '- Bildirim gonderimi ve iletisim\n' +
-      '- Uygulama performansinin iyilestirilmesi\n' +
-      '- Yasal yukumluluklerin yerine getirilmesi\n\n' +
-      'Verileriniz Turkiye\'deki sunucularda ve AB standartlarina uygun sekilde islenir. ' +
-      '6698 sayili Kisisel Verilerin Korunmasi Kanunu (KVKK) ve Avrupa Birliği Genel ' +
-      'Veri Koruma Tuzugu (GDPR) kapsaminda tum haklariniz saklidir.',
+      'Toplanan veriler aşağıdaki amaçlarla işlenir:\n\n' +
+      '- Uyumluluk analizi ve eşleştirme algoritması\n' +
+      '- Profil doğrulama ve güvenlik kontrolleri\n' +
+      '- Bildirim gönderimi ve iletişim\n' +
+      '- Uygulama performansının iyileştirilmesi\n' +
+      '- Yasal yükümlülüklerin yerine getirilmesi\n\n' +
+      'Verileriniz Türkiye\'deki sunucularda ve AB standartlarına uygun şekilde işlenir. ' +
+      '6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) ve Avrupa Birliği Genel ' +
+      'Veri Koruma Tüzüğü (GDPR) kapsamında tüm haklarınız saklıdır.',
   },
   {
-    title: 'Veri Paylasimi',
+    title: 'Veri Paylaşımı',
     icon: 'share-outline',
     content:
-      'Kisisel verileriniz asagidaki durumlar haricinde ucuncu taraflarla paylasilmaz:\n\n' +
-      '- Yasal zorunluluklar (mahkeme karari, resmi talep)\n' +
-      '- Guvenlik tehditleri ve dolandiricilik onleme\n' +
-      '- Hizmet saglayicilari (odeme isleme, bulut depolama)\n\n' +
-      'Hizmet saglayicilariyla paylasilmasi zorunlu veriler, gizlilik sozlesmesi ' +
-      'cercevesinde ve yalnizca hizmetin gerceklesmesi icin paylasilir.\n\n' +
-      'Verileriniz hicbir zaman reklam amaciyla satilmaz veya paylasilmaz.',
+      'Kişisel verileriniz aşağıdaki durumlar haricinde üçüncü taraflarla paylaşılmaz:\n\n' +
+      '- Yasal zorunluluklar (mahkeme kararı, resmi talep)\n' +
+      '- Güvenlik tehditleri ve dolandırıcılık önleme\n' +
+      '- Hizmet sağlayıcıları (ödeme işleme, bulut depolama)\n\n' +
+      'Hizmet sağlayıcılarıyla paylaşılması zorunlu veriler, gizlilik sözleşmesi ' +
+      'çerçevesinde ve yalnızca hizmetin gerçekleşmesi için paylaşılır.\n\n' +
+      'Verileriniz hiçbir zaman reklam amacıyla satılmaz veya paylaşılmaz.',
   },
   {
-    title: 'Haklariniz',
+    title: 'Haklarınız',
     icon: 'shield-checkmark-outline',
     content:
-      'KVKK ve GDPR kapsaminda asagidaki haklara sahipsiniz:\n\n' +
-      '- Kisisel verilerinizin islenip islenmedigini ogrenme\n' +
-      '- Islenmisse buna iliskin bilgi talep etme\n' +
-      '- Isleme amacini ve amaca uygun kullanilip kullanilmadigini ogrenme\n' +
-      '- Yurt icinde veya disinda aktarilip aktarilmadigini ogrenme\n' +
-      '- Eksik veya yanlis islenmisse duzeltilmesini isteme\n' +
-      '- Islenmesini gerektiren sebeplerin ortadan kalkmasi halinde silinmesini isteme\n' +
-      '- Verilerinizin tasinabilir bir formatta indirilmesini talep etme\n' +
-      '- Isleme sonucu aleyhinize bir sonuc ortaya cikarsa itiraz etme\n\n' +
-      'Bu haklarinizi kullanmak icin uygulama icinden veya destek@luma.dating ' +
-      'adresinden bize ulasabilirsiniz.',
+      'KVKK ve GDPR kapsamında aşağıdaki haklara sahipsiniz:\n\n' +
+      '- Kişisel verilerinizin işlenip işlenmediğini öğrenme\n' +
+      '- İşlenmişse buna ilişkin bilgi talep etme\n' +
+      '- İşleme amacını ve amaca uygun kullanılıp kullanılmadığını öğrenme\n' +
+      '- Yurt içinde veya dışında aktarılıp aktarılmadığını öğrenme\n' +
+      '- Eksik veya yanlış işlenmişse düzeltilmesini isteme\n' +
+      '- İşlenmesini gerektiren sebeplerin ortadan kalkması halinde silinmesini isteme\n' +
+      '- Verilerinizin taşınabilir bir formatta indirilmesini talep etme\n' +
+      '- İşleme sonucu aleyhinize bir sonuç ortaya çıkarsa itiraz etme\n\n' +
+      'Bu haklarınızı kullanmak için uygulama içinden veya destek@luma.dating ' +
+      'adresinden bize ulaşabilirsiniz.',
   },
   {
-    title: 'Iletisim',
+    title: 'İletişim',
     icon: 'mail-outline',
     content:
-      'Gizlilik politikamiz hakkinda sorulariniz icin:\n\n' +
+      'Gizlilik politikamız hakkında sorularınız için:\n\n' +
       'E-posta: destek@luma.dating\n' +
-      'Adres: LUMA Teknoloji A.S.\n' +
-      'Veri Sorumlusu Irtibat Kisisi: kvkk@luma.dating\n\n' +
-      'Gizlilik politikamiz son guncelleme tarihi: 12 Mart 2026\n\n' +
-      'Politikamizda yapilacak degisiklikler uygulama uzerinden bildirilecektir.',
+      'Adres: LUMA Teknoloji A.Ş.\n' +
+      'Veri Sorumlusu İrtibat Kişisi: kvkk@luma.dating\n\n' +
+      'Gizlilik politikamız son güncelleme tarihi: 12 Mart 2026\n\n' +
+      'Politikamızda yapılacak değişiklikler uygulama üzerinden bildirilecektir.',
   },
 ];
 
@@ -109,58 +109,58 @@ const KVKK_SECTIONS: PolicySection[] = [
     title: 'Veri Sorumlusu',
     icon: 'business-outline',
     content:
-      'LUMA Teknoloji A.S. ("LUMA") olarak, 6698 sayili Kisisel Verilerin Korunmasi Kanunu ' +
-      '("KVKK") kapsaminda veri sorumlusu sifatiyla kisisel verilerinizi islemekteyiz.\n\n' +
-      'Veri Sorumlusu: LUMA Teknoloji A.S.\n' +
-      'Adres: Istanbul, Turkiye\n' +
-      'Irtibat: kvkk@luma.dating',
+      'LUMA Teknoloji A.Ş. ("LUMA") olarak, 6698 sayılı Kişisel Verilerin Korunması Kanunu ' +
+      '("KVKK") kapsamında veri sorumlusu sıfatıyla kişisel verilerinizi işlemekteyiz.\n\n' +
+      'Veri Sorumlusu: LUMA Teknoloji A.Ş.\n' +
+      'Adres: İstanbul, Türkiye\n' +
+      'İrtibat: kvkk@luma.dating',
   },
   {
-    title: 'Kisisel Verilerin Islenmesi',
+    title: 'Kişisel Verilerin İşlenmesi',
     icon: 'document-text-outline',
     content:
-      'KVKK\'nin 5. ve 6. maddeleri uyarinca kisisel verileriniz asagidaki hukuki sebeplerle islenmektedir:\n\n' +
-      '- Acik rizaniz (profil bilgileri, fotograf, konum)\n' +
-      '- Sozlesmenin ifasi (hesap olusturma, eslestirme hizmeti)\n' +
-      '- Hukuki yukumluluk (yasal saklama gereklilikleri)\n' +
-      '- Mesru menfaat (hizmet iyilestirme, guvenlik)\n\n' +
-      'Ozel nitelikli kisisel veriler (biyometrik veri gibi) yalnizca acik rizaniz ile islenir.',
+      'KVKK\'nin 5. ve 6. maddeleri uyarınca kişisel verileriniz aşağıdaki hukuki sebeplerle işlenmektedir:\n\n' +
+      '- Açık rızanız (profil bilgileri, fotoğraf, konum)\n' +
+      '- Sözleşmenin ifası (hesap oluşturma, eşleştirme hizmeti)\n' +
+      '- Hukuki yükümlülük (yasal saklama gereklilikleri)\n' +
+      '- Meşru menfaat (hizmet iyileştirme, güvenlik)\n\n' +
+      'Özel nitelikli kişisel veriler (biyometrik veri gibi) yalnızca açık rızanız ile işlenir.',
   },
   {
-    title: 'Verilerin Aktarilmasi',
+    title: 'Verilerin Aktarılması',
     icon: 'swap-horizontal-outline',
     content:
-      'Kisisel verileriniz KVKK\'nin 8. ve 9. maddeleri kapsaminda:\n\n' +
-      '- Yurt icinde: Hizmet saglayicilari, is ortaklari ve yetkili kamu kurumlarina\n' +
-      '- Yurt disinda: Yeterli korumaya sahip ulkelere veya taahhutname ile\n\n' +
-      'aktarilabilir. Tum aktarimlar KVKK\'nin ongordugu guvenlik onlemleri alinarak yapilir.',
+      'Kişisel verileriniz KVKK\'nin 8. ve 9. maddeleri kapsamında:\n\n' +
+      '- Yurt içinde: Hizmet sağlayıcıları, iş ortakları ve yetkili kamu kurumlarına\n' +
+      '- Yurt dışında: Yeterli korumaya sahip ülkelere veya taahhütname ile\n\n' +
+      'aktarılabilir. Tüm aktarımlar KVKK\'nin öngördüğü güvenlik önlemleri alınarak yapılır.',
   },
   {
-    title: 'KVKK Kapsamindaki Haklariniz',
+    title: 'KVKK Kapsamındaki Haklarınız',
     icon: 'shield-checkmark-outline',
     content:
-      'KVKK\'nin 11. maddesi uyarinca asagidaki haklara sahipsiniz:\n\n' +
-      '- Kisisel verilerinizin islenip islenmedigini ogrenme\n' +
-      '- Islenmisse buna iliskin bilgi talep etme\n' +
-      '- Isleme amacini ve amaca uygun kullanilip kullanilmadigini ogrenme\n' +
-      '- Yurt icinde veya disinda aktarilip aktarilmadigini ogrenme\n' +
-      '- Eksik veya yanlis islenmisse duzeltilmesini isteme\n' +
-      '- KVKK\'nin 7. maddesi cercevesinde silinmesini veya yok edilmesini isteme\n' +
-      '- Duzeltme/silme islemlerinin aktarildigi ucuncu kisilere bildirilmesini isteme\n' +
-      '- Islenen verilerin munhasiran otomatik sistemler ile analiz edilmesi suretiyle aleyhinize bir sonucun ortaya cikmasina itiraz etme\n' +
-      '- Kanuna aykiri islenmesi sebebiyle zarara ugramaniz halinde zararin giderilmesini talep etme',
+      'KVKK\'nin 11. maddesi uyarınca aşağıdaki haklara sahipsiniz:\n\n' +
+      '- Kişisel verilerinizin işlenip işlenmediğini öğrenme\n' +
+      '- İşlenmişse buna ilişkin bilgi talep etme\n' +
+      '- İşleme amacını ve amaca uygun kullanılıp kullanılmadığını öğrenme\n' +
+      '- Yurt içinde veya dışında aktarılıp aktarılmadığını öğrenme\n' +
+      '- Eksik veya yanlış işlenmişse düzeltilmesini isteme\n' +
+      '- KVKK\'nin 7. maddesi çerçevesinde silinmesini veya yok edilmesini isteme\n' +
+      '- Düzeltme/silme işlemlerinin aktarıldığı üçüncü kişilere bildirilmesini isteme\n' +
+      '- İşlenen verilerin münhasıran otomatik sistemler ile analiz edilmesi suretiyle aleyhinize bir sonucun ortaya çıkmasına itiraz etme\n' +
+      '- Kanuna aykırı işlenmesi sebebiyle zarara uğramanız halinde zararın giderilmesini talep etme',
   },
   {
-    title: 'Basvuru Yontemi',
+    title: 'Başvuru Yöntemi',
     icon: 'mail-outline',
     content:
-      'KVKK kapsamindaki haklarinizi kullanmak icin:\n\n' +
+      'KVKK kapsamındaki haklarınızı kullanmak için:\n\n' +
       'E-posta: kvkk@luma.dating\n' +
-      'Posta: LUMA Teknoloji A.S., Istanbul, Turkiye\n\n' +
-      'Basvurular en gec 30 gun icinde ucretsiz olarak yanitlanacaktir. ' +
-      'Islemin ayrica bir maliyet gerektirmesi halinde Kisisel Verileri Koruma Kurulu ' +
-      'tarafindan belirlenen tarife uzerinden ucret alinabilir.\n\n' +
-      'Son guncelleme: 12 Mart 2026',
+      'Posta: LUMA Teknoloji A.Ş., İstanbul, Türkiye\n\n' +
+      'Başvurular en geç 30 gün içinde ücretsiz olarak yanıtlanacaktır. ' +
+      'İşlemin ayrıca bir maliyet gerektirmesi halinde Kişisel Verileri Koruma Kurulu ' +
+      'tarafından belirlenen tarife üzerinden ücret alınabilir.\n\n' +
+      'Son güncelleme: 12 Mart 2026',
   },
 ];
 
@@ -174,10 +174,10 @@ export const PrivacyPolicyScreen: React.FC = () => {
   const pageType = route.params?.type ?? 'privacy';
   const isKvkk = pageType === 'kvkk';
   const sections = isKvkk ? KVKK_SECTIONS : POLICY_SECTIONS;
-  const headerTitle = isKvkk ? 'KVKK Aydinlatma Metni' : 'Gizlilik Politikasi';
+  const headerTitle = isKvkk ? 'KVKK Aydınlatma Metni' : 'Gizlilik Politikası';
   const introText = isKvkk
-    ? 'Bu aydinlatma metni, 6698 sayili Kisisel Verilerin Korunmasi Kanunu ("KVKK") kapsaminda kisisel verilerinizin islenmesine iliskin bilgilendirme amaci tasimaktadir.'
-    : 'LUMA olarak gizliliginize onem veriyoruz. Bu politika, kisisel verilerinizin nasil toplandigi, islendigi ve korundugunun aciklanmasidir.';
+    ? 'Bu aydınlatma metni, 6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") kapsamında kişisel verilerinizin işlenmesine ilişkin bilgilendirme amacı taşımaktadır.'
+    : 'LUMA olarak gizliliğinize önem veriyoruz. Bu politika, kişisel verilerinizin nasıl toplandığı, işlendiği ve korunduğunun açıklanmasıdır.';
 
   const [isExporting, setIsExporting] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
@@ -193,11 +193,11 @@ export const PrivacyPolicyScreen: React.FC = () => {
     try {
       // TODO: await userService.requestDataExport();
       Alert.alert(
-        'Talep Alindi',
-        'Veri indirme talebiniz alindi. Verileriniz hazir oldugunda e-posta adresinize gonderilecektir.',
+        'Talep Alındı',
+        'Veri indirme talebiniz alındı. Verileriniz hazır olduğunda e-posta adresinize gönderilecektir.',
       );
     } catch {
-      Alert.alert('Hata', 'Veri indirme talebi gonderilemedi. Lutfen tekrar deneyin.');
+      Alert.alert('Hata', 'Veri indirme talebi gönderilemedi. Lütfen tekrar deneyin.');
     } finally {
       setIsExporting(false);
     }
@@ -280,9 +280,9 @@ export const PrivacyPolicyScreen: React.FC = () => {
               <Ionicons name="download-outline" size={18} color={colors.primary} />
             </View>
             <View style={dynamicStyles.actionTextContainer}>
-              <Text style={dynamicStyles.actionTitle}>Verilerimi Indir</Text>
+              <Text style={dynamicStyles.actionTitle}>Verilerimi İndir</Text>
               <Text style={dynamicStyles.actionSubtitle}>
-                Tum kisisel verilerinizi tasinabilir formatta indirin
+                Tüm kişisel verilerinizi taşınabilir formatta indirin
               </Text>
             </View>
           </View>
@@ -307,7 +307,7 @@ export const PrivacyPolicyScreen: React.FC = () => {
                 Verilerimi Sil
               </Text>
               <Text style={dynamicStyles.actionSubtitle}>
-                Hesabinizi ve tum verilerinizi kalici olarak silin
+                Hesabınızı ve tüm verilerinizi kalıcı olarak silin
               </Text>
             </View>
           </View>

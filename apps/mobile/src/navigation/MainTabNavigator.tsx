@@ -57,6 +57,7 @@ import { MembershipPlansScreen } from '../screens/settings/MembershipPlansScreen
 import { PersonalitySelectionScreen } from '../screens/profile/PersonalitySelectionScreen';
 import { ProfileCoachScreen } from '../screens/profile/ProfileCoachScreen';
 import { BlockedUsersScreen } from '../screens/settings/BlockedUsersScreen';
+import { SafetyCenterScreen } from '../screens/settings/SafetyCenterScreen';
 import { AccountDeletionScreen } from '../screens/settings/AccountDeletionScreen';
 import { PrivacyPolicyScreen } from '../screens/settings/PrivacyPolicyScreen';
 import { QuestionsScreen } from '../screens/onboarding/QuestionsScreen';
@@ -78,6 +79,7 @@ import { ActivitiesScreen } from '../screens/activities/ActivitiesScreen';
 import { CreateActivityScreen } from '../screens/activities/CreateActivityScreen';
 import { ActivityDetailScreen } from '../screens/activities/ActivityDetailScreen';
 import { ActivityGroupChatScreen } from '../screens/activities/ActivityGroupChatScreen';
+import { IcebreakerRoomScreen } from '../screens/harmony/IcebreakerRoomScreen';
 
 // Waves screen
 import { WavesScreen } from '../screens/waves/WavesScreen';
@@ -108,6 +110,36 @@ function getNestedStateIndex(
   route: { state?: { index?: number } } | undefined,
 ): number | undefined {
   return route?.state?.index;
+}
+
+/**
+ * Creates a tabPress listener that resets the stack to root when
+ * the user taps a tab that is already focused and has a deep stack.
+ */
+function createTabResetListener(
+  navigation: { getState?: () => { routes: Array<{ name: string; key?: string; state?: unknown }> } | undefined; dispatch: (action: unknown) => void },
+  route: { name: string },
+) {
+  return {
+    tabPress: (e: { preventDefault: () => void }) => {
+      const tabState = navigation.getState?.();
+      if (!tabState?.routes) return;
+      const thisRoute = tabState.routes.find((r) => r.name === route.name);
+      const nestedIndex = getNestedStateIndex(thisRoute);
+      const isDeep = nestedIndex !== undefined && nestedIndex > 0;
+      if (isDeep) {
+        e.preventDefault();
+        navigation.dispatch(
+          CommonActions.reset({
+            ...tabState,
+            routes: tabState.routes.map((r) =>
+              r.name === route.name ? { ...r, state: undefined } : r
+            ),
+          })
+        );
+      }
+    },
+  };
 }
 
 // Ionicons name map for active/inactive tab states
@@ -304,6 +336,11 @@ const ActivitiesStackNavigator: React.FC = () => (
     />
     <ActivitiesStack.Screen name="ActivityDetail" component={ActivityDetailScreen} />
     <ActivitiesStack.Screen name="ActivityGroupChat" component={ActivityGroupChatScreen} />
+    <ActivitiesStack.Screen
+      name="IcebreakerRoom"
+      component={IcebreakerRoomScreen}
+      options={{ animation: 'slide_from_bottom' }}
+    />
   </ActivitiesStack.Navigator>
 );
 
@@ -329,6 +366,7 @@ const ProfileStackNavigator: React.FC = () => (
     <ProfileStack.Screen name="PersonalitySelection" component={PersonalitySelectionScreen} />
     <ProfileStack.Screen name="ProfileCoach" component={ProfileCoachScreen} />
     <ProfileStack.Screen name="BlockedUsers" component={BlockedUsersScreen} />
+    <ProfileStack.Screen name="SafetyCenter" component={SafetyCenterScreen} />
     <ProfileStack.Screen name="AccountDeletion" component={AccountDeletionScreen} />
     <ProfileStack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
     <ProfileStack.Screen name="Questions" component={QuestionsScreen} />
@@ -398,26 +436,7 @@ export const MainTabNavigator: React.FC = () => {
           tabBarAccessibilityLabel: 'Sosyal Akış',
           tabBarButtonTestID: 'tab-feed',
         }}
-        listeners={({ navigation, route }) => ({
-          tabPress: (e) => {
-            const tabState = navigation.getState?.();
-            if (!tabState?.routes) return;
-            const thisRoute = tabState.routes.find((r: { name: string }) => r.name === route.name);
-            const nestedIndex = getNestedStateIndex(thisRoute);
-            const isDeep = nestedIndex !== undefined && nestedIndex > 0;
-            if (isDeep) {
-              e.preventDefault();
-              navigation.dispatch(
-                CommonActions.reset({
-                  ...tabState,
-                  routes: tabState.routes.map((r: { name: string; key?: string; state?: unknown }) =>
-                    r.name === route.name ? { ...r, state: undefined } : r
-                  ),
-                })
-              );
-            }
-          },
-        })}
+        listeners={({ navigation, route }) => createTabResetListener(navigation, route)}
       />
       <Tab.Screen
         name="DiscoveryTab"
@@ -434,26 +453,7 @@ export const MainTabNavigator: React.FC = () => {
           tabBarAccessibilityLabel: `Keşfet${notifUnreadCount > 0 ? `, ${notifUnreadCount} bildirim` : ''}`,
           tabBarButtonTestID: 'tab-discovery',
         }}
-        listeners={({ navigation, route }) => ({
-          tabPress: (e) => {
-            const tabState = navigation.getState?.();
-            if (!tabState?.routes) return;
-            const thisRoute = tabState.routes.find((r: { name: string }) => r.name === route.name);
-            const nestedIndex = getNestedStateIndex(thisRoute);
-            const isDeep = nestedIndex !== undefined && nestedIndex > 0;
-            if (isDeep) {
-              e.preventDefault();
-              navigation.dispatch(
-                CommonActions.reset({
-                  ...tabState,
-                  routes: tabState.routes.map((r: { name: string; key?: string; state?: unknown }) =>
-                    r.name === route.name ? { ...r, state: undefined } : r
-                  ),
-                })
-              );
-            }
-          },
-        })}
+        listeners={({ navigation, route }) => createTabResetListener(navigation, route)}
       />
       <Tab.Screen
         name="ActivitiesTab"
@@ -466,26 +466,7 @@ export const MainTabNavigator: React.FC = () => {
           tabBarAccessibilityLabel: 'Aktiviteler',
           tabBarButtonTestID: 'tab-activities',
         }}
-        listeners={({ navigation, route }) => ({
-          tabPress: (e) => {
-            const tabState = navigation.getState?.();
-            if (!tabState?.routes) return;
-            const thisRoute = tabState.routes.find((r: { name: string }) => r.name === route.name);
-            const nestedIndex = getNestedStateIndex(thisRoute);
-            const isDeep = nestedIndex !== undefined && nestedIndex > 0;
-            if (isDeep) {
-              e.preventDefault();
-              navigation.dispatch(
-                CommonActions.reset({
-                  ...tabState,
-                  routes: tabState.routes.map((r: { name: string; key?: string; state?: unknown }) =>
-                    r.name === route.name ? { ...r, state: undefined } : r
-                  ),
-                })
-              );
-            }
-          },
-        })}
+        listeners={({ navigation, route }) => createTabResetListener(navigation, route)}
       />
       <Tab.Screen
         name="MatchesTab"
@@ -502,26 +483,7 @@ export const MainTabNavigator: React.FC = () => {
           tabBarAccessibilityLabel: `Eşleşmeler${totalUnread > 0 ? `, ${totalUnread} okunmamış mesaj` : ''}`,
           tabBarButtonTestID: 'tab-matches',
         }}
-        listeners={({ navigation, route }) => ({
-          tabPress: (e) => {
-            const tabState = navigation.getState?.();
-            if (!tabState?.routes) return;
-            const thisRoute = tabState.routes.find((r: { name: string }) => r.name === route.name);
-            const nestedIndex = getNestedStateIndex(thisRoute);
-            const isDeep = nestedIndex !== undefined && nestedIndex > 0;
-            if (isDeep) {
-              e.preventDefault();
-              navigation.dispatch(
-                CommonActions.reset({
-                  ...tabState,
-                  routes: tabState.routes.map((r: { name: string; key?: string; state?: unknown }) =>
-                    r.name === route.name ? { ...r, state: undefined } : r
-                  ),
-                })
-              );
-            }
-          },
-        })}
+        listeners={({ navigation, route }) => createTabResetListener(navigation, route)}
       />
       <Tab.Screen
         name="ProfileTab"
@@ -534,26 +496,7 @@ export const MainTabNavigator: React.FC = () => {
           tabBarAccessibilityLabel: 'Profil',
           tabBarButtonTestID: 'tab-profile',
         }}
-        listeners={({ navigation, route }) => ({
-          tabPress: (e) => {
-            const tabState = navigation.getState?.();
-            if (!tabState?.routes) return;
-            const thisRoute = tabState.routes.find((r: { name: string }) => r.name === route.name);
-            const nestedIndex = getNestedStateIndex(thisRoute);
-            const isDeep = nestedIndex !== undefined && nestedIndex > 0;
-            if (isDeep) {
-              e.preventDefault();
-              navigation.dispatch(
-                CommonActions.reset({
-                  ...tabState,
-                  routes: tabState.routes.map((r: { name: string; key?: string; state?: unknown }) =>
-                    r.name === route.name ? { ...r, state: undefined } : r
-                  ),
-                })
-              );
-            }
-          },
-        })}
+        listeners={({ navigation, route }) => createTabResetListener(navigation, route)}
       />
     </Tab.Navigator>
     <NotificationPermissionModal

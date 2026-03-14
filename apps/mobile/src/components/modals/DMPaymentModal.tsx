@@ -77,7 +77,7 @@ export const DMPaymentModal: React.FC<DMPaymentModalProps> = ({
           </View>
 
           {/* Title */}
-          <Text style={styles.title}>Direkt Mesaj Gonder</Text>
+          <Text style={styles.title}>Direkt Mesaj Gönder</Text>
           <Text style={styles.subtitle}>
             {recipientName} adli kisiye mesaj gonder
           </Text>
@@ -144,7 +144,7 @@ export const DMPaymentModal: React.FC<DMPaymentModalProps> = ({
                     <>
                       <Ionicons name="send" size={18} color="#FFFFFF" />
                       <Text style={styles.primaryButtonText}>
-                        Mesaji Gonder
+                        Mesajı Gönder
                       </Text>
                     </>
                   )}

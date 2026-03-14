@@ -179,7 +179,7 @@ export const EditProfileScreen: React.FC = () => {
               'Fotografi Sil',
               'Bu fotografi silmek istediginden emin misin?',
               [
-                { text: 'Iptal', style: 'cancel' },
+                { text: 'İptal', style: 'cancel' },
                 {
                   text: 'Sil',
                   style: 'destructive',
@@ -189,8 +189,8 @@ export const EditProfileScreen: React.FC = () => {
             );
           },
         });
-        options.push({ text: 'Iptal', style: 'cancel' });
-        Alert.alert('Fotograf Secenekleri', undefined, options);
+        options.push({ text: 'İptal', style: 'cancel' });
+        Alert.alert('Fotoğraf Seçenekleri', undefined, options);
         return;
       }
 
@@ -215,7 +215,7 @@ export const EditProfileScreen: React.FC = () => {
           },
         },
         {
-          text: 'Galeriden Sec',
+          text: 'Galeriden Seç',
           onPress: async () => {
             const uri = await photoService.pickFromGallery();
             if (uri) {
@@ -230,7 +230,7 @@ export const EditProfileScreen: React.FC = () => {
             }
           },
         },
-        { text: 'Iptal', style: 'cancel' },
+        { text: 'İptal', style: 'cancel' },
       ]);
     },
     [profile.photos.length, isPhotoUploading, uploadPhoto, deletePhoto, setMainPhoto],
@@ -270,7 +270,7 @@ export const EditProfileScreen: React.FC = () => {
       'Videoyu Sil',
       'Profil videosunu silmek istediginizden emin misiniz?',
       [
-        { text: 'Iptal', style: 'cancel' },
+        { text: 'İptal', style: 'cancel' },
         {
           text: 'Sil',
           style: 'destructive',
@@ -302,7 +302,7 @@ export const EditProfileScreen: React.FC = () => {
 
   const getOptionLabel = (options: LifestyleOption[], value: string): string => {
     const found = options.find((o) => o.value === value);
-    return found ? found.label : 'Sec';
+    return found ? found.label : 'Seç';
   };
 
   // ── Save handler ───────────────────────────────────────────────────────
@@ -784,7 +784,7 @@ export const EditProfileScreen: React.FC = () => {
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Sigara</Text>
                 <Text style={[styles.infoValue, !smoking && styles.infoValuePlaceholder]}>
-                  {smoking ? getOptionLabel(SMOKING_OPTIONS, smoking) : 'Sec'}
+                  {smoking ? getOptionLabel(SMOKING_OPTIONS, smoking) : 'Seç'}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
@@ -802,7 +802,7 @@ export const EditProfileScreen: React.FC = () => {
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Spor</Text>
                 <Text style={[styles.infoValue, !exercise && styles.infoValuePlaceholder]}>
-                  {exercise ? getOptionLabel(EXERCISE_OPTIONS, exercise) : 'Sec'}
+                  {exercise ? getOptionLabel(EXERCISE_OPTIONS, exercise) : 'Seç'}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
@@ -820,7 +820,7 @@ export const EditProfileScreen: React.FC = () => {
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Cocuk</Text>
                 <Text style={[styles.infoValue, !children && styles.infoValuePlaceholder]}>
-                  {children ? getOptionLabel(CHILDREN_OPTIONS, children) : 'Sec'}
+                  {children ? getOptionLabel(CHILDREN_OPTIONS, children) : 'Seç'}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />

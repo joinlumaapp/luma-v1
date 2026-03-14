@@ -1,5 +1,5 @@
 // PaidMessageModal — bottom sheet for sending a paid first message without matching
-// Shows message input + 199 TL payment confirmation
+// Shows message input + 150 Jeton payment confirmation
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
@@ -18,7 +18,7 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 
-const PAID_MESSAGE_PRICE = 199;
+const PAID_MESSAGE_PRICE = 150;
 const MAX_MESSAGE_LENGTH = 300;
 
 interface PaidMessageModalProps {
@@ -124,7 +124,7 @@ export const PaidMessageModal: React.FC<PaidMessageModalProps> = ({
               {/* Price hint */}
               <View style={styles.priceHint}>
                 <Text style={styles.priceHintText}>
-                  Bu mesaj {PAID_MESSAGE_PRICE} TL karşılığında gönderilir
+                  Bu mesaj {PAID_MESSAGE_PRICE} Jeton karşılığında gönderilir
                 </Text>
               </View>
 
@@ -160,7 +160,7 @@ export const PaidMessageModal: React.FC<PaidMessageModalProps> = ({
 
               <Text style={styles.title}>Ödeme Onayı</Text>
               <Text style={styles.subtitle}>
-                Bu kişiye eşleşmeden mesaj göndermek için {PAID_MESSAGE_PRICE} TL ödeyerek mesaj gönderebilirsin.
+                Bu kişiye eşleşmeden mesaj göndermek için {PAID_MESSAGE_PRICE} Jeton ödeyerek mesaj gönderebilirsin.
               </Text>
 
               {/* Message preview */}
@@ -175,7 +175,7 @@ export const PaidMessageModal: React.FC<PaidMessageModalProps> = ({
               <View style={styles.priceCard}>
                 <View style={styles.priceRow}>
                   <Text style={styles.priceLabel}>1 Mesaj Gönder</Text>
-                  <Text style={styles.priceValue}>{PAID_MESSAGE_PRICE} TL</Text>
+                  <Text style={styles.priceValue}>{PAID_MESSAGE_PRICE} Jeton</Text>
                 </View>
               </View>
 
@@ -186,7 +186,7 @@ export const PaidMessageModal: React.FC<PaidMessageModalProps> = ({
                 activeOpacity={0.8}
               >
                 <Text style={styles.confirmButtonText}>
-                  Mesaj Gönder ({PAID_MESSAGE_PRICE} TL)
+                  Mesaj Gönder ({PAID_MESSAGE_PRICE} Jeton)
                 </Text>
               </TouchableOpacity>
 

@@ -34,8 +34,8 @@ const STRONG_DIMENSION_THRESHOLD = 70;
 
 // Daily swipe limits per package tier (LOCKED: 4 packages)
 const DAILY_SWIPE_LIMITS: Record<string, number> = {
-  FREE: 20,
-  GOLD: 60,
+  FREE: 999999,
+  GOLD: 999999,
   PRO: 200,
   RESERVED: 999999, // Unlimited
 };
@@ -43,7 +43,7 @@ const DAILY_SWIPE_LIMITS: Record<string, number> = {
 // Daily super like limits per package tier (LOCKED: 4 packages)
 const DAILY_SUPER_LIKE_LIMITS: Record<string, number> = {
   FREE: 1,
-  GOLD: 5,
+  GOLD: 10,
   PRO: 999999, // Unlimited
   RESERVED: 999999, // Unlimited
 };

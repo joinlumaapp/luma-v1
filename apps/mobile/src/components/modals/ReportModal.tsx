@@ -32,7 +32,7 @@ interface ReportReason {
 
 const REPORT_REASONS: ReportReason[] = [
   { id: 'spam', label: 'Spam' },
-  { id: 'inappropriate_photos', label: 'Uygunsuz Fotoğraflar' },
+  { id: 'inappropriate_photo', label: 'Uygunsuz Fotoğraflar' },
   { id: 'harassment', label: 'Taciz' },
   { id: 'underage', label: 'Yaş Sınırı İhlali' },
   { id: 'fake_profile', label: 'Sahte Profil' },

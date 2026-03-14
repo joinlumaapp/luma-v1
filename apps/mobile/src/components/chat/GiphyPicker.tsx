@@ -215,7 +215,7 @@ export const GiphyPicker: React.FC<GiphyPickerProps> = ({ onSelect, onClose }) =
 
       {/* Header */}
       <View style={pickerStyles.header}>
-        <Text style={pickerStyles.title}>GIF Gonder</Text>
+        <Text style={pickerStyles.title}>GIF Gönder</Text>
         <TouchableOpacity
           onPress={onClose}
           accessibilityLabel="Kapat"

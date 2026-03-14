@@ -342,7 +342,7 @@ export const CompatibilityInsightScreen: React.FC = () => {
   const { matchId, partnerName } = route.params;
 
   const packageTier = useAuthStore((state) => state.user?.packageTier ?? 'free');
-  // Dimensions are locked for Free and Premium users (need Supreme+ to unlock all 7)
+  // Dimensions are locked for Free and Gold users (need Pro or Reserved to unlock all 7)
   const isFreeUser = packageTier === 'free' || packageTier === 'gold';
 
   const [isLoading, setIsLoading] = useState(true);
@@ -585,7 +585,7 @@ export const CompatibilityInsightScreen: React.FC = () => {
                   {dim.isPremiumLocked ? (
                     <View style={styles.lockBadge}>
                       <Text style={styles.lockIcon}>{'\uD83D\uDD12'}</Text>
-                      <Text style={styles.lockText}>Supreme+</Text>
+                      <Text style={styles.lockText}>Pro</Text>
                     </View>
                   ) : (
                     <View style={styles.dimensionScoreContainer}>
@@ -683,7 +683,7 @@ export const CompatibilityInsightScreen: React.FC = () => {
                 Tüm Boyutları Aç
               </Text>
               <Text style={styles.premiumCtaSubtitle}>
-                Supreme ile 7 boyutun tamamını gör ve ruh eşini bul!
+                Pro ile 7 boyutun tamamını gör ve ruh eşini bul!
               </Text>
               <TouchableOpacity
                 style={styles.premiumCtaButton}
@@ -691,7 +691,7 @@ export const CompatibilityInsightScreen: React.FC = () => {
                 onPress={() => navigation.navigate('MembershipPlans')}
               >
                 <Text style={styles.premiumCtaButtonText}>
-                  Supreme'a Yükselt
+                  Pro'ya Yükselt
                 </Text>
               </TouchableOpacity>
             </View>

@@ -65,21 +65,11 @@ export const authService = {
     return response.data;
   },
 
-  // Upload selfie for verification
-  verifySelfie: async (photoUri: string): Promise<{ isVerified: boolean }> => {
-    const formData = new FormData();
-    formData.append('selfie', {
-      uri: photoUri,
-      type: 'image/jpeg',
-      name: 'selfie.jpg',
-    } as unknown as Blob);
-
-    const response = await api.post<{ isVerified: boolean }>(
+  // Upload selfie for verification (sends base64 string matching backend VerifySelfieDto)
+  verifySelfie: async (selfieBase64: string): Promise<{ verified: boolean; status: string }> => {
+    const response = await api.post<{ verified: boolean; status: string }>(
       API_ROUTES.AUTH.VERIFY_SELFIE,
-      formData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      }
+      { selfieImage: selfieBase64 },
     );
     return response.data;
   },

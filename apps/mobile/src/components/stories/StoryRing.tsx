@@ -101,8 +101,8 @@ export const StoryRing: React.FC<StoryRingProps> = ({
     if (isSeen) {
       return { borderColor: palette.gray[400], borderWidth: 1.5 };
     }
-    // Unseen — gold gradient effect (solid gold as gradient requires SVG)
-    return { borderColor: palette.gold[500], borderWidth: dims.border };
+    // Unseen — purple matching app primary color
+    return { borderColor: palette.purple[500], borderWidth: dims.border };
   };
 
   const ringStyle = getRingStyle();
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   plusBadge: {
     position: 'absolute',
     right: 0,
-    backgroundColor: palette.gold[500],
+    backgroundColor: palette.purple[500],
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,

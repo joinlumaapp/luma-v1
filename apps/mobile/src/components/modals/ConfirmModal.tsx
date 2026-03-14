@@ -29,7 +29,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   title,
   message,
   confirmLabel = 'Onayla',
-  cancelLabel = 'Vazgec',
+  cancelLabel = 'Vazgeç',
   onConfirm,
   onCancel,
   destructive = false,

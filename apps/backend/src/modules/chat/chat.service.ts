@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ModerationService } from '../moderation/moderation.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -164,6 +165,7 @@ export class ChatService {
         type: true,
         status: true,
         mediaUrl: true,
+        metadata: true,
         readAt: true,
         createdAt: true,
       },
@@ -181,6 +183,7 @@ export class ChatService {
         type: msg.type,
         status: msg.status,
         mediaUrl: msg.mediaUrl,
+        metadata: msg.metadata,
         isRead: msg.readAt !== null,
         createdAt: msg.createdAt.toISOString(),
       })),
@@ -241,9 +244,24 @@ export class ChatService {
         type: true,
         status: true,
         mediaUrl: true,
+        metadata: true,
         createdAt: true,
       },
     });
+
+    // Detect URLs in text messages and store link preview metadata.
+    // TODO: Server-side link preview fetching (title, image, description) could be
+    // added here as an async job — for now we only extract the first URL so the
+    // client can fetch preview data itself.
+    if (messageType === 'TEXT') {
+      const urlMatch = dto.content.match(/https?:\/\/[^\s]+/);
+      if (urlMatch) {
+        await this.prisma.chatMessage.update({
+          where: { id: message.id },
+          data: { metadata: { linkUrl: urlMatch[0] } },
+        });
+      }
+    }
 
     // Update match's updatedAt to bubble conversation to top
     await this.prisma.match.update({
@@ -280,6 +298,7 @@ export class ChatService {
       type: message.type,
       status: message.status,
       mediaUrl: message.mediaUrl,
+      metadata: message.metadata,
       isRead: false,
       createdAt: message.createdAt.toISOString(),
     };
@@ -402,6 +421,57 @@ export class ChatService {
       action: 'added',
       messageId,
       emoji: dto.emoji,
+    };
+  }
+
+  // ─── Delete / Unsend Message ──────────────────────────────
+
+  /**
+   * Soft-delete a message. Only the original sender can delete their own message.
+   * Sets content to empty string and status to DELETED — the record is preserved
+   * so conversation ordering and references remain intact.
+   */
+  async deleteMessage(userId: string, messageId: string) {
+    const message = await this.prisma.chatMessage.findUnique({
+      where: { id: messageId },
+      select: { id: true, senderId: true, matchId: true },
+    });
+
+    if (!message) {
+      throw new NotFoundException('Mesaj bulunamadi');
+    }
+
+    if (message.senderId !== userId) {
+      throw new ForbiddenException('Sadece kendi mesajlarinizi silebilirsiniz');
+    }
+
+    // Verify the match is still active
+    const match = await this.prisma.match.findUnique({
+      where: { id: message.matchId },
+      select: { isActive: true },
+    });
+
+    if (!match) {
+      throw new NotFoundException('Eslesme bulunamadi');
+    }
+
+    if (!match.isActive) {
+      throw new ForbiddenException('Bu eslestirme artik aktif degil');
+    }
+
+    await this.prisma.chatMessage.update({
+      where: { id: messageId },
+      data: {
+        content: '',
+        status: 'DELETED',
+        metadata: Prisma.JsonNull,
+      },
+    });
+
+    return {
+      messageId,
+      matchId: message.matchId,
+      deleted: true,
     };
   }
 }

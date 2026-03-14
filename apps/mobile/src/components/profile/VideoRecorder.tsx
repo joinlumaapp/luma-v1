@@ -112,7 +112,7 @@ export const VideoRecorder: React.FC<VideoRecorderProps> = ({
   const handleCancel = useCallback(() => {
     if (selectedVideo) {
       Alert.alert(
-        'Iptal Et',
+        'İptal Et',
         'Video secimini iptal etmek istediginizden emin misiniz?',
         [
           { text: 'Hayir', style: 'cancel' },
@@ -190,7 +190,7 @@ export const VideoRecorder: React.FC<VideoRecorderProps> = ({
                 accessibilityRole="button"
               >
                 <Ionicons name="refresh" size={20} color={colors.text} />
-                <Text style={styles.retryButtonText}>Tekrar Sec</Text>
+                <Text style={styles.retryButtonText}>Tekrar Seç</Text>
               </Pressable>
 
               <Pressable
@@ -265,7 +265,7 @@ export const VideoRecorder: React.FC<VideoRecorderProps> = ({
               accessibilityRole="button"
             >
               <Ionicons name="images-outline" size={22} color={palette.gold[600]} />
-              <Text style={styles.galleryButtonText}>Galeriden Sec</Text>
+              <Text style={styles.galleryButtonText}>Galeriden Seç</Text>
             </Pressable>
 
             {/* Specs */}

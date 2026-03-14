@@ -1,4 +1,4 @@
-// DiscoveryCard — Photo (62%) + Info Panel (38%) layout
+// DiscoveryCard — Full-bleed photo with bottom-aligned info overlay
 // No gesture handling — parent manages swipe + tap
 
 import React, { useEffect, useRef } from 'react';
@@ -84,16 +84,6 @@ const MODE_CONFIG: Record<string, { label: string; bg: string; text: string }> =
 const getModeStyle = (tag: string) =>
   MODE_CONFIG[tag] ?? MODE_CONFIG.exploring;
 
-// ─── Fallback compatibility explanation based on score range ─
-// Used only when no real compatReasons are provided
-
-const getFallbackExplanations = (score: number): string[] => {
-  if (score >= 90) return ['Ortak ilgi alanları', 'Benzer sosyal enerji'];
-  if (score >= 80) return ['Güçlü uyum alanları', 'Benzer yaşam tarzı'];
-  if (score >= 70) return ['Ortak ilgi alanları'];
-  return ['Keşfedilecek farklılıklar'];
-};
-
 // ─── Component ────────────────────────────────────────────────
 
 const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap, onInstantMessage, isActiveCard = false }) => {
@@ -169,7 +159,7 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
 
   const cardContent = (
     <View style={styles.cardRoot}>
-      {/* ── Photo/Video section — 62% ── */}
+      {/* ── Photo/Video — fills remaining space ── */}
       <View style={styles.photoSection}>
         {hasVideo ? (
           <VideoProfile
@@ -211,7 +201,7 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
           <View style={styles.onlineDot} />
         )}
 
-        {/* Ultra-smooth dark gradient for clean text readability */}
+        {/* Bottom gradient for smooth photo→info transition */}
         <LinearGradient
           colors={['transparent', colors.background + '40', colors.background + 'B3', colors.background] as [string, string, ...string[]]}
           locations={[0, 0.4, 0.75, 1]}
@@ -243,10 +233,10 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
         )}
       </View>
 
-      {/* ── Info panel — 38%, 6 rows ── */}
+      {/* ── Info panel — content-sized, solid theme background ── */}
       <View style={styles.infoPanel}>
         {/* Row 1: Name + Age + Tier + Supreme Crown */}
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={styles.nameRow}>
           <Text style={styles.nameAge} numberOfLines={1}>
             {profile.firstName}, {profile.age}
           </Text>
@@ -328,32 +318,19 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
           </View>
         )}
 
-        {/* Row 6: Compatibility Score + "Neden uyumlusunuz?" reasons (tappable) */}
-        {profile.compatibility && (() => {
-          const reasons = profile.compatReasons && profile.compatReasons.length > 0
-            ? profile.compatReasons
-            : getFallbackExplanations(compatScore);
-          return (
-            <Pressable
-              style={styles.compatArea}
-              onPress={() => onCompatTap?.(profile.userId)}
-              accessibilityLabel={`Uyum yüzde ${compatScore}`}
-              accessibilityRole="button"
-            >
-              <Text style={[styles.compatScore, isSuper && styles.compatScoreSuper]}>
-                %{compatScore} Uyum
-              </Text>
-              {reasons.length > 0 && (
-                <Text style={styles.compatReasonTitle}>NEDEN UYUMLUSUNUZ?</Text>
-              )}
-              {reasons.map((line) => (
-                <Text key={line} style={styles.compatExplanation}>
-                  {'\u2022'} {line}
-                </Text>
-              ))}
-            </Pressable>
-          );
-        })()}
+        {/* Row 6: Compatibility Score (tappable — detail opens in sheet) */}
+        {profile.compatibility && (
+          <Pressable
+            style={styles.compatArea}
+            onPress={() => onCompatTap?.(profile.userId)}
+            accessibilityLabel={`Uyum yüzde ${compatScore}`}
+            accessibilityRole="button"
+          >
+            <Text style={[styles.compatScore, isSuper && styles.compatScoreSuper]}>
+              %{compatScore} Uyum
+            </Text>
+          </Pressable>
+        )}
       </View>
     </View>
   );
@@ -387,28 +364,22 @@ export const DiscoveryCard = React.memo(DiscoveryCardInner, (prevProps, nextProp
 
 // ─── Styles ───────────────────────────────────────────────────
 
-const PHOTO_RATIO = 0.62;
-
 const styles = StyleSheet.create({
   cardRoot: {
     flex: 1,
     borderRadius: 20,
     overflow: 'hidden',
-    // Use cream background instead of white to eliminate subpixel white edge artifacts
     backgroundColor: colors.background,
   },
 
-  // ── Photo section — 62% ──
+  // ── Photo section — fills all remaining space ──
   photoSection: {
-    flex: PHOTO_RATIO,
+    flex: 1,
     position: 'relative',
     overflow: 'hidden',
-    // Match parent background — no white line between photo and card edge
     backgroundColor: colors.background,
   },
   photo: {
-    // Absolute fill ensures the image covers the full container
-    // with no subpixel gaps at the border-radius boundary
     position: 'absolute',
     top: 0,
     left: 0,
@@ -432,7 +403,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: '35%',
+    height: '25%',
   },
 
   // ── Verified Badge — top-left ──
@@ -468,18 +439,20 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
 
-  // ── Info panel — 38%, 6 rows ──
+  // ── Info panel — content-sized, solid theme background ──
   infoPanel: {
-    flex: 1 - PHOTO_RATIO,
     backgroundColor: colors.background,
     paddingHorizontal: spacing.md + 2,
-    paddingTop: 4,
-    paddingBottom: 4,
-    justifyContent: 'flex-start',
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm + 2,
     gap: 3,
   },
 
   // ── Row 1: Name + Age ──
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   nameAge: {
     fontSize: 22,
     fontWeight: fontWeights.bold,
@@ -599,7 +572,6 @@ const styles = StyleSheet.create({
   // ── Row 6: Compatibility Area ──
   compatArea: {
     marginTop: 2,
-    gap: 1,
   },
   compatScore: {
     fontSize: 18,
@@ -609,20 +581,6 @@ const styles = StyleSheet.create({
   },
   compatScoreSuper: {
     color: palette.gold[600],
-  },
-  compatReasonTitle: {
-    fontSize: 10,
-    fontWeight: fontWeights.semibold,
-    color: colors.textSecondary,
-    marginTop: 2,
-    marginBottom: 1,
-    includeFontPadding: false,
-  },
-  compatExplanation: {
-    fontSize: 11,
-    fontWeight: fontWeights.regular,
-    color: colors.textTertiary,
-    lineHeight: 16,
   },
 
   // ── Hızlı Mesaj button ──

@@ -9,6 +9,7 @@ import {
   Dimensions,
   Alert,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useNavigation } from '@react-navigation/native';
@@ -29,10 +30,13 @@ export const SelfieVerificationScreen: React.FC = () => {
   const navigation = useNavigation<SelfieNavigationProp>();
   const [permission, requestPermission] = useCameraPermissions();
   const [isTakingSelfie, setIsTakingSelfie] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [selfieComplete, setSelfieComplete] = useState(false);
   const [capturedUri, setCapturedUri] = useState<string | null>(null);
+  const [capturedBase64, setCapturedBase64] = useState<string | null>(null);
   const cameraRef = useRef<CameraView>(null);
   const setVerified = useAuthStore((state) => state.setVerified);
+  const verifySelfie = useAuthStore((state) => state.verifySelfie);
   const isTestMode = useTestModeStore((state) => state.isTestMode);
 
   // Founder test mode: auto-approve selfie after 2s
@@ -40,6 +44,7 @@ export const SelfieVerificationScreen: React.FC = () => {
     if (__DEV__ && isTestMode) {
       const timer = setTimeout(() => {
         setVerified(true);
+        useAuthStore.getState().setOnboarded(true);
       }, 2000);
       return () => clearTimeout(timer);
     }
@@ -63,9 +68,11 @@ export const SelfieVerificationScreen: React.FC = () => {
     try {
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.8,
+        base64: true,
       });
       if (photo) {
         setCapturedUri(photo.uri);
+        setCapturedBase64(photo.base64 ?? null);
         setSelfieComplete(true);
       }
     } catch {
@@ -77,16 +84,37 @@ export const SelfieVerificationScreen: React.FC = () => {
 
   const handleRetake = useCallback(() => {
     setCapturedUri(null);
+    setCapturedBase64(null);
     setSelfieComplete(false);
   }, []);
 
-  const handleContinue = () => {
-    setVerified(true);
-    useAuthStore.getState().setOnboarded(true);
+  const handleContinue = async () => {
+    if (!capturedBase64 || isVerifying) return;
+
+    setIsVerifying(true);
+    try {
+      // Send captured photo base64 to backend for verification
+      const result = await verifySelfie(capturedBase64);
+
+      if (result.verified) {
+        Alert.alert('Basarili', 'Kimligin basariyla dogrulandi!');
+      } else {
+        Alert.alert(
+          'Dogrulama Basarisiz',
+          'Selfie dogrulamasi basarisiz oldu. Tekrar deneyebilir veya atlayabilirsin.',
+        );
+      }
+      useAuthStore.getState().setOnboarded(true);
+    } catch {
+      Alert.alert('Hata', 'Selfie dogrulanirken bir hata olustu. Lutfen tekrar deneyin.');
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   const handleSkip = () => {
-    useAuthStore.getState().setVerified(true);
+    // User skips selfie verification — NOT marked as verified
+    useAuthStore.getState().setVerified(false);
     useAuthStore.getState().setOnboarded(true);
   };
 
@@ -170,11 +198,16 @@ export const SelfieVerificationScreen: React.FC = () => {
         {selfieComplete ? (
           <>
             <TouchableOpacity
-              style={styles.continueButton}
+              style={[styles.continueButton, isVerifying && styles.selfieButtonDisabled]}
               onPress={handleContinue}
+              disabled={isVerifying}
               activeOpacity={0.85}
             >
-              <Text style={styles.continueButtonText}>Onayla ve Devam Et</Text>
+              {isVerifying ? (
+                <ActivityIndicator color={colors.text} />
+              ) : (
+                <Text style={styles.continueButtonText}>Onayla ve Devam Et</Text>
+              )}
             </TouchableOpacity>
             <TouchableOpacity onPress={handleRetake} style={styles.skipButton}>
               <Text style={styles.retakeText}>Tekrar Çek</Text>

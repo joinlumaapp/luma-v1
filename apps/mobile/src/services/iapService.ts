@@ -15,7 +15,8 @@ const PRODUCT_IDS = {
     'com.luma.dating.reserved.monthly',
   ],
   gold: [
-    'com.luma.dating.gold.100',
+    'com.luma.dating.gold.50',
+    'com.luma.dating.gold.150',
     'com.luma.dating.gold.500',
     'com.luma.dating.gold.1000',
   ],

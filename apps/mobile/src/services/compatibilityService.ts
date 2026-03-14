@@ -113,14 +113,16 @@ export const compatibilityService = {
     await api.post('/compatibility/answers/bulk', { answers });
   },
 
-  // Legacy: submit answers as a Record<questionId, answerIndex> (onboarding compat)
+  // Submit answers as a Record<questionId, answerIndex> (onboarding compat)
+  // Uses bulk endpoint to send all answers in a single request
   submitAnswers: async (answers: Record<string, number>): Promise<void> => {
-    // Convert Record<questionId, answerIndex> format to the
-    // SubmitAnswerDto format and send individually
-    const entries = Object.entries(answers);
-    for (const [questionId, answerIndex] of entries) {
-      await api.post('/compatibility/answers', { questionId, answerIndex });
-    }
+    const bulkItems: BulkAnswerItem[] = Object.entries(answers).map(
+      ([questionId, answerIndex]) => ({
+        questionId,
+        optionId: String(answerIndex),
+      }),
+    );
+    await api.post('/compatibility/answers/bulk', { answers: bulkItems });
   },
 
   // Get compatibility score with another user

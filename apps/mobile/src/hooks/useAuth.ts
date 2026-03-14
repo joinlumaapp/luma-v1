@@ -147,7 +147,7 @@ export const useAuth = (): UseAuthReturn => {
   const verifySelfie = useCallback(async (photoUri: string): Promise<boolean> => {
     try {
       const response = await authService.verifySelfie(photoUri);
-      return response.isVerified;
+      return response.verified;
     } catch {
       return false;
     }

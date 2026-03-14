@@ -181,7 +181,7 @@ export const SettingsScreen: React.FC = () => {
         'Hesabi Aktif Et',
         'Hesabinizi tekrar aktif hale getirmek istediginizden emin misiniz?',
         [
-          { text: 'Vazgec', style: 'cancel' },
+          { text: 'Vazgeç', style: 'cancel' },
           {
             text: 'Aktif Et',
             onPress: async () => {
@@ -214,7 +214,7 @@ export const SettingsScreen: React.FC = () => {
       'Hesabi Dondur',
       'Hesabinizi dondurmak istediginizden emin misiniz? Dondurma suresince profiliniz gizlenir.',
       [
-        { text: 'Vazgec', style: 'cancel' },
+        { text: 'Vazgeç', style: 'cancel' },
         {
           text: 'Dondur',
           style: 'destructive',
@@ -266,12 +266,12 @@ export const SettingsScreen: React.FC = () => {
 
   const handleCancelSubscription = useCallback(() => {
     Alert.alert(
-      'Aboneligi Iptal Et',
+      'Aboneliği İptal Et',
       'Aboneliginizi iptal etmek istediginizden emin misiniz?',
       [
-        { text: 'Vazgec', style: 'cancel' },
+        { text: 'Vazgeç', style: 'cancel' },
         {
-          text: 'Iptal Et',
+          text: 'İptal Et',
           style: 'destructive',
           onPress: async () => {
             setIsCancelling(true);
@@ -307,7 +307,7 @@ export const SettingsScreen: React.FC = () => {
       'Cikis Yap',
       'Hesabindan cikmak istediginize emin misiniz?',
       [
-        { text: 'Iptal', style: 'cancel' },
+        { text: 'İptal', style: 'cancel' },
         { text: 'Cikis Yap', style: 'destructive', onPress: () => logout() },
       ],
     );
@@ -327,7 +327,7 @@ export const SettingsScreen: React.FC = () => {
 
   const handleResetOnboarding = useCallback(() => {
     Alert.alert('Onboarding Sifirla', 'Onboarding adimlarini tekrar gormek istiyor musun?', [
-      { text: 'Iptal', style: 'cancel' },
+      { text: 'İptal', style: 'cancel' },
       {
         text: 'Sifirla',
         onPress: async () => {
@@ -395,7 +395,7 @@ export const SettingsScreen: React.FC = () => {
           ? [{
               key: 'cancel_subscription',
               icon: 'close-circle-outline' as keyof typeof Ionicons.glyphMap,
-              title: isCancelling ? 'Iptal ediliyor...' : 'Aboneligi Iptal Et',
+              title: isCancelling ? 'İptal ediliyor...' : 'Aboneliği İptal Et',
               type: 'action' as const,
               destructive: true,
               onPress: handleCancelSubscription,
@@ -522,9 +522,17 @@ export const SettingsScreen: React.FC = () => {
       icon: 'shield-outline',
       data: [
         {
+          key: 'safety_center',
+          icon: 'shield-checkmark-outline',
+          title: 'Guvenlik Merkezi',
+          subtitle: 'Guvenli bulusma ipuclari ve acil numaralar',
+          type: 'navigation',
+          onPress: () => navigation.navigate('SafetyCenter'),
+        },
+        {
           key: 'online_status',
           icon: 'ellipse',
-          title: 'Cevrimici Durumu Goster',
+          title: 'Çevrimiçi Durumu Göster',
           type: 'toggle',
           value: showOnlineStatus,
           onToggle: setShowOnlineStatus,
@@ -532,7 +540,7 @@ export const SettingsScreen: React.FC = () => {
         {
           key: 'distance',
           icon: 'location-outline',
-          title: 'Mesafeyi Goster',
+          title: 'Mesafeyi Göster',
           type: 'toggle',
           value: showDistance,
           onToggle: setShowDistance,

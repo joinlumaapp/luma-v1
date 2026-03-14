@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -16,18 +17,24 @@ const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 @Injectable()
 export class ProfilesService {
+  private readonly logger = new Logger(ProfilesService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Get a user's full profile including photos and intention tag.
+   * Get a user's profile. When `isOwner` is true (default, for /profiles/me),
+   * all photos are returned including pending moderation. When false (public view),
+   * only approved photos are returned.
    */
-  async getProfile(userId: string) {
+  async getProfile(userId: string, isOwner = true) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
         profile: true,
         photos: {
-          where: { isApproved: true },
+          // Owner sees all their photos (including pending moderation);
+          // public viewers only see approved photos.
+          ...(isOwner ? {} : { where: { isApproved: true } }),
           orderBy: { order: 'asc' },
         },
       },
@@ -37,13 +44,21 @@ export class ProfilesService {
       throw new NotFoundException('Kullanıcı bulunamadı');
     }
 
-    // Calculate profile completion
-    const completion = this.calculateCompletion(user);
+    // Calculate profile completion (only approved photos count)
+    const approvedPhotos = user.photos.filter((p) => p.isApproved);
+    const completion = this.calculateCompletion({
+      ...user,
+      photos: approvedPhotos,
+    });
 
     return {
       userId: user.id,
       profile: user.profile,
-      photos: user.photos,
+      photos: user.photos.map((p) => ({
+        ...p,
+        // Indicate moderation status to the owner
+        ...(isOwner && !p.isApproved ? { moderationStatus: 'pending' as const } : {}),
+      })),
       profileCompletion: completion,
     };
   }
@@ -174,9 +189,12 @@ export class ProfilesService {
         thumbnailUrl,
         order: photoCount, // Next position
         isPrimary: photoCount === 0, // First photo is primary
-        isApproved: true, // Auto-approve for now; add moderation later
+        isApproved: false, // Photos start as pending; require moderation
       },
     });
+
+    // Run photo moderation (auto-approves in dev, flags for review in prod)
+    const moderationResult = await this.moderatePhoto(photo.id, userId);
 
     return {
       photoId: photo.id,
@@ -184,7 +202,52 @@ export class ProfilesService {
       thumbnailUrl: photo.thumbnailUrl,
       order: photo.order,
       isPrimary: photo.isPrimary,
+      isApproved: moderationResult.approved,
+      moderationStatus: moderationResult.approved ? 'approved' : 'pending',
     };
+  }
+
+  /**
+   * Perform photo moderation checks.
+   *
+   * In development: auto-approves after a simulated delay with a warning log.
+   * In production: leaves photo as pending (isApproved=false) for manual/AI review.
+   *
+   * TODO: Integrate AWS Rekognition for automated NSFW detection:
+   *   - Call rekognition.detectModerationLabels({ Image: { S3Object: { Bucket, Name } } })
+   *   - Reject if any label confidence > 80% for categories:
+   *     Explicit Nudity, Violence, Drugs, Hate Symbols
+   *   - Auto-approve if all labels below threshold
+   *   - Flag for manual review if confidence is between 50-80%
+   */
+  private async moderatePhoto(
+    photoId: string,
+    userId: string,
+  ): Promise<{ approved: boolean; reason: string }> {
+    const isDev = process.env.NODE_ENV !== 'production';
+
+    if (isDev) {
+      // DEV MODE: Auto-approve with warning
+      this.logger.warn(
+        `[DEV] Auto-approving photo ${photoId} for user ${userId}. ` +
+        `In production, this would require manual/AI moderation review.`,
+      );
+
+      await this.prisma.userPhoto.update({
+        where: { id: photoId },
+        data: { isApproved: true },
+      });
+
+      return { approved: true, reason: 'dev_auto_approved' };
+    }
+
+    // PRODUCTION: Photo stays as isApproved=false, awaiting review
+    this.logger.log(
+      `Photo ${photoId} for user ${userId} queued for moderation review. ` +
+      `Manual approval or AWS Rekognition integration required.`,
+    );
+
+    return { approved: false, reason: 'pending_moderation_review' };
   }
 
   /**

@@ -76,7 +76,7 @@ export const BlockedUsersScreen: React.FC = () => {
       'Engeli Kaldir',
       `${user.name} adli kullanicinin engelini kaldirmak istediginize emin misiniz?`,
       [
-        { text: 'Vazgec', style: 'cancel' },
+        { text: 'Vazgeç', style: 'cancel' },
         {
           text: 'Engeli Kaldir',
           onPress: async () => {

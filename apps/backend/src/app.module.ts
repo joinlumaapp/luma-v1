@@ -39,6 +39,7 @@ import { CacheModule } from './modules/cache/cache.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { PresenceModule } from './modules/presence/presence.module';
 
 @Module({
   imports: [
@@ -112,6 +113,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
     StorageModule,           // S3/CloudFront photo & voice storage
     AdminModule,             // Admin dashboard & moderation panel
     AnalyticsModule,         // Subsystem 19: Analytics, Metrics & Insights
+    PresenceModule,          // User online/offline presence tracking
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

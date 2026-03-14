@@ -107,133 +107,123 @@ const isStartingSoon = (dateString: string): boolean => {
 
 // ─── Filter Chips with Glow + Bounce ─────────────────────────────────────────
 
-interface FilterOption {
-  key: ActivityType | 'all';
-  label: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  color: string;
+interface FilterChipsProps {
+  selected: ActivityType | 'all';
+  onSelect: (key: ActivityType | 'all') => void;
+  onGameRoom: () => void;
 }
 
-const FILTER_OPTIONS: FilterOption[] = [
-  { key: 'all', label: 'Tümü', icon: 'apps', color: palette.purple[500] },
-  { key: 'coffee', label: 'Kahve', icon: 'cafe', color: '#D97706' },
-  { key: 'dinner', label: 'Yemek', icon: 'restaurant', color: '#EC4899' },
-  { key: 'sport', label: 'Spor', icon: 'football', color: '#3B82F6' },
-  { key: 'culture', label: 'Kültür', icon: 'color-palette', color: '#F59E0B' },
-  { key: 'outdoor', label: 'Açık Hava', icon: 'leaf', color: '#10B981' },
-  { key: 'drinks', label: 'İçecek', icon: 'wine', color: '#8B5CF6' },
-  { key: 'travel', label: 'Gezi', icon: 'airplane', color: '#06B6D4' },
-];
-
-interface FilterChipItemProps {
-  item: FilterOption;
-  isActive: boolean;
-  onPress: () => void;
-}
-
-const FilterChipItem: React.FC<FilterChipItemProps> = ({ item, isActive, onPress }) => {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+const GameRoomChip: React.FC<{ onPress: () => void }> = ({ onPress }) => {
   const glowAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    if (isActive) {
-      // Bounce
+    // Continuous glow
+    Animated.loop(
       Animated.sequence([
-        Animated.timing(scaleAnim, { toValue: 0.9, duration: 80, useNativeDriver: true }),
-        Animated.spring(scaleAnim, { toValue: 1, friction: 3, tension: 200, useNativeDriver: true }),
-      ]).start();
-      // Glow pulse
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(glowAnim, { toValue: 1, duration: 1200, useNativeDriver: false }),
-          Animated.timing(glowAnim, { toValue: 0, duration: 1200, useNativeDriver: false }),
-        ])
-      ).start();
-    } else {
-      scaleAnim.setValue(1);
-      glowAnim.setValue(0);
-    }
-  }, [isActive, scaleAnim, glowAnim]);
+        Animated.timing(glowAnim, { toValue: 1, duration: 1500, useNativeDriver: false }),
+        Animated.timing(glowAnim, { toValue: 0, duration: 1500, useNativeDriver: false }),
+      ])
+    ).start();
+    // Subtle pulse
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.05, duration: 1200, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 1200, useNativeDriver: true }),
+      ])
+    ).start();
+  }, [glowAnim, pulseAnim]);
 
-  const shadowRadius = glowAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 12],
-  });
+  const shadowRadius = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [4, 16] });
+  const shadowOpacity = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.3, 0.7] });
 
-  const shadowOpacity = glowAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 0.5],
-  });
-
-  // Separate Animated.Views: outer = JS-driven shadow, inner = native-driven transform
   return (
-    <Animated.View
-      style={
-        isActive
-          ? {
-              shadowColor: item.color,
-              shadowOffset: { width: 0, height: 0 },
-              shadowRadius,
-              shadowOpacity,
-              elevation: 6,
-            }
-          : undefined
-      }
-    >
-      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-        <TouchableOpacity
-          style={[
-            filterStyles.chip,
-            isActive && { backgroundColor: item.color + '20', borderColor: item.color + '60' },
-          ]}
-          onPress={onPress}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name={item.icon}
-            size={16}
-            color={isActive ? item.color : colors.textSecondary}
-          />
-          <Text style={[
-            filterStyles.chipText,
-            isActive && { color: item.color, fontWeight: '700' },
-          ]}>
-            {item.label}
-          </Text>
+    <Animated.View style={{
+      shadowColor: palette.purple[500],
+      shadowOffset: { width: 0, height: 0 },
+      shadowRadius,
+      shadowOpacity,
+      elevation: 8,
+    }}>
+      <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+        <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
+          <LinearGradient
+            colors={[palette.purple[500], palette.pink[500]]}
+            style={filterStyles.gameChip}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <Ionicons name="game-controller" size={18} color="#FFFFFF" />
+            <Text style={filterStyles.gameChipText}>Oyun Odası</Text>
+            <View style={filterStyles.liveDot} />
+          </LinearGradient>
         </TouchableOpacity>
       </Animated.View>
     </Animated.View>
   );
 };
 
-interface FilterChipsProps {
-  selected: ActivityType | 'all';
-  onSelect: (key: ActivityType | 'all') => void;
-}
+const EventChip: React.FC<{ onPress: () => void }> = ({ onPress }) => {
+  const glowAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
-const FilterChips: React.FC<FilterChipsProps> = ({ selected, onSelect }) => (
-  <FlatList
-    horizontal
-    data={FILTER_OPTIONS}
-    keyExtractor={(item) => item.key}
-    showsHorizontalScrollIndicator={false}
-    contentContainerStyle={filterStyles.container}
-    renderItem={({ item }) => (
-      <FilterChipItem
-        item={item}
-        isActive={selected === item.key}
-        onPress={() => onSelect(item.key)}
-      />
-    )}
-  />
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowAnim, { toValue: 1, duration: 1500, useNativeDriver: false }),
+        Animated.timing(glowAnim, { toValue: 0, duration: 1500, useNativeDriver: false }),
+      ])
+    ).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.05, duration: 1200, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 1200, useNativeDriver: true }),
+      ])
+    ).start();
+  }, [glowAnim, pulseAnim]);
+
+  const shadowRadius = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [4, 16] });
+  const shadowOpacity = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.3, 0.7] });
+
+  return (
+    <Animated.View style={{
+      shadowColor: '#F59E0B',
+      shadowOffset: { width: 0, height: 0 },
+      shadowRadius,
+      shadowOpacity,
+      elevation: 8,
+    }}>
+      <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+        <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
+          <LinearGradient
+            colors={['#F59E0B', '#EF4444']}
+            style={filterStyles.gameChip}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <Ionicons name="calendar" size={18} color="#FFFFFF" />
+            <Text style={filterStyles.gameChipText}>Etkinlik</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </Animated.View>
+    </Animated.View>
+  );
+};
+
+const FilterChips: React.FC<FilterChipsProps> = ({ selected: _selected, onSelect: _onSelect, onGameRoom }) => (
+  <View style={filterStyles.container}>
+    <EventChip onPress={() => _onSelect('all')} />
+    <GameRoomChip onPress={onGameRoom} />
+  </View>
 );
 
 const filterStyles = StyleSheet.create({
   container: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
     paddingBottom: spacing.md,
-    paddingRight: spacing.xxl,
     gap: spacing.sm,
   },
   chip: {
@@ -253,6 +243,30 @@ const filterStyles = StyleSheet.create({
     lineHeight: 20,
     color: colors.textSecondary,
     fontWeight: '600',
+  },
+  gameChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    minHeight: 44,
+  },
+  gameChipText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#FFFFFF',
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#4ADE80',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.4)',
   },
 });
 
@@ -934,7 +948,11 @@ export const ActivitiesScreen: React.FC = () => {
       </View>
 
       {/* Filter chips */}
-      <FilterChips selected={filter} onSelect={setFilter} />
+      <FilterChips
+        selected={filter}
+        onSelect={setFilter}
+        onGameRoom={() => navigation.navigate('IcebreakerRoom', { roomId: `room_${Date.now()}` })}
+      />
 
       {/* Content */}
       {isLoading && activities.length === 0 ? (

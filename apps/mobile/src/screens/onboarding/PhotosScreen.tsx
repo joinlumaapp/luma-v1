@@ -103,14 +103,14 @@ export const PhotosScreen: React.FC = () => {
         : 'Fotograf kaynagini secin',
       [
         {
-          text: 'Galeriden Sec',
+          text: 'Galeriden Seç',
           onPress: () => handlePickFromGallery(index),
         },
         {
           text: 'Kamera',
           onPress: () => handleTakePhoto(index),
         },
-        { text: 'Iptal', style: 'cancel' },
+        { text: 'İptal', style: 'cancel' },
       ],
     );
   }, []);
@@ -138,7 +138,7 @@ export const PhotosScreen: React.FC = () => {
         'Profil Fotografi',
         'Profil fotografini degistirmek ister misin?',
         [
-          { text: 'Iptal', style: 'cancel' },
+          { text: 'İptal', style: 'cancel' },
           {
             text: 'Degistir',
             onPress: () => showPickerOptions(0),

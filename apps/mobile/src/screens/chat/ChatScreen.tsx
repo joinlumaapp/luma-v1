@@ -461,7 +461,7 @@ export const ChatScreen: React.FC = () => {
               'Eslasmeyi Kaldir',
               `${partnerName} ile eslasmeyi kaldirmak istediginize emin misiniz? Bu islem geri alinamaz.`,
               [
-                { text: 'Vazgec', style: 'cancel' },
+                { text: 'Vazgeç', style: 'cancel' },
                 {
                   text: 'Kaldir',
                   style: 'destructive',
@@ -485,7 +485,7 @@ export const ChatScreen: React.FC = () => {
             }
           },
         },
-        { text: 'Vazgec', style: 'cancel' },
+        { text: 'Vazgeç', style: 'cancel' },
       ],
     );
   }, [matchId, partnerName, partnerUserId, navigation, unmatch]);
@@ -540,7 +540,7 @@ export const ChatScreen: React.FC = () => {
             />
             <View style={failedStyles.indicator}>
               <Text style={failedStyles.icon}>{'\u26A0'}</Text>
-              <Text style={failedStyles.text}>Gonderilemedi. Tekrar denemek icin dokunun.</Text>
+              <Text style={failedStyles.text}>Gönderilemedi. Tekrar denemek için dokunun.</Text>
             </View>
           </View>
         </TouchableOpacity>

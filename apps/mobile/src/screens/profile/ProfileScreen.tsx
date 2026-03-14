@@ -489,13 +489,13 @@ export const ProfileScreen: React.FC = () => {
         )}
       </View>
 
-      {/* Stats row — dating-relevant */}
+      {/* Stats row — social metrics (same as other profiles) */}
       <View style={styles.statsCard}>
-        <CountUpStat target={strengthData?.percentage ?? 0} label="PROFIL GUCU" suffix="%" />
+        <CountUpStat target={15} label="GONDERİ" />
         <View style={styles.statDivider} />
-        <CountUpStat target={profile.interestTags.length} label="ILGI ALANI" />
+        <CountUpStat target={108} label="TAKİPCİ" />
         <View style={styles.statDivider} />
-        <CountUpStat target={weeklyViewCount ?? 0} label="HAFTALIK GORUNTULENME" />
+        <CountUpStat target={73} label="TAKİP" />
       </View>
 
       {/* Action buttons row */}
@@ -779,7 +779,7 @@ export const ProfileScreen: React.FC = () => {
             onRefresh={handleRefresh}
             tintColor="#D4AF37"
             colors={['#D4AF37']}
-            title="Guncelleniyor..."
+            title="Güncelleniyor..."
             titleColor={colors.textSecondary}
           />
         }
@@ -860,6 +860,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'visible',
     ...shadows.small,
   },
 
@@ -947,33 +948,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md + 2,
-    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md + 4,
+    paddingHorizontal: spacing.md,
+    overflow: 'visible',
     ...shadows.small,
   },
   statItem: {
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
   },
   statValue: {
-    fontSize: 24,
-    lineHeight: 32,
+    fontSize: 22,
     fontWeight: fontWeights.bold,
     color: colors.text,
     textAlign: 'center',
-    includeFontPadding: false,
     paddingHorizontal: 2,
+    paddingVertical: 2,
   },
   statLabel: {
-    fontSize: 10,
-    lineHeight: 14,
+    fontSize: 11,
     fontWeight: fontWeights.semibold,
     color: colors.textTertiary,
     marginTop: 4,
     textAlign: 'center',
-    includeFontPadding: false,
+    paddingHorizontal: 2,
+    paddingVertical: 1,
   },
   statDivider: {
     width: 1,

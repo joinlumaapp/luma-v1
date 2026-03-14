@@ -7,7 +7,7 @@ export interface PackageDefinition {
   tier: PackageTier;
   name: string;
   nameTr: string;
-  dailySwipeLimit: number; // Free: 20, Gold: 60, Pro: 200, Reserved: unlimited
+  dailySwipeLimit: number; // All tiers: 999999 (unlimited)
   hasHarmonyAccess: boolean;
   hasPremiumQuestions: boolean;
   hasSuperCompatibilityView: boolean;
@@ -73,7 +73,7 @@ export interface GoldPack {
 // Package feature definitions — Single authoritative source
 export const PACKAGE_FEATURES = {
   FREE: {
-    dailySwipes: 20,
+    dailySwipes: 999999,
     monthlyGold: 0,
     premiumQuestions: false,
     harmonyMinutes: 30,
@@ -84,8 +84,8 @@ export const PACKAGE_FEATURES = {
     priorityInFeed: false,
   },
   GOLD: {
-    dailySwipes: 60,
-    monthlyGold: 50,
+    dailySwipes: 999999,
+    monthlyGold: 250,
     premiumQuestions: true,
     harmonyMinutes: 30,
     seeWhoLikedYou: true,
@@ -95,8 +95,8 @@ export const PACKAGE_FEATURES = {
     priorityInFeed: false,
   },
   PRO: {
-    dailySwipes: 200,
-    monthlyGold: 150,
+    dailySwipes: 999999,
+    monthlyGold: 500,
     premiumQuestions: true,
     harmonyMinutes: 45,
     seeWhoLikedYou: true,
@@ -107,7 +107,7 @@ export const PACKAGE_FEATURES = {
   },
   RESERVED: {
     dailySwipes: 999999,
-    monthlyGold: 500,
+    monthlyGold: 1000,
     premiumQuestions: true,
     harmonyMinutes: 60,
     seeWhoLikedYou: true,

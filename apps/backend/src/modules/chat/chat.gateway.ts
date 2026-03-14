@@ -32,10 +32,10 @@ interface AuthenticatedSocket extends Socket {
  * Handles: join/leave conversation rooms, send messages, typing indicators, read receipts.
  *
  * Events emitted TO clients:
- *   chat:message, chat:typing, chat:stop_typing, chat:read, chat:error
+ *   chat:message, chat:typing, chat:stop_typing, chat:read, chat:message_deleted, chat:error
  *
  * Events received FROM clients:
- *   chat:join, chat:leave, chat:message, chat:typing, chat:stop_typing, chat:read
+ *   chat:join, chat:leave, chat:message, chat:delete_message, chat:typing, chat:stop_typing, chat:read
  */
 @WebSocketGateway({
   namespace: '/chat',
@@ -290,6 +290,41 @@ export class ChatGateway
     }
   }
 
+  // ─── Delete / Unsend ──────────────────────────────────────
+
+  /**
+   * Delete (unsend) a message via WebSocket.
+   * Soft-deletes via ChatService and broadcasts chat:message_deleted to the room.
+   */
+  @SubscribeMessage('chat:delete_message')
+  async handleDeleteMessage(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { messageId: string },
+  ): Promise<void> {
+    const userId = this.getUserId(client);
+
+    if (!data.messageId) {
+      client.emit('chat:error', { message: 'Message ID gerekli' });
+      return;
+    }
+
+    try {
+      const result = await this.chatService.deleteMessage(userId, data.messageId);
+
+      // Broadcast deletion to the conversation room
+      this.server.to(`chat:${result.matchId}`).emit('chat:message_deleted', {
+        messageId: result.messageId,
+        matchId: result.matchId,
+        deletedBy: userId,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Mesaj silinemedi';
+      client.emit('chat:error', { message: errorMessage });
+    }
+  }
+
   // ─── Typing Indicators ────────────────────────────────────
 
   /**
@@ -391,6 +426,13 @@ export class ChatGateway
   isUserOnline(userId: string): boolean {
     const sockets = this.userSockets.get(userId);
     return sockets !== undefined && sockets.size > 0;
+  }
+
+  /**
+   * Broadcast an event to all clients in a conversation room (used by ChatController).
+   */
+  broadcastToRoom(matchId: string, event: string, data: Record<string, unknown>): void {
+    this.server.to(`chat:${matchId}`).emit(event, data);
   }
 
   /**

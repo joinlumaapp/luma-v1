@@ -38,6 +38,12 @@ const OTP_RESEND_COOLDOWN_SECONDS = 60;
 /** Redis key prefix for OTP rate limiting */
 const OTP_RATE_LIMIT_KEY_PREFIX = 'otp:ratelimit:';
 
+/** Redis key prefix for blacklisted (logged-out) access tokens */
+const TOKEN_BLACKLIST_PREFIX = 'token:blacklist:';
+
+/** Access token TTL in seconds (must match JWT_ACCESS_EXPIRY = 15m) */
+const ACCESS_TOKEN_TTL_SECONDS = 900;
+
 /** Tracks OTP request history for rate limiting (stored in Redis as JSON) */
 interface OtpRateLimitEntry {
   timestamps: number[];
@@ -449,7 +455,14 @@ export class AuthService {
   // LOGOUT — Revoke current session
   // ═══════════════════════════════════════════════════════════════
 
-  async logout(userId: string): Promise<{ message: string }> {
+  async logout(userId: string, accessToken?: string): Promise<{ message: string }> {
+    // Blacklist the current access token in Redis so it is rejected immediately
+    // by JwtAuthGuard, even before its natural JWT expiry (15 min).
+    if (accessToken) {
+      const tokenKey = `${TOKEN_BLACKLIST_PREFIX}${this.hashToken(accessToken)}`;
+      await this.cache.set(tokenKey, true, ACCESS_TOKEN_TTL_SECONDS);
+    }
+
     // Revoke all active sessions for this user
     await this.prisma.userSession.updateMany({
       where: {
@@ -823,19 +836,25 @@ export class AuthService {
 
   /**
    * Mock liveness check — returns a simulated score.
-   * In production: AWS Rekognition DetectFaces with liveness detection.
+   * TODO(production): Replace with AWS Rekognition DetectFaces with liveness detection.
+   * WARNING: This mock always returns passing scores. Only used when NODE_ENV !== 'production'.
+   * In production, this must call a real liveness detection API.
    */
   private mockLivenessCheck(_selfieBase64: string): number {
-    // Simulate a passing liveness score (0.85-0.99)
+    // DEV/STAGING ONLY — returns a simulated passing liveness score (0.85-0.99).
+    // In production (NODE_ENV === 'production'), replace with real AWS Rekognition call.
     return 0.85 + Math.random() * 0.14;
   }
 
   /**
    * Mock face comparison — returns a simulated match score.
-   * In production: AWS Rekognition CompareFaces against profile photos.
+   * TODO(production): Replace with AWS Rekognition CompareFaces against profile photos.
+   * WARNING: This mock always returns passing scores. Only used when NODE_ENV !== 'production'.
+   * In production, this must call a real face comparison API.
    */
   private mockFaceComparison(_selfieBase64: string): number {
-    // Simulate a passing face match score (0.82-0.98)
+    // DEV/STAGING ONLY — returns a simulated passing face match score (0.82-0.98).
+    // In production (NODE_ENV === 'production'), replace with real AWS Rekognition call.
     return 0.82 + Math.random() * 0.16;
   }
 }

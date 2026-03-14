@@ -44,9 +44,9 @@ const FEATURE_COMPARISON: FeatureRow[] = [
   {
     label: 'Beğeni Limiti',
     values: {
-      free: '20/gün',
-      gold: '60/gün',
-      pro: '200/gün',
+      free: 'Sınırsız',
+      gold: 'Sınırsız',
+      pro: 'Sınırsız',
       reserved: 'Sınırsız',
     },
   },
@@ -54,7 +54,7 @@ const FEATURE_COMPARISON: FeatureRow[] = [
     label: 'Süper Beğeni',
     values: {
       free: '1/gün',
-      gold: '5/gün',
+      gold: '10/gün',
       pro: '10/gün',
       reserved: 'Sınırsız',
     },
@@ -90,8 +90,8 @@ const FEATURE_COMPARISON: FeatureRow[] = [
     label: 'Boost',
     values: {
       free: '-',
-      gold: '1/ay',
-      pro: '3/ay',
+      gold: '4/ay',
+      pro: '4/ay',
       reserved: 'Sınırsız',
     },
   },
@@ -108,7 +108,7 @@ const FEATURE_COMPARISON: FeatureRow[] = [
     label: 'Günlük Mesaj',
     values: {
       free: '1/gün',
-      gold: '5/gün',
+      gold: '10/gün',
       pro: '10/gün',
       reserved: 'Sınırsız',
     },

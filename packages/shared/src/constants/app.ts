@@ -79,8 +79,8 @@ export const AGE_LIMITS = {
 
 // Discovery swipe limits per package tier
 export const DISCOVERY_LIMITS = {
-  FREE: 20,
-  GOLD: 60,
-  PRO: 200,
+  FREE: 999999,
+  GOLD: 999999,
+  PRO: 999999,
   RESERVED: 999999,
 } as const;

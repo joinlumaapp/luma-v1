@@ -6,7 +6,9 @@ import {
   HttpCode,
   HttpStatus,
   Delete,
+  Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
@@ -94,8 +96,9 @@ export class AuthController {
     description: 'Revokes all active sessions for the authenticated user.',
   })
   @ApiResponse({ status: 200, description: 'Logged out successfully' })
-  async logout(@CurrentUser('sub') userId: string) {
-    return this.authService.logout(userId);
+  async logout(@CurrentUser('sub') userId: string, @Req() req: Request) {
+    const token = req.headers.authorization?.split(' ')[1];
+    return this.authService.logout(userId, token);
   }
 
   @Public()

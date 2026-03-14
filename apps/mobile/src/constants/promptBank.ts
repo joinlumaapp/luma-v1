@@ -142,7 +142,7 @@ export const PROMPT_BANK: PromptOption[] = [
   {
     id: 'yasam_03',
     category: 'yasam',
-    textTr: 'Vazgecemedigim aliskanlik...',
+    textTr: 'Vazgeçemediğim aliskanlik...',
   },
   {
     id: 'yasam_04',

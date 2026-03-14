@@ -312,22 +312,25 @@ describe('AuthController', () => {
 
   describe('logout()', () => {
     const userId = 'user-uuid-1';
+    const mockRequest = {
+      headers: { authorization: 'Bearer mock-access-token-xyz' },
+    } as unknown as import('express').Request;
 
     it('should logout successfully', async () => {
       const expected = { message: 'Başarıyla çıkış yapıldı' };
       mockAuthService.logout.mockResolvedValue(expected);
 
-      const result = await controller.logout(userId);
+      const result = await controller.logout(userId, mockRequest);
 
       expect(result.message).toBe('Başarıyla çıkış yapıldı');
     });
 
-    it('should delegate to authService.logout with userId', async () => {
+    it('should delegate to authService.logout with userId and access token', async () => {
       mockAuthService.logout.mockResolvedValue({ message: 'OK' });
 
-      await controller.logout(userId);
+      await controller.logout(userId, mockRequest);
 
-      expect(mockAuthService.logout).toHaveBeenCalledWith(userId);
+      expect(mockAuthService.logout).toHaveBeenCalledWith(userId, 'mock-access-token-xyz');
       expect(mockAuthService.logout).toHaveBeenCalledTimes(1);
     });
   });

@@ -203,7 +203,7 @@ model UserPhoto {
   thumbnailUrl String?  @map("thumbnail_url")
   order        Int      @default(0)
   isPrimary    Boolean  @default(false) @map("is_primary")
-  isApproved   Boolean  @default(true) @map("is_approved")
+  isApproved   Boolean  @default(false) @map("is_approved")
   moderationScore Float? @map("moderation_score")
   createdAt    DateTime @default(now()) @map("created_at")
 
@@ -926,6 +926,7 @@ model ChatMessage {
   status    ChatMessageStatus  @default(SENT) @map("status")
   mediaUrl       String?            @map("media_url")
   mediaDuration  Float?             @map("media_duration") // seconds — for VOICE messages
+  metadata       Json?              @db.JsonB // JSONB — e.g. { linkUrl: string } for link previews
   readAt         DateTime?          @map("read_at")
   createdAt DateTime           @default(now()) @map("created_at")
   updatedAt DateTime           @updatedAt @map("updated_at")
@@ -967,6 +968,7 @@ enum ChatMessageStatus {
   SENT
   DELIVERED
   READ
+  DELETED
 }
 
 // ============================================================

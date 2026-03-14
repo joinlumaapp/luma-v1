@@ -2,12 +2,35 @@
 // Includes local re-engagement scheduling and date plan reminders
 
 import { Platform } from 'react-native';
-import * as Notifications from 'expo-notifications';
-import { SchedulableTriggerInputTypes } from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import api from './api';
 import { isExpoGo } from '../utils/runtime';
+
+// Lazy-load expo-notifications to avoid Expo Go SDK 53 crash on Android.
+// The module throws a console error at import time when running in Expo Go,
+// so we defer the require until the module is actually needed.
+type NotificationsModule = typeof import('expo-notifications');
+let _notifications: NotificationsModule | null = null;
+
+function getNotifications(): NotificationsModule | null {
+  if (isExpoGo()) return null;
+  if (!_notifications) {
+    try {
+      _notifications = require('expo-notifications') as NotificationsModule;
+    } catch {
+      if (__DEV__) console.warn('[NotificationService] expo-notifications yüklenemedi');
+      return null;
+    }
+  }
+  return _notifications;
+}
+
+/** Safe accessor for SchedulableTriggerInputTypes */
+function getTriggerTypes() {
+  const mod = getNotifications();
+  return mod?.SchedulableTriggerInputTypes ?? null;
+}
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -71,7 +94,8 @@ type CleanupFunction = () => void;
 // Wrapped in try-catch to prevent module-level crash that causes white screen.
 
 try {
-  if (!isExpoGo()) {
+  const Notifications = getNotifications();
+  if (Notifications) {
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
         shouldShowAlert: true,
@@ -120,6 +144,9 @@ export const notificationService = {
       return { granted: false, status: 'undetermined' };
     }
 
+    const Notifications = getNotifications();
+    if (!Notifications) return { granted: false, status: 'undetermined' };
+
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
@@ -166,6 +193,8 @@ export const notificationService = {
     }
 
     try {
+      const Notifications = getNotifications();
+      if (!Notifications) return null;
       const projectId = Constants.expoConfig?.extra?.eas?.projectId;
       const tokenData = await Notifications.getExpoPushTokenAsync({
         projectId,
@@ -200,7 +229,8 @@ export const notificationService = {
   // ─── Notification Listeners ──────────────────────────────────────
 
   onNotificationReceived: (callback: NotificationCallback): CleanupFunction => {
-    if (isExpoGo()) {
+    const Notifications = getNotifications();
+    if (!Notifications) {
       return () => {}; // no-op cleanup
     }
     const subscription = Notifications.addNotificationReceivedListener(
@@ -216,7 +246,8 @@ export const notificationService = {
   },
 
   onNotificationTapped: (callback: NotificationTapCallback): CleanupFunction => {
-    if (isExpoGo()) {
+    const Notifications = getNotifications();
+    if (!Notifications) {
       return () => {}; // no-op cleanup
     }
     const subscription = Notifications.addNotificationResponseReceivedListener(
@@ -397,6 +428,10 @@ export async function scheduleReEngagementNotifications(): Promise<void> {
   }
 
   try {
+    const Notifications = getNotifications();
+    const TriggerTypes = getTriggerTypes();
+    if (!Notifications || !TriggerTypes) return;
+
     // Cancel all previously scheduled re-engagement notifications
     await cancelReEngagementNotifications();
 
@@ -409,7 +444,7 @@ export async function scheduleReEngagementNotifications(): Promise<void> {
         sound: true,
       },
       trigger: {
-        type: SchedulableTriggerInputTypes.TIME_INTERVAL,
+        type: TriggerTypes.TIME_INTERVAL,
         seconds: RE_ENGAGEMENT_INTERVALS.DAY_1,
       },
       identifier: `${RE_ENGAGEMENT_PREFIX}day_1`,
@@ -424,7 +459,7 @@ export async function scheduleReEngagementNotifications(): Promise<void> {
         sound: true,
       },
       trigger: {
-        type: SchedulableTriggerInputTypes.TIME_INTERVAL,
+        type: TriggerTypes.TIME_INTERVAL,
         seconds: RE_ENGAGEMENT_INTERVALS.DAY_3,
       },
       identifier: `${RE_ENGAGEMENT_PREFIX}day_3`,
@@ -439,7 +474,7 @@ export async function scheduleReEngagementNotifications(): Promise<void> {
         sound: true,
       },
       trigger: {
-        type: SchedulableTriggerInputTypes.TIME_INTERVAL,
+        type: TriggerTypes.TIME_INTERVAL,
         seconds: RE_ENGAGEMENT_INTERVALS.DAY_7,
       },
       identifier: `${RE_ENGAGEMENT_PREFIX}day_7`,
@@ -460,6 +495,8 @@ export async function scheduleReEngagementNotifications(): Promise<void> {
  */
 async function cancelReEngagementNotifications(): Promise<void> {
   try {
+    const Notifications = getNotifications();
+    if (!Notifications) return;
     const scheduled = await Notifications.getAllScheduledNotificationsAsync();
     const reEngagementIds = scheduled
       .filter((n) => n.identifier.startsWith(RE_ENGAGEMENT_PREFIX))
@@ -502,6 +539,10 @@ export async function scheduleDatePlanReminder(
   }
 
   try {
+    const Notifications = getNotifications();
+    const TriggerTypes = getTriggerTypes();
+    if (!Notifications || !TriggerTypes) return;
+
     const dateMs = new Date(dateIso).getTime();
     const now = Date.now();
 
@@ -516,7 +557,7 @@ export async function scheduleDatePlanReminder(
           sound: true,
         },
         trigger: {
-          type: SchedulableTriggerInputTypes.DATE,
+          type: TriggerTypes.DATE,
           date: new Date(oneHourBeforeMs),
         },
         identifier: `${DATE_PLAN_PREFIX}${planId}_1h`,
@@ -533,7 +574,7 @@ export async function scheduleDatePlanReminder(
           sound: true,
         },
         trigger: {
-          type: SchedulableTriggerInputTypes.DATE,
+          type: TriggerTypes.DATE,
           date: new Date(dateMs),
         },
         identifier: `${DATE_PLAN_PREFIX}${planId}_at`,
@@ -555,6 +596,8 @@ export async function scheduleDatePlanReminder(
  */
 export async function cancelDatePlanReminder(planId: string): Promise<void> {
   try {
+    const Notifications = getNotifications();
+    if (!Notifications) return;
     await Notifications.cancelScheduledNotificationAsync(`${DATE_PLAN_PREFIX}${planId}_1h`);
     await Notifications.cancelScheduledNotificationAsync(`${DATE_PLAN_PREFIX}${planId}_at`);
   } catch (error) {
@@ -575,6 +618,8 @@ const MATCH_URGENCY_PREFIX = 'luma_matchurgency_';
 
 async function cancelNotificationsByPrefix(prefix: string): Promise<void> {
   try {
+    const Notifications = getNotifications();
+    if (!Notifications) return;
     const scheduled = await Notifications.getAllScheduledNotificationsAsync();
     const ids = scheduled
       .filter((n) => n.identifier.startsWith(prefix))
@@ -597,12 +642,14 @@ interface ScheduleLocalNotificationOptions {
   title: string;
   body: string;
   data: Record<string, unknown>;
-  trigger: Notifications.NotificationTriggerInput;
+  trigger: unknown;
 }
 
 async function scheduleLocalNotification(
   options: ScheduleLocalNotificationOptions,
 ): Promise<void> {
+  const Notifications = getNotifications();
+  if (!Notifications) return;
   await Notifications.scheduleNotificationAsync({
     content: {
       title: options.title,
@@ -610,7 +657,7 @@ async function scheduleLocalNotification(
       data: options.data,
       sound: true,
     },
-    trigger: options.trigger,
+    trigger: options.trigger as import('expo-notifications').NotificationTriggerInput,
     identifier: options.identifier,
   });
 }
@@ -635,6 +682,9 @@ export async function scheduleFomoNotifications(): Promise<void> {
   }
 
   try {
+    const TriggerTypes = getTriggerTypes();
+    if (!TriggerTypes) return;
+
     await cancelNotificationsByPrefix(FOMO_PREFIX);
 
     // Daily 20:00 — curated profiles
@@ -644,7 +694,7 @@ export async function scheduleFomoNotifications(): Promise<void> {
       body: 'Bu akşam sana özel seçilmiş profiller var! Kaçırma 💜',
       data: { type: 'FOMO', subtype: 'daily_evening' },
       trigger: {
-        type: SchedulableTriggerInputTypes.DAILY,
+        type: TriggerTypes.DAILY,
         hour: 20,
         minute: 0,
       },
@@ -657,7 +707,7 @@ export async function scheduleFomoNotifications(): Promise<void> {
       body: 'Bugün seni 3 kişi beğendi! Kim olduklarını merak etmiyor musun? 👀',
       data: { type: 'FOMO', subtype: 'inactivity_12h' },
       trigger: {
-        type: SchedulableTriggerInputTypes.TIME_INTERVAL,
+        type: TriggerTypes.TIME_INTERVAL,
         seconds: 43200, // 12 hours
       },
     });
@@ -669,7 +719,7 @@ export async function scheduleFomoNotifications(): Promise<void> {
       body: 'Hafta sonu bonusu aktif! Bugün 2x beğeni hakkın var 🎉',
       data: { type: 'FOMO', subtype: 'weekend_bonus' },
       trigger: {
-        type: SchedulableTriggerInputTypes.WEEKLY,
+        type: TriggerTypes.WEEKLY,
         weekday: 7, // Saturday (1=Sun … 7=Sat)
         hour: 9,
         minute: 0,
@@ -683,7 +733,7 @@ export async function scheduleFomoNotifications(): Promise<void> {
       body: 'Haftalık raporun hazır! Bu hafta nasıl geçti bir bak 📊',
       data: { type: 'FOMO', subtype: 'weekly_report' },
       trigger: {
-        type: SchedulableTriggerInputTypes.WEEKLY,
+        type: TriggerTypes.WEEKLY,
         weekday: 1, // Sunday (1=Sun)
         hour: 20,
         minute: 0,
@@ -706,7 +756,7 @@ export async function scheduleFomoNotifications(): Promise<void> {
  * Send an immediate notification when someone super-likes the user.
  */
 export async function notifySuperLike(): Promise<void> {
-  if (isExpoGo()) return;
+  if (!getNotifications()) return;
 
   try {
     await scheduleLocalNotification({
@@ -714,7 +764,7 @@ export async function notifySuperLike(): Promise<void> {
       title: 'LUMA',
       body: 'Birisi seni süper beğendi! 🔥 Kim olduğunu gör',
       data: { type: 'MATCH_URGENCY', subtype: 'super_like' },
-      trigger: null as unknown as Notifications.NotificationTriggerInput, // immediate
+      trigger: null as unknown as import('expo-notifications').NotificationTriggerInput, // immediate
     });
   } catch (error) {
     if (__DEV__) {
@@ -734,7 +784,8 @@ export async function scheduleMatchNudge(
   matchId: string,
   partnerName: string,
 ): Promise<void> {
-  if (isExpoGo()) return;
+  const TriggerTypes = getTriggerTypes();
+  if (!TriggerTypes) return;
 
   try {
     // 24h — no message yet
@@ -744,7 +795,7 @@ export async function scheduleMatchNudge(
       body: `${partnerName} ile eşleştin ama henüz konuşmadınız. İlk adımı at!`,
       data: { type: 'MATCH_URGENCY', subtype: 'no_message_24h', matchId },
       trigger: {
-        type: SchedulableTriggerInputTypes.TIME_INTERVAL,
+        type: TriggerTypes.TIME_INTERVAL,
         seconds: 86400, // 24 hours
       },
     });
@@ -756,7 +807,7 @@ export async function scheduleMatchNudge(
       body: 'Eşleşmen seni bekliyor, bir mesaj gönder 💬',
       data: { type: 'MATCH_URGENCY', subtype: 'no_response_48h', matchId },
       trigger: {
-        type: SchedulableTriggerInputTypes.TIME_INTERVAL,
+        type: TriggerTypes.TIME_INTERVAL,
         seconds: 172800, // 48 hours
       },
     });
@@ -776,6 +827,8 @@ export async function scheduleMatchNudge(
  */
 export async function cancelMatchNudge(matchId: string): Promise<void> {
   try {
+    const Notifications = getNotifications();
+    if (!Notifications) return;
     await Notifications.cancelScheduledNotificationAsync(
       `${MATCH_URGENCY_PREFIX}${matchId}_24h`,
     );
@@ -810,6 +863,9 @@ export async function scheduleWeeklyContentNotifications(): Promise<void> {
   }
 
   try {
+    const TriggerTypes = getTriggerTypes();
+    if (!TriggerTypes) return;
+
     await cancelNotificationsByPrefix(WEEKLY_CONTENT_PREFIX);
 
     const weeklySchedule: Array<{
@@ -869,7 +925,7 @@ export async function scheduleWeeklyContentNotifications(): Promise<void> {
         body: item.body,
         data: { type: 'WEEKLY_CONTENT', subtype: item.subtype },
         trigger: {
-          type: SchedulableTriggerInputTypes.WEEKLY,
+          type: TriggerTypes.WEEKLY,
           weekday: item.weekday,
           hour: item.hour,
           minute: item.minute,
@@ -899,7 +955,8 @@ const MISSED_LIKES_PREFIX = 'luma_missedlikes_';
  * Call this when the daily like quota reaches zero.
  */
 export async function scheduleMissedLikesNotification(): Promise<void> {
-  if (isExpoGo()) return;
+  const TriggerTypes = getTriggerTypes();
+  if (!TriggerTypes) return;
 
   try {
     // Cancel any previous missed-likes notification
@@ -911,7 +968,7 @@ export async function scheduleMissedLikesNotification(): Promise<void> {
       body: 'Dün beğeni hakkın dolduğunda seni beğenen 2 kişi vardı. Premium ile hiç kaçırma!',
       data: { type: 'MISSED_LIKES', subtype: 'premium_upsell' },
       trigger: {
-        type: SchedulableTriggerInputTypes.TIME_INTERVAL,
+        type: TriggerTypes.TIME_INTERVAL,
         seconds: 7200, // 2 hours after likes run out
       },
     });

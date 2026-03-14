@@ -81,16 +81,14 @@ const styles = StyleSheet.create({
   },
   pillSmall: {
     height: 36,
-    paddingLeft: 14,
-    paddingRight: 26,
+    paddingHorizontal: 16,
     borderRadius: 18,
     gap: 6,
-    minWidth: 95,
+    minWidth: 80,
   },
   pillMedium: {
     height: 44,
-    paddingLeft: 18,
-    paddingRight: 30,
+    paddingHorizontal: 20,
     borderRadius: 22,
     gap: 8,
   },
@@ -101,12 +99,8 @@ const styles = StyleSheet.create({
   },
   balanceSmall: {
     fontSize: 14,
-    lineHeight: 20,
-    paddingRight: 4,
   },
   balanceMedium: {
     fontSize: 18,
-    lineHeight: 24,
-    paddingRight: 4,
   },
 });

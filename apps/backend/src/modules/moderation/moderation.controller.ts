@@ -2,15 +2,18 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ModerationService } from './moderation.service';
 import { CreateReportDto, CreateBlockDto } from './dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { AdminGuard } from '../../common/guards/admin.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('Moderation')
@@ -51,5 +54,41 @@ export class ModerationController {
   @ApiOperation({ summary: 'Get list of blocked users' })
   async getBlockedUsers(@CurrentUser('sub') userId: string) {
     return this.moderationService.getBlockedUsers(userId);
+  }
+
+  // ─── Photo Moderation (Admin Only) ──────────────────────────
+
+  @Get('photos/pending')
+  @UseGuards(AdminGuard)
+  @ApiOperation({ summary: 'Get photos pending moderation review (admin only)' })
+  async getPendingPhotos(
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    return this.moderationService.getPendingPhotos(
+      limit ? parseInt(limit, 10) : 50,
+      offset ? parseInt(offset, 10) : 0,
+    );
+  }
+
+  @Patch('photos/:photoId/approve')
+  @UseGuards(AdminGuard)
+  @ApiOperation({ summary: 'Approve a photo for public display (admin only)' })
+  async approvePhoto(
+    @CurrentUser('sub') adminUserId: string,
+    @Param('photoId') photoId: string,
+  ) {
+    return this.moderationService.approvePhoto(photoId, adminUserId);
+  }
+
+  @Patch('photos/:photoId/reject')
+  @UseGuards(AdminGuard)
+  @ApiOperation({ summary: 'Reject and delete a photo (admin only)' })
+  async rejectPhoto(
+    @CurrentUser('sub') adminUserId: string,
+    @Param('photoId') photoId: string,
+    @Body() body: { reason?: string },
+  ) {
+    return this.moderationService.rejectPhoto(photoId, adminUserId, body.reason);
   }
 }

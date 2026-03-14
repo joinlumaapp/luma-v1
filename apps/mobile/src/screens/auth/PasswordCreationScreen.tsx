@@ -79,7 +79,7 @@ export const PasswordCreationScreen: React.FC = () => {
 
       {/* Content */}
       <View style={styles.content}>
-        <Text style={styles.title}>Sifre Olustur</Text>
+        <Text style={styles.title}>Şifre Oluştur</Text>
         <Text style={styles.subtitle}>
           Hesabini korumak icin guvenli bir sifre belirle.
         </Text>
@@ -104,9 +104,9 @@ export const PasswordCreationScreen: React.FC = () => {
           <TouchableOpacity
             onPress={() => setShowPassword((p) => !p)}
             style={styles.toggleButton}
-            accessibilityLabel={showPassword ? 'Sifreyi gizle' : 'Sifreyi goster'}
+            accessibilityLabel={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
           >
-            <Text style={styles.toggleText}>{showPassword ? 'Gizle' : 'Goster'}</Text>
+            <Text style={styles.toggleText}>{showPassword ? 'Gizle' : 'Göster'}</Text>
           </TouchableOpacity>
         </View>
 
@@ -164,7 +164,7 @@ export const PasswordCreationScreen: React.FC = () => {
           testID="password-continue-btn"
         >
           <Text style={[styles.continueText, !isValid && styles.continueTextDisabled]}>
-            Hesabi Olustur
+            Hesabı Oluştur
           </Text>
         </TouchableOpacity>
       </View>
