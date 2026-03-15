@@ -1,5 +1,5 @@
 // Onboarding step 15/15: Compatibility questions — 20 core + optional 25 premium
-// Mode-aware: 'serious_relationship' -> 45 questions, 'exploring' -> 20 core only
+// Mode-aware: 'SERIOUS_RELATIONSHIP' -> 45 questions, 'EXPLORING' -> 20 core only
 // Features: slide left/right transitions, haptic feedback, smooth animated progress bar,
 // motivation interstitials, analysis + result screens
 // Cream/beige theme matching onboarding flow
@@ -107,7 +107,7 @@ export const QuestionsScreen: React.FC = () => {
   const [cardKey, setCardKey] = useState(0);
   const [slideDirection, setSlideDirection] = useState<SlideDirection>('forward');
 
-  const showPremium = selectedMode === 'serious_relationship';
+  const showPremium = selectedMode === 'SERIOUS_RELATIONSHIP';
 
   // Animated progress bar
   const progressWidth = useSharedValue(0);
@@ -290,7 +290,7 @@ export const QuestionsScreen: React.FC = () => {
     return (
       <View style={[styles.container, styles.centeredContainer]}>
         <ActivityIndicator size="large" color={onboardingColors.text} />
-        <Text style={styles.loadingText}>Sorular yukleniyor...</Text>
+        <Text style={styles.loadingText}>Sorular yükleniyor...</Text>
       </View>
     );
   }
@@ -332,7 +332,7 @@ export const QuestionsScreen: React.FC = () => {
           <Text style={styles.celebrationEmoji}>{'\uD83D\uDD2C'}</Text>
           <Text style={styles.celebrationTitle}>LUMA senin karakterini analiz ediyor...</Text>
           <Text style={styles.celebrationSubtitle}>
-            Cevaplarin değerlendiriliyor ve en uyumlu profiller belirleniyor.
+            Cevapların değerlendiriliyor ve en uyumlu profiller belirleniyor.
           </Text>
           <ActivityIndicator size="small" color={onboardingColors.text} style={{ marginTop: spacing.lg }} />
         </Animated.View>
@@ -349,10 +349,10 @@ export const QuestionsScreen: React.FC = () => {
             {'\uD83C\uDF89'}
           </Animated.Text>
           <Animated.Text entering={FadeIn.duration(400).delay(200)} style={styles.resultTitle}>
-            Uyum profilin hazir!
+            Uyum profilin hazır!
           </Animated.Text>
           <Animated.Text entering={FadeIn.duration(400).delay(300)} style={styles.resultSubtitle}>
-            Iste seni tanimamiza yardimci olan özellikler:
+            İşte seni tanımamıza yardımcı olan özellikler:
           </Animated.Text>
 
           {RESULT_SECTIONS.map((section, sIdx) => (
@@ -373,7 +373,7 @@ export const QuestionsScreen: React.FC = () => {
         </Animated.View>
 
         <View style={styles.resultFooter}>
-          <FullWidthButton label="Eslesmeleri Gor" onPress={handleResultContinue} />
+          <FullWidthButton label="Eşleşmeleri Gör" onPress={handleResultContinue} />
         </View>
       </View>
     );

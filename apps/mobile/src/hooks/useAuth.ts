@@ -77,7 +77,7 @@ export const useAuth = (): UseAuthReturn => {
               id: me.id,
               phone: me.phone,
               isVerified: me.isFullyVerified,
-              packageTier: (me.packageTier as PackageTier) || 'free',
+              packageTier: (me.packageTier as PackageTier) || 'FREE',
             });
 
             const onboarded = await storage.getOnboarded();
@@ -93,7 +93,7 @@ export const useAuth = (): UseAuthReturn => {
                 id: me.id,
                 phone: me.phone,
                 isVerified: me.isFullyVerified,
-                packageTier: (me.packageTier as PackageTier) || 'free',
+                packageTier: (me.packageTier as PackageTier) || 'FREE',
               });
 
               const onboarded = await storage.getOnboarded();
@@ -133,7 +133,7 @@ export const useAuth = (): UseAuthReturn => {
           id: response.user.id,
           phone: response.user.phone,
           isVerified: response.user.isVerified,
-          packageTier: 'free',
+          packageTier: 'FREE',
         });
         await storage.setTokens(response.accessToken, response.refreshToken);
         return true;
@@ -160,7 +160,7 @@ export const useAuth = (): UseAuthReturn => {
         id: response.user.id,
         phone: response.user.phone,
         isVerified: response.user.isVerified,
-        packageTier: 'free',
+        packageTier: 'FREE',
       });
       await storage.setTokens(response.accessToken, response.refreshToken);
     },
@@ -197,7 +197,7 @@ export const useAuth = (): UseAuthReturn => {
     [user]
   );
 
-  const isPremium = user?.packageTier !== 'free';
+  const isPremium = user?.packageTier !== 'FREE';
 
   return {
     isAuthenticated,

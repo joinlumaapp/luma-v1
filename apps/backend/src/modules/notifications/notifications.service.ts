@@ -147,6 +147,20 @@ export class NotificationsService {
     // Prune old entries
     entry.timestamps = entry.timestamps.filter((ts) => ts > oneHourAgo);
 
+    // Remove empty entries to prevent memory leak from inactive users
+    if (entry.timestamps.length === 0) {
+      this.rateLimitMap.delete(userId);
+    }
+
+    // Periodic full sweep: when map grows too large, evict all empty buckets
+    if (this.rateLimitMap.size > 10_000) {
+      for (const [key, val] of this.rateLimitMap) {
+        if (val.timestamps.length === 0) {
+          this.rateLimitMap.delete(key);
+        }
+      }
+    }
+
     if (entry.timestamps.length >= MAX_PUSH_PER_HOUR) {
       return false;
     }

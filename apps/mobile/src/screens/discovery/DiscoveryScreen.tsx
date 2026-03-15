@@ -248,7 +248,7 @@ export const DiscoveryScreen: React.FC = () => {
   const currentUserId = useAuthStore((s) => s.user?.id);
 
   // ─── Super Like premium gate ────────────────────────────
-  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'free') as PackageTier;
+  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE') as PackageTier;
   const dailyLimit = SUPER_LIKE_CONFIG.DAILY_LIMITS[packageTier];
   const isUnlimitedSuperLike = dailyLimit === -1;
   const [superLikesUsed, setSuperLikesUsed] = useState(0);
@@ -351,11 +351,11 @@ export const DiscoveryScreen: React.FC = () => {
   }, [navigation]);
 
   // ─── Boost access gate ─────────────────────────────────
-  const canUseBoost = packageTier !== 'free';
+  const canUseBoost = packageTier !== 'FREE';
 
   // ─── Undo access gate — tier-based daily limits ─────────
-  const canUseUndo = packageTier !== 'free';
-  const undoDailyLimits: Record<PackageTier, number> = { free: 0, gold: 1, pro: 3, reserved: 999999 };
+  const canUseUndo = packageTier !== 'FREE';
+  const undoDailyLimits: Record<PackageTier, number> = { FREE: 0, GOLD: 1, PRO: 3, RESERVED: 999999 };
   const undoDailyLimit = undoDailyLimits[packageTier];
   const hasFreeUndoRemaining = undosUsedToday < undoDailyLimit;
   const undoNeedsJeton = canUseUndo && !hasFreeUndoRemaining;
@@ -426,7 +426,7 @@ export const DiscoveryScreen: React.FC = () => {
   }, []);
 
   // ─── FOMO engagement state ──────────────────────────────
-  const isFreeTier = packageTier === 'free';
+  const isFreeTier = packageTier === 'FREE';
   const isSaturdayBonus = DISCOVERY_CONFIG.IS_SATURDAY_BONUS;
 
   // FOMO: midnight countdown + teaser pulse (declared here, effects after hasMoreCards)
@@ -1470,7 +1470,7 @@ export const DiscoveryScreen: React.FC = () => {
           userPhotoUrl={userPhotoUrl}
           compatibilityScore={matchedCard?.compatibilityPercent ?? 0}
           isSuperCompatible={matchedCard ? matchedCard.compatibilityPercent >= 90 : false}
-          isSupremeMember={matchedCard?.packageTier === 'reserved' || packageTier === 'reserved'}
+          isSupremeMember={matchedCard?.packageTier === 'RESERVED' || packageTier === 'RESERVED'}
           conversationStarters={matchConversationStarters}
           compatibilityExplanation={matchExplanation}
           onSendMessage={handleMatchSendMessage}

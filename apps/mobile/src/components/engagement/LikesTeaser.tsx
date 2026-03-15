@@ -31,8 +31,8 @@ interface LikesTeaserProps {
 export const LikesTeaser: React.FC<LikesTeaserProps> = ({ onPressPremium, onPressFree, onPress }) => {
   const count = useEngagementStore((s) => s.likesTeaserCount);
   const profiles = useEngagementStore((s) => s.likesTeaserProfiles);
-  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'free') as PackageTier;
-  const isPremium = packageTier !== 'free';
+  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE') as PackageTier;
+  const isPremium = packageTier !== 'FREE';
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const badgeScale = useRef(new Animated.Value(0)).current;

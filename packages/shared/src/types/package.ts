@@ -32,8 +32,8 @@ export interface Subscription {
 }
 
 export enum PaymentPlatform {
-  APPLE = 'apple',
-  GOOGLE = 'google',
+  APPLE = 'APPLE',
+  GOOGLE = 'GOOGLE',
 }
 
 // Subsystem 17: Virtual Currency
@@ -50,14 +50,16 @@ export interface GoldTransaction {
 
 export enum GoldTransactionType {
   // Credits
-  PURCHASE = 'purchase', // Bought Gold pack
-  SUBSCRIPTION_ALLOCATION = 'subscription_allocation', // Monthly package bonus
-  REFERRAL_BONUS = 'referral_bonus', // Invited a friend
-  BADGE_REWARD = 'badge_reward', // Earned a badge
+  PURCHASE = 'PURCHASE', // Bought Gold pack
+  SUBSCRIPTION_ALLOCATION = 'SUBSCRIPTION_ALLOCATION', // Monthly package bonus
+  REFERRAL_BONUS = 'REFERRAL_BONUS', // Invited a friend
+  BADGE_REWARD = 'BADGE_REWARD', // Earned a badge
+  STREAK_REWARD = 'STREAK_REWARD', // Streak bonus reward
+  DAILY_LOGIN = 'DAILY_LOGIN', // Daily login bonus
   // Debits
-  HARMONY_EXTENSION = 'harmony_extension', // Extended Harmony Room
-  PROFILE_BOOST = 'profile_boost', // Boosted profile
-  SUPER_LIKE = 'super_like', // Sent a super like
+  HARMONY_EXTENSION = 'HARMONY_EXTENSION', // Extended Harmony Room
+  PROFILE_BOOST = 'PROFILE_BOOST', // Boosted profile
+  SUPER_LIKE = 'SUPER_LIKE', // Sent a super like
 }
 
 export interface GoldPack {
@@ -150,7 +152,7 @@ export const PACKAGE_TIER_ORDER: Record<PackageTier, number> = {
 };
 
 // Gold spend action types
-export type GoldSpendAction = 'harmony_extension' | 'profile_boost' | 'super_like';
+export type GoldSpendAction = 'HARMONY_EXTENSION' | 'PROFILE_BOOST' | 'SUPER_LIKE';
 
 // Transaction history item (for API responses)
 export interface TransactionHistoryItem {

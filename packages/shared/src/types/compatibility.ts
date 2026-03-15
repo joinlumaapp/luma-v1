@@ -90,22 +90,22 @@ export interface CompatibilityBonuses {
 // Question categories mapping to psychological dimensions
 export enum QuestionCategory {
   // Core Questions (Q1-Q20)
-  COMMUNICATION = 'communication', // Q1-Q3
-  LIFE_GOALS = 'life_goals', // Q4-Q6
-  VALUES = 'values', // Q7-Q9
-  LIFESTYLE = 'lifestyle', // Q10-Q12
-  EMOTIONAL_INTELLIGENCE = 'emotional_intelligence', // Q13-Q15
-  RELATIONSHIP_EXPECTATIONS = 'relationship_expectations', // Q16-Q18
-  SOCIAL_COMPATIBILITY = 'social_compatibility', // Q19-Q20
+  COMMUNICATION = 'COMMUNICATION', // Q1-Q3
+  LIFE_GOALS = 'LIFE_GOALS', // Q4-Q6
+  VALUES = 'VALUES', // Q7-Q9
+  LIFESTYLE = 'LIFESTYLE', // Q10-Q12
+  EMOTIONAL_INTELLIGENCE = 'EMOTIONAL_INTELLIGENCE', // Q13-Q15
+  RELATIONSHIP_EXPECTATIONS = 'RELATIONSHIP_EXPECTATIONS', // Q16-Q18
+  SOCIAL_COMPATIBILITY = 'SOCIAL_COMPATIBILITY', // Q19-Q20
   // Premium Questions (Q21-Q45)
-  ATTACHMENT_STYLE = 'attachment_style', // Q21-Q24
-  LOVE_LANGUAGE = 'love_language', // Q25-Q27
-  CONFLICT_STYLE = 'conflict_style', // Q28-Q30
-  FUTURE_VISION = 'future_vision', // Q31-Q34
-  INTELLECTUAL = 'intellectual', // Q35-Q37
-  INTIMACY = 'intimacy', // Q38-Q40
-  GROWTH_MINDSET = 'growth_mindset', // Q41-Q43
-  CORE_FEARS = 'core_fears', // Q44-Q45
+  ATTACHMENT_STYLE = 'ATTACHMENT_STYLE', // Q21-Q24
+  LOVE_LANGUAGE = 'LOVE_LANGUAGE', // Q25-Q27
+  CONFLICT_STYLE = 'CONFLICT_STYLE', // Q28-Q30
+  FUTURE_VISION = 'FUTURE_VISION', // Q31-Q34
+  INTELLECTUAL = 'INTELLECTUAL', // Q35-Q37
+  INTIMACY = 'INTIMACY', // Q38-Q40
+  GROWTH_MINDSET = 'GROWTH_MINDSET', // Q41-Q43
+  CORE_FEARS = 'CORE_FEARS', // Q44-Q45
 }
 
 // Score display bounds — LOCKED per product spec

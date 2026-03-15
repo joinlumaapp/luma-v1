@@ -138,8 +138,8 @@ export const CallScreen: React.FC = () => {
   const flipCamera = useCallStore((s) => s.flipCamera);
   const setMinimized = useCallStore((s) => s.setMinimized);
 
-  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'free');
-  const isPremium = packageTier !== 'free';
+  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE');
+  const isPremium = packageTier !== 'FREE';
 
   const displayName = remoteUser?.name ?? partnerName;
 

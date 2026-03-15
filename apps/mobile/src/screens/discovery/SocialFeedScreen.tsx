@@ -412,7 +412,7 @@ type FeedNavProp = NativeStackNavigationProp<FeedStackParamList, 'SocialFeed'>;
 export const SocialFeedScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<FeedNavProp>();
-  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'free');
+  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE');
   // packageTier used for daily post limit gating
 
   // Daily post tracking for free users

@@ -90,7 +90,7 @@ export const OTPVerificationScreen: React.FC = () => {
           id: 'test-user-001',
           phone: phoneNumber,
           isVerified: false,
-          packageTier: 'free',
+          packageTier: 'FREE',
         });
         // Activate 48-hour Gold trial for new test user
         activateTrial();
@@ -124,8 +124,8 @@ export const OTPVerificationScreen: React.FC = () => {
         // Award welcome bonus Jeton
         useCoinStore.getState().claimWelcomeBonus();
         Alert.alert(
-          'Hosgeldin!',
-          '48 saatlik Premium deneyimin basladi! Gold ozelliklerin keyfini cikar.\n\nHos geldin hediyesi: 100 Jeton!',
+          'Hoş geldin!',
+          '48 saatlik Premium deneyimin başladı! Gold özelliklerinin keyfini çıkar.\n\nHoş geldin hediyesi: 100 Jeton!',
         );
         // New user -> collect email + password before onboarding
         navigation.navigate('EmailEntry');

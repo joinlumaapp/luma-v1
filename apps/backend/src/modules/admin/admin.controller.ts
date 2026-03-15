@@ -11,7 +11,7 @@ import {
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { AdminService } from './admin.service';
+import { AdminService, DashboardStats, PaginatedResult } from './admin.service';
 import { AdminGuard } from '../../common/guards/admin.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import {
@@ -35,7 +35,7 @@ export class AdminController {
 
   @Get('dashboard')
   @ApiOperation({ summary: 'Get admin dashboard overview stats' })
-  async getDashboard() {
+  async getDashboard(): Promise<DashboardStats> {
     return this.adminService.getDashboardStats();
   }
 
@@ -43,7 +43,7 @@ export class AdminController {
 
   @Get('users')
   @ApiOperation({ summary: 'List users with filters and pagination' })
-  async getUsers(@Query() filters: UserFilterDto) {
+  async getUsers(@Query() filters: UserFilterDto): Promise<PaginatedResult<unknown>> {
     return this.adminService.getUsers(filters);
   }
 
@@ -76,7 +76,7 @@ export class AdminController {
 
   @Get('reports')
   @ApiOperation({ summary: 'List reports with filters and pagination' })
-  async getReports(@Query() filters: ReportFilterDto) {
+  async getReports(@Query() filters: ReportFilterDto): Promise<PaginatedResult<unknown>> {
     return this.adminService.getReports(filters);
   }
 
@@ -102,7 +102,7 @@ export class AdminController {
 
   @Get('payments')
   @ApiOperation({ summary: 'List payment/transaction history' })
-  async getPayments(@Query() filters: PaymentFilterDto) {
+  async getPayments(@Query() filters: PaymentFilterDto): Promise<PaginatedResult<unknown>> {
     return this.adminService.getPayments(filters);
   }
 

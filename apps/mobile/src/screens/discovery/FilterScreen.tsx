@@ -26,7 +26,7 @@ import { useScreenTracking } from '../../hooks/useAnalytics';
 
 type GenderPreference = 'male' | 'female' | 'all';
 
-type RequiredTier = 'gold' | 'pro';
+type RequiredTier = 'GOLD' | 'PRO';
 
 // ── Constants ──────────────────────────────────────────────────────
 
@@ -87,20 +87,20 @@ const clamp = (value: number, min: number, max: number): number =>
 /** Returns true if the user's package tier meets or exceeds the required tier. */
 const hasAccess = (userTier: PackageTier, requiredTier: RequiredTier): boolean => {
   const tierRank: Record<PackageTier, number> = {
-    free: 0,
-    gold: 1,
-    pro: 2,
-    reserved: 3,
+    FREE: 0,
+    GOLD: 1,
+    PRO: 2,
+    RESERVED: 3,
   };
   const requiredRank: Record<RequiredTier, number> = {
-    gold: 1,
-    pro: 2,
+    GOLD: 1,
+    PRO: 2,
   };
   return tierRank[userTier] >= requiredRank[requiredTier];
 };
 
 const tierDisplayName = (tier: RequiredTier): string => {
-  if (tier === 'gold') return 'Premium';
+  if (tier === 'GOLD') return 'Premium';
   return 'Supreme';
 };
 
@@ -114,7 +114,7 @@ export const FilterScreen: React.FC = () => {
   const filters = useDiscoveryStore((state) => state.filters);
   const setFilters = useDiscoveryStore((state) => state.setFilters);
   const refreshFeed = useDiscoveryStore((state) => state.refreshFeed);
-  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'free');
+  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE');
 
   // ── Existing filter state ──
   const [genderPreference, setGenderPreference] = useState<GenderPreference>(
@@ -204,7 +204,7 @@ export const FilterScreen: React.FC = () => {
 
     // Parse height values only if height filter is enabled and user has Pro access
     let heightFilter: { min: number; max: number } | null = null;
-    if (heightEnabled && hasAccess(packageTier, 'pro')) {
+    if (heightEnabled && hasAccess(packageTier, 'PRO')) {
       const parsedHMin = clamp(parseInt(heightMin, 10) || HEIGHT_MIN, HEIGHT_MIN, HEIGHT_MAX);
       const parsedHMax = clamp(parseInt(heightMax, 10) || HEIGHT_MAX, parsedHMin, HEIGHT_MAX);
       heightFilter = { min: parsedHMin, max: parsedHMax };
@@ -217,11 +217,11 @@ export const FilterScreen: React.FC = () => {
       maxDistance: parsedDistance,
       intentionTags: selectedTags,
       height: heightFilter,
-      education: hasAccess(packageTier, 'gold') ? selectedEducation : [],
-      smoking: hasAccess(packageTier, 'gold') ? selectedSmoking : [],
-      drinking: hasAccess(packageTier, 'gold') ? selectedDrinking : [],
-      exercise: hasAccess(packageTier, 'gold') ? selectedExercise : [],
-      zodiac: hasAccess(packageTier, 'pro') ? selectedZodiac : [],
+      education: hasAccess(packageTier, 'GOLD') ? selectedEducation : [],
+      smoking: hasAccess(packageTier, 'GOLD') ? selectedSmoking : [],
+      drinking: hasAccess(packageTier, 'GOLD') ? selectedDrinking : [],
+      exercise: hasAccess(packageTier, 'GOLD') ? selectedExercise : [],
+      zodiac: hasAccess(packageTier, 'PRO') ? selectedZodiac : [],
     });
 
     refreshFeed();
@@ -499,7 +499,7 @@ export const FilterScreen: React.FC = () => {
         <View style={styles.divider} />
 
         {/* ── Height (Pro+) ── */}
-        {renderLockedSection('Boy', 'pro', (
+        {renderLockedSection('Boy', 'PRO', (
           <View style={styles.heightSection}>
             <View style={styles.heightToggleRow}>
               <Text style={styles.heightRangeLabel}>
@@ -511,7 +511,7 @@ export const FilterScreen: React.FC = () => {
                   heightEnabled && styles.toggleButtonActive,
                 ]}
                 onPress={() => {
-                  if (hasAccess(packageTier, 'pro')) {
+                  if (hasAccess(packageTier, 'PRO')) {
                     setHeightEnabled((prev) => !prev);
                   }
                 }}
@@ -611,12 +611,12 @@ export const FilterScreen: React.FC = () => {
         ))}
 
         {/* ── Education (Gold+) ── */}
-        {renderLockedSection('Eğitim', 'gold',
+        {renderLockedSection('Eğitim', 'GOLD',
           renderChipGroup(EDUCATION_OPTIONS, selectedEducation, toggleChip(setSelectedEducation))
         )}
 
         {/* ── Lifestyle (Gold+) ── */}
-        {renderLockedSection('Yaşam Tarzı', 'gold', (
+        {renderLockedSection('Yaşam Tarzı', 'GOLD', (
           <View style={styles.lifestyleContainer}>
             <View style={styles.lifestyleSubSection}>
               <Text style={styles.subSectionTitle}>Sigara</Text>
@@ -634,7 +634,7 @@ export const FilterScreen: React.FC = () => {
         ))}
 
         {/* ── Zodiac (Pro+) ── */}
-        {renderLockedSection('Burç', 'pro',
+        {renderLockedSection('Burç', 'PRO',
           renderChipGroup(ZODIAC_OPTIONS, selectedZodiac, toggleChip(setSelectedZodiac))
         )}
 

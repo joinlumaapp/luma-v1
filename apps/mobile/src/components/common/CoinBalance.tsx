@@ -49,7 +49,6 @@ export const CoinBalance: React.FC<CoinBalanceProps> = ({
         <Text
           style={[styles.balanceText, isSmall ? styles.balanceSmall : styles.balanceMedium]}
           allowFontScaling={false}
-          numberOfLines={1}
         >
           {balance.toLocaleString('tr-TR')}
         </Text>
@@ -95,10 +94,9 @@ const styles = StyleSheet.create({
   balanceText: {
     color: TEXT_BLACK,
     fontWeight: fontWeights.bold,
-    includeFontPadding: false,
   },
   balanceSmall: {
-    fontSize: 14,
+    fontSize: 15,
   },
   balanceMedium: {
     fontSize: 18,

@@ -313,9 +313,9 @@ export const ChatScreen: React.FC = () => {
 
   const coinBalance = useCoinStore((state) => state.balance);
   const sendInstantMessage = useCoinStore((state) => state.sendInstantMessage);
-  const packageTier = useAuthStore((state) => state.user?.packageTier ?? 'free');
-  const isPremiumTier = packageTier !== 'free';
-  const showReadReceipts = packageTier === 'pro' || packageTier === 'reserved';
+  const packageTier = useAuthStore((state) => state.user?.packageTier ?? 'FREE');
+  const isPremiumTier = packageTier !== 'FREE';
+  const showReadReceipts = packageTier === 'PRO' || packageTier === 'RESERVED';
 
   // Call feature
   const startCall = useCallStore((state) => state.startCall);

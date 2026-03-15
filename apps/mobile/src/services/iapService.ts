@@ -110,7 +110,7 @@ async function initIAP(): Promise<IAPStatus> {
  * In production, triggers the native store payment sheet.
  * In mock mode, returns a clearly-labeled dev receipt.
  *
- * @param packageTier - The tier to subscribe to ('gold' | 'pro' | 'reserved')
+ * @param packageTier - The tier to subscribe to ('GOLD' | 'PRO' | 'RESERVED')
  * @returns Purchase result with receipt data for backend validation
  */
 async function purchaseSubscription(

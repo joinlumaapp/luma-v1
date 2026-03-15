@@ -342,9 +342,9 @@ export const CompatibilityInsightScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { matchId, partnerName } = route.params;
 
-  const packageTier = useAuthStore((state) => state.user?.packageTier ?? 'free');
+  const packageTier = useAuthStore((state) => state.user?.packageTier ?? 'FREE');
   // Dimensions are locked for Free and Gold users (need Pro or Reserved to unlock all 7)
-  const isFreeUser = packageTier === 'free' || packageTier === 'gold';
+  const isFreeUser = packageTier === 'FREE' || packageTier === 'GOLD';
 
   const [isLoading, setIsLoading] = useState(true);
   const [compatibilityData, setCompatibilityData] = useState<CompatibilityData | null>(null);

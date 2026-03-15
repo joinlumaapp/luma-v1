@@ -474,7 +474,7 @@ export const MainTabNavigator: React.FC = () => {
         name="MatchesTab"
         component={MatchesStackNavigator}
         options={{
-          tabBarLabel: 'Eşleş',
+          tabBarLabel: 'Eşleşme',
           tabBarIcon: ({ focused }) => (
             <TabIconWithBadge
               name="heart"

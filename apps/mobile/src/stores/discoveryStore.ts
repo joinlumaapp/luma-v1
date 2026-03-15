@@ -20,10 +20,10 @@ const UNDO_DAILY_DATE_KEY = 'luma_undo_daily_date';
 
 // Daily free undo limits per package tier
 const DAILY_UNDO_LIMITS: Record<PackageTier, number> = {
-  free: 0,
-  gold: 1,
-  pro: 3,
-  reserved: 999999, // Unlimited
+  FREE: 0,
+  GOLD: 1,
+  PRO: 3,
+  RESERVED: 999999, // Unlimited
 };
 
 // Jeton cost per extra undo beyond the free daily allowance
@@ -62,7 +62,7 @@ export interface DiscoveryProfile {
   job?: string;
   education?: string;
   /** Subscription tier for badge display */
-  packageTier?: 'free' | 'gold' | 'pro' | 'reserved';
+  packageTier?: 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
   /** Profile prompts (Hinge-style question + answer) */
   prompts?: Array<{ id: string; question: string; answer: string; order: number }>;
   /** Profile video URL */
@@ -173,7 +173,7 @@ const mapFeedCardToProfile = (card: FeedCard): DiscoveryProfile => ({
 });
 
 // ─── Supreme Visibility Priority ─────────────────────────────
-// Boosts 'reserved' (Supreme) profiles to the top 5% of the feed stack.
+// Boosts 'RESERVED' (Supreme) profiles to the top 5% of the feed stack.
 // Among supreme profiles, higher feedScore wins. Non-supreme order is preserved.
 
 const sortWithSupremePriority = (profiles: DiscoveryProfile[]): DiscoveryProfile[] => {
@@ -181,7 +181,7 @@ const sortWithSupremePriority = (profiles: DiscoveryProfile[]): DiscoveryProfile
   const regular: DiscoveryProfile[] = [];
 
   for (const p of profiles) {
-    if (p.packageTier === 'reserved') {
+    if (p.packageTier === 'RESERVED') {
       supreme.push(p);
     } else {
       regular.push(p);
@@ -203,9 +203,9 @@ const sortWithSupremePriority = (profiles: DiscoveryProfile[]): DiscoveryProfile
 
 // ─── Intention tag normalization ─────────────────────────────
 const INTENTION_NORMALIZE: Record<string, string> = {
-  'Ciddi İlişki': 'serious_relationship',
-  'Keşfediyorum': 'exploring',
-  'Emin Değilim': 'not_sure',
+  'Ciddi İlişki': 'SERIOUS_RELATIONSHIP',
+  'Keşfediyorum': 'EXPLORING',
+  'Emin Değilim': 'NOT_SURE',
 };
 const normalizeIntention = (tag: string): string =>
   INTENTION_NORMALIZE[tag] ?? tag;
@@ -366,10 +366,10 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
     try {
       // Map direction to API direction: left=pass, right=like, up=super_like
       const apiDirection = direction === 'up'
-        ? 'super_like'
+        ? 'SUPER_LIKE'
         : direction === 'right'
-          ? 'like'
-          : 'pass';
+          ? 'LIKE'
+          : 'PASS';
 
       // Track swipe event
       const swipeEvent = direction === 'right'
@@ -495,11 +495,11 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
     if (!state.canUndo || !state.lastSwipedProfile) return;
 
     // Get package tier for undo limit check
-    const tier = (require('../stores/authStore').useAuthStore.getState().user?.packageTier ?? 'free') as PackageTier;
+    const tier = (require('../stores/authStore').useAuthStore.getState().user?.packageTier ?? 'FREE') as PackageTier;
     const dailyFreeLimit = DAILY_UNDO_LIMITS[tier];
 
     // Free users cannot undo at all
-    if (tier === 'free') {
+    if (tier === 'FREE') {
       set({ canUndo: false, undoTimerId: null, lastSwipedProfile: null, lastSwipeDirection: null });
       return;
     }
@@ -611,7 +611,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
 
   resetDaily: () => {
     // Use tier-based limit; imports from authStore at call-time to avoid circular deps
-    const tier = (require('../stores/authStore').useAuthStore.getState().user?.packageTier ?? 'free') as keyof typeof DISCOVERY_CONFIG.DAILY_LIKES;
+    const tier = (require('../stores/authStore').useAuthStore.getState().user?.packageTier ?? 'FREE') as keyof typeof DISCOVERY_CONFIG.DAILY_LIKES;
     const limit = DISCOVERY_CONFIG.DAILY_LIKES[tier];
     set({ dailyRemaining: limit, undosUsedToday: 0 });
     // Persist reset

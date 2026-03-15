@@ -1,18 +1,19 @@
 // LUMA V1 — Chat & Messaging Types
 
 export enum ChatMessageType {
-  TEXT = 'text',
-  IMAGE = 'image',
-  GIF = 'gif',
-  VOICE = 'voice',
-  SYSTEM = 'system',
+  TEXT = 'TEXT',
+  IMAGE = 'IMAGE',
+  GIF = 'GIF',
+  VOICE = 'VOICE',
+  SYSTEM = 'SYSTEM',
 }
 
 // Matches Prisma ChatMessageStatus enum
 export enum ChatMessageStatus {
-  SENT = 'sent',
-  DELIVERED = 'delivered',
-  READ = 'read',
+  SENT = 'SENT',
+  DELIVERED = 'DELIVERED',
+  READ = 'READ',
+  DELETED = 'DELETED',
 }
 
 export interface ChatMessage {

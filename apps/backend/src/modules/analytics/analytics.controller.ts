@@ -14,7 +14,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { AnalyticsService } from './analytics.service';
+import { AnalyticsService, DashboardMetrics, RetentionCohort, UserFunnelResult } from './analytics.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { BatchEventsDto, DashboardQueryDto, RetentionQueryDto } from './dto/analytics.dto';
@@ -47,7 +47,7 @@ export class AnalyticsController {
    */
   @Get('dashboard')
   @ApiOperation({ summary: 'Get admin dashboard metrics' })
-  async getDashboard(@Query() query: DashboardQueryDto) {
+  async getDashboard(@Query() query: DashboardQueryDto): Promise<DashboardMetrics> {
     return this.analyticsService.getDashboard(query.period);
   }
 
@@ -57,7 +57,7 @@ export class AnalyticsController {
    */
   @Get('retention')
   @ApiOperation({ summary: 'Get retention cohort data' })
-  async getRetention(@Query() query: RetentionQueryDto) {
+  async getRetention(@Query() query: RetentionQueryDto): Promise<RetentionCohort[]> {
     return this.analyticsService.getRetentionCohorts(query.cohorts);
   }
 
@@ -71,7 +71,7 @@ export class AnalyticsController {
   async getUserFunnel(
     @Param('userId') userId: string,
     @Query('funnel') funnelName?: string,
-  ) {
+  ): Promise<UserFunnelResult> {
     return this.analyticsService.getUserFunnel(
       userId,
       funnelName ?? 'registration',

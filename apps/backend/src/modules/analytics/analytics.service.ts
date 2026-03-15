@@ -3,12 +3,13 @@
 // Designed for admin dashboard consumption and data-driven product decisions.
 
 import { Injectable, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { BatchEventsDto } from './dto/analytics.dto';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-interface DashboardMetrics {
+export interface DashboardMetrics {
   period: 'day' | 'week' | 'month';
   generatedAt: string;
   metrics: {
@@ -37,7 +38,7 @@ interface DashboardMetrics {
   };
 }
 
-interface RetentionCohort {
+export interface RetentionCohort {
   cohortDate: string;
   cohortSize: number;
   day1: number;
@@ -52,7 +53,7 @@ interface FunnelStepResult {
   completedAt: string | null;
 }
 
-interface UserFunnelResult {
+export interface UserFunnelResult {
   funnelName: string;
   steps: FunnelStepResult[];
   completionRate: number;
@@ -79,7 +80,7 @@ export class AnalyticsService {
     const records = batch.events.map((event) => ({
       userId,
       event: event.event,
-      properties: event.properties as Record<string, unknown>,
+      properties: (event.properties ?? {}) as Prisma.InputJsonValue,
       sessionId: batch.sessionId,
       platform: batch.platform,
       appVersion: batch.appVersion,
@@ -115,7 +116,7 @@ export class AnalyticsService {
         data: {
           userId,
           event,
-          properties: (properties ?? {}) as Record<string, unknown>,
+          properties: (properties ?? {}) as Prisma.InputJsonValue,
           sessionId: 'server',
           platform: 'server',
           appVersion: 'backend',
@@ -186,7 +187,7 @@ export class AnalyticsService {
       this.getPackageDistribution(),
       // Paid users count
       this.prisma.user.count({
-        where: { packageTier: { not: 'free' } },
+        where: { packageTier: { not: 'FREE' } },
       }).catch(() => 0),
       // Harmony sessions in period
       this.prisma.harmonySession.count({
@@ -435,10 +436,10 @@ export class AnalyticsService {
   }> {
     try {
       const [free, gold, pro, reserved] = await Promise.all([
-        this.prisma.user.count({ where: { packageTier: 'free' } }),
-        this.prisma.user.count({ where: { packageTier: 'gold' } }),
-        this.prisma.user.count({ where: { packageTier: 'pro' } }),
-        this.prisma.user.count({ where: { packageTier: 'reserved' } }),
+        this.prisma.user.count({ where: { packageTier: 'FREE' } }),
+        this.prisma.user.count({ where: { packageTier: 'GOLD' } }),
+        this.prisma.user.count({ where: { packageTier: 'PRO' } }),
+        this.prisma.user.count({ where: { packageTier: 'RESERVED' } }),
       ]);
       return { free, gold, pro, reserved };
     } catch {

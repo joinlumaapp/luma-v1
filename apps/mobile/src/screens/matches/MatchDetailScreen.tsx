@@ -153,20 +153,23 @@ export const MatchDetailScreen: React.FC = () => {
       </View>
 
       {/* Stats row — social metrics (consistent with ProfileScreen) */}
+      {/* TODO: Replace hardcoded stat values (15/108/73) with real data from API.
+         API does not yet provide post count, follower count, or following count.
+         These are placeholder values until the social stats endpoint is implemented. */}
       <View style={styles.statsCard}>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>15</Text>
-          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>GÖNDERİ</Text>
+          <Text style={styles.statLabel}>GÖNDERİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Text style={styles.statValue}>108</Text>
-          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>TAKİPÇİ</Text>
+          <Text style={styles.statLabel}>TAKİPÇİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Text style={styles.statValue}>73</Text>
-          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>TAKİP</Text>
+          <Text style={styles.statLabel}>TAKİP</Text>
         </View>
       </View>
     </View>
@@ -175,11 +178,11 @@ export const MatchDetailScreen: React.FC = () => {
   // ── Info sections (interleaved with photos) — seamless ──
   const infoSections: React.ReactNode[] = [];
 
-  // 1. Hakkinda — bio + intention chip
+  // 1. Hakkında — bio + intention chip
   if (selectedMatch.bio || selectedMatch.intentionTag) {
     infoSections.push(
       <View key="about" style={styles.section}>
-        <Text style={styles.sectionTitle}>Hakkinda</Text>
+        <Text style={styles.sectionTitle}>Hakkında</Text>
         {selectedMatch.bio && <Text style={styles.bioText}>{selectedMatch.bio}</Text>}
         {selectedMatch.intentionTag && (
           <View style={{ marginTop: 12 }}>
@@ -189,7 +192,7 @@ export const MatchDetailScreen: React.FC = () => {
             <View style={{ flexDirection: 'row' }}>
               <View style={{ backgroundColor: 'rgba(139,92,246,0.12)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20 }}>
                 <Text style={{ fontSize: 13, fontWeight: fontWeights.medium, color: '#8B5CF6' }}>
-                  {selectedMatch.intentionTag === 'serious' || selectedMatch.intentionTag === 'serious_relationship' ? 'Ciddi Iliski' : selectedMatch.intentionTag === 'exploring' ? 'Kesfediyorum' : 'Emin Degilim'}
+                  {selectedMatch.intentionTag === 'serious' || selectedMatch.intentionTag === 'SERIOUS_RELATIONSHIP' ? 'Ciddi İlişki' : selectedMatch.intentionTag === 'EXPLORING' ? 'Keşfediyorum' : 'Emin Değilim'}
                 </Text>
               </View>
             </View>
@@ -199,14 +202,14 @@ export const MatchDetailScreen: React.FC = () => {
     );
   }
 
-  // 2. Ilgi Alanlari — interest tags
+  // 2. İlgi Alanları — interest tags
   const matchInterests = (selectedMatch as unknown as Record<string, unknown>).interests as string[] | undefined
     ?? (selectedMatch as unknown as Record<string, unknown>).interestTags as string[] | undefined
     ?? [];
   if (matchInterests.length > 0) {
     infoSections.push(
       <View key="interests" style={styles.section}>
-        <Text style={styles.sectionTitle}>Ilgi Alanlari</Text>
+        <Text style={styles.sectionTitle}>İlgi Alanları</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {matchInterests.map((tag: string) => (
             <View key={tag} style={{ backgroundColor: 'rgba(139, 92, 246, 0.08)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(139, 92, 246, 0.15)' }}>
@@ -218,21 +221,21 @@ export const MatchDetailScreen: React.FC = () => {
     );
   }
 
-  // 3. Hakkimda — lifestyle detail rows
+  // 3. Hakkımda — lifestyle detail rows
   {
     const lifestyleRows: Array<{ icon: keyof typeof Ionicons.glyphMap; iconBg: string; label: string; value: string }> = [];
     const m = selectedMatch as unknown as Record<string, unknown>;
-    if (m.job) lifestyleRows.push({ icon: 'briefcase-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'Is', value: String(m.job) });
-    if (m.education) lifestyleRows.push({ icon: 'school-outline', iconBg: 'rgba(236, 72, 153, 0.10)', label: 'Egitim', value: String(m.education) });
+    if (m.job) lifestyleRows.push({ icon: 'briefcase-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'İş', value: String(m.job) });
+    if (m.education) lifestyleRows.push({ icon: 'school-outline', iconBg: 'rgba(236, 72, 153, 0.10)', label: 'Eğitim', value: String(m.education) });
     if (m.height) lifestyleRows.push({ icon: 'resize-outline', iconBg: 'rgba(139, 92, 246, 0.10)', label: 'Boy', value: `${m.height} cm` });
     if (m.smoking) lifestyleRows.push({ icon: 'flame-outline', iconBg: 'rgba(239, 68, 68, 0.10)', label: 'Sigara', value: String(m.smoking) });
     if (m.sports) lifestyleRows.push({ icon: 'fitness-outline', iconBg: 'rgba(59, 130, 246, 0.10)', label: 'Spor', value: String(m.sports) });
-    if (m.children) lifestyleRows.push({ icon: 'people-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'Cocuk', value: String(m.children) });
+    if (m.children) lifestyleRows.push({ icon: 'people-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'Çocuk', value: String(m.children) });
 
     if (lifestyleRows.length > 0) {
       infoSections.push(
         <View key="details" style={styles.section}>
-          <Text style={styles.sectionTitle}>Hakkimda</Text>
+          <Text style={styles.sectionTitle}>Hakkımda</Text>
           {lifestyleRows.map((row, idx) => (
             <View
               key={row.label}
@@ -491,33 +494,38 @@ const styles = StyleSheet.create({
   // ── Stats card — minimalist ──
   statsCard: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
     alignItems: 'center',
+    justifyContent: 'space-evenly',
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.md + 4,
+    paddingHorizontal: spacing.xl,
   },
   statItem: {
     alignItems: 'center',
+    justifyContent: 'center',
     flex: 1,
+    paddingHorizontal: 12,
   },
   statValue: {
     fontSize: 22,
     fontWeight: fontWeights.bold,
     color: colors.text,
-    letterSpacing: -0.3,
+    textAlign: 'center',
   },
   statLabel: {
     fontSize: 11,
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
-    marginTop: 2,
-    includeFontPadding: false,
+    marginTop: 4,
+    textAlign: 'center',
+    letterSpacing: 0.3,
   },
   statDivider: {
     width: 1,
     height: 28,
     backgroundColor: colors.surfaceBorder,
+    marginHorizontal: spacing.sm,
   },
 
   // ── Sections — seamless, no card background ──

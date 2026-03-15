@@ -67,7 +67,7 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
     title: 'Geri Al Özelliği',
     description:
       'Yanlış yönde kaydırdın mı? Geri Al ile son beğeni kararını geri alabilirsin.',
-    minimumTier: 'gold',
+    minimumTier: 'GOLD',
     tierLabel: 'Premium+',
   },
   super_like: {
@@ -75,7 +75,7 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
     title: 'Süper Beğeni',
     description:
       'Süper Beğeni ile özel birinden öne çık! Eşleşme şansın 3 kat artar.',
-    minimumTier: 'gold',
+    minimumTier: 'GOLD',
     tierLabel: 'Premium+',
   },
   visitors: {
@@ -83,7 +83,7 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
     title: 'Profil Ziyaretçileri',
     description:
       'Profilini kimlerin ziyaret ettiğini gör ve yeni bağlantı fırsatlarını kaçırma.',
-    minimumTier: 'gold',
+    minimumTier: 'GOLD',
     tierLabel: 'Premium+',
   },
   who_likes: {
@@ -91,7 +91,7 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
     title: 'Kimin Beğendiği',
     description:
       'Seni beğenen kişileri hemen gör ve anında eşleşmeler oluştur.',
-    minimumTier: 'gold',
+    minimumTier: 'GOLD',
     tierLabel: 'Premium+',
   },
   filters: {
@@ -99,7 +99,7 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
     title: 'Gelişmiş Filtreler',
     description:
       'Yaş aralığı, mesafe, niyet etiketi ve daha fazlası ile arama sonuçlarını daralt.',
-    minimumTier: 'pro',
+    minimumTier: 'PRO',
     tierLabel: 'Supreme+',
   },
   priority: {
@@ -107,7 +107,7 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
     title: 'Öncelikli Gösterim',
     description:
       'Profilin diğer kullanıcılara önce gösterilir. Daha fazla beğeni ve eşleşme kazan.',
-    minimumTier: 'pro',
+    minimumTier: 'PRO',
     tierLabel: 'Supreme+',
   },
   badge: {
@@ -115,7 +115,7 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
     title: 'Özel Rozet',
     description:
       'Sınırsız üyelerine özel rozet ile profilinde fark yarat.',
-    minimumTier: 'reserved',
+    minimumTier: 'RESERVED',
     tierLabel: 'Sınırsız',
   },
   events: {
@@ -123,7 +123,7 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
     title: 'Özel Etkinlik Davetleri',
     description:
       'LUMA Sınırsız üyelerine özel düzenlenen etkinliklere davet al.',
-    minimumTier: 'reserved',
+    minimumTier: 'RESERVED',
     tierLabel: 'Sınırsız',
   },
   feed: {
@@ -131,7 +131,7 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
     title: 'Sosyal Akış',
     description:
       'Daha fazla paylaşım yapmak için paketini yükselt.',
-    minimumTier: 'gold',
+    minimumTier: 'GOLD',
     tierLabel: 'Premium+',
   },
   boost: {
@@ -139,7 +139,7 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
     title: 'Profil Boost',
     description:
       'Profilini öne çıkar ve Keşfette 10x daha fazla görünürlük kazan.',
-    minimumTier: 'gold',
+    minimumTier: 'GOLD',
     tierLabel: 'Premium+',
   },
   daily_likes: {
@@ -147,7 +147,7 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
     title: 'Sınırsız Beğeni',
     description:
       'Günlük beğeni limitini kaldır ve istediğin kadar profil beğen.',
-    minimumTier: 'gold',
+    minimumTier: 'GOLD',
     tierLabel: 'Premium+',
   },
   messages: {
@@ -155,7 +155,7 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
     title: 'Daha Fazla Mesaj',
     description:
       'Günlük mesaj limitini artır ve daha fazla sohbet başlat.',
-    minimumTier: 'gold',
+    minimumTier: 'GOLD',
     tierLabel: 'Premium+',
   },
   insights: {
@@ -163,7 +163,7 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
     title: 'Detaylı Uyumluluk Analizi',
     description:
       'Tüm uyumluluk boyutlarını detaylı gör ve ilişkini derinlemesine analiz et.',
-    minimumTier: 'pro',
+    minimumTier: 'PRO',
     tierLabel: 'Supreme+',
   },
   waves: {
@@ -171,7 +171,7 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
     title: 'Daha Fazla Selam',
     description:
       'Premium ile günde 20 selam gönder ve daha fazla sohbet başlat.',
-    minimumTier: 'gold',
+    minimumTier: 'GOLD',
     tierLabel: 'Premium+',
   },
   paid_message: {
@@ -179,7 +179,7 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
     title: 'Ücretli Mesaj',
     description:
       'Eşleşmeden önce ilk mesajını gönder ve sohbeti başlat.',
-    minimumTier: 'free',
+    minimumTier: 'FREE',
     tierLabel: '',
   },
 };

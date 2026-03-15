@@ -40,7 +40,7 @@ export interface FeedCard {
   job?: string;
   education?: string;
   /** Subscription tier of the user */
-  packageTier?: 'free' | 'gold' | 'pro' | 'reserved';
+  packageTier?: 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
   /** Profile prompts (Hinge-style question + answer) */
   prompts?: Array<{ id: string; question: string; answer: string; order: number }>;
   /** Favorite spots/locations */
@@ -56,7 +56,7 @@ export interface FeedResponse {
 
 export interface SwipeRequest {
   targetUserId: string;
-  direction: 'like' | 'pass' | 'super_like';
+  direction: 'LIKE' | 'PASS' | 'SUPER_LIKE';
   comment?: string; // optional comment attached to LIKE
   /** Icebreaker context — sent when user comments on a photo or prompt */
   icebreaker?: {
@@ -215,7 +215,7 @@ const MOCK_CARDS: FeedCard[] = [
     age: 26,
     city: 'İstanbul',
     bio: 'Kitap kurdu, kahve bağımlısı. Hayatı keşfetmeyi seven biri.',
-    intentionTag: 'serious_relationship',
+    intentionTag: 'SERIOUS_RELATIONSHIP',
     compatibility: { score: 92, level: 'super' },
     photos: [
       { url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=260&fit=crop' },
@@ -253,7 +253,7 @@ const MOCK_CARDS: FeedCard[] = [
     age: 24,
     city: 'Ankara',
     bio: 'Müzik ve sanat hayatımın merkezinde. Gitar çalıyorum.',
-    intentionTag: 'exploring',
+    intentionTag: 'EXPLORING',
     compatibility: { score: 85, level: 'normal' },
     photos: [
       { url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&h=260&fit=crop' },
@@ -291,7 +291,7 @@ const MOCK_CARDS: FeedCard[] = [
     age: 28,
     city: 'İzmir',
     bio: 'Doğa yürüyüşleri, yoga ve sağlıklı yaşam tutkunu.',
-    intentionTag: 'serious_relationship',
+    intentionTag: 'SERIOUS_RELATIONSHIP',
     compatibility: { score: 78, level: 'normal' },
     photos: [
       { url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&h=260&fit=crop' },
@@ -331,7 +331,7 @@ const MOCK_CARDS: FeedCard[] = [
     age: 25,
     city: 'İstanbul',
     bio: 'Yazılımcı, kedileri sever. Film önerileri konusunda iddialıyım.',
-    intentionTag: 'not_sure',
+    intentionTag: 'NOT_SURE',
     compatibility: { score: 88, level: 'normal' },
     photos: [
       { url: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=200&h=260&fit=crop' },
@@ -368,7 +368,7 @@ const MOCK_CARDS: FeedCard[] = [
     age: 27,
     city: 'Bursa',
     bio: 'Fotoğrafçılık, seyahat ve yeni lezzetler keşfetmek benim işim.',
-    intentionTag: 'exploring',
+    intentionTag: 'EXPLORING',
     compatibility: { score: 73, level: 'normal' },
     photos: [
       { url: 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=200&h=260&fit=crop' },
@@ -403,7 +403,7 @@ const MOCK_CARDS: FeedCard[] = [
     age: 23,
     city: 'İstanbul',
     bio: 'Psikoloji öğrencisi. İnsanları anlamak en büyük tutkum.',
-    intentionTag: 'serious_relationship',
+    intentionTag: 'SERIOUS_RELATIONSHIP',
     compatibility: { score: 95, level: 'super' },
     photos: [
       { url: 'https://images.unsplash.com/photo-1502767089025-6572583495f9?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1502767089025-6572583495f9?w=200&h=260&fit=crop' },
@@ -442,7 +442,7 @@ const MOCK_CARDS: FeedCard[] = [
     age: 26,
     city: 'Antalya',
     bio: 'Deniz, güneş ve spor. Hayatı dolu dolu yaşıyorum.',
-    intentionTag: 'exploring',
+    intentionTag: 'EXPLORING',
     compatibility: { score: 81, level: 'normal' },
     photos: [
       { url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=260&fit=crop' },
@@ -479,7 +479,7 @@ const MOCK_CARDS: FeedCard[] = [
     age: 29,
     city: 'İstanbul',
     bio: 'Mimar. Tasarım, estetik ve yaratıcılık benim dünyam.',
-    intentionTag: 'serious_relationship',
+    intentionTag: 'SERIOUS_RELATIONSHIP',
     compatibility: { score: 87, level: 'normal' },
     photos: [
       { url: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&h=800&fit=crop', thumbnailUrl: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&h=260&fit=crop' },
@@ -650,8 +650,8 @@ const MOCK_FAVORITE_SPOTS_POOL: Array<Array<{ name: string; category: string }>>
 const MOCK_SMOKING_OPTIONS = ['İçmez', 'Sosyal içici', 'İçer'];
 const MOCK_SPORTS_OPTIONS = ['Yoga', 'Koşu', 'Yüzme', 'Fitness', 'Pilates', 'Dans', 'Tenis'];
 const MOCK_CHILDREN_OPTIONS = ['İstemiyor', 'İstiyor', 'Belki ileride'];
-const MOCK_INTENTION_TAGS: Array<'serious_relationship' | 'exploring' | 'not_sure'> = [
-  'serious_relationship', 'exploring', 'not_sure',
+const MOCK_INTENTION_TAGS: Array<'SERIOUS_RELATIONSHIP' | 'EXPLORING' | 'NOT_SURE'> = [
+  'SERIOUS_RELATIONSHIP', 'EXPLORING', 'NOT_SURE',
 ];
 
 // Collect all photo URLs from the static MOCK_CARDS for reuse
@@ -911,7 +911,7 @@ export const discoveryService = {
       return response.data;
     } catch {
       // Mock swipe response — simulate occasional matches on likes
-      const isLike = data.direction === 'like' || data.direction === 'super_like';
+      const isLike = data.direction === 'LIKE' || data.direction === 'SUPER_LIKE';
       const isMatch = isLike && Math.random() < 0.25;
       return {
         direction: data.direction,

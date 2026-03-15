@@ -76,6 +76,11 @@ model User {
   datePlans              DatePlan[]
   weeklyReports          WeeklyReport[]
   analyticsEvents        AnalyticsEvent[]
+  stories                Story[]
+  storyViews             StoryView[]
+  storyLikes             StoryLike[]
+  followersGiven         UserFollow[]      @relation("FollowsGiven")
+  followersReceived      UserFollow[]      @relation("FollowsReceived")
 
   @@map("users")
 }
@@ -1245,4 +1250,74 @@ model AnalyticsEvent {
   @@index([userId, event])
   @@index([event, createdAt])
   @@map("analytics_events")
+}
+
+// ============================================================
+// SUBSYSTEM: Stories (Instagram-quality 24h stories)
+// Story creation, view tracking, likes, user follows
+// ============================================================
+
+model Story {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  mediaUrl  String    @map("media_url")
+  mediaType String    @map("media_type") @db.VarChar(10) // image, video
+  overlays  String?   @db.Text // JSON-encoded overlay data
+  expiresAt DateTime  @map("expires_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  views StoryView[]
+  likes StoryLike[]
+
+  @@index([userId, createdAt])
+  @@index([expiresAt]) // Cleanup: find expired stories
+  @@map("stories")
+}
+
+model StoryView {
+  id       String   @id @default(uuid()) @db.Uuid
+  storyId  String   @map("story_id") @db.Uuid
+  viewerId String   @map("viewer_id") @db.Uuid
+  viewedAt DateTime @default(now()) @map("viewed_at")
+
+  story  Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  viewer User  @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, viewerId])
+  @@index([storyId])
+  @@index([viewerId])
+  @@map("story_views")
+}
+
+model StoryLike {
+  id        String   @id @default(uuid()) @db.Uuid
+  storyId   String   @map("story_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, userId])
+  @@index([storyId])
+  @@index([userId])
+  @@map("story_likes")
+}
+
+model UserFollow {
+  id          String   @id @default(uuid()) @db.Uuid
+  followerId  String   @map("follower_id") @db.Uuid
+  followingId String   @map("following_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  follower  User @relation("FollowsGiven", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("FollowsReceived", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@map("user_follows")
 }

@@ -513,6 +513,17 @@ export class ProfilesService {
       return;
     }
 
+    // Evict expired entries when the map grows too large to prevent memory leaks.
+    // Entries older than 1 hour are no longer useful (duplicate-check window).
+    if (ProfilesService.profileViews.size > 10_000) {
+      const oneHourAgo = now.getTime() - 60 * 60 * 1000;
+      for (const [key, view] of ProfilesService.profileViews) {
+        if (view.viewedAt.getTime() < oneHourAgo) {
+          ProfilesService.profileViews.delete(key);
+        }
+      }
+    }
+
     ProfilesService.profileViews.set(viewKey, {
       viewerId,
       viewedUserId,
@@ -748,73 +759,9 @@ export class ProfilesService {
   }
 
   // ─── Profile Video ──────────────────────────────────────────
-
-  /**
-   * Save profile video data (URL, thumbnail, duration) to user profile.
-   */
-  async setProfileVideo(
-    userId: string,
-    videoData: { url: string; thumbnailUrl: string; duration: number; key: string },
-  ) {
-    const profile = await this.prisma.userProfile.findUnique({
-      where: { userId },
-    });
-
-    if (!profile) {
-      throw new NotFoundException('Profil bulunamadi. Once profil olusturun.');
-    }
-
-    await this.prisma.userProfile.update({
-      where: { userId },
-      data: {
-        videoUrl: videoData.url,
-        videoThumbnailUrl: videoData.thumbnailUrl,
-        videoDuration: videoData.duration,
-        videoKey: videoData.key,
-        lastActiveAt: new Date(),
-      },
-    });
-
-    return {
-      url: videoData.url,
-      thumbnailUrl: videoData.thumbnailUrl,
-      duration: videoData.duration,
-      key: videoData.key,
-    };
-  }
-
-  /**
-   * Delete the user's profile video.
-   */
-  async deleteProfileVideo(userId: string) {
-    const profile = await this.prisma.userProfile.findUnique({
-      where: { userId },
-      select: { videoKey: true },
-    });
-
-    if (!profile) {
-      throw new NotFoundException('Profil bulunamadi');
-    }
-
-    // Clear video fields from profile
-    await this.prisma.userProfile.update({
-      where: { userId },
-      data: {
-        videoUrl: null,
-        videoThumbnailUrl: null,
-        videoDuration: null,
-        videoKey: null,
-        lastActiveAt: new Date(),
-      },
-    });
-
-    // In production: delete from S3
-    // if (profile.videoKey) {
-    //   await this.storageService.deleteFile(profile.videoKey);
-    // }
-
-    return { deleted: true };
-  }
+  // TODO: Video fields (videoUrl, videoThumbnailUrl, videoDuration, videoKey)
+  // are not yet in the UserProfile schema. Add them via a Prisma migration
+  // before enabling video features.
 
   // ─── Profile Prompts ─────────────────────────────────────────
 

@@ -6,6 +6,7 @@ import {
   Param,
   Query,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PlacesService } from './places.service';
@@ -63,11 +64,21 @@ export class PlacesController {
     @Query('longitude') longitude: string,
     @Query('radiusKm') radiusKm?: string,
   ) {
-    return this.placesService.getPopularPlaces(
-      parseFloat(latitude),
-      parseFloat(longitude),
-      radiusKm ? parseFloat(radiusKm) : 25,
-    );
+    const lat = parseFloat(latitude);
+    const lng = parseFloat(longitude);
+    const radius = radiusKm ? parseFloat(radiusKm) : 25;
+
+    if (isNaN(lat) || isNaN(lng)) {
+      throw new BadRequestException(
+        'latitude and longitude must be valid numbers',
+      );
+    }
+
+    if (radiusKm !== undefined && isNaN(radius)) {
+      throw new BadRequestException('radiusKm must be a valid number');
+    }
+
+    return this.placesService.getPopularPlaces(lat, lng, radius);
   }
 
   @Get('my-check-ins')

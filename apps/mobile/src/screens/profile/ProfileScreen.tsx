@@ -79,7 +79,7 @@ const translateLookingFor = (ids: string[]): string[] => {
   const map: Record<string, string> = {
     long_term: 'Uzun süreli ilişki', short_term: 'Kısa süreli ilişki',
     friendship: 'Arkadaşlık', travel_together: 'Birlikte gezmek',
-    serious_relationship: 'Ciddi ilişki',
+    SERIOUS_RELATIONSHIP: 'Ciddi ilişki',
   };
   return ids.map((id) => map[id] || id);
 };
@@ -133,10 +133,10 @@ const CountUpStat: React.FC<{ target: number; label: string; suffix?: string }> 
 
   return (
     <View style={styles.statItem}>
-      <Text style={styles.statValue} numberOfLines={1}>
+      <Text style={styles.statValue}>
         {displayValue}{suffix ?? ''}
       </Text>
-      <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+      <Text style={styles.statLabel}>
         {label}
       </Text>
     </View>
@@ -209,9 +209,9 @@ const getStrengthColor = (level: 'low' | 'medium' | 'high'): string => {
 // ─── Intention tag display config ────────────────────────────────────────────
 
 const INTENTION_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
-  serious_relationship: { label: 'Ciddi İlişki', bg: 'rgba(139, 92, 246, 0.12)', text: palette.purple[600] },
-  exploring: { label: 'Yeni Kesifler', bg: 'rgba(236, 72, 153, 0.12)', text: palette.pink[600] },
-  not_sure: { label: 'Acik Fikirli', bg: 'rgba(251, 191, 36, 0.12)', text: palette.gold[700] },
+  SERIOUS_RELATIONSHIP: { label: 'Ciddi İlişki', bg: 'rgba(139, 92, 246, 0.12)', text: palette.purple[600] },
+  EXPLORING: { label: 'Yeni Keşifler', bg: 'rgba(236, 72, 153, 0.12)', text: palette.pink[600] },
+  NOT_SURE: { label: 'Açık Fikirli', bg: 'rgba(251, 191, 36, 0.12)', text: palette.gold[700] },
 };
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -393,11 +393,11 @@ export const ProfileScreen: React.FC = () => {
 
   // Build about rows
   const aboutRows: AboutRow[] = [
-    { icon: 'calendar-outline', iconBg: 'rgba(139, 92, 246, 0.10)', label: 'Yas', value: profile.birthDate ? `${age}` : 'Belirtilmedi' },
+    { icon: 'calendar-outline', iconBg: 'rgba(139, 92, 246, 0.10)', label: 'Yaş', value: profile.birthDate ? `${age}` : 'Belirtilmedi' },
     { icon: 'person-outline', iconBg: 'rgba(59, 130, 246, 0.10)', label: 'Cinsiyet', value: translateGender(profile.gender) },
     { icon: 'location-outline', iconBg: 'rgba(245, 158, 11, 0.10)', label: 'Şehir', value: profile.city || 'Belirtilmedi' },
-    { icon: 'briefcase-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'Is', value: profile.job || 'Belirtilmedi' },
-    { icon: 'school-outline', iconBg: 'rgba(236, 72, 153, 0.10)', label: 'Egitim', value: profile.education || 'Belirtilmedi' },
+    { icon: 'briefcase-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'İş', value: profile.job || 'Belirtilmedi' },
+    { icon: 'school-outline', iconBg: 'rgba(236, 72, 153, 0.10)', label: 'Eğitim', value: profile.education || 'Belirtilmedi' },
     { icon: 'people-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'Çocuk', value: profile.children ? translateChildren(profile.children) : 'Belirtilmedi' },
     { icon: 'flame-outline', iconBg: 'rgba(239, 68, 68, 0.10)', label: 'Sigara', value: profile.smoking ? translateSmoking(profile.smoking) : 'Belirtilmedi' },
     { icon: 'resize-outline', iconBg: 'rgba(139, 92, 246, 0.10)', label: 'Boy', value: profile.height ? `${profile.height} cm` : 'Belirtilmedi' },
@@ -405,7 +405,7 @@ export const ProfileScreen: React.FC = () => {
   ];
 
   // ── Header Bar ──────────────────────────────────────────────────────────────
-  const packageTier = user?.packageTier ?? 'free';
+  const packageTier = user?.packageTier ?? 'FREE';
 
   const headerBar = (
     <View style={[styles.headerBar, { paddingTop: insets.top }]}>
@@ -419,7 +419,7 @@ export const ProfileScreen: React.FC = () => {
         >
           <SubscriptionBadge tier={packageTier} />
         </TouchableOpacity>
-        {packageTier === 'reserved' && (
+        {packageTier === 'RESERVED' && (
           <View style={styles.supremeHeaderBadge}>
             <Ionicons name="diamond" size={12} color="#D4AF37" />
             <Text style={styles.supremeHeaderBadgeText}>SUPREME</Text>
@@ -433,7 +433,7 @@ export const ProfileScreen: React.FC = () => {
           style={styles.settingsButton}
           accessibilityLabel="Ayarlar"
           accessibilityRole="button"
-          accessibilityHint="Uygulama ayarlarini acmak için dokunun"
+          accessibilityHint="Uygulama ayarlarını açmak için dokunun"
           testID="profile-settings-btn"
         >
           <Ionicons name="settings-outline" size={22} color={colors.text} />
@@ -475,7 +475,7 @@ export const ProfileScreen: React.FC = () => {
             <View style={styles.completionBarTrack}>
               <View style={[styles.completionBarFill, { width: `${completionPercent}%` }]} />
             </View>
-            <Text style={styles.completionBarText}>Profil %{completionPercent} tamamlandi</Text>
+            <Text style={styles.completionBarText}>Profil %{completionPercent} tamamlandı</Text>
           </TouchableOpacity>
         )}
 
@@ -490,6 +490,9 @@ export const ProfileScreen: React.FC = () => {
       </View>
 
       {/* Stats row — social metrics (same as other profiles) */}
+      {/* TODO: Replace hardcoded stat values (15/108/73) with real data from API.
+         API does not yet provide post count, follower count, or following count.
+         These are placeholder values until the social stats endpoint is implemented. */}
       <View style={styles.statsCard}>
         <CountUpStat target={15} label="GÖNDERİ" />
         <View style={styles.statDivider} />
@@ -505,7 +508,7 @@ export const ProfileScreen: React.FC = () => {
           onPress={handleEditProfile}
           activeOpacity={0.85}
           style={styles.actionButtonFlex}
-          accessibilityLabel="Profili duzenle"
+          accessibilityLabel="Profili düzenle"
           accessibilityRole="button"
           testID="profile-edit-btn"
         >
@@ -516,7 +519,7 @@ export const ProfileScreen: React.FC = () => {
             style={styles.gradientButton}
           >
             <Ionicons name="pencil" size={15} color="#FFFFFF" />
-            <Text style={styles.gradientButtonText}>Duzenle</Text>
+            <Text style={styles.gradientButtonText}>Düzenle</Text>
           </LinearGradient>
         </TouchableOpacity>
 
@@ -531,12 +534,12 @@ export const ProfileScreen: React.FC = () => {
           }}
           activeOpacity={0.85}
           style={styles.actionButtonFlex}
-          accessibilityLabel="Profili paylas"
+          accessibilityLabel="Profili paylaş"
           accessibilityRole="button"
         >
           <View style={styles.outlinedButton}>
             <Ionicons name="share-outline" size={15} color={palette.purple[600]} />
-            <Text style={styles.outlinedButtonText}>Paylas</Text>
+            <Text style={styles.outlinedButtonText}>Paylaş</Text>
           </View>
         </TouchableOpacity>
 
@@ -555,7 +558,7 @@ export const ProfileScreen: React.FC = () => {
         <View style={styles.weeklyViewsRow}>
           <View style={styles.weeklyViewsDot} />
           <Text style={styles.weeklyViewsText}>
-            Bu hafta <Text style={styles.weeklyViewsBold}>{weeklyViewCount} kisi</Text> profilini gordu
+            Bu hafta <Text style={styles.weeklyViewsBold}>{weeklyViewCount} kişi</Text> profilini gördü
           </Text>
         </View>
       )}
@@ -568,7 +571,7 @@ export const ProfileScreen: React.FC = () => {
   // 1. Hakkinda — bio + lookingFor chips
   infoSections.push(
     <View key="about" style={styles.section}>
-      <Text style={styles.sectionTitle}>Hakkinda</Text>
+      <Text style={styles.sectionTitle}>Hakkında</Text>
       <Text style={styles.bioText}>{profile.bio || '-'}</Text>
       {profile.lookingFor.length > 0 && (
         <View style={styles.lookingForSection}>
@@ -590,7 +593,7 @@ export const ProfileScreen: React.FC = () => {
     infoSections.push(
       <View key="interests" style={styles.section}>
         <Text style={styles.sectionTitle}>
-          Ilgi Alanlari ({profile.interestTags.length}/10)
+          İlgi Alanları ({profile.interestTags.length}/10)
         </Text>
         <View style={styles.chipRow}>
           {profile.interestTags.map((tag) => (
@@ -635,21 +638,21 @@ export const ProfileScreen: React.FC = () => {
     </View>,
   );
 
-  // 4. Rözetler
+  // 4. Rozetler
   infoSections.push(
     <TouchableOpacity
       key="badges"
       style={styles.section}
       onPress={handleBadges}
       activeOpacity={0.7}
-      accessibilityLabel="Rözetler"
+      accessibilityLabel="Rozetler"
       accessibilityRole="button"
-      accessibilityHint="Tum rözetleri gormek için dokunun"
+      accessibilityHint="Tüm rozetleri görmek için dokunun"
       testID="profile-badges-btn"
     >
       <View style={styles.badgesHeader}>
-        <Text style={styles.sectionTitle}>Rözetler</Text>
-        <Text style={styles.seeAllText}>Tumunu Gor</Text>
+        <Text style={styles.sectionTitle}>Rozetler</Text>
+        <Text style={styles.seeAllText}>Tümünü Gör</Text>
       </View>
       <View style={styles.badgesRow}>
         {badges.length > 0 ? (
@@ -670,7 +673,7 @@ export const ProfileScreen: React.FC = () => {
             </View>
           ))
         ) : (
-          <Text style={styles.badgeLabel}>Henuz rözet kazanilmadi</Text>
+          <Text style={styles.badgeLabel}>Henüz rozet kazanılmadı</Text>
         )}
       </View>
     </TouchableOpacity>,
@@ -713,7 +716,7 @@ export const ProfileScreen: React.FC = () => {
       style={styles.boostCard}
       onPress={() => setShowBoostModal(true)}
       activeOpacity={0.8}
-      accessibilityLabel="Profilini one cikar"
+      accessibilityLabel="Profilini öne çıkar"
       accessibilityRole="button"
       testID="profile-boost-btn"
     >
@@ -726,12 +729,12 @@ export const ProfileScreen: React.FC = () => {
         </LinearGradient>
         <View style={styles.boostContent}>
           <Text style={styles.boostTitle}>
-            {boostStatus.isActive ? 'One Cikarma Aktif' : 'Profilini One Cikar'}
+            {boostStatus.isActive ? 'Öne Çıkarma Aktif' : 'Profilini Öne Çıkar'}
           </Text>
           <Text style={styles.boostSubtitle}>
             {boostStatus.isActive
-              ? 'Profilin 10x daha fazla goruntuleniyor'
-              : 'Kesfette 10x daha fazla gorunurluk'}
+              ? 'Profilin 10x daha fazla görüntüleniyor'
+              : 'Keşfette 10x daha fazla görünürlük'}
           </Text>
         </View>
         {boostStatus.isActive ? (
@@ -946,40 +949,35 @@ const styles = StyleSheet.create({
   statsCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md + 4,
-    paddingHorizontal: spacing.md,
-    overflow: 'visible',
-    ...shadows.small,
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+    paddingVertical: spacing.md,
   },
   statItem: {
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
-    paddingHorizontal: 4,
   },
   statValue: {
     fontSize: 22,
     fontWeight: fontWeights.bold,
     color: colors.text,
     textAlign: 'center',
-    paddingHorizontal: 2,
-    paddingVertical: 2,
+    includeFontPadding: true,
   },
   statLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: fontWeights.semibold,
     color: colors.textTertiary,
-    marginTop: 4,
+    marginTop: 2,
     textAlign: 'center',
-    paddingHorizontal: 2,
-    paddingVertical: 1,
+    includeFontPadding: true,
   },
   statDivider: {
     width: 1,
     height: 28,
     backgroundColor: colors.surfaceBorder,
+    marginHorizontal: spacing.sm,
   },
 
   // ── Action buttons row ──

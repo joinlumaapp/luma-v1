@@ -21,7 +21,7 @@ export interface ConversationSummary {
   lastMessageAt: string;
   unreadCount: number;
   isOnline: boolean;
-  packageTier?: 'free' | 'gold' | 'pro' | 'reserved';
+  packageTier?: 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
 }
 
 export interface ConversationsResponse {

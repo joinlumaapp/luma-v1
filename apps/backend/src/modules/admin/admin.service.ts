@@ -22,7 +22,7 @@ import {
 } from './dto';
 
 /** Shape returned by getDashboardStats */
-interface DashboardStats {
+export interface DashboardStats {
   totalUsers: number;
   activeUsers: number;
   newUsersToday: number;
@@ -34,7 +34,7 @@ interface DashboardStats {
 }
 
 /** Shape for paginated results */
-interface PaginatedResult<T> {
+export interface PaginatedResult<T> {
   items: T[];
   total: number;
   page: number;

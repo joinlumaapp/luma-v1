@@ -51,7 +51,7 @@ interface FeedUserProfile {
   education: string;
   intentionTag: string;
   zodiacSign: string;
-  packageTier?: 'free' | 'gold' | 'pro' | 'reserved';
+  packageTier?: 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
 }
 
 const MOCK_PROFILES: Record<string, FeedUserProfile> = {
@@ -63,7 +63,7 @@ const MOCK_PROFILES: Record<string, FeedUserProfile> = {
     compatibilityPercent: 92,
     hobbies: ['Yoga', 'Kitap', 'Seyahat', 'Fotoğrafçılık'],
     height: '168 cm', job: 'Grafik Tasarımcı', education: 'İstanbul Üniversitesi', intentionTag: 'Ciddi İlişki', zodiacSign: 'Başak',
-    packageTier: 'gold',
+    packageTier: 'GOLD',
   },
   'bot-002': {
     userId: 'bot-002', name: 'Zeynep', age: 24, city: 'Ankara',
@@ -73,7 +73,7 @@ const MOCK_PROFILES: Record<string, FeedUserProfile> = {
     compatibilityPercent: 68,
     hobbies: ['Dans', 'Muzik', 'Yuzme', 'Pilates', 'Sinema'],
     height: '172 cm', job: 'Pazarlama Uzmani', education: 'Bilkent Universitesi', intentionTag: 'Kesfediyorum', zodiacSign: 'Ikizler',
-    packageTier: 'reserved',
+    packageTier: 'RESERVED',
   },
 };
 
@@ -562,33 +562,38 @@ const styles = StyleSheet.create({
   // ── Stats card — minimalist ──
   statsCard: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
     alignItems: 'center',
+    justifyContent: 'space-evenly',
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.md + 4,
+    paddingHorizontal: spacing.xl,
   },
   statItem: {
     alignItems: 'center',
+    justifyContent: 'center',
     flex: 1,
+    paddingHorizontal: 12,
   },
   statValue: {
     fontSize: 22,
     fontWeight: fontWeights.bold,
     color: colors.text,
-    letterSpacing: -0.3,
+    textAlign: 'center',
   },
   statLabel: {
     fontSize: 11,
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
-    marginTop: 2,
-    includeFontPadding: false,
+    marginTop: 4,
+    textAlign: 'center',
+    letterSpacing: 0.3,
   },
   statDivider: {
     width: 1,
     height: 28,
     backgroundColor: colors.surfaceBorder,
+    marginHorizontal: spacing.sm,
   },
 
   // ── Follow button ──

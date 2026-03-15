@@ -207,7 +207,7 @@ export const PhotosScreen: React.FC = () => {
         {isCompressing ? (
           <View style={styles.compressingContent}>
             <ActivityIndicator size="small" color={onboardingColors.text} />
-            <Text style={styles.compressingText}>Isleniyor...</Text>
+            <Text style={styles.compressingText}>İşleniyor...</Text>
           </View>
         ) : slot ? (
           <Animated.View
@@ -255,7 +255,7 @@ export const PhotosScreen: React.FC = () => {
               />
             </View>
             {isMain && (
-              <Text style={styles.profileSlotLabel}>Profil fotografi</Text>
+              <Text style={styles.profileSlotLabel}>Profil fotoğrafı</Text>
             )}
           </View>
         )}

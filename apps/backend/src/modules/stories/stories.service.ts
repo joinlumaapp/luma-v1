@@ -11,6 +11,16 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateStoryDto } from './dto/create-story.dto';
 
+/** Minimal file interface compatible with multer uploads */
+interface UploadedFile {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  size: number;
+  buffer: Buffer;
+}
+
 @Injectable()
 export class StoriesService {
   private readonly logger = new Logger(StoriesService.name);
@@ -37,8 +47,14 @@ export class StoriesService {
         user: {
           select: {
             id: true,
-            firstName: true,
-            photos: true,
+            profile: {
+              select: { firstName: true },
+            },
+            photos: {
+              where: { isPrimary: true },
+              select: { url: true },
+              take: 1,
+            },
           },
         },
         views: {
@@ -64,8 +80,8 @@ export class StoriesService {
       if (!userStoriesMap.has(storyUserId)) {
         userStoriesMap.set(storyUserId, {
           userId: storyUserId,
-          userName: story.user.firstName ?? 'Kullanici',
-          userAvatarUrl: story.user.photos?.[0] ?? '',
+          userName: story.user.profile?.firstName ?? 'Kullanici',
+          userAvatarUrl: story.user.photos?.[0]?.url ?? '',
           stories: [],
           hasUnseenStories: false,
           latestStoryAt: story.createdAt.toISOString(),
@@ -87,7 +103,7 @@ export class StoriesService {
   /** Create a new story */
   async createStory(
     userId: string,
-    file: Express.Multer.File,
+    file: UploadedFile,
     dto: CreateStoryDto,
   ) {
     // Upload file to storage (S3/CloudFront)
@@ -165,8 +181,14 @@ export class StoriesService {
         viewer: {
           select: {
             id: true,
-            firstName: true,
-            photos: true,
+            profile: {
+              select: { firstName: true },
+            },
+            photos: {
+              where: { isPrimary: true },
+              select: { url: true },
+              take: 1,
+            },
           },
         },
       },
@@ -175,8 +197,8 @@ export class StoriesService {
 
     return views.map((view) => ({
       userId: view.viewer.id,
-      userName: view.viewer.firstName ?? 'Kullanici',
-      userAvatarUrl: view.viewer.photos?.[0] ?? '',
+      userName: view.viewer.profile?.firstName ?? 'Kullanici',
+      userAvatarUrl: view.viewer.photos?.[0]?.url ?? '',
       viewedAt: view.viewedAt.toISOString(),
     }));
   }
@@ -186,7 +208,12 @@ export class StoriesService {
     const story = await this.prisma.story.findUnique({
       where: { id: storyId },
       include: {
-        user: { select: { id: true, firstName: true } },
+        user: {
+          select: {
+            id: true,
+            profile: { select: { firstName: true } },
+          },
+        },
       },
     });
 
@@ -258,25 +285,25 @@ export class StoriesService {
     const matches = await this.prisma.match.findMany({
       where: {
         OR: [
-          { userId1: userId },
-          { userId2: userId },
+          { userAId: userId },
+          { userBId: userId },
         ],
-        status: 'ACTIVE',
+        isActive: true,
       },
-      select: { userId1: true, userId2: true },
+      select: { userAId: true, userBId: true },
     });
 
     const ids = new Set<string>();
     for (const f of follows) ids.add(f.followingId);
     for (const m of matches) {
-      const partnerId = m.userId1 === userId ? m.userId2 : m.userId1;
+      const partnerId = m.userAId === userId ? m.userBId : m.userAId;
       ids.add(partnerId);
     }
 
     return Array.from(ids);
   }
 
-  private async uploadStoryMedia(file: Express.Multer.File): Promise<string> {
+  private async uploadStoryMedia(file: UploadedFile): Promise<string> {
     // TODO: Integrate with StorageService (S3/CloudFront)
     // For now, return a placeholder URL
     const filename = `stories/${Date.now()}-${file.originalname}`;

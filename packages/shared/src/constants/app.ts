@@ -12,18 +12,19 @@ export const V1_LOCKED = {
   premiumQuestions: 25,
   intentionTags: 3,
   packages: 4,
-  menuTabs: 4,
+  menuTabs: 5,
   matchAnimations: 2,
   compatibilityLevels: 2,
   badges: 8,
 } as const;
 
-// Menu Tab Configuration — LOCKED: 4 Tabs
+// Menu Tab Configuration — LOCKED: 5 Tabs
 export const MENU_TABS = {
-  DISCOVER: { index: 0, key: 'discover', label: 'Keşfet', icon: 'compass' },
-  MATCHES: { index: 1, key: 'matches', label: 'Eşleşmeler', icon: 'heart' },
-  HARMONY: { index: 2, key: 'harmony', label: 'Harmony', icon: 'music' },
-  PROFILE: { index: 3, key: 'profile', label: 'Profil', icon: 'user' },
+  FEED: { index: 0, key: 'feed', label: 'Feed', icon: 'home' },
+  DISCOVER: { index: 1, key: 'discover', label: 'Keşfet', icon: 'compass' },
+  ACTIVITIES: { index: 2, key: 'activities', label: 'Etkinlik', icon: 'calendar' },
+  MATCHES: { index: 3, key: 'matches', label: 'Eşleşmeler', icon: 'heart' },
+  PROFILE: { index: 4, key: 'profile', label: 'Profil', icon: 'user' },
 } as const;
 
 // Intention Tag Labels — Soft, non-judgmental language per brand identity

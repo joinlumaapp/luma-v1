@@ -1,5 +1,5 @@
 // SettingsScreen — Premium glassmorphism design with Ionicons, Supreme section, clean categories
-// Categories: Hesap Ayarlari, Supreme Avantajlarim, Bildirimler, Gizlilik ve Guvenlik, Destek, Gorunum, Tehlike Bolgesi
+// Categories: Hesap Ayarları, Supreme Avantajlarım, Bildirimler, Gizlilik ve Güvenlik, Destek, Görünüm, Tehlike Bölgesi
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
@@ -102,7 +102,7 @@ interface SettingSection {
 
 // Theme option labels (Turkish)
 const THEME_OPTIONS: { mode: ThemeMode; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { mode: 'light', label: 'Acik', icon: 'sunny-outline' },
+  { mode: 'light', label: 'Açık', icon: 'sunny-outline' },
   { mode: 'dark', label: 'Koyu', icon: 'moon-outline' },
   { mode: 'system', label: 'Sistem', icon: 'phone-portrait-outline' },
 ];
@@ -118,8 +118,8 @@ export const SettingsScreen: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const { colors, themeMode, setThemeMode } = useTheme();
 
-  const packageTier = user?.packageTier ?? 'free';
-  const isSupreme = packageTier === 'reserved';
+  const packageTier = user?.packageTier ?? 'FREE';
+  const isSupreme = packageTier === 'RESERVED';
 
   // ── Notification toggles ──────────────────────────────────────
   const [pushNotifications, setPushNotificationsRaw] = useState(true);
@@ -178,8 +178,8 @@ export const SettingsScreen: React.FC = () => {
     if (isAccountFrozen) {
       // Unfreeze flow
       Alert.alert(
-        'Hesabi Aktif Et',
-        'Hesabinizi tekrar aktif hale getirmek istediginizden emin misiniz?',
+        'Hesabı Aktif Et',
+        'Hesabınızı tekrar aktif hale getirmek istediğinizden emin misiniz?',
         [
           { text: 'Vazgeç', style: 'cancel' },
           {
@@ -267,7 +267,7 @@ export const SettingsScreen: React.FC = () => {
   const handleCancelSubscription = useCallback(() => {
     Alert.alert(
       'Aboneliği İptal Et',
-      'Aboneliginizi iptal etmek istediginizden emin misiniz?',
+      'Aboneliğinizi iptal etmek istediğinizden emin misiniz?',
       [
         { text: 'Vazgeç', style: 'cancel' },
         {
@@ -277,7 +277,7 @@ export const SettingsScreen: React.FC = () => {
             setIsCancelling(true);
             try {
               await paymentService.cancelSubscription();
-              updatePackageTier('free');
+              updatePackageTier('FREE');
               Alert.alert('Başarılı', 'Aboneliğiniz başarıyla iptal edildi.');
             } catch {
               Alert.alert('Hata', 'Abonelik iptal edilirken bir sorun oluştu.');
@@ -315,7 +315,7 @@ export const SettingsScreen: React.FC = () => {
 
   const handleContactUs = useCallback(() => {
     Linking.openURL('mailto:destek@luma.dating').catch(() => {
-      Alert.alert('Hata', 'E-posta uygulamasi acilamadi.');
+      Alert.alert('Hata', 'E-posta uygulaması açılamadı.');
     });
   }, []);
 
@@ -326,10 +326,10 @@ export const SettingsScreen: React.FC = () => {
   const setOnboarded = useAuthStore((state) => state.setOnboarded);
 
   const handleResetOnboarding = useCallback(() => {
-    Alert.alert('Onboarding Sifirla', 'Onboarding adimlarini tekrar gormek istiyor musun?', [
+    Alert.alert('Onboarding Sıfırla', 'Onboarding adımlarını tekrar görmek istiyor musun?', [
       { text: 'İptal', style: 'cancel' },
       {
-        text: 'Sifirla',
+        text: 'Sıfırla',
         onPress: async () => {
           await storage.clearOnboarded();
           setOnboarded(false);
@@ -343,30 +343,30 @@ export const SettingsScreen: React.FC = () => {
   const emailDisplay = user?.email ?? 'Belirtilmedi';
 
   const sections: SettingSection[] = [
-    // 1. Hesap Ayarlari
+    // 1. Hesap Ayarları
     {
-      title: 'Hesap Ayarlari',
+      title: 'Hesap Ayarları',
       icon: 'person-outline',
       data: [
         {
           key: 'edit_profile',
           icon: 'create-outline',
-          title: 'Profil Duzenle',
+          title: 'Profil Düzenle',
           type: 'navigation',
           onPress: () => navigation.navigate('EditProfile'),
         },
         {
           key: 'edit_answers',
           icon: 'chatbubbles-outline',
-          title: 'Cevaplarimi Duzenle',
-          subtitle: 'Uyumluluk sorularini tekrar yanitla',
+          title: 'Cevaplarımı Düzenle',
+          subtitle: 'Uyumluluk sorularını tekrar yanıtla',
           type: 'navigation',
           onPress: () => navigation.navigate('Questions', { editMode: true }),
         },
         {
           key: 'phone',
           icon: 'call-outline',
-          title: 'Telefon Numarasi',
+          title: 'Telefon Numarası',
           type: 'display',
           subtitle: phoneDisplay,
         },
@@ -391,7 +391,7 @@ export const SettingsScreen: React.FC = () => {
           type: 'action',
           onPress: handleRestorePurchases,
         },
-        ...((packageTier !== 'free')
+        ...((packageTier !== 'FREE')
           ? [{
               key: 'cancel_subscription',
               icon: 'close-circle-outline' as keyof typeof Ionicons.glyphMap,
@@ -406,35 +406,35 @@ export const SettingsScreen: React.FC = () => {
 
     // 2. Supreme Avantajlarim (only for Supreme members)
     ...(isSupreme ? [{
-      title: 'Supreme Avantajlarim',
+      title: 'Supreme Avantajlarım',
       icon: 'diamond' as keyof typeof Ionicons.glyphMap,
       accentColor: SUPREME_GOLD,
       data: [
         {
           key: 'supreme_likes',
           icon: 'heart' as keyof typeof Ionicons.glyphMap,
-          title: 'Sinirsiz Begeni',
+          title: 'Sınırsız Beğeni',
           type: 'supreme_feature' as const,
           active: true,
         },
         {
           key: 'supreme_super_likes',
           icon: 'star' as keyof typeof Ionicons.glyphMap,
-          title: 'Sinirsiz Super Begeni',
+          title: 'Sınırsız Süper Beğeni',
           type: 'supreme_feature' as const,
           active: true,
         },
         {
           key: 'supreme_visibility',
           icon: 'eye' as keyof typeof Ionicons.glyphMap,
-          title: 'Oncelikli Gorunurluk',
+          title: 'Öncelikli Görünürlük',
           type: 'supreme_feature' as const,
           active: true,
         },
         {
           key: 'supreme_compat',
           icon: 'analytics' as keyof typeof Ionicons.glyphMap,
-          title: 'Detayli Uyumluluk Analizi',
+          title: 'Detaylı Uyumluluk Analizi',
           type: 'supreme_feature' as const,
           active: true,
         },
@@ -455,7 +455,7 @@ export const SettingsScreen: React.FC = () => {
         {
           key: 'supreme_aura',
           icon: 'sparkles' as keyof typeof Ionicons.glyphMap,
-          title: 'Altin Aura Efekti',
+          title: 'Altın Aura Efekti',
           type: 'supreme_feature' as const,
           active: true,
         },
@@ -477,7 +477,7 @@ export const SettingsScreen: React.FC = () => {
         {
           key: 'match_notif',
           icon: 'heart-outline',
-          title: 'Yeni Eslesmeler',
+          title: 'Yeni Eşleşmeler',
           type: 'toggle',
           value: matchNotifications,
           onToggle: setMatchNotifications,
@@ -493,7 +493,7 @@ export const SettingsScreen: React.FC = () => {
         {
           key: 'push',
           icon: 'megaphone-outline',
-          title: 'Uygulama Duyurulari',
+          title: 'Uygulama Duyuruları',
           type: 'toggle',
           value: appAnnouncements,
           onToggle: setAppAnnouncements,
@@ -501,7 +501,7 @@ export const SettingsScreen: React.FC = () => {
         {
           key: 'push_master',
           icon: 'notifications-off-outline',
-          title: 'Tum Bildirimler',
+          title: 'Tüm Bildirimler',
           type: 'toggle',
           value: pushNotifications,
           onToggle: setPushNotifications,
@@ -509,23 +509,23 @@ export const SettingsScreen: React.FC = () => {
         {
           key: 'notif_settings',
           icon: 'options-outline',
-          title: 'Detayli Bildirim Ayarlari',
+          title: 'Detaylı Bildirim Ayarları',
           type: 'navigation',
           onPress: () => navigation.navigate('NotificationSettings'),
         },
       ],
     },
 
-    // 4. Gizlilik ve Guvenlik
+    // 4. Gizlilik ve Güvenlik
     {
-      title: 'Gizlilik ve Guvenlik',
+      title: 'Gizlilik ve Güvenlik',
       icon: 'shield-outline',
       data: [
         {
           key: 'safety_center',
           icon: 'shield-checkmark-outline',
-          title: 'Guvenlik Merkezi',
-          subtitle: 'Guvenli bulusma ipuclari ve acil numaralar',
+          title: 'Güvenlik Merkezi',
+          subtitle: 'Güvenli buluşma ipuçları ve acil numaralar',
           type: 'navigation',
           onPress: () => navigation.navigate('SafetyCenter'),
         },
@@ -554,7 +554,7 @@ export const SettingsScreen: React.FC = () => {
         {
           key: 'blocked',
           icon: 'ban-outline',
-          title: 'Engellenen Kullanicilar',
+          title: 'Engellenen Kullanıcılar',
           type: 'navigation',
           onPress: () => navigation.navigate('BlockedUsers'),
         },
@@ -562,10 +562,10 @@ export const SettingsScreen: React.FC = () => {
           key: 'freeze',
           icon: isAccountFrozen ? 'play-outline' : 'snow-outline',
           title: isFreezing
-            ? 'Isleniyor...'
+            ? 'İşleniyor...'
             : isAccountFrozen
               ? 'Hesap Donduruldu — Aktif Et'
-              : 'Hesabi Dondur',
+              : 'Hesabı Dondur',
           type: 'action',
           onPress: handleFreezeAccount,
         },
@@ -580,16 +580,16 @@ export const SettingsScreen: React.FC = () => {
         {
           key: 'faq_matching',
           icon: 'help-outline',
-          title: 'Esleme nasil oluyor?',
+          title: 'Eşleşme nasıl oluyor?',
           type: 'faq',
-          answer: 'LUMA, 45 soruya verdiginiz yanitlari analiz ederek sizinle uyumlu kisileri bulur. Karsilikli begeni durumunda eslesmis olursunuz.',
+          answer: 'LUMA, 45 soruya verdiğiniz yanıtları analiz ederek sizinle uyumlu kişileri bulur. Karşılıklı beğeni durumunda eşleşmiş olursunuz.',
         },
         {
           key: 'faq_gold',
           icon: 'help-outline',
-          title: 'Gold ne ise yarar?',
+          title: 'Gold ne işe yarar?',
           type: 'faq',
-          answer: 'Gold paketi ile sinirsiz begeni, detayli uyumluluk analizi, 25 premium soru, gunluk 5 super begeni ve kimin begendigini gorme gibi ozellikler kazanirsiniz.',
+          answer: 'Gold paketi ile sınırsız beğeni, detaylı uyumluluk analizi, 25 premium soru, günlük 5 süper beğeni ve kimin beğendiğini görme gibi özellikler kazanırsınız.',
         },
         {
           key: 'faq_delete',
@@ -615,30 +615,30 @@ export const SettingsScreen: React.FC = () => {
         {
           key: 'terms',
           icon: 'document-text-outline',
-          title: 'Kullanim Kosullari',
+          title: 'Kullanım Koşulları',
           type: 'navigation',
           onPress: handleOpenTerms,
         },
         {
           key: 'privacy',
           icon: 'lock-closed-outline',
-          title: 'Gizlilik Politikasi',
+          title: 'Gizlilik Politikası',
           type: 'navigation',
           onPress: () => navigation.navigate('PrivacyPolicy', { type: 'privacy' }),
         },
         {
           key: 'kvkk',
           icon: 'shield-outline',
-          title: 'KVKK Aydinlatma Metni',
+          title: 'KVKK Aydınlatma Metni',
           type: 'navigation',
           onPress: () => navigation.navigate('PrivacyPolicy', { type: 'kvkk' }),
         },
       ],
     },
 
-    // 6. Gorunum
+    // 6. Görünüm
     {
-      title: 'Gorunum',
+      title: 'Görünüm',
       icon: 'color-palette-outline',
       data: [
         {
@@ -652,27 +652,27 @@ export const SettingsScreen: React.FC = () => {
 
     // DEV section
     ...(__DEV__ ? [{
-      title: 'Gelistirici',
+      title: 'Geliştirici',
       icon: 'code-slash-outline' as keyof typeof Ionicons.glyphMap,
       data: [{
         key: 'reset_onboarding',
         icon: 'refresh-circle-outline' as keyof typeof Ionicons.glyphMap,
-        title: 'Onboarding Tekrar Gor',
+        title: 'Onboarding Tekrar Gör',
         type: 'action' as const,
         onPress: handleResetOnboarding,
       }],
     }] : []),
 
-    // 7. Tehlike Bolgesi
+    // 7. Tehlike Bölgesi
     {
-      title: 'Tehlike Bolgesi',
+      title: 'Tehlike Bölgesi',
       icon: 'warning-outline',
       accentColor: colors.error,
       data: [
         {
           key: 'delete',
           icon: 'trash-outline',
-          title: 'Hesabimi Sil',
+          title: 'Hesabımı Sil',
           type: 'action',
           destructive: true,
           onPress: () => navigation.navigate('AccountDeletion'),
@@ -857,8 +857,8 @@ export const SettingsScreen: React.FC = () => {
   };
 
   const renderSectionHeader = ({ section }: { section: SettingSection }) => {
-    const isSupremeSection = section.title === 'Supreme Avantajlarim';
-    const isDanger = section.title === 'Tehlike Bolgesi';
+    const isSupremeSection = section.title === 'Supreme Avantajlarım';
+    const isDanger = section.title === 'Tehlike Bölgesi';
     const iconColor = isSupremeSection ? SUPREME_GOLD : isDanger ? colors.error : colors.textTertiary;
 
     return (
@@ -890,7 +890,7 @@ export const SettingsScreen: React.FC = () => {
         activeOpacity={0.7}
       >
         <Ionicons name="log-out-outline" size={18} color={colors.error} />
-        <Text style={dynamicStyles.logoutText}>Cikis Yap</Text>
+        <Text style={dynamicStyles.logoutText}>Çıkış Yap</Text>
       </TouchableOpacity>
 
       <Text style={dynamicStyles.footerVersion}>LUMA v1.0.0</Text>

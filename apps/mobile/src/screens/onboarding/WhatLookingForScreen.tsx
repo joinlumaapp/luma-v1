@@ -36,17 +36,17 @@ const LOOKING_FOR_OPTIONS: LookingForOption[] = [
 
 /**
  * Map the user's lookingFor selections to the best-matching IntentionTag.
- * Locked intention tags: serious_relationship, exploring, not_sure
+ * Locked intention tags: SERIOUS_RELATIONSHIP, EXPLORING, NOT_SURE
  */
 function deriveIntentionTag(selections: Set<string>): string {
   if (selections.has('long_term')) {
-    return 'serious_relationship';
+    return 'SERIOUS_RELATIONSHIP';
   }
   if (selections.has('short_term') || selections.has('travel_together')) {
-    return 'exploring';
+    return 'EXPLORING';
   }
   // friendship-only or any other combination
-  return 'not_sure';
+  return 'NOT_SURE';
 }
 
 export const WhatLookingForScreen: React.FC = () => {

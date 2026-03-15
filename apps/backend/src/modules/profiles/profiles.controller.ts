@@ -9,7 +9,6 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
-  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -137,37 +136,8 @@ export class ProfilesController {
   }
 
   // ── Profile Video ──────────────────────────────────────────
-
-  @Post('video')
-  @ApiOperation({ summary: 'Upload a profile video (10-30s, max 50MB)' })
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('video'))
-  async uploadProfileVideo(
-    @CurrentUser('sub') userId: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Multer file type from @nestjs/platform-express
-    @UploadedFile() file: any,
-  ) {
-    if (!file) {
-      throw new BadRequestException('Video dosyasi gerekli');
-    }
-
-    // In production, upload to storage and get URLs
-    // For now, mock the video data
-    const videoData = {
-      url: `https://cdn.luma.app/videos/${userId}/${Date.now()}.mp4`,
-      thumbnailUrl: `https://cdn.luma.app/videos/${userId}/${Date.now()}_thumb.jpg`,
-      duration: 20, // Estimated; in production, extract from file metadata
-      key: `videos/${userId}/${Date.now()}.mp4`,
-    };
-
-    return this.profilesService.setProfileVideo(userId, videoData);
-  }
-
-  @Delete('video')
-  @ApiOperation({ summary: 'Delete profile video' })
-  async deleteProfileVideo(@CurrentUser('sub') userId: string) {
-    return this.profilesService.deleteProfileVideo(userId);
-  }
+  // TODO: Video endpoints disabled until videoUrl/videoKey fields are added
+  // to the UserProfile Prisma model via migration.
 
   // ── Profile Prompts (Hinge-style) ───────────────────────────
 

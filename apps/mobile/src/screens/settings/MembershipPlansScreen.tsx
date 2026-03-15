@@ -55,8 +55,8 @@ const GLASS = {
 
 /** Maps UI plan selection to the PackageTier used by iapService */
 const PLAN_TO_TIER: Record<string, PackageTier> = {
-  supreme: 'reserved',
-  premium: 'gold',
+  supreme: 'RESERVED',
+  premium: 'GOLD',
 };
 
 /** Maps coin pack IDs to App Store / Play Store product IDs */
@@ -175,10 +175,10 @@ const FEATURES: TierFeature[] = [
 // Map PackageTier to plan category
 const getTierCategory = (tier: PackageTier): 'free' | 'premium' | 'supreme' => {
   switch (tier) {
-    case 'reserved':
+    case 'RESERVED':
       return 'supreme';
-    case 'gold':
-    case 'pro':
+    case 'GOLD':
+    case 'PRO':
       return 'premium';
     default:
       return 'free';
@@ -700,7 +700,7 @@ const coinCardStyles = StyleSheet.create({
 export const MembershipPlansScreen: React.FC = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const currentTier = useAuthStore((s) => s.user?.packageTier ?? 'free');
+  const currentTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE');
   const currentCategory = getTierCategory(currentTier);
 
   // Tab state
@@ -754,7 +754,7 @@ export const MembershipPlansScreen: React.FC = () => {
               setIsPurchasing(true);
               try {
                 await paymentService.cancelSubscription();
-                useAuthStore.getState().updatePackageTier('free');
+                useAuthStore.getState().updatePackageTier('FREE');
                 Alert.alert('Başarılı', 'Ücretsiz plana geçiş yapıldı.');
               } catch (error: unknown) {
                 const message = error instanceof Error ? error.message : '';

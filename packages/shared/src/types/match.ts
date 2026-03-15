@@ -14,9 +14,9 @@ export interface Swipe {
 
 // Matches Prisma SwipeAction enum: LIKE | PASS | SUPER_LIKE
 export enum SwipeAction {
-  LIKE = 'like',
-  PASS = 'pass',
-  SUPER_LIKE = 'super_like',
+  LIKE = 'LIKE',
+  PASS = 'PASS',
+  SUPER_LIKE = 'SUPER_LIKE',
 }
 
 export interface Match {
@@ -33,8 +33,8 @@ export interface Match {
 
 // Subsystem 9: Match Animations — LOCKED: 2 Types
 export enum MatchAnimationType {
-  NORMAL = 'normal',
-  SUPER_COMPATIBILITY = 'super_compatibility',
+  NORMAL = 'NORMAL',
+  SUPER_COMPATIBILITY = 'SUPER_COMPATIBILITY',
 }
 
 export interface MatchNotification {

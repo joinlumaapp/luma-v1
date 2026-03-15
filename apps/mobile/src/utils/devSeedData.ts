@@ -814,9 +814,9 @@ const crossedPaths = [
 const devUserProfile = {
   firstName: 'Ari',
   birthDate: '1995-06-15',
-  gender: 'male',
+  gender: 'MALE',
   genderPreference: ['female'],
-  lookingFor: ['serious_relationship'],
+  lookingFor: ['SERIOUS_RELATIONSHIP'],
   height: 178,
   sports: 'often',
   smoking: 'never',
@@ -925,7 +925,7 @@ export function seedDevData(): void {
       id: 'dev-user-001',
       phone: '+905551234567',
       isVerified: true,
-      packageTier: 'free',
+      packageTier: 'FREE',
     },
   });
 
@@ -941,9 +941,9 @@ export function seedDevData(): void {
   const userTags = new Set(devUserProfile.interestTags);
   const userIntention = devUserProfile.intentionTag;
   const INTENTION_MAP: Record<string, string> = {
-    'Ciddi İlişki': 'serious_relationship',
-    'Keşfediyorum': 'exploring',
-    'Emin Değilim': 'not_sure',
+    'Ciddi İlişki': 'SERIOUS_RELATIONSHIP',
+    'Keşfediyorum': 'EXPLORING',
+    'Emin Değilim': 'NOT_SURE',
   };
   const normalizedUserIntention = INTENTION_MAP[userIntention] ?? userIntention;
 

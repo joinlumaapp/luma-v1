@@ -14,9 +14,9 @@ for (const opt of INTEREST_OPTIONS) {
 
 // Intention label map
 const INTENTION_LABELS: Record<string, string> = {
-  serious_relationship: 'ciddi bir ilişki',
-  exploring: 'yeni keşifler',
-  not_sure: 'açık fikirli bir tanışma',
+  SERIOUS_RELATIONSHIP: 'ciddi bir ilişki',
+  EXPLORING: 'yeni keşifler',
+  NOT_SURE: 'açık fikirli bir tanışma',
 };
 
 // Smoking preference labels (Turkish)

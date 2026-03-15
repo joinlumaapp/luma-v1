@@ -79,13 +79,13 @@ const EmptySlot: React.FC<{ index: number; onPress: () => void }> = ({ index, on
         onPress={onPress}
         activeOpacity={0.7}
         accessibilityRole="button"
-        accessibilityLabel={`Soru sec, slot ${index + 1}`}
+        accessibilityLabel={`Soru seç, slot ${index + 1}`}
       >
         <View style={styles.emptySlotInner}>
           <View style={styles.addIconCircle}>
             <Ionicons name="add" size={28} color={onboardingColors.text} />
           </View>
-          <Text style={styles.emptySlotText}>Soru Sec</Text>
+          <Text style={styles.emptySlotText}>Soru Seç</Text>
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -167,7 +167,7 @@ const FilledSlot: React.FC<FilledSlotProps> = ({
             value={slot.answer}
             onChangeText={onChangeAnswer}
             onBlur={onBlur}
-            placeholder="Cevabini yaz..."
+            placeholder="Cevabını yaz..."
             placeholderTextColor={onboardingColors.textTertiary}
             maxLength={MAX_PROMPT_ANSWER_LENGTH}
             multiline
@@ -183,7 +183,7 @@ const FilledSlot: React.FC<FilledSlotProps> = ({
                 !slot.answer && styles.answerPlaceholder,
               ]}
             >
-              {slot.answer || 'Cevabini yazmak icin dokun...'}
+              {slot.answer || 'Cevabını yazmak için dokun...'}
             </Text>
           </TouchableOpacity>
         )}
@@ -198,7 +198,7 @@ const FilledSlot: React.FC<FilledSlotProps> = ({
               onPress={onEdit}
               style={styles.actionButton}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              accessibilityLabel="Cevabi duzenle"
+              accessibilityLabel="Cevabı düzenle"
             >
               <Ionicons
                 name="pencil-outline"
@@ -210,7 +210,7 @@ const FilledSlot: React.FC<FilledSlotProps> = ({
               onPress={onDelete}
               style={styles.actionButton}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              accessibilityLabel="Soruyu kaldir"
+              accessibilityLabel="Soruyu kaldır"
             >
               <Ionicons
                 name="trash-outline"
@@ -364,7 +364,7 @@ export const PromptSelectionScreen: React.FC = () => {
               ))}
             </View>
             <Text style={styles.completionText}>
-              {completedCount}/{TOTAL_SLOTS} tamamlandi
+              {completedCount}/{TOTAL_SLOTS} tamamlandı
             </Text>
           </View>
 
@@ -387,9 +387,9 @@ export const PromptSelectionScreen: React.FC = () => {
           keyboardShouldPersistTaps="handled"
         >
           {/* Title */}
-          <Text style={styles.title}>Kendini tanit</Text>
+          <Text style={styles.title}>Kendini tanıt</Text>
           <Text style={styles.subtitle}>
-            3 soru sec ve cevapla. Bu cevaplar{'\n'}profilinde gorunecek.
+            3 soru seç ve cevapla. Bu cevaplar{'\n'}profilinde görünecek.
           </Text>
 
           {/* Prompt Slots */}

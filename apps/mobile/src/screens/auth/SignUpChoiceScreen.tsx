@@ -70,7 +70,7 @@ export const SignUpChoiceScreen: React.FC = () => {
           activeOpacity={0.7}
         >
           <Ionicons name="logo-google" size={20} color={onboardingColors.text} />
-          <Text style={styles.googleButtonText}>Google ile baglan (Cok yakinda)</Text>
+          <Text style={styles.googleButtonText}>Google ile bağlan (Çok yakında)</Text>
         </TouchableOpacity>
 
         {/* Phone button */}

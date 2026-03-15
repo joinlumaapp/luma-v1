@@ -30,11 +30,11 @@ export const LOCKED_ARCHITECTURE = {
   COMPATIBILITY_LEVELS: 2,
 } as const;
 
-// Intention tags — 3 in backend, 2 visible in UI (not_sure hidden for now)
+// Intention tags — 3 in backend, 2 visible in UI (NOT_SURE hidden for now)
 export const INTENTION_TAGS = [
-  { id: 'serious_relationship', label: 'Anlamlı Bağlantı', icon: 'heart' },
-  { id: 'exploring', label: 'Keşfet', icon: 'compass' },
-  { id: 'not_sure', label: 'Emin Değilim', icon: 'help-circle', hidden: true },
+  { id: 'SERIOUS_RELATIONSHIP', label: 'Anlamlı Bağlantı', icon: 'heart' },
+  { id: 'EXPLORING', label: 'Keşfet', icon: 'compass' },
+  { id: 'NOT_SURE', label: 'Emin Değilim', icon: 'help-circle', hidden: true },
 ] as const;
 
 // Visible modes for onboarding (excludes hidden tags)
@@ -67,7 +67,7 @@ export const INTEREST_OPTIONS = [
 // Package tiers — LOCKED at 4
 export const PACKAGE_TIERS = [
   {
-    id: 'free',
+    id: 'FREE',
     name: 'Ücretsiz',
     price: 0,
     features: [
@@ -78,7 +78,7 @@ export const PACKAGE_TIERS = [
     ],
   },
   {
-    id: 'gold',
+    id: 'GOLD',
     name: 'Premium',
     price: 349.99,
     features: [
@@ -91,7 +91,7 @@ export const PACKAGE_TIERS = [
     ],
   },
   {
-    id: 'pro',
+    id: 'PRO',
     name: 'Supreme',
     price: 599.99,
     features: [
@@ -104,7 +104,7 @@ export const PACKAGE_TIERS = [
     ],
   },
   {
-    id: 'reserved',
+    id: 'RESERVED',
     name: 'Sınırsız',
     price: 1299.99,
     features: [
@@ -133,16 +133,16 @@ const isSaturday = (): boolean => new Date().getDay() === 6;
 
 // Base daily like limits per tier (before any bonuses)
 const BASE_DAILY_LIKES = {
-  free: 999999,
-  gold: 999999,
-  pro: 999999,
-  reserved: 999999,
+  FREE: 999999,
+  GOLD: 999999,
+  PRO: 999999,
+  RESERVED: 999999,
 } as const;
 
 /** Returns tier daily likes with Saturday 2x bonus applied to free tier */
 export const getDailyLikesForTier = (tier: keyof typeof BASE_DAILY_LIKES): number => {
   const base = BASE_DAILY_LIKES[tier];
-  if (tier === 'free' && isSaturday()) return base * 2;
+  if (tier === 'FREE' && isSaturday()) return base * 2;
   return base;
 };
 
@@ -154,10 +154,10 @@ export const DISCOVERY_CONFIG = {
   MAX_DISTANCE_KM: 200,
   /** Per-tier daily like limits — must match PACKAGE_FEATURES in @luma/shared */
   DAILY_LIKES: {
-    free: 999999,
-    gold: 999999,
-    pro: 999999,
-    reserved: 999999,
+    FREE: 999999,
+    GOLD: 999999,
+    PRO: 999999,
+    RESERVED: 999999,
   },
   /** Whether Saturday 2x bonus is currently active */
   IS_SATURDAY_BONUS: isSaturday(),
@@ -170,50 +170,50 @@ export const DISCOVERY_CONFIG = {
 // Super Like daily limits per package tier (-1 = unlimited)
 export const SUPER_LIKE_CONFIG = {
   DAILY_LIMITS: {
-    free: 1,
-    gold: 10,
-    pro: 10,
-    reserved: -1,
+    FREE: 1,
+    GOLD: 10,
+    PRO: 10,
+    RESERVED: -1,
   },
 } as const;
 
 // Feed post daily limits per package tier (-1 = unlimited)
 export const FEED_POST_CONFIG = {
   DAILY_LIMITS: {
-    free: 1,
-    gold: 5,
-    pro: -1,
-    reserved: -1,
+    FREE: 1,
+    GOLD: 5,
+    PRO: -1,
+    RESERVED: -1,
   },
 } as const;
 
 // Boost monthly allowance per tier (-1 = unlimited, 0 = not available)
 export const BOOST_CONFIG = {
   MONTHLY_LIMITS: {
-    free: 0,
-    gold: 4,
-    pro: 4,
-    reserved: -1,
+    FREE: 0,
+    GOLD: 4,
+    PRO: 4,
+    RESERVED: -1,
   },
 } as const;
 
 // "Likes You" daily profile view limits per package tier (-1 = unlimited)
 export const LIKES_VIEW_CONFIG = {
   DAILY_LIMITS: {
-    free: 1,
-    gold: 20,
-    pro: 50,
-    reserved: -1,
+    FREE: 1,
+    GOLD: 20,
+    PRO: 50,
+    RESERVED: -1,
   },
 } as const;
 
 // Wave daily limits per package tier (legacy — kept for backward compat)
 export const WAVE_CONFIG = {
   DAILY_LIMITS: {
-    free: 3,
-    gold: 20,
-    pro: 20,
-    reserved: 20,
+    FREE: 3,
+    GOLD: 20,
+    PRO: 20,
+    RESERVED: 20,
   },
   COIN_COST: 5,
 } as const;
@@ -227,10 +227,10 @@ export const PAID_MESSAGE_CONFIG = {
 // Message daily limits per package tier (-1 = unlimited)
 export const MESSAGE_CONFIG = {
   DAILY_LIMITS: {
-    free: 1,
-    gold: 10,
-    pro: 10,
-    reserved: -1,
+    FREE: 1,
+    GOLD: 10,
+    PRO: 10,
+    RESERVED: -1,
   },
   SINGLE_MESSAGE_PACK_PRICE: 150, // Jeton — purchased with Gold balance
 } as const;

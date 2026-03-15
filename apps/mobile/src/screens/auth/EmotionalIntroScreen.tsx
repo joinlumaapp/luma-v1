@@ -1,5 +1,5 @@
 // EmotionalIntroScreen — Happn-style landing page
-// Lila/purple gradient background, LUMA logo, Google + Diger secenekler
+// Lila/purple gradient background, LUMA logo, Google + Diğer seçenekler
 // Founder Test Panel: long-press LUMA logo 3s to open
 
 import React, { useState, useCallback } from 'react';
@@ -149,7 +149,7 @@ const EmotionalIntroScreen: React.FC = () => {
       id: 'dev-user-001',
       phone: '+90 555 555 5555',
       isVerified: true,
-      packageTier: 'reserved',
+      packageTier: 'RESERVED',
     });
     setOnboarded(true);
     await storage.setTokens('dev-access-token', 'dev-refresh-token');
@@ -166,7 +166,7 @@ const EmotionalIntroScreen: React.FC = () => {
       id: 'dev-user-001',
       phone: '+90 555 555 5555',
       isVerified: true,
-      packageTier: 'reserved',
+      packageTier: 'RESERVED',
     });
     setStartedOnboarding(true);
   }, []);
@@ -237,7 +237,7 @@ const EmotionalIntroScreen: React.FC = () => {
             activeOpacity={0.9}
           >
             <Ionicons name="logo-google" size={20} color="#1A1A1A" />
-            <Text style={styles.googleButtonText}>Google ile baglan (Cok yakinda)</Text>
+            <Text style={styles.googleButtonText}>Google ile bağlan (Çok yakında)</Text>
           </TouchableOpacity>
 
           {/* Diger secenekler button */}
@@ -265,7 +265,7 @@ const EmotionalIntroScreen: React.FC = () => {
               onPress={() => Linking.openURL('https://luma.dating/terms')}
               accessibilityRole="link"
             >
-              Genel Kullanim Kosullarimizi
+              Genel Kullanım Koşullarımızı
             </Text>
             {' ve '}
             <Text
@@ -273,9 +273,9 @@ const EmotionalIntroScreen: React.FC = () => {
               onPress={() => Linking.openURL('https://luma.dating/privacy')}
               accessibilityRole="link"
             >
-              Gizlilik Politikamizi
+              Gizlilik Politikamızı
             </Text>
-            {' kabul etmis olursun.'}
+            {' kabul etmiş olursun.'}
           </Text>
         </View>
       </LinearGradient>

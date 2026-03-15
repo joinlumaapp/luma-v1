@@ -23,7 +23,7 @@ export interface Match {
   matchedAt: string;
   lastMessage: string | null;
   /** Subscription tier for badge display */
-  packageTier?: 'free' | 'gold' | 'pro' | 'reserved';
+  packageTier?: 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
 }
 
 export interface MatchDetail extends Match {

@@ -3,7 +3,7 @@
 // 5 Game Cards, Badge Definitions, 10 Demo Users with Profiles,
 // Photos, Answers, Matches, Chat Messages, and Badge Awards
 
-import { PrismaClient, QuestionCategory, PackageTier, IntentionTag, Gender, SwipeAction, MatchAnimationType, CompatibilityLevel, ChatMessageType, ChatMessageStatus, NotificationType, PaymentPlatform, GoldTransactionType } from '@prisma/client';
+import { PrismaClient, Prisma, QuestionCategory, PackageTier, IntentionTag, Gender, SwipeAction, MatchAnimationType, CompatibilityLevel, ChatMessageType, ChatMessageStatus, NotificationType, PaymentPlatform, GoldTransactionType } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { randomBetween, randomPickN, INTEREST_TAGS, TURKISH_CITIES } from './seed-utils';
 
@@ -1546,7 +1546,7 @@ async function seedDemoNotifications(userIds: string[], matchIds: string[]): Pro
     type: NotificationType;
     title: string;
     body: string;
-    data: Record<string, string> | null;
+    data: Prisma.InputJsonValue | null;
     isRead: boolean;
     createdAt: Date;
   }> = [];
@@ -1653,7 +1653,12 @@ async function seedDemoNotifications(userIds: string[], matchIds: string[]): Pro
     createdAt: new Date(now.getTime() - 12 * 60 * 60 * 1000),
   });
 
-  await prisma.notification.createMany({ data: notifications });
+  await prisma.notification.createMany({
+    data: notifications.map((n) => ({
+      ...n,
+      data: n.data === null ? Prisma.JsonNull : n.data,
+    })),
+  });
 }
 
 // ============================================================

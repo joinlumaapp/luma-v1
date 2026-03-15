@@ -505,7 +505,8 @@ export const ProfilePreviewScreen: React.FC = () => {
               }}>
                 <Text style={{ fontSize: 13, fontFamily: 'Poppins_500Medium', fontWeight: '500', color: palette.purple[500] }}>
                   {profile.intentionTag === 'serious' ? 'Ciddi İlişki' :
-                   profile.intentionTag === 'exploring' ? 'Keşfediyorum' : 'Emin Değilim'}
+                   profile.intentionTag === 'SERIOUS_RELATIONSHIP' ? 'Ciddi İlişki' :
+                   profile.intentionTag === 'EXPLORING' ? 'Keşfediyorum' : 'Emin Değilim'}
                 </Text>
               </View>
             </View>
@@ -732,20 +733,23 @@ export const ProfilePreviewScreen: React.FC = () => {
       )}
 
       {/* Stats card — social metrics (Akış feed integration) */}
+      {/* TODO: Replace hardcoded stat values (15/108/73) with real data from API.
+         API does not yet provide post count, follower count, or following count.
+         These are placeholder values until the social stats endpoint is implemented. */}
       <View style={styles.statsCard}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue} numberOfLines={1}>15</Text>
-          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>GÖNDERİ</Text>
+          <Text style={styles.statValue}>15</Text>
+          <Text style={styles.statLabel}>GÖNDERİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue} numberOfLines={1}>108</Text>
-          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>TAKİPÇİ</Text>
+          <Text style={styles.statValue}>108</Text>
+          <Text style={styles.statLabel}>TAKİPÇİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue} numberOfLines={1}>73</Text>
-          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>TAKİP</Text>
+          <Text style={styles.statValue}>73</Text>
+          <Text style={styles.statLabel}>TAKİP</Text>
         </View>
       </View>
     </View>
@@ -996,17 +1000,17 @@ const styles = StyleSheet.create({
   statsCard: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-evenly',
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     paddingVertical: spacing.md + 4,
-    paddingHorizontal: spacing.md,
-    overflow: 'visible',
+    paddingHorizontal: spacing.xl,
   },
   statItem: {
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
-    paddingHorizontal: 4,
+    paddingHorizontal: 12,
   },
   statValue: {
     fontSize: 22,
@@ -1014,23 +1018,21 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
-    paddingHorizontal: 2,
-    paddingVertical: 2,
   },
   statLabel: {
     fontSize: 11,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: colors.textTertiary,
-    marginTop: 2,
+    marginTop: 4,
     textAlign: 'center',
-    paddingHorizontal: 2,
-    paddingVertical: 1,
+    letterSpacing: 0.3,
   },
   statDivider: {
     width: 1,
     height: 28,
     backgroundColor: colors.surfaceBorder,
+    marginHorizontal: spacing.sm,
   },
 
   // ── Seamless sections (no card background — part of the cream canvas) ──

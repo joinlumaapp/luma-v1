@@ -112,7 +112,8 @@ export class ModerationService {
   /**
    * Check if a reported user has exceeded safety thresholds.
    * - At REPORT_THRESHOLD_FLAG (3): marks all pending reports as REVIEWING
-   * - At REPORT_THRESHOLD_SUSPEND (10): deactivates the user account
+   * - At REPORT_THRESHOLD_SUSPEND (10+ reports from 5+ distinct reporters):
+   *   flags for admin review instead of auto-suspending (prevents coordinated abuse)
    */
   private async checkReportThreshold(reportedUserId: string) {
     const pendingCount = await this.prisma.report.count({
@@ -123,11 +124,37 @@ export class ModerationService {
     });
 
     if (pendingCount >= REPORT_THRESHOLD_SUSPEND) {
-      // Auto-suspend: deactivate user
-      await this.prisma.user.update({
-        where: { id: reportedUserId },
-        data: { isActive: false },
+      // Count distinct reporters to prevent coordinated abuse
+      const distinctReporters = await this.prisma.report.groupBy({
+        by: ['reporterId'],
+        where: {
+          reportedId: reportedUserId,
+          status: { in: ['PENDING', 'REVIEWING'] },
+        },
       });
+
+      const MIN_DISTINCT_REPORTERS = 5;
+
+      if (distinctReporters.length >= MIN_DISTINCT_REPORTERS) {
+        // Flag for admin review instead of auto-suspending
+        await this.prisma.report.updateMany({
+          where: {
+            reportedId: reportedUserId,
+            status: { in: ['PENDING', 'REVIEWING'] },
+          },
+          data: {
+            status: 'REVIEWING',
+          },
+        });
+
+        this.logger.warn(
+          `User ${reportedUserId} flagged for admin review: ${pendingCount} reports from ${distinctReporters.length} distinct reporters`,
+        );
+      } else {
+        this.logger.log(
+          `User ${reportedUserId} has ${pendingCount} reports but only from ${distinctReporters.length} distinct reporters — not escalating yet`,
+        );
+      }
     } else if (pendingCount >= REPORT_THRESHOLD_FLAG) {
       // Auto-escalate: move pending reports to REVIEWING
       await this.prisma.report.updateMany({

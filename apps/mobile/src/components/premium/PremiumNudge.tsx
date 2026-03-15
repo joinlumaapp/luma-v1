@@ -76,7 +76,7 @@ export const PremiumNudge: React.FC<PremiumNudgeProps> = ({
   swipeCount,
   onUpgrade,
 }) => {
-  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'free');
+  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE');
   const [visible, setVisible] = useState(false);
   const [currentMessage, setCurrentMessage] = useState<NudgeMessage>(NUDGE_MESSAGES[0]);
   const slideAnim = useRef(new Animated.Value(-100)).current;
@@ -85,7 +85,7 @@ export const PremiumNudge: React.FC<PremiumNudgeProps> = ({
   const lastShownAt = useRef(0);
 
   // Don't show to premium users
-  if (packageTier !== 'free') return null;
+  if (packageTier !== 'FREE') return null;
 
   const showNudge = useCallback(() => {
     // Pick a random message

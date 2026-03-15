@@ -47,23 +47,23 @@ export interface UserPhoto {
 
 // Subsystem 4: Intention Tags — LOCKED: 3 Tags
 export enum IntentionTag {
-  SERIOUS_RELATIONSHIP = 'serious_relationship',
-  EXPLORING = 'exploring',
-  NOT_SURE = 'not_sure',
+  SERIOUS_RELATIONSHIP = 'SERIOUS_RELATIONSHIP',
+  EXPLORING = 'EXPLORING',
+  NOT_SURE = 'NOT_SURE',
 }
 
 export enum Gender {
-  MALE = 'male',
-  FEMALE = 'female',
-  OTHER = 'other',
+  MALE = 'MALE',
+  FEMALE = 'FEMALE',
+  OTHER = 'OTHER',
 }
 
 // Subsystem 16: Package Tiers — LOCKED: 4 Packages
 export enum PackageTier {
-  FREE = 'free',
-  GOLD = 'gold',
-  PRO = 'pro',
-  RESERVED = 'reserved',
+  FREE = 'FREE',
+  GOLD = 'GOLD',
+  PRO = 'PRO',
+  RESERVED = 'RESERVED',
 }
 
 export enum VerificationStatus {

@@ -10,7 +10,7 @@ import { storage } from '../utils/storage';
 import { parseApiError } from '../services/api';
 import type { AxiosError } from 'axios';
 
-export type PackageTier = 'free' | 'gold' | 'pro' | 'reserved';
+export type PackageTier = 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
 
 /** Duration of the Gold trial for new phone-registered users (48 hours in ms) */
 const TRIAL_DURATION_MS = 48 * 60 * 60 * 1000;
@@ -131,7 +131,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         id: response.user.id,
         phone: response.user.phone,
         isVerified: response.user.isVerified,
-        packageTier: (response.user.packageTier as PackageTier) || 'free',
+        packageTier: (response.user.packageTier as PackageTier) || 'FREE',
       };
 
       // Persist tokens
@@ -167,7 +167,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           id: 'dev-user-001',
           phone,
           isVerified: false,
-          packageTier: 'free',
+          packageTier: 'FREE',
         };
         set({
           accessToken: 'dev-access-token',
@@ -458,7 +458,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           id: me.id,
           phone: me.phone,
           isVerified: me.isFullyVerified,
-          packageTier: (me.packageTier as PackageTier) || 'free',
+          packageTier: (me.packageTier as PackageTier) || 'FREE',
         };
 
         const isOnboarded = me.profile?.isComplete ?? false;
@@ -496,7 +496,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               id: me.id,
               phone: me.phone,
               isVerified: me.isFullyVerified,
-              packageTier: (me.packageTier as PackageTier) || 'free',
+              packageTier: (me.packageTier as PackageTier) || 'FREE',
             };
             set({
               user,
@@ -531,7 +531,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         id: me.id,
         phone: me.phone,
         isVerified: me.isFullyVerified,
-        packageTier: (me.packageTier as PackageTier) || 'free',
+        packageTier: (me.packageTier as PackageTier) || 'FREE',
       };
       set({ user, isOnboarded: me.profile?.isComplete ?? false });
     } catch {
@@ -583,7 +583,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     storage.setNumber(TRIAL_EXPIRY_KEY, expiresAt);
     set((state) => ({
       trialExpiresAt: expiresAt,
-      user: state.user ? { ...state.user, packageTier: 'gold' as PackageTier } : null,
+      user: state.user ? { ...state.user, packageTier: 'GOLD' as PackageTier } : null,
     }));
   },
 
@@ -596,7 +596,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       storage.delete(TRIAL_EXPIRY_KEY);
       set({
         trialExpiresAt: null,
-        user: { ...user, packageTier: 'free' },
+        user: { ...user, packageTier: 'FREE' },
       });
       return true; // expired
     }
@@ -608,14 +608,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (saved && saved > Date.now()) {
       set((state) => ({
         trialExpiresAt: saved,
-        user: state.user ? { ...state.user, packageTier: 'gold' as PackageTier } : null,
+        user: state.user ? { ...state.user, packageTier: 'GOLD' as PackageTier } : null,
       }));
     } else if (saved) {
       // Persisted trial has expired — clean up
       storage.delete(TRIAL_EXPIRY_KEY);
       set((state) => ({
         trialExpiresAt: null,
-        user: state.user ? { ...state.user, packageTier: 'free' as PackageTier } : null,
+        user: state.user ? { ...state.user, packageTier: 'FREE' as PackageTier } : null,
       }));
     }
   },

@@ -17,11 +17,11 @@ export interface HarmonySession {
 }
 
 export enum HarmonySessionStatus {
-  PENDING = 'pending', // Created but not both joined
-  ACTIVE = 'active', // Both users in session
-  EXTENDED = 'extended', // Timer extended with Gold
-  ENDED = 'ended', // Timer expired naturally
-  CANCELLED = 'cancelled', // One user left early
+  PENDING = 'PENDING', // Created but not both joined
+  ACTIVE = 'ACTIVE', // Both users in session
+  EXTENDED = 'EXTENDED', // Timer extended with Gold
+  ENDED = 'ENDED', // Timer expired naturally
+  CANCELLED = 'CANCELLED', // One user left early
 }
 
 export interface HarmonyMessage {
@@ -34,10 +34,10 @@ export interface HarmonyMessage {
 }
 
 export enum HarmonyMessageType {
-  TEXT = 'text',
-  QUESTION_CARD = 'question_card',
-  GAME_CARD = 'game_card',
-  SYSTEM = 'system', // "Session extended by 15 minutes"
+  TEXT = 'TEXT',
+  QUESTION_CARD = 'QUESTION_CARD',
+  GAME_CARD = 'GAME_CARD',
+  SYSTEM = 'SYSTEM', // "Session extended by 15 minutes"
 }
 
 export interface HarmonyQuestionCard {
@@ -49,9 +49,9 @@ export interface HarmonyQuestionCard {
 }
 
 export enum QuestionCardCategory {
-  ICEBREAKER = 'icebreaker', // 10 cards
-  DEEP_CONNECTION = 'deep_connection', // 10 cards
-  FUN_PLAYFUL = 'fun_playful', // 10 cards
+  ICEBREAKER = 'ICEBREAKER', // 10 cards
+  DEEP_CONNECTION = 'DEEP_CONNECTION', // 10 cards
+  FUN_PLAYFUL = 'FUN_PLAYFUL', // 10 cards
 }
 
 export interface HarmonyGameCard {
@@ -64,11 +64,11 @@ export interface HarmonyGameCard {
 }
 
 export enum GameCardType {
-  COMMON_GROUND = 'common_ground', // İkimizin Ortak Noktası
-  TWO_TRUTHS_ONE_LIE = 'two_truths_one_lie', // Doğru mu Yanlış mı?
-  COMPLETE_SENTENCE = 'complete_sentence', // Tamamla Cümleyi
-  WORD_ASSOCIATION = 'word_association', // Kelime İlişkilendirme
-  IMAGINATION = 'imagination', // Hayal Gücü
+  COMMON_GROUND = 'COMMON_GROUND', // İkimizin Ortak Noktası
+  TWO_TRUTHS_ONE_LIE = 'TWO_TRUTHS_ONE_LIE', // Doğru mu Yanlış mı?
+  COMPLETE_SENTENCE = 'COMPLETE_SENTENCE', // Tamamla Cümleyi
+  WORD_ASSOCIATION = 'WORD_ASSOCIATION', // Kelime İlişkilendirme
+  IMAGINATION = 'IMAGINATION', // Hayal Gücü
 }
 
 export interface HarmonyExtension {

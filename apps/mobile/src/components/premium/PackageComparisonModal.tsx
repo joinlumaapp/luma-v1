@@ -58,7 +58,7 @@ const TIER_PRICES: Record<PackageTier, string> = {
 };
 
 // Tier order for hierarchy checks
-const TIER_ORDER: PackageTier[] = ['free', 'gold', 'pro', 'reserved'];
+const TIER_ORDER: PackageTier[] = ['FREE', 'GOLD', 'PRO', 'RESERVED'];
 
 // Feature comparison data — each row maps to all 4 tiers (Bumble-style layout)
 const FEATURES: ComparisonFeature[] = [
@@ -170,7 +170,7 @@ const FEATURES: ComparisonFeature[] = [
 ];
 
 // Recommended tier constant
-const RECOMMENDED_TIER: PackageTier = 'pro';
+const RECOMMENDED_TIER: PackageTier = 'PRO';
 
 // ─── Component ───────────────────────────────────────────────
 
@@ -180,7 +180,7 @@ export const PackageComparisonModal: React.FC<PackageComparisonModalProps> = ({
   onUpgrade,
 }) => {
   const insets = useSafeAreaInsets();
-  const currentTier = useAuthStore((state) => state.user?.packageTier ?? 'free');
+  const currentTier = useAuthStore((state) => state.user?.packageTier ?? 'FREE');
   const currentTierIndex = TIER_ORDER.indexOf(currentTier);
 
   // Check if a given cell value represents an "available" feature

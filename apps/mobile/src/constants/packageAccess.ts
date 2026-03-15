@@ -6,10 +6,10 @@ import type { PackageTier } from '../stores/authStore';
 // ─── Tier Ranking ────────────────────────────────────────────────
 
 const TIER_RANK: Record<PackageTier, number> = {
-  free: 0,
-  gold: 1,
-  pro: 2,
-  reserved: 3,
+  FREE: 0,
+  GOLD: 1,
+  PRO: 2,
+  RESERVED: 3,
 };
 
 /** Returns true if user tier meets or exceeds required tier */
@@ -21,10 +21,10 @@ export const hasTierAccess = (
 // ─── Display Names ───────────────────────────────────────────────
 
 export const TIER_DISPLAY_NAMES: Record<PackageTier, string> = {
-  free: 'Ucretsiz',
-  gold: 'Premium',
-  pro: 'Supreme',
-  reserved: 'Sınırsız',
+  FREE: 'Ucretsiz',
+  GOLD: 'Premium',
+  PRO: 'Supreme',
+  RESERVED: 'Sınırsız',
 };
 
 /** "Premium+" means gold or above */
@@ -33,9 +33,9 @@ export const getTierLabel = (tier: PackageTier): string =>
 
 /** Returns "Premium+" style label for upgrade prompts */
 export const getMinTierLabel = (tier: PackageTier): string => {
-  if (tier === 'gold') return 'Premium+';
-  if (tier === 'pro') return 'Supreme+';
-  if (tier === 'reserved') return 'Sınırsız';
+  if (tier === 'GOLD') return 'Premium+';
+  if (tier === 'PRO') return 'Supreme+';
+  if (tier === 'RESERVED') return 'Sınırsız';
   return 'Ucretsiz';
 };
 
@@ -75,104 +75,104 @@ interface FeatureRule {
 
 export const FEATURE_RULES: Record<FeatureKey, FeatureRule> = {
   daily_likes: {
-    minTier: 'free',
-    limits: { free: -1, gold: -1, pro: -1, reserved: -1 },
+    minTier: 'FREE',
+    limits: { FREE: -1, GOLD: -1, PRO: -1, RESERVED: -1 },
     labelTr: 'Günlük Beğeni',
     descriptionTr: 'Sınırsız beğeni hakkı.',
   },
   super_like: {
-    minTier: 'free',
-    limits: { free: 1, gold: 10, pro: 10, reserved: -1 },
+    minTier: 'FREE',
+    limits: { FREE: 1, GOLD: 10, PRO: 10, RESERVED: -1 },
     labelTr: 'Süper Beğeni',
     descriptionTr: 'Süper Beğeni ile öne çık! Eşleşme şansın 3 kat artar.',
   },
   undo: {
-    minTier: 'gold',
-    limits: { free: 0, gold: -1, pro: -1, reserved: -1 },
+    minTier: 'GOLD',
+    limits: { FREE: 0, GOLD: -1, PRO: -1, RESERVED: -1 },
     labelTr: 'Geri Al',
     descriptionTr: 'Yanlış yöne kaydırdın mı? Son kararı geri al.',
   },
   who_likes: {
-    minTier: 'gold',
-    limits: { free: 1, gold: 20, pro: 50, reserved: -1 },
+    minTier: 'GOLD',
+    limits: { FREE: 1, GOLD: 20, PRO: 50, RESERVED: -1 },
     labelTr: 'Kimin Beğendiği',
     descriptionTr: 'Seni beğenen kişileri hemen gör ve anında eşleşmeler oluştur.',
   },
   visitors: {
-    minTier: 'gold',
-    limits: { free: 0, gold: -1, pro: -1, reserved: -1 },
+    minTier: 'GOLD',
+    limits: { FREE: 0, GOLD: -1, PRO: -1, RESERVED: -1 },
     labelTr: 'Profil Ziyaretçileri',
     descriptionTr: 'Profilini kimlerin ziyaret ettiğini gör.',
   },
   feed_post: {
-    minTier: 'free',
-    limits: { free: 1, gold: 5, pro: -1, reserved: -1 },
+    minTier: 'FREE',
+    limits: { FREE: 1, GOLD: 5, PRO: -1, RESERVED: -1 },
     labelTr: 'Sosyal Akış Paylaşımı',
     descriptionTr: 'Daha fazla paylaşım yapmak için paketini yükselt.',
   },
   boost: {
-    minTier: 'gold',
-    limits: { free: 0, gold: 4, pro: 4, reserved: -1 },
+    minTier: 'GOLD',
+    limits: { FREE: 0, GOLD: 4, PRO: 4, RESERVED: -1 },
     labelTr: 'Boost',
     descriptionTr: 'Profilini öne çıkar ve 10x daha fazla görünürlük kazan.',
   },
   advanced_filters: {
-    minTier: 'pro',
-    limits: { free: 0, gold: 0, pro: -1, reserved: -1 },
+    minTier: 'PRO',
+    limits: { FREE: 0, GOLD: 0, PRO: -1, RESERVED: -1 },
     labelTr: 'Gelişmiş Filtreler',
     descriptionTr: 'Yaş, mesafe, niyet etiketi ve daha fazlasıyla aramayı daralt.',
   },
   priority_visibility: {
-    minTier: 'pro',
-    limits: { free: 0, gold: 0, pro: -1, reserved: -1 },
+    minTier: 'PRO',
+    limits: { FREE: 0, GOLD: 0, PRO: -1, RESERVED: -1 },
     labelTr: 'Öncelikli Gösterim',
     descriptionTr: 'Profilin diğer kullanıcılara önce gösterilir.',
   },
   compatibility_insights: {
-    minTier: 'pro',
-    limits: { free: 4, gold: 4, pro: 7, reserved: 7 },
+    minTier: 'PRO',
+    limits: { FREE: 4, GOLD: 4, PRO: 7, RESERVED: 7 },
     labelTr: 'Detaylı Uyumluluk Analizi',
     descriptionTr: 'Tüm uyumluluk boyutlarını detaylı gör.',
   },
   stories_visibility: {
-    minTier: 'pro',
-    limits: { free: 0, gold: 0, pro: -1, reserved: -1 },
+    minTier: 'PRO',
+    limits: { FREE: 0, GOLD: 0, PRO: -1, RESERVED: -1 },
     labelTr: 'Hikaye Önde Gösterim',
     descriptionTr: 'Hikayelerin daha fazla kişiye gösterilir.',
   },
   special_badge: {
-    minTier: 'reserved',
-    limits: { free: 0, gold: 0, pro: 0, reserved: -1 },
+    minTier: 'RESERVED',
+    limits: { FREE: 0, GOLD: 0, PRO: 0, RESERVED: -1 },
     labelTr: 'Özel Rozet',
     descriptionTr: 'Sınırsız üyelerine özel rozet ile profilinde fark yarat.',
   },
   vip_support: {
-    minTier: 'reserved',
-    limits: { free: 0, gold: 0, pro: 0, reserved: -1 },
+    minTier: 'RESERVED',
+    limits: { FREE: 0, GOLD: 0, PRO: 0, RESERVED: -1 },
     labelTr: 'VIP Destek',
     descriptionTr: 'Öncelikli müşteri desteği ile sorunların hızla çözülür.',
   },
   events: {
-    minTier: 'reserved',
-    limits: { free: 0, gold: 0, pro: 0, reserved: -1 },
+    minTier: 'RESERVED',
+    limits: { FREE: 0, GOLD: 0, PRO: 0, RESERVED: -1 },
     labelTr: 'Özel Etkinlikler',
     descriptionTr: 'Sınırsız üyelerine özel etkinliklere davet al.',
   },
   messages: {
-    minTier: 'free',
-    limits: { free: 1, gold: 10, pro: 10, reserved: -1 },
+    minTier: 'FREE',
+    limits: { FREE: 1, GOLD: 10, PRO: 10, RESERVED: -1 },
     labelTr: 'Günlük Mesaj',
     descriptionTr: 'Daha fazla mesaj göndermek için paketini yükselt.',
   },
   waves: {
-    minTier: 'free',
-    limits: { free: 3, gold: 20, pro: 20, reserved: 20 },
+    minTier: 'FREE',
+    limits: { FREE: 3, GOLD: 20, PRO: 20, RESERVED: 20 },
     labelTr: 'Selam Gönder',
     descriptionTr: 'Yakınındaki kullanıcılara eşleşmeden selam gönder.',
   },
   paid_message: {
-    minTier: 'free',
-    limits: { free: -1, gold: -1, pro: -1, reserved: -1 },
+    minTier: 'FREE',
+    limits: { FREE: -1, GOLD: -1, PRO: -1, RESERVED: -1 },
     labelTr: 'Ücretli Mesaj',
     descriptionTr: 'Eşleşmeden önce mesaj gönder — 150 Jeton.',
   },

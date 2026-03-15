@@ -47,7 +47,7 @@ const TIER_DISPLAY_NAMES: Record<string, string> = {
 export const SubscriptionStatusCard: React.FC<SubscriptionStatusCardProps> = ({
   onUpgrade,
 }) => {
-  const currentTier = useAuthStore((state) => state.user?.packageTier ?? 'free');
+  const currentTier = useAuthStore((state) => state.user?.packageTier ?? 'FREE');
   const [status, setStatus] = useState<SubscriptionStatusResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -74,7 +74,7 @@ export const SubscriptionStatusCard: React.FC<SubscriptionStatusCardProps> = ({
 
   // Animate the upgrade button with a gentle pulse for free users
   useEffect(() => {
-    if (currentTier === 'free') {
+    if (currentTier === 'FREE') {
       const animation = Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
@@ -108,10 +108,10 @@ export const SubscriptionStatusCard: React.FC<SubscriptionStatusCardProps> = ({
     });
   };
 
-  const tierKey = status?.packageTier ?? currentTier.toUpperCase();
+  const tierKey = status?.packageTier ?? currentTier;
   const accentColor = TIER_COLORS[tierKey] ?? colors.textSecondary;
   const displayName = TIER_DISPLAY_NAMES[tierKey] ?? 'Ücretsiz';
-  const isPaid = status?.isPaid ?? currentTier !== 'free';
+  const isPaid = status?.isPaid ?? currentTier !== 'FREE';
 
   if (isLoading) {
     return (

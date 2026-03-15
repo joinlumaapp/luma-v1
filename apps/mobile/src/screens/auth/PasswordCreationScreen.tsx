@@ -30,7 +30,7 @@ interface PasswordRule {
 
 const PASSWORD_RULES: PasswordRule[] = [
   { label: 'En az 8 karakter', test: (pw) => pw.length >= MIN_PASSWORD_LENGTH },
-  { label: 'Bir buyuk harf', test: (pw) => /[A-Z]/.test(pw) },
+  { label: 'Bir büyük harf', test: (pw) => /[A-Z]/.test(pw) },
   { label: 'Bir rakam', test: (pw) => /\d/.test(pw) },
 ];
 
@@ -81,7 +81,7 @@ export const PasswordCreationScreen: React.FC = () => {
       <View style={styles.content}>
         <Text style={styles.title}>Şifre Oluştur</Text>
         <Text style={styles.subtitle}>
-          Hesabini korumak icin guvenli bir sifre belirle.
+          Hesabını korumak için güvenli bir şifre belirle.
         </Text>
 
         {/* Password input */}
@@ -90,7 +90,7 @@ export const PasswordCreationScreen: React.FC = () => {
             style={styles.input}
             value={password}
             onChangeText={setPassword}
-            placeholder="Sifre"
+            placeholder="Şifre"
             placeholderTextColor={onboardingColors.textSecondary}
             secureTextEntry={!showPassword}
             autoCapitalize="none"
@@ -135,7 +135,7 @@ export const PasswordCreationScreen: React.FC = () => {
             style={styles.input}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
-            placeholder="Sifreyi tekrarla"
+            placeholder="Şifreyi tekrarla"
             placeholderTextColor={onboardingColors.textSecondary}
             secureTextEntry={!showPassword}
             autoCapitalize="none"
@@ -150,7 +150,7 @@ export const PasswordCreationScreen: React.FC = () => {
         </View>
 
         {confirmPassword.length > 0 && !passwordsMatch && (
-          <Text style={styles.errorText}>Sifreler uyusmuyor.</Text>
+          <Text style={styles.errorText}>Şifreler uyuşmuyor.</Text>
         )}
       </View>
 

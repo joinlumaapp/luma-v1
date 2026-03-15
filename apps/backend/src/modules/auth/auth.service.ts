@@ -841,8 +841,12 @@ export class AuthService {
    * In production, this must call a real liveness detection API.
    */
   private mockLivenessCheck(_selfieBase64: string): number {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'Liveness check not configured for production. Integrate AWS Rekognition DetectFaces.',
+      );
+    }
     // DEV/STAGING ONLY — returns a simulated passing liveness score (0.85-0.99).
-    // In production (NODE_ENV === 'production'), replace with real AWS Rekognition call.
     return 0.85 + Math.random() * 0.14;
   }
 
@@ -853,8 +857,12 @@ export class AuthService {
    * In production, this must call a real face comparison API.
    */
   private mockFaceComparison(_selfieBase64: string): number {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'Face comparison not configured for production. Integrate AWS Rekognition CompareFaces.',
+      );
+    }
     // DEV/STAGING ONLY — returns a simulated passing face match score (0.82-0.98).
-    // In production (NODE_ENV === 'production'), replace with real AWS Rekognition call.
     return 0.82 + Math.random() * 0.16;
   }
 }

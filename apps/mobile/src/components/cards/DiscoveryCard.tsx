@@ -44,7 +44,7 @@ export interface DiscoveryCardProfile {
   matchReasons?: string[];
   /** Real compatibility reasons generated from shared signals */
   compatReasons?: string[];
-  packageTier?: 'free' | 'gold' | 'pro' | 'reserved';
+  packageTier?: 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
   /** Profile prompts (Hinge-style question + answer) */
   prompts?: Array<{ id: string; question: string; answer: string; order: number }>;
   /** Profile video data */
@@ -78,13 +78,13 @@ for (const opt of INTEREST_OPTIONS) {
 // ─── Mode badge labels ───────────────────────────────────────
 
 const MODE_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
-  serious_relationship: { label: 'Anlamlı Bağlantı', bg: 'rgba(139, 92, 246, 0.15)', text: palette.purple[700] },
-  exploring: { label: 'Yeni Keşifler', bg: 'rgba(236, 72, 153, 0.15)', text: palette.pink[700] },
-  not_sure: { label: 'Açık Fikirli', bg: 'rgba(251, 191, 36, 0.15)', text: palette.gold[700] },
+  SERIOUS_RELATIONSHIP: { label: 'Anlamlı Bağlantı', bg: 'rgba(139, 92, 246, 0.15)', text: palette.purple[700] },
+  EXPLORING: { label: 'Yeni Keşifler', bg: 'rgba(236, 72, 153, 0.15)', text: palette.pink[700] },
+  NOT_SURE: { label: 'Açık Fikirli', bg: 'rgba(251, 191, 36, 0.15)', text: palette.gold[700] },
 };
 
 const getModeStyle = (tag: string) =>
-  MODE_CONFIG[tag] ?? MODE_CONFIG.exploring;
+  MODE_CONFIG[tag] ?? MODE_CONFIG.EXPLORING;
 
 // ─── Component ────────────────────────────────────────────────
 
@@ -93,7 +93,7 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
   const compatScore = profile.compatibility?.score ?? 0;
   const isSuper = profile.compatibility?.level === 'super';
   const modeStyle = profile.intentionTag ? getModeStyle(profile.intentionTag) : null;
-  const isSupreme = profile.packageTier === 'reserved';
+  const isSupreme = profile.packageTier === 'RESERVED';
 
   // ── Supreme Aura: pulsing gold border opacity ──
   const auraOpacity = useRef(new Animated.Value(0.4)).current;

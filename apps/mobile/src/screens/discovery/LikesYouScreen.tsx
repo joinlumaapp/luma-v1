@@ -293,8 +293,8 @@ export const LikesYouScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<LikesYouNavProp>();
 
-  const packageTier = (useAuthStore((s) => s.user?.packageTier ?? 'free')) as PackageTier;
-  const isBlurred = packageTier === 'free';
+  const packageTier = (useAuthStore((s) => s.user?.packageTier ?? 'FREE')) as PackageTier;
+  const isBlurred = packageTier === 'FREE';
 
   // Daily view limit
   const dailyLimit = LIKES_VIEW_CONFIG.DAILY_LIMITS[packageTier];

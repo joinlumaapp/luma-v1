@@ -45,7 +45,7 @@ export const SendWaveModal: React.FC<SendWaveModalProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const { quota, fetchQuota, sendWave } = useWaveStore();
-  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'free');
+  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE');
   const slideAnim = useRef(new Animated.Value(300)).current;
 
   useEffect(() => {

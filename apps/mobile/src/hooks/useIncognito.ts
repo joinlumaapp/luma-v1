@@ -6,7 +6,7 @@ import { useAuthStore, type PackageTier } from '../stores/authStore';
 import { useProfileStore } from '../stores/profileStore';
 
 /** Package tiers that can use incognito mode */
-const INCOGNITO_ELIGIBLE_TIERS: ReadonlySet<PackageTier> = new Set(['pro', 'reserved']);
+const INCOGNITO_ELIGIBLE_TIERS: ReadonlySet<PackageTier> = new Set(['PRO', 'RESERVED']);
 
 interface UseIncognitoResult {
   /** Whether incognito mode is currently active */
@@ -20,7 +20,7 @@ interface UseIncognitoResult {
 }
 
 export const useIncognito = (): UseIncognitoResult => {
-  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'free');
+  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE');
   const isIncognito = useProfileStore((s) => s.profile.isIncognito);
   const updateProfile = useProfileStore((s) => s.updateProfile);
   const incognitoExpiresAt = useProfileStore((s) => s.profile.incognitoExpiresAt ?? null);

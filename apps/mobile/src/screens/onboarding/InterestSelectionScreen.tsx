@@ -56,7 +56,7 @@ const CATEGORIES: InterestCategory[] = [
       'Alkolsüz',
       'Ne kadar çok peynir o kadar iyi',
       'Sağlıklı',
-      'Kahhvveee',
+      'Kahve',
       'Butik bira',
     ],
   },

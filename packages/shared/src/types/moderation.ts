@@ -5,13 +5,13 @@
  * Maps to Prisma ReportCategory enum.
  */
 export enum ReportReason {
-  FAKE_PROFILE = 'fake_profile',
-  HARASSMENT = 'harassment',
-  INAPPROPRIATE_PHOTO = 'inappropriate_photo',
-  SPAM = 'spam',
-  UNDERAGE = 'underage',
-  SCAM = 'scam',
-  OTHER = 'other',
+  FAKE_PROFILE = 'FAKE_PROFILE',
+  HARASSMENT = 'HARASSMENT',
+  INAPPROPRIATE_PHOTO = 'INAPPROPRIATE_PHOTO',
+  SPAM = 'SPAM',
+  UNDERAGE = 'UNDERAGE',
+  SCAM = 'SCAM',
+  OTHER = 'OTHER',
 }
 
 /**
@@ -19,10 +19,10 @@ export enum ReportReason {
  * Maps to Prisma ReportStatus enum.
  */
 export enum ReportStatus {
-  PENDING = 'pending',
-  REVIEWING = 'reviewing',
-  RESOLVED = 'resolved',
-  DISMISSED = 'dismissed',
+  PENDING = 'PENDING',
+  REVIEWING = 'REVIEWING',
+  RESOLVED = 'RESOLVED',
+  DISMISSED = 'DISMISSED',
 }
 
 /**

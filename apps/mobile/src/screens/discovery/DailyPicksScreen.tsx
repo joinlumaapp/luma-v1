@@ -51,8 +51,9 @@ type DailyPicksNavProp = CompositeNavigationProp<
 
 const INTENTION_LABELS: Record<string, string> = {
   serious: 'Ciddi İlişki',
-  exploring: 'Keşfediyorum',
-  not_sure: 'Emin Değilim',
+  SERIOUS_RELATIONSHIP: 'Ciddi İlişki',
+  EXPLORING: 'Keşfediyorum',
+  NOT_SURE: 'Emin Değilim',
 };
 
 // ─── Countdown timer hook ─────────────────────────────────────
@@ -288,8 +289,8 @@ export const DailyPicksScreen: React.FC = () => {
   const navigation = useNavigation<DailyPicksNavProp>();
 
   // Auth store
-  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'free');
-  const isFreeUser = packageTier === 'free';
+  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE');
+  const isFreeUser = packageTier === 'FREE';
 
   // Local state
   const [picks, setPicks] = useState<DailyPickCard[]>([]);

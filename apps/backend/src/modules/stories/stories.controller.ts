@@ -16,9 +16,19 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { StoriesService } from './stories.service';
 import { CreateStoryDto, ReplyToStoryDto } from './dto/create-story.dto';
+
+/** Minimal file interface compatible with multer uploads */
+interface UploadedFile {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  size: number;
+  buffer: Buffer;
+}
 
 interface AuthenticatedRequest {
   user: { userId: string };
@@ -40,7 +50,7 @@ export class StoriesController {
   @UseInterceptors(FileInterceptor('media'))
   async createStory(
     @Req() req: AuthenticatedRequest,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: UploadedFile,
     @Body() dto: CreateStoryDto,
   ) {
     return this.storiesService.createStory(req.user.userId, file, dto);

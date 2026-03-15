@@ -248,7 +248,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const today = getTodayString();
     const sent = lastMessageDate === today ? dailyMessagesSent : 0;
 
-    const tier = (useAuthStore.getState().user?.packageTier ?? 'free') as PackageTier;
+    const tier = (useAuthStore.getState().user?.packageTier ?? 'FREE') as PackageTier;
     const limit = MESSAGE_CONFIG.DAILY_LIMITS[tier];
     const isUnlimited = limit === -1;
     const remaining = isUnlimited ? -1 : Math.max(0, limit - sent) + singleMessageCredits;
@@ -279,7 +279,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }
 
       // Message limit gate
-      const tier = (useAuthStore.getState().user?.packageTier ?? 'free') as PackageTier;
+      const tier = (useAuthStore.getState().user?.packageTier ?? 'FREE') as PackageTier;
       const limit = MESSAGE_CONFIG.DAILY_LIMITS[tier];
       const isUnlimited = limit === -1;
 

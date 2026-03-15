@@ -32,7 +32,7 @@ const PACKAGE_COLORS: Record<string, string> = {
 };
 
 // Package tier order for comparison
-const TIER_ORDER: PackageTier[] = ['free', 'gold', 'pro', 'reserved'];
+const TIER_ORDER: PackageTier[] = ['FREE', 'GOLD', 'PRO', 'RESERVED'];
 
 // Feature comparison grid data
 interface FeatureRow {
@@ -178,7 +178,7 @@ export const PackagesScreen: React.FC = () => {
   useScreenTracking('Packages');
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const currentPlan = useAuthStore((state) => state.user?.packageTier ?? 'free');
+  const currentPlan = useAuthStore((state) => state.user?.packageTier ?? 'FREE');
   const updatePackageTier = useAuthStore((state) => state.updatePackageTier);
   const [isSubscribing, setIsSubscribing] = useState(false);
 
