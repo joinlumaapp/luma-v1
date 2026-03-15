@@ -568,7 +568,7 @@ export const ProfileScreen: React.FC = () => {
   // ── Info Sections (interleaved with photos) ─────────────────────────────────
   const infoSections: React.ReactNode[] = [];
 
-  // 1. Hakkinda — bio + lookingFor chips
+  // 1. Hakkında — bio + lookingFor chips
   infoSections.push(
     <View key="about" style={styles.section}>
       <Text style={styles.sectionTitle}>Hakkında</Text>
@@ -588,7 +588,7 @@ export const ProfileScreen: React.FC = () => {
     </View>,
   );
 
-  // 2. Ilgi Alanlari
+  // 2. İlgi Alanları
   if (profile.interestTags.length > 0) {
     infoSections.push(
       <View key="interests" style={styles.section}>

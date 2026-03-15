@@ -311,11 +311,11 @@ export const FeedProfileScreen: React.FC = () => {
   // ── Info sections — seamless, interleaved with photos ──
   const infoSections: React.ReactNode[] = [];
 
-  // 1. Hakkinda — bio + intention chip
+  // 1. Hakkında — bio + intention chip
   if (profile.bio || profile.intentionTag) {
     infoSections.push(
       <View key="about" style={styles.section}>
-        <Text style={styles.sectionTitle}>Hakkinda</Text>
+        <Text style={styles.sectionTitle}>Hakkında</Text>
         {profile.bio && <Text style={styles.bioText}>{profile.bio}</Text>}
         {profile.intentionTag && (
           <View style={{ marginTop: 12 }}>
@@ -361,10 +361,10 @@ export const FeedProfileScreen: React.FC = () => {
     );
   }
 
-  // 4. Ilgi Alanlari — partially visible
+  // 4. İlgi Alanları — partially visible
   infoSections.push(
     <View key="hobbies" style={styles.section}>
-      <Text style={styles.sectionTitle}>Ilgi Alanlari</Text>
+      <Text style={styles.sectionTitle}>İlgi Alanları</Text>
       <View style={styles.chipRow}>
         {profile.hobbies.slice(0, isPremium ? profile.hobbies.length : 2).map((hobby) => (
           <View key={hobby} style={styles.hobbyChip}>
@@ -381,10 +381,10 @@ export const FeedProfileScreen: React.FC = () => {
     </View>,
   );
 
-  // 5. Hakkimda — lifestyle detail rows (premium-locked)
+  // 5. Hakkımda — lifestyle detail rows (premium-locked)
   infoSections.push(
     <View key="details" style={styles.section}>
-      <Text style={styles.sectionTitle}>Hakkimda</Text>
+      <Text style={styles.sectionTitle}>Hakkımda</Text>
       {isPremium ? (
         <View style={styles.detailsGrid}>
           <DetailRow icon="resize-outline" iconBg="rgba(139, 92, 246, 0.10)" label="Boy" value={profile.height} />

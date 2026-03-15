@@ -629,7 +629,7 @@ export const EditProfileScreen: React.FC = () => {
                 <Text style={styles.infoValue}>{profile.firstName || '-'}</Text>
               </View>
               <View style={styles.readOnlyTag}>
-                <Text style={styles.readOnlyTagText}>Degistirilemez</Text>
+                <Text style={styles.readOnlyTagText}>Değiştirilemez</Text>
               </View>
             </View>
 
@@ -643,7 +643,7 @@ export const EditProfileScreen: React.FC = () => {
                 <Text style={styles.infoValue}>{age > 0 ? `${age}` : '-'}</Text>
               </View>
               <View style={styles.readOnlyTag}>
-                <Text style={styles.readOnlyTagText}>Degistirilemez</Text>
+                <Text style={styles.readOnlyTagText}>Değiştirilemez</Text>
               </View>
             </View>
 
@@ -768,10 +768,10 @@ export const EditProfileScreen: React.FC = () => {
             )}
           </View>
 
-          {/* ── Ilgi Alanlari ─────────────────────────────────────────── */}
+          {/* ── İlgi Alanları ─────────────────────────────────────────── */}
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Ilgi Alanlari</Text>
+              <Text style={styles.sectionTitle}>İlgi Alanları</Text>
               <Text style={styles.charCounter}>
                 {selectedInterests.length}/{MAX_INTERESTS}
               </Text>
