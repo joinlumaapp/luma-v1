@@ -24,7 +24,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ProfileStackParamList } from '../../navigation/types';
 import { colors, palette } from '../../theme/colors';
-import { fontWeights } from '../../theme/typography';
+import { fontWeights, poppinsFonts } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 import { INTEREST_OPTIONS } from '../../constants/config';
 import { useProfileStore } from '../../stores/profileStore';
@@ -1034,6 +1034,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
+    fontFamily: poppinsFonts.semibold,
     fontWeight: fontWeights.semibold,
     color: colors.text,
     includeFontPadding: false,
@@ -1062,6 +1063,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
+    fontFamily: poppinsFonts.bold,
     fontWeight: fontWeights.bold,
     color: colors.text,
     letterSpacing: -0.2,
@@ -1070,6 +1072,7 @@ const styles = StyleSheet.create({
   },
   sectionHint: {
     fontSize: 13,
+    fontFamily: poppinsFonts.regular,
     fontWeight: fontWeights.regular,
     color: colors.textTertiary,
     marginBottom: spacing.md,
@@ -1130,6 +1133,7 @@ const styles = StyleSheet.create({
   },
   photoMainBadgeText: {
     fontSize: 10,
+    fontFamily: poppinsFonts.bold,
     fontWeight: fontWeights.bold,
     color: '#FFFFFF',
     includeFontPadding: false,
@@ -1147,6 +1151,7 @@ const styles = StyleSheet.create({
   },
   photoOrderText: {
     fontSize: 10,
+    fontFamily: poppinsFonts.bold,
     fontWeight: fontWeights.bold,
     color: '#FFFFFF',
     includeFontPadding: false,
@@ -1159,6 +1164,7 @@ const styles = StyleSheet.create({
   },
   photoUploadingText: {
     fontSize: 10,
+    fontFamily: poppinsFonts.medium,
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
     includeFontPadding: false,
@@ -1167,6 +1173,7 @@ const styles = StyleSheet.create({
   // ── Bio ──
   charCounter: {
     fontSize: 12,
+    fontFamily: poppinsFonts.regular,
     fontWeight: fontWeights.regular,
     color: colors.textTertiary,
     includeFontPadding: false,
@@ -1179,6 +1186,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     padding: spacing.md,
     fontSize: 15,
+    fontFamily: poppinsFonts.regular,
     fontWeight: fontWeights.regular,
     color: colors.text,
     minHeight: 120,
@@ -1210,6 +1218,7 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 11,
+    fontFamily: poppinsFonts.medium,
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
     marginBottom: 2,
@@ -1217,6 +1226,7 @@ const styles = StyleSheet.create({
   },
   infoValue: {
     fontSize: 15,
+    fontFamily: poppinsFonts.medium,
     fontWeight: fontWeights.medium,
     color: colors.text,
     includeFontPadding: false,
@@ -1233,6 +1243,7 @@ const styles = StyleSheet.create({
   },
   readOnlyTagText: {
     fontSize: 10,
+    fontFamily: poppinsFonts.medium,
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
     includeFontPadding: false,
@@ -1265,11 +1276,13 @@ const styles = StyleSheet.create({
   },
   pickerItemText: {
     fontSize: 15,
+    fontFamily: poppinsFonts.regular,
     fontWeight: fontWeights.regular,
     color: colors.text,
     includeFontPadding: false,
   },
   pickerItemTextSelected: {
+    fontFamily: poppinsFonts.semibold,
     fontWeight: fontWeights.semibold,
     color: palette.gold[600],
   },
@@ -1301,11 +1314,13 @@ const styles = StyleSheet.create({
   },
   interestLabel: {
     fontSize: 13,
+    fontFamily: poppinsFonts.medium,
     fontWeight: fontWeights.medium,
     color: colors.text,
     includeFontPadding: false,
   },
   interestLabelSelected: {
+    fontFamily: poppinsFonts.semibold,
     fontWeight: fontWeights.semibold,
     color: palette.gold[700],
   },
@@ -1321,6 +1336,7 @@ const styles = StyleSheet.create({
   },
   promptEditQuestion: {
     fontSize: 13,
+    fontFamily: poppinsFonts.medium,
     fontWeight: fontWeights.medium,
     color: colors.textSecondary,
     marginBottom: spacing.sm,
@@ -1329,6 +1345,7 @@ const styles = StyleSheet.create({
   },
   promptEditAnswer: {
     fontSize: 15,
+    fontFamily: poppinsFonts.regular,
     fontWeight: fontWeights.regular,
     color: colors.text,
     minHeight: 60,
@@ -1347,6 +1364,7 @@ const styles = StyleSheet.create({
   },
   charCount: {
     fontSize: 11,
+    fontFamily: poppinsFonts.regular,
     fontWeight: fontWeights.regular,
     color: colors.textTertiary,
     includeFontPadding: false,
@@ -1365,6 +1383,7 @@ const styles = StyleSheet.create({
   },
   addPromptText: {
     fontSize: 14,
+    fontFamily: poppinsFonts.semibold,
     fontWeight: fontWeights.semibold,
     color: palette.purple[500],
     includeFontPadding: false,
@@ -1407,6 +1426,7 @@ const styles = StyleSheet.create({
   },
   voiceTitle: {
     fontSize: 15,
+    fontFamily: poppinsFonts.semibold,
     fontWeight: fontWeights.semibold,
     color: colors.text,
     marginBottom: 2,
@@ -1414,6 +1434,7 @@ const styles = StyleSheet.create({
   },
   voiceSubtitle: {
     fontSize: 12,
+    fontFamily: poppinsFonts.regular,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     includeFontPadding: false,
@@ -1427,6 +1448,7 @@ const styles = StyleSheet.create({
   },
   videoUploadingText: {
     fontSize: 13,
+    fontFamily: poppinsFonts.medium,
     fontWeight: fontWeights.medium,
     color: palette.gold[600],
     includeFontPadding: false,
@@ -1478,6 +1500,7 @@ const styles = StyleSheet.create({
   },
   videoDurationText: {
     fontSize: 11,
+    fontFamily: poppinsFonts.semibold,
     fontWeight: fontWeights.semibold,
     color: '#FFFFFF',
     includeFontPadding: false,
@@ -1503,6 +1526,7 @@ const styles = StyleSheet.create({
   },
   videoActionText: {
     fontSize: 13,
+    fontFamily: poppinsFonts.semibold,
     fontWeight: fontWeights.semibold,
     color: palette.gold[600],
     includeFontPadding: false,
@@ -1528,6 +1552,7 @@ const styles = StyleSheet.create({
   },
   videoAddText: {
     fontSize: 16,
+    fontFamily: poppinsFonts.semibold,
     fontWeight: fontWeights.semibold,
     color: palette.gold[600],
     includeFontPadding: false,
@@ -1565,6 +1590,7 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     fontSize: 16,
+    fontFamily: poppinsFonts.bold,
     fontWeight: fontWeights.bold,
     color: '#FFFFFF',
     letterSpacing: 0.3,
