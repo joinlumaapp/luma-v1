@@ -491,9 +491,9 @@ export const ProfileScreen: React.FC = () => {
 
       {/* Stats row — social metrics (same as other profiles) */}
       <View style={styles.statsCard}>
-        <CountUpStat target={15} label="GONDERİ" />
+        <CountUpStat target={15} label="GÖNDERİ" />
         <View style={styles.statDivider} />
-        <CountUpStat target={108} label="TAKİPCİ" />
+        <CountUpStat target={108} label="TAKİPÇİ" />
         <View style={styles.statDivider} />
         <CountUpStat target={73} label="TAKİP" />
       </View>

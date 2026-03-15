@@ -268,12 +268,12 @@ export const FeedProfileScreen: React.FC = () => {
       <View style={styles.statsCard}>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{profile.postCount}</Text>
-          <Text style={styles.statLabel}>GONDERİ</Text>
+          <Text style={styles.statLabel}>GÖNDERİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{profile.followerCount}</Text>
-          <Text style={styles.statLabel}>TAKİPCİ</Text>
+          <Text style={styles.statLabel}>TAKİPÇİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>

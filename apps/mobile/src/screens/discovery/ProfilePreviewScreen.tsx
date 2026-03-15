@@ -676,12 +676,12 @@ export const ProfilePreviewScreen: React.FC = () => {
       <View style={styles.statsCard}>
         <View style={styles.statItem}>
           <Text style={styles.statValue} numberOfLines={1}>15</Text>
-          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>GONDERİ</Text>
+          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>GÖNDERİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Text style={styles.statValue} numberOfLines={1}>108</Text>
-          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>TAKİPCİ</Text>
+          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>TAKİPÇİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>

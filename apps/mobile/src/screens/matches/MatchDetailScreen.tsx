@@ -152,25 +152,21 @@ export const MatchDetailScreen: React.FC = () => {
         )}
       </View>
 
-      {/* Stats row — dating-relevant */}
+      {/* Stats row — social metrics (consistent with ProfileScreen) */}
       <View style={styles.statsCard}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>%{compatPercent}</Text>
-          <Text style={styles.statLabel}>UYUM SKORU</Text>
+          <Text style={styles.statValue}>15</Text>
+          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>GÖNDERİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{selectedMatch.compatibilityBreakdown.filter((c) => c.score >= 70).length}</Text>
-          <Text style={styles.statLabel}>ORTAK ILGI</Text>
+          <Text style={styles.statValue}>108</Text>
+          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>TAKİPÇİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>
-            {selectedMatch.matchedAt
-              ? `${Math.max(1, Math.floor((Date.now() - new Date(selectedMatch.matchedAt).getTime()) / (1000 * 60 * 60 * 24)))}g`
-              : '-'}
-          </Text>
-          <Text style={styles.statLabel}>ESLESME</Text>
+          <Text style={styles.statValue}>73</Text>
+          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>TAKİP</Text>
         </View>
       </View>
     </View>
