@@ -61,6 +61,8 @@ export const NameScreen: React.FC = () => {
           autoCapitalize="words"
           returnKeyType="done"
           onSubmitEditing={handleContinue}
+          accessibilityLabel="Adın"
+          accessibilityHint="Profilinde görünecek adını gir"
         />
       </OnboardingLayout>
     </KeyboardAvoidingView>

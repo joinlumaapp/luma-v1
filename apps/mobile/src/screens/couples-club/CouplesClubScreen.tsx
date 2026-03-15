@@ -420,7 +420,7 @@ export const CouplesClubScreen: React.FC = () => {
 
   // --- Event card ---
   const renderEventItem = ({ item }: { item: CouplesEvent }) => (
-    <View style={styles.eventCard}>
+    <View style={styles.eventCard} accessibilityLabel={`${item.title} etkinliği, ${formatEventDate(item.date)}, ${item.attendeeCount}/${item.capacity} katılımcı`}>
       <View style={styles.eventHeader}>
         <Text style={styles.eventTitle}>{item.title}</Text>
         {item.isPro && (
@@ -444,6 +444,8 @@ export const CouplesClubScreen: React.FC = () => {
           style={[styles.rsvpButton, item.isRsvped && styles.rsvpButtonActive]}
           onPress={() => handleRsvp(item.id, item.isRsvped)}
           activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={item.isRsvped ? 'Katılımdan çık' : 'Etkinliğe katıl'}
         >
           <Text style={[styles.rsvpButtonText, item.isRsvped && styles.rsvpButtonTextActive]}>
             {item.isRsvped ? 'Katılımdan Çık' : 'Katıl'}
@@ -579,6 +581,9 @@ export const CouplesClubScreen: React.FC = () => {
         <TouchableOpacity
           style={[styles.tab, activeTab === 'events' && styles.tabActive]}
           onPress={() => setActiveTab('events')}
+          accessibilityRole="tab"
+          accessibilityLabel="Etkinlikler"
+          accessibilityState={{ selected: activeTab === 'events' }}
         >
           <Text style={[styles.tabText, activeTab === 'events' && styles.tabTextActive]}>
             Etkinlikler
@@ -587,6 +592,9 @@ export const CouplesClubScreen: React.FC = () => {
         <TouchableOpacity
           style={[styles.tab, activeTab === 'leaderboard' && styles.tabActive]}
           onPress={() => setActiveTab('leaderboard')}
+          accessibilityRole="tab"
+          accessibilityLabel="Sıralama"
+          accessibilityState={{ selected: activeTab === 'leaderboard' }}
         >
           <Text style={[styles.tabText, activeTab === 'leaderboard' && styles.tabTextActive]}>
             Sıralama

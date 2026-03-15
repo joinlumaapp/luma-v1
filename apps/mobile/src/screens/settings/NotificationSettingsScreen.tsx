@@ -184,6 +184,8 @@ export const NotificationSettingsScreen: React.FC = () => {
               true: colors.primary + '60',
             }}
             thumbColor={isEnabled ? colors.primary : colors.textTertiary}
+            accessibilityRole="switch"
+            accessibilityLabel={item.label}
           />
         </View>
         {showDivider && <View style={styles.divider} />}
@@ -268,6 +270,8 @@ export const NotificationSettingsScreen: React.FC = () => {
                 true: colors.error + '80',
               }}
               thumbColor={preferences.allDisabled ? colors.error : colors.textTertiary}
+              accessibilityRole="switch"
+              accessibilityLabel="Tüm bildirimleri kapat"
             />
           </View>
         </View>

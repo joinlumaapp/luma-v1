@@ -293,6 +293,7 @@ export const PackagesScreen: React.FC = () => {
                 isCurrent && styles.packageCardCurrent,
                 { borderColor: isCurrent ? accentColor : colors.surfaceBorder },
               ]}
+              accessibilityLabel={`${pkg.name} paketi, ${isCurrent ? 'mevcut paket' : formatPrice(pkg.price) + '/ay'}`}
             >
               {/* Current package badge */}
               {isCurrent && (
@@ -352,6 +353,8 @@ export const PackagesScreen: React.FC = () => {
                   style={[styles.upgradeButton, { backgroundColor: accentColor }]}
                   onPress={() => handleUpgrade(pkg.id)}
                   activeOpacity={0.85}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${pkg.name} paketine yükselt`}
                 >
                   <Text style={styles.upgradeButtonText}>Yükselt</Text>
                 </TouchableOpacity>

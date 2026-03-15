@@ -235,6 +235,8 @@ const EmotionalIntroScreen: React.FC = () => {
             style={[styles.googleButton, styles.googleButtonDisabled]}
             onPress={handleGoogleSignIn}
             activeOpacity={0.9}
+            accessibilityRole="button"
+            accessibilityLabel="Google ile bağlan"
           >
             <Ionicons name="logo-google" size={20} color="#1A1A1A" />
             <Text style={styles.googleButtonText}>Google ile bağlan (Çok yakında)</Text>
@@ -245,12 +247,14 @@ const EmotionalIntroScreen: React.FC = () => {
             style={styles.otherButton}
             onPress={handleOtherOptions}
             activeOpacity={0.9}
+            accessibilityRole="button"
+            accessibilityLabel="Diğer seçenekler"
           >
             <Text style={styles.otherButtonText}>Diğer seçenekler</Text>
           </TouchableOpacity>
 
           {/* Login link for existing users */}
-          <TouchableOpacity onPress={handleLogin} activeOpacity={0.7}>
+          <TouchableOpacity onPress={handleLogin} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="Giriş yap">
             <Text style={styles.loginText}>
               {'Zaten hesabın var mı? '}
               <Text style={styles.loginLink}>Giriş yap</Text>

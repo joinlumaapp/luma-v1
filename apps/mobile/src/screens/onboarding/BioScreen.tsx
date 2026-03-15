@@ -79,6 +79,9 @@ export const BioScreen: React.FC = () => {
                   setBio(prompt + ' ');
                 }
               }}
+              accessibilityLabel={`Öneri: ${prompt}`}
+              accessibilityRole="button"
+              accessibilityHint="Bu öneriyi bio alanına eklemek için dokun"
             >
               <Text style={styles.promptText}>{prompt}</Text>
             </TouchableOpacity>
@@ -101,6 +104,8 @@ export const BioScreen: React.FC = () => {
             textAlignVertical="top"
             maxLength={PROFILE_CONFIG.MAX_BIO_LENGTH}
             autoFocus
+            accessibilityLabel="Hakkında yazısı"
+            accessibilityHint="Kendini tanımlayan bir bio yaz"
           />
           <View style={styles.counterRow}>
             {isTooShort && (
@@ -127,10 +132,17 @@ export const BioScreen: React.FC = () => {
           style={styles.continueButton}
           onPress={handleContinue}
           activeOpacity={0.85}
+          accessibilityLabel="Devam"
+          accessibilityRole="button"
         >
           <Text style={styles.continueButtonText}>Devam</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
+        <TouchableOpacity
+          onPress={handleSkip}
+          style={styles.skipButton}
+          accessibilityLabel="Şimdilik atla"
+          accessibilityRole="button"
+        >
           <Text style={styles.skipText}>Şimdilik Atla</Text>
         </TouchableOpacity>
       </View>

@@ -218,6 +218,8 @@ export const RelationshipScreen: React.FC = () => {
               onValueChange={handleToggleVisibility}
               trackColor={{ false: colors.surfaceBorder, true: colors.primary + '60' }}
               thumbColor={relationship.isVisible ? colors.primary : colors.textTertiary}
+              accessibilityRole="switch"
+              accessibilityLabel="İlişki görünürlüğü"
             />
           </View>
         </View>
@@ -228,6 +230,8 @@ export const RelationshipScreen: React.FC = () => {
             style={styles.endButton}
             onPress={handleEndRelationship}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="İlişkiyi sonlandır"
           >
             <Text style={styles.endButtonText}>İlişkiyi Sonlandır</Text>
           </TouchableOpacity>

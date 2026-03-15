@@ -610,7 +610,7 @@ export const PlacesScreen: React.FC = () => {
             <>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>{selectedPlace.name}</Text>
-                <TouchableOpacity onPress={() => setDetailModalVisible(false)}>
+                <TouchableOpacity onPress={() => setDetailModalVisible(false)} accessibilityRole="button" accessibilityLabel="Kapat">
                   <Text style={styles.modalCloseText}>X</Text>
                 </TouchableOpacity>
               </View>
@@ -662,7 +662,7 @@ export const PlacesScreen: React.FC = () => {
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Check-in Yap</Text>
-            <TouchableOpacity onPress={() => setCheckInModalVisible(false)}>
+            <TouchableOpacity onPress={() => setCheckInModalVisible(false)} accessibilityRole="button" accessibilityLabel="Kapat">
               <Text style={styles.modalCloseText}>X</Text>
             </TouchableOpacity>
           </View>
@@ -693,6 +693,8 @@ export const PlacesScreen: React.FC = () => {
             onPress={handleCheckIn}
             disabled={isCheckingIn}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Check-in yap"
           >
             {isCheckingIn ? (
               <ActivityIndicator size="small" color={colors.text} />
@@ -719,6 +721,9 @@ export const PlacesScreen: React.FC = () => {
             key={mode}
             style={[styles.viewModeTab, isActive && styles.viewModeTabActive]}
             onPress={() => setViewMode(mode)}
+            accessibilityRole="tab"
+            accessibilityLabel={labels[mode]}
+            accessibilityState={{ selected: isActive }}
           >
             <Text style={[styles.viewModeTabText, isActive && styles.viewModeTabTextActive]}>
               {labels[mode]}
@@ -833,6 +838,8 @@ export const PlacesScreen: React.FC = () => {
                   style={styles.fab}
                   onPress={() => setCheckInModalVisible(true)}
                   activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Check-in yap"
                 >
                   <Text style={styles.fabIcon}>+</Text>
                   <Text style={styles.fabText}>Check-in Yap</Text>

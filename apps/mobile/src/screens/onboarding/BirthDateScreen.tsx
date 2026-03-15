@@ -128,6 +128,9 @@ export const BirthDateScreen: React.FC = () => {
               key={day}
               style={[styles.chip, selectedDay === day && styles.chipActive]}
               onPress={() => setSelectedDay(day)}
+              accessibilityLabel={`Gün ${day}`}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: selectedDay === day }}
             >
               <Text style={[styles.chipText, selectedDay === day && styles.chipTextActive]}>
                 {day}
@@ -146,6 +149,9 @@ export const BirthDateScreen: React.FC = () => {
               key={month}
               style={[styles.chipWide, selectedMonth === index && styles.chipActive]}
               onPress={() => setSelectedMonth(index)}
+              accessibilityLabel={`Ay ${MONTH_NAMES_FULL[index]}`}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: selectedMonth === index }}
             >
               <Text style={[styles.chipText, selectedMonth === index && styles.chipTextActive]}>
                 {month}
@@ -164,6 +170,9 @@ export const BirthDateScreen: React.FC = () => {
               key={year}
               style={[styles.chip, selectedYear === year && styles.chipActive]}
               onPress={() => setSelectedYear(year)}
+              accessibilityLabel={`Yıl ${year}`}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: selectedYear === year }}
             >
               <Text style={[styles.chipText, selectedYear === year && styles.chipTextActive]}>
                 {year}
@@ -186,6 +195,8 @@ export const BirthDateScreen: React.FC = () => {
             onValueChange={setShowZodiac}
             trackColor={{ false: onboardingColors.surfaceBorder, true: '#B8A5D0' }}
             thumbColor={showZodiac ? '#FFFFFF' : '#FFFFFF'}
+            accessibilityLabel="Burcu profilde göster"
+            accessibilityRole="switch"
           />
         </View>
       )}

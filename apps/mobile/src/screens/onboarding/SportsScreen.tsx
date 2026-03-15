@@ -70,6 +70,9 @@ export const SportsScreen: React.FC = () => {
               style={[styles.optionCard, isSelected && styles.optionCardSelected]}
               onPress={() => setSelected(option.value)}
               activeOpacity={0.8}
+              accessibilityLabel={option.label}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: isSelected }}
             >
               <Text style={[styles.optionLabel, isSelected && styles.optionLabelSelected]}>
                 {option.label}

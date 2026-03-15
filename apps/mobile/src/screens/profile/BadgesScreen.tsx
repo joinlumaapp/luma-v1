@@ -471,6 +471,8 @@ export const BadgesScreen: React.FC = () => {
           isEarned && styles.badgeCardEarned,
           !isEarned && styles.badgeCardLocked,
         ]}
+        accessibilityLabel={`${item.name} rozeti, ${isEarned ? 'kazanılmış' : 'kazanılmamış'}`}
+        accessibilityState={{ selected: isEarned }}
       >
         {/* Progress ring with badge icon */}
         <ProgressRing

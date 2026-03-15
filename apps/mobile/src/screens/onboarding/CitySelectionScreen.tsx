@@ -91,6 +91,8 @@ export const CitySelectionScreen: React.FC = () => {
             maxLength={40}
             returnKeyType="done"
             onSubmitEditing={handleContinue}
+            accessibilityLabel="Şehir adı"
+            accessibilityHint="Yaşadığın şehri yaz"
           />
         </View>
 
@@ -107,6 +109,9 @@ export const CitySelectionScreen: React.FC = () => {
                 style={[styles.cityChip, isSelected && styles.cityChipSelected]}
                 onPress={() => handleSelectCity(c)}
                 activeOpacity={0.7}
+                accessibilityLabel={c}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isSelected }}
               >
                 <Text style={[styles.cityChipText, isSelected && styles.cityChipTextSelected]}>
                   {c}

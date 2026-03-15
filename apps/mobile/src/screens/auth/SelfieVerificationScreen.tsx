@@ -128,7 +128,7 @@ export const SelfieVerificationScreen: React.FC = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+        <TouchableOpacity onPress={handleBack} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Geri dön">
           <Text style={styles.backText}>{'<'}</Text>
         </TouchableOpacity>
       </View>
@@ -202,6 +202,8 @@ export const SelfieVerificationScreen: React.FC = () => {
               onPress={handleContinue}
               disabled={isVerifying}
               activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel="Onayla ve devam et"
             >
               {isVerifying ? (
                 <ActivityIndicator color={colors.text} />
@@ -209,7 +211,7 @@ export const SelfieVerificationScreen: React.FC = () => {
                 <Text style={styles.continueButtonText}>Onayla ve Devam Et</Text>
               )}
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleRetake} style={styles.skipButton}>
+            <TouchableOpacity onPress={handleRetake} style={styles.skipButton} accessibilityRole="button" accessibilityLabel="Tekrar çek">
               <Text style={styles.retakeText}>Tekrar Çek</Text>
             </TouchableOpacity>
           </>
@@ -219,6 +221,8 @@ export const SelfieVerificationScreen: React.FC = () => {
             onPress={handleTakeSelfie}
             disabled={isTakingSelfie || !permissionGranted}
             activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityLabel="Selfie çek"
           >
             <Text style={styles.selfieButtonText}>
               {isTakingSelfie ? 'Çekiliyor...' : 'Selfie Çek'}
@@ -227,7 +231,7 @@ export const SelfieVerificationScreen: React.FC = () => {
         )}
 
         {!selfieComplete && (
-          <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
+          <TouchableOpacity onPress={handleSkip} style={styles.skipButton} accessibilityRole="button" accessibilityLabel="Şimdilik atla">
             <Text style={styles.skipText}>Şimdilik Atla</Text>
           </TouchableOpacity>
         )}

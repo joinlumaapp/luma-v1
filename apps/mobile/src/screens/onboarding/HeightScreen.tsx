@@ -151,6 +151,8 @@ export const HeightScreen: React.FC = () => {
           initialScrollIndex={defaultIndex}
           onMomentumScrollEnd={handleScrollEnd}
           onScrollEndDrag={handleScrollEnd}
+          accessibilityLabel={`Boy seçici, seçili: ${selectedHeight} cm`}
+          accessibilityRole="adjustable"
           contentContainerStyle={{
             paddingTop: verticalPadding,
             paddingBottom: verticalPadding,
