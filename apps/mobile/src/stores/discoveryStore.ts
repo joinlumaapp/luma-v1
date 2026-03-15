@@ -609,7 +609,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
     // Use tier-based limit; imports from authStore at call-time to avoid circular deps
     const tier = (require('../stores/authStore').useAuthStore.getState().user?.packageTier ?? 'free') as keyof typeof DISCOVERY_CONFIG.DAILY_LIKES;
     const limit = DISCOVERY_CONFIG.DAILY_LIKES[tier];
-    set({ dailyRemaining: (limit as number) === -1 ? 9999 : limit, undosUsedToday: 0 });
+    set({ dailyRemaining: limit, undosUsedToday: 0 });
     // Persist reset
     AsyncStorage.setItem(UNDO_DAILY_KEY, '0').catch(() => {});
     AsyncStorage.setItem(UNDO_DAILY_DATE_KEY, new Date().toISOString().split('T')[0]).catch(() => {});

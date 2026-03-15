@@ -41,16 +41,16 @@ function getQueueableActionType(url: string): OfflineActionType | undefined {
 // ── Turkish user-facing error messages ─────────────────────────────────
 
 export const ERROR_MESSAGES = {
-  NETWORK_ERROR: 'Internet baglantisi bulunamadi. Lutfen baglantinizi kontrol edin.',
-  SERVER_ERROR: 'Sunucu hatasi olustu. Lutfen daha sonra tekrar deneyin.',
-  RATE_LIMITED: 'Cok fazla istek gonderdiniz. Lutfen biraz bekleyin.',
-  SESSION_EXPIRED: 'Oturumunuz sona erdi. Lutfen tekrar giris yapin.',
-  UNAUTHORIZED: 'Bu islemi gerceklestirmek icin giris yapmaniz gerekiyor.',
-  NOT_FOUND: 'Aradiginiz icerik bulunamadi.',
-  FORBIDDEN: 'Bu islemi gerceklestirme yetkiniz yok.',
-  VALIDATION_ERROR: 'Girilen bilgilerde hata var. Lutfen kontrol edin.',
-  UNKNOWN: 'Beklenmeyen bir hata olustu.',
-  REQUEST_QUEUED: 'Cevrimdisi: Istek baglantiginiz geri geldiginde gonderilecek.',
+  NETWORK_ERROR: 'İnternet bağlantısı bulunamadı. Lütfen bağlantınızı kontrol edin.',
+  SERVER_ERROR: 'Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin.',
+  RATE_LIMITED: 'Çok fazla istek gönderdiniz. Lütfen biraz bekleyin.',
+  SESSION_EXPIRED: 'Oturumunuz sona erdi. Lütfen tekrar giriş yapın.',
+  UNAUTHORIZED: 'Bu işlemi gerçekleştirmek için giriş yapmanız gerekiyor.',
+  NOT_FOUND: 'Aradığınız içerik bulunamadı.',
+  FORBIDDEN: 'Bu işlemi gerçekleştirme yetkiniz yok.',
+  VALIDATION_ERROR: 'Girilen bilgilerde hata var. Lütfen kontrol edin.',
+  UNKNOWN: 'Beklenmeyen bir hata oluştu.',
+  REQUEST_QUEUED: 'Çevrimdışı: İstek bağlantınız geri geldiğinde gönderilecek.',
 } as const;
 
 // ── Typed API error ────────────────────────────────────────────────────

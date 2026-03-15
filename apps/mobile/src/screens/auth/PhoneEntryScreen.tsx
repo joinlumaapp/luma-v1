@@ -85,10 +85,10 @@ export const PhoneEntryScreen: React.FC = () => {
       if (success) {
         navigation.navigate('OTPVerification', { phoneNumber: fullNumber, countryCode: selectedCountry.code });
       } else {
-        Alert.alert('Hata', 'SMS gonderilemedi. Tekrar deneyin.');
+        Alert.alert('Hata', 'SMS gönderilemedi. Tekrar deneyin.');
       }
     } catch {
-      Alert.alert('Hata', 'SMS gonderilemedi. Tekrar deneyin.');
+      Alert.alert('Hata', 'SMS gönderilemedi. Tekrar deneyin.');
     } finally {
       setIsSubmitting(false);
     }

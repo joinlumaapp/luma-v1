@@ -26,12 +26,12 @@ type SafetyCenterNavigationProp = NativeStackNavigationProp<ProfileStackParamLis
 
 // ── Safety Tips ──────────────────────────────────────────────────
 const SAFETY_TIPS = [
-  'Ilk bulusmada mutlaka halka acik bir yer secin (kafe, restoran, AVM).',
-  'Bulusma oncesi guvendiginiz birine nereye gittiginizi ve kacta donmeyi planladiginizi bildirin.',
-  'Icguduelerinize guvenin — kendinizi rahatsiz hissederseniz ayrilmaktan cekinmeyin.',
-  'Kisisel bilgilerinizi (adres, is yeri, finansal bilgiler) erken asamada paylasmaktan kacinin.',
-  'Yuzyuze bulusmadan once uygulama ici goruntulu arama yapin, karsinizdaki kisinin gercek oldugunu dogrulayin.',
-  'Bulusma yerine kendi ulasim aracinizla gidin; baskalarina bagimli olmayin.',
+  'İlk buluşmada mutlaka halka açık bir yer seçin (kafe, restoran, AVM).',
+  'Buluşma öncesi güvendiğiniz birine nereye gittiğinizi ve kaçta dönmeyi planladığınızı bildirin.',
+  'İçgüdülerinize güvenin — kendinizi rahatsız hissederseniz ayrılmaktan çekinmeyin.',
+  'Kişisel bilgilerinizi (adres, iş yeri, finansal bilgiler) erken aşamada paylaşmaktan kaçının.',
+  'Yüz yüze buluşmadan önce uygulama içi görüntülü arama yapın, karşınızdaki kişinin gerçek olduğunu doğrulayın.',
+  'Buluşma yerine kendi ulaşım aracınızla gidin; başkalarına bağımlı olmayın.',
 ];
 
 // ── Emergency Contacts ──────────────────────────────────────────
@@ -56,7 +56,7 @@ const SECTIONS: SafetySection[] = [
     key: 'safe_meeting',
     icon: 'shield-checkmark',
     iconColor: '#10B981',
-    title: 'Guvenli Bulusma Ipuclari',
+    title: 'Güvenli Buluşma İpuçları',
     content: 'tips',
   },
   {
@@ -70,7 +70,7 @@ const SECTIONS: SafetySection[] = [
     key: 'verification',
     icon: 'camera',
     iconColor: '#3B82F6',
-    title: 'Fotograf Dogrulama',
+    title: 'Fotoğraf Doğrulama',
     content: 'verification',
   },
   {
@@ -84,7 +84,7 @@ const SECTIONS: SafetySection[] = [
     key: 'privacy',
     icon: 'lock-closed',
     iconColor: '#8B5CF6',
-    title: 'Gizlilik Ayarlari',
+    title: 'Gizlilik Ayarları',
     content: 'privacy',
   },
 ];
@@ -99,7 +99,7 @@ export const SafetyCenterScreen: React.FC = () => {
 
   const handleCall = (number: string) => {
     Linking.openURL(`tel:${number}`).catch(() => {
-      Alert.alert('Hata', 'Arama baslatilamadi.');
+      Alert.alert('Hata', 'Arama başlatılamadı.');
     });
   };
 
@@ -127,13 +127,13 @@ export const SafetyCenterScreen: React.FC = () => {
         return (
           <View style={dynamicStyles.contentContainer}>
             <Text style={dynamicStyles.descriptionText}>
-              Herhangi bir profilde sag ust kosedeki menu simgesine dokunarak o kisiyi engelleyebilir veya raporlayabilirsiniz.
+              Herhangi bir profilde sağ üst köşedeki menü simgesine dokunarak o kişiyi engelleyebilir veya raporlayabilirsiniz.
             </Text>
             <Text style={dynamicStyles.descriptionText}>
-              Engellediginiz kisiler sizin profilinizi goremez ve sizinle iletisime gecemez. Raporladiginiz kisiler guvenlik ekibimiz tarafindan incelenir.
+              Engellediğiniz kişiler sizin profilinizi göremez ve sizinle iletişime geçemez. Raporladığınız kişiler güvenlik ekibimiz tarafından incelenir.
             </Text>
             <Text style={dynamicStyles.descriptionText}>
-              Sahte profiller, taciz, uygunsuz icerik veya diger ihlalleri raporlamaktan cekinmeyin. Tum raporlar gizli tutulur.
+              Sahte profiller, taciz, uygunsuz içerik veya diğer ihlalleri raporlamaktan çekinmeyin. Tüm raporlar gizli tutulur.
             </Text>
           </View>
         );
@@ -142,13 +142,13 @@ export const SafetyCenterScreen: React.FC = () => {
         return (
           <View style={dynamicStyles.contentContainer}>
             <Text style={dynamicStyles.descriptionText}>
-              LUMA'da selfie dogrulama sistemi ile profilinizin gercek oldugunu kanitlayabilirsiniz. Dogrulanmis profiller mavi tik rozeti alir.
+              LUMA'da selfie doğrulama sistemi ile profilinizin gerçek olduğunu kanıtlayabilirsiniz. Doğrulanmış profiller mavi tik rozeti alır.
             </Text>
             <Text style={dynamicStyles.descriptionText}>
-              Dogrulama sirasinda canli bir selfie cekilir ve yapay zeka ile profil fotograflarinizla karsilastirilir. Bu sayede sahte profiller onlenir.
+              Doğrulama sırasında canlı bir selfie çekilir ve yapay zeka ile profil fotoğraflarınızla karşılaştırılır. Bu sayede sahte profiller önlenir.
             </Text>
             <Text style={dynamicStyles.descriptionText}>
-              Eslesmelerinizde mavi tik goren kullanicilar, karsisindaki kisinin gercek oldugunu bilir ve daha guvende hisseder.
+              Eşleşmelerinizde mavi tik gören kullanıcılar, karşısındaki kişinin gerçek olduğunu bilir ve daha güvende hisseder.
             </Text>
           </View>
         );
@@ -157,7 +157,7 @@ export const SafetyCenterScreen: React.FC = () => {
         return (
           <View style={dynamicStyles.contentContainer}>
             <Text style={dynamicStyles.descriptionText}>
-              Acil bir durumda asagidaki numaralari arayabilirsiniz. Guvenliginiz her seyden onemlidir.
+              Acil bir durumda aşağıdaki numaraları arayabilirsiniz. Güvenliğiniz her şeyden önemlidir.
             </Text>
             {EMERGENCY_CONTACTS.map((contact) => (
               <TouchableOpacity
@@ -180,10 +180,10 @@ export const SafetyCenterScreen: React.FC = () => {
         return (
           <View style={dynamicStyles.contentContainer}>
             <Text style={dynamicStyles.descriptionText}>
-              Gizlilik ayarlarinizi kullanarak profilinizi kimlerin gorebilecegini kontrol edebilirsiniz.
+              Gizlilik ayarlarınızı kullanarak profilinizi kimlerin görebileceğini kontrol edebilirsiniz.
             </Text>
             <Text style={dynamicStyles.descriptionText}>
-              Gizli Mod (Incognito) ile sadece begendiginiz kisilere gorunur olabilirsiniz. Cevrimici durumunuzu ve mesafe bilginizi gizleyebilirsiniz.
+              Gizli Mod (Incognito) ile sadece beğendiğiniz kişilere görünür olabilirsiniz. Çevrimiçi durumunuzu ve mesafe bilginizi gizleyebilirsiniz.
             </Text>
             <TouchableOpacity
               style={dynamicStyles.linkButton}
@@ -191,7 +191,7 @@ export const SafetyCenterScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <Ionicons name="settings-outline" size={18} color={colors.primary} />
-              <Text style={dynamicStyles.linkButtonText}>Gizlilik Ayarlarina Git</Text>
+              <Text style={dynamicStyles.linkButtonText}>Gizlilik Ayarlarına Git</Text>
               <Ionicons name="chevron-forward" size={16} color={colors.primary} />
             </TouchableOpacity>
           </View>
@@ -213,7 +213,7 @@ export const SafetyCenterScreen: React.FC = () => {
         >
           <Ionicons name="chevron-back" size={22} color={colors.text} />
         </TouchableOpacity>
-        <Text style={dynamicStyles.headerTitle}>Guvenlik Merkezi</Text>
+        <Text style={dynamicStyles.headerTitle}>Güvenlik Merkezi</Text>
         <View style={staticStyles.headerSpacer} />
       </View>
 
@@ -225,9 +225,9 @@ export const SafetyCenterScreen: React.FC = () => {
         {/* Hero banner */}
         <View style={dynamicStyles.heroBanner}>
           <Ionicons name="shield-checkmark" size={40} color={colors.primary} />
-          <Text style={dynamicStyles.heroTitle}>Guvenliginiz Bizim Oncelimiz</Text>
+          <Text style={dynamicStyles.heroTitle}>Güvenliğiniz Bizim Önceliğimiz</Text>
           <Text style={dynamicStyles.heroSubtitle}>
-            LUMA'da guvenli bir deneyim icin bilmeniz gereken her sey burada.
+            LUMA'da güvenli bir deneyim için bilmeniz gereken her şey burada.
           </Text>
         </View>
 

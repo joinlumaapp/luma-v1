@@ -37,8 +37,8 @@ const requestCameraPermission = async (): Promise<boolean> => {
   const { status } = await ImagePicker.requestCameraPermissionsAsync();
   if (status !== 'granted') {
     Alert.alert(
-      'Kamera Izni Gerekli',
-      'Video cekmek icin kamera iznine ihtiyacimiz var. Lutfen ayarlardan izin verin.',
+      'Kamera İzni Gerekli',
+      'Video çekmek için kamera iznine ihtiyacımız var. Lütfen ayarlardan izin verin.',
       [{ text: 'Tamam' }],
     );
     return false;
@@ -50,8 +50,8 @@ const requestGalleryPermission = async (): Promise<boolean> => {
   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (status !== 'granted') {
     Alert.alert(
-      'Galeri Izni Gerekli',
-      'Videolara erismek icin galeri iznine ihtiyacimiz var. Lutfen ayarlardan izin verin.',
+      'Galeri İzni Gerekli',
+      'Videolara erişmek için galeri iznine ihtiyacımız var. Lütfen ayarlardan izin verin.',
       [{ text: 'Tamam' }],
     );
     return false;
@@ -82,21 +82,21 @@ const validateVideoFile = async (uri: string, duration: number): Promise<string 
   // Validate extension
   const ext = getFileExtension(uri);
   if (!ALLOWED_EXTENSIONS.includes(ext)) {
-    return `Desteklenmeyen video formati. Sadece ${ALLOWED_EXTENSIONS.join(', ').toUpperCase()} kabul edilir.`;
+    return `Desteklenmeyen video formatı. Sadece ${ALLOWED_EXTENSIONS.join(', ').toUpperCase()} kabul edilir.`;
   }
 
   // Validate duration
   if (duration < MIN_VIDEO_DURATION_SECONDS) {
-    return `Video en az ${MIN_VIDEO_DURATION_SECONDS} saniye olmali.`;
+    return `Video en az ${MIN_VIDEO_DURATION_SECONDS} saniye olmalı.`;
   }
   if (duration > MAX_VIDEO_DURATION_SECONDS) {
-    return `Video en fazla ${MAX_VIDEO_DURATION_SECONDS} saniye olmali.`;
+    return `Video en fazla ${MAX_VIDEO_DURATION_SECONDS} saniye olmalı.`;
   }
 
   // Validate file size
   const size = await getFileSize(uri);
   if (size > MAX_FILE_SIZE_BYTES) {
-    return `Video boyutu en fazla ${MAX_FILE_SIZE_BYTES / (1024 * 1024)}MB olmali.`;
+    return `Video boyutu en fazla ${MAX_FILE_SIZE_BYTES / (1024 * 1024)}MB olmalı.`;
   }
 
   return null;
@@ -132,7 +132,7 @@ export const videoService = {
       // Validate
       const error = await validateVideoFile(asset.uri, duration);
       if (error) {
-        Alert.alert('Video Hatasi', error, [{ text: 'Tamam' }]);
+        Alert.alert('Video Hatası', error, [{ text: 'Tamam' }]);
         return null;
       }
 
@@ -146,7 +146,7 @@ export const videoService = {
     } catch {
       Alert.alert(
         'Hata',
-        'Video secilirken bir sorun olustu. Lutfen tekrar deneyin.',
+        'Video seçilirken bir sorun oluştu. Lütfen tekrar deneyin.',
         [{ text: 'Tamam' }],
       );
       return null;
@@ -180,7 +180,7 @@ export const videoService = {
       // Validate
       const error = await validateVideoFile(asset.uri, duration);
       if (error) {
-        Alert.alert('Video Hatasi', error, [{ text: 'Tamam' }]);
+        Alert.alert('Video Hatası', error, [{ text: 'Tamam' }]);
         return null;
       }
 
@@ -194,7 +194,7 @@ export const videoService = {
     } catch {
       Alert.alert(
         'Hata',
-        'Video cekilirken bir sorun olustu. Lutfen tekrar deneyin.',
+        'Video çekilirken bir sorun oluştu. Lütfen tekrar deneyin.',
         [{ text: 'Tamam' }],
       );
       return null;
@@ -255,7 +255,7 @@ export const videoService = {
 
       return response.data;
     } catch {
-      throw new Error('Video yuklenirken bir hata olustu. Lutfen tekrar deneyin.');
+      throw new Error('Video yüklenirken bir hata oluştu. Lütfen tekrar deneyin.');
     }
   },
 
@@ -266,7 +266,7 @@ export const videoService = {
     try {
       await api.delete('/profiles/video');
     } catch {
-      throw new Error('Video silinirken bir hata olustu. Lutfen tekrar deneyin.');
+      throw new Error('Video silinirken bir hata oluştu. Lütfen tekrar deneyin.');
     }
   },
 

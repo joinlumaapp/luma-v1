@@ -188,7 +188,7 @@ export const OTPVerificationScreen: React.FC = () => {
         setActiveIndex(0);
         inputRefs.current[0]?.focus();
       } else {
-        Alert.alert('Hata', 'Kod gonderilemedi.');
+        Alert.alert('Hata', 'Kod gönderilemedi.');
       }
     } catch (error: unknown) {
       const axiosError = error as { response?: { data?: { retryAfterSeconds?: number } } };
@@ -198,7 +198,7 @@ export const OTPVerificationScreen: React.FC = () => {
         setRateLimitTimer(retryAfter);
         setResendTimer(retryAfter);
       } else {
-        Alert.alert('Hata', 'Kod gonderilemedi.');
+        Alert.alert('Hata', 'Kod gönderilemedi.');
       }
     }
   };

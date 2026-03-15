@@ -87,7 +87,7 @@ class AppErrorBoundary extends Component<
         <View style={errorStyles.container}>
           <Text style={errorStyles.title}>LUMA</Text>
           <Text style={errorStyles.subtitle}>
-            Uygulama yuklenirken bir hata olustu
+            Uygulama yüklenirken bir hata oluştu
           </Text>
           <Text style={errorStyles.detail}>
             {this.state.error?.message ?? 'Bilinmeyen hata'}
@@ -96,7 +96,7 @@ class AppErrorBoundary extends Component<
             <Text style={errorStyles.retryButtonText}>Tekrar Dene</Text>
           </TouchableOpacity>
           <TouchableOpacity style={errorStyles.restartButton} onPress={this.handleRestart}>
-            <Text style={errorStyles.restartButtonText}>Uygulamayi Yeniden Baslat</Text>
+            <Text style={errorStyles.restartButtonText}>Uygulamayı Yeniden Başlat</Text>
           </TouchableOpacity>
         </View>
       );

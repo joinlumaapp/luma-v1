@@ -60,7 +60,7 @@ export const BlockedUsersScreen: React.FC = () => {
           console.warn('[BlockedUsers] API cagirisi basarisiz, mock veri kullaniliyor');
           setBlockedUsers(DEV_MOCK_BLOCKED_USERS);
         } else {
-          Alert.alert('Hata', 'Engellenen kullanicilar yuklenirken bir sorun olustu.');
+          Alert.alert('Hata', 'Engellenen kullanıcılar yüklenirken bir sorun oluştu.');
         }
       } finally {
         setIsLoading(false);
@@ -73,12 +73,12 @@ export const BlockedUsersScreen: React.FC = () => {
 
   const handleUnblock = useCallback((user: BlockedUser) => {
     Alert.alert(
-      'Engeli Kaldir',
-      `${user.name} adli kullanicinin engelini kaldirmak istediginize emin misiniz?`,
+      'Engeli Kaldır',
+      `${user.name} adlı kullanıcının engelini kaldırmak istediğinize emin misiniz?`,
       [
         { text: 'Vazgeç', style: 'cancel' },
         {
-          text: 'Engeli Kaldir',
+          text: 'Engeli Kaldır',
           onPress: async () => {
             setUnblockingId(user.id);
             try {
@@ -89,7 +89,7 @@ export const BlockedUsersScreen: React.FC = () => {
                 console.warn('[BlockedUsers] Engel kaldirma API basarisiz, yerel olarak kaldiriliyor');
                 setBlockedUsers((prev) => prev.filter((u) => u.id !== user.id));
               } else {
-                Alert.alert('Hata', 'Engel kaldirilamadi. Lutfen tekrar deneyin.');
+                Alert.alert('Hata', 'Engel kaldırılamadı. Lütfen tekrar deneyin.');
               }
             } finally {
               setUnblockingId(null);

@@ -97,16 +97,16 @@ export const SelfieVerificationScreen: React.FC = () => {
       const result = await verifySelfie(capturedBase64);
 
       if (result.verified) {
-        Alert.alert('Basarili', 'Kimligin basariyla dogrulandi!');
+        Alert.alert('Başarılı', 'Kimliğin başarıyla doğrulandı!');
       } else {
         Alert.alert(
-          'Dogrulama Basarisiz',
-          'Selfie dogrulamasi basarisiz oldu. Tekrar deneyebilir veya atlayabilirsin.',
+          'Doğrulama Başarısız',
+          'Selfie doğrulaması başarısız oldu. Tekrar deneyebilir veya atlayabilirsin.',
         );
       }
       useAuthStore.getState().setOnboarded(true);
     } catch {
-      Alert.alert('Hata', 'Selfie dogrulanirken bir hata olustu. Lutfen tekrar deneyin.');
+      Alert.alert('Hata', 'Selfie doğrulanırken bir hata oluştu. Lütfen tekrar deneyin.');
     } finally {
       setIsVerifying(false);
     }

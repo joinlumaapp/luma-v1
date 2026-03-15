@@ -277,11 +277,11 @@ export const JetonMarketScreen: React.FC = () => {
         const success = await useCoinStore.getState().purchaseCoins(packId);
 
         if (!success) {
-          Alert.alert('Hata', 'Jeton satin alma basarisiz oldu. Lutfen tekrar deneyin.');
+          Alert.alert('Hata', 'Jeton satın alma başarısız oldu. Lütfen tekrar deneyin.');
           return;
         }
 
-        Alert.alert('Basarili!', `${pack.coins} Jeton hesabiniza eklendi.`);
+        Alert.alert('Başarılı!', `${pack.coins} Jeton hesabınıza eklendi.`);
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : '';
         if (message.includes('cancelled')) return;

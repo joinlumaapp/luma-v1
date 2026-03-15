@@ -158,24 +158,27 @@ export const useMatchStore = create<MatchState>((set, get) => ({
   },
 
   unmatch: async (matchId) => {
+    // Save current state for rollback
+    const prevMatches = get().matches;
+    const prevSelected = get().selectedMatch;
+    const prevCount = get().totalCount;
+
+    // Optimistic update
+    set((state) => ({
+      matches: state.matches.filter((m) => m.id !== matchId),
+      selectedMatch: state.selectedMatch?.id === matchId ? null : state.selectedMatch,
+      totalCount: state.totalCount - 1,
+    }));
+
     try {
       await matchService.unmatch(matchId);
       analyticsService.track(ANALYTICS_EVENTS.UNMATCH, { matchId });
-      set((state) => ({
-        matches: state.matches.filter((m) => m.id !== matchId),
-        selectedMatch: state.selectedMatch?.id === matchId ? null : state.selectedMatch,
-        totalCount: state.totalCount - 1,
-      }));
     } catch (error: unknown) {
       if (__DEV__) {
-        console.warn('Eslestirme kaldirma basarisiz:', error);
-        // In dev, still remove locally
-        set((state) => ({
-          matches: state.matches.filter((m) => m.id !== matchId),
-          selectedMatch: state.selectedMatch?.id === matchId ? null : state.selectedMatch,
-          totalCount: state.totalCount - 1,
-        }));
+        console.warn('Eşleştirme kaldırma başarısız:', error);
       } else {
+        // Rollback on error
+        set({ matches: prevMatches, selectedMatch: prevSelected, totalCount: prevCount });
         const apiError = parseApiError(error as AxiosError);
         set({ error: apiError.userMessage });
       }

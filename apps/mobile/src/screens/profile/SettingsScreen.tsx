@@ -191,13 +191,13 @@ export const SettingsScreen: React.FC = () => {
                   profileService.updateProfile({ isComplete: true })
                 );
                 setIsAccountFrozen(false);
-                Alert.alert('Basarili', 'Hesabiniz tekrar aktif hale getirildi.');
+                Alert.alert('Başarılı', 'Hesabınız tekrar aktif hale getirildi.');
               } catch {
                 if (__DEV__) {
                   setIsAccountFrozen(false);
-                  Alert.alert('Basarili', 'Hesabiniz tekrar aktif hale getirildi.');
+                  Alert.alert('Başarılı', 'Hesabınız tekrar aktif hale getirildi.');
                 } else {
-                  Alert.alert('Hata', 'Hesap aktif edilirken bir sorun olustu.');
+                  Alert.alert('Hata', 'Hesap aktif edilirken bir sorun oluştu.');
                 }
               } finally {
                 setIsFreezing(false);
@@ -211,8 +211,8 @@ export const SettingsScreen: React.FC = () => {
 
     // Freeze flow
     Alert.alert(
-      'Hesabi Dondur',
-      'Hesabinizi dondurmak istediginizden emin misiniz? Dondurma suresince profiliniz gizlenir.',
+      'Hesabı Dondur',
+      'Hesabınızı dondurmak istediğinizden emin misiniz? Dondurma süresince profiliniz gizlenir.',
       [
         { text: 'Vazgeç', style: 'cancel' },
         {
@@ -225,13 +225,13 @@ export const SettingsScreen: React.FC = () => {
                 profileService.updateProfile({ isComplete: false })
               );
               setIsAccountFrozen(true);
-              Alert.alert('Hesap Donduruldu', 'Profiliniz artik gizli. Istediginiz zaman tekrar aktif edebilirsiniz.');
+              Alert.alert('Hesap Donduruldu', 'Profiliniz artık gizli. İstediğiniz zaman tekrar aktif edebilirsiniz.');
             } catch {
               if (__DEV__) {
                 setIsAccountFrozen(true);
-                Alert.alert('Hesap Donduruldu', 'Profiliniz artik gizli. Istediginiz zaman tekrar aktif edebilirsiniz.');
+                Alert.alert('Hesap Donduruldu', 'Profiliniz artık gizli. İstediğiniz zaman tekrar aktif edebilirsiniz.');
               } else {
-                Alert.alert('Hata', 'Hesap dondurulurken bir sorun olustu.');
+                Alert.alert('Hata', 'Hesap dondurulurken bir sorun oluştu.');
               }
             } finally {
               setIsFreezing(false);
@@ -253,12 +253,12 @@ export const SettingsScreen: React.FC = () => {
       const result = await iapService.restorePurchases();
       if (result) {
         await paymentService.validateReceipt({ receipt: result.receipt, platform: result.platform });
-        Alert.alert('Basarili', 'Satin alimlariniz basariyla geri yuklendi.');
+        Alert.alert('Başarılı', 'Satın alımlarınız başarıyla geri yüklendi.');
       } else {
-        Alert.alert('Bilgi', 'Geri yuklenecek bir satin alim bulunamadi.');
+        Alert.alert('Bilgi', 'Geri yüklenecek bir satın alım bulunamadı.');
       }
     } catch {
-      Alert.alert('Hata', 'Satin alimlar geri yuklenirken bir sorun olustu.');
+      Alert.alert('Hata', 'Satın alımlar geri yüklenirken bir sorun oluştu.');
     } finally {
       setIsRestoring(false);
     }
@@ -278,9 +278,9 @@ export const SettingsScreen: React.FC = () => {
             try {
               await paymentService.cancelSubscription();
               updatePackageTier('free');
-              Alert.alert('Basarili', 'Aboneliginiz basariyla iptal edildi.');
+              Alert.alert('Başarılı', 'Aboneliğiniz başarıyla iptal edildi.');
             } catch {
-              Alert.alert('Hata', 'Abonelik iptal edilirken bir sorun olustu.');
+              Alert.alert('Hata', 'Abonelik iptal edilirken bir sorun oluştu.');
             } finally {
               setIsCancelling(false);
             }
@@ -304,11 +304,11 @@ export const SettingsScreen: React.FC = () => {
 
   const handleLogout = useCallback(() => {
     Alert.alert(
-      'Cikis Yap',
-      'Hesabindan cikmak istediginize emin misiniz?',
+      'Çıkış Yap',
+      'Hesabından çıkmak istediğinize emin misiniz?',
       [
         { text: 'İptal', style: 'cancel' },
-        { text: 'Cikis Yap', style: 'destructive', onPress: () => logout() },
+        { text: 'Çıkış Yap', style: 'destructive', onPress: () => logout() },
       ],
     );
   }, [logout]);
@@ -387,7 +387,7 @@ export const SettingsScreen: React.FC = () => {
         {
           key: 'restore_purchases',
           icon: 'refresh-outline',
-          title: isRestoring ? 'Geri yukleniyor...' : 'Satin Alimlari Geri Yukle',
+          title: isRestoring ? 'Geri yükleniyor...' : 'Satın Alımları Geri Yükle',
           type: 'action',
           onPress: handleRestorePurchases,
         },

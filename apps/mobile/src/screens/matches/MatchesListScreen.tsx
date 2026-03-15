@@ -1074,10 +1074,13 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.h3,
     color: colors.text,
+    flex: 1,
   },
   matchCount: {
     ...typography.bodySmall,
     color: colors.textSecondary,
+    flexShrink: 0,
+    marginLeft: spacing.sm,
   },
   // ── Tabs ──
   tabScrollWrapper: {

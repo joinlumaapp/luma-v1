@@ -44,7 +44,7 @@ export const useProfile = (): UseProfileReturn => {
       storeSetField('photos', data.photos.map((p) => p.url));
       storeSetField('isComplete', data.isComplete);
     } catch (err) {
-      setError('Profil yuklenemedi. Tekrar deneyin.');
+      setError('Profil yüklenemedi. Tekrar deneyin.');
     } finally {
       setIsLoading(false);
     }
@@ -77,7 +77,7 @@ export const useProfile = (): UseProfileReturn => {
         storeSetField('photos', [...profile.photos, result.url]);
         return true;
       } catch {
-        setError('Fotograf yuklenemedi. Tekrar deneyin.');
+        setError('Fotoğraf yüklenemedi. Tekrar deneyin.');
         return false;
       } finally {
         setIsLoading(false);
@@ -94,7 +94,7 @@ export const useProfile = (): UseProfileReturn => {
         await profileService.deletePhoto(photoId);
         return true;
       } catch {
-        setError('Fotograf silinemedi. Tekrar deneyin.');
+        setError('Fotoğraf silinemedi. Tekrar deneyin.');
         return false;
       } finally {
         setIsLoading(false);
@@ -109,7 +109,7 @@ export const useProfile = (): UseProfileReturn => {
         await profileService.reorderPhotos(photoIds);
         return true;
       } catch {
-        setError('Fotograflar siralanamadi. Tekrar deneyin.');
+        setError('Fotoğraflar sıralanamadı. Tekrar deneyin.');
         return false;
       }
     },
@@ -123,7 +123,7 @@ export const useProfile = (): UseProfileReturn => {
         storeSetField('intentionTag', tag);
         return true;
       } catch {
-        setError('Niyet etiketi degistirilemedi. Tekrar deneyin.');
+        setError('Niyet etiketi değiştirilemedi. Tekrar deneyin.');
         return false;
       }
     },

@@ -20,14 +20,14 @@ export const ErrorFallback: React.FC<ErrorFallbackProps> = ({
   message,
 }) => {
   const displayMessage =
-    message ?? 'Bir sorun olustu. Lutfen tekrar deneyin.';
+    message ?? 'Bir sorun oluştu. Lütfen tekrar deneyin.';
 
   return (
     <View style={styles.container} accessibilityRole="alert">
       <View style={styles.iconContainer}>
         <Ionicons name="alert-circle-outline" size={48} color={colors.accent} />
       </View>
-      <Text style={styles.title}>Bir seyler ters gitti</Text>
+      <Text style={styles.title}>Bir şeyler ters gitti</Text>
       <Text style={styles.message}>{displayMessage}</Text>
       {__DEV__ && error && (
         <Text style={styles.errorDetail} numberOfLines={3}>

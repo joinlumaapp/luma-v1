@@ -63,7 +63,7 @@ export const AccountDeletionScreen: React.FC = () => {
     try {
       const user = useAuthStore.getState().user;
       if (!user?.phone) {
-        Alert.alert('Hata', 'Telefon numarasi bulunamadi.');
+        Alert.alert('Hata', 'Telefon numarası bulunamadı.');
         return;
       }
       // Re-use the existing register endpoint to send an OTP to the user's phone
@@ -71,7 +71,7 @@ export const AccountDeletionScreen: React.FC = () => {
       setOtpSent(true);
       setStep('confirm_otp');
     } catch {
-      Alert.alert('Hata', 'Dogrulama kodu gonderilemedi. Lutfen tekrar deneyin.');
+      Alert.alert('Hata', 'Doğrulama kodu gönderilemedi. Lütfen tekrar deneyin.');
     } finally {
       setIsSendingOtp(false);
     }
@@ -81,7 +81,7 @@ export const AccountDeletionScreen: React.FC = () => {
 
   const handleVerifyAndShowFinal = useCallback(async () => {
     if (otpCode.length < 6) {
-      Alert.alert('Hata', 'Lutfen 6 haneli dogrulama kodunu girin.');
+      Alert.alert('Hata', 'Lütfen 6 haneli doğrulama kodunu girin.');
       return;
     }
 
@@ -89,13 +89,13 @@ export const AccountDeletionScreen: React.FC = () => {
     try {
       const user = useAuthStore.getState().user;
       if (!user?.phone) {
-        Alert.alert('Hata', 'Telefon numarasi bulunamadi.');
+        Alert.alert('Hata', 'Telefon numarası bulunamadı.');
         return;
       }
       // Verify the OTP code through the SMS verification endpoint
       const result = await authService.verifySms(user.phone, otpCode);
       if (!result.verified) {
-        Alert.alert('Hata', 'Dogrulama kodu yanlis. Lutfen tekrar deneyin.');
+        Alert.alert('Hata', 'Doğrulama kodu yanlış. Lütfen tekrar deneyin.');
         return;
       }
       setShowFinalModal(true);
@@ -106,7 +106,7 @@ export const AccountDeletionScreen: React.FC = () => {
         setShowFinalModal(true);
         return;
       }
-      Alert.alert('Hata', 'Dogrulama kodu dogrulanamadi. Lutfen tekrar deneyin.');
+      Alert.alert('Hata', 'Doğrulama kodu doğrulanamadı. Lütfen tekrar deneyin.');
     } finally {
       setIsVerifyingOtp(false);
     }
@@ -119,7 +119,7 @@ export const AccountDeletionScreen: React.FC = () => {
       setShowFinalModal(false);
       logout();
     } catch {
-      Alert.alert('Hata', 'Hesap silinemedi. Lutfen tekrar deneyin.');
+      Alert.alert('Hata', 'Hesap silinemedi. Lütfen tekrar deneyin.');
     } finally {
       setIsDeleting(false);
     }

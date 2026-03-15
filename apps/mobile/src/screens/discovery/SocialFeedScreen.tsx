@@ -621,6 +621,7 @@ export const SocialFeedScreen: React.FC = () => {
       ) : (
         <FlatList
           data={posts}
+          extraData={posts}
           keyExtractor={keyExtractor}
           renderItem={renderPost}
           ListHeaderComponent={ListHeader}

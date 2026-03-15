@@ -43,7 +43,7 @@ export const useLocation = (): UseLocationResult => {
       if (!hasPermission) {
         const granted = await locationService.requestPermission();
         if (!granted) {
-          setError('Konum izni verilmedi. Yakinindaki kisileri gormek icin konum iznine ihtiyacimiz var.');
+          setError('Konum izni verilmedi. Yakınındaki kişileri görmek için konum iznine ihtiyacımız var.');
           setIsLoading(false);
           isFetching.current = false;
           return;
@@ -57,10 +57,10 @@ export const useLocation = (): UseLocationResult => {
         lastFetchedAt.current = Date.now();
         setError(null);
       } else {
-        setError('Konum alinamadi. Lutfen konum servislerinizin acik oldugundan emin olun.');
+        setError('Konum alınamadı. Lütfen konum servislerinizin açık olduğundan emin olun.');
       }
     } catch {
-      setError('Konum guncelleme basarisiz oldu.');
+      setError('Konum güncelleme başarısız oldu.');
     } finally {
       setIsLoading(false);
       isFetching.current = false;

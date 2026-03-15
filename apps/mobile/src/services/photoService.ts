@@ -41,8 +41,8 @@ const requestCameraPermission = async (): Promise<boolean> => {
   const { status } = await ImagePicker.requestCameraPermissionsAsync();
   if (status !== 'granted') {
     Alert.alert(
-      'Kamera Izni Gerekli',
-      'Fotografinizi cekmek icin kamera iznine ihtiyacimiz var. Lutfen ayarlardan izin verin.',
+      'Kamera İzni Gerekli',
+      'Fotoğrafınızı çekmek için kamera iznine ihtiyacımız var. Lütfen ayarlardan izin verin.',
       [{ text: 'Tamam' }],
     );
     return false;
@@ -57,8 +57,8 @@ const requestGalleryPermission = async (): Promise<boolean> => {
   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (status !== 'granted') {
     Alert.alert(
-      'Galeri Izni Gerekli',
-      'Fotograflariniza erismek icin galeri iznine ihtiyacimiz var. Lutfen ayarlardan izin verin.',
+      'Galeri İzni Gerekli',
+      'Fotoğraflarınıza erişmek için galeri iznine ihtiyacımız var. Lütfen ayarlardan izin verin.',
       [{ text: 'Tamam' }],
     );
     return false;
@@ -100,7 +100,7 @@ export const photoService = {
     } catch {
       Alert.alert(
         'Hata',
-        'Fotograf secilirken bir sorun olustu. Lutfen tekrar deneyin.',
+        'Fotoğraf seçilirken bir sorun oluştu. Lütfen tekrar deneyin.',
         [{ text: 'Tamam' }],
       );
       return null;
@@ -125,7 +125,7 @@ export const photoService = {
     } catch {
       Alert.alert(
         'Hata',
-        'Fotograf cekilirken bir sorun olustu. Lutfen tekrar deneyin.',
+        'Fotoğraf çekilirken bir sorun oluştu. Lütfen tekrar deneyin.',
         [{ text: 'Tamam' }],
       );
       return null;
@@ -205,7 +205,7 @@ export const photoService = {
 
       return response.data;
     } catch {
-      throw new Error('Fotograf yuklenirken bir hata olustu. Lutfen tekrar deneyin.');
+      throw new Error('Fotoğraf yüklenirken bir hata oluştu. Lütfen tekrar deneyin.');
     }
   },
 
@@ -216,7 +216,7 @@ export const photoService = {
     try {
       await api.delete(`/profiles/photos/${photoId}`);
     } catch {
-      throw new Error('Fotograf silinirken bir hata olustu. Lutfen tekrar deneyin.');
+      throw new Error('Fotoğraf silinirken bir hata oluştu. Lütfen tekrar deneyin.');
     }
   },
 
@@ -227,7 +227,7 @@ export const photoService = {
     try {
       await api.put('/profiles/photos/reorder', { photoIds });
     } catch {
-      throw new Error('Fotograflar yeniden siralanamadi. Lutfen tekrar deneyin.');
+      throw new Error('Fotoğraflar yeniden sıralanamadı. Lütfen tekrar deneyin.');
     }
   },
 

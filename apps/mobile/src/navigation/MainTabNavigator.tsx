@@ -422,6 +422,8 @@ export const MainTabNavigator: React.FC = () => {
         tabBarInactiveTintColor: darkTheme.tabBarInactive,
         tabBarLabelStyle: {
           ...typography.tabBar,
+          fontSize: 9,
+          lineHeight: 14,
         },
       }}
     >
@@ -459,7 +461,7 @@ export const MainTabNavigator: React.FC = () => {
         name="ActivitiesTab"
         component={ActivitiesStackNavigator}
         options={{
-          tabBarLabel: 'Aktiviteler',
+          tabBarLabel: 'Etkinlik',
           tabBarIcon: ({ focused }) => (
             <TabIcon name="activities" focused={focused} />
           ),
@@ -472,7 +474,7 @@ export const MainTabNavigator: React.FC = () => {
         name="MatchesTab"
         component={MatchesStackNavigator}
         options={{
-          tabBarLabel: 'Eşleşmeler',
+          tabBarLabel: 'Eşleş',
           tabBarIcon: ({ focused }) => (
             <TabIconWithBadge
               name="heart"

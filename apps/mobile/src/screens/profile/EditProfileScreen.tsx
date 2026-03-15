@@ -197,7 +197,7 @@ export const EditProfileScreen: React.FC = () => {
       // Empty slot — add photo
       if (isPhotoUploading) return;
 
-      Alert.alert('Fotograf Ekle', 'Fotograf kaynagini sec', [
+      Alert.alert('Fotoğraf Ekle', 'Fotoğraf kaynağını seç', [
         {
           text: 'Kamera',
           onPress: async () => {
@@ -207,7 +207,7 @@ export const EditProfileScreen: React.FC = () => {
               try {
                 await uploadPhoto(uri);
               } catch {
-                Alert.alert('Hata', 'Fotograf yuklenemedi.');
+                Alert.alert('Hata', 'Fotoğraf yüklenemedi.');
               } finally {
                 setIsPhotoUploading(false);
               }
@@ -223,7 +223,7 @@ export const EditProfileScreen: React.FC = () => {
               try {
                 await uploadPhoto(uri);
               } catch {
-                Alert.alert('Hata', 'Fotograf yuklenemedi.');
+                Alert.alert('Hata', 'Fotoğraf yüklenemedi.');
               } finally {
                 setIsPhotoUploading(false);
               }
@@ -259,7 +259,7 @@ export const EditProfileScreen: React.FC = () => {
       try {
         await uploadVideo(video.uri);
       } catch {
-        Alert.alert('Hata', 'Video yuklenemedi. Lutfen tekrar deneyin.');
+        Alert.alert('Hata', 'Video yüklenemedi. Lütfen tekrar deneyin.');
       }
     },
     [uploadVideo],
@@ -268,7 +268,7 @@ export const EditProfileScreen: React.FC = () => {
   const handleDeleteVideo = useCallback(() => {
     Alert.alert(
       'Videoyu Sil',
-      'Profil videosunu silmek istediginizden emin misiniz?',
+      'Profil videosunu silmek istediğinizden emin misiniz?',
       [
         { text: 'İptal', style: 'cancel' },
         {
@@ -278,7 +278,7 @@ export const EditProfileScreen: React.FC = () => {
             try {
               await deleteVideoAction();
             } catch {
-              Alert.alert('Hata', 'Video silinemedi. Lutfen tekrar deneyin.');
+              Alert.alert('Hata', 'Video silinemedi. Lütfen tekrar deneyin.');
             }
           },
         },
@@ -321,7 +321,7 @@ export const EditProfileScreen: React.FC = () => {
       });
       navigation.goBack();
     } catch {
-      Alert.alert('Hata', 'Profil guncellenemedi. Lutfen tekrar dene.');
+      Alert.alert('Hata', 'Profil güncellenemedi. Lütfen tekrar dene.');
     } finally {
       setIsSaving(false);
     }

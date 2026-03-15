@@ -991,7 +991,7 @@ export async function scheduleMissedLikesNotification(): Promise<void> {
  * This bundles re-engagement, FOMO, and weekly content schedules.
  */
 export async function scheduleAllEngagementNotifications(): Promise<void> {
-  await Promise.all([
+  await Promise.allSettled([
     scheduleReEngagementNotifications(),
     scheduleFomoNotifications(),
     scheduleWeeklyContentNotifications(),
@@ -1002,7 +1002,7 @@ export async function scheduleAllEngagementNotifications(): Promise<void> {
  * Cancel ALL scheduled engagement notifications (e.g. on logout).
  */
 export async function cancelAllEngagementNotifications(): Promise<void> {
-  await Promise.all([
+  await Promise.allSettled([
     cancelNotificationsByPrefix(RE_ENGAGEMENT_PREFIX),
     cancelNotificationsByPrefix(FOMO_PREFIX),
     cancelNotificationsByPrefix(WEEKLY_CONTENT_PREFIX),
