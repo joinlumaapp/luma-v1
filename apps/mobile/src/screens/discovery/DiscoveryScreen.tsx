@@ -358,8 +358,8 @@ export const DiscoveryScreen: React.FC = () => {
   const undoDailyLimits: Record<PackageTier, number> = { FREE: 0, GOLD: 1, PRO: 3, RESERVED: 999999 };
   const undoDailyLimit = undoDailyLimits[packageTier];
   const hasFreeUndoRemaining = undosUsedToday < undoDailyLimit;
-  const undoNeedsJeton = canUseUndo && !hasFreeUndoRemaining;
-  const UNDO_JETON_COST_UI = 5;
+  const undoNeedsGold = canUseUndo && !hasFreeUndoRemaining;
+  const UNDO_GOLD_COST_UI = 5;
 
   // ─── Pull-to-refresh state ──────────────────────────────
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -1394,17 +1394,17 @@ export const DiscoveryScreen: React.FC = () => {
 
       {/* Action buttons */}
       <View style={styles.actionsRow}>
-        {/* Undo button — tier-based with jeton cost */}
+        {/* Undo button — tier-based with Gold cost */}
         {canUseUndo ? (
           <Animated.View style={[styles.undoWrapper, undoAnimatedStyle]}>
             <Pressable
               onPress={() => {
                 if (!canUndo) return;
-                // Check if jeton is needed and insufficient
-                if (undoNeedsJeton && coinBalance < UNDO_JETON_COST_UI) {
+                // Check if Gold is needed and insufficient
+                if (undoNeedsGold && coinBalance < UNDO_GOLD_COST_UI) {
                   Alert.alert(
                     'Yetersiz Jeton',
-                    `Geri alma için ${UNDO_JETON_COST_UI} jeton gerekli. Jeton satın al.`,
+                    `Geri alma için ${UNDO_GOLD_COST_UI} jeton gerekli. Jeton satın al.`,
                     [
                       { text: 'Vazgeç', style: 'cancel' },
                       { text: 'Jeton Al', onPress: () => navigation.navigate('ProfileTab', { screen: 'MembershipPlans' } as never) },
@@ -1415,15 +1415,15 @@ export const DiscoveryScreen: React.FC = () => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 undoLastSwipe();
               }}
-              accessibilityLabel={undoNeedsJeton ? `Geri al — ${UNDO_JETON_COST_UI} jeton` : 'Geri al'}
+              accessibilityLabel={undoNeedsGold ? `Geri al — ${UNDO_GOLD_COST_UI} jeton` : 'Geri al'}
               accessibilityRole="button"
               accessibilityHint="Son kaydırma işlemini geri almak için dokunun"
             >
               <View style={styles.undoButton} testID="discovery-undo-btn">
                 <Ionicons name="arrow-undo" size={20} color={palette.gold[500]} />
-                {undoNeedsJeton && (
-                  <View style={styles.undoJetonBadge}>
-                    <Text style={styles.undoJetonText}>{UNDO_JETON_COST_UI}</Text>
+                {undoNeedsGold && (
+                  <View style={styles.undoGoldBadge}>
+                    <Text style={styles.undoGoldText}>{UNDO_GOLD_COST_UI}</Text>
                   </View>
                 )}
               </View>
@@ -1823,7 +1823,7 @@ const styles = StyleSheet.create({
     borderColor: palette.gold[500],
     ...shadows.medium,
   },
-  undoJetonBadge: {
+  undoGoldBadge: {
     position: 'absolute',
     top: -4,
     right: -4,
@@ -1835,7 +1835,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 3,
   },
-  undoJetonText: {
+  undoGoldText: {
     fontSize: 9,
     fontFamily: 'Poppins_800ExtraBold',
     fontWeight: '800',

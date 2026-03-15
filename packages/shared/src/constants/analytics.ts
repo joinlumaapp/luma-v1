@@ -80,7 +80,7 @@ export const AnalyticsEvent = {
   PURCHASE_STARTED: 'payment_package_selected',
   PURCHASE_COMPLETED: 'payment_completed',
   PURCHASE_FAILED: 'payment_failed',
-  JETON_SPENT: 'jeton_spent',
+  GOLD_SPENT: 'gold_spent',
 
   // Engagement
   APP_OPENED: 'app_opened',
@@ -197,7 +197,7 @@ export const DashboardMetric = {
   SWIPES_PER_SESSION: 'swipes_per_session',
   HARMONY_SESSIONS_PER_USER: 'harmony_sessions_per_user',
   MATCH_TO_HARMONY_RATE: 'match_to_harmony_rate',
-  JETON_PURCHASE_FREQUENCY: 'jeton_purchase_frequency',
+  GOLD_PURCHASE_FREQUENCY: 'gold_purchase_frequency',
   PACKAGE_TIER_DISTRIBUTION: 'package_tier_distribution',
 } as const;
 

@@ -26,8 +26,8 @@ const DAILY_UNDO_LIMITS: Record<PackageTier, number> = {
   RESERVED: 999999, // Unlimited
 };
 
-// Jeton cost per extra undo beyond the free daily allowance
-export const UNDO_JETON_COST = 5;
+// Gold cost per extra undo beyond the free daily allowance
+export const UNDO_GOLD_COST = 5;
 
 export interface DiscoveryProfile {
   id: string;
@@ -518,16 +518,16 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
 
     const hasFreeUndo = undosUsed < dailyFreeLimit;
 
-    // If no free undo remaining, deduct jetons
+    // If no free undo remaining, deduct Gold
     if (!hasFreeUndo) {
       const coinStore = require('../stores/coinStore').useCoinStore;
       const { balance, spendCoins } = coinStore.getState();
-      if (balance < UNDO_JETON_COST) {
-        // Not enough jetons — clear undo state
+      if (balance < UNDO_GOLD_COST) {
+        // Not enough Gold — clear undo state
         set({ canUndo: false, undoTimerId: null, lastSwipedProfile: null, lastSwipeDirection: null });
         return;
       }
-      const spent = await spendCoins(UNDO_JETON_COST, 'Geri alma (undo)');
+      const spent = await spendCoins(UNDO_GOLD_COST, 'Geri alma (undo)');
       if (!spent) {
         set({ canUndo: false, undoTimerId: null, lastSwipedProfile: null, lastSwipeDirection: null });
         return;
@@ -538,7 +538,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
       await discoveryService.undoSwipe();
       analyticsService.track(ANALYTICS_EVENTS.DISCOVERY_UNDO, {
         cardId: state.lastSwipedProfile.id,
-        paidWithJeton: !hasFreeUndo,
+        paidWithGold: !hasFreeUndo,
       });
 
       // Clear the undo timer

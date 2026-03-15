@@ -14,7 +14,6 @@ export type RootStackParamList = {
 export type AuthStackParamList = {
   EmotionalIntro: undefined;
   SignUpChoice: undefined;
-  Welcome: undefined; // Legacy — not in navigator, kept for type compatibility
   PhoneEntry: undefined;
   OTPVerification: { phoneNumber: string; countryCode: string };
   EmailEntry: undefined;
@@ -42,8 +41,6 @@ export type OnboardingStackParamList = {
   QuestionsIntro: undefined;
   Questions: undefined;
   SelfieVerification: undefined;
-  // Legacy screens (not in navigator, kept for type compatibility)
-  ModeSelection: undefined;
 };
 
 // -- Main Tabs (5 tabs) --

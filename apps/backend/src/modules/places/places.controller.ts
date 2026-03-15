@@ -5,18 +5,15 @@ import {
   Body,
   Param,
   Query,
-  UseGuards,
   BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PlacesService } from './places.service';
 import { CheckInDto, AddMemoryDto } from './dto';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('Places')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('places')
 export class PlacesController {
   constructor(private readonly placesService: PlacesService) {}

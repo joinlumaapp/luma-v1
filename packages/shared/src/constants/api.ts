@@ -26,6 +26,14 @@ export const API_ROUTES = {
     TRACK_VIEW: '/profiles/view/:targetUserId',
     VISITORS: '/profiles/visitors',
     LOCATION: '/profiles/location',
+    COACH: '/profiles/coach',
+    PERSONALITY: '/profiles/personality',
+    GET_PROMPTS: '/profiles/:userId/prompts',
+    SAVE_PROMPTS: '/profiles/prompts',
+    BOOST_STATUS: '/profiles/boost/status',
+    BOOST: '/profiles/boost',
+    INCOGNITO: '/profiles/incognito',
+    LOGIN_STREAK: '/profiles/login-streak',
   },
   // Subsystem 5-6: Compatibility
   COMPATIBILITY: {
@@ -39,18 +47,27 @@ export const API_ROUTES = {
     DAILY_INSIGHT: '/compatibility/daily/insight',
     DAILY_STATS: '/compatibility/daily/stats/:questionId',
     DAILY_STREAK: '/compatibility/daily/streak',
+    GET_DETAILED: '/compatibility/detailed/:targetUserId',
   },
   // Subsystem 8: Discovery
   DISCOVERY: {
     GET_FEED: '/discovery/feed',
     SWIPE: '/discovery/swipe',
     UNDO: '/discovery/undo',
+    LIKES_YOU: '/discovery/likes-you',
+    DAILY_PICKS: '/discovery/daily-picks',
+    VIEW_DAILY_PICK: '/discovery/daily-picks/:pickedUserId/view',
+    WEEKLY_REPORT: '/discovery/weekly-report',
   },
   // Subsystem 9: Matches
   MATCHES: {
     GET_ALL: '/matches',
     GET_ONE: '/matches/:id',
     UNMATCH: '/matches/:id',
+    CREATE_DATE_PLAN: '/matches/:matchId/date-plans',
+    GET_DATE_PLANS: '/matches/:matchId/date-plans',
+    RESPOND_DATE_PLAN: '/matches/date-plans/:planId/respond',
+    DELETE_DATE_PLAN: '/matches/date-plans/:planId',
   },
   // Subsystem 10: Harmony
   HARMONY: {
@@ -66,6 +83,9 @@ export const API_ROUTES = {
     TOGGLE_VISIBILITY: '/relationships/visibility',
     GET_STATUS: '/relationships/status',
     GET_MILESTONES: '/relationships/milestones',
+    CONFIRM_DEACTIVATE: '/relationships/deactivate/confirm',
+    CANCEL_DEACTIVATE: '/relationships/deactivate/cancel',
+    COUPLE_MATCHES: '/relationships/couple-matches',
   },
   // Subsystem 12: Couples Club (routed through relationships controller)
   COUPLES_CLUB: {
@@ -81,13 +101,7 @@ export const API_ROUTES = {
     GET_MY_BADGES: '/badges/me',
     GET_PROGRESS: '/badges/progress',
   },
-  // Subsystem 16-17: Packages & Gold
-  PACKAGES: {
-    GET_ALL: '/packages',
-    SUBSCRIBE: '/packages/subscribe',
-    CANCEL: '/packages/cancel',
-    VALIDATE_RECEIPT: '/packages/validate-receipt',
-  },
+  // Subsystem 16-17: Gold
   GOLD: {
     GET_BALANCE: '/gold/balance',
     GET_HISTORY: '/gold/history',
@@ -121,6 +135,7 @@ export const API_ROUTES = {
     GET_MESSAGES: '/chat/conversations/:matchId/messages',
     SEND_MESSAGE: '/chat/conversations/:matchId/messages',
     MARK_READ: '/chat/conversations/:matchId/read',
+    DELETE_MESSAGE: '/chat/messages/:messageId',
   },
   // Notifications
   NOTIFICATIONS: {
@@ -169,6 +184,38 @@ export const API_ROUTES = {
     RETENTION: '/analytics/retention',          // GET — retention cohorts
     USER_FUNNEL: '/analytics/funnel/:userId',   // GET — single user funnel
   },
+  // Stories
+  STORIES: {
+    LIST: '/stories',
+    CREATE: '/stories',
+    GET: '/stories/:storyId',
+    DELETE: '/stories/:storyId',
+    VIEW: '/stories/:storyId/view',
+    LIKE: '/stories/:storyId/like',
+    FEED: '/stories/feed',
+  },
+  // Engagement
+  ENGAGEMENT: {
+    DAILY_REWARD: '/engagement/daily-reward',
+    CHALLENGE_PROGRESS: '/engagement/challenge-progress',
+    LEADERBOARD: '/engagement/leaderboard',
+    ACHIEVEMENTS: '/engagement/achievements',
+    EXTEND_MATCH: '/engagement/extend-match',
+  },
+  // Users
+  USERS: {
+    ME: '/users/me',
+  },
+} as const;
+
+/**
+ * @deprecated Use API_ROUTES.PAYMENTS instead. PACKAGES was consolidated into PAYMENTS.
+ */
+export const PACKAGES_ROUTES = {
+  GET_ALL: API_ROUTES.PAYMENTS.GET_PACKAGES,
+  SUBSCRIBE: API_ROUTES.PAYMENTS.SUBSCRIBE,
+  CANCEL: API_ROUTES.PAYMENTS.CANCEL_SUBSCRIPTION,
+  VALIDATE_RECEIPT: API_ROUTES.PAYMENTS.VALIDATE_RECEIPT,
 } as const;
 
 // WebSocket events

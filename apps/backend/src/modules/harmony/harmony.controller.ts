@@ -5,17 +5,14 @@ import {
   Patch,
   Body,
   Param,
-  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { HarmonyService } from './harmony.service';
 import { CreateSessionDto, ExtendSessionDto } from './dto';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('Harmony')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('harmony')
 export class HarmonyController {
   constructor(private readonly harmonyService: HarmonyService) {}

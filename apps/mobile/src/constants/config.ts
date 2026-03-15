@@ -220,7 +220,7 @@ export const WAVE_CONFIG = {
 
 // Paid first message configuration
 export const PAID_MESSAGE_CONFIG = {
-  PRICE_JETON: 150,
+  PRICE_GOLD: 150,
   MAX_LENGTH: 300,
 } as const;
 
@@ -232,5 +232,5 @@ export const MESSAGE_CONFIG = {
     PRO: 10,
     RESERVED: -1,
   },
-  SINGLE_MESSAGE_PACK_PRICE: 150, // Jeton — purchased with Gold balance
+  SINGLE_MESSAGE_PACK_PRICE: 150, // Gold — in-app currency
 } as const;

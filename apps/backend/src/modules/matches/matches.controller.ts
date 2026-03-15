@@ -6,18 +6,15 @@ import {
   Param,
   Patch,
   Post,
-  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { MatchesService } from './matches.service';
 import { DatePlanService } from './date-plan.service';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { CreateDatePlanDto, RespondDatePlanDto } from './dto/date-plan.dto';
 
 @ApiTags('Matches')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('matches')
 export class MatchesController {
   constructor(
