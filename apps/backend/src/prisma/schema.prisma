@@ -70,6 +70,7 @@ model User {
   dailyQuestionAnswers   DailyQuestionAnswer[]
   icebreakerAnswers      IcebreakerAnswer[]
   profilePrompts         ProfilePrompt[]
+  favoriteSpots          UserFavoriteSpot[]
   profileBoosts          ProfileBoost[]
   loginStreak            LoginStreak?
   datePlans              DatePlan[]
@@ -1066,6 +1067,25 @@ model ProfilePrompt {
   @@unique([userId, order]) // max 3 prompts per user (order 0,1,2)
   @@index([userId])
   @@map("profile_prompts")
+}
+
+// ============================================================
+// SUBSYSTEM: User Favorite Spots
+// Favorite places/locations shown on profile (max 8 per user)
+// ============================================================
+
+model UserFavoriteSpot {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  name      String   @db.VarChar(100)
+  category  String   @db.VarChar(30) // park, kafe, sahil, restoran, bar, muze, semt, doga, tarihi, eglence
+  order     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_favorite_spots")
 }
 
 // ============================================================
