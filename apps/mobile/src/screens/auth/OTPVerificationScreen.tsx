@@ -367,6 +367,7 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontSize: 20,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: onboardingColors.text,
   },
@@ -377,12 +378,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: onboardingColors.text,
     marginBottom: spacing.sm,
   },
   subtitle: {
     fontSize: 15,
+    fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
     color: onboardingColors.textSecondary,
     marginBottom: spacing.xl,
@@ -398,6 +401,7 @@ const styles = StyleSheet.create({
   },
   warningText: {
     fontSize: 13,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: '#DC2626',
     textAlign: 'center',
@@ -417,6 +421,7 @@ const styles = StyleSheet.create({
     borderColor: onboardingColors.surfaceBorder,
     textAlign: 'center',
     fontSize: 24,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: onboardingColors.text,
   },
@@ -434,11 +439,13 @@ const styles = StyleSheet.create({
   },
   resendTimerText: {
     fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
     color: onboardingColors.textTertiary,
   },
   resendButton: {
     fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: onboardingColors.text,
   },
@@ -448,6 +455,7 @@ const styles = StyleSheet.create({
   },
   verifyingText: {
     fontSize: 15,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: onboardingColors.textSecondary,
   },
@@ -467,6 +475,7 @@ const styles = StyleSheet.create({
   },
   verifyButtonText: {
     fontSize: 16,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: onboardingColors.buttonText,
   },

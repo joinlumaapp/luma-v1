@@ -396,6 +396,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.bodyLarge,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   closeText: {
@@ -449,6 +450,7 @@ const styles = StyleSheet.create({
   commentUserName: {
     ...typography.bodySmall,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   commentTime: {
@@ -483,6 +485,7 @@ const styles = StyleSheet.create({
   actionCount: {
     ...typography.captionSmall,
     color: colors.textTertiary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   actionCountLiked: {
@@ -491,6 +494,7 @@ const styles = StyleSheet.create({
   replyAction: {
     ...typography.captionSmall,
     color: colors.textSecondary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   reactionRow: {
@@ -532,6 +536,7 @@ const styles = StyleSheet.create({
   replyUserName: {
     ...typography.captionSmall,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   replyText: {
@@ -558,6 +563,7 @@ const styles = StyleSheet.create({
   replyIndicatorCancel: {
     fontSize: 14,
     color: colors.textTertiary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     paddingHorizontal: spacing.xs,
   },
@@ -597,6 +603,7 @@ const styles = StyleSheet.create({
   sendButtonText: {
     ...typography.buttonSmall,
     color: '#FFFFFF',
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 });

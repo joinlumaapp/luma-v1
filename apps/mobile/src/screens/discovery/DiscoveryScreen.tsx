@@ -1686,6 +1686,7 @@ const styles = StyleSheet.create({
   },
   streakBadgeCount: {
     fontSize: 13,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: '#FF9500',
     letterSpacing: 0.2,
@@ -1709,6 +1710,7 @@ const styles = StyleSheet.create({
   },
   streakTooltipText: {
     fontSize: 12,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#FFFFFF',
     textAlign: 'center',
@@ -1730,6 +1732,7 @@ const styles = StyleSheet.create({
   notifBadgeText: {
     ...typography.captionSmall,
     color: '#FFFFFF',
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     fontSize: 9,
     lineHeight: 12,
@@ -1775,6 +1778,7 @@ const styles = StyleSheet.create({
   },
   washIconText: {
     fontSize: 60,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: '#FFFFFF',
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
@@ -1783,6 +1787,7 @@ const styles = StyleSheet.create({
   },
   washLabelText: {
     fontSize: 22,
+    fontFamily: 'Poppins_800ExtraBold',
     fontWeight: '800',
     color: '#FFFFFF',
     includeFontPadding: false,
@@ -1832,6 +1837,7 @@ const styles = StyleSheet.create({
   },
   undoJetonText: {
     fontSize: 9,
+    fontFamily: 'Poppins_800ExtraBold',
     fontWeight: '800',
     color: '#fff',
   },
@@ -1873,6 +1879,7 @@ const styles = StyleSheet.create({
   emptyIconLetter: {
     fontSize: 32,
     color: colors.primary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   emptyTitle: {
@@ -1929,16 +1936,20 @@ const styles = StyleSheet.create({
   // ── FOMO header badge ──
   fomoLikesBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(239,68,68,0.12)', borderRadius: 14, paddingHorizontal: 8, paddingVertical: 4, gap: 3, borderWidth: 1, borderColor: 'rgba(239,68,68,0.25)' },
   fomoLikesEmoji: { fontSize: 12 },
-  fomoLikesText: { fontSize: 12, fontWeight: '700', color: '#EF4444', letterSpacing: 0.2 },
+  fomoLikesText: { fontSize: 12, fontFamily: 'Poppins_700Bold',
+ fontWeight: '700', color: '#EF4444', letterSpacing: 0.2 },
   // ── Saturday banner ──
   saturdayBanner: { backgroundColor: palette.gold[500] + '18', borderWidth: 1, borderColor: palette.gold[500] + '30', borderRadius: borderRadius.md, marginHorizontal: spacing.lg, marginBottom: spacing.xs, paddingVertical: spacing.xs + 2, paddingHorizontal: spacing.md, alignItems: 'center' },
-  saturdayBannerText: { ...typography.caption, color: palette.gold[400], fontWeight: '700', letterSpacing: 0.3 },
+  saturdayBannerText: { ...typography.caption, color: palette.gold[400], fontFamily: 'Poppins_700Bold',
+ fontWeight: '700', letterSpacing: 0.3 },
   // ── Teaser card ──
   teaserCard: { backgroundColor: colors.surface, borderRadius: borderRadius.xl, borderWidth: 2, paddingVertical: spacing.lg, paddingHorizontal: spacing.xl, alignItems: 'center', marginBottom: spacing.lg, width: SCREEN_WIDTH - spacing.xxl * 2, shadowColor: palette.gold[500], shadowOffset: { width: 0, height: 4 }, shadowRadius: 12, elevation: 6 },
   teaserAvatarRow: { flexDirection: 'row', marginBottom: spacing.sm },
   teaserAvatar: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: colors.surface },
-  teaserAvatarText: { fontSize: 18, fontWeight: '700', color: colors.textTertiary },
-  teaserTitle: { ...typography.bodyLarge, color: colors.text, fontWeight: '700', marginBottom: 4 },
+  teaserAvatarText: { fontSize: 18, fontFamily: 'Poppins_700Bold',
+ fontWeight: '700', color: colors.textTertiary },
+  teaserTitle: { ...typography.bodyLarge, color: colors.text, fontFamily: 'Poppins_700Bold',
+ fontWeight: '700', marginBottom: 4 },
   teaserSubtitle: { ...typography.caption, color: colors.textSecondary },
   teaserArrow: { position: 'absolute', right: spacing.md, top: '50%' },
   // ── Daily reset countdown ──
@@ -1976,6 +1987,7 @@ const styles = StyleSheet.create({
   commentModalTitle: {
     ...typography.bodyLarge,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     flex: 1,
   },

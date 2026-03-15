@@ -75,11 +75,13 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: palette.gold[600],
   },
   time: {
     fontSize: 12,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: palette.gold[500],
   },

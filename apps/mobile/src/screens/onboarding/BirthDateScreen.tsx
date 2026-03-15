@@ -196,6 +196,7 @@ export const BirthDateScreen: React.FC = () => {
 const styles = StyleSheet.create({
   title: {
     fontSize: 28,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: onboardingColors.text,
     marginBottom: 20,
@@ -212,11 +213,13 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 17,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: onboardingColors.textSecondary,
   },
   label: {
     fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: onboardingColors.textSecondary,
     marginBottom: 8,
@@ -259,11 +262,13 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: onboardingColors.text,
   },
   chipTextActive: {
     color: onboardingColors.selectedText,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   zodiacCard: {
@@ -280,11 +285,13 @@ const styles = StyleSheet.create({
   zodiacText: {
     flex: 1,
     fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
     color: onboardingColors.textSecondary,
     lineHeight: 20,
   },
   zodiacBold: {
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: onboardingColors.text,
   },

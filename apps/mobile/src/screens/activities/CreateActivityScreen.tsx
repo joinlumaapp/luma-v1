@@ -284,6 +284,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.bodyLarge,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   headerSpacer: {
@@ -296,6 +297,7 @@ const styles = StyleSheet.create({
   label: {
     ...typography.bodySmall,
     color: colors.textSecondary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     marginBottom: spacing.sm,
     marginTop: spacing.md,
@@ -329,6 +331,7 @@ const styles = StyleSheet.create({
   },
   typeTextActive: {
     color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   quickSuggestionsRow: {
@@ -358,10 +361,12 @@ const styles = StyleSheet.create({
   quickChipText: {
     fontSize: 14,
     color: colors.textSecondary,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
   },
   quickChipTextActive: {
     color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   input: {
@@ -411,6 +416,7 @@ const styles = StyleSheet.create({
   participantText: {
     ...typography.bodyLarge,
     color: colors.textSecondary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   participantTextActive: {

@@ -487,6 +487,7 @@ const styles = StyleSheet.create({
   },
   analysisLabel: {
     fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: onboardingColors.text,
     letterSpacing: 0.3,
@@ -494,6 +495,7 @@ const styles = StyleSheet.create({
   },
   skipTopText: {
     fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: onboardingColors.textTertiary,
     ...Platform.select({ android: { includeFontPadding: false } }),
@@ -517,6 +519,7 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 13,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: onboardingColors.text,
     minWidth: 40,
@@ -531,6 +534,7 @@ const styles = StyleSheet.create({
   },
   questionIndicatorText: {
     fontSize: 12,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: onboardingColors.textTertiary,
     ...Platform.select({ android: { includeFontPadding: false } }),
@@ -546,6 +550,7 @@ const styles = StyleSheet.create({
   },
   premiumBadgeText: {
     fontSize: 12,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#A0845C',
     ...Platform.select({ android: { includeFontPadding: false } }),
@@ -573,6 +578,7 @@ const styles = StyleSheet.create({
   },
   questionText: {
     fontSize: 20,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: onboardingColors.text,
     marginBottom: spacing.lg,
@@ -616,6 +622,7 @@ const styles = StyleSheet.create({
   },
   optionText: {
     fontSize: 15,
+    fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
     color: onboardingColors.textSecondary,
     flex: 1,
@@ -623,6 +630,7 @@ const styles = StyleSheet.create({
   },
   optionTextSelected: {
     color: onboardingColors.selectedText,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
   },
   footerSpacer: {
@@ -630,6 +638,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 15,
+    fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
     color: onboardingColors.textSecondary,
     marginTop: spacing.sm,
@@ -645,6 +654,7 @@ const styles = StyleSheet.create({
   },
   celebrationTitle: {
     fontSize: 28,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: onboardingColors.text,
     textAlign: 'center',
@@ -653,6 +663,7 @@ const styles = StyleSheet.create({
   },
   celebrationSubtitle: {
     fontSize: 16,
+    fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
     color: onboardingColors.textSecondary,
     textAlign: 'center',
@@ -675,6 +686,7 @@ const styles = StyleSheet.create({
   },
   resultTitle: {
     fontSize: 26,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: onboardingColors.text,
     textAlign: 'center',
@@ -683,6 +695,7 @@ const styles = StyleSheet.create({
   },
   resultSubtitle: {
     fontSize: 15,
+    fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
     color: onboardingColors.textSecondary,
     textAlign: 'center',
@@ -710,6 +723,7 @@ const styles = StyleSheet.create({
   },
   resultSectionTitle: {
     fontSize: 16,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: onboardingColors.text,
     ...Platform.select({ android: { includeFontPadding: false } }),

@@ -239,6 +239,7 @@ const styles = StyleSheet.create({
   quotaValue: {
     ...typography.bodySmall,
     color: colors.primary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   quotaBar: {

@@ -632,6 +632,7 @@ const styles = StyleSheet.create({
   backIcon: {
     fontSize: 24,
     color: colors.text,
+    fontFamily: 'Poppins_300Light',
     fontWeight: '300',
     marginTop: -2,
   },
@@ -650,6 +651,7 @@ const styles = StyleSheet.create({
   countBadgeText: {
     fontSize: 11,
     color: colors.text,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
 
@@ -675,6 +677,7 @@ const styles = StyleSheet.create({
   },
   summaryCount: {
     color: colors.text,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
 
@@ -724,11 +727,13 @@ const styles = StyleSheet.create({
   },
   highlightBadgeText: {
     fontSize: 10,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   highlightName: {
     ...typography.bodyLarge,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   highlightSubtitle: {
@@ -748,6 +753,7 @@ const styles = StyleSheet.create({
   },
   highlightArrowText: {
     fontSize: 22,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 
@@ -771,6 +777,7 @@ const styles = StyleSheet.create({
   viewLimitUpgradeLink: {
     ...typography.caption,
     color: colors.primary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
 
@@ -799,6 +806,7 @@ const styles = StyleSheet.create({
   upgradeBannerTitle: {
     ...typography.bodyLarge,
     color: '#FFD700',
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   upgradeBannerSubtitle: {
@@ -817,6 +825,7 @@ const styles = StyleSheet.create({
   upgradeBannerArrowText: {
     fontSize: 22,
     color: '#FFD700',
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 
@@ -824,6 +833,7 @@ const styles = StyleSheet.create({
   gridSectionLabel: {
     ...typography.bodySmall,
     color: colors.textSecondary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     marginBottom: spacing.sm,
   },
@@ -891,6 +901,7 @@ const styles = StyleSheet.create({
   },
   compatBadgeText: {
     fontSize: 10,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
 
@@ -923,6 +934,7 @@ const styles = StyleSheet.create({
   cardName: {
     ...typography.caption,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   hintsRow: {
@@ -933,6 +945,7 @@ const styles = StyleSheet.create({
   hintText: {
     fontSize: 9,
     color: 'rgba(255, 255, 255, 0.7)',
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
   },
   cardComment: {

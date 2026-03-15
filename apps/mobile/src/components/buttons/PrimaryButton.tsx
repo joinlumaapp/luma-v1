@@ -144,6 +144,7 @@ const styles = StyleSheet.create({
   text: {
     ...typography.button,
     color: '#FFFFFF',
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     letterSpacing: 0.5,
   },

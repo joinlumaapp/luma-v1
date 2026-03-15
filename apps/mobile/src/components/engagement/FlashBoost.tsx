@@ -252,6 +252,7 @@ const styles = StyleSheet.create({
   title: {
     ...typography.h3,
     color: palette.white,
+    fontFamily: 'Poppins_800ExtraBold',
     fontWeight: '800',
   },
   subtitle: {
@@ -270,6 +271,7 @@ const styles = StyleSheet.create({
   timerText: {
     ...typography.h4,
     color: palette.white,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
@@ -287,6 +289,7 @@ const styles = StyleSheet.create({
   newPrice: {
     ...typography.h4,
     color: palette.white,
+    fontFamily: 'Poppins_800ExtraBold',
     fontWeight: '800',
   },
   ctaButton: {
@@ -298,6 +301,7 @@ const styles = StyleSheet.create({
   ctaText: {
     ...typography.button,
     color: palette.gold[700],
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
 });

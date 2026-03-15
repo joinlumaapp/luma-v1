@@ -390,6 +390,7 @@ const styles = StyleSheet.create({
   minimizeIcon: {
     fontSize: 24,
     color: palette.white,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   topBarCenter: {
@@ -399,6 +400,7 @@ const styles = StyleSheet.create({
   callTypeLabel: {
     ...typography.bodySmall,
     color: 'rgba(255, 255, 255, 0.6)',
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
   },
   // ── Center area ────────────────────────────────────────────
@@ -437,12 +439,14 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: 48,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: palette.white,
   },
   displayName: {
     ...typography.h4,
     color: palette.white,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     marginBottom: spacing.xs,
   },
@@ -463,6 +467,7 @@ const styles = StyleSheet.create({
   },
   videoPlaceholderText: {
     fontSize: 72,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: palette.purple[400],
     opacity: 0.3,
@@ -516,6 +521,7 @@ const styles = StyleSheet.create({
     ...shadows.small,
   },
   controlIcon: {
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   controlLabel: {
@@ -553,6 +559,7 @@ const styles = StyleSheet.create({
   premiumTitle: {
     ...typography.h4,
     color: palette.white,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     marginBottom: spacing.sm,
     textAlign: 'center',
@@ -577,6 +584,7 @@ const styles = StyleSheet.create({
   upgradeButtonText: {
     ...typography.button,
     color: '#1A1A1A',
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   premiumBackButton: {

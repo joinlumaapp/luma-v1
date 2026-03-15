@@ -291,6 +291,7 @@ const pickerStyles = StyleSheet.create({
   label: {
     ...typography.caption,
     color: colors.textSecondary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     marginBottom: spacing.sm,
     includeFontPadding: false,
@@ -314,10 +315,12 @@ const pickerStyles = StyleSheet.create({
   dayChipText: {
     ...typography.bodySmall,
     color: colors.textSecondary,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
   },
   dayChipTextActive: {
     color: '#FFFFFF',
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   timeRow: {
@@ -347,15 +350,18 @@ const pickerStyles = StyleSheet.create({
   timeChipText: {
     ...typography.body,
     color: colors.textSecondary,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
   },
   timeChipTextActive: {
     color: '#FFFFFF',
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   timeSeparator: {
     ...typography.h3,
     color: colors.textSecondary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   minuteRow: {
@@ -1000,6 +1006,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.bodyLarge,
     color: colors.text,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   headerSubtitle: {
@@ -1017,6 +1024,7 @@ const styles = StyleSheet.create({
   },
   superBadgeText: {
     fontSize: 9,
+    fontFamily: 'Poppins_800ExtraBold',
     fontWeight: '800',
     color: palette.gold[400],
     letterSpacing: 1,
@@ -1034,6 +1042,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     ...typography.caption,
     color: colors.textSecondary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     includeFontPadding: false,
     marginBottom: spacing.sm,
@@ -1065,6 +1074,7 @@ const styles = StyleSheet.create({
   activityLabel: {
     ...typography.caption,
     color: colors.text,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     textAlign: 'center',
   },
@@ -1082,6 +1092,7 @@ const styles = StyleSheet.create({
   suggestionsTitle: {
     ...typography.caption,
     color: palette.gold[400],
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     includeFontPadding: false,
   },
@@ -1109,6 +1120,7 @@ const styles = StyleSheet.create({
   },
   suggestionTextActive: {
     color: '#FFFFFF',
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 
@@ -1135,6 +1147,7 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.text,
     flex: 1,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
   },
 
@@ -1155,6 +1168,7 @@ const styles = StyleSheet.create({
   createBtnText: {
     ...typography.button,
     color: '#FFFFFF',
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     fontSize: 16,
   },
@@ -1207,6 +1221,7 @@ const styles = StyleSheet.create({
   planTitle: {
     ...typography.bodyLarge,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     flex: 1,
   },
@@ -1217,6 +1232,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   planDetail: {

@@ -212,6 +212,7 @@ const styles = StyleSheet.create({
   title: {
     ...typography.label,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   subtitle: {
@@ -232,6 +233,7 @@ const styles = StyleSheet.create({
   countText: {
     ...typography.caption,
     color: palette.white,
+    fontFamily: 'Poppins_800ExtraBold',
     fontWeight: '800',
   },
 });

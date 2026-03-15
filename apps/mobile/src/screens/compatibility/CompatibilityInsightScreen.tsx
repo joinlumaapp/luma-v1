@@ -323,6 +323,7 @@ const radarStyles = StyleSheet.create({
   dimensionLabelText: {
     ...typography.captionSmall,
     color: colors.primary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     textAlign: 'center',
   },
@@ -776,6 +777,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.bodyLarge,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 
@@ -803,6 +805,7 @@ const styles = StyleSheet.create({
   },
   scoreValue: {
     ...typography.h1,
+    fontFamily: 'Poppins_800ExtraBold',
     fontWeight: '800',
   },
   scoreLabel: {
@@ -822,6 +825,7 @@ const styles = StyleSheet.create({
   },
   levelText: {
     ...typography.bodySmall,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
 
@@ -875,6 +879,7 @@ const styles = StyleSheet.create({
   dimensionName: {
     ...typography.body,
     color: colors.text,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
   },
   dimensionScoreContainer: {
@@ -884,6 +889,7 @@ const styles = StyleSheet.create({
   },
   dimensionScore: {
     ...typography.bodyLarge,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   expandIcon: {
@@ -921,6 +927,7 @@ const styles = StyleSheet.create({
   lockText: {
     ...typography.captionSmall,
     color: colors.textTertiary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 
@@ -934,6 +941,7 @@ const styles = StyleSheet.create({
   explanationTitle: {
     ...typography.bodySmall,
     color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     marginBottom: spacing.xs,
   },
@@ -951,6 +959,7 @@ const styles = StyleSheet.create({
   insightText: {
     ...typography.captionSmall,
     color: colors.success,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
   },
 

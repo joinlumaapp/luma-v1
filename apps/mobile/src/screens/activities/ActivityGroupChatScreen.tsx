@@ -278,6 +278,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.bodyLarge,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   headerSubtitle: {
@@ -319,6 +320,7 @@ const styles = StyleSheet.create({
   },
   stripAvatarInitial: {
     fontSize: 11,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.primary,
   },
@@ -334,6 +336,7 @@ const styles = StyleSheet.create({
   },
   stripOverflowText: {
     fontSize: 10,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.textSecondary,
   },
@@ -357,6 +360,7 @@ const styles = StyleSheet.create({
   emptyText: {
     ...typography.bodyLarge,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     marginBottom: spacing.xs,
   },
@@ -398,6 +402,7 @@ const styles = StyleSheet.create({
   },
   bubbleAvatarInitial: {
     fontSize: 11,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.primary,
   },
@@ -420,6 +425,7 @@ const styles = StyleSheet.create({
   bubbleSender: {
     ...typography.captionSmall,
     color: colors.primary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     marginBottom: 2,
   },
@@ -478,6 +484,7 @@ const styles = StyleSheet.create({
   sendButtonText: {
     ...typography.bodySmall,
     color: '#FFFFFF',
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 });

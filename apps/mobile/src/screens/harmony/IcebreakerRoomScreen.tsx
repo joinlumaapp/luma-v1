@@ -213,7 +213,8 @@ const UnoCardView: React.FC<{
         shadowOpacity: 0.15, shadowRadius: 4,
       }}>
         <Text style={{
-          fontSize, fontWeight: '900',
+          fontSize, fontFamily: 'Poppins_900Black',
+ fontWeight: '900',
           color: colorInfo.bg,
           lineHeight: fontSize * 1.2,
           textShadowColor: 'rgba(0,0,0,0.1)',
@@ -226,7 +227,8 @@ const UnoCardView: React.FC<{
       {/* Corner value top-left */}
       <Text style={{
         position: 'absolute', top: isLarge ? 6 : 4, left: isLarge ? 7 : 5,
-        fontSize: isLarge ? 13 : 10, fontWeight: '800', color: colorInfo.text,
+        fontSize: isLarge ? 13 : 10, fontFamily: 'Poppins_800ExtraBold',
+ fontWeight: '800', color: colorInfo.text,
         lineHeight: isLarge ? 18 : 14,
       }}>
         {card.value}
@@ -234,7 +236,8 @@ const UnoCardView: React.FC<{
       {/* Corner value bottom-right */}
       <Text style={{
         position: 'absolute', bottom: isLarge ? 6 : 4, right: isLarge ? 7 : 5,
-        fontSize: isLarge ? 13 : 10, fontWeight: '800', color: colorInfo.text,
+        fontSize: isLarge ? 13 : 10, fontFamily: 'Poppins_800ExtraBold',
+ fontWeight: '800', color: colorInfo.text,
         lineHeight: isLarge ? 18 : 14,
         transform: [{ rotate: '180deg' }],
       }}>
@@ -281,12 +284,14 @@ const DrawPileView: React.FC<{ count: number; onPress: () => void; label: string
           borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.3)',
           justifyContent: 'center', alignItems: 'center',
         }}>
-          <Text style={{ fontSize: 18, fontWeight: '900', color: GOLD, lineHeight: 24 }}>{count}</Text>
+          <Text style={{ fontSize: 18, fontFamily: 'Poppins_900Black',
+ fontWeight: '900', color: GOLD, lineHeight: 24 }}>{count}</Text>
         </View>
       </View>
     </View>
     <Text style={{
-      fontSize: 9, fontWeight: '700', color: TEXT_MUTED, letterSpacing: 1,
+      fontSize: 9, fontFamily: 'Poppins_700Bold',
+ fontWeight: '700', color: TEXT_MUTED, letterSpacing: 1,
       textAlign: 'center', marginTop: 4, lineHeight: 14,
     }}>
       {label}
@@ -335,7 +340,8 @@ const OkeyTileView: React.FC<{
       {/* Number */}
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 2 }}>
         <Text style={{
-          fontSize: 24, fontWeight: '900', color: tileColor,
+          fontSize: 24, fontFamily: 'Poppins_900Black',
+ fontWeight: '900', color: tileColor,
           lineHeight: 30,
           textShadowColor: 'rgba(0,0,0,0.08)',
           textShadowOffset: { width: 0, height: 1 },
@@ -1294,7 +1300,8 @@ export const IcebreakerRoomScreen: React.FC = () => {
                       borderWidth: 2, borderColor: 'rgba(139, 92, 246, 0.25)',
                       justifyContent: 'center', alignItems: 'center',
                     }}>
-                      <Text style={{ fontSize: 28, fontWeight: '900', color: palette.purple[400], lineHeight: 34 }}>
+                      <Text style={{ fontSize: 28, fontFamily: 'Poppins_900Black',
+ fontWeight: '900', color: palette.purple[400], lineHeight: 34 }}>
                         {okeyPileCount}
                       </Text>
                     </View>
@@ -1415,7 +1422,8 @@ const st = StyleSheet.create({
     borderRadius: borderRadius.full, borderWidth: 1, borderColor: GOLD_BORDER, gap: 3,
   },
   liveDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#4ADE80' },
-  liveText: { fontSize: 7, fontWeight: '800', color: GOLD, letterSpacing: 1, lineHeight: 12 },
+  liveText: { fontSize: 7, fontFamily: 'Poppins_800ExtraBold',
+ fontWeight: '800', color: GOLD, letterSpacing: 1, lineHeight: 12 },
   timerText: { fontSize: 12, fontWeight: fontWeights.semibold, color: TEXT_SECONDARY, letterSpacing: 0.5, lineHeight: 18 },
 
   // Voice
@@ -1437,21 +1445,24 @@ const st = StyleSheet.create({
     borderWidth: 2.5, overflow: 'hidden',
   },
   playerAvatarGrad: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  playerInitial: { fontSize: 16, fontWeight: '700', color: '#FFFFFF', lineHeight: 22 },
+  playerInitial: { fontSize: 16, fontFamily: 'Poppins_700Bold',
+ fontWeight: '700', color: '#FFFFFF', lineHeight: 22 },
   activeIndicator: {
     position: 'absolute', bottom: -1, right: -1,
     width: 14, height: 14, borderRadius: 7,
     backgroundColor: '#4ADE80', borderWidth: 2.5, borderColor: BG_DARK,
   },
   playerName: {
-    fontSize: 10, fontWeight: '600', color: TEXT_SECONDARY,
+    fontSize: 10, fontFamily: 'Poppins_600SemiBold',
+ fontWeight: '600', color: TEXT_SECONDARY,
     marginTop: 3, textAlign: 'center', lineHeight: 14,
   },
   playerScoreBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 2,
     marginTop: 1,
   },
-  playerScore: { fontSize: 9, fontWeight: '700', color: GOLD, lineHeight: 14 },
+  playerScore: { fontSize: 9, fontFamily: 'Poppins_700Bold',
+ fontWeight: '700', color: GOLD, lineHeight: 14 },
 
   // Turn indicator
   turnIndicator: {
@@ -1463,7 +1474,8 @@ const st = StyleSheet.create({
     borderWidth: 1, borderColor: GOLD_BORDER,
   },
   turnText: {
-    fontSize: 13, fontWeight: '700', color: TEXT_SECONDARY, letterSpacing: 0.5, lineHeight: 18,
+    fontSize: 13, fontFamily: 'Poppins_700Bold',
+ fontWeight: '700', color: TEXT_SECONDARY, letterSpacing: 0.5, lineHeight: 18,
   },
 
   // Spectators
@@ -1477,9 +1489,11 @@ const st = StyleSheet.create({
     backgroundColor: SURFACE, borderWidth: 1.5, borderColor: BG_DARK,
     justifyContent: 'center', alignItems: 'center',
   },
-  specInitial: { fontSize: 8, fontWeight: '700', color: TEXT_SECONDARY },
+  specInitial: { fontSize: 8, fontFamily: 'Poppins_700Bold',
+ fontWeight: '700', color: TEXT_SECONDARY },
   specOverflow: { backgroundColor: GOLD_SUBTLE, borderColor: GOLD_BORDER },
-  specOverflowText: { fontSize: 7, fontWeight: '800', color: GOLD },
+  specOverflowText: { fontSize: 7, fontFamily: 'Poppins_800ExtraBold',
+ fontWeight: '800', color: GOLD },
   specInfo: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   specCount: { fontSize: 10, color: TEXT_MUTED, letterSpacing: 0.3, lineHeight: 14 },
 
@@ -1494,7 +1508,8 @@ const st = StyleSheet.create({
     borderRadius: 20, overflow: 'hidden',
     backgroundColor: SURFACE, borderWidth: 1, borderColor: SURFACE_BORDER,
   },
-  gameTabLabel: { fontSize: 10, fontWeight: '700', color: TEXT_MUTED, letterSpacing: 1.5, lineHeight: 14 },
+  gameTabLabel: { fontSize: 10, fontFamily: 'Poppins_700Bold',
+ fontWeight: '700', color: TEXT_MUTED, letterSpacing: 1.5, lineHeight: 14 },
 
   // Game content
   gameScroll: { flex: 1 },
@@ -1520,13 +1535,16 @@ const st = StyleSheet.create({
     paddingHorizontal: 8, paddingVertical: 2,
     borderWidth: 1, borderColor: GOLD_BORDER,
   },
-  handCountText: { fontSize: 10, fontWeight: '800', color: GOLD, lineHeight: 14 },
+  handCountText: { fontSize: 10, fontFamily: 'Poppins_800ExtraBold',
+ fontWeight: '800', color: GOLD, lineHeight: 14 },
   sectionLabel: {
-    fontSize: 9, fontWeight: '800', color: TEXT_MUTED,
+    fontSize: 9, fontFamily: 'Poppins_800ExtraBold',
+ fontWeight: '800', color: TEXT_MUTED,
     letterSpacing: 2, lineHeight: 14, paddingLeft: 4,
   },
   handScroll: { paddingHorizontal: spacing.sm, paddingVertical: 8 },
-  pileLabel: { fontSize: 8, fontWeight: '700', color: TEXT_MUTED, letterSpacing: 1.5, lineHeight: 14 },
+  pileLabel: { fontSize: 8, fontFamily: 'Poppins_700Bold',
+ fontWeight: '700', color: TEXT_MUTED, letterSpacing: 1.5, lineHeight: 14 },
 
   // Okey rack
   okeyRackContainer: {
@@ -1542,8 +1560,10 @@ const st = StyleSheet.create({
     borderWidth: 1, borderColor: SURFACE_BORDER,
     padding: spacing.sm, alignItems: 'center', gap: 4,
   },
-  statValue: { fontSize: 16, fontWeight: '800', color: TEXT_PRIMARY, lineHeight: 22 },
-  statLabel: { fontSize: 8, fontWeight: '700', color: TEXT_MUTED, letterSpacing: 1, lineHeight: 14 },
+  statValue: { fontSize: 16, fontFamily: 'Poppins_800ExtraBold',
+ fontWeight: '800', color: TEXT_PRIMARY, lineHeight: 22 },
+  statLabel: { fontSize: 8, fontFamily: 'Poppins_700Bold',
+ fontWeight: '700', color: TEXT_MUTED, letterSpacing: 1, lineHeight: 14 },
 
   // Actions
   actionRow: {
@@ -1555,7 +1575,8 @@ const st = StyleSheet.create({
     paddingHorizontal: 24, paddingVertical: 12, borderRadius: borderRadius.full,
   },
   actionPillText: {
-    fontSize: 11, fontWeight: '800', color: PURPLE_DEEP, letterSpacing: 1.5, lineHeight: 16,
+    fontSize: 11, fontFamily: 'Poppins_800ExtraBold',
+ fontWeight: '800', color: PURPLE_DEEP, letterSpacing: 1.5, lineHeight: 16,
   },
 
   // Reactions
@@ -1575,7 +1596,8 @@ const st = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 6, paddingVertical: spacing.sm,
   },
-  chatToggleText: { fontSize: 12, fontWeight: '600', color: GOLD, lineHeight: 16 },
+  chatToggleText: { fontSize: 12, fontFamily: 'Poppins_600SemiBold',
+ fontWeight: '600', color: GOLD, lineHeight: 16 },
   chatPanel: { gap: spacing.xs, marginTop: spacing.xs },
   chatList: { maxHeight: 200 },
   chatMsg: { marginBottom: 6 },
@@ -1590,7 +1612,8 @@ const st = StyleSheet.create({
     alignSelf: 'flex-start', maxWidth: '85%',
   },
   chatAuthor: {
-    fontSize: 10, fontWeight: '700', color: GOLD,
+    fontSize: 10, fontFamily: 'Poppins_700Bold',
+ fontWeight: '700', color: GOLD,
     marginBottom: 2, lineHeight: 14,
   },
   chatText: { fontSize: 13, color: TEXT_PRIMARY, lineHeight: 18 },
@@ -1608,7 +1631,8 @@ const st = StyleSheet.create({
 
   // ── Lobby ──
   lobbyHeader: { marginBottom: spacing.sm },
-  lobbyTitle: { fontSize: 20, fontWeight: '800', color: TEXT_PRIMARY, letterSpacing: 1, lineHeight: 28 },
+  lobbyTitle: { fontSize: 20, fontFamily: 'Poppins_800ExtraBold',
+ fontWeight: '800', color: TEXT_PRIMARY, letterSpacing: 1, lineHeight: 28 },
   lobbySubtitle: { fontSize: 12, color: TEXT_MUTED, marginTop: 2, lineHeight: 18 },
 
   // Table card
@@ -1625,15 +1649,18 @@ const st = StyleSheet.create({
     overflow: 'hidden',
   },
   tableCardTitle: { flex: 1 },
-  tableCardName: { fontSize: 15, fontWeight: '700', color: TEXT_PRIMARY, lineHeight: 20 },
-  tableCardType: { fontSize: 10, fontWeight: '600', color: TEXT_MUTED, letterSpacing: 1, lineHeight: 14 },
+  tableCardName: { fontSize: 15, fontFamily: 'Poppins_700Bold',
+ fontWeight: '700', color: TEXT_PRIMARY, lineHeight: 20 },
+  tableCardType: { fontSize: 10, fontFamily: 'Poppins_600SemiBold',
+ fontWeight: '600', color: TEXT_MUTED, letterSpacing: 1, lineHeight: 14 },
   tableLiveBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 3,
     backgroundColor: 'rgba(74, 222, 128, 0.1)', borderWidth: 1, borderColor: 'rgba(74, 222, 128, 0.25)',
     paddingHorizontal: 8, paddingVertical: 3, borderRadius: borderRadius.full,
   },
   tableLiveDot: { width: 5, height: 5, borderRadius: 2.5 },
-  tableLiveText: { fontSize: 8, fontWeight: '800', color: '#4ADE80', letterSpacing: 1, lineHeight: 12 },
+  tableLiveText: { fontSize: 8, fontFamily: 'Poppins_800ExtraBold',
+ fontWeight: '800', color: '#4ADE80', letterSpacing: 1, lineHeight: 12 },
 
   // Seats
   tableCardPlayers: {
@@ -1644,8 +1671,10 @@ const st = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1.5, borderColor: SURFACE_BORDER,
     justifyContent: 'center', alignItems: 'center', overflow: 'hidden',
   },
-  tableSeatInitial: { fontSize: 13, fontWeight: '700', color: '#FFFFFF' },
-  tableSeatCount: { fontSize: 10, fontWeight: '600', color: TEXT_MUTED, marginLeft: 4, lineHeight: 14 },
+  tableSeatInitial: { fontSize: 13, fontFamily: 'Poppins_700Bold',
+ fontWeight: '700', color: '#FFFFFF' },
+  tableSeatCount: { fontSize: 10, fontFamily: 'Poppins_600SemiBold',
+ fontWeight: '600', color: TEXT_MUTED, marginLeft: 4, lineHeight: 14 },
 
   // Footer
   tableCardFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
@@ -1658,17 +1687,20 @@ const st = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 7, borderRadius: borderRadius.full,
     backgroundColor: SURFACE, borderWidth: 1, borderColor: SURFACE_BORDER,
   },
-  tableWatchText: { fontSize: 11, fontWeight: '600', color: TEXT_SECONDARY, lineHeight: 16 },
+  tableWatchText: { fontSize: 11, fontFamily: 'Poppins_600SemiBold',
+ fontWeight: '600', color: TEXT_SECONDARY, lineHeight: 16 },
   tableJoinBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 16, paddingVertical: 7, borderRadius: borderRadius.full,
   },
-  tableJoinText: { fontSize: 11, fontWeight: '700', color: '#FFFFFF', lineHeight: 16 },
+  tableJoinText: { fontSize: 11, fontFamily: 'Poppins_700Bold',
+ fontWeight: '700', color: '#FFFFFF', lineHeight: 16 },
   tableFullBadge: {
     paddingHorizontal: 12, paddingVertical: 7, borderRadius: borderRadius.full,
     backgroundColor: 'rgba(255,255,255,0.05)',
   },
-  tableFullText: { fontSize: 11, fontWeight: '600', color: TEXT_MUTED, lineHeight: 16 },
+  tableFullText: { fontSize: 11, fontFamily: 'Poppins_600SemiBold',
+ fontWeight: '600', color: TEXT_MUTED, lineHeight: 16 },
 
   // Create table
   createTableBtn: { marginTop: spacing.sm, borderRadius: borderRadius.full, overflow: 'hidden' },
@@ -1676,7 +1708,8 @@ const st = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     paddingVertical: 14, borderRadius: borderRadius.full,
   },
-  createTableText: { fontSize: 14, fontWeight: '800', color: PURPLE_DEEP, letterSpacing: 0.5, lineHeight: 20 },
+  createTableText: { fontSize: 14, fontFamily: 'Poppins_800ExtraBold',
+ fontWeight: '800', color: PURPLE_DEEP, letterSpacing: 0.5, lineHeight: 20 },
 
   // Spectator banner
   spectatorBanner: {
@@ -1684,5 +1717,6 @@ const st = StyleSheet.create({
     backgroundColor: GOLD_SUBTLE, borderBottomWidth: 1, borderBottomColor: GOLD_BORDER,
     paddingVertical: 6,
   },
-  spectatorBannerText: { fontSize: 11, fontWeight: '600', color: GOLD, lineHeight: 16 },
+  spectatorBannerText: { fontSize: 11, fontFamily: 'Poppins_600SemiBold',
+ fontWeight: '600', color: GOLD, lineHeight: 16 },
 });

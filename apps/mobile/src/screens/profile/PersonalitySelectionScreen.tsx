@@ -259,7 +259,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface, justifyContent: 'center', alignItems: 'center',
     borderWidth: 1, borderColor: colors.surfaceBorder,
   },
-  backIcon: { fontSize: 24, color: colors.text, fontWeight: '300', marginTop: -2 },
+  backIcon: { fontSize: 24, color: colors.text, fontFamily: 'Poppins_300Light',
+ fontWeight: '300', marginTop: -2 },
   headerTitle: { ...typography.bodyLarge, color: colors.text, fontWeight: '600' },
   saveText: { ...typography.body, color: colors.primary, fontWeight: '600' },
   saveTextDisabled: { opacity: 0.5 },
@@ -289,6 +290,7 @@ const styles = StyleSheet.create({
   },
   mbtiType: {
     ...typography.bodyLarge, color: colors.text,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700', fontSize: 15,
   },
   mbtiTypeSelected: { color: colors.primary },
@@ -312,7 +314,8 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   enneagramNumber: {
-    ...typography.h3, color: colors.text, fontWeight: '700',
+    ...typography.h3, color: colors.text, fontFamily: 'Poppins_700Bold',
+ fontWeight: '700',
   },
   enneagramNumberSelected: { color: colors.primary },
   enneagramLabel: {

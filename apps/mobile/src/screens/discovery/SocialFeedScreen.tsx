@@ -722,6 +722,7 @@ const selectorStyles = StyleSheet.create({
   label: {
     ...typography.captionSmall,
     color: colors.textSecondary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   closeBtn: {
@@ -790,6 +791,7 @@ const tabStyles = StyleSheet.create({
   },
   tabTextActive: {
     color: palette.purple[400],
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
 });
@@ -825,6 +827,7 @@ const modalStyles = StyleSheet.create({
   headerTitle: {
     ...typography.body,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   headerBadge: {
@@ -840,6 +843,7 @@ const modalStyles = StyleSheet.create({
   },
   headerBadgeLabel: {
     fontSize: 11,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   cancelText: {
@@ -849,6 +853,7 @@ const modalStyles = StyleSheet.create({
   submitText: {
     ...typography.body,
     color: colors.primary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   submitTextDisabled: {
@@ -935,6 +940,7 @@ const modalStyles = StyleSheet.create({
   mediaRemoveText: {
     color: '#FFFFFF',
     fontSize: 10,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   videoOverlay: {
@@ -975,6 +981,7 @@ const modalStyles = StyleSheet.create({
   mediaButtonLabel: {
     ...typography.captionSmall,
     color: colors.textSecondary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   charCount: {

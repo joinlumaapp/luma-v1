@@ -221,7 +221,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface, justifyContent: 'center', alignItems: 'center',
     borderWidth: 1, borderColor: colors.surfaceBorder,
   },
-  backIcon: { fontSize: 24, color: colors.text, fontWeight: '300', marginTop: -2 },
+  backIcon: { fontSize: 24, color: colors.text, fontFamily: 'Poppins_300Light',
+ fontWeight: '300', marginTop: -2 },
   headerTitle: { ...typography.h3, color: colors.text },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   scrollContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl },
@@ -247,6 +248,7 @@ const styles = StyleSheet.create({
   section: { marginBottom: spacing.lg },
   sectionTitle: {
     ...typography.bodyLarge, color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600', marginBottom: spacing.sm,
   },
   // Tip card

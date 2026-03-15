@@ -225,6 +225,7 @@ const badgeStyles = StyleSheet.create({
     overflow: 'hidden',
   },
   supremeLabel: {
+    fontFamily: 'Poppins_800ExtraBold',
     fontWeight: '800',
     color: GOLD_24K.light,
     includeFontPadding: false,
@@ -259,6 +260,7 @@ const badgeStyles = StyleSheet.create({
     gap: 4,
   },
   premiumLabel: {
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: 0.5,

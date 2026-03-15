@@ -324,6 +324,7 @@ const styles = StyleSheet.create({
   },
   devButtonText: {
     fontSize: 13,
+    fontFamily: 'Poppins_800ExtraBold',
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: 1.5,
@@ -339,6 +340,7 @@ const styles = StyleSheet.create({
   },
   logoText: {
     fontSize: 64,
+    fontFamily: 'Poppins_300Light',
     fontWeight: '300',
     color: '#FFFFFF',
     letterSpacing: 28,
@@ -380,6 +382,7 @@ const styles = StyleSheet.create({
   },
   googleButtonText: {
     fontSize: 16,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#1A1A1A',
   },
@@ -396,16 +399,19 @@ const styles = StyleSheet.create({
   },
   otherButtonText: {
     fontSize: 16,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#FFFFFF',
   },
   // Login link
   loginText: {
     fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
     color: 'rgba(255, 255, 255, 0.6)',
   },
   loginLink: {
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: '#FFFFFF',
     textDecorationLine: 'underline',
@@ -446,12 +452,14 @@ const styles = StyleSheet.create({
   },
   testPanelTitle: {
     fontSize: 20,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: '#1A1A1A',
     textAlign: 'center',
   },
   testPanelSubtitle: {
     fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
     color: '#6B6B6B',
     textAlign: 'center',
@@ -476,16 +484,19 @@ const styles = StyleSheet.create({
   },
   testPanelButtonText: {
     fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#FFFFFF',
   },
   testPanelButtonDesc: {
     fontSize: 12,
+    fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
     color: '#9A9A9A',
   },
   testPanelCancel: {
     fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: '#6B6B6B',
     textAlign: 'center',

@@ -127,6 +127,7 @@ const styles = StyleSheet.create({
   title: {
     ...typography.h3,
     color: colors.text,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     textAlign: 'center',
     marginBottom: spacing.sm,

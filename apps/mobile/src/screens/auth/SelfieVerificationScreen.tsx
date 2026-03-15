@@ -303,6 +303,7 @@ const styles = StyleSheet.create({
   permissionText: {
     ...typography.bodySmall,
     color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   faceGuide: {
@@ -332,6 +333,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     ...typography.bodySmall,
     lineHeight: 28,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   instructionText: {
@@ -381,6 +383,7 @@ const styles = StyleSheet.create({
   retakeText: {
     ...typography.bodySmall,
     color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 });

@@ -370,12 +370,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 14,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: '#FFFFFF',
     marginBottom: 2,
   },
   body: {
     fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
     color: 'rgba(255, 255, 255, 0.7)',
     lineHeight: 18,

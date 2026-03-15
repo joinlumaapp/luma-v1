@@ -1,10 +1,25 @@
-// LUMA typography system — ultra-premium geometric sans-serif
-// Uses native system fonts: SF Pro (iOS) / Roboto (Android)
+// LUMA typography system — Poppins premium geometric sans-serif
+// Custom Google Font: Poppins (loaded via expo-font in App.tsx)
+// Fallback to system fonts until fonts are loaded
 // includeFontPadding: false globally to eliminate Android text clipping
 
 import { Platform, TextStyle } from 'react-native';
 
-const fontFamily = Platform.select({
+// Poppins font family mapping — each weight has its own font name
+// React Native doesn't support numeric fontWeight with custom fonts,
+// so we use explicit font names per weight.
+export const poppinsFonts = {
+  light: 'Poppins_300Light',
+  regular: 'Poppins_400Regular',
+  medium: 'Poppins_500Medium',
+  semibold: 'Poppins_600SemiBold',
+  bold: 'Poppins_700Bold',
+  extrabold: 'Poppins_800ExtraBold',
+  black: 'Poppins_900Black',
+} as const;
+
+// Fallback system fonts (used before Poppins loads)
+const systemFont = Platform.select({
   ios: 'System',
   android: 'Roboto',
   default: 'System',
@@ -53,53 +68,53 @@ export const lineHeights = {
 } as const;
 
 export const typography = {
-  // ── Headlines — bold, tight, commanding ──
+  // ── Headlines — bold, commanding, Poppins ──
   h1: {
-    fontFamily,
+    fontFamily: poppinsFonts.bold,
     fontSize: fontSizes['4xl'],
     lineHeight: lineHeights['4xl'],
     fontWeight: fontWeights.bold,
     ...androidFix,
   },
   h2: {
-    fontFamily,
+    fontFamily: poppinsFonts.bold,
     fontSize: fontSizes['3xl'],
     lineHeight: lineHeights['3xl'],
     fontWeight: fontWeights.bold,
     ...androidFix,
   },
   h3: {
-    fontFamily,
+    fontFamily: poppinsFonts.semibold,
     fontSize: fontSizes['2xl'],
     lineHeight: lineHeights['2xl'],
     fontWeight: fontWeights.semibold,
     ...androidFix,
   },
   h4: {
-    fontFamily,
+    fontFamily: poppinsFonts.semibold,
     fontSize: fontSizes.xl,
     lineHeight: lineHeights.xl,
     fontWeight: fontWeights.semibold,
     ...androidFix,
   },
 
-  // ── Body — clean, readable ──
+  // ── Body — clean, readable, medium weight for better presence ──
   bodyLarge: {
-    fontFamily,
+    fontFamily: poppinsFonts.medium,
     fontSize: fontSizes.lg,
     lineHeight: lineHeights.lg,
-    fontWeight: fontWeights.regular,
+    fontWeight: fontWeights.medium,
     ...androidFix,
   },
   body: {
-    fontFamily,
+    fontFamily: poppinsFonts.regular,
     fontSize: fontSizes.base,
     lineHeight: lineHeights.base,
     fontWeight: fontWeights.regular,
     ...androidFix,
   },
   bodySmall: {
-    fontFamily,
+    fontFamily: poppinsFonts.regular,
     fontSize: fontSizes.md,
     lineHeight: lineHeights.md,
     fontWeight: fontWeights.regular,
@@ -108,53 +123,53 @@ export const typography = {
 
   // ── Captions — light weight for minimalist contrast ──
   caption: {
-    fontFamily,
+    fontFamily: poppinsFonts.regular,
     fontSize: fontSizes.sm,
     lineHeight: lineHeights.sm,
     fontWeight: fontWeights.regular,
     ...androidFix,
   },
   captionSmall: {
-    fontFamily,
+    fontFamily: poppinsFonts.regular,
     fontSize: fontSizes.xs,
     lineHeight: lineHeights.xs,
     fontWeight: fontWeights.regular,
     ...androidFix,
   },
 
-  // ── UI elements ──
+  // ── UI elements — semibold for strong tap targets ──
   button: {
-    fontFamily,
+    fontFamily: poppinsFonts.semibold,
     fontSize: fontSizes.base,
     lineHeight: lineHeights.base,
     fontWeight: fontWeights.semibold,
     ...androidFix,
   },
   buttonSmall: {
-    fontFamily,
+    fontFamily: poppinsFonts.semibold,
     fontSize: fontSizes.md,
     lineHeight: lineHeights.md,
     fontWeight: fontWeights.semibold,
     ...androidFix,
   },
   label: {
-    fontFamily,
+    fontFamily: poppinsFonts.medium,
     fontSize: fontSizes.md,
     lineHeight: lineHeights.md,
     fontWeight: fontWeights.medium,
     ...androidFix,
   },
   tabBar: {
-    fontFamily,
+    fontFamily: poppinsFonts.medium,
     fontSize: fontSizes.xs,
     lineHeight: lineHeights.xs,
     fontWeight: fontWeights.medium,
     ...androidFix,
   },
 
-  // ── Premium subtitle — uppercase, tracked, light ──
+  // ── Premium subtitle — uppercase, tracked, semibold ──
   subtitle: {
-    fontFamily,
+    fontFamily: poppinsFonts.semibold,
     fontSize: fontSizes.xs,
     lineHeight: lineHeights.xs,
     fontWeight: fontWeights.semibold,
@@ -162,5 +177,8 @@ export const typography = {
     ...androidFix,
   },
 } as const;
+
+/** System font fallback (for use before fonts load) */
+export const systemFontFamily = systemFont;
 
 export type TypographyVariant = keyof typeof typography;

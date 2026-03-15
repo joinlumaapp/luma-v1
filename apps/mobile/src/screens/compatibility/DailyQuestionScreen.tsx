@@ -253,6 +253,7 @@ const celebrationStyles = StyleSheet.create({
   title: {
     ...typography.h3,
     color: palette.gold[400],
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     marginBottom: spacing.md,
     textAlign: 'center',
@@ -269,11 +270,13 @@ const celebrationStyles = StyleSheet.create({
   streakText: {
     ...typography.bodyLarge,
     color: colors.text,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   milestoneText: {
     ...typography.body,
     color: palette.gold[400],
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     textAlign: 'center',
     marginTop: spacing.xs,
@@ -344,6 +347,7 @@ const streakStyles = StyleSheet.create({
   count: {
     ...typography.bodySmall,
     color: colors.accent,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   message: {
@@ -499,6 +503,7 @@ const optionStyles = StyleSheet.create({
   letter: {
     ...typography.bodySmall,
     color: colors.textTertiary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   text: {
@@ -1013,6 +1018,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.bodyLarge,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   dayBadge: {
@@ -1024,6 +1030,7 @@ const styles = StyleSheet.create({
   dayText: {
     ...typography.captionSmall,
     color: colors.primary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
 
@@ -1054,6 +1061,7 @@ const styles = StyleSheet.create({
   categoryText: {
     ...typography.captionSmall,
     color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   questionText: {
@@ -1089,12 +1097,14 @@ const styles = StyleSheet.create({
   insightTitle: {
     ...typography.bodyLarge,
     color: colors.primary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     marginBottom: spacing.xs,
   },
   insightStat: {
     ...typography.body,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     marginBottom: spacing.sm,
   },
@@ -1168,6 +1178,7 @@ const styles = StyleSheet.create({
   answerStatsUserAnswer: {
     ...typography.body,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     flex: 1,
   },
@@ -1187,6 +1198,7 @@ const styles = StyleSheet.create({
   },
   answerStatsBarLabelActive: {
     color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   answerStatsBarTrack: {
@@ -1208,11 +1220,13 @@ const styles = StyleSheet.create({
   },
   answerStatsBarPercentActive: {
     color: colors.primary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   answerStatsInsightMessage: {
     ...typography.bodySmall,
     color: colors.accent,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     marginBottom: spacing.xs,
   },

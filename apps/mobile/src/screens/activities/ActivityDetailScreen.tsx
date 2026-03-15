@@ -293,6 +293,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.bodyLarge,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   headerSpacer: {
@@ -330,6 +331,7 @@ const styles = StyleSheet.create({
   typeLabel: {
     ...typography.bodySmall,
     color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   title: {
@@ -360,6 +362,7 @@ const styles = StyleSheet.create({
   creatorInitial: {
     ...typography.bodySmall,
     color: colors.primary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   creatorName: {
@@ -377,6 +380,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     ...typography.bodySmall,
     color: colors.textTertiary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     marginBottom: spacing.md,
     includeFontPadding: false,
@@ -431,6 +435,7 @@ const styles = StyleSheet.create({
   participantInitial: {
     ...typography.bodySmall,
     color: colors.primary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   participantInfo: {
@@ -439,6 +444,7 @@ const styles = StyleSheet.create({
   participantName: {
     ...typography.body,
     color: colors.text,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
   },
   participantJoined: {
@@ -511,6 +517,7 @@ const styles = StyleSheet.create({
   fullText: {
     ...typography.body,
     color: colors.textTertiary,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
   },
 });

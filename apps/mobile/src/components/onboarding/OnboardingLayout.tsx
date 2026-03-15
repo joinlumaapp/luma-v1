@@ -201,6 +201,7 @@ const styles = StyleSheet.create({
   },
   skipText: {
     fontSize: 16,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: onboardingColors.text,
   },
@@ -253,6 +254,7 @@ const styles = StyleSheet.create({
   },
   fullButtonText: {
     fontSize: 16,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: onboardingColors.buttonText,
   },

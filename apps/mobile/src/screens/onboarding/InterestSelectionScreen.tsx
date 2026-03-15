@@ -352,6 +352,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: onboardingColors.text,
     lineHeight: 36,
@@ -359,6 +360,7 @@ const styles = StyleSheet.create({
   },
   counter: {
     fontSize: 16,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: onboardingColors.text,
     marginBottom: 16,
@@ -387,6 +389,7 @@ const styles = StyleSheet.create({
   },
   previewSlotText: {
     fontSize: 11,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: onboardingColors.selectedText,
     paddingHorizontal: 6,
@@ -408,6 +411,7 @@ const styles = StyleSheet.create({
   },
   categoryTitle: {
     fontSize: 20,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: onboardingColors.text,
   },
@@ -428,6 +432,7 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: 15,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: onboardingColors.text,
   },
@@ -441,6 +446,7 @@ const styles = StyleSheet.create({
   },
   customInputLabel: {
     fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: onboardingColors.text,
     marginBottom: 10,
@@ -477,6 +483,7 @@ const styles = StyleSheet.create({
   },
   moreText: {
     fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: onboardingColors.textSecondary,
   },

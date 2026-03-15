@@ -90,6 +90,7 @@ export const SportsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   title: {
     fontSize: 28,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: onboardingColors.text,
     marginBottom: 8,
@@ -120,6 +121,7 @@ const styles = StyleSheet.create({
   },
   optionLabel: {
     fontSize: 17,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: onboardingColors.text,
   },

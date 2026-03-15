@@ -147,6 +147,7 @@ const styles = StyleSheet.create({
   compatText: {
     ...typography.bodySmall,
     color: colors.text,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   verifiedBadge: {
@@ -163,6 +164,7 @@ const styles = StyleSheet.create({
   verifiedIcon: {
     fontSize: 14,
     color: colors.text,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   info: {
@@ -198,6 +200,7 @@ const styles = StyleSheet.create({
   intentionText: {
     ...typography.captionSmall,
     color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 });

@@ -240,6 +240,7 @@ function createDynamicStyles(c: ThemeColors) {
     headerTitle: {
       ...typography.bodyLarge,
       color: c.text,
+      fontFamily: 'Poppins_600SemiBold',
       fontWeight: '600',
       includeFontPadding: false,
     },
@@ -283,6 +284,7 @@ function createDynamicStyles(c: ThemeColors) {
     avatarText: {
       ...typography.bodySmall,
       color: c.textSecondary,
+      fontFamily: 'Poppins_600SemiBold',
       fontWeight: '600',
       includeFontPadding: false,
     },
@@ -292,6 +294,7 @@ function createDynamicStyles(c: ThemeColors) {
     userName: {
       ...typography.body,
       color: c.text,
+      fontFamily: 'Poppins_500Medium',
       fontWeight: '500',
       includeFontPadding: false,
     },
@@ -316,6 +319,7 @@ function createDynamicStyles(c: ThemeColors) {
     unblockText: {
       ...typography.caption,
       color: c.primary,
+      fontFamily: 'Poppins_600SemiBold',
       fontWeight: '600',
       includeFontPadding: false,
     },
@@ -341,6 +345,7 @@ function createDynamicStyles(c: ThemeColors) {
     emptyTitle: {
       ...typography.bodyLarge,
       color: c.text,
+      fontFamily: 'Poppins_600SemiBold',
       fontWeight: '600',
       marginBottom: spacing.sm,
       includeFontPadding: false,

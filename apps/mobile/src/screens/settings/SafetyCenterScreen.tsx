@@ -287,6 +287,7 @@ function createDynamicStyles(c: ThemeColors) {
     headerTitle: {
       ...typography.bodyLarge,
       color: c.text,
+      fontFamily: 'Poppins_600SemiBold',
       fontWeight: '600',
     },
 
@@ -343,6 +344,7 @@ function createDynamicStyles(c: ThemeColors) {
     sectionTitle: {
       ...typography.body,
       color: c.text,
+      fontFamily: 'Poppins_600SemiBold',
       fontWeight: '600',
       flex: 1,
     },
@@ -372,6 +374,7 @@ function createDynamicStyles(c: ThemeColors) {
     tipBulletText: {
       ...typography.captionSmall,
       color: c.primary,
+      fontFamily: 'Poppins_700Bold',
       fontWeight: '700',
     },
     tipText: {
@@ -408,6 +411,7 @@ function createDynamicStyles(c: ThemeColors) {
     emergencyLabel: {
       ...typography.body,
       color: c.text,
+      fontFamily: 'Poppins_500Medium',
       fontWeight: '500',
     },
 
@@ -427,6 +431,7 @@ function createDynamicStyles(c: ThemeColors) {
     linkButtonText: {
       ...typography.body,
       color: c.primary,
+      fontFamily: 'Poppins_600SemiBold',
       fontWeight: '600',
       flex: 1,
     },

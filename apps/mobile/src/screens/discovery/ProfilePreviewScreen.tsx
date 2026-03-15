@@ -790,6 +790,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 28,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.text,
     letterSpacing: -0.5,
@@ -823,18 +824,21 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: 28,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.text,
     letterSpacing: -0.5,
   },
   jobTitle: {
     fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: palette.purple[600],
     letterSpacing: 0.1,
   },
   cityText: {
     fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
     color: colors.textSecondary,
   },
@@ -856,6 +860,7 @@ const styles = StyleSheet.create({
   },
   intentionText: {
     fontSize: 12,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: colors.primary,
     letterSpacing: 0.2,
@@ -874,10 +879,12 @@ const styles = StyleSheet.create({
   },
   compatInlineText: {
     fontSize: 17,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   compatSuperLabel: {
     fontSize: 12,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.accent,
     backgroundColor: colors.accent + '18',
@@ -904,6 +911,7 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 22,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
@@ -912,6 +920,7 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 11,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: colors.textTertiary,
     marginTop: 2,
@@ -932,6 +941,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 13,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.textTertiary,
     includeFontPadding: false,
@@ -962,6 +972,7 @@ const styles = StyleSheet.create({
   },
   lifestyleValue: {
     fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: colors.text,
   },
@@ -1002,6 +1013,7 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontSize: 13,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: colors.primary,
   },

@@ -3,7 +3,7 @@
 export { palette, colors, darkTheme, lightTheme, darkColors, lightColors } from './colors';
 export type { ThemeColors, ThemeMode } from './colors';
 export { ThemeProvider, useTheme } from './ThemeContext';
-export { typography, fontSizes, fontWeights, lineHeights } from './typography';
+export { typography, fontSizes, fontWeights, lineHeights, poppinsFonts } from './typography';
 export type { TypographyVariant } from './typography';
 export { spacing, borderRadius, screenPadding, layout, shadows } from './spacing';
 export type { Spacing, BorderRadius } from './spacing';

@@ -388,6 +388,7 @@ const styles = StyleSheet.create({
   },
   coinLetter: {
     fontSize: 36,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: '#FFFFFF',
     textShadowColor: 'rgba(0,0,0,0.25)',
@@ -398,6 +399,7 @@ const styles = StyleSheet.create({
   // Amount
   amountText: {
     fontSize: 28,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: GOLD.medium,
     marginTop: spacing.md,

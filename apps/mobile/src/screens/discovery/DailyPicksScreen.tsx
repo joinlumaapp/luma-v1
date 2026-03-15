@@ -563,6 +563,7 @@ const styles = StyleSheet.create({
   backIcon: {
     fontSize: 24,
     color: colors.text,
+    fontFamily: 'Poppins_300Light',
     fontWeight: '300',
     marginTop: -2,
   },
@@ -594,6 +595,7 @@ const styles = StyleSheet.create({
   countdownText: {
     ...typography.caption,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },
@@ -682,6 +684,7 @@ const styles = StyleSheet.create({
   },
   compatBadgeText: {
     fontSize: 12,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
 
@@ -700,6 +703,7 @@ const styles = StyleSheet.create({
   intentionBadgeText: {
     ...typography.captionSmall,
     color: colors.text,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
   },
 
@@ -711,6 +715,7 @@ const styles = StyleSheet.create({
   cardName: {
     ...typography.bodySmall,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   cardCity: {
@@ -784,6 +789,7 @@ const styles = StyleSheet.create({
   allViewedTitle: {
     ...typography.bodyLarge,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     textAlign: 'center',
     marginBottom: spacing.md,
@@ -806,6 +812,7 @@ const styles = StyleSheet.create({
   allViewedCountdownValue: {
     ...typography.bodySmall,
     color: colors.primary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
@@ -862,6 +869,7 @@ const styles = StyleSheet.create({
   emptyCountdownValue: {
     ...typography.bodySmall,
     color: colors.primary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },

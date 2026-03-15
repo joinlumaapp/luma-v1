@@ -712,6 +712,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.sm,
   },
   overlayText: {
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 1, height: 1 },
@@ -743,6 +744,7 @@ const styles = StyleSheet.create({
   },
   textInputField: {
     color: '#FFFFFF',
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     textAlign: 'center',
     minHeight: 60,
@@ -769,11 +771,13 @@ const styles = StyleSheet.create({
   fontSizeButtonText: {
     ...typography.bodySmall,
     color: '#FFFFFF',
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   fontSizeLabel: {
     ...typography.body,
     color: '#FFFFFF',
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     minWidth: 28,
     textAlign: 'center',
@@ -807,6 +811,7 @@ const styles = StyleSheet.create({
   stickerPickerTitle: {
     ...typography.bodySmall,
     color: '#FFFFFF',
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   stickerGrid: {
@@ -895,6 +900,7 @@ const styles = StyleSheet.create({
   changeImageText: {
     ...typography.bodySmall,
     color: '#FFFFFF',
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   publishButton: {

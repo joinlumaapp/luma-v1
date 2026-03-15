@@ -729,6 +729,7 @@ const styles = StyleSheet.create({
   proLabelText: {
     ...typography.captionSmall,
     color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   // Locked overlay
@@ -783,6 +784,7 @@ const styles = StyleSheet.create({
   },
   radioLabelActive: {
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   // Age range
@@ -824,6 +826,7 @@ const styles = StyleSheet.create({
   distanceValueLabel: {
     ...typography.bodySmall,
     color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     includeFontPadding: false,
   },
@@ -851,6 +854,7 @@ const styles = StyleSheet.create({
   },
   distancePickTextActive: {
     color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   cityWideToggle: {
@@ -873,6 +877,7 @@ const styles = StyleSheet.create({
   },
   cityWideToggleTextActive: {
     color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   // Intention chips
@@ -899,6 +904,7 @@ const styles = StyleSheet.create({
   },
   chipTextActive: {
     color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   // Height section
@@ -929,6 +935,7 @@ const styles = StyleSheet.create({
   toggleButtonText: {
     ...typography.caption,
     color: colors.textSecondary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   toggleButtonTextActive: {

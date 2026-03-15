@@ -91,6 +91,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   badgeIcon: {
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
 });

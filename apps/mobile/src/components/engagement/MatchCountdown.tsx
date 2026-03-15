@@ -191,6 +191,7 @@ const styles = StyleSheet.create({
   },
   inlineText: {
     ...typography.captionSmall,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },
@@ -203,6 +204,7 @@ const styles = StyleSheet.create({
   },
   inlineExtendText: {
     ...typography.captionSmall,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: palette.error,
   },
@@ -229,6 +231,7 @@ const styles = StyleSheet.create({
   bannerTitle: {
     ...typography.label,
     color: palette.white,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   bannerSubtitle: {
@@ -250,6 +253,7 @@ const styles = StyleSheet.create({
   extendText: {
     ...typography.caption,
     color: palette.white,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 });

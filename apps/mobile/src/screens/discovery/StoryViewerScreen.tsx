@@ -639,6 +639,7 @@ const styles = StyleSheet.create({
     maxWidth: SCREEN_WIDTH * 0.7,
   },
   overlayText: {
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 1, height: 1 },
@@ -717,12 +718,14 @@ const styles = StyleSheet.create({
   },
   headerAvatarInitial: {
     fontSize: 14,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: '#fff',
   },
   headerName: {
     ...typography.bodySmall,
     color: '#fff',
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   headerTime: {
@@ -746,6 +749,7 @@ const styles = StyleSheet.create({
   viewCountText: {
     ...typography.captionSmall,
     color: 'rgba(255,255,255,0.8)',
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   closeButton: {
@@ -819,6 +823,7 @@ const styles = StyleSheet.create({
   viewersButtonText: {
     ...typography.bodySmall,
     color: '#FFFFFF',
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
   },
 

@@ -9,8 +9,19 @@ import {
   View,
   Text,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import * as Updates from 'expo-updates';
+import { useFonts } from 'expo-font';
+import {
+  Poppins_300Light,
+  Poppins_400Regular,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  Poppins_800ExtraBold,
+  Poppins_900Black,
+} from '@expo-google-fonts/poppins';
 import type { AppStateStatus } from 'react-native';
 import type { ReactNode, ErrorInfo } from 'react';
 
@@ -267,8 +278,46 @@ function TrialExpiryChecker(): null {
   return null;
 }
 
+// ─── Font Loading Splash ──────────────────────────────────────────────
+function FontLoadingSplash(): React.JSX.Element {
+  return (
+    <View style={splashStyles.container}>
+      <Text style={splashStyles.logo}>LUMA</Text>
+      <ActivityIndicator size="small" color="#D4AF37" style={splashStyles.spinner} />
+    </View>
+  );
+}
+
+const splashStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#3D1B5B',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logo: {
+    fontSize: 40,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 6,
+  },
+  spinner: {
+    marginTop: 24,
+  },
+});
+
 // ─── App Root ─────────────────────────────────────────────────────────
 export default function App(): React.JSX.Element {
+  const [fontsLoaded] = useFonts({
+    Poppins_300Light,
+    Poppins_400Regular,
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+    Poppins_800ExtraBold,
+    Poppins_900Black,
+  });
+
   useEffect(() => {
     analyticsService.initialize().catch(() => {});
     analyticsService.track(ANALYTICS_EVENTS.APP_OPENED);
@@ -288,6 +337,10 @@ export default function App(): React.JSX.Element {
       subscription.remove();
     };
   }, []);
+
+  if (!fontsLoaded) {
+    return <FontLoadingSplash />;
+  }
 
   return (
     <AppErrorBoundary>

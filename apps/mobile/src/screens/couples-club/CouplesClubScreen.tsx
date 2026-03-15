@@ -261,6 +261,7 @@ const guardStyles = StyleSheet.create({
   badgeTitle: {
     ...typography.bodyLarge,
     color: colors.text,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     marginBottom: 2,
   },
@@ -694,6 +695,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.bodyLarge,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   createHeaderButton: {
@@ -707,6 +709,7 @@ const styles = StyleSheet.create({
   createHeaderButtonText: {
     fontSize: 22,
     color: colors.primary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   // Tabs
@@ -729,6 +732,7 @@ const styles = StyleSheet.create({
   tabText: {
     ...typography.body,
     color: colors.textTertiary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   tabTextActive: {
@@ -764,6 +768,7 @@ const styles = StyleSheet.create({
   eventTitle: {
     ...typography.bodyLarge,
     color: colors.text,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     flex: 1,
   },
@@ -777,6 +782,7 @@ const styles = StyleSheet.create({
   proBadgeText: {
     ...typography.captionSmall,
     color: colors.accent,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   eventDescription: {
@@ -816,6 +822,7 @@ const styles = StyleSheet.create({
   rsvpButtonText: {
     ...typography.bodySmall,
     color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   rsvpButtonTextActive: {
@@ -847,6 +854,7 @@ const styles = StyleSheet.create({
   rankText: {
     ...typography.body,
     color: colors.textSecondary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   rankTextTop: {
@@ -858,6 +866,7 @@ const styles = StyleSheet.create({
   coupleNames: {
     ...typography.body,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     marginBottom: 2,
   },
@@ -889,6 +898,7 @@ const styles = StyleSheet.create({
   myRankLabel: {
     ...typography.body,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   myRankValue: {
@@ -981,6 +991,7 @@ const styles = StyleSheet.create({
   emptyIconBrandedLetter: {
     fontSize: 32,
     color: colors.primary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   emptyTitle: {
@@ -1027,6 +1038,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     ...typography.bodySmall,
     color: colors.textSecondary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     marginBottom: spacing.xs,
     marginTop: spacing.sm,

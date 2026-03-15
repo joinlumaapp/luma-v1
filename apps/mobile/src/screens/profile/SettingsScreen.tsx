@@ -975,6 +975,7 @@ function createDynamicStyles(c: ThemeColors) {
     headerTitle: {
       ...typography.bodyLarge,
       color: c.text,
+      fontFamily: 'Poppins_600SemiBold',
       fontWeight: '600',
     },
 
@@ -994,6 +995,7 @@ function createDynamicStyles(c: ThemeColors) {
       ...typography.caption,
       color: c.textTertiary,
       includeFontPadding: false,
+      fontFamily: 'Poppins_600SemiBold',
       fontWeight: '600',
     },
     sectionTitleSupreme: {
@@ -1046,6 +1048,7 @@ function createDynamicStyles(c: ThemeColors) {
     },
     settingLabelDestructive: {
       color: c.error,
+      fontFamily: 'Poppins_600SemiBold',
       fontWeight: '600',
     },
 
@@ -1071,6 +1074,7 @@ function createDynamicStyles(c: ThemeColors) {
     supremeActiveText: {
       ...typography.captionSmall,
       color: SUPREME_GOLD,
+      fontFamily: 'Poppins_700Bold',
       fontWeight: '700',
       letterSpacing: 0.3,
     },
@@ -1130,10 +1134,12 @@ function createDynamicStyles(c: ThemeColors) {
     themeOptionText: {
       ...typography.caption,
       color: c.textSecondary,
+      fontFamily: 'Poppins_500Medium',
       fontWeight: '500',
     },
     themeOptionTextSelected: {
       color: c.primary,
+      fontFamily: 'Poppins_700Bold',
       fontWeight: '700',
     },
 

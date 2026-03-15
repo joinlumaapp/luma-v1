@@ -339,6 +339,7 @@ const timelineStyles = StyleSheet.create({
   addedByText: {
     ...typography.captionSmall,
     color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   placeRow: {
@@ -362,6 +363,7 @@ const timelineStyles = StyleSheet.create({
   placeName: {
     ...typography.body,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     flex: 1,
   },
@@ -397,6 +399,7 @@ const timelineStyles = StyleSheet.create({
   monthText: {
     ...typography.bodySmall,
     color: colors.textTertiary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     textTransform: 'capitalize',
   },
@@ -459,6 +462,7 @@ const timelineStyles = StyleSheet.create({
   fabIcon: {
     fontSize: 20,
     color: colors.text,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   fabText: {

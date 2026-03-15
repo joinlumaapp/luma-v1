@@ -222,7 +222,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
     borderWidth: 1, borderColor: colors.surfaceBorder,
   },
-  backIcon: { fontSize: 24, color: colors.text, fontWeight: '300', marginTop: -2 },
+  backIcon: { fontSize: 24, color: colors.text, fontFamily: 'Poppins_300Light',
+ fontWeight: '300', marginTop: -2 },
   headerTitle: { ...typography.h3, color: colors.text },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   scrollContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl },
@@ -245,10 +246,12 @@ const styles = StyleSheet.create({
   compatSection: { marginBottom: spacing.lg },
   sectionTitle: {
     ...typography.bodyLarge, color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600', marginBottom: spacing.sm,
   },
   compatRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  compatPercent: { ...typography.h2, color: colors.primary, fontWeight: '700', minWidth: 60 },
+  compatPercent: { ...typography.h2, color: colors.primary, fontFamily: 'Poppins_700Bold',
+ fontWeight: '700', minWidth: 60 },
   compatBarBg: {
     flex: 1, height: 8, borderRadius: 4,
     backgroundColor: colors.surface,

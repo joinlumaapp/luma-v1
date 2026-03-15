@@ -86,6 +86,7 @@ const styles = StyleSheet.create({
   title: {
     ...typography.bodyLarge,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     flex: 1,
   },
@@ -101,6 +102,7 @@ const styles = StyleSheet.create({
   unreadBadgeText: {
     ...typography.captionSmall,
     color: '#FFFFFF',
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
 });

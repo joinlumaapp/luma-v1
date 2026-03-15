@@ -756,12 +756,14 @@ const styles = StyleSheet.create({
   photoName: {
     ...typography.captionSmall,
     color: colors.textSecondary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     maxWidth: 80,
     textAlign: 'center',
   },
   initialsText: {
     ...typography.h3,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   heartContainer: {
@@ -801,6 +803,7 @@ const styles = StyleSheet.create({
   superBadgeText: {
     ...typography.captionSmall,
     color: colors.accent,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     includeFontPadding: false,
   },
@@ -819,6 +822,7 @@ const styles = StyleSheet.create({
   },
   scoreText: {
     ...typography.h3,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   scoreLabel: {

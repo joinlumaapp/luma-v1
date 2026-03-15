@@ -77,6 +77,7 @@ const styles = StyleSheet.create({
   code: {
     ...typography.body,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   divider: {

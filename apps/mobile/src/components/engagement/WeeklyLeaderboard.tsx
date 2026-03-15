@@ -273,10 +273,12 @@ const styles = StyleSheet.create({
   tabText: {
     ...typography.captionSmall,
     color: colors.textTertiary,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
   },
   tabTextActive: {
     color: palette.purple[600],
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 
@@ -303,11 +305,13 @@ const styles = StyleSheet.create({
   },
   rankBadgeText: {
     ...typography.captionSmall,
+    fontFamily: 'Poppins_800ExtraBold',
     fontWeight: '800',
   },
   rankText: {
     ...typography.caption,
     color: colors.textTertiary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     width: 24,
     textAlign: 'center',
@@ -324,6 +328,7 @@ const styles = StyleSheet.create({
   entryName: {
     ...typography.bodySmall,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   entryScore: {
@@ -358,6 +363,7 @@ const styles = StyleSheet.create({
   userRankText: {
     ...typography.bodySmall,
     color: palette.purple[600],
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   userRankHint: {

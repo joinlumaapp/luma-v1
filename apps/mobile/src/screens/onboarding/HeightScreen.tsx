@@ -172,6 +172,7 @@ export const HeightScreen: React.FC = () => {
 const styles = StyleSheet.create({
   title: {
     fontSize: 28,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: onboardingColors.text,
     marginBottom: 8,
@@ -216,10 +217,12 @@ const styles = StyleSheet.create({
   itemText: {
     fontSize: 16,
     color: onboardingColors.textSecondary,
+    fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
   },
   itemTextCenter: {
     fontSize: 20,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: onboardingColors.text,
   },
@@ -235,11 +238,13 @@ const styles = StyleSheet.create({
   },
   selectedValue: {
     fontSize: 32,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: onboardingColors.text,
   },
   selectedConversion: {
     fontSize: 18,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: onboardingColors.textSecondary,
   },

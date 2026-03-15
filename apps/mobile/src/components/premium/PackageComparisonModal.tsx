@@ -366,6 +366,7 @@ const styles = StyleSheet.create({
   title: {
     ...typography.h4,
     color: colors.text,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   closeButton: {
@@ -379,6 +380,7 @@ const styles = StyleSheet.create({
   closeText: {
     ...typography.body,
     color: colors.textSecondary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   subtitle: {
@@ -409,6 +411,7 @@ const styles = StyleSheet.create({
   featureLabelHeader: {
     ...typography.captionSmall,
     color: colors.textTertiary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     includeFontPadding: false,
   },
@@ -437,11 +440,13 @@ const styles = StyleSheet.create({
   recommendedBadgeText: {
     ...typography.captionSmall,
     color: colors.text,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     fontSize: 8,
   },
   tierHeaderName: {
     ...typography.captionSmall,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     textAlign: 'center',
     marginTop: spacing.xs,
@@ -486,16 +491,19 @@ const styles = StyleSheet.create({
   },
   valueTextCheck: {
     color: colors.success,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     fontSize: 16,
   },
   valueTextCross: {
     color: colors.error + '80',
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     fontSize: 16,
   },
   valueTextCustom: {
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 
@@ -522,6 +530,7 @@ const styles = StyleSheet.create({
   upgradeBtnText: {
     ...typography.captionSmall,
     color: colors.text,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     textAlign: 'center',
     lineHeight: 13,
@@ -536,6 +545,7 @@ const styles = StyleSheet.create({
   },
   currentBadgeText: {
     ...typography.captionSmall,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   emptyBtnPlaceholder: {

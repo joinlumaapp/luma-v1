@@ -260,6 +260,7 @@ const styles = StyleSheet.create({
   },
   tierName: {
     ...typography.bodyLarge,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   tierBadge: {
@@ -270,6 +271,7 @@ const styles = StyleSheet.create({
   },
   tierBadgeText: {
     ...typography.captionSmall,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   goldMini: {
@@ -284,11 +286,13 @@ const styles = StyleSheet.create({
   goldCoinIcon: {
     ...typography.caption,
     color: palette.gold[500],
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   goldMiniText: {
     ...typography.caption,
     color: palette.gold[500],
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 
@@ -308,6 +312,7 @@ const styles = StyleSheet.create({
   detailValue: {
     ...typography.bodySmall,
     color: colors.text,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
   },
   warningBanner: {
@@ -320,6 +325,7 @@ const styles = StyleSheet.create({
   warningText: {
     ...typography.caption,
     color: colors.warning,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   cancelledBanner: {
@@ -360,6 +366,7 @@ const styles = StyleSheet.create({
   upgradeButtonText: {
     ...typography.button,
     color: colors.textInverse,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
 });

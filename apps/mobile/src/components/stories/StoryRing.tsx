@@ -223,6 +223,7 @@ const styles = StyleSheet.create({
   },
   avatarInitial: {
     fontSize: 22,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.textSecondary,
   },
@@ -240,6 +241,7 @@ const styles = StyleSheet.create({
   },
   plusIcon: {
     color: '#FFFFFF',
+    fontFamily: 'Poppins_800ExtraBold',
     fontWeight: '800',
     marginTop: -1,
   },

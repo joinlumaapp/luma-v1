@@ -1113,10 +1113,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 20,
     color: '#4A3728',
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   tabChipTextActive: {
     color: '#FFFFFF',
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   // ── Nudge section ("not talked today") ──
@@ -1127,6 +1129,7 @@ const styles = StyleSheet.create({
   nudgeTitle: {
     ...typography.bodySmall,
     color: colors.textSecondary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     marginBottom: spacing.sm,
   },
@@ -1162,11 +1165,13 @@ const styles = StyleSheet.create({
   nudgeAvatarInitial: {
     ...typography.bodyLarge,
     color: colors.primary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   nudgeName: {
     ...typography.captionSmall,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     marginBottom: 2,
     textAlign: 'center',
@@ -1174,6 +1179,7 @@ const styles = StyleSheet.create({
   },
   nudgeCompat: {
     ...typography.captionSmall,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     marginBottom: 6,
   },
@@ -1186,6 +1192,7 @@ const styles = StyleSheet.create({
   nudgeCtaText: {
     ...typography.captionSmall,
     color: '#fff',
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     fontSize: 9,
   },
@@ -1243,6 +1250,7 @@ const styles = StyleSheet.create({
   },
   newBadgeText: {
     fontSize: 8,
+    fontFamily: 'Poppins_800ExtraBold',
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: 0.5,
@@ -1257,6 +1265,7 @@ const styles = StyleSheet.create({
   },
   newInlineBadgeText: {
     fontSize: 10,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.primary,
   },
@@ -1288,10 +1297,12 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   matchNameUnread: {
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   messagePreviewUnread: {
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   unreadCountBadge: {
@@ -1306,6 +1317,7 @@ const styles = StyleSheet.create({
   },
   unreadCountText: {
     fontSize: 10,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: '#FFFFFF',
   },
@@ -1322,6 +1334,7 @@ const styles = StyleSheet.create({
   },
   tabBadgeText: {
     fontSize: 9,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: '#FFFFFF',
     lineHeight: 12,
@@ -1338,6 +1351,7 @@ const styles = StyleSheet.create({
   matchName: {
     ...typography.bodyLarge,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   messagePreview: {
@@ -1369,6 +1383,7 @@ const styles = StyleSheet.create({
   starterText: {
     ...typography.captionSmall,
     color: colors.primary,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     fontSize: 10,
   },
@@ -1395,6 +1410,7 @@ const styles = StyleSheet.create({
   },
   compatibilityPercent: {
     ...typography.bodyLarge,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   compatibilityLabel: {
@@ -1485,6 +1501,7 @@ const styles = StyleSheet.create({
   viewersHeaderText: {
     ...typography.bodySmall,
     color: colors.textSecondary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   blurredAvatar: {

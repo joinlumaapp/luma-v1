@@ -194,6 +194,7 @@ const styles = StyleSheet.create({
   iconText: {
     fontSize: 14,
     color: colors.text,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   textContainer: {
@@ -202,6 +203,7 @@ const styles = StyleSheet.create({
   toastTitle: {
     ...typography.bodySmall,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   toastMessage: {

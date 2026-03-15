@@ -222,6 +222,7 @@ const styles = StyleSheet.create({
   },
   reasonLabelActive: {
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   detailsSection: {

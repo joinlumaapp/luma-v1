@@ -362,11 +362,13 @@ const styles = StyleSheet.create({
   userName: {
     ...typography.body,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   verifiedBadge: {
     fontSize: 14,
     color: colors.primary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   dotSeparator: {
@@ -397,6 +399,7 @@ const styles = StyleSheet.create({
   followButtonText: {
     ...typography.captionSmall,
     color: '#FFFFFF',
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   followButtonTextActive: {
@@ -418,6 +421,7 @@ const styles = StyleSheet.create({
   },
   topicLabel: {
     fontSize: 12,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   // Content
@@ -430,6 +434,7 @@ const styles = StyleSheet.create({
   readMore: {
     fontSize: 14,
     color: colors.primary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     marginTop: -spacing.xs,
     marginBottom: spacing.sm,
@@ -453,6 +458,7 @@ const styles = StyleSheet.create({
   compatText: {
     ...typography.caption,
     color: palette.purple[500],
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   // Action row
@@ -486,6 +492,7 @@ const styles = StyleSheet.create({
   },
   actionCountLiked: {
     color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   profileButton: {
@@ -498,6 +505,7 @@ const styles = StyleSheet.create({
   profileButtonText: {
     ...typography.captionSmall,
     color: colors.primary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
 });
@@ -549,6 +557,7 @@ const mediaStyles = StyleSheet.create({
   videoBadgeText: {
     ...typography.captionSmall,
     color: '#FFFFFF',
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   // Photos
@@ -627,6 +636,7 @@ const musicStyles = StyleSheet.create({
   title: {
     ...typography.body,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   artist: {

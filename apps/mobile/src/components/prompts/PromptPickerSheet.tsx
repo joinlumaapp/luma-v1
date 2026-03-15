@@ -313,6 +313,7 @@ const styles = StyleSheet.create({
   },
   categoryChipTextActive: {
     color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   promptList: {
@@ -345,6 +346,7 @@ const styles = StyleSheet.create({
   categoryBadgeText: {
     ...typography.captionSmall,
     color: colors.primary,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
   },
   emptyState: {

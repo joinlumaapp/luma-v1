@@ -269,12 +269,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: onboardingColors.text,
     marginBottom: spacing.sm,
   },
   subtitle: {
     fontSize: 15,
+    fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
     color: onboardingColors.textSecondary,
     marginBottom: spacing.xl,
@@ -300,6 +302,7 @@ const styles = StyleSheet.create({
   },
   countryCode: {
     fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: onboardingColors.text,
   },
@@ -323,6 +326,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: spacing.md,
     fontSize: 17,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: onboardingColors.text,
     letterSpacing: 1.5,
@@ -350,6 +354,7 @@ const styles = StyleSheet.create({
   },
   countryOptionText: {
     fontSize: 15,
+    fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
     color: onboardingColors.text,
     flex: 1,
@@ -357,6 +362,7 @@ const styles = StyleSheet.create({
   checkmark: {
     fontSize: 16,
     color: onboardingColors.checkGreen,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   footer: {
@@ -376,6 +382,7 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     fontSize: 16,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: onboardingColors.buttonText,
     letterSpacing: 0.3,
@@ -385,6 +392,7 @@ const styles = StyleSheet.create({
   },
   securityNote: {
     fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
     color: onboardingColors.textTertiary,
     textAlign: 'center',

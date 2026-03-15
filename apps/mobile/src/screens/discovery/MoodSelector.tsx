@@ -209,6 +209,7 @@ const styles = StyleSheet.create({
   },
   moodBadgeText: {
     fontSize: 10,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 });

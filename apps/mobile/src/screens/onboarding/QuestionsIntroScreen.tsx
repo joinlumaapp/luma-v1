@@ -99,6 +99,7 @@ const styles = StyleSheet.create({
   },
   questionMark: {
     fontSize: 28,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: '#1A1A1A',
   },
@@ -118,6 +119,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: onboardingColors.text,
     lineHeight: 36,
@@ -125,6 +127,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
+    fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
     color: onboardingColors.textSecondary,
     lineHeight: 24,

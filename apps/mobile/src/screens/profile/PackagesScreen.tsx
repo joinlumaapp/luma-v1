@@ -516,6 +516,7 @@ const styles = StyleSheet.create({
   currentBadgeText: {
     ...typography.captionSmall,
     color: colors.text,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
 
@@ -538,6 +539,7 @@ const styles = StyleSheet.create({
   },
   packageName: {
     ...typography.h3,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
 
@@ -552,12 +554,14 @@ const styles = StyleSheet.create({
   priceCurrency: {
     ...typography.bodySmall,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     marginLeft: 1,
   },
   priceAmount: {
     ...typography.h2,
     color: colors.text,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     lineHeight: 36,
   },
@@ -568,6 +572,7 @@ const styles = StyleSheet.create({
   priceDecimal: {
     ...typography.bodySmall,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   pricePeriod: {
@@ -577,6 +582,7 @@ const styles = StyleSheet.create({
   freeText: {
     ...typography.h3,
     color: colors.textSecondary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 
@@ -592,6 +598,7 @@ const styles = StyleSheet.create({
   },
   featureCheck: {
     ...typography.body,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     width: 20,
     textAlign: 'center',
@@ -623,6 +630,7 @@ const styles = StyleSheet.create({
   },
   currentIndicatorText: {
     ...typography.buttonSmall,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 
@@ -637,6 +645,7 @@ const styles = StyleSheet.create({
   comparisonTitle: {
     ...typography.h4,
     color: colors.text,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     marginBottom: spacing.md,
     textAlign: 'center',
@@ -656,11 +665,13 @@ const styles = StyleSheet.create({
   comparisonLabelHeader: {
     ...typography.captionSmall,
     color: colors.textTertiary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     includeFontPadding: false,
   },
   comparisonColumnHeader: {
     ...typography.captionSmall,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     textAlign: 'center',
   },
@@ -689,6 +700,7 @@ const styles = StyleSheet.create({
   },
   comparisonValueAvailable: {
     color: colors.success,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   comparisonValueUnavailable: {

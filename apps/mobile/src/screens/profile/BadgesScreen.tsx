@@ -261,6 +261,7 @@ const ringStyles = StyleSheet.create({
   },
   percentText: {
     fontSize: 9,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   shimmerGlow: {
@@ -279,6 +280,7 @@ const ringStyles = StyleSheet.create({
   },
   iconText: {
     fontSize: 22,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
 });
@@ -332,6 +334,7 @@ const recentStyles = StyleSheet.create({
   title: {
     ...typography.bodyLarge,
     color: palette.gold[400],
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     marginBottom: spacing.sm,
   },
@@ -354,11 +357,13 @@ const recentStyles = StyleSheet.create({
   },
   iconText: {
     fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   name: {
     ...typography.captionSmall,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     textAlign: 'center',
   },
@@ -640,6 +645,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.bodyLarge,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   headerCountBadge: {
@@ -654,6 +660,7 @@ const styles = StyleSheet.create({
   headerCountText: {
     ...typography.captionSmall,
     color: colors.text,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   headerSpacer: {
@@ -682,6 +689,7 @@ const styles = StyleSheet.create({
   summaryText: {
     ...typography.bodySmall,
     color: colors.textSecondary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 
@@ -716,6 +724,7 @@ const styles = StyleSheet.create({
   badgeName: {
     ...typography.body,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     textAlign: 'center',
     marginBottom: 2,
@@ -744,6 +753,7 @@ const styles = StyleSheet.create({
   },
   earnedText: {
     ...typography.captionSmall,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   earnedDate: {
@@ -753,6 +763,7 @@ const styles = StyleSheet.create({
   goldRewardBadge: {
     ...typography.captionSmall,
     color: palette.gold[400],
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     marginTop: 2,
   },
@@ -777,6 +788,7 @@ const styles = StyleSheet.create({
   progressLabel: {
     ...typography.captionSmall,
     color: colors.textTertiary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 });

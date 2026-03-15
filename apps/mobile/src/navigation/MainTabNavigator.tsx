@@ -557,6 +557,7 @@ const styles = StyleSheet.create({
   unreadBadgeText: {
     ...typography.captionSmall,
     color: '#FFFFFF',
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     fontSize: 9,
     lineHeight: 12,

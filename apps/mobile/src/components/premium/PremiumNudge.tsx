@@ -234,6 +234,7 @@ const styles = StyleSheet.create({
   ctaText: {
     ...typography.captionSmall,
     color: '#FFFFFF',
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   dismissButton: {
@@ -250,6 +251,7 @@ const styles = StyleSheet.create({
   dismissText: {
     fontSize: 10,
     color: colors.textTertiary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
 });

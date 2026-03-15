@@ -186,6 +186,7 @@ const chipStyles = StyleSheet.create({
   },
   text: {
     ...typography.captionSmall,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 });
@@ -373,6 +374,7 @@ const styles = StyleSheet.create({
   },
   scoreText: {
     ...typography.h3,
+    fontFamily: 'Poppins_800ExtraBold',
     fontWeight: '800',
   },
   scoreLabel: {
@@ -388,6 +390,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     ...typography.captionSmall,
     color: colors.textTertiary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     marginBottom: spacing.xs,
     includeFontPadding: false,
@@ -423,6 +426,7 @@ const styles = StyleSheet.create({
   commonAnswerText: {
     ...typography.captionSmall,
     color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 
@@ -437,6 +441,7 @@ const styles = StyleSheet.create({
   },
   insightText: {
     ...typography.captionSmall,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 });

@@ -263,6 +263,7 @@ const styles = StyleSheet.create({
   pillText: {
     ...typography.caption,
     color: palette.white,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 
@@ -301,6 +302,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     ...typography.label,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   cardDescription: {
@@ -320,6 +322,7 @@ const styles = StyleSheet.create({
   rewardText: {
     ...typography.caption,
     color: palette.gold[600],
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
 
@@ -345,6 +348,7 @@ const styles = StyleSheet.create({
   progressText: {
     ...typography.captionSmall,
     color: colors.textSecondary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     minWidth: 28,
     textAlign: 'right',
@@ -363,6 +367,7 @@ const styles = StyleSheet.create({
   claimBtnText: {
     ...typography.buttonSmall,
     color: palette.white,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   claimedRow: {
@@ -373,6 +378,7 @@ const styles = StyleSheet.create({
   claimedText: {
     ...typography.caption,
     color: palette.success,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   timerRow: {

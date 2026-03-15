@@ -190,6 +190,7 @@ const styles = StyleSheet.create({
   backText: {
     fontSize: 24,
     color: onboardingColors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   content: {
@@ -199,6 +200,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: onboardingColors.text,
     marginBottom: 8,
@@ -229,6 +231,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 17,
     color: onboardingColors.text,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
   },
   toggleButton: {
@@ -238,6 +241,7 @@ const styles = StyleSheet.create({
   toggleText: {
     fontSize: 14,
     color: onboardingColors.textSecondary,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   rulesContainer: {
@@ -287,6 +291,7 @@ const styles = StyleSheet.create({
   },
   continueText: {
     fontSize: 17,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: onboardingColors.background,
   },

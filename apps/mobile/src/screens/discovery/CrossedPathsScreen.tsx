@@ -272,6 +272,7 @@ const cardStyles = StyleSheet.create({
   verifiedIcon: {
     fontSize: 10,
     color: colors.text,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   info: {
@@ -286,6 +287,7 @@ const cardStyles = StyleSheet.create({
   name: {
     ...typography.bodyLarge,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     flex: 1,
   },
@@ -299,6 +301,7 @@ const cardStyles = StyleSheet.create({
   compatText: {
     ...typography.caption,
     color: colors.primary,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   locationRow: {
@@ -333,6 +336,7 @@ const cardStyles = StyleSheet.create({
   crossingText: {
     ...typography.captionSmall,
     color: colors.primaryLight,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   actions: {
@@ -733,6 +737,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.bodyLarge,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   headerSpacer: {

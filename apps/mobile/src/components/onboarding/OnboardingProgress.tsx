@@ -173,11 +173,13 @@ const styles = StyleSheet.create({
   checkMark: {
     color: colors.text,
     fontSize: 11,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   stepNumber: {
     ...typography.captionSmall,
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   stepNumberCurrent: {
@@ -196,6 +198,7 @@ const styles = StyleSheet.create({
   },
   stepLabelCurrent: {
     color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   stepLabelUpcoming: {

@@ -85,6 +85,7 @@ const styles = StyleSheet.create({
   backIcon: {
     fontSize: 28,
     color: colors.text,
+    fontFamily: 'Poppins_300Light',
     fontWeight: '300',
     marginTop: -2,
   },

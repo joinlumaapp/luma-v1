@@ -71,6 +71,7 @@ const styles = StyleSheet.create({
     ...shadows.small,
   },
   icon: {
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
 });

@@ -300,6 +300,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.h3,
     color: palette.white,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
   headerSubtitle: {
@@ -350,6 +351,7 @@ const styles = StyleSheet.create({
   },
   dayJetons: {
     ...typography.captionSmall,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.textSecondary,
   },
@@ -376,11 +378,13 @@ const styles = StyleSheet.create({
   coinAmount: {
     ...typography.h2,
     color: palette.white,
+    fontFamily: 'Poppins_800ExtraBold',
     fontWeight: '800',
   },
   coinLabel: {
     ...typography.captionSmall,
     color: 'rgba(255,255,255,0.9)',
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   bonusBadge: {
@@ -396,11 +400,13 @@ const styles = StyleSheet.create({
   bonusText: {
     ...typography.caption,
     color: palette.gold[500],
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   multiplierText: {
     ...typography.caption,
     color: palette.gold[500],
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     marginTop: spacing.xs,
   },
@@ -425,6 +431,7 @@ const styles = StyleSheet.create({
   claimButtonText: {
     ...typography.button,
     color: palette.white,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
 });

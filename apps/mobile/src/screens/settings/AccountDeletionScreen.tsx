@@ -385,6 +385,7 @@ function createDynamicStyles(c: ThemeColors) {
     headerTitle: {
       ...typography.bodyLarge,
       color: c.text,
+      fontFamily: 'Poppins_600SemiBold',
       fontWeight: '600',
       includeFontPadding: false,
     },
@@ -416,6 +417,7 @@ function createDynamicStyles(c: ThemeColors) {
     warningTitle: {
       ...typography.bodyLarge,
       color: c.error,
+      fontFamily: 'Poppins_700Bold',
       fontWeight: '700',
       marginBottom: spacing.sm,
       textAlign: 'center',
@@ -446,6 +448,7 @@ function createDynamicStyles(c: ThemeColors) {
     infoTitle: {
       ...typography.bodySmall,
       color: c.primary,
+      fontFamily: 'Poppins_600SemiBold',
       fontWeight: '600',
       marginBottom: 4,
       includeFontPadding: false,
@@ -461,6 +464,7 @@ function createDynamicStyles(c: ThemeColors) {
     sectionLabel: {
       ...typography.caption,
       color: c.textTertiary,
+      fontFamily: 'Poppins_600SemiBold',
       fontWeight: '600',
       marginBottom: spacing.sm,
       paddingHorizontal: spacing.xs,
@@ -509,6 +513,7 @@ function createDynamicStyles(c: ThemeColors) {
       includeFontPadding: false,
     },
     reasonTextSelected: {
+      fontFamily: 'Poppins_500Medium',
       fontWeight: '500',
     },
 
@@ -562,6 +567,7 @@ function createDynamicStyles(c: ThemeColors) {
     otpTitle: {
       ...typography.h4,
       color: c.text,
+      fontFamily: 'Poppins_700Bold',
       fontWeight: '700',
       marginBottom: spacing.sm,
       includeFontPadding: false,
@@ -596,6 +602,7 @@ function createDynamicStyles(c: ThemeColors) {
     resendText: {
       ...typography.bodySmall,
       color: c.primary,
+      fontFamily: 'Poppins_500Medium',
       fontWeight: '500',
       includeFontPadding: false,
     },
@@ -641,6 +648,7 @@ function createDynamicStyles(c: ThemeColors) {
     modalTitle: {
       ...typography.h4,
       color: c.error,
+      fontFamily: 'Poppins_700Bold',
       fontWeight: '700',
       marginBottom: spacing.md,
       textAlign: 'center',
@@ -678,6 +686,7 @@ function createDynamicStyles(c: ThemeColors) {
     modalDeleteText: {
       ...typography.button,
       color: '#FFFFFF',
+      fontFamily: 'Poppins_700Bold',
       fontWeight: '700',
       includeFontPadding: false,
     },
