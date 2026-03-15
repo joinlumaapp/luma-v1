@@ -110,7 +110,7 @@ export const GiphyPicker: React.FC<GiphyPickerProps> = ({ onSelect, onClose }) =
       setOffset(result.offset);
       setTotalCount(result.totalCount);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Bir hata olustu');
+      setError(err instanceof Error ? err.message : 'Bir hata oluştu');
     } finally {
       setIsLoading(false);
     }
@@ -136,7 +136,7 @@ export const GiphyPicker: React.FC<GiphyPickerProps> = ({ onSelect, onClose }) =
       }
     } catch (err) {
       if (currentQueryRef.current === searchQuery) {
-        setError(err instanceof Error ? err.message : 'Bir hata olustu');
+        setError(err instanceof Error ? err.message : 'Bir hata oluştu');
       }
     } finally {
       if (currentQueryRef.current === searchQuery) {

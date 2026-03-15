@@ -56,13 +56,13 @@ interface FeedUserProfile {
 
 const MOCK_PROFILES: Record<string, FeedUserProfile> = {
   'bot-001': {
-    userId: 'bot-001', name: 'Elif', age: 26, city: 'Istanbul',
-    avatarUrl: 'https://i.pravatar.cc/150?img=1', bio: 'Sahilde yurumeyi, kitap okumayı ve yeni insanlarla tanismayı seviyorum.',
+    userId: 'bot-001', name: 'Elif', age: 26, city: 'İstanbul',
+    avatarUrl: 'https://i.pravatar.cc/150?img=1', bio: 'Sahilde yürümeyi, kitap okumayı ve yeni insanlarla tanışmayı seviyorum.',
     isVerified: true, isFollowing: true, followerCount: 312, followingCount: 198, postCount: 24,
     photos: ['https://picsum.photos/seed/elif1/400/500', 'https://picsum.photos/seed/elif2/400/500'],
     compatibilityPercent: 92,
-    hobbies: ['Yoga', 'Kitap', 'Seyahat', 'Fotografcilik'],
-    height: '168 cm', job: 'Grafik Tasarimci', education: 'Istanbul Universitesi', intentionTag: 'Ciddi Iliski', zodiacSign: 'Basak',
+    hobbies: ['Yoga', 'Kitap', 'Seyahat', 'Fotoğrafçılık'],
+    height: '168 cm', job: 'Grafik Tasarımcı', education: 'İstanbul Üniversitesi', intentionTag: 'Ciddi İlişki', zodiacSign: 'Başak',
     packageTier: 'gold',
   },
   'bot-002': {

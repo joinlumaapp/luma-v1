@@ -103,7 +103,7 @@ export const FlashBoost: React.FC<FlashBoostProps> = ({
     if (balance < DISCOUNTED_COST) {
       Alert.alert(
         'Yetersiz Jeton',
-        `Flash Boost icin ${DISCOUNTED_COST} jeton gerekli.`,
+        `Flash Boost için ${DISCOUNTED_COST} jeton gerekli.`,
         [
           { text: 'Vazgeç', style: 'cancel' },
           {

@@ -610,7 +610,7 @@ export const DiscoveryScreen: React.FC = () => {
                 text: `Jeton ile Gönder (${SUPER_LIKE_COST} jeton)`,
                 onPress: async () => {
                   if (coinBalance < SUPER_LIKE_COST) {
-                    Alert.alert('Yetersiz Jeton', `Super Like için ${SUPER_LIKE_COST} jeton gerekli. Mevcut bakiyen: ${coinBalance} jeton.`);
+                    Alert.alert('Yetersiz Jeton', `Süper Like için ${SUPER_LIKE_COST} jeton gerekli. Mevcut bakiyen: ${coinBalance} jeton.`);
                     return;
                   }
                   const success = await useCoinStore.getState().sendSuperLike(card.id);

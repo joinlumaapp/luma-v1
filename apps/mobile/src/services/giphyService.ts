@@ -108,7 +108,7 @@ export const giphyService = {
       if (__DEV__) {
         console.warn('GIF arama hatasi:', error);
       }
-      throw new Error('GIF aranamadi. Lutfen tekrar deneyin.');
+      throw new Error('GIF aranamadı. Lütfen tekrar deneyin.');
     }
   },
 
@@ -145,7 +145,7 @@ export const giphyService = {
       if (__DEV__) {
         console.warn('Trending GIF hatasi:', error);
       }
-      throw new Error('Trend GIF\'ler yuklenemedi. Lutfen tekrar deneyin.');
+      throw new Error('Trend GIF\'ler yüklenemedi. Lütfen tekrar deneyin.');
     }
   },
 

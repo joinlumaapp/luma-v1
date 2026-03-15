@@ -296,7 +296,7 @@ export const JetonMarketScreen: React.FC = () => {
   const handleWatchAd = useCallback(async () => {
     if (!isAdAvailable()) return;
     const reward = await watchAd();
-    Alert.alert('Tebrikler!', `${reward} Jeton kazandin!`);
+    Alert.alert('Tebrikler!', `${reward} Jeton kazandın!`);
   }, [watchAd, isAdAvailable]);
 
   return (

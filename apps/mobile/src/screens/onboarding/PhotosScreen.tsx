@@ -86,7 +86,7 @@ export const PhotosScreen: React.FC = () => {
     } catch {
       Alert.alert(
         'Hata',
-        'Fotograf isleniremedi. Lutfen tekrar deneyin.',
+        'Fotoğraf işlenemedi. Lütfen tekrar deneyin.',
         [{ text: 'Tamam' }],
       );
     } finally {
@@ -97,10 +97,10 @@ export const PhotosScreen: React.FC = () => {
   const showPickerOptions = useCallback((index: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     Alert.alert(
-      index === 0 ? 'Profil Fotografi' : 'Fotograf Ekle',
+      index === 0 ? 'Profil Fotoğrafı' : 'Fotoğraf Ekle',
       index === 0
-        ? 'Profil fotografin icin yuzunun net gorundugu bir fotograf sec.'
-        : 'Fotograf kaynagini secin',
+        ? 'Profil fotoğrafın için yüzünün net göründüğü bir fotoğraf seç.'
+        : 'Fotoğraf kaynağını seçin',
       [
         {
           text: 'Galeriden Seç',
@@ -135,16 +135,16 @@ export const PhotosScreen: React.FC = () => {
 
     if (index === 0) {
       Alert.alert(
-        'Profil Fotografi',
-        'Profil fotografini degistirmek ister misin?',
+        'Profil Fotoğrafı',
+        'Profil fotoğrafını değiştirmek ister misin?',
         [
           { text: 'İptal', style: 'cancel' },
           {
-            text: 'Degistir',
+            text: 'Değiştir',
             onPress: () => showPickerOptions(0),
           },
           {
-            text: 'Kaldir',
+            text: 'Kaldır',
             style: 'destructive',
             onPress: () => {
               setPhotoSlots((prev) => {
@@ -197,10 +197,10 @@ export const PhotosScreen: React.FC = () => {
         activeOpacity={0.7}
         accessibilityLabel={
           slot
-            ? `Fotograf ${index + 1}, kaldirmak icin dokun`
+            ? `Fotoğraf ${index + 1}, kaldırmak için dokun`
             : isMain
-              ? 'Profil fotografi ekle'
-              : `Fotograf ${index + 1} ekle`
+              ? 'Profil fotoğrafı ekle'
+              : `Fotoğraf ${index + 1} ekle`
         }
         accessibilityRole="button"
       >

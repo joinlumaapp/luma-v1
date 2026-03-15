@@ -66,7 +66,7 @@ const ACTIVITY_PRESETS: ActivityPreset[] = [
       'Mikla Restaurant',
       'Nusr-Et Steakhouse',
       'Sunset Grill & Bar',
-      'Zuma Istanbul',
+      'Zuma İstanbul',
       'Nicole Restaurant',
     ],
   },
@@ -89,7 +89,7 @@ const ACTIVITY_PRESETS: ActivityPreset[] = [
     icon: 'musical-notes',
     color: '#EF4444',
     suggestedPlaces: [
-      'Babylon Istanbul',
+      'Babylon İstanbul',
       'Volkswagen Arena',
       'IF Performance Hall',
       'Zorlu PSM',
@@ -115,7 +115,7 @@ const ACTIVITY_PRESETS: ActivityPreset[] = [
     icon: 'color-palette',
     color: '#3B82F6',
     suggestedPlaces: [
-      'Istanbul Modern',
+      'İstanbul Modern',
       'Sakıp Sabancı Müzesi',
       'Pera Müzesi',
       'Masumiyet Müzesi',

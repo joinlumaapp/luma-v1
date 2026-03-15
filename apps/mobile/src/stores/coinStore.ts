@@ -399,7 +399,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
         return true;
       }
 
-      const message = error instanceof Error ? error.message : 'Satin alma basarisiz';
+      const message = error instanceof Error ? error.message : 'Satın alma başarısız';
       set({ isLoading: false, error: message });
       return false;
     }
@@ -419,7 +419,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
         id: generateId(),
         amount: reward,
         type: 'earn',
-        reason: 'Reklam izleme odulu',
+        reason: 'Reklam izleme ödülü',
         timestamp: Date.now(),
       };
 
@@ -449,7 +449,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
         id: generateId(),
         amount: reward,
         type: 'earn',
-        reason: 'Reklam izleme odulu',
+        reason: 'Reklam izleme ödülü',
         timestamp: Date.now(),
       };
 
@@ -490,7 +490,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
       id: generateId(),
       amount: DAILY_CHECKIN_REWARD,
       type: 'earn',
-      reason: 'Gunluk giris odulu',
+      reason: 'Günlük giriş ödülü',
       timestamp: Date.now(),
     };
 
@@ -522,7 +522,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
       id: generateId(),
       amount: PROFILE_COMPLETION_REWARD,
       type: 'earn',
-      reason: 'Profil tamamlama odulu',
+      reason: 'Profil tamamlama ödülü',
       timestamp: Date.now(),
     };
 
@@ -549,7 +549,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
       id: generateId(),
       amount: ACTIVITY_CREATION_REWARD,
       type: 'earn',
-      reason: 'Aktivite olusturma odulu',
+      reason: 'Aktivite oluşturma ödülü',
       timestamp: Date.now(),
     };
 
@@ -574,7 +574,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
   sendInstantMessage: async (recipientId: string): Promise<boolean> => {
     const { balance } = get();
     if (balance < INSTANT_MESSAGE_COST) {
-      set({ error: 'Hizli mesaj gonderme icin yetersiz jeton.' });
+      set({ error: 'Hızlı mesaj gönderme için yetersiz jeton.' });
       return false;
     }
 
@@ -624,7 +624,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
   activateProfileBoost: async (): Promise<boolean> => {
     const { balance } = get();
     if (balance < PROFILE_BOOST_COST) {
-      set({ error: 'Profil Boost icin yetersiz jeton.' });
+      set({ error: 'Profil Boost için yetersiz jeton.' });
       return false;
     }
 
@@ -689,7 +689,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
   sendSuperLike: async (targetId: string): Promise<boolean> => {
     const { balance } = get();
     if (balance < SUPER_LIKE_COST) {
-      set({ error: 'Super Begeni icin yetersiz jeton.' });
+      set({ error: 'Süper Beğeni için yetersiz jeton.' });
       return false;
     }
 
@@ -756,7 +756,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
       id: generateId(),
       amount: WELCOME_BONUS,
       type: 'earn',
-      reason: 'Hos geldin hediyesi',
+      reason: 'Hoş geldin hediyesi',
       timestamp: Date.now(),
     };
 
@@ -791,7 +791,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
       id: generateId(),
       amount: DAILY_QUESTION_REWARD,
       type: 'earn',
-      reason: 'Gunluk soru odulu',
+      reason: 'Günlük soru ödülü',
       timestamp: Date.now(),
     };
 
@@ -822,7 +822,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
       id: generateId(),
       amount: REFERRAL_REWARD,
       type: 'earn',
-      reason: 'Arkadas davet odulu',
+      reason: 'Arkadaş davet ödülü',
       timestamp: Date.now(),
     };
 

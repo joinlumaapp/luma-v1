@@ -107,7 +107,7 @@ export const OTPVerificationScreen: React.FC = () => {
 
       if (!verified) {
         setFailedAttempts((prev) => prev + 1);
-        Alert.alert('Hata', 'Kod gecersiz. Tekrar deneyin.');
+        Alert.alert('Hata', 'Kod geçersiz. Tekrar deneyin.');
         setCode(Array(OTP_LENGTH).fill(''));
         setActiveIndex(0);
         inputRefs.current[0]?.focus();
@@ -136,7 +136,7 @@ export const OTPVerificationScreen: React.FC = () => {
       useAuthStore.getState().setOnboarded(true);
     } catch {
       setFailedAttempts((prev) => prev + 1);
-      Alert.alert('Hata', 'Kod gecersiz. Tekrar deneyin.');
+      Alert.alert('Hata', 'Kod geçersiz. Tekrar deneyin.');
       setCode(Array(OTP_LENGTH).fill(''));
       setActiveIndex(0);
       inputRefs.current[0]?.focus();

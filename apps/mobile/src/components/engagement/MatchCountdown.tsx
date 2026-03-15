@@ -157,13 +157,13 @@ export const MatchCountdown: React.FC<MatchCountdownProps> = ({
           <View style={styles.bannerTextBlock}>
             <Text style={styles.bannerTitle}>
               {expired
-                ? 'Esleme suresi doldu!'
-                : `${formatTimeRemaining(remaining)} kaldi`}
+                ? 'Eşleşme süresi doldu!'
+                : `${formatTimeRemaining(remaining)} kaldı`}
             </Text>
             <Text style={styles.bannerSubtitle}>
               {expired
-                ? 'Sure uzatarak eslemeyi koru'
-                : '24 saat icinde mesaj at, yoksa esleme kaybolur!'}
+                ? 'Süre uzatarak eşleşmeyi koru'
+                : '24 saat içinde mesaj at, yoksa eşleşme kaybolur!'}
             </Text>
           </View>
         </View>

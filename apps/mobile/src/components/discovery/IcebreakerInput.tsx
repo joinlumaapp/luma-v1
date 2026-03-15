@@ -157,7 +157,7 @@ export const IcebreakerInput: React.FC<IcebreakerInputProps> = ({
             )}
             <View style={styles.targetTextContainer}>
               <Text style={styles.targetLabel} numberOfLines={1}>
-                {isPhoto ? `${profileName} - Fotograf` : target.promptQuestion ?? 'Prompt'}
+                {isPhoto ? `${profileName} - Fotoğraf` : target.promptQuestion ?? 'Prompt'}
               </Text>
               {!isPhoto && target.promptAnswer && (
                 <Text style={styles.targetAnswer} numberOfLines={1}>

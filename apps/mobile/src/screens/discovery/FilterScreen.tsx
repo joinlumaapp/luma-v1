@@ -421,7 +421,7 @@ export const FilterScreen: React.FC = () => {
           <View style={styles.distanceTitleRow}>
             <Text style={styles.sectionTitle}>Maksimum Mesafe</Text>
             <Text style={styles.distanceValueLabel}>
-              {cityWideMode ? 'Sehir geneli' : `${maxDistance} km icinde`}
+              {cityWideMode ? 'Şehir geneli' : `${maxDistance} km içinde`}
             </Text>
           </View>
 

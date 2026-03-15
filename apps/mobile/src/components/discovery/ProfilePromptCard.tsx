@@ -60,7 +60,7 @@ const ProfilePromptCardInner: React.FC<ProfilePromptCardProps> = ({
     <Pressable
       style={styles.card}
       onPress={() => onCommentTap(prompt)}
-      accessibilityLabel={`Prompt: ${prompt.question}. Yanit: ${prompt.answer}. Yorum yapmak icin dokun.`}
+      accessibilityLabel={`Prompt: ${prompt.question}. Yanıt: ${prompt.answer}. Yorum yapmak için dokun.`}
       accessibilityRole="button"
     >
       {/* Question label */}

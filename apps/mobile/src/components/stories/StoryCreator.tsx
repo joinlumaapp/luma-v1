@@ -165,7 +165,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
     // For now, use a placeholder
     Alert.alert(
       'Fotoğraf Seç',
-      'Galeriden fotograf secmek icin expo-image-picker entegrasyonu gereklidir.',
+      'Galeriden fotoğraf seçmek için expo-image-picker entegrasyonu gereklidir.',
       [
         { text: 'Tamam', style: 'default' },
       ],
@@ -264,10 +264,10 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
     if (imageUri || textOverlays.length > 0 || stickerOverlays.length > 0) {
       Alert.alert(
         'Vazgeç',
-        'Hikayeni kaydetmeden cikmak istedigin kesin mi?',
+        'Hikayeni kaydetmeden çıkmak istediğin kesin mi?',
         [
-          { text: 'Kaldir', style: 'cancel' },
-          { text: 'Cik', style: 'destructive', onPress: () => navigation.goBack() },
+          { text: 'Kaldır', style: 'cancel' },
+          { text: 'Çık', style: 'destructive', onPress: () => navigation.goBack() },
         ],
       );
     } else {

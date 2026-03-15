@@ -123,7 +123,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const response: VerifySmsResponse = await authService.verifySms(phone, code);
 
       if (!response.verified) {
-        set({ isLoading: false, error: 'Dogrulama kodu yanlis. Lutfen tekrar deneyin.' });
+        set({ isLoading: false, error: 'Doğrulama kodu yanlış. Lütfen tekrar deneyin.' });
         return false;
       }
 

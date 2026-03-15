@@ -473,7 +473,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
       // so the card is still visible at its current position. We only need to
       // surface the error so the UI can display a toast/banner.
       set({
-        error: 'Swipe gonderilemedi. Lutfen tekrar dene.',
+        error: 'Swipe gönderilemedi. Lütfen tekrar dene.',
         canUndo: false,
         undoTimerId: null,
         lastSwipedProfile: null,

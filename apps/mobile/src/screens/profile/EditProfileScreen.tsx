@@ -47,8 +47,8 @@ const MAX_INTERESTS = 10;
 
 // ── Turkish city list ──────────────────────────────────────────────────────
 const TURKISH_CITIES: string[] = [
-  'Istanbul', 'Ankara', 'Izmir', 'Antalya', 'Bursa', 'Adana',
-  'Konya', 'Gaziantep', 'Mersin', 'Diyarbakir', 'Kayseri',
+  'İstanbul', 'Ankara', 'İzmir', 'Antalya', 'Bursa', 'Adana',
+  'Konya', 'Gaziantep', 'Mersin', 'Diyarbakır', 'Kayseri',
   'Eskişehir', 'Samsun', 'Trabzon', 'Mugla', 'Denizli',
   'Sakarya', 'Malatya', 'Kahramanmaras', 'Erzurum',
 ];
@@ -176,8 +176,8 @@ export const EditProfileScreen: React.FC = () => {
               return;
             }
             Alert.alert(
-              'Fotografi Sil',
-              'Bu fotografi silmek istediginden emin misin?',
+              'Fotoğrafı Sil',
+              'Bu fotoğrafı silmek istediğinden emin misin?',
               [
                 { text: 'İptal', style: 'cancel' },
                 {
@@ -477,9 +477,9 @@ export const EditProfileScreen: React.FC = () => {
             )}
           </View>
 
-          {/* ── Fotograflar (3x2 grid) ────────────────────────────────── */}
+          {/* ── Fotoğraflar (3x2 grid) ────────────────────────────────── */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Fotograflar</Text>
+            <Text style={styles.sectionTitle}>Fotoğraflar</Text>
             <Text style={styles.sectionHint}>
               Ilk fotograf profil fotografin olacak. En az 2, en fazla 6 fotograf ekle.
             </Text>
@@ -499,8 +499,8 @@ export const EditProfileScreen: React.FC = () => {
                     activeOpacity={0.7}
                     accessibilityLabel={
                       uri
-                        ? `Fotograf ${index + 1}, duzenlemek için dokun`
-                        : `Fotograf ekle, slot ${index + 1}`
+                        ? `Fotoğraf ${index + 1}, düzenlemek için dokun`
+                        : `Fotoğraf ekle, slot ${index + 1}`
                     }
                     accessibilityRole="button"
                   >
