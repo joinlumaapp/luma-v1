@@ -31,6 +31,9 @@ import { useProfileStore } from '../../stores/profileStore';
 import { photoService } from '../../services/photoService';
 import { VideoRecorder } from '../../components/profile/VideoRecorder';
 import { VideoProfile } from '../../components/profile/VideoProfile';
+import { FavoriteSpotsEditor } from '../../components/profile/FavoriteSpotsEditor';
+import { PromptPickerSheet } from '../../components/prompts/PromptPickerSheet';
+import type { PromptOption } from '../../constants/promptBank';
 import type { VideoMetadata } from '../../services/videoService';
 
 type EditProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'EditProfile'>;
@@ -115,6 +118,8 @@ export const EditProfileScreen: React.FC = () => {
   const setMainPhoto = useProfileStore((state) => state.setMainPhoto);
   const uploadVideo = useProfileStore((state) => state.uploadVideo);
   const deleteVideoAction = useProfileStore((state) => state.deleteVideo);
+  const setPrompts = useProfileStore((state) => state.setPrompts);
+  const setFavoriteSpots = useProfileStore((state) => state.setFavoriteSpots);
   const isVideoUploading = useProfileStore((state) => state.isVideoUploading);
   const videoUploadProgress = useProfileStore((state) => state.videoUploadProgress);
 
@@ -132,6 +137,7 @@ export const EditProfileScreen: React.FC = () => {
   const [showHeightPicker, setShowHeightPicker] = useState(false);
   const [showVideoRecorder, setShowVideoRecorder] = useState(false);
   const [showVideoPreview, setShowVideoPreview] = useState(false);
+  const [showPromptPicker, setShowPromptPicker] = useState(false);
 
   // Sync from store on external changes
   useEffect(() => {
@@ -285,6 +291,39 @@ export const EditProfileScreen: React.FC = () => {
       ],
     );
   }, [deleteVideoAction]);
+
+  // ── Prompt handlers ───────────────────────────────────────────────────
+  const updatePromptAnswer = useCallback(
+    (index: number, text: string) => {
+      const updated = [...profile.prompts];
+      updated[index] = { ...updated[index], answer: text };
+      setPrompts(updated);
+    },
+    [profile.prompts, setPrompts],
+  );
+
+  const removePrompt = useCallback(
+    (index: number) => {
+      const updated = profile.prompts.filter((_: unknown, i: number) => i !== index);
+      setPrompts(updated);
+    },
+    [profile.prompts, setPrompts],
+  );
+
+  const handlePromptSelect = useCallback(
+    (prompt: PromptOption) => {
+      if (profile.prompts.length >= 3) return;
+      const newPrompt = {
+        id: prompt.id,
+        question: prompt.textTr,
+        answer: '',
+        order: profile.prompts.length,
+      };
+      setPrompts([...profile.prompts, newPrompt]);
+      setShowPromptPicker(false);
+    },
+    [profile.prompts, setPrompts],
+  );
 
   // ── Lifestyle picker toggle ────────────────────────────────────────────
   const cycleOption = useCallback(
@@ -768,6 +807,61 @@ export const EditProfileScreen: React.FC = () => {
             </View>
           </View>
 
+          {/* ── Prompt'larim ──────────────────────────────────────────── */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Prompt'larim</Text>
+            <Text style={styles.sectionHint}>Profilinde gorunecek sorular (max 3)</Text>
+
+            {profile.prompts.map((prompt: { id: string; question: string; answer: string; order: number }, idx: number) => (
+              <View key={prompt.id} style={styles.promptEditCard}>
+                <Text style={styles.promptEditQuestion}>{prompt.question}</Text>
+                <TextInput
+                  style={styles.promptEditAnswer}
+                  value={prompt.answer}
+                  onChangeText={(text) => updatePromptAnswer(idx, text)}
+                  placeholder="Cevabini yaz..."
+                  placeholderTextColor={colors.textTertiary}
+                  maxLength={200}
+                  multiline
+                  textAlignVertical="top"
+                />
+                <View style={styles.promptEditFooter}>
+                  <Text style={styles.charCount}>{prompt.answer.length}/200</Text>
+                  <TouchableOpacity
+                    onPress={() => removePrompt(idx)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    activeOpacity={0.6}
+                    accessibilityLabel="Prompt'u kaldir"
+                    accessibilityRole="button"
+                  >
+                    <Ionicons name="trash-outline" size={18} color={colors.textTertiary} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+
+            {profile.prompts.length < 3 && (
+              <TouchableOpacity
+                style={styles.addPromptButton}
+                onPress={() => setShowPromptPicker(true)}
+                activeOpacity={0.7}
+                accessibilityLabel="Soru ekle"
+                accessibilityRole="button"
+              >
+                <Ionicons name="add-circle-outline" size={20} color={palette.purple[500]} />
+                <Text style={styles.addPromptText}>Soru Ekle</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* ── Sevdigin Mekanlar ──────────────────────────────────────── */}
+          <View style={styles.section}>
+            <FavoriteSpotsEditor
+              spots={profile.favoriteSpots}
+              onSpotsChange={(spots) => setFavoriteSpots(spots)}
+            />
+          </View>
+
           {/* ── Yaşam Tarzi ───────────────────────────────────────────── */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Yaşam Tarzi</Text>
@@ -897,6 +991,12 @@ export const EditProfileScreen: React.FC = () => {
         visible={showVideoRecorder}
         onDismiss={() => setShowVideoRecorder(false)}
         onVideoReady={handleVideoReady}
+      />
+      <PromptPickerSheet
+        visible={showPromptPicker}
+        onSelect={handlePromptSelect}
+        onClose={() => setShowPromptPicker(false)}
+        usedPromptIds={profile.prompts.map((p: { id: string }) => p.id)}
       />
     </KeyboardAvoidingView>
   );
@@ -1208,6 +1308,66 @@ const styles = StyleSheet.create({
   interestLabelSelected: {
     fontWeight: fontWeights.semibold,
     color: palette.gold[700],
+  },
+
+  // ── Prompts ──
+  promptEditCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  promptEditQuestion: {
+    fontSize: 13,
+    fontWeight: fontWeights.medium,
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+    lineHeight: 18,
+    includeFontPadding: false,
+  },
+  promptEditAnswer: {
+    fontSize: 15,
+    fontWeight: fontWeights.regular,
+    color: colors.text,
+    minHeight: 60,
+    padding: 0,
+    includeFontPadding: false,
+    textAlignVertical: 'top',
+  },
+  promptEditFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.surfaceBorder + '60',
+  },
+  charCount: {
+    fontSize: 11,
+    fontWeight: fontWeights.regular,
+    color: colors.textTertiary,
+    includeFontPadding: false,
+  },
+  addPromptButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+    borderRadius: borderRadius.md,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: palette.purple[500] + '40',
+    backgroundColor: palette.purple[500] + '05',
+  },
+  addPromptText: {
+    fontSize: 14,
+    fontWeight: fontWeights.semibold,
+    color: palette.purple[500],
+    includeFontPadding: false,
   },
 
   // ── Lifestyle rows ──

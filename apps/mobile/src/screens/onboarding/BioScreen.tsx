@@ -46,11 +46,11 @@ export const BioScreen: React.FC = () => {
     if (isValidBio) {
       setProfileField('bio', trimmedBio);
     }
-    navigation.navigate('Photos');
+    navigation.navigate('PromptSelection');
   };
 
   const handleSkip = () => {
-    navigation.navigate('Photos');
+    navigation.navigate('PromptSelection');
   };
 
   return (

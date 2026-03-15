@@ -24,7 +24,7 @@ export const PersonalityIntroScreen: React.FC = () => {
   return (
     <OnboardingLayout
       step={11}
-      totalSteps={17}
+      totalSteps={18}
       showBack
       footer={
         <FullWidthButton

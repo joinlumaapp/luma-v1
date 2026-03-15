@@ -58,7 +58,7 @@ export const WhoToMeetScreen: React.FC = () => {
   return (
     <OnboardingLayout
       step={4}
-      totalSteps={17}
+      totalSteps={18}
       footer={
         <FullWidthButton
           label="Onayla"

@@ -37,6 +37,7 @@ export type OnboardingStackParamList = {
   PersonalityIntro: undefined;
   InterestSelection: undefined;
   Bio: undefined;
+  PromptSelection: undefined;
   Photos: undefined;
   QuestionsIntro: undefined;
   Questions: undefined;

@@ -23,8 +23,8 @@ export const QuestionsIntroScreen: React.FC = () => {
 
   return (
     <OnboardingLayout
-      step={14}
-      totalSteps={17}
+      step={16}
+      totalSteps={18}
       showBack
       footer={
         <FullWidthButton

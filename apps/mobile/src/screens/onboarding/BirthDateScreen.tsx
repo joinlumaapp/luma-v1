@@ -106,7 +106,7 @@ export const BirthDateScreen: React.FC = () => {
   return (
     <OnboardingLayout
       step={2}
-      totalSteps={17}
+      totalSteps={18}
       showBack
       footer={<ArrowButton onPress={handleContinue} disabled={!isValid} />}
     >

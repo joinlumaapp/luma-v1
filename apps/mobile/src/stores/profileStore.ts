@@ -35,6 +35,10 @@ export interface ProfileData {
   isComplete: boolean;
   /** Profile video (10-30 seconds) */
   profileVideo: ProfileVideoData | null;
+  /** Profile prompts — Hinge-style Q&A (max 3) */
+  prompts: Array<{ id: string; question: string; answer: string; order: number }>;
+  /** Favorite spots/places shown on profile */
+  favoriteSpots: Array<{ name: string; category: string }>;
   /** Incognito mode — hides user from discovery feed */
   isIncognito: boolean;
   /** Timestamp (ms) when incognito expires, null = indefinite while active */
@@ -57,6 +61,8 @@ interface ProfileState {
   setField: (key: string, value: unknown) => void;
   setIntentionTag: (tag: string) => void;
   setInterestTags: (tags: string[]) => void;
+  setPrompts: (prompts: ProfileData['prompts']) => void;
+  setFavoriteSpots: (spots: ProfileData['favoriteSpots']) => void;
   fetchProfile: () => Promise<void>;
   updateProfile: (data: Partial<ProfileData>) => Promise<void>;
   uploadPhoto: (uri: string) => Promise<void>;
@@ -90,6 +96,8 @@ const initialProfile: ProfileData = {
   education: '',
   isComplete: false,
   profileVideo: null,
+  prompts: [],
+  favoriteSpots: [],
   isIncognito: false,
   incognitoExpiresAt: null,
 };
@@ -121,6 +129,8 @@ const mapResponseToProfile = (data: ProfileResponse): ProfileData => {
       thumbnailUrl: videoData.thumbnailUrl,
       duration: videoData.duration,
     } : null,
+    prompts: Array.isArray((data as { prompts?: ProfileData['prompts'] }).prompts) ? (data as { prompts?: ProfileData['prompts'] }).prompts! : [],
+    favoriteSpots: Array.isArray((data as { favoriteSpots?: ProfileData['favoriteSpots'] }).favoriteSpots) ? (data as { favoriteSpots?: ProfileData['favoriteSpots'] }).favoriteSpots! : [],
     isIncognito: (data as { isIncognito?: boolean }).isIncognito ?? false,
     incognitoExpiresAt: (data as { incognitoExpiresAt?: number | null }).incognitoExpiresAt ?? null,
   };
@@ -152,6 +162,20 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     set((state) => ({
       profile: { ...state.profile, interestTags: tags },
     })),
+
+  setPrompts: (prompts) => {
+    set((state) => ({
+      profile: { ...state.profile, prompts },
+      _hasChanges: true,
+    }));
+  },
+
+  setFavoriteSpots: (spots) => {
+    set((state) => ({
+      profile: { ...state.profile, favoriteSpots: spots },
+      _hasChanges: true,
+    }));
+  },
 
   fetchProfile: async () => {
     set({ isLoading: true, error: null });

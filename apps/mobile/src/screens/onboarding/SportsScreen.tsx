@@ -50,7 +50,7 @@ export const SportsScreen: React.FC = () => {
   return (
     <OnboardingLayout
       step={7}
-      totalSteps={17}
+      totalSteps={18}
       showBack
       showSkip
       onSkip={handleSkip}

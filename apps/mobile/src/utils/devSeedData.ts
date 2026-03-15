@@ -837,6 +837,8 @@ const devUserProfile = {
   profileVideo: null,
   isIncognito: false,
   incognitoExpiresAt: null,
+  prompts: [],
+  favoriteSpots: [],
 };
 
 // ── Match Detail Data (compatibility breakdown) ────────────────────

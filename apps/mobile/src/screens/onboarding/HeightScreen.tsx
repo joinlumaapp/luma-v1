@@ -121,7 +121,7 @@ export const HeightScreen: React.FC = () => {
   return (
     <OnboardingLayout
       step={6}
-      totalSteps={17}
+      totalSteps={18}
       showBack
       showSkip
       onSkip={handleSkip}
