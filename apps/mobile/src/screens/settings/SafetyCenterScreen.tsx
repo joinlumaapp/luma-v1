@@ -36,10 +36,10 @@ const SAFETY_TIPS = [
 
 // ── Emergency Contacts ──────────────────────────────────────────
 const EMERGENCY_CONTACTS = [
-  { label: '112 — Genel Acil Yardim', number: '112' },
-  { label: '155 — Polis Imdat', number: '155' },
+  { label: '112 — Genel Acil Yardım', number: '112' },
+  { label: '155 — Polis İmdat', number: '155' },
   { label: '156 — Jandarma', number: '156' },
-  { label: '182 — Kadin Destek Hatti (ALO 182)', number: '182' },
+  { label: '182 — Kadın Destek Hattı (ALO 182)', number: '182' },
 ];
 
 // ── Section data ────────────────────────────────────────────────

@@ -41,26 +41,26 @@ type QuestionsNavigationProp = NativeStackNavigationProp<OnboardingStackParamLis
 
 // 20 LOCKED core questions
 const CORE_QUESTIONS = [
-  { id: 1, question: 'Hafta sonu planlarinda hangisi sana daha yakin?', options: ['Evde kitap okumak veya film izlemek', 'Arkadaslarla disari cikmak', 'Dogada yuruyus veya spor yapmak', 'Yeni bir hobi veya etkinlik denemek'] },
-  { id: 2, question: 'Bir anlasmazlikta nasil bir yaklasim benimsersin?', options: ['Hemen konusup cozmek isterim', 'Biraz soguyup sonra konusurum', 'Karsi tarafin baslatmasini beklerim', 'Yazili iletisimi tercih ederim'] },
-  { id: 3, question: 'Ideal bir tatil nasil olurdu?', options: ['Sahilde dinlenmek', 'Tarih ve kultur turu', 'Macera ve doga sporlari', 'Sehir kesfi ve gastronomi'] },
-  { id: 4, question: 'Para yonetimi konusunda nasil birisin?', options: ['Biriktirmeyi severim, planliyim', 'Dengeli harcama, orta yol', 'Anin tadini cikarir, fazla dusunmem', 'Deneyimlere yatirim yaparim'] },
-  { id: 5, question: 'Sosyal ortamlarda kendini nasil tanimlirsin?', options: ['Hayatin merkezi, enerjik', 'Kucuk gruplarla rahat', 'Secici, az ama oz', 'Dinleyici ve gozlemci'] },
-  { id: 6, question: 'Gelecek planlarin konusunda ne dusunursun?', options: ['Net hedeflerim var, plan yaparim', 'Genel bir yonum var ama esneyim', 'Akisina birakirim', 'Simdiyi yasarim, gelecek gelir'] },
-  { id: 7, question: 'Sevgi dilini en iyi ne ifade eder?', options: ['Fiziksel yakinlik ve dokunma', 'Soz ve iltifatlar', 'Birlikte zaman gecirmek', 'Hediye ve surprizler'] },
-  { id: 8, question: 'Stresle nasil basa cikarsin?', options: ['Egzersiz ve fiziksel aktivite', 'Yalniz vakit gecirmek', 'Birileriyle konusmak', 'Yaratici bir ugras (muzik, resim vb.)'] },
-  { id: 9, question: 'Iliskide bagimsizlik konusundaki gorusun?', options: ['Her sey birlikte yapilmali', 'Bagimsiz alanlar onemli', 'Dengeli bir karisim ideal', 'Duruma gore degisir'] },
-  { id: 10, question: 'Sabah rutinin nasil?', options: ['Erken kalkici, uretken sabahlar', 'Normal saatlerde, sakin baslangic', 'Gec kalkici, gece kusuyum', 'Gunune gore degisir'] },
-  { id: 11, question: 'Yemek konusunda tercihin?', options: ['Evde yemek yapmak', 'Disarida yemek', 'Yeni tatlar kesfetmek', 'Pratik ve hizli cozumler'] },
-  { id: 12, question: 'Evcil hayvan tercihin?', options: ['Kopek sever', 'Kedi sever', 'Her ikisi de', 'Evcil hayvan istemem'] },
-  { id: 13, question: 'Iliskide iletisim sikligi?', options: ['Surekli iletisimde olmak', 'Gun icerisinde birkac kez', 'Ihtiyac duydukca', 'Gorusmeyi tercih ederim'] },
-  { id: 14, question: 'Aile ile iliskin nasil?', options: ['Cok yakiniz, sik gorusuruz', 'Iyi iliskimiz var, makul mesafe', 'Mesafeli ama saygiyla', 'Karmasik bir durum'] },
-  { id: 15, question: 'Fit olmak senin icin ne kadar onemli?', options: ['Cok onemli, duzenli spor yaparim', 'Onemli ama obsesif degilim', 'Ara sira hareket ederim', 'Cok takilmam'] },
-  { id: 16, question: 'Teknoloji ve sosyal medya kullanimim?', options: ['Cok aktifim, her yerdeyim', 'Orta duzeyde kullanirim', 'Minimalist, sinirli kullanim', 'Mumkun oldukca uzak dururum'] },
-  { id: 17, question: 'Cocuk sahibi olmak hakkindaki gorusun?', options: ['Kesinlikle istiyorum', 'Acigim ama acele yok', 'Emin degilim', 'Istemiyorum'] },
-  { id: 18, question: 'Hangi ortam seni daha iyi tanimlar?', options: ['Sehir hayati, kalabalik', 'Sakin bir mahalle', 'Kirsal, dogayla ic ice', 'Fark etmez, esnek davranirim'] },
-  { id: 19, question: 'Seyahat tercihin?', options: ['Yurt disi, uzak ulkeler', 'Yurt ici, yakin yerler', 'Her ikisi de', 'Seyahati pek sevmem'] },
-  { id: 20, question: 'Bir iliskide en cok neye deger verirsin?', options: ['Guven ve sadakat', 'Mizah ve eglence', 'Entelektuel uyum', 'Duygusal destek'] },
+  { id: 1, question: 'Hafta sonu planlarında hangisi sana daha yakın?', options: ['Evde kitap okumak veya film izlemek', 'Arkadaşlarla dışarı çıkmak', 'Doğada yürüyüş veya spor yapmak', 'Yeni bir hobi veya etkinlik denemek'] },
+  { id: 2, question: 'Bir anlaşmazlıkta nasıl bir yaklaşım benimsersin?', options: ['Hemen konuşup çözmek isterim', 'Biraz soğuyup sonra konuşurum', 'Karşı tarafın başlatmasını beklerim', 'Yazılı iletişimi tercih ederim'] },
+  { id: 3, question: 'İdeal bir tatil nasıl olurdu?', options: ['Sahilde dinlenmek', 'Tarih ve kültür turu', 'Macera ve doğa sporları', 'Şehir keşfi ve gastronomi'] },
+  { id: 4, question: 'Para yönetimi konusunda nasıl birisin?', options: ['Biriktirmeyi severim, planlıyım', 'Dengeli harcama, orta yol', 'Anın tadını çıkarır, fazla düşünmem', 'Deneyimlere yatırım yaparım'] },
+  { id: 5, question: 'Sosyal ortamlarda kendini nasıl tanımlarsın?', options: ['Hayatın merkezi, enerjik', 'Küçük gruplarla rahat', 'Seçici, az ama öz', 'Dinleyici ve gözlemci'] },
+  { id: 6, question: 'Gelecek planların konusunda ne düşünürsün?', options: ['Net hedeflerim var, plan yaparım', 'Genel bir yönüm var ama esneyim', 'Akışına bırakırım', 'Şimdiyi yaşarım, gelecek gelir'] },
+  { id: 7, question: 'Sevgi dilini en iyi ne ifade eder?', options: ['Fiziksel yakınlık ve dokunma', 'Söz ve iltifatlar', 'Birlikte zaman geçirmek', 'Hediye ve sürprizler'] },
+  { id: 8, question: 'Stresle nasıl başa çıkarsın?', options: ['Egzersiz ve fiziksel aktivite', 'Yalnız vakit geçirmek', 'Birileriyle konuşmak', 'Yaratıcı bir uğraş (müzik, resim vb.)'] },
+  { id: 9, question: 'İlişkide bağımsızlık konusundaki görüşün?', options: ['Her şey birlikte yapılmalı', 'Bağımsız alanlar önemli', 'Dengeli bir karışım ideal', 'Duruma göre değişir'] },
+  { id: 10, question: 'Sabah rutinin nasıl?', options: ['Erken kalkıcı, üretken sabahlar', 'Normal saatlerde, sakin başlangıç', 'Geç kalkıcı, gece kuşuyum', 'Gününe göre değişir'] },
+  { id: 11, question: 'Yemek konusunda tercihin?', options: ['Evde yemek yapmak', 'Dışarıda yemek', 'Yeni tatlar keşfetmek', 'Pratik ve hızlı çözümler'] },
+  { id: 12, question: 'Evcil hayvan tercihin?', options: ['Köpek sever', 'Kedi sever', 'Her ikisi de', 'Evcil hayvan istemem'] },
+  { id: 13, question: 'İlişkide iletişim sıklığı?', options: ['Sürekli iletişimde olmak', 'Gün içerisinde birkaç kez', 'İhtiyaç duydukça', 'Görüşmeyi tercih ederim'] },
+  { id: 14, question: 'Aile ile ilişkin nasıl?', options: ['Çok yakınız, sık görüşürüz', 'İyi ilişkimiz var, makul mesafe', 'Mesafeli ama saygıyla', 'Karmaşık bir durum'] },
+  { id: 15, question: 'Fit olmak senin için ne kadar önemli?', options: ['Çok önemli, düzenli spor yaparım', 'Önemli ama obsesif değilim', 'Ara sıra hareket ederim', 'Çok takılmam'] },
+  { id: 16, question: 'Teknoloji ve sosyal medya kullanımım?', options: ['Çok aktifim, her yerdeyim', 'Orta düzeyde kullanırım', 'Minimalist, sınırlı kullanım', 'Mümkün oldukça uzak dururum'] },
+  { id: 17, question: 'Çocuk sahibi olmak hakkındaki görüşün?', options: ['Kesinlikle istiyorum', 'Açığım ama acele yok', 'Emin değilim', 'İstemiyorum'] },
+  { id: 18, question: 'Hangi ortam seni daha iyi tanımlar?', options: ['Şehir hayatı, kalabalık', 'Sakin bir mahalle', 'Kırsal, doğayla iç içe', 'Fark etmez, esnek davranırım'] },
+  { id: 19, question: 'Seyahat tercihin?', options: ['Yurt dışı, uzak ülkeler', 'Yurt içi, yakın yerler', 'Her ikisi de', 'Seyahati pek sevmem'] },
+  { id: 20, question: 'Bir ilişkide en çok neye değer verirsin?', options: ['Güven ve sadakat', 'Mizah ve eğlence', 'Entelektüel uyum', 'Duygusal destek'] },
 ];
 
 interface NormalizedQuestion {
@@ -74,20 +74,20 @@ const ANALYSIS_DURATION = 2500;
 
 // Motivational messages shown every 4 questions
 const MOTIVATION_MESSAGES: Record<number, { emoji: string; title: string; subtitle: string }> = {
-  4: { emoji: '\u2728', title: 'Harika gidiyorsun.', subtitle: 'Analizin %20 tamamlandi.' },
-  8: { emoji: '\uD83E\uDDE0', title: 'Gercek uyumunu bulmaya yaklasiyoruz.', subtitle: 'Cevaplarin cok degerli.' },
-  12: { emoji: '\uD83C\uDFAF', title: 'Biraz daha, cok az kaldi.', subtitle: 'Uyum profilin sekilleniyor.' },
-  16: { emoji: '\uD83D\uDE80', title: 'Son sorulara geldik.', subtitle: 'Neredeyse haziriz.' },
-  20: { emoji: '\uD83D\uDD2C', title: 'Tebrikler!', subtitle: 'Tum sorulari tamamladin.' },
+  4: { emoji: '\u2728', title: 'Harika gidiyorsun.', subtitle: 'Analizin %20 tamamlandı.' },
+  8: { emoji: '\uD83E\uDDE0', title: 'Gerçek uyumunu bulmaya yaklaşıyoruz.', subtitle: 'Cevapların çok değerli.' },
+  12: { emoji: '\uD83C\uDFAF', title: 'Biraz daha, çok az kaldı.', subtitle: 'Uyum profilin şekilleniyor.' },
+  16: { emoji: '\uD83D\uDE80', title: 'Son sorulara geldik.', subtitle: 'Neredeyse hazırız.' },
+  20: { emoji: '\uD83D\uDD2C', title: 'Tebrikler!', subtitle: 'Tüm soruları tamamladın.' },
 };
 
 const MOTIVATION_DISPLAY_MS = 2200;
 
 // Result screen highlights
 const RESULT_SECTIONS = [
-  { emoji: '\uD83E\uDDE0', title: 'Kisilik Ozelliklerin', items: ['Duygusal zekan yuksek', 'Iletisime acik bir yapin var', 'Empati yetenegin guclu'] },
-  { emoji: '\uD83C\uDFE0', title: 'Yasam Tercihlerin', items: ['Aktif bir sosyal hayat', 'Dengeyi seven bir yaklasim', 'Yeni deneyimlere aciklik'] },
-  { emoji: '\uD83D\uDC9C', title: 'Sosyal Tarzin', items: ['Samimi ve icten', 'Kucuk gruplarda rahat', 'Dinlemeyi seven bir karakter'] },
+  { emoji: '\uD83E\uDDE0', title: 'Kişilik Özelliklerin', items: ['Duygusal zekan yüksek', 'İletişime açık bir yapın var', 'Empati yeteneğin güçlü'] },
+  { emoji: '\uD83C\uDFE0', title: 'Yaşam Tercihlerin', items: ['Aktif bir sosyal hayat', 'Dengeyi seven bir yaklaşım', 'Yeni deneyimlere açıklık'] },
+  { emoji: '\uD83D\uDC9C', title: 'Sosyal Tarzın', items: ['Samimi ve içten', 'Küçük gruplarda rahat', 'Dinlemeyi seven bir karakter'] },
 ];
 
 type ScreenPhase = 'questions' | 'motivation' | 'analysis' | 'result';
@@ -332,7 +332,7 @@ export const QuestionsScreen: React.FC = () => {
           <Text style={styles.celebrationEmoji}>{'\uD83D\uDD2C'}</Text>
           <Text style={styles.celebrationTitle}>LUMA senin karakterini analiz ediyor...</Text>
           <Text style={styles.celebrationSubtitle}>
-            Cevaplarin degerlendiriliyor ve en uyumlu profiller belirleniyor.
+            Cevaplarin değerlendiriliyor ve en uyumlu profiller belirleniyor.
           </Text>
           <ActivityIndicator size="small" color={onboardingColors.text} style={{ marginTop: spacing.lg }} />
         </Animated.View>
@@ -352,7 +352,7 @@ export const QuestionsScreen: React.FC = () => {
             Uyum profilin hazir!
           </Animated.Text>
           <Animated.Text entering={FadeIn.duration(400).delay(300)} style={styles.resultSubtitle}>
-            Iste seni tanimamiza yardimci olan ozellikler:
+            Iste seni tanimamiza yardimci olan özellikler:
           </Animated.Text>
 
           {RESULT_SECTIONS.map((section, sIdx) => (

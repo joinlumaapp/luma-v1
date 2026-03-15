@@ -272,7 +272,7 @@ export const PhotosScreen: React.FC = () => {
           <FullWidthButton
             label={
               selectedCount === 0
-                ? 'En az 1 fotograf ekle'
+                ? 'En az 1 fotoğraf ekle'
                 : `Devam et (${selectedCount}/6)`
             }
             onPress={handleContinue}
@@ -281,16 +281,16 @@ export const PhotosScreen: React.FC = () => {
         </Animated.View>
       }
     >
-      <Text style={styles.title}>Fotografini ekle</Text>
+      <Text style={styles.title}>Fotoğrafını ekle</Text>
       <Text style={styles.subtitle}>
-        Ilk fotografin profil fotografin olacak — yuzun net gorunmeli.{'\n'}
-        Digerleri istege bagli!
+        İlk fotoğrafın profil fotoğrafın olacak — yüzün net görünmeli.{'\n'}
+        Diğerleri isteğe bağlı!
       </Text>
 
       {/* Photo count indicator */}
       <View style={styles.countRow}>
         <Text style={styles.countText}>
-          {selectedCount} / {ONBOARDING_PHOTO_SLOTS} fotograf
+          {selectedCount} / {ONBOARDING_PHOTO_SLOTS} fotoğraf
         </Text>
         {selectedCount >= PROFILE_CONFIG.MIN_PHOTOS && (
           <Animated.View entering={FadeIn.duration(300)}>
@@ -312,13 +312,13 @@ export const PhotosScreen: React.FC = () => {
             size={18}
             color={onboardingColors.text}
           />
-          <Text style={styles.tipsTitle}>Fotograf Ipuclari</Text>
+          <Text style={styles.tipsTitle}>Fotoğraf İpuçları</Text>
         </View>
         <View style={styles.tipsList}>
-          <Text style={styles.tipItem}>{'\u2022'} Yuzun net gorunmeli</Text>
-          <Text style={styles.tipItem}>{'\u2022'} Gunes gozlugundan kacin</Text>
-          <Text style={styles.tipItem}>{'\u2022'} Dogal isik kullan</Text>
-          <Text style={styles.tipItem}>{'\u2022'} Tek basina oldugun fotograflar en iyisi</Text>
+          <Text style={styles.tipItem}>{'\u2022'} Yüzün net görünmeli</Text>
+          <Text style={styles.tipItem}>{'\u2022'} Güneş gözlüğünden kaçın</Text>
+          <Text style={styles.tipItem}>{'\u2022'} Doğal ışık kullan</Text>
+          <Text style={styles.tipItem}>{'\u2022'} Tek başına olduğun fotoğraflar en iyisi</Text>
         </View>
       </View>
     </OnboardingLayout>

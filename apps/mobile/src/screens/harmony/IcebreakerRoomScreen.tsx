@@ -497,7 +497,7 @@ interface GameTable {
 
 const MOCK_TABLES: GameTable[] = [
   {
-    id: 't1', gameType: 'uno', name: 'UNO Turnuvas\u0131',
+    id: 't1', gameType: 'uno', name: 'UNO Turnuvası',
     players: [{ name: 'Elif', initial: 'E' }, { name: 'Burak', initial: 'B' }, { name: 'Selin', initial: 'S' }],
     maxPlayers: 4, spectators: 8, timeLeft: 1245, isStarted: true,
   },
@@ -512,7 +512,7 @@ const MOCK_TABLES: GameTable[] = [
     maxPlayers: 4, spectators: 12, timeLeft: 820, isStarted: true,
   },
   {
-    id: 't4', gameType: 'uno', name: 'Acemi Masas\u0131',
+    id: 't4', gameType: 'uno', name: 'Acemi Masası',
     players: [{ name: 'Ali', initial: 'A' }],
     maxPlayers: 4, spectators: 0, timeLeft: 0, isStarted: false,
   },
@@ -566,7 +566,7 @@ const TableCard: React.FC<{
           </View>
         ) : (
           <View style={[st.tableLiveBadge, { borderColor: GOLD_BORDER, backgroundColor: GOLD_SUBTLE }]}>
-            <Text style={[st.tableLiveText, { color: GOLD }]}>BEKL\u0130YOR</Text>
+            <Text style={[st.tableLiveText, { color: GOLD }]}>BEKLİYOR</Text>
           </View>
         )}
       </View>
@@ -614,7 +614,7 @@ const TableCard: React.FC<{
             <TouchableOpacity onPress={() => onWatch(table.id)} activeOpacity={0.8}
               style={st.tableWatchBtn}>
               <Ionicons name="eye" size={14} color={TEXT_SECONDARY} />
-              <Text style={st.tableWatchText}>\u0130zle</Text>
+              <Text style={st.tableWatchText}>İzle</Text>
             </TouchableOpacity>
           )}
           {hasSlot && (
@@ -640,8 +640,8 @@ const TableCard: React.FC<{
 // ─── Board Mini Map ─────────────────────────────────────────────────────────
 
 const BOARD_SQUARES = [
-  'Ba\u015Fla', 'Ev', 'Hazine', 'D\u00FCkkan', 'Vergi',
-  'Park', 'Otel', '\u015Eans', 'Kafe', 'Hapishane',
+  'Başla', 'Ev', 'Hazine', 'Dükkan', 'Vergi',
+  'Park', 'Otel', 'Şans', 'Kafe', 'Hapishane',
   'Plaj', 'AVM', 'Su', 'Villa', 'Tren',
   'Stadyum', 'Elektrik', 'Marina', 'Kule', 'Bonus',
 ];
@@ -728,9 +728,9 @@ export const IcebreakerRoomScreen: React.FC = () => {
 
   // Chat
   const [messages, setMessages] = useState<ChatMessage[]>([
-    sysMsg('Oyun odas\u0131 olu\u015Fturuldu'),
+    sysMsg('Oyun odası oluşturuldu'),
     { id: 'c1', userName: 'Elif', text: 'Herkese merhaba! \uD83D\uDC4B', isSystem: false },
-    { id: 'c2', userName: 'Burak', text: 'Haz\u0131r m\u0131y\u0131z?', isSystem: false },
+    { id: 'c2', userName: 'Burak', text: 'Hazır mıyız?', isSystem: false },
   ]);
 
   // Timer
@@ -768,16 +768,16 @@ export const IcebreakerRoomScreen: React.FC = () => {
 
     const timer = setTimeout(() => {
       if (gameType === 'uno') {
-        addSystemMsg(`${activePlayer.name} bir kart oynad\u0131`);
+        addSystemMsg(`${activePlayer.name} bir kart oynadı`);
         setDiscardCard(randomUnoCard());
         setPlayers((prev) => prev.map((p) =>
           p.id === activePlayer.id ? { ...p, score: p.score + 10 } : p
         ));
       } else if (gameType === 'board') {
         const roll = Math.floor(Math.random() * 6) + 1;
-        addSystemMsg(`${activePlayer.name} zar att\u0131: ${roll}`);
+        addSystemMsg(`${activePlayer.name} zar attı: ${roll}`);
       } else {
-        addSystemMsg(`${activePlayer.name} bir ta\u015F oynad\u0131`);
+        addSystemMsg(`${activePlayer.name} bir taş oynadı`);
       }
       nextTurn();
     }, 1500 + Math.random() * 1500);
@@ -788,7 +788,7 @@ export const IcebreakerRoomScreen: React.FC = () => {
   // ── UNO: Play card ──
   const handlePlayUnoCard = useCallback((cardId: string) => {
     if (!isMyTurn) {
-      Alert.alert('S\u0131ra Sende De\u011Fil', 'S\u0131ran\u0131 bekle!');
+      Alert.alert('Sıra Sende Değil', 'Sıranı bekle!');
       return;
     }
     const card = unoHand.find((c) => c.id === cardId);
@@ -798,14 +798,14 @@ export const IcebreakerRoomScreen: React.FC = () => {
     setUnoHand((prev) => prev.filter((c) => c.id !== cardId));
     setDiscardCard(card);
     setPlayers((prev) => prev.map((p) => p.id === '1' ? { ...p, score: p.score + 15 } : p));
-    addSystemMsg(`Sen ${card.value} kart\u0131n\u0131 oynad\u0131n`);
+    addSystemMsg(`Sen ${card.value} kartını oynadın`);
 
     if (unoHand.length === 2) {
-      addSystemMsg('\uD83C\uDF89 UNO! Son kart\u0131n kald\u0131!');
+      addSystemMsg('\uD83C\uDF89 UNO! Son kartın kaldı!');
       haptic('success');
     }
     if (unoHand.length === 1) {
-      addSystemMsg('\uD83C\uDFC6 Tebrikler! T\u00FCm kartlar\u0131n\u0131 bitirdin!');
+      addSystemMsg('\uD83C\uDFC6 Tebrikler! Tüm kartlarını bitirdin!');
       haptic('success');
     }
 
@@ -815,24 +815,24 @@ export const IcebreakerRoomScreen: React.FC = () => {
   // ── UNO: Draw card ──
   const handleDrawUnoCard = useCallback(() => {
     if (!isMyTurn) {
-      Alert.alert('S\u0131ra Sende De\u011Fil', 'S\u0131ran\u0131 bekle!');
+      Alert.alert('Sıra Sende Değil', 'Sıranı bekle!');
       return;
     }
     if (drawPileCount <= 0) {
-      Alert.alert('Deste Bitti', '\u00C7ekilecek kart kalmad\u0131!');
+      Alert.alert('Deste Bitti', 'Çekilecek kart kalmadı!');
       return;
     }
     haptic('light');
     setUnoHand((prev) => [...prev, randomUnoCard()]);
     setDrawPileCount((prev) => prev - 1);
-    addSystemMsg('Sen bir kart \u00E7ektin');
+    addSystemMsg('Sen bir kart çektin');
     nextTurn();
   }, [isMyTurn, drawPileCount, nextTurn, addSystemMsg]);
 
   // ── Okey: Play tile ──
   const handlePlayOkeyTile = useCallback((tileId: string) => {
     if (!isMyTurn) {
-      Alert.alert('S\u0131ra Sende De\u011Fil', 'S\u0131ran\u0131 bekle!');
+      Alert.alert('Sıra Sende Değil', 'Sıranı bekle!');
       return;
     }
     const tile = okeyRack.find((t) => t.id === tileId);
@@ -841,7 +841,7 @@ export const IcebreakerRoomScreen: React.FC = () => {
     haptic('medium');
     setOkeyRack((prev) => prev.filter((t) => t.id !== tileId));
     setPlayers((prev) => prev.map((p) => p.id === '1' ? { ...p, score: p.score + 10 } : p));
-    addSystemMsg(`Sen ${tile.number} ta\u015F\u0131n\u0131 att\u0131n`);
+    addSystemMsg(`Sen ${tile.number} taşını attın`);
 
     if (okeyRack.length <= 1) {
       addSystemMsg('\uD83C\uDFC6 Tebrikler! Okey bitirdin!');
@@ -854,23 +854,23 @@ export const IcebreakerRoomScreen: React.FC = () => {
   // ── Okey: Draw tile ──
   const handleDrawOkeyTile = useCallback(() => {
     if (!isMyTurn) {
-      Alert.alert('S\u0131ra Sende De\u011Fil', 'S\u0131ran\u0131 bekle!');
+      Alert.alert('Sıra Sende Değil', 'Sıranı bekle!');
       return;
     }
     if (okeyPileCount <= 0) {
-      Alert.alert('Ta\u015F Bitti', '\u00C7ekilecek ta\u015F kalmad\u0131!');
+      Alert.alert('Taş Bitti', 'Çekilecek taş kalmadı!');
       return;
     }
     haptic('light');
     setOkeyRack((prev) => [...prev, randomOkeyTile()]);
     setOkeyPileCount((prev) => prev - 1);
-    addSystemMsg('Sen bir ta\u015F \u00E7ektin');
+    addSystemMsg('Sen bir taş çektin');
   }, [isMyTurn, okeyPileCount, addSystemMsg]);
 
   // ── Board: Roll dice ──
   const handleRollDice = useCallback(() => {
     if (!isMyTurn) {
-      Alert.alert('S\u0131ra Sende De\u011Fil', 'S\u0131ran\u0131 bekle!');
+      Alert.alert('Sıra Sende Değil', 'Sıranı bekle!');
       return;
     }
     haptic('heavy');
@@ -880,11 +880,11 @@ export const IcebreakerRoomScreen: React.FC = () => {
     setBoardPosition(newPos);
 
     const events = [
-      { msg: `${roll} geldi! M\u00FClk sat\u0131n ald\u0131n \uD83C\uDFE0`, balance: -200, props: 1 },
-      { msg: `${roll} geldi! Kira toplad\u0131n \uD83D\uDCB0`, balance: 150, props: 0 },
-      { msg: `${roll} geldi! Vergi \u00F6dedin \uD83D\uDCB8`, balance: -100, props: 0 },
-      { msg: `${roll} geldi! \u015Eans kart\u0131: Bonus! \uD83C\uDFB2`, balance: 200, props: 0 },
-      { msg: `${roll} geldi! Bo\u015F arsa, ge\u00E7tin`, balance: 0, props: 0 },
+      { msg: `${roll} geldi! Mülk satın aldın \uD83C\uDFE0`, balance: -200, props: 1 },
+      { msg: `${roll} geldi! Kira topladın \uD83D\uDCB0`, balance: 150, props: 0 },
+      { msg: `${roll} geldi! Vergi ödedin \uD83D\uDCB8`, balance: -100, props: 0 },
+      { msg: `${roll} geldi! Şans kartı: Bonus! \uD83C\uDFB2`, balance: 200, props: 0 },
+      { msg: `${roll} geldi! Boş arsa, geçtin`, balance: 0, props: 0 },
     ];
     const event = events[Math.floor(Math.random() * events.length)];
     setBoardBalance((prev) => prev + event.balance);
@@ -897,11 +897,11 @@ export const IcebreakerRoomScreen: React.FC = () => {
   // ── End turn (skip) ──
   const handleEndTurn = useCallback(() => {
     if (!isMyTurn) {
-      Alert.alert('S\u0131ra Sende De\u011Fil', 'S\u0131ran\u0131 bekle!');
+      Alert.alert('Sıra Sende Değil', 'Sıranı bekle!');
       return;
     }
     haptic('light');
-    addSystemMsg('Sen s\u0131ran\u0131 pas ge\u00E7tin');
+    addSystemMsg('Sen sıranı pas geçtin');
     nextTurn();
   }, [isMyTurn, nextTurn, addSystemMsg]);
 
@@ -920,7 +920,7 @@ export const IcebreakerRoomScreen: React.FC = () => {
   const handleMicToggle = useCallback(() => {
     haptic('medium');
     setIsMuted((m) => {
-      addSystemMsg(!m ? 'Mikrofonun kapat\u0131ld\u0131 \uD83D\uDD07' : 'Mikrofonun a\u00E7\u0131ld\u0131 \uD83C\uDF99\uFE0F');
+      addSystemMsg(!m ? 'Mikrofonun kapatıldı \uD83D\uDD07' : 'Mikrofonun açıldı \uD83C\uDF99\uFE0F');
       return !m;
     });
   }, [addSystemMsg]);
@@ -943,7 +943,7 @@ export const IcebreakerRoomScreen: React.FC = () => {
       setGameType(table.gameType);
       setIsSpectator(false);
       setInGame(true);
-      addSystemMsg(`${table.name} masas\u0131na oturdun`);
+      addSystemMsg(`${table.name} masasına oturdun`);
     }
   }, [addSystemMsg]);
 
@@ -954,7 +954,7 @@ export const IcebreakerRoomScreen: React.FC = () => {
       setGameType(table.gameType);
       setIsSpectator(true);
       setInGame(true);
-      addSystemMsg(`${table.name} masas\u0131n\u0131 izliyorsun`);
+      addSystemMsg(`${table.name} masasını izliyorsun`);
     }
   }, [addSystemMsg]);
 
@@ -1006,7 +1006,7 @@ export const IcebreakerRoomScreen: React.FC = () => {
           ListHeaderComponent={
             <View style={st.lobbyHeader}>
               <Text style={st.lobbyTitle}>Masalar</Text>
-              <Text style={st.lobbySubtitle}>Bir masaya otur veya izleyici olarak kat\u0131l</Text>
+              <Text style={st.lobbySubtitle}>Bir masaya otur veya izleyici olarak katıl</Text>
             </View>
           }
           renderItem={({ item }) => (
@@ -1018,18 +1018,18 @@ export const IcebreakerRoomScreen: React.FC = () => {
               activeOpacity={0.8}
               onPress={() => {
                 haptic('medium');
-                Alert.alert('Masa Olu\u015Ftur', 'Hangi oyunu oynamak istersin?', [
-                  { text: 'UNO', onPress: () => { setGameType('uno'); setIsSpectator(false); setInGame(true); addSystemMsg('Yeni UNO masas\u0131 olu\u015Fturdun'); } },
-                  { text: 'Board', onPress: () => { setGameType('board'); setIsSpectator(false); setInGame(true); addSystemMsg('Yeni Board masas\u0131 olu\u015Fturdun'); } },
-                  { text: 'Okey', onPress: () => { setGameType('okey'); setIsSpectator(false); setInGame(true); addSystemMsg('Yeni Okey masas\u0131 olu\u015Fturdun'); } },
-                  { text: '\u0130ptal', style: 'cancel' },
+                Alert.alert('Masa Oluştur', 'Hangi oyunu oynamak istersin?', [
+                  { text: 'UNO', onPress: () => { setGameType('uno'); setIsSpectator(false); setInGame(true); addSystemMsg('Yeni UNO masası oluşturdun'); } },
+                  { text: 'Board', onPress: () => { setGameType('board'); setIsSpectator(false); setInGame(true); addSystemMsg('Yeni Board masası oluşturdun'); } },
+                  { text: 'Okey', onPress: () => { setGameType('okey'); setIsSpectator(false); setInGame(true); addSystemMsg('Yeni Okey masası oluşturdun'); } },
+                  { text: 'İptal', style: 'cancel' },
                 ]);
               }}
             >
               <LinearGradient colors={[GOLD, GOLD_LIGHT]} style={st.createTableGrad}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
                 <Ionicons name="add-circle-outline" size={20} color={PURPLE_DEEP} />
-                <Text style={st.createTableText}>Yeni Masa Olu\u015Ftur</Text>
+                <Text style={st.createTableText}>Yeni Masa Oluştur</Text>
               </LinearGradient>
             </TouchableOpacity>
           }
@@ -1055,7 +1055,7 @@ export const IcebreakerRoomScreen: React.FC = () => {
       {isSpectator && (
         <View style={st.spectatorBanner}>
           <Ionicons name="eye" size={14} color={GOLD} />
-          <Text style={st.spectatorBannerText}>\u0130zleyici modundas\u0131n</Text>
+          <Text style={st.spectatorBannerText}>İzleyici modundasın</Text>
         </View>
       )}
 
@@ -1088,10 +1088,10 @@ export const IcebreakerRoomScreen: React.FC = () => {
           <TouchableOpacity style={st.headerBtn} activeOpacity={0.7}
             onPress={() => {
               haptic('light');
-              Alert.alert('Oyun Men\u00FCs\u00FC', undefined, [
-                { text: 'Salona D\u00F6n', onPress: handleLeaveGame },
-                { text: 'Oyun Odas\u0131ndan \u00C7\u0131k', style: 'destructive', onPress: () => navigation.goBack() },
-                { text: '\u0130ptal', style: 'cancel' },
+              Alert.alert('Oyun Menüsü', undefined, [
+                { text: 'Salona Dön', onPress: handleLeaveGame },
+                { text: 'Oyun Odasından Çık', style: 'destructive', onPress: () => navigation.goBack() },
+                { text: 'İptal', style: 'cancel' },
               ]);
             }}>
             <Ionicons name="ellipsis-vertical" size={16} color={TEXT_PRIMARY} />
@@ -1121,7 +1121,7 @@ export const IcebreakerRoomScreen: React.FC = () => {
       {/* Turn indicator */}
       <View style={[st.turnIndicator, isMyTurn && st.turnIndicatorActive]}>
         <Text style={[st.turnText, isMyTurn && { color: GOLD }]}>
-          {isMyTurn ? '\uD83C\uDFAF Senin s\u0131ran!' : `\u23F3 ${players.find((p) => p.isActive)?.name || ''} oynuyor...`}
+          {isMyTurn ? '\uD83C\uDFAF Senin sıran!' : `\u23F3 ${players.find((p) => p.isActive)?.name || ''} oynuyor...`}
         </Text>
       </View>
 
@@ -1179,7 +1179,7 @@ export const IcebreakerRoomScreen: React.FC = () => {
                   }} />
 
                   {/* Draw pile */}
-                  <DrawPileView count={drawPileCount} onPress={handleDrawUnoCard} label="\u00C7EK" />
+                  <DrawPileView count={drawPileCount} onPress={handleDrawUnoCard} label="ÇEK" />
                 </View>
               </BlurView>
             </View>
@@ -1187,7 +1187,7 @@ export const IcebreakerRoomScreen: React.FC = () => {
             {/* Hand */}
             <View style={st.handSection}>
               <View style={st.handHeader}>
-                <Text style={st.sectionLabel}>EL\u0130NDEK\u0130 KARTLAR</Text>
+                <Text style={st.sectionLabel}>ELİNDEKİ KARTLAR</Text>
                 <View style={st.handCountBadge}>
                   <Text style={st.handCountText}>{unoHand.length}</Text>
                 </View>
@@ -1246,7 +1246,7 @@ export const IcebreakerRoomScreen: React.FC = () => {
                     <View style={st.statCard}>
                       <Ionicons name="home" size={16} color="#22C55E" />
                       <Text style={st.statValue}>{boardProperties}</Text>
-                      <Text style={st.statLabel}>M\u00FClk</Text>
+                      <Text style={st.statLabel}>Mülk</Text>
                     </View>
                     <View style={[st.statCard, { borderColor: GOLD_BORDER }]}>
                       <Ionicons name="wallet" size={16} color={GOLD} />
@@ -1287,7 +1287,7 @@ export const IcebreakerRoomScreen: React.FC = () => {
                 <View style={st.tableInner}>
                   {/* Pile info */}
                   <View style={{ alignItems: 'center', gap: 4 }}>
-                    <Text style={st.pileLabel}>KALAN TA\u015E</Text>
+                    <Text style={st.pileLabel}>KALAN TAŞ</Text>
                     <View style={{
                       width: 64, height: 64, borderRadius: 32,
                       backgroundColor: 'rgba(139, 92, 246, 0.1)',
@@ -1306,13 +1306,13 @@ export const IcebreakerRoomScreen: React.FC = () => {
                       style={[st.actionPill, !isMyTurn && { opacity: 0.5 }]}
                       start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
                       <Ionicons name="add-circle-outline" size={16} color="#FFFFFF" />
-                      <Text style={[st.actionPillText, { color: '#FFFFFF' }]}>TA\u015E \u00C7EK</Text>
+                      <Text style={[st.actionPillText, { color: '#FFFFFF' }]}>TAŞ ÇEK</Text>
                     </LinearGradient>
                   </TouchableOpacity>
 
-                  {/* G\u00F6sterge (indicator) tile */}
+                  {/* Gösterge (indicator) tile */}
                   <View style={{ alignItems: 'center', gap: 4 }}>
-                    <Text style={st.pileLabel}>G\u00D6STERGE</Text>
+                    <Text style={st.pileLabel}>GÖSTERGE</Text>
                     <OkeyTileView
                       tile={{ id: 'indicator', number: 7, color: '#EF4444' }}
                     />
@@ -1324,7 +1324,7 @@ export const IcebreakerRoomScreen: React.FC = () => {
             {/* Rack */}
             <View style={st.handSection}>
               <View style={st.handHeader}>
-                <Text style={st.sectionLabel}>RAF\u0130NDAK\u0130 TA\u015ELAR</Text>
+                <Text style={st.sectionLabel}>RAFİNDAKİ TAŞLAR</Text>
                 <View style={st.handCountBadge}>
                   <Text style={st.handCountText}>{okeyRack.length}</Text>
                 </View>
@@ -1357,7 +1357,7 @@ export const IcebreakerRoomScreen: React.FC = () => {
             <LinearGradient colors={isMyTurn ? [GOLD, GOLD_LIGHT] : [TEXT_MUTED, TEXT_MUTED]}
               style={st.actionPill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
               <Ionicons name="play-skip-forward-outline" size={16} color={isMyTurn ? PURPLE_DEEP : '#666666'} />
-              <Text style={[st.actionPillText, !isMyTurn && { color: '#666666' }]}>PAS GE\u00C7</Text>
+              <Text style={[st.actionPillText, !isMyTurn && { color: '#666666' }]}>PAS GEÇ</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -1375,7 +1375,7 @@ export const IcebreakerRoomScreen: React.FC = () => {
         {/* Chat toggle */}
         <TouchableOpacity style={st.chatToggle} onPress={() => setShowChat((v) => !v)} activeOpacity={0.7}>
           <Ionicons name={showChat ? 'chatbubbles' : 'chatbubbles-outline'} size={16} color={GOLD} />
-          <Text style={st.chatToggleText}>{showChat ? 'Sohbeti Gizle' : 'Sohbeti G\u00F6ster'}</Text>
+          <Text style={st.chatToggleText}>{showChat ? 'Sohbeti Gizle' : 'Sohbeti Göster'}</Text>
           <Ionicons name={showChat ? 'chevron-up' : 'chevron-down'} size={14} color={TEXT_MUTED} />
         </TouchableOpacity>
 

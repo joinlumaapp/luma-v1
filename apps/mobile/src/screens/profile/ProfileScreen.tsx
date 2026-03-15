@@ -58,45 +58,45 @@ const calculateAge = (birthDate: string): number => {
 
 // Helper: translate profile field values to Turkish display labels
 const translateSports = (v: string): string => {
-  const map: Record<string, string> = { never: 'Pek yapmam', sometimes: 'Ara sira', often: 'Duzenli' };
+  const map: Record<string, string> = { never: 'Pek yapmam', sometimes: 'Ara sıra', often: 'Düzenli' };
   return map[v] || 'Belirtilmedi';
 };
 const translateSmoking = (v: string): string => {
-  const map: Record<string, string> = { regular: 'Iciyor', sometimes: 'Ara sira', never: 'Icmiyor', tolerate: 'Icmez ama karismaz' };
+  const map: Record<string, string> = { regular: 'İçiyor', sometimes: 'Ara sıra', never: 'İçmiyor', tolerate: 'İçmez ama karışmaz' };
   return map[v] || 'Belirtilmedi';
 };
 const translateChildren = (v: string): string => {
   const map: Record<string, string> = {
-    have: 'Var', no_children: 'Yok', want: 'Ileride olabilir', dont_want: 'Istemiyor',
+    have: 'Var', no_children: 'Yok', want: 'İleride olabilir', dont_want: 'İstemiyor',
   };
   return map[v] || 'Belirtilmedi';
 };
 const translateGender = (v: string): string => {
-  const map: Record<string, string> = { male: 'Erkek', female: 'Kadin' };
+  const map: Record<string, string> = { male: 'Erkek', female: 'Kadın' };
   return map[v] || v || 'Belirtilmedi';
 };
 const translateLookingFor = (ids: string[]): string[] => {
   const map: Record<string, string> = {
-    long_term: 'Uzun sureli iliski', short_term: 'Kisa sureli iliski',
-    friendship: 'Arkadaslik', travel_together: 'Birlikte gezmek',
-    serious_relationship: 'Ciddi iliski',
+    long_term: 'Uzun süreli ilişki', short_term: 'Kısa süreli ilişki',
+    friendship: 'Arkadaşlık', travel_together: 'Birlikte gezmek',
+    serious_relationship: 'Ciddi ilişki',
   };
   return ids.map((id) => map[id] || id);
 };
 
 const INTEREST_TAG_LABELS: Record<string, string> = {
-  travel: 'Seyahat', music: 'Muzik', sports: 'Spor', cooking: 'Yemek',
-  art: 'Sanat', technology: 'Teknoloji', nature: 'Doga', books: 'Kitap',
-  movies: 'Film', photography: 'Fotografcilik', dance: 'Dans', yoga: 'Yoga',
+  travel: 'Seyahat', music: 'Müzik', sports: 'Spor', cooking: 'Yemek',
+  art: 'Sanat', technology: 'Teknoloji', nature: 'Doğa', books: 'Kitap',
+  movies: 'Film', photography: 'Fotoğrafçılık', dance: 'Dans', yoga: 'Yoga',
   gaming: 'Oyun', animals: 'Hayvanlar', fashion: 'Moda', football: 'Futbol',
-  hiking: 'Doga Yuruyusu', coffee: 'Kahve & Sarap',
-  reading: 'Okuma', meditation: 'Meditasyon', swimming: 'Yuzme',
-  fitness: 'Fitness', beach: 'Plaj', architecture: 'Mimari', design: 'Tasarim',
+  hiking: 'Doğa Yürüyüşü', coffee: 'Kahve & Şarap',
+  reading: 'Okuma', meditation: 'Meditasyon', swimming: 'Yüzme',
+  fitness: 'Fitness', beach: 'Plaj', architecture: 'Mimari', design: 'Tasarım',
   guitar: 'Gitar', psychology: 'Psikoloji', food: 'Yemek', cats: 'Kediler',
 };
 const translateInterestTag = (tag: string): string => INTEREST_TAG_LABELS[tag] || tag;
 
-// Hakkimda row data type
+// Hakkımda row data type
 interface AboutRow {
   icon: keyof typeof Ionicons.glyphMap;
   iconBg: string;
@@ -209,7 +209,7 @@ const getStrengthColor = (level: 'low' | 'medium' | 'high'): string => {
 // ─── Intention tag display config ────────────────────────────────────────────
 
 const INTENTION_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
-  serious_relationship: { label: 'Ciddi Iliski', bg: 'rgba(139, 92, 246, 0.12)', text: palette.purple[600] },
+  serious_relationship: { label: 'Ciddi İlişki', bg: 'rgba(139, 92, 246, 0.12)', text: palette.purple[600] },
   exploring: { label: 'Yeni Kesifler', bg: 'rgba(236, 72, 153, 0.12)', text: palette.pink[600] },
   not_sure: { label: 'Acik Fikirli', bg: 'rgba(251, 191, 36, 0.12)', text: palette.gold[700] },
 };
@@ -395,10 +395,10 @@ export const ProfileScreen: React.FC = () => {
   const aboutRows: AboutRow[] = [
     { icon: 'calendar-outline', iconBg: 'rgba(139, 92, 246, 0.10)', label: 'Yas', value: profile.birthDate ? `${age}` : 'Belirtilmedi' },
     { icon: 'person-outline', iconBg: 'rgba(59, 130, 246, 0.10)', label: 'Cinsiyet', value: translateGender(profile.gender) },
-    { icon: 'location-outline', iconBg: 'rgba(245, 158, 11, 0.10)', label: 'Sehir', value: profile.city || 'Belirtilmedi' },
+    { icon: 'location-outline', iconBg: 'rgba(245, 158, 11, 0.10)', label: 'Şehir', value: profile.city || 'Belirtilmedi' },
     { icon: 'briefcase-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'Is', value: profile.job || 'Belirtilmedi' },
     { icon: 'school-outline', iconBg: 'rgba(236, 72, 153, 0.10)', label: 'Egitim', value: profile.education || 'Belirtilmedi' },
-    { icon: 'people-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'Cocuk', value: profile.children ? translateChildren(profile.children) : 'Belirtilmedi' },
+    { icon: 'people-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'Çocuk', value: profile.children ? translateChildren(profile.children) : 'Belirtilmedi' },
     { icon: 'flame-outline', iconBg: 'rgba(239, 68, 68, 0.10)', label: 'Sigara', value: profile.smoking ? translateSmoking(profile.smoking) : 'Belirtilmedi' },
     { icon: 'resize-outline', iconBg: 'rgba(139, 92, 246, 0.10)', label: 'Boy', value: profile.height ? `${profile.height} cm` : 'Belirtilmedi' },
     { icon: 'fitness-outline', iconBg: 'rgba(59, 130, 246, 0.10)', label: 'Spor', value: profile.sports ? translateSports(profile.sports) : 'Belirtilmedi' },
@@ -433,7 +433,7 @@ export const ProfileScreen: React.FC = () => {
           style={styles.settingsButton}
           accessibilityLabel="Ayarlar"
           accessibilityRole="button"
-          accessibilityHint="Uygulama ayarlarini acmak icin dokunun"
+          accessibilityHint="Uygulama ayarlarini acmak için dokunun"
           testID="profile-settings-btn"
         >
           <Ionicons name="settings-outline" size={22} color={colors.text} />
@@ -525,7 +525,7 @@ export const ProfileScreen: React.FC = () => {
           onPress={() => {
             const userId = user?.id ?? '';
             Share.share({
-              message: `LUMA'da profilime goz at! https://luma.dating/profile/${userId}`,
+              message: `LUMA'da profilime göz at! https://luma.dating/profile/${userId}`,
               title: 'LUMA Profil',
             }).catch(() => {});
           }}
@@ -603,10 +603,10 @@ export const ProfileScreen: React.FC = () => {
     );
   }
 
-  // 3. Hakkimda — lifestyle detail rows
+  // 3. Hakkımda — lifestyle detail rows
   infoSections.push(
     <View key="details" style={styles.section}>
-      <Text style={styles.sectionTitle}>Hakkimda</Text>
+      <Text style={styles.sectionTitle}>Hakkımda</Text>
       {aboutRows.map((row, idx) => (
         <TouchableOpacity
           key={row.label}
@@ -635,20 +635,20 @@ export const ProfileScreen: React.FC = () => {
     </View>,
   );
 
-  // 4. Rozetler
+  // 4. Rözetler
   infoSections.push(
     <TouchableOpacity
       key="badges"
       style={styles.section}
       onPress={handleBadges}
       activeOpacity={0.7}
-      accessibilityLabel="Rozetler"
+      accessibilityLabel="Rözetler"
       accessibilityRole="button"
-      accessibilityHint="Tum rozetleri gormek icin dokunun"
+      accessibilityHint="Tum rözetleri gormek için dokunun"
       testID="profile-badges-btn"
     >
       <View style={styles.badgesHeader}>
-        <Text style={styles.sectionTitle}>Rozetler</Text>
+        <Text style={styles.sectionTitle}>Rözetler</Text>
         <Text style={styles.seeAllText}>Tumunu Gor</Text>
       </View>
       <View style={styles.badgesRow}>
@@ -670,13 +670,13 @@ export const ProfileScreen: React.FC = () => {
             </View>
           ))
         ) : (
-          <Text style={styles.badgeLabel}>Henuz rozet kazanilmadi</Text>
+          <Text style={styles.badgeLabel}>Henuz rözet kazanilmadi</Text>
         )}
       </View>
     </TouchableOpacity>,
   );
 
-  // 5. Profil Kocu + Kisilik Tipi
+  // 5. Profil Kocu + Kişilik Tipi
   infoSections.push(
     <View key="quick-actions" style={styles.quickActionsRow}>
       <TouchableOpacity
@@ -695,13 +695,13 @@ export const ProfileScreen: React.FC = () => {
         style={styles.quickActionCard}
         onPress={handlePersonality}
         activeOpacity={0.7}
-        accessibilityLabel="Kisilik Tipi"
+        accessibilityLabel="Kişilik Tipi"
         accessibilityRole="button"
       >
         <View style={styles.quickActionIconCircle}>
           <Text style={styles.quickActionEmoji}>{'\uD83E\uDDE0'}</Text>
         </View>
-        <Text style={styles.quickActionLabel}>Kisilik Tipi</Text>
+        <Text style={styles.quickActionLabel}>Kişilik Tipi</Text>
       </TouchableOpacity>
     </View>,
   );

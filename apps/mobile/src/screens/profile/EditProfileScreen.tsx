@@ -49,7 +49,7 @@ const MAX_INTERESTS = 10;
 const TURKISH_CITIES: string[] = [
   'Istanbul', 'Ankara', 'Izmir', 'Antalya', 'Bursa', 'Adana',
   'Konya', 'Gaziantep', 'Mersin', 'Diyarbakir', 'Kayseri',
-  'Eskisehir', 'Samsun', 'Trabzon', 'Mugla', 'Denizli',
+  'Eskişehir', 'Samsun', 'Trabzon', 'Mugla', 'Denizli',
   'Sakarya', 'Malatya', 'Kahramanmaras', 'Erzurum',
 ];
 
@@ -60,23 +60,23 @@ interface LifestyleOption {
 }
 
 const SMOKING_OPTIONS: LifestyleOption[] = [
-  { value: 'never', label: 'Icmiyor' },
-  { value: 'sometimes', label: 'Ara sira' },
-  { value: 'regular', label: 'Iciyor' },
-  { value: 'tolerate', label: 'Icmez ama karismaz' },
+  { value: 'never', label: 'İçmiyor' },
+  { value: 'sometimes', label: 'Ara sıra' },
+  { value: 'regular', label: 'İçiyor' },
+  { value: 'tolerate', label: 'İçmez ama karışmaz' },
 ];
 
 const EXERCISE_OPTIONS: LifestyleOption[] = [
   { value: 'never', label: 'Pek yapmam' },
-  { value: 'sometimes', label: 'Ara sira' },
-  { value: 'often', label: 'Duzenli' },
+  { value: 'sometimes', label: 'Ara sıra' },
+  { value: 'often', label: 'Düzenli' },
 ];
 
 const CHILDREN_OPTIONS: LifestyleOption[] = [
   { value: 'have', label: 'Var' },
   { value: 'no_children', label: 'Yok' },
-  { value: 'want', label: 'Ileride olabilir' },
-  { value: 'dont_want', label: 'Istemiyor' },
+  { value: 'want', label: 'İleride olabilir' },
+  { value: 'dont_want', label: 'İstemiyor' },
 ];
 
 // ── Age calculator ─────────────────────────────────────────────────────────
@@ -171,7 +171,7 @@ export const EditProfileScreen: React.FC = () => {
             if (profile.photos.length <= 2) {
               Alert.alert(
                 'Silinemez',
-                'En az 2 fotograf gereklidir. Silmek icin once yeni fotograf ekleyin.',
+                'En az 2 fotograf gereklidir. Silmek için once yeni fotograf ekleyin.',
               );
               return;
             }
@@ -499,7 +499,7 @@ export const EditProfileScreen: React.FC = () => {
                     activeOpacity={0.7}
                     accessibilityLabel={
                       uri
-                        ? `Fotograf ${index + 1}, duzenlemek icin dokun`
+                        ? `Fotograf ${index + 1}, duzenlemek için dokun`
                         : `Fotograf ekle, slot ${index + 1}`
                     }
                     accessibilityRole="button"
@@ -547,10 +547,10 @@ export const EditProfileScreen: React.FC = () => {
             </View>
           </View>
 
-          {/* ── Hakkimda (Bio) ────────────────────────────────────────── */}
+          {/* ── Hakkımda (Bio) ────────────────────────────────────────── */}
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Hakkimda</Text>
+              <Text style={styles.sectionTitle}>Hakkımda</Text>
               <Text
                 style={[
                   styles.charCounter,
@@ -618,9 +618,9 @@ export const EditProfileScreen: React.FC = () => {
                 <Ionicons name="location-outline" size={18} color={colors.text} />
               </View>
               <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Sehir</Text>
+                <Text style={styles.infoLabel}>Şehir</Text>
                 <Text style={[styles.infoValue, !city && styles.infoValuePlaceholder]}>
-                  {city || 'Sehir sec'}
+                  {city || 'Şehir sec'}
                 </Text>
               </View>
               <Ionicons
@@ -768,9 +768,9 @@ export const EditProfileScreen: React.FC = () => {
             </View>
           </View>
 
-          {/* ── Yasam Tarzi ───────────────────────────────────────────── */}
+          {/* ── Yaşam Tarzi ───────────────────────────────────────────── */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Yasam Tarzi</Text>
+            <Text style={styles.sectionTitle}>Yaşam Tarzi</Text>
 
             {/* Smoking */}
             <TouchableOpacity
@@ -818,7 +818,7 @@ export const EditProfileScreen: React.FC = () => {
                 <Ionicons name="people-outline" size={18} color={colors.text} />
               </View>
               <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Cocuk</Text>
+                <Text style={styles.infoLabel}>Çocuk</Text>
                 <Text style={[styles.infoValue, !children && styles.infoValuePlaceholder]}>
                   {children ? getOptionLabel(CHILDREN_OPTIONS, children) : 'Seç'}
                 </Text>
@@ -838,7 +838,7 @@ export const EditProfileScreen: React.FC = () => {
               onPress={() => {
                 Alert.alert(
                   'Yakin Zamanda',
-                  'Ses tanitimi ozelligi yakin zamanda aktif olacak.',
+                  'Ses tanitimi özelligi yakın zamanda aktif olacak.',
                 );
               }}
               activeOpacity={0.7}
