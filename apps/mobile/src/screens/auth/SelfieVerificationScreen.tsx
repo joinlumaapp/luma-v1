@@ -17,6 +17,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../stores/authStore';
 import { useTestModeStore } from '../../stores/testModeStore';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
@@ -27,6 +28,7 @@ const { width } = Dimensions.get('window');
 const CAMERA_SIZE = width * 0.7;
 
 export const SelfieVerificationScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<SelfieNavigationProp>();
   const [permission, requestPermission] = useCameraPermissions();
   const [isTakingSelfie, setIsTakingSelfie] = useState(false);
@@ -127,7 +129,7 @@ export const SelfieVerificationScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <TouchableOpacity onPress={handleBack} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Geri dön">
           <Text style={styles.backText}>{'<'}</Text>
         </TouchableOpacity>
@@ -246,7 +248,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    paddingTop: 60,
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.md,
   },

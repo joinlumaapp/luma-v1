@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { RelationshipsService } from './relationships.service';
-import { ActivateRelationshipDto, ToggleVisibilityDto, CreateEventDto } from './dto';
+import { ActivateRelationshipDto, ToggleVisibilityDto, CreateEventDto, RsvpEventDto } from './dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('Relationships')
@@ -85,9 +85,9 @@ export class RelationshipsController {
   async rsvpEvent(
     @CurrentUser('sub') userId: string,
     @Param('eventId') eventId: string,
-    @Body() body: { status: 'attending' | 'maybe' | 'declined' },
+    @Body() dto: RsvpEventDto,
   ) {
-    return this.relationshipsService.rsvpEvent(userId, eventId, body.status);
+    return this.relationshipsService.rsvpEvent(userId, eventId, dto.status);
   }
 
   @Post('events')

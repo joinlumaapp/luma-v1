@@ -991,6 +991,9 @@ model NotificationPreference {
   badges          Boolean  @default(true)
   system          Boolean  @default(true)
   allDisabled     Boolean  @default(false) @map("all_disabled")
+  quietHoursStart String?  @default("23:00") @map("quiet_hours_start") @db.VarChar(5)
+  quietHoursEnd   String?  @default("08:00") @map("quiet_hours_end") @db.VarChar(5)
+  timezone        String?  @default("Europe/Istanbul") @db.VarChar(50)
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 

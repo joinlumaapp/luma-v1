@@ -27,6 +27,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../navigation/types';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { onboardingColors } from '../../components/onboarding/OnboardingLayout';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 
@@ -42,6 +43,7 @@ const COUNTRY_CODES = [
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 export const PhoneEntryScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<PhoneEntryNavigationProp>();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [selectedCountry, setSelectedCountry] = useState(COUNTRY_CODES[0]);
@@ -126,7 +128,7 @@ export const PhoneEntryScreen: React.FC = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
           <TouchableOpacity
             onPress={handleBack}
             style={styles.backButton}
@@ -244,14 +246,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingTop: 60,
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.md,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: onboardingColors.surface,
     justifyContent: 'center',
     alignItems: 'center',

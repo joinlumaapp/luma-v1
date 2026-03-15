@@ -19,6 +19,7 @@ import type { AuthStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../stores/authStore';
 import { useTestModeStore } from '../../stores/testModeStore';
 import { useCoinStore } from '../../stores/coinStore';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { onboardingColors } from '../../components/onboarding/OnboardingLayout';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 
@@ -30,6 +31,7 @@ const DEFAULT_RESEND_TIMER_SECONDS = 60;
 const DEFAULT_MAX_RESEND_ATTEMPTS = 5;
 
 export const OTPVerificationScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<OTPNavigationProp>();
   const route = useRoute<OTPRouteProp>();
   const { phoneNumber, countryCode } = route.params;
@@ -228,7 +230,7 @@ export const OTPVerificationScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" backgroundColor={onboardingColors.background} translucent />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <TouchableOpacity
           onPress={handleBack}
           style={styles.backButton}
@@ -351,7 +353,6 @@ const styles = StyleSheet.create({
     backgroundColor: onboardingColors.background,
   },
   header: {
-    paddingTop: 60,
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.md,
   },

@@ -366,9 +366,9 @@ export class NotificationsService {
       badges: pref.badges,
       system: pref.system,
       allDisabled: pref.allDisabled,
-      quietHoursStart: (pref as Record<string, unknown>).quietHoursStart as string ?? DEFAULT_PREFERENCES.quietHoursStart,
-      quietHoursEnd: (pref as Record<string, unknown>).quietHoursEnd as string ?? DEFAULT_PREFERENCES.quietHoursEnd,
-      timezone: (pref as Record<string, unknown>).timezone as string ?? DEFAULT_PREFERENCES.timezone,
+      quietHoursStart: pref.quietHoursStart ?? DEFAULT_PREFERENCES.quietHoursStart,
+      quietHoursEnd: pref.quietHoursEnd ?? DEFAULT_PREFERENCES.quietHoursEnd,
+      timezone: pref.timezone ?? DEFAULT_PREFERENCES.timezone,
     };
   }
 
@@ -403,9 +403,9 @@ export class NotificationsService {
       badges: pref.badges,
       system: pref.system,
       allDisabled: pref.allDisabled,
-      quietHoursStart: (pref as Record<string, unknown>).quietHoursStart as string ?? DEFAULT_PREFERENCES.quietHoursStart,
-      quietHoursEnd: (pref as Record<string, unknown>).quietHoursEnd as string ?? DEFAULT_PREFERENCES.quietHoursEnd,
-      timezone: (pref as Record<string, unknown>).timezone as string ?? DEFAULT_PREFERENCES.timezone,
+      quietHoursStart: pref.quietHoursStart ?? DEFAULT_PREFERENCES.quietHoursStart,
+      quietHoursEnd: pref.quietHoursEnd ?? DEFAULT_PREFERENCES.quietHoursEnd,
+      timezone: pref.timezone ?? DEFAULT_PREFERENCES.timezone,
     };
   }
 

@@ -2,45 +2,28 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsOptional,
   IsString,
-  IsEmail,
-  IsDateString,
-  IsEnum,
-  MinLength,
+  IsBoolean,
   MaxLength,
 } from 'class-validator';
 
-export enum Gender {
-  MALE = 'male',
-  FEMALE = 'female',
-  NON_BINARY = 'non_binary',
-}
-
+/**
+ * DTO for updating fields on the User model (not UserProfile).
+ *
+ * User model only has: phone, phoneCountryCode, isActive,
+ * isSmsVerified, isSelfieVerified, isFullyVerified, packageTier, goldBalance.
+ *
+ * Profile-level fields (displayName, email, dateOfBirth, gender, city)
+ * belong to UserProfile and should be updated via ProfilesModule.
+ */
 export class UpdateUserDto {
-  @ApiPropertyOptional({ description: 'Display name', example: 'Ari' })
+  @ApiPropertyOptional({ description: 'Phone country code', example: '+90' })
   @IsOptional()
   @IsString()
-  @MinLength(2)
-  @MaxLength(50)
-  displayName?: string;
+  @MaxLength(5)
+  phoneCountryCode?: string;
 
-  @ApiPropertyOptional({ description: 'Email address' })
+  @ApiPropertyOptional({ description: 'Whether the user account is active' })
   @IsOptional()
-  @IsEmail()
-  email?: string;
-
-  @ApiPropertyOptional({ description: 'Date of birth (ISO 8601)' })
-  @IsOptional()
-  @IsDateString()
-  dateOfBirth?: string;
-
-  @ApiPropertyOptional({ description: 'Gender', enum: Gender })
-  @IsOptional()
-  @IsEnum(Gender)
-  gender?: Gender;
-
-  @ApiPropertyOptional({ description: 'City name' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  city?: string;
+  @IsBoolean()
+  isActive?: boolean;
 }

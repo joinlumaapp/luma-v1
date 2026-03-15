@@ -23,6 +23,8 @@ import {
   ReorderPhotosDto,
   UpdateLocationDto,
   UpdatePersonalityDto,
+  SavePromptsDto,
+  ToggleIncognitoDto,
 } from './dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -148,9 +150,9 @@ export class ProfilesController {
   @ApiOperation({ summary: 'Save profile prompts (max 3)' })
   async savePrompts(
     @CurrentUser('sub') userId: string,
-    @Body() body: { prompts: Array<{ question: string; answer: string; order: number }> },
+    @Body() dto: SavePromptsDto,
   ) {
-    return this.profilesService.savePrompts(userId, body.prompts);
+    return this.profilesService.savePrompts(userId, dto.prompts);
   }
 
   // ── Profile Boost ───────────────────────────────────────────
@@ -173,9 +175,9 @@ export class ProfilesController {
   @ApiOperation({ summary: 'Toggle incognito mode (hide from discovery, Gold+ only)' })
   async toggleIncognito(
     @CurrentUser('sub') userId: string,
-    @Body() body: { enabled: boolean },
+    @Body() dto: ToggleIncognitoDto,
   ) {
-    return this.profilesService.toggleIncognito(userId, body.enabled);
+    return this.profilesService.toggleIncognito(userId, dto.enabled);
   }
 
   // ── Login Streak ────────────────────────────────────────────

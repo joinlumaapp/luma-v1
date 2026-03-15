@@ -197,7 +197,7 @@ export class TasksService {
   }
 
   // ─── 9. Auto-End Expired Relationship Deactivations ────────────
-  // Runs every 15 minutes — ends relationships past the 48-hour deadline
+  // Runs every 10 minutes — ends relationships past the 48-hour deadline
   @Cron(CronExpression.EVERY_10_MINUTES)
   async autoEndExpiredRelationships(): Promise<void> {
     const endedCount = await this.relationshipsService.autoEndExpiredRelationships();

@@ -5,3 +5,5 @@ export { SetMoodDto, MoodValue } from './set-mood.dto';
 export { UploadVoiceIntroDto } from './voice-intro.dto';
 export { UpdateLocationDto } from './update-location.dto';
 export { UpdatePersonalityDto } from './update-personality.dto';
+export { SavePromptsDto, PromptItemDto } from './save-prompts.dto';
+export { ToggleIncognitoDto } from './toggle-incognito.dto';

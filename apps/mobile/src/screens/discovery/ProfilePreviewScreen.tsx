@@ -342,6 +342,8 @@ export const ProfilePreviewScreen: React.FC = () => {
           isVerified: false,
         });
       }
+    }).catch(() => {
+      // Silently fail — profile may still load from cards or matches
     });
     return () => { cancelled = true; };
   }, [userId, cardProfile]);

@@ -1,6 +1,6 @@
 // Onboarding step 2/11: Birth date picker with zodiac sign — cream/beige theme
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -24,7 +24,6 @@ import {
 type NavProp = NativeStackNavigationProp<OnboardingStackParamList, 'BirthDate'>;
 
 const MIN_AGE = 18;
-const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
 const MONTHS = [
   'Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz',
   'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara',
@@ -72,6 +71,23 @@ export const BirthDateScreen: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [showZodiac, setShowZodiac] = useState(true);
   const setProfileField = useProfileStore((state) => state.setField);
+
+  // Calculate valid days based on selected month and year
+  const maxDay = useMemo(() => {
+    if (selectedMonth === null) return 31;
+    // Use Date(year, month+1, 0) to get last day of the month
+    const year = selectedYear ?? 2000; // default to leap year when year not yet selected
+    return new Date(year, selectedMonth + 1, 0).getDate();
+  }, [selectedMonth, selectedYear]);
+
+  const days = useMemo(() => Array.from({ length: maxDay }, (_, i) => i + 1), [maxDay]);
+
+  // Auto-correct selected day if it exceeds the new max
+  React.useEffect(() => {
+    if (selectedDay !== null && selectedDay > maxDay) {
+      setSelectedDay(maxDay);
+    }
+  }, [maxDay, selectedDay]);
 
   const isValid = selectedDay !== null && selectedMonth !== null && selectedYear !== null;
 
@@ -123,7 +139,7 @@ export const BirthDateScreen: React.FC = () => {
       <Text style={styles.label}>Gün</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollRow}>
         <View style={styles.chipsRow}>
-          {DAYS.map((day) => (
+          {days.map((day) => (
             <TouchableOpacity
               key={day}
               style={[styles.chip, selectedDay === day && styles.chipActive]}
