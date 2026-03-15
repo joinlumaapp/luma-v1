@@ -175,17 +175,112 @@ export const MatchDetailScreen: React.FC = () => {
   // ── Info sections (interleaved with photos) — seamless ──
   const infoSections: React.ReactNode[] = [];
 
-  // 1. Bio
-  if (selectedMatch.bio && selectedMatch.bio.length > 0) {
+  // 1. Hakkinda — bio + intention chip
+  if (selectedMatch.bio || selectedMatch.intentionTag) {
     infoSections.push(
-      <View key="bio" style={styles.section}>
-        <Text style={styles.sectionTitle}>Hakkında</Text>
-        <Text style={styles.bioText}>{selectedMatch.bio}</Text>
+      <View key="about" style={styles.section}>
+        <Text style={styles.sectionTitle}>Hakkinda</Text>
+        {selectedMatch.bio && <Text style={styles.bioText}>{selectedMatch.bio}</Text>}
+        {selectedMatch.intentionTag && (
+          <View style={{ marginTop: 12 }}>
+            <Text style={{ fontSize: 14, fontWeight: fontWeights.semibold, color: colors.text, marginBottom: 8 }}>
+              Burada olma sebebi
+            </Text>
+            <View style={{ flexDirection: 'row' }}>
+              <View style={{ backgroundColor: 'rgba(139,92,246,0.12)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20 }}>
+                <Text style={{ fontSize: 13, fontWeight: fontWeights.medium, color: '#8B5CF6' }}>
+                  {selectedMatch.intentionTag === 'serious' || selectedMatch.intentionTag === 'serious_relationship' ? 'Ciddi Iliski' : selectedMatch.intentionTag === 'exploring' ? 'Kesfediyorum' : 'Emin Degilim'}
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
       </View>,
     );
   }
 
-  // 2. Compatibility breakdown
+  // 2. Ilgi Alanlari — interest tags
+  const matchInterests = (selectedMatch as unknown as Record<string, unknown>).interests as string[] | undefined
+    ?? (selectedMatch as unknown as Record<string, unknown>).interestTags as string[] | undefined
+    ?? [];
+  if (matchInterests.length > 0) {
+    infoSections.push(
+      <View key="interests" style={styles.section}>
+        <Text style={styles.sectionTitle}>Ilgi Alanlari</Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          {matchInterests.map((tag: string) => (
+            <View key={tag} style={{ backgroundColor: 'rgba(139, 92, 246, 0.08)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(139, 92, 246, 0.15)' }}>
+              <Text style={{ fontSize: 13, fontWeight: fontWeights.medium, color: palette.purple[600] }}>{tag}</Text>
+            </View>
+          ))}
+        </View>
+      </View>,
+    );
+  }
+
+  // 3. Hakkimda — lifestyle detail rows
+  {
+    const lifestyleRows: Array<{ icon: keyof typeof Ionicons.glyphMap; iconBg: string; label: string; value: string }> = [];
+    const m = selectedMatch as unknown as Record<string, unknown>;
+    if (m.job) lifestyleRows.push({ icon: 'briefcase-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'Is', value: String(m.job) });
+    if (m.education) lifestyleRows.push({ icon: 'school-outline', iconBg: 'rgba(236, 72, 153, 0.10)', label: 'Egitim', value: String(m.education) });
+    if (m.height) lifestyleRows.push({ icon: 'resize-outline', iconBg: 'rgba(139, 92, 246, 0.10)', label: 'Boy', value: `${m.height} cm` });
+    if (m.smoking) lifestyleRows.push({ icon: 'flame-outline', iconBg: 'rgba(239, 68, 68, 0.10)', label: 'Sigara', value: String(m.smoking) });
+    if (m.sports) lifestyleRows.push({ icon: 'fitness-outline', iconBg: 'rgba(59, 130, 246, 0.10)', label: 'Spor', value: String(m.sports) });
+    if (m.children) lifestyleRows.push({ icon: 'people-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'Cocuk', value: String(m.children) });
+
+    if (lifestyleRows.length > 0) {
+      infoSections.push(
+        <View key="details" style={styles.section}>
+          <Text style={styles.sectionTitle}>Hakkimda</Text>
+          {lifestyleRows.map((row, idx) => (
+            <View
+              key={row.label}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingVertical: 14,
+                borderBottomWidth: idx < lifestyleRows.length - 1 ? 1 : 0,
+                borderBottomColor: colors.surfaceBorder + '80',
+              }}
+            >
+              <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: row.iconBg, justifyContent: 'center', alignItems: 'center', marginRight: 14 }}>
+                <Ionicons name={row.icon} size={18} color={colors.text} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 11, fontWeight: fontWeights.medium, color: colors.textTertiary, marginBottom: 2 }}>{row.label}</Text>
+                <Text style={{ fontSize: 15, fontWeight: fontWeights.medium, color: colors.text }}>{row.value}</Text>
+              </View>
+            </View>
+          ))}
+        </View>,
+      );
+    }
+  }
+
+  // 4. Rozetler — badge showcase
+  {
+    const matchBadges = (selectedMatch as unknown as Record<string, unknown>).earnedBadges as Array<{ id: string; name: string }> | undefined ?? [];
+    if (matchBadges.length > 0) {
+      infoSections.push(
+        <View key="badges" style={styles.section}>
+          <Text style={styles.sectionTitle}>Rozetleri</Text>
+          <View style={{ flexDirection: 'row', gap: spacing.md }}>
+            {matchBadges.slice(0, 3).map((badge) => (
+              <View key={badge.id} style={{ alignItems: 'center', gap: 6 }}>
+                <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(139, 92, 246, 0.10)', justifyContent: 'center', alignItems: 'center' }}>
+                  <Text style={{ fontSize: 18 }}>{'*'}</Text>
+                </View>
+                <Text style={{ fontSize: 11, fontWeight: fontWeights.medium, color: colors.textSecondary }} numberOfLines={1}>{badge.name}</Text>
+              </View>
+            ))}
+          </View>
+        </View>,
+      );
+    }
+  }
+
+  // 5. Compatibility breakdown
   if (selectedMatch.compatibilityBreakdown.length > 0) {
     infoSections.push(
       <View key="breakdown" style={styles.section}>

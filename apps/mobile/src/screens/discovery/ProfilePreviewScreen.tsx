@@ -483,32 +483,91 @@ export const ProfilePreviewScreen: React.FC = () => {
     );
   }
 
-  // Block 2: Lifestyle (clean icon + text rows, no box borders)
-  const lifestyleItems: Array<{ icon: keyof typeof Ionicons.glyphMap; value: string }> = [];
-  if (profile.job) lifestyleItems.push({ icon: 'briefcase-outline', value: profile.job });
-  if (profile.education) lifestyleItems.push({ icon: 'school-outline', value: profile.education });
-  if (profile.height) lifestyleItems.push({ icon: 'resize-outline', value: `${profile.height} cm` });
-  if (profile.sports) lifestyleItems.push({ icon: 'fitness-outline', value: profile.sports });
-  if (profile.smoking) lifestyleItems.push({ icon: 'flame-outline', value: profile.smoking });
-  if (profile.children) lifestyleItems.push({ icon: 'people-outline', value: profile.children });
-
-  if (lifestyleItems.length > 0 || (profile.bio && profile.bio.length > 0)) {
+  // Block 1b: Hakkında — bio + intention tag (matches ProfileScreen pattern)
+  if (profile.bio || profile.intentionTag) {
     infoSections.push(
-      <View key="lifestyle-block" style={styles.seamlessSection}>
-        {/* Bio blends directly into the background */}
+      <View key="about-section" style={styles.seamlessSection}>
+        <Text style={styles.sectionLabel}>HAKKINDA</Text>
         {profile.bio && profile.bio.length > 0 && (
           <Text style={styles.bioText}>{profile.bio}</Text>
         )}
-        {lifestyleItems.length > 0 && (
-          <View style={styles.lifestyleGrid}>
-            {lifestyleItems.map((item) => (
-              <View key={item.icon} style={styles.lifestyleItem}>
-                <Ionicons name={item.icon} size={18} color={colors.textSecondary} />
-                <Text style={styles.lifestyleValue}>{item.value}</Text>
+        {profile.intentionTag && (
+          <View style={{ marginTop: spacing.sm }}>
+            <Text style={[styles.bioText, { fontSize: 13, color: colors.textSecondary, marginBottom: 6 }]}>
+              Burada olma sebebi
+            </Text>
+            <View style={{ flexDirection: 'row' }}>
+              <View style={{
+                backgroundColor: 'rgba(139, 92, 246, 0.12)',
+                paddingHorizontal: 14,
+                paddingVertical: 6,
+                borderRadius: 20,
+              }}>
+                <Text style={{ fontSize: 13, fontFamily: 'Poppins_500Medium', fontWeight: '500', color: palette.purple[500] }}>
+                  {profile.intentionTag === 'serious' ? 'Ciddi İlişki' :
+                   profile.intentionTag === 'exploring' ? 'Keşfediyorum' : 'Emin Değilim'}
+                </Text>
               </View>
-            ))}
+            </View>
           </View>
         )}
+      </View>,
+    );
+  }
+
+  // Block 2: Hakkımda — lifestyle detail rows with icon circles (matches ProfileScreen aboutRows)
+  const lifestyleItems: Array<{ icon: keyof typeof Ionicons.glyphMap; iconBg: string; label: string; value: string }> = [];
+  if (profile.job) lifestyleItems.push({ icon: 'briefcase-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'İş', value: profile.job });
+  if (profile.education) lifestyleItems.push({ icon: 'school-outline', iconBg: 'rgba(236, 72, 153, 0.10)', label: 'Eğitim', value: profile.education });
+  if (profile.height) lifestyleItems.push({ icon: 'resize-outline', iconBg: 'rgba(139, 92, 246, 0.10)', label: 'Boy', value: `${profile.height} cm` });
+  if (profile.sports) lifestyleItems.push({ icon: 'fitness-outline', iconBg: 'rgba(59, 130, 246, 0.10)', label: 'Spor', value: profile.sports });
+  if (profile.smoking) lifestyleItems.push({ icon: 'flame-outline', iconBg: 'rgba(239, 68, 68, 0.10)', label: 'Sigara', value: profile.smoking });
+  if (profile.children) lifestyleItems.push({ icon: 'people-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'Çocuk', value: profile.children });
+
+  if (lifestyleItems.length > 0) {
+    infoSections.push(
+      <View key="lifestyle-block" style={styles.seamlessSection}>
+        <Text style={styles.sectionLabel}>HAKKIMDA</Text>
+        {lifestyleItems.map((item, idx) => (
+          <View key={item.icon} style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingVertical: 12,
+            borderBottomWidth: idx < lifestyleItems.length - 1 ? 1 : 0,
+            borderBottomColor: 'rgba(0,0,0,0.06)',
+          }}>
+            <View style={{
+              width: 38,
+              height: 38,
+              borderRadius: 12,
+              backgroundColor: item.iconBg,
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginRight: 14,
+            }}>
+              <Ionicons name={item.icon} size={18} color={colors.text} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{
+                fontSize: 11,
+                fontFamily: 'Poppins_500Medium',
+                fontWeight: '500',
+                color: colors.textTertiary,
+                marginBottom: 2,
+              }}>
+                {item.label}
+              </Text>
+              <Text style={{
+                fontSize: 15,
+                fontFamily: 'Poppins_500Medium',
+                fontWeight: '500',
+                color: colors.text,
+              }}>
+                {item.value}
+              </Text>
+            </View>
+          </View>
+        ))}
       </View>,
     );
   }

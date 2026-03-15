@@ -311,12 +311,24 @@ export const FeedProfileScreen: React.FC = () => {
   // ── Info sections — seamless, interleaved with photos ──
   const infoSections: React.ReactNode[] = [];
 
-  // 1. Bio — visible to all
-  if (profile.bio) {
+  // 1. Hakkinda — bio + intention chip
+  if (profile.bio || profile.intentionTag) {
     infoSections.push(
-      <View key="bio" style={styles.section}>
-        <Text style={styles.sectionTitle}>Hakkında</Text>
-        <Text style={styles.bioText}>{profile.bio}</Text>
+      <View key="about" style={styles.section}>
+        <Text style={styles.sectionTitle}>Hakkinda</Text>
+        {profile.bio && <Text style={styles.bioText}>{profile.bio}</Text>}
+        {profile.intentionTag && (
+          <View style={{ marginTop: 12 }}>
+            <Text style={styles.subsectionTitle}>Burada olma sebebi</Text>
+            <View style={{ flexDirection: 'row' }}>
+              <View style={{ backgroundColor: 'rgba(139,92,246,0.12)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20 }}>
+                <Text style={{ fontSize: 13, fontWeight: fontWeights.medium, color: '#8B5CF6' }}>
+                  {profile.intentionTag}
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
       </View>,
     );
   }
@@ -349,35 +361,10 @@ export const FeedProfileScreen: React.FC = () => {
     );
   }
 
-  // 4. Detailed info — premium-locked
-  infoSections.push(
-    <View key="details" style={styles.section}>
-      <Text style={styles.sectionTitle}>Detaylı Bilgiler</Text>
-      {isPremium ? (
-        <View style={styles.detailsGrid}>
-          <DetailRow icon="resize-outline" iconBg="rgba(139, 92, 246, 0.10)" label="Boy" value={profile.height} />
-          <DetailRow icon="briefcase-outline" iconBg="rgba(16, 185, 129, 0.10)" label="İş" value={profile.job} />
-          <DetailRow icon="school-outline" iconBg="rgba(236, 72, 153, 0.10)" label="Eğitim" value={profile.education} />
-          <DetailRow icon="heart-outline" iconBg="rgba(245, 158, 11, 0.10)" label="Amaç" value={profile.intentionTag} />
-          <DetailRow icon="star-outline" iconBg="rgba(59, 130, 246, 0.10)" label="Burç" value={profile.zodiacSign} />
-        </View>
-      ) : (
-        <View style={styles.lockedContainer}>
-          <View style={styles.detailsGrid}>
-            <DetailRow icon="resize-outline" iconBg="rgba(139, 92, 246, 0.10)" label="Boy" value="***" />
-            <DetailRow icon="briefcase-outline" iconBg="rgba(16, 185, 129, 0.10)" label="İş" value="***" />
-            <DetailRow icon="school-outline" iconBg="rgba(236, 72, 153, 0.10)" label="Eğitim" value="***" />
-          </View>
-          <PremiumLock onPress={handlePremiumUpgrade} />
-        </View>
-      )}
-    </View>,
-  );
-
-  // 5. Hobbies — partially visible
+  // 4. Ilgi Alanlari — partially visible
   infoSections.push(
     <View key="hobbies" style={styles.section}>
-      <Text style={styles.sectionTitle}>Hobiler</Text>
+      <Text style={styles.sectionTitle}>Ilgi Alanlari</Text>
       <View style={styles.chipRow}>
         {profile.hobbies.slice(0, isPremium ? profile.hobbies.length : 2).map((hobby) => (
           <View key={hobby} style={styles.hobbyChip}>
@@ -394,7 +381,43 @@ export const FeedProfileScreen: React.FC = () => {
     </View>,
   );
 
-  // 6. Premium CTA banner (only for non-premium)
+  // 5. Hakkimda — lifestyle detail rows (premium-locked)
+  infoSections.push(
+    <View key="details" style={styles.section}>
+      <Text style={styles.sectionTitle}>Hakkimda</Text>
+      {isPremium ? (
+        <View style={styles.detailsGrid}>
+          <DetailRow icon="resize-outline" iconBg="rgba(139, 92, 246, 0.10)" label="Boy" value={profile.height} />
+          <DetailRow icon="briefcase-outline" iconBg="rgba(16, 185, 129, 0.10)" label="Is" value={profile.job} />
+          <DetailRow icon="school-outline" iconBg="rgba(236, 72, 153, 0.10)" label="Egitim" value={profile.education} />
+          <DetailRow icon="heart-outline" iconBg="rgba(245, 158, 11, 0.10)" label="Amac" value={profile.intentionTag} />
+          <DetailRow icon="star-outline" iconBg="rgba(59, 130, 246, 0.10)" label="Burc" value={profile.zodiacSign} />
+        </View>
+      ) : (
+        <View style={styles.lockedContainer}>
+          <View style={styles.detailsGrid}>
+            <DetailRow icon="resize-outline" iconBg="rgba(139, 92, 246, 0.10)" label="Boy" value="***" />
+            <DetailRow icon="briefcase-outline" iconBg="rgba(16, 185, 129, 0.10)" label="Is" value="***" />
+            <DetailRow icon="school-outline" iconBg="rgba(236, 72, 153, 0.10)" label="Egitim" value="***" />
+          </View>
+          <PremiumLock onPress={handlePremiumUpgrade} />
+        </View>
+      )}
+    </View>,
+  );
+
+  // 6. Rozetleri — badge showcase (placeholder, shown when badges available)
+  // Badges will come from API; for now show placeholder for premium users
+  if (isPremium) {
+    infoSections.push(
+      <View key="badges" style={styles.section}>
+        <Text style={styles.sectionTitle}>Rozetleri</Text>
+        <Text style={{ fontSize: 13, fontWeight: fontWeights.regular, color: colors.textTertiary }}>Henuz rozet kazanilmadi</Text>
+      </View>,
+    );
+  }
+
+  // 7. Premium CTA banner (only for non-premium)
   if (!isPremium) {
     infoSections.push(
       <TouchableOpacity key="premium-cta" style={styles.premiumBanner} onPress={handlePremiumUpgrade} activeOpacity={0.85}>
@@ -622,6 +645,12 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     lineHeight: 24,
+  },
+  subsectionTitle: {
+    fontSize: 14,
+    fontWeight: fontWeights.semibold,
+    color: colors.text,
+    marginBottom: 8,
   },
 
   // ── About rows (detail rows) ──
