@@ -43,6 +43,8 @@ export interface FeedCard {
   packageTier?: 'free' | 'gold' | 'pro' | 'reserved';
   /** Profile prompts (Hinge-style question + answer) */
   prompts?: Array<{ id: string; question: string; answer: string; order: number }>;
+  /** Favorite spots/locations */
+  favoriteSpots?: Array<{ name: string; category: string }>;
 }
 
 export interface FeedResponse {
@@ -239,6 +241,11 @@ const MOCK_CARDS: FeedCard[] = [
       { id: 'p1-1', question: 'En iyi seyahat anim...', answer: 'Kapadokya\'da balon turu sirasinda gun dogumunu izlemek', order: 0 },
       { id: 'p1-2', question: 'Beni gulduren sey...', answer: 'Iyi bir stand-up ve arkadaslarimla sacma muhabbetler', order: 1 },
     ],
+    favoriteSpots: [
+      { name: 'Bebek Sahili', category: 'sahil' },
+      { name: 'Kadikoy', category: 'semt' },
+      { name: 'Cihangir', category: 'semt' },
+    ],
   },
   {
     userId: 'mock-2',
@@ -272,6 +279,11 @@ const MOCK_CARDS: FeedCard[] = [
       { id: 'p2-2', question: 'Ilk bulusmada...', answer: 'Mutlaka canli muzik olan bir mekan secerim', order: 1 },
       { id: 'p2-3', question: 'En cok deger verdigim...', answer: 'Samimiyet ve yaraticilik', order: 2 },
     ],
+    favoriteSpots: [
+      { name: 'Belgrad Ormani', category: 'park' },
+      { name: 'Moda Sahili', category: 'sahil' },
+      { name: 'Karakoy', category: 'semt' },
+    ],
   },
   {
     userId: 'mock-3',
@@ -302,6 +314,16 @@ const MOCK_CARDS: FeedCard[] = [
     children: 'Belki ileride',
     job: 'Diyetisyen',
     education: 'Ege Üniversitesi',
+    prompts: [
+      { id: 'p3-1', question: 'Hafta sonu planim genelde...', answer: 'Sabah erkenden daga cikip gun batiminda sehre donmek', order: 0 },
+      { id: 'p3-2', question: 'Hayatimda vazgecemedegim...', answer: 'Her gun taze sebzelerle yemek yapmak, mutfak benim terapim', order: 1 },
+      { id: 'p3-3', question: 'Ilk bulusmada...', answer: 'Acik havada yuruyu\u015f ve samimi bir sohbet tercih ederim', order: 2 },
+    ],
+    favoriteSpots: [
+      { name: 'Kiz Kulesi', category: 'tarihi' },
+      { name: 'Nisantasi', category: 'semt' },
+      { name: 'Camlica Tepesi', category: 'doga' },
+    ],
   },
   {
     userId: 'mock-4',
@@ -330,6 +352,15 @@ const MOCK_CARDS: FeedCard[] = [
     children: 'İstemiyor',
     job: 'Yazılım Geliştirici',
     education: 'ODTÜ',
+    prompts: [
+      { id: 'p4-1', question: 'Beni gulduren sey...', answer: 'Kedimin 3 kilo olmasi ama kendini aslan sanmasi', order: 0 },
+      { id: 'p4-2', question: 'En cok deger verdigim...', answer: 'Beraber sessizce ayni odada kitap okuyabilmek', order: 1 },
+    ],
+    favoriteSpots: [
+      { name: 'Ortakoy', category: 'semt' },
+      { name: 'Emirgan Korusu', category: 'park' },
+      { name: 'Besiktas', category: 'semt' },
+    ],
   },
   {
     userId: 'mock-5',
@@ -356,6 +387,15 @@ const MOCK_CARDS: FeedCard[] = [
     smoking: 'Sosyal içici',
     sports: 'Yüzme',
     job: 'Fotoğrafçı',
+    prompts: [
+      { id: 'p5-1', question: 'En iyi seyahat anim...', answer: 'Bali\'de pirinc tarlalarinin arasinda bisiklet surmek', order: 0 },
+      { id: 'p5-2', question: 'Hafta sonu planim genelde...', answer: 'Yeni acilan bir restoranda brunch, sonra sokak fotografi cekmek', order: 1 },
+    ],
+    favoriteSpots: [
+      { name: 'Balat', category: 'semt' },
+      { name: 'Galata Kulesi', category: 'tarihi' },
+      { name: 'Princes Adalari', category: 'doga' },
+    ],
   },
   {
     userId: 'mock-6',
@@ -385,6 +425,16 @@ const MOCK_CARDS: FeedCard[] = [
     children: 'İstiyor',
     job: 'Psikolog Adayı',
     education: 'Boğaziçi Üniversitesi',
+    prompts: [
+      { id: 'p6-1', question: 'En cok deger verdigim...', answer: 'Karsi tarafi yargilamadan dinleyebilmek, gercek empati', order: 0 },
+      { id: 'p6-2', question: 'Beni gulduren sey...', answer: 'Psikoloji dersi sonrasi herkesin birbirini analiz etmeye calismasi', order: 1 },
+      { id: 'p6-3', question: 'Hayatimda vazgecemedegim...', answer: 'Sabah meditasyonum ve gunesin dogusunu izlemek', order: 2 },
+    ],
+    favoriteSpots: [
+      { name: 'Rumeli Hisari', category: 'tarihi' },
+      { name: 'Macka Parki', category: 'park' },
+      { name: 'Arnavutkoy', category: 'semt' },
+    ],
   },
   {
     userId: 'mock-7',
@@ -413,6 +463,15 @@ const MOCK_CARDS: FeedCard[] = [
     sports: 'Yüzme, Fitness',
     children: 'Belki ileride',
     job: 'Spor Eğitmeni',
+    prompts: [
+      { id: 'p7-1', question: 'Ilk bulusmada...', answer: 'Sahilde kosu sonrasi soguk kahve icmeyi teklif ederim', order: 0 },
+      { id: 'p7-2', question: 'Hafta sonu planim genelde...', answer: 'Sabah dalga sorfunden sonra sahilde uzanmak', order: 1 },
+    ],
+    favoriteSpots: [
+      { name: 'Konyaalti Sahili', category: 'sahil' },
+      { name: 'Duden Selalesi', category: 'doga' },
+      { name: 'Kaleici', category: 'tarihi' },
+    ],
   },
   {
     userId: 'mock-8',
@@ -441,6 +500,16 @@ const MOCK_CARDS: FeedCard[] = [
     sports: 'Pilates',
     job: 'Mimar',
     education: 'İTÜ',
+    prompts: [
+      { id: 'p8-1', question: 'Hayatimda vazgecemedegim...', answer: 'Sehirleri mimarileriyle kesfetmek, her bina bir hikaye', order: 0 },
+      { id: 'p8-2', question: 'En iyi seyahat anim...', answer: 'Barcelona\'da Gaudi\'nin eserlerini gormek icin 3 gun yurumek', order: 1 },
+      { id: 'p8-3', question: 'En cok deger verdigim...', answer: 'Detaylara dikkat eden ve estetik duygusunu paylasan biri', order: 2 },
+    ],
+    favoriteSpots: [
+      { name: 'Uskudar', category: 'semt' },
+      { name: 'Topkapi Sarayi', category: 'tarihi' },
+      { name: 'Fenerbahce Parki', category: 'park' },
+    ],
   },
 ];
 
@@ -564,6 +633,20 @@ const MOCK_PROMPT_POOL: Array<{ question: string; answers: string[] }> = [
   { question: 'Hafta sonu planim genelde...', answers: ['Brunch + kitap + kafe', 'Dogada yuruyus veya bisiklet', 'Arkadaslarla bulusma'] },
 ];
 
+// Mock favorite spots pool for generated cards
+const MOCK_FAVORITE_SPOTS_POOL: Array<Array<{ name: string; category: string }>> = [
+  [{ name: 'Bebek Sahili', category: 'sahil' }, { name: 'Kadikoy', category: 'semt' }, { name: 'Cihangir', category: 'semt' }],
+  [{ name: 'Belgrad Ormani', category: 'park' }, { name: 'Moda Sahili', category: 'sahil' }, { name: 'Karakoy', category: 'semt' }],
+  [{ name: 'Kiz Kulesi', category: 'tarihi' }, { name: 'Nisantasi', category: 'semt' }, { name: 'Camlica Tepesi', category: 'doga' }],
+  [{ name: 'Ortakoy', category: 'semt' }, { name: 'Emirgan Korusu', category: 'park' }, { name: 'Besiktas', category: 'semt' }],
+  [{ name: 'Balat', category: 'semt' }, { name: 'Galata Kulesi', category: 'tarihi' }, { name: 'Princes Adalari', category: 'doga' }],
+  [{ name: 'Rumeli Hisari', category: 'tarihi' }, { name: 'Macka Parki', category: 'park' }, { name: 'Arnavutkoy', category: 'semt' }],
+  [{ name: 'Konyaalti Sahili', category: 'sahil' }, { name: 'Duden Selalesi', category: 'doga' }, { name: 'Kaleici', category: 'tarihi' }],
+  [{ name: 'Uskudar', category: 'semt' }, { name: 'Topkapi Sarayi', category: 'tarihi' }, { name: 'Fenerbahce Parki', category: 'park' }],
+  [{ name: 'Taksim', category: 'semt' }, { name: 'Yildiz Parki', category: 'park' }, { name: 'Eminonu', category: 'tarihi' }],
+  [{ name: 'Bagdat Caddesi', category: 'semt' }, { name: 'Cengelkoy', category: 'semt' }, { name: 'Polonez Koyu', category: 'doga' }],
+];
+
 const MOCK_SMOKING_OPTIONS = ['İçmez', 'Sosyal içici', 'İçer'];
 const MOCK_SPORTS_OPTIONS = ['Yoga', 'Koşu', 'Yüzme', 'Fitness', 'Pilates', 'Dans', 'Tenis'];
 const MOCK_CHILDREN_OPTIONS = ['İstemiyor', 'İstiyor', 'Belki ileride'];
@@ -647,6 +730,7 @@ function generateMockCards(count: number): FeedCard[] {
       children: pickFrom(MOCK_CHILDREN_OPTIONS, i, 1),
       job: pickFrom(MOCK_JOBS, i, 3),
       education: pickFrom(MOCK_EDUCATIONS, i, 4),
+      favoriteSpots: pickFrom(MOCK_FAVORITE_SPOTS_POOL, i, 2),
       // ~60% of generated profiles have prompts (1-3)
       ...(i % 5 !== 0 ? {
         prompts: (() => {

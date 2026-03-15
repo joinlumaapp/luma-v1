@@ -71,6 +71,8 @@ export interface DiscoveryProfile {
   videoThumbnailUrl?: string;
   /** Profile video duration in seconds */
   videoDuration?: number;
+  /** Favorite spots/locations */
+  favoriteSpots?: Array<{ name: string; category: string }>;
 }
 
 // Undo window duration in milliseconds
@@ -166,6 +168,8 @@ const mapFeedCardToProfile = (card: FeedCard): DiscoveryProfile => ({
   job: card.job,
   education: card.education,
   packageTier: card.packageTier,
+  prompts: card.prompts ?? [],
+  favoriteSpots: card.favoriteSpots ?? [],
 });
 
 // ─── Supreme Visibility Priority ─────────────────────────────

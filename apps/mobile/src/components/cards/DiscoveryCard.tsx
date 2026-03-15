@@ -12,7 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, palette, glassmorphism } from '../../theme/colors';
-import { fontWeights } from '../../theme/typography';
+import { fontWeights, poppinsFonts } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { INTEREST_OPTIONS } from '../../constants/config';
 import { formatActivityStatus, formatDistanceTurkish } from '../../utils/formatters';
@@ -45,6 +45,8 @@ export interface DiscoveryCardProfile {
   /** Real compatibility reasons generated from shared signals */
   compatReasons?: string[];
   packageTier?: 'free' | 'gold' | 'pro' | 'reserved';
+  /** Profile prompts (Hinge-style question + answer) */
+  prompts?: Array<{ id: string; question: string; answer: string; order: number }>;
   /** Profile video data */
   profileVideo?: {
     url: string;
@@ -297,6 +299,18 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
           </Text>
         )}
 
+        {/* Row 4.5: Prompt Preview (first prompt, compact) */}
+        {profile.prompts && profile.prompts.length > 0 && (
+          <View style={styles.promptPreview}>
+            <Text style={styles.promptQuestion} numberOfLines={1}>
+              {'\u275D'} {profile.prompts[0].question}
+            </Text>
+            <Text style={styles.promptAnswer} numberOfLines={2}>
+              {profile.prompts[0].answer}
+            </Text>
+          </View>
+        )}
+
         {/* Row 5: Interest Tags (max 2 + "+N") */}
         {visibleTags.length > 0 && (
           <View style={styles.tagsRow}>
@@ -527,6 +541,28 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     lineHeight: 18,
+  },
+
+  // ── Row 4.5: Prompt Preview ──
+  promptPreview: {
+    backgroundColor: colors.surfaceLight,
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 4,
+  },
+  promptQuestion: {
+    fontSize: 11,
+    fontWeight: fontWeights.medium,
+    fontFamily: poppinsFonts.medium,
+    color: colors.textSecondary,
+  },
+  promptAnswer: {
+    fontSize: 15,
+    fontWeight: fontWeights.semibold,
+    fontFamily: poppinsFonts.semibold,
+    color: colors.text,
+    marginTop: 2,
+    lineHeight: 20,
   },
 
   // ── Row 5: Interest tags ──

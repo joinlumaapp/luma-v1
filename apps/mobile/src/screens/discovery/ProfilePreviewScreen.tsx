@@ -34,6 +34,8 @@ import { matchService } from '../../services/matchService';
 import { INTEREST_OPTIONS } from '../../constants/config';
 import { ActivityStatus } from '../../components/common/ActivityStatus';
 import { generateExpandedReasons } from '../../utils/compatReasons';
+import { FavoriteSpotsCard } from '../../components/profile/FavoriteSpotsCard';
+import { CommonGroundCard } from '../../components/discovery/CommonGroundCard';
 import { useProfileStore } from '../../stores/profileStore';
 import { PaidMessageModal } from '../../components/messaging/PaidMessageModal';
 import { waveService } from '../../services/waveService';
@@ -511,6 +513,28 @@ export const ProfilePreviewScreen: React.FC = () => {
     );
   }
 
+  // Block 3: Profile Prompts (Hinge-style Q&A cards interspersed)
+  if (profile.prompts && profile.prompts.length > 0) {
+    profile.prompts.forEach((prompt, idx) => {
+      infoSections.push(
+        <View key={`prompt-${idx}`} style={styles.promptCard}>
+          <Text style={styles.promptQuoteIcon}>{'\u201C'}</Text>
+          <Text style={styles.promptQuestion}>{prompt.question}</Text>
+          <Text style={styles.promptAnswer}>{prompt.answer}</Text>
+        </View>,
+      );
+    });
+  }
+
+  // Block 3b: Favorite Spots
+  if (profile.favoriteSpots && profile.favoriteSpots.length > 0) {
+    infoSections.push(
+      <View key="favorite-spots" style={styles.seamlessSection}>
+        <FavoriteSpotsCard spots={profile.favoriteSpots} />
+      </View>,
+    );
+  }
+
   // Block 4: Compatibility Reasons (elegant bullet points)
   if (compatReasons.length > 0) {
     infoSections.push(
@@ -543,6 +567,22 @@ export const ProfilePreviewScreen: React.FC = () => {
         </View>
       </View>,
     );
+  }
+
+  // Common Ground card (shared interests + compat reasons)
+  {
+    const sharedInterests = profile.interestTags?.slice(0, 3) ?? [];
+    const commonReasons = compatReasons.slice(0, 2);
+    if (sharedInterests.length > 0 || commonReasons.length > 0) {
+      infoSections.push(
+        <View key="common-ground" style={styles.seamlessSection}>
+          <CommonGroundCard
+            sharedInterests={sharedInterests.map((id) => INTEREST_LABEL_MAP[id] ?? id)}
+            compatReasons={commonReasons}
+          />
+        </View>,
+      );
+    }
   }
 
   // Compat detail module
@@ -955,6 +995,36 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: 24,
     marginBottom: spacing.md,
+  },
+
+  // ── Prompt Cards (Hinge-style Q&A) ──
+  promptCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.xl,
+    alignItems: 'center' as const,
+  },
+  promptQuoteIcon: {
+    fontSize: 32,
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+    fontFamily: 'Poppins_700Bold',
+  },
+  promptQuestion: {
+    fontSize: 13,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500' as const,
+    color: colors.textSecondary,
+    textAlign: 'center' as const,
+    marginBottom: spacing.sm,
+  },
+  promptAnswer: {
+    fontSize: 22,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700' as const,
+    color: colors.text,
+    textAlign: 'center' as const,
+    lineHeight: 30,
   },
 
   // ── Lifestyle (clean icon + text, no borders) ──
