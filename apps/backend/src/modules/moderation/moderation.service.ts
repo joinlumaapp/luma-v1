@@ -104,7 +104,12 @@ export class ModerationService {
       },
     });
 
-    // Check report threshold for auto-flagging
+    // UNDERAGE report: immediately hide profile and notify admin
+    if (dto.reason === ReportReasonDto.UNDERAGE) {
+      await this.handleUnderageReport(dto.reportedUserId);
+    }
+
+    // Check report threshold for auto-flagging / auto-suspend
     await this.checkReportThreshold(dto.reportedUserId);
 
     return {
@@ -113,14 +118,39 @@ export class ModerationService {
       reason: dto.reason,
       status: report.status.toLowerCase(),
       createdAt: report.createdAt.toISOString(),
+      suggestBlock: true,
     };
+  }
+
+  /**
+   * Handle UNDERAGE report: immediately hide the reported user's profile
+   * and log an urgent admin notification.
+   */
+  private async handleUnderageReport(reportedUserId: string): Promise<void> {
+    // Hide the profile immediately by deactivating the user
+    await this.prisma.user.update({
+      where: { id: reportedUserId },
+      data: { isActive: false },
+    });
+
+    // Hide profile from discovery
+    await this.prisma.userProfile.updateMany({
+      where: { userId: reportedUserId },
+      data: { isComplete: false },
+    });
+
+    this.logger.error(
+      `[URGENT] UNDERAGE report for user ${reportedUserId}. ` +
+        "Profile hidden immediately. Admin review required.",
+    );
   }
 
   /**
    * Check if a reported user has exceeded safety thresholds.
    * - At REPORT_THRESHOLD_FLAG (3): marks all pending reports as REVIEWING
+   * - At 5+ distinct reporters: auto-suspend (hide profile)
    * - At REPORT_THRESHOLD_SUSPEND (10+ reports from 5+ distinct reporters):
-   *   flags for admin review instead of auto-suspending (prevents coordinated abuse)
+   *   flags for admin review
    */
   private async checkReportThreshold(reportedUserId: string) {
     const pendingCount = await this.prisma.report.count({
@@ -130,38 +160,45 @@ export class ModerationService {
       },
     });
 
-    if (pendingCount >= REPORT_THRESHOLD_SUSPEND) {
-      // Count distinct reporters to prevent coordinated abuse
-      const distinctReporters = await this.prisma.report.groupBy({
-        by: ["reporterId"],
+    // Count distinct reporters
+    const distinctReporters = await this.prisma.report.groupBy({
+      by: ["reporterId"],
+      where: {
+        reportedId: reportedUserId,
+        status: { in: ["PENDING", "REVIEWING"] },
+      },
+    });
+
+    const MIN_DISTINCT_REPORTERS = 5;
+
+    // Auto-suspend: 5+ distinct reporters → hide profile immediately
+    if (distinctReporters.length >= MIN_DISTINCT_REPORTERS) {
+      // Deactivate user profile (suspend account)
+      await this.prisma.user.update({
+        where: { id: reportedUserId },
+        data: { isActive: false },
+      });
+
+      // Hide profile from discovery
+      await this.prisma.userProfile.updateMany({
+        where: { userId: reportedUserId },
+        data: { isComplete: false },
+      });
+
+      // Escalate all reports to REVIEWING
+      await this.prisma.report.updateMany({
         where: {
           reportedId: reportedUserId,
           status: { in: ["PENDING", "REVIEWING"] },
         },
+        data: {
+          status: "REVIEWING",
+        },
       });
 
-      const MIN_DISTINCT_REPORTERS = 5;
-
-      if (distinctReporters.length >= MIN_DISTINCT_REPORTERS) {
-        // Flag for admin review instead of auto-suspending
-        await this.prisma.report.updateMany({
-          where: {
-            reportedId: reportedUserId,
-            status: { in: ["PENDING", "REVIEWING"] },
-          },
-          data: {
-            status: "REVIEWING",
-          },
-        });
-
-        this.logger.warn(
-          `User ${reportedUserId} flagged for admin review: ${pendingCount} reports from ${distinctReporters.length} distinct reporters`,
-        );
-      } else {
-        this.logger.log(
-          `User ${reportedUserId} has ${pendingCount} reports but only from ${distinctReporters.length} distinct reporters — not escalating yet`,
-        );
-      }
+      this.logger.warn(
+        `User ${reportedUserId} auto-suspended: ${pendingCount} reports from ${distinctReporters.length} distinct reporters. Profile hidden.`,
+      );
     } else if (pendingCount >= REPORT_THRESHOLD_FLAG) {
       // Auto-escalate: move pending reports to REVIEWING
       await this.prisma.report.updateMany({

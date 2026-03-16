@@ -7,6 +7,8 @@ import {
 import { PrismaService } from "../../prisma/prisma.service";
 import { BadgesService } from "../badges/badges.service";
 import { NotificationsService } from "../notifications/notifications.service";
+import { SearchService } from "../search/search.service";
+import { LumaCacheService, CACHE_KEYS } from "../cache/cache.service";
 import { SwipeDto, SwipeDirection } from "./dto";
 import { FeedFilterDto, GenderPreferenceParam } from "./dto/feed-filter.dto";
 
@@ -92,12 +94,20 @@ const SCORE_WEIGHTS = {
 // Maximum distance in km used as reference for distance scoring (50 km)
 const DISTANCE_SCORING_MAX_KM = 50;
 
-// New user boost: accounts created within this many days get a boost
-const NEW_USER_BOOST_DAYS = 7;
+// New user boost: accounts created within this many days get a boost (aggressive, Tinder-level)
+const NEW_USER_BOOST_DAYS = 3;
 // Activity recency: users active within this many hours get highest score
 const ACTIVITY_RECENCY_HOURS = 24;
 // Maximum photo count for scoring (diminishing returns above this)
 const MAX_PHOTO_COUNT_FOR_SCORE = 6;
+
+// ES relevance score weight (10% of total feed score)
+const ES_RELEVANCE_WEIGHT = 0.1;
+
+// Cache TTLs (seconds) — override shared defaults for discovery-specific durations
+const DISCOVERY_FEED_TTL = 300; // 5 minutes
+const PROFILE_VIEW_TTL = 600; // 10 minutes
+const DAILY_PICKS_TTL = 3600; // 1 hour
 
 /** Shape of a scored feed card for internal sorting */
 interface ScoredFeedCard {
@@ -143,6 +153,8 @@ export class DiscoveryService {
     private readonly prisma: PrismaService,
     private readonly badgesService: BadgesService,
     private readonly notificationsService: NotificationsService,
+    private readonly searchService: SearchService,
+    private readonly cache: LumaCacheService,
   ) {}
 
   // ─── Public: Discovery Feed ─────────────────────────────────────
@@ -167,6 +179,13 @@ export class DiscoveryService {
     filters?: FeedFilterDto,
     cursor?: string,
   ): Promise<PaginatedFeed> {
+    // Check cache first (skip if cursor pagination — only cache first page)
+    if (!cursor) {
+      const cacheKey = CACHE_KEYS.discoveryFeed(userId);
+      const cached = await this.cache.get<PaginatedFeed>(cacheKey);
+      if (cached) return cached;
+    }
+
     // Block discovery for users with an active relationship
     const activeRelationship = await this.prisma.relationship.findFirst({
       where: {
@@ -290,37 +309,6 @@ export class DiscoveryService {
       }
     }
 
-    // Build dynamic filter conditions
-    const profileWhere = this.buildProfileWhereClause(allExcludeIds, filters);
-
-    // Fetch larger candidate pool
-    const candidates = await this.prisma.userProfile.findMany({
-      where: profileWhere,
-      include: {
-        user: {
-          select: {
-            id: true,
-            isSelfieVerified: true,
-            isFullyVerified: true,
-            packageTier: true,
-            createdAt: true,
-            photos: {
-              where: { isApproved: true },
-              orderBy: { order: "asc" },
-              take: 6,
-            },
-          },
-        },
-      },
-      take: FEED_CANDIDATE_BATCH_SIZE,
-      orderBy: { lastActiveAt: "desc" },
-    });
-
-    // Apply age + distance filter in a single pass, pre-compute distances
-    const minAge = filters?.minAge ?? DEFAULT_MIN_AGE;
-    const maxAge = filters?.maxAge ?? DEFAULT_MAX_AGE;
-    const maxDistanceKm = filters?.maxDistance ?? DEFAULT_MAX_DISTANCE_KM;
-
     // Prefer real-time coordinates from the request over stored profile location.
     // This ensures fresh GPS data is used when the mobile client sends it.
     const userLat = filters?.latitude ?? user.profile.latitude;
@@ -331,6 +319,121 @@ export class DiscoveryService {
       userLon !== null &&
       userLon !== undefined;
 
+    const minAge = filters?.minAge ?? DEFAULT_MIN_AGE;
+    const maxAge = filters?.maxAge ?? DEFAULT_MAX_AGE;
+    const maxDistanceKm = filters?.maxDistance ?? DEFAULT_MAX_DISTANCE_KM;
+
+    // ── Stage 1: Try Elasticsearch for candidate pre-filtering ──
+    // ES handles geo_distance + age + gender + intention filters efficiently.
+    // Falls back to Prisma if ES is unavailable.
+    let esRelevanceMap = new Map<string, number>();
+    let esCandidateIds: string[] | null = null;
+
+    if (this.searchService.isElasticsearchConnected()) {
+      try {
+        const esResult = await this.searchService.searchUsers({
+          excludeUserIds: [...allExcludeIds],
+          location:
+            hasUserLocation
+              ? { lat: userLat!, lon: userLon! }
+              : undefined,
+          maxDistanceKm: hasUserLocation ? maxDistanceKm : undefined,
+          minAge,
+          maxAge,
+          gender:
+            filters?.genderPreference &&
+            filters.genderPreference !== GenderPreferenceParam.ALL
+              ? filters.genderPreference.toUpperCase()
+              : undefined,
+          intentionTag:
+            filters?.intentionTags && filters.intentionTags.length === 1
+              ? filters.intentionTags[0]
+              : undefined,
+          limit: FEED_CANDIDATE_BATCH_SIZE,
+        });
+
+        if (esResult.hits.length > 0) {
+          esCandidateIds = esResult.hits.map((h) => h.userId);
+          // Store ES relevance scores (normalized 0-100) for feed scoring
+          const maxEsScore = esResult.hits.length;
+          esResult.hits.forEach((hit, index) => {
+            // Higher-ranked ES results get higher relevance score
+            const relevance = ((maxEsScore - index) / maxEsScore) * 100;
+            esRelevanceMap.set(hit.userId, relevance);
+          });
+          this.logger.debug(
+            `ES returned ${esResult.hits.length} candidates for user ${userId}`,
+          );
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        this.logger.warn(`ES search failed, falling back to Prisma: ${message}`);
+      }
+    }
+
+    // ── Stage 2: Fetch detailed profiles from Prisma ──
+    // If ES provided candidate IDs, only fetch those; otherwise do full Prisma query.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let candidates: any[];
+
+    if (esCandidateIds && esCandidateIds.length > 0) {
+      // ES pre-filtered: fetch only the ES candidates from Prisma for full profile data
+      candidates = await this.prisma.userProfile.findMany({
+        where: {
+          userId: { in: esCandidateIds },
+          isComplete: true,
+          isIncognito: false,
+          user: {
+            isActive: true,
+            deletedAt: null,
+            isSmsVerified: true,
+          },
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              isSelfieVerified: true,
+              isFullyVerified: true,
+              packageTier: true,
+              createdAt: true,
+              photos: {
+                where: { isApproved: true },
+                orderBy: { order: "asc" },
+                take: 6,
+              },
+            },
+          },
+        },
+        take: FEED_CANDIDATE_BATCH_SIZE,
+      });
+    } else {
+      // Prisma-only fallback: use existing filter logic
+      const profileWhere = this.buildProfileWhereClause(allExcludeIds, filters);
+      candidates = await this.prisma.userProfile.findMany({
+        where: profileWhere,
+        include: {
+          user: {
+            select: {
+              id: true,
+              isSelfieVerified: true,
+              isFullyVerified: true,
+              packageTier: true,
+              createdAt: true,
+              photos: {
+                where: { isApproved: true },
+                orderBy: { order: "asc" },
+                take: 6,
+              },
+            },
+          },
+        },
+        take: FEED_CANDIDATE_BATCH_SIZE,
+        orderBy: { lastActiveAt: "desc" },
+      });
+    }
+
+    // Apply age + distance filter in a single pass, pre-compute distances
     const filteredCandidates: Array<{
       profile: (typeof candidates)[number];
       age: number;
@@ -441,6 +544,7 @@ export class DiscoveryService {
             ? mutualInterestCount / totalUniqueInterests
             : 0;
 
+        // Base feed score from internal algorithm
         let feedScore = this.calculateFeedScore({
           compatibilityScore: score?.finalScore ?? 0,
           distanceKm,
@@ -452,6 +556,14 @@ export class DiscoveryService {
           isVerified: profile.user.isSelfieVerified,
           mutualInterestRatio,
         });
+
+        // Blend in ES relevance score at 10% weight (if available)
+        const esRelevance = esRelevanceMap.get(profile.userId) ?? 0;
+        if (esRelevance > 0) {
+          feedScore =
+            feedScore * (1 - ES_RELEVANCE_WEIGHT) +
+            esRelevance * ES_RELEVANCE_WEIGHT;
+        }
 
         // Apply boost multiplier (3x visibility for 30 minutes)
         if (isBoosted) {
@@ -474,7 +586,7 @@ export class DiscoveryService {
           interestTags: profile.interestTags ?? [],
           distanceKm:
             distanceKm !== null ? Math.round(distanceKm * 10) / 10 : null,
-          photos: profile.user.photos.map((p) => ({
+          photos: profile.user.photos.map((p: { id: string; url: string; thumbnailUrl: string | null }) => ({
             id: p.id,
             url: p.url,
             thumbnailUrl: p.thumbnailUrl,
@@ -511,8 +623,11 @@ export class DiscoveryService {
       return 0;
     });
 
+    // Apply diversity algorithm to avoid monotonous feeds
+    const diverseCards = this.applyFeedDiversity(cards);
+
     // Page the results with cursor-based pagination
-    const paginatedCards = cards.slice(0, FEED_PAGE_SIZE);
+    const paginatedCards = diverseCards.slice(0, FEED_PAGE_SIZE);
 
     // Build cursor for next page (set of all IDs seen so far)
     const seenIds = new Set([
@@ -539,14 +654,26 @@ export class DiscoveryService {
       DAILY_FEED_VIEW_LIMITS[user.packageTier] ?? DAILY_FEED_VIEW_LIMITS.FREE;
     const remaining = dailyLimit - (todaySwipeCount?.count ?? 0);
 
-    return {
+    const result: PaginatedFeed = {
       cards: paginatedCards,
       remaining: Math.max(0, remaining),
       dailyLimit,
-      totalCandidates: cards.length,
+      totalCandidates: diverseCards.length,
       cursor: nextCursor,
       hasMore: nextCursor !== null,
     };
+
+    // Cache the first page result (5 minutes)
+    if (!cursor) {
+      const cacheKey = CACHE_KEYS.discoveryFeed(userId);
+      this.cache
+        .set(cacheKey, result, DISCOVERY_FEED_TTL)
+        .catch((err) =>
+          this.logger.warn("Feed cache write failed", String(err)),
+        );
+    }
+
+    return result;
   }
 
   /**
@@ -810,6 +937,13 @@ export class DiscoveryService {
         .catch(() => {});
     }
 
+    // Invalidate discovery feed cache after swipe (non-blocking)
+    this.cache
+      .del(CACHE_KEYS.discoveryFeed(userId))
+      .catch((err) =>
+        this.logger.warn("Feed cache invalidation failed", String(err)),
+      );
+
     // Award badge checks after swipe (non-blocking)
     this.badgesService
       .checkAndAwardBadges(userId, "swipe")
@@ -1020,6 +1154,15 @@ export class DiscoveryService {
    * Picks are the highest-compatibility matches refreshed daily.
    */
   async getDailyPicks(userId: string) {
+    // Check cache first (1 hour TTL)
+    const dailyPicksCacheKey = `daily-picks:${userId}`;
+    const cachedPicks = await this.cache.get<{
+      picks: unknown[];
+      refreshesAt: string;
+      totalAvailable: number;
+    }>(dailyPicksCacheKey);
+    if (cachedPicks) return cachedPicks;
+
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { packageTier: true },
@@ -1154,11 +1297,20 @@ export class DiscoveryService {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    return {
+    const dailyPicksResult = {
       picks,
       refreshesAt: tomorrow.toISOString(),
       totalAvailable,
     };
+
+    // Cache daily picks for 1 hour
+    this.cache
+      .set(dailyPicksCacheKey, dailyPicksResult, DAILY_PICKS_TTL)
+      .catch((err) =>
+        this.logger.warn("Daily picks cache write failed", String(err)),
+      );
+
+    return dailyPicksResult;
   }
 
   /** Mark a daily pick as viewed */
@@ -1258,7 +1410,7 @@ export class DiscoveryService {
     const accountAgeDays =
       (Date.now() - params.accountCreatedAt.getTime()) / (1000 * 60 * 60 * 24);
     if (accountAgeDays <= NEW_USER_BOOST_DAYS) {
-      newUserBonus = 5 * (1 - accountAgeDays / NEW_USER_BOOST_DAYS);
+      newUserBonus = 15 * (1 - accountAgeDays / NEW_USER_BOOST_DAYS);
     }
 
     // Compute weighted composite score
@@ -1502,6 +1654,89 @@ export class DiscoveryService {
       // Non-critical: silently fail if feed_views table doesn't exist yet
       this.logger.debug("Feed view recording skipped — table may not exist");
     }
+  }
+
+  // ─── Feed Diversity ─────────────────────────────────────────────
+
+  /**
+   * Apply diversity constraints to avoid monotonous feeds.
+   *
+   * Rules (applied greedily):
+   *  - Max 2 consecutive profiles from the same city
+   *  - Max 2 consecutive profiles from the same age bracket (within +/- 2 years)
+   *  - Max 2 consecutive profiles with the same intention tag
+   *
+   * The algorithm iterates over the score-sorted list and picks the
+   * next card that satisfies the diversity constraints. Skipped cards
+   * are placed back later to ensure no one is dropped entirely.
+   */
+  applyFeedDiversity(cards: ScoredFeedCard[]): ScoredFeedCard[] {
+    if (cards.length <= 2) return cards;
+
+    const result: ScoredFeedCard[] = [];
+    const remaining = [...cards];
+
+    while (remaining.length > 0) {
+      let placed = false;
+
+      for (let i = 0; i < remaining.length; i++) {
+        const card = remaining[i];
+        if (this.passesDiversityCheck(result, card)) {
+          result.push(card);
+          remaining.splice(i, 1);
+          placed = true;
+          break;
+        }
+      }
+
+      // If no card passes diversity check, force the best-scored remaining card
+      if (!placed) {
+        result.push(remaining.shift()!);
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Check if adding a card to the end of the result list would
+   * violate any diversity constraint (max 2 consecutive same-trait).
+   */
+  private passesDiversityCheck(
+    result: ScoredFeedCard[],
+    card: ScoredFeedCard,
+  ): boolean {
+    if (result.length < 2) return true;
+
+    const prev1 = result[result.length - 1];
+    const prev2 = result[result.length - 2];
+
+    // Max 2 consecutive from same city
+    if (
+      card.city !== null &&
+      prev1.city === card.city &&
+      prev2.city === card.city
+    ) {
+      return false;
+    }
+
+    // Max 2 consecutive from same age bracket (within +/- 2 years)
+    if (
+      Math.abs(card.age - prev1.age) <= 2 &&
+      Math.abs(card.age - prev2.age) <= 2
+    ) {
+      return false;
+    }
+
+    // Max 2 consecutive with same intention tag
+    if (
+      card.intentionTag === prev1.intentionTag &&
+      card.intentionTag === prev2.intentionTag
+    ) {
+      return false;
+    }
+
+    return true;
   }
 
   // ─── Cursor Encoding/Decoding ─────────────────────────────────

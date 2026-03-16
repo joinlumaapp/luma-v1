@@ -748,6 +748,9 @@ model Subscription {
   expiryDate    DateTime       @map("expiry_date")
   isActive      Boolean        @default(true) @map("is_active")
   autoRenew     Boolean        @default(true) @map("auto_renew")
+  isTrial       Boolean        @default(false) @map("is_trial")
+  trialEndDate  DateTime?      @map("trial_end_date")
+  gracePeriodEnd DateTime?     @map("grace_period_end")
   cancelledAt   DateTime?      @map("cancelled_at")
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt @map("updated_at")
@@ -815,6 +818,11 @@ enum GoldTransactionType {
   SUPER_LIKE
   STREAK_REWARD
   DAILY_LOGIN
+  READ_RECEIPTS
+  UNDO_PASS
+  SPOTLIGHT
+  TRAVEL_MODE
+  PRIORITY_MESSAGE
 }
 
 // ============================================================

@@ -450,6 +450,9 @@ describe("PaymentsService", () => {
         autoRenew: true,
         cancelledAt: null,
         isActive: true,
+        isTrial: false,
+        trialEndDate: null,
+        gracePeriodEnd: null,
       });
 
       const result = await service.getSubscriptionStatus("u1");
@@ -461,6 +464,9 @@ describe("PaymentsService", () => {
       expect(result.platform).toBe("APPLE");
       expect(result.goldBalance).toBe(50);
       expect(result.features.dailySwipes).toBe(999999);
+      expect(result.isTrial).toBe(false);
+      expect(result.trialDaysRemaining).toBe(0);
+      expect(result.isInGracePeriod).toBe(false);
     });
 
     it("should throw NotFoundException when user not found", async () => {
@@ -487,10 +493,65 @@ describe("PaymentsService", () => {
         autoRenew: false,
         cancelledAt: new Date(),
         isActive: true,
+        isTrial: false,
+        trialEndDate: null,
+        gracePeriodEnd: null,
       });
 
       const result = await service.getSubscriptionStatus("u1");
       expect(result.isExpiringSoon).toBe(true);
+    });
+
+    it("should return trial info when subscription is a trial", async () => {
+      const now = new Date();
+      const trialEnd = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000); // 5 days from now
+      const expiryDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      mockPrisma.user.findUnique.mockResolvedValue({
+        packageTier: "GOLD",
+        goldBalance: 250,
+      });
+      mockPrisma.subscription.findFirst.mockResolvedValue({
+        id: "sub1",
+        packageTier: "GOLD",
+        platform: "APPLE",
+        startDate: new Date(),
+        expiryDate,
+        autoRenew: true,
+        cancelledAt: null,
+        isActive: true,
+        isTrial: true,
+        trialEndDate: trialEnd,
+        gracePeriodEnd: null,
+      });
+
+      const result = await service.getSubscriptionStatus("u1");
+      expect(result.isTrial).toBe(true);
+      expect(result.trialDaysRemaining).toBe(5);
+    });
+
+    it("should return isInGracePeriod when grace period is active", async () => {
+      const now = new Date();
+      const gracePeriodEnd = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000);
+      mockPrisma.user.findUnique.mockResolvedValue({
+        packageTier: "GOLD",
+        goldBalance: 0,
+      });
+      mockPrisma.subscription.findFirst.mockResolvedValue({
+        id: "sub1",
+        packageTier: "GOLD",
+        platform: "APPLE",
+        startDate: new Date(),
+        expiryDate: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
+        autoRenew: false,
+        cancelledAt: null,
+        isActive: true,
+        isTrial: false,
+        trialEndDate: null,
+        gracePeriodEnd,
+      });
+
+      const result = await service.getSubscriptionStatus("u1");
+      expect(result.isInGracePeriod).toBe(true);
     });
   });
 
@@ -499,11 +560,36 @@ describe("PaymentsService", () => {
   // ═══════════════════════════════════════════════════════════════
 
   describe("processExpiredSubscriptions()", () => {
-    it("should downgrade expired non-renewing subscriptions", async () => {
-      mockPrisma.subscription.findMany.mockResolvedValue([
-        { id: "sub1", userId: "u1", packageTier: "GOLD" },
-        { id: "sub2", userId: "u2", packageTier: "PRO" },
-      ]);
+    it("should set grace period for newly expired subscriptions without one", async () => {
+      // Phase 1: newly expired (no gracePeriodEnd)
+      mockPrisma.subscription.findMany
+        .mockResolvedValueOnce([
+          { id: "sub1", userId: "u1", packageTier: "GOLD", expiryDate: new Date("2025-01-01") },
+        ])
+        // Phase 2: grace period expired (none yet)
+        .mockResolvedValueOnce([]);
+
+      const count = await service.processExpiredSubscriptions();
+
+      // Grace period set, but no downgrades yet
+      expect(count).toBe(0);
+      expect(mockPrisma.subscription.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "sub1" },
+          data: expect.objectContaining({ gracePeriodEnd: expect.any(Date) }),
+        }),
+      );
+    });
+
+    it("should downgrade subscriptions whose grace period has ended", async () => {
+      // Phase 1: no newly expired
+      mockPrisma.subscription.findMany
+        .mockResolvedValueOnce([])
+        // Phase 2: grace period expired
+        .mockResolvedValueOnce([
+          { id: "sub1", userId: "u1", packageTier: "GOLD" },
+          { id: "sub2", userId: "u2", packageTier: "PRO" },
+        ]);
       mockPrisma.$transaction.mockImplementation(
         async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
           await fn(mockPrisma);
@@ -517,7 +603,9 @@ describe("PaymentsService", () => {
     });
 
     it("should return 0 when no expired subscriptions", async () => {
-      mockPrisma.subscription.findMany.mockResolvedValue([]);
+      mockPrisma.subscription.findMany
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([]);
 
       const count = await service.processExpiredSubscriptions();
 
@@ -901,15 +989,19 @@ describe("PaymentsService", () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it("should successfully subscribe to GOLD tier", async () => {
-      mockPrisma.subscription.findFirst.mockResolvedValue(null);
+    it("should successfully subscribe to GOLD tier with trial for first-time user", async () => {
+      mockPrisma.subscription.findFirst
+        .mockResolvedValueOnce(null) // no active subscription
+        .mockResolvedValueOnce(null); // no previous trial
       mockPrisma.iapReceipt.findUnique.mockResolvedValue(null);
       const subExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      const trialEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
       mockPrisma.$transaction.mockImplementation(
         async (fn: (tx: typeof mockPrisma) => Promise<unknown>) => {
           mockPrisma.subscription.create.mockResolvedValue({
             id: "sub-new",
             expiryDate: subExpiry,
+            trialEndDate: trialEnd,
           });
           mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 0 });
           return fn(mockPrisma);
@@ -924,6 +1016,37 @@ describe("PaymentsService", () => {
 
       expect(result.subscribed).toBe(true);
       expect(result.packageTier).toBe("gold");
+      expect(result.isTrial).toBe(true);
+      expect(result.trialEndDate).toBeDefined();
+    });
+
+    it("should not grant trial to user who already used trial", async () => {
+      mockPrisma.subscription.findFirst
+        .mockResolvedValueOnce(null) // no active subscription
+        .mockResolvedValueOnce({ id: "old-trial", isTrial: true }); // previous trial exists
+      mockPrisma.iapReceipt.findUnique.mockResolvedValue(null);
+      const subExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      mockPrisma.$transaction.mockImplementation(
+        async (fn: (tx: typeof mockPrisma) => Promise<unknown>) => {
+          mockPrisma.subscription.create.mockResolvedValue({
+            id: "sub-new",
+            expiryDate: subExpiry,
+            trialEndDate: null,
+          });
+          mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 0 });
+          return fn(mockPrisma);
+        },
+      );
+
+      const result = await service.subscribe("u1", {
+        packageTier: PackageTier.GOLD,
+        platform: "apple",
+        receipt: "valid-receipt",
+      });
+
+      expect(result.subscribed).toBe(true);
+      expect(result.isTrial).toBe(false);
+      expect(result.trialEndDate).toBeNull();
     });
   });
 
@@ -967,6 +1090,71 @@ describe("PaymentsService", () => {
       await expect(
         service.spendGold("u1", { action: "super_like" }),
       ).rejects.toThrow(BadRequestException);
+    });
+
+    it("should correctly charge for read_receipts (15 gold)", async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 100 });
+      mockPrisma.$transaction.mockImplementation(
+        async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
+          await fn(mockPrisma);
+        },
+      );
+
+      const result = await service.spendGold("u1", { action: "read_receipts" });
+      expect(result.goldSpent).toBe(15);
+      expect(result.newBalance).toBe(85);
+    });
+
+    it("should correctly charge for undo_pass (30 gold)", async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 100 });
+      mockPrisma.$transaction.mockImplementation(
+        async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
+          await fn(mockPrisma);
+        },
+      );
+
+      const result = await service.spendGold("u1", { action: "undo_pass" });
+      expect(result.goldSpent).toBe(30);
+      expect(result.newBalance).toBe(70);
+    });
+
+    it("should correctly charge for spotlight (75 gold)", async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 100 });
+      mockPrisma.$transaction.mockImplementation(
+        async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
+          await fn(mockPrisma);
+        },
+      );
+
+      const result = await service.spendGold("u1", { action: "spotlight" });
+      expect(result.goldSpent).toBe(75);
+      expect(result.newBalance).toBe(25);
+    });
+
+    it("should correctly charge for travel_mode (200 gold)", async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 300 });
+      mockPrisma.$transaction.mockImplementation(
+        async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
+          await fn(mockPrisma);
+        },
+      );
+
+      const result = await service.spendGold("u1", { action: "travel_mode" });
+      expect(result.goldSpent).toBe(200);
+      expect(result.newBalance).toBe(100);
+    });
+
+    it("should correctly charge for priority_message (40 gold)", async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 100 });
+      mockPrisma.$transaction.mockImplementation(
+        async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
+          await fn(mockPrisma);
+        },
+      );
+
+      const result = await service.spendGold("u1", { action: "priority_message" });
+      expect(result.goldSpent).toBe(40);
+      expect(result.newBalance).toBe(60);
     });
 
     it("should include referenceId when provided", async () => {

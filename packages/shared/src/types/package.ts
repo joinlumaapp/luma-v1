@@ -3,6 +3,36 @@
 
 import { PackageTier } from './user';
 
+// Subscription duration options
+export type SubscriptionDuration = 'monthly' | 'quarterly' | 'yearly';
+
+// Pricing tier for multi-duration subscriptions
+export interface PricingTier {
+  duration: SubscriptionDuration;
+  price: number;
+  monthlyEquivalent: number;
+  savingsPercent: number;
+}
+
+// Pricing tiers per paid package (Free has no pricing)
+export const PACKAGE_PRICING: Record<'GOLD' | 'PRO' | 'RESERVED', PricingTier[]> = {
+  GOLD: [
+    { duration: 'monthly', price: 14.99, monthlyEquivalent: 14.99, savingsPercent: 0 },
+    { duration: 'quarterly', price: 34.99, monthlyEquivalent: 11.66, savingsPercent: 22 },
+    { duration: 'yearly', price: 99.99, monthlyEquivalent: 8.33, savingsPercent: 44 },
+  ],
+  PRO: [
+    { duration: 'monthly', price: 29.99, monthlyEquivalent: 29.99, savingsPercent: 0 },
+    { duration: 'quarterly', price: 69.99, monthlyEquivalent: 23.33, savingsPercent: 22 },
+    { duration: 'yearly', price: 199.99, monthlyEquivalent: 16.67, savingsPercent: 44 },
+  ],
+  RESERVED: [
+    { duration: 'monthly', price: 49.99, monthlyEquivalent: 49.99, savingsPercent: 0 },
+    { duration: 'quarterly', price: 119.99, monthlyEquivalent: 40.00, savingsPercent: 20 },
+    { duration: 'yearly', price: 349.99, monthlyEquivalent: 29.17, savingsPercent: 42 },
+  ],
+};
+
 export interface PackageDefinition {
   tier: PackageTier;
   name: string;
@@ -27,6 +57,9 @@ export interface Subscription {
   expiryDate: Date;
   isActive: boolean;
   autoRenew: boolean;
+  isTrial: boolean;
+  trialEndDate: Date | null;
+  gracePeriodEnd: Date | null;
   createdAt: Date;
   cancelledAt: Date | null;
 }
@@ -60,6 +93,11 @@ export enum GoldTransactionType {
   HARMONY_EXTENSION = 'HARMONY_EXTENSION', // Extended Harmony Room
   PROFILE_BOOST = 'PROFILE_BOOST', // Boosted profile
   SUPER_LIKE = 'SUPER_LIKE', // Sent a super like
+  READ_RECEIPTS = 'READ_RECEIPTS', // See if message was read
+  UNDO_PASS = 'UNDO_PASS', // Undo a passed profile
+  SPOTLIGHT = 'SPOTLIGHT', // 30 min area spotlight
+  TRAVEL_MODE = 'TRAVEL_MODE', // 24h travel mode
+  PRIORITY_MESSAGE = 'PRIORITY_MESSAGE', // Pin message to top
 }
 
 export interface GoldPack {
@@ -141,6 +179,11 @@ export const GOLD_COSTS = {
   HARMONY_EXTENSION: 50, // 15 min extension
   PROFILE_BOOST: 100, // 24h profile boost
   SUPER_LIKE: 25, // Send a super like
+  READ_RECEIPTS: 15, // See if message was read (single use)
+  UNDO_PASS: 30, // Undo a passed profile
+  SPOTLIGHT: 75, // Show to everyone in area for 30 min
+  TRAVEL_MODE: 200, // Show profile in different city for 24h
+  PRIORITY_MESSAGE: 40, // Pin message to top
 } as const;
 
 // Package tier hierarchy for upgrade validation
@@ -152,7 +195,15 @@ export const PACKAGE_TIER_ORDER: Record<PackageTier, number> = {
 };
 
 // Gold spend action types
-export type GoldSpendAction = 'HARMONY_EXTENSION' | 'PROFILE_BOOST' | 'SUPER_LIKE';
+export type GoldSpendAction =
+  | 'HARMONY_EXTENSION'
+  | 'PROFILE_BOOST'
+  | 'SUPER_LIKE'
+  | 'READ_RECEIPTS'
+  | 'UNDO_PASS'
+  | 'SPOTLIGHT'
+  | 'TRAVEL_MODE'
+  | 'PRIORITY_MESSAGE';
 
 // Transaction history item (for API responses)
 export interface TransactionHistoryItem {

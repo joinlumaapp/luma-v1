@@ -37,11 +37,17 @@ describe("ModerationService", () => {
       delete: jest.fn(),
       count: jest.fn(),
     },
+    userProfile: {
+      updateMany: jest.fn(),
+    },
     $transaction: jest.fn(),
   };
 
   beforeEach(async () => {
     jest.resetAllMocks();
+
+    // Default mock: groupBy returns empty array (no distinct reporters)
+    mockPrisma.report.groupBy.mockResolvedValue([]);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -92,6 +98,7 @@ describe("ModerationService", () => {
       expect(result.reason).toBe(ReportReasonDto.SPAM);
       expect(result.status).toBe("pending");
       expect(result.createdAt).toBe(createdAt.toISOString());
+      expect(result.suggestBlock).toBe(true);
     });
 
     it("should throw BadRequestException when reporting yourself", async () => {
@@ -507,7 +514,7 @@ describe("ModerationService", () => {
       });
     });
 
-    it("should escalate to REVIEWING when 10 reports from 5+ distinct reporters", async () => {
+    it("should auto-suspend and escalate to REVIEWING when 5+ distinct reporters", async () => {
       const dto: CreateReportDto = {
         reportedUserId: "user-very-bad",
         reason: ReportReasonDto.HARASSMENT,
@@ -534,10 +541,19 @@ describe("ModerationService", () => {
         { reporterId: "r4" },
         { reporterId: "r5" },
       ]);
+      mockPrisma.user.update.mockResolvedValue({});
+      mockPrisma.userProfile.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.report.updateMany.mockResolvedValue({ count: 10 });
 
       await service.reportUser(reporterId, dto);
 
+      // Should auto-suspend user
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({
+        where: { id: "user-very-bad" },
+        data: { isActive: false },
+      });
+
+      // Should escalate reports to REVIEWING
       expect(mockPrisma.report.updateMany).toHaveBeenCalledWith({
         where: {
           reportedId: "user-very-bad",
@@ -610,6 +626,133 @@ describe("ModerationService", () => {
           }),
         }),
       );
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // UNDERAGE report handling
+  // ═══════════════════════════════════════════════════════════════
+
+  describe("UNDERAGE report handling", () => {
+    it("should immediately hide profile on UNDERAGE report", async () => {
+      const dto: CreateReportDto = {
+        reportedUserId: "user-underage",
+        reason: ReportReasonDto.UNDERAGE,
+      };
+
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: "user-underage",
+        isActive: true,
+      });
+      mockPrisma.report.findFirst.mockResolvedValue(null);
+      mockPrisma.report.count.mockResolvedValue(1);
+      mockPrisma.user.update.mockResolvedValue({});
+      mockPrisma.userProfile.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.report.create.mockResolvedValue({
+        id: "report-underage",
+        reportedId: "user-underage",
+        category: "UNDERAGE",
+        status: "PENDING",
+        createdAt: new Date(),
+      });
+
+      const result = await service.reportUser("reporter-1", dto);
+
+      // Should deactivate user
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({
+        where: { id: "user-underage" },
+        data: { isActive: false },
+      });
+
+      // Should hide profile
+      expect(mockPrisma.userProfile.updateMany).toHaveBeenCalledWith({
+        where: { userId: "user-underage" },
+        data: { isComplete: false },
+      });
+
+      expect(result.suggestBlock).toBe(true);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // Auto-suspend on 5+ distinct reporters
+  // ═══════════════════════════════════════════════════════════════
+
+  describe("auto-suspend on 5+ distinct reporters", () => {
+    it("should suspend user when 5+ distinct reporters exist", async () => {
+      const dto: CreateReportDto = {
+        reportedUserId: "user-many-reports",
+        reason: ReportReasonDto.HARASSMENT,
+      };
+
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: "user-many-reports",
+        isActive: true,
+      });
+      mockPrisma.report.findFirst.mockResolvedValue(null);
+      mockPrisma.report.count.mockResolvedValue(6);
+      mockPrisma.report.groupBy.mockResolvedValue([
+        { reporterId: "r1" },
+        { reporterId: "r2" },
+        { reporterId: "r3" },
+        { reporterId: "r4" },
+        { reporterId: "r5" },
+      ]);
+      mockPrisma.user.update.mockResolvedValue({});
+      mockPrisma.userProfile.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.report.updateMany.mockResolvedValue({ count: 6 });
+      mockPrisma.report.create.mockResolvedValue({
+        id: "report-suspend",
+        reportedId: "user-many-reports",
+        category: "HARASSMENT",
+        status: "PENDING",
+        createdAt: new Date(),
+      });
+
+      await service.reportUser("reporter-1", dto);
+
+      // Should deactivate user
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({
+        where: { id: "user-many-reports" },
+        data: { isActive: false },
+      });
+
+      // Should hide profile
+      expect(mockPrisma.userProfile.updateMany).toHaveBeenCalledWith({
+        where: { userId: "user-many-reports" },
+        data: { isComplete: false },
+      });
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // suggestBlock in report response
+  // ═══════════════════════════════════════════════════════════════
+
+  describe("suggestBlock in report response", () => {
+    it("should always include suggestBlock: true in report response", async () => {
+      const dto: CreateReportDto = {
+        reportedUserId: "user-reported-x",
+        reason: ReportReasonDto.SPAM,
+      };
+
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: "user-reported-x",
+        isActive: true,
+      });
+      mockPrisma.report.findFirst.mockResolvedValue(null);
+      mockPrisma.report.count.mockResolvedValue(1);
+      mockPrisma.report.create.mockResolvedValue({
+        id: "report-suggest",
+        reportedId: "user-reported-x",
+        category: "SPAM",
+        status: "PENDING",
+        createdAt: new Date(),
+      });
+
+      const result = await service.reportUser("reporter-1", dto);
+
+      expect(result.suggestBlock).toBe(true);
     });
   });
 });

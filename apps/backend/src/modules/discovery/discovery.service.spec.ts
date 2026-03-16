@@ -4,8 +4,21 @@ import { DiscoveryService } from "./discovery.service";
 import { PrismaService } from "../../prisma/prisma.service";
 import { BadgesService } from "../badges/badges.service";
 import { NotificationsService } from "../notifications/notifications.service";
+import { SearchService } from "../search/search.service";
+import { LumaCacheService } from "../cache/cache.service";
 import { SwipeDirection } from "./dto/swipe.dto";
 import { GenderPreferenceParam } from "./dto/feed-filter.dto";
+
+const mockSearchService = {
+  isElasticsearchConnected: jest.fn().mockReturnValue(false),
+  searchUsers: jest.fn().mockResolvedValue({ hits: [], total: 0 }),
+};
+
+const mockCacheService = {
+  get: jest.fn().mockResolvedValue(null),
+  set: jest.fn().mockResolvedValue(undefined),
+  del: jest.fn().mockResolvedValue(undefined),
+};
 
 const mockPrisma = {
   user: {
@@ -57,6 +70,8 @@ const mockPrisma = {
     updateMany: jest.fn(),
   },
   $transaction: jest.fn(),
+  $queryRaw: jest.fn().mockResolvedValue([]),
+  $executeRawUnsafe: jest.fn().mockResolvedValue(0),
 };
 
 const mockNotifications = {
@@ -68,6 +83,13 @@ describe("DiscoveryService", () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    // Reset mock defaults after clearAllMocks
+    mockSearchService.isElasticsearchConnected.mockReturnValue(false);
+    mockSearchService.searchUsers.mockResolvedValue({ hits: [], total: 0 });
+    mockCacheService.get.mockResolvedValue(null);
+    mockCacheService.set.mockResolvedValue(undefined);
+    mockCacheService.del.mockResolvedValue(undefined);
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DiscoveryService,
@@ -77,6 +99,8 @@ describe("DiscoveryService", () => {
           useValue: { checkAndAwardBadges: jest.fn().mockResolvedValue([]) },
         },
         { provide: NotificationsService, useValue: mockNotifications },
+        { provide: SearchService, useValue: mockSearchService },
+        { provide: LumaCacheService, useValue: mockCacheService },
       ],
     }).compile();
     service = module.get<DiscoveryService>(DiscoveryService);
@@ -720,6 +744,214 @@ describe("DiscoveryService", () => {
 
       const result = await service.recordInteraction("u1", "u2", "pass");
       expect(result.recorded).toBe(true);
+    });
+  });
+
+  describe("applyFeedDiversity()", () => {
+    it("should break up 3+ consecutive same-city profiles", () => {
+      const cards = [
+        { userId: "a", city: "Istanbul", age: 25, intentionTag: "SERIOUS", feedScore: 90 },
+        { userId: "b", city: "Istanbul", age: 30, intentionTag: "EXPLORING", feedScore: 80 },
+        { userId: "c", city: "Istanbul", age: 35, intentionTag: "NOT_SURE", feedScore: 70 },
+        { userId: "d", city: "Ankara", age: 28, intentionTag: "SERIOUS", feedScore: 60 },
+      ] as Parameters<DiscoveryService["applyFeedDiversity"]>[0];
+
+      const result = service.applyFeedDiversity(cards);
+
+      // Should not have 3 consecutive Istanbul profiles
+      for (let i = 2; i < result.length; i++) {
+        const sameCity =
+          result[i].city === result[i - 1].city &&
+          result[i].city === result[i - 2].city;
+        if (result[i].city !== null) {
+          expect(sameCity).toBe(false);
+        }
+      }
+      // All cards should still be present
+      expect(result).toHaveLength(4);
+    });
+
+    it("should break up 3+ consecutive same-age-bracket profiles", () => {
+      const cards = [
+        { userId: "a", city: "Istanbul", age: 25, intentionTag: "SERIOUS", feedScore: 90 },
+        { userId: "b", city: "Ankara", age: 26, intentionTag: "EXPLORING", feedScore: 80 },
+        { userId: "c", city: "Izmir", age: 24, intentionTag: "NOT_SURE", feedScore: 70 },
+        { userId: "d", city: "Bursa", age: 35, intentionTag: "SERIOUS", feedScore: 60 },
+      ] as Parameters<DiscoveryService["applyFeedDiversity"]>[0];
+
+      const result = service.applyFeedDiversity(cards);
+      expect(result).toHaveLength(4);
+    });
+
+    it("should break up 3+ consecutive same-intention-tag profiles", () => {
+      const cards = [
+        { userId: "a", city: "Istanbul", age: 25, intentionTag: "SERIOUS", feedScore: 90 },
+        { userId: "b", city: "Ankara", age: 30, intentionTag: "SERIOUS", feedScore: 80 },
+        { userId: "c", city: "Izmir", age: 35, intentionTag: "SERIOUS", feedScore: 70 },
+        { userId: "d", city: "Bursa", age: 28, intentionTag: "EXPLORING", feedScore: 60 },
+      ] as Parameters<DiscoveryService["applyFeedDiversity"]>[0];
+
+      const result = service.applyFeedDiversity(cards);
+
+      // Should not have 3 consecutive SERIOUS profiles
+      for (let i = 2; i < result.length; i++) {
+        const sameTag =
+          result[i].intentionTag === result[i - 1].intentionTag &&
+          result[i].intentionTag === result[i - 2].intentionTag;
+        expect(sameTag).toBe(false);
+      }
+      expect(result).toHaveLength(4);
+    });
+
+    it("should return cards as-is when fewer than 3", () => {
+      const cards = [
+        { userId: "a", city: "Istanbul", age: 25, intentionTag: "SERIOUS", feedScore: 90 },
+      ] as Parameters<DiscoveryService["applyFeedDiversity"]>[0];
+
+      const result = service.applyFeedDiversity(cards);
+      expect(result).toHaveLength(1);
+      expect(result[0].userId).toBe("a");
+    });
+  });
+
+  describe("cache integration", () => {
+    beforeEach(() => {
+      mockPrisma.relationship.findFirst.mockResolvedValue(null);
+      mockPrisma.relationship.findMany.mockResolvedValue([]);
+      mockPrisma.profileBoost.findMany.mockResolvedValue([]);
+      mockPrisma.feedView.findMany.mockResolvedValue([]);
+      mockSearchService.isElasticsearchConnected.mockReturnValue(false);
+    });
+
+    it("should return cached feed if available", async () => {
+      const cachedFeed = {
+        cards: [],
+        remaining: 10,
+        dailyLimit: 20,
+        totalCandidates: 0,
+        cursor: null,
+        hasMore: false,
+      };
+      mockCacheService.get.mockResolvedValueOnce(cachedFeed);
+
+      const result = await service.getDiscoveryFeed("u1");
+
+      expect(result).toEqual(cachedFeed);
+      // Should not call prisma at all
+      expect(mockPrisma.relationship.findFirst).not.toHaveBeenCalled();
+    });
+
+    it("should invalidate feed cache after swipe", async () => {
+      mockPrisma.user.findUnique
+        .mockResolvedValueOnce({ packageTier: "FREE" })
+        .mockResolvedValueOnce({ id: "u2", isActive: true });
+      mockPrisma.block.findFirst.mockResolvedValue(null);
+      mockPrisma.swipe.findUnique.mockResolvedValue(null);
+      mockPrisma.dailySwipeCount.upsert.mockResolvedValue({ count: 5 });
+      mockPrisma.$transaction.mockImplementation(
+        async (cb: (tx: unknown) => Promise<unknown>) => {
+          return cb({
+            swipe: { create: jest.fn().mockResolvedValue({ id: "swipe-1" }) },
+            dailySwipeCount: { upsert: jest.fn() },
+          });
+        },
+      );
+
+      await service.swipe("u1", {
+        targetUserId: "u2",
+        direction: SwipeDirection.PASS,
+      });
+
+      expect(mockCacheService.del).toHaveBeenCalledWith("discovery:feed:u1");
+    });
+  });
+
+  describe("Elasticsearch integration", () => {
+    beforeEach(() => {
+      mockPrisma.relationship.findFirst.mockResolvedValue(null);
+      mockPrisma.relationship.findMany.mockResolvedValue([]);
+      mockPrisma.profileBoost.findMany.mockResolvedValue([]);
+      mockPrisma.feedView.findMany.mockResolvedValue([]);
+      mockCacheService.get.mockResolvedValue(null);
+    });
+
+    it("should use ES candidates when available", async () => {
+      mockSearchService.isElasticsearchConnected.mockReturnValue(true);
+      mockSearchService.searchUsers.mockResolvedValue({
+        hits: [
+          { userId: "u2", firstName: "Ayse", age: 28, gender: "FEMALE", intentionTag: "SERIOUS", bio: null, city: "Istanbul", isVerified: true, packageTier: "GOLD", primaryPhotoUrl: null, distanceKm: 5 },
+        ],
+        total: 1,
+      });
+
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: "u1",
+        packageTier: "FREE",
+        profile: {
+          firstName: "Ali",
+          latitude: 41.0,
+          longitude: 29.0,
+          interestTags: [],
+        },
+      });
+      mockPrisma.swipe.findMany.mockResolvedValue([]);
+      mockPrisma.block.findMany.mockResolvedValue([]);
+      mockPrisma.dailySwipeCount.findUnique.mockResolvedValue(null);
+      mockPrisma.userProfile.findMany.mockResolvedValue([
+        {
+          userId: "u2",
+          firstName: "Ayse",
+          birthDate: new Date("1998-03-01"),
+          bio: "Hi",
+          city: "Istanbul",
+          gender: "FEMALE",
+          intentionTag: "SERIOUS_RELATIONSHIP",
+          interestTags: [],
+          latitude: 41.01,
+          longitude: 29.01,
+          isComplete: true,
+          lastActiveAt: new Date(),
+          user: {
+            id: "u2",
+            isSelfieVerified: true,
+            isFullyVerified: true,
+            packageTier: "GOLD",
+            createdAt: new Date("2025-12-01"),
+            photos: [{ id: "p1", url: "url", thumbnailUrl: "thumb" }],
+          },
+        },
+      ]);
+      mockPrisma.compatibilityScore.findMany.mockResolvedValue([]);
+
+      const result = await service.getDiscoveryFeed("u1");
+
+      expect(mockSearchService.searchUsers).toHaveBeenCalled();
+      expect(result.cards).toHaveLength(1);
+      expect(result.cards[0].userId).toBe("u2");
+    });
+
+    it("should fall back to Prisma when ES is unavailable", async () => {
+      mockSearchService.isElasticsearchConnected.mockReturnValue(false);
+
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: "u1",
+        packageTier: "FREE",
+        profile: {
+          firstName: "Ali",
+          latitude: null,
+          longitude: null,
+          interestTags: [],
+        },
+      });
+      mockPrisma.swipe.findMany.mockResolvedValue([]);
+      mockPrisma.block.findMany.mockResolvedValue([]);
+      mockPrisma.userProfile.findMany.mockResolvedValue([]);
+      mockPrisma.dailySwipeCount.findUnique.mockResolvedValue(null);
+
+      const result = await service.getDiscoveryFeed("u1");
+
+      expect(mockSearchService.searchUsers).not.toHaveBeenCalled();
+      expect(result.cards).toHaveLength(0);
     });
   });
 

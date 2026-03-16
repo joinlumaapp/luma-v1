@@ -41,6 +41,15 @@ const OTP_RATE_LIMIT_KEY_PREFIX = "otp:ratelimit:";
 /** Redis key prefix for blacklisted (logged-out) access tokens */
 const TOKEN_BLACKLIST_PREFIX = "token:blacklist:";
 
+/** Redis key prefix for device-based registration tracking */
+const DEVICE_REGISTRATION_PREFIX = "device:registrations:";
+
+/** Maximum distinct phone registrations per device before flagging */
+const MAX_REGISTRATIONS_PER_DEVICE = 3;
+
+/** TTL for device registration tracking (30 days in seconds) */
+const DEVICE_TRACKING_TTL_SECONDS = 30 * 24 * 60 * 60;
+
 /** Access token TTL in seconds (must match JWT_ACCESS_EXPIRY = 15m) */
 const ACCESS_TOKEN_TTL_SECONDS = 900;
 
@@ -244,6 +253,11 @@ export class AuthService {
     // Send SMS (mock in development, Twilio in production)
     await this.sendSmsOtp(dto.phone, otpCode);
 
+    // Track device fingerprint for abuse detection
+    if (dto.deviceId) {
+      await this.trackDeviceRegistration(dto.deviceId, dto.phone);
+    }
+
     return {
       message: "Dogrulama kodu gonderildi",
       isNewUser,
@@ -281,6 +295,16 @@ export class AuthService {
 
     // Verify the OTP
     await this.verifyOtpCode(user.id, dto.code);
+
+    // Age verification: if user has a profile with birthDate, enforce 18+ requirement
+    if (user.profile?.birthDate) {
+      const age = this.calculateAge(new Date(user.profile.birthDate));
+      if (age < 18) {
+        throw new BadRequestException(
+          "18 yasindan kucukler kayit olamaz",
+        );
+      }
+    }
 
     // Mark user as SMS verified
     await this.prisma.user.update({
@@ -454,6 +478,11 @@ export class AuthService {
         where: { id: user.id },
         data: { isSmsVerified: true },
       });
+    }
+
+    // Track device fingerprint for abuse detection
+    if (dto.deviceId) {
+      await this.trackDeviceRegistration(dto.deviceId, dto.phone);
     }
 
     // Check if user has a profile (determines if onboarding is needed)
@@ -887,6 +916,50 @@ export class AuthService {
         expiresIn: this.configService.get<string>("JWT_REFRESH_EXPIRY", "7d"),
       },
     );
+  }
+
+  /**
+   * Calculate age from a birth date.
+   */
+  private calculateAge(birthDate: Date): number {
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+    return age;
+  }
+
+  /**
+   * Track device registrations for abuse detection.
+   * Flags devices that register with 3+ distinct phone numbers.
+   */
+  private async trackDeviceRegistration(
+    deviceId: string,
+    phone: string,
+  ): Promise<void> {
+    const cacheKey = `${DEVICE_REGISTRATION_PREFIX}${deviceId}`;
+    const existing = await this.cache.get<string[]>(cacheKey);
+
+    const phones = existing ?? [];
+
+    // Add phone if not already tracked for this device
+    if (!phones.includes(phone)) {
+      phones.push(phone);
+      await this.cache.set(cacheKey, phones, DEVICE_TRACKING_TTL_SECONDS);
+    }
+
+    // Flag if too many distinct phone registrations from this device
+    if (phones.length >= MAX_REGISTRATIONS_PER_DEVICE) {
+      this.logger.warn(
+        `Device abuse detected: deviceId=${deviceId} has ${phones.length} distinct phone registrations. ` +
+          `Phones: ${phones.map((p) => p.slice(0, 4) + "****").join(", ")}`,
+      );
+    }
   }
 
   /**

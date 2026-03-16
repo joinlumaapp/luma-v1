@@ -125,6 +125,11 @@ const GOLD_COSTS: Record<string, { cost: number; descriptionTr: string }> = {
   },
   profile_boost: { cost: 100, descriptionTr: "Profil one cikarma (24 saat)" },
   super_like: { cost: 25, descriptionTr: "Super begeni gonderme" },
+  read_receipts: { cost: 15, descriptionTr: "Mesaj okundu bilgisi (tek kullanimlik)" },
+  undo_pass: { cost: 30, descriptionTr: "Gecilen profili geri alma" },
+  spotlight: { cost: 75, descriptionTr: "30 dk bolge one cikarma" },
+  travel_mode: { cost: 200, descriptionTr: "24 saat farkli sehirde profil gosterme" },
+  priority_message: { cost: 40, descriptionTr: "Mesaji en uste cikarma" },
 };
 
 // One-time purchase products (not subscription-based)
@@ -175,6 +180,7 @@ export class PaymentsService {
   /**
    * Subscribe to a package tier.
    * Validates receipt with platform store and activates subscription.
+   * Supports 7-day free trial for first-time subscribers.
    */
   async subscribe(userId: string, dto: SubscribeDto) {
     if (dto.packageTier === "free") {
@@ -211,6 +217,12 @@ export class PaymentsService {
       throw new BadRequestException("Bu makbuz daha once kullanilmis");
     }
 
+    // Check trial eligibility: user can only use trial once (any tier)
+    const previousTrial = await this.prisma.subscription.findFirst({
+      where: { userId, isTrial: true },
+    });
+    const isEligibleForTrial = previousTrial === null;
+
     const tierKey = dto.packageTier.toUpperCase();
 
     // Create subscription in transaction
@@ -219,6 +231,12 @@ export class PaymentsService {
       const startDate = new Date();
       const expiryDate = new Date();
       expiryDate.setMonth(expiryDate.getMonth() + 1); // Monthly subscription
+
+      // Trial: 7-day free trial for first-time subscribers
+      const isTrial = isEligibleForTrial;
+      const trialEndDate = isTrial
+        ? new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000)
+        : null;
 
       const subscription = await tx.subscription.create({
         data: {
@@ -229,6 +247,8 @@ export class PaymentsService {
           purchaseToken: dto.receipt,
           startDate,
           expiryDate,
+          isTrial,
+          trialEndDate,
         },
       });
 
@@ -283,7 +303,9 @@ export class PaymentsService {
       return subscription;
     });
 
-    this.logger.log(`User ${userId} subscribed to ${dto.packageTier}`);
+    this.logger.log(
+      `User ${userId} subscribed to ${dto.packageTier}${isEligibleForTrial ? " (trial)" : ""}`,
+    );
 
     // Check badges after subscription (non-blocking)
     this.badgesService
@@ -295,6 +317,8 @@ export class PaymentsService {
       subscriptionId: result.id,
       packageTier: dto.packageTier,
       expiresAt: result.expiryDate,
+      isTrial: isEligibleForTrial,
+      trialEndDate: isEligibleForTrial ? result.trialEndDate : null,
     };
   }
 
@@ -662,6 +686,11 @@ export class PaymentsService {
         harmony_extension: "HARMONY_EXTENSION",
         profile_boost: "PROFILE_BOOST",
         super_like: "SUPER_LIKE",
+        read_receipts: "READ_RECEIPTS",
+        undo_pass: "UNDO_PASS",
+        spotlight: "SPOTLIGHT",
+        travel_mode: "TRAVEL_MODE",
+        priority_message: "PRIORITY_MESSAGE",
       };
 
       await tx.goldTransaction.create({
@@ -807,6 +836,9 @@ export class PaymentsService {
         autoRenew: true,
         cancelledAt: true,
         isActive: true,
+        isTrial: true,
+        trialEndDate: true,
+        gracePeriodEnd: true,
       },
     });
 
@@ -824,6 +856,21 @@ export class PaymentsService {
       isExpiringSoon = diffDays <= 3 && diffDays > 0;
     }
 
+    // Calculate trial days remaining
+    const isTrial = activeSubscription?.isTrial ?? false;
+    let trialDaysRemaining = 0;
+    if (isTrial && activeSubscription?.trialEndDate) {
+      const now = new Date();
+      const trialEnd = new Date(activeSubscription.trialEndDate);
+      const diffMs = trialEnd.getTime() - now.getTime();
+      trialDaysRemaining = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+    }
+
+    // Check if in grace period
+    const isInGracePeriod = activeSubscription?.gracePeriodEnd
+      ? new Date(activeSubscription.gracePeriodEnd).getTime() > new Date().getTime()
+      : false;
+
     return {
       packageTier: user.packageTier,
       packageName: packageDef?.nameTr ?? "Ucretsiz",
@@ -834,6 +881,9 @@ export class PaymentsService {
       startDate: activeSubscription?.startDate ?? null,
       cancelledAt: activeSubscription?.cancelledAt ?? null,
       isExpiringSoon,
+      isTrial,
+      trialDaysRemaining,
+      isInGracePeriod,
       platform: activeSubscription?.platform ?? null,
       goldBalance: user.goldBalance,
       features: packageDef?.features ?? PACKAGE_DEFINITIONS.free.features,
@@ -841,18 +891,61 @@ export class PaymentsService {
   }
 
   /**
-   * Process expired subscriptions: downgrade users to FREE tier.
+   * Process expired subscriptions with 3-day grace period.
    * Intended to be called by a scheduled cron job (e.g. every hour).
-   * Finds subscriptions where expiryDate has passed, autoRenew is false, and isActive is true.
+   *
+   * Flow:
+   * 1. Subscription expires + autoRenew is false + no grace period set yet
+   *    -> Set gracePeriodEnd = expiryDate + 3 days (premium features continue)
+   * 2. Grace period has ended
+   *    -> Deactivate subscription + downgrade to FREE
    */
   async processExpiredSubscriptions(): Promise<number> {
     const now = new Date();
+    const GRACE_PERIOD_DAYS = 3;
 
-    const expiredSubscriptions = await this.prisma.subscription.findMany({
+    // Phase 1: Find newly expired subscriptions without grace period and assign one
+    const newlyExpired = await this.prisma.subscription.findMany({
       where: {
         isActive: true,
         autoRenew: false,
         expiryDate: { lt: now },
+        gracePeriodEnd: null,
+      },
+      select: {
+        id: true,
+        userId: true,
+        packageTier: true,
+        expiryDate: true,
+      },
+    });
+
+    for (const sub of newlyExpired) {
+      try {
+        const gracePeriodEnd = new Date(sub.expiryDate);
+        gracePeriodEnd.setDate(gracePeriodEnd.getDate() + GRACE_PERIOD_DAYS);
+
+        await this.prisma.subscription.update({
+          where: { id: sub.id },
+          data: { gracePeriodEnd },
+        });
+
+        this.logger.log(
+          `Grace period set for subscription ${sub.id}: user ${sub.userId} has until ${gracePeriodEnd.toISOString()}`,
+        );
+      } catch (err) {
+        this.logger.error(
+          `Failed to set grace period for subscription ${sub.id}: ${err}`,
+        );
+      }
+    }
+
+    // Phase 2: Find subscriptions where grace period has ended -> downgrade to FREE
+    const graceExpired = await this.prisma.subscription.findMany({
+      where: {
+        isActive: true,
+        autoRenew: false,
+        gracePeriodEnd: { lt: now },
       },
       select: {
         id: true,
@@ -863,7 +956,7 @@ export class PaymentsService {
 
     let processedCount = 0;
 
-    for (const sub of expiredSubscriptions) {
+    for (const sub of graceExpired) {
       try {
         await this.prisma.$transaction(async (tx) => {
           // Deactivate subscription
@@ -880,7 +973,7 @@ export class PaymentsService {
         });
 
         this.logger.log(
-          `Expired subscription ${sub.id}: user ${sub.userId} downgraded from ${sub.packageTier} to FREE`,
+          `Expired subscription ${sub.id}: user ${sub.userId} downgraded from ${sub.packageTier} to FREE (grace period ended)`,
         );
         processedCount++;
       } catch (err) {

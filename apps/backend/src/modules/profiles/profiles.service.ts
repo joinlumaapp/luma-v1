@@ -655,16 +655,20 @@ export class ProfilesService {
     };
   }
 
+  /** Maximum physically possible travel speed in km/h before flagging */
+  private static readonly IMPOSSIBLE_TRAVEL_SPEED_KMH = 500;
+
   /**
    * Update the user's geolocation coordinates.
    * Called periodically from the mobile client.
    * Validates latitude (-90 to 90) and longitude (-180 to 180).
+   * Includes impossible travel detection (>500 km/h).
    */
   async updateLocation(
     userId: string,
     latitude: number,
     longitude: number,
-  ): Promise<{ updated: true }> {
+  ): Promise<{ updated: true; impossibleTravelDetected?: boolean }> {
     // Validate coordinate bounds
     if (latitude < -90 || latitude > 90) {
       throw new BadRequestException(
@@ -685,6 +689,37 @@ export class ProfilesService {
       throw new NotFoundException("Profil bulunamadi. Once profil olusturun.");
     }
 
+    // Impossible travel detection
+    let impossibleTravelDetected = false;
+    if (
+      profile.latitude != null &&
+      profile.longitude != null &&
+      profile.locationUpdatedAt != null
+    ) {
+      const distanceKm = this.haversineDistance(
+        profile.latitude,
+        profile.longitude,
+        latitude,
+        longitude,
+      );
+
+      const timeDiffHours =
+        (Date.now() - profile.locationUpdatedAt.getTime()) / (1000 * 60 * 60);
+
+      // Avoid division by zero — require at least 1 second elapsed
+      if (timeDiffHours > 0.0003 && distanceKm > 0) {
+        const speedKmh = distanceKm / timeDiffHours;
+
+        if (speedKmh > ProfilesService.IMPOSSIBLE_TRAVEL_SPEED_KMH) {
+          impossibleTravelDetected = true;
+          this.logger.warn(
+            `[IMPOSSIBLE_TRAVEL] User ${userId}: ${distanceKm.toFixed(1)}km in ${(timeDiffHours * 60).toFixed(1)}min = ${speedKmh.toFixed(0)}km/h. ` +
+              `From (${profile.latitude}, ${profile.longitude}) to (${latitude}, ${longitude}). Flagged for admin review.`,
+          );
+        }
+      }
+    }
+
     await this.prisma.userProfile.update({
       where: { userId },
       data: {
@@ -695,7 +730,34 @@ export class ProfilesService {
       },
     });
 
-    return { updated: true };
+    return { updated: true, ...(impossibleTravelDetected ? { impossibleTravelDetected } : {}) };
+  }
+
+  /**
+   * Calculate the great-circle distance between two coordinates using the Haversine formula.
+   * @returns Distance in kilometers
+   */
+  private haversineDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ): number {
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = this.toRadians(lat2 - lat1);
+    const dLon = this.toRadians(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.toRadians(lat1)) *
+        Math.cos(this.toRadians(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  private toRadians(degrees: number): number {
+    return degrees * (Math.PI / 180);
   }
 
   // ─── In-Memory Profile View Store ──────────────────────────────

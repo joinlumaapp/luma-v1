@@ -4,9 +4,10 @@ import { DiscoveryService } from "./discovery.service";
 import { WeeklyReportService } from "./weekly-report.service";
 import { BadgesModule } from "../badges/badges.module";
 import { NotificationsModule } from "../notifications/notifications.module";
+import { SearchModule } from "../search/search.module";
 
 @Module({
-  imports: [BadgesModule, NotificationsModule],
+  imports: [BadgesModule, NotificationsModule, SearchModule],
   controllers: [DiscoveryController],
   providers: [DiscoveryService, WeeklyReportService],
   exports: [DiscoveryService, WeeklyReportService],

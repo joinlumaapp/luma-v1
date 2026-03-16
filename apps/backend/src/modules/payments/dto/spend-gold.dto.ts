@@ -12,12 +12,17 @@ const VALID_GOLD_ACTIONS = [
   "harmony_extension",
   "profile_boost",
   "super_like",
+  "read_receipts",
+  "undo_pass",
+  "spotlight",
+  "travel_mode",
+  "priority_message",
 ] as const;
 
 export class SpendGoldDto {
   @ApiProperty({
     description:
-      "Action to spend gold on: harmony_extension, profile_boost, super_like",
+      "Action to spend gold on: harmony_extension, profile_boost, super_like, read_receipts, undo_pass, spotlight, travel_mode, priority_message",
     example: "harmony_extension",
     enum: VALID_GOLD_ACTIONS,
   })
