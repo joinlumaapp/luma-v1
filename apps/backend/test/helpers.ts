@@ -16,6 +16,7 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe, Type } from '@nestjs/common';
+import { APP_GUARD, Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { ThrottlerGuard } from '@nestjs/throttler';
@@ -226,6 +227,9 @@ export async function createTestModule(
     providers: [
       { provide: JwtService, useValue: jwtService },
       { provide: ConfigService, useValue: configService },
+      Reflector,
+      // Register JwtAuthGuard as global guard (mirrors APP_GUARD in app.module.ts)
+      { provide: APP_GUARD, useClass: JwtAuthGuard },
       ...config.serviceProviders,
     ],
   });

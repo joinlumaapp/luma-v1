@@ -14,6 +14,7 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { DiscoveryController } from '../src/modules/discovery/discovery.controller';
 import { DiscoveryService } from '../src/modules/discovery/discovery.service';
+import { WeeklyReportService } from '../src/modules/discovery/weekly-report.service';
 import {
   createTestApp,
   TEST_USER,
@@ -27,9 +28,17 @@ describe('Discovery E2E — /api/v1/discovery', () => {
   let jwtToken: string;
 
   const mockDiscoveryService = {
-    getFeed: jest.fn(),
+    getDiscoveryFeed: jest.fn(),
     swipe: jest.fn(),
     undoSwipe: jest.fn(),
+    getLikesYou: jest.fn(),
+    getDailyPicks: jest.fn(),
+    markDailyPickViewed: jest.fn(),
+  };
+
+  const mockWeeklyReportService = {
+    getWeeklyReport: jest.fn(),
+    generateReport: jest.fn(),
   };
 
   beforeAll(async () => {
@@ -37,6 +46,7 @@ describe('Discovery E2E — /api/v1/discovery', () => {
       controllers: [DiscoveryController],
       serviceProviders: [
         { provide: DiscoveryService, useValue: mockDiscoveryService },
+        { provide: WeeklyReportService, useValue: mockWeeklyReportService },
       ],
     });
     app = testApp.app;
@@ -77,7 +87,7 @@ describe('Discovery E2E — /api/v1/discovery', () => {
         remaining: 15,
         dailyLimit: 20,
       };
-      mockDiscoveryService.getFeed.mockResolvedValue(mockFeedResponse);
+      mockDiscoveryService.getDiscoveryFeed.mockResolvedValue(mockFeedResponse);
 
       const response = await request(app.getHttpServer())
         .get('/api/v1/discovery/feed')
@@ -91,9 +101,10 @@ describe('Discovery E2E — /api/v1/discovery', () => {
       expect(response.body.cards[0]).toHaveProperty('userId');
       expect(response.body.cards[0]).toHaveProperty('firstName');
       expect(response.body.cards[0]).toHaveProperty('feedScore');
-      expect(mockDiscoveryService.getFeed).toHaveBeenCalledWith(
+      expect(mockDiscoveryService.getDiscoveryFeed).toHaveBeenCalledWith(
         TEST_USER.id,
         expect.any(Object),
+        undefined,
       );
     });
 
@@ -102,7 +113,7 @@ describe('Discovery E2E — /api/v1/discovery', () => {
         .get('/api/v1/discovery/feed')
         .expect(401);
 
-      expect(mockDiscoveryService.getFeed).not.toHaveBeenCalled();
+      expect(mockDiscoveryService.getDiscoveryFeed).not.toHaveBeenCalled();
     });
 
     it('should reject invalid JWT with 401', async () => {
@@ -111,11 +122,11 @@ describe('Discovery E2E — /api/v1/discovery', () => {
         .set('Authorization', 'Bearer invalid-jwt-token')
         .expect(401);
 
-      expect(mockDiscoveryService.getFeed).not.toHaveBeenCalled();
+      expect(mockDiscoveryService.getDiscoveryFeed).not.toHaveBeenCalled();
     });
 
     it('should pass query parameters as filter DTO', async () => {
-      mockDiscoveryService.getFeed.mockResolvedValue({
+      mockDiscoveryService.getDiscoveryFeed.mockResolvedValue({
         cards: [],
         remaining: 20,
         dailyLimit: 20,
@@ -132,7 +143,7 @@ describe('Discovery E2E — /api/v1/discovery', () => {
         .set('Authorization', `Bearer ${jwtToken}`)
         .expect(200);
 
-      expect(mockDiscoveryService.getFeed).toHaveBeenCalledWith(
+      expect(mockDiscoveryService.getDiscoveryFeed).toHaveBeenCalledWith(
         TEST_USER.id,
         expect.objectContaining({
           genderPreference: 'female',
@@ -140,6 +151,7 @@ describe('Discovery E2E — /api/v1/discovery', () => {
           maxAge: 35,
           maxDistance: 50,
         }),
+        undefined,
       );
     });
 
@@ -150,7 +162,7 @@ describe('Discovery E2E — /api/v1/discovery', () => {
         .set('Authorization', `Bearer ${jwtToken}`)
         .expect(400);
 
-      expect(mockDiscoveryService.getFeed).not.toHaveBeenCalled();
+      expect(mockDiscoveryService.getDiscoveryFeed).not.toHaveBeenCalled();
     });
 
     it('should reject minAge below 18 with 400', async () => {
@@ -160,7 +172,7 @@ describe('Discovery E2E — /api/v1/discovery', () => {
         .set('Authorization', `Bearer ${jwtToken}`)
         .expect(400);
 
-      expect(mockDiscoveryService.getFeed).not.toHaveBeenCalled();
+      expect(mockDiscoveryService.getDiscoveryFeed).not.toHaveBeenCalled();
     });
 
     it('should reject maxAge above 99 with 400', async () => {
@@ -170,7 +182,7 @@ describe('Discovery E2E — /api/v1/discovery', () => {
         .set('Authorization', `Bearer ${jwtToken}`)
         .expect(400);
 
-      expect(mockDiscoveryService.getFeed).not.toHaveBeenCalled();
+      expect(mockDiscoveryService.getDiscoveryFeed).not.toHaveBeenCalled();
     });
 
     it('should reject maxDistance above 500 with 400', async () => {
@@ -180,7 +192,7 @@ describe('Discovery E2E — /api/v1/discovery', () => {
         .set('Authorization', `Bearer ${jwtToken}`)
         .expect(400);
 
-      expect(mockDiscoveryService.getFeed).not.toHaveBeenCalled();
+      expect(mockDiscoveryService.getDiscoveryFeed).not.toHaveBeenCalled();
     });
   });
 

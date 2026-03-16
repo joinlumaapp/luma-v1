@@ -15,6 +15,7 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { ChatController } from '../src/modules/chat/chat.controller';
 import { ChatService } from '../src/modules/chat/chat.service';
+import { ChatGateway } from '../src/modules/chat/chat.gateway';
 import {
   createTestApp,
   TEST_USER,
@@ -38,11 +39,17 @@ describe('Chat E2E — /api/v1/chat', () => {
     reactToMessage: jest.fn(),
   };
 
+  const mockChatGateway = {
+    sendMessageToMatch: jest.fn(),
+    emitTyping: jest.fn(),
+  };
+
   beforeAll(async () => {
     const testApp = await createTestApp({
       controllers: [ChatController],
       serviceProviders: [
         { provide: ChatService, useValue: mockChatService },
+        { provide: ChatGateway, useValue: mockChatGateway },
       ],
     });
     app = testApp.app;

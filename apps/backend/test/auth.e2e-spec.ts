@@ -363,7 +363,7 @@ describe('Auth E2E — /api/v1/auth', () => {
         .expect(200);
 
       expect(response.body.message).toBeDefined();
-      expect(mockAuthService.logout).toHaveBeenCalledWith(TEST_USER.id);
+      expect(mockAuthService.logout).toHaveBeenCalledWith(TEST_USER.id, expect.any(String));
     });
 
     it('should reject without JWT token with 401', async () => {
