@@ -88,7 +88,7 @@ export class BadgesService {
     const progress = await this.getBadgeProgress(userId);
 
     // Filter to only unearned badges for the progress section
-    const earnedIds = new Set(earnedBadges.map((eb) => eb.badgeId));
+    const _earnedIds = new Set(earnedBadges.map((eb) => eb.badgeId));
     const unearnedProgress = progress
       .filter((p) => !p.isEarned)
       .map((p) => ({

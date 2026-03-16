@@ -144,22 +144,39 @@ describe("NotificationsService", () => {
     });
 
     it("should send to all active devices", async () => {
-      mockPrisma.notificationPreference.findUnique.mockResolvedValue(null);
+      // Use unique userId to avoid rate limit interference from other tests
+      // Mock Date to 12:00 noon so quiet hours (23:00-08:00) are never active
+      jest.useFakeTimers({ now: new Date("2026-03-17T12:00:00Z") });
+      const userId = "u-send-all-devices";
+      mockPrisma.notificationPreference.findUnique.mockResolvedValue({
+        id: "np1",
+        userId,
+        newMatches: true,
+        messages: true,
+        harmonyInvites: true,
+        badges: true,
+        system: true,
+        allDisabled: false,
+        quietHoursStart: "23:00",
+        quietHoursEnd: "08:00",
+        timezone: "UTC",
+      });
       mockPrisma.notification.create.mockResolvedValue({ id: "n1" });
-      mockPrisma.notification.count.mockResolvedValue(0); // for getBadgeCount
+      mockPrisma.notification.count.mockResolvedValue(0);
       mockPrisma.deviceToken.findMany.mockResolvedValue([
         { id: "dt1", token: "token1" },
         { id: "dt2", token: "token2" },
       ]);
 
       const result = await service.sendPushNotification(
-        "u1",
+        userId,
         "Test Title",
         "Test Body",
         { matchId: "m1" },
         "NEW_MATCH",
       );
 
+      jest.useRealTimers();
       expect(result.sent).toBe(true);
       expect(result.deviceCount).toBe(2);
     });
@@ -338,8 +355,27 @@ describe("NotificationsService", () => {
   });
 
   describe("sendPushNotification() parallel sending", () => {
+    const noQuietHoursPrefs = {
+      id: "np1",
+      userId: "u1",
+      newMatches: true,
+      messages: true,
+      harmonyInvites: true,
+      badges: true,
+      system: true,
+      allDisabled: false,
+      quietHoursStart: null,
+      quietHoursEnd: null,
+      timezone: "Europe/Istanbul",
+    };
+
     it("should send to devices in parallel via Promise.allSettled", async () => {
-      mockPrisma.notificationPreference.findUnique.mockResolvedValue(null);
+      jest.useFakeTimers({ now: new Date("2026-03-17T12:00:00Z") });
+      const userId = "u-parallel-send";
+      mockPrisma.notificationPreference.findUnique.mockResolvedValue({
+        ...noQuietHoursPrefs,
+        userId,
+      });
       mockPrisma.notification.create.mockResolvedValue({ id: "n1" });
       mockPrisma.notification.count.mockResolvedValue(0);
       mockPrisma.deviceToken.findMany.mockResolvedValue([
@@ -350,20 +386,26 @@ describe("NotificationsService", () => {
       mockFirebase.send.mockResolvedValue({ success: true, messageId: "msg1" });
 
       const result = await service.sendPushNotification(
-        "u1",
+        userId,
         "Test",
         "Body",
         undefined,
         "SYSTEM",
       );
 
+      jest.useRealTimers();
       expect(result.sent).toBe(true);
       expect(result.deviceCount).toBe(3);
       expect(mockFirebase.send).toHaveBeenCalledTimes(3);
     });
 
     it("should deactivate tokens that fail and count only successes", async () => {
-      mockPrisma.notificationPreference.findUnique.mockResolvedValue(null);
+      jest.useFakeTimers({ now: new Date("2026-03-17T12:00:00Z") });
+      const userId = "u-deactivate-tokens";
+      mockPrisma.notificationPreference.findUnique.mockResolvedValue({
+        ...noQuietHoursPrefs,
+        userId,
+      });
       mockPrisma.notification.create.mockResolvedValue({ id: "n1" });
       mockPrisma.notification.count.mockResolvedValue(0);
       mockPrisma.deviceToken.findMany.mockResolvedValue([
@@ -379,13 +421,14 @@ describe("NotificationsService", () => {
       mockPrisma.deviceToken.update.mockResolvedValue({});
 
       const result = await service.sendPushNotification(
-        "u1",
+        userId,
         "Test",
         "Body",
         undefined,
         "SYSTEM",
       );
 
+      jest.useRealTimers();
       expect(result.sent).toBe(true);
       expect(result.deviceCount).toBe(1);
       expect(mockPrisma.deviceToken.update).toHaveBeenCalledWith({

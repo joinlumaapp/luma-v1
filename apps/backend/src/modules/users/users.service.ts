@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 import { UpdateUserDto } from "./dto";
 
@@ -40,7 +36,7 @@ export class UsersService {
     }
 
     // Exclude sensitive fields
-    const { deletedAt, ...safeUser } = user;
+    const { deletedAt: _deletedAt, ...safeUser } = user;
 
     // Compute age from birthDate
     const age = user.profile?.birthDate

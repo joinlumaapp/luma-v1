@@ -7,11 +7,7 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 import { BadgesService } from "../badges/badges.service";
-import {
-  LumaCacheService,
-  CACHE_KEYS,
-  CACHE_TTL,
-} from "../cache/cache.service";
+import { LumaCacheService, CACHE_KEYS } from "../cache/cache.service";
 import { SubmitAnswerDto, SubmitAnswersBulkDto } from "./dto";
 
 // LOCKED: 2 Compatibility Levels

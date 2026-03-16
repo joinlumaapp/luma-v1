@@ -138,6 +138,10 @@ async function bootstrap() {
       .addTag("Moderation", "Reports & blocking")
       .addTag("Health", "App info, feature flags & health checks")
       .addTag("Users", "User account management")
+      .addTag("Admin", "Admin dashboard & user management")
+      .addTag("Analytics", "Event tracking & metrics")
+      .addTag("Engagement", "Daily rewards, challenges & leaderboard")
+      .addTag("Storage", "File upload & media management")
       .build();
 
     const document = SwaggerModule.createDocument(app, config);

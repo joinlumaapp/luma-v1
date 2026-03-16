@@ -3,7 +3,7 @@ import { BadRequestException, ForbiddenException } from "@nestjs/common";
 import { DiscoveryController } from "./discovery.controller";
 import { DiscoveryService } from "./discovery.service";
 import { WeeklyReportService } from "./weekly-report.service";
-import { FeedFilterDto, SwipeDto } from "./dto";
+import { FeedFilterDto } from "./dto";
 import { SwipeDirection } from "./dto/swipe.dto";
 import { ThrottlerGuard } from "@nestjs/throttler";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";

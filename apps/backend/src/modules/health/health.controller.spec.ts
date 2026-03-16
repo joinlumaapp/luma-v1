@@ -6,7 +6,7 @@ import { LumaCacheService } from "../cache/cache.service";
 
 describe("HealthController", () => {
   let controller: HealthController;
-  let prisma: { $queryRaw: jest.Mock };
+  let _prisma: { $queryRaw: jest.Mock };
 
   const mockPrisma = {
     $queryRaw: jest.fn(),
@@ -35,7 +35,7 @@ describe("HealthController", () => {
       .compile();
 
     controller = module.get<HealthController>(HealthController);
-    prisma = module.get(PrismaService);
+    _prisma = module.get(PrismaService);
   });
 
   it("should be defined", () => {

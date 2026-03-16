@@ -69,9 +69,9 @@ function createMockSession(overrides: Partial<Record<string, unknown>> = {}) {
 
 describe("AuthService", () => {
   let service: AuthService;
-  let prisma: Record<string, unknown>;
-  let jwtService: JwtService;
-  let configService: ConfigService;
+  let _prisma: Record<string, unknown>;
+  let _jwtService: JwtService;
+  let _configService: ConfigService;
 
   // ─── Prisma mock objects ───────────────────────────────────────
 
@@ -200,9 +200,9 @@ describe("AuthService", () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    prisma = module.get(PrismaService);
-    jwtService = module.get<JwtService>(JwtService);
-    configService = module.get<ConfigService>(ConfigService);
+    _prisma = module.get(PrismaService);
+    _jwtService = module.get<JwtService>(JwtService);
+    _configService = module.get<ConfigService>(ConfigService);
 
     // Default JWT mock behavior
     mockJwtService.signAsync.mockResolvedValue("mock-jwt-token");

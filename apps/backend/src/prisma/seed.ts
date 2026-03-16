@@ -19,13 +19,7 @@ import {
   PaymentPlatform,
   GoldTransactionType,
 } from "@prisma/client";
-import * as bcrypt from "bcryptjs";
-import {
-  randomBetween,
-  randomPickN,
-  INTEREST_TAGS,
-  TURKISH_CITIES,
-} from "./seed-utils";
+import { randomBetween } from "./seed-utils";
 
 const prisma = new PrismaClient();
 
@@ -2904,7 +2898,7 @@ async function seedDemoLoginStreaks(userIds: string[]): Promise<void> {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const streaks = userIds.map((userId, idx) => {
+  const streaks = userIds.map((userId, _idx) => {
     const currentStreak = randomBetween(1, 14);
     const longestStreak = Math.max(
       currentStreak,

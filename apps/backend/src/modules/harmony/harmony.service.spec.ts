@@ -302,7 +302,7 @@ describe("HarmonyService", () => {
     const setupSuccessfulCreate = (
       overrides: { userId?: string; deckCategory?: string } = {},
     ) => {
-      const userId = overrides.userId ?? "u1";
+      const _userId = overrides.userId ?? "u1";
       mockPrisma.match.findUnique.mockResolvedValue({
         id: "m1",
         userAId: "u1",

@@ -73,7 +73,7 @@ const DEFAULT_MAX_DISTANCE_KM = 100;
 const ANTI_REPEAT_WINDOW_HOURS = 24;
 
 // Boost configuration: boosted users get 3x visibility for 30 minutes
-const BOOST_DURATION_MINUTES = 30;
+const _BOOST_DURATION_MINUTES = 30;
 const BOOST_SCORE_MULTIPLIER = 3;
 
 // ─── Smart Feed Scoring Weights (per spec) ─────────────────────

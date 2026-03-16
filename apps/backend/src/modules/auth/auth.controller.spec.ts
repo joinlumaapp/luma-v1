@@ -14,7 +14,7 @@ import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 
 describe("AuthController", () => {
   let controller: AuthController;
-  let authService: AuthService;
+  let _authService: AuthService;
 
   const mockAuthService = {
     register: jest.fn(),
@@ -40,7 +40,7 @@ describe("AuthController", () => {
       .compile();
 
     controller = module.get<AuthController>(AuthController);
-    authService = module.get<AuthService>(AuthService);
+    _authService = module.get<AuthService>(AuthService);
   });
 
   it("should be defined", () => {

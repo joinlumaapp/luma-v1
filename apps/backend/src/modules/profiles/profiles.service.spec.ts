@@ -1,6 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { NotFoundException, BadRequestException } from "@nestjs/common";
-import * as crypto from "crypto";
 import { ProfilesService } from "./profiles.service";
 import { PrismaService } from "../../prisma/prisma.service";
 import { IntentionTagValue } from "./dto/set-intention-tag.dto";

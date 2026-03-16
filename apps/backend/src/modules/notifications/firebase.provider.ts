@@ -2,7 +2,6 @@ import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import * as admin from "firebase-admin";
 import {
   getFirebaseApp,
-  getFirebaseMessaging,
   isFirebaseConfigured,
 } from "../../common/providers/firebase.provider";
 import { PrismaService } from "../../prisma/prisma.service";
