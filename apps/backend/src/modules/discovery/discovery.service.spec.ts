@@ -594,11 +594,11 @@ describe('DiscoveryService', () => {
 
     it('should throw ForbiddenException when daily limit reached', async () => {
       mockPrisma.user.findUnique
-        .mockResolvedValueOnce({ packageTier: 'FREE' })
+        .mockResolvedValueOnce({ packageTier: 'PRO' })
         .mockResolvedValueOnce({ id: 'u2', isActive: true });
       mockPrisma.block.findFirst.mockResolvedValue(null);
       mockPrisma.swipe.findUnique.mockResolvedValue(null);
-      mockPrisma.dailySwipeCount.upsert.mockResolvedValue({ count: 20 }); // FREE limit reached
+      mockPrisma.dailySwipeCount.upsert.mockResolvedValue({ count: 200 }); // PRO limit reached
 
       await expect(
         service.swipe('u1', { targetUserId: 'u2', direction: SwipeDirection.LIKE }),

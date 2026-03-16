@@ -6,6 +6,7 @@ import {
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { ChatController } from './chat.controller';
 import { ChatService } from './chat.service';
+import { ChatGateway } from './chat.gateway';
 import { ReactionEmojiValue } from './dto/message-reaction.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
@@ -18,6 +19,11 @@ describe('ChatController', () => {
     sendMessage: jest.fn(),
     markAsRead: jest.fn(),
     reactToMessage: jest.fn(),
+    deleteMessage: jest.fn(),
+  };
+
+  const mockChatGateway = {
+    broadcastToRoom: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -27,6 +33,7 @@ describe('ChatController', () => {
       controllers: [ChatController],
       providers: [
         { provide: ChatService, useValue: mockChatService },
+        { provide: ChatGateway, useValue: mockChatGateway },
       ],
     })
       .overrideGuard(JwtAuthGuard)

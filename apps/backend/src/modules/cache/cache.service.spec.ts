@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { LumaCacheService } from './cache.service';
+import { LumaCacheService, CACHE_TTL, CACHE_KEYS } from './cache.service';
 
 describe('LumaCacheService', () => {
   let service: LumaCacheService;
@@ -90,6 +90,14 @@ describe('LumaCacheService', () => {
       expect(result).toBeNull();
     });
 
+    it('should return null and not throw on JSON parse error', async () => {
+      mockRedisClient.get.mockResolvedValue('not-valid-json{{{');
+
+      const result = await service.get('bad-json-key');
+
+      expect(result).toBeNull();
+    });
+
     it('should prefix the key with luma:', async () => {
       mockRedisClient.get.mockResolvedValue(null);
 
@@ -144,6 +152,12 @@ describe('LumaCacheService', () => {
       await expect(service.set('key', 'value')).resolves.toBeUndefined();
     });
 
+    it('should not throw on Redis setex error', async () => {
+      mockRedisClient.setex.mockRejectedValue(new Error('Setex failed'));
+
+      await expect(service.set('key', 'value', 60)).resolves.toBeUndefined();
+    });
+
     it('should use set (not setex) when TTL is 0', async () => {
       mockRedisClient.set.mockResolvedValue('OK');
 
@@ -160,6 +174,23 @@ describe('LumaCacheService', () => {
 
       expect(mockRedisClient.set).toHaveBeenCalled();
       expect(mockRedisClient.setex).not.toHaveBeenCalled();
+    });
+
+    it('should use set (not setex) when TTL is undefined', async () => {
+      mockRedisClient.set.mockResolvedValue('OK');
+
+      await service.set('key', 'value', undefined);
+
+      expect(mockRedisClient.set).toHaveBeenCalled();
+      expect(mockRedisClient.setex).not.toHaveBeenCalled();
+    });
+
+    it('should do nothing when client is null', async () => {
+      (service as unknown as { client: null }).client = null;
+
+      await service.set('key', 'value');
+
+      expect(mockRedisClient.set).not.toHaveBeenCalled();
     });
   });
 
@@ -188,6 +219,14 @@ describe('LumaCacheService', () => {
       mockRedisClient.del.mockRejectedValue(new Error('Del failed'));
 
       await expect(service.del('key')).resolves.toBeUndefined();
+    });
+
+    it('should do nothing when client is null', async () => {
+      (service as unknown as { client: null }).client = null;
+
+      await service.del('some-key');
+
+      expect(mockRedisClient.del).not.toHaveBeenCalled();
     });
   });
 
@@ -253,6 +292,14 @@ describe('LumaCacheService', () => {
       expect(mockRedisClient.scan).toHaveBeenCalledTimes(3);
       expect(mockRedisClient.del).toHaveBeenCalledTimes(3);
     });
+
+    it('should do nothing when client is null', async () => {
+      (service as unknown as { client: null }).client = null;
+
+      await service.invalidatePattern('*');
+
+      expect(mockRedisClient.scan).not.toHaveBeenCalled();
+    });
   });
 
   // ═══════════════════════════════════════════════════════════════
@@ -272,6 +319,101 @@ describe('LumaCacheService', () => {
     it('should return false when client is null', () => {
       (service as unknown as { client: null }).client = null;
       expect(service.isRedisConnected()).toBe(false);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // onModuleDestroy()
+  // ═══════════════════════════════════════════════════════════════
+
+  describe('onModuleDestroy()', () => {
+    it('should quit Redis client and set state to disconnected', async () => {
+      mockRedisClient.quit.mockResolvedValue('OK');
+
+      await service.onModuleDestroy();
+
+      expect(mockRedisClient.quit).toHaveBeenCalled();
+      expect(service.isRedisConnected()).toBe(false);
+    });
+
+    it('should handle quit error gracefully', async () => {
+      mockRedisClient.quit.mockRejectedValue(new Error('Quit failed'));
+
+      await expect(service.onModuleDestroy()).resolves.toBeUndefined();
+      expect(service.isRedisConnected()).toBe(false);
+    });
+
+    it('should do nothing if client is already null', async () => {
+      (service as unknown as { client: null }).client = null;
+
+      await service.onModuleDestroy();
+
+      expect(mockRedisClient.quit).not.toHaveBeenCalled();
+    });
+
+    it('should set client to null after destroy', async () => {
+      mockRedisClient.quit.mockResolvedValue('OK');
+
+      await service.onModuleDestroy();
+
+      // After destroy, get should return null (client is null)
+      const result = await service.get('any-key');
+      expect(result).toBeNull();
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // CACHE_TTL constants
+  // ═══════════════════════════════════════════════════════════════
+
+  describe('CACHE_TTL constants', () => {
+    it('should have correct TTL values', () => {
+      expect(CACHE_TTL.USER_PROFILE).toBe(300);
+      expect(CACHE_TTL.DISCOVERY_FEED).toBe(60);
+      expect(CACHE_TTL.COMPATIBILITY_SCORE).toBe(3600);
+      expect(CACHE_TTL.MATCH_LIST).toBe(180);
+      expect(CACHE_TTL.QUESTIONS).toBe(86400);
+      expect(CACHE_TTL.BADGE_DEFINITIONS).toBe(86400);
+      expect(CACHE_TTL.NOTIFICATION_PREFS).toBe(600);
+      expect(CACHE_TTL.SESSION).toBe(60);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // CACHE_KEYS builders
+  // ═══════════════════════════════════════════════════════════════
+
+  describe('CACHE_KEYS builders', () => {
+    it('should build user profile key', () => {
+      expect(CACHE_KEYS.userProfile('u1')).toBe('user:profile:u1');
+    });
+
+    it('should build discovery feed key', () => {
+      expect(CACHE_KEYS.discoveryFeed('u1')).toBe('discovery:feed:u1');
+    });
+
+    it('should build compatibility score key', () => {
+      expect(CACHE_KEYS.compatScore('u1', 'u2')).toBe('compat:u1:u2');
+    });
+
+    it('should build match list key', () => {
+      expect(CACHE_KEYS.matchList('u1')).toBe('matches:u1');
+    });
+
+    it('should build questions key for premium', () => {
+      expect(CACHE_KEYS.questions(true)).toBe('questions:all');
+    });
+
+    it('should build questions key for core', () => {
+      expect(CACHE_KEYS.questions(false)).toBe('questions:core');
+    });
+
+    it('should build badge definitions key', () => {
+      expect(CACHE_KEYS.badgeDefinitions()).toBe('badges:definitions');
+    });
+
+    it('should build notification prefs key', () => {
+      expect(CACHE_KEYS.notifPrefs('u1')).toBe('notif:prefs:u1');
     });
   });
 });

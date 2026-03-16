@@ -9,6 +9,7 @@ import { ModerationController } from './moderation.controller';
 import { ModerationService } from './moderation.service';
 import { ReportReasonDto } from './dto/report.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { AdminGuard } from '../../common/guards/admin.guard';
 
 describe('ModerationController', () => {
   let controller: ModerationController;
@@ -18,6 +19,9 @@ describe('ModerationController', () => {
     blockUser: jest.fn(),
     unblockUser: jest.fn(),
     getBlockedUsers: jest.fn(),
+    getPendingPhotos: jest.fn(),
+    approvePhoto: jest.fn(),
+    rejectPhoto: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -32,6 +36,8 @@ describe('ModerationController', () => {
       .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
       .overrideGuard(ThrottlerGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(AdminGuard)
       .useValue({ canActivate: () => true })
       .compile();
 

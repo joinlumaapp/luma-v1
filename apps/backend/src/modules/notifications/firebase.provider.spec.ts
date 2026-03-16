@@ -1,28 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigService } from '@nestjs/config';
 import { FirebaseProvider } from './firebase.provider';
 import { PrismaService } from '../../prisma/prisma.service';
-import * as admin from 'firebase-admin';
 
-// Mock firebase-admin at module level
-jest.mock('firebase-admin', () => {
-  const mockSend = jest.fn();
-  const mockSendEachForMulticast = jest.fn();
-  const mockMessaging = jest.fn().mockReturnValue({
-    send: mockSend,
-    sendEachForMulticast: mockSendEachForMulticast,
-  });
-  const mockApp = {
-    messaging: mockMessaging,
-  };
+// Mock the centralized firebase provider module
+const mockGetFirebaseApp = jest.fn();
+const mockIsFirebaseConfigured = jest.fn();
 
-  return {
-    initializeApp: jest.fn().mockReturnValue(mockApp),
-    credential: {
-      cert: jest.fn().mockReturnValue('mock-credential'),
-    },
-  };
-});
+jest.mock('../../common/providers/firebase.provider', () => ({
+  getFirebaseApp: (...args: unknown[]) => mockGetFirebaseApp(...args),
+  getFirebaseMessaging: jest.fn(),
+  isFirebaseConfigured: (...args: unknown[]) => mockIsFirebaseConfigured(...args),
+}));
 
 const mockPrisma = {
   deviceToken: {
@@ -32,28 +20,11 @@ const mockPrisma = {
 
 describe('FirebaseProvider', () => {
   let provider: FirebaseProvider;
-  let configService: ConfigService;
 
-  const baseEnv: Record<string, string | undefined> = {
-    FIREBASE_PROJECT_ID: undefined,
-    FIREBASE_PRIVATE_KEY: undefined,
-    FIREBASE_CLIENT_EMAIL: undefined,
-    NODE_ENV: 'development',
-  };
-
-  function createConfigService(overrides: Record<string, string | undefined> = {}): ConfigService {
-    const env = { ...baseEnv, ...overrides };
-    return {
-      get: jest.fn((key: string) => env[key]),
-    } as unknown as ConfigService;
-  }
-
-  async function buildModule(envOverrides: Record<string, string | undefined> = {}): Promise<TestingModule> {
-    configService = createConfigService(envOverrides);
+  async function buildModule(): Promise<TestingModule> {
     const module = await Test.createTestingModule({
       providers: [
         FirebaseProvider,
-        { provide: ConfigService, useValue: configService },
         { provide: PrismaService, useValue: mockPrisma },
       ],
     }).compile();
@@ -69,50 +40,23 @@ describe('FirebaseProvider', () => {
   // ─── Initialization ─────────────────────────────────────────────────
 
   describe('onModuleInit()', () => {
-    it('should initialize Firebase when all credentials are provided', async () => {
-      await buildModule({
-        FIREBASE_PROJECT_ID: 'luma-test',
-        FIREBASE_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\\nfake\\n-----END PRIVATE KEY-----',
-        FIREBASE_CLIENT_EMAIL: 'test@luma-test.iam.gserviceaccount.com',
-      });
+    it('should set configured=true when centralized provider reports configured', async () => {
+      mockGetFirebaseApp.mockReturnValue({ messaging: jest.fn() });
+      mockIsFirebaseConfigured.mockReturnValue(true);
 
+      await buildModule();
       provider.onModuleInit();
 
       expect(provider.configured).toBe(true);
-      expect(admin.initializeApp).toHaveBeenCalledWith({
-        credential: 'mock-credential',
-      });
-      expect(admin.credential.cert).toHaveBeenCalledWith({
-        projectId: 'luma-test',
-        privateKey: '-----BEGIN PRIVATE KEY-----\nfake\n-----END PRIVATE KEY-----',
-        clientEmail: 'test@luma-test.iam.gserviceaccount.com',
-      });
     });
 
-    it('should fall back to mock mode when credentials are missing in development', async () => {
-      await buildModule({ NODE_ENV: 'development' });
+    it('should fall back to mock mode when not configured', async () => {
+      mockGetFirebaseApp.mockReturnValue(null);
+      mockIsFirebaseConfigured.mockReturnValue(false);
 
+      await buildModule();
       provider.onModuleInit();
 
-      expect(provider.configured).toBe(false);
-      expect(admin.initializeApp).not.toHaveBeenCalled();
-    });
-
-    it('should throw when credentials are missing in production', async () => {
-      await buildModule({ NODE_ENV: 'production' });
-
-      expect(() => provider.onModuleInit()).toThrow(
-        'Firebase credentials are required in production',
-      );
-    });
-
-    it('should not throw when partial credentials are provided in development', async () => {
-      await buildModule({
-        FIREBASE_PROJECT_ID: 'luma-test',
-        NODE_ENV: 'development',
-      });
-
-      expect(() => provider.onModuleInit()).not.toThrow();
       expect(provider.configured).toBe(false);
     });
   });
@@ -121,6 +65,8 @@ describe('FirebaseProvider', () => {
 
   describe('send() — mock mode', () => {
     beforeEach(async () => {
+      mockGetFirebaseApp.mockReturnValue(null);
+      mockIsFirebaseConfigured.mockReturnValue(false);
       await buildModule();
       provider.onModuleInit();
     });
@@ -152,16 +98,15 @@ describe('FirebaseProvider', () => {
     let mockSend: jest.Mock;
 
     beforeEach(async () => {
-      await buildModule({
-        FIREBASE_PROJECT_ID: 'luma-test',
-        FIREBASE_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\\nfake\\n-----END PRIVATE KEY-----',
-        FIREBASE_CLIENT_EMAIL: 'test@luma-test.iam.gserviceaccount.com',
-      });
-      provider.onModuleInit();
+      mockSend = jest.fn();
+      const mockApp = {
+        messaging: jest.fn().mockReturnValue({ send: mockSend }),
+      };
+      mockGetFirebaseApp.mockReturnValue(mockApp);
+      mockIsFirebaseConfigured.mockReturnValue(true);
 
-      // Access the mock send function from the mocked messaging instance
-      const app = (admin.initializeApp as jest.Mock).mock.results[0].value;
-      mockSend = app.messaging().send;
+      await buildModule();
+      provider.onModuleInit();
     });
 
     it('should send via FCM and return messageId on success', async () => {
@@ -216,6 +161,8 @@ describe('FirebaseProvider', () => {
 
   describe('sendPush()', () => {
     beforeEach(async () => {
+      mockGetFirebaseApp.mockReturnValue(null);
+      mockIsFirebaseConfigured.mockReturnValue(false);
       await buildModule();
       provider.onModuleInit();
     });
@@ -258,6 +205,8 @@ describe('FirebaseProvider', () => {
 
   describe('sendMulticast() — mock mode', () => {
     beforeEach(async () => {
+      mockGetFirebaseApp.mockReturnValue(null);
+      mockIsFirebaseConfigured.mockReturnValue(false);
       await buildModule();
       provider.onModuleInit();
     });
@@ -287,15 +236,18 @@ describe('FirebaseProvider', () => {
     let mockSendEachForMulticast: jest.Mock;
 
     beforeEach(async () => {
-      await buildModule({
-        FIREBASE_PROJECT_ID: 'luma-test',
-        FIREBASE_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\\nfake\\n-----END PRIVATE KEY-----',
-        FIREBASE_CLIENT_EMAIL: 'test@luma-test.iam.gserviceaccount.com',
-      });
-      provider.onModuleInit();
+      mockSendEachForMulticast = jest.fn();
+      const mockApp = {
+        messaging: jest.fn().mockReturnValue({
+          send: jest.fn(),
+          sendEachForMulticast: mockSendEachForMulticast,
+        }),
+      };
+      mockGetFirebaseApp.mockReturnValue(mockApp);
+      mockIsFirebaseConfigured.mockReturnValue(true);
 
-      const app = (admin.initializeApp as jest.Mock).mock.results[0].value;
-      mockSendEachForMulticast = app.messaging().sendEachForMulticast;
+      await buildModule();
+      provider.onModuleInit();
     });
 
     it('should return success and failure counts', async () => {
@@ -372,6 +324,8 @@ describe('FirebaseProvider', () => {
 
   describe('sendMultiple()', () => {
     beforeEach(async () => {
+      mockGetFirebaseApp.mockReturnValue(null);
+      mockIsFirebaseConfigured.mockReturnValue(false);
       await buildModule();
       provider.onModuleInit();
     });
@@ -408,16 +362,16 @@ describe('FirebaseProvider', () => {
 
   describe('configured', () => {
     it('should return false before initialization', async () => {
+      mockGetFirebaseApp.mockReturnValue(null);
+      mockIsFirebaseConfigured.mockReturnValue(false);
       await buildModule();
       expect(provider.configured).toBe(false);
     });
 
     it('should return true after successful initialization', async () => {
-      await buildModule({
-        FIREBASE_PROJECT_ID: 'luma-test',
-        FIREBASE_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\\nfake\\n-----END PRIVATE KEY-----',
-        FIREBASE_CLIENT_EMAIL: 'test@luma-test.iam.gserviceaccount.com',
-      });
+      mockGetFirebaseApp.mockReturnValue({ messaging: jest.fn() });
+      mockIsFirebaseConfigured.mockReturnValue(true);
+      await buildModule();
       provider.onModuleInit();
 
       expect(provider.configured).toBe(true);

@@ -14,10 +14,11 @@ describe('ModerationService', () => {
 
   const mockPrisma = {
     user: { findUnique: jest.fn(), update: jest.fn() },
-    report: { findFirst: jest.fn(), create: jest.fn(), count: jest.fn(), updateMany: jest.fn() },
+    report: { findFirst: jest.fn(), create: jest.fn(), count: jest.fn(), updateMany: jest.fn(), groupBy: jest.fn() },
     block: { findUnique: jest.fn(), findFirst: jest.fn(), findMany: jest.fn(), create: jest.fn(), delete: jest.fn() },
     match: { updateMany: jest.fn() },
     harmonySession: { updateMany: jest.fn() },
+    userPhoto: { findUnique: jest.fn(), findMany: jest.fn(), update: jest.fn(), delete: jest.fn(), count: jest.fn() },
     $transaction: jest.fn(),
   };
 
@@ -461,7 +462,7 @@ describe('ModerationService', () => {
       });
     });
 
-    it('should auto-suspend user when threshold of 10 is reached', async () => {
+    it('should escalate to REVIEWING when 10 reports from 5+ distinct reporters', async () => {
       const dto: CreateReportDto = {
         reportedUserId: 'user-very-bad',
         reason: ReportReasonDto.HARASSMENT,
@@ -477,13 +478,23 @@ describe('ModerationService', () => {
         createdAt: new Date(),
       });
       mockPrisma.report.count.mockResolvedValue(10);
-      mockPrisma.user.update.mockResolvedValue({});
+      // 5 distinct reporters
+      mockPrisma.report.groupBy.mockResolvedValue([
+        { reporterId: 'r1' }, { reporterId: 'r2' }, { reporterId: 'r3' },
+        { reporterId: 'r4' }, { reporterId: 'r5' },
+      ]);
+      mockPrisma.report.updateMany.mockResolvedValue({ count: 10 });
 
       await service.reportUser(reporterId, dto);
 
-      expect(mockPrisma.user.update).toHaveBeenCalledWith({
-        where: { id: 'user-very-bad' },
-        data: { isActive: false },
+      expect(mockPrisma.report.updateMany).toHaveBeenCalledWith({
+        where: {
+          reportedId: 'user-very-bad',
+          status: { in: ['PENDING', 'REVIEWING'] },
+        },
+        data: {
+          status: 'REVIEWING',
+        },
       });
     });
 

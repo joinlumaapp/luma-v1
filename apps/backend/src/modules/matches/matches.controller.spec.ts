@@ -3,6 +3,7 @@ import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { MatchesController } from './matches.controller';
 import { MatchesService } from './matches.service';
+import { DatePlanService } from './date-plan.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
 describe('MatchesController', () => {
@@ -14,6 +15,13 @@ describe('MatchesController', () => {
     unmatch: jest.fn(),
   };
 
+  const mockDatePlanService = {
+    createDatePlan: jest.fn(),
+    getDatePlans: jest.fn(),
+    respondToDatePlan: jest.fn(),
+    cancelDatePlan: jest.fn(),
+  };
+
   beforeEach(async () => {
     jest.resetAllMocks();
 
@@ -21,6 +29,7 @@ describe('MatchesController', () => {
       controllers: [MatchesController],
       providers: [
         { provide: MatchesService, useValue: mockMatchesService },
+        { provide: DatePlanService, useValue: mockDatePlanService },
       ],
     })
       .overrideGuard(JwtAuthGuard)

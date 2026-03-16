@@ -6,7 +6,7 @@ import {
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
-import { Gender } from './dto/update-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
 describe('UsersController', () => {
@@ -119,20 +119,33 @@ describe('UsersController', () => {
   describe('updateUser()', () => {
     const userId = 'user-uuid-1';
 
-    it('should update user display name successfully', async () => {
-      const dto = { displayName: 'Mehmet Y.' };
+    it('should update phoneCountryCode successfully', async () => {
+      const dto: UpdateUserDto = { phoneCountryCode: '+90' };
       mockUsersService.updateUser.mockResolvedValue({
         id: userId,
-        displayName: 'Mehmet Y.',
+        phoneCountryCode: '+90',
       });
 
       const result = await controller.updateUser(userId, dto);
 
       expect(result).toHaveProperty('id', userId);
+      expect(result).toHaveProperty('phoneCountryCode', '+90');
+    });
+
+    it('should update isActive field successfully', async () => {
+      const dto: UpdateUserDto = { isActive: false };
+      mockUsersService.updateUser.mockResolvedValue({
+        id: userId,
+        isActive: false,
+      });
+
+      const result = await controller.updateUser(userId, dto);
+
+      expect(result).toHaveProperty('isActive', false);
     });
 
     it('should throw NotFoundException when user does not exist', async () => {
-      const dto = { displayName: 'Test' };
+      const dto: UpdateUserDto = { phoneCountryCode: '+1' };
       mockUsersService.updateUser.mockRejectedValue(
         new NotFoundException('Kullanici bulunamadi'),
       );
@@ -143,9 +156,9 @@ describe('UsersController', () => {
     });
 
     it('should throw BadRequestException for invalid data', async () => {
-      const dto = { email: 'invalid' };
+      const dto: UpdateUserDto = { phoneCountryCode: '+90' };
       mockUsersService.updateUser.mockRejectedValue(
-        new BadRequestException('Gecersiz e-posta adresi'),
+        new BadRequestException('Gecersiz veri'),
       );
 
       await expect(controller.updateUser(userId, dto)).rejects.toThrow(
@@ -154,22 +167,13 @@ describe('UsersController', () => {
     });
 
     it('should delegate to usersService.updateUser with userId and dto', async () => {
-      const dto = { city: 'Ankara' };
+      const dto: UpdateUserDto = { isActive: true };
       mockUsersService.updateUser.mockResolvedValue({ id: userId });
 
       await controller.updateUser(userId, dto);
 
       expect(mockUsersService.updateUser).toHaveBeenCalledWith(userId, dto);
       expect(mockUsersService.updateUser).toHaveBeenCalledTimes(1);
-    });
-
-    it('should handle gender update with proper enum', async () => {
-      const dto = { gender: Gender.MALE };
-      mockUsersService.updateUser.mockResolvedValue({ id: userId });
-
-      await controller.updateUser(userId, dto);
-
-      expect(mockUsersService.updateUser).toHaveBeenCalledWith(userId, { gender: Gender.MALE });
     });
   });
 });

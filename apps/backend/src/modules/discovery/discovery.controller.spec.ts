@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { DiscoveryController } from './discovery.controller';
 import { DiscoveryService } from './discovery.service';
+import { WeeklyReportService } from './weekly-report.service';
 import { FeedFilterDto, SwipeDto } from './dto';
 import { SwipeDirection } from './dto/swipe.dto';
 import { ThrottlerGuard } from '@nestjs/throttler';
@@ -11,8 +12,16 @@ describe('DiscoveryController', () => {
   let controller: DiscoveryController;
 
   const mockDiscoveryService = {
-    getFeed: jest.fn(),
+    getDiscoveryFeed: jest.fn(),
     swipe: jest.fn(),
+    undoSwipe: jest.fn(),
+    getLikesYou: jest.fn(),
+    getDailyPicks: jest.fn(),
+    markDailyPickViewed: jest.fn(),
+  };
+
+  const mockWeeklyReportService = {
+    getWeeklyReport: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -22,6 +31,7 @@ describe('DiscoveryController', () => {
       controllers: [DiscoveryController],
       providers: [
         { provide: DiscoveryService, useValue: mockDiscoveryService },
+        { provide: WeeklyReportService, useValue: mockWeeklyReportService },
       ],
     })
       .overrideGuard(JwtAuthGuard)
@@ -59,7 +69,7 @@ describe('DiscoveryController', () => {
         remaining: 18,
         dailyLimit: 20,
       };
-      mockDiscoveryService.getFeed.mockResolvedValue(expected);
+      mockDiscoveryService.getDiscoveryFeed.mockResolvedValue(expected);
 
       const filters: FeedFilterDto = {} as FeedFilterDto;
       const result = await controller.getFeed(userId, filters);
@@ -77,25 +87,25 @@ describe('DiscoveryController', () => {
         maxDistance: 50,
       } as unknown as FeedFilterDto;
 
-      mockDiscoveryService.getFeed.mockResolvedValue({ cards: [], remaining: 20, dailyLimit: 20 });
+      mockDiscoveryService.getDiscoveryFeed.mockResolvedValue({ cards: [], remaining: 20, dailyLimit: 20 });
 
       await controller.getFeed(userId, filters);
 
-      expect(mockDiscoveryService.getFeed).toHaveBeenCalledWith(userId, filters);
+      expect(mockDiscoveryService.getDiscoveryFeed).toHaveBeenCalledWith(userId, filters, undefined);
     });
 
     it('should delegate to discoveryService.getFeed with correct userId', async () => {
-      mockDiscoveryService.getFeed.mockResolvedValue({ cards: [], remaining: 20, dailyLimit: 20 });
+      mockDiscoveryService.getDiscoveryFeed.mockResolvedValue({ cards: [], remaining: 20, dailyLimit: 20 });
 
       const filters: FeedFilterDto = {} as FeedFilterDto;
       await controller.getFeed(userId, filters);
 
-      expect(mockDiscoveryService.getFeed).toHaveBeenCalledWith(userId, filters);
-      expect(mockDiscoveryService.getFeed).toHaveBeenCalledTimes(1);
+      expect(mockDiscoveryService.getDiscoveryFeed).toHaveBeenCalledWith(userId, filters, undefined);
+      expect(mockDiscoveryService.getDiscoveryFeed).toHaveBeenCalledTimes(1);
     });
 
     it('should throw BadRequestException when user has no profile', async () => {
-      mockDiscoveryService.getFeed.mockRejectedValue(
+      mockDiscoveryService.getDiscoveryFeed.mockRejectedValue(
         new BadRequestException('Keşif için profil oluşturmanız gerekiyor'),
       );
 
@@ -106,7 +116,7 @@ describe('DiscoveryController', () => {
     });
 
     it('should return empty cards when no candidates match filters', async () => {
-      mockDiscoveryService.getFeed.mockResolvedValue({
+      mockDiscoveryService.getDiscoveryFeed.mockResolvedValue({
         cards: [],
         remaining: 20,
         dailyLimit: 20,

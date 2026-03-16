@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TasksService } from './tasks.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RelationshipsService } from '../relationships/relationships.service';
+import { StoriesService } from '../stories/stories.service';
 
 describe('TasksService', () => {
   let service: TasksService;
@@ -20,6 +21,10 @@ describe('TasksService', () => {
     autoEndExpiredRelationships: jest.fn(),
   };
 
+  const mockStoriesService = {
+    cleanupExpiredStories: jest.fn().mockResolvedValue(0),
+  };
+
   beforeEach(async () => {
     jest.resetAllMocks();
 
@@ -28,6 +33,7 @@ describe('TasksService', () => {
         TasksService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: RelationshipsService, useValue: mockRelationshipsService },
+        { provide: StoriesService, useValue: mockStoriesService },
       ],
     }).compile();
 

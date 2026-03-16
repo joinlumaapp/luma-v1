@@ -146,6 +146,7 @@ describe('NotificationsService', () => {
     it('should send to all active devices', async () => {
       mockPrisma.notificationPreference.findUnique.mockResolvedValue(null);
       mockPrisma.notification.create.mockResolvedValue({ id: 'n1' });
+      mockPrisma.notification.count.mockResolvedValue(0); // for getBadgeCount
       mockPrisma.deviceToken.findMany.mockResolvedValue([
         { id: 'dt1', token: 'token1' },
         { id: 'dt2', token: 'token2' },
@@ -226,6 +227,9 @@ describe('NotificationsService', () => {
         badges: true,
         system: true,
         allDisabled: false,
+        quietHoursStart: '23:00',
+        quietHoursEnd: '08:00',
+        timezone: 'Europe/Istanbul',
       });
     });
 
@@ -239,6 +243,9 @@ describe('NotificationsService', () => {
         badges: true,
         system: true,
         allDisabled: false,
+        quietHoursStart: '23:00',
+        quietHoursEnd: '08:00',
+        timezone: 'Europe/Istanbul',
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -334,6 +341,7 @@ describe('NotificationsService', () => {
     it('should send to devices in parallel via Promise.allSettled', async () => {
       mockPrisma.notificationPreference.findUnique.mockResolvedValue(null);
       mockPrisma.notification.create.mockResolvedValue({ id: 'n1' });
+      mockPrisma.notification.count.mockResolvedValue(0);
       mockPrisma.deviceToken.findMany.mockResolvedValue([
         { id: 'dt1', token: 'token1' },
         { id: 'dt2', token: 'token2' },
@@ -357,6 +365,7 @@ describe('NotificationsService', () => {
     it('should deactivate tokens that fail and count only successes', async () => {
       mockPrisma.notificationPreference.findUnique.mockResolvedValue(null);
       mockPrisma.notification.create.mockResolvedValue({ id: 'n1' });
+      mockPrisma.notification.count.mockResolvedValue(0);
       mockPrisma.deviceToken.findMany.mockResolvedValue([
         { id: 'dt1', token: 'token1' },
         { id: 'dt2', token: 'bad-token' },
@@ -394,6 +403,9 @@ describe('NotificationsService', () => {
         badges: true,
         system: true,
         allDisabled: false,
+        quietHoursStart: '23:00',
+        quietHoursEnd: '08:00',
+        timezone: 'Europe/Istanbul',
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -428,6 +440,9 @@ describe('NotificationsService', () => {
         badges: false,
         system: true,
         allDisabled: false,
+        quietHoursStart: '23:00',
+        quietHoursEnd: '08:00',
+        timezone: 'Europe/Istanbul',
         createdAt: new Date(),
         updatedAt: new Date(),
       });

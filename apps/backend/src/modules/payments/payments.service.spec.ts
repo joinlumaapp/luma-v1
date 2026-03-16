@@ -121,10 +121,10 @@ describe('PaymentsService', () => {
       const result = await service.getPackages();
 
       const freePkg = result.packages.find((p) => p.tier === 'FREE');
-      expect(freePkg?.features.dailySwipes).toBe(20);
+      expect(freePkg?.features.dailySwipes).toBe(999999);
 
       const goldPkg = result.packages.find((p) => p.tier === 'GOLD');
-      expect(goldPkg?.features.dailySwipes).toBe(60);
+      expect(goldPkg?.features.dailySwipes).toBe(999999);
       expect(goldPkg?.features.seeWhoLikesYou).toBe(true);
     });
 
@@ -175,7 +175,7 @@ describe('PaymentsService', () => {
 
       // Reserved: everything enabled, highest values
       expect(reserved?.features.dailySwipes).toBe(999999);
-      expect(reserved?.features.monthlyGold).toBe(500);
+      expect(reserved?.features.monthlyGold).toBe(1000);
       expect(reserved?.features.harmonyMinutes).toBe(60);
     });
   });
@@ -450,7 +450,7 @@ describe('PaymentsService', () => {
       expect(result.autoRenew).toBe(true);
       expect(result.platform).toBe('APPLE');
       expect(result.goldBalance).toBe(50);
-      expect(result.features.dailySwipes).toBe(60);
+      expect(result.features.dailySwipes).toBe(999999);
     });
 
     it('should throw NotFoundException when user not found', async () => {

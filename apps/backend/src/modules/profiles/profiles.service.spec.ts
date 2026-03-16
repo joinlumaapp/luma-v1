@@ -200,7 +200,6 @@ describe('ProfilesService', () => {
         include: {
           profile: true,
           photos: {
-            where: { isApproved: true },
             orderBy: { order: 'asc' },
           },
         },
@@ -663,17 +662,22 @@ describe('ProfilesService', () => {
       });
     });
 
-    it('should auto-approve photos', async () => {
+    it('should auto-approve photos in dev mode via moderatePhoto', async () => {
       mockPrismaUserPhoto.count.mockResolvedValue(0);
-      mockPrismaUserPhoto.create.mockResolvedValue(createMockPhoto());
+      const createdPhoto = createMockPhoto({ isApproved: false });
+      mockPrismaUserPhoto.create.mockResolvedValue(createdPhoto);
+      mockPrismaUserPhoto.update.mockResolvedValue({ ...createdPhoto, isApproved: true });
 
-      await service.uploadPhoto('user-uuid-1', validFile);
+      const result = await service.uploadPhoto('user-uuid-1', validFile);
 
+      // Photo is created with isApproved: false
       expect(mockPrismaUserPhoto.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
-          isApproved: true,
+          isApproved: false,
         }),
       });
+      // Then auto-approved via update in dev mode
+      expect(result.isApproved).toBe(true);
     });
   });
 
