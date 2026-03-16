@@ -56,7 +56,7 @@ export const API_ROUTES = {
     UNDO: '/discovery/undo',
     LIKES_YOU: '/discovery/likes-you',
     DAILY_PICKS: '/discovery/daily-picks',
-    VIEW_DAILY_PICK: '/discovery/daily-picks/:pickedUserId/view',
+    VIEW_DAILY_PICK: '/discovery/daily-picks/:pickedUserId/view', // PATCH
     WEEKLY_REPORT: '/discovery/weekly-report',
   },
   // Subsystem 9: Matches
@@ -124,10 +124,11 @@ export const API_ROUTES = {
   // Subsystem 13: Places
   PLACES: {
     CHECK_IN: '/places/check-in',
-    GET_SHARED: '/places/shared',
+    GET_SHARED: '/places/shared/:partnerId',
     ADD_MEMORY: '/places/memories',
     GET_TIMELINE: '/places/timeline/:partnerId',
     GET_MY_CHECK_INS: '/places/my-check-ins',
+    GET_POPULAR: '/places/popular',
   },
   // Subsystem: Chat / Messaging
   CHAT: {
@@ -192,19 +193,22 @@ export const API_ROUTES = {
     DELETE: '/stories/:storyId',
     VIEW: '/stories/:storyId/view',
     LIKE: '/stories/:storyId/like',
-    FEED: '/stories/feed',
+    VIEWERS: '/stories/:storyId/viewers',
+    REPLY: '/stories/:storyId/reply',
   },
   // Engagement
   ENGAGEMENT: {
-    DAILY_REWARD: '/engagement/daily-reward',
-    CHALLENGE_PROGRESS: '/engagement/challenge-progress',
-    LEADERBOARD: '/engagement/leaderboard',
-    ACHIEVEMENTS: '/engagement/achievements',
-    EXTEND_MATCH: '/engagement/extend-match',
+    DAILY_REWARD: '/engagement/daily-reward/claim',     // POST
+    CHALLENGE_PROGRESS: '/engagement/challenge/progress', // POST
+    LEADERBOARD: '/engagement/leaderboard',              // GET
+    ACHIEVEMENT_UNLOCK: '/engagement/achievement/unlock', // POST
+    EXTEND_MATCH: '/engagement/match/extend',            // POST
+    LIKES_TEASER: '/engagement/likes-teaser',            // GET
   },
   // Users
   USERS: {
-    ME: '/users/me',
+    ME: '/users/me',           // GET
+    UPDATE: '/users/me',       // PATCH
   },
 } as const;
 
