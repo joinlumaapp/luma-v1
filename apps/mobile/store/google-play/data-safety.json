@@ -1,0 +1,155 @@
+{
+  "appName": "LUMA - Uyumlu Eslesme",
+  "packageName": "com.luma.dating",
+  "lastUpdated": "2026-03-17",
+  "dataCollected": [
+    {
+      "category": "Personal info",
+      "type": "Name",
+      "purpose": ["App functionality"],
+      "optional": false,
+      "shared": false,
+      "ephemeral": false
+    },
+    {
+      "category": "Personal info",
+      "type": "Phone number",
+      "purpose": ["Account management"],
+      "optional": false,
+      "shared": false,
+      "ephemeral": false
+    },
+    {
+      "category": "Personal info",
+      "type": "Date of birth",
+      "purpose": ["App functionality"],
+      "optional": false,
+      "shared": false,
+      "ephemeral": false
+    },
+    {
+      "category": "Personal info",
+      "type": "Gender",
+      "purpose": ["App functionality"],
+      "optional": false,
+      "shared": false,
+      "ephemeral": false
+    },
+    {
+      "category": "Photos and videos",
+      "type": "Photos",
+      "purpose": ["App functionality"],
+      "optional": false,
+      "shared": false,
+      "ephemeral": false
+    },
+    {
+      "category": "Photos and videos",
+      "type": "Selfie verification photo",
+      "purpose": ["Fraud prevention, security, and compliance"],
+      "optional": false,
+      "shared": false,
+      "ephemeral": true,
+      "note": "Deleted within 7 days after verification"
+    },
+    {
+      "category": "Location",
+      "type": "Approximate location",
+      "purpose": ["App functionality"],
+      "optional": true,
+      "shared": false,
+      "ephemeral": true,
+      "note": "City-level precision, retained for 24 hours"
+    },
+    {
+      "category": "Messages",
+      "type": "In-app messages",
+      "purpose": ["App functionality"],
+      "optional": true,
+      "shared": false,
+      "ephemeral": false
+    },
+    {
+      "category": "App activity",
+      "type": "App interactions",
+      "purpose": ["Analytics"],
+      "optional": false,
+      "shared": false,
+      "ephemeral": false,
+      "note": "Anonymized usage data"
+    },
+    {
+      "category": "App info and performance",
+      "type": "Crash logs",
+      "purpose": ["Analytics"],
+      "optional": false,
+      "shared": true,
+      "sharedWith": "Firebase Crashlytics",
+      "ephemeral": false
+    },
+    {
+      "category": "App info and performance",
+      "type": "Diagnostics",
+      "purpose": ["Analytics"],
+      "optional": false,
+      "shared": true,
+      "sharedWith": "Firebase Analytics",
+      "ephemeral": false
+    },
+    {
+      "category": "Device or other IDs",
+      "type": "Device ID",
+      "purpose": ["Fraud prevention, security, and compliance", "Analytics"],
+      "optional": false,
+      "shared": false,
+      "ephemeral": false
+    },
+    {
+      "category": "Financial info",
+      "type": "Purchase history",
+      "purpose": ["App functionality"],
+      "optional": true,
+      "shared": false,
+      "ephemeral": false,
+      "note": "Subscription status only; payment details handled by Google Play"
+    }
+  ],
+  "dataNotCollected": [
+    "Email address",
+    "Physical address",
+    "Race and ethnicity",
+    "Political or religious beliefs",
+    "Sexual orientation",
+    "Health info",
+    "Fitness info",
+    "Files and docs",
+    "Calendar events",
+    "Contacts",
+    "SMS or MMS",
+    "Audio",
+    "Music files",
+    "Videos",
+    "Web browsing history",
+    "Search history",
+    "Installed apps"
+  ],
+  "securityPractices": {
+    "dataEncryptedInTransit": true,
+    "dataEncryptedAtRest": true,
+    "dataDeleteRequest": true,
+    "dataDeleteRequestUrl": "https://luma.dating/delete-account",
+    "dataDeleteRequestDescription": "Users can delete their account and all associated data through the app (Profile > Settings > Delete Account) or by emailing support@luma.dating. Data is permanently deleted within 30 days.",
+    "independentSecurityReview": false
+  },
+  "dataSharedSummary": {
+    "sharedWithThirdParties": true,
+    "thirdParties": [
+      {
+        "name": "Google Firebase",
+        "dataTypes": ["Crash logs", "Diagnostics"],
+        "purpose": "Analytics and crash reporting"
+      }
+    ],
+    "dataSoldToThirdParties": false
+  }
+}
