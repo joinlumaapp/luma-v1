@@ -6,10 +6,12 @@ import helmet from "helmet";
 import { json, urlencoded } from "express";
 import { join } from "path";
 import { existsSync, mkdirSync } from "fs";
+import { ConfigService } from "@nestjs/config";
 import { AppModule } from "./app.module";
 import { AllExceptionsFilter } from "./common/filters/all-exceptions.filter";
 import { SanitizePipe } from "./common/pipes/sanitize.pipe";
 import { RequestLoggerInterceptor } from "./common/interceptors/request-logger.interceptor";
+import { RedisIoAdapter } from "./common/providers/redis-io-adapter";
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -147,6 +149,12 @@ async function bootstrap() {
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup("api/docs", app, document);
   }
+
+  // Socket.IO Redis adapter for horizontal WebSocket scaling
+  const configService = app.get(ConfigService);
+  const redisIoAdapter = new RedisIoAdapter(app, configService);
+  await redisIoAdapter.connectToRedis();
+  app.useWebSocketAdapter(redisIoAdapter);
 
   app.enableShutdownHooks();
 

@@ -14,6 +14,7 @@ import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import { Server, Socket } from "socket.io";
 import { PrismaService } from "../../prisma/prisma.service";
+import { WsConnectionService } from "../../common/providers/ws-connection.service";
 import { HarmonyService } from "./harmony.service";
 
 /**
@@ -72,6 +73,7 @@ export class HarmonyGateway
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly wsConnectionService: WsConnectionService,
   ) {}
 
   afterInit(): void {
@@ -106,6 +108,13 @@ export class HarmonyGateway
       } else {
         this.userSockets.set(payload.sub, new Set([client.id]));
       }
+
+      // Register connection in Redis for cross-instance visibility
+      await this.wsConnectionService.registerConnection(
+        client.id,
+        payload.sub,
+        "/harmony",
+      );
 
       this.logger.log(`Client connected: ${client.id} (user: ${payload.sub})`);
     } catch {
@@ -144,6 +153,10 @@ export class HarmonyGateway
         }
       }
       this.eventTimestamps.delete(client.id);
+
+      // Remove connection from Redis
+      void this.wsConnectionService.removeConnection(client.id, userId);
+
       this.logger.log(`Client disconnected: ${client.id} (user: ${userId})`);
     }
   }

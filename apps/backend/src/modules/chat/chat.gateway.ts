@@ -15,6 +15,7 @@ import { ConfigService } from "@nestjs/config";
 import { Server, Socket } from "socket.io";
 import { ChatService } from "./chat.service";
 import { PrismaService } from "../../prisma/prisma.service";
+import { WsConnectionService } from "../../common/providers/ws-connection.service";
 import { SendMessageDto } from "./dto/send-message.dto";
 
 /**
@@ -65,6 +66,7 @@ export class ChatGateway
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly wsConnectionService: WsConnectionService,
   ) {}
 
   afterInit(): void {
@@ -100,6 +102,13 @@ export class ChatGateway
         this.userSockets.set(payload.sub, new Set([client.id]));
       }
 
+      // Register connection in Redis for cross-instance visibility
+      await this.wsConnectionService.registerConnection(
+        client.id,
+        payload.sub,
+        "/chat",
+      );
+
       this.logger.log(`Client connected: ${client.id} (user: ${payload.sub})`);
     } catch {
       this.logger.warn(`Unauthorized connection attempt: ${client.id}`);
@@ -119,6 +128,10 @@ export class ChatGateway
         }
       }
       this.eventTimestamps.delete(client.id);
+
+      // Remove connection from Redis
+      void this.wsConnectionService.removeConnection(client.id, userId);
+
       this.logger.log(`Client disconnected: ${client.id} (user: ${userId})`);
     }
   }

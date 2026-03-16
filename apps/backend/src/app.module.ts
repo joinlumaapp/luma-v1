@@ -40,6 +40,7 @@ import { StorageModule } from "./modules/storage/storage.module";
 import { AdminModule } from "./modules/admin/admin.module";
 import { AnalyticsModule } from "./modules/analytics/analytics.module";
 import { PresenceModule } from "./modules/presence/presence.module";
+import { WsConnectionModule } from "./common/providers/ws-connection.module";
 
 @Module({
   imports: [
@@ -114,6 +115,7 @@ import { PresenceModule } from "./modules/presence/presence.module";
     AdminModule, // Admin dashboard & moderation panel
     AnalyticsModule, // Subsystem 19: Analytics, Metrics & Insights
     PresenceModule, // User online/offline presence tracking
+    WsConnectionModule, // Redis-backed WebSocket connection registry (horizontal scaling)
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
