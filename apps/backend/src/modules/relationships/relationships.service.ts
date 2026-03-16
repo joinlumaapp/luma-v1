@@ -4,10 +4,14 @@ import {
   ForbiddenException,
   BadRequestException,
   Logger,
-} from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { BadgesService } from '../badges/badges.service';
-import { ActivateRelationshipDto, ToggleVisibilityDto, CreateEventDto } from './dto';
+} from "@nestjs/common";
+import { PrismaService } from "../../prisma/prisma.service";
+import { BadgesService } from "../badges/badges.service";
+import {
+  ActivateRelationshipDto,
+  ToggleVisibilityDto,
+  CreateEventDto,
+} from "./dto";
 
 export interface CoupleMatch {
   coupleId: string;
@@ -36,11 +40,11 @@ export class RelationshipsService {
     });
 
     if (!match || !match.isActive) {
-      throw new NotFoundException('Eşleşme bulunamadı veya aktif değil');
+      throw new NotFoundException("Eşleşme bulunamadı veya aktif değil");
     }
 
     if (match.userAId !== userId && match.userBId !== userId) {
-      throw new ForbiddenException('Bu eşleşmenin katılımcısı değilsiniz');
+      throw new ForbiddenException("Bu eşleşmenin katılımcısı değilsiniz");
     }
 
     const partnerId = match.userAId === userId ? match.userBId : match.userAId;
@@ -49,16 +53,16 @@ export class RelationshipsService {
     const existingRelationship = await this.prisma.relationship.findFirst({
       where: {
         OR: [
-          { userAId: userId, status: { in: ['PROPOSED', 'ACTIVE'] } },
-          { userBId: userId, status: { in: ['PROPOSED', 'ACTIVE'] } },
-          { userAId: partnerId, status: { in: ['PROPOSED', 'ACTIVE'] } },
-          { userBId: partnerId, status: { in: ['PROPOSED', 'ACTIVE'] } },
+          { userAId: userId, status: { in: ["PROPOSED", "ACTIVE"] } },
+          { userBId: userId, status: { in: ["PROPOSED", "ACTIVE"] } },
+          { userAId: partnerId, status: { in: ["PROPOSED", "ACTIVE"] } },
+          { userBId: partnerId, status: { in: ["PROPOSED", "ACTIVE"] } },
         ],
       },
     });
 
     if (existingRelationship) {
-      if (existingRelationship.status === 'PROPOSED') {
+      if (existingRelationship.status === "PROPOSED") {
         // Check if the existing proposal was initiated by the partner (not by us).
         // We determine who proposed by comparing with the ordered pair:
         // The proposer is the one who first called activate(), creating the row.
@@ -66,17 +70,20 @@ export class RelationshipsService {
         // relative to the current user — if the proposal involves BOTH users and
         // the current user didn't already create it, the partner must have proposed.
         const proposalInvolvesPartner =
-          (existingRelationship.userAId === partnerId || existingRelationship.userBId === partnerId);
+          existingRelationship.userAId === partnerId ||
+          existingRelationship.userBId === partnerId;
         const proposalInvolvesCurrentUser =
-          (existingRelationship.userAId === userId || existingRelationship.userBId === userId);
-        const isMutualProposal = proposalInvolvesPartner && proposalInvolvesCurrentUser;
+          existingRelationship.userAId === userId ||
+          existingRelationship.userBId === userId;
+        const isMutualProposal =
+          proposalInvolvesPartner && proposalInvolvesCurrentUser;
 
         if (isMutualProposal) {
           // Both confirmed — activate relationship
           const relationship = await this.prisma.relationship.update({
             where: { id: existingRelationship.id },
             data: {
-              status: 'ACTIVE',
+              status: "ACTIVE",
               activatedAt: new Date(),
             },
           });
@@ -85,25 +92,35 @@ export class RelationshipsService {
           await this.prisma.notification.create({
             data: {
               userId: partnerId,
-              type: 'SYSTEM',
-              title: 'İlişki Modu Aktif!',
-              body: 'Tebrikler! İlişki modunuz aktif edildi. Artık Çiftler Kulübü özelliklerine erişebilirsiniz.',
+              type: "SYSTEM",
+              title: "İlişki Modu Aktif!",
+              body: "Tebrikler! İlişki modunuz aktif edildi. Artık Çiftler Kulübü özelliklerine erişebilirsiniz.",
               data: { relationshipId: relationship.id },
             },
           });
 
           // Award couple_goal badge to both users (non-blocking)
-          this.badgesService.checkAndAwardBadges(userId, 'relationship').catch((err) => this.logger.warn('Badge check failed', err.message));
-          this.badgesService.checkAndAwardBadges(partnerId, 'relationship').catch((err) => this.logger.warn('Badge check failed', err.message));
+          this.badgesService
+            .checkAndAwardBadges(userId, "relationship")
+            .catch((err) =>
+              this.logger.warn("Badge check failed", err.message),
+            );
+          this.badgesService
+            .checkAndAwardBadges(partnerId, "relationship")
+            .catch((err) =>
+              this.logger.warn("Badge check failed", err.message),
+            );
 
           return {
             relationshipId: relationship.id,
-            status: 'ACTIVE',
-            message: 'İlişki modu aktif edildi!',
+            status: "ACTIVE",
+            message: "İlişki modu aktif edildi!",
           };
         }
       }
-      throw new BadRequestException('Zaten aktif bir ilişkiniz veya bekleyen bir teklifiniz var');
+      throw new BadRequestException(
+        "Zaten aktif bir ilişkiniz veya bekleyen bir teklifiniz var",
+      );
     }
 
     // Create new relationship proposal
@@ -112,7 +129,7 @@ export class RelationshipsService {
       data: {
         userAId: first,
         userBId: second,
-        status: 'PROPOSED',
+        status: "PROPOSED",
       },
     });
 
@@ -120,17 +137,18 @@ export class RelationshipsService {
     await this.prisma.notification.create({
       data: {
         userId: partnerId,
-        type: 'SYSTEM',
-        title: 'İlişki Modu Teklifi!',
-        body: 'Eşleşmeniz size İlişki Modu teklif ediyor. Kabul ederseniz birlikte Çiftler Kulübüne katılabilirsiniz.',
+        type: "SYSTEM",
+        title: "İlişki Modu Teklifi!",
+        body: "Eşleşmeniz size İlişki Modu teklif ediyor. Kabul ederseniz birlikte Çiftler Kulübüne katılabilirsiniz.",
         data: { relationshipId: relationship.id, matchId: dto.matchId },
       },
     });
 
     return {
       relationshipId: relationship.id,
-      status: 'PROPOSED',
-      message: 'İlişki modu teklifi gönderildi. Partnerinizin onayı bekleniyor.',
+      status: "PROPOSED",
+      message:
+        "İlişki modu teklifi gönderildi. Partnerinizin onayı bekleniyor.",
     };
   }
 
@@ -142,12 +160,13 @@ export class RelationshipsService {
     const relationship = await this.findActiveRelationship(userId);
 
     if (!relationship) {
-      throw new NotFoundException('Aktif bir ilişkiniz bulunmuyor');
+      throw new NotFoundException("Aktif bir ilişkiniz bulunmuyor");
     }
 
-    const partnerId = relationship.userAId === userId
-      ? relationship.userBId
-      : relationship.userAId;
+    const partnerId =
+      relationship.userAId === userId
+        ? relationship.userBId
+        : relationship.userAId;
 
     const now = new Date();
     const deadline = new Date(now.getTime() + 48 * 60 * 60 * 1000);
@@ -155,7 +174,7 @@ export class RelationshipsService {
     await this.prisma.relationship.update({
       where: { id: relationship.id },
       data: {
-        status: 'ENDING',
+        status: "ENDING",
         deactivationInitiatedAt: now,
         deactivationInitiatedBy: userId,
         deactivationDeadline: deadline,
@@ -166,18 +185,19 @@ export class RelationshipsService {
     await this.prisma.notification.create({
       data: {
         userId: partnerId,
-        type: 'SYSTEM',
-        title: 'İlişki Sonlandırma Talebi',
-        body: 'Partneriniz ilişkiyi sonlandırmak istiyor. 48 saat içinde onaylayabilir veya bekleyebilirsiniz.',
+        type: "SYSTEM",
+        title: "İlişki Sonlandırma Talebi",
+        body: "Partneriniz ilişkiyi sonlandırmak istiyor. 48 saat içinde onaylayabilir veya bekleyebilirsiniz.",
         data: { relationshipId: relationship.id },
       },
     });
 
     return {
       deactivated: false,
-      status: 'ENDING',
+      status: "ENDING",
       deactivationDeadline: deadline,
-      message: 'İlişki sonlandırma talebi gönderildi. 48 saat bekleme süresi başladı.',
+      message:
+        "İlişki sonlandırma talebi gönderildi. 48 saat bekleme süresi başladı.",
     };
   }
 
@@ -189,14 +209,14 @@ export class RelationshipsService {
     const relationship = await this.prisma.relationship.findFirst({
       where: {
         OR: [{ userAId: userId }, { userBId: userId }],
-        status: 'ENDING',
+        status: "ENDING",
         NOT: { deactivationInitiatedBy: userId },
       },
     });
 
     if (!relationship) {
       throw new NotFoundException(
-        'Onaylanacak bir ilişki sonlandırma talebi bulunamadı',
+        "Onaylanacak bir ilişki sonlandırma talebi bulunamadı",
       );
     }
 
@@ -205,7 +225,7 @@ export class RelationshipsService {
     await this.prisma.relationship.update({
       where: { id: relationship.id },
       data: {
-        status: 'ENDED',
+        status: "ENDED",
         endedAt: new Date(),
       },
     });
@@ -215,9 +235,9 @@ export class RelationshipsService {
       await this.prisma.notification.create({
         data: {
           userId: initiatorId,
-          type: 'SYSTEM',
-          title: 'İlişki Modu Sonlandırıldı',
-          body: 'Partneriniz ilişki sonlandırma talebinizi onayladı. İlişki modu sonlandırıldı.',
+          type: "SYSTEM",
+          title: "İlişki Modu Sonlandırıldı",
+          body: "Partneriniz ilişki sonlandırma talebinizi onayladı. İlişki modu sonlandırıldı.",
           data: { relationshipId: relationship.id },
         },
       });
@@ -225,7 +245,7 @@ export class RelationshipsService {
 
     return {
       confirmed: true,
-      message: 'İlişki modu sonlandırıldı',
+      message: "İlişki modu sonlandırıldı",
     };
   }
 
@@ -237,25 +257,26 @@ export class RelationshipsService {
     const relationship = await this.prisma.relationship.findFirst({
       where: {
         OR: [{ userAId: userId }, { userBId: userId }],
-        status: 'ENDING',
+        status: "ENDING",
         deactivationInitiatedBy: userId,
       },
     });
 
     if (!relationship) {
       throw new NotFoundException(
-        'İptal edilecek bir ilişki sonlandırma talebi bulunamadı',
+        "İptal edilecek bir ilişki sonlandırma talebi bulunamadı",
       );
     }
 
-    const partnerId = relationship.userAId === userId
-      ? relationship.userBId
-      : relationship.userAId;
+    const partnerId =
+      relationship.userAId === userId
+        ? relationship.userBId
+        : relationship.userAId;
 
     await this.prisma.relationship.update({
       where: { id: relationship.id },
       data: {
-        status: 'ACTIVE',
+        status: "ACTIVE",
         deactivationInitiatedAt: null,
         deactivationInitiatedBy: null,
         deactivationDeadline: null,
@@ -266,16 +287,16 @@ export class RelationshipsService {
     await this.prisma.notification.create({
       data: {
         userId: partnerId,
-        type: 'SYSTEM',
-        title: 'İlişki Sonlandırma İptal Edildi',
-        body: 'Partneriniz ilişki sonlandırma talebini geri çekti. İlişki modu aktif olmaya devam ediyor.',
+        type: "SYSTEM",
+        title: "İlişki Sonlandırma İptal Edildi",
+        body: "Partneriniz ilişki sonlandırma talebini geri çekti. İlişki modu aktif olmaya devam ediyor.",
         data: { relationshipId: relationship.id },
       },
     });
 
     return {
       cancelled: true,
-      message: 'İlişki sonlandırma talebi iptal edildi. İlişki modu aktif.',
+      message: "İlişki sonlandırma talebi iptal edildi. İlişki modu aktif.",
     };
   }
 
@@ -288,7 +309,7 @@ export class RelationshipsService {
 
     const expiredRelationships = await this.prisma.relationship.findMany({
       where: {
-        status: 'ENDING',
+        status: "ENDING",
         deactivationDeadline: { lt: now },
       },
     });
@@ -300,11 +321,11 @@ export class RelationshipsService {
     // Update all expired ENDING relationships to ENDED
     await this.prisma.relationship.updateMany({
       where: {
-        status: 'ENDING',
+        status: "ENDING",
         deactivationDeadline: { lt: now },
       },
       data: {
-        status: 'ENDED',
+        status: "ENDED",
         endedAt: now,
       },
     });
@@ -313,16 +334,16 @@ export class RelationshipsService {
     const notifications = expiredRelationships.flatMap((rel) => [
       {
         userId: rel.userAId,
-        type: 'SYSTEM' as const,
-        title: 'İlişki Modu Sonlandırıldı',
-        body: '48 saatlik bekleme süresi doldu. İlişki modu otomatik olarak sonlandırıldı.',
+        type: "SYSTEM" as const,
+        title: "İlişki Modu Sonlandırıldı",
+        body: "48 saatlik bekleme süresi doldu. İlişki modu otomatik olarak sonlandırıldı.",
         data: { relationshipId: rel.id },
       },
       {
         userId: rel.userBId,
-        type: 'SYSTEM' as const,
-        title: 'İlişki Modu Sonlandırıldı',
-        body: '48 saatlik bekleme süresi doldu. İlişki modu otomatik olarak sonlandırıldı.',
+        type: "SYSTEM" as const,
+        title: "İlişki Modu Sonlandırıldı",
+        body: "48 saatlik bekleme süresi doldu. İlişki modu otomatik olarak sonlandırıldı.",
         data: { relationshipId: rel.id },
       },
     ]);
@@ -339,7 +360,7 @@ export class RelationshipsService {
     const relationship = await this.findActiveRelationship(userId);
 
     if (!relationship) {
-      throw new NotFoundException('Aktif bir ilişkiniz bulunmuyor');
+      throw new NotFoundException("Aktif bir ilişkiniz bulunmuyor");
     }
 
     await this.prisma.relationship.update({
@@ -350,8 +371,8 @@ export class RelationshipsService {
     return {
       isVisible: dto.isVisible,
       message: dto.isVisible
-        ? 'Çiftler Kulübünde görünür oldunuz'
-        : 'Çiftler Kulübünde gizli oldunuz',
+        ? "Çiftler Kulübünde görünür oldunuz"
+        : "Çiftler Kulübünde gizli oldunuz",
     };
   }
 
@@ -362,9 +383,9 @@ export class RelationshipsService {
     const relationship = await this.prisma.relationship.findFirst({
       where: {
         OR: [{ userAId: userId }, { userBId: userId }],
-        status: { in: ['PROPOSED', 'ACTIVE', 'HIDDEN', 'ENDING'] },
+        status: { in: ["PROPOSED", "ACTIVE", "HIDDEN", "ENDING"] },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     if (!relationship) {
@@ -375,9 +396,10 @@ export class RelationshipsService {
     }
 
     // Get partner info
-    const partnerId = relationship.userAId === userId
-      ? relationship.userBId
-      : relationship.userAId;
+    const partnerId =
+      relationship.userAId === userId
+        ? relationship.userBId
+        : relationship.userAId;
 
     const partner = await this.prisma.user.findUnique({
       where: { id: partnerId },
@@ -402,7 +424,8 @@ export class RelationshipsService {
     // Calculate relationship duration
     const durationDays = relationship.activatedAt
       ? Math.floor(
-          (Date.now() - relationship.activatedAt.getTime()) / (1000 * 60 * 60 * 24),
+          (Date.now() - relationship.activatedAt.getTime()) /
+            (1000 * 60 * 60 * 24),
         )
       : 0;
 
@@ -412,7 +435,7 @@ export class RelationshipsService {
     });
 
     return {
-      hasActiveRelationship: relationship.status === 'ACTIVE',
+      hasActiveRelationship: relationship.status === "ACTIVE",
       relationship: {
         id: relationship.id,
         status: relationship.status,
@@ -453,9 +476,10 @@ export class RelationshipsService {
       };
     }
 
-    const partnerId = relationship.userAId === userId
-      ? relationship.userBId
-      : relationship.userAId;
+    const partnerId =
+      relationship.userAId === userId
+        ? relationship.userBId
+        : relationship.userAId;
 
     // Calculate days since activation
     const activatedAt = relationship.activatedAt ?? relationship.createdAt;
@@ -487,7 +511,7 @@ export class RelationshipsService {
           { userAId: userId, userBId: partnerId },
           { userAId: partnerId, userBId: userId },
         ],
-        status: { not: 'PENDING' },
+        status: { not: "PENDING" },
       },
     });
 
@@ -502,7 +526,9 @@ export class RelationshipsService {
     });
     const myPlaceIds = new Set(myPlaces.map((p) => p.placeId));
     const sharedPlaceCount = new Set(
-      partnerPlaces.filter((p) => myPlaceIds.has(p.placeId)).map((p) => p.placeId),
+      partnerPlaces
+        .filter((p) => myPlaceIds.has(p.placeId))
+        .map((p) => p.placeId),
     ).size;
 
     // Define all milestones
@@ -519,104 +545,109 @@ export class RelationshipsService {
 
     const timeMilestones: MilestoneDef[] = [
       {
-        id: 'tm_1w',
-        key: 'first_week',
-        title: 'Ilk Haftaniz!',
-        description: 'Birlikte ilk haftanizi tamamladiniz.',
-        icon: 'week',
+        id: "tm_1w",
+        key: "first_week",
+        title: "Ilk Haftaniz!",
+        description: "Birlikte ilk haftanizi tamamladiniz.",
+        icon: "week",
         currentValue: daysSinceActivation,
         targetValue: 7,
-        achievedAt: daysSinceActivation >= 7
-          ? new Date(activatedAt.getTime() + 7 * 24 * 60 * 60 * 1000)
-          : null,
+        achievedAt:
+          daysSinceActivation >= 7
+            ? new Date(activatedAt.getTime() + 7 * 24 * 60 * 60 * 1000)
+            : null,
       },
       {
-        id: 'tm_1m',
-        key: 'first_month',
-        title: '1 Aylik!',
-        description: 'Bir aydir birliktesiniz. Tebrikler!',
-        icon: 'month',
+        id: "tm_1m",
+        key: "first_month",
+        title: "1 Aylik!",
+        description: "Bir aydir birliktesiniz. Tebrikler!",
+        icon: "month",
         currentValue: daysSinceActivation,
         targetValue: 30,
-        achievedAt: daysSinceActivation >= 30
-          ? new Date(activatedAt.getTime() + 30 * 24 * 60 * 60 * 1000)
-          : null,
+        achievedAt:
+          daysSinceActivation >= 30
+            ? new Date(activatedAt.getTime() + 30 * 24 * 60 * 60 * 1000)
+            : null,
       },
       {
-        id: 'tm_3m',
-        key: 'three_months',
-        title: '3 Aylik!',
-        description: 'Uc aydir guclu bir bag kuruyorsunuz.',
-        icon: 'quarter',
+        id: "tm_3m",
+        key: "three_months",
+        title: "3 Aylik!",
+        description: "Uc aydir guclu bir bag kuruyorsunuz.",
+        icon: "quarter",
         currentValue: daysSinceActivation,
         targetValue: 90,
-        achievedAt: daysSinceActivation >= 90
-          ? new Date(activatedAt.getTime() + 90 * 24 * 60 * 60 * 1000)
-          : null,
+        achievedAt:
+          daysSinceActivation >= 90
+            ? new Date(activatedAt.getTime() + 90 * 24 * 60 * 60 * 1000)
+            : null,
       },
       {
-        id: 'tm_6m',
-        key: 'six_months',
-        title: '6 Aylik!',
-        description: 'Alti ay boyunca birbirinizi tanidiniz.',
-        icon: 'half_year',
+        id: "tm_6m",
+        key: "six_months",
+        title: "6 Aylik!",
+        description: "Alti ay boyunca birbirinizi tanidiniz.",
+        icon: "half_year",
         currentValue: daysSinceActivation,
         targetValue: 180,
-        achievedAt: daysSinceActivation >= 180
-          ? new Date(activatedAt.getTime() + 180 * 24 * 60 * 60 * 1000)
-          : null,
+        achievedAt:
+          daysSinceActivation >= 180
+            ? new Date(activatedAt.getTime() + 180 * 24 * 60 * 60 * 1000)
+            : null,
       },
       {
-        id: 'tm_1y',
-        key: 'one_year',
-        title: '1 Yillik!',
-        description: 'Bir yildir birliktesiniz. Muhtesem!',
-        icon: 'year',
+        id: "tm_1y",
+        key: "one_year",
+        title: "1 Yillik!",
+        description: "Bir yildir birliktesiniz. Muhtesem!",
+        icon: "year",
         currentValue: daysSinceActivation,
         targetValue: 365,
-        achievedAt: daysSinceActivation >= 365
-          ? new Date(activatedAt.getTime() + 365 * 24 * 60 * 60 * 1000)
-          : null,
+        achievedAt:
+          daysSinceActivation >= 365
+            ? new Date(activatedAt.getTime() + 365 * 24 * 60 * 60 * 1000)
+            : null,
       },
     ];
 
     const countMilestones: MilestoneDef[] = [
       {
-        id: 'cm_10msg',
-        key: 'ten_messages',
-        title: '10 Mesaj!',
-        description: 'Birbirinize ilk 10 mesajinizi gonderdiniz.',
-        icon: 'messages',
+        id: "cm_10msg",
+        key: "ten_messages",
+        title: "10 Mesaj!",
+        description: "Birbirinize ilk 10 mesajinizi gonderdiniz.",
+        icon: "messages",
         currentValue: messageCount,
         targetValue: 10,
         achievedAt: messageCount >= 10 ? new Date() : null,
       },
       {
-        id: 'cm_100msg',
-        key: 'hundred_messages',
-        title: '100 Mesaj!',
-        description: 'Ilk 100 mesaj! Iletisim cok guclu.',
-        icon: 'messages_100',
+        id: "cm_100msg",
+        key: "hundred_messages",
+        title: "100 Mesaj!",
+        description: "Ilk 100 mesaj! Iletisim cok guclu.",
+        icon: "messages_100",
         currentValue: messageCount,
         targetValue: 100,
         achievedAt: messageCount >= 100 ? new Date() : null,
       },
       {
-        id: 'cm_harmony',
-        key: 'first_harmony',
-        title: 'Ilk Harmony Oturumu!',
-        description: 'Ilk Harmony oturumunuzu gerceklestirdiniz.',
-        icon: 'harmony',
+        id: "cm_harmony",
+        key: "first_harmony",
+        title: "Ilk Harmony Oturumu!",
+        description: "Ilk Harmony oturumunuzu gerceklestirdiniz.",
+        icon: "harmony",
         currentValue: harmonyCount,
         targetValue: 1,
         achievedAt: harmonyCount >= 1 ? new Date() : null,
       },
       {
-        id: 'cm_5places',
-        key: 'five_shared_places',
-        title: '5 Ortak Mekan!',
-        description: 'Birlikte 5 farkli mekan kesfettiniz.',
-        icon: 'places',
+        id: "cm_5places",
+        key: "five_shared_places",
+        title: "5 Ortak Mekan!",
+        description: "Birlikte 5 farkli mekan kesfettiniz.",
+        icon: "places",
         currentValue: sharedPlaceCount,
         targetValue: 5,
         achievedAt: sharedPlaceCount >= 5 ? new Date() : null,
@@ -673,18 +704,19 @@ export class RelationshipsService {
 
     if (!myRelationship) {
       throw new NotFoundException(
-        'Çift eşleşmelerini görmek için aktif bir ilişkiniz olmalıdır',
+        "Çift eşleşmelerini görmek için aktif bir ilişkiniz olmalıdır",
       );
     }
 
-    const partnerId = myRelationship.userAId === userId
-      ? myRelationship.userBId
-      : myRelationship.userAId;
+    const partnerId =
+      myRelationship.userAId === userId
+        ? myRelationship.userBId
+        : myRelationship.userAId;
 
     // Find other active, visible relationships (exclude user's own)
     const otherRelationships = await this.prisma.relationship.findMany({
       where: {
-        status: 'ACTIVE',
+        status: "ACTIVE",
         isVisible: true,
         id: { not: myRelationship.id },
       },
@@ -719,7 +751,10 @@ export class RelationshipsService {
     }
 
     // Gather all candidate user IDs for batch compatibility lookup
-    const allCandidateUserIds = otherRelationships.flatMap((r) => [r.userAId, r.userBId]);
+    const allCandidateUserIds = otherRelationships.flatMap((r) => [
+      r.userAId,
+      r.userBId,
+    ]);
     const myUserIds = [userId, partnerId];
 
     // Build all possible pairs between our couple and each candidate couple
@@ -731,17 +766,18 @@ export class RelationshipsService {
     }
 
     // Batch fetch compatibility scores
-    const scores = pairsToLookup.length > 0
-      ? await this.prisma.compatibilityScore.findMany({
-          where: {
-            OR: pairsToLookup.map((p) => ({
-              userAId: p.first,
-              userBId: p.second,
-            })),
-          },
-          select: { userAId: true, userBId: true, finalScore: true },
-        })
-      : [];
+    const scores =
+      pairsToLookup.length > 0
+        ? await this.prisma.compatibilityScore.findMany({
+            where: {
+              OR: pairsToLookup.map((p) => ({
+                userAId: p.first,
+                userBId: p.second,
+              })),
+            },
+            select: { userAId: true, userBId: true, finalScore: true },
+          })
+        : [];
 
     // Build O(1) score lookup map
     const scoreMap = new Map<string, number>();
@@ -759,7 +795,9 @@ export class RelationshipsService {
       select: { intentionTag: true },
     });
     const myIntentions = new Set<string>(
-      ([myProfile?.intentionTag, partnerProfile?.intentionTag].filter(Boolean)) as string[],
+      [myProfile?.intentionTag, partnerProfile?.intentionTag].filter(
+        Boolean,
+      ) as string[],
     );
 
     // Calculate couple compatibility for each candidate
@@ -780,20 +818,25 @@ export class RelationshipsService {
       }
 
       // Average compatibility across all available pairs
-      const avgScore = pairScores.length > 0
-        ? Math.round((pairScores.reduce((a, b) => a + b, 0) / pairScores.length) * 10) / 10
-        : 0;
+      const avgScore =
+        pairScores.length > 0
+          ? Math.round(
+              (pairScores.reduce((a, b) => a + b, 0) / pairScores.length) * 10,
+            ) / 10
+          : 0;
 
       // Check shared intention tags
       const candIntentions = [
         rel.userA.profile?.intentionTag,
         rel.userB.profile?.intentionTag,
       ].filter(Boolean) as string[];
-      const sharedInterests = candIntentions.filter((tag) => myIntentions.has(tag));
+      const sharedInterests = candIntentions.filter((tag) =>
+        myIntentions.has(tag),
+      );
 
       const partnerNames = [
-        rel.userA.profile?.firstName ?? 'Bilinmeyen',
-        rel.userB.profile?.firstName ?? 'Bilinmeyen',
+        rel.userA.profile?.firstName ?? "Bilinmeyen",
+        rel.userB.profile?.firstName ?? "Bilinmeyen",
       ];
 
       return {
@@ -822,7 +865,7 @@ export class RelationshipsService {
     const relationship = await this.findActiveRelationship(userId);
 
     if (!relationship) {
-      throw new NotFoundException('Aktif bir ilişkiniz bulunmuyor');
+      throw new NotFoundException("Aktif bir ilişkiniz bulunmuyor");
     }
 
     const events = await this.prisma.couplesClubEvent.findMany({
@@ -835,7 +878,7 @@ export class RelationshipsService {
           select: { participants: true },
         },
       },
-      orderBy: { eventDate: 'asc' },
+      orderBy: { eventDate: "asc" },
     });
 
     return {
@@ -856,11 +899,15 @@ export class RelationshipsService {
   /**
    * RSVP to a Couples Club event.
    */
-  async rsvpEvent(userId: string, eventId: string, status: 'attending' | 'maybe' | 'declined') {
+  async rsvpEvent(
+    userId: string,
+    eventId: string,
+    status: "attending" | "maybe" | "declined",
+  ) {
     const relationship = await this.findActiveRelationship(userId);
 
     if (!relationship) {
-      throw new NotFoundException('Aktif bir ilişkiniz bulunmuyor');
+      throw new NotFoundException("Aktif bir ilişkiniz bulunmuyor");
     }
 
     const event = await this.prisma.couplesClubEvent.findUnique({
@@ -869,11 +916,14 @@ export class RelationshipsService {
     });
 
     if (!event) {
-      throw new NotFoundException('Etkinlik bulunamadı');
+      throw new NotFoundException("Etkinlik bulunamadı");
     }
 
-    if (status === 'attending' && event._count.participants >= event.maxCouples) {
-      throw new BadRequestException('Bu etkinlik dolu.');
+    if (
+      status === "attending" &&
+      event._count.participants >= event.maxCouples
+    ) {
+      throw new BadRequestException("Bu etkinlik dolu.");
     }
 
     const rsvp = await this.prisma.couplesClubParticipant.upsert({
@@ -893,11 +943,12 @@ export class RelationshipsService {
     return {
       eventId,
       rsvpStatus: rsvp.rsvpStatus,
-      message: status === 'attending'
-        ? 'Etkinliğe katılımınız onaylandı!'
-        : status === 'maybe'
-          ? 'Katılım durumunuz "belki" olarak kaydedildi.'
-          : 'Etkinlikten çıkış yapıldı.',
+      message:
+        status === "attending"
+          ? "Etkinliğe katılımınız onaylandı!"
+          : status === "maybe"
+            ? 'Katılım durumunuz "belki" olarak kaydedildi.'
+            : "Etkinlikten çıkış yapıldı.",
     };
   }
 
@@ -909,12 +960,12 @@ export class RelationshipsService {
     const relationship = await this.findActiveRelationship(userId);
 
     if (!relationship) {
-      throw new NotFoundException('Aktif bir ilişkiniz bulunmuyor');
+      throw new NotFoundException("Aktif bir ilişkiniz bulunmuyor");
     }
 
     const eventDate = new Date(dto.date);
     if (eventDate <= new Date()) {
-      throw new BadRequestException('Etkinlik tarihi gelecekte olmalıdır');
+      throw new BadRequestException("Etkinlik tarihi gelecekte olmalıdır");
     }
 
     const event = await this.prisma.couplesClubEvent.create({
@@ -942,11 +993,11 @@ export class RelationshipsService {
       title: event.titleTr,
       description: event.descriptionTr,
       date: event.eventDate.toISOString(),
-      location: event.location ?? '',
+      location: event.location ?? "",
       capacity: event.maxCouples,
       attendeeCount: 0,
       isRsvped: false,
-      createdByName: profile?.firstName ?? 'Bilinmeyen',
+      createdByName: profile?.firstName ?? "Bilinmeyen",
       imageUrl: event.imageUrl,
       isPro: false,
     };
@@ -962,13 +1013,13 @@ export class RelationshipsService {
     const relationship = await this.findActiveRelationship(userId);
 
     if (!relationship) {
-      throw new NotFoundException('Aktif bir ilişkiniz bulunmuyor');
+      throw new NotFoundException("Aktif bir ilişkiniz bulunmuyor");
     }
 
     // Find all active, visible relationships
     const activeRelationships = await this.prisma.relationship.findMany({
       where: {
-        status: 'ACTIVE',
+        status: "ACTIVE",
         isVisible: true,
       },
       include: {
@@ -988,7 +1039,7 @@ export class RelationshipsService {
         },
         coupleBadge: true,
       },
-      orderBy: { activatedAt: 'asc' },
+      orderBy: { activatedAt: "asc" },
     });
 
     // Calculate scores for each couple
@@ -1005,8 +1056,8 @@ export class RelationshipsService {
 
       return {
         coupleId: rel.id,
-        partnerAName: rel.userA.profile?.firstName ?? 'Bilinmeyen',
-        partnerBName: rel.userB.profile?.firstName ?? 'Bilinmeyen',
+        partnerAName: rel.userA.profile?.firstName ?? "Bilinmeyen",
+        partnerBName: rel.userB.profile?.firstName ?? "Bilinmeyen",
         score,
         badgeCount,
         durationDays,
@@ -1037,7 +1088,7 @@ export class RelationshipsService {
     return this.prisma.relationship.findFirst({
       where: {
         OR: [{ userAId: userId }, { userBId: userId }],
-        status: 'ACTIVE',
+        status: "ACTIVE",
       },
     });
   }

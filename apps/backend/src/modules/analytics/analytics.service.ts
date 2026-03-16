@@ -2,15 +2,15 @@
 // and DAU/WAU/MAU computation. Stores events in PostgreSQL via Prisma.
 // Designed for admin dashboard consumption and data-driven product decisions.
 
-import { Injectable, Logger } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { PrismaService } from '../../prisma/prisma.service';
-import type { BatchEventsDto } from './dto/analytics.dto';
+import { Injectable, Logger } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
+import { PrismaService } from "../../prisma/prisma.service";
+import type { BatchEventsDto } from "./dto/analytics.dto";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface DashboardMetrics {
-  period: 'day' | 'week' | 'month';
+  period: "day" | "week" | "month";
   generatedAt: string;
   metrics: {
     dau: number;
@@ -63,7 +63,7 @@ export interface UserFunnelResult {
 
 @Injectable()
 export class AnalyticsService {
-  private readonly logger = new Logger('AnalyticsService');
+  private readonly logger = new Logger("AnalyticsService");
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -95,7 +95,9 @@ export class AnalyticsService {
     } catch (error: unknown) {
       // If the table does not exist yet, log and continue gracefully
       const message = error instanceof Error ? error.message : String(error);
-      this.logger.warn(`Event ingestion failed (table may not exist yet): ${message}`);
+      this.logger.warn(
+        `Event ingestion failed (table may not exist yet): ${message}`,
+      );
     }
 
     this.logger.debug(`Ingested ${records.length} events for user ${userId}`);
@@ -117,9 +119,9 @@ export class AnalyticsService {
           userId,
           event,
           properties: (properties ?? {}) as Prisma.InputJsonValue,
-          sessionId: 'server',
-          platform: 'server',
-          appVersion: 'backend',
+          sessionId: "server",
+          platform: "server",
+          appVersion: "backend",
           clientTimestamp: new Date(),
           createdAt: new Date(),
         },
@@ -136,7 +138,9 @@ export class AnalyticsService {
    * Compute admin dashboard metrics: DAU, WAU, MAU, registration counts,
    * conversion rates, retention, session stats, and package distribution.
    */
-  async getDashboard(period: 'day' | 'week' | 'month' = 'day'): Promise<DashboardMetrics> {
+  async getDashboard(
+    period: "day" | "week" | "month" = "day",
+  ): Promise<DashboardMetrics> {
     const now = new Date();
     const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -164,35 +168,50 @@ export class AnalyticsService {
       // MAU — distinct users in last 30 days
       this.countDistinctUsers(monthAgo, now),
       // New registrations in the period
-      this.countEventsByName('signup_completed', this.getPeriodStart(period), now),
+      this.countEventsByName(
+        "signup_completed",
+        this.getPeriodStart(period),
+        now,
+      ),
       // Total users
       this.prisma.user.count().catch(() => 0),
       // Verified users
-      this.prisma.user.count({ where: { isSelfieVerified: true } }).catch(() => 0),
+      this.prisma.user
+        .count({ where: { isSelfieVerified: true } })
+        .catch(() => 0),
       // Match count in period
-      this.prisma.match.count({
-        where: { createdAt: { gte: this.getPeriodStart(period) } },
-      }).catch(() => 0),
+      this.prisma.match
+        .count({
+          where: { createdAt: { gte: this.getPeriodStart(period) } },
+        })
+        .catch(() => 0),
       // Total swipes in period
-      this.countEventsByName('discovery_swipe_right', this.getPeriodStart(period), now)
-        .then(async (rightSwipes) => {
-          const leftSwipes = await this.countEventsByName(
-            'discovery_swipe_left',
-            this.getPeriodStart(period),
-            now,
-          );
-          return rightSwipes + leftSwipes;
-        }),
+      this.countEventsByName(
+        "discovery_swipe_right",
+        this.getPeriodStart(period),
+        now,
+      ).then(async (rightSwipes) => {
+        const leftSwipes = await this.countEventsByName(
+          "discovery_swipe_left",
+          this.getPeriodStart(period),
+          now,
+        );
+        return rightSwipes + leftSwipes;
+      }),
       // Package distribution
       this.getPackageDistribution(),
       // Paid users count
-      this.prisma.user.count({
-        where: { packageTier: { not: 'FREE' } },
-      }).catch(() => 0),
+      this.prisma.user
+        .count({
+          where: { packageTier: { not: "FREE" } },
+        })
+        .catch(() => 0),
       // Harmony sessions in period
-      this.prisma.harmonySession.count({
-        where: { createdAt: { gte: this.getPeriodStart(period) } },
-      }).catch(() => 0),
+      this.prisma.harmonySession
+        .count({
+          where: { createdAt: { gte: this.getPeriodStart(period) } },
+        })
+        .catch(() => 0),
       // Active users for harmony calc
       this.countDistinctUsers(this.getPeriodStart(period), now),
     ]);
@@ -203,8 +222,8 @@ export class AnalyticsService {
 
     // Average session duration from session_duration events
     const avgSessionDurationMs = await this.getAverageMetric(
-      'session_duration',
-      'time_spent_ms',
+      "session_duration",
+      "time_spent_ms",
       this.getPeriodStart(period),
       now,
     );
@@ -212,9 +231,10 @@ export class AnalyticsService {
     // Swipes per session
     const dau = dauResult || 1;
     const swipesPerSession = swipeCount / dau;
-    const harmonySessionsPerUser = activeUsersForHarmony > 0
-      ? harmonySessionCount / activeUsersForHarmony
-      : 0;
+    const harmonySessionsPerUser =
+      activeUsersForHarmony > 0
+        ? harmonySessionCount / activeUsersForHarmony
+        : 0;
 
     // Retention (simplified — use cohort-based for detailed view)
     const [day1Ret, day7Ret, day30Ret] = await Promise.all([
@@ -255,26 +275,32 @@ export class AnalyticsService {
    * Each cohort = users who registered in a given week.
    * Retention = % of that cohort active N days later.
    */
-  async getRetentionCohorts(cohortCount: number = 12): Promise<RetentionCohort[]> {
+  async getRetentionCohorts(
+    cohortCount: number = 12,
+  ): Promise<RetentionCohort[]> {
     const cohorts: RetentionCohort[] = [];
     const now = new Date();
 
     for (let i = 0; i < cohortCount; i++) {
-      const weekStart = new Date(now.getTime() - (i + 1) * 7 * 24 * 60 * 60 * 1000);
+      const weekStart = new Date(
+        now.getTime() - (i + 1) * 7 * 24 * 60 * 60 * 1000,
+      );
       const weekEnd = new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000);
 
       // Users who registered in this week
-      const cohortUsers = await this.prisma.user.findMany({
-        where: {
-          createdAt: { gte: weekStart, lt: weekEnd },
-        },
-        select: { id: true },
-      }).catch(() => [] as { id: string }[]);
+      const cohortUsers = await this.prisma.user
+        .findMany({
+          where: {
+            createdAt: { gte: weekStart, lt: weekEnd },
+          },
+          select: { id: true },
+        })
+        .catch(() => [] as { id: string }[]);
 
       const cohortSize = cohortUsers.length;
       if (cohortSize === 0) {
         cohorts.push({
-          cohortDate: weekStart.toISOString().split('T')[0],
+          cohortDate: weekStart.toISOString().split("T")[0],
           cohortSize: 0,
           day1: 0,
           day7: 0,
@@ -294,7 +320,7 @@ export class AnalyticsService {
       ]);
 
       cohorts.push({
-        cohortDate: weekStart.toISOString().split('T')[0],
+        cohortDate: weekStart.toISOString().split("T")[0],
         cohortSize,
         day1: Math.round((day1 / cohortSize) * 10000) / 100,
         day7: Math.round((day7 / cohortSize) * 10000) / 100,
@@ -312,43 +338,57 @@ export class AnalyticsService {
    * Get funnel progress for a specific user.
    * Checks which funnel steps the user has completed based on their events.
    */
-  async getUserFunnel(userId: string, funnelName: string): Promise<UserFunnelResult> {
-    const funnelDefs: Record<string, Array<{ name: string; event: string; order: number }>> = {
+  async getUserFunnel(
+    userId: string,
+    funnelName: string,
+  ): Promise<UserFunnelResult> {
+    const funnelDefs: Record<
+      string,
+      Array<{ name: string; event: string; order: number }>
+    > = {
       registration: [
-        { name: 'Phone Entry', event: 'auth_otp_requested', order: 1 },
-        { name: 'OTP Verified', event: 'auth_otp_verified', order: 2 },
-        { name: 'Selfie Done', event: 'auth_selfie_completed', order: 3 },
+        { name: "Phone Entry", event: "auth_otp_requested", order: 1 },
+        { name: "OTP Verified", event: "auth_otp_verified", order: 2 },
+        { name: "Selfie Done", event: "auth_selfie_completed", order: 3 },
       ],
       onboarding: [
-        { name: 'Started', event: 'onboarding_step_completed', order: 1 },
-        { name: 'Completed', event: 'onboarding_completed', order: 2 },
+        { name: "Started", event: "onboarding_step_completed", order: 1 },
+        { name: "Completed", event: "onboarding_completed", order: 2 },
       ],
       first_match: [
-        { name: 'Discovery Viewed', event: 'discovery_card_viewed', order: 1 },
-        { name: 'First Swipe', event: 'discovery_swipe_right', order: 2 },
-        { name: 'Match Created', event: 'match_created', order: 3 },
+        { name: "Discovery Viewed", event: "discovery_card_viewed", order: 1 },
+        { name: "First Swipe", event: "discovery_swipe_right", order: 2 },
+        { name: "Match Created", event: "match_created", order: 3 },
       ],
       conversion: [
-        { name: 'Payment Viewed', event: 'payment_screen_viewed', order: 1 },
-        { name: 'Package Selected', event: 'payment_package_selected', order: 2 },
-        { name: 'Payment Done', event: 'payment_completed', order: 3 },
+        { name: "Payment Viewed", event: "payment_screen_viewed", order: 1 },
+        {
+          name: "Package Selected",
+          event: "payment_package_selected",
+          order: 2,
+        },
+        { name: "Payment Done", event: "payment_completed", order: 3 },
       ],
     };
 
-    const steps = funnelDefs[funnelName] ?? funnelDefs['registration'];
+    const steps = funnelDefs[funnelName] ?? funnelDefs["registration"];
 
     // Get all distinct events for this user
-    const userEvents = await this.prisma.analyticsEvent.findMany({
-      where: {
-        userId,
-        event: { in: steps.map((s) => s.event) },
-      },
-      orderBy: { clientTimestamp: 'asc' },
-      distinct: ['event'],
-      select: { event: true, clientTimestamp: true },
-    }).catch(() => [] as { event: string; clientTimestamp: Date }[]);
+    const userEvents = await this.prisma.analyticsEvent
+      .findMany({
+        where: {
+          userId,
+          event: { in: steps.map((s) => s.event) },
+        },
+        orderBy: { clientTimestamp: "asc" },
+        distinct: ["event"],
+        select: { event: true, clientTimestamp: true },
+      })
+      .catch(() => [] as { event: string; clientTimestamp: Date }[]);
 
-    const eventMap = new Map(userEvents.map((e) => [e.event, e.clientTimestamp]));
+    const eventMap = new Map(
+      userEvents.map((e) => [e.event, e.clientTimestamp]),
+    );
 
     const resultSteps: FunnelStepResult[] = steps.map((step) => {
       const completedAt = eventMap.get(step.event);
@@ -359,10 +399,13 @@ export class AnalyticsService {
       };
     });
 
-    const completedCount = resultSteps.filter((s) => s.completedAt !== null).length;
-    const completionRate = steps.length > 0
-      ? Math.round((completedCount / steps.length) * 10000) / 100
-      : 0;
+    const completedCount = resultSteps.filter(
+      (s) => s.completedAt !== null,
+    ).length;
+    const completionRate =
+      steps.length > 0
+        ? Math.round((completedCount / steps.length) * 10000) / 100
+        : 0;
 
     return {
       funnelName,
@@ -388,14 +431,14 @@ export class AnalyticsService {
 
   // ─── Private Helpers ─────────────────────────────────────────────────
 
-  private getPeriodStart(period: 'day' | 'week' | 'month'): Date {
+  private getPeriodStart(period: "day" | "week" | "month"): Date {
     const now = new Date();
     switch (period) {
-      case 'day':
+      case "day":
         return new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      case 'week':
+      case "week":
         return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      case 'month':
+      case "month":
         return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     }
   }
@@ -406,7 +449,7 @@ export class AnalyticsService {
         where: {
           createdAt: { gte: from, lt: to },
         },
-        distinct: ['userId'],
+        distinct: ["userId"],
         select: { userId: true },
       });
       return result.length;
@@ -415,7 +458,11 @@ export class AnalyticsService {
     }
   }
 
-  private async countEventsByName(eventName: string, from: Date, to: Date): Promise<number> {
+  private async countEventsByName(
+    eventName: string,
+    from: Date,
+    to: Date,
+  ): Promise<number> {
     try {
       return await this.prisma.analyticsEvent.count({
         where: {
@@ -436,10 +483,10 @@ export class AnalyticsService {
   }> {
     try {
       const [free, gold, pro, reserved] = await Promise.all([
-        this.prisma.user.count({ where: { packageTier: 'FREE' } }),
-        this.prisma.user.count({ where: { packageTier: 'GOLD' } }),
-        this.prisma.user.count({ where: { packageTier: 'PRO' } }),
-        this.prisma.user.count({ where: { packageTier: 'RESERVED' } }),
+        this.prisma.user.count({ where: { packageTier: "FREE" } }),
+        this.prisma.user.count({ where: { packageTier: "GOLD" } }),
+        this.prisma.user.count({ where: { packageTier: "PRO" } }),
+        this.prisma.user.count({ where: { packageTier: "RESERVED" } }),
       ]);
       return { free, gold, pro, reserved };
     } catch {
@@ -469,7 +516,7 @@ export class AnalyticsService {
       let count = 0;
       for (const event of events) {
         const props = event.properties as Record<string, unknown> | null;
-        if (props && typeof props[propertyKey] === 'number') {
+        if (props && typeof props[propertyKey] === "number") {
           total += props[propertyKey] as number;
           count += 1;
         }
@@ -484,7 +531,9 @@ export class AnalyticsService {
   private async getSimpleRetention(days: number): Promise<number> {
     try {
       const now = new Date();
-      const cohortStart = new Date(now.getTime() - (days + 1) * 24 * 60 * 60 * 1000);
+      const cohortStart = new Date(
+        now.getTime() - (days + 1) * 24 * 60 * 60 * 1000,
+      );
       const cohortEnd = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 
       // Users who registered N+1 days ago
@@ -496,7 +545,11 @@ export class AnalyticsService {
       if (cohortUsers.length === 0) return 0;
 
       const userIds = cohortUsers.map((u) => u.id);
-      const retainedCount = await this.getCohortRetention(userIds, cohortEnd, days);
+      const retainedCount = await this.getCohortRetention(
+        userIds,
+        cohortEnd,
+        days,
+      );
 
       return Math.round((retainedCount / cohortUsers.length) * 10000) / 100;
     } catch {
@@ -511,7 +564,9 @@ export class AnalyticsService {
   ): Promise<number> {
     if (userIds.length === 0) return 0;
 
-    const targetStart = new Date(fromDate.getTime() + daysAfter * 24 * 60 * 60 * 1000);
+    const targetStart = new Date(
+      fromDate.getTime() + daysAfter * 24 * 60 * 60 * 1000,
+    );
     const targetEnd = new Date(targetStart.getTime() + 24 * 60 * 60 * 1000);
 
     try {
@@ -520,7 +575,7 @@ export class AnalyticsService {
           userId: { in: userIds },
           createdAt: { gte: targetStart, lt: targetEnd },
         },
-        distinct: ['userId'],
+        distinct: ["userId"],
         select: { userId: true },
       });
       return result.length;

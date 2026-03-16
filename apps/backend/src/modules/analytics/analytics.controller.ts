@@ -12,17 +12,26 @@ import {
   Post,
   Query,
   UseGuards,
-} from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { AnalyticsService, DashboardMetrics, RetentionCohort, UserFunnelResult } from './analytics.service';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { BatchEventsDto, DashboardQueryDto, RetentionQueryDto } from './dto/analytics.dto';
+} from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
+import {
+  AnalyticsService,
+  DashboardMetrics,
+  RetentionCohort,
+  UserFunnelResult,
+} from "./analytics.service";
+import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
+import { CurrentUser } from "../../common/decorators/current-user.decorator";
+import {
+  BatchEventsDto,
+  DashboardQueryDto,
+  RetentionQueryDto,
+} from "./dto/analytics.dto";
 
-@ApiTags('Analytics')
+@ApiTags("Analytics")
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller('analytics')
+@Controller("analytics")
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
@@ -31,10 +40,10 @@ export class AnalyticsController {
    * Receive a batch of client-side analytics events.
    * Called by the mobile app's analytics service flush mechanism.
    */
-  @Post('events')
-  @ApiOperation({ summary: 'Receive client analytics event batch' })
+  @Post("events")
+  @ApiOperation({ summary: "Receive client analytics event batch" })
   async batchEvents(
-    @CurrentUser('sub') userId: string,
+    @CurrentUser("sub") userId: string,
     @Body() dto: BatchEventsDto,
   ) {
     return this.analyticsService.trackEventBatch(userId, dto);
@@ -45,9 +54,11 @@ export class AnalyticsController {
    * Admin dashboard with aggregated metrics.
    * Returns DAU, WAU, MAU, conversion rates, retention, session stats.
    */
-  @Get('dashboard')
-  @ApiOperation({ summary: 'Get admin dashboard metrics' })
-  async getDashboard(@Query() query: DashboardQueryDto): Promise<DashboardMetrics> {
+  @Get("dashboard")
+  @ApiOperation({ summary: "Get admin dashboard metrics" })
+  async getDashboard(
+    @Query() query: DashboardQueryDto,
+  ): Promise<DashboardMetrics> {
     return this.analyticsService.getDashboard(query.period);
   }
 
@@ -55,9 +66,11 @@ export class AnalyticsController {
    * GET /analytics/retention
    * Weekly retention cohort data for the last N weeks.
    */
-  @Get('retention')
-  @ApiOperation({ summary: 'Get retention cohort data' })
-  async getRetention(@Query() query: RetentionQueryDto): Promise<RetentionCohort[]> {
+  @Get("retention")
+  @ApiOperation({ summary: "Get retention cohort data" })
+  async getRetention(
+    @Query() query: RetentionQueryDto,
+  ): Promise<RetentionCohort[]> {
     return this.analyticsService.getRetentionCohorts(query.cohorts);
   }
 
@@ -66,15 +79,15 @@ export class AnalyticsController {
    * Get funnel progress for a specific user.
    * Query param ?funnel=registration|onboarding|first_match|conversion
    */
-  @Get('funnel/:userId')
-  @ApiOperation({ summary: 'Get user funnel progress' })
+  @Get("funnel/:userId")
+  @ApiOperation({ summary: "Get user funnel progress" })
   async getUserFunnel(
-    @Param('userId') userId: string,
-    @Query('funnel') funnelName?: string,
+    @Param("userId") userId: string,
+    @Query("funnel") funnelName?: string,
   ): Promise<UserFunnelResult> {
     return this.analyticsService.getUserFunnel(
       userId,
-      funnelName ?? 'registration',
+      funnelName ?? "registration",
     );
   }
 }

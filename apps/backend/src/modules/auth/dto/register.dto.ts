@@ -1,15 +1,10 @@
-import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsNotEmpty,
-  IsString,
-  IsPhoneNumber,
-  Length,
-} from 'class-validator';
+import { ApiProperty } from "@nestjs/swagger";
+import { IsNotEmpty, IsString, IsPhoneNumber, Length } from "class-validator";
 
 export class RegisterDto {
   @ApiProperty({
-    description: 'Phone number in E.164 format',
-    example: '+905551234567',
+    description: "Phone number in E.164 format",
+    example: "+905551234567",
   })
   @IsNotEmpty()
   @IsString()
@@ -17,8 +12,8 @@ export class RegisterDto {
   phone!: string;
 
   @ApiProperty({
-    description: 'ISO country code',
-    example: 'TR',
+    description: "ISO country code",
+    example: "TR",
   })
   @IsNotEmpty()
   @IsString()

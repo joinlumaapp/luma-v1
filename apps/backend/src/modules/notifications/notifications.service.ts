@@ -1,24 +1,21 @@
-import {
-  Injectable,
-  Logger,
-} from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { FirebaseProvider } from './firebase.provider';
+import { Injectable, Logger } from "@nestjs/common";
+import { PrismaService } from "../../prisma/prisma.service";
+import { FirebaseProvider } from "./firebase.provider";
 import {
   RegisterDeviceDto,
   MarkReadDto,
   UpdatePreferencesDto,
   DEFAULT_PREFERENCES,
-} from './dto';
-import type { NotificationPreferences } from './dto';
+} from "./dto";
+import type { NotificationPreferences } from "./dto";
 
 const NOTIFICATIONS_PAGE_SIZE = 30;
 
 /** Maximum push notifications per user per hour. */
 const MAX_PUSH_PER_HOUR = 10;
 
-export { NotificationType } from '@prisma/client';
-import { NotificationType } from '@prisma/client';
+export { NotificationType } from "@prisma/client";
+import { NotificationType } from "@prisma/client";
 
 // ────────────────────────────────────────────────────────────────────
 // Turkish notification templates
@@ -32,59 +29,62 @@ interface NotificationTemplate {
 
 const NOTIFICATION_TEMPLATES: Record<NotificationType, NotificationTemplate> = {
   NEW_MATCH: {
-    title: 'Yeni bir eslesmen var!',
-    body: 'Sen ve {name} birbirinizi begendiniz!',
+    title: "Yeni bir eslesmen var!",
+    body: "Sen ve {name} birbirinizi begendiniz!",
   },
   NEW_MESSAGE: {
-    title: '{name}',
-    body: '{name} sana mesaj gonderdi',
+    title: "{name}",
+    body: "{name} sana mesaj gonderdi",
   },
   SUPER_LIKE: {
-    title: 'Super Begeni!',
-    body: '{name} seni super begendi!',
+    title: "Super Begeni!",
+    body: "{name} seni super begendi!",
   },
   MATCH_REMOVED: {
-    title: 'Eslesme Kaldirildi',
-    body: 'Bir eslesmen sona erdi',
+    title: "Eslesme Kaldirildi",
+    body: "Bir eslesmen sona erdi",
   },
   HARMONY_INVITE: {
-    title: 'Harmony Daveti',
-    body: '{name} seni Harmony\'ye davet etti',
+    title: "Harmony Daveti",
+    body: "{name} seni Harmony'ye davet etti",
   },
   HARMONY_REMINDER: {
-    title: 'Harmony Hatirlatma',
-    body: '{name} ile Harmony oturumunuz {minutesLeft} dakika icinde sona erecek',
+    title: "Harmony Hatirlatma",
+    body: "{name} ile Harmony oturumunuz {minutesLeft} dakika icinde sona erecek",
   },
   BADGE_EARNED: {
-    title: 'Yeni Rozet!',
-    body: 'Yeni rozet kazandin: {badge_name}',
+    title: "Yeni Rozet!",
+    body: "Yeni rozet kazandin: {badge_name}",
   },
   SUBSCRIPTION_EXPIRING: {
-    title: 'Abonelik Hatirlatma',
-    body: '{packageName} aboneliginiz {daysLeft} gun icinde sona erecek',
+    title: "Abonelik Hatirlatma",
+    body: "{packageName} aboneliginiz {daysLeft} gun icinde sona erecek",
   },
   RELATIONSHIP_REQUEST: {
-    title: 'Iliski Istegi',
-    body: '{name} sana iliski istegi gonderdi',
+    title: "Iliski Istegi",
+    body: "{name} sana iliski istegi gonderdi",
   },
   SYSTEM: {
-    title: 'LUMA',
-    body: '{message}',
+    title: "LUMA",
+    body: "{message}",
   },
 };
 
 /** Maps notification types to preference keys. */
-const TYPE_TO_PREF_KEY: Record<NotificationType, keyof NotificationPreferences | null> = {
-  NEW_MATCH: 'newMatches',
-  NEW_MESSAGE: 'messages',
-  SUPER_LIKE: 'newMatches',
-  MATCH_REMOVED: 'newMatches',
-  HARMONY_INVITE: 'harmonyInvites',
-  HARMONY_REMINDER: 'harmonyInvites',
-  BADGE_EARNED: 'badges',
-  SUBSCRIPTION_EXPIRING: 'system',
-  RELATIONSHIP_REQUEST: 'newMatches',
-  SYSTEM: 'system',
+const TYPE_TO_PREF_KEY: Record<
+  NotificationType,
+  keyof NotificationPreferences | null
+> = {
+  NEW_MATCH: "newMatches",
+  NEW_MESSAGE: "messages",
+  SUPER_LIKE: "newMatches",
+  MATCH_REMOVED: "newMatches",
+  HARMONY_INVITE: "harmonyInvites",
+  HARMONY_REMINDER: "harmonyInvites",
+  BADGE_EARNED: "badges",
+  SUBSCRIPTION_EXPIRING: "system",
+  RELATIONSHIP_REQUEST: "newMatches",
+  SYSTEM: "system",
 };
 
 // ────────────────────────────────────────────────────────────────────
@@ -120,7 +120,7 @@ export class NotificationsService {
     const template = NOTIFICATION_TEMPLATES[type];
 
     const replace = (text: string): string =>
-      text.replace(/\{(\w+)\}/g, (_, key: string) => data[key] ?? '');
+      text.replace(/\{(\w+)\}/g, (_, key: string) => data[key] ?? "");
 
     return {
       title: replace(template.title),
@@ -186,21 +186,22 @@ export class NotificationsService {
     try {
       const now = new Date();
       // Get current time in user's timezone
-      const formatter = new Intl.DateTimeFormat('en-US', {
-        timeZone: timezone || 'Europe/Istanbul',
-        hour: '2-digit',
-        minute: '2-digit',
+      const formatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: timezone || "Europe/Istanbul",
+        hour: "2-digit",
+        minute: "2-digit",
         hour12: false,
       });
 
       const parts = formatter.formatToParts(now);
-      const hourPart = parts.find((p) => p.type === 'hour');
-      const minutePart = parts.find((p) => p.type === 'minute');
+      const hourPart = parts.find((p) => p.type === "hour");
+      const minutePart = parts.find((p) => p.type === "minute");
       if (!hourPart || !minutePart) return false;
 
-      const currentMinutes = parseInt(hourPart.value, 10) * 60 + parseInt(minutePart.value, 10);
-      const [startH, startM] = quietHoursStart.split(':').map(Number);
-      const [endH, endM] = quietHoursEnd.split(':').map(Number);
+      const currentMinutes =
+        parseInt(hourPart.value, 10) * 60 + parseInt(minutePart.value, 10);
+      const [startH, startM] = quietHoursStart.split(":").map(Number);
+      const [endH, endM] = quietHoursEnd.split(":").map(Number);
       const startMinutes = startH * 60 + startM;
       const endMinutes = endH * 60 + endM;
 
@@ -213,7 +214,9 @@ export class NotificationsService {
       return currentMinutes >= startMinutes || currentMinutes < endMinutes;
     } catch {
       // If timezone is invalid, don't suppress
-      this.logger.warn('Quiet hours timezone parse failed, skipping quiet hours check');
+      this.logger.warn(
+        "Quiet hours timezone parse failed, skipping quiet hours check",
+      );
       return false;
     }
   }
@@ -229,7 +232,7 @@ export class NotificationsService {
     const [notifications, total, unreadCount] = await Promise.all([
       this.prisma.notification.findMany({
         where: { userId },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         skip,
         take: NOTIFICATIONS_PAGE_SIZE,
         select: {
@@ -366,7 +369,8 @@ export class NotificationsService {
       badges: pref.badges,
       system: pref.system,
       allDisabled: pref.allDisabled,
-      quietHoursStart: pref.quietHoursStart ?? DEFAULT_PREFERENCES.quietHoursStart,
+      quietHoursStart:
+        pref.quietHoursStart ?? DEFAULT_PREFERENCES.quietHoursStart,
       quietHoursEnd: pref.quietHoursEnd ?? DEFAULT_PREFERENCES.quietHoursEnd,
       timezone: pref.timezone ?? DEFAULT_PREFERENCES.timezone,
     };
@@ -403,7 +407,8 @@ export class NotificationsService {
       badges: pref.badges,
       system: pref.system,
       allDisabled: pref.allDisabled,
-      quietHoursStart: pref.quietHoursStart ?? DEFAULT_PREFERENCES.quietHoursStart,
+      quietHoursStart:
+        pref.quietHoursStart ?? DEFAULT_PREFERENCES.quietHoursStart,
       quietHoursEnd: pref.quietHoursEnd ?? DEFAULT_PREFERENCES.quietHoursEnd,
       timezone: pref.timezone ?? DEFAULT_PREFERENCES.timezone,
     };
@@ -412,7 +417,10 @@ export class NotificationsService {
   /**
    * Check if a notification type is enabled for a user.
    */
-  private async isNotificationEnabled(userId: string, type: NotificationType): Promise<boolean> {
+  private async isNotificationEnabled(
+    userId: string,
+    type: NotificationType,
+  ): Promise<boolean> {
     const prefs = await this.getPreferences(userId);
 
     // Master toggle
@@ -427,7 +435,7 @@ export class NotificationsService {
 
     // Preference value can be string (quiet hours) or boolean
     const value = prefs[prefKey];
-    if (typeof value === 'boolean') {
+    if (typeof value === "boolean") {
       return value;
     }
 
@@ -457,7 +465,7 @@ export class NotificationsService {
         body: payload.body,
       },
       data: payload.data,
-      platform: platform as 'ios' | 'android' | undefined,
+      platform: platform as "ios" | "android" | undefined,
     });
 
     if (!result.success) {
@@ -482,14 +490,14 @@ export class NotificationsService {
     title: string,
     body: string,
     data?: Record<string, unknown>,
-    type: NotificationType = 'SYSTEM',
+    type: NotificationType = "SYSTEM",
   ) {
     // Check user preferences before sending
     if (!(await this.isNotificationEnabled(userId, type))) {
       this.logger.debug(
         `Bildirim devre disi — kullanici: ${userId}, tip: ${type}`,
       );
-      return { sent: false, stored: false, reason: 'disabled_by_preference' };
+      return { sent: false, stored: false, reason: "disabled_by_preference" };
     }
 
     // Check quiet hours
@@ -502,7 +510,7 @@ export class NotificationsService {
           type,
           title,
           body,
-          data: data as object ?? undefined,
+          data: (data as object) ?? undefined,
         },
       });
 
@@ -514,7 +522,7 @@ export class NotificationsService {
         sent: false,
         stored: true,
         notificationId: notification.id,
-        reason: 'quiet_hours',
+        reason: "quiet_hours",
       };
     }
 
@@ -527,7 +535,7 @@ export class NotificationsService {
           type,
           title,
           body,
-          data: data as object ?? undefined,
+          data: (data as object) ?? undefined,
         },
       });
 
@@ -539,7 +547,7 @@ export class NotificationsService {
         sent: false,
         stored: true,
         notificationId: notification.id,
-        reason: 'rate_limited',
+        reason: "rate_limited",
       };
     }
 
@@ -550,7 +558,7 @@ export class NotificationsService {
         type,
         title,
         body,
-        data: data as object ?? undefined,
+        data: (data as object) ?? undefined,
       },
     });
 
@@ -568,9 +576,7 @@ export class NotificationsService {
 
     // Convert data values to strings for FCM
     const stringData = data
-      ? Object.fromEntries(
-          Object.entries(data).map(([k, v]) => [k, String(v)]),
-        )
+      ? Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v)]))
       : undefined;
 
     // Get badge count for the user to include in the push payload
@@ -608,12 +614,12 @@ export class NotificationsService {
     );
 
     const successCount = results.filter(
-      (r) => r.status === 'fulfilled' && r.value.sent,
+      (r) => r.status === "fulfilled" && r.value.sent,
     ).length;
 
     this.logger.debug(
       `Push bildirim gonderildi — ` +
-      `${successCount}/${devices.length} cihaz, kullanici: ${userId}: "${title}"`,
+        `${successCount}/${devices.length} cihaz, kullanici: ${userId}: "${title}"`,
     );
 
     return {
@@ -659,23 +665,27 @@ export class NotificationsService {
 
       const chunkResults = await Promise.allSettled(
         chunk.map(async (userId) => {
-          const result = await this.sendTemplatedNotification(userId, type, data);
+          const result = await this.sendTemplatedNotification(
+            userId,
+            type,
+            data,
+          );
           return {
             userId,
             sent: result.sent,
-            reason: 'reason' in result ? (result.reason as string) : undefined,
+            reason: "reason" in result ? (result.reason as string) : undefined,
           };
         }),
       );
 
       for (const settled of chunkResults) {
-        if (settled.status === 'fulfilled') {
+        if (settled.status === "fulfilled") {
           results.push(settled.value);
         } else {
           results.push({
-            userId: 'unknown',
+            userId: "unknown",
             sent: false,
-            reason: 'internal_error',
+            reason: "internal_error",
           });
         }
       }
@@ -698,26 +708,27 @@ export class NotificationsService {
   /**
    * Send a silent/data-only notification (no visible alert) for background data sync.
    */
-  async sendSilentNotification(
-    userId: string,
-    data: Record<string, string>,
-  ) {
+  async sendSilentNotification(userId: string, data: Record<string, string>) {
     const devices = await this.prisma.deviceToken.findMany({
       where: { userId, isActive: true },
     });
 
     if (devices.length === 0) {
-      return { sent: false, reason: 'no_active_devices' };
+      return { sent: false, reason: "no_active_devices" };
     }
 
     const results = await Promise.allSettled(
       devices.map((device) =>
-        this.firebase.sendSilent(device.token, data, device.platform as 'ios' | 'android'),
+        this.firebase.sendSilent(
+          device.token,
+          data,
+          device.platform as "ios" | "android",
+        ),
       ),
     );
 
     const successCount = results.filter(
-      (r) => r.status === 'fulfilled' && r.value.success,
+      (r) => r.status === "fulfilled" && r.value.success,
     ).length;
 
     return { sent: successCount > 0, deviceCount: successCount };
@@ -733,7 +744,9 @@ export class NotificationsService {
     data?: Record<string, string>,
   ) {
     const result = await this.firebase.sendToTopic(topic, title, body, data);
-    this.logger.log(`Topic bildirim gonderildi — topic: ${topic}, basarili: ${result.success}`);
+    this.logger.log(
+      `Topic bildirim gonderildi — topic: ${topic}, basarili: ${result.success}`,
+    );
     return result;
   }
 
@@ -743,7 +756,7 @@ export class NotificationsService {
    * Notify user of a new match.
    */
   async notifyNewMatch(userId: string, matcherName: string) {
-    return this.sendTemplatedNotification(userId, 'NEW_MATCH', {
+    return this.sendTemplatedNotification(userId, "NEW_MATCH", {
       name: matcherName,
     });
   }
@@ -760,8 +773,8 @@ export class NotificationsService {
       userId,
       senderName,
       truncatedPreview,
-      { type: 'NEW_MESSAGE', senderName },
-      'NEW_MESSAGE',
+      { type: "NEW_MESSAGE", senderName },
+      "NEW_MESSAGE",
     );
   }
 
@@ -769,7 +782,7 @@ export class NotificationsService {
    * Notify user of a super like.
    */
   async notifySuperLike(userId: string, likerName: string) {
-    return this.sendTemplatedNotification(userId, 'SUPER_LIKE', {
+    return this.sendTemplatedNotification(userId, "SUPER_LIKE", {
       name: likerName,
     });
   }
@@ -778,7 +791,7 @@ export class NotificationsService {
    * Notify user of a Harmony Room invite.
    */
   async notifyHarmonyInvite(userId: string, inviterName: string) {
-    return this.sendTemplatedNotification(userId, 'HARMONY_INVITE', {
+    return this.sendTemplatedNotification(userId, "HARMONY_INVITE", {
       name: inviterName,
     });
   }
@@ -786,8 +799,12 @@ export class NotificationsService {
   /**
    * Notify user of a Harmony session reminder (about to expire).
    */
-  async notifyHarmonyReminder(userId: string, partnerName: string, minutesLeft: number) {
-    return this.sendTemplatedNotification(userId, 'HARMONY_REMINDER', {
+  async notifyHarmonyReminder(
+    userId: string,
+    partnerName: string,
+    minutesLeft: number,
+  ) {
+    return this.sendTemplatedNotification(userId, "HARMONY_REMINDER", {
       name: partnerName,
       minutesLeft: String(minutesLeft),
     });
@@ -797,7 +814,7 @@ export class NotificationsService {
    * Notify user of a newly earned badge.
    */
   async notifyBadgeEarned(userId: string, badgeName: string) {
-    return this.sendTemplatedNotification(userId, 'BADGE_EARNED', {
+    return this.sendTemplatedNotification(userId, "BADGE_EARNED", {
       badge_name: badgeName,
     });
   }
@@ -805,8 +822,12 @@ export class NotificationsService {
   /**
    * Notify user of subscription expiring soon.
    */
-  async notifySubscriptionExpiring(userId: string, daysLeft: number, packageName: string) {
-    return this.sendTemplatedNotification(userId, 'SUBSCRIPTION_EXPIRING', {
+  async notifySubscriptionExpiring(
+    userId: string,
+    daysLeft: number,
+    packageName: string,
+  ) {
+    return this.sendTemplatedNotification(userId, "SUBSCRIPTION_EXPIRING", {
       daysLeft: String(daysLeft),
       packageName,
     });
@@ -816,7 +837,7 @@ export class NotificationsService {
    * Notify user of a relationship request.
    */
   async notifyRelationshipRequest(userId: string, requesterName: string) {
-    return this.sendTemplatedNotification(userId, 'RELATIONSHIP_REQUEST', {
+    return this.sendTemplatedNotification(userId, "RELATIONSHIP_REQUEST", {
       name: requesterName,
     });
   }
@@ -827,10 +848,10 @@ export class NotificationsService {
   async notifyNewLike(userId: string) {
     return this.sendPushNotification(
       userId,
-      'Yeni Begeni!',
-      'Birisi seni begendi! Kim oldugunu gor',
-      { type: 'SYSTEM' },
-      'SYSTEM',
+      "Yeni Begeni!",
+      "Birisi seni begendi! Kim oldugunu gor",
+      { type: "SYSTEM" },
+      "SYSTEM",
     );
   }
 
@@ -840,10 +861,10 @@ export class NotificationsService {
   async notifyDailyPicks(userId: string) {
     return this.sendPushNotification(
       userId,
-      'Gunluk Secimler',
-      'Gunluk secimlerin hazir! Hemen kesfet',
-      { type: 'SYSTEM', action: 'daily_picks' },
-      'SYSTEM',
+      "Gunluk Secimler",
+      "Gunluk secimlerin hazir! Hemen kesfet",
+      { type: "SYSTEM", action: "daily_picks" },
+      "SYSTEM",
     );
   }
 
@@ -853,10 +874,14 @@ export class NotificationsService {
   async notifyBoostActive(userId: string, durationMinutes = 30) {
     return this.sendPushNotification(
       userId,
-      'Boost Aktif!',
+      "Boost Aktif!",
       `Boost'un aktif! ${durationMinutes} dakikan var`,
-      { type: 'SYSTEM', action: 'boost_active', duration: String(durationMinutes) },
-      'SYSTEM',
+      {
+        type: "SYSTEM",
+        action: "boost_active",
+        duration: String(durationMinutes),
+      },
+      "SYSTEM",
     );
   }
 
@@ -866,10 +891,10 @@ export class NotificationsService {
   async notifyInactiveReminder(userId: string) {
     return this.sendPushNotification(
       userId,
-      'Seni ozledik!',
-      'Seni ozledik! Yeni profiller seni bekliyor',
-      { type: 'SYSTEM', action: 'inactive_reminder' },
-      'SYSTEM',
+      "Seni ozledik!",
+      "Seni ozledik! Yeni profiller seni bekliyor",
+      { type: "SYSTEM", action: "inactive_reminder" },
+      "SYSTEM",
     );
   }
 
@@ -879,10 +904,14 @@ export class NotificationsService {
   async notifyMatchExpiring(userId: string, hoursLeft = 24) {
     return this.sendPushNotification(
       userId,
-      'Eslesme Sona Eriyor',
+      "Eslesme Sona Eriyor",
       `Eslesmen ${hoursLeft} saat icinde sona erecek`,
-      { type: 'SYSTEM', action: 'match_expiring', hoursLeft: String(hoursLeft) },
-      'SYSTEM',
+      {
+        type: "SYSTEM",
+        action: "match_expiring",
+        hoursLeft: String(hoursLeft),
+      },
+      "SYSTEM",
     );
   }
 
@@ -892,10 +921,10 @@ export class NotificationsService {
   async notifyCompatibilityUpdate(userId: string) {
     return this.sendPushNotification(
       userId,
-      'Uyum Skoru',
-      'Uyum skorun guncellendi',
-      { type: 'SYSTEM', action: 'compatibility_update' },
-      'SYSTEM',
+      "Uyum Skoru",
+      "Uyum skorun guncellendi",
+      { type: "SYSTEM", action: "compatibility_update" },
+      "SYSTEM",
     );
   }
 
@@ -903,9 +932,9 @@ export class NotificationsService {
    * Send a system announcement to all users subscribed to a topic.
    */
   async sendSystemAnnouncement(title: string, body: string) {
-    return this.sendToTopic('announcements', title, body, {
-      type: 'SYSTEM',
-      action: 'announcement',
+    return this.sendToTopic("announcements", title, body, {
+      type: "SYSTEM",
+      action: "announcement",
     });
   }
 }

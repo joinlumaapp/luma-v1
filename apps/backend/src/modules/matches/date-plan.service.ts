@@ -2,9 +2,9 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
-} from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { CreateDatePlanDto, RespondDatePlanDto } from './dto/date-plan.dto';
+} from "@nestjs/common";
+import { PrismaService } from "../../prisma/prisma.service";
+import { CreateDatePlanDto, RespondDatePlanDto } from "./dto/date-plan.dto";
 
 @Injectable()
 export class DatePlanService {
@@ -26,16 +26,16 @@ export class DatePlanService {
     });
 
     if (!match) {
-      throw new NotFoundException('Eslesme bulunamadi');
+      throw new NotFoundException("Eslesme bulunamadi");
     }
 
     if (!match.isActive) {
-      throw new ForbiddenException('Bu eslesme artik aktif degil');
+      throw new ForbiddenException("Bu eslesme artik aktif degil");
     }
 
     // Verify user is a participant
     if (match.userAId !== userId && match.userBId !== userId) {
-      throw new ForbiddenException('Bu eslesmeye erisim yetkiniz yok');
+      throw new ForbiddenException("Bu eslesmeye erisim yetkiniz yok");
     }
 
     const datePlan = await this.prisma.datePlan.create({
@@ -43,12 +43,10 @@ export class DatePlanService {
         matchId,
         proposedById: userId,
         title: dto.title,
-        suggestedDate: dto.suggestedDate
-          ? new Date(dto.suggestedDate)
-          : null,
+        suggestedDate: dto.suggestedDate ? new Date(dto.suggestedDate) : null,
         suggestedPlace: dto.suggestedPlace ?? null,
         note: dto.note ?? null,
-        status: 'PROPOSED',
+        status: "PROPOSED",
       },
     });
 
@@ -74,31 +72,29 @@ export class DatePlanService {
     });
 
     if (!datePlan) {
-      throw new NotFoundException('Bulusma plani bulunamadi');
+      throw new NotFoundException("Bulusma plani bulunamadi");
     }
 
     if (!datePlan.match.isActive) {
-      throw new ForbiddenException('Bu eslesme artik aktif degil');
+      throw new ForbiddenException("Bu eslesme artik aktif degil");
     }
 
     // Verify user is a participant in the match
     const { userAId, userBId } = datePlan.match;
     if (userAId !== userId && userBId !== userId) {
-      throw new ForbiddenException('Bu plana erisim yetkiniz yok');
+      throw new ForbiddenException("Bu plana erisim yetkiniz yok");
     }
 
     // The proposer cannot respond to their own plan
     if (datePlan.proposedById === userId) {
       throw new ForbiddenException(
-        'Kendi onerdiginiz plana yanit veremezsiniz',
+        "Kendi onerdiginiz plana yanit veremezsiniz",
       );
     }
 
     // Can only respond to PROPOSED plans
-    if (datePlan.status !== 'PROPOSED') {
-      throw new ForbiddenException(
-        'Bu plana zaten yanit verilmis',
-      );
+    if (datePlan.status !== "PROPOSED") {
+      throw new ForbiddenException("Bu plana zaten yanit verilmis");
     }
 
     const updated = await this.prisma.datePlan.update({
@@ -124,17 +120,17 @@ export class DatePlanService {
     });
 
     if (!match) {
-      throw new NotFoundException('Eslesme bulunamadi');
+      throw new NotFoundException("Eslesme bulunamadi");
     }
 
     // Verify user is a participant
     if (match.userAId !== userId && match.userBId !== userId) {
-      throw new ForbiddenException('Bu eslesmeye erisim yetkiniz yok');
+      throw new ForbiddenException("Bu eslesmeye erisim yetkiniz yok");
     }
 
     const plans = await this.prisma.datePlan.findMany({
       where: { matchId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       include: {
         proposedBy: {
           select: {
@@ -168,32 +164,30 @@ export class DatePlanService {
     });
 
     if (!datePlan) {
-      throw new NotFoundException('Bulusma plani bulunamadi');
+      throw new NotFoundException("Bulusma plani bulunamadi");
     }
 
     // Verify user is a participant in the match
     const { userAId, userBId } = datePlan.match;
     if (userAId !== userId && userBId !== userId) {
-      throw new ForbiddenException('Bu plana erisim yetkiniz yok');
+      throw new ForbiddenException("Bu plana erisim yetkiniz yok");
     }
 
     // Only the proposer can cancel
     if (datePlan.proposedById !== userId) {
-      throw new ForbiddenException(
-        'Yalnizca plani oneren kisi iptal edebilir',
-      );
+      throw new ForbiddenException("Yalnizca plani oneren kisi iptal edebilir");
     }
 
     // Cannot cancel already completed or cancelled plans
-    if (datePlan.status === 'COMPLETED' || datePlan.status === 'CANCELLED') {
+    if (datePlan.status === "COMPLETED" || datePlan.status === "CANCELLED") {
       throw new ForbiddenException(
-        'Bu plan zaten tamamlanmis veya iptal edilmis',
+        "Bu plan zaten tamamlanmis veya iptal edilmis",
       );
     }
 
     const updated = await this.prisma.datePlan.update({
       where: { id: planId },
-      data: { status: 'CANCELLED' },
+      data: { status: "CANCELLED" },
     });
 
     return updated;

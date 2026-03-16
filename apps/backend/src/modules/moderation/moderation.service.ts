@@ -4,22 +4,22 @@ import {
   NotFoundException,
   ConflictException,
   Logger,
-} from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { CreateReportDto, ReportReasonDto } from './dto/report.dto';
-import { CreateBlockDto } from './dto/block.dto';
+} from "@nestjs/common";
+import { PrismaService } from "../../prisma/prisma.service";
+import { CreateReportDto, ReportReasonDto } from "./dto/report.dto";
+import { CreateBlockDto } from "./dto/block.dto";
 
 /**
  * Maps DTO report reasons to Prisma ReportCategory enum values.
  */
 const REASON_TO_CATEGORY: Record<ReportReasonDto, string> = {
-  [ReportReasonDto.SPAM]: 'SPAM',
-  [ReportReasonDto.INAPPROPRIATE_PHOTO]: 'INAPPROPRIATE_PHOTO',
-  [ReportReasonDto.HARASSMENT]: 'HARASSMENT',
-  [ReportReasonDto.UNDERAGE]: 'UNDERAGE',
-  [ReportReasonDto.FAKE_PROFILE]: 'FAKE_PROFILE',
-  [ReportReasonDto.SCAM]: 'SCAM',
-  [ReportReasonDto.OTHER]: 'OTHER',
+  [ReportReasonDto.SPAM]: "SPAM",
+  [ReportReasonDto.INAPPROPRIATE_PHOTO]: "INAPPROPRIATE_PHOTO",
+  [ReportReasonDto.HARASSMENT]: "HARASSMENT",
+  [ReportReasonDto.UNDERAGE]: "UNDERAGE",
+  [ReportReasonDto.FAKE_PROFILE]: "FAKE_PROFILE",
+  [ReportReasonDto.SCAM]: "SCAM",
+  [ReportReasonDto.OTHER]: "OTHER",
 };
 
 /**
@@ -45,7 +45,7 @@ export class ModerationService {
   async reportUser(reporterId: string, dto: CreateReportDto) {
     // Cannot report yourself
     if (reporterId === dto.reportedUserId) {
-      throw new BadRequestException('Kendinizi sikayet edemezsiniz');
+      throw new BadRequestException("Kendinizi sikayet edemezsiniz");
     }
 
     // Verify reported user exists
@@ -55,7 +55,7 @@ export class ModerationService {
     });
 
     if (!reportedUser) {
-      throw new NotFoundException('Sikayet edilen kullanici bulunamadi');
+      throw new NotFoundException("Sikayet edilen kullanici bulunamadi");
     }
 
     // Check for duplicate report within 24 hours
@@ -72,7 +72,7 @@ export class ModerationService {
 
     if (existingReport) {
       throw new ConflictException(
-        'Bu kullaniciyi son 24 saat icinde zaten sikayet ettiniz',
+        "Bu kullaniciyi son 24 saat icinde zaten sikayet ettiniz",
       );
     }
 
@@ -84,9 +84,16 @@ export class ModerationService {
       data: {
         reporterId,
         reportedId: dto.reportedUserId,
-        category: category as 'SPAM' | 'INAPPROPRIATE_PHOTO' | 'HARASSMENT' | 'UNDERAGE' | 'FAKE_PROFILE' | 'SCAM' | 'OTHER',
+        category: category as
+          | "SPAM"
+          | "INAPPROPRIATE_PHOTO"
+          | "HARASSMENT"
+          | "UNDERAGE"
+          | "FAKE_PROFILE"
+          | "SCAM"
+          | "OTHER",
         details: dto.details ?? null,
-        status: 'PENDING',
+        status: "PENDING",
       },
       select: {
         id: true,
@@ -119,17 +126,17 @@ export class ModerationService {
     const pendingCount = await this.prisma.report.count({
       where: {
         reportedId: reportedUserId,
-        status: { in: ['PENDING', 'REVIEWING'] },
+        status: { in: ["PENDING", "REVIEWING"] },
       },
     });
 
     if (pendingCount >= REPORT_THRESHOLD_SUSPEND) {
       // Count distinct reporters to prevent coordinated abuse
       const distinctReporters = await this.prisma.report.groupBy({
-        by: ['reporterId'],
+        by: ["reporterId"],
         where: {
           reportedId: reportedUserId,
-          status: { in: ['PENDING', 'REVIEWING'] },
+          status: { in: ["PENDING", "REVIEWING"] },
         },
       });
 
@@ -140,10 +147,10 @@ export class ModerationService {
         await this.prisma.report.updateMany({
           where: {
             reportedId: reportedUserId,
-            status: { in: ['PENDING', 'REVIEWING'] },
+            status: { in: ["PENDING", "REVIEWING"] },
           },
           data: {
-            status: 'REVIEWING',
+            status: "REVIEWING",
           },
         });
 
@@ -160,10 +167,10 @@ export class ModerationService {
       await this.prisma.report.updateMany({
         where: {
           reportedId: reportedUserId,
-          status: 'PENDING',
+          status: "PENDING",
         },
         data: {
-          status: 'REVIEWING',
+          status: "REVIEWING",
         },
       });
     }
@@ -195,7 +202,7 @@ export class ModerationService {
   async blockUser(blockerId: string, dto: CreateBlockDto) {
     // Cannot block yourself
     if (blockerId === dto.blockedUserId) {
-      throw new BadRequestException('Kendinizi engelleyemezsiniz');
+      throw new BadRequestException("Kendinizi engelleyemezsiniz");
     }
 
     // Verify the target user exists
@@ -205,7 +212,7 @@ export class ModerationService {
     });
 
     if (!blockedUser) {
-      throw new NotFoundException('Engellenecek kullanici bulunamadi');
+      throw new NotFoundException("Engellenecek kullanici bulunamadi");
     }
 
     // Check if already blocked
@@ -219,7 +226,7 @@ export class ModerationService {
     });
 
     if (existingBlock) {
-      throw new ConflictException('Bu kullanici zaten engellenmis');
+      throw new ConflictException("Bu kullanici zaten engellenmis");
     }
 
     // Use a transaction: create block + deactivate matches + cancel harmony sessions
@@ -259,10 +266,10 @@ export class ModerationService {
             { userAId: blockerId, userBId: dto.blockedUserId },
             { userAId: dto.blockedUserId, userBId: blockerId },
           ],
-          status: { in: ['PENDING', 'ACTIVE', 'EXTENDED'] },
+          status: { in: ["PENDING", "ACTIVE", "EXTENDED"] },
         },
         data: {
-          status: 'CANCELLED',
+          status: "CANCELLED",
           actualEndedAt: new Date(),
         },
       });
@@ -292,7 +299,7 @@ export class ModerationService {
     });
 
     if (!existingBlock) {
-      throw new NotFoundException('Bu kullanici engellenmemis');
+      throw new NotFoundException("Bu kullanici engellenmemis");
     }
 
     await this.prisma.block.delete({
@@ -334,12 +341,12 @@ export class ModerationService {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
-    const blockedUsers = blocks.map((block: typeof blocks[number]) => ({
+    const blockedUsers = blocks.map((block: (typeof blocks)[number]) => ({
       userId: block.blocked.id,
-      firstName: block.blocked.profile?.firstName ?? 'Kullanici',
+      firstName: block.blocked.profile?.firstName ?? "Kullanici",
       photoUrl: block.blocked.photos[0]?.thumbnailUrl ?? null,
       blockedAt: block.createdAt.toISOString(),
     }));
@@ -371,7 +378,7 @@ export class ModerationService {
     });
 
     if (!photo) {
-      throw new NotFoundException('Fotograf bulunamadi');
+      throw new NotFoundException("Fotograf bulunamadi");
     }
 
     if (photo.isApproved) {
@@ -379,7 +386,7 @@ export class ModerationService {
         photoId: photo.id,
         userId: photo.userId,
         isApproved: true,
-        message: 'Fotograf zaten onaylanmis',
+        message: "Fotograf zaten onaylanmis",
       };
     }
 
@@ -396,7 +403,7 @@ export class ModerationService {
       photoId: photo.id,
       userId: photo.userId,
       isApproved: true,
-      message: 'Fotograf basariyla onaylandi',
+      message: "Fotograf basariyla onaylandi",
     };
   }
 
@@ -420,7 +427,7 @@ export class ModerationService {
     });
 
     if (!photo) {
-      throw new NotFoundException('Fotograf bulunamadi');
+      throw new NotFoundException("Fotograf bulunamadi");
     }
 
     // Delete the rejected photo
@@ -431,7 +438,7 @@ export class ModerationService {
     // Reorder remaining photos for the user
     const remainingPhotos = await this.prisma.userPhoto.findMany({
       where: { userId: photo.userId },
-      orderBy: { order: 'asc' },
+      orderBy: { order: "asc" },
     });
 
     for (let i = 0; i < remainingPhotos.length; i++) {
@@ -446,14 +453,14 @@ export class ModerationService {
 
     this.logger.log(
       `Photo ${photoId} rejected by admin ${adminUserId} for user ${photo.userId}` +
-      (reason ? ` — reason: ${reason}` : ''),
+        (reason ? ` — reason: ${reason}` : ""),
     );
 
     return {
       photoId,
       userId: photo.userId,
       deleted: true,
-      message: 'Fotograf reddedildi ve silindi',
+      message: "Fotograf reddedildi ve silindi",
     };
   }
 
@@ -476,7 +483,7 @@ export class ModerationService {
     const [photos, total] = await Promise.all([
       this.prisma.userPhoto.findMany({
         where: { isApproved: false },
-        orderBy: { createdAt: 'asc' },
+        orderBy: { createdAt: "asc" },
         take: limit,
         skip: offset,
         select: {

@@ -4,46 +4,46 @@ import {
   ExecutionContext,
   CallHandler,
   Logger,
-} from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
-import { Request, Response } from 'express';
+} from "@nestjs/common";
+import { Observable } from "rxjs";
+import { tap } from "rxjs/operators";
+import { Request, Response } from "express";
 
 /**
  * Fields that should be masked in request body logs.
  * Never log tokens, passwords, OTP codes, or personal data.
  */
 const SENSITIVE_FIELDS = new Set([
-  'password',
-  'token',
-  'refreshToken',
-  'accessToken',
-  'otp',
-  'code',
-  'secret',
-  'authorization',
-  'selfieBase64',
-  'imageBase64',
-  'photoData',
+  "password",
+  "token",
+  "refreshToken",
+  "accessToken",
+  "otp",
+  "code",
+  "secret",
+  "authorization",
+  "selfieBase64",
+  "imageBase64",
+  "photoData",
 ]);
 
 /** Paths to skip logging entirely (noisy health checks) */
 const SKIP_PATHS = new Set([
-  '/api/v1/health',
-  '/api/v1/health/ping',
-  '/health',
-  '/ping',
+  "/api/v1/health",
+  "/api/v1/health/ping",
+  "/health",
+  "/ping",
 ]);
 
 @Injectable()
 export class RequestLoggerInterceptor implements NestInterceptor {
-  private readonly logger = new Logger('HTTP');
+  private readonly logger = new Logger("HTTP");
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const contextType = context.getType();
 
     // Only log HTTP requests
-    if (contextType !== 'http') {
+    if (contextType !== "http") {
       return next.handle();
     }
 
@@ -51,13 +51,13 @@ export class RequestLoggerInterceptor implements NestInterceptor {
     const { method, originalUrl, ip } = request;
 
     // Skip health check endpoints
-    const basePath = originalUrl.split('?')[0];
+    const basePath = originalUrl.split("?")[0];
     if (SKIP_PATHS.has(basePath)) {
       return next.handle();
     }
 
     const startTime = Date.now();
-    const userAgent = request.get('user-agent') ?? 'unknown';
+    const userAgent = request.get("user-agent") ?? "unknown";
 
     // Log request body in development (with sensitive fields masked)
     const maskedBody = this.maskSensitiveFields(
@@ -92,7 +92,15 @@ export class RequestLoggerInterceptor implements NestInterceptor {
         error: () => {
           const duration = Date.now() - startTime;
           this.logger.error(
-            this.formatLog(method, originalUrl, 500, duration, ip, userAgent, maskedBody),
+            this.formatLog(
+              method,
+              originalUrl,
+              500,
+              duration,
+              ip,
+              userAgent,
+              maskedBody,
+            ),
           );
         },
       }),
@@ -112,20 +120,24 @@ export class RequestLoggerInterceptor implements NestInterceptor {
       `${method} ${url}`,
       `${statusCode}`,
       `${duration}ms`,
-      `IP:${ip ?? 'unknown'}`,
+      `IP:${ip ?? "unknown"}`,
     ];
 
     // Only include user agent in verbose mode
-    if (process.env.LOG_VERBOSE === 'true') {
+    if (process.env.LOG_VERBOSE === "true") {
       parts.push(`UA:${userAgent}`);
     }
 
     // Include masked body in development
-    if (process.env.NODE_ENV !== 'production' && body && Object.keys(body).length > 0) {
+    if (
+      process.env.NODE_ENV !== "production" &&
+      body &&
+      Object.keys(body).length > 0
+    ) {
       parts.push(`Body:${JSON.stringify(body)}`);
     }
 
-    return parts.join(' | ');
+    return parts.join(" | ");
   }
 
   /**
@@ -135,16 +147,22 @@ export class RequestLoggerInterceptor implements NestInterceptor {
   private maskSensitiveFields(
     obj: Record<string, unknown> | undefined,
   ): Record<string, unknown> | undefined {
-    if (!obj || typeof obj !== 'object') {
+    if (!obj || typeof obj !== "object") {
       return obj;
     }
 
     const masked: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj)) {
       if (SENSITIVE_FIELDS.has(key)) {
-        masked[key] = '[MASKED]';
-      } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-        masked[key] = this.maskSensitiveFields(value as Record<string, unknown>);
+        masked[key] = "[MASKED]";
+      } else if (
+        typeof value === "object" &&
+        value !== null &&
+        !Array.isArray(value)
+      ) {
+        masked[key] = this.maskSensitiveFields(
+          value as Record<string, unknown>,
+        );
       } else {
         masked[key] = value;
       }

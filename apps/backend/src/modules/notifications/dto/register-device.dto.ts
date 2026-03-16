@@ -1,21 +1,21 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsEnum } from 'class-validator';
+import { ApiProperty } from "@nestjs/swagger";
+import { IsNotEmpty, IsString, IsEnum } from "class-validator";
 
 export enum DevicePlatform {
-  IOS = 'ios',
-  ANDROID = 'android',
+  IOS = "ios",
+  ANDROID = "android",
 }
 
 export class RegisterDeviceDto {
   @ApiProperty({
-    description: 'Push notification token (FCM or APNs)',
+    description: "Push notification token (FCM or APNs)",
   })
   @IsNotEmpty()
   @IsString()
   pushToken!: string;
 
   @ApiProperty({
-    description: 'Device platform',
+    description: "Device platform",
     enum: DevicePlatform,
   })
   @IsNotEmpty()
@@ -23,7 +23,7 @@ export class RegisterDeviceDto {
   platform!: DevicePlatform;
 
   @ApiProperty({
-    description: 'Unique device identifier',
+    description: "Unique device identifier",
   })
   @IsNotEmpty()
   @IsString()

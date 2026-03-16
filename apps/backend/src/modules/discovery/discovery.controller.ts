@@ -6,87 +6,112 @@ import {
   Body,
   Param,
   Query,
-} from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
-import { DiscoveryService } from './discovery.service';
-import { WeeklyReportService } from './weekly-report.service';
-import { SwipeDto, FeedFilterDto } from './dto';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
+} from "@nestjs/common";
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from "@nestjs/swagger";
+import { Throttle } from "@nestjs/throttler";
+import { DiscoveryService } from "./discovery.service";
+import { WeeklyReportService } from "./weekly-report.service";
+import { SwipeDto, FeedFilterDto } from "./dto";
+import { CurrentUser } from "../../common/decorators/current-user.decorator";
 
-@ApiTags('Discovery')
+@ApiTags("Discovery")
 @ApiBearerAuth()
-@Controller('discovery')
+@Controller("discovery")
 export class DiscoveryController {
   constructor(
     private readonly discoveryService: DiscoveryService,
     private readonly weeklyReportService: WeeklyReportService,
   ) {}
 
-  @Get('feed')
-  @ApiOperation({ summary: 'Get discovery card feed with optional filters and cursor-based pagination' })
-  @ApiQuery({ name: 'genderPreference', required: false, enum: ['male', 'female', 'all'] })
-  @ApiQuery({ name: 'minAge', required: false, type: Number })
-  @ApiQuery({ name: 'maxAge', required: false, type: Number })
-  @ApiQuery({ name: 'maxDistance', required: false, type: Number })
-  @ApiQuery({ name: 'intentionTags', required: false, type: String, description: 'Comma-separated intention tags' })
-  @ApiQuery({ name: 'cursor', required: false, type: String, description: 'Pagination cursor from previous response' })
+  @Get("feed")
+  @ApiOperation({
+    summary:
+      "Get discovery card feed with optional filters and cursor-based pagination",
+  })
+  @ApiQuery({
+    name: "genderPreference",
+    required: false,
+    enum: ["male", "female", "all"],
+  })
+  @ApiQuery({ name: "minAge", required: false, type: Number })
+  @ApiQuery({ name: "maxAge", required: false, type: Number })
+  @ApiQuery({ name: "maxDistance", required: false, type: Number })
+  @ApiQuery({
+    name: "intentionTags",
+    required: false,
+    type: String,
+    description: "Comma-separated intention tags",
+  })
+  @ApiQuery({
+    name: "cursor",
+    required: false,
+    type: String,
+    description: "Pagination cursor from previous response",
+  })
   async getFeed(
-    @CurrentUser('sub') userId: string,
+    @CurrentUser("sub") userId: string,
     @Query() filters: FeedFilterDto,
-    @Query('cursor') cursor?: string,
+    @Query("cursor") cursor?: string,
   ) {
     return this.discoveryService.getDiscoveryFeed(userId, filters, cursor);
   }
 
-  @Post('swipe')
+  @Post("swipe")
   @Throttle({ default: { limit: 30, ttl: 60000 } }) // 30 swipes per minute
-  @ApiOperation({ summary: 'Swipe on a profile (like, pass, or super_like)' })
-  async swipe(
-    @CurrentUser('sub') userId: string,
-    @Body() dto: SwipeDto,
-  ) {
+  @ApiOperation({ summary: "Swipe on a profile (like, pass, or super_like)" })
+  async swipe(@CurrentUser("sub") userId: string, @Body() dto: SwipeDto) {
     return this.discoveryService.swipe(userId, dto);
   }
 
-  @Post('undo')
-  @ApiOperation({ summary: 'Undo last swipe within 5-second window (Geri Al)' })
-  async undoSwipe(
-    @CurrentUser('sub') userId: string,
-  ) {
+  @Post("undo")
+  @ApiOperation({ summary: "Undo last swipe within 5-second window (Geri Al)" })
+  async undoSwipe(@CurrentUser("sub") userId: string) {
     return this.discoveryService.undoSwipe(userId);
   }
 
   // ── Likes You (Seni Begeneler) ─────────────────────────────
 
-  @Get('likes-you')
-  @ApiOperation({ summary: 'Get users who liked you (blurred for Free, clear for Gold+)' })
-  async getLikesYou(@CurrentUser('sub') userId: string) {
+  @Get("likes-you")
+  @ApiOperation({
+    summary: "Get users who liked you (blurred for Free, clear for Gold+)",
+  })
+  async getLikesYou(@CurrentUser("sub") userId: string) {
     return this.discoveryService.getLikesYou(userId);
   }
 
   // ── Daily Picks (Gunun Seckileri) ───────────────────────────
 
-  @Get('daily-picks')
-  @ApiOperation({ summary: 'Get daily curated high-compatibility profiles (top 10, refreshed at midnight)' })
-  async getDailyPicks(@CurrentUser('sub') userId: string) {
+  @Get("daily-picks")
+  @ApiOperation({
+    summary:
+      "Get daily curated high-compatibility profiles (top 10, refreshed at midnight)",
+  })
+  async getDailyPicks(@CurrentUser("sub") userId: string) {
     return this.discoveryService.getDailyPicks(userId);
   }
 
-  @Patch('daily-picks/:pickedUserId/view')
-  @ApiOperation({ summary: 'Mark a daily pick as viewed' })
+  @Patch("daily-picks/:pickedUserId/view")
+  @ApiOperation({ summary: "Mark a daily pick as viewed" })
   async markDailyPickViewed(
-    @CurrentUser('sub') userId: string,
-    @Param('pickedUserId') pickedUserId: string,
+    @CurrentUser("sub") userId: string,
+    @Param("pickedUserId") pickedUserId: string,
   ) {
     return this.discoveryService.markDailyPickViewed(userId, pickedUserId);
   }
 
   // ── Weekly Report (Haftalik Rapor) ────────────────────────────
 
-  @Get('weekly-report')
-  @ApiOperation({ summary: 'Get weekly compatibility report with activity insights and trending interests' })
-  async getWeeklyReport(@CurrentUser('sub') userId: string) {
+  @Get("weekly-report")
+  @ApiOperation({
+    summary:
+      "Get weekly compatibility report with activity insights and trending interests",
+  })
+  async getWeeklyReport(@CurrentUser("sub") userId: string) {
     return this.weeklyReportService.getWeeklyReport(userId);
   }
 }

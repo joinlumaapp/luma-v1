@@ -1,17 +1,26 @@
 // DTO for story creation
 
-import { IsString, IsEnum, IsArray, ValidateNested, IsNumber, IsOptional, Min, Max } from 'class-validator';
-import { Type } from 'class-transformer';
+import {
+  IsString,
+  IsEnum,
+  IsArray,
+  ValidateNested,
+  IsNumber,
+  IsOptional,
+  Min,
+  Max,
+} from "class-validator";
+import { Type } from "class-transformer";
 
 export enum StoryMediaType {
-  IMAGE = 'image',
-  VIDEO = 'video',
+  IMAGE = "image",
+  VIDEO = "video",
 }
 
 export enum StoryOverlayType {
-  TEXT = 'text',
-  STICKER = 'sticker',
-  DRAWING = 'drawing',
+  TEXT = "text",
+  STICKER = "sticker",
+  DRAWING = "drawing",
 }
 
 export class StoryOverlayDto {

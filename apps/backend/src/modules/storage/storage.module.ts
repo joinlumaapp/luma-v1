@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
-import { StorageService } from './storage.service';
-import { StorageController } from './storage.controller';
-import { ImageProcessorService } from './image-processor.service';
+import { Module } from "@nestjs/common";
+import { StorageService } from "./storage.service";
+import { StorageController } from "./storage.controller";
+import { ImageProcessorService } from "./image-processor.service";
 
 /**
  * StorageModule — S3/CloudFront file storage for LUMA V1.

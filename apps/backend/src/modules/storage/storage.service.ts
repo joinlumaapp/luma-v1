@@ -1,16 +1,16 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Injectable, Logger, BadRequestException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
-} from '@aws-sdk/client-s3';
-import { getSignedUrl as s3GetSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { v4 as uuidv4 } from 'uuid';
-import * as fs from 'fs';
-import * as path from 'path';
-import { ImageProcessorService } from './image-processor.service';
+} from "@aws-sdk/client-s3";
+import { getSignedUrl as s3GetSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { v4 as uuidv4 } from "uuid";
+import * as fs from "fs";
+import * as path from "path";
+import { ImageProcessorService } from "./image-processor.service";
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -82,10 +82,7 @@ export const MAX_VIDEO_SIZE = 50 * 1024 * 1024;
 const MAX_VIDEO_DURATION_SECONDS = 30;
 
 /** Allowed video MIME types. */
-export const ALLOWED_VIDEO_TYPES = [
-  'video/mp4',
-  'video/quicktime',
-] as const;
+export const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/quicktime"] as const;
 
 /** Maximum voice intro duration: 30 seconds. */
 const MAX_VOICE_DURATION_SECONDS = 30;
@@ -95,27 +92,27 @@ const M4A_BITRATE_BYTES_PER_SECOND = 16_000;
 
 /** Allowed photo MIME types. */
 export const ALLOWED_PHOTO_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/heic',
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
 ] as const;
 
 /** Map MIME type to file extension. */
 const MIME_TO_EXT: Record<string, string> = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-  'image/heic': 'heic',
-  'audio/mp4': 'm4a',
-  'audio/m4a': 'm4a',
-  'audio/aac': 'aac',
-  'video/mp4': 'mp4',
-  'video/quicktime': 'mov',
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/heic": "heic",
+  "audio/mp4": "m4a",
+  "audio/m4a": "m4a",
+  "audio/aac": "aac",
+  "video/mp4": "mp4",
+  "video/quicktime": "mov",
 };
 
 /** Local uploads directory for dev fallback. */
-const LOCAL_UPLOADS_DIR = path.resolve(process.cwd(), 'uploads');
+const LOCAL_UPLOADS_DIR = path.resolve(process.cwd(), "uploads");
 
 /**
  * StorageService — S3/CloudFront-backed file storage for LUMA V1.
@@ -142,24 +139,38 @@ export class StorageService {
     private readonly configService: ConfigService,
     private readonly imageProcessor: ImageProcessorService,
   ) {
-    this.region = this.configService.get<string>('AWS_REGION', 'eu-west-1');
-    this.bucket = this.configService.get<string>('AWS_S3_BUCKET', 'luma-photos-dev');
-    this.voiceBucket = this.configService.get<string>('AWS_S3_VOICE_BUCKET', 'luma-voice-dev');
-    this.cloudfrontUrl = this.configService.get<string>('AWS_CLOUDFRONT_URL', '');
+    this.region = this.configService.get<string>("AWS_REGION", "eu-west-1");
+    this.bucket = this.configService.get<string>(
+      "AWS_S3_BUCKET",
+      "luma-photos-dev",
+    );
+    this.voiceBucket = this.configService.get<string>(
+      "AWS_S3_VOICE_BUCKET",
+      "luma-voice-dev",
+    );
+    this.cloudfrontUrl = this.configService.get<string>(
+      "AWS_CLOUDFRONT_URL",
+      "",
+    );
 
-    const accessKeyId = this.configService.get<string>('AWS_ACCESS_KEY_ID', '');
-    const secretAccessKey = this.configService.get<string>('AWS_SECRET_ACCESS_KEY', '');
-    const nodeEnv = this.configService.get<string>('NODE_ENV', 'development');
+    const accessKeyId = this.configService.get<string>("AWS_ACCESS_KEY_ID", "");
+    const secretAccessKey = this.configService.get<string>(
+      "AWS_SECRET_ACCESS_KEY",
+      "",
+    );
+    const nodeEnv = this.configService.get<string>("NODE_ENV", "development");
 
     // Determine if we should use local file system instead of S3
-    const hasAwsCredentials = accessKeyId.length > 0 && secretAccessKey.length > 0;
-    this.isLocalMode = !hasAwsCredentials && (nodeEnv === 'development' || nodeEnv === 'test');
+    const hasAwsCredentials =
+      accessKeyId.length > 0 && secretAccessKey.length > 0;
+    this.isLocalMode =
+      !hasAwsCredentials && (nodeEnv === "development" || nodeEnv === "test");
 
     if (this.isLocalMode) {
       this.s3Client = null;
       this.logger.warn(
-        'AWS credentials not configured — running in local storage mode. ' +
-          'Files will be saved to the uploads/ directory.',
+        "AWS credentials not configured — running in local storage mode. " +
+          "Files will be saved to the uploads/ directory.",
       );
       this.ensureLocalUploadDirs();
     } else {
@@ -170,7 +181,9 @@ export class StorageService {
           secretAccessKey,
         },
       });
-      this.logger.log(`S3 storage initialized (region: ${this.region}, bucket: ${this.bucket})`);
+      this.logger.log(
+        `S3 storage initialized (region: ${this.region}, bucket: ${this.bucket})`,
+      );
     }
   }
 
@@ -187,11 +200,11 @@ export class StorageService {
     targetPath: string,
     options?: UploadFileOptions,
   ): Promise<FileUploadResult> {
-    const contentType = options?.contentType ?? 'application/octet-stream';
-    const cacheControl = options?.cacheControl ?? 'max-age=31536000, immutable';
+    const contentType = options?.contentType ?? "application/octet-stream";
+    const cacheControl = options?.cacheControl ?? "max-age=31536000, immutable";
 
     if (file.length === 0) {
-      throw new BadRequestException('File is empty');
+      throw new BadRequestException("File is empty");
     }
 
     const ext = this.getExtensionFromMime(contentType);
@@ -236,13 +249,18 @@ export class StorageService {
     const thumbnailKey = `thumbnails/${userId}/${fileId}.jpg`;
 
     if (this.isLocalMode) {
-      return this.uploadPhotoLocally(photoKey, thumbnailKey, processed.buffer, thumbnail.buffer);
+      return this.uploadPhotoLocally(
+        photoKey,
+        thumbnailKey,
+        processed.buffer,
+        thumbnail.buffer,
+      );
     }
 
     // Upload full-size photo and thumbnail in parallel
     await Promise.all([
-      this.putObject(this.bucket, photoKey, processed.buffer, 'image/jpeg'),
-      this.putObject(this.bucket, thumbnailKey, thumbnail.buffer, 'image/jpeg'),
+      this.putObject(this.bucket, photoKey, processed.buffer, "image/jpeg"),
+      this.putObject(this.bucket, thumbnailKey, thumbnail.buffer, "image/jpeg"),
     ]);
 
     const url = this.buildPublicUrl(this.bucket, photoKey);
@@ -268,7 +286,7 @@ export class StorageService {
   ): Promise<PhotoUploadResult> {
     this.validatePhotoInput(file, mimeType);
 
-    const ext = MIME_TO_EXT[mimeType] || 'jpg';
+    const ext = MIME_TO_EXT[mimeType] || "jpg";
     const fileId = uuidv4();
     const key = `photos/${userId}/${fileId}.${ext}`;
     const thumbnailKey = `thumbnails/${userId}/${fileId}.${ext}`;
@@ -302,7 +320,9 @@ export class StorageService {
     this.validateVoiceInput(audioBuffer);
 
     // Estimate duration from file size (approximate for M4A)
-    const estimatedDuration = Math.round(audioBuffer.length / M4A_BITRATE_BYTES_PER_SECOND);
+    const estimatedDuration = Math.round(
+      audioBuffer.length / M4A_BITRATE_BYTES_PER_SECOND,
+    );
     if (estimatedDuration > MAX_VOICE_DURATION_SECONDS) {
       throw new BadRequestException(
         `Voice intro exceeds maximum duration of ${MAX_VOICE_DURATION_SECONDS} seconds ` +
@@ -318,11 +338,13 @@ export class StorageService {
       return { ...result, duration: estimatedDuration };
     }
 
-    await this.putObject(this.voiceBucket, key, audioBuffer, 'audio/mp4');
+    await this.putObject(this.voiceBucket, key, audioBuffer, "audio/mp4");
 
     const url = this.buildPublicUrl(this.voiceBucket, key);
 
-    this.logger.debug(`Voice intro uploaded: ${key} (${audioBuffer.length} bytes, ~${estimatedDuration}s)`);
+    this.logger.debug(
+      `Voice intro uploaded: ${key} (${audioBuffer.length} bytes, ~${estimatedDuration}s)`,
+    );
 
     return { url, key, duration: estimatedDuration };
   }
@@ -351,13 +373,18 @@ export class StorageService {
       );
     }
 
-    const ext = MIME_TO_EXT[mimeType] || 'mp4';
+    const ext = MIME_TO_EXT[mimeType] || "mp4";
     const fileId = uuidv4();
     const videoKey = `videos/${userId}/${fileId}.${ext}`;
     const thumbnailKey = `thumbnails/${userId}/${fileId}_video.jpg`;
 
     if (this.isLocalMode) {
-      return this.uploadVideoLocally(videoKey, thumbnailKey, videoBuffer, duration);
+      return this.uploadVideoLocally(
+        videoKey,
+        thumbnailKey,
+        videoBuffer,
+        duration,
+      );
     }
 
     await this.putObject(this.bucket, videoKey, videoBuffer, mimeType);
@@ -433,39 +460,47 @@ export class StorageService {
 
   private validatePhotoInput(file: Buffer, mimeType: string): void {
     if (file.length === 0) {
-      throw new BadRequestException('Photo file is empty');
+      throw new BadRequestException("Photo file is empty");
     }
     if (file.length > MAX_PHOTO_SIZE) {
       throw new BadRequestException(
         `Photo exceeds maximum size of ${MAX_PHOTO_SIZE / (1024 * 1024)} MB`,
       );
     }
-    if (!ALLOWED_PHOTO_TYPES.includes(mimeType as (typeof ALLOWED_PHOTO_TYPES)[number])) {
+    if (
+      !ALLOWED_PHOTO_TYPES.includes(
+        mimeType as (typeof ALLOWED_PHOTO_TYPES)[number],
+      )
+    ) {
       throw new BadRequestException(
-        `Unsupported photo type: ${mimeType}. Allowed: ${ALLOWED_PHOTO_TYPES.join(', ')}`,
+        `Unsupported photo type: ${mimeType}. Allowed: ${ALLOWED_PHOTO_TYPES.join(", ")}`,
       );
     }
   }
 
   private validateVideoInput(file: Buffer, mimeType: string): void {
     if (file.length === 0) {
-      throw new BadRequestException('Video dosyasi bos');
+      throw new BadRequestException("Video dosyasi bos");
     }
     if (file.length > MAX_VIDEO_SIZE) {
       throw new BadRequestException(
         `Video boyutu en fazla ${MAX_VIDEO_SIZE / (1024 * 1024)} MB olmali`,
       );
     }
-    if (!ALLOWED_VIDEO_TYPES.includes(mimeType as (typeof ALLOWED_VIDEO_TYPES)[number])) {
+    if (
+      !ALLOWED_VIDEO_TYPES.includes(
+        mimeType as (typeof ALLOWED_VIDEO_TYPES)[number],
+      )
+    ) {
       throw new BadRequestException(
-        `Desteklenmeyen video formati: ${mimeType}. Kabul edilen formatlar: ${ALLOWED_VIDEO_TYPES.join(', ')}`,
+        `Desteklenmeyen video formati: ${mimeType}. Kabul edilen formatlar: ${ALLOWED_VIDEO_TYPES.join(", ")}`,
       );
     }
   }
 
   private validateVoiceInput(file: Buffer): void {
     if (file.length === 0) {
-      throw new BadRequestException('Voice file is empty');
+      throw new BadRequestException("Voice file is empty");
     }
     if (file.length > MAX_VOICE_SIZE) {
       throw new BadRequestException(
@@ -477,7 +512,7 @@ export class StorageService {
   // ─── Helpers ───────────────────────────────────────────────
 
   private getExtensionFromMime(mimeType: string): string {
-    return MIME_TO_EXT[mimeType] ?? 'bin';
+    return MIME_TO_EXT[mimeType] ?? "bin";
   }
 
   // ─── S3 Helpers ─────────────────────────────────────────────
@@ -496,7 +531,7 @@ export class StorageService {
           Key: key,
           Body: body,
           ContentType: contentType,
-          CacheControl: cacheControl ?? 'max-age=31536000, immutable',
+          CacheControl: cacheControl ?? "max-age=31536000, immutable",
         }),
       );
     } catch (err) {
@@ -513,7 +548,7 @@ export class StorageService {
   private buildPublicUrl(bucket: string, key: string): string {
     if (this.cloudfrontUrl) {
       // CloudFront distribution serves from the bucket root
-      return `${this.cloudfrontUrl.replace(/\/$/, '')}/${key}`;
+      return `${this.cloudfrontUrl.replace(/\/$/, "")}/${key}`;
     }
     return `https://${bucket}.s3.${this.region}.amazonaws.com/${key}`;
   }
@@ -522,7 +557,7 @@ export class StorageService {
    * Determine the correct S3 bucket based on the key prefix.
    */
   private getBucketForKey(key: string): string {
-    if (key.startsWith('voice/')) {
+    if (key.startsWith("voice/")) {
       return this.voiceBucket;
     }
     // videos, photos, thumbnails all go in the main bucket
@@ -533,7 +568,7 @@ export class StorageService {
 
   private ensureLocalUploadDirs(): void {
     try {
-      const dirs = ['photos', 'thumbnails', 'voice', 'videos'];
+      const dirs = ["photos", "thumbnails", "voice", "videos"];
       for (const dir of dirs) {
         fs.mkdirSync(path.join(LOCAL_UPLOADS_DIR, dir), { recursive: true });
       }
@@ -573,7 +608,9 @@ export class StorageService {
     const url = `file://${photoPath}`;
     const thumbnailUrl = `file://${thumbPath}`;
 
-    this.logger.debug(`Profile photo saved locally: ${photoPath} (${photoBuffer.length} bytes)`);
+    this.logger.debug(
+      `Profile photo saved locally: ${photoPath} (${photoBuffer.length} bytes)`,
+    );
 
     return { url, thumbnailUrl, key: photoKey };
   }
@@ -591,12 +628,17 @@ export class StorageService {
     const url = `file://${filePath}`;
     const thumbnailUrl = `file://${path.join(LOCAL_UPLOADS_DIR, thumbnailKey)}`;
 
-    this.logger.debug(`Photo saved locally: ${filePath} (${file.length} bytes)`);
+    this.logger.debug(
+      `Photo saved locally: ${filePath} (${file.length} bytes)`,
+    );
 
     return { url, thumbnailUrl, key };
   }
 
-  private uploadVoiceLocally(key: string, file: Buffer): Omit<VoiceUploadResult, 'duration'> {
+  private uploadVoiceLocally(
+    key: string,
+    file: Buffer,
+  ): Omit<VoiceUploadResult, "duration"> {
     const filePath = path.join(LOCAL_UPLOADS_DIR, key);
     const dir = path.dirname(filePath);
     fs.mkdirSync(dir, { recursive: true });
@@ -604,7 +646,9 @@ export class StorageService {
 
     const url = `file://${filePath}`;
 
-    this.logger.debug(`Voice intro saved locally: ${filePath} (${file.length} bytes)`);
+    this.logger.debug(
+      `Voice intro saved locally: ${filePath} (${file.length} bytes)`,
+    );
 
     return { url, key };
   }
@@ -622,7 +666,9 @@ export class StorageService {
     const url = `file://${videoPath}`;
     const thumbnailUrl = `file://${path.join(LOCAL_UPLOADS_DIR, thumbnailKey)}`;
 
-    this.logger.debug(`Profile video saved locally: ${videoPath} (${videoBuffer.length} bytes)`);
+    this.logger.debug(
+      `Profile video saved locally: ${videoPath} (${videoBuffer.length} bytes)`,
+    );
 
     return { url, thumbnailUrl, key: videoKey, duration };
   }

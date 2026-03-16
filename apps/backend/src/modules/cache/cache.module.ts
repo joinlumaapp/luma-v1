@@ -1,5 +1,5 @@
-import { Global, Module } from '@nestjs/common';
-import { LumaCacheService } from './cache.service';
+import { Global, Module } from "@nestjs/common";
+import { LumaCacheService } from "./cache.service";
 
 /**
  * CacheModule — Global Redis cache layer for LUMA V1.

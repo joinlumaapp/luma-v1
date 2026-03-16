@@ -3,30 +3,30 @@ import {
   BadRequestException,
   ForbiddenException,
   Logger,
-} from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { BadgesService } from '../badges/badges.service';
-import { NotificationsService } from '../notifications/notifications.service';
-import { SwipeDto, SwipeDirection } from './dto';
-import { FeedFilterDto, GenderPreferenceParam } from './dto/feed-filter.dto';
+} from "@nestjs/common";
+import { PrismaService } from "../../prisma/prisma.service";
+import { BadgesService } from "../badges/badges.service";
+import { NotificationsService } from "../notifications/notifications.service";
+import { SwipeDto, SwipeDirection } from "./dto";
+import { FeedFilterDto, GenderPreferenceParam } from "./dto/feed-filter.dto";
 
 // Turkish labels for compatibility dimension categories
 const DIMENSION_LABELS_TR: Record<string, string> = {
-  COMMUNICATION: 'Iletisim Tarzi',
-  LIFE_GOALS: 'Yasam Hedefleri',
-  VALUES: 'Degerler',
-  LIFESTYLE: 'Yasam Tarzi',
-  EMOTIONAL_INTELLIGENCE: 'Duygusal Zeka',
-  RELATIONSHIP_EXPECTATIONS: 'Iliski Beklentileri',
-  SOCIAL_COMPATIBILITY: 'Sosyal Uyum',
-  ATTACHMENT_STYLE: 'Baglanma Tarzi',
-  LOVE_LANGUAGE: 'Sevgi Dili',
-  CONFLICT_STYLE: 'Catisma Yaklasimi',
-  FUTURE_VISION: 'Gelecek Vizyonu',
-  INTELLECTUAL: 'Entelektuel Uyum',
-  INTIMACY: 'Yakinlik',
-  GROWTH_MINDSET: 'Gelisim Odaklilik',
-  CORE_FEARS: 'Temel Kaygilar',
+  COMMUNICATION: "Iletisim Tarzi",
+  LIFE_GOALS: "Yasam Hedefleri",
+  VALUES: "Degerler",
+  LIFESTYLE: "Yasam Tarzi",
+  EMOTIONAL_INTELLIGENCE: "Duygusal Zeka",
+  RELATIONSHIP_EXPECTATIONS: "Iliski Beklentileri",
+  SOCIAL_COMPATIBILITY: "Sosyal Uyum",
+  ATTACHMENT_STYLE: "Baglanma Tarzi",
+  LOVE_LANGUAGE: "Sevgi Dili",
+  CONFLICT_STYLE: "Catisma Yaklasimi",
+  FUTURE_VISION: "Gelecek Vizyonu",
+  INTELLECTUAL: "Entelektuel Uyum",
+  INTIMACY: "Yakinlik",
+  GROWTH_MINDSET: "Gelisim Odaklilik",
+  CORE_FEARS: "Temel Kaygilar",
 };
 
 // Threshold for a dimension to be considered "strong"
@@ -80,13 +80,13 @@ const BOOST_SCORE_MULTIPLIER = 3;
 // Distance proximity contributes 15% — closer users rank higher.
 // Other weights reduced proportionally to accommodate distance.
 const SCORE_WEIGHTS = {
-  COMPATIBILITY: 0.35,          // Compatibility score contribution
-  DISTANCE: 0.15,               // Geographic proximity bonus (closer = higher)
-  PROFILE_COMPLETENESS: 0.12,   // Profile completeness bonus
-  ACTIVITY: 0.13,               // Recent activity score
-  PHOTO_COUNT: 0.08,            // Photo count factor
-  MUTUAL_INTERESTS: 0.10,       // Mutual interest tag overlap
-  VERIFICATION: 0.07,           // Verified selfie users boosted
+  COMPATIBILITY: 0.35, // Compatibility score contribution
+  DISTANCE: 0.15, // Geographic proximity bonus (closer = higher)
+  PROFILE_COMPLETENESS: 0.12, // Profile completeness bonus
+  ACTIVITY: 0.13, // Recent activity score
+  PHOTO_COUNT: 0.08, // Photo count factor
+  MUTUAL_INTERESTS: 0.1, // Mutual interest tag overlap
+  VERIFICATION: 0.07, // Verified selfie users boosted
 };
 
 // Maximum distance in km used as reference for distance scoring (50 km)
@@ -171,7 +171,7 @@ export class DiscoveryService {
     const activeRelationship = await this.prisma.relationship.findFirst({
       where: {
         OR: [{ userAId: userId }, { userBId: userId }],
-        status: 'ACTIVE',
+        status: "ACTIVE",
       },
     });
 
@@ -193,11 +193,15 @@ export class DiscoveryService {
     });
 
     if (!user || !user.profile) {
-      throw new BadRequestException('Kesfet icin profil olusturmaniz gerekiyor');
+      throw new BadRequestException(
+        "Kesfet icin profil olusturmaniz gerekiyor",
+      );
     }
 
     const today = this.getToday();
-    const antiRepeatCutoff = new Date(Date.now() - ANTI_REPEAT_WINDOW_HOURS * 60 * 60 * 1000);
+    const antiRepeatCutoff = new Date(
+      Date.now() - ANTI_REPEAT_WINDOW_HOURS * 60 * 60 * 1000,
+    );
 
     // Parallel: exclusion IDs + daily swipe count + super likers + recent feed views
     const [
@@ -232,11 +236,11 @@ export class DiscoveryService {
       this.prisma.swipe.findMany({
         where: {
           targetId: userId,
-          action: 'SUPER_LIKE',
+          action: "SUPER_LIKE",
           createdAt: { gte: antiRepeatCutoff },
         },
         select: { swiperId: true, createdAt: true },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
       }),
       // Recent feed views for anti-repeat (profiles shown in last 24h)
       this.getRecentFeedViews(userId, antiRepeatCutoff),
@@ -244,7 +248,7 @@ export class DiscoveryService {
 
     // Exclude users who are currently in active relationships
     const activeRelationships = await this.prisma.relationship.findMany({
-      where: { status: 'ACTIVE' },
+      where: { status: "ACTIVE" },
       select: { userAId: true, userBId: true },
     });
     const usersInRelationships = new Set<string>();
@@ -273,7 +277,9 @@ export class DiscoveryService {
     ]);
 
     // Apply cursor-based pagination: if cursor provided, exclude IDs before cursor
-    const cursorExcludeIds = cursor ? this.decodeCursor(cursor) : new Set<string>();
+    const cursorExcludeIds = cursor
+      ? this.decodeCursor(cursor)
+      : new Set<string>();
 
     const allExcludeIds = new Set([...excludeIds, ...cursorExcludeIds]);
 
@@ -300,14 +306,14 @@ export class DiscoveryService {
             createdAt: true,
             photos: {
               where: { isApproved: true },
-              orderBy: { order: 'asc' },
+              orderBy: { order: "asc" },
               take: 6,
             },
           },
         },
       },
       take: FEED_CANDIDATE_BATCH_SIZE,
-      orderBy: { lastActiveAt: 'desc' },
+      orderBy: { lastActiveAt: "desc" },
     });
 
     // Apply age + distance filter in a single pass, pre-compute distances
@@ -319,8 +325,11 @@ export class DiscoveryService {
     // This ensures fresh GPS data is used when the mobile client sends it.
     const userLat = filters?.latitude ?? user.profile.latitude;
     const userLon = filters?.longitude ?? user.profile.longitude;
-    const hasUserLocation = userLat !== null && userLat !== undefined
-      && userLon !== null && userLon !== undefined;
+    const hasUserLocation =
+      userLat !== null &&
+      userLat !== undefined &&
+      userLon !== null &&
+      userLon !== undefined;
 
     const filteredCandidates: Array<{
       profile: (typeof candidates)[number];
@@ -333,9 +342,16 @@ export class DiscoveryService {
       if (age < minAge || age > maxAge) continue;
 
       let distanceKm: number | null = null;
-      if (hasUserLocation && profile.latitude !== null && profile.longitude !== null) {
+      if (
+        hasUserLocation &&
+        profile.latitude !== null &&
+        profile.longitude !== null
+      ) {
         distanceKm = this.calculateDistanceKm(
-          userLat!, userLon!, profile.latitude, profile.longitude,
+          userLat!,
+          userLon!,
+          profile.latitude,
+          profile.longitude,
         );
         if (distanceKm > maxDistanceKm) continue;
       }
@@ -384,7 +400,11 @@ export class DiscoveryService {
     // Build O(1) lookup maps
     const compatMap = new Map<
       string,
-      { finalScore: number; level: string; dimensionScores: Record<string, number> | null }
+      {
+        finalScore: number;
+        level: string;
+        dimensionScores: Record<string, number> | null;
+      }
     >();
     for (const score of compatScores) {
       compatMap.set(`${score.userAId}_${score.userBId}`, {
@@ -400,78 +420,82 @@ export class DiscoveryService {
     const userInterestTags = new Set(user.profile.interestTags ?? []);
 
     // Build scored cards
-    const cards: ScoredFeedCard[] = filteredCandidates.map(({ profile, age, distanceKm }) => {
-      const { first, second } = this.orderIds(userId, profile.userId);
-      const score = compatMap.get(`${first}_${second}`) ?? null;
-      const isBoosted = boostedUserIds.has(profile.userId);
-      const isSuperLiker = superLikerIds.has(profile.userId);
+    const cards: ScoredFeedCard[] = filteredCandidates.map(
+      ({ profile, age, distanceKm }) => {
+        const { first, second } = this.orderIds(userId, profile.userId);
+        const score = compatMap.get(`${first}_${second}`) ?? null;
+        const isBoosted = boostedUserIds.has(profile.userId);
+        const isSuperLiker = superLikerIds.has(profile.userId);
 
-      // Calculate mutual interest overlap
-      const candidateInterestTags = profile.interestTags ?? [];
-      const mutualInterestCount = candidateInterestTags.filter(
-        (tag: string) => userInterestTags.has(tag),
-      ).length;
-      const totalUniqueInterests = new Set([
-        ...userInterestTags,
-        ...candidateInterestTags,
-      ]).size;
-      const mutualInterestRatio = totalUniqueInterests > 0
-        ? mutualInterestCount / totalUniqueInterests
-        : 0;
+        // Calculate mutual interest overlap
+        const candidateInterestTags = profile.interestTags ?? [];
+        const mutualInterestCount = candidateInterestTags.filter(
+          (tag: string) => userInterestTags.has(tag),
+        ).length;
+        const totalUniqueInterests = new Set([
+          ...userInterestTags,
+          ...candidateInterestTags,
+        ]).size;
+        const mutualInterestRatio =
+          totalUniqueInterests > 0
+            ? mutualInterestCount / totalUniqueInterests
+            : 0;
 
-      let feedScore = this.calculateFeedScore({
-        compatibilityScore: score?.finalScore ?? 0,
-        distanceKm,
-        lastActiveAt: profile.lastActiveAt,
-        isComplete: profile.isComplete,
-        bioLength: profile.bio?.length ?? 0,
-        photoCount: profile.user.photos.length,
-        accountCreatedAt: profile.user.createdAt,
-        isVerified: profile.user.isSelfieVerified,
-        mutualInterestRatio,
-      });
+        let feedScore = this.calculateFeedScore({
+          compatibilityScore: score?.finalScore ?? 0,
+          distanceKm,
+          lastActiveAt: profile.lastActiveAt,
+          isComplete: profile.isComplete,
+          bioLength: profile.bio?.length ?? 0,
+          photoCount: profile.user.photos.length,
+          accountCreatedAt: profile.user.createdAt,
+          isVerified: profile.user.isSelfieVerified,
+          mutualInterestRatio,
+        });
 
-      // Apply boost multiplier (3x visibility for 30 minutes)
-      if (isBoosted) {
-        feedScore = Math.min(100, feedScore * BOOST_SCORE_MULTIPLIER);
-      }
+        // Apply boost multiplier (3x visibility for 30 minutes)
+        if (isBoosted) {
+          feedScore = Math.min(100, feedScore * BOOST_SCORE_MULTIPLIER);
+        }
 
-      // Derive strong categories and explanation from dimension scores
-      const dimensions = score?.dimensionScores ?? null;
-      const strongCategories = this.getStrongCategories(dimensions);
-      const compatExplanation = this.buildCompatExplanation(dimensions);
+        // Derive strong categories and explanation from dimension scores
+        const dimensions = score?.dimensionScores ?? null;
+        const strongCategories = this.getStrongCategories(dimensions);
+        const compatExplanation = this.buildCompatExplanation(dimensions);
 
-      return {
-        userId: profile.userId,
-        firstName: profile.firstName,
-        age,
-        bio: profile.bio,
-        city: profile.city,
-        gender: profile.gender,
-        intentionTag: profile.intentionTag,
-        interestTags: profile.interestTags ?? [],
-        distanceKm: distanceKm !== null ? Math.round(distanceKm * 10) / 10 : null,
-        photos: profile.user.photos.map((p) => ({
-          id: p.id,
-          url: p.url,
-          thumbnailUrl: p.thumbnailUrl,
-        })),
-        isVerified: profile.user.isSelfieVerified,
-        packageTier: profile.user.packageTier,
-        compatibility: score
-          ? {
-              score: score.finalScore,
-              level: score.level,
-              isSuperCompatible: score.level === 'SUPER',
-            }
-          : null,
-        compatExplanation,
-        strongCategories,
-        feedScore,
-        isBoosted,
-        isSuperLiker,
-      };
-    });
+        return {
+          userId: profile.userId,
+          firstName: profile.firstName,
+          age,
+          bio: profile.bio,
+          city: profile.city,
+          gender: profile.gender,
+          intentionTag: profile.intentionTag,
+          interestTags: profile.interestTags ?? [],
+          distanceKm:
+            distanceKm !== null ? Math.round(distanceKm * 10) / 10 : null,
+          photos: profile.user.photos.map((p) => ({
+            id: p.id,
+            url: p.url,
+            thumbnailUrl: p.thumbnailUrl,
+          })),
+          isVerified: profile.user.isSelfieVerified,
+          packageTier: profile.user.packageTier,
+          compatibility: score
+            ? {
+                score: score.finalScore,
+                level: score.level,
+                isSuperCompatible: score.level === "SUPER",
+              }
+            : null,
+          compatExplanation,
+          strongCategories,
+          feedScore,
+          isBoosted,
+          isSuperLiker,
+        };
+      },
+    );
 
     // Sort: super-likers first, then by smart feed score (highest first)
     cards.sort((a, b) => {
@@ -495,19 +519,24 @@ export class DiscoveryService {
       ...cursorExcludeIds,
       ...paginatedCards.map((c) => c.userId),
     ]);
-    const nextCursor = paginatedCards.length === FEED_PAGE_SIZE
-      ? this.encodeCursor(seenIds)
-      : null;
+    const nextCursor =
+      paginatedCards.length === FEED_PAGE_SIZE
+        ? this.encodeCursor(seenIds)
+        : null;
 
     // Record feed views for anti-repeat pattern (fire-and-forget)
     if (paginatedCards.length > 0) {
-      this.recordFeedViews(userId, paginatedCards.map((c) => c.userId)).catch(
-        (err) => this.logger.warn('Feed view recording failed', err.message),
+      this.recordFeedViews(
+        userId,
+        paginatedCards.map((c) => c.userId),
+      ).catch((err) =>
+        this.logger.warn("Feed view recording failed", err.message),
       );
     }
 
     // Check daily feed view / swipe remaining
-    const dailyLimit = DAILY_FEED_VIEW_LIMITS[user.packageTier] ?? DAILY_FEED_VIEW_LIMITS.FREE;
+    const dailyLimit =
+      DAILY_FEED_VIEW_LIMITS[user.packageTier] ?? DAILY_FEED_VIEW_LIMITS.FREE;
     const remaining = dailyLimit - (todaySwipeCount?.count ?? 0);
 
     return {
@@ -524,7 +553,11 @@ export class DiscoveryService {
    * Backwards-compatible alias for getDiscoveryFeed.
    * Called by the controller's GET /discovery/feed endpoint.
    */
-  async getFeed(userId: string, filters?: FeedFilterDto, cursor?: string): Promise<PaginatedFeed> {
+  async getFeed(
+    userId: string,
+    filters?: FeedFilterDto,
+    cursor?: string,
+  ): Promise<PaginatedFeed> {
     return this.getDiscoveryFeed(userId, filters, cursor);
   }
 
@@ -542,7 +575,7 @@ export class DiscoveryService {
     });
 
     if (!user) {
-      throw new BadRequestException('Kullanici bulunamadi');
+      throw new BadRequestException("Kullanici bulunamadi");
     }
 
     // Check if target user exists
@@ -552,7 +585,7 @@ export class DiscoveryService {
     });
 
     if (!targetUser || !targetUser.isActive) {
-      throw new BadRequestException('Hedef kullanici bulunamadi');
+      throw new BadRequestException("Hedef kullanici bulunamadi");
     }
 
     // Check if either user has blocked the other (edge case: block after feed load)
@@ -566,7 +599,7 @@ export class DiscoveryService {
     });
 
     if (blockExists) {
-      throw new BadRequestException('Bu kullaniciyla etkilesim kurulamaz');
+      throw new BadRequestException("Bu kullaniciyla etkilesim kurulamaz");
     }
 
     // Check if already swiped
@@ -577,11 +610,12 @@ export class DiscoveryService {
     });
 
     if (existingSwipe) {
-      throw new BadRequestException('Bu kullaniciya zaten karar verdiniz');
+      throw new BadRequestException("Bu kullaniciya zaten karar verdiniz");
     }
 
     // Check daily swipe limit
-    const dailyLimit = DAILY_SWIPE_LIMITS[user.packageTier] ?? DAILY_SWIPE_LIMITS.FREE;
+    const dailyLimit =
+      DAILY_SWIPE_LIMITS[user.packageTier] ?? DAILY_SWIPE_LIMITS.FREE;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -599,11 +633,13 @@ export class DiscoveryService {
 
     // Check super like daily limit if applicable
     if (dto.direction === SwipeDirection.SUPER_LIKE) {
-      const superLikeLimit = DAILY_SUPER_LIKE_LIMITS[user.packageTier] ?? DAILY_SUPER_LIKE_LIMITS.FREE;
+      const superLikeLimit =
+        DAILY_SUPER_LIKE_LIMITS[user.packageTier] ??
+        DAILY_SUPER_LIKE_LIMITS.FREE;
       const todaySuperLikes = await this.prisma.swipe.count({
         where: {
           swiperId: userId,
-          action: 'SUPER_LIKE',
+          action: "SUPER_LIKE",
           createdAt: { gte: today },
         },
       });
@@ -616,11 +652,12 @@ export class DiscoveryService {
     }
 
     // Map DTO direction to Prisma enum
-    const action = dto.direction === SwipeDirection.PASS
-      ? 'PASS'
-      : dto.direction === SwipeDirection.SUPER_LIKE
-        ? 'SUPER_LIKE'
-        : 'LIKE';
+    const action =
+      dto.direction === SwipeDirection.PASS
+        ? "PASS"
+        : dto.direction === SwipeDirection.SUPER_LIKE
+          ? "SUPER_LIKE"
+          : "LIKE";
 
     // Record the swipe and increment daily count in a transaction
     const result = await this.prisma.$transaction(async (tx) => {
@@ -630,7 +667,7 @@ export class DiscoveryService {
           swiperId: userId,
           targetId: dto.targetUserId,
           action,
-          ...(dto.comment && action === 'LIKE' ? { comment: dto.comment } : {}),
+          ...(dto.comment && action === "LIKE" ? { comment: dto.comment } : {}),
         },
       });
 
@@ -642,18 +679,23 @@ export class DiscoveryService {
       });
 
       // If PASS, no match check needed
-      if (action === 'PASS') {
-        return { isMatch: false, matchId: null, animationType: null, swipeId: swipeRecord.id };
+      if (action === "PASS") {
+        return {
+          isMatch: false,
+          matchId: null,
+          animationType: null,
+          swipeId: swipeRecord.id,
+        };
       }
 
       // Send special notification for super likes
-      if (action === 'SUPER_LIKE') {
+      if (action === "SUPER_LIKE") {
         await tx.notification.create({
           data: {
             userId: dto.targetUserId,
-            type: 'SUPER_LIKE',
-            title: 'Super Begeni!',
-            body: 'Birisi sizi Super Begendi! Hemen gormek ister misiniz?',
+            type: "SUPER_LIKE",
+            title: "Super Begeni!",
+            body: "Birisi sizi Super Begendi! Hemen gormek ister misiniz?",
             data: { swiperId: userId },
           },
         });
@@ -669,8 +711,13 @@ export class DiscoveryService {
         },
       });
 
-      if (!reciprocalSwipe || reciprocalSwipe.action === 'PASS') {
-        return { isMatch: false, matchId: null, animationType: null, swipeId: swipeRecord.id };
+      if (!reciprocalSwipe || reciprocalSwipe.action === "PASS") {
+        return {
+          isMatch: false,
+          matchId: null,
+          animationType: null,
+          swipeId: swipeRecord.id,
+        };
       }
 
       // MUTUAL LIKE — Create match!
@@ -690,50 +737,54 @@ export class DiscoveryService {
       ]);
 
       const finalScore = compatScore?.finalScore ?? 0;
-      const compatLevel = compatScore?.level ?? 'NORMAL';
+      const compatLevel = compatScore?.level ?? "NORMAL";
 
       // LOCKED: 2 animation types
-      const animationType = compatLevel === 'SUPER'
-        ? 'SUPER_COMPATIBILITY'
-        : 'NORMAL';
+      const animationType =
+        compatLevel === "SUPER" ? "SUPER_COMPATIBILITY" : "NORMAL";
 
       const match = await tx.match.create({
         data: {
           userAId: first,
           userBId: second,
           compatibilityScore: finalScore,
-          compatibilityLevel: compatLevel as 'NORMAL' | 'SUPER',
-          animationType: animationType as 'NORMAL' | 'SUPER_COMPATIBILITY',
+          compatibilityLevel: compatLevel as "NORMAL" | "SUPER",
+          animationType: animationType as "NORMAL" | "SUPER_COMPATIBILITY",
         },
       });
 
       // Create personalized notifications for both users
-      const swiperName = swiperProfile?.firstName ?? 'Biri';
-      const targetName = targetProfile?.firstName ?? 'Biri';
-      const scoreText = finalScore > 0 ? ` (%${Math.round(finalScore)} uyum)` : '';
+      const swiperName = swiperProfile?.firstName ?? "Biri";
+      const targetName = targetProfile?.firstName ?? "Biri";
+      const scoreText =
+        finalScore > 0 ? ` (%${Math.round(finalScore)} uyum)` : "";
 
       await tx.notification.createMany({
         data: [
           {
             userId,
-            type: 'NEW_MATCH',
-            title: compatLevel === 'SUPER'
-              ? 'Super Uyumlu Eslesme!'
-              : 'Yeni Eslesme!',
-            body: compatLevel === 'SUPER'
-              ? `${targetName} ile super uyumlu bir eslesmeniz var!${scoreText}`
-              : `${targetName} ile eslestiniz!${scoreText}`,
+            type: "NEW_MATCH",
+            title:
+              compatLevel === "SUPER"
+                ? "Super Uyumlu Eslesme!"
+                : "Yeni Eslesme!",
+            body:
+              compatLevel === "SUPER"
+                ? `${targetName} ile super uyumlu bir eslesmeniz var!${scoreText}`
+                : `${targetName} ile eslestiniz!${scoreText}`,
             data: { matchId: match.id, animationType },
           },
           {
             userId: dto.targetUserId,
-            type: 'NEW_MATCH',
-            title: compatLevel === 'SUPER'
-              ? 'Super Uyumlu Eslesme!'
-              : 'Yeni Eslesme!',
-            body: compatLevel === 'SUPER'
-              ? `${swiperName} ile super uyumlu bir eslesmeniz var!${scoreText}`
-              : `${swiperName} ile eslestiniz!${scoreText}`,
+            type: "NEW_MATCH",
+            title:
+              compatLevel === "SUPER"
+                ? "Super Uyumlu Eslesme!"
+                : "Yeni Eslesme!",
+            body:
+              compatLevel === "SUPER"
+                ? `${swiperName} ile super uyumlu bir eslesmeniz var!${scoreText}`
+                : `${swiperName} ile eslestiniz!${scoreText}`,
             data: { matchId: match.id, animationType },
           },
         ],
@@ -751,17 +802,27 @@ export class DiscoveryService {
 
     // Send push notifications for matches and super likes (outside transaction, fire-and-forget)
     if (result.isMatch && result.swiperName && result.targetName) {
-      this.notificationsService.notifyNewMatch(dto.targetUserId, result.swiperName).catch(() => {});
-      this.notificationsService.notifyNewMatch(userId, result.targetName).catch(() => {});
+      this.notificationsService
+        .notifyNewMatch(dto.targetUserId, result.swiperName)
+        .catch(() => {});
+      this.notificationsService
+        .notifyNewMatch(userId, result.targetName)
+        .catch(() => {});
     }
 
     // Award badge checks after swipe (non-blocking)
-    this.badgesService.checkAndAwardBadges(userId, 'swipe').catch((err) => this.logger.warn('Badge check failed', err.message));
+    this.badgesService
+      .checkAndAwardBadges(userId, "swipe")
+      .catch((err) => this.logger.warn("Badge check failed", err.message));
 
     // If match was created, check match-related badges for both users
     if (result.isMatch) {
-      this.badgesService.checkAndAwardBadges(userId, 'match').catch((err) => this.logger.warn('Badge check failed', err.message));
-      this.badgesService.checkAndAwardBadges(dto.targetUserId, 'match').catch((err) => this.logger.warn('Badge check failed', err.message));
+      this.badgesService
+        .checkAndAwardBadges(userId, "match")
+        .catch((err) => this.logger.warn("Badge check failed", err.message));
+      this.badgesService
+        .checkAndAwardBadges(dto.targetUserId, "match")
+        .catch((err) => this.logger.warn("Badge check failed", err.message));
     }
 
     return {
@@ -777,7 +838,7 @@ export class DiscoveryService {
   async recordInteraction(
     userId: string,
     targetId: string,
-    type: 'like' | 'pass' | 'superlike',
+    type: "like" | "pass" | "superlike",
   ): Promise<{ recorded: boolean }> {
     const directionMap: Record<string, SwipeDirection> = {
       like: SwipeDirection.LIKE,
@@ -801,18 +862,18 @@ export class DiscoveryService {
     // Find the most recent swipe by this user
     const lastSwipe = await this.prisma.swipe.findFirst({
       where: { swiperId: userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     if (!lastSwipe) {
-      throw new BadRequestException('Geri alinacak bir islem bulunamadi');
+      throw new BadRequestException("Geri alinacak bir islem bulunamadi");
     }
 
     // Check if the swipe is within the undo time window
     const swipeAge = Date.now() - lastSwipe.createdAt.getTime();
     if (swipeAge > UNDO_WINDOW_MS) {
       throw new BadRequestException(
-        'Geri alma suresi doldu. Sadece son 5 saniye icindeki islemler geri alinabilir.',
+        "Geri alma suresi doldu. Sadece son 5 saniye icindeki islemler geri alinabilir.",
       );
     }
 
@@ -857,15 +918,15 @@ export class DiscoveryService {
       select: { packageTier: true },
     });
 
-    if (!user) throw new BadRequestException('Kullanici bulunamadi');
+    if (!user) throw new BadRequestException("Kullanici bulunamadi");
 
-    const isBlurred = user.packageTier === 'FREE';
+    const isBlurred = user.packageTier === "FREE";
 
     // Get swipes where someone liked this user AND no match exists yet
     const incomingLikes = await this.prisma.swipe.findMany({
       where: {
         targetId: userId,
-        action: { in: ['LIKE', 'SUPER_LIKE'] },
+        action: { in: ["LIKE", "SUPER_LIKE"] },
         swiper: {
           isActive: true,
           deletedAt: null,
@@ -894,23 +955,24 @@ export class DiscoveryService {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: 50,
     });
 
     // Batch-fetch compatibility scores
     const likerIds = incomingLikes.map((s) => s.swiperId);
-    const compatScores = likerIds.length > 0
-      ? await this.prisma.compatibilityScore.findMany({
-          where: {
-            OR: likerIds.map((likerId) => {
-              const { first, second } = this.orderIds(userId, likerId);
-              return { userAId: first, userBId: second };
-            }),
-          },
-          select: { userAId: true, userBId: true, finalScore: true },
-        })
-      : [];
+    const compatScores =
+      likerIds.length > 0
+        ? await this.prisma.compatibilityScore.findMany({
+            where: {
+              OR: likerIds.map((likerId) => {
+                const { first, second } = this.orderIds(userId, likerId);
+                return { userAId: first, userBId: second };
+              }),
+            },
+            select: { userAId: true, userBId: true, finalScore: true },
+          })
+        : [];
 
     const compatMap = new Map<string, number>();
     for (const s of compatScores) {
@@ -924,11 +986,11 @@ export class DiscoveryService {
 
       return {
         userId: swipe.swiperId,
-        firstName: swipe.swiper.profile?.firstName ?? '',
+        firstName: swipe.swiper.profile?.firstName ?? "",
         age: swipe.swiper.profile?.birthDate
           ? this.calculateAge(swipe.swiper.profile.birthDate)
           : 0,
-        photoUrl: photo?.thumbnailUrl ?? photo?.url ?? '',
+        photoUrl: photo?.thumbnailUrl ?? photo?.url ?? "",
         compatibilityPercent: Math.round(score),
         likedAt: swipe.createdAt.toISOString(),
         comment: swipe.comment ?? null,
@@ -963,15 +1025,16 @@ export class DiscoveryService {
       select: { packageTier: true },
     });
 
-    if (!user) throw new BadRequestException('Kullanici bulunamadi');
+    if (!user) throw new BadRequestException("Kullanici bulunamadi");
 
     const today = this.getToday();
-    const totalAvailable = DiscoveryService.DAILY_PICK_COUNTS[user.packageTier] ?? 3;
+    const totalAvailable =
+      DiscoveryService.DAILY_PICK_COUNTS[user.packageTier] ?? 3;
 
     // Check if picks already generated for today
     const existingPicks = await this.prisma.dailyPick.findMany({
       where: { userId, date: today },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: "asc" },
     });
 
     let pickUserIds: string[];
@@ -995,45 +1058,55 @@ export class DiscoveryService {
     }
 
     // Fetch profile data for picked users
-    const pickedUsers = pickUserIds.length > 0
-      ? await this.prisma.userProfile.findMany({
-          where: { userId: { in: pickUserIds } },
-          select: {
-            userId: true,
-            firstName: true,
-            birthDate: true,
-            city: true,
-            bio: true,
-            intentionTag: true,
-            interestTags: true,
-            user: {
-              select: {
-                isSelfieVerified: true,
-                photos: {
-                  where: { isPrimary: true, isApproved: true },
-                  select: { url: true, thumbnailUrl: true },
-                  take: 1,
+    const pickedUsers =
+      pickUserIds.length > 0
+        ? await this.prisma.userProfile.findMany({
+            where: { userId: { in: pickUserIds } },
+            select: {
+              userId: true,
+              firstName: true,
+              birthDate: true,
+              city: true,
+              bio: true,
+              intentionTag: true,
+              interestTags: true,
+              user: {
+                select: {
+                  isSelfieVerified: true,
+                  photos: {
+                    where: { isPrimary: true, isApproved: true },
+                    select: { url: true, thumbnailUrl: true },
+                    take: 1,
+                  },
                 },
               },
             },
-          },
-        })
-      : [];
+          })
+        : [];
 
     // Batch compatibility scores
-    const compatScores = pickUserIds.length > 0
-      ? await this.prisma.compatibilityScore.findMany({
-          where: {
-            OR: pickUserIds.map((pid) => {
-              const { first, second } = this.orderIds(userId, pid);
-              return { userAId: first, userBId: second };
-            }),
-          },
-          select: { userAId: true, userBId: true, finalScore: true, dimensionScores: true },
-        })
-      : [];
+    const compatScores =
+      pickUserIds.length > 0
+        ? await this.prisma.compatibilityScore.findMany({
+            where: {
+              OR: pickUserIds.map((pid) => {
+                const { first, second } = this.orderIds(userId, pid);
+                return { userAId: first, userBId: second };
+              }),
+            },
+            select: {
+              userAId: true,
+              userBId: true,
+              finalScore: true,
+              dimensionScores: true,
+            },
+          })
+        : [];
 
-    const compatMap = new Map<string, { finalScore: number; dimensionScores: Record<string, number> | null }>();
+    const compatMap = new Map<
+      string,
+      { finalScore: number; dimensionScores: Record<string, number> | null }
+    >();
     for (const s of compatScores) {
       compatMap.set(`${s.userAId}_${s.userBId}`, {
         finalScore: s.finalScore,
@@ -1057,15 +1130,17 @@ export class DiscoveryService {
         const photo = profile.user.photos[0];
         const { first, second } = this.orderIds(userId, pickedUserId);
         const compat = compatMap.get(`${first}_${second}`);
-        const explanation = this.buildCompatExplanation(compat?.dimensionScores ?? null);
+        const explanation = this.buildCompatExplanation(
+          compat?.dimensionScores ?? null,
+        );
 
         return {
           userId: pickedUserId,
           firstName: profile.firstName,
           age: this.calculateAge(profile.birthDate),
-          city: profile.city ?? '',
-          bio: profile.bio ?? '',
-          photoUrl: photo?.thumbnailUrl ?? photo?.url ?? '',
+          city: profile.city ?? "",
+          bio: profile.bio ?? "",
+          photoUrl: photo?.thumbnailUrl ?? photo?.url ?? "",
           compatibilityPercent: Math.round(compat?.finalScore ?? 0),
           compatExplanation: explanation,
           intentionTag: profile.intentionTag,
@@ -1132,7 +1207,10 @@ export class DiscoveryService {
     if (params.distanceKm !== null) {
       distanceComponent = Math.max(
         0,
-        (1 - Math.min(params.distanceKm, DISTANCE_SCORING_MAX_KM) / DISTANCE_SCORING_MAX_KM) * 100,
+        (1 -
+          Math.min(params.distanceKm, DISTANCE_SCORING_MAX_KM) /
+            DISTANCE_SCORING_MAX_KM) *
+          100,
       );
     }
 
@@ -1147,13 +1225,16 @@ export class DiscoveryService {
     // 3. Activity recency score (0-100) — weight 15%
     let activityComponent = 0;
     if (params.lastActiveAt) {
-      const hoursSinceActive = (Date.now() - params.lastActiveAt.getTime()) / (1000 * 60 * 60);
+      const hoursSinceActive =
+        (Date.now() - params.lastActiveAt.getTime()) / (1000 * 60 * 60);
       if (hoursSinceActive <= 1) {
         activityComponent = 100; // Online now or very recently
       } else if (hoursSinceActive <= ACTIVITY_RECENCY_HOURS) {
-        activityComponent = 100 - (hoursSinceActive / ACTIVITY_RECENCY_HOURS) * 60;
+        activityComponent =
+          100 - (hoursSinceActive / ACTIVITY_RECENCY_HOURS) * 60;
       } else if (hoursSinceActive <= 72) {
-        activityComponent = 40 - ((hoursSinceActive - ACTIVITY_RECENCY_HOURS) / 48) * 30;
+        activityComponent =
+          40 - ((hoursSinceActive - ACTIVITY_RECENCY_HOURS) / 48) * 30;
       } else {
         activityComponent = Math.max(0, 10 - (hoursSinceActive / 168) * 10);
       }
@@ -1174,7 +1255,8 @@ export class DiscoveryService {
 
     // New user boost: additive bonus on top (not part of weights)
     let newUserBonus = 0;
-    const accountAgeDays = (Date.now() - params.accountCreatedAt.getTime()) / (1000 * 60 * 60 * 24);
+    const accountAgeDays =
+      (Date.now() - params.accountCreatedAt.getTime()) / (1000 * 60 * 60 * 24);
     if (accountAgeDays <= NEW_USER_BOOST_DAYS) {
       newUserBonus = 5 * (1 - accountAgeDays / NEW_USER_BOOST_DAYS);
     }
@@ -1212,7 +1294,10 @@ export class DiscoveryService {
     };
 
     // Gender preference filter
-    if (filters?.genderPreference && filters.genderPreference !== GenderPreferenceParam.ALL) {
+    if (
+      filters?.genderPreference &&
+      filters.genderPreference !== GenderPreferenceParam.ALL
+    ) {
       baseWhere.gender = filters.genderPreference.toUpperCase();
     }
 
@@ -1324,7 +1409,10 @@ export class DiscoveryService {
   }
 
   /** Generate top compatibility picks for a user (top 10 highest-compatibility matches) */
-  private async generateDailyPicks(userId: string, count: number): Promise<string[]> {
+  private async generateDailyPicks(
+    userId: string,
+    count: number,
+  ): Promise<string[]> {
     const swipedIds = await this.getSwipedUserIds(userId);
     const excludeIds = new Set([userId, ...swipedIds]);
 
@@ -1336,7 +1424,7 @@ export class DiscoveryService {
           { userBId: userId, userAId: { notIn: [...excludeIds] } },
         ],
       },
-      orderBy: { finalScore: 'desc' },
+      orderBy: { finalScore: "desc" },
       take: count * 2, // fetch extra to filter inactive
       select: { userAId: true, userBId: true, finalScore: true },
     });
@@ -1373,7 +1461,9 @@ export class DiscoveryService {
     since: Date,
   ): Promise<Array<{ viewedUserId: string }>> {
     try {
-      const rows = await this.prisma.$queryRaw<Array<{ viewed_user_id: string }>>`
+      const rows = await this.prisma.$queryRaw<
+        Array<{ viewed_user_id: string }>
+      >`
         SELECT viewed_user_id FROM feed_views
         WHERE user_id = ${userId}::uuid
           AND viewed_at >= ${since}
@@ -1390,21 +1480,27 @@ export class DiscoveryService {
    * Stores which profiles were shown to the user in the last 24h.
    * Uses raw SQL to avoid compile-time dependency on the FeedView model.
    */
-  private async recordFeedViews(userId: string, viewedUserIds: string[]): Promise<void> {
+  private async recordFeedViews(
+    userId: string,
+    viewedUserIds: string[],
+  ): Promise<void> {
     if (viewedUserIds.length === 0) return;
 
     try {
       const now = new Date();
       const values = viewedUserIds
-        .map((vid) => `(gen_random_uuid(), '${userId}'::uuid, '${vid}'::uuid, '${now.toISOString()}'::timestamptz)`)
-        .join(', ');
+        .map(
+          (vid) =>
+            `(gen_random_uuid(), '${userId}'::uuid, '${vid}'::uuid, '${now.toISOString()}'::timestamptz)`,
+        )
+        .join(", ");
 
       await this.prisma.$executeRawUnsafe(
         `INSERT INTO feed_views (id, user_id, viewed_user_id, viewed_at) VALUES ${values} ON CONFLICT DO NOTHING`,
       );
     } catch {
       // Non-critical: silently fail if feed_views table doesn't exist yet
-      this.logger.debug('Feed view recording skipped — table may not exist');
+      this.logger.debug("Feed view recording skipped — table may not exist");
     }
   }
 
@@ -1416,7 +1512,7 @@ export class DiscoveryService {
    */
   private encodeCursor(seenIds: Set<string>): string {
     const idsArray = [...seenIds];
-    return Buffer.from(idsArray.join(','), 'utf-8').toString('base64');
+    return Buffer.from(idsArray.join(","), "utf-8").toString("base64");
   }
 
   /**
@@ -1425,8 +1521,8 @@ export class DiscoveryService {
    */
   private decodeCursor(cursor: string): Set<string> {
     try {
-      const decoded = Buffer.from(cursor, 'base64').toString('utf-8');
-      const ids = decoded.split(',').filter((id) => id.length > 0);
+      const decoded = Buffer.from(cursor, "base64").toString("utf-8");
+      const ids = decoded.split(",").filter((id) => id.length > 0);
       return new Set(ids);
     } catch {
       return new Set();

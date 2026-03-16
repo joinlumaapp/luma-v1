@@ -1,18 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import axios, { AxiosError } from 'axios';
-import { LumaCacheService } from '../cache/cache.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import axios, { AxiosError } from "axios";
+import { LumaCacheService } from "../cache/cache.service";
 
 // ─── Constants ─────────────────────────────────────────────────
 const SMS_RATE_LIMIT_MAX_REQUESTS = 3;
 const SMS_RATE_LIMIT_WINDOW_SECONDS = 10 * 60; // 10 minutes
-const SMS_RATE_LIMIT_KEY_PREFIX = 'sms:ratelimit:';
+const SMS_RATE_LIMIT_KEY_PREFIX = "sms:ratelimit:";
 
-const NETGSM_API_URL = 'https://api.netgsm.com.tr/sms/send/otp';
+const NETGSM_API_URL = "https://api.netgsm.com.tr/sms/send/otp";
 const NETGSM_TIMEOUT_MS = 10_000;
 const TWILIO_TIMEOUT_MS = 10_000;
 
-const OTP_REDIS_KEY_PREFIX = 'otp:';
+const OTP_REDIS_KEY_PREFIX = "otp:";
 const OTP_TTL_SECONDS = 5 * 60; // 5 minutes
 const MAX_OTP_VERIFY_ATTEMPTS = 3;
 
@@ -45,9 +45,9 @@ export class NetgsmProvider implements SmsProviderInterface {
   private readonly msgheader: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.usercode = this.configService.get<string>('NETGSM_USERCODE', '');
-    this.password = this.configService.get<string>('NETGSM_PASSWORD', '');
-    this.msgheader = this.configService.get<string>('NETGSM_MSGHEADER', 'LUMA');
+    this.usercode = this.configService.get<string>("NETGSM_USERCODE", "");
+    this.password = this.configService.get<string>("NETGSM_PASSWORD", "");
+    this.msgheader = this.configService.get<string>("NETGSM_MSGHEADER", "LUMA");
   }
 
   isConfigured(): boolean {
@@ -56,12 +56,12 @@ export class NetgsmProvider implements SmsProviderInterface {
 
   async sendOtp(phone: string, code: string): Promise<boolean> {
     if (!this.isConfigured()) {
-      this.logger.warn('Netgsm credentials not configured');
+      this.logger.warn("Netgsm credentials not configured");
       return false;
     }
 
     // Strip leading + for Netgsm (expects 905XXXXXXXXX)
-    const gsmno = phone.startsWith('+') ? phone.substring(1) : phone;
+    const gsmno = phone.startsWith("+") ? phone.substring(1) : phone;
     const message = `LUMA dogrulama kodunuz: ${code}. Bu kodu kimseyle paylasmayin.`;
 
     const maskedPhone = this.maskPhone(phone);
@@ -78,17 +78,22 @@ export class NetgsmProvider implements SmsProviderInterface {
         },
         {
           timeout: NETGSM_TIMEOUT_MS,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { "Content-Type": "application/json" },
         },
       );
 
       // Netgsm returns various status codes in the response body
-      const responseData = typeof response.data === 'string'
-        ? response.data
-        : JSON.stringify(response.data);
+      const responseData =
+        typeof response.data === "string"
+          ? response.data
+          : JSON.stringify(response.data);
 
       // Success codes: 00, 01, 02 indicate message accepted
-      if (responseData.startsWith('00') || responseData.startsWith('01') || responseData.startsWith('02')) {
+      if (
+        responseData.startsWith("00") ||
+        responseData.startsWith("01") ||
+        responseData.startsWith("02")
+      ) {
         this.logger.log(`Netgsm OTP sent to ${maskedPhone}`);
         return true;
       }
@@ -96,16 +101,21 @@ export class NetgsmProvider implements SmsProviderInterface {
       this.logger.error(`Netgsm error for ${maskedPhone}: ${responseData}`);
       return false;
     } catch (error: unknown) {
-      const errorMessage = error instanceof AxiosError
-        ? error.message
-        : error instanceof Error ? error.message : 'Bilinmeyen hata';
-      this.logger.error(`Netgsm request failed for ${maskedPhone}: ${errorMessage}`);
+      const errorMessage =
+        error instanceof AxiosError
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : "Bilinmeyen hata";
+      this.logger.error(
+        `Netgsm request failed for ${maskedPhone}: ${errorMessage}`,
+      );
       return false;
     }
   }
 
   private maskPhone(phone: string): string {
-    if (phone.length < 6) return '****';
+    if (phone.length < 6) return "****";
     return `${phone.slice(0, 4)}****${phone.slice(-2)}`;
   }
 }
@@ -120,9 +130,9 @@ export class TwilioProvider implements SmsProviderInterface {
   private readonly fromNumber: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.accountSid = this.configService.get<string>('TWILIO_ACCOUNT_SID', '');
-    this.authToken = this.configService.get<string>('TWILIO_AUTH_TOKEN', '');
-    this.fromNumber = this.configService.get<string>('TWILIO_FROM_NUMBER', '');
+    this.accountSid = this.configService.get<string>("TWILIO_ACCOUNT_SID", "");
+    this.authToken = this.configService.get<string>("TWILIO_AUTH_TOKEN", "");
+    this.fromNumber = this.configService.get<string>("TWILIO_FROM_NUMBER", "");
   }
 
   isConfigured(): boolean {
@@ -131,7 +141,7 @@ export class TwilioProvider implements SmsProviderInterface {
 
   async sendOtp(phone: string, code: string): Promise<boolean> {
     if (!this.isConfigured()) {
-      this.logger.warn('Twilio credentials not configured');
+      this.logger.warn("Twilio credentials not configured");
       return false;
     }
 
@@ -152,7 +162,7 @@ export class TwilioProvider implements SmsProviderInterface {
           username: this.accountSid,
           password: this.authToken,
         },
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
       });
 
       if (response.status >= 200 && response.status < 300) {
@@ -160,19 +170,26 @@ export class TwilioProvider implements SmsProviderInterface {
         return true;
       }
 
-      this.logger.error(`Twilio error for ${maskedPhone}: HTTP ${response.status}`);
+      this.logger.error(
+        `Twilio error for ${maskedPhone}: HTTP ${response.status}`,
+      );
       return false;
     } catch (error: unknown) {
-      const errorMessage = error instanceof AxiosError
-        ? error.message
-        : error instanceof Error ? error.message : 'Bilinmeyen hata';
-      this.logger.error(`Twilio request failed for ${maskedPhone}: ${errorMessage}`);
+      const errorMessage =
+        error instanceof AxiosError
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : "Bilinmeyen hata";
+      this.logger.error(
+        `Twilio request failed for ${maskedPhone}: ${errorMessage}`,
+      );
       return false;
     }
   }
 
   private maskPhone(phone: string): string {
-    if (phone.length < 6) return '****';
+    if (phone.length < 6) return "****";
     return `${phone.slice(0, 4)}****${phone.slice(-2)}`;
   }
 }
@@ -184,9 +201,8 @@ export class MockSmsProvider implements SmsProviderInterface {
   private readonly logger = new Logger(MockSmsProvider.name);
 
   async sendOtp(phone: string, code: string): Promise<boolean> {
-    const maskedPhone = phone.length >= 6
-      ? `${phone.slice(0, 4)}****${phone.slice(-2)}`
-      : '****';
+    const maskedPhone =
+      phone.length >= 6 ? `${phone.slice(0, 4)}****${phone.slice(-2)}` : "****";
     this.logger.debug(`══════════════════════════════════════`);
     this.logger.debug(`  [DEV] SMS OTP for ${maskedPhone}: ${code}`);
     this.logger.debug(`══════════════════════════════════════`);
@@ -216,23 +232,26 @@ export class SmsProvider {
     private readonly configService: ConfigService,
     private readonly cache: LumaCacheService,
   ) {
-    this.isProduction = this.configService.get<string>('NODE_ENV') === 'production';
+    this.isProduction =
+      this.configService.get<string>("NODE_ENV") === "production";
     this.netgsm = new NetgsmProvider(configService);
     this.twilio = new TwilioProvider(configService);
     this.mock = new MockSmsProvider();
 
     if (this.isProduction) {
       if (this.netgsm.isConfigured()) {
-        this.logger.log('Netgsm provider configured (primary for +90)');
+        this.logger.log("Netgsm provider configured (primary for +90)");
       }
       if (this.twilio.isConfigured()) {
-        this.logger.log('Twilio provider configured (international / fallback)');
+        this.logger.log(
+          "Twilio provider configured (international / fallback)",
+        );
       }
       if (!this.netgsm.isConfigured() && !this.twilio.isConfigured()) {
-        this.logger.error('No SMS provider configured in production!');
+        this.logger.error("No SMS provider configured in production!");
       }
     } else {
-      this.logger.log('Development mode: SMS OTP will be logged to console');
+      this.logger.log("Development mode: SMS OTP will be logged to console");
     }
   }
 
@@ -260,11 +279,13 @@ export class SmsProvider {
     }
 
     // Production: select provider based on phone prefix
-    const isTurkish = phone.startsWith('+90');
+    const isTurkish = phone.startsWith("+90");
     const primary: SmsProviderInterface = isTurkish ? this.netgsm : this.twilio;
-    const fallback: SmsProviderInterface = isTurkish ? this.twilio : this.netgsm;
-    const primaryName = isTurkish ? 'Netgsm' : 'Twilio';
-    const fallbackName = isTurkish ? 'Twilio' : 'Netgsm';
+    const fallback: SmsProviderInterface = isTurkish
+      ? this.twilio
+      : this.netgsm;
+    const primaryName = isTurkish ? "Netgsm" : "Twilio";
+    const fallbackName = isTurkish ? "Twilio" : "Netgsm";
 
     // Attempt 1: Primary provider
     let success = await primary.sendOtp(phone, code);
@@ -282,7 +303,9 @@ export class SmsProvider {
     }
 
     // Attempt 3: Fallback provider
-    this.logger.warn(`${primaryName} retry failed, switching to ${fallbackName}...`);
+    this.logger.warn(
+      `${primaryName} retry failed, switching to ${fallbackName}...`,
+    );
     success = await fallback.sendOtp(phone, code);
     if (success) {
       await this.recordSmsRequest(phone);
@@ -291,7 +314,7 @@ export class SmsProvider {
 
     // All providers failed
     this.logger.error(`All SMS providers failed for ${this.maskPhone(phone)}`);
-    throw new Error('SMS gonderilemedi. Lutfen daha sonra tekrar deneyin.');
+    throw new Error("SMS gonderilemedi. Lutfen daha sonra tekrar deneyin.");
   }
 
   // ─── OTP Storage (Redis) ──────────────────────────────────────
@@ -322,20 +345,24 @@ export class SmsProvider {
     const stored = await this.cache.get<StoredOtp>(key);
 
     if (!stored) {
-      throw new Error('Dogrulama kodu bulunamadi veya suresi dolmus. Lutfen yeni kod isteyin.');
+      throw new Error(
+        "Dogrulama kodu bulunamadi veya suresi dolmus. Lutfen yeni kod isteyin.",
+      );
     }
 
     // Check max attempts
     if (stored.attempts >= MAX_OTP_VERIFY_ATTEMPTS) {
       await this.cache.del(key);
-      throw new Error('Cok fazla hatali deneme. Lutfen yeni kod isteyin.');
+      throw new Error("Cok fazla hatali deneme. Lutfen yeni kod isteyin.");
     }
 
     // Check expiry (belt and suspenders with Redis TTL)
     const elapsed = Date.now() - stored.createdAt;
     if (elapsed > OTP_TTL_SECONDS * 1000) {
       await this.cache.del(key);
-      throw new Error('Dogrulama kodunun suresi dolmus. Lutfen yeni kod isteyin.');
+      throw new Error(
+        "Dogrulama kodunun suresi dolmus. Lutfen yeni kod isteyin.",
+      );
     }
 
     // Compare codes
@@ -345,11 +372,16 @@ export class SmsProvider {
         ...stored,
         attempts: stored.attempts + 1,
       };
-      const remainingTtl = Math.max(1, OTP_TTL_SECONDS - Math.floor(elapsed / 1000));
+      const remainingTtl = Math.max(
+        1,
+        OTP_TTL_SECONDS - Math.floor(elapsed / 1000),
+      );
       await this.cache.set(key, updated, remainingTtl);
 
       const remaining = MAX_OTP_VERIFY_ATTEMPTS - updated.attempts;
-      throw new Error(`Gecersiz dogrulama kodu. ${remaining} deneme hakkiniz kaldi.`);
+      throw new Error(
+        `Gecersiz dogrulama kodu. ${remaining} deneme hakkiniz kaldi.`,
+      );
     }
 
     // Success: delete OTP from Redis
@@ -410,7 +442,7 @@ export class SmsProvider {
   }
 
   private maskPhone(phone: string): string {
-    if (phone.length < 6) return '****';
+    if (phone.length < 6) return "****";
     return `${phone.slice(0, 4)}****${phone.slice(-2)}`;
   }
 }

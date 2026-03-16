@@ -10,19 +10,19 @@ import {
   UploadedFile,
   NotFoundException,
   BadRequestException,
-} from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+} from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
 import {
   ApiTags,
   ApiOperation,
   ApiBearerAuth,
   ApiConsumes,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { UploadVoiceIntroDto } from './dto/voice-intro.dto';
-import { PrismaService } from '../../prisma/prisma.service';
-import * as crypto from 'crypto';
+} from "@nestjs/swagger";
+import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
+import { CurrentUser } from "../../common/decorators/current-user.decorator";
+import { UploadVoiceIntroDto } from "./dto/voice-intro.dto";
+import { PrismaService } from "../../prisma/prisma.service";
+import * as crypto from "crypto";
 
 /**
  * VoiceIntroController — Profile voice introduction feature.
@@ -38,39 +38,39 @@ import * as crypto from 'crypto';
 
 const MAX_FILE_SIZE_MB = 5;
 const ALLOWED_AUDIO_TYPES = [
-  'audio/mp4',
-  'audio/m4a',
-  'audio/mpeg',
-  'audio/wav',
-  'audio/aac',
-  'audio/x-m4a',
+  "audio/mp4",
+  "audio/m4a",
+  "audio/mpeg",
+  "audio/wav",
+  "audio/aac",
+  "audio/x-m4a",
 ];
 
-@ApiTags('Profiles')
+@ApiTags("Profiles")
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller('profiles')
+@Controller("profiles")
 export class VoiceIntroController {
   constructor(private readonly prisma: PrismaService) {}
 
-  @Post('voice-intro')
-  @ApiOperation({ summary: 'Upload a 30-second voice introduction' })
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('audio'))
+  @Post("voice-intro")
+  @ApiOperation({ summary: "Upload a 30-second voice introduction" })
+  @ApiConsumes("multipart/form-data")
+  @UseInterceptors(FileInterceptor("audio"))
   async uploadVoiceIntro(
-    @CurrentUser('sub') userId: string,
+    @CurrentUser("sub") userId: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Multer file type from @nestjs/platform-express
     @UploadedFile() file: any,
     @Body() dto: UploadVoiceIntroDto,
   ) {
     if (!file) {
-      throw new BadRequestException('Ses dosyasi gerekli');
+      throw new BadRequestException("Ses dosyasi gerekli");
     }
 
     // Validate MIME type
     if (!ALLOWED_AUDIO_TYPES.includes(file.mimetype)) {
       throw new BadRequestException(
-        'Desteklenmeyen dosya formati. M4A, MP3, WAV veya AAC kullanin.',
+        "Desteklenmeyen dosya formati. M4A, MP3, WAV veya AAC kullanin.",
       );
     }
 
@@ -83,7 +83,7 @@ export class VoiceIntroController {
 
     // Validate duration
     if (dto.durationSeconds > 30) {
-      throw new BadRequestException('Ses kaydi en fazla 30 saniye olabilir');
+      throw new BadRequestException("Ses kaydi en fazla 30 saniye olabilir");
     }
 
     // Verify user exists
@@ -92,7 +92,7 @@ export class VoiceIntroController {
     });
 
     if (!user) {
-      throw new NotFoundException('Kullanici bulunamadi');
+      throw new NotFoundException("Kullanici bulunamadi");
     }
 
     // In production: Upload to S3
@@ -113,13 +113,13 @@ export class VoiceIntroController {
       voiceIntroUrl: profile.voiceIntroUrl,
       durationSeconds: profile.voiceIntroDuration,
       createdAt: new Date().toISOString(),
-      message: 'Sesli tanitim yuklendi!',
+      message: "Sesli tanitim yuklendi!",
     };
   }
 
-  @Get('voice-intro/:userId')
-  @ApiOperation({ summary: 'Get a user\'s voice introduction URL' })
-  async getVoiceIntro(@Param('userId') userId: string) {
+  @Get("voice-intro/:userId")
+  @ApiOperation({ summary: "Get a user's voice introduction URL" })
+  async getVoiceIntro(@Param("userId") userId: string) {
     const profile = await this.prisma.userProfile.findUnique({
       where: { userId },
       select: {
@@ -129,7 +129,7 @@ export class VoiceIntroController {
     });
 
     if (!profile) {
-      throw new NotFoundException('Profil bulunamadi');
+      throw new NotFoundException("Profil bulunamadi");
     }
 
     if (!profile.voiceIntroUrl) {
@@ -147,20 +147,20 @@ export class VoiceIntroController {
     };
   }
 
-  @Delete('voice-intro')
-  @ApiOperation({ summary: 'Delete voice introduction' })
-  async deleteVoiceIntro(@CurrentUser('sub') userId: string) {
+  @Delete("voice-intro")
+  @ApiOperation({ summary: "Delete voice introduction" })
+  async deleteVoiceIntro(@CurrentUser("sub") userId: string) {
     const profile = await this.prisma.userProfile.findUnique({
       where: { userId },
       select: { voiceIntroUrl: true },
     });
 
     if (!profile) {
-      throw new NotFoundException('Profil bulunamadi');
+      throw new NotFoundException("Profil bulunamadi");
     }
 
     if (!profile.voiceIntroUrl) {
-      throw new BadRequestException('Silinecek sesli tanitim bulunamadi');
+      throw new BadRequestException("Silinecek sesli tanitim bulunamadi");
     }
 
     // In production: Delete from S3
@@ -176,7 +176,7 @@ export class VoiceIntroController {
 
     return {
       deleted: true,
-      message: 'Sesli tanitim silindi',
+      message: "Sesli tanitim silindi",
     };
   }
 }

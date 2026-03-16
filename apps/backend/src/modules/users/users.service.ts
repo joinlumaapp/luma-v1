@@ -1,6 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { UpdateUserDto } from './dto';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from "@nestjs/common";
+import { PrismaService } from "../../prisma/prisma.service";
+import { UpdateUserDto } from "./dto";
 
 @Injectable()
 export class UsersService {
@@ -17,22 +21,22 @@ export class UsersService {
         profile: true,
         photos: {
           where: { isApproved: true },
-          orderBy: { order: 'asc' },
+          orderBy: { order: "asc" },
         },
         badges: {
           include: { badge: true },
-          orderBy: { earnedAt: 'desc' },
+          orderBy: { earnedAt: "desc" },
         },
         subscriptions: {
           where: { isActive: true },
           take: 1,
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
         },
       },
     });
 
     if (!user) {
-      throw new NotFoundException('Kullanıcı bulunamadı');
+      throw new NotFoundException("Kullanıcı bulunamadı");
     }
 
     // Exclude sensitive fields
@@ -63,7 +67,7 @@ export class UsersService {
     });
 
     if (!user) {
-      throw new NotFoundException('Kullanıcı bulunamadı');
+      throw new NotFoundException("Kullanıcı bulunamadı");
     }
 
     const updatedUser = await this.prisma.user.update({
@@ -98,7 +102,10 @@ export class UsersService {
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
       age--;
     }
     return age;
@@ -107,7 +114,11 @@ export class UsersService {
   private calculateProfileCompletion(user: {
     isSmsVerified: boolean;
     isSelfieVerified: boolean;
-    profile: { bio: string | null; city: string | null; intentionTag: string } | null;
+    profile: {
+      bio: string | null;
+      city: string | null;
+      intentionTag: string;
+    } | null;
     photos: { id: string }[];
   }): number {
     let score = 0;

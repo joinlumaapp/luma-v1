@@ -1,20 +1,20 @@
-import { UnauthorizedException } from '@nestjs/common';
-import { JwtService, TokenExpiredError } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import { Reflector } from '@nestjs/core';
-import { JwtAuthGuard, IS_PUBLIC_KEY } from './jwt-auth.guard';
+import { UnauthorizedException } from "@nestjs/common";
+import { JwtService, TokenExpiredError } from "@nestjs/jwt";
+import { ConfigService } from "@nestjs/config";
+import { Reflector } from "@nestjs/core";
+import { JwtAuthGuard, IS_PUBLIC_KEY } from "./jwt-auth.guard";
 
-describe('JwtAuthGuard', () => {
+describe("JwtAuthGuard", () => {
   let guard: JwtAuthGuard;
   let jwtService: JwtService;
   let configService: ConfigService;
   let reflector: Reflector;
 
   const mockPayload = {
-    sub: 'user-123',
-    phone: '+905551234567',
+    sub: "user-123",
+    phone: "+905551234567",
     isVerified: true,
-    packageTier: 'free',
+    packageTier: "free",
     iat: Math.floor(Date.now() / 1000),
     exp: Math.floor(Date.now() / 1000) + 900,
   };
@@ -26,7 +26,7 @@ describe('JwtAuthGuard', () => {
 
     configService = {
       get: jest.fn((key: string) => {
-        if (key === 'JWT_SECRET') return 'test-secret';
+        if (key === "JWT_SECRET") return "test-secret";
         return undefined; // No REDIS_URL — skip Redis init
       }),
     } as unknown as ConfigService;
@@ -53,76 +53,82 @@ describe('JwtAuthGuard', () => {
     } as never;
   }
 
-  it('should allow public routes', async () => {
+  it("should allow public routes", async () => {
     (reflector.getAllAndOverride as jest.Mock).mockReturnValue(true);
 
     const result = await guard.canActivate(createMockContext());
     expect(result).toBe(true);
   });
 
-  it('should throw if no authorization header', async () => {
+  it("should throw if no authorization header", async () => {
     await expect(guard.canActivate(createMockContext())).rejects.toThrow(
       UnauthorizedException,
     );
   });
 
-  it('should throw if authorization header is not Bearer', async () => {
+  it("should throw if authorization header is not Bearer", async () => {
     await expect(
-      guard.canActivate(createMockContext('Basic abc123')),
+      guard.canActivate(createMockContext("Basic abc123")),
     ).rejects.toThrow(UnauthorizedException);
   });
 
-  it('should throw with specific message for expired tokens', async () => {
+  it("should throw with specific message for expired tokens", async () => {
     (jwtService.verifyAsync as jest.Mock).mockRejectedValue(
-      new TokenExpiredError('jwt expired', new Date()),
+      new TokenExpiredError("jwt expired", new Date()),
     );
 
     await expect(
-      guard.canActivate(createMockContext('Bearer expired.token.here')),
-    ).rejects.toThrow('Oturumunuzun suresi doldu');
+      guard.canActivate(createMockContext("Bearer expired.token.here")),
+    ).rejects.toThrow("Oturumunuzun suresi doldu");
   });
 
-  it('should throw for invalid tokens', async () => {
+  it("should throw for invalid tokens", async () => {
     (jwtService.verifyAsync as jest.Mock).mockRejectedValue(
-      new Error('invalid signature'),
+      new Error("invalid signature"),
     );
 
     await expect(
-      guard.canActivate(createMockContext('Bearer invalid.token')),
-    ).rejects.toThrow('Gecersiz erisim tokeni');
+      guard.canActivate(createMockContext("Bearer invalid.token")),
+    ).rejects.toThrow("Gecersiz erisim tokeni");
   });
 
-  it('should throw if token payload is missing required claims', async () => {
+  it("should throw if token payload is missing required claims", async () => {
     (jwtService.verifyAsync as jest.Mock).mockResolvedValue({
-      sub: '',
-      phone: '',
+      sub: "",
+      phone: "",
       iat: 0,
       exp: 0,
     });
 
     await expect(
-      guard.canActivate(createMockContext('Bearer valid.but.empty')),
-    ).rejects.toThrow('Gecersiz token icerigi');
+      guard.canActivate(createMockContext("Bearer valid.but.empty")),
+    ).rejects.toThrow("Gecersiz token icerigi");
   });
 
-  it('should attach user payload to request on success', async () => {
-    const context = createMockContext('Bearer valid.jwt.token');
-    const request = (context as unknown as { switchToHttp: () => { getRequest: () => Record<string, unknown> } }).switchToHttp().getRequest();
+  it("should attach user payload to request on success", async () => {
+    const context = createMockContext("Bearer valid.jwt.token");
+    const request = (
+      context as unknown as {
+        switchToHttp: () => { getRequest: () => Record<string, unknown> };
+      }
+    )
+      .switchToHttp()
+      .getRequest();
 
     await guard.canActivate(context);
 
-    expect(request['user']).toEqual(mockPayload);
+    expect(request["user"]).toEqual(mockPayload);
   });
 
-  it('should verify token with correct secret', async () => {
-    await guard.canActivate(createMockContext('Bearer valid.jwt.token'));
+  it("should verify token with correct secret", async () => {
+    await guard.canActivate(createMockContext("Bearer valid.jwt.token"));
 
-    expect(jwtService.verifyAsync).toHaveBeenCalledWith('valid.jwt.token', {
-      secret: 'test-secret',
+    expect(jwtService.verifyAsync).toHaveBeenCalledWith("valid.jwt.token", {
+      secret: "test-secret",
     });
   });
 
-  it('should export IS_PUBLIC_KEY constant', () => {
-    expect(IS_PUBLIC_KEY).toBe('isPublic');
+  it("should export IS_PUBLIC_KEY constant", () => {
+    expect(IS_PUBLIC_KEY).toBe("isPublic");
   });
 });

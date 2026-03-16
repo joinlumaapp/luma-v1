@@ -1,18 +1,24 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from "class-validator";
 
 export enum AnnouncementTargetTier {
-  ALL = 'all',
-  FREE = 'FREE',
-  GOLD = 'GOLD',
-  PRO = 'PRO',
-  RESERVED = 'RESERVED',
+  ALL = "all",
+  FREE = "FREE",
+  GOLD = "GOLD",
+  PRO = "PRO",
+  RESERVED = "RESERVED",
 }
 
 export class AnnouncementDto {
   @ApiProperty({
-    description: 'Announcement title',
-    example: 'Yeni ozellik!',
+    description: "Announcement title",
+    example: "Yeni ozellik!",
     maxLength: 200,
   })
   @IsNotEmpty()
@@ -21,8 +27,8 @@ export class AnnouncementDto {
   title!: string;
 
   @ApiProperty({
-    description: 'Announcement body',
-    example: 'LUMA artik daha hizli eslesme sunuyor.',
+    description: "Announcement body",
+    example: "LUMA artik daha hizli eslesme sunuyor.",
     maxLength: 2000,
   })
   @IsNotEmpty()
@@ -31,7 +37,7 @@ export class AnnouncementDto {
   body!: string;
 
   @ApiPropertyOptional({
-    description: 'Target user tier (default: all users)',
+    description: "Target user tier (default: all users)",
     enum: AnnouncementTargetTier,
     default: AnnouncementTargetTier.ALL,
   })

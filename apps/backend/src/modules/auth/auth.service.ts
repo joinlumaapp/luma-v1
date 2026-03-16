@@ -3,22 +3,22 @@ import {
   UnauthorizedException,
   BadRequestException,
   Logger,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from '../../prisma/prisma.service';
-import { LumaCacheService } from '../cache/cache.service';
-import { SmsProvider } from './sms.provider';
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { JwtService } from "@nestjs/jwt";
+import { PrismaService } from "../../prisma/prisma.service";
+import { LumaCacheService } from "../cache/cache.service";
+import { SmsProvider } from "./sms.provider";
 import {
   RegisterDto,
   VerifySmsDto,
   VerifySelfieDto,
   LoginDto,
   RefreshTokenDto,
-} from './dto';
-import { JwtPayload } from '../../common/decorators/current-user.decorator';
-import * as crypto from 'crypto';
-import * as bcrypt from 'bcryptjs';
+} from "./dto";
+import { JwtPayload } from "../../common/decorators/current-user.decorator";
+import * as crypto from "crypto";
+import * as bcrypt from "bcryptjs";
 
 // ─── Constants ────────────────────────────────────────────────────
 const OTP_LENGTH = 6;
@@ -32,14 +32,14 @@ const SELFIE_MAX_BASE64_LENGTH = 5 * 1024 * 1024; // 5MB max selfie
 // ─── OTP Rate Limiting Constants ──────────────────────────────────
 const OTP_RATE_LIMIT_MAX_REQUESTS = 3;
 const OTP_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
-const OTP_RATE_LIMIT_WINDOW_SECONDS = 10 * 60;     // 10 minutes (TTL for Redis)
+const OTP_RATE_LIMIT_WINDOW_SECONDS = 10 * 60; // 10 minutes (TTL for Redis)
 const OTP_RESEND_COOLDOWN_SECONDS = 60;
 
 /** Redis key prefix for OTP rate limiting */
-const OTP_RATE_LIMIT_KEY_PREFIX = 'otp:ratelimit:';
+const OTP_RATE_LIMIT_KEY_PREFIX = "otp:ratelimit:";
 
 /** Redis key prefix for blacklisted (logged-out) access tokens */
-const TOKEN_BLACKLIST_PREFIX = 'token:blacklist:';
+const TOKEN_BLACKLIST_PREFIX = "token:blacklist:";
 
 /** Access token TTL in seconds (must match JWT_ACCESS_EXPIRY = 15m) */
 const ACCESS_TOKEN_TTL_SECONDS = 900;
@@ -96,13 +96,18 @@ export class AuthService {
     const timeSinceLastRequest = now - entry.lastRequestAt;
     const cooldownRemaining = Math.max(
       0,
-      Math.ceil((OTP_RESEND_COOLDOWN_SECONDS * 1000 - timeSinceLastRequest) / 1000),
+      Math.ceil(
+        (OTP_RESEND_COOLDOWN_SECONDS * 1000 - timeSinceLastRequest) / 1000,
+      ),
     );
 
     if (cooldownRemaining > 0) {
       return {
         allowed: false,
-        remainingAttempts: Math.max(0, OTP_RATE_LIMIT_MAX_REQUESTS - validTimestamps.length),
+        remainingAttempts: Math.max(
+          0,
+          OTP_RATE_LIMIT_MAX_REQUESTS - validTimestamps.length,
+        ),
         retryAfterSeconds: cooldownRemaining,
         cooldownSeconds: cooldownRemaining,
       };
@@ -124,7 +129,8 @@ export class AuthService {
 
     return {
       allowed: true,
-      remainingAttempts: OTP_RATE_LIMIT_MAX_REQUESTS - validTimestamps.length - 1,
+      remainingAttempts:
+        OTP_RATE_LIMIT_MAX_REQUESTS - validTimestamps.length - 1,
       retryAfterSeconds: 0,
       cooldownSeconds: OTP_RESEND_COOLDOWN_SECONDS,
     };
@@ -168,9 +174,10 @@ export class AuthService {
 
     if (!rateLimit.allowed) {
       throw new BadRequestException({
-        message: rateLimit.remainingAttempts === 0
-          ? `Cok fazla deneme. ${Math.ceil(rateLimit.retryAfterSeconds / 60)} dakika sonra tekrar deneyin.`
-          : `Lutfen ${rateLimit.retryAfterSeconds} saniye bekleyin.`,
+        message:
+          rateLimit.remainingAttempts === 0
+            ? `Cok fazla deneme. ${Math.ceil(rateLimit.retryAfterSeconds / 60)} dakika sonra tekrar deneyin.`
+            : `Lutfen ${rateLimit.retryAfterSeconds} saniye bekleyin.`,
         remainingAttempts: rateLimit.remainingAttempts,
         retryAfterSeconds: rateLimit.retryAfterSeconds,
         cooldownSeconds: rateLimit.cooldownSeconds,
@@ -188,7 +195,7 @@ export class AuthService {
     if (existingUser) {
       // Existing user — just send a new OTP for login
       if (existingUser.deletedAt) {
-        throw new BadRequestException('Bu hesap silinmiştir');
+        throw new BadRequestException("Bu hesap silinmiştir");
       }
       userId = existingUser.id;
     } else {
@@ -211,10 +218,10 @@ export class AuthService {
     await this.prisma.userVerification.updateMany({
       where: {
         userId,
-        type: 'SMS',
-        status: 'PENDING',
+        type: "SMS",
+        status: "PENDING",
       },
-      data: { status: 'EXPIRED' },
+      data: { status: "EXPIRED" },
     });
 
     // Hash OTP before storing
@@ -224,7 +231,7 @@ export class AuthService {
     await this.prisma.userVerification.create({
       data: {
         userId,
-        type: 'SMS',
+        type: "SMS",
         otpCode: hashedOtp,
         otpExpiresAt,
         otpAttempts: 0,
@@ -238,7 +245,7 @@ export class AuthService {
     await this.sendSmsOtp(dto.phone, otpCode);
 
     return {
-      message: 'Dogrulama kodu gonderildi',
+      message: "Dogrulama kodu gonderildi",
       isNewUser,
       remainingAttempts: rateLimit.remainingAttempts,
       retryAfterSeconds: 0,
@@ -250,13 +257,17 @@ export class AuthService {
   // VERIFY SMS — Verify phone OTP and issue tokens for new users
   // ═══════════════════════════════════════════════════════════════
 
-  async verifySms(
-    dto: VerifySmsDto,
-  ): Promise<{
+  async verifySms(dto: VerifySmsDto): Promise<{
     verified: boolean;
     accessToken: string;
     refreshToken: string;
-    user: { id: string; phone: string; isVerified: boolean; isNew: boolean; packageTier: string };
+    user: {
+      id: string;
+      phone: string;
+      isVerified: boolean;
+      isNew: boolean;
+      packageTier: string;
+    };
   }> {
     // Find user by phone, include profile to check onboarding status
     const user = await this.prisma.user.findUnique({
@@ -265,7 +276,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new BadRequestException('Kullanıcı bulunamadı');
+      throw new BadRequestException("Kullanıcı bulunamadı");
     }
 
     // Verify the OTP
@@ -278,7 +289,12 @@ export class AuthService {
     });
 
     // Generate tokens and create session
-    const tokens = await this.createSession(user.id, user.phone, user.isSelfieVerified, user.packageTier);
+    const tokens = await this.createSession(
+      user.id,
+      user.phone,
+      user.isSelfieVerified,
+      user.packageTier,
+    );
 
     return {
       verified: true,
@@ -303,7 +319,7 @@ export class AuthService {
   ): Promise<{ verified: boolean; status: string }> {
     // Validate selfie payload size to prevent DoS via oversized base64
     if (dto.selfieImage.length > SELFIE_MAX_BASE64_LENGTH) {
-      throw new BadRequestException('Selfie dosyasi cok buyuk. Maksimum 5MB.');
+      throw new BadRequestException("Selfie dosyasi cok buyuk. Maksimum 5MB.");
     }
 
     // Check user exists
@@ -313,19 +329,18 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new BadRequestException('Kullanıcı bulunamadı');
+      throw new BadRequestException("Kullanıcı bulunamadı");
     }
 
     if (user.isSelfieVerified) {
-      return { verified: true, status: 'Zaten doğrulanmış' };
+      return { verified: true, status: "Zaten doğrulanmış" };
     }
 
     // In production: Send selfie to AWS Rekognition / Face comparison service
     // For now: Mock verification with simulated scores
     const livenessScore = this.mockLivenessCheck(dto.selfieImage);
-    const faceMatchScore = user.photos.length > 0
-      ? this.mockFaceComparison(dto.selfieImage)
-      : 1.0; // No photos yet, accept selfie
+    const faceMatchScore =
+      user.photos.length > 0 ? this.mockFaceComparison(dto.selfieImage) : 1.0; // No photos yet, accept selfie
 
     const isVerified =
       livenessScore >= SELFIE_LIVENESS_THRESHOLD &&
@@ -335,8 +350,8 @@ export class AuthService {
     await this.prisma.userVerification.create({
       data: {
         userId,
-        type: 'SELFIE',
-        status: isVerified ? 'VERIFIED' : 'REJECTED',
+        type: "SELFIE",
+        status: isVerified ? "VERIFIED" : "REJECTED",
         selfieUrl: `selfies/${userId}/${Date.now()}.jpg`, // Mock S3 path
         livenessScore,
         faceMatchScore,
@@ -359,7 +374,7 @@ export class AuthService {
 
       // Award "Verified" badge if badge exists
       const verifiedBadge = await this.prisma.badgeDefinition.findUnique({
-        where: { key: 'verified_star' },
+        where: { key: "verified_star" },
       });
 
       if (verifiedBadge) {
@@ -377,7 +392,8 @@ export class AuthService {
             where: { id: userId },
             select: { goldBalance: true },
           });
-          const newBalance = (currentUser?.goldBalance ?? 0) + verifiedBadge.goldReward;
+          const newBalance =
+            (currentUser?.goldBalance ?? 0) + verifiedBadge.goldReward;
 
           await this.prisma.user.update({
             where: { id: userId },
@@ -387,7 +403,7 @@ export class AuthService {
           await this.prisma.goldTransaction.create({
             data: {
               userId,
-              type: 'BADGE_REWARD',
+              type: "BADGE_REWARD",
               amount: verifiedBadge.goldReward,
               balance: newBalance,
               description: `Badge reward: ${verifiedBadge.nameEn}`,
@@ -399,7 +415,9 @@ export class AuthService {
 
     return {
       verified: isVerified,
-      status: isVerified ? 'Kimlik doğrulandı' : 'Doğrulama başarısız, tekrar deneyin',
+      status: isVerified
+        ? "Kimlik doğrulandı"
+        : "Doğrulama başarısız, tekrar deneyin",
     };
   }
 
@@ -407,20 +425,24 @@ export class AuthService {
   // LOGIN — Verify OTP for existing users, return token pair
   // ═══════════════════════════════════════════════════════════════
 
-  async login(
-    dto: LoginDto,
-  ): Promise<{ accessToken: string; refreshToken: string; user: { id: string; isNewUser: boolean } }> {
+  async login(dto: LoginDto): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    user: { id: string; isNewUser: boolean };
+  }> {
     // Find user by phone
     const user = await this.prisma.user.findUnique({
       where: { phone: dto.phone },
     });
 
     if (!user) {
-      throw new BadRequestException('Bu telefon numarasına kayıtlı kullanıcı bulunamadı');
+      throw new BadRequestException(
+        "Bu telefon numarasına kayıtlı kullanıcı bulunamadı",
+      );
     }
 
     if (!user.isActive || user.deletedAt) {
-      throw new UnauthorizedException('Hesap devre dışı veya silinmiş');
+      throw new UnauthorizedException("Hesap devre dışı veya silinmiş");
     }
 
     // Verify OTP code
@@ -440,7 +462,12 @@ export class AuthService {
     });
 
     // Generate tokens and create session
-    const tokens = await this.createSession(user.id, user.phone, user.isSelfieVerified, user.packageTier);
+    const tokens = await this.createSession(
+      user.id,
+      user.phone,
+      user.isSelfieVerified,
+      user.packageTier,
+    );
 
     return {
       ...tokens,
@@ -455,7 +482,10 @@ export class AuthService {
   // LOGOUT — Revoke current session
   // ═══════════════════════════════════════════════════════════════
 
-  async logout(userId: string, accessToken?: string): Promise<{ message: string }> {
+  async logout(
+    userId: string,
+    accessToken?: string,
+  ): Promise<{ message: string }> {
     // Blacklist the current access token in Redis so it is rejected immediately
     // by JwtAuthGuard, even before its natural JWT expiry (15 min).
     if (accessToken) {
@@ -472,7 +502,7 @@ export class AuthService {
       data: { isRevoked: true },
     });
 
-    return { message: 'Başarıyla çıkış yapıldı' };
+    return { message: "Başarıyla çıkış yapıldı" };
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -486,10 +516,12 @@ export class AuthService {
     let payload: { sub: string };
     try {
       payload = await this.jwtService.verifyAsync(dto.refreshToken, {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+        secret: this.configService.get<string>("JWT_REFRESH_SECRET"),
       });
     } catch {
-      throw new UnauthorizedException('Geçersiz veya süresi dolmuş refresh token');
+      throw new UnauthorizedException(
+        "Geçersiz veya süresi dolmuş refresh token",
+      );
     }
 
     // Find session by hashed refresh token (tokens stored as SHA-256 hashes)
@@ -509,7 +541,9 @@ export class AuthService {
           data: { isRevoked: true },
         });
       }
-      throw new UnauthorizedException('Refresh token geçersiz veya iptal edilmiş');
+      throw new UnauthorizedException(
+        "Refresh token geçersiz veya iptal edilmiş",
+      );
     }
 
     // Check expiration
@@ -518,7 +552,7 @@ export class AuthService {
         where: { id: session.id },
         data: { isRevoked: true },
       });
-      throw new UnauthorizedException('Refresh token süresi dolmuş');
+      throw new UnauthorizedException("Refresh token süresi dolmuş");
     }
 
     // Revoke old session (token rotation)
@@ -533,11 +567,16 @@ export class AuthService {
     });
 
     if (!user || !user.isActive || user.deletedAt) {
-      throw new UnauthorizedException('Kullanıcı hesabı aktif değil');
+      throw new UnauthorizedException("Kullanıcı hesabı aktif değil");
     }
 
     // Generate new token pair with new session
-    return this.createSession(user.id, user.phone, user.isSelfieVerified, user.packageTier);
+    return this.createSession(
+      user.id,
+      user.phone,
+      user.isSelfieVerified,
+      user.packageTier,
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -550,7 +589,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new BadRequestException('Kullanıcı bulunamadı');
+      throw new BadRequestException("Kullanıcı bulunamadı");
     }
 
     // Use a transaction for atomicity
@@ -613,7 +652,10 @@ export class AuthService {
 
     this.logger.log(`Account deleted (soft) for user ${userId}`);
 
-    return { message: 'Hesabınız silme işlemine alındı. 30 gün içinde tüm verileriniz kalıcı olarak silinecektir.' };
+    return {
+      message:
+        "Hesabınız silme işlemine alındı. 30 gün içinde tüm verileriniz kalıcı olarak silinecektir.",
+    };
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -634,7 +676,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new BadRequestException('Kullanici bulunamadi');
+      throw new BadRequestException("Kullanici bulunamadi");
     }
 
     return {
@@ -648,7 +690,11 @@ export class AuthService {
         isSelfieVerified: user.isSelfieVerified,
       },
       profile: user.profile,
-      photos: user.photos.map((p) => ({ id: p.id, url: p.url, isPrimary: p.isPrimary })),
+      photos: user.photos.map((p) => ({
+        id: p.id,
+        url: p.url,
+        isPrimary: p.isPrimary,
+      })),
       answers: user.answers,
       badges: user.badges,
       subscriptions: user.subscriptions,
@@ -661,7 +707,7 @@ export class AuthService {
    * SHA-256 hash for deterministic token hashing (lookup-friendly).
    */
   private hashToken(token: string): string {
-    return crypto.createHash('sha256').update(token).digest('hex');
+    return crypto.createHash("sha256").update(token).digest("hex");
   }
 
   /**
@@ -670,7 +716,7 @@ export class AuthService {
   private async enforceSessionLimit(userId: string): Promise<void> {
     const activeSessions = await this.prisma.userSession.findMany({
       where: { userId, isRevoked: false },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: "asc" },
     });
 
     if (activeSessions.length >= MAX_ACTIVE_SESSIONS_PER_USER) {
@@ -691,7 +737,7 @@ export class AuthService {
   private generateOtp(): string {
     const max = Math.pow(10, OTP_LENGTH);
     const randomNumber = crypto.randomInt(0, max);
-    return randomNumber.toString().padStart(OTP_LENGTH, '0');
+    return randomNumber.toString().padStart(OTP_LENGTH, "0");
   }
 
   /**
@@ -703,8 +749,11 @@ export class AuthService {
     try {
       await this.smsProvider.sendOtp(phone, code);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'SMS gonderilemedi';
-      this.logger.error(`SMS OTP send failed for ${phone.slice(0, 4)}****: ${errorMessage}`);
+      const errorMessage =
+        error instanceof Error ? error.message : "SMS gonderilemedi";
+      this.logger.error(
+        `SMS OTP send failed for ${phone.slice(0, 4)}****: ${errorMessage}`,
+      );
       throw new BadRequestException(errorMessage);
     }
   }
@@ -717,36 +766,42 @@ export class AuthService {
     const verification = await this.prisma.userVerification.findFirst({
       where: {
         userId,
-        type: 'SMS',
-        status: 'PENDING',
+        type: "SMS",
+        status: "PENDING",
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     if (!verification) {
-      throw new BadRequestException('Doğrulama kodu bulunamadı. Lütfen yeni kod isteyin.');
+      throw new BadRequestException(
+        "Doğrulama kodu bulunamadı. Lütfen yeni kod isteyin.",
+      );
     }
 
     // Check expiration
     if (verification.otpExpiresAt && verification.otpExpiresAt < new Date()) {
       await this.prisma.userVerification.update({
         where: { id: verification.id },
-        data: { status: 'EXPIRED' },
+        data: { status: "EXPIRED" },
       });
-      throw new BadRequestException('Doğrulama kodunun süresi dolmuş. Lütfen yeni kod isteyin.');
+      throw new BadRequestException(
+        "Doğrulama kodunun süresi dolmuş. Lütfen yeni kod isteyin.",
+      );
     }
 
     // Check attempt limit
     if (verification.otpAttempts >= MAX_OTP_ATTEMPTS) {
       await this.prisma.userVerification.update({
         where: { id: verification.id },
-        data: { status: 'EXPIRED' },
+        data: { status: "EXPIRED" },
       });
-      throw new BadRequestException('Çok fazla hatalı deneme. Lütfen yeni kod isteyin.');
+      throw new BadRequestException(
+        "Çok fazla hatalı deneme. Lütfen yeni kod isteyin.",
+      );
     }
 
     // Compare codes using bcrypt
-    const isCodeValid = await bcrypt.compare(code, verification.otpCode ?? '');
+    const isCodeValid = await bcrypt.compare(code, verification.otpCode ?? "");
     if (!isCodeValid) {
       await this.prisma.userVerification.update({
         where: { id: verification.id },
@@ -761,7 +816,7 @@ export class AuthService {
     await this.prisma.userVerification.update({
       where: { id: verification.id },
       data: {
-        status: 'VERIFIED',
+        status: "VERIFIED",
         verifiedAt: new Date(),
       },
     });
@@ -794,7 +849,7 @@ export class AuthService {
 
     // Calculate refresh token expiry
     const refreshExpiryDays = parseInt(
-      this.configService.get<string>('JWT_REFRESH_EXPIRY_DAYS', '7'),
+      this.configService.get<string>("JWT_REFRESH_EXPIRY_DAYS", "7"),
       10,
     );
     const expiresAt = new Date();
@@ -819,8 +874,8 @@ export class AuthService {
 
   private async generateAccessToken(payload: JwtPayload): Promise<string> {
     return this.jwtService.signAsync(payload, {
-      secret: this.configService.get<string>('JWT_SECRET'),
-      expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRY', '15m'),
+      secret: this.configService.get<string>("JWT_SECRET"),
+      expiresIn: this.configService.get<string>("JWT_ACCESS_EXPIRY", "15m"),
     });
   }
 
@@ -828,8 +883,8 @@ export class AuthService {
     return this.jwtService.signAsync(
       { sub: userId },
       {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-        expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRY', '7d'),
+        secret: this.configService.get<string>("JWT_REFRESH_SECRET"),
+        expiresIn: this.configService.get<string>("JWT_REFRESH_EXPIRY", "7d"),
       },
     );
   }
@@ -841,9 +896,9 @@ export class AuthService {
    * In production, this must call a real liveness detection API.
    */
   private mockLivenessCheck(_selfieBase64: string): number {
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === "production") {
       throw new Error(
-        'Liveness check not configured for production. Integrate AWS Rekognition DetectFaces.',
+        "Liveness check not configured for production. Integrate AWS Rekognition DetectFaces.",
       );
     }
     // DEV/STAGING ONLY — returns a simulated passing liveness score (0.85-0.99).
@@ -857,9 +912,9 @@ export class AuthService {
    * In production, this must call a real face comparison API.
    */
   private mockFaceComparison(_selfieBase64: string): number {
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === "production") {
       throw new Error(
-        'Face comparison not configured for production. Integrate AWS Rekognition CompareFaces.',
+        "Face comparison not configured for production. Integrate AWS Rekognition CompareFaces.",
       );
     }
     // DEV/STAGING ONLY — returns a simulated passing face match score (0.82-0.98).

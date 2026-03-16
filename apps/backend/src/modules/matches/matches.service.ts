@@ -1,5 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from "@nestjs/common";
+import { PrismaService } from "../../prisma/prisma.service";
 
 @Injectable()
 export class MatchesService {
@@ -55,13 +59,13 @@ export class MatchesService {
           },
         },
         harmonySessions: {
-          where: { status: { in: ['ACTIVE', 'EXTENDED'] } },
+          where: { status: { in: ["ACTIVE", "EXTENDED"] } },
           take: 1,
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
           select: { id: true, status: true },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     // Transform to client-friendly format
@@ -83,7 +87,7 @@ export class MatchesService {
         harmonySessionId: match.harmonySessions[0]?.id ?? null,
         partner: {
           userId: partner.id,
-          firstName: partner.profile?.firstName ?? 'Kullanıcı',
+          firstName: partner.profile?.firstName ?? "Kullanıcı",
           age: partnerAge,
           city: partner.profile?.city,
           intentionTag: partner.profile?.intentionTag,
@@ -123,11 +127,13 @@ export class MatchesService {
             },
             photos: {
               where: { isApproved: true },
-              orderBy: { order: 'asc' },
+              orderBy: { order: "asc" },
               select: { id: true, url: true, thumbnailUrl: true, order: true },
             },
             badges: {
-              include: { badge: { select: { key: true, nameTr: true, iconUrl: true } } },
+              include: {
+                badge: { select: { key: true, nameTr: true, iconUrl: true } },
+              },
               take: 5,
             },
           },
@@ -149,17 +155,19 @@ export class MatchesService {
             },
             photos: {
               where: { isApproved: true },
-              orderBy: { order: 'asc' },
+              orderBy: { order: "asc" },
               select: { id: true, url: true, thumbnailUrl: true, order: true },
             },
             badges: {
-              include: { badge: { select: { key: true, nameTr: true, iconUrl: true } } },
+              include: {
+                badge: { select: { key: true, nameTr: true, iconUrl: true } },
+              },
               take: 5,
             },
           },
         },
         harmonySessions: {
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
           take: 5,
           select: {
             id: true,
@@ -174,12 +182,12 @@ export class MatchesService {
     });
 
     if (!match) {
-      throw new NotFoundException('Eşleşme bulunamadı');
+      throw new NotFoundException("Eşleşme bulunamadı");
     }
 
     // Verify user is a participant
     if (match.userAId !== userId && match.userBId !== userId) {
-      throw new ForbiddenException('Bu eşleşmeye erişim yetkiniz yok');
+      throw new ForbiddenException("Bu eşleşmeye erişim yetkiniz yok");
     }
 
     // Determine partner
@@ -203,12 +211,16 @@ export class MatchesService {
     });
 
     // Generate intelligent compatibility explanation and conversation starters
-    const breakdown = (compatScore?.dimensionScores ?? {}) as Record<string, number>;
+    const breakdown = (compatScore?.dimensionScores ?? {}) as Record<
+      string,
+      number
+    >;
     const explanation = this.generateCompatibilityExplanation(
       breakdown,
       match.compatibilityScore,
     );
-    const conversationStarters = await this.generateConversationStarters(matchId);
+    const conversationStarters =
+      await this.generateConversationStarters(matchId);
 
     return {
       matchId: match.id,
@@ -226,7 +238,7 @@ export class MatchesService {
       conversationStarters,
       partner: {
         userId: partner.id,
-        firstName: partner.profile?.firstName ?? 'Kullanıcı',
+        firstName: partner.profile?.firstName ?? "Kullanıcı",
         age: partnerAge,
         bio: partner.profile?.bio,
         city: partner.profile?.city,
@@ -255,17 +267,21 @@ export class MatchesService {
     const match = await this.prisma.match.findUnique({
       where: { id: matchId },
       include: {
-        userA: { select: { id: true, profile: { select: { firstName: true } } } },
-        userB: { select: { id: true, profile: { select: { firstName: true } } } },
+        userA: {
+          select: { id: true, profile: { select: { firstName: true } } },
+        },
+        userB: {
+          select: { id: true, profile: { select: { firstName: true } } },
+        },
       },
     });
 
     if (!match) {
-      throw new NotFoundException('Eşleşme bulunamadı');
+      throw new NotFoundException("Eşleşme bulunamadı");
     }
 
     if (match.userAId !== userId && match.userBId !== userId) {
-      throw new ForbiddenException('Bu eşleşmeye erişim yetkiniz yok');
+      throw new ForbiddenException("Bu eşleşmeye erişim yetkiniz yok");
     }
 
     // Determine the partner to notify
@@ -285,10 +301,10 @@ export class MatchesService {
       await tx.harmonySession.updateMany({
         where: {
           matchId,
-          status: { in: ['PENDING', 'ACTIVE', 'EXTENDED'] },
+          status: { in: ["PENDING", "ACTIVE", "EXTENDED"] },
         },
         data: {
-          status: 'CANCELLED',
+          status: "CANCELLED",
           actualEndedAt: new Date(),
         },
       });
@@ -297,9 +313,9 @@ export class MatchesService {
       await tx.notification.create({
         data: {
           userId: partnerId,
-          type: 'MATCH_REMOVED',
-          title: 'Eşleşme Kaldırıldı',
-          body: 'Bir eşleşmeniz kaldırıldı.',
+          type: "MATCH_REMOVED",
+          title: "Eşleşme Kaldırıldı",
+          body: "Bir eşleşmeniz kaldırıldı.",
           data: { matchId },
         },
       });
@@ -344,8 +360,8 @@ export class MatchesService {
     // Fallback if no dimension-specific starters
     if (starters.length === 0) {
       starters.push(
-        'Merhaba! Profilini çok beğendim, biraz kendinden bahseder misin?',
-        'Selam! Uyumluluk puanımız güzel görünüyor, tanışmak isterim!',
+        "Merhaba! Profilini çok beğendim, biraz kendinden bahseder misin?",
+        "Selam! Uyumluluk puanımız güzel görünüyor, tanışmak isterim!",
       );
     }
 
@@ -360,36 +376,37 @@ export class MatchesService {
     dimensionScores: Record<string, number>,
     finalScore: number,
   ): string {
-    const sorted = Object.entries(dimensionScores)
-      .sort(([, a], [, b]) => b - a);
+    const sorted = Object.entries(dimensionScores).sort(
+      ([, a], [, b]) => b - a,
+    );
 
     const topDimensions = sorted.slice(0, 2);
     const dimNames: Record<string, string> = {
-      communication: 'iletişim tarzınız',
-      life_goals: 'yaşam hedefleriniz',
-      values: 'değerleriniz',
-      lifestyle: 'yaşam tarzınız',
-      emotional_intelligence: 'duygusal zekanız',
-      relationship_expectations: 'ilişki beklentileriniz',
-      social_compatibility: 'sosyal uyumunuz',
-      attachment_style: 'bağlanma tarzınız',
-      love_language: 'sevgi diliniz',
-      conflict_style: 'çatışma yaklaşımınız',
-      future_vision: 'gelecek vizyonunuz',
-      intellectual: 'entelektüel uyumunuz',
-      intimacy: 'yakınlık anlayışınız',
-      growth_mindset: 'gelişim bakış açınız',
-      core_fears: 'derin anlayışınız',
+      communication: "iletişim tarzınız",
+      life_goals: "yaşam hedefleriniz",
+      values: "değerleriniz",
+      lifestyle: "yaşam tarzınız",
+      emotional_intelligence: "duygusal zekanız",
+      relationship_expectations: "ilişki beklentileriniz",
+      social_compatibility: "sosyal uyumunuz",
+      attachment_style: "bağlanma tarzınız",
+      love_language: "sevgi diliniz",
+      conflict_style: "çatışma yaklaşımınız",
+      future_vision: "gelecek vizyonunuz",
+      intellectual: "entelektüel uyumunuz",
+      intimacy: "yakınlık anlayışınız",
+      growth_mindset: "gelişim bakış açınız",
+      core_fears: "derin anlayışınız",
     };
 
     if (topDimensions.length < 2) {
       return finalScore >= 90
-        ? 'Muhteşem bir uyumunuz var! Birbirinizi gerçekten anlayabilirsiniz.'
-        : 'İlginç bir uyumluluk profiliniz var. Birbirinizi keşfedin!';
+        ? "Muhteşem bir uyumunuz var! Birbirinizi gerçekten anlayabilirsiniz."
+        : "İlginç bir uyumluluk profiliniz var. Birbirinizi keşfedin!";
     }
 
-    const dim1 = dimNames[topDimensions[0][0]] ?? 'temel değerleriniz';
-    const dim2 = dimNames[topDimensions[1][0]] ?? 'yaşam tarzınız';
+    const dim1 = dimNames[topDimensions[0][0]] ?? "temel değerleriniz";
+    const dim2 = dimNames[topDimensions[1][0]] ?? "yaşam tarzınız";
 
     if (finalScore >= 90) {
       return `${dim1.charAt(0).toUpperCase() + dim1.slice(1)} ve ${dim2} harika uyum gösteriyor. Birbirinizi anlamak sizin için çok doğal olacak.`;
@@ -405,35 +422,38 @@ export class MatchesService {
   /**
    * Get a personalized conversation starter based on a compatibility category.
    */
-  private getStarterForCategory(category: string, score: number): string | null {
+  private getStarterForCategory(
+    category: string,
+    score: number,
+  ): string | null {
     const highScoreStarters: Record<string, string[]> = {
       communication: [
-        'İletişim konusunda çok benzer düşünüyorsunuz! Sence ideal bir sohbet nasıl olmalı?',
-        'İletişim tarzlarınız çok uyumlu! İlk izlenim senin için ne kadar önemli?',
+        "İletişim konusunda çok benzer düşünüyorsunuz! Sence ideal bir sohbet nasıl olmalı?",
+        "İletişim tarzlarınız çok uyumlu! İlk izlenim senin için ne kadar önemli?",
       ],
       life_goals: [
-        'Yaşam hedefleriniz çok uyumlu! 5 yıl sonra kendini nerede görüyorsun?',
-        'Hayata bakış açınız birbirine yakın! En büyük hayalin ne?',
+        "Yaşam hedefleriniz çok uyumlu! 5 yıl sonra kendini nerede görüyorsun?",
+        "Hayata bakış açınız birbirine yakın! En büyük hayalin ne?",
       ],
       values: [
-        'Değerleriniz çok uyumlu! Hayatta en önemli 3 şey senin için ne?',
-        'Temel değerleriniz örtüşüyor! Sence bir ilişkide en önemli şey ne?',
+        "Değerleriniz çok uyumlu! Hayatta en önemli 3 şey senin için ne?",
+        "Temel değerleriniz örtüşüyor! Sence bir ilişkide en önemli şey ne?",
       ],
       lifestyle: [
-        'Yaşam tarzlarınız çok uyumlu! Hafta sonları genelde nasıl geçirirsin?',
-        'Yaşam tarzınız birbirine yakın! İdeal bir gün sence nasıl olurdu?',
+        "Yaşam tarzlarınız çok uyumlu! Hafta sonları genelde nasıl geçirirsin?",
+        "Yaşam tarzınız birbirine yakın! İdeal bir gün sence nasıl olurdu?",
       ],
       emotional_intelligence: [
-        'Duygusal zekanız çok uyumlu! Zor anlarda kendini nasıl motive edersin?',
-        'Duygusal olarak çok uyumlusunuz! Mutluluk sence nereden gelir?',
+        "Duygusal zekanız çok uyumlu! Zor anlarda kendini nasıl motive edersin?",
+        "Duygusal olarak çok uyumlusunuz! Mutluluk sence nereden gelir?",
       ],
       relationship_expectations: [
-        'İlişki beklentileriniz çok uyumlu! Sence ideal bir ilişki nasıl olmalı?',
-        'İlişkiye bakış açınız benzer! Bir ilişkide en çok neye değer verirsin?',
+        "İlişki beklentileriniz çok uyumlu! Sence ideal bir ilişki nasıl olmalı?",
+        "İlişkiye bakış açınız benzer! Bir ilişkide en çok neye değer verirsin?",
       ],
       social_compatibility: [
-        'Sosyal uyumunuz harika! Arkadaşlarınla vakit geçirmeyi mi yoksa baş başa kalmayı mı tercih edersin?',
-        'Sosyal tarzlarınız birbirini tamamlıyor! İdeal bir buluşma sence nasıl olurdu?',
+        "Sosyal uyumunuz harika! Arkadaşlarınla vakit geçirmeyi mi yoksa baş başa kalmayı mı tercih edersin?",
+        "Sosyal tarzlarınız birbirini tamamlıyor! İdeal bir buluşma sence nasıl olurdu?",
       ],
     };
 

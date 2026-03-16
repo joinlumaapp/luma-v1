@@ -1,16 +1,16 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsOptional, MaxLength } from 'class-validator';
+import { ApiProperty } from "@nestjs/swagger";
+import { IsNotEmpty, IsString, IsOptional, MaxLength } from "class-validator";
 
 export class AddMemoryDto {
   @ApiProperty({
-    description: 'Place ID to add memory to',
+    description: "Place ID to add memory to",
   })
   @IsNotEmpty()
   @IsString()
   placeId!: string;
 
   @ApiProperty({
-    description: 'Memory text / caption',
+    description: "Memory text / caption",
     maxLength: 500,
   })
   @IsNotEmpty()
@@ -19,7 +19,7 @@ export class AddMemoryDto {
   text!: string;
 
   @ApiProperty({
-    description: 'Optional photo URL associated with the memory',
+    description: "Optional photo URL associated with the memory",
     required: false,
   })
   @IsOptional()

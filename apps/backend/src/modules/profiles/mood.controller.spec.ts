@@ -1,12 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
-import { ThrottlerGuard } from '@nestjs/throttler';
-import { MoodController } from './mood.controller';
-import { PrismaService } from '../../prisma/prisma.service';
-import { MoodValue } from './dto/set-mood.dto';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { Test, TestingModule } from "@nestjs/testing";
+import { NotFoundException } from "@nestjs/common";
+import { ThrottlerGuard } from "@nestjs/throttler";
+import { MoodController } from "./mood.controller";
+import { PrismaService } from "../../prisma/prisma.service";
+import { MoodValue } from "./dto/set-mood.dto";
+import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 
-describe('MoodController', () => {
+describe("MoodController", () => {
   let controller: MoodController;
 
   const mockPrisma = {
@@ -24,9 +24,7 @@ describe('MoodController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [MoodController],
-      providers: [
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [{ provide: PrismaService, useValue: mockPrisma }],
     })
       .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
@@ -37,7 +35,7 @@ describe('MoodController', () => {
     controller = module.get<MoodController>(MoodController);
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(controller).toBeDefined();
   });
 
@@ -45,11 +43,11 @@ describe('MoodController', () => {
   // PUT /profiles/mood
   // ═══════════════════════════════════════════════════════════════
 
-  describe('setMood()', () => {
-    const userId = 'user-uuid-1';
+  describe("setMood()", () => {
+    const userId = "user-uuid-1";
 
-    it('should set mood successfully and return mood data with expiry', async () => {
-      const moodSetAt = new Date('2026-02-23T10:00:00.000Z');
+    it("should set mood successfully and return mood data with expiry", async () => {
+      const moodSetAt = new Date("2026-02-23T10:00:00.000Z");
       mockPrisma.user.findUnique.mockResolvedValue({ id: userId });
       mockPrisma.userProfile.update.mockResolvedValue({
         currentMood: MoodValue.ENERJIK,
@@ -62,14 +60,16 @@ describe('MoodController', () => {
       expect(result.mood).toBe(MoodValue.ENERJIK);
       expect(result.moodSetAt).toBe(moodSetAt.toISOString());
       expect(result.expiresAt).toBeDefined();
-      expect(result.message).toBe('Ruh halin güncellendi!');
+      expect(result.message).toBe("Ruh halin güncellendi!");
 
       // Verify expiry is 24 hours after moodSetAt
       const expiresAt = new Date(result.expiresAt);
-      expect(expiresAt.getTime()).toBe(moodSetAt.getTime() + 24 * 60 * 60 * 1000);
+      expect(expiresAt.getTime()).toBe(
+        moodSetAt.getTime() + 24 * 60 * 60 * 1000,
+      );
     });
 
-    it('should throw NotFoundException when user does not exist', async () => {
+    it("should throw NotFoundException when user does not exist", async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
       const dto = { mood: MoodValue.MUTLU };
@@ -78,7 +78,7 @@ describe('MoodController', () => {
       );
     });
 
-    it('should delegate to prisma.user.findUnique and prisma.userProfile.update', async () => {
+    it("should delegate to prisma.user.findUnique and prisma.userProfile.update", async () => {
       const moodSetAt = new Date();
       mockPrisma.user.findUnique.mockResolvedValue({ id: userId });
       mockPrisma.userProfile.update.mockResolvedValue({
@@ -106,10 +106,10 @@ describe('MoodController', () => {
   // GET /profiles/mood/:userId
   // ═══════════════════════════════════════════════════════════════
 
-  describe('getUserMood()', () => {
-    const userId = 'user-uuid-1';
+  describe("getUserMood()", () => {
+    const userId = "user-uuid-1";
 
-    it('should return active mood when within 24h', async () => {
+    it("should return active mood when within 24h", async () => {
       const recentDate = new Date(Date.now() - 2 * 60 * 60 * 1000); // 2 hours ago
       mockPrisma.userProfile.findUnique.mockResolvedValue({
         currentMood: MoodValue.HEYECANLI,
@@ -124,7 +124,7 @@ describe('MoodController', () => {
       expect(result.expiresAt).toBeDefined();
     });
 
-    it('should return inactive mood when expired (set > 24h ago)', async () => {
+    it("should return inactive mood when expired (set > 24h ago)", async () => {
       const expiredDate = new Date(Date.now() - 25 * 60 * 60 * 1000); // 25 hours ago
       mockPrisma.userProfile.findUnique.mockResolvedValue({
         currentMood: MoodValue.DUSUNCELI,
@@ -137,7 +137,7 @@ describe('MoodController', () => {
       expect(result.isActive).toBe(false);
     });
 
-    it('should return null when no mood set', async () => {
+    it("should return null when no mood set", async () => {
       mockPrisma.userProfile.findUnique.mockResolvedValue({
         currentMood: null,
         moodSetAt: null,
@@ -149,7 +149,7 @@ describe('MoodController', () => {
       expect(result.isActive).toBe(false);
     });
 
-    it('should throw NotFoundException when profile does not exist', async () => {
+    it("should throw NotFoundException when profile does not exist", async () => {
       mockPrisma.userProfile.findUnique.mockResolvedValue(null);
 
       await expect(controller.getUserMood(userId)).rejects.toThrow(
@@ -157,7 +157,7 @@ describe('MoodController', () => {
       );
     });
 
-    it('should delegate to prisma.userProfile.findUnique with correct select', async () => {
+    it("should delegate to prisma.userProfile.findUnique with correct select", async () => {
       mockPrisma.userProfile.findUnique.mockResolvedValue({
         currentMood: null,
         moodSetAt: null,

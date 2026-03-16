@@ -1,15 +1,15 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test, TestingModule } from "@nestjs/testing";
 import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
-} from '@nestjs/common';
-import { ThrottlerGuard } from '@nestjs/throttler';
-import { RelationshipsController } from './relationships.controller';
-import { RelationshipsService } from './relationships.service';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+} from "@nestjs/common";
+import { ThrottlerGuard } from "@nestjs/throttler";
+import { RelationshipsController } from "./relationships.controller";
+import { RelationshipsService } from "./relationships.service";
+import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 
-describe('RelationshipsController', () => {
+describe("RelationshipsController", () => {
   let controller: RelationshipsController;
 
   const mockRelationshipsService = {
@@ -45,7 +45,7 @@ describe('RelationshipsController', () => {
     controller = module.get<RelationshipsController>(RelationshipsController);
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(controller).toBeDefined();
   });
 
@@ -53,42 +53,43 @@ describe('RelationshipsController', () => {
   // POST /relationships/activate
   // ═══════════════════════════════════════════════════════════════
 
-  describe('activate()', () => {
-    const userId = 'user-uuid-1';
+  describe("activate()", () => {
+    const userId = "user-uuid-1";
 
-    it('should create a relationship proposal successfully', async () => {
-      const dto = { matchId: 'match-1' };
+    it("should create a relationship proposal successfully", async () => {
+      const dto = { matchId: "match-1" };
       const expected = {
-        relationshipId: 'rel-1',
-        status: 'PROPOSED',
-        message: 'Iliski modu teklifi gonderildi. Partnerinizin onayi bekleniyor.',
+        relationshipId: "rel-1",
+        status: "PROPOSED",
+        message:
+          "Iliski modu teklifi gonderildi. Partnerinizin onayi bekleniyor.",
       };
       mockRelationshipsService.activate.mockResolvedValue(expected);
 
       const result = await controller.activate(userId, dto);
 
-      expect(result.relationshipId).toBe('rel-1');
-      expect(result.status).toBe('PROPOSED');
+      expect(result.relationshipId).toBe("rel-1");
+      expect(result.status).toBe("PROPOSED");
     });
 
-    it('should activate relationship on mutual confirmation', async () => {
-      const dto = { matchId: 'match-1' };
+    it("should activate relationship on mutual confirmation", async () => {
+      const dto = { matchId: "match-1" };
       const expected = {
-        relationshipId: 'rel-1',
-        status: 'ACTIVE',
-        message: 'Iliski modu aktif edildi!',
+        relationshipId: "rel-1",
+        status: "ACTIVE",
+        message: "Iliski modu aktif edildi!",
       };
       mockRelationshipsService.activate.mockResolvedValue(expected);
 
       const result = await controller.activate(userId, dto);
 
-      expect(result.status).toBe('ACTIVE');
+      expect(result.status).toBe("ACTIVE");
     });
 
-    it('should throw NotFoundException when match does not exist', async () => {
-      const dto = { matchId: 'bad-id' };
+    it("should throw NotFoundException when match does not exist", async () => {
+      const dto = { matchId: "bad-id" };
       mockRelationshipsService.activate.mockRejectedValue(
-        new NotFoundException('Eslesme bulunamadi veya aktif degil'),
+        new NotFoundException("Eslesme bulunamadi veya aktif degil"),
       );
 
       await expect(controller.activate(userId, dto)).rejects.toThrow(
@@ -96,10 +97,10 @@ describe('RelationshipsController', () => {
       );
     });
 
-    it('should throw ForbiddenException when user is not a match participant', async () => {
-      const dto = { matchId: 'match-other' };
+    it("should throw ForbiddenException when user is not a match participant", async () => {
+      const dto = { matchId: "match-other" };
       mockRelationshipsService.activate.mockRejectedValue(
-        new ForbiddenException('Bu eslesmenin katilimcisi degilsiniz'),
+        new ForbiddenException("Bu eslesmenin katilimcisi degilsiniz"),
       );
 
       await expect(controller.activate(userId, dto)).rejects.toThrow(
@@ -107,10 +108,12 @@ describe('RelationshipsController', () => {
       );
     });
 
-    it('should throw BadRequestException when already in a relationship', async () => {
-      const dto = { matchId: 'match-1' };
+    it("should throw BadRequestException when already in a relationship", async () => {
+      const dto = { matchId: "match-1" };
       mockRelationshipsService.activate.mockRejectedValue(
-        new BadRequestException('Zaten aktif bir iliskiniz veya bekleyen bir teklifiniz var'),
+        new BadRequestException(
+          "Zaten aktif bir iliskiniz veya bekleyen bir teklifiniz var",
+        ),
       );
 
       await expect(controller.activate(userId, dto)).rejects.toThrow(
@@ -118,13 +121,18 @@ describe('RelationshipsController', () => {
       );
     });
 
-    it('should delegate to relationshipsService.activate with userId and dto', async () => {
-      const dto = { matchId: 'match-1' };
-      mockRelationshipsService.activate.mockResolvedValue({ status: 'PROPOSED' });
+    it("should delegate to relationshipsService.activate with userId and dto", async () => {
+      const dto = { matchId: "match-1" };
+      mockRelationshipsService.activate.mockResolvedValue({
+        status: "PROPOSED",
+      });
 
       await controller.activate(userId, dto);
 
-      expect(mockRelationshipsService.activate).toHaveBeenCalledWith(userId, dto);
+      expect(mockRelationshipsService.activate).toHaveBeenCalledWith(
+        userId,
+        dto,
+      );
       expect(mockRelationshipsService.activate).toHaveBeenCalledTimes(1);
     });
   });
@@ -133,26 +141,26 @@ describe('RelationshipsController', () => {
   // DELETE /relationships/deactivate
   // ═══════════════════════════════════════════════════════════════
 
-  describe('deactivate()', () => {
-    const userId = 'user-uuid-1';
+  describe("deactivate()", () => {
+    const userId = "user-uuid-1";
 
-    it('should initiate 48-hour deactivation', async () => {
+    it("should initiate 48-hour deactivation", async () => {
       mockRelationshipsService.deactivate.mockResolvedValue({
         deactivated: false,
-        status: 'ENDING',
+        status: "ENDING",
         deactivationDeadline: new Date(),
-        message: 'Iliski sonlandirma talebi gonderildi.',
+        message: "Iliski sonlandirma talebi gonderildi.",
       });
 
       const result = await controller.deactivate(userId);
 
-      expect(result.status).toBe('ENDING');
+      expect(result.status).toBe("ENDING");
       expect(result.deactivated).toBe(false);
     });
 
-    it('should throw NotFoundException when no active relationship', async () => {
+    it("should throw NotFoundException when no active relationship", async () => {
       mockRelationshipsService.deactivate.mockRejectedValue(
-        new NotFoundException('Aktif bir iliskiniz bulunmuyor'),
+        new NotFoundException("Aktif bir iliskiniz bulunmuyor"),
       );
 
       await expect(controller.deactivate(userId)).rejects.toThrow(
@@ -160,8 +168,11 @@ describe('RelationshipsController', () => {
       );
     });
 
-    it('should delegate to relationshipsService.deactivate with userId', async () => {
-      mockRelationshipsService.deactivate.mockResolvedValue({ deactivated: false, status: 'ENDING' });
+    it("should delegate to relationshipsService.deactivate with userId", async () => {
+      mockRelationshipsService.deactivate.mockResolvedValue({
+        deactivated: false,
+        status: "ENDING",
+      });
 
       await controller.deactivate(userId);
 
@@ -170,13 +181,13 @@ describe('RelationshipsController', () => {
     });
   });
 
-  describe('confirmDeactivation()', () => {
-    const userId = 'user-uuid-1';
+  describe("confirmDeactivation()", () => {
+    const userId = "user-uuid-1";
 
-    it('should confirm deactivation successfully', async () => {
+    it("should confirm deactivation successfully", async () => {
       mockRelationshipsService.confirmDeactivation.mockResolvedValue({
         confirmed: true,
-        message: 'Iliski modu sonlandirildi',
+        message: "Iliski modu sonlandirildi",
       });
 
       const result = await controller.confirmDeactivation(userId);
@@ -184,22 +195,26 @@ describe('RelationshipsController', () => {
       expect(result.confirmed).toBe(true);
     });
 
-    it('should delegate to relationshipsService.confirmDeactivation', async () => {
-      mockRelationshipsService.confirmDeactivation.mockResolvedValue({ confirmed: true });
+    it("should delegate to relationshipsService.confirmDeactivation", async () => {
+      mockRelationshipsService.confirmDeactivation.mockResolvedValue({
+        confirmed: true,
+      });
 
       await controller.confirmDeactivation(userId);
 
-      expect(mockRelationshipsService.confirmDeactivation).toHaveBeenCalledWith(userId);
+      expect(mockRelationshipsService.confirmDeactivation).toHaveBeenCalledWith(
+        userId,
+      );
     });
   });
 
-  describe('cancelDeactivation()', () => {
-    const userId = 'user-uuid-1';
+  describe("cancelDeactivation()", () => {
+    const userId = "user-uuid-1";
 
-    it('should cancel deactivation successfully', async () => {
+    it("should cancel deactivation successfully", async () => {
       mockRelationshipsService.cancelDeactivation.mockResolvedValue({
         cancelled: true,
-        message: 'Iliski sonlandirma talebi iptal edildi.',
+        message: "Iliski sonlandirma talebi iptal edildi.",
       });
 
       const result = await controller.cancelDeactivation(userId);
@@ -207,12 +222,16 @@ describe('RelationshipsController', () => {
       expect(result.cancelled).toBe(true);
     });
 
-    it('should delegate to relationshipsService.cancelDeactivation', async () => {
-      mockRelationshipsService.cancelDeactivation.mockResolvedValue({ cancelled: true });
+    it("should delegate to relationshipsService.cancelDeactivation", async () => {
+      mockRelationshipsService.cancelDeactivation.mockResolvedValue({
+        cancelled: true,
+      });
 
       await controller.cancelDeactivation(userId);
 
-      expect(mockRelationshipsService.cancelDeactivation).toHaveBeenCalledWith(userId);
+      expect(mockRelationshipsService.cancelDeactivation).toHaveBeenCalledWith(
+        userId,
+      );
     });
   });
 
@@ -220,14 +239,14 @@ describe('RelationshipsController', () => {
   // PATCH /relationships/visibility
   // ═══════════════════════════════════════════════════════════════
 
-  describe('toggleVisibility()', () => {
-    const userId = 'user-uuid-1';
+  describe("toggleVisibility()", () => {
+    const userId = "user-uuid-1";
 
-    it('should set visibility to true', async () => {
+    it("should set visibility to true", async () => {
       const dto = { isVisible: true };
       mockRelationshipsService.toggleVisibility.mockResolvedValue({
         isVisible: true,
-        message: 'Ciftler Kulubunde gorunur oldunuz',
+        message: "Ciftler Kulubunde gorunur oldunuz",
       });
 
       const result = await controller.toggleVisibility(userId, dto);
@@ -235,11 +254,11 @@ describe('RelationshipsController', () => {
       expect(result.isVisible).toBe(true);
     });
 
-    it('should set visibility to false', async () => {
+    it("should set visibility to false", async () => {
       const dto = { isVisible: false };
       mockRelationshipsService.toggleVisibility.mockResolvedValue({
         isVisible: false,
-        message: 'Ciftler Kulubunde gizli oldunuz',
+        message: "Ciftler Kulubunde gizli oldunuz",
       });
 
       const result = await controller.toggleVisibility(userId, dto);
@@ -247,10 +266,10 @@ describe('RelationshipsController', () => {
       expect(result.isVisible).toBe(false);
     });
 
-    it('should throw NotFoundException when no active relationship', async () => {
+    it("should throw NotFoundException when no active relationship", async () => {
       const dto = { isVisible: true };
       mockRelationshipsService.toggleVisibility.mockRejectedValue(
-        new NotFoundException('Aktif bir iliskiniz bulunmuyor'),
+        new NotFoundException("Aktif bir iliskiniz bulunmuyor"),
       );
 
       await expect(controller.toggleVisibility(userId, dto)).rejects.toThrow(
@@ -258,14 +277,21 @@ describe('RelationshipsController', () => {
       );
     });
 
-    it('should delegate to relationshipsService.toggleVisibility with userId and dto', async () => {
+    it("should delegate to relationshipsService.toggleVisibility with userId and dto", async () => {
       const dto = { isVisible: true };
-      mockRelationshipsService.toggleVisibility.mockResolvedValue({ isVisible: true });
+      mockRelationshipsService.toggleVisibility.mockResolvedValue({
+        isVisible: true,
+      });
 
       await controller.toggleVisibility(userId, dto);
 
-      expect(mockRelationshipsService.toggleVisibility).toHaveBeenCalledWith(userId, dto);
-      expect(mockRelationshipsService.toggleVisibility).toHaveBeenCalledTimes(1);
+      expect(mockRelationshipsService.toggleVisibility).toHaveBeenCalledWith(
+        userId,
+        dto,
+      );
+      expect(mockRelationshipsService.toggleVisibility).toHaveBeenCalledTimes(
+        1,
+      );
     });
   });
 
@@ -273,21 +299,21 @@ describe('RelationshipsController', () => {
   // GET /relationships/status
   // ═══════════════════════════════════════════════════════════════
 
-  describe('getStatus()', () => {
-    const userId = 'user-uuid-1';
+  describe("getStatus()", () => {
+    const userId = "user-uuid-1";
 
-    it('should return active relationship status with partner info', async () => {
+    it("should return active relationship status with partner info", async () => {
       const expected = {
         hasActiveRelationship: true,
         relationship: {
-          id: 'rel-1',
-          status: 'ACTIVE',
+          id: "rel-1",
+          status: "ACTIVE",
           isVisible: true,
-          activatedAt: '2025-05-01T10:00:00Z',
+          activatedAt: "2025-05-01T10:00:00Z",
           durationDays: 30,
           partner: {
-            userId: 'user-2',
-            firstName: 'Ayse',
+            userId: "user-2",
+            firstName: "Ayse",
             age: 25,
             isVerified: true,
           },
@@ -298,11 +324,11 @@ describe('RelationshipsController', () => {
       const result = await controller.getStatus(userId);
 
       expect(result.hasActiveRelationship).toBe(true);
-      expect(result.relationship!.partner!.firstName).toBe('Ayse');
+      expect(result.relationship!.partner!.firstName).toBe("Ayse");
       expect(result.relationship!.durationDays).toBe(30);
     });
 
-    it('should return no relationship for single user', async () => {
+    it("should return no relationship for single user", async () => {
       mockRelationshipsService.getStatus.mockResolvedValue({
         hasActiveRelationship: false,
         relationship: null,
@@ -314,7 +340,7 @@ describe('RelationshipsController', () => {
       expect(result.relationship).toBeNull();
     });
 
-    it('should delegate to relationshipsService.getStatus with userId', async () => {
+    it("should delegate to relationshipsService.getStatus with userId", async () => {
       mockRelationshipsService.getStatus.mockResolvedValue({
         hasActiveRelationship: false,
         relationship: null,
@@ -331,13 +357,27 @@ describe('RelationshipsController', () => {
   // GET /relationships/milestones
   // ═══════════════════════════════════════════════════════════════
 
-  describe('getMilestones()', () => {
-    const userId = 'user-uuid-1';
+  describe("getMilestones()", () => {
+    const userId = "user-uuid-1";
 
-    it('should return milestones for active relationship', async () => {
+    it("should return milestones for active relationship", async () => {
       const expected = {
-        achieved: [{ id: 'tm_1w', key: 'first_week', title: 'Ilk Haftaniz!', isAchieved: true }],
-        upcoming: [{ id: 'tm_1m', key: 'first_month', title: '1 Aylik!', isAchieved: false }],
+        achieved: [
+          {
+            id: "tm_1w",
+            key: "first_week",
+            title: "Ilk Haftaniz!",
+            isAchieved: true,
+          },
+        ],
+        upcoming: [
+          {
+            id: "tm_1m",
+            key: "first_month",
+            title: "1 Aylik!",
+            isAchieved: false,
+          },
+        ],
         totalAchieved: 1,
         totalMilestones: 9,
       };
@@ -350,7 +390,7 @@ describe('RelationshipsController', () => {
       expect(result.upcoming).toHaveLength(1);
     });
 
-    it('should return empty milestones when no active relationship', async () => {
+    it("should return empty milestones when no active relationship", async () => {
       const expected = {
         achieved: [],
         upcoming: [],
@@ -365,7 +405,7 @@ describe('RelationshipsController', () => {
       expect(result.achieved).toHaveLength(0);
     });
 
-    it('should delegate to relationshipsService.getMilestones with userId', async () => {
+    it("should delegate to relationshipsService.getMilestones with userId", async () => {
       mockRelationshipsService.getMilestones.mockResolvedValue({
         achieved: [],
         upcoming: [],
@@ -375,7 +415,9 @@ describe('RelationshipsController', () => {
 
       await controller.getMilestones(userId);
 
-      expect(mockRelationshipsService.getMilestones).toHaveBeenCalledWith(userId);
+      expect(mockRelationshipsService.getMilestones).toHaveBeenCalledWith(
+        userId,
+      );
       expect(mockRelationshipsService.getMilestones).toHaveBeenCalledTimes(1);
     });
   });
@@ -384,16 +426,16 @@ describe('RelationshipsController', () => {
   // GET /relationships/couple-matches
   // ═══════════════════════════════════════════════════════════════
 
-  describe('getCoupleMatches()', () => {
-    const userId = 'user-uuid-1';
+  describe("getCoupleMatches()", () => {
+    const userId = "user-uuid-1";
 
-    it('should return couple matches', async () => {
+    it("should return couple matches", async () => {
       const expected = {
         coupleMatches: [
           {
-            coupleId: 'rel-2',
-            partnerNames: ['Zeynep', 'Emre'],
-            sharedInterests: ['SERIOUS_RELATIONSHIP'],
+            coupleId: "rel-2",
+            partnerNames: ["Zeynep", "Emre"],
+            sharedInterests: ["SERIOUS_RELATIONSHIP"],
             compatibilityScore: 75,
           },
         ],
@@ -407,9 +449,11 @@ describe('RelationshipsController', () => {
       expect(result.total).toBe(1);
     });
 
-    it('should throw NotFoundException when no active relationship', async () => {
+    it("should throw NotFoundException when no active relationship", async () => {
       mockRelationshipsService.findCoupleMatches.mockRejectedValue(
-        new NotFoundException('Cift eslesmelerini gormek icin aktif bir iliskiniz olmalidir'),
+        new NotFoundException(
+          "Cift eslesmelerini gormek icin aktif bir iliskiniz olmalidir",
+        ),
       );
 
       await expect(controller.getCoupleMatches(userId)).rejects.toThrow(
@@ -417,13 +461,20 @@ describe('RelationshipsController', () => {
       );
     });
 
-    it('should delegate to relationshipsService.findCoupleMatches', async () => {
-      mockRelationshipsService.findCoupleMatches.mockResolvedValue({ coupleMatches: [], total: 0 });
+    it("should delegate to relationshipsService.findCoupleMatches", async () => {
+      mockRelationshipsService.findCoupleMatches.mockResolvedValue({
+        coupleMatches: [],
+        total: 0,
+      });
 
       await controller.getCoupleMatches(userId);
 
-      expect(mockRelationshipsService.findCoupleMatches).toHaveBeenCalledWith(userId);
-      expect(mockRelationshipsService.findCoupleMatches).toHaveBeenCalledTimes(1);
+      expect(mockRelationshipsService.findCoupleMatches).toHaveBeenCalledWith(
+        userId,
+      );
+      expect(mockRelationshipsService.findCoupleMatches).toHaveBeenCalledTimes(
+        1,
+      );
     });
   });
 
@@ -431,27 +482,27 @@ describe('RelationshipsController', () => {
   // POST /relationships/events
   // ═══════════════════════════════════════════════════════════════
 
-  describe('createEvent()', () => {
-    const userId = 'user-uuid-1';
+  describe("createEvent()", () => {
+    const userId = "user-uuid-1";
 
-    it('should create an event successfully', async () => {
+    it("should create an event successfully", async () => {
       const dto = {
-        title: 'Cift Yogasi',
-        description: 'Birlikte yoga yapalim',
-        date: '2026-04-01T18:00:00.000Z',
-        location: 'Istanbul',
+        title: "Cift Yogasi",
+        description: "Birlikte yoga yapalim",
+        date: "2026-04-01T18:00:00.000Z",
+        location: "Istanbul",
         capacity: 10,
       };
       const expected = {
-        id: 'evt-1',
-        title: 'Cift Yogasi',
-        description: 'Birlikte yoga yapalim',
-        date: '2026-04-01T18:00:00.000Z',
-        location: 'Istanbul',
+        id: "evt-1",
+        title: "Cift Yogasi",
+        description: "Birlikte yoga yapalim",
+        date: "2026-04-01T18:00:00.000Z",
+        location: "Istanbul",
         capacity: 10,
         attendeeCount: 0,
         isRsvped: false,
-        createdByName: 'Ali',
+        createdByName: "Ali",
         imageUrl: null,
         isPro: false,
       };
@@ -459,20 +510,20 @@ describe('RelationshipsController', () => {
 
       const result = await controller.createEvent(userId, dto);
 
-      expect(result.id).toBe('evt-1');
-      expect(result.title).toBe('Cift Yogasi');
+      expect(result.id).toBe("evt-1");
+      expect(result.title).toBe("Cift Yogasi");
     });
 
-    it('should throw NotFoundException when no active relationship', async () => {
+    it("should throw NotFoundException when no active relationship", async () => {
       const dto = {
-        title: 'Test',
-        description: 'Test desc',
-        date: '2026-04-01T18:00:00.000Z',
-        location: 'Istanbul',
+        title: "Test",
+        description: "Test desc",
+        date: "2026-04-01T18:00:00.000Z",
+        location: "Istanbul",
         capacity: 10,
       };
       mockRelationshipsService.createEvent.mockRejectedValue(
-        new NotFoundException('Aktif bir iliskiniz bulunmuyor'),
+        new NotFoundException("Aktif bir iliskiniz bulunmuyor"),
       );
 
       await expect(controller.createEvent(userId, dto)).rejects.toThrow(
@@ -480,19 +531,22 @@ describe('RelationshipsController', () => {
       );
     });
 
-    it('should delegate to relationshipsService.createEvent with userId and dto', async () => {
+    it("should delegate to relationshipsService.createEvent with userId and dto", async () => {
       const dto = {
-        title: 'Test',
-        description: 'Test desc',
-        date: '2026-04-01T18:00:00.000Z',
-        location: 'Istanbul',
+        title: "Test",
+        description: "Test desc",
+        date: "2026-04-01T18:00:00.000Z",
+        location: "Istanbul",
         capacity: 10,
       };
-      mockRelationshipsService.createEvent.mockResolvedValue({ id: 'evt-1' });
+      mockRelationshipsService.createEvent.mockResolvedValue({ id: "evt-1" });
 
       await controller.createEvent(userId, dto);
 
-      expect(mockRelationshipsService.createEvent).toHaveBeenCalledWith(userId, dto);
+      expect(mockRelationshipsService.createEvent).toHaveBeenCalledWith(
+        userId,
+        dto,
+      );
       expect(mockRelationshipsService.createEvent).toHaveBeenCalledTimes(1);
     });
   });
@@ -501,17 +555,17 @@ describe('RelationshipsController', () => {
   // GET /relationships/leaderboard
   // ═══════════════════════════════════════════════════════════════
 
-  describe('getLeaderboard()', () => {
-    const userId = 'user-uuid-1';
+  describe("getLeaderboard()", () => {
+    const userId = "user-uuid-1";
 
-    it('should return leaderboard entries with my rank', async () => {
+    it("should return leaderboard entries with my rank", async () => {
       const expected = {
         entries: [
           {
             rank: 1,
-            coupleId: 'rel-1',
-            partnerAName: 'Ali',
-            partnerBName: 'Ayse',
+            coupleId: "rel-1",
+            partnerAName: "Ali",
+            partnerBName: "Ayse",
             score: 350,
             badgeCount: 1,
             durationDays: 30,
@@ -527,9 +581,9 @@ describe('RelationshipsController', () => {
       expect(result.myRank).toBe(1);
     });
 
-    it('should throw NotFoundException when no active relationship', async () => {
+    it("should throw NotFoundException when no active relationship", async () => {
       mockRelationshipsService.getLeaderboard.mockRejectedValue(
-        new NotFoundException('Aktif bir iliskiniz bulunmuyor'),
+        new NotFoundException("Aktif bir iliskiniz bulunmuyor"),
       );
 
       await expect(controller.getLeaderboard(userId)).rejects.toThrow(
@@ -537,12 +591,17 @@ describe('RelationshipsController', () => {
       );
     });
 
-    it('should delegate to relationshipsService.getLeaderboard with userId', async () => {
-      mockRelationshipsService.getLeaderboard.mockResolvedValue({ entries: [], myRank: null });
+    it("should delegate to relationshipsService.getLeaderboard with userId", async () => {
+      mockRelationshipsService.getLeaderboard.mockResolvedValue({
+        entries: [],
+        myRank: null,
+      });
 
       await controller.getLeaderboard(userId);
 
-      expect(mockRelationshipsService.getLeaderboard).toHaveBeenCalledWith(userId);
+      expect(mockRelationshipsService.getLeaderboard).toHaveBeenCalledWith(
+        userId,
+      );
       expect(mockRelationshipsService.getLeaderboard).toHaveBeenCalledTimes(1);
     });
   });

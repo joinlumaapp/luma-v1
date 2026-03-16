@@ -1,11 +1,11 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import * as admin from 'firebase-admin';
+import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import * as admin from "firebase-admin";
 import {
   getFirebaseApp,
   getFirebaseMessaging,
   isFirebaseConfigured,
-} from '../../common/providers/firebase.provider';
-import { PrismaService } from '../../prisma/prisma.service';
+} from "../../common/providers/firebase.provider";
+import { PrismaService } from "../../prisma/prisma.service";
 
 // ────────────────────────────────────────────────────────────────────
 // Types
@@ -22,7 +22,7 @@ export interface FcmPayload {
   };
   data?: Record<string, string>;
   /** When provided, platform-specific formatting is applied. */
-  platform?: 'ios' | 'android';
+  platform?: "ios" | "android";
 }
 
 /**
@@ -65,9 +65,9 @@ interface FcmSendResponse {
 
 /** FCM error codes indicating a stale/invalid device token. */
 const INVALID_TOKEN_ERRORS = new Set([
-  'messaging/registration-token-not-registered',
-  'messaging/invalid-registration-token',
-  'messaging/invalid-argument',
+  "messaging/registration-token-not-registered",
+  "messaging/invalid-registration-token",
+  "messaging/invalid-argument",
 ]);
 
 /** Maximum retry attempts for transient FCM errors. */
@@ -78,9 +78,9 @@ const RETRY_BASE_DELAY_MS = 500;
 
 /** FCM error codes that are eligible for retry. */
 const RETRYABLE_ERRORS = new Set([
-  'messaging/internal-error',
-  'messaging/server-unavailable',
-  'messaging/too-many-requests',
+  "messaging/internal-error",
+  "messaging/server-unavailable",
+  "messaging/too-many-requests",
 ]);
 
 // ────────────────────────────────────────────────────────────────────
@@ -108,19 +108,19 @@ export class FirebaseProvider implements OnModuleInit {
   private isConfigured = false;
   private firebaseApp: admin.app.App | null = null;
 
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   onModuleInit(): void {
     this.firebaseApp = getFirebaseApp();
     this.isConfigured = isFirebaseConfigured();
 
     if (this.isConfigured) {
-      this.logger.log('Firebase Cloud Messaging ready (using centralized provider)');
+      this.logger.log(
+        "Firebase Cloud Messaging ready (using centralized provider)",
+      );
     } else {
       this.logger.warn(
-        'Firebase not configured — push notifications will be mocked in development.',
+        "Firebase not configured — push notifications will be mocked in development.",
       );
     }
   }
@@ -149,10 +149,10 @@ export class FirebaseProvider implements OnModuleInit {
       data: payload.data,
     };
 
-    if (payload.platform === 'ios') {
+    if (payload.platform === "ios") {
       message.apns = {
         headers: {
-          'apns-priority': '10',
+          "apns-priority": "10",
         },
         payload: {
           aps: {
@@ -160,20 +160,20 @@ export class FirebaseProvider implements OnModuleInit {
               title: payload.notification.title,
               body: payload.notification.body,
             },
-            sound: 'default',
+            sound: "default",
             badge: badgeCount ?? 0,
-            'mutable-content': 1,
+            "mutable-content": 1,
           },
         },
       };
-    } else if (payload.platform === 'android') {
+    } else if (payload.platform === "android") {
       message.android = {
-        priority: 'high',
+        priority: "high",
         notification: {
           title: payload.notification.title,
           body: payload.notification.body,
-          channelId: 'luma_default',
-          sound: 'default',
+          channelId: "luma_default",
+          sound: "default",
           defaultSound: true,
           notificationCount: badgeCount ?? 0,
         },
@@ -201,7 +201,7 @@ export class FirebaseProvider implements OnModuleInit {
       } catch (error: unknown) {
         lastError = error;
         const fcmError = error as { code?: string };
-        const errorCode = fcmError.code ?? '';
+        const errorCode = fcmError.code ?? "";
 
         // Only retry for transient errors
         if (!RETRYABLE_ERRORS.has(errorCode)) {
@@ -211,7 +211,7 @@ export class FirebaseProvider implements OnModuleInit {
         const delay = RETRY_BASE_DELAY_MS * Math.pow(2, attempt);
         this.logger.warn(
           `FCM gecici hata (${context}), yeniden denenecek ` +
-          `(${attempt + 1}/${MAX_RETRIES}) — ${delay}ms bekleniyor: ${errorCode}`,
+            `(${attempt + 1}/${MAX_RETRIES}) — ${delay}ms bekleniyor: ${errorCode}`,
         );
 
         await this.sleep(delay);
@@ -237,7 +237,7 @@ export class FirebaseProvider implements OnModuleInit {
     if (!this.isConfigured || !this.firebaseApp) {
       this.logger.debug(
         `[MOCK FCM] token=${payload.token.substring(0, 12)}... ` +
-        `title="${payload.notification.title}" body="${payload.notification.body}"`,
+          `title="${payload.notification.title}" body="${payload.notification.body}"`,
       );
       return {
         success: true,
@@ -257,10 +257,12 @@ export class FirebaseProvider implements OnModuleInit {
       return { success: true, messageId };
     } catch (error: unknown) {
       const fcmError = error as { code?: string; message?: string };
-      const errorMessage = fcmError.message ?? 'Bilinmeyen hata';
-      const errorCode = fcmError.code ?? '';
+      const errorMessage = fcmError.message ?? "Bilinmeyen hata";
+      const errorCode = fcmError.code ?? "";
 
-      this.logger.error(`FCM gonderme hatasi: ${errorMessage} (code: ${errorCode})`);
+      this.logger.error(
+        `FCM gonderme hatasi: ${errorMessage} (code: ${errorCode})`,
+      );
 
       // Deactivate invalid tokens in the database
       if (INVALID_TOKEN_ERRORS.has(errorCode)) {
@@ -290,10 +292,10 @@ export class FirebaseProvider implements OnModuleInit {
     });
 
     if (!result.success) {
-      throw new Error(result.error ?? 'FCM send failed');
+      throw new Error(result.error ?? "FCM send failed");
     }
 
-    return result.messageId ?? '';
+    return result.messageId ?? "";
   }
 
   /**
@@ -306,7 +308,7 @@ export class FirebaseProvider implements OnModuleInit {
   async sendSilent(
     token: string,
     data: Record<string, string>,
-    platform?: 'ios' | 'android',
+    platform?: "ios" | "android",
   ): Promise<FcmSendResult> {
     if (!this.isConfigured || !this.firebaseApp) {
       this.logger.debug(
@@ -322,21 +324,21 @@ export class FirebaseProvider implements OnModuleInit {
         data,
       };
 
-      if (platform === 'ios') {
+      if (platform === "ios") {
         message.apns = {
           headers: {
-            'apns-priority': '5',
-            'apns-push-type': 'background',
+            "apns-priority": "5",
+            "apns-push-type": "background",
           },
           payload: {
             aps: {
-              'content-available': 1,
+              "content-available": 1,
             },
           },
         };
-      } else if (platform === 'android') {
+      } else if (platform === "android") {
         message.android = {
-          priority: 'high',
+          priority: "high",
           ttl: 3600000, // 1 hour
         };
       }
@@ -349,10 +351,12 @@ export class FirebaseProvider implements OnModuleInit {
       return { success: true, messageId };
     } catch (error: unknown) {
       const fcmError = error as { code?: string; message?: string };
-      const errorMessage = fcmError.message ?? 'Bilinmeyen hata';
-      const errorCode = fcmError.code ?? '';
+      const errorMessage = fcmError.message ?? "Bilinmeyen hata";
+      const errorCode = fcmError.code ?? "";
 
-      this.logger.error(`FCM silent gonderme hatasi: ${errorMessage} (code: ${errorCode})`);
+      this.logger.error(
+        `FCM silent gonderme hatasi: ${errorMessage} (code: ${errorCode})`,
+      );
 
       if (INVALID_TOKEN_ERRORS.has(errorCode)) {
         await this.deactivateToken(token);
@@ -388,18 +392,18 @@ export class FirebaseProvider implements OnModuleInit {
         notification: { title, body },
         data,
         apns: {
-          headers: { 'apns-priority': '10' },
+          headers: { "apns-priority": "10" },
           payload: {
             aps: {
-              sound: 'default',
+              sound: "default",
             },
           },
         },
         android: {
-          priority: 'high',
+          priority: "high",
           notification: {
-            channelId: 'luma_announcements',
-            sound: 'default',
+            channelId: "luma_announcements",
+            sound: "default",
           },
         },
       };
@@ -409,11 +413,13 @@ export class FirebaseProvider implements OnModuleInit {
         `topic:${topic}`,
       );
 
-      this.logger.log(`Topic bildirim gonderildi — topic: ${topic}, messageId: ${messageId}`);
+      this.logger.log(
+        `Topic bildirim gonderildi — topic: ${topic}, messageId: ${messageId}`,
+      );
       return { success: true, messageId };
     } catch (error: unknown) {
       const fcmError = error as { message?: string };
-      const errorMessage = fcmError.message ?? 'Bilinmeyen hata';
+      const errorMessage = fcmError.message ?? "Bilinmeyen hata";
       this.logger.error(`FCM topic gonderme hatasi: ${errorMessage}`);
       return { success: false, error: errorMessage };
     }
@@ -440,7 +446,7 @@ export class FirebaseProvider implements OnModuleInit {
     if (!this.isConfigured || !this.firebaseApp) {
       this.logger.debug(
         `[MOCK FCM MULTICAST] tokens=${tokens.length} ` +
-        `title="${title}" body="${body}"`,
+          `title="${title}" body="${body}"`,
       );
       return { successCount: tokens.length, failureCount: 0 };
     }
@@ -452,16 +458,16 @@ export class FirebaseProvider implements OnModuleInit {
         notification: { title, body },
         data,
         android: {
-          priority: 'high',
+          priority: "high",
           notification: {
-            channelId: 'luma_default',
-            sound: 'default',
+            channelId: "luma_default",
+            sound: "default",
           },
         },
         apns: {
-          headers: { 'apns-priority': '10' },
+          headers: { "apns-priority": "10" },
           payload: {
-            aps: { sound: 'default' },
+            aps: { sound: "default" },
           },
         },
       });
@@ -497,7 +503,7 @@ export class FirebaseProvider implements OnModuleInit {
       };
     } catch (error: unknown) {
       const fcmError = error as { message?: string };
-      const errorMessage = fcmError.message ?? 'Bilinmeyen hata';
+      const errorMessage = fcmError.message ?? "Bilinmeyen hata";
       this.logger.error(`FCM multicast hatasi: ${errorMessage}`);
       return { successCount: 0, failureCount: tokens.length };
     }
@@ -518,9 +524,9 @@ export class FirebaseProvider implements OnModuleInit {
     );
 
     return settled.map((result) =>
-      result.status === 'fulfilled'
+      result.status === "fulfilled"
         ? result.value
-        : { success: false, error: 'Promise rejected' },
+        : { success: false, error: "Promise rejected" },
     );
   }
 
@@ -531,7 +537,9 @@ export class FirebaseProvider implements OnModuleInit {
    */
   async subscribeToTopic(token: string, topic: string): Promise<boolean> {
     if (!this.isConfigured || !this.firebaseApp) {
-      this.logger.debug(`[MOCK FCM] subscribeToTopic — token=${token.substring(0, 12)}... topic=${topic}`);
+      this.logger.debug(
+        `[MOCK FCM] subscribeToTopic — token=${token.substring(0, 12)}... topic=${topic}`,
+      );
       return true;
     }
 
@@ -541,7 +549,9 @@ export class FirebaseProvider implements OnModuleInit {
       return response.failureCount === 0;
     } catch (error: unknown) {
       const fcmError = error as { message?: string };
-      this.logger.error(`Topic subscribe hatasi: ${fcmError.message ?? 'Bilinmeyen hata'}`);
+      this.logger.error(
+        `Topic subscribe hatasi: ${fcmError.message ?? "Bilinmeyen hata"}`,
+      );
       return false;
     }
   }
@@ -551,7 +561,9 @@ export class FirebaseProvider implements OnModuleInit {
    */
   async unsubscribeFromTopic(token: string, topic: string): Promise<boolean> {
     if (!this.isConfigured || !this.firebaseApp) {
-      this.logger.debug(`[MOCK FCM] unsubscribeFromTopic — token=${token.substring(0, 12)}... topic=${topic}`);
+      this.logger.debug(
+        `[MOCK FCM] unsubscribeFromTopic — token=${token.substring(0, 12)}... topic=${topic}`,
+      );
       return true;
     }
 
@@ -561,7 +573,9 @@ export class FirebaseProvider implements OnModuleInit {
       return response.failureCount === 0;
     } catch (error: unknown) {
       const fcmError = error as { message?: string };
-      this.logger.error(`Topic unsubscribe hatasi: ${fcmError.message ?? 'Bilinmeyen hata'}`);
+      this.logger.error(
+        `Topic unsubscribe hatasi: ${fcmError.message ?? "Bilinmeyen hata"}`,
+      );
       return false;
     }
   }
@@ -584,7 +598,7 @@ export class FirebaseProvider implements OnModuleInit {
     } catch (dbError: unknown) {
       const err = dbError as { message?: string };
       this.logger.error(
-        `Token devre disi birakma hatasi: ${err.message ?? 'Bilinmeyen hata'}`,
+        `Token devre disi birakma hatasi: ${err.message ?? "Bilinmeyen hata"}`,
       );
     }
   }

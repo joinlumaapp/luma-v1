@@ -5,11 +5,11 @@ import {
   CallHandler,
   HttpException,
   HttpStatus,
-} from '@nestjs/common';
-import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
-import * as Sentry from '@sentry/nestjs';
-import { Request } from 'express';
+} from "@nestjs/common";
+import { Observable, throwError } from "rxjs";
+import { catchError } from "rxjs/operators";
+import * as Sentry from "@sentry/nestjs";
+import { Request } from "express";
 
 interface RequestUser {
   sub: string;
@@ -42,17 +42,14 @@ export class SentryInterceptor implements NestInterceptor {
     );
   }
 
-  private captureToSentry(
-    exception: unknown,
-    context: ExecutionContext,
-  ): void {
+  private captureToSentry(exception: unknown, context: ExecutionContext): void {
     const contextType = context.getType();
 
-    if (contextType === 'http') {
+    if (contextType === "http") {
       const request = context.switchToHttp().getRequest<Request>();
-      const user = (request as unknown as Record<string, unknown>)[
-        'user'
-      ] as RequestUser | undefined;
+      const user = (request as unknown as Record<string, unknown>)["user"] as
+        | RequestUser
+        | undefined;
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       Sentry.withScope((scope: any) => {
@@ -62,10 +59,10 @@ export class SentryInterceptor implements NestInterceptor {
         }
 
         // Attach request metadata as tags for filtering in Sentry dashboard
-        scope.setTag('http.method', request.method);
-        scope.setTag('http.url', request.url);
-        scope.setExtra('ip', request.ip);
-        scope.setExtra('userAgent', request.get('user-agent') ?? 'unknown');
+        scope.setTag("http.method", request.method);
+        scope.setTag("http.url", request.url);
+        scope.setExtra("ip", request.ip);
+        scope.setExtra("userAgent", request.get("user-agent") ?? "unknown");
 
         if (exception instanceof Error) {
           Sentry.captureException(exception);
@@ -81,7 +78,9 @@ export class SentryInterceptor implements NestInterceptor {
         Sentry.captureException(exception);
       } else {
         Sentry.captureException(
-          new Error(`Non-Error exception (${contextType}): ${String(exception)}`),
+          new Error(
+            `Non-Error exception (${contextType}): ${String(exception)}`,
+          ),
         );
       }
     }

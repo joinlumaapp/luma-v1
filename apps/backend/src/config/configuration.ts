@@ -79,16 +79,16 @@ export interface AppConfig {
  */
 function required(key: string, env: string): string {
   const value = process.env[key];
-  if (value !== undefined && value !== '') {
+  if (value !== undefined && value !== "") {
     return value;
   }
-  if (env === 'production') {
+  if (env === "production") {
     throw new Error(
       `[LUMA Config] Missing required environment variable: ${key}. ` +
         `Set it in your .env file or ECS task definition.`,
     );
   }
-  return '';
+  return "";
 }
 
 /**
@@ -103,70 +103,73 @@ function optional(key: string, defaultValue: string): string {
  * Used with: ConfigModule.forRoot({ load: [configuration] })
  */
 export default (): AppConfig => {
-  const env = optional('NODE_ENV', 'development');
-  const isProduction = env === 'production';
+  const env = optional("NODE_ENV", "development");
+  const isProduction = env === "production";
 
   // ── Validate critical vars in production ──────────────
   if (isProduction) {
     const criticalVars = [
-      'DATABASE_URL',
-      'REDIS_URL',
-      'JWT_SECRET',
-      'JWT_REFRESH_SECRET',
+      "DATABASE_URL",
+      "REDIS_URL",
+      "JWT_SECRET",
+      "JWT_REFRESH_SECRET",
     ];
     const missing = criticalVars.filter(
-      (v) => !process.env[v] || process.env[v] === '',
+      (v) => !process.env[v] || process.env[v] === "",
     );
     if (missing.length > 0) {
       throw new Error(
-        `[LUMA Config] Missing critical environment variables for production: ${missing.join(', ')}. ` +
+        `[LUMA Config] Missing critical environment variables for production: ${missing.join(", ")}. ` +
           `The application cannot start without these.`,
       );
     }
 
     // Warn about insecure JWT secrets
-    const jwtSecret = process.env.JWT_SECRET || '';
+    const jwtSecret = process.env.JWT_SECRET || "";
     if (
-      jwtSecret.includes('change-this') ||
-      jwtSecret.includes('dev-key') ||
+      jwtSecret.includes("change-this") ||
+      jwtSecret.includes("dev-key") ||
       jwtSecret.length < 32
     ) {
       throw new Error(
-        '[LUMA Config] JWT_SECRET is insecure. Use a random 256-bit key in production. ' +
-          'Generate with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"',
+        "[LUMA Config] JWT_SECRET is insecure. Use a random 256-bit key in production. " +
+          "Generate with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"",
       );
     }
   }
 
   return {
     app: {
-      name: optional('APP_NAME', 'luma'),
+      name: optional("APP_NAME", "luma"),
       env,
-      port: parseInt(optional('PORT', '3000'), 10),
-      corsOrigins: optional('CORS_ORIGINS', 'http://localhost:3000,http://localhost:8081')
-        .split(',')
+      port: parseInt(optional("PORT", "3000"), 10),
+      corsOrigins: optional(
+        "CORS_ORIGINS",
+        "http://localhost:3000,http://localhost:8081",
+      )
+        .split(",")
         .map((s) => s.trim())
         .filter(Boolean),
     },
     database: {
-      url: required('DATABASE_URL', env),
+      url: required("DATABASE_URL", env),
     },
     redis: {
-      url: optional('REDIS_URL', 'redis://localhost:6379'),
+      url: optional("REDIS_URL", "redis://localhost:6379"),
     },
     elasticsearch: {
-      url: optional('ELASTICSEARCH_URL', 'http://localhost:9200'),
+      url: optional("ELASTICSEARCH_URL", "http://localhost:9200"),
     },
     jwt: {
-      secret: required('JWT_SECRET', env),
-      refreshSecret: required('JWT_REFRESH_SECRET', env),
-      accessExpiry: optional('JWT_ACCESS_EXPIRY', '15m'),
-      refreshExpiry: optional('JWT_REFRESH_EXPIRY', '7d'),
-      refreshExpiryDays: parseInt(optional('JWT_REFRESH_EXPIRY_DAYS', '7'), 10),
+      secret: required("JWT_SECRET", env),
+      refreshSecret: required("JWT_REFRESH_SECRET", env),
+      accessExpiry: optional("JWT_ACCESS_EXPIRY", "15m"),
+      refreshExpiry: optional("JWT_REFRESH_EXPIRY", "7d"),
+      refreshExpiryDays: parseInt(optional("JWT_REFRESH_EXPIRY_DAYS", "7"), 10),
     },
     throttle: {
-      ttl: parseInt(optional('THROTTLE_TTL', '60'), 10),
-      limit: parseInt(optional('THROTTLE_LIMIT', '100'), 10),
+      ttl: parseInt(optional("THROTTLE_TTL", "60"), 10),
+      limit: parseInt(optional("THROTTLE_LIMIT", "100"), 10),
     },
     twilio: {
       accountSid: process.env.TWILIO_ACCOUNT_SID,
@@ -181,10 +184,10 @@ export default (): AppConfig => {
     firebase: {
       projectId: process.env.FIREBASE_PROJECT_ID,
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
     },
     aws: {
-      region: optional('AWS_REGION', 'eu-west-1'),
+      region: optional("AWS_REGION", "eu-west-1"),
       accessKeyId: process.env.AWS_ACCESS_KEY_ID,
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
       s3BucketName: process.env.S3_BUCKET_NAME,
@@ -198,12 +201,12 @@ export default (): AppConfig => {
       token: process.env.MIXPANEL_TOKEN,
     },
     admin: {
-      userIds: (process.env.ADMIN_USER_IDS || '')
-        .split(',')
+      userIds: (process.env.ADMIN_USER_IDS || "")
+        .split(",")
         .map((s) => s.trim())
         .filter(Boolean),
-      moderatorIds: (process.env.MODERATOR_USER_IDS || '')
-        .split(',')
+      moderatorIds: (process.env.MODERATOR_USER_IDS || "")
+        .split(",")
         .map((s) => s.trim())
         .filter(Boolean),
     },

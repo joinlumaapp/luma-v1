@@ -4,19 +4,19 @@ import {
   Injectable,
   Logger,
   UnauthorizedException,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Reflector } from '@nestjs/core';
-import { JwtService, TokenExpiredError } from '@nestjs/jwt';
-import { Request } from 'express';
-import Redis from 'ioredis';
-import { createHash } from 'crypto';
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { Reflector } from "@nestjs/core";
+import { JwtService, TokenExpiredError } from "@nestjs/jwt";
+import { Request } from "express";
+import Redis from "ioredis";
+import { createHash } from "crypto";
 
-export const IS_PUBLIC_KEY = 'isPublic';
+export const IS_PUBLIC_KEY = "isPublic";
 
 /** Prefix for blacklisted (logged-out) tokens in Redis.
  *  Must include the 'luma:' namespace used by LumaCacheService. */
-const TOKEN_BLACKLIST_PREFIX = 'luma:token:blacklist:';
+const TOKEN_BLACKLIST_PREFIX = "luma:token:blacklist:";
 
 interface JwtTokenPayload {
   sub: string;
@@ -29,7 +29,7 @@ interface JwtTokenPayload {
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  private readonly logger = new Logger('JwtAuthGuard');
+  private readonly logger = new Logger("JwtAuthGuard");
   private redis: Redis | null = null;
 
   constructor(
@@ -37,7 +37,7 @@ export class JwtAuthGuard implements CanActivate {
     private readonly configService: ConfigService,
     private readonly reflector: Reflector,
   ) {
-    const redisUrl = this.configService.get<string>('REDIS_URL');
+    const redisUrl = this.configService.get<string>("REDIS_URL");
     if (redisUrl) {
       this.redis = new Redis(redisUrl, {
         maxRetriesPerRequest: 1,
@@ -70,7 +70,7 @@ export class JwtAuthGuard implements CanActivate {
 
     if (!token) {
       throw new UnauthorizedException(
-        'Erisim tokeni gereklidir. Lutfen giris yapin.',
+        "Erisim tokeni gereklidir. Lutfen giris yapin.",
       );
     }
 
@@ -78,23 +78,23 @@ export class JwtAuthGuard implements CanActivate {
     let payload: JwtTokenPayload;
     try {
       payload = await this.jwtService.verifyAsync<JwtTokenPayload>(token, {
-        secret: this.configService.get<string>('JWT_SECRET'),
+        secret: this.configService.get<string>("JWT_SECRET"),
       });
     } catch (error: unknown) {
       if (error instanceof TokenExpiredError) {
         throw new UnauthorizedException(
-          'Oturumunuzun suresi doldu. Lutfen tekrar giris yapin.',
+          "Oturumunuzun suresi doldu. Lutfen tekrar giris yapin.",
         );
       }
       throw new UnauthorizedException(
-        'Gecersiz erisim tokeni. Lutfen tekrar giris yapin.',
+        "Gecersiz erisim tokeni. Lutfen tekrar giris yapin.",
       );
     }
 
     // Validate required claims
     if (!payload.sub || !payload.phone) {
       throw new UnauthorizedException(
-        'Gecersiz token icerigi. Lutfen tekrar giris yapin.',
+        "Gecersiz token icerigi. Lutfen tekrar giris yapin.",
       );
     }
 
@@ -102,12 +102,12 @@ export class JwtAuthGuard implements CanActivate {
     const isBlacklisted = await this.isTokenBlacklisted(token);
     if (isBlacklisted) {
       throw new UnauthorizedException(
-        'Bu oturum sonlandirildi. Lutfen tekrar giris yapin.',
+        "Bu oturum sonlandirildi. Lutfen tekrar giris yapin.",
       );
     }
 
     // Attach the decoded user payload to the request object
-    (request as unknown as Record<string, unknown>)['user'] = payload;
+    (request as unknown as Record<string, unknown>)["user"] = payload;
 
     return true;
   }
@@ -141,7 +141,7 @@ export class JwtAuthGuard implements CanActivate {
    * Ensures blacklist lookups use the same key format as blacklist writes.
    */
   private hashToken(token: string): string {
-    return createHash('sha256').update(token).digest('hex');
+    return createHash("sha256").update(token).digest("hex");
   }
 
   private extractTokenFromHeader(request: Request): string | undefined {
@@ -150,8 +150,8 @@ export class JwtAuthGuard implements CanActivate {
       return undefined;
     }
 
-    const parts = authHeader.split(' ');
-    if (parts.length !== 2 || parts[0] !== 'Bearer') {
+    const parts = authHeader.split(" ");
+    if (parts.length !== 2 || parts[0] !== "Bearer") {
       return undefined;
     }
 

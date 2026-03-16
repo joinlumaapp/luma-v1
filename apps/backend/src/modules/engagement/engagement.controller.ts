@@ -1,12 +1,5 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Body,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Post, Get, Body, Query, UseGuards } from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
 import {
   IsInt,
   IsString,
@@ -15,10 +8,10 @@ import {
   IsOptional,
   IsIn,
   Min,
-} from 'class-validator';
-import { EngagementService } from './engagement.service';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
+} from "class-validator";
+import { EngagementService } from "./engagement.service";
+import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
+import { CurrentUser } from "../../common/decorators/current-user.decorator";
 
 // ── DTOs ──
 
@@ -42,8 +35,8 @@ export class UpdateChallengeProgressDto {
 
 export class LeaderboardQueryDto {
   @IsOptional()
-  @IsIn(['most_liked', 'most_messaged', 'best_compatibility'])
-  category?: 'most_liked' | 'most_messaged' | 'best_compatibility';
+  @IsIn(["most_liked", "most_messaged", "best_compatibility"])
+  category?: "most_liked" | "most_messaged" | "best_compatibility";
 }
 
 export class UnlockAchievementDto {
@@ -58,19 +51,19 @@ export class ExtendMatchDto {
 
 // ── Controller ──
 
-@ApiTags('Engagement')
+@ApiTags("Engagement")
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller('engagement')
+@Controller("engagement")
 export class EngagementController {
   constructor(private readonly engagementService: EngagementService) {}
 
   // ── Daily Reward ──
 
-  @Post('daily-reward/claim')
-  @ApiOperation({ summary: 'Claim daily reward for a given day' })
+  @Post("daily-reward/claim")
+  @ApiOperation({ summary: "Claim daily reward for a given day" })
   async claimDailyReward(
-    @CurrentUser('sub') userId: string,
+    @CurrentUser("sub") userId: string,
     @Body() dto: ClaimDailyRewardDto,
   ) {
     return this.engagementService.claimDailyReward(userId, dto.day);
@@ -78,10 +71,10 @@ export class EngagementController {
 
   // ── Challenge Progress ──
 
-  @Post('challenge/progress')
-  @ApiOperation({ summary: 'Update challenge progress' })
+  @Post("challenge/progress")
+  @ApiOperation({ summary: "Update challenge progress" })
   async updateChallengeProgress(
-    @CurrentUser('sub') userId: string,
+    @CurrentUser("sub") userId: string,
     @Body() dto: UpdateChallengeProgressDto,
   ) {
     return this.engagementService.updateChallengeProgress(
@@ -94,38 +87,35 @@ export class EngagementController {
 
   // ── Leaderboard ──
 
-  @Get('leaderboard')
-  @ApiOperation({ summary: 'Get leaderboard by category' })
+  @Get("leaderboard")
+  @ApiOperation({ summary: "Get leaderboard by category" })
   async getLeaderboard(
-    @CurrentUser('sub') userId: string,
+    @CurrentUser("sub") userId: string,
     @Query() query: LeaderboardQueryDto,
   ) {
     return this.engagementService.getLeaderboard(
       userId,
-      query.category ?? 'most_liked',
+      query.category ?? "most_liked",
     );
   }
 
   // ── Achievement ──
 
-  @Post('achievement/unlock')
-  @ApiOperation({ summary: 'Unlock an achievement' })
+  @Post("achievement/unlock")
+  @ApiOperation({ summary: "Unlock an achievement" })
   async unlockAchievement(
-    @CurrentUser('sub') userId: string,
+    @CurrentUser("sub") userId: string,
     @Body() dto: UnlockAchievementDto,
   ) {
-    return this.engagementService.unlockAchievement(
-      userId,
-      dto.achievementId,
-    );
+    return this.engagementService.unlockAchievement(userId, dto.achievementId);
   }
 
   // ── Match Extend ──
 
-  @Post('match/extend')
-  @ApiOperation({ summary: 'Extend a match expiration' })
+  @Post("match/extend")
+  @ApiOperation({ summary: "Extend a match expiration" })
   async extendMatch(
-    @CurrentUser('sub') userId: string,
+    @CurrentUser("sub") userId: string,
     @Body() dto: ExtendMatchDto,
   ) {
     return this.engagementService.extendMatch(userId, dto.matchId);
@@ -133,9 +123,9 @@ export class EngagementController {
 
   // ── Likes Teaser ──
 
-  @Get('likes-teaser')
-  @ApiOperation({ summary: 'Get blurred likes teaser for free users' })
-  async getLikesTeaser(@CurrentUser('sub') userId: string) {
+  @Get("likes-teaser")
+  @ApiOperation({ summary: "Get blurred likes teaser for free users" })
+  async getLikesTeaser(@CurrentUser("sub") userId: string) {
     return this.engagementService.getLikesTeaser(userId);
   }
 }

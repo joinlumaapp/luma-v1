@@ -1,4 +1,4 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from "@nestjs/swagger";
 import {
   IsOptional,
   IsEnum,
@@ -8,18 +8,18 @@ import {
   Max,
   IsArray,
   IsString,
-} from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+} from "class-validator";
+import { Transform, Type } from "class-transformer";
 
 export enum GenderPreferenceParam {
-  MALE = 'male',
-  FEMALE = 'female',
-  ALL = 'all',
+  MALE = "male",
+  FEMALE = "female",
+  ALL = "all",
 }
 
 export class FeedFilterDto {
   @ApiPropertyOptional({
-    description: 'Gender preference filter',
+    description: "Gender preference filter",
     enum: GenderPreferenceParam,
   })
   @IsOptional()
@@ -27,7 +27,7 @@ export class FeedFilterDto {
   genderPreference?: GenderPreferenceParam;
 
   @ApiPropertyOptional({
-    description: 'Minimum age filter',
+    description: "Minimum age filter",
     minimum: 18,
     maximum: 99,
   })
@@ -39,7 +39,7 @@ export class FeedFilterDto {
   minAge?: number;
 
   @ApiPropertyOptional({
-    description: 'Maximum age filter',
+    description: "Maximum age filter",
     minimum: 18,
     maximum: 99,
   })
@@ -51,7 +51,7 @@ export class FeedFilterDto {
   maxAge?: number;
 
   @ApiPropertyOptional({
-    description: 'Maximum distance in kilometers',
+    description: "Maximum distance in kilometers",
     minimum: 1,
     maximum: 500,
   })
@@ -63,13 +63,13 @@ export class FeedFilterDto {
   maxDistance?: number;
 
   @ApiPropertyOptional({
-    description: 'Intention tag filters (comma-separated or array)',
+    description: "Intention tag filters (comma-separated or array)",
     type: [String],
   })
   @IsOptional()
   @Transform(({ value }: { value: unknown }) => {
-    if (typeof value === 'string') {
-      return value.split(',').map((v: string) => v.trim());
+    if (typeof value === "string") {
+      return value.split(",").map((v: string) => v.trim());
     }
     return value;
   })
@@ -78,7 +78,7 @@ export class FeedFilterDto {
   intentionTags?: string[];
 
   @ApiPropertyOptional({
-    description: 'User current latitude for real-time distance calculation',
+    description: "User current latitude for real-time distance calculation",
     minimum: -90,
     maximum: 90,
   })
@@ -90,7 +90,7 @@ export class FeedFilterDto {
   latitude?: number;
 
   @ApiPropertyOptional({
-    description: 'User current longitude for real-time distance calculation',
+    description: "User current longitude for real-time distance calculation",
     minimum: -180,
     maximum: 180,
   })

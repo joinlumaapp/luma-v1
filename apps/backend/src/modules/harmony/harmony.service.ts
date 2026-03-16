@@ -4,10 +4,10 @@ import {
   ForbiddenException,
   BadRequestException,
   Logger,
-} from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { BadgesService } from '../badges/badges.service';
-import { CreateSessionDto, ExtendSessionDto } from './dto';
+} from "@nestjs/common";
+import { PrismaService } from "../../prisma/prisma.service";
+import { BadgesService } from "../badges/badges.service";
+import { CreateSessionDto, ExtendSessionDto } from "./dto";
 
 // Harmony Room constants
 const DEFAULT_DURATION_MINUTES = 30; // Free: 30 minutes
@@ -41,7 +41,7 @@ export class HarmonyService {
             questionCard: true,
             gameCard: true,
           },
-          orderBy: { usedAt: 'asc' },
+          orderBy: { usedAt: "asc" },
         },
         match: {
           select: {
@@ -62,7 +62,7 @@ export class HarmonyService {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     return {
@@ -70,7 +70,7 @@ export class HarmonyService {
         const cards = session.usedCards.map((uc) => {
           if (uc.questionCard) {
             return {
-              type: 'question' as const,
+              type: "question" as const,
               id: uc.questionCard.id,
               category: uc.questionCard.category,
               textEn: uc.questionCard.textEn,
@@ -79,7 +79,7 @@ export class HarmonyService {
             };
           }
           return {
-            type: 'game' as const,
+            type: "game" as const,
             id: uc.gameCard!.id,
             nameEn: uc.gameCard!.nameEn,
             nameTr: uc.gameCard!.nameTr,
@@ -95,8 +95,8 @@ export class HarmonyService {
           matchId: session.matchId,
           userAId: session.userAId,
           userBId: session.userBId,
-          userAName: session.userA?.profile?.firstName ?? '',
-          userBName: session.userB?.profile?.firstName ?? '',
+          userAName: session.userA?.profile?.firstName ?? "",
+          userBName: session.userB?.profile?.firstName ?? "",
           status: session.status,
           startedAt: session.startedAt,
           endsAt: session.endsAt,
@@ -123,23 +123,25 @@ export class HarmonyService {
     });
 
     if (!match || !match.isActive) {
-      throw new NotFoundException('Eşleşme bulunamadı veya aktif değil');
+      throw new NotFoundException("Eşleşme bulunamadı veya aktif değil");
     }
 
     if (match.userAId !== userId && match.userBId !== userId) {
-      throw new ForbiddenException('Bu eşleşmenin katılımcısı değilsiniz');
+      throw new ForbiddenException("Bu eşleşmenin katılımcısı değilsiniz");
     }
 
     // Check no active session already exists for this match
     const activeSession = await this.prisma.harmonySession.findFirst({
       where: {
         matchId: dto.matchId,
-        status: { in: ['PENDING', 'ACTIVE', 'EXTENDED'] },
+        status: { in: ["PENDING", "ACTIVE", "EXTENDED"] },
       },
     });
 
     if (activeSession) {
-      throw new BadRequestException('Bu eşleşme için zaten aktif bir Harmony Room oturumu var');
+      throw new BadRequestException(
+        "Bu eşleşme için zaten aktif bir Harmony Room oturumu var",
+      );
     }
 
     // Tier gating: FREE users cannot create Harmony Room sessions
@@ -148,16 +150,16 @@ export class HarmonyService {
       select: { packageTier: true },
     });
 
-    if (requestingUser?.packageTier === 'FREE') {
+    if (requestingUser?.packageTier === "FREE") {
       throw new ForbiddenException(
-        'Harmony Room başlatmak için Gold veya üzeri üyelik gereklidir. Davet ile katılabilirsiniz.',
+        "Harmony Room başlatmak için Gold veya üzeri üyelik gereklidir. Davet ile katılabilirsiniz.",
       );
     }
 
     // 5-minute chat prerequisite: both users must have chatted for at least 5 minutes
     const chatMessages = await this.prisma.chatMessage.findMany({
       where: { matchId: dto.matchId },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: "asc" },
       select: { senderId: true, createdAt: true },
     });
 
@@ -167,18 +169,19 @@ export class HarmonyService {
 
     if (!bothUsersSentMessages || chatMessages.length < 2) {
       throw new BadRequestException(
-        'Harmony Room için en az 5 dakika sohbet etmeniz gerekiyor.',
+        "Harmony Room için en az 5 dakika sohbet etmeniz gerekiyor.",
       );
     }
 
     const firstMessageTime = chatMessages[0].createdAt.getTime();
-    const lastMessageTime = chatMessages[chatMessages.length - 1].createdAt.getTime();
+    const lastMessageTime =
+      chatMessages[chatMessages.length - 1].createdAt.getTime();
     const chatDurationMs = lastMessageTime - firstMessageTime;
     const MIN_CHAT_DURATION_MS = 300000; // 5 minutes
 
     if (chatDurationMs < MIN_CHAT_DURATION_MS) {
       throw new BadRequestException(
-        'Harmony Room için en az 5 dakika sohbet etmeniz gerekiyor.',
+        "Harmony Room için en az 5 dakika sohbet etmeniz gerekiyor.",
       );
     }
 
@@ -187,14 +190,16 @@ export class HarmonyService {
 
     // Create session
     const now = new Date();
-    const endsAt = new Date(now.getTime() + DEFAULT_DURATION_MINUTES * 60 * 1000);
+    const endsAt = new Date(
+      now.getTime() + DEFAULT_DURATION_MINUTES * 60 * 1000,
+    );
 
     const session = await this.prisma.harmonySession.create({
       data: {
         matchId: dto.matchId,
         userAId: match.userAId,
         userBId: match.userBId,
-        status: 'ACTIVE',
+        status: "ACTIVE",
         startedAt: now,
         endsAt,
       },
@@ -203,11 +208,14 @@ export class HarmonyService {
     // Assign initial cards (category-based deck selection or mixed)
     const questionCardWhere: Record<string, unknown> = { isActive: true };
     if (dto.deckCategory) {
-      questionCardWhere.category = dto.deckCategory as 'ICEBREAKER' | 'DEEP_CONNECTION' | 'FUN_PLAYFUL';
+      questionCardWhere.category = dto.deckCategory as
+        | "ICEBREAKER"
+        | "DEEP_CONNECTION"
+        | "FUN_PLAYFUL";
     }
     const questionCards = await this.prisma.harmonyQuestionCard.findMany({
       where: questionCardWhere,
-      orderBy: { order: 'asc' },
+      orderBy: { order: "asc" },
     });
 
     const gameCards = await this.prisma.harmonyGameCard.findMany({
@@ -215,8 +223,12 @@ export class HarmonyService {
     });
 
     // Pick random cards
-    const selectedQuestionCards = this.pickRandom(questionCards, Math.min(CARDS_PER_SESSION - 1, questionCards.length));
-    const selectedGameCard = gameCards.length > 0 ? this.pickRandom(gameCards, 1) : [];
+    const selectedQuestionCards = this.pickRandom(
+      questionCards,
+      Math.min(CARDS_PER_SESSION - 1, questionCards.length),
+    );
+    const selectedGameCard =
+      gameCards.length > 0 ? this.pickRandom(gameCards, 1) : [];
 
     // Create used card records
     const usedCardData = [
@@ -238,9 +250,9 @@ export class HarmonyService {
     await this.prisma.notification.create({
       data: {
         userId: partnerId,
-        type: 'HARMONY_INVITE',
-        title: 'Harmony Room Daveti!',
-        body: 'Eşleşmeniz sizi Harmony Room\'a davet ediyor. Katılın ve daha yakından tanışın!',
+        type: "HARMONY_INVITE",
+        title: "Harmony Room Daveti!",
+        body: "Eşleşmeniz sizi Harmony Room'a davet ediyor. Katılın ve daha yakından tanışın!",
         data: { sessionId: session.id, matchId: dto.matchId },
       },
     });
@@ -288,28 +300,32 @@ export class HarmonyService {
     });
 
     if (!session) {
-      throw new NotFoundException('Harmony Room oturumu bulunamadı');
+      throw new NotFoundException("Harmony Room oturumu bulunamadı");
     }
 
     if (session.userAId !== userId && session.userBId !== userId) {
-      throw new ForbiddenException('Bu oturumun katılımcısı değilsiniz');
+      throw new ForbiddenException("Bu oturumun katılımcısı değilsiniz");
     }
 
     // Check if session has expired
     if (
-      session.status === 'ACTIVE' &&
+      session.status === "ACTIVE" &&
       session.endsAt &&
       session.endsAt < new Date()
     ) {
       await this.prisma.harmonySession.update({
         where: { id: sessionId },
-        data: { status: 'ENDED', actualEndedAt: new Date() },
+        data: { status: "ENDED", actualEndedAt: new Date() },
       });
-      session.status = 'ENDED';
+      session.status = "ENDED";
 
       // Check chat_master badge for both participants (non-blocking)
-      this.badgesService.checkAndAwardBadges(session.userAId, 'harmony').catch((err) => this.logger.warn('Badge check failed', err.message));
-      this.badgesService.checkAndAwardBadges(session.userBId, 'harmony').catch((err) => this.logger.warn('Badge check failed', err.message));
+      this.badgesService
+        .checkAndAwardBadges(session.userAId, "harmony")
+        .catch((err) => this.logger.warn("Badge check failed", err.message));
+      this.badgesService
+        .checkAndAwardBadges(session.userBId, "harmony")
+        .catch((err) => this.logger.warn("Badge check failed", err.message));
     }
 
     // Get cards and messages
@@ -328,8 +344,8 @@ export class HarmonyService {
       matchId: session.matchId,
       userAId: session.userAId,
       userBId: session.userBId,
-      userAName: session.userA?.profile?.firstName ?? '',
-      userBName: session.userB?.profile?.firstName ?? '',
+      userAName: session.userA?.profile?.firstName ?? "",
+      userBName: session.userB?.profile?.firstName ?? "",
       status: session.status,
       startedAt: session.startedAt,
       endsAt: session.endsAt,
@@ -352,26 +368,31 @@ export class HarmonyService {
     });
 
     if (!session) {
-      throw new NotFoundException('Oturum bulunamadı');
+      throw new NotFoundException("Oturum bulunamadı");
     }
 
     if (session.userAId !== userId && session.userBId !== userId) {
-      throw new ForbiddenException('Bu oturumun katılımcısı değilsiniz');
+      throw new ForbiddenException("Bu oturumun katılımcısı değilsiniz");
     }
 
-    if (!['ACTIVE', 'EXTENDED'].includes(session.status)) {
-      throw new BadRequestException('Sadece aktif oturumlar uzatılabilir');
+    if (!["ACTIVE", "EXTENDED"].includes(session.status)) {
+      throw new BadRequestException("Sadece aktif oturumlar uzatılabilir");
     }
 
     // Check total extension limit
-    if (session.totalExtensionMinutes + dto.additionalMinutes > MAX_EXTENSION_MINUTES) {
+    if (
+      session.totalExtensionMinutes + dto.additionalMinutes >
+      MAX_EXTENSION_MINUTES
+    ) {
       throw new BadRequestException(
         `Maksimum uzatma süresi ${MAX_EXTENSION_MINUTES} dakikadır. Kalan: ${MAX_EXTENSION_MINUTES - session.totalExtensionMinutes} dakika.`,
       );
     }
 
     // Calculate gold cost — block-based pricing (15-min blocks at 50 Gold each)
-    const extensionBlocks = Math.ceil(dto.additionalMinutes / EXTENSION_BLOCK_MINUTES);
+    const extensionBlocks = Math.ceil(
+      dto.additionalMinutes / EXTENSION_BLOCK_MINUTES,
+    );
     const goldCost = extensionBlocks * GOLD_PER_EXTENSION;
 
     // Check user's gold balance
@@ -399,7 +420,7 @@ export class HarmonyService {
       await tx.goldTransaction.create({
         data: {
           userId,
-          type: 'HARMONY_EXTENSION',
+          type: "HARMONY_EXTENSION",
           amount: -goldCost,
           balance: newBalance,
           description: `Harmony Room ${dto.additionalMinutes} dakika uzatma`,
@@ -426,9 +447,10 @@ export class HarmonyService {
       const updatedSession = await tx.harmonySession.update({
         where: { id: dto.sessionId },
         data: {
-          status: 'EXTENDED',
+          status: "EXTENDED",
           endsAt: newEndsAt,
-          totalExtensionMinutes: session.totalExtensionMinutes + dto.additionalMinutes,
+          totalExtensionMinutes:
+            session.totalExtensionMinutes + dto.additionalMinutes,
         },
       });
 
@@ -451,7 +473,10 @@ export class HarmonyService {
       ...alreadyUsed.map((c) => c.gameCardId).filter(Boolean),
     ]);
     const available = questionCards.filter((c) => !usedIds.has(c.id));
-    const bonusCards = this.pickRandom(available, Math.min(CARDS_PER_EXTENSION, available.length));
+    const bonusCards = this.pickRandom(
+      available,
+      Math.min(CARDS_PER_EXTENSION, available.length),
+    );
 
     if (bonusCards.length > 0) {
       await this.prisma.harmonyUsedCard.createMany({
@@ -481,11 +506,11 @@ export class HarmonyService {
     });
 
     if (!session) {
-      throw new NotFoundException('Oturum bulunamadı');
+      throw new NotFoundException("Oturum bulunamadı");
     }
 
     if (session.userAId !== userId && session.userBId !== userId) {
-      throw new ForbiddenException('Bu oturumun katılımcısı değilsiniz');
+      throw new ForbiddenException("Bu oturumun katılımcısı değilsiniz");
     }
 
     return { sessionId, cards: await this.getSessionCards(sessionId) };
@@ -500,13 +525,13 @@ export class HarmonyService {
         questionCard: true,
         gameCard: true,
       },
-      orderBy: { usedAt: 'asc' },
+      orderBy: { usedAt: "asc" },
     });
 
     return usedCards.map((uc) => {
       if (uc.questionCard) {
         return {
-          type: 'question' as const,
+          type: "question" as const,
           id: uc.questionCard.id,
           category: uc.questionCard.category,
           textEn: uc.questionCard.textEn,
@@ -515,7 +540,7 @@ export class HarmonyService {
         };
       }
       return {
-        type: 'game' as const,
+        type: "game" as const,
         id: uc.gameCard!.id,
         nameEn: uc.gameCard!.nameEn,
         nameTr: uc.gameCard!.nameTr,

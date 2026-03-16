@@ -1,4 +1,4 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from "@nestjs/swagger";
 import {
   IsOptional,
   IsEnum,
@@ -6,22 +6,22 @@ import {
   Min,
   Max,
   IsDateString,
-} from 'class-validator';
-import { Type } from 'class-transformer';
+} from "class-validator";
+import { Type } from "class-transformer";
 
 export enum PaymentTypeFilter {
-  PURCHASE = 'PURCHASE',
-  SUBSCRIPTION_ALLOCATION = 'SUBSCRIPTION_ALLOCATION',
-  REFERRAL_BONUS = 'REFERRAL_BONUS',
-  BADGE_REWARD = 'BADGE_REWARD',
-  HARMONY_EXTENSION = 'HARMONY_EXTENSION',
-  PROFILE_BOOST = 'PROFILE_BOOST',
-  SUPER_LIKE = 'SUPER_LIKE',
+  PURCHASE = "PURCHASE",
+  SUBSCRIPTION_ALLOCATION = "SUBSCRIPTION_ALLOCATION",
+  REFERRAL_BONUS = "REFERRAL_BONUS",
+  BADGE_REWARD = "BADGE_REWARD",
+  HARMONY_EXTENSION = "HARMONY_EXTENSION",
+  PROFILE_BOOST = "PROFILE_BOOST",
+  SUPER_LIKE = "SUPER_LIKE",
 }
 
 export class PaymentFilterDto {
   @ApiPropertyOptional({
-    description: 'Filter by transaction type',
+    description: "Filter by transaction type",
     enum: PaymentTypeFilter,
   })
   @IsOptional()
@@ -29,22 +29,22 @@ export class PaymentFilterDto {
   type?: PaymentTypeFilter;
 
   @ApiPropertyOptional({
-    description: 'Filter transactions after this date (ISO 8601)',
-    example: '2025-01-01',
+    description: "Filter transactions after this date (ISO 8601)",
+    example: "2025-01-01",
   })
   @IsOptional()
   @IsDateString()
   dateFrom?: string;
 
   @ApiPropertyOptional({
-    description: 'Filter transactions before this date (ISO 8601)',
-    example: '2025-12-31',
+    description: "Filter transactions before this date (ISO 8601)",
+    example: "2025-12-31",
   })
   @IsOptional()
   @IsDateString()
   dateTo?: string;
 
-  @ApiPropertyOptional({ description: 'Page number (1-based)', default: 1 })
+  @ApiPropertyOptional({ description: "Page number (1-based)", default: 1 })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -52,7 +52,7 @@ export class PaymentFilterDto {
   page?: number = 1;
 
   @ApiPropertyOptional({
-    description: 'Items per page',
+    description: "Items per page",
     default: 20,
     maximum: 100,
   })

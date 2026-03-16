@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { google } from 'googleapis';
+import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { google } from "googleapis";
 
 // ─── Apple Receipt Validation Types ────────────────────────────────
 
@@ -13,8 +13,8 @@ const APPLE_STATUS = {
   PRODUCTION_RECEIPT_ON_SANDBOX: 21008,
 } as const;
 
-const APPLE_PRODUCTION_URL = 'https://buy.itunes.apple.com/verifyReceipt';
-const APPLE_SANDBOX_URL = 'https://sandbox.itunes.apple.com/verifyReceipt';
+const APPLE_PRODUCTION_URL = "https://buy.itunes.apple.com/verifyReceipt";
+const APPLE_SANDBOX_URL = "https://sandbox.itunes.apple.com/verifyReceipt";
 
 /** Single in-app purchase entry in Apple's receipt response */
 interface AppleInAppPurchase {
@@ -93,7 +93,7 @@ export interface ReceiptValidationResult {
   productId: string;
   purchaseDate: Date | null;
   expiresDate: Date | null;
-  platform: 'APPLE' | 'GOOGLE';
+  platform: "APPLE" | "GOOGLE";
   isTrial: boolean;
   isCancelled: boolean;
   rawResult: AppleReceiptResult | GoogleReceiptResult;
@@ -114,30 +114,34 @@ export class ReceiptValidatorService {
 
   constructor(private readonly configService: ConfigService) {
     this.isProduction =
-      this.configService.get<string>('NODE_ENV') === 'production';
+      this.configService.get<string>("NODE_ENV") === "production";
 
-    this.appleSharedSecret =
-      this.configService.get<string>('APPLE_SHARED_SECRET', '');
-    this.googleServiceAccountKeyPath =
-      this.configService.get<string>('GOOGLE_PLAY_SERVICE_ACCOUNT_KEY', '');
+    this.appleSharedSecret = this.configService.get<string>(
+      "APPLE_SHARED_SECRET",
+      "",
+    );
+    this.googleServiceAccountKeyPath = this.configService.get<string>(
+      "GOOGLE_PLAY_SERVICE_ACCOUNT_KEY",
+      "",
+    );
 
     if (!this.appleSharedSecret) {
-      const level = this.isProduction ? 'error' : 'warn';
+      const level = this.isProduction ? "error" : "warn";
       this.logger[level](
-        'APPLE_SHARED_SECRET is not configured. ' +
+        "APPLE_SHARED_SECRET is not configured. " +
           (this.isProduction
-            ? 'Apple receipt validation will FAIL in production!'
-            : 'Apple receipts will use mock validation in dev mode.'),
+            ? "Apple receipt validation will FAIL in production!"
+            : "Apple receipts will use mock validation in dev mode."),
       );
     }
 
     if (!this.googleServiceAccountKeyPath) {
-      const level = this.isProduction ? 'error' : 'warn';
+      const level = this.isProduction ? "error" : "warn";
       this.logger[level](
-        'GOOGLE_PLAY_SERVICE_ACCOUNT_KEY is not configured. ' +
+        "GOOGLE_PLAY_SERVICE_ACCOUNT_KEY is not configured. " +
           (this.isProduction
-            ? 'Google receipt validation will FAIL in production!'
-            : 'Google receipts will use mock validation in dev mode.'),
+            ? "Google receipt validation will FAIL in production!"
+            : "Google receipts will use mock validation in dev mode."),
       );
     }
   }
@@ -149,12 +153,12 @@ export class ReceiptValidatorService {
    * Returns a unified ReceiptValidationResult.
    */
   async validateReceipt(
-    platform: 'APPLE' | 'GOOGLE',
+    platform: "APPLE" | "GOOGLE",
     receipt: string,
     packageName?: string,
     productId?: string,
   ): Promise<ReceiptValidationResult> {
-    if (platform === 'APPLE') {
+    if (platform === "APPLE") {
       const appleResult = await this.validateAppleReceipt(receipt);
       return {
         isValid: appleResult.isValid,
@@ -162,7 +166,7 @@ export class ReceiptValidatorService {
         productId: appleResult.productId,
         purchaseDate: appleResult.purchaseDate,
         expiresDate: appleResult.expiresDate,
-        platform: 'APPLE',
+        platform: "APPLE",
         isTrial: appleResult.isTrial,
         isCancelled: appleResult.isCancelled,
         rawResult: appleResult,
@@ -170,8 +174,8 @@ export class ReceiptValidatorService {
     }
 
     // Google Play requires packageName and productId
-    const resolvedPackageName = packageName ?? 'com.luma.dating';
-    const resolvedProductId = productId ?? 'unknown';
+    const resolvedPackageName = packageName ?? "com.luma.dating";
+    const resolvedProductId = productId ?? "unknown";
 
     const googleResult = await this.validateGoogleReceipt(
       resolvedPackageName,
@@ -184,7 +188,7 @@ export class ReceiptValidatorService {
       productId: googleResult.productId,
       purchaseDate: googleResult.purchaseDate,
       expiresDate: googleResult.expiresDate,
-      platform: 'GOOGLE',
+      platform: "GOOGLE",
       isTrial: googleResult.isTrial,
       isCancelled: googleResult.isCancelled,
       rawResult: googleResult,
@@ -205,7 +209,7 @@ export class ReceiptValidatorService {
   async validateAppleReceipt(receiptData: string): Promise<AppleReceiptResult> {
     // Dev fallback: no shared secret configured
     if (!this.appleSharedSecret) {
-      return this.handleMissingCredentials('Apple', receiptData);
+      return this.handleMissingCredentials("Apple", receiptData);
     }
 
     try {
@@ -218,7 +222,7 @@ export class ReceiptValidatorService {
       // Auto-retry with sandbox if status 21007
       if (prodResponse.status === APPLE_STATUS.SANDBOX_RECEIPT_ON_PRODUCTION) {
         this.logger.debug(
-          'Apple receipt is from sandbox environment, retrying with sandbox URL',
+          "Apple receipt is from sandbox environment, retrying with sandbox URL",
         );
         const sandboxResponse = await this.callAppleVerifyReceipt(
           APPLE_SANDBOX_URL,
@@ -230,7 +234,7 @@ export class ReceiptValidatorService {
       return this.parseAppleResponse(prodResponse);
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
+        error instanceof Error ? error.message : "Unknown error";
       this.logger.error(`Apple receipt validation failed: ${errorMessage}`);
 
       return this.createInvalidAppleResult();
@@ -260,26 +264,25 @@ export class ReceiptValidatorService {
     try {
       const auth = new google.auth.GoogleAuth({
         keyFile: this.googleServiceAccountKeyPath,
-        scopes: ['https://www.googleapis.com/auth/androidpublisher'],
+        scopes: ["https://www.googleapis.com/auth/androidpublisher"],
       });
 
       const androidPublisher = google.androidpublisher({
-        version: 'v3',
+        version: "v3",
         auth,
       });
 
       // Try subscription validation first
-      const response =
-        await androidPublisher.purchases.subscriptions.get({
-          packageName,
-          subscriptionId: productId,
-          token: purchaseToken,
-        });
+      const response = await androidPublisher.purchases.subscriptions.get({
+        packageName,
+        subscriptionId: productId,
+        token: purchaseToken,
+      });
 
       const data = response.data;
 
       const paymentState =
-        typeof data.paymentState === 'number'
+        typeof data.paymentState === "number"
           ? data.paymentState
           : GOOGLE_PAYMENT_STATE.PAYMENT_PENDING;
 
@@ -296,7 +299,7 @@ export class ReceiptValidatorService {
         : null;
 
       const isCancelled =
-        typeof data.cancelReason === 'number' &&
+        typeof data.cancelReason === "number" &&
         data.cancelReason === GOOGLE_CANCEL_REASON.USER_CANCELLED;
 
       return {
@@ -309,11 +312,11 @@ export class ReceiptValidatorService {
         isCancelled,
         paymentState,
         autoRenewing: data.autoRenewing ?? false,
-        orderId: data.orderId ?? '',
+        orderId: data.orderId ?? "",
       };
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
+        error instanceof Error ? error.message : "Unknown error";
       this.logger.error(`Google receipt validation failed: ${errorMessage}`);
 
       return this.createInvalidGoogleResult(productId);
@@ -330,21 +333,19 @@ export class ReceiptValidatorService {
     receiptData: string,
   ): Promise<AppleVerifyReceiptResponse> {
     const body = JSON.stringify({
-      'receipt-data': receiptData,
+      "receipt-data": receiptData,
       password: this.appleSharedSecret,
-      'exclude-old-transactions': true,
+      "exclude-old-transactions": true,
     });
 
     const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body,
     });
 
     if (!response.ok) {
-      throw new Error(
-        `Apple verifyReceipt returned HTTP ${response.status}`,
-      );
+      throw new Error(`Apple verifyReceipt returned HTTP ${response.status}`);
     }
 
     const json = (await response.json()) as AppleVerifyReceiptResponse;
@@ -367,12 +368,10 @@ export class ReceiptValidatorService {
 
     // Get the latest purchase info
     const purchases =
-      response.latest_receipt_info ??
-      response.receipt?.in_app ??
-      [];
+      response.latest_receipt_info ?? response.receipt?.in_app ?? [];
 
     if (purchases.length === 0) {
-      this.logger.warn('Apple receipt has no in-app purchases');
+      this.logger.warn("Apple receipt has no in-app purchases");
       return this.createInvalidAppleResult();
     }
 
@@ -398,10 +397,10 @@ export class ReceiptValidatorService {
       productId: latest.product_id,
       purchaseDate,
       expiresDate,
-      isTrial: latest.is_trial_period === 'true',
+      isTrial: latest.is_trial_period === "true",
       isCancelled: !!latest.cancellation_date_ms,
-      environment: response.environment ?? 'unknown',
-      bundleId: response.receipt?.bundle_id ?? '',
+      environment: response.environment ?? "unknown",
+      bundleId: response.receipt?.bundle_id ?? "",
     };
   }
 
@@ -411,15 +410,15 @@ export class ReceiptValidatorService {
   private createInvalidAppleResult(): AppleReceiptResult {
     return {
       isValid: false,
-      transactionId: '',
-      originalTransactionId: '',
-      productId: '',
+      transactionId: "",
+      originalTransactionId: "",
+      productId: "",
       purchaseDate: null,
       expiresDate: null,
       isTrial: false,
       isCancelled: false,
-      environment: 'unknown',
-      bundleId: '',
+      environment: "unknown",
+      bundleId: "",
     };
   }
 
@@ -429,7 +428,7 @@ export class ReceiptValidatorService {
   private createInvalidGoogleResult(productId: string): GoogleReceiptResult {
     return {
       isValid: false,
-      transactionId: '',
+      transactionId: "",
       productId,
       purchaseDate: null,
       expiresDate: null,
@@ -437,7 +436,7 @@ export class ReceiptValidatorService {
       isCancelled: false,
       paymentState: GOOGLE_PAYMENT_STATE.PAYMENT_PENDING,
       autoRenewing: false,
-      orderId: '',
+      orderId: "",
     };
   }
 
@@ -470,13 +469,13 @@ export class ReceiptValidatorService {
       isValid: true,
       transactionId: mockTransactionId,
       originalTransactionId: mockTransactionId,
-      productId: 'mock_product',
+      productId: "mock_product",
       purchaseDate: now,
       expiresDate,
       isTrial: false,
       isCancelled: false,
-      environment: 'mock',
-      bundleId: 'com.luma.dating',
+      environment: "mock",
+      bundleId: "com.luma.dating",
     };
   }
 
@@ -491,7 +490,7 @@ export class ReceiptValidatorService {
   ): GoogleReceiptResult {
     if (this.isProduction) {
       this.logger.error(
-        'Google Play credentials not configured in production. Receipt validation rejected.',
+        "Google Play credentials not configured in production. Receipt validation rejected.",
       );
       return this.createInvalidGoogleResult(productId);
     }

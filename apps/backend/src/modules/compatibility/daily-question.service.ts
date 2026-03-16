@@ -7,15 +7,15 @@ import {
   BadRequestException,
   ConflictException,
   Logger,
-} from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { LumaCacheService } from '../cache/cache.service';
+} from "@nestjs/common";
+import { PrismaService } from "../../prisma/prisma.service";
+import { LumaCacheService } from "../cache/cache.service";
 
 // LOCKED: 45 questions total — daily rotation cycles through all 45
 const TOTAL_QUESTION_COUNT = 45;
 
 // Epoch date for daily question rotation — consistent starting point
-const EPOCH_DATE = new Date('2025-01-01T00:00:00Z');
+const EPOCH_DATE = new Date("2025-01-01T00:00:00Z");
 
 export interface DailyQuestionResponse {
   questionId: string;
@@ -78,7 +78,7 @@ export class DailyQuestionService {
     });
 
     if (!user) {
-      throw new NotFoundException('Kullanici bulunamadi');
+      throw new NotFoundException("Kullanici bulunamadi");
     }
 
     const dayNumber = this.getDayNumber();
@@ -92,7 +92,7 @@ export class DailyQuestionService {
       },
       include: {
         options: {
-          orderBy: { order: 'asc' },
+          orderBy: { order: "asc" },
           select: {
             id: true,
             labelTr: true,
@@ -104,7 +104,7 @@ export class DailyQuestionService {
     });
 
     if (!question) {
-      throw new NotFoundException('Gunun sorusu bulunamadi');
+      throw new NotFoundException("Gunun sorusu bulunamadi");
     }
 
     // Check if user already answered today's question
@@ -157,7 +157,7 @@ export class DailyQuestionService {
 
     if (!question) {
       throw new BadRequestException(
-        'Bu soru bugunun sorusu degil veya gecersiz',
+        "Bu soru bugunun sorusu degil veya gecersiz",
       );
     }
 
@@ -165,7 +165,7 @@ export class DailyQuestionService {
     const validOptionIds = question.options.map((o: { id: string }) => o.id);
     if (!validOptionIds.includes(optionId)) {
       throw new BadRequestException(
-        'Gecersiz secenek. Bu secenek bu soruya ait degil.',
+        "Gecersiz secenek. Bu secenek bu soruya ait degil.",
       );
     }
 
@@ -181,7 +181,7 @@ export class DailyQuestionService {
 
     if (existing) {
       throw new ConflictException(
-        'Bu soruyu bugun zaten yanitladin. Yarin yeni bir soru gelecek!',
+        "Bu soruyu bugun zaten yanitladin. Yarin yeni bir soru gelecek!",
       );
     }
 
@@ -242,9 +242,7 @@ export class DailyQuestionService {
     });
 
     if (!userAnswer) {
-      throw new BadRequestException(
-        'Once bu soruyu yanitlamalisin',
-      );
+      throw new BadRequestException("Once bu soruyu yanitlamalisin");
     }
 
     // Get the question with options for labels
@@ -252,7 +250,7 @@ export class DailyQuestionService {
       where: { id: questionId },
       include: {
         options: {
-          orderBy: { order: 'asc' },
+          orderBy: { order: "asc" },
           select: {
             id: true,
             labelTr: true,
@@ -262,7 +260,7 @@ export class DailyQuestionService {
     });
 
     if (!question) {
-      throw new NotFoundException('Soru bulunamadi');
+      throw new NotFoundException("Soru bulunamadi");
     }
 
     // Get user's match IDs
@@ -274,8 +272,9 @@ export class DailyQuestionService {
       select: { userAId: true, userBId: true },
     });
 
-    const matchUserIds = matches.map((m: { userAId: string; userBId: string }) =>
-      m.userAId === userId ? m.userBId : m.userAId,
+    const matchUserIds = matches.map(
+      (m: { userAId: string; userBId: string }) =>
+        m.userAId === userId ? m.userBId : m.userAId,
     );
 
     // Get all answers for this question on this day from matches
@@ -318,16 +317,19 @@ export class DailyQuestionService {
       }
     }
 
-    const optionBreakdown = question.options.map((opt: { id: string; labelTr: string }) => {
-      const count = optionCounts.get(opt.id) ?? 0;
-      return {
-        optionId: opt.id,
-        labelTr: opt.labelTr,
-        count,
-        percent: totalResponses > 0 ? Math.round((count / totalResponses) * 100) : 0,
-        isUserChoice: opt.id === userAnswer.optionId,
-      };
-    });
+    const optionBreakdown = question.options.map(
+      (opt: { id: string; labelTr: string }) => {
+        const count = optionCounts.get(opt.id) ?? 0;
+        return {
+          optionId: opt.id,
+          labelTr: opt.labelTr,
+          count,
+          percent:
+            totalResponses > 0 ? Math.round((count / totalResponses) * 100) : 0,
+          isUserChoice: opt.id === userAnswer.optionId,
+        };
+      },
+    );
 
     // Generate soul mate insight based on match alignment
     const soulMateInsight = this.generateSoulMateInsight(
@@ -353,9 +355,9 @@ export class DailyQuestionService {
     // Get all daily answers ordered by dayNumber descending
     const answers = await this.prisma.dailyQuestionAnswer.findMany({
       where: { userId },
-      orderBy: { dayNumber: 'desc' },
+      orderBy: { dayNumber: "desc" },
       select: { dayNumber: true, createdAt: true },
-      distinct: ['dayNumber'],
+      distinct: ["dayNumber"],
     });
 
     if (answers.length === 0) {
@@ -444,14 +446,14 @@ export class DailyQuestionService {
       where: { id: questionId },
       include: {
         options: {
-          orderBy: { order: 'asc' },
+          orderBy: { order: "asc" },
           select: { id: true, labelTr: true },
         },
       },
     });
 
     if (!question) {
-      throw new NotFoundException('Soru bulunamadi');
+      throw new NotFoundException("Soru bulunamadi");
     }
 
     // Get ALL daily answers for this question (across all days)
@@ -474,15 +476,18 @@ export class DailyQuestionService {
     }
 
     // Build breakdown
-    const optionBreakdown = question.options.map((opt: { id: string; labelTr: string }) => {
-      const count = optionCounts.get(opt.id) ?? 0;
-      return {
-        optionId: opt.id,
-        labelTr: opt.labelTr,
-        count,
-        percent: totalAnswers > 0 ? Math.round((count / totalAnswers) * 100) : 0,
-      };
-    });
+    const optionBreakdown = question.options.map(
+      (opt: { id: string; labelTr: string }) => {
+        const count = optionCounts.get(opt.id) ?? 0;
+        return {
+          optionId: opt.id,
+          labelTr: opt.labelTr,
+          count,
+          percent:
+            totalAnswers > 0 ? Math.round((count / totalAnswers) * 100) : 0,
+        };
+      },
+    );
 
     // Most popular
     let mostPopularOption: {
@@ -505,7 +510,7 @@ export class DailyQuestionService {
     // Find user's answer for this question (most recent daily answer)
     const userDailyAnswer = await this.prisma.dailyQuestionAnswer.findFirst({
       where: { userId, questionId },
-      orderBy: { dayNumber: 'desc' },
+      orderBy: { dayNumber: "desc" },
       select: { optionId: true },
     });
 
@@ -563,7 +568,9 @@ export class DailyQuestionService {
    * Invalidate all cached compatibility scores for a user.
    * Called when a daily answer changes the user's main answer set.
    */
-  private async invalidateUserCompatibilityCache(userId: string): Promise<void> {
+  private async invalidateUserCompatibilityCache(
+    userId: string,
+  ): Promise<void> {
     try {
       await this.cacheService.invalidatePattern(`compat:*${userId}*`);
     } catch (err) {
@@ -580,25 +587,25 @@ export class DailyQuestionService {
     matchResponses: number,
   ): string {
     if (matchResponses === 0) {
-      return 'Eslesmelerinden henuz kimse bu soruyu yanitlamadi. Yarinki soruyu kacirma!';
+      return "Eslesmelerinden henuz kimse bu soruyu yanitlamadi. Yarinki soruyu kacirma!";
     }
 
     if (sameAnswerPercent >= 80) {
-      return 'Ruh esin de ayni sekilde dusunuyor! Eslesmelerinle muhtesem bir uyum icerindesin.';
+      return "Ruh esin de ayni sekilde dusunuyor! Eslesmelerinle muhtesem bir uyum icerindesin.";
     }
 
     if (sameAnswerPercent >= 60) {
-      return 'Eslesmelerinle bakis aciniz oldukca yakin. Guzel bir baglanti kurabilirsiniz!';
+      return "Eslesmelerinle bakis aciniz oldukca yakin. Guzel bir baglanti kurabilirsiniz!";
     }
 
     if (sameAnswerPercent >= 40) {
-      return 'Farkli bakis acilari iliskiyi zenginlestirir. Birbirinizden ogrenebileceginiz cok sey var!';
+      return "Farkli bakis acilari iliskiyi zenginlestirir. Birbirinizden ogrenebileceginiz cok sey var!";
     }
 
     if (sameAnswerPercent >= 20) {
-      return 'Farkli dusunceler farkli perspektifler getirir. Bu bir firsat olabilir!';
+      return "Farkli dusunceler farkli perspektifler getirir. Bu bir firsat olabilir!";
     }
 
-    return 'Eslesmelerinle farkli dusunuyorsun — ama bu da bir uyum gostergesi olabilir!';
+    return "Eslesmelerinle farkli dusunuyorsun — ama bu da bir uyum gostergesi olabilir!";
   }
 }

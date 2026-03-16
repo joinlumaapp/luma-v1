@@ -1,20 +1,20 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { IsEnum, IsOptional, IsString, MaxLength } from "class-validator";
 
 export enum ReportDecision {
-  APPROVE = 'approve',
-  REJECT = 'reject',
+  APPROVE = "approve",
+  REJECT = "reject",
 }
 
 export enum ReportAction {
-  WARN = 'warn',
-  BAN = 'ban',
-  DISMISS = 'dismiss',
+  WARN = "warn",
+  BAN = "ban",
+  DISMISS = "dismiss",
 }
 
 export class ReviewReportDto {
   @ApiProperty({
-    description: 'Decision on the report',
+    description: "Decision on the report",
     enum: ReportDecision,
     example: ReportDecision.APPROVE,
   })
@@ -22,7 +22,7 @@ export class ReviewReportDto {
   decision!: ReportDecision;
 
   @ApiPropertyOptional({
-    description: 'Action to take if approved (warn/ban/dismiss)',
+    description: "Action to take if approved (warn/ban/dismiss)",
     enum: ReportAction,
   })
   @IsOptional()
@@ -30,7 +30,7 @@ export class ReviewReportDto {
   action?: ReportAction;
 
   @ApiPropertyOptional({
-    description: 'Review note from admin/moderator',
+    description: "Review note from admin/moderator",
     maxLength: 1000,
   })
   @IsOptional()

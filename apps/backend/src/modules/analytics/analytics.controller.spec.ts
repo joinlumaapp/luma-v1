@@ -1,10 +1,10 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { ThrottlerGuard } from '@nestjs/throttler';
-import { AnalyticsController } from './analytics.controller';
-import { AnalyticsService } from './analytics.service';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { Test, TestingModule } from "@nestjs/testing";
+import { ThrottlerGuard } from "@nestjs/throttler";
+import { AnalyticsController } from "./analytics.controller";
+import { AnalyticsService } from "./analytics.service";
+import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 
-describe('AnalyticsController', () => {
+describe("AnalyticsController", () => {
   let controller: AnalyticsController;
 
   const mockAnalyticsService = {
@@ -32,7 +32,7 @@ describe('AnalyticsController', () => {
     controller = module.get<AnalyticsController>(AnalyticsController);
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(controller).toBeDefined();
   });
 
@@ -40,51 +40,77 @@ describe('AnalyticsController', () => {
   // POST /analytics/events
   // ===============================================================
 
-  describe('batchEvents()', () => {
-    it('should receive event batch and return received count', async () => {
+  describe("batchEvents()", () => {
+    it("should receive event batch and return received count", async () => {
       const dto = {
         events: [
-          { event: 'screen_view', properties: { screen: 'home' } as Record<string, string | number | boolean | null>, timestamp: Date.now() },
-          { event: 'button_tap', properties: { button: 'like' } as Record<string, string | number | boolean | null>, timestamp: Date.now() },
+          {
+            event: "screen_view",
+            properties: { screen: "home" } as Record<
+              string,
+              string | number | boolean | null
+            >,
+            timestamp: Date.now(),
+          },
+          {
+            event: "button_tap",
+            properties: { button: "like" } as Record<
+              string,
+              string | number | boolean | null
+            >,
+            timestamp: Date.now(),
+          },
         ],
-        sessionId: 'session-1',
-        platform: 'ios' as const,
-        appVersion: '1.0.0',
+        sessionId: "session-1",
+        platform: "ios" as const,
+        appVersion: "1.0.0",
       };
       mockAnalyticsService.trackEventBatch.mockResolvedValue({ received: 2 });
 
-      const result = await controller.batchEvents('user-1', dto);
+      const result = await controller.batchEvents("user-1", dto);
 
       expect(result.received).toBe(2);
-      expect(mockAnalyticsService.trackEventBatch).toHaveBeenCalledWith('user-1', dto);
+      expect(mockAnalyticsService.trackEventBatch).toHaveBeenCalledWith(
+        "user-1",
+        dto,
+      );
     });
 
-    it('should handle empty event batch', async () => {
+    it("should handle empty event batch", async () => {
       const dto = {
         events: [],
-        sessionId: 'session-1',
-        platform: 'android' as const,
-        appVersion: '1.0.0',
+        sessionId: "session-1",
+        platform: "android" as const,
+        appVersion: "1.0.0",
       };
       mockAnalyticsService.trackEventBatch.mockResolvedValue({ received: 0 });
 
-      const result = await controller.batchEvents('user-1', dto);
+      const result = await controller.batchEvents("user-1", dto);
 
       expect(result.received).toBe(0);
     });
 
-    it('should delegate to analyticsService.trackEventBatch with userId', async () => {
+    it("should delegate to analyticsService.trackEventBatch with userId", async () => {
       const dto = {
-        events: [{ event: 'test', properties: {} as Record<string, string | number | boolean | null>, timestamp: Date.now() }],
-        sessionId: 'session-1',
-        platform: 'ios' as const,
-        appVersion: '1.0.0',
+        events: [
+          {
+            event: "test",
+            properties: {} as Record<string, string | number | boolean | null>,
+            timestamp: Date.now(),
+          },
+        ],
+        sessionId: "session-1",
+        platform: "ios" as const,
+        appVersion: "1.0.0",
       };
       mockAnalyticsService.trackEventBatch.mockResolvedValue({ received: 1 });
 
-      await controller.batchEvents('user-2', dto);
+      await controller.batchEvents("user-2", dto);
 
-      expect(mockAnalyticsService.trackEventBatch).toHaveBeenCalledWith('user-2', dto);
+      expect(mockAnalyticsService.trackEventBatch).toHaveBeenCalledWith(
+        "user-2",
+        dto,
+      );
       expect(mockAnalyticsService.trackEventBatch).toHaveBeenCalledTimes(1);
     });
   });
@@ -93,10 +119,10 @@ describe('AnalyticsController', () => {
   // GET /analytics/dashboard
   // ===============================================================
 
-  describe('getDashboard()', () => {
-    it('should return dashboard metrics for default period', async () => {
+  describe("getDashboard()", () => {
+    it("should return dashboard metrics for default period", async () => {
       const expected = {
-        period: 'day',
+        period: "day",
         generatedAt: new Date().toISOString(),
         metrics: {
           dau: 100,
@@ -120,29 +146,29 @@ describe('AnalyticsController', () => {
       };
       mockAnalyticsService.getDashboard.mockResolvedValue(expected);
 
-      const result = await controller.getDashboard({ period: 'day' });
+      const result = await controller.getDashboard({ period: "day" });
 
-      expect(result.period).toBe('day');
+      expect(result.period).toBe("day");
       expect(result.metrics.dau).toBe(100);
-      expect(mockAnalyticsService.getDashboard).toHaveBeenCalledWith('day');
+      expect(mockAnalyticsService.getDashboard).toHaveBeenCalledWith("day");
     });
 
-    it('should pass week period to service', async () => {
+    it("should pass week period to service", async () => {
       mockAnalyticsService.getDashboard.mockResolvedValue({
-        period: 'week',
+        period: "week",
         generatedAt: new Date().toISOString(),
         metrics: {},
         packageDistribution: {},
       });
 
-      await controller.getDashboard({ period: 'week' });
+      await controller.getDashboard({ period: "week" });
 
-      expect(mockAnalyticsService.getDashboard).toHaveBeenCalledWith('week');
+      expect(mockAnalyticsService.getDashboard).toHaveBeenCalledWith("week");
     });
 
-    it('should handle undefined period', async () => {
+    it("should handle undefined period", async () => {
       mockAnalyticsService.getDashboard.mockResolvedValue({
-        period: 'day',
+        period: "day",
         generatedAt: new Date().toISOString(),
         metrics: {},
         packageDistribution: {},
@@ -158,11 +184,25 @@ describe('AnalyticsController', () => {
   // GET /analytics/retention
   // ===============================================================
 
-  describe('getRetention()', () => {
-    it('should return retention cohort data', async () => {
+  describe("getRetention()", () => {
+    it("should return retention cohort data", async () => {
       const expected = [
-        { cohortDate: '2025-06-01', cohortSize: 100, day1: 40, day7: 25, day14: 18, day30: 10 },
-        { cohortDate: '2025-05-25', cohortSize: 90, day1: 38, day7: 22, day14: 15, day30: 8 },
+        {
+          cohortDate: "2025-06-01",
+          cohortSize: 100,
+          day1: 40,
+          day7: 25,
+          day14: 18,
+          day30: 10,
+        },
+        {
+          cohortDate: "2025-05-25",
+          cohortSize: 90,
+          day1: 38,
+          day7: 22,
+          day14: 15,
+          day30: 8,
+        },
       ];
       mockAnalyticsService.getRetentionCohorts.mockResolvedValue(expected);
 
@@ -173,12 +213,14 @@ describe('AnalyticsController', () => {
       expect(mockAnalyticsService.getRetentionCohorts).toHaveBeenCalledWith(2);
     });
 
-    it('should handle undefined cohorts param', async () => {
+    it("should handle undefined cohorts param", async () => {
       mockAnalyticsService.getRetentionCohorts.mockResolvedValue([]);
 
       await controller.getRetention({});
 
-      expect(mockAnalyticsService.getRetentionCohorts).toHaveBeenCalledWith(undefined);
+      expect(mockAnalyticsService.getRetentionCohorts).toHaveBeenCalledWith(
+        undefined,
+      );
     });
   });
 
@@ -186,57 +228,65 @@ describe('AnalyticsController', () => {
   // GET /analytics/funnel/:userId
   // ===============================================================
 
-  describe('getUserFunnel()', () => {
-    it('should return funnel progress for a user', async () => {
+  describe("getUserFunnel()", () => {
+    it("should return funnel progress for a user", async () => {
       const expected = {
-        funnelName: 'registration',
+        funnelName: "registration",
         steps: [
-          { name: 'Phone Entry', order: 1, completedAt: '2025-06-01T00:00:00.000Z' },
-          { name: 'OTP Verified', order: 2, completedAt: '2025-06-01T00:01:00.000Z' },
-          { name: 'Selfie Done', order: 3, completedAt: null },
+          {
+            name: "Phone Entry",
+            order: 1,
+            completedAt: "2025-06-01T00:00:00.000Z",
+          },
+          {
+            name: "OTP Verified",
+            order: 2,
+            completedAt: "2025-06-01T00:01:00.000Z",
+          },
+          { name: "Selfie Done", order: 3, completedAt: null },
         ],
         completionRate: 66.67,
       };
       mockAnalyticsService.getUserFunnel.mockResolvedValue(expected);
 
-      const result = await controller.getUserFunnel('user-1', 'registration');
+      const result = await controller.getUserFunnel("user-1", "registration");
 
-      expect(result.funnelName).toBe('registration');
+      expect(result.funnelName).toBe("registration");
       expect(result.steps).toHaveLength(3);
       expect(result.completionRate).toBe(66.67);
       expect(mockAnalyticsService.getUserFunnel).toHaveBeenCalledWith(
-        'user-1',
-        'registration',
+        "user-1",
+        "registration",
       );
     });
 
-    it('should default to registration funnel when no funnel name specified', async () => {
+    it("should default to registration funnel when no funnel name specified", async () => {
       mockAnalyticsService.getUserFunnel.mockResolvedValue({
-        funnelName: 'registration',
+        funnelName: "registration",
         steps: [],
         completionRate: 0,
       });
 
-      await controller.getUserFunnel('user-1', undefined);
+      await controller.getUserFunnel("user-1", undefined);
 
       expect(mockAnalyticsService.getUserFunnel).toHaveBeenCalledWith(
-        'user-1',
-        'registration',
+        "user-1",
+        "registration",
       );
     });
 
-    it('should pass conversion funnel name correctly', async () => {
+    it("should pass conversion funnel name correctly", async () => {
       mockAnalyticsService.getUserFunnel.mockResolvedValue({
-        funnelName: 'conversion',
+        funnelName: "conversion",
         steps: [],
         completionRate: 0,
       });
 
-      await controller.getUserFunnel('user-1', 'conversion');
+      await controller.getUserFunnel("user-1", "conversion");
 
       expect(mockAnalyticsService.getUserFunnel).toHaveBeenCalledWith(
-        'user-1',
-        'conversion',
+        "user-1",
+        "conversion",
       );
     });
   });

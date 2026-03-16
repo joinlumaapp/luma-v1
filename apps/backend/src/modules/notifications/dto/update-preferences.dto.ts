@@ -1,9 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsOptional, IsString, Matches } from 'class-validator';
+import { ApiProperty } from "@nestjs/swagger";
+import { IsBoolean, IsOptional, IsString, Matches } from "class-validator";
 
 export class UpdatePreferencesDto {
   @ApiProperty({
-    description: 'Yeni eslesmeler bildirimi',
+    description: "Yeni eslesmeler bildirimi",
     required: false,
   })
   @IsOptional()
@@ -11,7 +11,7 @@ export class UpdatePreferencesDto {
   newMatches?: boolean;
 
   @ApiProperty({
-    description: 'Mesaj bildirimleri',
+    description: "Mesaj bildirimleri",
     required: false,
   })
   @IsOptional()
@@ -19,7 +19,7 @@ export class UpdatePreferencesDto {
   messages?: boolean;
 
   @ApiProperty({
-    description: 'Harmony davetleri bildirimi',
+    description: "Harmony davetleri bildirimi",
     required: false,
   })
   @IsOptional()
@@ -27,7 +27,7 @@ export class UpdatePreferencesDto {
   harmonyInvites?: boolean;
 
   @ApiProperty({
-    description: 'Rozet bildirimleri',
+    description: "Rozet bildirimleri",
     required: false,
   })
   @IsOptional()
@@ -35,7 +35,7 @@ export class UpdatePreferencesDto {
   badges?: boolean;
 
   @ApiProperty({
-    description: 'Sistem bildirimleri',
+    description: "Sistem bildirimleri",
     required: false,
   })
   @IsOptional()
@@ -43,7 +43,7 @@ export class UpdatePreferencesDto {
   system?: boolean;
 
   @ApiProperty({
-    description: 'Tum bildirimleri kapat',
+    description: "Tum bildirimleri kapat",
     required: false,
   })
   @IsOptional()
@@ -57,7 +57,7 @@ export class UpdatePreferencesDto {
   @IsOptional()
   @IsString()
   @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, {
-    message: 'quietHoursStart must be in HH:mm format',
+    message: "quietHoursStart must be in HH:mm format",
   })
   quietHoursStart?: string;
 
@@ -68,7 +68,7 @@ export class UpdatePreferencesDto {
   @IsOptional()
   @IsString()
   @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, {
-    message: 'quietHoursEnd must be in HH:mm format',
+    message: "quietHoursEnd must be in HH:mm format",
   })
   quietHoursEnd?: string;
 
@@ -100,7 +100,7 @@ export const DEFAULT_PREFERENCES: NotificationPreferences = {
   badges: true,
   system: true,
   allDisabled: false,
-  quietHoursStart: '23:00',
-  quietHoursEnd: '08:00',
-  timezone: 'Europe/Istanbul',
+  quietHoursStart: "23:00",
+  quietHoursEnd: "08:00",
+  timezone: "Europe/Istanbul",
 };

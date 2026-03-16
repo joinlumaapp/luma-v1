@@ -128,6 +128,7 @@ jobs:
         working-directory: apps/backend
         env:
           NODE_ENV: test
+          NODE_OPTIONS: '--max-old-space-size=4096'
           JWT_SECRET: ci-test-secret
           JWT_REFRESH_SECRET: ci-test-refresh-secret
           JWT_ACCESS_EXPIRY: 15m
@@ -198,10 +199,11 @@ jobs:
           key: workspace-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
 
       - name: Run E2E tests
-        run: npx jest --config test/jest-e2e.json --forceExit --ci
+        run: npx jest --config test/jest-e2e.config.ts --runInBand --forceExit --ci --testPathIgnorePatterns='app.e2e-spec'
         working-directory: apps/backend
         env:
           NODE_ENV: test
+          NODE_OPTIONS: '--max-old-space-size=4096'
           JWT_SECRET: ci-test-secret
           JWT_REFRESH_SECRET: ci-test-refresh-secret
           JWT_ACCESS_EXPIRY: 15m

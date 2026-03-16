@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import {
   IsNotEmpty,
   IsString,
@@ -7,20 +7,20 @@ import {
   ArrayMinSize,
   ArrayMaxSize,
   MaxLength,
-} from 'class-validator';
+} from "class-validator";
 
 /**
  * 3 Icebreaker game types (LOCKED).
  */
 export enum IcebreakerGameType {
-  THIS_OR_THAT = 'THIS_OR_THAT',
-  TWO_TRUTHS_ONE_LIE = 'TWO_TRUTHS_ONE_LIE',
-  RAPID_FIRE = 'RAPID_FIRE',
+  THIS_OR_THAT = "THIS_OR_THAT",
+  TWO_TRUTHS_ONE_LIE = "TWO_TRUTHS_ONE_LIE",
+  RAPID_FIRE = "RAPID_FIRE",
 }
 
 export class StartIcebreakerDto {
   @ApiProperty({
-    description: 'Type of icebreaker game to start',
+    description: "Type of icebreaker game to start",
     enum: IcebreakerGameType,
     example: IcebreakerGameType.THIS_OR_THAT,
   })
@@ -31,24 +31,24 @@ export class StartIcebreakerDto {
 
 export class SubmitIcebreakerAnswerDto {
   @ApiProperty({
-    description: 'Session ID of the icebreaker game',
-    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: "Session ID of the icebreaker game",
+    example: "550e8400-e29b-41d4-a716-446655440000",
   })
   @IsNotEmpty()
   @IsString()
   sessionId!: string;
 
   @ApiProperty({
-    description: 'Question ID being answered',
-    example: 'q1',
+    description: "Question ID being answered",
+    example: "q1",
   })
   @IsNotEmpty()
   @IsString()
   questionId!: string;
 
   @ApiProperty({
-    description: 'Selected answer value',
-    example: 'A',
+    description: "Selected answer value",
+    example: "A",
     maxLength: 500,
   })
   @IsNotEmpty()
@@ -59,9 +59,9 @@ export class SubmitIcebreakerAnswerDto {
 
 export class SubmitTwoTruthsDto {
   @ApiProperty({
-    description: 'Array of 3 statements (2 truths, 1 lie)',
+    description: "Array of 3 statements (2 truths, 1 lie)",
     type: [String],
-    example: ['Istanbul\'da dogdum', 'Piyano calarim', 'Uzaya gittim'],
+    example: ["Istanbul'da dogdum", "Piyano calarim", "Uzaya gittim"],
   })
   @IsArray()
   @ArrayMinSize(3)
@@ -71,7 +71,7 @@ export class SubmitTwoTruthsDto {
   statements!: string[];
 
   @ApiProperty({
-    description: 'Index of the lie (0, 1, or 2)',
+    description: "Index of the lie (0, 1, or 2)",
     example: 2,
   })
   @IsNotEmpty()
@@ -80,7 +80,8 @@ export class SubmitTwoTruthsDto {
 
 export class GuessLieDto {
   @ApiProperty({
-    description: 'Index of the statement the user thinks is the lie (0, 1, or 2)',
+    description:
+      "Index of the statement the user thinks is the lie (0, 1, or 2)",
     example: 2,
   })
   @IsNotEmpty()

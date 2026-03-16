@@ -1,8 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
-import { PrismaService } from '../../prisma/prisma.service';
-import { RelationshipsService } from '../relationships/relationships.service';
-import { StoriesService } from '../stories/stories.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { Cron, CronExpression } from "@nestjs/schedule";
+import { PrismaService } from "../../prisma/prisma.service";
+import { RelationshipsService } from "../relationships/relationships.service";
+import { StoriesService } from "../stories/stories.service";
 
 /**
  * Scheduled tasks (cron jobs) for LUMA V1.
@@ -36,11 +36,11 @@ export class TasksService {
 
     const result = await this.prisma.harmonySession.updateMany({
       where: {
-        status: { in: ['ACTIVE', 'EXTENDED'] },
+        status: { in: ["ACTIVE", "EXTENDED"] },
         endsAt: { lt: now },
       },
       data: {
-        status: 'ENDED',
+        status: "ENDED",
         actualEndedAt: now,
       },
     });
@@ -56,11 +56,11 @@ export class TasksService {
   async cleanExpiredOtpCodes(): Promise<void> {
     const result = await this.prisma.userVerification.updateMany({
       where: {
-        type: 'SMS',
-        status: 'PENDING',
+        type: "SMS",
+        status: "PENDING",
         otpExpiresAt: { lt: new Date() },
       },
-      data: { status: 'EXPIRED' },
+      data: { status: "EXPIRED" },
     });
 
     if (result.count > 0) {
@@ -70,7 +70,7 @@ export class TasksService {
 
   // ─── 3. Reset Daily Swipe Counters ───────────────────────────
   // Runs at midnight (00:00) Turkey time (UTC+3)
-  @Cron('0 21 * * *') // 21:00 UTC = 00:00 Turkey
+  @Cron("0 21 * * *") // 21:00 UTC = 00:00 Turkey
   async resetDailySwipeCounters(): Promise<void> {
     const result = await this.prisma.dailySwipeCount.deleteMany({
       where: {
@@ -117,7 +117,7 @@ export class TasksService {
         const userIds = expiredSubs.map((s: { userId: string }) => s.userId);
         await this.prisma.user.updateMany({
           where: { id: { in: userIds } },
-          data: { packageTier: 'FREE' },
+          data: { packageTier: "FREE" },
         });
         this.logger.log(`Downgraded ${userIds.length} user(s) to FREE tier`);
       }
@@ -126,7 +126,7 @@ export class TasksService {
 
   // ─── 5. Clean Old Revoked Sessions ───────────────────────────
   // Runs daily at 03:00 UTC
-  @Cron('0 3 * * *')
+  @Cron("0 3 * * *")
   async cleanOldSessions(): Promise<void> {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
@@ -144,7 +144,7 @@ export class TasksService {
 
   // ─── 6. Clean Old Notifications ──────────────────────────────
   // Runs daily at 04:00 UTC
-  @Cron('0 4 * * *')
+  @Cron("0 4 * * *")
   async cleanOldNotifications(): Promise<void> {
     const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
 
@@ -162,25 +162,27 @@ export class TasksService {
 
   // ─── 7. Clean Old Expired Verifications ────────────────────────
   // Runs daily at 04:30 UTC — removes expired/rejected verification records older than 7 days
-  @Cron('30 4 * * *')
+  @Cron("30 4 * * *")
   async cleanOldVerifications(): Promise<void> {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
     const result = await this.prisma.userVerification.deleteMany({
       where: {
-        status: { in: ['EXPIRED', 'REJECTED'] },
+        status: { in: ["EXPIRED", "REJECTED"] },
         createdAt: { lt: sevenDaysAgo },
       },
     });
 
     if (result.count > 0) {
-      this.logger.log(`Cleaned ${result.count} old expired/rejected verification(s)`);
+      this.logger.log(
+        `Cleaned ${result.count} old expired/rejected verification(s)`,
+      );
     }
   }
 
   // ─── 8. Clean Old Daily Swipe Counts ───────────────────────────
   // Runs weekly on Sunday at 05:00 UTC — removes swipe tracking data older than 90 days
-  @Cron('0 5 * * 0')
+  @Cron("0 5 * * 0")
   async cleanOldSwipeCounts(): Promise<void> {
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
@@ -192,7 +194,9 @@ export class TasksService {
     });
 
     if (result.count > 0) {
-      this.logger.log(`Cleaned ${result.count} old daily swipe count record(s)`);
+      this.logger.log(
+        `Cleaned ${result.count} old daily swipe count record(s)`,
+      );
     }
   }
 
@@ -200,16 +204,19 @@ export class TasksService {
   // Runs every 10 minutes — ends relationships past the 48-hour deadline
   @Cron(CronExpression.EVERY_10_MINUTES)
   async autoEndExpiredRelationships(): Promise<void> {
-    const endedCount = await this.relationshipsService.autoEndExpiredRelationships();
+    const endedCount =
+      await this.relationshipsService.autoEndExpiredRelationships();
 
     if (endedCount > 0) {
-      this.logger.log(`Auto-ended ${endedCount} expired relationship deactivation(s)`);
+      this.logger.log(
+        `Auto-ended ${endedCount} expired relationship deactivation(s)`,
+      );
     }
   }
 
   // ─── 10. Clean Up Expired Stories ──────────────────────────────
   // Runs every 30 minutes — soft-deletes stories older than 24 hours
-  @Cron('*/30 * * * *')
+  @Cron("*/30 * * * *")
   async cleanupExpiredStories(): Promise<void> {
     const cleanedCount = await this.storiesService.cleanupExpiredStories();
 

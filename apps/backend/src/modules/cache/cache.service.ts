@@ -1,26 +1,31 @@
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import Redis from 'ioredis';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  OnModuleDestroy,
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import Redis from "ioredis";
 
 // ─── Standard TTL constants (seconds) ────────────────────────
 // Use these when calling set() to ensure consistent cache durations.
 export const CACHE_TTL = {
   /** User profile data — moderate TTL, invalidate on profile update */
-  USER_PROFILE: 300,        // 5 minutes
+  USER_PROFILE: 300, // 5 minutes
   /** Discovery feed — short TTL, feed changes frequently */
-  DISCOVERY_FEED: 60,       // 1 minute
+  DISCOVERY_FEED: 60, // 1 minute
   /** Compatibility scores — long TTL, recalculated infrequently */
   COMPATIBILITY_SCORE: 3600, // 1 hour
   /** Match list — moderate TTL, invalidate on new match/unmatch */
-  MATCH_LIST: 180,          // 3 minutes
+  MATCH_LIST: 180, // 3 minutes
   /** Questions list — very long TTL, questions rarely change */
-  QUESTIONS: 86400,         // 24 hours
+  QUESTIONS: 86400, // 24 hours
   /** Badge definitions — very long TTL, definitions are static */
   BADGE_DEFINITIONS: 86400, // 24 hours
   /** Notification preferences — moderate TTL */
-  NOTIFICATION_PREFS: 600,  // 10 minutes
+  NOTIFICATION_PREFS: 600, // 10 minutes
   /** Session validation — short TTL for security */
-  SESSION: 60,              // 1 minute
+  SESSION: 60, // 1 minute
 } as const;
 
 // ─── Cache key builders ──────────────────────────────────────
@@ -28,10 +33,11 @@ export const CACHE_TTL = {
 export const CACHE_KEYS = {
   userProfile: (userId: string) => `user:profile:${userId}`,
   discoveryFeed: (userId: string) => `discovery:feed:${userId}`,
-  compatScore: (userAId: string, userBId: string) => `compat:${userAId}:${userBId}`,
+  compatScore: (userAId: string, userBId: string) =>
+    `compat:${userAId}:${userBId}`,
   matchList: (userId: string) => `matches:${userId}`,
-  questions: (isPremium: boolean) => `questions:${isPremium ? 'all' : 'core'}`,
-  badgeDefinitions: () => 'badges:definitions',
+  questions: (isPremium: boolean) => `questions:${isPremium ? "all" : "core"}`,
+  badgeDefinitions: () => "badges:definitions",
   notifPrefs: (userId: string) => `notif:prefs:${userId}`,
 } as const;
 
@@ -53,7 +59,10 @@ export class LumaCacheService implements OnModuleInit, OnModuleDestroy {
   constructor(private readonly configService: ConfigService) {}
 
   async onModuleInit(): Promise<void> {
-    const redisUrl = this.configService.get<string>('REDIS_URL', 'redis://localhost:6379');
+    const redisUrl = this.configService.get<string>(
+      "REDIS_URL",
+      "redis://localhost:6379",
+    );
 
     try {
       this.client = new Redis(redisUrl, {
@@ -66,37 +75,41 @@ export class LumaCacheService implements OnModuleInit, OnModuleDestroy {
         enableReadyCheck: true,
       });
 
-      this.client.on('connect', () => {
+      this.client.on("connect", () => {
         this.isConnected = true;
-        this.logger.log('Redis connected');
+        this.logger.log("Redis connected");
       });
 
-      this.client.on('error', (err: Error) => {
+      this.client.on("error", (err: Error) => {
         this.isConnected = false;
         this.logger.warn(`Redis error: ${err.message}`);
       });
 
-      this.client.on('close', () => {
+      this.client.on("close", () => {
         this.isConnected = false;
-        this.logger.warn('Redis connection closed');
+        this.logger.warn("Redis connection closed");
       });
 
       // Wait for the initial connection (with timeout)
       await Promise.race([
         new Promise<void>((resolve) => {
           if (this.client) {
-            this.client.once('ready', () => resolve());
+            this.client.once("ready", () => resolve());
           }
         }),
         new Promise<void>((_, reject) =>
-          setTimeout(() => reject(new Error('Redis connection timeout')), 5000),
+          setTimeout(() => reject(new Error("Redis connection timeout")), 5000),
         ),
       ]).catch((err: Error) => {
-        this.logger.warn(`Redis initial connection failed: ${err.message}. Cache will be unavailable.`);
+        this.logger.warn(
+          `Redis initial connection failed: ${err.message}. Cache will be unavailable.`,
+        );
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      this.logger.warn(`Failed to initialize Redis: ${message}. Running without cache.`);
+      this.logger.warn(
+        `Failed to initialize Redis: ${message}. Running without cache.`,
+      );
     }
   }
 
@@ -124,7 +137,7 @@ export class LumaCacheService implements OnModuleInit, OnModuleDestroy {
       if (raw === null) return null;
       return JSON.parse(raw) as T;
     } catch (err) {
-      this.logError('get', key, err);
+      this.logError("get", key, err);
       return null;
     }
   }
@@ -146,7 +159,7 @@ export class LumaCacheService implements OnModuleInit, OnModuleDestroy {
         await this.client!.set(prefixed, serialized);
       }
     } catch (err) {
-      this.logError('set', key, err);
+      this.logError("set", key, err);
     }
   }
 
@@ -159,7 +172,7 @@ export class LumaCacheService implements OnModuleInit, OnModuleDestroy {
     try {
       await this.client!.del(this.prefixKey(key));
     } catch (err) {
-      this.logError('del', key, err);
+      this.logError("del", key, err);
     }
   }
 
@@ -177,15 +190,15 @@ export class LumaCacheService implements OnModuleInit, OnModuleDestroy {
 
     try {
       const prefixedPattern = this.prefixKey(pattern);
-      let cursor = '0';
+      let cursor = "0";
       let totalDeleted = 0;
 
       do {
         const [nextCursor, keys] = await this.client!.scan(
           cursor,
-          'MATCH',
+          "MATCH",
           prefixedPattern,
-          'COUNT',
+          "COUNT",
           100,
         );
         cursor = nextCursor;
@@ -194,13 +207,15 @@ export class LumaCacheService implements OnModuleInit, OnModuleDestroy {
           await this.client!.del(...keys);
           totalDeleted += keys.length;
         }
-      } while (cursor !== '0');
+      } while (cursor !== "0");
 
       if (totalDeleted > 0) {
-        this.logger.debug(`Invalidated ${totalDeleted} keys matching "${pattern}"`);
+        this.logger.debug(
+          `Invalidated ${totalDeleted} keys matching "${pattern}"`,
+        );
       }
     } catch (err) {
-      this.logError('invalidatePattern', pattern, err);
+      this.logError("invalidatePattern", pattern, err);
     }
   }
 

@@ -1,2 +1,2 @@
-export { SentryModule } from './sentry.module';
-export { SentryInterceptor } from './sentry.interceptor';
+export { SentryModule } from "./sentry.module";
+export { SentryInterceptor } from "./sentry.interceptor";

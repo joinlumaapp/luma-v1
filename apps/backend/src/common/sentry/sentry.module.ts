@@ -1,6 +1,6 @@
-import { Module, Global, Logger, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import * as Sentry from '@sentry/nestjs';
+import { Module, Global, Logger, OnModuleInit } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import * as Sentry from "@sentry/nestjs";
 
 /**
  * Global Sentry error-tracking module.
@@ -11,31 +11,34 @@ import * as Sentry from '@sentry/nestjs';
 @Global()
 @Module({})
 export class SentryModule implements OnModuleInit {
-  private readonly logger = new Logger('SentryModule');
+  private readonly logger = new Logger("SentryModule");
 
   constructor(private readonly configService: ConfigService) {}
 
   onModuleInit(): void {
-    const dsn = this.configService.get<string>('SENTRY_DSN');
+    const dsn = this.configService.get<string>("SENTRY_DSN");
 
     if (!dsn) {
       this.logger.log(
-        'SENTRY_DSN not configured — Sentry error tracking disabled',
+        "SENTRY_DSN not configured — Sentry error tracking disabled",
       );
       return;
     }
 
     const environment = this.configService.get<string>(
-      'NODE_ENV',
-      'development',
+      "NODE_ENV",
+      "development",
     );
-    const release = this.configService.get<string>('npm_package_version', '1.0.0');
+    const release = this.configService.get<string>(
+      "npm_package_version",
+      "1.0.0",
+    );
 
     Sentry.init({
       dsn,
       environment,
       release: `luma-backend@${release}`,
-      tracesSampleRate: environment === 'production' ? 0.2 : 1.0,
+      tracesSampleRate: environment === "production" ? 0.2 : 1.0,
       // Do not send PII by default — userId is attached explicitly via the interceptor
       sendDefaultPii: false,
     });

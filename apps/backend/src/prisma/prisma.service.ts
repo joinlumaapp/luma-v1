@@ -1,5 +1,10 @@
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  OnModuleDestroy,
+} from "@nestjs/common";
+import { PrismaClient } from "@prisma/client";
 
 @Injectable()
 export class PrismaService
@@ -11,9 +16,9 @@ export class PrismaService
   constructor() {
     super({
       log:
-        process.env.NODE_ENV === 'development'
-          ? ['query', 'info', 'warn', 'error']
-          : ['error'],
+        process.env.NODE_ENV === "development"
+          ? ["query", "info", "warn", "error"]
+          : ["error"],
       // Connection pool tuning for PostgreSQL
       datasourceUrl: process.env.DATABASE_URL,
     });
@@ -21,18 +26,21 @@ export class PrismaService
 
   async onModuleInit() {
     await this.$connect();
-    this.logger.log('Prisma connected to PostgreSQL');
+    this.logger.log("Prisma connected to PostgreSQL");
   }
 
   async onModuleDestroy() {
     await this.$disconnect();
-    this.logger.log('Prisma disconnected');
+    this.logger.log("Prisma disconnected");
   }
 
   // Soft delete helper — used for GDPR-compliant account deletion
   async softDelete(model: string, id: string) {
     const delegate = (this as Record<string, unknown>)[model] as {
-      update: (args: { where: { id: string }; data: Record<string, unknown> }) => Promise<unknown>;
+      update: (args: {
+        where: { id: string };
+        data: Record<string, unknown>;
+      }) => Promise<unknown>;
     };
     return delegate.update({
       where: { id },
@@ -77,7 +85,9 @@ export class PrismaService
     });
 
     if (result.count > 0) {
-      this.logger.log(`Cleaned up ${result.count} old daily swipe count records`);
+      this.logger.log(
+        `Cleaned up ${result.count} old daily swipe count records`,
+      );
     }
 
     return result.count;

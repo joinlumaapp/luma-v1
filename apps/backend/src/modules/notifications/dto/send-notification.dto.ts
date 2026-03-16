@@ -1,37 +1,37 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import {
   IsNotEmpty,
   IsString,
   IsEnum,
   IsOptional,
   IsObject,
-} from 'class-validator';
+} from "class-validator";
 
 /**
  * Notification types that can be sent via the internal API.
  * Maps to the Prisma NotificationType enum.
  */
 export enum SendNotificationType {
-  NEW_MATCH = 'NEW_MATCH',
-  NEW_MESSAGE = 'NEW_MESSAGE',
-  SUPER_LIKE = 'SUPER_LIKE',
-  MATCH_REMOVED = 'MATCH_REMOVED',
-  HARMONY_INVITE = 'HARMONY_INVITE',
-  HARMONY_REMINDER = 'HARMONY_REMINDER',
-  BADGE_EARNED = 'BADGE_EARNED',
-  SUBSCRIPTION_EXPIRING = 'SUBSCRIPTION_EXPIRING',
-  RELATIONSHIP_REQUEST = 'RELATIONSHIP_REQUEST',
-  SYSTEM = 'SYSTEM',
+  NEW_MATCH = "NEW_MATCH",
+  NEW_MESSAGE = "NEW_MESSAGE",
+  SUPER_LIKE = "SUPER_LIKE",
+  MATCH_REMOVED = "MATCH_REMOVED",
+  HARMONY_INVITE = "HARMONY_INVITE",
+  HARMONY_REMINDER = "HARMONY_REMINDER",
+  BADGE_EARNED = "BADGE_EARNED",
+  SUBSCRIPTION_EXPIRING = "SUBSCRIPTION_EXPIRING",
+  RELATIONSHIP_REQUEST = "RELATIONSHIP_REQUEST",
+  SYSTEM = "SYSTEM",
 }
 
 export class SendNotificationDto {
-  @ApiProperty({ description: 'Target user ID' })
+  @ApiProperty({ description: "Target user ID" })
   @IsNotEmpty()
   @IsString()
   userId!: string;
 
   @ApiProperty({
-    description: 'Notification type',
+    description: "Notification type",
     enum: SendNotificationType,
   })
   @IsNotEmpty()
@@ -39,8 +39,8 @@ export class SendNotificationDto {
   type!: SendNotificationType;
 
   @ApiPropertyOptional({
-    description: 'Extra data payload (e.g. matcherName, badgeName)',
-    type: 'object',
+    description: "Extra data payload (e.g. matcherName, badgeName)",
+    type: "object",
   })
   @IsOptional()
   @IsObject()
@@ -51,13 +51,13 @@ export class SendNotificationDto {
  * DTO for batch sending notifications to multiple users.
  */
 export class SendBatchNotificationDto {
-  @ApiProperty({ description: 'Target user IDs', type: [String] })
+  @ApiProperty({ description: "Target user IDs", type: [String] })
   @IsNotEmpty()
   @IsString({ each: true })
   userIds!: string[];
 
   @ApiProperty({
-    description: 'Notification type',
+    description: "Notification type",
     enum: SendNotificationType,
   })
   @IsNotEmpty()
@@ -65,8 +65,8 @@ export class SendBatchNotificationDto {
   type!: SendNotificationType;
 
   @ApiPropertyOptional({
-    description: 'Extra data payload',
-    type: 'object',
+    description: "Extra data payload",
+    type: "object",
   })
   @IsOptional()
   @IsObject()

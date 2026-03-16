@@ -7,9 +7,9 @@ import {
   Logger,
   NotFoundException,
   ForbiddenException,
-} from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { CreateStoryDto } from './dto/create-story.dto';
+} from "@nestjs/common";
+import { PrismaService } from "../../prisma/prisma.service";
+import { CreateStoryDto } from "./dto/create-story.dto";
 
 /** Minimal file interface compatible with multer uploads */
 interface UploadedFile {
@@ -31,7 +31,9 @@ export class StoriesService {
   /** Get all active stories from matched/followed users */
   async getStories(userId: string) {
     const now = new Date();
-    const cutoff = new Date(now.getTime() - this.STORY_TTL_HOURS * 60 * 60 * 1000);
+    const cutoff = new Date(
+      now.getTime() - this.STORY_TTL_HOURS * 60 * 60 * 1000,
+    );
 
     // Get users the current user follows or is matched with
     const followedUserIds = await this.getFollowedUserIds(userId);
@@ -62,26 +64,29 @@ export class StoriesService {
           select: { id: true },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     // Group stories by user
-    const userStoriesMap = new Map<string, {
-      userId: string;
-      userName: string;
-      userAvatarUrl: string;
-      stories: typeof stories;
-      hasUnseenStories: boolean;
-      latestStoryAt: string;
-    }>();
+    const userStoriesMap = new Map<
+      string,
+      {
+        userId: string;
+        userName: string;
+        userAvatarUrl: string;
+        stories: typeof stories;
+        hasUnseenStories: boolean;
+        latestStoryAt: string;
+      }
+    >();
 
     for (const story of stories) {
       const storyUserId = story.userId;
       if (!userStoriesMap.has(storyUserId)) {
         userStoriesMap.set(storyUserId, {
           userId: storyUserId,
-          userName: story.user.profile?.firstName ?? 'Kullanici',
-          userAvatarUrl: story.user.photos?.[0]?.url ?? '',
+          userName: story.user.profile?.firstName ?? "Kullanici",
+          userAvatarUrl: story.user.photos?.[0]?.url ?? "",
           stories: [],
           hasUnseenStories: false,
           latestStoryAt: story.createdAt.toISOString(),
@@ -101,14 +106,12 @@ export class StoriesService {
   }
 
   /** Create a new story */
-  async createStory(
-    userId: string,
-    file: UploadedFile,
-    dto: CreateStoryDto,
-  ) {
+  async createStory(userId: string, file: UploadedFile, dto: CreateStoryDto) {
     // Upload file to storage (S3/CloudFront)
     const mediaUrl = await this.uploadStoryMedia(file);
-    const expiresAt = new Date(Date.now() + this.STORY_TTL_HOURS * 60 * 60 * 1000);
+    const expiresAt = new Date(
+      Date.now() + this.STORY_TTL_HOURS * 60 * 60 * 1000,
+    );
 
     const story = await this.prisma.story.create({
       data: {
@@ -131,11 +134,11 @@ export class StoriesService {
     });
 
     if (!story) {
-      throw new NotFoundException('Hikaye bulunamadi');
+      throw new NotFoundException("Hikaye bulunamadi");
     }
 
     if (story.userId !== userId) {
-      throw new ForbiddenException('Bu hikayeyi silme yetkiniz yok');
+      throw new ForbiddenException("Bu hikayeyi silme yetkiniz yok");
     }
 
     await this.prisma.story.update({
@@ -168,11 +171,11 @@ export class StoriesService {
     });
 
     if (!story) {
-      throw new NotFoundException('Hikaye bulunamadi');
+      throw new NotFoundException("Hikaye bulunamadi");
     }
 
     if (story.userId !== userId) {
-      throw new ForbiddenException('Goruntuleme bilgisine erisim yetkiniz yok');
+      throw new ForbiddenException("Goruntuleme bilgisine erisim yetkiniz yok");
     }
 
     const views = await this.prisma.storyView.findMany({
@@ -192,13 +195,13 @@ export class StoriesService {
           },
         },
       },
-      orderBy: { viewedAt: 'desc' },
+      orderBy: { viewedAt: "desc" },
     });
 
     return views.map((view) => ({
       userId: view.viewer.id,
-      userName: view.viewer.profile?.firstName ?? 'Kullanici',
-      userAvatarUrl: view.viewer.photos?.[0]?.url ?? '',
+      userName: view.viewer.profile?.firstName ?? "Kullanici",
+      userAvatarUrl: view.viewer.photos?.[0]?.url ?? "",
       viewedAt: view.viewedAt.toISOString(),
     }));
   }
@@ -218,7 +221,7 @@ export class StoriesService {
     });
 
     if (!story) {
-      throw new NotFoundException('Hikaye bulunamadi');
+      throw new NotFoundException("Hikaye bulunamadi");
     }
 
     // Find or create a chat between sender and story owner
@@ -229,7 +232,7 @@ export class StoriesService {
 
     return {
       success: true,
-      message: 'Yanitiniz gonderildi',
+      message: "Yanitiniz gonderildi",
     };
   }
 
@@ -284,10 +287,7 @@ export class StoriesService {
 
     const matches = await this.prisma.match.findMany({
       where: {
-        OR: [
-          { userAId: userId },
-          { userBId: userId },
-        ],
+        OR: [{ userAId: userId }, { userBId: userId }],
         isActive: true,
       },
       select: { userAId: true, userBId: true },

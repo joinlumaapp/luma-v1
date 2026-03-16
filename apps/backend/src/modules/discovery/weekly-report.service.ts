@@ -1,34 +1,34 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { PrismaService } from "../../prisma/prisma.service";
 
 // Turkish day names (Monday = index 1 in JS getDay() mapping)
 const TURKISH_DAY_NAMES: Record<number, string> = {
-  0: 'Pazar',
-  1: 'Pazartesi',
-  2: 'Sali',
-  3: 'Carsamba',
-  4: 'Persembe',
-  5: 'Cuma',
-  6: 'Cumartesi',
+  0: "Pazar",
+  1: "Pazartesi",
+  2: "Sali",
+  3: "Carsamba",
+  4: "Persembe",
+  5: "Cuma",
+  6: "Cumartesi",
 };
 
 // Turkish category labels for top category display
 const CATEGORY_LABELS_TR: Record<string, string> = {
-  COMMUNICATION: 'Iletisim Tarzi',
-  LIFE_GOALS: 'Yasam Hedefleri',
-  VALUES: 'Degerler',
-  LIFESTYLE: 'Yasam Tarzi',
-  EMOTIONAL_INTELLIGENCE: 'Duygusal Zeka',
-  RELATIONSHIP_EXPECTATIONS: 'Iliski Beklentileri',
-  SOCIAL_COMPATIBILITY: 'Sosyal Uyum',
-  ATTACHMENT_STYLE: 'Baglanma Tarzi',
-  LOVE_LANGUAGE: 'Sevgi Dili',
-  CONFLICT_STYLE: 'Catisma Yaklasimi',
-  FUTURE_VISION: 'Gelecek Vizyonu',
-  INTELLECTUAL: 'Entelektuel Uyum',
-  INTIMACY: 'Yakinlik',
-  GROWTH_MINDSET: 'Gelisim Odaklilik',
-  CORE_FEARS: 'Temel Kaygilar',
+  COMMUNICATION: "Iletisim Tarzi",
+  LIFE_GOALS: "Yasam Hedefleri",
+  VALUES: "Degerler",
+  LIFESTYLE: "Yasam Tarzi",
+  EMOTIONAL_INTELLIGENCE: "Duygusal Zeka",
+  RELATIONSHIP_EXPECTATIONS: "Iliski Beklentileri",
+  SOCIAL_COMPATIBILITY: "Sosyal Uyum",
+  ATTACHMENT_STYLE: "Baglanma Tarzi",
+  LOVE_LANGUAGE: "Sevgi Dili",
+  CONFLICT_STYLE: "Catisma Yaklasimi",
+  FUTURE_VISION: "Gelecek Vizyonu",
+  INTELLECTUAL: "Entelektuel Uyum",
+  INTIMACY: "Yakinlik",
+  GROWTH_MINDSET: "Gelisim Odaklilik",
+  CORE_FEARS: "Temel Kaygilar",
 };
 
 // Maximum number of trending interests to return
@@ -77,7 +77,7 @@ export class WeeklyReportService {
   async getWeeklyReport(userId: string): Promise<WeeklyReportResponse> {
     const latestReport = await this.prisma.weeklyReport.findFirst({
       where: { userId },
-      orderBy: { weekStart: 'desc' },
+      orderBy: { weekStart: "desc" },
     });
 
     const now = new Date();
@@ -169,7 +169,7 @@ export class WeeklyReportService {
       this.prisma.swipe.count({
         where: {
           swiperId: userId,
-          action: { in: ['LIKE', 'SUPER_LIKE'] },
+          action: { in: ["LIKE", "SUPER_LIKE"] },
           createdAt: { gte: weekStart, lt: weekEnd },
         },
       }),
@@ -235,7 +235,9 @@ export class WeeklyReportService {
         : 0;
 
     // Find most active day by grouping swipes
-    const mostActiveDay = this.findMostActiveDay(swipesByDay.map((s) => s.createdAt));
+    const mostActiveDay = this.findMostActiveDay(
+      swipesByDay.map((s) => s.createdAt),
+    );
 
     // Create the weekly report record
     const report = await this.prisma.weeklyReport.create({
@@ -354,7 +356,7 @@ export class WeeklyReportService {
     return this.prisma.swipe.count({
       where: {
         targetId: userId,
-        action: { in: ['LIKE', 'SUPER_LIKE'] },
+        action: { in: ["LIKE", "SUPER_LIKE"] },
         createdAt: { gte: weekStart, lt: weekEnd },
       },
     });
@@ -374,7 +376,7 @@ export class WeeklyReportService {
         OR: [{ userAId: userId }, { userBId: userId }],
         createdAt: { gte: weekStart, lt: weekEnd },
       },
-      orderBy: { compatibilityScore: 'desc' },
+      orderBy: { compatibilityScore: "desc" },
       select: {
         userAId: true,
         userBId: true,
@@ -386,9 +388,8 @@ export class WeeklyReportService {
     if (!topMatch) return null;
 
     // Get the partner's profile
-    const partnerId = topMatch.userAId === userId
-      ? topMatch.userBId
-      : topMatch.userAId;
+    const partnerId =
+      topMatch.userAId === userId ? topMatch.userBId : topMatch.userAId;
 
     const partnerProfile = await this.prisma.userProfile.findUnique({
       where: { userId: partnerId },
@@ -397,7 +398,7 @@ export class WeeklyReportService {
 
     return {
       userId: partnerId,
-      firstName: partnerProfile?.firstName ?? '',
+      firstName: partnerProfile?.firstName ?? "",
       compatibilityScore: topMatch.compatibilityScore,
       matchedAt: topMatch.createdAt.toISOString(),
     };
@@ -408,7 +409,9 @@ export class WeeklyReportService {
    * Returns the top N most popular interest tags among active users
    * in the same city as the current user.
    */
-  private async getTrendingInterestsInArea(userId: string): Promise<TrendingInterest[]> {
+  private async getTrendingInterestsInArea(
+    userId: string,
+  ): Promise<TrendingInterest[]> {
     // Get user's city
     const userProfile = await this.prisma.userProfile.findUnique({
       where: { userId },
@@ -465,7 +468,10 @@ export class WeeklyReportService {
     topCategory: string | null;
     messagesExchanged: number;
     mostActiveDay: string | null;
-  }): Omit<WeeklyReportResponse, 'likesReceived' | 'topCompatibilityMatch' | 'trendingInterests'> {
+  }): Omit<
+    WeeklyReportResponse,
+    "likesReceived" | "topCompatibilityMatch" | "trendingInterests"
+  > {
     const likeRate =
       report.totalSwipes > 0
         ? Math.round((report.totalLikes / report.totalSwipes) * 10000) / 100
@@ -481,7 +487,7 @@ export class WeeklyReportService {
 
     // Translate top category to Turkish label
     const topCategoryTr = report.topCategory
-      ? CATEGORY_LABELS_TR[report.topCategory] ?? report.topCategory
+      ? (CATEGORY_LABELS_TR[report.topCategory] ?? report.topCategory)
       : null;
 
     return {
@@ -514,13 +520,9 @@ export class WeeklyReportService {
 
     // Like rate insights
     if (params.likeRate > 50) {
-      insights.push(
-        'Secici davraniyorsun — bu kaliteli eslesmelere yol acar',
-      );
+      insights.push("Secici davraniyorsun — bu kaliteli eslesmelere yol acar");
     } else if (params.likeRate < 20 && params.likeRate > 0) {
-      insights.push(
-        'Daha acik ol — farkli profillere sans ver',
-      );
+      insights.push("Daha acik ol — farkli profillere sans ver");
     }
 
     // Match count insights
@@ -529,49 +531,39 @@ export class WeeklyReportService {
         `Harika bir hafta! ${params.totalMatches} yeni eslesme kazandin`,
       );
     } else if (params.totalMatches === 0 && params.totalSwipes > 0) {
-      insights.push(
-        'Bu hafta eslesme olmadi — profilini guncellemeyi dene',
-      );
+      insights.push("Bu hafta eslesme olmadi — profilini guncellemeyi dene");
     }
 
     // Message activity insight
     if (params.messagesExchanged > 20) {
-      insights.push(
-        'Aktif sohbet ediyorsun — bu eslesmeleri guclendirir',
-      );
+      insights.push("Aktif sohbet ediyorsun — bu eslesmeleri guclendirir");
     } else if (params.messagesExchanged === 0 && params.totalMatches > 0) {
-      insights.push(
-        'Eslesmelerine mesaj gonder — ilk adimi at!',
-      );
+      insights.push("Eslesmelerine mesaj gonder — ilk adimi at!");
     }
 
     // Compatibility insight
     if (params.avgCompatibility > 80) {
-      insights.push(
-        'Yuksek uyumlu profillerle eslesiyorsun — harika secimler',
-      );
+      insights.push("Yuksek uyumlu profillerle eslesiyorsun — harika secimler");
     } else if (params.avgCompatibility > 0 && params.avgCompatibility < 50) {
       insights.push(
-        'Uyumluluk sorularini tamamla — daha isabetli eslesmelere ulasirsun',
+        "Uyumluluk sorularini tamamla — daha isabetli eslesmelere ulasirsun",
       );
     }
 
     // Activity level insight
     if (params.totalSwipes === 0) {
       insights.push(
-        'Bu hafta hic kesfetmedin — duzenli kullanim eslesme sansini artirir',
+        "Bu hafta hic kesfetmedin — duzenli kullanim eslesme sansini artirir",
       );
     } else if (params.totalSwipes > 50) {
       insights.push(
-        'Aktif bir kesfetme haftasi gecirdin — bu momentum senin icin iyi',
+        "Aktif bir kesfetme haftasi gecirdin — bu momentum senin icin iyi",
       );
     }
 
     // Ensure at least one insight is always returned
     if (insights.length === 0) {
-      insights.push(
-        'Kesfetmeye devam et — dogru kisi seni bekliyor',
-      );
+      insights.push("Kesfetmeye devam et — dogru kisi seni bekliyor");
     }
 
     // Cap at 4 insights

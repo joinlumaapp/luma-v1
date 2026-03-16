@@ -1,10 +1,10 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { TasksService } from './tasks.service';
-import { PrismaService } from '../../prisma/prisma.service';
-import { RelationshipsService } from '../relationships/relationships.service';
-import { StoriesService } from '../stories/stories.service';
+import { Test, TestingModule } from "@nestjs/testing";
+import { TasksService } from "./tasks.service";
+import { PrismaService } from "../../prisma/prisma.service";
+import { RelationshipsService } from "../relationships/relationships.service";
+import { StoriesService } from "../stories/stories.service";
 
-describe('TasksService', () => {
+describe("TasksService", () => {
   let service: TasksService;
 
   const mockPrisma = {
@@ -40,7 +40,7 @@ describe('TasksService', () => {
     service = module.get<TasksService>(TasksService);
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(service).toBeDefined();
   });
 
@@ -48,28 +48,30 @@ describe('TasksService', () => {
   // endExpiredHarmonySessions()
   // ═══════════════════════════════════════════════════════════════
 
-  describe('endExpiredHarmonySessions()', () => {
-    it('should end expired active and extended harmony sessions', async () => {
+  describe("endExpiredHarmonySessions()", () => {
+    it("should end expired active and extended harmony sessions", async () => {
       mockPrisma.harmonySession.updateMany.mockResolvedValue({ count: 3 });
 
       await service.endExpiredHarmonySessions();
 
       expect(mockPrisma.harmonySession.updateMany).toHaveBeenCalledWith({
         where: {
-          status: { in: ['ACTIVE', 'EXTENDED'] },
+          status: { in: ["ACTIVE", "EXTENDED"] },
           endsAt: { lt: expect.any(Date) },
         },
         data: {
-          status: 'ENDED',
+          status: "ENDED",
           actualEndedAt: expect.any(Date),
         },
       });
     });
 
-    it('should not throw when no sessions to expire', async () => {
+    it("should not throw when no sessions to expire", async () => {
       mockPrisma.harmonySession.updateMany.mockResolvedValue({ count: 0 });
 
-      await expect(service.endExpiredHarmonySessions()).resolves.toBeUndefined();
+      await expect(
+        service.endExpiredHarmonySessions(),
+      ).resolves.toBeUndefined();
     });
   });
 
@@ -77,23 +79,23 @@ describe('TasksService', () => {
   // cleanExpiredOtpCodes()
   // ═══════════════════════════════════════════════════════════════
 
-  describe('cleanExpiredOtpCodes()', () => {
-    it('should mark expired SMS OTP codes as EXPIRED', async () => {
+  describe("cleanExpiredOtpCodes()", () => {
+    it("should mark expired SMS OTP codes as EXPIRED", async () => {
       mockPrisma.userVerification.updateMany.mockResolvedValue({ count: 5 });
 
       await service.cleanExpiredOtpCodes();
 
       expect(mockPrisma.userVerification.updateMany).toHaveBeenCalledWith({
         where: {
-          type: 'SMS',
-          status: 'PENDING',
+          type: "SMS",
+          status: "PENDING",
           otpExpiresAt: { lt: expect.any(Date) },
         },
-        data: { status: 'EXPIRED' },
+        data: { status: "EXPIRED" },
       });
     });
 
-    it('should not throw when no OTPs to expire', async () => {
+    it("should not throw when no OTPs to expire", async () => {
       mockPrisma.userVerification.updateMany.mockResolvedValue({ count: 0 });
 
       await expect(service.cleanExpiredOtpCodes()).resolves.toBeUndefined();
@@ -104,8 +106,8 @@ describe('TasksService', () => {
   // resetDailySwipeCounters()
   // ═══════════════════════════════════════════════════════════════
 
-  describe('resetDailySwipeCounters()', () => {
-    it('should delete old daily swipe count records', async () => {
+  describe("resetDailySwipeCounters()", () => {
+    it("should delete old daily swipe count records", async () => {
       mockPrisma.dailySwipeCount.deleteMany.mockResolvedValue({ count: 100 });
 
       await service.resetDailySwipeCounters();
@@ -117,7 +119,7 @@ describe('TasksService', () => {
       });
     });
 
-    it('should not throw when no records to delete', async () => {
+    it("should not throw when no records to delete", async () => {
       mockPrisma.dailySwipeCount.deleteMany.mockResolvedValue({ count: 0 });
 
       await expect(service.resetDailySwipeCounters()).resolves.toBeUndefined();
@@ -128,12 +130,12 @@ describe('TasksService', () => {
   // expireSubscriptions()
   // ═══════════════════════════════════════════════════════════════
 
-  describe('expireSubscriptions()', () => {
-    it('should deactivate expired non-renewing subscriptions', async () => {
+  describe("expireSubscriptions()", () => {
+    it("should deactivate expired non-renewing subscriptions", async () => {
       mockPrisma.subscription.updateMany.mockResolvedValue({ count: 2 });
       mockPrisma.subscription.findMany.mockResolvedValue([
-        { userId: 'user-1' },
-        { userId: 'user-2' },
+        { userId: "user-1" },
+        { userId: "user-2" },
       ]);
       mockPrisma.user.updateMany.mockResolvedValue({ count: 2 });
 
@@ -149,22 +151,22 @@ describe('TasksService', () => {
       });
     });
 
-    it('should downgrade expired users to FREE tier', async () => {
+    it("should downgrade expired users to FREE tier", async () => {
       mockPrisma.subscription.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.subscription.findMany.mockResolvedValue([
-        { userId: 'user-expired-1' },
+        { userId: "user-expired-1" },
       ]);
       mockPrisma.user.updateMany.mockResolvedValue({ count: 1 });
 
       await service.expireSubscriptions();
 
       expect(mockPrisma.user.updateMany).toHaveBeenCalledWith({
-        where: { id: { in: ['user-expired-1'] } },
-        data: { packageTier: 'FREE' },
+        where: { id: { in: ["user-expired-1"] } },
+        data: { packageTier: "FREE" },
       });
     });
 
-    it('should not downgrade users when no subscriptions expired', async () => {
+    it("should not downgrade users when no subscriptions expired", async () => {
       mockPrisma.subscription.updateMany.mockResolvedValue({ count: 0 });
 
       await service.expireSubscriptions();
@@ -173,7 +175,7 @@ describe('TasksService', () => {
       expect(mockPrisma.user.updateMany).not.toHaveBeenCalled();
     });
 
-    it('should handle expired subs with no recently expired users', async () => {
+    it("should handle expired subs with no recently expired users", async () => {
       mockPrisma.subscription.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.subscription.findMany.mockResolvedValue([]);
 
@@ -187,8 +189,8 @@ describe('TasksService', () => {
   // cleanOldSessions()
   // ═══════════════════════════════════════════════════════════════
 
-  describe('cleanOldSessions()', () => {
-    it('should delete revoked sessions older than 30 days', async () => {
+  describe("cleanOldSessions()", () => {
+    it("should delete revoked sessions older than 30 days", async () => {
       mockPrisma.userSession.deleteMany.mockResolvedValue({ count: 10 });
 
       await service.cleanOldSessions();
@@ -201,7 +203,7 @@ describe('TasksService', () => {
       });
     });
 
-    it('should not throw when no sessions to clean', async () => {
+    it("should not throw when no sessions to clean", async () => {
       mockPrisma.userSession.deleteMany.mockResolvedValue({ count: 0 });
 
       await expect(service.cleanOldSessions()).resolves.toBeUndefined();
@@ -212,8 +214,8 @@ describe('TasksService', () => {
   // cleanOldNotifications()
   // ═══════════════════════════════════════════════════════════════
 
-  describe('cleanOldNotifications()', () => {
-    it('should delete read notifications older than 90 days', async () => {
+  describe("cleanOldNotifications()", () => {
+    it("should delete read notifications older than 90 days", async () => {
       mockPrisma.notification.deleteMany.mockResolvedValue({ count: 50 });
 
       await service.cleanOldNotifications();
@@ -226,7 +228,7 @@ describe('TasksService', () => {
       });
     });
 
-    it('should not throw when no notifications to clean', async () => {
+    it("should not throw when no notifications to clean", async () => {
       mockPrisma.notification.deleteMany.mockResolvedValue({ count: 0 });
 
       await expect(service.cleanOldNotifications()).resolves.toBeUndefined();
@@ -237,19 +239,23 @@ describe('TasksService', () => {
   // autoEndExpiredRelationships()
   // ═══════════════════════════════════════════════════════════════
 
-  describe('autoEndExpiredRelationships()', () => {
-    it('should delegate to relationshipsService.autoEndExpiredRelationships', async () => {
+  describe("autoEndExpiredRelationships()", () => {
+    it("should delegate to relationshipsService.autoEndExpiredRelationships", async () => {
       mockRelationshipsService.autoEndExpiredRelationships.mockResolvedValue(3);
 
       await service.autoEndExpiredRelationships();
 
-      expect(mockRelationshipsService.autoEndExpiredRelationships).toHaveBeenCalledTimes(1);
+      expect(
+        mockRelationshipsService.autoEndExpiredRelationships,
+      ).toHaveBeenCalledTimes(1);
     });
 
-    it('should not throw when no expired relationships', async () => {
+    it("should not throw when no expired relationships", async () => {
       mockRelationshipsService.autoEndExpiredRelationships.mockResolvedValue(0);
 
-      await expect(service.autoEndExpiredRelationships()).resolves.toBeUndefined();
+      await expect(
+        service.autoEndExpiredRelationships(),
+      ).resolves.toBeUndefined();
     });
   });
 });

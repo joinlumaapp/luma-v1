@@ -4,15 +4,15 @@ import {
   ForbiddenException,
   Injectable,
   Logger,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../../prisma/prisma.service';
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { PrismaService } from "../../prisma/prisma.service";
 
 /**
  * Role values accepted by the AdminGuard.
  * 'admin' has full access; 'moderator' has access to moderation endpoints.
  */
-type AdminRole = 'admin' | 'moderator';
+type AdminRole = "admin" | "moderator";
 
 /**
  * Guard that restricts access to admin/moderator users only.
@@ -35,18 +35,18 @@ export class AdminGuard implements CanActivate {
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
   ) {
-    const adminRaw = this.configService.get<string>('ADMIN_USER_IDS', '');
-    const modRaw = this.configService.get<string>('MODERATOR_USER_IDS', '');
+    const adminRaw = this.configService.get<string>("ADMIN_USER_IDS", "");
+    const modRaw = this.configService.get<string>("MODERATOR_USER_IDS", "");
 
     this.adminIds = new Set(
       adminRaw
-        .split(',')
+        .split(",")
         .map((id) => id.trim())
         .filter(Boolean),
     );
     this.moderatorIds = new Set(
       modRaw
-        .split(',')
+        .split(",")
         .map((id) => id.trim())
         .filter(Boolean),
     );
@@ -62,7 +62,7 @@ export class AdminGuard implements CanActivate {
 
     if (!user?.sub) {
       throw new ForbiddenException(
-        'Yetkilendirme basarisiz. Erisim reddedildi.',
+        "Yetkilendirme basarisiz. Erisim reddedildi.",
       );
     }
 
@@ -71,9 +71,7 @@ export class AdminGuard implements CanActivate {
 
     if (!role) {
       this.logger.warn(`Unauthorized admin access attempt by user ${userId}`);
-      throw new ForbiddenException(
-        'Bu alana erisim yetkiniz bulunmamaktadir.',
-      );
+      throw new ForbiddenException("Bu alana erisim yetkiniz bulunmamaktadir.");
     }
 
     // Verify user is still active in the database
@@ -83,9 +81,7 @@ export class AdminGuard implements CanActivate {
     });
 
     if (!dbUser || !dbUser.isActive) {
-      throw new ForbiddenException(
-        'Hesabiniz aktif degil. Erisim reddedildi.',
-      );
+      throw new ForbiddenException("Hesabiniz aktif degil. Erisim reddedildi.");
     }
 
     // Attach admin role to request for downstream use
@@ -100,10 +96,10 @@ export class AdminGuard implements CanActivate {
    */
   private resolveRole(userId: string): AdminRole | null {
     if (this.adminIds.has(userId)) {
-      return 'admin';
+      return "admin";
     }
     if (this.moderatorIds.has(userId)) {
-      return 'moderator';
+      return "moderator";
     }
     return null;
   }

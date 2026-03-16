@@ -14,11 +14,11 @@ import {
   Req,
   HttpCode,
   HttpStatus,
-} from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { StoriesService } from './stories.service';
-import { CreateStoryDto, ReplyToStoryDto } from './dto/create-story.dto';
+} from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
+import { StoriesService } from "./stories.service";
+import { CreateStoryDto, ReplyToStoryDto } from "./dto/create-story.dto";
 
 /** Minimal file interface compatible with multer uploads */
 interface UploadedFile {
@@ -34,7 +34,7 @@ interface AuthenticatedRequest {
   user: { userId: string };
 }
 
-@Controller('stories')
+@Controller("stories")
 @UseGuards(JwtAuthGuard)
 export class StoriesController {
   constructor(private readonly storiesService: StoriesService) {}
@@ -47,7 +47,7 @@ export class StoriesController {
 
   /** POST /stories — Create a new story (multipart upload) */
   @Post()
-  @UseInterceptors(FileInterceptor('media'))
+  @UseInterceptors(FileInterceptor("media"))
   async createStory(
     @Req() req: AuthenticatedRequest,
     @UploadedFile() file: UploadedFile,
@@ -57,49 +57,53 @@ export class StoriesController {
   }
 
   /** DELETE /stories/:id — Delete own story */
-  @Delete(':id')
+  @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteStory(
     @Req() req: AuthenticatedRequest,
-    @Param('id') storyId: string,
+    @Param("id") storyId: string,
   ) {
     await this.storiesService.deleteStory(req.user.userId, storyId);
   }
 
   /** POST /stories/:id/view — Mark a story as viewed */
-  @Post(':id/view')
+  @Post(":id/view")
   @HttpCode(HttpStatus.NO_CONTENT)
   async markAsViewed(
     @Req() req: AuthenticatedRequest,
-    @Param('id') storyId: string,
+    @Param("id") storyId: string,
   ) {
     await this.storiesService.markAsViewed(req.user.userId, storyId);
   }
 
   /** GET /stories/:id/viewers — Get list of viewers for own story */
-  @Get(':id/viewers')
+  @Get(":id/viewers")
   async getViewers(
     @Req() req: AuthenticatedRequest,
-    @Param('id') storyId: string,
+    @Param("id") storyId: string,
   ) {
     return this.storiesService.getViewers(req.user.userId, storyId);
   }
 
   /** POST /stories/:id/reply — Send a reply to a story (creates chat message) */
-  @Post(':id/reply')
+  @Post(":id/reply")
   async replyToStory(
     @Req() req: AuthenticatedRequest,
-    @Param('id') storyId: string,
+    @Param("id") storyId: string,
     @Body() dto: ReplyToStoryDto,
   ) {
-    return this.storiesService.replyToStory(req.user.userId, storyId, dto.message);
+    return this.storiesService.replyToStory(
+      req.user.userId,
+      storyId,
+      dto.message,
+    );
   }
 
   /** POST /stories/:id/like — Toggle like on a story */
-  @Post(':id/like')
+  @Post(":id/like")
   async toggleLike(
     @Req() req: AuthenticatedRequest,
-    @Param('id') storyId: string,
+    @Param("id") storyId: string,
   ) {
     return this.storiesService.toggleLike(req.user.userId, storyId);
   }

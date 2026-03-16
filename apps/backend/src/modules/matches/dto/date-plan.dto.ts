@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import {
   IsString,
   IsOptional,
@@ -6,13 +6,13 @@ import {
   MaxLength,
   IsIn,
   IsNotEmpty,
-} from 'class-validator';
+} from "class-validator";
 
 export class CreateDatePlanDto {
   @ApiProperty({
-    description: 'Title of the date plan',
+    description: "Title of the date plan",
     maxLength: 100,
-    example: 'Kahve buluşması',
+    example: "Kahve buluşması",
   })
   @IsNotEmpty()
   @IsString()
@@ -20,17 +20,17 @@ export class CreateDatePlanDto {
   title!: string;
 
   @ApiPropertyOptional({
-    description: 'Suggested date and time for the plan (ISO 8601)',
-    example: '2026-03-15T18:00:00.000Z',
+    description: "Suggested date and time for the plan (ISO 8601)",
+    example: "2026-03-15T18:00:00.000Z",
   })
   @IsOptional()
   @IsDateString()
   suggestedDate?: string;
 
   @ApiPropertyOptional({
-    description: 'Suggested place for the date',
+    description: "Suggested place for the date",
     maxLength: 200,
-    example: 'Bebek Starbucks, Istanbul',
+    example: "Bebek Starbucks, Istanbul",
   })
   @IsOptional()
   @IsString()
@@ -38,9 +38,9 @@ export class CreateDatePlanDto {
   suggestedPlace?: string;
 
   @ApiPropertyOptional({
-    description: 'Optional note or message about the plan',
+    description: "Optional note or message about the plan",
     maxLength: 300,
-    example: 'Deniz kenarinda oturalim mi?',
+    example: "Deniz kenarinda oturalim mi?",
   })
   @IsOptional()
   @IsString()
@@ -50,11 +50,11 @@ export class CreateDatePlanDto {
 
 export class RespondDatePlanDto {
   @ApiProperty({
-    description: 'Response to the date plan',
-    enum: ['ACCEPTED', 'DECLINED'],
-    example: 'ACCEPTED',
+    description: "Response to the date plan",
+    enum: ["ACCEPTED", "DECLINED"],
+    example: "ACCEPTED",
   })
   @IsNotEmpty()
-  @IsIn(['ACCEPTED', 'DECLINED'])
-  response!: 'ACCEPTED' | 'DECLINED';
+  @IsIn(["ACCEPTED", "DECLINED"])
+  response!: "ACCEPTED" | "DECLINED";
 }

@@ -3,9 +3,9 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
-} from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { CheckInDto, AddMemoryDto } from './dto';
+} from "@nestjs/common";
+import { PrismaService } from "../../prisma/prisma.service";
+import { CheckInDto, AddMemoryDto } from "./dto";
 
 export interface PopularPlace {
   id: string;
@@ -49,7 +49,7 @@ export class PlacesService {
     const relationship = await this.prisma.relationship.findFirst({
       where: {
         OR: [{ userAId: userId }, { userBId: userId }],
-        status: 'ACTIVE',
+        status: "ACTIVE",
       },
     });
 
@@ -75,15 +75,16 @@ export class PlacesService {
 
     // Notify partner if in relationship
     if (relationship) {
-      const partnerId = relationship.userAId === userId
-        ? relationship.userBId
-        : relationship.userAId;
+      const partnerId =
+        relationship.userAId === userId
+          ? relationship.userBId
+          : relationship.userAId;
 
       await this.prisma.notification.create({
         data: {
           userId: partnerId,
-          type: 'SYSTEM',
-          title: 'Yeni Check-in!',
+          type: "SYSTEM",
+          title: "Yeni Check-in!",
           body: `Partneriniz "${dto.placeName}" mekanına check-in yaptı.`,
           data: { placeId: place.id, checkInId: checkIn.id },
         },
@@ -102,14 +103,17 @@ export class PlacesService {
    * Verify that two users have an active relationship or match.
    * Throws ForbiddenException if no connection exists.
    */
-  private async verifyPartnerAccess(userId: string, partnerId: string): Promise<void> {
+  private async verifyPartnerAccess(
+    userId: string,
+    partnerId: string,
+  ): Promise<void> {
     const relationship = await this.prisma.relationship.findFirst({
       where: {
         OR: [
           { userAId: userId, userBId: partnerId },
           { userAId: partnerId, userBId: userId },
         ],
-        status: 'ACTIVE',
+        status: "ACTIVE",
       },
     });
 
@@ -126,7 +130,7 @@ export class PlacesService {
 
       if (!match) {
         throw new ForbiddenException(
-          'Bu kullanici ile mekan bilgilerinizi paylasma yetkiniz yok',
+          "Bu kullanici ile mekan bilgilerinizi paylasma yetkiniz yok",
         );
       }
     }
@@ -170,7 +174,7 @@ export class PlacesService {
           where: {
             userId: { in: [userId, partnerId] },
           },
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
           take: 5,
           select: {
             id: true,
@@ -189,7 +193,10 @@ export class PlacesService {
       },
     });
 
-    interface CheckInRecord { userId: string; checkedInAt: Date }
+    interface CheckInRecord {
+      userId: string;
+      checkedInAt: Date;
+    }
     interface PlaceWithRelations {
       id: string;
       name: string;
@@ -197,7 +204,13 @@ export class PlacesService {
       latitude: number;
       longitude: number;
       checkIns: CheckInRecord[];
-      memories: Array<{ id: string; note: string | null; photoUrl: string | null; userId: string; createdAt: Date }>;
+      memories: Array<{
+        id: string;
+        note: string | null;
+        photoUrl: string | null;
+        userId: string;
+        createdAt: Date;
+      }>;
     }
 
     const sharedPlaces = (places as PlaceWithRelations[]).map((place) => ({
@@ -206,8 +219,11 @@ export class PlacesService {
       address: place.address,
       latitude: place.latitude,
       longitude: place.longitude,
-      myVisits: place.checkIns.filter((c: CheckInRecord) => c.userId === userId).length,
-      partnerVisits: place.checkIns.filter((c: CheckInRecord) => c.userId === partnerId).length,
+      myVisits: place.checkIns.filter((c: CheckInRecord) => c.userId === userId)
+        .length,
+      partnerVisits: place.checkIns.filter(
+        (c: CheckInRecord) => c.userId === partnerId,
+      ).length,
       lastVisited: place.checkIns
         .map((c: CheckInRecord) => c.checkedInAt)
         .sort((a: Date, b: Date) => b.getTime() - a.getTime())[0],
@@ -237,7 +253,7 @@ export class PlacesService {
     });
 
     if (!place) {
-      throw new NotFoundException('Mekan bulunamadı');
+      throw new NotFoundException("Mekan bulunamadı");
     }
 
     // Verify user has checked in to this place
@@ -247,7 +263,7 @@ export class PlacesService {
 
     if (!hasCheckIn) {
       throw new BadRequestException(
-        'Anı eklemek için önce bu mekana check-in yapmalısınız',
+        "Anı eklemek için önce bu mekana check-in yapmalısınız",
       );
     }
 
@@ -295,7 +311,7 @@ export class PlacesService {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: 50,
     });
 
@@ -306,7 +322,7 @@ export class PlacesService {
         placeId: m.place.id,
         note: m.note,
         photoUrl: m.photoUrl,
-        addedBy: m.user.profile?.firstName ?? 'Bilinmeyen',
+        addedBy: m.user.profile?.firstName ?? "Bilinmeyen",
         createdAt: m.createdAt,
       })),
       total: memories.length,
@@ -317,7 +333,11 @@ export class PlacesService {
    * Get popular places near a given location with social proof (aggregate visit counts).
    * No personal data is exposed — only aggregated counts per place.
    */
-  async getPopularPlaces(latitude: number, longitude: number, radiusKm: number) {
+  async getPopularPlaces(
+    latitude: number,
+    longitude: number,
+    radiusKm: number,
+  ) {
     // Fetch all discovered places
     const allPlaces = await this.prisma.discoveredPlace.findMany({
       include: {
@@ -412,7 +432,7 @@ export class PlacesService {
           },
         },
       },
-      orderBy: { checkedInAt: 'desc' },
+      orderBy: { checkedInAt: "desc" },
       take: 50,
     });
 

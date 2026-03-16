@@ -3,23 +3,23 @@ import {
   Logger,
   OnModuleInit,
   OnModuleDestroy,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { Client as ElasticsearchClient } from "@elastic/elasticsearch";
 import type {
   IndicesCreateRequest,
   SearchRequest,
   SearchResponse,
   BulkRequest,
-} from '@elastic/elasticsearch/lib/api/types';
+} from "@elastic/elasticsearch/lib/api/types";
 import {
   UserSearchDocument,
   UserSearchFilters,
   UserSearchHit,
   UserSearchResult,
-} from './search.interfaces';
+} from "./search.interfaces";
 
-const INDEX_NAME = 'luma-users';
+const INDEX_NAME = "luma-users";
 
 /**
  * User profile mapping for Elasticsearch.
@@ -33,28 +33,28 @@ const USER_INDEX_MAPPING: IndicesCreateRequest = {
   settings: {
     number_of_shards: 1,
     number_of_replicas: 0, // single-node dev; increase in production
-    refresh_interval: '1s',
+    refresh_interval: "1s",
   },
   mappings: {
     properties: {
-      userId: { type: 'keyword' },
-      firstName: { type: 'text', analyzer: 'standard' },
-      age: { type: 'integer' },
-      gender: { type: 'keyword' },
-      intentionTag: { type: 'keyword' },
-      bio: { type: 'text', analyzer: 'standard' },
-      city: { type: 'keyword' },
-      country: { type: 'keyword' },
-      location: { type: 'geo_point' },
-      isVerified: { type: 'boolean' },
-      isFullyVerified: { type: 'boolean' },
-      packageTier: { type: 'keyword' },
-      isComplete: { type: 'boolean' },
-      isActive: { type: 'boolean' },
-      isSmsVerified: { type: 'boolean' },
-      lastActiveAt: { type: 'date' },
-      photoCount: { type: 'integer' },
-      primaryPhotoUrl: { type: 'keyword', index: false },
+      userId: { type: "keyword" },
+      firstName: { type: "text", analyzer: "standard" },
+      age: { type: "integer" },
+      gender: { type: "keyword" },
+      intentionTag: { type: "keyword" },
+      bio: { type: "text", analyzer: "standard" },
+      city: { type: "keyword" },
+      country: { type: "keyword" },
+      location: { type: "geo_point" },
+      isVerified: { type: "boolean" },
+      isFullyVerified: { type: "boolean" },
+      packageTier: { type: "keyword" },
+      isComplete: { type: "boolean" },
+      isActive: { type: "boolean" },
+      isSmsVerified: { type: "boolean" },
+      lastActiveAt: { type: "date" },
+      photoCount: { type: "integer" },
+      primaryPhotoUrl: { type: "keyword", index: false },
     },
   },
 };
@@ -74,8 +74,8 @@ export class SearchService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit(): Promise<void> {
     const esUrl = this.configService.get<string>(
-      'ELASTICSEARCH_URL',
-      'http://localhost:9200',
+      "ELASTICSEARCH_URL",
+      "http://localhost:9200",
     );
 
     try {
@@ -151,7 +151,7 @@ export class SearchService implements OnModuleInit, OnModuleDestroy {
         index: INDEX_NAME,
         id: doc.userId,
         document: doc,
-        refresh: 'wait_for', // make immediately searchable
+        refresh: "wait_for", // make immediately searchable
       });
       this.logger.debug(`Indexed user ${doc.userId}`);
     } catch (err) {
@@ -168,7 +168,7 @@ export class SearchService implements OnModuleInit, OnModuleDestroy {
     if (!this.isAvailable() || docs.length === 0) return;
 
     try {
-      const operations: BulkRequest['operations'] = [];
+      const operations: BulkRequest["operations"] = [];
       for (const doc of docs) {
         operations.push({ index: { _index: INDEX_NAME, _id: doc.userId } });
         operations.push(doc);
@@ -176,7 +176,7 @@ export class SearchService implements OnModuleInit, OnModuleDestroy {
 
       const result = await this.client!.bulk({
         operations,
-        refresh: 'wait_for',
+        refresh: "wait_for",
       });
 
       if (result.errors) {
@@ -204,13 +204,13 @@ export class SearchService implements OnModuleInit, OnModuleDestroy {
       await this.client!.delete({
         index: INDEX_NAME,
         id: userId,
-        refresh: 'wait_for',
+        refresh: "wait_for",
       });
       this.logger.debug(`Removed user ${userId} from index`);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       // 404 is expected if user was never indexed
-      if (!message.includes('not_found')) {
+      if (!message.includes("not_found")) {
         this.logger.error(`Failed to remove user ${userId}: ${message}`);
       }
     }
@@ -308,16 +308,16 @@ export class SearchService implements OnModuleInit, OnModuleDestroy {
               lat: filters.location.lat,
               lon: filters.location.lon,
             },
-            order: 'asc',
-            unit: 'km',
-            mode: 'min',
-            distance_type: 'arc',
+            order: "asc",
+            unit: "km",
+            mode: "min",
+            distance_type: "arc",
           },
         });
       }
 
       // Secondary sort: recently active
-      sort.push({ lastActiveAt: { order: 'desc' } });
+      sort.push({ lastActiveAt: { order: "desc" } });
 
       const searchRequest: SearchRequest = {
         index: INDEX_NAME,
@@ -329,18 +329,18 @@ export class SearchService implements OnModuleInit, OnModuleDestroy {
             must_not: mustNot,
           },
         },
-        sort: sort as unknown as SearchRequest['sort'],
+        sort: sort as unknown as SearchRequest["sort"],
         _source: [
-          'userId',
-          'firstName',
-          'age',
-          'gender',
-          'intentionTag',
-          'bio',
-          'city',
-          'isVerified',
-          'packageTier',
-          'primaryPhotoUrl',
+          "userId",
+          "firstName",
+          "age",
+          "gender",
+          "intentionTag",
+          "bio",
+          "city",
+          "isVerified",
+          "packageTier",
+          "primaryPhotoUrl",
         ],
       };
 
@@ -349,18 +349,20 @@ export class SearchService implements OnModuleInit, OnModuleDestroy {
 
       const totalValue = response.hits.total;
       const total =
-        typeof totalValue === 'number'
-          ? totalValue
-          : totalValue?.value ?? 0;
+        typeof totalValue === "number" ? totalValue : (totalValue?.value ?? 0);
 
       const hits: UserSearchHit[] = response.hits.hits.map((hit) => {
         const source = hit._source as UserSearchDocument;
         // Extract geo distance from sort values (first sort field if geo used)
         let distanceKm: number | null = null;
-        if (filters.location && Array.isArray(hit.sort) && hit.sort.length > 0) {
+        if (
+          filters.location &&
+          Array.isArray(hit.sort) &&
+          hit.sort.length > 0
+        ) {
           const rawDistance = hit.sort[0];
           distanceKm =
-            typeof rawDistance === 'number'
+            typeof rawDistance === "number"
               ? Math.round(rawDistance * 10) / 10
               : null;
         }

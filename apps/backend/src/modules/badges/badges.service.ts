@@ -1,8 +1,5 @@
-import {
-  Injectable,
-  Logger,
-} from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { PrismaService } from "../../prisma/prisma.service";
 
 // Badge progress item returned by getBadgeProgress
 export interface BadgeProgressItem {
@@ -12,7 +9,7 @@ export interface BadgeProgressItem {
   iconUrl: string | null;
   isEarned: boolean;
   earnedAt: Date | null;
-  progress: number;       // 0-100
+  progress: number; // 0-100
   currentValue: number;
   targetValue: number;
   goldReward: number;
@@ -36,7 +33,7 @@ export class BadgesService {
   async getAllBadges() {
     const badges = await this.prisma.badgeDefinition.findMany({
       where: { isActive: true },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: "asc" },
       select: {
         id: true,
         key: true,
@@ -78,7 +75,7 @@ export class BadgesService {
           },
         },
       },
-      orderBy: { earnedAt: 'desc' },
+      orderBy: { earnedAt: "desc" },
     });
 
     // Get all badge definitions for total count
@@ -121,7 +118,7 @@ export class BadgesService {
     // Get all badge definitions
     const allBadges = await this.prisma.badgeDefinition.findMany({
       where: { isActive: true },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: "asc" },
       select: {
         id: true,
         key: true,
@@ -171,11 +168,16 @@ export class BadgesService {
 
       // Calculate progress for unearned badges
       const { currentValue, targetValue, description } =
-        await this.calculateCriteriaProgress(userId, criteria, badge.descriptionTr);
+        await this.calculateCriteriaProgress(
+          userId,
+          criteria,
+          badge.descriptionTr,
+        );
 
-      const progress = targetValue > 0
-        ? Math.min(100, Math.round((currentValue / targetValue) * 100))
-        : 0;
+      const progress =
+        targetValue > 0
+          ? Math.min(100, Math.round((currentValue / targetValue) * 100))
+          : 0;
 
       progressItems.push({
         badgeKey: badge.key,
@@ -198,7 +200,10 @@ export class BadgesService {
    * Award a badge to a user (internal use by other services).
    * Returns Gold reward amount if badge was newly awarded.
    */
-  async awardBadge(userId: string, badgeKey: string): Promise<{ awarded: boolean; goldReward: number }> {
+  async awardBadge(
+    userId: string,
+    badgeKey: string,
+  ): Promise<{ awarded: boolean; goldReward: number }> {
     // Find badge definition
     const badge = await this.prisma.badgeDefinition.findUnique({
       where: { key: badgeKey },
@@ -241,7 +246,7 @@ export class BadgesService {
         await tx.goldTransaction.create({
           data: {
             userId,
-            type: 'BADGE_REWARD',
+            type: "BADGE_REWARD",
             amount: badge.goldReward,
             balance: newBalance,
             description: `Rozet odulu: ${badge.nameTr}`,
@@ -253,10 +258,14 @@ export class BadgesService {
       await tx.notification.create({
         data: {
           userId,
-          type: 'BADGE_EARNED',
-          title: 'Yeni Rozet Kazandiniz!',
-          body: `"${badge.nameTr}" rozetini kazandiniz${badge.goldReward > 0 ? ` ve ${badge.goldReward} Gold odulu aldiniz` : ''}!`,
-          data: { badgeId: badge.id, badgeKey: badge.key, goldReward: badge.goldReward },
+          type: "BADGE_EARNED",
+          title: "Yeni Rozet Kazandiniz!",
+          body: `"${badge.nameTr}" rozetini kazandiniz${badge.goldReward > 0 ? ` ve ${badge.goldReward} Gold odulu aldiniz` : ""}!`,
+          data: {
+            badgeId: badge.id,
+            badgeKey: badge.key,
+            goldReward: badge.goldReward,
+          },
         },
       });
     });
@@ -272,23 +281,33 @@ export class BadgesService {
    */
   async checkAndAwardBadges(
     userId: string,
-    hint?: 'match' | 'harmony' | 'answer' | 'compatibility' | 'verification' | 'relationship' | 'swipe' | 'subscription',
+    hint?:
+      | "match"
+      | "harmony"
+      | "answer"
+      | "compatibility"
+      | "verification"
+      | "relationship"
+      | "swipe"
+      | "subscription",
   ): Promise<{ awarded: string[] }> {
     const awarded: string[] = [];
 
     // Map hints to badge keys that should be checked
     const badgeChecks: Record<string, string[]> = {
-      match: ['first_spark', 'soul_mate'],
-      harmony: ['chat_master'],
-      answer: ['question_explorer'],
-      compatibility: ['soul_mate', 'deep_match'],
-      verification: ['verified_star'],
-      relationship: ['couple_goal'],
-      swipe: ['explorer'],
+      match: ["first_spark", "soul_mate"],
+      harmony: ["chat_master"],
+      answer: ["question_explorer"],
+      compatibility: ["soul_mate", "deep_match"],
+      verification: ["verified_star"],
+      relationship: ["couple_goal"],
+      swipe: ["explorer"],
       subscription: [],
     };
 
-    const keysToCheck = hint ? badgeChecks[hint] ?? [] : Object.values(badgeChecks).flat();
+    const keysToCheck = hint
+      ? (badgeChecks[hint] ?? [])
+      : Object.values(badgeChecks).flat();
     const uniqueKeys = [...new Set(keysToCheck)];
 
     for (const badgeKey of uniqueKeys) {
@@ -309,9 +328,12 @@ export class BadgesService {
   /**
    * Evaluate whether a specific badge should be awarded to a user.
    */
-  private async evaluateBadgeCriteria(userId: string, badgeKey: string): Promise<boolean> {
+  private async evaluateBadgeCriteria(
+    userId: string,
+    badgeKey: string,
+  ): Promise<boolean> {
     switch (badgeKey) {
-      case 'first_spark': {
+      case "first_spark": {
         // First match achieved
         const matchCount = await this.prisma.match.count({
           where: {
@@ -322,18 +344,18 @@ export class BadgesService {
         return matchCount >= 1;
       }
 
-      case 'chat_master': {
+      case "chat_master": {
         // 5 completed Harmony sessions
         const sessionCount = await this.prisma.harmonySession.count({
           where: {
             OR: [{ userAId: userId }, { userBId: userId }],
-            status: { in: ['ENDED', 'EXTENDED'] },
+            status: { in: ["ENDED", "EXTENDED"] },
           },
         });
         return sessionCount >= 5;
       }
 
-      case 'question_explorer': {
+      case "question_explorer": {
         // Answered all 20 core questions
         const answerCount = await this.prisma.userAnswer.count({
           where: { userId },
@@ -341,19 +363,19 @@ export class BadgesService {
         return answerCount >= 20;
       }
 
-      case 'soul_mate': {
+      case "soul_mate": {
         // Has at least one SUPER compatibility match
         const superMatch = await this.prisma.match.findFirst({
           where: {
             OR: [{ userAId: userId }, { userBId: userId }],
             isActive: true,
-            compatibilityLevel: 'SUPER',
+            compatibilityLevel: "SUPER",
           },
         });
         return superMatch !== null;
       }
 
-      case 'verified_star': {
+      case "verified_star": {
         // Selfie verified
         const user = await this.prisma.user.findUnique({
           where: { id: userId },
@@ -362,18 +384,18 @@ export class BadgesService {
         return user?.isSelfieVerified === true;
       }
 
-      case 'couple_goal': {
+      case "couple_goal": {
         // Has an active relationship
         const relationship = await this.prisma.relationship.findFirst({
           where: {
             OR: [{ userAId: userId }, { userBId: userId }],
-            status: 'ACTIVE',
+            status: "ACTIVE",
           },
         });
         return relationship !== null;
       }
 
-      case 'explorer': {
+      case "explorer": {
         // 50 swipes (profile explorations)
         const swipeCount = await this.prisma.swipe.count({
           where: { swiperId: userId },
@@ -381,7 +403,7 @@ export class BadgesService {
         return swipeCount >= 50;
       }
 
-      case 'deep_match': {
+      case "deep_match": {
         // Both users in a match have answered all 45 questions
         const userAnswerCount = await this.prisma.userAnswer.count({
           where: { userId },
@@ -399,7 +421,8 @@ export class BadgesService {
         });
 
         for (const match of matches) {
-          const partnerId = match.userAId === userId ? match.userBId : match.userAId;
+          const partnerId =
+            match.userAId === userId ? match.userBId : match.userAId;
           const partnerAnswerCount = await this.prisma.userAnswer.count({
             where: { userId: partnerId },
           });
@@ -421,9 +444,17 @@ export class BadgesService {
     userId: string,
     criteria: BadgeCriteria | null,
     defaultDescription: string,
-  ): Promise<{ currentValue: number; targetValue: number; description: string }> {
+  ): Promise<{
+    currentValue: number;
+    targetValue: number;
+    description: string;
+  }> {
     if (!criteria?.type) {
-      return { currentValue: 0, targetValue: 1, description: defaultDescription };
+      return {
+        currentValue: 0,
+        targetValue: 1,
+        description: defaultDescription,
+      };
     }
 
     const targetValue = criteria.count ?? 1;
@@ -431,7 +462,7 @@ export class BadgesService {
     let description = defaultDescription;
 
     switch (criteria.type) {
-      case 'match_count': {
+      case "match_count": {
         currentValue = await this.prisma.match.count({
           where: {
             OR: [{ userAId: userId }, { userBId: userId }],
@@ -442,18 +473,18 @@ export class BadgesService {
         break;
       }
 
-      case 'harmony_session_count': {
+      case "harmony_session_count": {
         currentValue = await this.prisma.harmonySession.count({
           where: {
             OR: [{ userAId: userId }, { userBId: userId }],
-            status: { in: ['ENDED', 'EXTENDED'] },
+            status: { in: ["ENDED", "EXTENDED"] },
           },
         });
         description = `${targetValue} Harmony Room oturumu tamamla`;
         break;
       }
 
-      case 'answer_count': {
+      case "answer_count": {
         currentValue = await this.prisma.userAnswer.count({
           where: { userId },
         });
@@ -461,42 +492,42 @@ export class BadgesService {
         break;
       }
 
-      case 'super_compatibility_match': {
+      case "super_compatibility_match": {
         const superMatch = await this.prisma.match.findFirst({
           where: {
             OR: [{ userAId: userId }, { userBId: userId }],
             isActive: true,
-            compatibilityLevel: 'SUPER',
+            compatibilityLevel: "SUPER",
           },
         });
         currentValue = superMatch ? 1 : 0;
-        description = 'Super uyumlu bir eslesme bul';
+        description = "Super uyumlu bir eslesme bul";
         break;
       }
 
-      case 'selfie_verification': {
+      case "selfie_verification": {
         const user = await this.prisma.user.findUnique({
           where: { id: userId },
           select: { isSelfieVerified: true },
         });
         currentValue = user?.isSelfieVerified ? 1 : 0;
-        description = 'Selfie dogrulamasini tamamla';
+        description = "Selfie dogrulamasini tamamla";
         break;
       }
 
-      case 'relationship_activated': {
+      case "relationship_activated": {
         const relationship = await this.prisma.relationship.findFirst({
           where: {
             OR: [{ userAId: userId }, { userBId: userId }],
-            status: 'ACTIVE',
+            status: "ACTIVE",
           },
         });
         currentValue = relationship ? 1 : 0;
-        description = 'Iliski modunu aktiflestir';
+        description = "Iliski modunu aktiflestir";
         break;
       }
 
-      case 'swipe_count': {
+      case "swipe_count": {
         currentValue = await this.prisma.swipe.count({
           where: { swiperId: userId },
         });
@@ -504,11 +535,12 @@ export class BadgesService {
         break;
       }
 
-      case 'deep_match': {
+      case "deep_match": {
         currentValue = await this.prisma.userAnswer.count({
           where: { userId },
         });
-        description = '45 uyumluluk sorusunu tamamla ve bir eslesmende de tamamlansin';
+        description =
+          "45 uyumluluk sorusunu tamamla ve bir eslesmende de tamamlansin";
         break;
       }
 

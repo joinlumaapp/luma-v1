@@ -4,11 +4,11 @@ import {
   BadRequestException,
   UnauthorizedException,
   NotFoundException,
-} from '@nestjs/common';
-import { AllExceptionsFilter } from './all-exceptions.filter';
+} from "@nestjs/common";
+import { AllExceptionsFilter } from "./all-exceptions.filter";
 
 // Mock Sentry
-jest.mock('@sentry/nestjs', () => ({
+jest.mock("@sentry/nestjs", () => ({
   withScope: jest.fn((cb: (scope: Record<string, unknown>) => void) => {
     cb({
       setUser: jest.fn(),
@@ -19,7 +19,7 @@ jest.mock('@sentry/nestjs', () => ({
   captureException: jest.fn(),
 }));
 
-describe('AllExceptionsFilter', () => {
+describe("AllExceptionsFilter", () => {
   let filter: AllExceptionsFilter;
   let mockResponse: {
     status: jest.Mock;
@@ -39,7 +39,7 @@ describe('AllExceptionsFilter', () => {
 
   beforeEach(() => {
     // Reset NODE_ENV for each test
-    process.env.NODE_ENV = 'test';
+    process.env.NODE_ENV = "test";
 
     filter = new AllExceptionsFilter();
 
@@ -50,14 +50,14 @@ describe('AllExceptionsFilter', () => {
     };
 
     mockRequest = {
-      method: 'GET',
-      url: '/api/v1/test',
-      ip: '127.0.0.1',
-      get: jest.fn().mockReturnValue('test-agent'),
+      method: "GET",
+      url: "/api/v1/test",
+      ip: "127.0.0.1",
+      get: jest.fn().mockReturnValue("test-agent"),
     };
 
     mockHost = {
-      getType: jest.fn().mockReturnValue('http'),
+      getType: jest.fn().mockReturnValue("http"),
       switchToHttp: jest.fn().mockReturnValue({
         getResponse: () => mockResponse,
         getRequest: () => mockRequest,
@@ -65,8 +65,8 @@ describe('AllExceptionsFilter', () => {
     };
   });
 
-  it('should handle HttpException with correct status', () => {
-    const exception = new BadRequestException('Invalid input');
+  it("should handle HttpException with correct status", () => {
+    const exception = new BadRequestException("Invalid input");
 
     filter.catch(exception, mockHost as never);
 
@@ -74,29 +74,29 @@ describe('AllExceptionsFilter', () => {
     expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
         statusCode: HttpStatus.BAD_REQUEST,
-        path: '/api/v1/test',
+        path: "/api/v1/test",
       }),
     );
   });
 
-  it('should handle UnauthorizedException', () => {
-    const exception = new UnauthorizedException('Token expired');
+  it("should handle UnauthorizedException", () => {
+    const exception = new UnauthorizedException("Token expired");
 
     filter.catch(exception, mockHost as never);
 
     expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.UNAUTHORIZED);
   });
 
-  it('should handle NotFoundException', () => {
-    const exception = new NotFoundException('User not found');
+  it("should handle NotFoundException", () => {
+    const exception = new NotFoundException("User not found");
 
     filter.catch(exception, mockHost as never);
 
     expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.NOT_FOUND);
   });
 
-  it('should handle generic Error as 500', () => {
-    const exception = new Error('Database connection failed');
+  it("should handle generic Error as 500", () => {
+    const exception = new Error("Database connection failed");
 
     filter.catch(exception, mockHost as never);
 
@@ -106,30 +106,30 @@ describe('AllExceptionsFilter', () => {
     expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: 'Sunucu hatasi olustu',
+        message: "Sunucu hatasi olustu",
       }),
     );
   });
 
-  it('should handle non-Error exceptions as 500', () => {
-    filter.catch('unexpected string error', mockHost as never);
+  it("should handle non-Error exceptions as 500", () => {
+    filter.catch("unexpected string error", mockHost as never);
 
     expect(mockResponse.status).toHaveBeenCalledWith(
       HttpStatus.INTERNAL_SERVER_ERROR,
     );
     expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
-        message: 'Bilinmeyen bir hata olustu',
+        message: "Bilinmeyen bir hata olustu",
       }),
     );
   });
 
-  it('should handle validation pipe array messages', () => {
+  it("should handle validation pipe array messages", () => {
     const exception = new HttpException(
       {
         statusCode: 400,
-        message: ['field1 is required', 'field2 must be string'],
-        error: 'Bad Request',
+        message: ["field1 is required", "field2 must be string"],
+        error: "Bad Request",
       },
       HttpStatus.BAD_REQUEST,
     );
@@ -138,47 +138,47 @@ describe('AllExceptionsFilter', () => {
 
     expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
-        message: 'field1 is required, field2 must be string',
+        message: "field1 is required, field2 must be string",
       }),
     );
   });
 
-  it('should not send response if headers already sent', () => {
+  it("should not send response if headers already sent", () => {
     mockResponse.headersSent = true;
-    const exception = new Error('test');
+    const exception = new Error("test");
 
     filter.catch(exception, mockHost as never);
 
     expect(mockResponse.status).not.toHaveBeenCalled();
   });
 
-  it('should handle WebSocket context type', () => {
-    mockHost.getType.mockReturnValue('ws');
-    const exception = new Error('ws error');
+  it("should handle WebSocket context type", () => {
+    mockHost.getType.mockReturnValue("ws");
+    const exception = new Error("ws error");
 
     // Should not throw
     expect(() => filter.catch(exception, mockHost as never)).not.toThrow();
   });
 
-  it('should include debug info in non-production', () => {
-    process.env.NODE_ENV = 'development';
+  it("should include debug info in non-production", () => {
+    process.env.NODE_ENV = "development";
     const newFilter = new AllExceptionsFilter();
-    const exception = new Error('debug test');
+    const exception = new Error("debug test");
 
     newFilter.catch(exception, mockHost as never);
 
     expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
         debug: expect.objectContaining({
-          name: 'Error',
+          name: "Error",
         }),
       }),
     );
   });
 
-  it('should mask messages containing sensitive info', () => {
+  it("should mask messages containing sensitive info", () => {
     const exception = new HttpException(
-      'SQL query failed: SELECT * FROM users',
+      "SQL query failed: SELECT * FROM users",
       HttpStatus.INTERNAL_SERVER_ERROR,
     );
 
@@ -188,11 +188,11 @@ describe('AllExceptionsFilter', () => {
       string,
       unknown
     >;
-    expect(jsonCall['message']).not.toContain('SELECT');
+    expect(jsonCall["message"]).not.toContain("SELECT");
   });
 
-  it('should include timestamp in response', () => {
-    filter.catch(new BadRequestException('test'), mockHost as never);
+  it("should include timestamp in response", () => {
+    filter.catch(new BadRequestException("test"), mockHost as never);
 
     expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({

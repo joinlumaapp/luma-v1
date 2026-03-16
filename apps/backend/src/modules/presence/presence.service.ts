@@ -1,11 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { LumaCacheService } from '../cache/cache.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { LumaCacheService } from "../cache/cache.service";
 
 /** Presence TTL in seconds — user is considered offline after this. */
 const PRESENCE_TTL_SECONDS = 300; // 5 minutes
 
 /** Redis key prefix for presence data. */
-const PRESENCE_KEY_PREFIX = 'presence';
+const PRESENCE_KEY_PREFIX = "presence";
 
 interface PresenceData {
   lastSeen: string;

@@ -1,5 +1,5 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import sharp from 'sharp';
+import { Injectable, Logger, BadRequestException } from "@nestjs/common";
+import sharp from "sharp";
 
 // ────────────────────────────────────────────────────────────────────
 // Types
@@ -28,7 +28,7 @@ export interface ProcessedImage {
   /** File size in bytes. */
   size: number;
   /** MIME type of the output. Always 'image/jpeg'. */
-  mimeType: 'image/jpeg';
+  mimeType: "image/jpeg";
 }
 
 /** Metadata extracted from an image for validation. */
@@ -66,7 +66,7 @@ const MIN_IMAGE_HEIGHT = 100;
 const MAX_INPUT_SIZE = 10 * 1024 * 1024;
 
 /** Allowed input formats. */
-const ALLOWED_FORMATS = new Set(['jpeg', 'png', 'webp', 'heif', 'heic']);
+const ALLOWED_FORMATS = new Set(["jpeg", "png", "webp", "heif", "heic"]);
 
 // ────────────────────────────────────────────────────────────────────
 // Service
@@ -90,7 +90,7 @@ export class ImageProcessorService {
    */
   async validate(buffer: Buffer): Promise<ImageMetadata> {
     if (buffer.length === 0) {
-      throw new BadRequestException('Image file is empty');
+      throw new BadRequestException("Image file is empty");
     }
 
     if (buffer.length > MAX_INPUT_SIZE) {
@@ -103,13 +103,15 @@ export class ImageProcessorService {
     try {
       metadata = await sharp(buffer).metadata();
     } catch {
-      throw new BadRequestException('Invalid image file — could not read metadata');
+      throw new BadRequestException(
+        "Invalid image file — could not read metadata",
+      );
     }
 
-    const format = metadata.format ?? 'unknown';
+    const format = metadata.format ?? "unknown";
     if (!ALLOWED_FORMATS.has(format)) {
       throw new BadRequestException(
-        `Unsupported image format: ${format}. Allowed: ${[...ALLOWED_FORMATS].join(', ')}`,
+        `Unsupported image format: ${format}. Allowed: ${[...ALLOWED_FORMATS].join(", ")}`,
       );
     }
 
@@ -138,7 +140,10 @@ export class ImageProcessorService {
    * - Strips EXIF data for privacy
    * - Maintains aspect ratio by default
    */
-  async resize(buffer: Buffer, options: ResizeOptions): Promise<ProcessedImage> {
+  async resize(
+    buffer: Buffer,
+    options: ResizeOptions,
+  ): Promise<ProcessedImage> {
     const quality = options.quality ?? DEFAULT_JPEG_QUALITY;
 
     const result = await sharp(buffer)
@@ -146,7 +151,7 @@ export class ImageProcessorService {
       .resize({
         width: options.maxWidth,
         height: options.maxHeight,
-        fit: options.keepAspectRatio !== false ? 'inside' : 'cover',
+        fit: options.keepAspectRatio !== false ? "inside" : "cover",
         withoutEnlargement: true,
       })
       .jpeg({ quality, mozjpeg: true })
@@ -157,7 +162,7 @@ export class ImageProcessorService {
       width: result.info.width,
       height: result.info.height,
       size: result.info.size,
-      mimeType: 'image/jpeg',
+      mimeType: "image/jpeg",
     };
   }
 
@@ -183,8 +188,8 @@ export class ImageProcessorService {
       .resize({
         width: THUMBNAIL_WIDTH,
         height: THUMBNAIL_HEIGHT,
-        fit: 'cover',
-        position: 'attention', // Smart crop — focuses on interesting area
+        fit: "cover",
+        position: "attention", // Smart crop — focuses on interesting area
       })
       .jpeg({ quality: THUMBNAIL_JPEG_QUALITY, mozjpeg: true })
       .toBuffer({ resolveWithObject: true });
@@ -194,7 +199,7 @@ export class ImageProcessorService {
       width: result.info.width,
       height: result.info.height,
       size: result.info.size,
-      mimeType: 'image/jpeg',
+      mimeType: "image/jpeg",
     };
   }
 
@@ -203,7 +208,10 @@ export class ImageProcessorService {
    *
    * Does not resize — only converts format and strips metadata.
    */
-  async convertToJpeg(buffer: Buffer, quality?: number): Promise<ProcessedImage> {
+  async convertToJpeg(
+    buffer: Buffer,
+    quality?: number,
+  ): Promise<ProcessedImage> {
     const jpegQuality = quality ?? DEFAULT_JPEG_QUALITY;
 
     const result = await sharp(buffer)
@@ -216,7 +224,7 @@ export class ImageProcessorService {
       width: result.info.width,
       height: result.info.height,
       size: result.info.size,
-      mimeType: 'image/jpeg',
+      mimeType: "image/jpeg",
     };
   }
 }

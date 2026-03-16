@@ -3,7 +3,7 @@ import {
   Injectable,
   ArgumentMetadata,
   BadRequestException,
-} from '@nestjs/common';
+} from "@nestjs/common";
 
 /**
  * Maximum allowed string length for any single field.
@@ -20,27 +20,27 @@ const MAX_SHORT_STRING_LENGTH = 500;
  * Fields that are considered "short text" and have stricter length limits.
  */
 const SHORT_TEXT_FIELDS = new Set([
-  'name',
-  'firstName',
-  'lastName',
-  'displayName',
-  'title',
-  'city',
-  'phone',
-  'code',
-  'otp',
+  "name",
+  "firstName",
+  "lastName",
+  "displayName",
+  "title",
+  "city",
+  "phone",
+  "code",
+  "otp",
 ]);
 
 /**
  * Fields that should NOT be sanitized (e.g., base64 image data, tokens).
  */
 const SKIP_SANITIZE_FIELDS = new Set([
-  'selfieBase64',
-  'imageBase64',
-  'photoData',
-  'refreshToken',
-  'accessToken',
-  'token',
+  "selfieBase64",
+  "imageBase64",
+  "photoData",
+  "refreshToken",
+  "accessToken",
+  "token",
 ]);
 
 /**
@@ -73,9 +73,9 @@ export class SanitizePipe implements PipeTransform {
   transform(value: unknown, metadata: ArgumentMetadata): unknown {
     // Only sanitize body, query, and param inputs
     if (
-      metadata.type !== 'body' &&
-      metadata.type !== 'query' &&
-      metadata.type !== 'param'
+      metadata.type !== "body" &&
+      metadata.type !== "query" &&
+      metadata.type !== "param"
     ) {
       return value;
     }
@@ -88,7 +88,7 @@ export class SanitizePipe implements PipeTransform {
       return value;
     }
 
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       return this.sanitizeString(value, fieldName);
     }
 
@@ -96,7 +96,7 @@ export class SanitizePipe implements PipeTransform {
       return value.map((item: unknown) => this.sanitize(item));
     }
 
-    if (typeof value === 'object') {
+    if (typeof value === "object") {
       return this.sanitizeObject(value as Record<string, unknown>);
     }
 
@@ -126,19 +126,19 @@ export class SanitizePipe implements PipeTransform {
     }
 
     // Strip HTML tags
-    sanitized = sanitized.replace(HTML_TAG_REGEX, '');
+    sanitized = sanitized.replace(HTML_TAG_REGEX, "");
 
     // Check for XSS patterns
     for (const pattern of XSS_PATTERNS) {
       if (pattern.test(sanitized)) {
         throw new BadRequestException(
-          'Gecersiz icerik tespit edildi. Lutfen girdinizi kontrol edin.',
+          "Gecersiz icerik tespit edildi. Lutfen girdinizi kontrol edin.",
         );
       }
     }
 
     // Normalize multiple consecutive spaces to single space
-    sanitized = sanitized.replace(/\s{2,}/g, ' ');
+    sanitized = sanitized.replace(/\s{2,}/g, " ");
 
     return sanitized;
   }

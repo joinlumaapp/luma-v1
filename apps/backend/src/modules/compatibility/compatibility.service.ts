@@ -4,11 +4,15 @@ import {
   BadRequestException,
   ForbiddenException,
   Logger,
-} from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { BadgesService } from '../badges/badges.service';
-import { LumaCacheService, CACHE_KEYS, CACHE_TTL } from '../cache/cache.service';
-import { SubmitAnswerDto, SubmitAnswersBulkDto } from './dto';
+} from "@nestjs/common";
+import { PrismaService } from "../../prisma/prisma.service";
+import { BadgesService } from "../badges/badges.service";
+import {
+  LumaCacheService,
+  CACHE_KEYS,
+  CACHE_TTL,
+} from "../cache/cache.service";
+import { SubmitAnswerDto, SubmitAnswersBulkDto } from "./dto";
 
 // LOCKED: 2 Compatibility Levels
 const SUPER_COMPATIBILITY_THRESHOLD = 90;
@@ -28,9 +32,9 @@ const SCORE_CACHE_TTL = 86400;
 // ─── Scoring Constants ────────────────────────────────────────
 // Points awarded based on answer proximity (option order distance)
 const EXACT_MATCH_POINTS = 100;
-const ADJACENT_MATCH_POINTS = 70;   // 1 step apart
-const TWO_STEP_MATCH_POINTS = 40;   // 2 steps apart
-const FAR_MATCH_POINTS = 10;        // 3+ steps apart
+const ADJACENT_MATCH_POINTS = 70; // 1 step apart
+const TWO_STEP_MATCH_POINTS = 40; // 2 steps apart
+const FAR_MATCH_POINTS = 10; // 3+ steps apart
 
 // Core questions weighted 2x compared to premium questions
 const CORE_WEIGHT_MULTIPLIER = 2;
@@ -38,178 +42,178 @@ const PREMIUM_WEIGHT_MULTIPLIER = 1;
 
 // Bonus percentages for profile alignment
 const INTENTION_TAG_BONUS_PERCENT = 10; // +10% for matching intention tags
-const SAME_CITY_BONUS_PERCENT = 5;      // +5% for same city
+const SAME_CITY_BONUS_PERCENT = 5; // +5% for same city
 
 // Turkish labels for compatibility dimension categories
 const DIMENSION_LABELS_TR: Record<string, string> = {
-  COMMUNICATION: 'Iletisim Tarzi',
-  LIFE_GOALS: 'Yasam Hedefleri',
-  VALUES: 'Degerler',
-  LIFESTYLE: 'Yasam Tarzi',
-  EMOTIONAL_INTELLIGENCE: 'Duygusal Zeka',
-  RELATIONSHIP_EXPECTATIONS: 'Iliski Beklentileri',
-  SOCIAL_COMPATIBILITY: 'Sosyal Uyum',
-  ATTACHMENT_STYLE: 'Baglanma Tarzi',
-  LOVE_LANGUAGE: 'Sevgi Dili',
-  CONFLICT_STYLE: 'Catisma Yaklasimi',
-  FUTURE_VISION: 'Gelecek Vizyonu',
-  INTELLECTUAL: 'Entelektuel Uyum',
-  INTIMACY: 'Yakinlik',
-  GROWTH_MINDSET: 'Gelisim Odaklilik',
-  CORE_FEARS: 'Temel Kaygilar',
+  COMMUNICATION: "Iletisim Tarzi",
+  LIFE_GOALS: "Yasam Hedefleri",
+  VALUES: "Degerler",
+  LIFESTYLE: "Yasam Tarzi",
+  EMOTIONAL_INTELLIGENCE: "Duygusal Zeka",
+  RELATIONSHIP_EXPECTATIONS: "Iliski Beklentileri",
+  SOCIAL_COMPATIBILITY: "Sosyal Uyum",
+  ATTACHMENT_STYLE: "Baglanma Tarzi",
+  LOVE_LANGUAGE: "Sevgi Dili",
+  CONFLICT_STYLE: "Catisma Yaklasimi",
+  FUTURE_VISION: "Gelecek Vizyonu",
+  INTELLECTUAL: "Entelektuel Uyum",
+  INTIMACY: "Yakinlik",
+  GROWTH_MINDSET: "Gelisim Odaklilik",
+  CORE_FEARS: "Temel Kaygilar",
   // Lowercase variants for consistent lookup
-  communication: 'Iletisim Tarzi',
-  life_goals: 'Yasam Hedefleri',
-  values: 'Degerler',
-  lifestyle: 'Yasam Tarzi',
-  emotional_intelligence: 'Duygusal Zeka',
-  relationship_expectations: 'Iliski Beklentileri',
-  social_compatibility: 'Sosyal Uyum',
-  attachment_style: 'Baglanma Tarzi',
-  love_language: 'Sevgi Dili',
-  conflict_style: 'Catisma Yaklasimi',
-  future_vision: 'Gelecek Vizyonu',
-  intellectual: 'Entelektuel Uyum',
-  intimacy: 'Yakinlik',
-  growth_mindset: 'Gelisim Odaklilik',
-  core_fears: 'Temel Kaygilar',
+  communication: "Iletisim Tarzi",
+  life_goals: "Yasam Hedefleri",
+  values: "Degerler",
+  lifestyle: "Yasam Tarzi",
+  emotional_intelligence: "Duygusal Zeka",
+  relationship_expectations: "Iliski Beklentileri",
+  social_compatibility: "Sosyal Uyum",
+  attachment_style: "Baglanma Tarzi",
+  love_language: "Sevgi Dili",
+  conflict_style: "Catisma Yaklasimi",
+  future_vision: "Gelecek Vizyonu",
+  intellectual: "Entelektuel Uyum",
+  intimacy: "Yakinlik",
+  growth_mindset: "Gelisim Odaklilik",
+  core_fears: "Temel Kaygilar",
 };
 
 // Conversation starter templates per category (Turkish)
 const CONVERSATION_STARTERS_TR: Record<string, string[]> = {
   COMMUNICATION: [
-    'Iletisimde en cok neye onem verirsiniz?',
-    'Zor bir konuyu nasil dile getirirsiniz?',
+    "Iletisimde en cok neye onem verirsiniz?",
+    "Zor bir konuyu nasil dile getirirsiniz?",
   ],
   LIFE_GOALS: [
-    '5 yil sonra kendinizi nerede goruyorsunuz?',
-    'Hayattaki en buyuk hedefiniz ne?',
+    "5 yil sonra kendinizi nerede goruyorsunuz?",
+    "Hayattaki en buyuk hedefiniz ne?",
   ],
   VALUES: [
-    'Sizin icin vazgecilmez degerleriniz neler?',
-    'Hayatta en cok neye onem verirsiniz?',
+    "Sizin icin vazgecilmez degerleriniz neler?",
+    "Hayatta en cok neye onem verirsiniz?",
   ],
   LIFESTYLE: [
-    'Ideal bir hafta sonu nasil gecirir?',
-    'Serbest zamaninizda en cok ne yapmayi seversiniz?',
+    "Ideal bir hafta sonu nasil gecirir?",
+    "Serbest zamaninizda en cok ne yapmayi seversiniz?",
   ],
   EMOTIONAL_INTELLIGENCE: [
-    'Duygularinizi nasil ifade edersiniz?',
-    'Zor zamanlarla nasil basa cikarsiniz?',
+    "Duygularinizi nasil ifade edersiniz?",
+    "Zor zamanlarla nasil basa cikarsiniz?",
   ],
   RELATIONSHIP_EXPECTATIONS: [
-    'Ideal bir iliskide en onemli sey sizce ne?',
-    'Bir iliskiden beklentileriniz neler?',
+    "Ideal bir iliskide en onemli sey sizce ne?",
+    "Bir iliskiden beklentileriniz neler?",
   ],
   SOCIAL_COMPATIBILITY: [
-    'Arkadasliklariniz sizin icin ne ifade ediyor?',
-    'Sosyal ortamlarda kendinizi nasil hissedersiniz?',
+    "Arkadasliklariniz sizin icin ne ifade ediyor?",
+    "Sosyal ortamlarda kendinizi nasil hissedersiniz?",
   ],
   ATTACHMENT_STYLE: [
-    'Yakinlik kurarken kendinizi rahat hisseder misiniz?',
-    'Guven sizin icin ne anlama geliyor?',
+    "Yakinlik kurarken kendinizi rahat hisseder misiniz?",
+    "Guven sizin icin ne anlama geliyor?",
   ],
   LOVE_LANGUAGE: [
-    'Sevginizi nasil gosterirsiniz?',
-    'Sevildigini en cok ne zaman hissedersiniz?',
+    "Sevginizi nasil gosterirsiniz?",
+    "Sevildigini en cok ne zaman hissedersiniz?",
   ],
   CONFLICT_STYLE: [
-    'Bir anlasmazlik yasandiginda nasil tepki verirsiniz?',
-    'Cozum odakli misiniz yoksa once duygulari mi konusursunuz?',
+    "Bir anlasmazlik yasandiginda nasil tepki verirsiniz?",
+    "Cozum odakli misiniz yoksa once duygulari mi konusursunuz?",
   ],
   FUTURE_VISION: [
-    'Gelecege dair en buyuk hayaliniz ne?',
-    'Hayatinizda neyi degistirmek isterdiniz?',
+    "Gelecege dair en buyuk hayaliniz ne?",
+    "Hayatinizda neyi degistirmek isterdiniz?",
   ],
   INTELLECTUAL: [
-    'Yeni bir sey ogrenmeyi sever misiniz?',
-    'Hangi konularda tutkulu sayilirsiniz?',
+    "Yeni bir sey ogrenmeyi sever misiniz?",
+    "Hangi konularda tutkulu sayilirsiniz?",
   ],
   INTIMACY: [
-    'Yakinlik sizin icin ne anlam tasiyor?',
-    'Bir iliskide fiziksel ve duygusal yakinlik dengesi nasil olmali?',
+    "Yakinlik sizin icin ne anlam tasiyor?",
+    "Bir iliskide fiziksel ve duygusal yakinlik dengesi nasil olmali?",
   ],
   GROWTH_MINDSET: [
-    'Kendinizi gelistirmek icin neler yapiyorsunuz?',
-    'Hatalarinizdan nasil ders cikarirsiniz?',
+    "Kendinizi gelistirmek icin neler yapiyorsunuz?",
+    "Hatalarinizdan nasil ders cikarirsiniz?",
   ],
   CORE_FEARS: [
-    'Bir iliskide sizi en cok ne endiselendirir?',
-    'Guven konusunda nasil hissediyorsunuz?',
+    "Bir iliskide sizi en cok ne endiselendirir?",
+    "Guven konusunda nasil hissediyorsunuz?",
   ],
 };
 
 // Turkish reason templates based on category scores
 const REASON_TEMPLATES_TR: Record<string, { high: string; medium: string }> = {
   communication: {
-    high: 'Iletisim tarzlariniz cok uyumlu',
-    medium: 'Iletisim konusunda birbirinizi tamamliyorsunuz',
+    high: "Iletisim tarzlariniz cok uyumlu",
+    medium: "Iletisim konusunda birbirinizi tamamliyorsunuz",
   },
   life_goals: {
-    high: 'Yasam hedefleriniz ortusuyor',
-    medium: 'Benzer yasam hedeflerine sahipsiniz',
+    high: "Yasam hedefleriniz ortusuyor",
+    medium: "Benzer yasam hedeflerine sahipsiniz",
   },
   values: {
-    high: 'Temel degerleriniz ayni noktada',
-    medium: 'Ortak degerleriniz var',
+    high: "Temel degerleriniz ayni noktada",
+    medium: "Ortak degerleriniz var",
   },
   lifestyle: {
-    high: 'Yasam tarzlariniz birbiriyle uyumlu',
-    medium: 'Birbirinize denk bir yasam tempoinuz var',
+    high: "Yasam tarzlariniz birbiriyle uyumlu",
+    medium: "Birbirinize denk bir yasam tempoinuz var",
   },
   emotional_intelligence: {
-    high: 'Duygusal zeka seviyeniz birbirine cok yakin',
-    medium: 'Duygusal anlayisiniz uyumlu',
+    high: "Duygusal zeka seviyeniz birbirine cok yakin",
+    medium: "Duygusal anlayisiniz uyumlu",
   },
   relationship_expectations: {
-    high: 'Iliski beklentileriniz neredeyse ayni',
-    medium: 'Iliskide ortak beklentileriniz var',
+    high: "Iliski beklentileriniz neredeyse ayni",
+    medium: "Iliskide ortak beklentileriniz var",
   },
   social_compatibility: {
-    high: 'Sosyal uyumunuz mukemmel',
-    medium: 'Sosyal dunyalariniz birbirine yakin',
+    high: "Sosyal uyumunuz mukemmel",
+    medium: "Sosyal dunyalariniz birbirine yakin",
   },
   attachment_style: {
-    high: 'Baglanma tarzlariniz birbirine cok uygun',
-    medium: 'Guven ve yakinlik konusunda birbirinizi tamamliyorsunuz',
+    high: "Baglanma tarzlariniz birbirine cok uygun",
+    medium: "Guven ve yakinlik konusunda birbirinizi tamamliyorsunuz",
   },
   love_language: {
-    high: 'Sevgi dilleriniz ortusuyor',
-    medium: 'Sevgiyi ifade bicimleriniz uyumlu',
+    high: "Sevgi dilleriniz ortusuyor",
+    medium: "Sevgiyi ifade bicimleriniz uyumlu",
   },
   conflict_style: {
-    high: 'Catisma cozme yaklasimlariniz benzer',
-    medium: 'Sorunlara birlikte yaklasabilirsiniz',
+    high: "Catisma cozme yaklasimlariniz benzer",
+    medium: "Sorunlara birlikte yaklasabilirsiniz",
   },
   future_vision: {
-    high: 'Gelecek vizyonunuz ortak bir noktada bulusuyor',
-    medium: 'Gelecege benzer gozlerle bakiyorsunuz',
+    high: "Gelecek vizyonunuz ortak bir noktada bulusuyor",
+    medium: "Gelecege benzer gozlerle bakiyorsunuz",
   },
   intellectual: {
-    high: 'Entelektuel uyumunuz harika',
-    medium: 'Dusunce dunya size yakin',
+    high: "Entelektuel uyumunuz harika",
+    medium: "Dusunce dunya size yakin",
   },
   intimacy: {
-    high: 'Yakinlik anlayisiniz birbirinize cok uygun',
-    medium: 'Yakinlik konusunda uyumlu bir ciftsiniz',
+    high: "Yakinlik anlayisiniz birbirinize cok uygun",
+    medium: "Yakinlik konusunda uyumlu bir ciftsiniz",
   },
   growth_mindset: {
-    high: 'Birlikte gelismeye cok uygunsunuz',
-    medium: 'Gelisim odakli bakis aciniz ortak',
+    high: "Birlikte gelismeye cok uygunsunuz",
+    medium: "Gelisim odakli bakis aciniz ortak",
   },
   core_fears: {
-    high: 'Temel kaygilariniz benzer, birbirinizi anlayabilirsiniz',
-    medium: 'Endiselerinizi paylasarak baglarinizi guclendirirsiniz',
+    high: "Temel kaygilariniz benzer, birbirinizi anlayabilirsiniz",
+    medium: "Endiselerinizi paylasarak baglarinizi guclendirirsiniz",
   },
 };
 
 // Categories where balanced opposites are beneficial (complementary pairing)
 // These categories benefit from diversity, not just similarity
 const COMPLEMENTARY_CATEGORIES = new Set([
-  'social_compatibility', // Introverts + extroverts can complement
-  'lifestyle',            // Different life paces can balance
-  'conflict_style',       // Different conflict approaches can be healthy
-  'attachment_style',     // Anxious + secure pairing is well-documented
+  "social_compatibility", // Introverts + extroverts can complement
+  "lifestyle", // Different life paces can balance
+  "conflict_style", // Different conflict approaches can be healthy
+  "attachment_style", // Anxious + secure pairing is well-documented
 ]);
 
 // Compatibility level label thresholds (before display clamping)
@@ -219,20 +223,20 @@ interface LevelLabelInfo {
 }
 
 const LEVEL_LABELS: LevelLabelInfo[] = [
-  { label: 'Yuksek Uyum', minScore: 80 },
-  { label: 'Iyi Uyum', minScore: 60 },
-  { label: 'Orta Uyum', minScore: 40 },
-  { label: 'Dusuk Uyum', minScore: 0 },
+  { label: "Yuksek Uyum", minScore: 80 },
+  { label: "Iyi Uyum", minScore: 60 },
+  { label: "Orta Uyum", minScore: 40 },
+  { label: "Dusuk Uyum", minScore: 0 },
 ];
 
 // ─── Internal type for answer data during scoring ─────────────
 interface AnswerData {
-  optionOrder: number;     // 0-based order of the selected option
-  optionCount: number;     // total number of options for this question
-  value: number;           // normalized 0-1 value
-  weight: number;          // question weight from DB
-  category: string;        // question category
-  isPremium: boolean;      // whether this is a premium question
+  optionOrder: number; // 0-based order of the selected option
+  optionCount: number; // total number of options for this question
+  value: number; // normalized 0-1 value
+  weight: number; // question weight from DB
+  category: string; // question category
+  isPremium: boolean; // whether this is a premium question
 }
 
 // ─── Internal type for category score accumulation ────────────
@@ -260,7 +264,11 @@ interface CachedCompatibilityScore {
     matchedQuestions: number;
   }>;
   topReasons: string[];
-  bonuses: { intentionTagMatch: number; sameCityBonus: number; totalBonus: number };
+  bonuses: {
+    intentionTagMatch: number;
+    sameCityBonus: number;
+    totalBonus: number;
+  };
   commonQuestions: number;
 }
 
@@ -287,10 +295,10 @@ export class CompatibilityService {
     });
 
     if (!user) {
-      throw new NotFoundException('Kullanıcı bulunamadı');
+      throw new NotFoundException("Kullanıcı bulunamadı");
     }
 
-    const hasPremiumAccess = user.packageTier !== 'FREE';
+    const hasPremiumAccess = user.packageTier !== "FREE";
 
     // Fetch questions with options
     const questions = await this.prisma.compatibilityQuestion.findMany({
@@ -300,7 +308,7 @@ export class CompatibilityService {
       },
       include: {
         options: {
-          orderBy: { order: 'asc' },
+          orderBy: { order: "asc" },
           select: {
             id: true,
             labelEn: true,
@@ -309,7 +317,7 @@ export class CompatibilityService {
           },
         },
       },
-      orderBy: { questionNumber: 'asc' },
+      orderBy: { questionNumber: "asc" },
     });
 
     // Get user's existing answers
@@ -319,26 +327,36 @@ export class CompatibilityService {
     });
 
     const answeredMap = new Map<string, string>(
-      answers.map((a: { questionId: string; optionId: string }) => [a.questionId, a.optionId]),
+      answers.map((a: { questionId: string; optionId: string }) => [
+        a.questionId,
+        a.optionId,
+      ]),
     );
 
     // Build response
-    const questionsWithStatus = questions.map((q: {
-      id: string; questionNumber: number; category: string;
-      textEn: string; textTr: string; weight: number;
-      isPremium: boolean; options: unknown[];
-    }) => ({
-      id: q.id,
-      questionNumber: q.questionNumber,
-      category: q.category,
-      textEn: q.textEn,
-      textTr: q.textTr,
-      weight: q.weight,
-      isPremium: q.isPremium,
-      options: q.options,
-      answeredOptionId: answeredMap.get(q.id) ?? null,
-      isAnswered: answeredMap.has(q.id),
-    }));
+    const questionsWithStatus = questions.map(
+      (q: {
+        id: string;
+        questionNumber: number;
+        category: string;
+        textEn: string;
+        textTr: string;
+        weight: number;
+        isPremium: boolean;
+        options: unknown[];
+      }) => ({
+        id: q.id,
+        questionNumber: q.questionNumber,
+        category: q.category,
+        textEn: q.textEn,
+        textTr: q.textTr,
+        weight: q.weight,
+        isPremium: q.isPremium,
+        options: q.options,
+        answeredOptionId: answeredMap.get(q.id) ?? null,
+        isAnswered: answeredMap.has(q.id),
+      }),
+    );
 
     return {
       questions: questionsWithStatus,
@@ -357,12 +375,12 @@ export class CompatibilityService {
     const question = await this.prisma.compatibilityQuestion.findUnique({
       where: { id: dto.questionId },
       include: {
-        options: { orderBy: { order: 'asc' } },
+        options: { orderBy: { order: "asc" } },
       },
     });
 
     if (!question || !question.isActive) {
-      throw new NotFoundException('Soru bulunamadı');
+      throw new NotFoundException("Soru bulunamadı");
     }
 
     // Check premium access
@@ -372,9 +390,9 @@ export class CompatibilityService {
         select: { packageTier: true },
       });
 
-      if (user?.packageTier === 'FREE') {
+      if (user?.packageTier === "FREE") {
         throw new ForbiddenException(
-          'Premium sorulara erişmek için Gold veya üzeri pakete geçin',
+          "Premium sorulara erişmek için Gold veya üzeri pakete geçin",
         );
       }
     }
@@ -413,7 +431,7 @@ export class CompatibilityService {
     });
 
     // Check and award answer-related badges
-    await this.badgesService.checkAndAwardBadges(userId, 'answer');
+    await this.badgesService.checkAndAwardBadges(userId, "answer");
 
     return {
       questionId: dto.questionId,
@@ -436,10 +454,10 @@ export class CompatibilityService {
     });
 
     if (!user) {
-      throw new NotFoundException('Kullanıcı bulunamadı');
+      throw new NotFoundException("Kullanıcı bulunamadı");
     }
 
-    const hasPremiumAccess = user.packageTier !== 'FREE';
+    const hasPremiumAccess = user.packageTier !== "FREE";
 
     // Fetch all referenced questions with their options
     const questionIds = dto.answers.map((a) => a.questionId);
@@ -448,8 +466,16 @@ export class CompatibilityService {
       include: { options: { select: { id: true } } },
     });
 
-    const questionMap = new Map<string, { id: string; isPremium: boolean; options: { id: string }[] }>(
-      questions.map((q: { id: string; isPremium: boolean; options: { id: string }[] }) => [q.id, q]),
+    const questionMap = new Map<
+      string,
+      { id: string; isPremium: boolean; options: { id: string }[] }
+    >(
+      questions.map(
+        (q: { id: string; isPremium: boolean; options: { id: string }[] }) => [
+          q.id,
+          q,
+        ],
+      ),
     );
 
     // Validate each answer
@@ -460,7 +486,7 @@ export class CompatibilityService {
       }
       if (question.isPremium && !hasPremiumAccess) {
         throw new ForbiddenException(
-          'Premium sorulara erişmek için Gold veya üzeri pakete geçin',
+          "Premium sorulara erişmek için Gold veya üzeri pakete geçin",
         );
       }
       const validOptionIds = question.options.map((o: { id: string }) => o.id);
@@ -500,7 +526,7 @@ export class CompatibilityService {
     });
 
     // Check and award answer-related badges
-    await this.badgesService.checkAndAwardBadges(userId, 'answer');
+    await this.badgesService.checkAndAwardBadges(userId, "answer");
 
     return {
       saved: true,
@@ -527,7 +553,7 @@ export class CompatibilityService {
       RESERVED: 999999,
     };
 
-    const dailyLimit = DAILY_COMPAT_LIMITS[user?.packageTier ?? 'FREE'] ?? 1;
+    const dailyLimit = DAILY_COMPAT_LIMITS[user?.packageTier ?? "FREE"] ?? 1;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -554,7 +580,7 @@ export class CompatibilityService {
   async getScoreWithUser(userId: string, targetUserId: string) {
     // Guard: prevent self-comparison
     if (userId === targetUserId) {
-      throw new BadRequestException('Kendinizle uyumluluk puani hesaplanamaz');
+      throw new BadRequestException("Kendinizle uyumluluk puani hesaplanamaz");
     }
 
     // Enforce daily compatibility check limit per tier
@@ -563,7 +589,8 @@ export class CompatibilityService {
     // Check Redis cache first
     const { first, second } = this.orderIds(userId, targetUserId);
     const cacheKey = CACHE_KEYS.compatScore(first, second);
-    const cached = await this.cacheService.get<CachedCompatibilityScore>(cacheKey);
+    const cached =
+      await this.cacheService.get<CachedCompatibilityScore>(cacheKey);
     if (cached) {
       this.logger.debug(`Cache hit for compatibility ${first}:${second}`);
       return cached;
@@ -582,7 +609,11 @@ export class CompatibilityService {
       if (age > SCORE_STALENESS_MS) {
         return this.calculateAndStoreScore(userId, targetUserId);
       }
-      const response = this.formatScoreResponse(userId, targetUserId, existingScore);
+      const response = this.formatScoreResponse(
+        userId,
+        targetUserId,
+        existingScore,
+      );
       // Cache the response
       await this.cacheService.set(cacheKey, response, SCORE_CACHE_TTL);
       return response;
@@ -620,7 +651,7 @@ export class CompatibilityService {
           question: {
             include: {
               options: {
-                orderBy: { order: 'asc' },
+                orderBy: { order: "asc" },
                 select: { id: true, order: true, value: true },
               },
             },
@@ -634,7 +665,7 @@ export class CompatibilityService {
           question: {
             include: {
               options: {
-                orderBy: { order: 'asc' },
+                orderBy: { order: "asc" },
                 select: { id: true, order: true, value: true },
               },
             },
@@ -647,7 +678,12 @@ export class CompatibilityService {
     // Create answer maps: questionId -> AnswerData
     const mapA = new Map<string, AnswerData>();
     for (const a of answersA) {
-      const q = a.question as { weight: number; category: string; isPremium: boolean; options: Array<{ id: string; order: number; value: number }> };
+      const q = a.question as {
+        weight: number;
+        category: string;
+        isPremium: boolean;
+        options: Array<{ id: string; order: number; value: number }>;
+      };
       const opt = a.option as { value: number; order: number };
       mapA.set(a.questionId, {
         optionOrder: opt.order,
@@ -661,7 +697,12 @@ export class CompatibilityService {
 
     const mapB = new Map<string, AnswerData>();
     for (const b of answersB) {
-      const q = b.question as { weight: number; category: string; isPremium: boolean; options: Array<{ id: string; order: number; value: number }> };
+      const q = b.question as {
+        weight: number;
+        category: string;
+        isPremium: boolean;
+        options: Array<{ id: string; order: number; value: number }>;
+      };
       const opt = b.option as { value: number; order: number };
       mapB.set(b.questionId, {
         optionOrder: opt.order,
@@ -683,8 +724,8 @@ export class CompatibilityService {
         baseScore: MIN_DISPLAY_SCORE,
         deepScore: null,
         finalScore: MIN_DISPLAY_SCORE,
-        level: 'NORMAL',
-        levelLabel: 'Orta Uyum',
+        level: "NORMAL",
+        levelLabel: "Orta Uyum",
         isSuperCompatible: false,
         breakdown: {},
         categoryScores: [],
@@ -722,19 +763,29 @@ export class CompatibilityService {
       }
 
       // Apply complementary category bonus for moderate differences
-      if (COMPLEMENTARY_CATEGORIES.has(a.category) && stepDistance >= 1 && stepDistance <= 2) {
+      if (
+        COMPLEMENTARY_CATEGORIES.has(a.category) &&
+        stepDistance >= 1 &&
+        stepDistance <= 2
+      ) {
         // Moderate differences in complementary categories get a bonus
         rawPoints = Math.min(EXACT_MATCH_POINTS, rawPoints + 15);
       }
 
       // Apply tier-based weight multiplier: core questions count 2x
-      const tierMultiplier = a.isPremium ? PREMIUM_WEIGHT_MULTIPLIER : CORE_WEIGHT_MULTIPLIER;
+      const tierMultiplier = a.isPremium
+        ? PREMIUM_WEIGHT_MULTIPLIER
+        : CORE_WEIGHT_MULTIPLIER;
       const weightedPoints = rawPoints * a.weight * tierMultiplier;
       const maxPossible = EXACT_MATCH_POINTS * a.weight * tierMultiplier;
 
       // Accumulate category scores
       if (!categoryAccumulators[a.category]) {
-        categoryAccumulators[a.category] = { totalPoints: 0, maxPoints: 0, count: 0 };
+        categoryAccumulators[a.category] = {
+          totalPoints: 0,
+          maxPoints: 0,
+          count: 0,
+        };
       }
       categoryAccumulators[a.category].totalPoints += weightedPoints;
       categoryAccumulators[a.category].maxPoints += maxPossible;
@@ -784,16 +835,14 @@ export class CompatibilityService {
     const totalBonus = intentionBonus + cityBonus;
 
     // Calculate raw percentage scores (0-100 range)
-    const rawBaseScore = coreMaxPoints > 0
-      ? (coreWeightedPoints / coreMaxPoints) * 100
-      : 0;
+    const rawBaseScore =
+      coreMaxPoints > 0 ? (coreWeightedPoints / coreMaxPoints) * 100 : 0;
 
     const hasPremiumAnswers = premiumMaxPoints > 0;
     const allPoints = coreWeightedPoints + premiumWeightedPoints;
     const allMax = coreMaxPoints + premiumMaxPoints;
-    const rawDeepScore = hasPremiumAnswers && allMax > 0
-      ? (allPoints / allMax) * 100
-      : null;
+    const rawDeepScore =
+      hasPremiumAnswers && allMax > 0 ? (allPoints / allMax) * 100 : null;
 
     // MASTER BRIEF: Premium NEVER changes displayed score, only ranking visibility
     // finalScore is ALWAYS based on core answers only, plus bonuses
@@ -818,9 +867,10 @@ export class CompatibilityService {
     }> = [];
 
     for (const [cat, data] of Object.entries(categoryAccumulators)) {
-      const catScore = data.maxPoints > 0
-        ? Math.round((data.totalPoints / data.maxPoints) * 100)
-        : 0;
+      const catScore =
+        data.maxPoints > 0
+          ? Math.round((data.totalPoints / data.maxPoints) * 100)
+          : 0;
       breakdown[cat] = catScore;
       categoryScores.push({
         category: cat,
@@ -838,19 +888,25 @@ export class CompatibilityService {
     // - All dimensions >= 60
     // - At least 3 dimensions >= 90
     const dimensionValues = Object.values(breakdown);
-    const allDimensionsAbove60 = dimensionValues.length > 0 && dimensionValues.every((v) => v >= 60);
+    const allDimensionsAbove60 =
+      dimensionValues.length > 0 && dimensionValues.every((v) => v >= 60);
     const highDimensionCount = dimensionValues.filter((v) => v >= 90).length;
-    const level = (
+    const level =
       finalScore >= SUPER_COMPATIBILITY_THRESHOLD &&
       allDimensionsAbove60 &&
       highDimensionCount >= 3
-    ) ? 'SUPER' : 'NORMAL';
+        ? "SUPER"
+        : "NORMAL";
 
     // Determine display-friendly level label
     const levelLabel = this.getLevelLabel(rawFinalScoreWithBonuses);
 
     // Generate top 3 compatibility reasons in Turkish
-    const topReasons = this.getTopCompatibilityReasons(categoryScores, intentionBonus, cityBonus);
+    const topReasons = this.getTopCompatibilityReasons(
+      categoryScores,
+      intentionBonus,
+      cityBonus,
+    );
 
     // Store/update the score in DB
     const score = await this.prisma.compatibilityScore.upsert({
@@ -878,8 +934,8 @@ export class CompatibilityService {
     // Award Deep Match badge if both users answered all 45 questions
     if (deepScore !== null) {
       await Promise.all([
-        this.badgesService.checkAndAwardBadges(first, 'compatibility'),
-        this.badgesService.checkAndAwardBadges(second, 'compatibility'),
+        this.badgesService.checkAndAwardBadges(first, "compatibility"),
+        this.badgesService.checkAndAwardBadges(second, "compatibility"),
       ]);
     }
 
@@ -891,7 +947,7 @@ export class CompatibilityService {
       finalScore: score.finalScore,
       level: score.level,
       levelLabel,
-      isSuperCompatible: score.level === 'SUPER',
+      isSuperCompatible: score.level === "SUPER",
       breakdown: (score.dimensionScores ?? {}) as Record<string, number>,
       categoryScores,
       topReasons,
@@ -939,16 +995,16 @@ export class CompatibilityService {
 
     // Add bonus-based reasons if there is room
     if (reasons.length < 3 && intentionBonus > 0) {
-      reasons.push('Ayni iliski niyetine sahipsiniz');
+      reasons.push("Ayni iliski niyetine sahipsiniz");
     }
 
     if (reasons.length < 3 && cityBonus > 0) {
-      reasons.push('Ayni sehirde yasiyorsunuz');
+      reasons.push("Ayni sehirde yasiyorsunuz");
     }
 
     // Fallback reasons if not enough data
     if (reasons.length === 0) {
-      reasons.push('Ortak sorulari yanıtlayarak uyumunuzu kesfedebilirsiniz');
+      reasons.push("Ortak sorulari yanıtlayarak uyumunuzu kesfedebilirsiniz");
     }
 
     return reasons.slice(0, 3);
@@ -961,7 +1017,14 @@ export class CompatibilityService {
   async getCategoryScores(
     userId: string,
     targetUserId: string,
-  ): Promise<Array<{ category: string; categoryLabel: string; score: number; matchedQuestions: number }>> {
+  ): Promise<
+    Array<{
+      category: string;
+      categoryLabel: string;
+      score: number;
+      matchedQuestions: number;
+    }>
+  > {
     const { first, second } = this.orderIds(userId, targetUserId);
 
     // Try to get from existing stored score
@@ -970,7 +1033,10 @@ export class CompatibilityService {
     });
 
     if (existingScore?.dimensionScores) {
-      const dimensions = existingScore.dimensionScores as Record<string, number>;
+      const dimensions = existingScore.dimensionScores as Record<
+        string,
+        number
+      >;
       return Object.entries(dimensions)
         .map(([category, score]) => ({
           category,
@@ -1013,29 +1079,37 @@ export class CompatibilityService {
           },
         },
       },
-      orderBy: { question: { questionNumber: 'asc' } },
+      orderBy: { question: { questionNumber: "asc" } },
     });
 
     return {
-      answers: answers.map((a: {
-        questionId: string;
-        question: { questionNumber: number; category: string; textEn: string; textTr: string; isPremium: boolean };
-        option: { id: string; labelEn: string; labelTr: string };
-        answeredAt: Date;
-      }) => ({
-        questionId: a.questionId,
-        questionNumber: a.question.questionNumber,
-        category: a.question.category,
-        textEn: a.question.textEn,
-        textTr: a.question.textTr,
-        isPremium: a.question.isPremium,
-        selectedOption: {
-          id: a.option.id,
-          labelEn: a.option.labelEn,
-          labelTr: a.option.labelTr,
-        },
-        answeredAt: a.answeredAt,
-      })),
+      answers: answers.map(
+        (a: {
+          questionId: string;
+          question: {
+            questionNumber: number;
+            category: string;
+            textEn: string;
+            textTr: string;
+            isPremium: boolean;
+          };
+          option: { id: string; labelEn: string; labelTr: string };
+          answeredAt: Date;
+        }) => ({
+          questionId: a.questionId,
+          questionNumber: a.question.questionNumber,
+          category: a.question.category,
+          textEn: a.question.textEn,
+          textTr: a.question.textTr,
+          isPremium: a.question.isPremium,
+          selectedOption: {
+            id: a.option.id,
+            labelEn: a.option.labelEn,
+            labelTr: a.option.labelTr,
+          },
+          answeredAt: a.answeredAt,
+        }),
+      ),
       totalAnswered: answers.length,
       totalQuestions: TOTAL_QUESTION_COUNT,
     };
@@ -1050,15 +1124,25 @@ export class CompatibilityService {
     targetUserId: string,
   ): Promise<{
     score: number;
-    level: 'NORMAL' | 'SUPER';
+    level: "NORMAL" | "SUPER";
     levelLabel: string;
-    strongAreas: Array<{ category: string; labelTr: string; description: string }>;
-    differences: Array<{ category: string; labelTr: string; description: string }>;
+    strongAreas: Array<{
+      category: string;
+      labelTr: string;
+      description: string;
+    }>;
+    differences: Array<{
+      category: string;
+      labelTr: string;
+      description: string;
+    }>;
     conversationStarters: string[];
     topReasons: string[];
   }> {
     if (userId === targetUserId) {
-      throw new BadRequestException('Kendinizle uyumluluk detayi goruntuleyemezsiniz');
+      throw new BadRequestException(
+        "Kendinizle uyumluluk detayi goruntuleyemezsiniz",
+      );
     }
 
     const { first, second } = this.orderIds(userId, targetUserId);
@@ -1076,15 +1160,26 @@ export class CompatibilityService {
     }
 
     const finalScore = existingScore?.finalScore ?? MIN_DISPLAY_SCORE;
-    const level = (existingScore?.level ?? 'NORMAL') as 'NORMAL' | 'SUPER';
-    const dimensionScores = (existingScore?.dimensionScores ?? {}) as Record<string, number>;
+    const level = (existingScore?.level ?? "NORMAL") as "NORMAL" | "SUPER";
+    const dimensionScores = (existingScore?.dimensionScores ?? {}) as Record<
+      string,
+      number
+    >;
 
     // Determine level label from raw score
     const levelLabel = this.getLevelLabel(finalScore);
 
     // Partition dimensions into strong areas and differences
-    const strongAreas: Array<{ category: string; labelTr: string; description: string }> = [];
-    const differences: Array<{ category: string; labelTr: string; description: string }> = [];
+    const strongAreas: Array<{
+      category: string;
+      labelTr: string;
+      description: string;
+    }> = [];
+    const differences: Array<{
+      category: string;
+      labelTr: string;
+      description: string;
+    }> = [];
 
     for (const [category, score] of Object.entries(dimensionScores)) {
       const labelTr = DIMENSION_LABELS_TR[category] ?? category;
@@ -1093,17 +1188,19 @@ export class CompatibilityService {
         strongAreas.push({
           category,
           labelTr,
-          description: score >= 90
-            ? `${labelTr} alaninda mukemmel bir uyumunuz var (%${Math.round(score)})`
-            : `${labelTr} alaninda guclu bir uyumunuz var (%${Math.round(score)})`,
+          description:
+            score >= 90
+              ? `${labelTr} alaninda mukemmel bir uyumunuz var (%${Math.round(score)})`
+              : `${labelTr} alaninda guclu bir uyumunuz var (%${Math.round(score)})`,
         });
       } else {
         differences.push({
           category,
           labelTr,
-          description: score >= 50
-            ? `${labelTr} alaninda farkli bakis acilariniz var (%${Math.round(score)})`
-            : `${labelTr} alaninda belirgin farkliliklar mevcut (%${Math.round(score)})`,
+          description:
+            score >= 50
+              ? `${labelTr} alaninda farkli bakis acilariniz var (%${Math.round(score)})`
+              : `${labelTr} alaninda belirgin farkliliklar mevcut (%${Math.round(score)})`,
         });
       }
     }
@@ -1128,8 +1225,9 @@ export class CompatibilityService {
     );
 
     // Generate top reasons
-    const catScores = Object.entries(dimensionScores)
-      .map(([category, score]) => ({ category, score }));
+    const catScores = Object.entries(dimensionScores).map(
+      ([category, score]) => ({ category, score }),
+    );
     const topReasons = this.getTopCompatibilityReasons(catScores, 0, 0);
 
     return {
@@ -1161,7 +1259,7 @@ export class CompatibilityService {
         return lvl.label;
       }
     }
-    return 'Dusuk Uyum';
+    return "Dusuk Uyum";
   }
 
   private formatScoreResponse(
@@ -1186,8 +1284,9 @@ export class CompatibilityService {
       }))
       .sort((a, b) => b.score - a.score);
 
-    const catScoresForReasons = Object.entries(dimensions)
-      .map(([category, catScore]) => ({ category, score: catScore }));
+    const catScoresForReasons = Object.entries(dimensions).map(
+      ([category, catScore]) => ({ category, score: catScore }),
+    );
 
     return {
       userId,
@@ -1197,7 +1296,7 @@ export class CompatibilityService {
       finalScore: score.finalScore,
       level: score.level,
       levelLabel: this.getLevelLabel(score.finalScore),
-      isSuperCompatible: score.level === 'SUPER',
+      isSuperCompatible: score.level === "SUPER",
       breakdown: score.dimensionScores ?? {},
       categoryScores,
       topReasons: this.getTopCompatibilityReasons(catScoresForReasons, 0, 0),
@@ -1220,14 +1319,20 @@ export class CompatibilityService {
 
     // Normalize category keys — try both UPPER and lower variants
     const getStarters = (category: string): string[] | undefined => {
-      return CONVERSATION_STARTERS_TR[category] ??
-             CONVERSATION_STARTERS_TR[category.toUpperCase()];
+      return (
+        CONVERSATION_STARTERS_TR[category] ??
+        CONVERSATION_STARTERS_TR[category.toUpperCase()]
+      );
     };
 
     // Add 1-2 starters from strong areas
     for (const area of strongAreas.slice(0, 2)) {
       const categoryStarters = getStarters(area.category);
-      if (categoryStarters && categoryStarters.length > 0 && !usedCategories.has(area.category)) {
+      if (
+        categoryStarters &&
+        categoryStarters.length > 0 &&
+        !usedCategories.has(area.category)
+      ) {
         starters.push(categoryStarters[0]);
         usedCategories.add(area.category);
       }
@@ -1236,7 +1341,11 @@ export class CompatibilityService {
     // Add 1 starter from differences (to explore different perspectives)
     for (const diff of differences.slice(0, 1)) {
       const categoryStarters = getStarters(diff.category);
-      if (categoryStarters && categoryStarters.length > 1 && !usedCategories.has(diff.category)) {
+      if (
+        categoryStarters &&
+        categoryStarters.length > 1 &&
+        !usedCategories.has(diff.category)
+      ) {
         starters.push(categoryStarters[1]);
         usedCategories.add(diff.category);
       }
@@ -1244,8 +1353,9 @@ export class CompatibilityService {
 
     // Fill remaining slots from any unused high-score categories
     if (starters.length < 3) {
-      const sortedDimensions = Object.entries(dimensionScores)
-        .sort((a, b) => b[1] - a[1]);
+      const sortedDimensions = Object.entries(dimensionScores).sort(
+        (a, b) => b[1] - a[1],
+      );
 
       for (const [category] of sortedDimensions) {
         if (starters.length >= 3) break;
@@ -1262,9 +1372,9 @@ export class CompatibilityService {
     // Fallback if no dimension-based starters available
     if (starters.length === 0) {
       starters.push(
-        'Hayatta en cok neye onem verirsiniz?',
-        'Ideal bir hafta sonu nasil gecirirsiniz?',
-        'Sizi en cok ne mutlu eder?',
+        "Hayatta en cok neye onem verirsiniz?",
+        "Ideal bir hafta sonu nasil gecirirsiniz?",
+        "Sizi en cok ne mutlu eder?",
       );
     }
 
@@ -1275,12 +1385,16 @@ export class CompatibilityService {
    * Invalidate all cached compatibility scores for a given user.
    * Called when a user submits or updates answers.
    */
-  private async invalidateUserCompatibilityCache(userId: string): Promise<void> {
+  private async invalidateUserCompatibilityCache(
+    userId: string,
+  ): Promise<void> {
     try {
       await this.cacheService.invalidatePattern(`compat:*${userId}*`);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      this.logger.warn(`Failed to invalidate compatibility cache for ${userId}: ${message}`);
+      this.logger.warn(
+        `Failed to invalidate compatibility cache for ${userId}: ${message}`,
+      );
     }
   }
 }

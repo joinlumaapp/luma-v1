@@ -1,4 +1,4 @@
-import * as crypto from 'crypto';
+import * as crypto from "crypto";
 
 /**
  * Centralized cache key definitions and TTL values for LUMA V1.
@@ -26,7 +26,7 @@ export const TTL_PACKAGE_FEATURES = 3600; // 1 hour
 export const CacheKeys = {
   /** Discovery feed for a user, hashed with filter state */
   discoveryFeed(userId: string, filtersHash?: string): string {
-    const suffix = filtersHash ? `:${filtersHash}` : '';
+    const suffix = filtersHash ? `:${filtersHash}` : "";
     return `discovery:feed:${userId}${suffix}`;
   },
 
@@ -42,13 +42,14 @@ export const CacheKeys = {
 
   /** Compatibility score between two users (ordered) */
   compatibilityScore(userAId: string, userBId: string): string {
-    const [first, second] = userAId < userBId ? [userAId, userBId] : [userBId, userAId];
+    const [first, second] =
+      userAId < userBId ? [userAId, userBId] : [userBId, userAId];
     return `compat:score:${first}:${second}`;
   },
 
   /** Package feature definitions (static, shared across users) */
   packageFeatures(): string {
-    return 'packages:features';
+    return "packages:features";
   },
 
   // ─── Invalidation Patterns ──────────────────────────────
@@ -60,12 +61,12 @@ export const CacheKeys = {
 
   /** All discovery feed entries (use after global data changes) */
   allDiscoveryFeeds(): string {
-    return 'discovery:feed:*';
+    return "discovery:feed:*";
   },
 
   /** All compatibility score entries */
   allCompatibilityScores(): string {
-    return 'compat:score:*';
+    return "compat:score:*";
   },
 } as const;
 
@@ -75,5 +76,5 @@ export const CacheKeys = {
  */
 export function hashFilters(filters: Record<string, unknown>): string {
   const sorted = JSON.stringify(filters, Object.keys(filters).sort());
-  return crypto.createHash('md5').update(sorted).digest('hex').substring(0, 8);
+  return crypto.createHash("md5").update(sorted).digest("hex").substring(0, 8);
 }

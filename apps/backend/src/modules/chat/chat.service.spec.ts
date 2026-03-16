@@ -1,15 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import {
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
-import { ChatService } from './chat.service';
-import { PrismaService } from '../../prisma/prisma.service';
-import { ModerationService } from '../moderation/moderation.service';
-import { NotificationsService } from '../notifications/notifications.service';
-import { ReactionEmojiValue } from './dto/message-reaction.dto';
+import { Test, TestingModule } from "@nestjs/testing";
+import { NotFoundException, ForbiddenException } from "@nestjs/common";
+import { ChatService } from "./chat.service";
+import { PrismaService } from "../../prisma/prisma.service";
+import { ModerationService } from "../moderation/moderation.service";
+import { NotificationsService } from "../notifications/notifications.service";
+import { ReactionEmojiValue } from "./dto/message-reaction.dto";
 
-describe('ChatService', () => {
+describe("ChatService", () => {
   let service: ChatService;
 
   const mockPrisma = {
@@ -66,7 +63,7 @@ describe('ChatService', () => {
     service = module.get<ChatService>(ChatService);
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(service).toBeDefined();
   });
 
@@ -74,37 +71,37 @@ describe('ChatService', () => {
   // getConversations()
   // ═══════════════════════════════════════════════════════════════
 
-  describe('getConversations()', () => {
-    const userId = 'user-uuid-1';
+  describe("getConversations()", () => {
+    const userId = "user-uuid-1";
 
-    it('should return conversations with partner info and last message', async () => {
-      const matchDate = new Date('2026-01-15T10:00:00Z');
-      const msgDate = new Date('2026-02-20T14:30:00Z');
+    it("should return conversations with partner info and last message", async () => {
+      const matchDate = new Date("2026-01-15T10:00:00Z");
+      const msgDate = new Date("2026-02-20T14:30:00Z");
 
       mockPrisma.match.findMany.mockResolvedValue([
         {
-          id: 'match-1',
+          id: "match-1",
           userAId: userId,
-          userBId: 'partner-1',
+          userBId: "partner-1",
           createdAt: matchDate,
           updatedAt: msgDate,
           userA: {
             id: userId,
-            profile: { firstName: 'Ali' },
+            profile: { firstName: "Ali" },
             photos: [],
           },
           userB: {
-            id: 'partner-1',
-            profile: { firstName: 'Ayse' },
-            photos: [{ thumbnailUrl: 'https://cdn.luma.app/photo1_thumb.jpg' }],
+            id: "partner-1",
+            profile: { firstName: "Ayse" },
+            photos: [{ thumbnailUrl: "https://cdn.luma.app/photo1_thumb.jpg" }],
           },
           chatMessages: [
             {
-              id: 'msg-1',
-              content: 'Merhaba!',
-              senderId: 'partner-1',
-              type: 'TEXT',
-              status: 'SENT',
+              id: "msg-1",
+              content: "Merhaba!",
+              senderId: "partner-1",
+              type: "TEXT",
+              status: "SENT",
               mediaUrl: null,
               readAt: null,
               createdAt: msgDate,
@@ -116,19 +113,19 @@ describe('ChatService', () => {
       const result = await service.getConversations(userId);
 
       expect(result.conversations).toHaveLength(1);
-      expect(result.conversations[0].matchId).toBe('match-1');
-      expect(result.conversations[0].partner.userId).toBe('partner-1');
-      expect(result.conversations[0].partner.firstName).toBe('Ayse');
+      expect(result.conversations[0].matchId).toBe("match-1");
+      expect(result.conversations[0].partner.userId).toBe("partner-1");
+      expect(result.conversations[0].partner.firstName).toBe("Ayse");
       expect(result.conversations[0].partner.photoUrl).toBe(
-        'https://cdn.luma.app/photo1_thumb.jpg',
+        "https://cdn.luma.app/photo1_thumb.jpg",
       );
       expect(result.conversations[0].lastMessage).not.toBeNull();
-      expect(result.conversations[0].lastMessage!.content).toBe('Merhaba!');
+      expect(result.conversations[0].lastMessage!.content).toBe("Merhaba!");
       expect(result.conversations[0].lastMessage!.isRead).toBe(false);
       expect(result.conversations[0].matchedAt).toBe(matchDate.toISOString());
     });
 
-    it('should return empty conversations when user has no matches', async () => {
+    it("should return empty conversations when user has no matches", async () => {
       mockPrisma.match.findMany.mockResolvedValue([]);
 
       const result = await service.getConversations(userId);
@@ -136,22 +133,22 @@ describe('ChatService', () => {
       expect(result.conversations).toEqual([]);
     });
 
-    it('should use fallback name when partner has no profile', async () => {
+    it("should use fallback name when partner has no profile", async () => {
       mockPrisma.match.findMany.mockResolvedValue([
         {
-          id: 'match-2',
-          userAId: 'partner-2',
+          id: "match-2",
+          userAId: "partner-2",
           userBId: userId,
           createdAt: new Date(),
           updatedAt: new Date(),
           userA: {
-            id: 'partner-2',
+            id: "partner-2",
             profile: null,
             photos: [],
           },
           userB: {
             id: userId,
-            profile: { firstName: 'Ali' },
+            profile: { firstName: "Ali" },
             photos: [],
           },
           chatMessages: [],
@@ -160,26 +157,26 @@ describe('ChatService', () => {
 
       const result = await service.getConversations(userId);
 
-      expect(result.conversations[0].partner.firstName).toBe('Kullanici');
+      expect(result.conversations[0].partner.firstName).toBe("Kullanici");
       expect(result.conversations[0].partner.photoUrl).toBeNull();
     });
 
-    it('should return null lastMessage when no messages exist', async () => {
+    it("should return null lastMessage when no messages exist", async () => {
       mockPrisma.match.findMany.mockResolvedValue([
         {
-          id: 'match-3',
+          id: "match-3",
           userAId: userId,
-          userBId: 'partner-3',
+          userBId: "partner-3",
           createdAt: new Date(),
           updatedAt: new Date(),
           userA: {
             id: userId,
-            profile: { firstName: 'Ali' },
+            profile: { firstName: "Ali" },
             photos: [],
           },
           userB: {
-            id: 'partner-3',
-            profile: { firstName: 'Zeynep' },
+            id: "partner-3",
+            profile: { firstName: "Zeynep" },
             photos: [],
           },
           chatMessages: [],
@@ -191,22 +188,22 @@ describe('ChatService', () => {
       expect(result.conversations[0].lastMessage).toBeNull();
     });
 
-    it('should identify partner correctly when user is userB', async () => {
+    it("should identify partner correctly when user is userB", async () => {
       mockPrisma.match.findMany.mockResolvedValue([
         {
-          id: 'match-4',
-          userAId: 'partner-4',
+          id: "match-4",
+          userAId: "partner-4",
           userBId: userId,
           createdAt: new Date(),
           updatedAt: new Date(),
           userA: {
-            id: 'partner-4',
-            profile: { firstName: 'Mehmet' },
-            photos: [{ thumbnailUrl: 'https://cdn.luma.app/photo2.jpg' }],
+            id: "partner-4",
+            profile: { firstName: "Mehmet" },
+            photos: [{ thumbnailUrl: "https://cdn.luma.app/photo2.jpg" }],
           },
           userB: {
             id: userId,
-            profile: { firstName: 'Ali' },
+            profile: { firstName: "Ali" },
             photos: [],
           },
           chatMessages: [],
@@ -215,11 +212,11 @@ describe('ChatService', () => {
 
       const result = await service.getConversations(userId);
 
-      expect(result.conversations[0].partner.userId).toBe('partner-4');
-      expect(result.conversations[0].partner.firstName).toBe('Mehmet');
+      expect(result.conversations[0].partner.userId).toBe("partner-4");
+      expect(result.conversations[0].partner.firstName).toBe("Mehmet");
     });
 
-    it('should query only active matches', async () => {
+    it("should query only active matches", async () => {
       mockPrisma.match.findMany.mockResolvedValue([]);
 
       await service.getConversations(userId);
@@ -238,25 +235,25 @@ describe('ChatService', () => {
   // getMessages()
   // ═══════════════════════════════════════════════════════════════
 
-  describe('getMessages()', () => {
-    const userId = 'user-uuid-1';
-    const matchId = 'match-uuid-1';
+  describe("getMessages()", () => {
+    const userId = "user-uuid-1";
+    const matchId = "match-uuid-1";
 
-    it('should return messages with pagination', async () => {
-      const msgDate = new Date('2026-02-20T14:30:00Z');
+    it("should return messages with pagination", async () => {
+      const msgDate = new Date("2026-02-20T14:30:00Z");
       mockPrisma.match.findUnique.mockResolvedValue({
         userAId: userId,
-        userBId: 'partner-1',
+        userBId: "partner-1",
         isActive: true,
       });
       mockPrisma.chatMessage.updateMany.mockResolvedValue({ count: 0 });
       mockPrisma.chatMessage.findMany.mockResolvedValue([
         {
-          id: 'msg-1',
+          id: "msg-1",
           senderId: userId,
-          content: 'Hello',
-          type: 'TEXT',
-          status: 'SENT',
+          content: "Hello",
+          type: "TEXT",
+          status: "SENT",
           mediaUrl: null,
           readAt: null,
           createdAt: msgDate,
@@ -266,13 +263,13 @@ describe('ChatService', () => {
       const result = await service.getMessages(userId, matchId);
 
       expect(result.messages).toHaveLength(1);
-      expect(result.messages[0].content).toBe('Hello');
+      expect(result.messages[0].content).toBe("Hello");
       expect(result.messages[0].isRead).toBe(false);
       expect(result.hasMore).toBe(false);
       expect(result.nextCursor).toBeNull();
     });
 
-    it('should throw NotFoundException when match does not exist', async () => {
+    it("should throw NotFoundException when match does not exist", async () => {
       mockPrisma.match.findUnique.mockResolvedValue(null);
 
       await expect(service.getMessages(userId, matchId)).rejects.toThrow(
@@ -280,10 +277,10 @@ describe('ChatService', () => {
       );
     });
 
-    it('should throw ForbiddenException when user is not a participant', async () => {
+    it("should throw ForbiddenException when user is not a participant", async () => {
       mockPrisma.match.findUnique.mockResolvedValue({
-        userAId: 'other-1',
-        userBId: 'other-2',
+        userAId: "other-1",
+        userBId: "other-2",
         isActive: true,
       });
 
@@ -292,10 +289,10 @@ describe('ChatService', () => {
       );
     });
 
-    it('should mark undelivered messages from other user as DELIVERED', async () => {
+    it("should mark undelivered messages from other user as DELIVERED", async () => {
       mockPrisma.match.findUnique.mockResolvedValue({
         userAId: userId,
-        userBId: 'partner-1',
+        userBId: "partner-1",
         isActive: true,
       });
       mockPrisma.chatMessage.updateMany.mockResolvedValue({ count: 3 });
@@ -307,18 +304,18 @@ describe('ChatService', () => {
         where: {
           matchId,
           senderId: { not: userId },
-          status: 'SENT',
+          status: "SENT",
         },
         data: {
-          status: 'DELIVERED',
+          status: "DELIVERED",
         },
       });
     });
 
-    it('should detect hasMore when more messages exist beyond limit', async () => {
+    it("should detect hasMore when more messages exist beyond limit", async () => {
       mockPrisma.match.findUnique.mockResolvedValue({
         userAId: userId,
-        userBId: 'partner-1',
+        userBId: "partner-1",
         isActive: true,
       });
       mockPrisma.chatMessage.updateMany.mockResolvedValue({ count: 0 });
@@ -328,8 +325,8 @@ describe('ChatService', () => {
         id: `msg-${i}`,
         senderId: userId,
         content: `Message ${i}`,
-        type: 'TEXT',
-        status: 'SENT',
+        type: "TEXT",
+        status: "SENT",
         mediaUrl: null,
         readAt: null,
         createdAt: new Date(),
@@ -340,24 +337,24 @@ describe('ChatService', () => {
 
       expect(result.hasMore).toBe(true);
       expect(result.messages).toHaveLength(2);
-      expect(result.nextCursor).toBe('msg-1');
+      expect(result.nextCursor).toBe("msg-1");
     });
 
-    it('should handle read messages correctly', async () => {
-      const readDate = new Date('2026-02-20T15:00:00Z');
+    it("should handle read messages correctly", async () => {
+      const readDate = new Date("2026-02-20T15:00:00Z");
       mockPrisma.match.findUnique.mockResolvedValue({
         userAId: userId,
-        userBId: 'partner-1',
+        userBId: "partner-1",
         isActive: true,
       });
       mockPrisma.chatMessage.updateMany.mockResolvedValue({ count: 0 });
       mockPrisma.chatMessage.findMany.mockResolvedValue([
         {
-          id: 'msg-read',
-          senderId: 'partner-1',
-          content: 'Read message',
-          type: 'TEXT',
-          status: 'READ',
+          id: "msg-read",
+          senderId: "partner-1",
+          content: "Read message",
+          type: "TEXT",
+          status: "READ",
           mediaUrl: null,
           readAt: readDate,
           createdAt: new Date(),
@@ -374,146 +371,146 @@ describe('ChatService', () => {
   // sendMessage()
   // ═══════════════════════════════════════════════════════════════
 
-  describe('sendMessage()', () => {
-    const userId = 'user-uuid-1';
-    const matchId = 'match-uuid-1';
+  describe("sendMessage()", () => {
+    const userId = "user-uuid-1";
+    const matchId = "match-uuid-1";
 
-    it('should send a text message successfully', async () => {
-      const createdAt = new Date('2026-02-20T14:30:00Z');
+    it("should send a text message successfully", async () => {
+      const createdAt = new Date("2026-02-20T14:30:00Z");
       mockPrisma.match.findUnique.mockResolvedValue({
         userAId: userId,
-        userBId: 'partner-1',
+        userBId: "partner-1",
         isActive: true,
       });
       mockPrisma.chatMessage.create.mockResolvedValue({
-        id: 'msg-new',
+        id: "msg-new",
         senderId: userId,
-        content: 'Merhaba!',
-        type: 'TEXT',
-        status: 'SENT',
+        content: "Merhaba!",
+        type: "TEXT",
+        status: "SENT",
         mediaUrl: null,
         createdAt,
       });
       mockPrisma.match.update.mockResolvedValue({});
 
       const result = await service.sendMessage(userId, matchId, {
-        content: 'Merhaba!',
+        content: "Merhaba!",
       });
 
-      expect(result.id).toBe('msg-new');
-      expect(result.content).toBe('Merhaba!');
-      expect(result.type).toBe('TEXT');
+      expect(result.id).toBe("msg-new");
+      expect(result.content).toBe("Merhaba!");
+      expect(result.type).toBe("TEXT");
       expect(result.isRead).toBe(false);
       expect(result.createdAt).toBe(createdAt.toISOString());
     });
 
-    it('should throw NotFoundException when match does not exist', async () => {
+    it("should throw NotFoundException when match does not exist", async () => {
       mockPrisma.match.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.sendMessage(userId, matchId, { content: 'Test' }),
+        service.sendMessage(userId, matchId, { content: "Test" }),
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw ForbiddenException when user is not a participant', async () => {
+    it("should throw ForbiddenException when user is not a participant", async () => {
       mockPrisma.match.findUnique.mockResolvedValue({
-        userAId: 'other-1',
-        userBId: 'other-2',
+        userAId: "other-1",
+        userBId: "other-2",
         isActive: true,
       });
 
       await expect(
-        service.sendMessage(userId, matchId, { content: 'Test' }),
+        service.sendMessage(userId, matchId, { content: "Test" }),
       ).rejects.toThrow(ForbiddenException);
     });
 
-    it('should throw ForbiddenException when match is inactive', async () => {
+    it("should throw ForbiddenException when match is inactive", async () => {
       mockPrisma.match.findUnique.mockResolvedValue({
         userAId: userId,
-        userBId: 'partner-1',
+        userBId: "partner-1",
         isActive: false,
       });
 
       await expect(
-        service.sendMessage(userId, matchId, { content: 'Test' }),
+        service.sendMessage(userId, matchId, { content: "Test" }),
       ).rejects.toThrow(ForbiddenException);
     });
 
-    it('should trim message content', async () => {
+    it("should trim message content", async () => {
       mockPrisma.match.findUnique.mockResolvedValue({
         userAId: userId,
-        userBId: 'partner-1',
+        userBId: "partner-1",
         isActive: true,
       });
       mockPrisma.chatMessage.create.mockResolvedValue({
-        id: 'msg-trimmed',
+        id: "msg-trimmed",
         senderId: userId,
-        content: 'trimmed',
-        type: 'TEXT',
-        status: 'SENT',
+        content: "trimmed",
+        type: "TEXT",
+        status: "SENT",
         mediaUrl: null,
         createdAt: new Date(),
       });
       mockPrisma.match.update.mockResolvedValue({});
 
       await service.sendMessage(userId, matchId, {
-        content: '  trimmed  ',
+        content: "  trimmed  ",
       });
 
       expect(mockPrisma.chatMessage.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            content: 'trimmed',
+            content: "trimmed",
           }),
         }),
       );
     });
 
-    it('should support IMAGE message type with mediaUrl', async () => {
+    it("should support IMAGE message type with mediaUrl", async () => {
       mockPrisma.match.findUnique.mockResolvedValue({
         userAId: userId,
-        userBId: 'partner-1',
+        userBId: "partner-1",
         isActive: true,
       });
       mockPrisma.chatMessage.create.mockResolvedValue({
-        id: 'msg-img',
+        id: "msg-img",
         senderId: userId,
-        content: 'Photo',
-        type: 'IMAGE',
-        status: 'SENT',
-        mediaUrl: 'https://cdn.luma.app/chat/img1.jpg',
+        content: "Photo",
+        type: "IMAGE",
+        status: "SENT",
+        mediaUrl: "https://cdn.luma.app/chat/img1.jpg",
         createdAt: new Date(),
       });
       mockPrisma.match.update.mockResolvedValue({});
 
       const result = await service.sendMessage(userId, matchId, {
-        content: 'Photo',
-        type: 'IMAGE',
-        mediaUrl: 'https://cdn.luma.app/chat/img1.jpg',
+        content: "Photo",
+        type: "IMAGE",
+        mediaUrl: "https://cdn.luma.app/chat/img1.jpg",
       });
 
-      expect(result.type).toBe('IMAGE');
-      expect(result.mediaUrl).toBe('https://cdn.luma.app/chat/img1.jpg');
+      expect(result.type).toBe("IMAGE");
+      expect(result.mediaUrl).toBe("https://cdn.luma.app/chat/img1.jpg");
     });
 
-    it('should update match updatedAt to bubble conversation to top', async () => {
+    it("should update match updatedAt to bubble conversation to top", async () => {
       mockPrisma.match.findUnique.mockResolvedValue({
         userAId: userId,
-        userBId: 'partner-1',
+        userBId: "partner-1",
         isActive: true,
       });
       mockPrisma.chatMessage.create.mockResolvedValue({
-        id: 'msg-1',
+        id: "msg-1",
         senderId: userId,
-        content: 'Test',
-        type: 'TEXT',
-        status: 'SENT',
+        content: "Test",
+        type: "TEXT",
+        status: "SENT",
         mediaUrl: null,
         createdAt: new Date(),
       });
       mockPrisma.match.update.mockResolvedValue({});
 
-      await service.sendMessage(userId, matchId, { content: 'Test' });
+      await service.sendMessage(userId, matchId, { content: "Test" });
 
       expect(mockPrisma.match.update).toHaveBeenCalledWith({
         where: { id: matchId },
@@ -521,187 +518,198 @@ describe('ChatService', () => {
       });
     });
 
-    it('should throw ForbiddenException when sender is blocked by recipient', async () => {
+    it("should throw ForbiddenException when sender is blocked by recipient", async () => {
       mockPrisma.match.findUnique.mockResolvedValue({
         userAId: userId,
-        userBId: 'partner-1',
+        userBId: "partner-1",
         isActive: true,
       });
       mockModerationService.isBlocked.mockResolvedValue(true);
 
       await expect(
-        service.sendMessage(userId, matchId, { content: 'Hello' }),
+        service.sendMessage(userId, matchId, { content: "Hello" }),
       ).rejects.toThrow(ForbiddenException);
 
-      expect(mockModerationService.isBlocked).toHaveBeenCalledWith(userId, 'partner-1');
+      expect(mockModerationService.isBlocked).toHaveBeenCalledWith(
+        userId,
+        "partner-1",
+      );
     });
 
-    it('should call isBlocked with correct user pair when user is userB', async () => {
+    it("should call isBlocked with correct user pair when user is userB", async () => {
       mockPrisma.match.findUnique.mockResolvedValue({
-        userAId: 'partner-1',
+        userAId: "partner-1",
         userBId: userId,
         isActive: true,
       });
       mockModerationService.isBlocked.mockResolvedValue(true);
 
       await expect(
-        service.sendMessage(userId, matchId, { content: 'Hello' }),
+        service.sendMessage(userId, matchId, { content: "Hello" }),
       ).rejects.toThrow(ForbiddenException);
 
-      expect(mockModerationService.isBlocked).toHaveBeenCalledWith(userId, 'partner-1');
-    });
-
-    it('should send push notification to partner after message creation', async () => {
-      mockPrisma.match.findUnique.mockResolvedValue({
-        userAId: userId,
-        userBId: 'partner-1',
-        isActive: true,
-      });
-      mockPrisma.chatMessage.create.mockResolvedValue({
-        id: 'msg-notif',
-        senderId: userId,
-        content: 'Merhaba!',
-        type: 'TEXT',
-        status: 'SENT',
-        mediaUrl: null,
-        createdAt: new Date(),
-      });
-      mockPrisma.match.update.mockResolvedValue({});
-      mockPrisma.userProfile.findUnique.mockResolvedValue({ firstName: 'Ali' });
-
-      await service.sendMessage(userId, matchId, { content: 'Merhaba!' });
-
-      expect(mockNotificationsService.notifyNewMessage).toHaveBeenCalledWith(
-        'partner-1',
-        'Ali',
-        'Merhaba!',
+      expect(mockModerationService.isBlocked).toHaveBeenCalledWith(
+        userId,
+        "partner-1",
       );
     });
 
-    it('should truncate long message in notification preview', async () => {
-      const longMessage = 'A'.repeat(150);
+    it("should send push notification to partner after message creation", async () => {
       mockPrisma.match.findUnique.mockResolvedValue({
         userAId: userId,
-        userBId: 'partner-1',
+        userBId: "partner-1",
         isActive: true,
       });
       mockPrisma.chatMessage.create.mockResolvedValue({
-        id: 'msg-long',
+        id: "msg-notif",
         senderId: userId,
-        content: longMessage,
-        type: 'TEXT',
-        status: 'SENT',
+        content: "Merhaba!",
+        type: "TEXT",
+        status: "SENT",
         mediaUrl: null,
         createdAt: new Date(),
       });
       mockPrisma.match.update.mockResolvedValue({});
-      mockPrisma.userProfile.findUnique.mockResolvedValue({ firstName: 'Ali' });
+      mockPrisma.userProfile.findUnique.mockResolvedValue({ firstName: "Ali" });
 
-      await service.sendMessage(userId, matchId, { content: longMessage });
+      await service.sendMessage(userId, matchId, { content: "Merhaba!" });
 
-      const notifyCall = mockNotificationsService.notifyNewMessage.mock.calls[0];
-      expect(notifyCall[2].length).toBeLessThanOrEqual(100);
-      expect(notifyCall[2]).toContain('...');
+      expect(mockNotificationsService.notifyNewMessage).toHaveBeenCalledWith(
+        "partner-1",
+        "Ali",
+        "Merhaba!",
+      );
     });
 
-    it('should use fallback sender name when profile does not exist', async () => {
+    it("should truncate long message in notification preview", async () => {
+      const longMessage = "A".repeat(150);
       mockPrisma.match.findUnique.mockResolvedValue({
         userAId: userId,
-        userBId: 'partner-1',
+        userBId: "partner-1",
         isActive: true,
       });
       mockPrisma.chatMessage.create.mockResolvedValue({
-        id: 'msg-no-profile',
+        id: "msg-long",
         senderId: userId,
-        content: 'Test',
-        type: 'TEXT',
-        status: 'SENT',
+        content: longMessage,
+        type: "TEXT",
+        status: "SENT",
+        mediaUrl: null,
+        createdAt: new Date(),
+      });
+      mockPrisma.match.update.mockResolvedValue({});
+      mockPrisma.userProfile.findUnique.mockResolvedValue({ firstName: "Ali" });
+
+      await service.sendMessage(userId, matchId, { content: longMessage });
+
+      const notifyCall =
+        mockNotificationsService.notifyNewMessage.mock.calls[0];
+      expect(notifyCall[2].length).toBeLessThanOrEqual(100);
+      expect(notifyCall[2]).toContain("...");
+    });
+
+    it("should use fallback sender name when profile does not exist", async () => {
+      mockPrisma.match.findUnique.mockResolvedValue({
+        userAId: userId,
+        userBId: "partner-1",
+        isActive: true,
+      });
+      mockPrisma.chatMessage.create.mockResolvedValue({
+        id: "msg-no-profile",
+        senderId: userId,
+        content: "Test",
+        type: "TEXT",
+        status: "SENT",
         mediaUrl: null,
         createdAt: new Date(),
       });
       mockPrisma.match.update.mockResolvedValue({});
       mockPrisma.userProfile.findUnique.mockResolvedValue(null);
 
-      await service.sendMessage(userId, matchId, { content: 'Test' });
+      await service.sendMessage(userId, matchId, { content: "Test" });
 
       expect(mockNotificationsService.notifyNewMessage).toHaveBeenCalledWith(
-        'partner-1',
-        'Biri',
-        'Test',
+        "partner-1",
+        "Biri",
+        "Test",
       );
     });
 
-    it('should not fail when notification sending throws', async () => {
+    it("should not fail when notification sending throws", async () => {
       mockPrisma.match.findUnique.mockResolvedValue({
         userAId: userId,
-        userBId: 'partner-1',
+        userBId: "partner-1",
         isActive: true,
       });
       mockPrisma.chatMessage.create.mockResolvedValue({
-        id: 'msg-notif-fail',
+        id: "msg-notif-fail",
         senderId: userId,
-        content: 'Test',
-        type: 'TEXT',
-        status: 'SENT',
+        content: "Test",
+        type: "TEXT",
+        status: "SENT",
         mediaUrl: null,
         createdAt: new Date(),
       });
       mockPrisma.match.update.mockResolvedValue({});
-      mockPrisma.userProfile.findUnique.mockResolvedValue({ firstName: 'Ali' });
-      mockNotificationsService.notifyNewMessage.mockRejectedValue(new Error('Push failed'));
+      mockPrisma.userProfile.findUnique.mockResolvedValue({ firstName: "Ali" });
+      mockNotificationsService.notifyNewMessage.mockRejectedValue(
+        new Error("Push failed"),
+      );
 
       // Should not throw even though notification failed
-      const result = await service.sendMessage(userId, matchId, { content: 'Test' });
+      const result = await service.sendMessage(userId, matchId, {
+        content: "Test",
+      });
 
-      expect(result.id).toBe('msg-notif-fail');
+      expect(result.id).toBe("msg-notif-fail");
     });
 
-    it('should persist message with default TEXT type when type not provided', async () => {
+    it("should persist message with default TEXT type when type not provided", async () => {
       mockPrisma.match.findUnique.mockResolvedValue({
         userAId: userId,
-        userBId: 'partner-1',
+        userBId: "partner-1",
         isActive: true,
       });
       mockPrisma.chatMessage.create.mockResolvedValue({
-        id: 'msg-default',
+        id: "msg-default",
         senderId: userId,
-        content: 'Hello',
-        type: 'TEXT',
-        status: 'SENT',
+        content: "Hello",
+        type: "TEXT",
+        status: "SENT",
         mediaUrl: null,
         createdAt: new Date(),
       });
       mockPrisma.match.update.mockResolvedValue({});
 
-      await service.sendMessage(userId, matchId, { content: 'Hello' });
+      await service.sendMessage(userId, matchId, { content: "Hello" });
 
       expect(mockPrisma.chatMessage.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            type: 'TEXT',
+            type: "TEXT",
           }),
         }),
       );
     });
 
-    it('should set null mediaUrl when not provided', async () => {
+    it("should set null mediaUrl when not provided", async () => {
       mockPrisma.match.findUnique.mockResolvedValue({
         userAId: userId,
-        userBId: 'partner-1',
+        userBId: "partner-1",
         isActive: true,
       });
       mockPrisma.chatMessage.create.mockResolvedValue({
-        id: 'msg-no-media',
+        id: "msg-no-media",
         senderId: userId,
-        content: 'Text only',
-        type: 'TEXT',
-        status: 'SENT',
+        content: "Text only",
+        type: "TEXT",
+        status: "SENT",
         mediaUrl: null,
         createdAt: new Date(),
       });
       mockPrisma.match.update.mockResolvedValue({});
 
-      await service.sendMessage(userId, matchId, { content: 'Text only' });
+      await service.sendMessage(userId, matchId, { content: "Text only" });
 
       expect(mockPrisma.chatMessage.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -717,14 +725,14 @@ describe('ChatService', () => {
   // markAsRead()
   // ═══════════════════════════════════════════════════════════════
 
-  describe('markAsRead()', () => {
-    const userId = 'user-uuid-1';
-    const matchId = 'match-uuid-1';
+  describe("markAsRead()", () => {
+    const userId = "user-uuid-1";
+    const matchId = "match-uuid-1";
 
-    it('should mark unread messages as read and return count', async () => {
+    it("should mark unread messages as read and return count", async () => {
       mockPrisma.match.findUnique.mockResolvedValue({
         userAId: userId,
-        userBId: 'partner-1',
+        userBId: "partner-1",
       });
       mockPrisma.chatMessage.updateMany.mockResolvedValue({ count: 5 });
 
@@ -733,10 +741,10 @@ describe('ChatService', () => {
       expect(result.markedAsRead).toBe(5);
     });
 
-    it('should only mark messages from the other user', async () => {
+    it("should only mark messages from the other user", async () => {
       mockPrisma.match.findUnique.mockResolvedValue({
         userAId: userId,
-        userBId: 'partner-1',
+        userBId: "partner-1",
       });
       mockPrisma.chatMessage.updateMany.mockResolvedValue({ count: 0 });
 
@@ -750,12 +758,12 @@ describe('ChatService', () => {
         },
         data: {
           readAt: expect.any(Date),
-          status: 'READ',
+          status: "READ",
         },
       });
     });
 
-    it('should throw NotFoundException when match does not exist', async () => {
+    it("should throw NotFoundException when match does not exist", async () => {
       mockPrisma.match.findUnique.mockResolvedValue(null);
 
       await expect(service.markAsRead(userId, matchId)).rejects.toThrow(
@@ -763,10 +771,10 @@ describe('ChatService', () => {
       );
     });
 
-    it('should throw ForbiddenException when user is not a participant', async () => {
+    it("should throw ForbiddenException when user is not a participant", async () => {
       mockPrisma.match.findUnique.mockResolvedValue({
-        userAId: 'other-1',
-        userBId: 'other-2',
+        userAId: "other-1",
+        userBId: "other-2",
       });
 
       await expect(service.markAsRead(userId, matchId)).rejects.toThrow(
@@ -774,10 +782,10 @@ describe('ChatService', () => {
       );
     });
 
-    it('should return 0 when no unread messages exist', async () => {
+    it("should return 0 when no unread messages exist", async () => {
       mockPrisma.match.findUnique.mockResolvedValue({
         userAId: userId,
-        userBId: 'partner-1',
+        userBId: "partner-1",
       });
       mockPrisma.chatMessage.updateMany.mockResolvedValue({ count: 0 });
 
@@ -791,19 +799,19 @@ describe('ChatService', () => {
   // reactToMessage()
   // ═══════════════════════════════════════════════════════════════
 
-  describe('reactToMessage()', () => {
-    const userId = 'user-uuid-1';
-    const messageId = 'msg-uuid-1';
-    const matchId = 'match-uuid-1';
+  describe("reactToMessage()", () => {
+    const userId = "user-uuid-1";
+    const messageId = "msg-uuid-1";
+    const matchId = "match-uuid-1";
 
-    it('should add a new reaction when none exists', async () => {
+    it("should add a new reaction when none exists", async () => {
       mockPrisma.chatMessage.findUnique.mockResolvedValue({
         id: messageId,
         matchId,
       });
       mockPrisma.match.findUnique.mockResolvedValue({
         userAId: userId,
-        userBId: 'partner-1',
+        userBId: "partner-1",
       });
       mockPrisma.messageReaction.findFirst.mockResolvedValue(null);
       mockPrisma.messageReaction.create.mockResolvedValue({});
@@ -812,22 +820,22 @@ describe('ChatService', () => {
         emoji: ReactionEmojiValue.HEART,
       });
 
-      expect(result.action).toBe('added');
+      expect(result.action).toBe("added");
       expect(result.emoji).toBe(ReactionEmojiValue.HEART);
       expect(mockPrisma.messageReaction.create).toHaveBeenCalled();
     });
 
-    it('should remove reaction when same emoji is toggled', async () => {
+    it("should remove reaction when same emoji is toggled", async () => {
       mockPrisma.chatMessage.findUnique.mockResolvedValue({
         id: messageId,
         matchId,
       });
       mockPrisma.match.findUnique.mockResolvedValue({
         userAId: userId,
-        userBId: 'partner-1',
+        userBId: "partner-1",
       });
       mockPrisma.messageReaction.findFirst.mockResolvedValue({
-        id: 'reaction-1',
+        id: "reaction-1",
         emoji: ReactionEmojiValue.HEART,
       });
       mockPrisma.messageReaction.delete.mockResolvedValue({});
@@ -836,23 +844,23 @@ describe('ChatService', () => {
         emoji: ReactionEmojiValue.HEART,
       });
 
-      expect(result.action).toBe('removed');
+      expect(result.action).toBe("removed");
       expect(mockPrisma.messageReaction.delete).toHaveBeenCalledWith({
-        where: { id: 'reaction-1' },
+        where: { id: "reaction-1" },
       });
     });
 
-    it('should update reaction when different emoji is used', async () => {
+    it("should update reaction when different emoji is used", async () => {
       mockPrisma.chatMessage.findUnique.mockResolvedValue({
         id: messageId,
         matchId,
       });
       mockPrisma.match.findUnique.mockResolvedValue({
         userAId: userId,
-        userBId: 'partner-1',
+        userBId: "partner-1",
       });
       mockPrisma.messageReaction.findFirst.mockResolvedValue({
-        id: 'reaction-1',
+        id: "reaction-1",
         emoji: ReactionEmojiValue.HEART,
       });
       mockPrisma.messageReaction.update.mockResolvedValue({});
@@ -861,23 +869,25 @@ describe('ChatService', () => {
         emoji: ReactionEmojiValue.LAUGH,
       });
 
-      expect(result.action).toBe('updated');
+      expect(result.action).toBe("updated");
       expect(result.emoji).toBe(ReactionEmojiValue.LAUGH);
       expect(mockPrisma.messageReaction.update).toHaveBeenCalledWith({
-        where: { id: 'reaction-1' },
+        where: { id: "reaction-1" },
         data: { emoji: ReactionEmojiValue.LAUGH },
       });
     });
 
-    it('should throw NotFoundException when message does not exist', async () => {
+    it("should throw NotFoundException when message does not exist", async () => {
       mockPrisma.chatMessage.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.reactToMessage(userId, messageId, { emoji: ReactionEmojiValue.HEART }),
+        service.reactToMessage(userId, messageId, {
+          emoji: ReactionEmojiValue.HEART,
+        }),
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw NotFoundException when match does not exist', async () => {
+    it("should throw NotFoundException when match does not exist", async () => {
       mockPrisma.chatMessage.findUnique.mockResolvedValue({
         id: messageId,
         matchId,
@@ -885,22 +895,26 @@ describe('ChatService', () => {
       mockPrisma.match.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.reactToMessage(userId, messageId, { emoji: ReactionEmojiValue.HEART }),
+        service.reactToMessage(userId, messageId, {
+          emoji: ReactionEmojiValue.HEART,
+        }),
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw ForbiddenException when user is not in match', async () => {
+    it("should throw ForbiddenException when user is not in match", async () => {
       mockPrisma.chatMessage.findUnique.mockResolvedValue({
         id: messageId,
         matchId,
       });
       mockPrisma.match.findUnique.mockResolvedValue({
-        userAId: 'other-1',
-        userBId: 'other-2',
+        userAId: "other-1",
+        userBId: "other-2",
       });
 
       await expect(
-        service.reactToMessage(userId, messageId, { emoji: ReactionEmojiValue.HEART }),
+        service.reactToMessage(userId, messageId, {
+          emoji: ReactionEmojiValue.HEART,
+        }),
       ).rejects.toThrow(ForbiddenException);
     });
   });

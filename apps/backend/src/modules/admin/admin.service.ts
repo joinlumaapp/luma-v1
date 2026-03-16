@@ -3,9 +3,9 @@ import {
   Logger,
   NotFoundException,
   BadRequestException,
-} from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { NotificationsService } from '../notifications/notifications.service';
+} from "@nestjs/common";
+import { PrismaService } from "../../prisma/prisma.service";
+import { NotificationsService } from "../notifications/notifications.service";
 import {
   UserFilterDto,
   UserStatusFilter,
@@ -19,7 +19,7 @@ import {
   ReportFilterDto,
   PaymentFilterDto,
   AnalyticsFilterDto,
-} from './dto';
+} from "./dto";
 
 /** Shape returned by getDashboardStats */
 export interface DashboardStats {
@@ -78,7 +78,7 @@ export class AdminService {
         where: { createdAt: { gte: todayStart } },
       }),
       this.prisma.report.count({
-        where: { status: { in: ['PENDING', 'REVIEWING'] } },
+        where: { status: { in: ["PENDING", "REVIEWING"] } },
       }),
       this.prisma.subscription.count({ where: { isActive: true } }),
       this.prisma.user.count({
@@ -89,7 +89,7 @@ export class AdminService {
     // Calculate total revenue from gold transactions (purchase type only)
     const revenueAgg = await this.prisma.goldTransaction.aggregate({
       _sum: { amount: true },
-      where: { type: 'PURCHASE', amount: { gt: 0 } },
+      where: { type: "PURCHASE", amount: { gt: 0 } },
     });
 
     return {
@@ -153,12 +153,11 @@ export class AdminService {
         { id: searchTerm.length === 36 ? searchTerm : undefined },
         {
           profile: {
-            firstName: { contains: searchTerm, mode: 'insensitive' },
+            firstName: { contains: searchTerm, mode: "insensitive" },
           },
         },
       ].filter(
-        (condition) =>
-          !Object.values(condition).some((v) => v === undefined),
+        (condition) => !Object.values(condition).some((v) => v === undefined),
       );
     }
 
@@ -167,7 +166,7 @@ export class AdminService {
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         select: {
           id: true,
           phone: true,
@@ -242,14 +241,14 @@ export class AdminService {
       where: { id: userId },
       include: {
         profile: true,
-        photos: { orderBy: { order: 'asc' } },
+        photos: { orderBy: { order: "asc" } },
         subscriptions: {
           where: { isActive: true },
           take: 1,
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
         },
         reportedBy: {
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
           take: 20,
           select: {
             id: true,
@@ -267,7 +266,7 @@ export class AdminService {
         },
         badges: {
           include: { badge: true },
-          orderBy: { earnedAt: 'desc' },
+          orderBy: { earnedAt: "desc" },
         },
         _count: {
           select: {
@@ -283,7 +282,7 @@ export class AdminService {
     });
 
     if (!user) {
-      throw new NotFoundException('Kullanici bulunamadi');
+      throw new NotFoundException("Kullanici bulunamadi");
     }
 
     return {
@@ -332,7 +331,7 @@ export class AdminService {
         category: r.category,
         status: r.status,
         details: r.details,
-        reporterName: r.reporter.profile?.firstName ?? 'Anonim',
+        reporterName: r.reporter.profile?.firstName ?? "Anonim",
         createdAt: r.createdAt.toISOString(),
       })),
       badges: user.badges.map((ub) => ({
@@ -367,14 +366,14 @@ export class AdminService {
     });
 
     if (!user) {
-      throw new NotFoundException('Kullanici bulunamadi');
+      throw new NotFoundException("Kullanici bulunamadi");
     }
 
     switch (dto.action) {
       case ModerateAction.BAN:
         if (!dto.reason) {
           throw new BadRequestException(
-            'Ban islemi icin sebep belirtilmelidir',
+            "Ban islemi icin sebep belirtilmelidir",
           );
         }
         await this.prisma.user.update({
@@ -389,16 +388,16 @@ export class AdminService {
       case ModerateAction.WARN:
         if (!dto.reason) {
           throw new BadRequestException(
-            'Uyari islemi icin sebep belirtilmelidir',
+            "Uyari islemi icin sebep belirtilmelidir",
           );
         }
         // Send warning notification to user
         await this.notificationsService.sendPushNotification(
           userId,
-          'Hesap Uyarisi',
+          "Hesap Uyarisi",
           dto.reason,
-          { type: 'admin_warning' },
-          'SYSTEM',
+          { type: "admin_warning" },
+          "SYSTEM",
         );
         this.logger.log(
           `User ${userId} warned by admin ${adminId}. Reason: ${dto.reason}`,
@@ -445,11 +444,11 @@ export class AdminService {
     });
 
     if (!user) {
-      throw new NotFoundException('Kullanici bulunamadi');
+      throw new NotFoundException("Kullanici bulunamadi");
     }
 
     if (user.deletedAt) {
-      throw new BadRequestException('Kullanici zaten silinmis');
+      throw new BadRequestException("Kullanici zaten silinmis");
     }
 
     await this.prisma.user.update({
@@ -491,7 +490,7 @@ export class AdminService {
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         select: {
           id: true,
           category: true,
@@ -533,11 +532,11 @@ export class AdminService {
       createdAt: report.createdAt.toISOString(),
       reporter: {
         id: report.reporter.id,
-        firstName: report.reporter.profile?.firstName ?? 'Anonim',
+        firstName: report.reporter.profile?.firstName ?? "Anonim",
       },
       reported: {
         id: report.reported.id,
-        firstName: report.reported.profile?.firstName ?? 'Anonim',
+        firstName: report.reported.profile?.firstName ?? "Anonim",
         isActive: report.reported.isActive,
         photoUrl: report.reported.photos[0]?.thumbnailUrl ?? null,
       },
@@ -566,15 +565,15 @@ export class AdminService {
     });
 
     if (!report) {
-      throw new NotFoundException('Rapor bulunamadi');
+      throw new NotFoundException("Rapor bulunamadi");
     }
 
-    if (report.status === 'RESOLVED' || report.status === 'DISMISSED') {
-      throw new BadRequestException('Bu rapor zaten incelenmis');
+    if (report.status === "RESOLVED" || report.status === "DISMISSED") {
+      throw new BadRequestException("Bu rapor zaten incelenmis");
     }
 
     const newStatus =
-      dto.decision === ReportDecision.APPROVE ? 'RESOLVED' : 'DISMISSED';
+      dto.decision === ReportDecision.APPROVE ? "RESOLVED" : "DISMISSED";
 
     await this.prisma.report.update({
       where: { id: reportId },
@@ -601,10 +600,10 @@ export class AdminService {
         case ReportAction.WARN:
           await this.notificationsService.sendPushNotification(
             report.reportedId,
-            'Hesap Uyarisi',
-            'Davranislariniz topluluk kurallarimiza aykiri bulunmustur. Lutfen kurallara uyunuz.',
-            { type: 'admin_warning', reportId },
-            'SYSTEM',
+            "Hesap Uyarisi",
+            "Davranislariniz topluluk kurallarimiza aykiri bulunmustur. Lutfen kurallara uyunuz.",
+            { type: "admin_warning", reportId },
+            "SYSTEM",
           );
           this.logger.log(
             `User ${report.reportedId} warned via report ${reportId} by admin ${adminId}`,
@@ -676,7 +675,7 @@ export class AdminService {
       _sum: { amount: true },
       _count: true,
       where: {
-        type: 'PURCHASE',
+        type: "PURCHASE",
         amount: { gt: 0 },
         createdAt: { gte: dateFrom, lte: dateTo },
       },
@@ -684,7 +683,7 @@ export class AdminService {
 
     // Tier distribution
     const tierDistribution = await this.prisma.user.groupBy({
-      by: ['packageTier'],
+      by: ["packageTier"],
       _count: true,
       where: { deletedAt: null, isActive: true },
     });
@@ -758,7 +757,7 @@ export class AdminService {
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         select: {
           id: true,
           type: true,
@@ -841,8 +840,8 @@ export class AdminService {
             user.id,
             dto.title,
             dto.body,
-            { type: 'system_announcement', adminId },
-            'SYSTEM',
+            { type: "system_announcement", adminId },
+            "SYSTEM",
           )
           .catch((err: Error) => {
             this.logger.warn(

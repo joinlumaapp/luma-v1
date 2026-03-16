@@ -1,6 +1,6 @@
-import { Module } from '@nestjs/common';
-import { PresenceController } from './presence.controller';
-import { PresenceService } from './presence.service';
+import { Module } from "@nestjs/common";
+import { PresenceController } from "./presence.controller";
+import { PresenceService } from "./presence.service";
 
 /**
  * PresenceModule — User online/offline tracking via Redis heartbeats.

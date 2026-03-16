@@ -1,7 +1,7 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
-import { UsersService } from './users.service';
-import { PrismaService } from '../../prisma/prisma.service';
+import { Test, TestingModule } from "@nestjs/testing";
+import { NotFoundException } from "@nestjs/common";
+import { UsersService } from "./users.service";
+import { PrismaService } from "../../prisma/prisma.service";
 
 const mockPrisma = {
   user: {
@@ -10,7 +10,7 @@ const mockPrisma = {
   },
 };
 
-describe('UsersService', () => {
+describe("UsersService", () => {
   let service: UsersService;
 
   beforeEach(async () => {
@@ -24,33 +24,33 @@ describe('UsersService', () => {
     service = module.get<UsersService>(UsersService);
   });
 
-  describe('getCurrentUser()', () => {
-    it('should return user with profile completion and age', async () => {
+  describe("getCurrentUser()", () => {
+    it("should return user with profile completion and age", async () => {
       const mockUser = {
-        id: 'u1',
-        phone: '+905551234567',
+        id: "u1",
+        phone: "+905551234567",
         isSmsVerified: true,
         isSelfieVerified: true,
         isActive: true,
-        packageTier: 'FREE',
+        packageTier: "FREE",
         goldBalance: 0,
         deletedAt: null,
         profile: {
-          firstName: 'Ali',
-          birthDate: new Date('1995-06-15'),
-          bio: 'Hello',
-          city: 'Istanbul',
-          intentionTag: 'SERIOUS_RELATIONSHIP',
+          firstName: "Ali",
+          birthDate: new Date("1995-06-15"),
+          bio: "Hello",
+          city: "Istanbul",
+          intentionTag: "SERIOUS_RELATIONSHIP",
         },
-        photos: [{ id: 'p1' }],
+        photos: [{ id: "p1" }],
         badges: [],
         subscriptions: [],
       };
       mockPrisma.user.findUnique.mockResolvedValue(mockUser);
 
-      const result = await service.getCurrentUser('u1');
+      const result = await service.getCurrentUser("u1");
 
-      expect(result.id).toBe('u1');
+      expect(result.id).toBe("u1");
       expect(result.age).toBeGreaterThan(0);
       expect(result.profileCompletion).toBe(100); // all 7 criteria met
       expect(result.activeSubscription).toBeNull();
@@ -58,17 +58,17 @@ describe('UsersService', () => {
       expect((result as Record<string, unknown>).deletedAt).toBeUndefined();
     });
 
-    it('should throw NotFoundException when user does not exist', async () => {
+    it("should throw NotFoundException when user does not exist", async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
-      await expect(service.getCurrentUser('u-none')).rejects.toThrow(
+      await expect(service.getCurrentUser("u-none")).rejects.toThrow(
         NotFoundException,
       );
     });
 
-    it('should return 14% completion for user with only SMS verified', async () => {
+    it("should return 14% completion for user with only SMS verified", async () => {
       const mockUser = {
-        id: 'u2',
+        id: "u2",
         isSmsVerified: true,
         isSelfieVerified: false,
         deletedAt: null,
@@ -79,21 +79,21 @@ describe('UsersService', () => {
       };
       mockPrisma.user.findUnique.mockResolvedValue(mockUser);
 
-      const result = await service.getCurrentUser('u2');
+      const result = await service.getCurrentUser("u2");
 
       expect(result.profileCompletion).toBe(14); // 1/7 = 14%
       expect(result.age).toBeNull();
     });
 
-    it('should return active subscription when present', async () => {
+    it("should return active subscription when present", async () => {
       const sub = {
-        id: 'sub1',
-        packageTier: 'GOLD',
+        id: "sub1",
+        packageTier: "GOLD",
         isActive: true,
-        expiryDate: new Date('2027-01-01'),
+        expiryDate: new Date("2027-01-01"),
       };
       mockPrisma.user.findUnique.mockResolvedValue({
-        id: 'u3',
+        id: "u3",
         isSmsVerified: true,
         isSelfieVerified: false,
         deletedAt: null,
@@ -103,12 +103,12 @@ describe('UsersService', () => {
         subscriptions: [sub],
       });
 
-      const result = await service.getCurrentUser('u3');
+      const result = await service.getCurrentUser("u3");
 
       expect(result.activeSubscription).toEqual(sub);
     });
 
-    it('should calculate correct age for user born today', async () => {
+    it("should calculate correct age for user born today", async () => {
       const today = new Date();
       const birthDate = new Date(
         today.getFullYear() - 25,
@@ -116,66 +116,74 @@ describe('UsersService', () => {
         today.getDate(),
       );
       mockPrisma.user.findUnique.mockResolvedValue({
-        id: 'u4',
+        id: "u4",
         isSmsVerified: true,
         isSelfieVerified: false,
         deletedAt: null,
-        profile: { birthDate, bio: null, city: null, intentionTag: 'EXPLORING' },
+        profile: {
+          birthDate,
+          bio: null,
+          city: null,
+          intentionTag: "EXPLORING",
+        },
         photos: [],
         badges: [],
         subscriptions: [],
       });
 
-      const result = await service.getCurrentUser('u4');
+      const result = await service.getCurrentUser("u4");
 
       expect(result.age).toBe(25);
     });
   });
 
-  describe('updateUser()', () => {
-    it('should throw NotFoundException when user does not exist', async () => {
+  describe("updateUser()", () => {
+    it("should throw NotFoundException when user does not exist", async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.updateUser('u-none', {} as Record<string, unknown>),
+        service.updateUser("u-none", {} as Record<string, unknown>),
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should update and return the user', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ id: 'u1' });
+    it("should update and return the user", async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ id: "u1" });
       mockPrisma.user.update.mockResolvedValue({
-        id: 'u1',
-        phone: '+905551234567',
+        id: "u1",
+        phone: "+905551234567",
       });
 
-      const result = await service.updateUser('u1', {} as Record<string, unknown>);
+      const result = await service.updateUser(
+        "u1",
+        {} as Record<string, unknown>,
+      );
 
-      expect(result.id).toBe('u1');
+      expect(result.id).toBe("u1");
     });
   });
 
-  describe('findById()', () => {
-    it('should return user when found', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ id: 'u1' });
-      const result = await service.findById('u1');
-      expect(result).toEqual({ id: 'u1' });
+  describe("findById()", () => {
+    it("should return user when found", async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ id: "u1" });
+      const result = await service.findById("u1");
+      expect(result).toEqual({ id: "u1" });
     });
 
-    it('should return null when not found', async () => {
+    it("should return null when not found", async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
-      const result = await service.findById('u-none');
+      const result = await service.findById("u-none");
       expect(result).toBeNull();
     });
   });
 
-  describe('findByPhone()', () => {
-    it('should find user by phone number', async () => {
+  describe("findByPhone()", () => {
+    it("should find user by phone number", async () => {
       mockPrisma.user.findUnique.mockResolvedValue({
-        id: 'u1',
-        phone: '+905551234567',
+        id: "u1",
+        phone: "+905551234567",
       });
-      const result = await service.findByPhone('+905551234567');
-      expect(result?.id).toBe('u1');
+      const result = await service.findByPhone("+905551234567");
+      expect(result?.id).toBe("u1");
     });
   });
 });

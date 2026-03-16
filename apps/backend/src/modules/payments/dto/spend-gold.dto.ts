@@ -1,12 +1,24 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsOptional, IsIn, IsNumber, Min } from 'class-validator';
+import { ApiProperty } from "@nestjs/swagger";
+import {
+  IsNotEmpty,
+  IsString,
+  IsOptional,
+  IsIn,
+  IsNumber,
+  Min,
+} from "class-validator";
 
-const VALID_GOLD_ACTIONS = ['harmony_extension', 'profile_boost', 'super_like'] as const;
+const VALID_GOLD_ACTIONS = [
+  "harmony_extension",
+  "profile_boost",
+  "super_like",
+] as const;
 
 export class SpendGoldDto {
   @ApiProperty({
-    description: 'Action to spend gold on: harmony_extension, profile_boost, super_like',
-    example: 'harmony_extension',
+    description:
+      "Action to spend gold on: harmony_extension, profile_boost, super_like",
+    example: "harmony_extension",
     enum: VALID_GOLD_ACTIONS,
   })
   @IsNotEmpty()
@@ -14,7 +26,8 @@ export class SpendGoldDto {
   action!: string;
 
   @ApiProperty({
-    description: 'Gold amount to spend (defaults to action cost if not specified)',
+    description:
+      "Gold amount to spend (defaults to action cost if not specified)",
     example: 1,
     required: false,
   })
@@ -24,7 +37,8 @@ export class SpendGoldDto {
   amount?: number;
 
   @ApiProperty({
-    description: 'Optional reference ID (e.g. session ID for harmony extension, target user ID for super like)',
+    description:
+      "Optional reference ID (e.g. session ID for harmony extension, target user ID for super like)",
     required: false,
   })
   @IsOptional()

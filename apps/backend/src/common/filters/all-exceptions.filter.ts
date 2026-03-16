@@ -5,36 +5,39 @@ import {
   HttpException,
   HttpStatus,
   Logger,
-} from '@nestjs/common';
-import { Response, Request } from 'express';
-import * as Sentry from '@sentry/nestjs';
+} from "@nestjs/common";
+import { Response, Request } from "express";
+import * as Sentry from "@sentry/nestjs";
 
 /** Turkish messages for common HTTP error codes */
 const TURKISH_ERROR_MESSAGES: Readonly<Record<number, string>> = {
-  [HttpStatus.BAD_REQUEST]: 'Gecersiz istek. Lutfen bilgilerinizi kontrol edin.',
-  [HttpStatus.UNAUTHORIZED]: 'Yetkisiz erisim. Lutfen giris yapin.',
-  [HttpStatus.FORBIDDEN]: 'Bu islemi gerceklestirme yetkiniz bulunmuyor.',
-  [HttpStatus.NOT_FOUND]: 'Aradiginiz kaynak bulunamadi.',
-  [HttpStatus.METHOD_NOT_ALLOWED]: 'Bu HTTP metodu desteklenmiyor.',
-  [HttpStatus.CONFLICT]: 'Bu islem bir cakisma olusturdu.',
-  [HttpStatus.UNPROCESSABLE_ENTITY]: 'Gonderilen veriler islenmedi.',
-  [HttpStatus.TOO_MANY_REQUESTS]: 'Cok fazla istek gonderdiniz. Lutfen bekleyin.',
-  [HttpStatus.INTERNAL_SERVER_ERROR]: 'Sunucu hatasi olustu. Lutfen daha sonra tekrar deneyin.',
-  [HttpStatus.BAD_GATEWAY]: 'Sunucu gecici olarak kullanilamiyor.',
-  [HttpStatus.SERVICE_UNAVAILABLE]: 'Hizmet gecici olarak kullanilamiyor.',
-  [HttpStatus.GATEWAY_TIMEOUT]: 'Sunucu yanit suresi doldu.',
+  [HttpStatus.BAD_REQUEST]:
+    "Gecersiz istek. Lutfen bilgilerinizi kontrol edin.",
+  [HttpStatus.UNAUTHORIZED]: "Yetkisiz erisim. Lutfen giris yapin.",
+  [HttpStatus.FORBIDDEN]: "Bu islemi gerceklestirme yetkiniz bulunmuyor.",
+  [HttpStatus.NOT_FOUND]: "Aradiginiz kaynak bulunamadi.",
+  [HttpStatus.METHOD_NOT_ALLOWED]: "Bu HTTP metodu desteklenmiyor.",
+  [HttpStatus.CONFLICT]: "Bu islem bir cakisma olusturdu.",
+  [HttpStatus.UNPROCESSABLE_ENTITY]: "Gonderilen veriler islenmedi.",
+  [HttpStatus.TOO_MANY_REQUESTS]:
+    "Cok fazla istek gonderdiniz. Lutfen bekleyin.",
+  [HttpStatus.INTERNAL_SERVER_ERROR]:
+    "Sunucu hatasi olustu. Lutfen daha sonra tekrar deneyin.",
+  [HttpStatus.BAD_GATEWAY]: "Sunucu gecici olarak kullanilamiyor.",
+  [HttpStatus.SERVICE_UNAVAILABLE]: "Hizmet gecici olarak kullanilamiyor.",
+  [HttpStatus.GATEWAY_TIMEOUT]: "Sunucu yanit suresi doldu.",
 };
 
 /** Fields that should never appear in error responses */
 const SENSITIVE_FIELDS = new Set([
-  'stack',
-  'query',
-  'sql',
-  'password',
-  'token',
-  'secret',
-  'authorization',
-  'cookie',
+  "stack",
+  "query",
+  "sql",
+  "password",
+  "token",
+  "secret",
+  "authorization",
+  "cookie",
 ]);
 
 interface ExceptionResponseObject {
@@ -45,18 +48,18 @@ interface ExceptionResponseObject {
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  private readonly logger = new Logger('ExceptionFilter');
+  private readonly logger = new Logger("ExceptionFilter");
   private readonly isProduction: boolean;
 
   constructor() {
-    this.isProduction = process.env.NODE_ENV === 'production';
+    this.isProduction = process.env.NODE_ENV === "production";
   }
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const contextType = host.getType();
 
     // WebSocket exceptions are handled by the gateway itself
-    if (contextType === 'ws') {
+    if (contextType === "ws") {
       this.handleWsException(exception);
       return;
     }
@@ -90,9 +93,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     // In development, include additional debug info (never in production)
     if (!this.isProduction && exception instanceof Error) {
-      responseBody['debug'] = {
+      responseBody["debug"] = {
         name: exception.name,
-        stack: exception.stack?.split('\n').slice(0, 5),
+        stack: exception.stack?.split("\n").slice(0, 5),
       };
     }
 
@@ -111,16 +114,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
       const status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
 
-      if (typeof exceptionResponse === 'string') {
+      if (typeof exceptionResponse === "string") {
         return { status, message: exceptionResponse, error: exception.name };
       }
 
-      if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
+      if (typeof exceptionResponse === "object" && exceptionResponse !== null) {
         const resp = exceptionResponse as ExceptionResponseObject;
         let message: string;
 
         if (Array.isArray(resp.message)) {
-          message = resp.message.join(', ');
+          message = resp.message.join(", ");
         } else {
           message = resp.message ?? exception.message;
         }
@@ -138,15 +141,15 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (exception instanceof Error) {
       return {
         status: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: 'Sunucu hatasi olustu',
-        error: 'Internal Server Error',
+        message: "Sunucu hatasi olustu",
+        error: "Internal Server Error",
       };
     }
 
     return {
       status: HttpStatus.INTERNAL_SERVER_ERROR,
-      message: 'Bilinmeyen bir hata olustu',
-      error: 'Internal Server Error',
+      message: "Bilinmeyen bir hata olustu",
+      error: "Internal Server Error",
     };
   }
 
@@ -159,7 +162,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (this.isProduction && status >= 500) {
       return (
         TURKISH_ERROR_MESSAGES[status] ??
-        'Sunucu hatasi olustu. Lutfen daha sonra tekrar deneyin.'
+        "Sunucu hatasi olustu. Lutfen daha sonra tekrar deneyin."
       );
     }
 
@@ -167,7 +170,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (this.containsSensitiveInfo(originalMessage)) {
       return (
         TURKISH_ERROR_MESSAGES[status] ??
-        'Bir hata olustu. Lutfen tekrar deneyin.'
+        "Bir hata olustu. Lutfen tekrar deneyin."
       );
     }
 
@@ -194,11 +197,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
   /**
    * Log errors with appropriate severity levels.
    */
-  private logError(
-    status: number,
-    request: Request,
-    exception: unknown,
-  ): void {
+  private logError(status: number, request: Request, exception: unknown): void {
     const context = `${request.method} ${request.url}`;
 
     if (status >= 500) {
@@ -223,7 +222,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
   private reportToSentry(exception: unknown, request: Request): void {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     Sentry.withScope((scope: any) => {
-      const user = (request as unknown as Record<string, unknown>)['user'] as
+      const user = (request as unknown as Record<string, unknown>)["user"] as
         | { sub: string }
         | undefined;
 
@@ -231,10 +230,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
         scope.setUser({ id: user.sub });
       }
 
-      scope.setTag('http.method', request.method);
-      scope.setTag('http.url', request.url);
-      scope.setExtra('ip', request.ip);
-      scope.setExtra('userAgent', request.get('user-agent') ?? 'unknown');
+      scope.setTag("http.method", request.method);
+      scope.setTag("http.url", request.url);
+      scope.setExtra("ip", request.ip);
+      scope.setExtra("userAgent", request.get("user-agent") ?? "unknown");
 
       if (exception instanceof Error) {
         Sentry.captureException(exception);
@@ -253,7 +252,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         exception.stack,
       );
     } else {
-      this.logger.error('WebSocket unknown exception', String(exception));
+      this.logger.error("WebSocket unknown exception", String(exception));
     }
   }
 }

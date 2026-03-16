@@ -5,9 +5,9 @@ import {
   HttpCode,
   HttpStatus,
   Logger,
-} from '@nestjs/common';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { PresenceService, UserPresenceStatus } from './presence.service';
+} from "@nestjs/common";
+import { CurrentUser } from "../../common/decorators/current-user.decorator";
+import { PresenceService, UserPresenceStatus } from "./presence.service";
 
 /**
  * PresenceController — REST endpoints for user online/offline tracking.
@@ -15,7 +15,7 @@ import { PresenceService, UserPresenceStatus } from './presence.service';
  * All endpoints require JWT authentication (global guard).
  * Mobile client calls heartbeat on foreground, offline on background.
  */
-@Controller('presence')
+@Controller("presence")
 export class PresenceController {
   private readonly logger = new Logger(PresenceController.name);
 
@@ -25,9 +25,9 @@ export class PresenceController {
    * POST /presence/heartbeat
    * Called periodically by the mobile app to signal the user is active.
    */
-  @Post('heartbeat')
+  @Post("heartbeat")
   @HttpCode(HttpStatus.NO_CONTENT)
-  async heartbeat(@CurrentUser('sub') userId: string): Promise<void> {
+  async heartbeat(@CurrentUser("sub") userId: string): Promise<void> {
     await this.presenceService.heartbeat(userId);
   }
 
@@ -35,9 +35,9 @@ export class PresenceController {
    * POST /presence/offline
    * Called when the mobile app goes to background.
    */
-  @Post('offline')
+  @Post("offline")
   @HttpCode(HttpStatus.NO_CONTENT)
-  async offline(@CurrentUser('sub') userId: string): Promise<void> {
+  async offline(@CurrentUser("sub") userId: string): Promise<void> {
     await this.presenceService.setOffline(userId);
   }
 
@@ -46,10 +46,10 @@ export class PresenceController {
    * Returns online status for a list of user IDs.
    * Used by the chat list to show green dots.
    */
-  @Post('batch')
+  @Post("batch")
   @HttpCode(HttpStatus.OK)
   async batch(
-    @CurrentUser('sub') _userId: string,
+    @CurrentUser("sub") _userId: string,
     @Body() body: { userIds: string[] },
   ): Promise<Record<string, UserPresenceStatus>> {
     const userIds = body.userIds ?? [];

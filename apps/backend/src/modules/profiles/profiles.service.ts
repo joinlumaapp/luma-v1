@@ -3,17 +3,17 @@ import {
   NotFoundException,
   BadRequestException,
   Logger,
-} from '@nestjs/common';
-import * as crypto from 'crypto';
-import { PrismaService } from '../../prisma/prisma.service';
-import { UpdateProfileDto, SetIntentionTagDto, ReorderPhotosDto } from './dto';
+} from "@nestjs/common";
+import * as crypto from "crypto";
+import { PrismaService } from "../../prisma/prisma.service";
+import { UpdateProfileDto, SetIntentionTagDto, ReorderPhotosDto } from "./dto";
 
 const MAX_PHOTOS = 20;
 const MIN_PHOTOS = 2;
 const MAX_PHOTO_SIZE_MB = 10;
 const MIN_AGE = 18;
 const MAX_AGE = 99;
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 @Injectable()
 export class ProfilesService {
@@ -35,13 +35,13 @@ export class ProfilesService {
           // Owner sees all their photos (including pending moderation);
           // public viewers only see approved photos.
           ...(isOwner ? {} : { where: { isApproved: true } }),
-          orderBy: { order: 'asc' },
+          orderBy: { order: "asc" },
         },
       },
     });
 
     if (!user) {
-      throw new NotFoundException('Kullanıcı bulunamadı');
+      throw new NotFoundException("Kullanıcı bulunamadı");
     }
 
     // Calculate profile completion (only approved photos count)
@@ -57,7 +57,9 @@ export class ProfilesService {
       photos: user.photos.map((p) => ({
         ...p,
         // Indicate moderation status to the owner
-        ...(isOwner && !p.isApproved ? { moderationStatus: 'pending' as const } : {}),
+        ...(isOwner && !p.isApproved
+          ? { moderationStatus: "pending" as const }
+          : {}),
       })),
       profileCompletion: completion,
     };
@@ -74,28 +76,34 @@ export class ProfilesService {
     });
 
     if (!user) {
-      throw new NotFoundException('Kullanıcı bulunamadı');
+      throw new NotFoundException("Kullanıcı bulunamadı");
     }
 
     // Validate age if birthDate is provided
     if (dto.birthDate) {
       const age = this.calculateAge(new Date(dto.birthDate));
       if (age < MIN_AGE) {
-        throw new BadRequestException('Uygulamayı kullanmak için en az 18 yaşında olmalısınız');
+        throw new BadRequestException(
+          "Uygulamayı kullanmak için en az 18 yaşında olmalısınız",
+        );
       }
       if (age > MAX_AGE) {
-        throw new BadRequestException('Geçerli bir doğum tarihi girin (maksimum 99 yaş)');
+        throw new BadRequestException(
+          "Geçerli bir doğum tarihi girin (maksimum 99 yaş)",
+        );
       }
     }
 
     // Validate bio min-length when provided
     if (dto.bio !== undefined && dto.bio.length > 0 && dto.bio.length < 10) {
-      throw new BadRequestException('Hakkinda yazisi en az 10 karakter olmali');
+      throw new BadRequestException("Hakkinda yazisi en az 10 karakter olmali");
     }
 
     // Validate interestTags max count
     if (dto.interestTags && dto.interestTags.length > 10) {
-      throw new BadRequestException('En fazla 10 ilgi alani etiketi eklenebilir');
+      throw new BadRequestException(
+        "En fazla 10 ilgi alani etiketi eklenebilir",
+      );
     }
 
     // Upsert profile (create if not exists, update if exists)
@@ -103,29 +111,37 @@ export class ProfilesService {
       where: { userId },
       create: {
         userId,
-        firstName: dto.firstName ?? '',
-        birthDate: dto.birthDate ? new Date(dto.birthDate) : new Date('2000-01-01'),
-        gender: dto.gender ?? 'OTHER',
+        firstName: dto.firstName ?? "",
+        birthDate: dto.birthDate
+          ? new Date(dto.birthDate)
+          : new Date("2000-01-01"),
+        gender: dto.gender ?? "OTHER",
         bio: dto.bio,
         city: dto.city,
         country: dto.country,
         latitude: dto.latitude,
         longitude: dto.longitude,
-        intentionTag: dto.intentionTag ?? 'NOT_SURE',
+        intentionTag: dto.intentionTag ?? "NOT_SURE",
         interestTags: dto.interestTags ?? [],
         isComplete: false,
       },
       update: {
         ...(dto.firstName !== undefined && { firstName: dto.firstName }),
-        ...(dto.birthDate !== undefined && { birthDate: new Date(dto.birthDate) }),
+        ...(dto.birthDate !== undefined && {
+          birthDate: new Date(dto.birthDate),
+        }),
         ...(dto.gender !== undefined && { gender: dto.gender }),
         ...(dto.bio !== undefined && { bio: dto.bio }),
         ...(dto.city !== undefined && { city: dto.city }),
         ...(dto.country !== undefined && { country: dto.country }),
         ...(dto.latitude !== undefined && { latitude: dto.latitude }),
         ...(dto.longitude !== undefined && { longitude: dto.longitude }),
-        ...(dto.intentionTag !== undefined && { intentionTag: dto.intentionTag }),
-        ...(dto.interestTags !== undefined && { interestTags: dto.interestTags }),
+        ...(dto.intentionTag !== undefined && {
+          intentionTag: dto.intentionTag,
+        }),
+        ...(dto.interestTags !== undefined && {
+          interestTags: dto.interestTags,
+        }),
         lastActiveAt: new Date(),
       },
     });
@@ -135,7 +151,11 @@ export class ProfilesService {
       where: { userId },
     });
 
-    const isComplete = this.isProfileComplete(profile, photos.length, user.isSmsVerified);
+    const isComplete = this.isProfileComplete(
+      profile,
+      photos.length,
+      user.isSmsVerified,
+    );
     if (isComplete !== profile.isComplete) {
       await this.prisma.userProfile.update({
         where: { id: profile.id },
@@ -152,19 +172,21 @@ export class ProfilesService {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Multer file type; install @types/multer for proper typing
   async uploadPhoto(userId: string, file: any) {
     if (!file) {
-      throw new BadRequestException('Fotoğraf dosyası gerekli');
+      throw new BadRequestException("Fotoğraf dosyası gerekli");
     }
 
     // Validate MIME type
     if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
       throw new BadRequestException(
-        'Desteklenmeyen dosya formatı. JPG, PNG veya WebP kullanın.',
+        "Desteklenmeyen dosya formatı. JPG, PNG veya WebP kullanın.",
       );
     }
 
     // Validate file size
     if (file.size > MAX_PHOTO_SIZE_MB * 1024 * 1024) {
-      throw new BadRequestException(`Dosya boyutu en fazla ${MAX_PHOTO_SIZE_MB}MB olabilir`);
+      throw new BadRequestException(
+        `Dosya boyutu en fazla ${MAX_PHOTO_SIZE_MB}MB olabilir`,
+      );
     }
 
     // Check photo count limit
@@ -173,7 +195,9 @@ export class ProfilesService {
     });
 
     if (photoCount >= MAX_PHOTOS) {
-      throw new BadRequestException(`En fazla ${MAX_PHOTOS} fotoğraf yükleyebilirsiniz`);
+      throw new BadRequestException(
+        `En fazla ${MAX_PHOTOS} fotoğraf yükleyebilirsiniz`,
+      );
     }
 
     // In production: Upload to S3 and generate thumbnails
@@ -203,7 +227,7 @@ export class ProfilesService {
       order: photo.order,
       isPrimary: photo.isPrimary,
       isApproved: moderationResult.approved,
-      moderationStatus: moderationResult.approved ? 'approved' : 'pending',
+      moderationStatus: moderationResult.approved ? "approved" : "pending",
     };
   }
 
@@ -224,13 +248,13 @@ export class ProfilesService {
     photoId: string,
     userId: string,
   ): Promise<{ approved: boolean; reason: string }> {
-    const isDev = process.env.NODE_ENV !== 'production';
+    const isDev = process.env.NODE_ENV !== "production";
 
     if (isDev) {
       // DEV MODE: Auto-approve with warning
       this.logger.warn(
         `[DEV] Auto-approving photo ${photoId} for user ${userId}. ` +
-        `In production, this would require manual/AI moderation review.`,
+          `In production, this would require manual/AI moderation review.`,
       );
 
       await this.prisma.userPhoto.update({
@@ -238,16 +262,16 @@ export class ProfilesService {
         data: { isApproved: true },
       });
 
-      return { approved: true, reason: 'dev_auto_approved' };
+      return { approved: true, reason: "dev_auto_approved" };
     }
 
     // PRODUCTION: Photo stays as isApproved=false, awaiting review
     this.logger.log(
       `Photo ${photoId} for user ${userId} queued for moderation review. ` +
-      `Manual approval or AWS Rekognition integration required.`,
+        `Manual approval or AWS Rekognition integration required.`,
     );
 
-    return { approved: false, reason: 'pending_moderation_review' };
+    return { approved: false, reason: "pending_moderation_review" };
   }
 
   /**
@@ -260,7 +284,7 @@ export class ProfilesService {
     });
 
     if (!photo) {
-      throw new NotFoundException('Fotoğraf bulunamadı');
+      throw new NotFoundException("Fotoğraf bulunamadı");
     }
 
     // Delete photo record
@@ -274,7 +298,7 @@ export class ProfilesService {
     // Reorder remaining photos
     const remainingPhotos = await this.prisma.userPhoto.findMany({
       where: { userId },
-      orderBy: { order: 'asc' },
+      orderBy: { order: "asc" },
     });
 
     for (let i = 0; i < remainingPhotos.length; i++) {
@@ -305,7 +329,7 @@ export class ProfilesService {
 
     // Ensure no duplicates in request
     if (dtoPhotoIds.size !== dto.photoIds.length) {
-      throw new BadRequestException('Tekrar eden fotograf ID\'leri var');
+      throw new BadRequestException("Tekrar eden fotograf ID'leri var");
     }
 
     // Ensure all provided IDs belong to user
@@ -345,7 +369,7 @@ export class ProfilesService {
     });
 
     if (!profile) {
-      throw new NotFoundException('Profil bulunamadı. Önce profil oluşturun.');
+      throw new NotFoundException("Profil bulunamadı. Önce profil oluşturun.");
     }
 
     await this.prisma.userProfile.update({
@@ -355,7 +379,7 @@ export class ProfilesService {
 
     return {
       intentionTag: dto.intentionTag,
-      message: 'Niyet etiketi güncellendi',
+      message: "Niyet etiketi güncellendi",
     };
   }
 
@@ -368,7 +392,7 @@ export class ProfilesService {
    */
   async getProfileStrength(userId: string): Promise<{
     percentage: number;
-    level: 'low' | 'medium' | 'high';
+    level: "low" | "medium" | "high";
     message: string;
     breakdown: Array<{
       key: string;
@@ -389,7 +413,7 @@ export class ProfilesService {
     });
 
     if (!user) {
-      throw new NotFoundException('Kullanıcı bulunamadı');
+      throw new NotFoundException("Kullanıcı bulunamadı");
     }
 
     // Count answered questions
@@ -406,57 +430,60 @@ export class ProfilesService {
       tip: string;
     }> = [
       {
-        key: 'name',
-        label: 'Isim',
+        key: "name",
+        label: "Isim",
         weight: 10,
-        completed: !!user.profile?.firstName && user.profile.firstName.length > 0,
-        tip: 'Isim ekle',
+        completed:
+          !!user.profile?.firstName && user.profile.firstName.length > 0,
+        tip: "Isim ekle",
       },
       {
-        key: 'bio',
-        label: 'Hakkinda',
+        key: "bio",
+        label: "Hakkinda",
         weight: 15,
         completed: !!user.profile?.bio && user.profile.bio.length > 0,
-        tip: 'Hakkinda bolumu yaz',
+        tip: "Hakkinda bolumu yaz",
       },
       {
-        key: 'photos',
-        label: 'Fotograflar',
+        key: "photos",
+        label: "Fotograflar",
         weight: 20,
         completed: user.photos.length >= 4,
-        tip: user.photos.length < 4
-          ? `Daha fazla foto yukle (${user.photos.length}/4)`
-          : '',
+        tip:
+          user.photos.length < 4
+            ? `Daha fazla foto yukle (${user.photos.length}/4)`
+            : "",
       },
       {
-        key: 'intention',
-        label: 'Niyet Etiketi',
+        key: "intention",
+        label: "Niyet Etiketi",
         weight: 10,
         completed: !!user.profile?.intentionTag,
-        tip: 'Niyet etiketi sec',
+        tip: "Niyet etiketi sec",
       },
       {
-        key: 'questions',
-        label: 'Uyumluluk Sorulari',
+        key: "questions",
+        label: "Uyumluluk Sorulari",
         weight: 20,
         completed: answeredCount >= 20,
-        tip: answeredCount < 20
-          ? `Daha fazla soru yanitla (${answeredCount}/20)`
-          : '',
+        tip:
+          answeredCount < 20
+            ? `Daha fazla soru yanitla (${answeredCount}/20)`
+            : "",
       },
       {
-        key: 'voice_intro',
-        label: 'Sesli Tanitim',
+        key: "voice_intro",
+        label: "Sesli Tanitim",
         weight: 10,
         completed: !!user.profile?.voiceIntroUrl,
-        tip: 'Sesli tanitim ekle',
+        tip: "Sesli tanitim ekle",
       },
       {
-        key: 'selfie_verified',
-        label: 'Selfie Dogrulama',
+        key: "selfie_verified",
+        label: "Selfie Dogrulama",
         weight: 15,
         completed: user.isSelfieVerified,
-        tip: 'Selfie dogrulama yap',
+        tip: "Selfie dogrulama yap",
       },
     ];
 
@@ -470,23 +497,22 @@ export class ProfilesService {
       }
     }
 
-    const percentage = totalWeight > 0
-      ? Math.round((earnedWeight / totalWeight) * 100)
-      : 0;
+    const percentage =
+      totalWeight > 0 ? Math.round((earnedWeight / totalWeight) * 100) : 0;
 
     // Determine level and message
-    let level: 'low' | 'medium' | 'high';
+    let level: "low" | "medium" | "high";
     let message: string;
 
     if (percentage < 50) {
-      level = 'low';
-      message = 'Profilini tamamla!';
+      level = "low";
+      message = "Profilini tamamla!";
     } else if (percentage < 80) {
-      level = 'medium';
-      message = 'Iyi gidiyorsun!';
+      level = "medium";
+      message = "Iyi gidiyorsun!";
     } else {
-      level = 'high';
-      message = 'Harika profil!';
+      level = "high";
+      message = "Harika profil!";
     }
 
     return {
@@ -500,7 +526,10 @@ export class ProfilesService {
   /**
    * Track a profile view — called when a user views another user's profile card.
    */
-  async trackProfileView(viewerId: string, viewedUserId: string): Promise<void> {
+  async trackProfileView(
+    viewerId: string,
+    viewedUserId: string,
+  ): Promise<void> {
     if (viewerId === viewedUserId) return;
 
     // Store in memory cache (keyed by viewed user)
@@ -509,7 +538,10 @@ export class ProfilesService {
 
     // Prevent duplicate views within 1 hour
     const existingView = ProfilesService.profileViews.get(viewKey);
-    if (existingView && now.getTime() - existingView.viewedAt.getTime() < 60 * 60 * 1000) {
+    if (
+      existingView &&
+      now.getTime() - existingView.viewedAt.getTime() < 60 * 60 * 1000
+    ) {
       return;
     }
 
@@ -552,10 +584,10 @@ export class ProfilesService {
     });
 
     if (!user) {
-      throw new NotFoundException('Kullanıcı bulunamadı');
+      throw new NotFoundException("Kullanıcı bulunamadı");
     }
 
-    const canSeeDetails = user.packageTier !== 'FREE';
+    const canSeeDetails = user.packageTier !== "FREE";
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -599,9 +631,7 @@ export class ProfilesService {
       },
     });
 
-    const profileMap = new Map(
-      visitorProfiles.map((vp) => [vp.id, vp]),
-    );
+    const profileMap = new Map(visitorProfiles.map((vp) => [vp.id, vp]));
 
     const visitors = uniqueVisitors.slice(0, 50).map((entry) => {
       const visitorProfile = profileMap.get(entry.viewerId);
@@ -638,12 +668,12 @@ export class ProfilesService {
     // Validate coordinate bounds
     if (latitude < -90 || latitude > 90) {
       throw new BadRequestException(
-        'Gecersiz enlem degeri. Enlem -90 ile 90 arasinda olmalidir.',
+        "Gecersiz enlem degeri. Enlem -90 ile 90 arasinda olmalidir.",
       );
     }
     if (longitude < -180 || longitude > 180) {
       throw new BadRequestException(
-        'Gecersiz boylam degeri. Boylam -180 ile 180 arasinda olmalidir.',
+        "Gecersiz boylam degeri. Boylam -180 ile 180 arasinda olmalidir.",
       );
     }
 
@@ -652,7 +682,7 @@ export class ProfilesService {
     });
 
     if (!profile) {
-      throw new NotFoundException('Profil bulunamadi. Once profil olusturun.');
+      throw new NotFoundException("Profil bulunamadi. Once profil olusturun.");
     }
 
     await this.prisma.userProfile.update({
@@ -681,7 +711,10 @@ export class ProfilesService {
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
       age--;
     }
     return age;
@@ -690,7 +723,11 @@ export class ProfilesService {
   private calculateCompletion(user: {
     isSmsVerified: boolean;
     isSelfieVerified: boolean;
-    profile: { bio: string | null; city: string | null; intentionTag: string } | null;
+    profile: {
+      bio: string | null;
+      city: string | null;
+      intentionTag: string;
+    } | null;
     photos: { id: string }[];
   }): number {
     let score = 0;
@@ -769,7 +806,7 @@ export class ProfilesService {
   async getPrompts(userId: string) {
     return this.prisma.profilePrompt.findMany({
       where: { userId },
-      orderBy: { order: 'asc' },
+      orderBy: { order: "asc" },
       select: {
         id: true,
         question: true,
@@ -785,19 +822,19 @@ export class ProfilesService {
     prompts: Array<{ question: string; answer: string; order: number }>,
   ) {
     if (prompts.length > 3) {
-      throw new BadRequestException('En fazla 3 profil sorusu eklenebilir');
+      throw new BadRequestException("En fazla 3 profil sorusu eklenebilir");
     }
 
     // Validate each prompt
     for (const prompt of prompts) {
       if (!prompt.question || prompt.question.length > 200) {
-        throw new BadRequestException('Soru 1-200 karakter arasi olmali');
+        throw new BadRequestException("Soru 1-200 karakter arasi olmali");
       }
       if (!prompt.answer || prompt.answer.length > 300) {
-        throw new BadRequestException('Cevap 1-300 karakter arasi olmali');
+        throw new BadRequestException("Cevap 1-300 karakter arasi olmali");
       }
       if (prompt.order < 0 || prompt.order > 2) {
-        throw new BadRequestException('Sira 0-2 arasi olmali');
+        throw new BadRequestException("Sira 0-2 arasi olmali");
       }
     }
 
@@ -836,7 +873,7 @@ export class ProfilesService {
         isActive: true,
         endsAt: { gt: new Date() },
       },
-      orderBy: { endsAt: 'desc' },
+      orderBy: { endsAt: "desc" },
     });
 
     if (!activeBoost) {
@@ -862,7 +899,7 @@ export class ProfilesService {
       select: { goldBalance: true },
     });
 
-    if (!user) throw new NotFoundException('Kullanici bulunamadi');
+    if (!user) throw new NotFoundException("Kullanici bulunamadi");
 
     if (user.goldBalance < ProfilesService.BOOST_GOLD_COST) {
       throw new BadRequestException(
@@ -880,11 +917,13 @@ export class ProfilesService {
     });
 
     if (existingBoost) {
-      throw new BadRequestException('Zaten aktif bir Boost mevcut');
+      throw new BadRequestException("Zaten aktif bir Boost mevcut");
     }
 
     const now = new Date();
-    const endsAt = new Date(now.getTime() + ProfilesService.BOOST_DURATION_MINUTES * 60 * 1000);
+    const endsAt = new Date(
+      now.getTime() + ProfilesService.BOOST_DURATION_MINUTES * 60 * 1000,
+    );
 
     // Deduct Gold and create boost in transaction
     const result = await this.prisma.$transaction(async (tx) => {
@@ -899,7 +938,7 @@ export class ProfilesService {
       await tx.goldTransaction.create({
         data: {
           userId,
-          type: 'PROFILE_BOOST',
+          type: "PROFILE_BOOST",
           amount: -ProfilesService.BOOST_GOLD_COST,
           balance: updatedUser.goldBalance,
           description: `Profil Boost - ${ProfilesService.BOOST_DURATION_MINUTES} dakika`,
@@ -934,12 +973,12 @@ export class ProfilesService {
     gold: number;
     name: string;
   }> = [
-    { days: 3, gold: 5, name: '3 Gün' },
-    { days: 7, gold: 10, name: '1 Hafta' },
-    { days: 14, gold: 20, name: '2 Hafta' },
-    { days: 30, gold: 50, name: '1 Ay' },
-    { days: 60, gold: 100, name: '2 Ay' },
-    { days: 100, gold: 200, name: '100 Gün' },
+    { days: 3, gold: 5, name: "3 Gün" },
+    { days: 7, gold: 10, name: "1 Hafta" },
+    { days: 14, gold: 20, name: "2 Hafta" },
+    { days: 30, gold: 50, name: "1 Ay" },
+    { days: 60, gold: 100, name: "2 Ay" },
+    { days: 100, gold: 200, name: "100 Gün" },
   ];
 
   /** Toggle incognito mode (hide from discovery, Gold+ only) */
@@ -949,11 +988,13 @@ export class ProfilesService {
       select: { packageTier: true },
     });
 
-    if (!user) throw new BadRequestException('Kullanıcı bulunamadı');
+    if (!user) throw new BadRequestException("Kullanıcı bulunamadı");
 
     // Incognito requires Gold+ package
-    if (enabled && user.packageTier === 'FREE') {
-      throw new BadRequestException('Gizli mod için Gold veya üzeri paket gereklidir');
+    if (enabled && user.packageTier === "FREE") {
+      throw new BadRequestException(
+        "Gizli mod için Gold veya üzeri paket gereklidir",
+      );
     }
 
     await this.prisma.userProfile.update({
@@ -967,14 +1008,34 @@ export class ProfilesService {
   // ─── AI Profile Coach (Rule-Based Tips) ────────────────────
 
   private static readonly VALID_MBTI_TYPES: ReadonlyArray<string> = [
-    'INTJ', 'INTP', 'ENTJ', 'ENTP',
-    'INFJ', 'INFP', 'ENFJ', 'ENFP',
-    'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ',
-    'ISTP', 'ISFP', 'ESTP', 'ESFP',
+    "INTJ",
+    "INTP",
+    "ENTJ",
+    "ENTP",
+    "INFJ",
+    "INFP",
+    "ENFJ",
+    "ENFP",
+    "ISTJ",
+    "ISFJ",
+    "ESTJ",
+    "ESFJ",
+    "ISTP",
+    "ISFP",
+    "ESTP",
+    "ESFP",
   ];
 
   private static readonly VALID_ENNEAGRAM_TYPES: ReadonlyArray<string> = [
-    '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
   ];
 
   /**
@@ -983,7 +1044,11 @@ export class ProfilesService {
    * and returns prioritized, actionable advice.
    */
   async getProfileCoachTips(userId: string): Promise<{
-    tips: Array<{ category: string; tip: string; priority: 'high' | 'medium' | 'low' }>;
+    tips: Array<{
+      category: string;
+      tip: string;
+      priority: "high" | "medium" | "low";
+    }>;
     profileStrength: number;
   }> {
     const user = await this.prisma.user.findUnique({
@@ -997,7 +1062,7 @@ export class ProfilesService {
     });
 
     if (!user) {
-      throw new NotFoundException('Kullanici bulunamadi');
+      throw new NotFoundException("Kullanici bulunamadi");
     }
 
     // Count prompts and answered questions
@@ -1012,86 +1077,90 @@ export class ProfilesService {
     const profile = user.profile;
     const photoCount = user.photos.length;
 
-    const tips: Array<{ category: string; tip: string; priority: 'high' | 'medium' | 'low' }> = [];
+    const tips: Array<{
+      category: string;
+      tip: string;
+      priority: "high" | "medium" | "low";
+    }> = [];
 
     // High priority tips (core profile elements)
     if (!profile?.bio) {
       tips.push({
-        category: 'bio',
-        tip: 'Bio ekle \u2014 kendini 2-3 c\u00fcmleyle tan\u0131t',
-        priority: 'high',
+        category: "bio",
+        tip: "Bio ekle \u2014 kendini 2-3 c\u00fcmleyle tan\u0131t",
+        priority: "high",
       });
     } else if (profile.bio.length < 50) {
       tips.push({
-        category: 'bio',
+        category: "bio",
         tip: "Bio'nu zenginle\u015ftir \u2014 ilgi \u00e7ekici detaylar ekle",
-        priority: 'medium',
+        priority: "medium",
       });
     }
 
     if (photoCount < 3) {
       tips.push({
-        category: 'photos',
-        tip: 'En az 3 foto\u011fraf ekle \u2014 farkl\u0131 ortamlarda \u00e7ekilmi\u015f',
-        priority: 'high',
+        category: "photos",
+        tip: "En az 3 foto\u011fraf ekle \u2014 farkl\u0131 ortamlarda \u00e7ekilmi\u015f",
+        priority: "high",
       });
     }
 
     if (!profile?.voiceIntroUrl) {
       tips.push({
-        category: 'voice',
-        tip: 'Sesli tan\u0131t\u0131m ekle \u2014 sesin ki\u015fili\u011fini yans\u0131t\u0131r',
-        priority: 'medium',
+        category: "voice",
+        tip: "Sesli tan\u0131t\u0131m ekle \u2014 sesin ki\u015fili\u011fini yans\u0131t\u0131r",
+        priority: "medium",
       });
     }
 
     if (!profile?.interestTags || profile.interestTags.length === 0) {
       tips.push({
-        category: 'interests',
-        tip: '\u0130lgi alanlar\u0131n\u0131 se\u00e7 \u2014 ortak noktalar bulmay\u0131 kolayla\u015ft\u0131r\u0131r',
-        priority: 'high',
+        category: "interests",
+        tip: "\u0130lgi alanlar\u0131n\u0131 se\u00e7 \u2014 ortak noktalar bulmay\u0131 kolayla\u015ft\u0131r\u0131r",
+        priority: "high",
       });
     }
 
     // Medium priority tips (enrichment)
     if (!profile?.height) {
       tips.push({
-        category: 'height',
-        tip: 'Boy bilgini ekle \u2014 aramalarda \u00f6ne \u00e7\u0131kmana yard\u0131mc\u0131 olur',
-        priority: 'medium',
+        category: "height",
+        tip: "Boy bilgini ekle \u2014 aramalarda \u00f6ne \u00e7\u0131kmana yard\u0131mc\u0131 olur",
+        priority: "medium",
       });
     }
 
     if (!profile?.education) {
       tips.push({
-        category: 'education',
-        tip: 'E\u011fitim bilgini ekle',
-        priority: 'medium',
+        category: "education",
+        tip: "E\u011fitim bilgini ekle",
+        priority: "medium",
       });
     }
 
     if (promptCount === 0) {
       tips.push({
-        category: 'prompts',
-        tip: 'Profil sorular\u0131 ekle \u2014 ki\u015fili\u011fini g\u00f6ster',
-        priority: 'medium',
+        category: "prompts",
+        tip: "Profil sorular\u0131 ekle \u2014 ki\u015fili\u011fini g\u00f6ster",
+        priority: "medium",
       });
     }
 
     // Low priority tips (extras)
     if (!profile?.zodiacSign) {
       tips.push({
-        category: 'zodiac',
-        tip: 'Bur\u00e7 bilgini ekle \u2014 e\u011flenceli bir ba\u011f kurma yolu',
-        priority: 'low',
+        category: "zodiac",
+        tip: "Bur\u00e7 bilgini ekle \u2014 e\u011flenceli bir ba\u011f kurma yolu",
+        priority: "low",
       });
     }
 
     if (!profile?.mbtiType) {
       tips.push({
-        category: 'mbti',
-        tip: 'Ki\u015filik tipini se\u00e7 \u2014 uyum analizini g\u00fc\u00e7lendirir',
-        priority: 'low',
+        category: "mbti",
+        tip: "Ki\u015filik tipini se\u00e7 \u2014 uyum analizini g\u00fc\u00e7lendirir",
+        priority: "low",
       });
     }
 
@@ -1106,9 +1175,9 @@ export class ProfilesService {
     // Add strength tip if below 70%
     if (strengthData < 70) {
       tips.push({
-        category: 'strength',
+        category: "strength",
         tip: "Profilini %70'in \u00fczerine \u00e7\u0131kar \u2014 daha fazla e\u015fle\u015fme al",
-        priority: 'high',
+        priority: "high",
       });
     }
 
@@ -1138,7 +1207,7 @@ export class ProfilesService {
       const upperMbti = mbtiType.toUpperCase();
       if (!ProfilesService.VALID_MBTI_TYPES.includes(upperMbti)) {
         throw new BadRequestException(
-          `Gecersiz MBTI tipi: ${mbtiType}. Gecerli tipler: ${ProfilesService.VALID_MBTI_TYPES.join(', ')}`,
+          `Gecersiz MBTI tipi: ${mbtiType}. Gecerli tipler: ${ProfilesService.VALID_MBTI_TYPES.join(", ")}`,
         );
       }
       mbtiType = upperMbti;
@@ -1155,7 +1224,9 @@ export class ProfilesService {
 
     // At least one must be provided
     if (mbtiType === undefined && enneagramType === undefined) {
-      throw new BadRequestException('En az bir kisilik tipi belirtilmeli (mbtiType veya enneagramType)');
+      throw new BadRequestException(
+        "En az bir kisilik tipi belirtilmeli (mbtiType veya enneagramType)",
+      );
     }
 
     const profile = await this.prisma.userProfile.findUnique({
@@ -1163,7 +1234,7 @@ export class ProfilesService {
     });
 
     if (!profile) {
-      throw new NotFoundException('Profil bulunamadi. Once profil olusturun.');
+      throw new NotFoundException("Profil bulunamadi. Once profil olusturun.");
     }
 
     const updatedProfile = await this.prisma.userProfile.update({
@@ -1182,7 +1253,7 @@ export class ProfilesService {
     return {
       mbtiType: updatedProfile.mbtiType,
       enneagramType: updatedProfile.enneagramType,
-      message: 'Kisilik tipi guncellendi',
+      message: "Kisilik tipi guncellendi",
     };
   }
 
@@ -1280,7 +1351,7 @@ export class ProfilesService {
         await tx.goldTransaction.create({
           data: {
             userId,
-            type: 'STREAK_REWARD',
+            type: "STREAK_REWARD",
             amount: goldAwarded,
             balance: updatedUser.goldBalance,
             description: `Giris serisi odulu - ${milestoneName}`,

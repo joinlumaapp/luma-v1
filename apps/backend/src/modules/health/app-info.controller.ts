@@ -1,11 +1,11 @@
-import { Controller, Get } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
-import { Public } from '../../common/decorators/current-user.decorator';
+import { Controller, Get } from "@nestjs/common";
+import { ApiTags, ApiOperation } from "@nestjs/swagger";
+import { Public } from "../../common/decorators/current-user.decorator";
 
 /** Minimum desteklenen uygulama sürümü */
-const CURRENT_APP_VERSION = '1.0.0';
-const MIN_SUPPORTED_VERSION = '1.0.0';
-const FORCE_UPDATE_BELOW = '1.0.0';
+const CURRENT_APP_VERSION = "1.0.0";
+const MIN_SUPPORTED_VERSION = "1.0.0";
+const FORCE_UPDATE_BELOW = "1.0.0";
 
 interface AppInfoResponse {
   appVersion: string;
@@ -27,16 +27,18 @@ interface AppConfigResponse {
   timestamp: string;
 }
 
-@ApiTags('Health')
-@Controller('app')
+@ApiTags("Health")
+@Controller("app")
 export class AppInfoController {
   /**
    * GET /app/info
    * Uygulama sürümü, minimum desteklenen sürüm ve bakım modu bilgisi döndürür.
    */
   @Public()
-  @Get('info')
-  @ApiOperation({ summary: 'Get app version, min supported version & maintenance status' })
+  @Get("info")
+  @ApiOperation({
+    summary: "Get app version, min supported version & maintenance status",
+  })
   getAppInfo(): AppInfoResponse {
     return {
       appVersion: CURRENT_APP_VERSION,
@@ -53,38 +55,40 @@ export class AppInfoController {
    * Özellik bayrakları ve uzaktan yapılandırma değerleri döndürür.
    */
   @Public()
-  @Get('config')
-  @ApiOperation({ summary: 'Get feature flags and remote configuration values' })
+  @Get("config")
+  @ApiOperation({
+    summary: "Get feature flags and remote configuration values",
+  })
   getAppConfig(): AppConfigResponse {
     return {
       featureFlags: {
         harmonyRoom: {
           enabled: true,
-          description: 'Harmony Room sesli sohbet özelliği',
+          description: "Harmony Room sesli sohbet özelliği",
         },
         couplesClub: {
           enabled: true,
-          description: 'Çiftler Kulübü sosyal alan',
+          description: "Çiftler Kulübü sosyal alan",
         },
         places: {
           enabled: true,
-          description: 'Mekan önerileri özelliği',
+          description: "Mekan önerileri özelliği",
         },
         premiumQuestions: {
           enabled: true,
-          description: 'Premium uyumluluk soruları (25 adet)',
+          description: "Premium uyumluluk soruları (25 adet)",
         },
         badges: {
           enabled: true,
-          description: 'Rozet ve başarım sistemi',
+          description: "Rozet ve başarım sistemi",
         },
         pushNotifications: {
           enabled: true,
-          description: 'Anlık bildirimler',
+          description: "Anlık bildirimler",
         },
         inAppPurchases: {
           enabled: true,
-          description: 'Uygulama içi satın alımlar',
+          description: "Uygulama içi satın alımlar",
         },
       },
       remoteConfig: {
@@ -98,9 +102,9 @@ export class AppInfoController {
         harmonyDefaultDurationMinutes: 30,
         harmonyExtensionMinutes: 15,
         harmonyMaxExtensions: 3,
-        supportEmail: 'destek@luma.dating',
-        privacyUrl: 'https://luma.dating/gizlilik',
-        termsUrl: 'https://luma.dating/kullanim-kosullari',
+        supportEmail: "destek@luma.dating",
+        privacyUrl: "https://luma.dating/gizlilik",
+        termsUrl: "https://luma.dating/kullanim-kosullari",
       },
       timestamp: new Date().toISOString(),
     };

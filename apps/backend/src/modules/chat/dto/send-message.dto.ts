@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import {
   IsNotEmpty,
   IsString,
@@ -7,12 +7,12 @@ import {
   IsOptional,
   IsIn,
   IsUrl,
-} from 'class-validator';
+} from "class-validator";
 
 export class SendMessageDto {
   @ApiProperty({
-    description: 'Message content',
-    example: 'Merhaba, nasilsin?',
+    description: "Message content",
+    example: "Merhaba, nasilsin?",
     maxLength: 1000,
   })
   @IsNotEmpty()
@@ -22,18 +22,18 @@ export class SendMessageDto {
   content!: string;
 
   @ApiPropertyOptional({
-    description: 'Message type',
-    enum: ['TEXT', 'IMAGE', 'GIF', 'VOICE'],
-    default: 'TEXT',
+    description: "Message type",
+    enum: ["TEXT", "IMAGE", "GIF", "VOICE"],
+    default: "TEXT",
   })
   @IsOptional()
   @IsString()
-  @IsIn(['TEXT', 'IMAGE', 'GIF', 'VOICE'])
-  type?: 'TEXT' | 'IMAGE' | 'GIF' | 'VOICE';
+  @IsIn(["TEXT", "IMAGE", "GIF", "VOICE"])
+  type?: "TEXT" | "IMAGE" | "GIF" | "VOICE";
 
   @ApiPropertyOptional({
-    description: 'Media URL for image/GIF/voice messages',
-    example: 'https://cdn.luma.app/chat/image.jpg',
+    description: "Media URL for image/GIF/voice messages",
+    example: "https://cdn.luma.app/chat/image.jpg",
   })
   @IsOptional()
   @IsString()
@@ -41,7 +41,7 @@ export class SendMessageDto {
   mediaUrl?: string;
 
   @ApiPropertyOptional({
-    description: 'Duration in seconds for voice messages',
+    description: "Duration in seconds for voice messages",
     example: 12.5,
   })
   @IsOptional()

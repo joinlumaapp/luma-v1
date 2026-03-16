@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, Min, Max } from 'class-validator';
+import { ApiProperty } from "@nestjs/swagger";
+import { IsNotEmpty, IsNumber, Min, Max } from "class-validator";
 
 /**
  * Voice introduction upload metadata.
@@ -7,7 +7,7 @@ import { IsNotEmpty, IsNumber, Min, Max } from 'class-validator';
  */
 export class UploadVoiceIntroDto {
   @ApiProperty({
-    description: 'Duration of voice recording in seconds (max 30)',
+    description: "Duration of voice recording in seconds (max 30)",
     example: 25,
     minimum: 1,
     maximum: 30,

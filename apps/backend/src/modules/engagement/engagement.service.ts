@@ -3,9 +3,9 @@ import {
   NotFoundException,
   BadRequestException,
   Logger,
-} from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
-import { PrismaService } from '../../prisma/prisma.service';
+} from "@nestjs/common";
+import { Cron, CronExpression } from "@nestjs/schedule";
+import { PrismaService } from "../../prisma/prisma.service";
 
 // ── Daily Reward Config ──
 const DAILY_REWARDS = [
@@ -43,12 +43,12 @@ export class EngagementService {
       select: { id: true, goldBalance: true },
     });
 
-    if (!user) throw new NotFoundException('Kullanici bulunamadi');
+    if (!user) throw new NotFoundException("Kullanici bulunamadi");
 
     // Find reward for the day
     const reward = DAILY_REWARDS.find((r) => r.day === day);
     if (!reward) {
-      throw new BadRequestException('Gecersiz odul gunu');
+      throw new BadRequestException("Gecersiz odul gunu");
     }
 
     // For now, use the login streak record as engagement proxy
@@ -72,10 +72,10 @@ export class EngagementService {
       await tx.goldTransaction.create({
         data: {
           userId,
-          type: 'DAILY_LOGIN',
+          type: "DAILY_LOGIN",
           amount: jetons,
           balance: updatedUser.goldBalance,
-          description: `Gunluk odul - Gun ${day}${multiplied ? ' (1.5x carpan)' : ''}`,
+          description: `Gunluk odul - Gun ${day}${multiplied ? " (1.5x carpan)" : ""}`,
         },
       });
 
@@ -86,7 +86,7 @@ export class EngagementService {
       jetons,
       multiplied,
       newBalance: result.newBalance,
-      bonus: day === 7 ? 'free_boost' : undefined,
+      bonus: day === 7 ? "free_boost" : undefined,
     };
   }
 
@@ -111,7 +111,10 @@ export class EngagementService {
 
   async getLeaderboard(
     userId: string,
-    category: 'most_liked' | 'most_messaged' | 'best_compatibility' = 'most_liked',
+    category:
+      | "most_liked"
+      | "most_messaged"
+      | "best_compatibility" = "most_liked",
   ) {
     type LeaderboardRow = { userId: string; score: bigint };
 
@@ -121,7 +124,7 @@ export class EngagementService {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
     switch (category) {
-      case 'most_liked': {
+      case "most_liked": {
         // Count received likes in the last 7 days using Swipe table
         results = await this.prisma.$queryRaw<LeaderboardRow[]>`
           SELECT target_id as "userId", COUNT(*) as "score"
@@ -135,7 +138,7 @@ export class EngagementService {
         break;
       }
 
-      case 'most_messaged': {
+      case "most_messaged": {
         results = await this.prisma.$queryRaw<LeaderboardRow[]>`
           SELECT sender_id as "userId", COUNT(*) as "score"
           FROM chat_messages
@@ -147,11 +150,11 @@ export class EngagementService {
         break;
       }
 
-      case 'best_compatibility':
+      case "best_compatibility":
       default: {
         // Use login streak as engagement proxy
         const streakResults = await this.prisma.loginStreak.findMany({
-          orderBy: { currentStreak: 'desc' },
+          orderBy: { currentStreak: "desc" },
           take: 10,
           select: {
             userId: true,
@@ -164,8 +167,8 @@ export class EngagementService {
 
         const entries = streakResults.map((r, index) => ({
           userId: r.userId,
-          name: profiles.get(r.userId)?.name ?? 'Kullanici',
-          photoUrl: profiles.get(r.userId)?.photoUrl ?? '',
+          name: profiles.get(r.userId)?.name ?? "Kullanici",
+          photoUrl: profiles.get(r.userId)?.photoUrl ?? "",
           score: r.currentStreak,
           rank: index + 1,
         }));
@@ -183,8 +186,8 @@ export class EngagementService {
 
     const entries = results.map((r, index) => ({
       userId: r.userId,
-      name: profiles.get(r.userId)?.name ?? 'Kullanici',
-      photoUrl: profiles.get(r.userId)?.photoUrl ?? '',
+      name: profiles.get(r.userId)?.name ?? "Kullanici",
+      photoUrl: profiles.get(r.userId)?.photoUrl ?? "",
       score: Number(r.score),
       rank: index + 1,
     }));
@@ -199,7 +202,9 @@ export class EngagementService {
   // Stored client-side; this endpoint syncs for analytics and badge system
 
   async unlockAchievement(userId: string, achievementId: string) {
-    this.logger.log(`Achievement unlocked: user=${userId} achievement=${achievementId}`);
+    this.logger.log(
+      `Achievement unlocked: user=${userId} achievement=${achievementId}`,
+    );
     return { unlocked: true, achievementId };
   }
 
@@ -231,7 +236,9 @@ export class EngagementService {
       data: { isActive: false },
     });
 
-    this.logger.log(`Expired ${expiredMatches.length} matches with no messages`);
+    this.logger.log(
+      `Expired ${expiredMatches.length} matches with no messages`,
+    );
   }
 
   // ── Match Extend ──
@@ -246,7 +253,7 @@ export class EngagementService {
     });
 
     if (!match) {
-      throw new NotFoundException('Esleme bulunamadi');
+      throw new NotFoundException("Esleme bulunamadi");
     }
 
     // Check user has enough jetons
@@ -272,7 +279,7 @@ export class EngagementService {
       await tx.goldTransaction.create({
         data: {
           userId,
-          type: 'DAILY_LOGIN', // Reuse existing type for now
+          type: "DAILY_LOGIN", // Reuse existing type for now
           amount: -MATCH_EXTEND_COST,
           balance: updatedUser.goldBalance,
           description: `Esleme suresi uzatma - ${matchId}`,
@@ -293,7 +300,7 @@ export class EngagementService {
     const likeCount = await this.prisma.swipe.count({
       where: {
         targetId: userId,
-        action: 'LIKE',
+        action: "LIKE",
       },
     });
 
@@ -301,10 +308,10 @@ export class EngagementService {
     const likers = await this.prisma.swipe.findMany({
       where: {
         targetId: userId,
-        action: 'LIKE',
+        action: "LIKE",
       },
       take: 3,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       select: {
         swiper: {
           select: {
@@ -321,7 +328,7 @@ export class EngagementService {
 
     const profiles = likers.map((l) => ({
       id: l.swiper.id,
-      photoUrl: l.swiper.photos[0]?.thumbnailUrl ?? '',
+      photoUrl: l.swiper.photos[0]?.thumbnailUrl ?? "",
     }));
 
     return { count: likeCount, profiles };
@@ -349,8 +356,8 @@ export class EngagementService {
     const map = new Map<string, { name: string; photoUrl: string }>();
     for (const user of users) {
       map.set(user.id, {
-        name: user.profile?.firstName ?? 'Kullanici',
-        photoUrl: user.photos[0]?.thumbnailUrl ?? '',
+        name: user.profile?.firstName ?? "Kullanici",
+        photoUrl: user.photos[0]?.thumbnailUrl ?? "",
       });
     }
 

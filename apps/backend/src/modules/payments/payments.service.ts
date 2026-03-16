@@ -3,27 +3,27 @@ import {
   BadRequestException,
   NotFoundException,
   Logger,
-} from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { BadgesService } from '../badges/badges.service';
+} from "@nestjs/common";
+import { PrismaService } from "../../prisma/prisma.service";
+import { BadgesService } from "../badges/badges.service";
 import {
   ReceiptValidatorService,
   ReceiptValidationResult,
-} from './receipt-validator.service';
+} from "./receipt-validator.service";
 import {
   SubscribeDto,
   ValidateReceiptDto,
   PurchaseGoldDto,
   UpgradePackageDto,
   SpendGoldDto,
-} from './dto';
+} from "./dto";
 
 // LOCKED: 4 Package Tiers with features
 const PACKAGE_DEFINITIONS = {
   free: {
-    tier: 'FREE',
-    name: 'Free',
-    nameTr: 'Ucretsiz',
+    tier: "FREE",
+    name: "Free",
+    nameTr: "Ucretsiz",
     monthlyPriceUsd: 0,
     monthlyPriceTry: 0,
     features: {
@@ -42,9 +42,9 @@ const PACKAGE_DEFINITIONS = {
     },
   },
   gold: {
-    tier: 'GOLD',
-    name: 'Gold',
-    nameTr: 'Gold',
+    tier: "GOLD",
+    name: "Gold",
+    nameTr: "Gold",
     monthlyPriceUsd: 14.99,
     monthlyPriceTry: 349.99,
     features: {
@@ -63,9 +63,9 @@ const PACKAGE_DEFINITIONS = {
     },
   },
   pro: {
-    tier: 'PRO',
-    name: 'Pro',
-    nameTr: 'Pro',
+    tier: "PRO",
+    name: "Pro",
+    nameTr: "Pro",
     monthlyPriceUsd: 29.99,
     monthlyPriceTry: 599.99,
     features: {
@@ -84,9 +84,9 @@ const PACKAGE_DEFINITIONS = {
     },
   },
   reserved: {
-    tier: 'RESERVED',
-    name: 'Reserved',
-    nameTr: 'Reserved',
+    tier: "RESERVED",
+    name: "Reserved",
+    nameTr: "Reserved",
     monthlyPriceUsd: 49.99,
     monthlyPriceTry: 1299.99,
     features: {
@@ -107,7 +107,10 @@ const PACKAGE_DEFINITIONS = {
 };
 
 // Gold pack definitions with TRY pricing
-const GOLD_PACKS: Record<string, { amount: number; priceUsd: number; priceTry: number; bonus: number }> = {
+const GOLD_PACKS: Record<
+  string,
+  { amount: number; priceUsd: number; priceTry: number; bonus: number }
+> = {
   gold_50: { amount: 50, priceUsd: 4.99, priceTry: 29.99, bonus: 0 },
   gold_150: { amount: 150, priceUsd: 12.99, priceTry: 79.99, bonus: 10 },
   gold_500: { amount: 500, priceUsd: 39.99, priceTry: 199.99, bonus: 50 },
@@ -116,14 +119,24 @@ const GOLD_PACKS: Record<string, { amount: number; priceUsd: number; priceTry: n
 
 // Gold spending costs per action
 const GOLD_COSTS: Record<string, { cost: number; descriptionTr: string }> = {
-  harmony_extension: { cost: 50, descriptionTr: 'Harmony Room sure uzatma (15 dk)' },
-  profile_boost: { cost: 100, descriptionTr: 'Profil one cikarma (24 saat)' },
-  super_like: { cost: 25, descriptionTr: 'Super begeni gonderme' },
+  harmony_extension: {
+    cost: 50,
+    descriptionTr: "Harmony Room sure uzatma (15 dk)",
+  },
+  profile_boost: { cost: 100, descriptionTr: "Profil one cikarma (24 saat)" },
+  super_like: { cost: 25, descriptionTr: "Super begeni gonderme" },
 };
 
 // One-time purchase products (not subscription-based)
-const ONE_TIME_PRODUCTS: Record<string, { priceTry: number; priceUsd: number; descriptionTr: string }> = {
-  deep_analysis: { priceTry: 69, priceUsd: 9.99, descriptionTr: 'Derin uyumluluk analizi' },
+const ONE_TIME_PRODUCTS: Record<
+  string,
+  { priceTry: number; priceUsd: number; descriptionTr: string }
+> = {
+  deep_analysis: {
+    priceTry: 69,
+    priceUsd: 9.99,
+    descriptionTr: "Derin uyumluluk analizi",
+  },
 };
 
 // Tier hierarchy: higher number = higher tier
@@ -164,8 +177,8 @@ export class PaymentsService {
    * Validates receipt with platform store and activates subscription.
    */
   async subscribe(userId: string, dto: SubscribeDto) {
-    if (dto.packageTier === 'free') {
-      throw new BadRequestException('Ucretsiz pakete abone olunamaz');
+    if (dto.packageTier === "free") {
+      throw new BadRequestException("Ucretsiz pakete abone olunamaz");
     }
 
     // Check if user already has an active subscription
@@ -175,19 +188,19 @@ export class PaymentsService {
 
     if (existing) {
       throw new BadRequestException(
-        'Zaten aktif bir aboneliginiz var. Once iptal edin veya yukseltme yapin.',
+        "Zaten aktif bir aboneliginiz var. Once iptal edin veya yukseltme yapin.",
       );
     }
 
     // Validate receipt with platform
-    const platform = dto.platform.toUpperCase() as 'APPLE' | 'GOOGLE';
+    const platform = dto.platform.toUpperCase() as "APPLE" | "GOOGLE";
     const validationResult = await this.validatePlatformReceipt(
       platform,
       dto.receipt,
     );
 
     if (!validationResult.isValid) {
-      throw new BadRequestException('Odeme makbuzu dogrulanamadi');
+      throw new BadRequestException("Odeme makbuzu dogrulanamadi");
     }
 
     // Prevent receipt replay: check if transactionId was already used
@@ -195,7 +208,7 @@ export class PaymentsService {
       where: { transactionId: validationResult.transactionId },
     });
     if (existingReceipt) {
-      throw new BadRequestException('Bu makbuz daha once kullanilmis');
+      throw new BadRequestException("Bu makbuz daha once kullanilmis");
     }
 
     const tierKey = dto.packageTier.toUpperCase();
@@ -210,7 +223,7 @@ export class PaymentsService {
       const subscription = await tx.subscription.create({
         data: {
           userId,
-          packageTier: tierKey as 'FREE' | 'GOLD' | 'PRO' | 'RESERVED',
+          packageTier: tierKey as "FREE" | "GOLD" | "PRO" | "RESERVED",
           platform,
           productId: `luma_${dto.packageTier}_monthly`,
           purchaseToken: dto.receipt,
@@ -235,17 +248,21 @@ export class PaymentsService {
       // Update user's package tier
       await tx.user.update({
         where: { id: userId },
-        data: { packageTier: tierKey as 'FREE' | 'GOLD' | 'PRO' | 'RESERVED' },
+        data: { packageTier: tierKey as "FREE" | "GOLD" | "PRO" | "RESERVED" },
       });
 
       // Award monthly Gold allocation
-      const packageDef = PACKAGE_DEFINITIONS[dto.packageTier as keyof typeof PACKAGE_DEFINITIONS];
+      const packageDef =
+        PACKAGE_DEFINITIONS[
+          dto.packageTier as keyof typeof PACKAGE_DEFINITIONS
+        ];
       if (packageDef && packageDef.features.monthlyGold > 0) {
         const user = await tx.user.findUnique({
           where: { id: userId },
           select: { goldBalance: true },
         });
-        const newBalance = (user?.goldBalance ?? 0) + packageDef.features.monthlyGold;
+        const newBalance =
+          (user?.goldBalance ?? 0) + packageDef.features.monthlyGold;
 
         await tx.user.update({
           where: { id: userId },
@@ -255,7 +272,7 @@ export class PaymentsService {
         await tx.goldTransaction.create({
           data: {
             userId,
-            type: 'SUBSCRIPTION_ALLOCATION',
+            type: "SUBSCRIPTION_ALLOCATION",
             amount: packageDef.features.monthlyGold,
             balance: newBalance,
             description: `${packageDef.name} aylik Gold tahsisi`,
@@ -269,7 +286,9 @@ export class PaymentsService {
     this.logger.log(`User ${userId} subscribed to ${dto.packageTier}`);
 
     // Check badges after subscription (non-blocking)
-    this.badgesService.checkAndAwardBadges(userId, 'subscription').catch((err) => this.logger.warn('Badge check failed', err.message));
+    this.badgesService
+      .checkAndAwardBadges(userId, "subscription")
+      .catch((err) => this.logger.warn("Badge check failed", err.message));
 
     return {
       subscribed: true,
@@ -291,7 +310,7 @@ export class PaymentsService {
     });
 
     if (!user) {
-      throw new NotFoundException('Kullanici bulunamadi');
+      throw new NotFoundException("Kullanici bulunamadi");
     }
 
     const currentTierKey = user.packageTier.toLowerCase();
@@ -301,25 +320,25 @@ export class PaymentsService {
     const targetOrder = TIER_ORDER[targetTierKey];
 
     if (currentOrder === undefined || targetOrder === undefined) {
-      throw new BadRequestException('Gecersiz paket seviyesi');
+      throw new BadRequestException("Gecersiz paket seviyesi");
     }
 
     if (targetOrder <= currentOrder) {
       throw new BadRequestException(
-        'Sadece daha yuksek bir pakete yukseltme yapabilirsiniz. ' +
-        `Mevcut: ${currentTierKey}, Hedef: ${targetTierKey}`,
+        "Sadece daha yuksek bir pakete yukseltme yapabilirsiniz. " +
+          `Mevcut: ${currentTierKey}, Hedef: ${targetTierKey}`,
       );
     }
 
     // Validate receipt with platform
-    const platform = dto.platform.toUpperCase() as 'APPLE' | 'GOOGLE';
+    const platform = dto.platform.toUpperCase() as "APPLE" | "GOOGLE";
     const validationResult = await this.validatePlatformReceipt(
       platform,
       dto.receipt,
     );
 
     if (!validationResult.isValid) {
-      throw new BadRequestException('Odeme makbuzu dogrulanamadi');
+      throw new BadRequestException("Odeme makbuzu dogrulanamadi");
     }
 
     // Prevent receipt replay
@@ -327,11 +346,16 @@ export class PaymentsService {
       where: { transactionId: validationResult.transactionId },
     });
     if (existingReceipt) {
-      throw new BadRequestException('Bu makbuz daha once kullanilmis');
+      throw new BadRequestException("Bu makbuz daha once kullanilmis");
     }
 
-    const targetTierUpper = dto.targetTier.toUpperCase() as 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
-    const packageDef = PACKAGE_DEFINITIONS[targetTierKey as keyof typeof PACKAGE_DEFINITIONS];
+    const targetTierUpper = dto.targetTier.toUpperCase() as
+      | "FREE"
+      | "GOLD"
+      | "PRO"
+      | "RESERVED";
+    const packageDef =
+      PACKAGE_DEFINITIONS[targetTierKey as keyof typeof PACKAGE_DEFINITIONS];
 
     const result = await this.prisma.$transaction(async (tx) => {
       // Cancel existing subscription if any
@@ -391,7 +415,8 @@ export class PaymentsService {
           where: { id: userId },
           select: { goldBalance: true },
         });
-        const newBalance = (freshUser?.goldBalance ?? 0) + packageDef.features.monthlyGold;
+        const newBalance =
+          (freshUser?.goldBalance ?? 0) + packageDef.features.monthlyGold;
 
         await tx.user.update({
           where: { id: userId },
@@ -401,7 +426,7 @@ export class PaymentsService {
         await tx.goldTransaction.create({
           data: {
             userId,
-            type: 'SUBSCRIPTION_ALLOCATION',
+            type: "SUBSCRIPTION_ALLOCATION",
             amount: packageDef.features.monthlyGold,
             balance: newBalance,
             description: `${packageDef.name} yukseltme Gold bonusu`,
@@ -433,11 +458,11 @@ export class PaymentsService {
   async cancelSubscription(userId: string) {
     const subscription = await this.prisma.subscription.findFirst({
       where: { userId, isActive: true },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     if (!subscription) {
-      throw new NotFoundException('Aktif abonelik bulunamadi');
+      throw new NotFoundException("Aktif abonelik bulunamadi");
     }
 
     await this.prisma.subscription.update({
@@ -456,7 +481,7 @@ export class PaymentsService {
     return {
       cancelled: true,
       accessUntil: subscription.expiryDate,
-      message: `Aboneliginiz iptal edildi. ${subscription.expiryDate.toLocaleDateString('tr-TR')} tarihine kadar erisim devam edecek.`,
+      message: `Aboneliginiz iptal edildi. ${subscription.expiryDate.toLocaleDateString("tr-TR")} tarihine kadar erisim devam edecek.`,
     };
   }
 
@@ -464,7 +489,7 @@ export class PaymentsService {
    * Validate a receipt from App Store or Play Store.
    */
   async validateReceipt(userId: string, dto: ValidateReceiptDto) {
-    const platform = dto.platform.toUpperCase() as 'APPLE' | 'GOOGLE';
+    const platform = dto.platform.toUpperCase() as "APPLE" | "GOOGLE";
     const result = await this.validatePlatformReceipt(platform, dto.receipt);
 
     return {
@@ -484,13 +509,13 @@ export class PaymentsService {
     });
 
     if (!user) {
-      throw new NotFoundException('Kullanici bulunamadi');
+      throw new NotFoundException("Kullanici bulunamadi");
     }
 
     // Get recent transactions
     const recentTransactions = await this.prisma.goldTransaction.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: 10,
       select: {
         id: true,
@@ -505,7 +530,7 @@ export class PaymentsService {
     return {
       balance: user.goldBalance,
       packageTier: user.packageTier,
-      currency: 'gold',
+      currency: "gold",
       recentTransactions,
     };
   }
@@ -518,16 +543,19 @@ export class PaymentsService {
     const pack = GOLD_PACKS[dto.packageId];
     if (!pack) {
       throw new BadRequestException(
-        `Gecersiz Gold paketi. Gecerli paketler: ${Object.keys(GOLD_PACKS).join(', ')}`,
+        `Gecersiz Gold paketi. Gecerli paketler: ${Object.keys(GOLD_PACKS).join(", ")}`,
       );
     }
 
     // Validate receipt
-    const platform = dto.platform.toUpperCase() as 'APPLE' | 'GOOGLE';
-    const validation = await this.validatePlatformReceipt(platform, dto.receipt);
+    const platform = dto.platform.toUpperCase() as "APPLE" | "GOOGLE";
+    const validation = await this.validatePlatformReceipt(
+      platform,
+      dto.receipt,
+    );
 
     if (!validation.isValid) {
-      throw new BadRequestException('Odeme makbuzu dogrulanamadi');
+      throw new BadRequestException("Odeme makbuzu dogrulanamadi");
     }
 
     // Prevent receipt replay
@@ -535,7 +563,7 @@ export class PaymentsService {
       where: { transactionId: validation.transactionId },
     });
     if (existingReceipt) {
-      throw new BadRequestException('Bu makbuz daha once kullanilmis');
+      throw new BadRequestException("Bu makbuz daha once kullanilmis");
     }
 
     const totalGold = pack.amount + pack.bonus;
@@ -555,11 +583,11 @@ export class PaymentsService {
       });
 
       // Record transaction
-      const bonusText = pack.bonus > 0 ? ` + ${pack.bonus} bonus` : '';
+      const bonusText = pack.bonus > 0 ? ` + ${pack.bonus} bonus` : "";
       await tx.goldTransaction.create({
         data: {
           userId,
-          type: 'PURCHASE',
+          type: "PURCHASE",
           amount: totalGold,
           balance: newBalance,
           description: `${pack.amount} Gold satin alma${bonusText} (${pack.priceTry} TL)`,
@@ -601,7 +629,7 @@ export class PaymentsService {
     const actionConfig = GOLD_COSTS[dto.action];
     if (!actionConfig) {
       throw new BadRequestException(
-        `Gecersiz islem. Gecerli islemler: ${Object.keys(GOLD_COSTS).join(', ')}`,
+        `Gecersiz islem. Gecerli islemler: ${Object.keys(GOLD_COSTS).join(", ")}`,
       );
     }
 
@@ -611,7 +639,7 @@ export class PaymentsService {
     });
 
     if (!user) {
-      throw new NotFoundException('Kullanici bulunamadi');
+      throw new NotFoundException("Kullanici bulunamadi");
     }
 
     if (user.goldBalance < actionConfig.cost) {
@@ -631,15 +659,16 @@ export class PaymentsService {
 
       // Map action to transaction type
       const transactionTypeMap: Record<string, string> = {
-        harmony_extension: 'HARMONY_EXTENSION',
-        profile_boost: 'PROFILE_BOOST',
-        super_like: 'SUPER_LIKE',
+        harmony_extension: "HARMONY_EXTENSION",
+        profile_boost: "PROFILE_BOOST",
+        super_like: "SUPER_LIKE",
       };
 
       await tx.goldTransaction.create({
         data: {
           userId,
-          type: (transactionTypeMap[dto.action] ?? 'HARMONY_EXTENSION') as import('@prisma/client').GoldTransactionType,
+          type: (transactionTypeMap[dto.action] ??
+            "HARMONY_EXTENSION") as import("@prisma/client").GoldTransactionType,
           amount: -actionConfig.cost,
           balance: newBalance,
           description: actionConfig.descriptionTr,
@@ -671,7 +700,7 @@ export class PaymentsService {
     const [transactions, total] = await Promise.all([
       this.prisma.goldTransaction.findMany({
         where: { userId },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         skip,
         take: safeLimit,
         select: {
@@ -709,7 +738,7 @@ export class PaymentsService {
     const [goldTransactions, subscriptions, goldTotal] = await Promise.all([
       this.prisma.goldTransaction.findMany({
         where: { userId },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         skip,
         take: safeLimit,
         select: {
@@ -723,7 +752,7 @@ export class PaymentsService {
       }),
       this.prisma.subscription.findMany({
         where: { userId },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         take: 10,
         select: {
           id: true,
@@ -762,13 +791,13 @@ export class PaymentsService {
     });
 
     if (!user) {
-      throw new NotFoundException('Kullanici bulunamadi');
+      throw new NotFoundException("Kullanici bulunamadi");
     }
 
     // Find the latest active subscription
     const activeSubscription = await this.prisma.subscription.findFirst({
       where: { userId, isActive: true },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       select: {
         id: true,
         packageTier: true,
@@ -782,7 +811,8 @@ export class PaymentsService {
     });
 
     const tierKey = user.packageTier.toLowerCase();
-    const packageDef = PACKAGE_DEFINITIONS[tierKey as keyof typeof PACKAGE_DEFINITIONS];
+    const packageDef =
+      PACKAGE_DEFINITIONS[tierKey as keyof typeof PACKAGE_DEFINITIONS];
 
     // Determine if subscription is expiring soon (within 3 days)
     let isExpiringSoon = false;
@@ -796,9 +826,9 @@ export class PaymentsService {
 
     return {
       packageTier: user.packageTier,
-      packageName: packageDef?.nameTr ?? 'Ucretsiz',
-      isPaid: user.packageTier !== 'FREE',
-      isActive: activeSubscription?.isActive ?? (user.packageTier === 'FREE'),
+      packageName: packageDef?.nameTr ?? "Ucretsiz",
+      isPaid: user.packageTier !== "FREE",
+      isActive: activeSubscription?.isActive ?? user.packageTier === "FREE",
       autoRenew: activeSubscription?.autoRenew ?? false,
       expiryDate: activeSubscription?.expiryDate ?? null,
       startDate: activeSubscription?.startDate ?? null,
@@ -845,7 +875,7 @@ export class PaymentsService {
           // Downgrade user to FREE
           await tx.user.update({
             where: { id: sub.userId },
-            data: { packageTier: 'FREE' },
+            data: { packageTier: "FREE" },
           });
         });
 
@@ -871,19 +901,27 @@ export class PaymentsService {
    * Purchase a one-time product (e.g., deep analysis).
    * Not a subscription — single purchase, permanent unlock.
    */
-  async purchaseOneTime(userId: string, productId: string, platform: string, receipt: string) {
+  async purchaseOneTime(
+    userId: string,
+    productId: string,
+    platform: string,
+    receipt: string,
+  ) {
     const product = ONE_TIME_PRODUCTS[productId];
     if (!product) {
       throw new BadRequestException(
-        `Geçersiz ürün. Geçerli ürünler: ${Object.keys(ONE_TIME_PRODUCTS).join(', ')}`,
+        `Geçersiz ürün. Geçerli ürünler: ${Object.keys(ONE_TIME_PRODUCTS).join(", ")}`,
       );
     }
 
     // Validate receipt
-    const platformUpper = platform.toUpperCase() as 'APPLE' | 'GOOGLE';
-    const validation = await this.validatePlatformReceipt(platformUpper, receipt);
+    const platformUpper = platform.toUpperCase() as "APPLE" | "GOOGLE";
+    const validation = await this.validatePlatformReceipt(
+      platformUpper,
+      receipt,
+    );
     if (!validation.isValid) {
-      throw new BadRequestException('Ödeme makbuzu doğrulanamadı');
+      throw new BadRequestException("Ödeme makbuzu doğrulanamadı");
     }
 
     // Prevent receipt replay
@@ -891,7 +929,7 @@ export class PaymentsService {
       where: { transactionId: validation.transactionId },
     });
     if (existingReceipt) {
-      throw new BadRequestException('Bu makbuz daha önce kullanılmış');
+      throw new BadRequestException("Bu makbuz daha önce kullanılmış");
     }
 
     // Store purchase
@@ -916,7 +954,7 @@ export class PaymentsService {
       await tx.goldTransaction.create({
         data: {
           userId,
-          type: 'PURCHASE',
+          type: "PURCHASE",
           amount: 0,
           balance: user?.goldBalance ?? 0,
           description: `${product.descriptionTr} (${product.priceTry} TL)`,
@@ -937,13 +975,18 @@ export class PaymentsService {
   /**
    * Check if a user has purchased a specific one-time product.
    */
-  async hasOneTimePurchase(userId: string, productId: string): Promise<boolean> {
+  async hasOneTimePurchase(
+    userId: string,
+    productId: string,
+  ): Promise<boolean> {
     const purchase = await this.prisma.goldTransaction.findFirst({
       where: {
         userId,
         referenceId: productId,
-        type: 'PURCHASE',
-        description: { contains: ONE_TIME_PRODUCTS[productId]?.descriptionTr ?? '' },
+        type: "PURCHASE",
+        description: {
+          contains: ONE_TIME_PRODUCTS[productId]?.descriptionTr ?? "",
+        },
       },
     });
     return purchase !== null;
@@ -959,7 +1002,7 @@ export class PaymentsService {
    * - Dev fallback: mock validation when credentials not configured
    */
   private async validatePlatformReceipt(
-    platform: 'APPLE' | 'GOOGLE',
+    platform: "APPLE" | "GOOGLE",
     receipt: string,
     productId?: string,
   ): Promise<ReceiptValidationResult> {
@@ -970,7 +1013,7 @@ export class PaymentsService {
     const result = await this.receiptValidator.validateReceipt(
       platform,
       receipt,
-      'com.luma.dating',
+      "com.luma.dating",
       productId,
     );
 
