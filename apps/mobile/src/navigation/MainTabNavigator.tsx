@@ -116,15 +116,16 @@ function getNestedStateIndex(
  * Creates a tabPress listener that resets the stack to root when
  * the user taps a tab that is already focused and has a deep stack.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function createTabResetListener(
-  navigation: { getState?: () => { routes: Array<{ name: string; key?: string; state?: unknown }> } | undefined; dispatch: (action: unknown) => void },
+  navigation: any,
   route: { name: string },
 ) {
   return {
     tabPress: (e: { preventDefault: () => void }) => {
       const tabState = navigation.getState?.();
       if (!tabState?.routes) return;
-      const thisRoute = tabState.routes.find((r) => r.name === route.name);
+      const thisRoute = tabState.routes.find((r: { name: string }) => r.name === route.name);
       const nestedIndex = getNestedStateIndex(thisRoute);
       const isDeep = nestedIndex !== undefined && nestedIndex > 0;
       if (isDeep) {
@@ -132,7 +133,7 @@ function createTabResetListener(
         navigation.dispatch(
           CommonActions.reset({
             ...tabState,
-            routes: tabState.routes.map((r) =>
+            routes: tabState.routes.map((r: { name: string; state?: unknown }) =>
               r.name === route.name ? { ...r, state: undefined } : r
             ),
           })

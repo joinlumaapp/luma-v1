@@ -186,10 +186,10 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
 
 // Gradient colors per tier for the upgrade button
 const TIER_GRADIENTS: Record<PackageTier, readonly [string, string]> = {
-  free: ['#9CA3AF', '#6B7280'],
-  gold: ['#FBBF24', '#D97706'],
-  pro: ['#8B5CF6', '#7C3AED'],
-  reserved: ['#EC4899', '#DB2777'],
+  FREE: ['#9CA3AF', '#6B7280'],
+  GOLD: ['#FBBF24', '#D97706'],
+  PRO: ['#8B5CF6', '#7C3AED'],
+  RESERVED: ['#EC4899', '#DB2777'],
 };
 
 // ─── Component ───────────────────────────────────────────────

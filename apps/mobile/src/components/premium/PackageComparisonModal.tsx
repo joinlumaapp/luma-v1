@@ -27,34 +27,34 @@ interface PackageComparisonModalProps {
 // Feature row data structure
 interface ComparisonFeature {
   label: string;
-  free: string;
-  gold: string;
-  pro: string;
-  reserved: string;
+  FREE: string;
+  GOLD: string;
+  PRO: string;
+  RESERVED: string;
 }
 
 // ─── Constants ───────────────────────────────────────────────
 
 // Package accent colors aligned with PackagesScreen
 const TIER_COLORS: Record<PackageTier, string> = {
-  free: colors.textSecondary,
-  gold: '#FFD700',
-  pro: colors.primary,
-  reserved: colors.secondary,
+  FREE: colors.textSecondary,
+  GOLD: '#FFD700',
+  PRO: colors.primary,
+  RESERVED: colors.secondary,
 };
 
 const TIER_LABELS: Record<PackageTier, string> = {
-  free: 'Ücretsiz',
-  gold: 'Premium',
-  pro: 'Supreme',
-  reserved: 'Reserved',
+  FREE: 'Ücretsiz',
+  GOLD: 'Premium',
+  PRO: 'Supreme',
+  RESERVED: 'Reserved',
 };
 
 const TIER_PRICES: Record<PackageTier, string> = {
-  free: '0₺',
-  gold: '349,99₺/ay',
-  pro: '599,99₺/ay',
-  reserved: '1.299,99₺/ay',
+  FREE: '0₺',
+  GOLD: '349,99₺/ay',
+  PRO: '599,99₺/ay',
+  RESERVED: '1.299,99₺/ay',
 };
 
 // Tier order for hierarchy checks
@@ -64,108 +64,108 @@ const TIER_ORDER: PackageTier[] = ['FREE', 'GOLD', 'PRO', 'RESERVED'];
 const FEATURES: ComparisonFeature[] = [
   {
     label: 'Beğeni limiti',
-    free: '20/gün',
-    gold: 'Sınırsız',
-    pro: 'Sınırsız',
-    reserved: 'Sınırsız',
+    FREE: '20/gün',
+    GOLD: 'Sınırsız',
+    PRO: 'Sınırsız',
+    RESERVED: 'Sınırsız',
   },
   {
     label: 'Süper Beğeni',
-    free: '1/gün',
-    gold: '5/gün',
-    pro: 'Sınırsız',
-    reserved: 'Sınırsız',
+    FREE: '1/gün',
+    GOLD: '5/gün',
+    PRO: 'Sınırsız',
+    RESERVED: 'Sınırsız',
   },
   {
     label: 'Geri al',
-    free: '\u2717',
-    gold: 'Sınırsız',
-    pro: 'Sınırsız',
-    reserved: 'Sınırsız',
+    FREE: '\u2717',
+    GOLD: 'Sınırsız',
+    PRO: 'Sınırsız',
+    RESERVED: 'Sınırsız',
   },
   {
     label: 'Kimin beğendiğini gör',
-    free: '\u2717',
-    gold: '\u2713',
-    pro: '\u2713',
-    reserved: '\u2713',
+    FREE: '\u2717',
+    GOLD: '\u2713',
+    PRO: '\u2713',
+    RESERVED: '\u2713',
   },
   {
     label: 'Reklamsız',
-    free: '\u2717',
-    gold: '\u2713',
-    pro: '\u2713',
-    reserved: '\u2713',
+    FREE: '\u2717',
+    GOLD: '\u2713',
+    PRO: '\u2713',
+    RESERVED: '\u2713',
   },
   {
     label: 'Boost hediye',
-    free: '\u2717',
-    gold: '\u2717',
-    pro: '3/ay',
-    reserved: '5/ay',
+    FREE: '\u2717',
+    GOLD: '\u2717',
+    PRO: '3/ay',
+    RESERVED: '5/ay',
   },
   {
     label: 'Beğenilerin öncelikli',
-    free: '\u2717',
-    gold: '\u2717',
-    pro: '\u2713',
-    reserved: '\u2713',
+    FREE: '\u2717',
+    GOLD: '\u2717',
+    PRO: '\u2713',
+    RESERVED: '\u2713',
   },
   {
     label: 'Gelişmiş filtreler',
-    free: '\u2717',
-    gold: '\u2717',
-    pro: '\u2713',
-    reserved: '\u2713',
+    FREE: '\u2717',
+    GOLD: '\u2717',
+    PRO: '\u2713',
+    RESERVED: '\u2713',
   },
   {
     label: 'Yakın çevre profilleri',
-    free: '\u2717',
-    gold: '\u2717',
-    pro: '\u2713',
-    reserved: '\u2713',
+    FREE: '\u2717',
+    GOLD: '\u2717',
+    PRO: '\u2713',
+    RESERVED: '\u2713',
   },
   {
     label: 'Beğenenleri gör',
-    free: '1/gün',
-    gold: '20/gün',
-    pro: '50/gün',
-    reserved: 'Sınırsız',
+    FREE: '1/gün',
+    GOLD: '20/gün',
+    PRO: '50/gün',
+    RESERVED: 'Sınırsız',
   },
   {
     label: 'Sosyal Akış',
-    free: '\u2717',
-    gold: '\u2713',
-    pro: '\u2713',
-    reserved: '\u2713',
+    FREE: '\u2717',
+    GOLD: '\u2713',
+    PRO: '\u2713',
+    RESERVED: '\u2713',
   },
   {
     label: 'Günlük mesaj',
-    free: '1/gün',
-    gold: '5/gün',
-    pro: '10/gün',
-    reserved: 'Sınırsız',
+    FREE: '1/gün',
+    GOLD: '5/gün',
+    PRO: '10/gün',
+    RESERVED: 'Sınırsız',
   },
   {
     label: 'Özel rozet',
-    free: '\u2717',
-    gold: '\u2717',
-    pro: '\u2717',
-    reserved: '\u2713',
+    FREE: '\u2717',
+    GOLD: '\u2717',
+    PRO: '\u2717',
+    RESERVED: '\u2713',
   },
   {
     label: 'VIP destek',
-    free: '\u2717',
-    gold: '\u2717',
-    pro: '\u2717',
-    reserved: '\u2713',
+    FREE: '\u2717',
+    GOLD: '\u2717',
+    PRO: '\u2717',
+    RESERVED: '\u2713',
   },
   {
     label: 'Özel etkinlik davet',
-    free: '\u2717',
-    gold: '\u2717',
-    pro: '\u2717',
-    reserved: '\u2713',
+    FREE: '\u2717',
+    GOLD: '\u2717',
+    PRO: '\u2717',
+    RESERVED: '\u2713',
   },
 ];
 

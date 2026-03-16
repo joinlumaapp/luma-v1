@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
 import { useColorScheme } from 'react-native';
-import { creamTheme, darkTheme, lightTheme, type ThemeColors, type ThemeMode } from './colors';
+import { creamTheme, darkTheme, type ThemeColors, type ThemeMode } from './colors';
 import { storage } from '../utils/storage';
 
 interface ThemeContextType {
