@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   BadRequestException,
+  InternalServerErrorException,
   Logger,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -970,8 +971,8 @@ export class AuthService {
    */
   private mockLivenessCheck(_selfieBase64: string): number {
     if (process.env.NODE_ENV === "production") {
-      throw new Error(
-        "Liveness check not configured for production. Integrate AWS Rekognition DetectFaces.",
+      throw new InternalServerErrorException(
+        "Selfie verification service not configured for production — liveness check unavailable",
       );
     }
     // DEV/STAGING ONLY — returns a simulated passing liveness score (0.85-0.99).
@@ -986,8 +987,8 @@ export class AuthService {
    */
   private mockFaceComparison(_selfieBase64: string): number {
     if (process.env.NODE_ENV === "production") {
-      throw new Error(
-        "Face comparison not configured for production. Integrate AWS Rekognition CompareFaces.",
+      throw new InternalServerErrorException(
+        "Selfie verification service not configured for production — face comparison unavailable",
       );
     }
     // DEV/STAGING ONLY — returns a simulated passing face match score (0.82-0.98).

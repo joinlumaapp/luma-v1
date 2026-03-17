@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, NotImplementedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { google } from "googleapis";
 
@@ -450,10 +450,9 @@ export class ReceiptValidatorService {
     receipt: string,
   ): AppleReceiptResult {
     if (this.isProduction) {
-      this.logger.error(
-        `${platform} credentials not configured in production. Receipt validation rejected.`,
+      throw new NotImplementedException(
+        "Apple receipt validation not yet configured",
       );
-      return this.createInvalidAppleResult();
     }
 
     this.logger.warn(

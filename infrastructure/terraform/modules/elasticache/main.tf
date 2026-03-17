@@ -72,7 +72,8 @@ resource "aws_elasticache_replication_group" "main" {
   automatic_failover_enabled = var.environment == "production"
   multi_az_enabled           = var.environment == "production"
   at_rest_encryption_enabled = true
-  transit_encryption_enabled = false
+  transit_encryption_enabled = true
+  auth_token                 = var.auth_token
 
   snapshot_retention_limit = var.environment == "production" ? 7 : 0
   snapshot_window          = "03:00-05:00"

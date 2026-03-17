@@ -3,6 +3,7 @@
 // Currently uses mock data; connects to real API when backend is ready
 
 import api from './api';
+import { devMockOrThrow } from '../utils/mockGuard';
 
 // ─── Types ─────────────────────────────────────────────────────
 
@@ -246,12 +247,11 @@ export const storyService = {
     try {
       const response = await api.get<StoryUser[]>('/stories');
       return response.data;
-    } catch {
-      // Fallback to mock data
-      return MOCK_STORY_USERS.map((user) => ({
+    } catch (error) {
+      return devMockOrThrow(error, MOCK_STORY_USERS.map((user) => ({
         ...user,
         hasUnseenStories: user.stories.some((s) => !seenStoryIds.has(s.id)),
-      }));
+      })), 'storyService.getStories');
     }
   },
 
@@ -270,7 +270,7 @@ export const storyService = {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       return response.data;
-    } catch {
+    } catch (error) {
       // Mock story creation
       const story: Story = {
         id: `story-dev-${Date.now()}`,
@@ -287,7 +287,7 @@ export const storyService = {
         isLiked: false,
         likeCount: 0,
       };
-      return story;
+      return devMockOrThrow(error, story, 'storyService.createStory');
     }
   },
 
@@ -295,8 +295,8 @@ export const storyService = {
   deleteStory: async (storyId: string): Promise<void> => {
     try {
       await api.delete(`/stories/${storyId}`);
-    } catch {
-      // Mock deletion — no-op in dev
+    } catch (error) {
+      devMockOrThrow(error, undefined, 'storyService.deleteStory');
     }
   },
 
@@ -305,9 +305,8 @@ export const storyService = {
     try {
       const response = await api.get<StoryViewer[]>(`/stories/${storyId}/viewers`);
       return response.data;
-    } catch {
-      // Mock viewers
-      return [
+    } catch (error) {
+      return devMockOrThrow(error, [
         {
           userId: 'bot-002',
           userName: 'Zeynep',
@@ -320,7 +319,7 @@ export const storyService = {
           userAvatarUrl: 'https://i.pravatar.cc/150?img=9',
           viewedAt: new Date(Date.now() - 45 * 60_000).toISOString(),
         },
-      ];
+      ], 'storyService.getStoryViewers');
     }
   },
 
@@ -329,8 +328,8 @@ export const storyService = {
     seenStoryIds.add(storyId);
     try {
       await api.post(`/stories/${storyId}/view`);
-    } catch {
-      // Non-critical — local tracking is sufficient
+    } catch (error) {
+      devMockOrThrow(error, undefined, 'storyService.markAsViewed');
     }
   },
 
@@ -338,8 +337,8 @@ export const storyService = {
   replyToStory: async (storyId: string, message: string): Promise<void> => {
     try {
       await api.post(`/stories/${storyId}/reply`, { message });
-    } catch {
-      // Mock reply — no-op in dev
+    } catch (error) {
+      devMockOrThrow(error, undefined, 'storyService.replyToStory');
     }
   },
 
@@ -350,8 +349,8 @@ export const storyService = {
         `/stories/${storyId}/like`,
       );
       return response.data;
-    } catch {
-      return { liked: true, likeCount: 0 };
+    } catch (error) {
+      return devMockOrThrow(error, { liked: true, likeCount: 0 }, 'storyService.toggleLike');
     }
   },
 };

@@ -43,7 +43,7 @@ resource "aws_s3_bucket_cors_configuration" "photos" {
   cors_rule {
     allowed_headers = ["*"]
     allowed_methods = ["GET", "PUT"]
-    allowed_origins = ["*"]
+    allowed_origins = var.cors_allowed_origins
     max_age_seconds = 3600
   }
 }
@@ -89,6 +89,13 @@ resource "aws_s3_bucket" "voice" {
     Name        = "${var.project}-voice-${var.environment}"
     Environment = var.environment
     Project     = var.project
+  }
+}
+
+resource "aws_s3_bucket_versioning" "voice" {
+  bucket = aws_s3_bucket.voice.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
@@ -172,7 +179,7 @@ resource "aws_s3_bucket_cors_configuration" "assets" {
   cors_rule {
     allowed_headers = ["*"]
     allowed_methods = ["GET"]
-    allowed_origins = ["*"]
+    allowed_origins = var.cors_allowed_origins
     max_age_seconds = 86400
   }
 }

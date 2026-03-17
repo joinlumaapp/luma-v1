@@ -28,9 +28,6 @@ env:
   # ── AWS Configuration (set these as GitHub repository secrets) ──
   AWS_REGION: eu-west-1
   ECR_REPOSITORY: luma-backend
-  ECS_CLUSTER: luma-cluster
-  ECS_SERVICE: luma-backend-service
-  ECS_TASK_DEFINITION: luma-backend-task
 
 jobs:
   # ── Determine environment ───────────────────────────────
@@ -174,10 +171,18 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       # ── ECS Task Definition Update ──────────────────────
+      - name: Set ECS resource names
+        id: ecs-names
+        run: |
+          ENV="${{ needs.prepare.outputs.environment }}"
+          echo "cluster=luma-${ENV}" >> "$GITHUB_OUTPUT"
+          echo "service=luma-${ENV}-backend" >> "$GITHUB_OUTPUT"
+          echo "task_definition=luma-${ENV}-backend" >> "$GITHUB_OUTPUT"
+
       - name: Download current task definition
         run: |
           aws ecs describe-task-definition \
-            --task-definition ${{ env.ECS_TASK_DEFINITION }} \
+            --task-definition ${{ steps.ecs-names.outputs.task_definition }} \
             --query 'taskDefinition' \
             --output json > task-definition.json
 
@@ -193,8 +198,8 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE }}
-          cluster: ${{ env.ECS_CLUSTER }}
+          service: ${{ steps.ecs-names.outputs.service }}
+          cluster: ${{ steps.ecs-names.outputs.cluster }}
           wait-for-service-stability: true
           wait-for-minutes: 10
 

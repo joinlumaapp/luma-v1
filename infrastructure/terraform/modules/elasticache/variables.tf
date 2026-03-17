@@ -22,3 +22,9 @@ variable "node_type" {
   type    = string
   default = "cache.t3.small"
 }
+
+variable "auth_token" {
+  description = "Auth token for Redis transit encryption (must be 16-128 chars)"
+  type        = string
+  sensitive   = true
+}

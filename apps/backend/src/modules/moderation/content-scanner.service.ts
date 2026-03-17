@@ -73,9 +73,12 @@ export class ContentScannerService {
     // 4. If confidence 50-80% → safe: false (flag for manual review)
     // 5. Otherwise → safe: true
 
-    this.logger.log(
-      `Production photo scan requested for: ${imageUrl}. ` +
-        "AWS Rekognition integration pending.",
+    // Production guard: AWS Rekognition integration is not yet wired.
+    // Log a critical warning but allow content through to avoid blocking uploads.
+    this.logger.error(
+      `[PRODUCTION WARNING] Content scanning is enabled but AWS Rekognition integration is not implemented. ` +
+        `Photo auto-approved WITHOUT moderation: ${imageUrl}. ` +
+        `This must be resolved before public launch.`,
     );
 
     return { safe: true, confidence: 0, labels: [] };
@@ -107,8 +110,13 @@ export class ContentScannerService {
     // 3. Also check Google SafeSearch / Content Safety API
     // 4. Log all CSAM detections for legal compliance
 
-    this.logger.log(
-      `CSAM hash check requested for: ${imageHash.substring(0, 8)}...`,
+    // Production guard: CSAM/PhotoDNA integration is not yet wired.
+    // Log a critical warning. We return false (no match) to avoid false positives,
+    // but this MUST be implemented before public launch for legal compliance.
+    this.logger.error(
+      `[PRODUCTION WARNING] CSAM database check is enabled but PhotoDNA/SafeSearch integration is not implemented. ` +
+        `Hash ${imageHash.substring(0, 8)}... was NOT checked against CSAM databases. ` +
+        `This must be resolved before public launch for NCMEC compliance.`,
     );
 
     return false;

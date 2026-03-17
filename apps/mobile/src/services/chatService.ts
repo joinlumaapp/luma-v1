@@ -3,6 +3,7 @@
 
 import { API_ROUTES } from '@luma/shared';
 import api, { buildUrl } from './api';
+import { devMockOrThrow } from '../utils/mockGuard';
 import {
   getPersistedMessages,
   persistMessage,
@@ -87,7 +88,7 @@ export const chatService = {
     try {
       const response = await api.get<ConversationsResponse>(API_ROUTES.CHAT.GET_CONVERSATIONS);
       return response.data;
-    } catch {
+    } catch (error) {
       // Build conversations from local persistence meta + match store
       const { useMatchStore } = require('../stores/matchStore');
       const matches = useMatchStore.getState().matches;
@@ -112,7 +113,7 @@ export const chatService = {
           new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
         );
 
-      return { conversations, total: conversations.length };
+      return devMockOrThrow(error, { conversations, total: conversations.length }, 'chatService.getConversations');
     }
   },
 
@@ -153,14 +154,14 @@ export const chatService = {
         hasMore: response.data.hasMore,
         cursor: response.data.cursor,
       };
-    } catch {
+    } catch (error) {
       // Return persisted messages — this is the key persistence fix
-      return {
+      return devMockOrThrow(error, {
         messages: persisted,
         total: persisted.length,
         hasMore: false,
         cursor: null,
-      };
+      }, 'chatService.getMessages');
     }
   },
 
@@ -178,7 +179,7 @@ export const chatService = {
       // Persist the confirmed message
       await persistMessage(matchId, response.data.message);
       return response.data;
-    } catch {
+    } catch (error) {
       // Mock fallback — create a local message so chat works in dev
       const { useAuthStore } = require('../stores/authStore');
       const userId = useAuthStore.getState().user?.id ?? 'dev-user-001';
@@ -198,7 +199,7 @@ export const chatService = {
       };
       // Persist locally — this ensures the message survives app restart
       await persistMessage(matchId, message);
-      return { message };
+      return devMockOrThrow(error, { message }, 'chatService.sendMessage');
     }
   },
 
@@ -251,7 +252,7 @@ export const chatService = {
       );
       await persistMessage(matchId, response.data.message);
       return response.data;
-    } catch {
+    } catch (error) {
       // Mock fallback for image messages
       const { useAuthStore } = require('../stores/authStore');
       const userId = useAuthStore.getState().user?.id ?? 'dev-user-001';
@@ -269,7 +270,7 @@ export const chatService = {
         reactions: [],
       };
       await persistMessage(matchId, message);
-      return { message };
+      return devMockOrThrow(error, { message }, 'chatService.sendImageMessage');
     }
   },
 
@@ -289,7 +290,7 @@ export const chatService = {
       );
       await persistMessage(matchId, response.data.message);
       return response.data;
-    } catch {
+    } catch (error) {
       const { useAuthStore } = require('../stores/authStore');
       const userId = useAuthStore.getState().user?.id ?? 'dev-user-001';
       const now = new Date().toISOString();
@@ -306,7 +307,7 @@ export const chatService = {
         reactions: [],
       };
       await persistMessage(matchId, message);
-      return { message };
+      return devMockOrThrow(error, { message }, 'chatService.sendGifMessage');
     }
   },
 
@@ -343,7 +344,7 @@ export const chatService = {
       );
       await persistMessage(matchId, response.data.message);
       return response.data;
-    } catch {
+    } catch (error) {
       const { useAuthStore } = require('../stores/authStore');
       const userId = useAuthStore.getState().user?.id ?? 'dev-user-001';
       const now = new Date().toISOString();
@@ -361,7 +362,7 @@ export const chatService = {
         reactions: [],
       };
       await persistMessage(matchId, message);
-      return { message };
+      return devMockOrThrow(error, { message }, 'chatService.sendVoiceMessage');
     }
   },
 

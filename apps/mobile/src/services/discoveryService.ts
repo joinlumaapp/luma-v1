@@ -2,6 +2,7 @@
 
 import { API_ROUTES } from '@luma/shared';
 import api from './api';
+import { devMockOrThrow } from '../utils/mockGuard';
 
 export interface FeedCard {
   userId: string;
@@ -898,9 +899,9 @@ export const discoveryService = {
         params: filters,
       });
       return response.data;
-    } catch {
+    } catch (error) {
       // Fallback to mock data when API is unavailable
-      return getMockFeedResponse();
+      return devMockOrThrow(error, getMockFeedResponse(), 'discoveryService.getFeed');
     }
   },
 
@@ -909,16 +910,16 @@ export const discoveryService = {
     try {
       const response = await api.post<SwipeResponse>(API_ROUTES.DISCOVERY.SWIPE, data);
       return response.data;
-    } catch {
+    } catch (error) {
       // Mock swipe response — simulate occasional matches on likes
       const isLike = data.direction === 'LIKE' || data.direction === 'SUPER_LIKE';
       const isMatch = isLike && Math.random() < 0.25;
-      return {
+      return devMockOrThrow<SwipeResponse>(error, {
         direction: data.direction,
         isMatch,
         matchId: isMatch ? `mock-match-${Date.now()}` : undefined,
         animationType: 'normal',
-      };
+      }, 'discoveryService.swipe');
     }
   },
 
@@ -927,8 +928,8 @@ export const discoveryService = {
     try {
       const response = await api.post<UndoSwipeResponse>(API_ROUTES.DISCOVERY.UNDO);
       return response.data;
-    } catch {
-      return { undone: true, targetUserId: '' };
+    } catch (error) {
+      return devMockOrThrow(error, { undone: true, targetUserId: '' }, 'discoveryService.undoSwipe');
     }
   },
 
@@ -937,13 +938,13 @@ export const discoveryService = {
     try {
       const response = await api.get<LikesYouResponse>('/discovery/likes-you');
       return response.data;
-    } catch {
+    } catch (error) {
       // Fallback to mock incoming likes when API is unavailable
-      return {
+      return devMockOrThrow(error, {
         likes: MOCK_INCOMING_LIKES,
         total: MOCK_INCOMING_LIKES.length,
         isBlurred: false,
-      };
+      }, 'discoveryService.getLikesYou');
     }
   },
 
@@ -962,8 +963,8 @@ export const discoveryService = {
     try {
       const response = await api.post<LoginStreakResponse>('/profiles/login-streak');
       return response.data;
-    } catch {
-      return { currentStreak: 1, longestStreak: 1, goldAwarded: 0, milestoneReached: false };
+    } catch (error) {
+      return devMockOrThrow(error, { currentStreak: 1, longestStreak: 1, goldAwarded: 0, milestoneReached: false }, 'discoveryService.recordLogin');
     }
   },
 
@@ -972,8 +973,8 @@ export const discoveryService = {
     try {
       const response = await api.get<BoostStatusResponse>('/profiles/boost/status');
       return response.data;
-    } catch {
-      return { isActive: false };
+    } catch (error) {
+      return devMockOrThrow(error, { isActive: false }, 'discoveryService.getBoostStatus');
     }
   },
 
@@ -981,15 +982,15 @@ export const discoveryService = {
     try {
       const response = await api.post<ActivateBoostResponse>('/profiles/boost', { durationMinutes });
       return response.data;
-    } catch {
+    } catch (error) {
       const goldCosts: Record<number, number> = { 30: 50, 120: 120, 1440: 250 };
       const cost = goldCosts[durationMinutes] ?? 50;
-      return {
+      return devMockOrThrow<ActivateBoostResponse>(error, {
         success: true,
         endsAt: new Date(Date.now() + durationMinutes * 60 * 1000).toISOString(),
         goldDeducted: cost,
         goldBalance: 500 - cost,
-      };
+      }, 'discoveryService.activateBoost');
     }
   },
 

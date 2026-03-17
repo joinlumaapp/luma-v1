@@ -40,6 +40,8 @@ import { StorageModule } from "./modules/storage/storage.module";
 import { AdminModule } from "./modules/admin/admin.module";
 import { AnalyticsModule } from "./modules/analytics/analytics.module";
 import { PresenceModule } from "./modules/presence/presence.module";
+import { EngagementModule } from "./modules/engagement/engagement.module";
+import { StoriesModule } from "./modules/stories/stories.module";
 import { WsConnectionModule } from "./common/providers/ws-connection.module";
 
 @Module({
@@ -115,6 +117,8 @@ import { WsConnectionModule } from "./common/providers/ws-connection.module";
     AdminModule, // Admin dashboard & moderation panel
     AnalyticsModule, // Subsystem 19: Analytics, Metrics & Insights
     PresenceModule, // User online/offline presence tracking
+    EngagementModule, // Subsystem 15: Daily rewards, challenges, leaderboard
+    StoriesModule, // Stories: create, view, like, reply (24h expiry)
     WsConnectionModule, // Redis-backed WebSocket connection registry (horizontal scaling)
   ],
   providers: [

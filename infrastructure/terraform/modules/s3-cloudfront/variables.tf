@@ -17,3 +17,9 @@ variable "cdn_domain_name" {
   type        = string
   default     = ""
 }
+
+variable "cors_allowed_origins" {
+  description = "Allowed origins for S3 CORS. Use [\"*\"] for dev, restrict for production."
+  type        = list(string)
+  default     = ["https://api.luma.dating", "https://luma.dating"]
+}

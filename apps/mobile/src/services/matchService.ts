@@ -3,6 +3,7 @@
 
 import { API_ROUTES } from '@luma/shared';
 import api, { buildUrl } from './api';
+import { devMockOrThrow } from '../utils/mockGuard';
 
 // ─── Mobile-Facing Interfaces ────────────────────────────────────────
 
@@ -327,7 +328,7 @@ export const matchService = {
         matches: data.matches.map(mapBackendToMatchSummary),
         total: data.total,
       };
-    } catch {
+    } catch (error) {
       // Mock fallback with realistic lastActivity timestamps
       // Preserve local updates from both in-memory store and persisted chat data
       // Lazy require to avoid circular dependency: matchStore imports matchService,
@@ -378,7 +379,7 @@ export const matchService = {
           lastMessage,
         };
       });
-      return { matches: mockMatches, total: mockMatches.length };
+      return devMockOrThrow(error, { matches: mockMatches, total: mockMatches.length }, 'matchService.getMatches');
     }
   },
 
@@ -387,11 +388,11 @@ export const matchService = {
     try {
       const response = await api.get<BackendMatchDetailResponse>(buildUrl(API_ROUTES.MATCHES.GET_ONE, { id: matchId }));
       return mapBackendToMatchDetail(response.data);
-    } catch {
+    } catch (error) {
       // Fallback: build from MOCK_MATCH_DETAILS
       const detail = MOCK_MATCH_DETAILS[matchId];
-      if (detail) return detail;
-      throw new Error('Match not found');
+      if (detail) return devMockOrThrow(error, detail, 'matchService.getMatch');
+      throw error;
     }
   },
 

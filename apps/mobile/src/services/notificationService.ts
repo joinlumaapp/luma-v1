@@ -6,6 +6,7 @@ import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import api from './api';
 import { isExpoGo } from '../utils/runtime';
+import { devMockOrThrow } from '../utils/mockGuard';
 
 // Lazy-load expo-notifications to avoid Expo Go SDK 53 crash on Android.
 // The module throws a console error at import time when running in Expo Go,
@@ -267,7 +268,7 @@ export const notificationService = {
         params: page !== undefined ? { page } : undefined,
       });
       return response.data;
-    } catch {
+    } catch (error) {
       // Mock fallback for development — 7 notification types
       const mockNotifications: Notification[] = [
         {
@@ -339,13 +340,13 @@ export const notificationService = {
         ...n,
         isRead: mockReadState.isRead(n.id, n.isRead),
       }));
-      return {
+      return devMockOrThrow(error, {
         notifications: withReadState,
         total: withReadState.length,
         unreadCount: withReadState.filter((n) => !n.isRead).length,
         page: 1,
         totalPages: 1,
-      };
+      }, 'notificationService.getNotifications');
     }
   },
 
@@ -356,9 +357,9 @@ export const notificationService = {
         { notificationIds },
       );
       return response.data;
-    } catch {
+    } catch (error) {
       mockReadState.markRead(notificationIds);
-      return { markedRead: notificationIds.length, unreadCount: 0 };
+      return devMockOrThrow(error, { markedRead: notificationIds.length, unreadCount: 0 }, 'notificationService.markRead');
     }
   },
 
@@ -368,9 +369,9 @@ export const notificationService = {
         '/notifications/mark-all-read',
       );
       return response.data;
-    } catch {
+    } catch (error) {
       mockReadState.markAllRead();
-      return { markedRead: 0, unreadCount: 0 };
+      return devMockOrThrow(error, { markedRead: 0, unreadCount: 0 }, 'notificationService.markAllRead');
     }
   },
 

@@ -3,6 +3,7 @@
 // Also handles paid first messages (150 Jeton) for pre-match messaging
 
 import api from './api';
+import { devMockOrThrow } from '../utils/mockGuard';
 
 // ─── Interfaces ────────────────────────────────────────────────────
 
@@ -130,8 +131,8 @@ export const waveService = {
     try {
       const response = await api.get<WavesResponse>('/waves/received');
       return response.data;
-    } catch {
-      return { waves: MOCK_RECEIVED_WAVES, total: MOCK_RECEIVED_WAVES.length };
+    } catch (error) {
+      return devMockOrThrow(error, { waves: MOCK_RECEIVED_WAVES, total: MOCK_RECEIVED_WAVES.length }, 'waveService.getReceivedWaves');
     }
   },
 
@@ -139,8 +140,8 @@ export const waveService = {
     try {
       const response = await api.get<WavesResponse>('/waves/sent');
       return response.data;
-    } catch {
-      return { waves: MOCK_SENT_WAVES, total: MOCK_SENT_WAVES.length };
+    } catch (error) {
+      return devMockOrThrow(error, { waves: MOCK_SENT_WAVES, total: MOCK_SENT_WAVES.length }, 'waveService.getSentWaves');
     }
   },
 
@@ -148,9 +149,8 @@ export const waveService = {
     try {
       const response = await api.get<WaveQuota>('/waves/quota');
       return response.data;
-    } catch {
-      // Mock: free user defaults
-      return { dailyLimit: 3, used: 1, remaining: 2, coinCost: 5 };
+    } catch (error) {
+      return devMockOrThrow(error, { dailyLimit: 3, used: 1, remaining: 2, coinCost: 5 }, 'waveService.getQuota');
     }
   },
 
@@ -158,7 +158,7 @@ export const waveService = {
     try {
       const response = await api.post<SendWaveResponse>('/waves', { receiverId, useCoins });
       return response.data;
-    } catch {
+    } catch (error) {
       const mockWave: Wave = {
         id: `w_${Date.now()}`,
         senderId: 'current_user',
@@ -170,7 +170,7 @@ export const waveService = {
         status: 'pending',
         createdAt: new Date().toISOString(),
       };
-      return { wave: mockWave, usedCoins: useCoins };
+      return devMockOrThrow(error, { wave: mockWave, usedCoins: useCoins }, 'waveService.sendWave');
     }
   },
 
@@ -178,8 +178,8 @@ export const waveService = {
     try {
       const response = await api.post<RespondWaveResponse>(`/waves/${waveId}/respond`, { accept });
       return response.data;
-    } catch {
-      return { chatId: accept ? `chat_wave_${waveId}` : null };
+    } catch (error) {
+      return devMockOrThrow(error, { chatId: accept ? `chat_wave_${waveId}` : null }, 'waveService.respondToWave');
     }
   },
 
@@ -197,14 +197,14 @@ export const waveService = {
         currency: 'JETON',
       });
       return response.data;
-    } catch {
+    } catch (error) {
       // Mock fallback — simulate successful payment and chat creation
       const mockMatchId = `paid_${Date.now()}`;
-      return {
+      return devMockOrThrow(error, {
         matchId: mockMatchId,
         messageId: `msg_${Date.now()}`,
         chatCreated: true,
-      };
+      }, 'waveService.sendPaidMessage');
     }
   },
 };

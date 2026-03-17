@@ -3,6 +3,7 @@
 // Currently uses mock data; will connect to real API when backend is ready
 
 import api from './api';
+import { devMockOrThrow, assertDevOnly } from '../utils/mockGuard';
 
 // ─── Types ─────────────────────────────────────────────────────
 
@@ -436,7 +437,7 @@ export const socialFeedService = {
         params: { filter, topic, cursor },
       });
       return response.data;
-    } catch {
+    } catch (error) {
       // Fallback to mock data in dev mode
       let filtered = MOCK_POSTS.map((p) => ({
         ...p,
@@ -467,11 +468,11 @@ export const socialFeedService = {
           return scoreB - scoreA;
         });
       }
-      return {
+      return devMockOrThrow(error, {
         posts: filtered,
         nextCursor: null,
         hasMore: false,
-      };
+      }, 'socialFeedService.getFeed');
     }
   },
 
@@ -480,9 +481,8 @@ export const socialFeedService = {
     try {
       const response = await api.post<FeedPost>('/social-feed', data);
       return response.data;
-    } catch {
-      // Mock post creation
-      return {
+    } catch (error) {
+      return devMockOrThrow(error, {
         id: `post-dev-${Date.now()}`,
         userId: 'dev-user-001',
         userName: 'Sen',
@@ -503,7 +503,7 @@ export const socialFeedService = {
         isLiked: false,
         isSaved: false,
         createdAt: new Date().toISOString(),
-      };
+      }, 'socialFeedService.createPost');
     }
   },
 
@@ -514,8 +514,8 @@ export const socialFeedService = {
         `/social-feed/${postId}/like`,
       );
       return response.data;
-    } catch {
-      return { liked: true, likeCount: 0 };
+    } catch (error) {
+      return devMockOrThrow(error, { liked: true, likeCount: 0 }, 'socialFeedService.toggleLike');
     }
   },
 
@@ -524,7 +524,7 @@ export const socialFeedService = {
     try {
       const response = await api.post<{ isFollowing: boolean }>(`/users/${userId}/follow`);
       return response.data;
-    } catch {
+    } catch (error) {
       // Mock toggle
       const wasFollowing = followedUserIds.has(userId);
       if (wasFollowing) {
@@ -532,7 +532,7 @@ export const socialFeedService = {
       } else {
         followedUserIds.add(userId);
       }
-      return { isFollowing: !wasFollowing };
+      return devMockOrThrow(error, { isFollowing: !wasFollowing }, 'socialFeedService.toggleFollow');
     }
   },
 
@@ -541,7 +541,7 @@ export const socialFeedService = {
     try {
       const response = await api.get<FeedComment[]>(`/social-feed/${postId}/comments`);
       return response.data;
-    } catch {
+    } catch (error) {
       const commentCount = MOCK_POSTS.find((p) => p.id === postId)?.commentCount ?? 3;
       const count = Math.min(commentCount, 5);
       const mockComments: FeedComment[] = [];
@@ -583,7 +583,7 @@ export const socialFeedService = {
           replies,
         });
       }
-      return mockComments;
+      return devMockOrThrow(error, mockComments, 'socialFeedService.getComments');
     }
   },
 
@@ -592,8 +592,8 @@ export const socialFeedService = {
     try {
       const response = await api.post<FeedComment>(`/social-feed/${postId}/comments`, { content });
       return response.data;
-    } catch {
-      return {
+    } catch (error) {
+      return devMockOrThrow(error, {
         id: `comment-dev-${Date.now()}`,
         userId: 'dev-user-001',
         userName: 'Sen',
@@ -603,7 +603,7 @@ export const socialFeedService = {
         likeCount: 0,
         isLiked: false,
         replies: [],
-      };
+      }, 'socialFeedService.addComment');
     }
   },
 
@@ -614,9 +614,8 @@ export const socialFeedService = {
         `/social-feed/comments/${commentId}/like`
       );
       return response.data;
-    } catch {
-      // Optimistic — caller handles toggle
-      return { likeCount: 0, isLiked: true };
+    } catch (error) {
+      return devMockOrThrow(error, { likeCount: 0, isLiked: true }, 'socialFeedService.likeComment');
     }
   },
 
@@ -632,8 +631,8 @@ export const socialFeedService = {
         { content }
       );
       return response.data;
-    } catch {
-      return {
+    } catch (error) {
+      return devMockOrThrow(error, {
         id: `reply-dev-${Date.now()}`,
         parentCommentId: commentId,
         userId: 'dev-user-001',
@@ -641,10 +640,13 @@ export const socialFeedService = {
         userAvatarUrl: 'https://i.pravatar.cc/150?img=68',
         content,
         createdAt: new Date().toISOString(),
-      };
+      }, 'socialFeedService.replyToComment');
     }
   },
 
   // Get mock posts (used by devSeedData)
-  getMockPosts: (): FeedPost[] => [...MOCK_POSTS],
+  getMockPosts: (): FeedPost[] => {
+    assertDevOnly('socialFeedService.getMockPosts');
+    return [...MOCK_POSTS];
+  },
 };

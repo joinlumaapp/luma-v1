@@ -81,6 +81,9 @@ resource "aws_opensearch_domain" "main" {
 }
 
 # ─── Access Policy ──────────────────────────────────────────
+# NOTE: Principal = "*" is intentional for VPC-based OpenSearch domains.
+# Access is restricted by VPC security groups (only ECS SG allowed on port 443).
+# This follows AWS best-practice for VPC-deployed OpenSearch.
 resource "aws_opensearch_domain_policy" "main" {
   domain_name = aws_opensearch_domain.main.domain_name
 

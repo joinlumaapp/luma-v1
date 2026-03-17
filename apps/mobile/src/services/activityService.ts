@@ -2,6 +2,7 @@
 // Users can create and join real-life activities with 2-6 participants
 
 import api from './api';
+import { devMockOrThrow } from '../utils/mockGuard';
 
 // ─── Interfaces ────────────────────────────────────────────────────
 
@@ -189,8 +190,8 @@ export const activityService = {
     try {
       const response = await api.get<ActivitiesResponse>('/activities');
       return response.data;
-    } catch {
-      return { activities: MOCK_ACTIVITIES, total: MOCK_ACTIVITIES.length };
+    } catch (error) {
+      return devMockOrThrow(error, { activities: MOCK_ACTIVITIES, total: MOCK_ACTIVITIES.length }, 'activityService.getActivities');
     }
   },
 
@@ -198,10 +199,10 @@ export const activityService = {
     try {
       const response = await api.get<Activity>(`/activities/${activityId}`);
       return response.data;
-    } catch {
+    } catch (error) {
       const found = MOCK_ACTIVITIES.find((a) => a.id === activityId);
       if (!found) throw new Error('Activity not found');
-      return found;
+      return devMockOrThrow(error, found, 'activityService.getActivityById');
     }
   },
 
@@ -209,7 +210,7 @@ export const activityService = {
     try {
       const response = await api.post<Activity>('/activities', data);
       return response.data;
-    } catch {
+    } catch (error) {
       const newActivity: Activity = {
         id: `act_${Date.now()}`,
         creatorId: 'current_user',
@@ -229,7 +230,7 @@ export const activityService = {
         createdAt: new Date().toISOString(),
         distanceKm: 0,
       };
-      return newActivity;
+      return devMockOrThrow(error, newActivity, 'activityService.createActivity');
     }
   },
 
@@ -239,24 +240,24 @@ export const activityService = {
         `/activities/${activityId}/join`,
       );
       return response.data;
-    } catch {
-      return { joined: true };
+    } catch (error) {
+      return devMockOrThrow(error, { joined: true }, 'activityService.joinActivity');
     }
   },
 
   leaveActivity: async (activityId: string): Promise<void> => {
     try {
       await api.post(`/activities/${activityId}/leave`);
-    } catch {
-      // Mock: silent success
+    } catch (error) {
+      devMockOrThrow(error, undefined, 'activityService.leaveActivity');
     }
   },
 
   cancelActivity: async (activityId: string): Promise<void> => {
     try {
       await api.delete(`/activities/${activityId}`);
-    } catch {
-      // Mock: silent success
+    } catch (error) {
+      devMockOrThrow(error, undefined, 'activityService.cancelActivity');
     }
   },
 };

@@ -1,6 +1,7 @@
 // Badge API service — list all badges, get user badges, get progress
 
 import api from './api';
+import { devMockOrThrow } from '../utils/mockGuard';
 
 export interface Badge {
   id: string;
@@ -61,15 +62,15 @@ export const badgeService = {
     try {
       const response = await api.get<Badge[]>('/badges');
       return response.data;
-    } catch {
-      return MOCK_BADGE_PROGRESS.map((b) => ({
+    } catch (error) {
+      return devMockOrThrow(error, MOCK_BADGE_PROGRESS.map((b) => ({
         id: b.badgeKey,
         name: b.name,
         description: b.description,
         iconUrl: b.iconUrl ?? '',
         category: 'social',
         criteria: b.description,
-      }));
+      })), 'badgeService.getAllBadges');
     }
   },
 
@@ -78,8 +79,8 @@ export const badgeService = {
     try {
       const response = await api.get<UserBadge[]>('/badges/me');
       return response.data;
-    } catch {
-      return MOCK_BADGE_PROGRESS
+    } catch (error) {
+      return devMockOrThrow(error, MOCK_BADGE_PROGRESS
         .filter((b) => b.isEarned)
         .map((b) => ({
           id: b.badgeKey,
@@ -92,7 +93,7 @@ export const badgeService = {
             criteria: b.description,
           },
           earnedAt: b.earnedAt ?? new Date().toISOString(),
-        }));
+        })), 'badgeService.getMyBadges');
     }
   },
 
@@ -101,12 +102,12 @@ export const badgeService = {
     try {
       const response = await api.get<BadgeProgressResponse>('/badges/progress');
       return response.data;
-    } catch {
-      return {
+    } catch (error) {
+      return devMockOrThrow(error, {
         badges: MOCK_BADGE_PROGRESS,
         total: MOCK_BADGE_PROGRESS.length,
         earned: MOCK_BADGE_PROGRESS.filter((b) => b.isEarned).length,
-      };
+      }, 'badgeService.getBadgeProgress');
     }
   },
 };

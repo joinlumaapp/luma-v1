@@ -1,53 +1,71 @@
-# Dependencies (will be installed in container)
+# ─── Dependencies (will be installed in container) ───────────
 node_modules
 **/node_modules
 
-# Git
+# ─── Git ─────────────────────────────────────────────────────
 .git
 .github
 .gitignore
 
-# IDE
+# ─── IDE & Editor ────────────────────────────────────────────
 .vscode
 .idea
 *.swp
 *.swo
+*~
 
-# Documentation
+# ─── Documentation ───────────────────────────────────────────
 *.md
 LICENSE
+docs/
 
-# Environment files
+# ─── Environment & Secrets ───────────────────────────────────
 .env
 .env.*
 !.env.example
+*.pem
+*.key
 
-# Mobile app (not needed for backend image)
+# ─── Mobile App (not needed for backend image) ──────────────
 apps/mobile
+android/
+ios/
 
-# Infrastructure
+# ─── Infrastructure & IaC ───────────────────────────────────
 infrastructure
+terraform/
+*.tfstate
+*.tfstate.*
+.terraform/
 
-# Build output (will be rebuilt in container)
-dist
-**/dist
-coverage
-**/coverage
-
-# Claude Code
+# ─── Claude Code ─────────────────────────────────────────────
 .claude
 
-# Logs
+# ─── Build Artifacts (will be rebuilt in container) ──────────
+dist
+**/dist
+build
+coverage
+**/coverage
+*.tsbuildinfo
+
+# ─── Logs ────────────────────────────────────────────────────
 *.log
 npm-debug.log*
 
-# OS files
+# ─── OS Files ────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
 
-# Test files (not needed in production image)
+# ─── Docker (prevent recursive context) ─────────────────────
+docker-compose*.yml
+.dockerignore
+
+# ─── Test Files (not needed in production image) ─────────────
 **/*.spec.ts
 **/*.test.ts
+**/*.e2e-spec.ts
 **/test
 **/__tests__
+**/__mocks__
 jest.config.*

@@ -18,7 +18,7 @@ export const APP_CONFIG: {
 
 // LOCKED architecture constants — do not modify
 export const LOCKED_ARCHITECTURE = {
-  MENU_TABS: 4,
+  MENU_TABS: 5,
   MAIN_CATEGORIES: 19,
   SUBSYSTEMS: 48,
   INTENTION_TAGS: 3,

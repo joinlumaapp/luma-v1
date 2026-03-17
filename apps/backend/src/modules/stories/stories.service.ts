@@ -7,6 +7,7 @@ import {
   Logger,
   NotFoundException,
   ForbiddenException,
+  InternalServerErrorException,
 } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 import { CreateStoryDto } from "./dto/create-story.dto";
@@ -304,10 +305,18 @@ export class StoriesService {
   }
 
   private async uploadStoryMedia(file: UploadedFile): Promise<string> {
-    // TODO: Integrate with StorageService (S3/CloudFront)
-    // For now, return a placeholder URL
+    // Production guard: StorageService (S3/CloudFront) integration is required
+    if (process.env.NODE_ENV === "production") {
+      throw new InternalServerErrorException(
+        "Story media upload is not configured for production — StorageService not integrated",
+      );
+    }
+
+    // DEV/STAGING ONLY: return a placeholder CDN URL
     const filename = `stories/${Date.now()}-${file.originalname}`;
-    this.logger.log(`Would upload story media to: ${filename}`);
+    this.logger.warn(
+      `[DEV] Returning placeholder CDN URL for story media: ${filename}`,
+    );
     return `https://cdn.lumaapp.com/${filename}`;
   }
 
