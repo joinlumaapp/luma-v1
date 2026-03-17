@@ -7,6 +7,7 @@ import { storage } from '../utils/storage';
 import { api, parseApiError } from '../services/api';
 import { paymentService } from '../services/paymentService';
 import { iapService } from '../services/iapService';
+import { devMockOrThrow } from '../utils/mockGuard';
 import type { AxiosError } from 'axios';
 
 export interface CoinPack {
@@ -287,20 +288,21 @@ export const useCoinStore = create<CoinState>((set, get) => ({
       persistBalance(response.data.newBalance);
       return true;
     } catch (error: unknown) {
-      if (__DEV__) {
-        console.warn('Jeton harcama API basarisiz, yerel deger korunuyor:', error);
+      try {
+        devMockOrThrow(error, true, 'coinStore.spendCoins');
         set({ isLoading: false });
         return true;
+      } catch {
+        // Revert optimistic update
+        set({
+          balance,
+          transactions: get().transactions.filter((t) => t.id !== transaction.id),
+          isLoading: false,
+          error: parseApiError(error as AxiosError).userMessage,
+        });
+        persistBalance(balance);
+        return false;
       }
-      // Revert optimistic update
-      set({
-        balance,
-        transactions: get().transactions.filter((t) => t.id !== transaction.id),
-        isLoading: false,
-        error: parseApiError(error as AxiosError).userMessage,
-      });
-      persistBalance(balance);
-      return false;
     }
   },
 
@@ -373,8 +375,8 @@ export const useCoinStore = create<CoinState>((set, get) => ({
 
       return true;
     } catch (error: unknown) {
-      if (__DEV__) {
-        console.warn('Jeton satin alma basarisiz, mock fallback kullaniliyor:', error);
+      try {
+        devMockOrThrow(error, true, 'coinStore.purchaseCoins');
         // Dev fallback — simulate purchase
         const transaction: CoinTransaction = {
           id: generateId(),
@@ -397,11 +399,11 @@ export const useCoinStore = create<CoinState>((set, get) => ({
         persistBalance(newBalance);
         persistTransactions(newTransactions);
         return true;
+      } catch {
+        const message = error instanceof Error ? error.message : 'Satın alma başarısız';
+        set({ isLoading: false, error: message });
+        return false;
       }
-
-      const message = error instanceof Error ? error.message : 'Satın alma başarısız';
-      set({ isLoading: false, error: message });
-      return false;
     }
   },
 
@@ -436,14 +438,13 @@ export const useCoinStore = create<CoinState>((set, get) => ({
 
       get().startAdCooldown();
       return reward;
-    } catch {
-      if (__DEV__) {
-        console.warn('Reklam odulu API basarisiz, mock fallback kullaniliyor');
-      }
+    } catch (error) {
       // Dev fallback — random reward
       const reward =
         AD_REWARD_MIN +
         Math.floor(Math.random() * (AD_REWARD_MAX - AD_REWARD_MIN + 1));
+
+      devMockOrThrow(error, reward, 'coinStore.watchAd');
 
       const transaction: CoinTransaction = {
         id: generateId(),
@@ -604,20 +605,21 @@ export const useCoinStore = create<CoinState>((set, get) => ({
       persistBalance(response.data.newBalance);
       return true;
     } catch (error: unknown) {
-      if (__DEV__) {
-        console.warn('Hizli mesaj harcama API basarisiz:', error);
+      try {
+        devMockOrThrow(error, true, 'coinStore.sendInstantMessage');
         set({ isLoading: false });
         return true;
+      } catch {
+        // Revert
+        set({
+          balance,
+          transactions: get().transactions.filter((t) => t.id !== transaction.id),
+          isLoading: false,
+          error: parseApiError(error as AxiosError).userMessage,
+        });
+        persistBalance(balance);
+        return false;
       }
-      // Revert
-      set({
-        balance,
-        transactions: get().transactions.filter((t) => t.id !== transaction.id),
-        isLoading: false,
-        error: parseApiError(error as AxiosError).userMessage,
-      });
-      persistBalance(balance);
-      return false;
     }
   },
 
@@ -656,8 +658,8 @@ export const useCoinStore = create<CoinState>((set, get) => ({
       persistTransactions(newTransactions);
       return true;
     } catch (error: unknown) {
-      if (__DEV__) {
-        console.warn('Boost API basarisiz, mock fallback kullaniliyor:', error);
+      try {
+        devMockOrThrow(error, true, 'coinStore.activateProfileBoost');
         const transaction: CoinTransaction = {
           id: generateId(),
           amount: -PROFILE_BOOST_COST,
@@ -677,12 +679,13 @@ export const useCoinStore = create<CoinState>((set, get) => ({
         persistBalance(newBalance);
         persistTransactions(newTransactions);
         return true;
+      } catch {
+        set({
+          isLoading: false,
+          error: parseApiError(error as AxiosError).userMessage,
+        });
+        return false;
       }
-      set({
-        isLoading: false,
-        error: parseApiError(error as AxiosError).userMessage,
-      });
-      return false;
     }
   },
 
@@ -719,20 +722,21 @@ export const useCoinStore = create<CoinState>((set, get) => ({
       persistBalance(response.data.newBalance);
       return true;
     } catch (error: unknown) {
-      if (__DEV__) {
-        console.warn('Super Begeni harcama API basarisiz:', error);
+      try {
+        devMockOrThrow(error, true, 'coinStore.sendSuperLike');
         set({ isLoading: false });
         return true;
+      } catch {
+        // Revert
+        set({
+          balance,
+          transactions: get().transactions.filter((t) => t.id !== transaction.id),
+          isLoading: false,
+          error: parseApiError(error as AxiosError).userMessage,
+        });
+        persistBalance(balance);
+        return false;
       }
-      // Revert
-      set({
-        balance,
-        transactions: get().transactions.filter((t) => t.id !== transaction.id),
-        isLoading: false,
-        error: parseApiError(error as AxiosError).userMessage,
-      });
-      persistBalance(balance);
-      return false;
     }
   },
 

@@ -5,6 +5,7 @@ import { profileService } from '../services/profileService';
 import type { ProfileResponse } from '../services/profileService';
 import { PROFILE_CONFIG } from '../constants/config';
 import { parseApiError } from '../services/api';
+import { devMockOrThrow } from '../utils/mockGuard';
 import type { AxiosError } from 'axios';
 import { videoService } from '../services/videoService';
 
@@ -213,14 +214,14 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         error: null,
       });
     } catch (error: unknown) {
-      if (__DEV__) {
-        console.warn('Profil guncelleme basarisiz:', error);
+      try {
+        devMockOrThrow(error, data, 'profileStore.updateProfile');
         // In dev, apply changes locally anyway
         set((state) => ({
           profile: { ...state.profile, ...data },
           isLoading: false,
         }));
-      } else {
+      } catch {
         const apiError = parseApiError(error as AxiosError);
         set({ isLoading: false, error: apiError.userMessage });
       }
@@ -242,8 +243,8 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         error: null,
       }));
     } catch (error: unknown) {
-      if (__DEV__) {
-        console.warn('Fotograf yukleme basarisiz:', error);
+      try {
+        devMockOrThrow(error, uri, 'profileStore.uploadPhoto');
         // In dev, add the local URI directly
         set((state) => ({
           profile: {
@@ -253,7 +254,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
           _photoIds: [...state._photoIds, `local-${Date.now()}`],
           isLoading: false,
         }));
-      } else {
+      } catch {
         const apiError = parseApiError(error as AxiosError);
         set({ isLoading: false, error: apiError.userMessage });
       }
@@ -276,8 +277,8 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         isLoading: false,
       }));
     } catch (error: unknown) {
-      if (__DEV__) {
-        console.warn('Fotograf silme basarisiz:', error);
+      try {
+        devMockOrThrow(error, true, 'profileStore.deletePhoto');
         // In dev, remove locally anyway
         set((state) => ({
           profile: {
@@ -287,7 +288,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
           _photoIds: state._photoIds.filter((_, i) => i !== index),
           isLoading: false,
         }));
-      } else {
+      } catch {
         const apiError = parseApiError(error as AxiosError);
         set({ isLoading: false, error: apiError.userMessage });
       }
@@ -344,8 +345,8 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         videoUploadProgress: 100,
       }));
     } catch (error: unknown) {
-      if (__DEV__) {
-        console.warn('Video yukleme basarisiz:', error);
+      try {
+        devMockOrThrow(error, uri, 'profileStore.uploadVideo');
         // In dev, save local URI as fallback
         set((state) => ({
           profile: {
@@ -359,7 +360,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
           isVideoUploading: false,
           videoUploadProgress: 0,
         }));
-      } else {
+      } catch {
         const apiError = parseApiError(error as AxiosError);
         set({ isVideoUploading: false, videoUploadProgress: 0, error: apiError.userMessage });
       }
@@ -378,8 +379,8 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         isLoading: false,
       }));
     } catch (error: unknown) {
-      if (__DEV__) {
-        console.warn('Video silme basarisiz:', error);
+      try {
+        devMockOrThrow(error, true, 'profileStore.deleteVideo');
         set((state) => ({
           profile: {
             ...state.profile,
@@ -387,7 +388,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
           },
           isLoading: false,
         }));
-      } else {
+      } catch {
         const apiError = parseApiError(error as AxiosError);
         set({ isLoading: false, error: apiError.userMessage });
       }

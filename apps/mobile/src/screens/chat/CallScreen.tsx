@@ -264,13 +264,27 @@ export const CallScreen: React.FC = () => {
 
       {/* Center: avatar + name + status */}
       <View style={styles.centerArea}>
-        {/* Video placeholder — actual RTCView would go here when WebRTC streams are available */}
-        {isVideo && isConnected ? (
+        {/* Video area — actual RTCView would replace the inner content when WebRTC streams are available */}
+        {isVideo && (callState === 'connecting' || isConnected) ? (
           <View style={styles.videoPlaceholder}>
-            <Text style={styles.videoPlaceholderText}>
+            {/* Partner avatar initial as background */}
+            <Text style={styles.videoAvatarInitial}>
               {displayName.charAt(0)}
             </Text>
-            <Text style={styles.videoPlaceholderLabel}>Goruntu akisi</Text>
+
+            {callState === 'connecting' ? (
+              /* Connecting state overlay */
+              <View style={styles.videoOverlay}>
+                <Text style={styles.videoOverlayName}>{displayName}</Text>
+                <Text style={styles.videoOverlayStatus}>Video baglantisi kuruluyor...</Text>
+              </View>
+            ) : (
+              /* Connected but no real stream yet */
+              <View style={styles.videoOverlay}>
+                <Text style={styles.videoUnavailableIcon}>{'\uD83C\uDFA5'}</Text>
+                <Text style={styles.videoOverlayStatus}>Video henuz desteklenmiyor</Text>
+              </View>
+            )}
 
             {/* Self-view PiP placeholder */}
             <View style={styles.pipContainer}>
@@ -465,17 +479,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'relative',
   },
-  videoPlaceholderText: {
-    fontSize: 72,
+  videoAvatarInitial: {
+    fontSize: 96,
     fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: palette.purple[400],
-    opacity: 0.3,
+    opacity: 0.15,
+    position: 'absolute',
   },
-  videoPlaceholderLabel: {
-    ...typography.caption,
-    color: 'rgba(255, 255, 255, 0.3)',
-    marginTop: spacing.sm,
+  videoOverlay: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  videoOverlayName: {
+    ...typography.h4,
+    color: palette.white,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    marginBottom: spacing.xs,
+  },
+  videoOverlayStatus: {
+    ...typography.body,
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  videoUnavailableIcon: {
+    fontSize: 40,
+    marginBottom: spacing.sm,
   },
   pipContainer: {
     position: 'absolute',

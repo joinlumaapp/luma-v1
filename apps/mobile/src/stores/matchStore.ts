@@ -6,6 +6,7 @@ import type { MatchDetailResponse } from '../services/matchService';
 import { analyticsService, ANALYTICS_EVENTS } from '../services/analyticsService';
 import { getAllConversationMeta } from '../services/chatPersistence';
 import { parseApiError } from '../services/api';
+import { devMockOrThrow } from '../utils/mockGuard';
 import type { AxiosError } from 'axios';
 
 export interface Match {
@@ -174,9 +175,10 @@ export const useMatchStore = create<MatchState>((set, get) => ({
       await matchService.unmatch(matchId);
       analyticsService.track(ANALYTICS_EVENTS.UNMATCH, { matchId });
     } catch (error: unknown) {
-      if (__DEV__) {
-        console.warn('Eşleştirme kaldırma başarısız:', error);
-      } else {
+      try {
+        devMockOrThrow(error, true, 'matchStore.unmatch');
+        // In dev, optimistic update sticks (no rollback)
+      } catch {
         // Rollback on error
         set({ matches: prevMatches, selectedMatch: prevSelected, totalCount: prevCount });
         const apiError = parseApiError(error as AxiosError);

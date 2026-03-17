@@ -21,6 +21,7 @@ import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import api, { buildUrl } from '../../services/api';
 import { API_ROUTES } from '@luma/shared';
+import { devMockOrThrow } from '../../utils/mockGuard';
 
 // ── Types ────────────────────────────────────────────────────────
 interface BlockedUser {
@@ -30,13 +31,11 @@ interface BlockedUser {
   blockedAt: string;
 }
 
-// DEV mock data — used only when API call fails in __DEV__ mode
-const DEV_MOCK_BLOCKED_USERS: BlockedUser[] = __DEV__
-  ? [
-      { id: 'mock-1', name: 'Test Kullanici 1', avatarUrl: null, blockedAt: '2026-02-15T10:00:00Z' },
-      { id: 'mock-2', name: 'Test Kullanici 2', avatarUrl: null, blockedAt: '2026-03-01T14:30:00Z' },
-    ]
-  : [];
+// DEV mock data — only used via devMockOrThrow guard (throws in production)
+const DEV_MOCK_BLOCKED_USERS: BlockedUser[] = [
+  { id: 'mock-1', name: 'Test Kullanici 1', avatarUrl: null, blockedAt: '2026-02-15T10:00:00Z' },
+  { id: 'mock-2', name: 'Test Kullanici 2', avatarUrl: null, blockedAt: '2026-03-01T14:30:00Z' },
+];
 
 export const BlockedUsersScreen: React.FC = () => {
   useScreenTracking('BlockedUsers');
@@ -55,11 +54,11 @@ export const BlockedUsersScreen: React.FC = () => {
       try {
         const response = await api.get<BlockedUser[]>(API_ROUTES.MODERATION.BLOCKED_LIST);
         setBlockedUsers(response.data);
-      } catch {
-        if (__DEV__) {
-          console.warn('[BlockedUsers] API cagirisi basarisiz, mock veri kullaniliyor');
-          setBlockedUsers(DEV_MOCK_BLOCKED_USERS);
-        } else {
+      } catch (error) {
+        try {
+          const mockData = devMockOrThrow(error, DEV_MOCK_BLOCKED_USERS, 'BlockedUsersScreen.fetchBlockedUsers');
+          setBlockedUsers(mockData);
+        } catch {
           Alert.alert('Hata', 'Engellenen kullanıcılar yüklenirken bir sorun oluştu.');
         }
       } finally {
@@ -84,11 +83,12 @@ export const BlockedUsersScreen: React.FC = () => {
             try {
               await api.delete(buildUrl(API_ROUTES.MODERATION.UNBLOCK, { userId: user.id }));
               setBlockedUsers((prev) => prev.filter((u) => u.id !== user.id));
-            } catch {
-              if (__DEV__) {
-                console.warn('[BlockedUsers] Engel kaldirma API basarisiz, yerel olarak kaldiriliyor');
+            } catch (unblockError) {
+              try {
+                devMockOrThrow(unblockError, undefined, 'BlockedUsersScreen.handleUnblock');
+                // In dev, silently remove from local list
                 setBlockedUsers((prev) => prev.filter((u) => u.id !== user.id));
-              } else {
+              } catch {
                 Alert.alert('Hata', 'Engel kaldırılamadı. Lütfen tekrar deneyin.');
               }
             } finally {

@@ -7,7 +7,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   StatusBar,
   Platform,
 } from 'react-native';
@@ -22,13 +21,6 @@ type NavProp = NativeStackNavigationProp<AuthStackParamList, 'SignUpChoice'>;
 
 export const SignUpChoiceScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
-
-  const handleGoogle = () => {
-    Alert.alert(
-      'Çok Yakında',
-      'Google ile giriş yakın zamanda aktif olacak. Şimdilik telefon ile devam edebilirsin.',
-    );
-  };
 
   const handlePhone = () => {
     navigation.navigate('PhoneEntry');
@@ -66,11 +58,15 @@ export const SignUpChoiceScreen: React.FC = () => {
         {/* Google button — disabled until Google Auth is implemented */}
         <TouchableOpacity
           style={[styles.googleButton, styles.googleButtonDisabled]}
-          onPress={handleGoogle}
-          activeOpacity={0.7}
+          disabled={true}
+          activeOpacity={1}
+          accessibilityRole="button"
+          accessibilityLabel="Google ile bağlan, çok yakında"
+          accessibilityState={{ disabled: true }}
         >
           <Ionicons name="logo-google" size={20} color={onboardingColors.text} />
-          <Text style={styles.googleButtonText}>Google ile bağlan (Çok yakında)</Text>
+          <Text style={styles.googleButtonText}>Google ile bağlan</Text>
+          <Text style={styles.comingSoonBadge}>Çok yakında</Text>
         </TouchableOpacity>
 
         {/* Phone button */}
@@ -153,7 +149,13 @@ const styles = StyleSheet.create({
     color: onboardingColors.text,
   },
   googleButtonDisabled: {
-    opacity: 0.5,
+    opacity: 0.45,
+  },
+  comingSoonBadge: {
+    fontSize: 10,
+    color: onboardingColors.textTertiary,
+    marginLeft: 4,
+    fontStyle: 'italic' as const,
   },
   phoneButton: {
     flexDirection: 'row',

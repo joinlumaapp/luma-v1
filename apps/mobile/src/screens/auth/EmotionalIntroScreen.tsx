@@ -12,7 +12,6 @@ import {
   Platform,
   Modal,
   Pressable,
-  Alert,
   Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -128,10 +127,6 @@ const EmotionalIntroScreen: React.FC = () => {
   const [showTestPanel, setShowTestPanel] = useState(false);
 
   // Navigation handlers
-  const handleGoogleSignIn = useCallback(() => {
-    Alert.alert('Google ile Bağlan', 'Çok yakında aktif olacak!');
-  }, []);
-
   const handleOtherOptions = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.navigate('SignUpChoice');
@@ -233,13 +228,15 @@ const EmotionalIntroScreen: React.FC = () => {
           {/* Google button — disabled until Google Auth is implemented */}
           <TouchableOpacity
             style={[styles.googleButton, styles.googleButtonDisabled]}
-            onPress={handleGoogleSignIn}
-            activeOpacity={0.9}
+            disabled={true}
+            activeOpacity={1}
             accessibilityRole="button"
-            accessibilityLabel="Google ile bağlan"
+            accessibilityLabel="Google ile bağlan, çok yakında"
+            accessibilityState={{ disabled: true }}
           >
             <Ionicons name="logo-google" size={20} color="#1A1A1A" />
-            <Text style={styles.googleButtonText}>Google ile bağlan (Çok yakında)</Text>
+            <Text style={styles.googleButtonText}>Google ile bağlan</Text>
+            <Text style={styles.comingSoonBadge}>Çok yakında</Text>
           </TouchableOpacity>
 
           {/* Diger secenekler button */}
@@ -422,7 +419,13 @@ const styles = StyleSheet.create({
   },
   // Google button disabled state
   googleButtonDisabled: {
-    opacity: 0.5,
+    opacity: 0.45,
+  },
+  comingSoonBadge: {
+    fontSize: 10,
+    color: '#6B6B6B',
+    marginLeft: 4,
+    fontStyle: 'italic' as const,
   },
   // Privacy text
   privacyText: {

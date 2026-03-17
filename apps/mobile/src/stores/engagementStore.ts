@@ -4,6 +4,7 @@
 import { create } from 'zustand';
 import { storage } from '../utils/storage';
 import { api } from '../services/api';
+import { devMockOrThrow } from '../utils/mockGuard';
 
 // ── Daily Reward Calendar ──
 export const DAILY_REWARDS = [
@@ -544,24 +545,23 @@ export const useEngagementStore = create<EngagementState>((set, get) => ({
         userRank: response.data.userRank,
         isLoading: false,
       });
-    } catch {
-      if (__DEV__) {
-        console.warn('Liderlik tablosu API basarisiz, mock veri kullaniliyor');
-        // Mock leaderboard
-        const mockEntries: LeaderboardEntry[] = Array.from({ length: 10 }, (_, i) => ({
-          userId: `user_${i + 1}`,
-          name: `Kullanıcı ${i + 1}`,
-          photoUrl: `https://picsum.photos/200?random=${i}`,
-          score: 100 - i * 8,
-          rank: i + 1,
-        }));
+    } catch (error) {
+      const mockEntries: LeaderboardEntry[] = Array.from({ length: 10 }, (_, i) => ({
+        userId: `user_${i + 1}`,
+        name: `Kullanıcı ${i + 1}`,
+        photoUrl: `https://picsum.photos/200?random=${i}`,
+        score: 100 - i * 8,
+        rank: i + 1,
+      }));
 
+      try {
+        devMockOrThrow(error, mockEntries, 'engagementStore.fetchLeaderboard');
         set({
           leaderboard: mockEntries,
           userRank: 15,
           isLoading: false,
         });
-      } else {
+      } catch {
         set({ isLoading: false });
       }
     }

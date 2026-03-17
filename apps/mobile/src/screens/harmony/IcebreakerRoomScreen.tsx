@@ -33,6 +33,7 @@ import Animated, {
 import { palette } from '../../theme/colors';
 import { fontWeights } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
+import { gameRoomService, type GameTable } from '../../services/gameRoomService';
 
 // ─── Design Tokens ──────────────────────────────────────────────────────────
 
@@ -489,45 +490,7 @@ const ChatPanel: React.FC<{ messages: ChatMessage[]; onSend: (t: string) => void
 };
 
 // ─── Lobby Types ────────────────────────────────────────────────────────────
-
-interface GameTable {
-  id: string;
-  gameType: GameType;
-  name: string;
-  players: Array<{ name: string; initial: string }>;
-  maxPlayers: number;
-  spectators: number;
-  timeLeft: number;
-  isStarted: boolean;
-}
-
-const MOCK_TABLES: GameTable[] = [
-  {
-    id: 't1', gameType: 'uno', name: 'UNO Turnuvası',
-    players: [{ name: 'Elif', initial: 'E' }, { name: 'Burak', initial: 'B' }, { name: 'Selin', initial: 'S' }],
-    maxPlayers: 4, spectators: 8, timeLeft: 1245, isStarted: true,
-  },
-  {
-    id: 't2', gameType: 'okey', name: 'Okey Klasik',
-    players: [{ name: 'Kaan', initial: 'K' }, { name: 'Deniz', initial: 'D' }],
-    maxPlayers: 4, spectators: 3, timeLeft: 0, isStarted: false,
-  },
-  {
-    id: 't3', gameType: 'board', name: 'Board Night',
-    players: [{ name: 'Merve', initial: 'M' }, { name: 'Can', initial: 'C' }, { name: 'Ari', initial: 'A' }, { name: 'Zeynep', initial: 'Z' }],
-    maxPlayers: 4, spectators: 12, timeLeft: 820, isStarted: true,
-  },
-  {
-    id: 't4', gameType: 'uno', name: 'Acemi Masası',
-    players: [{ name: 'Ali', initial: 'A' }],
-    maxPlayers: 4, spectators: 0, timeLeft: 0, isStarted: false,
-  },
-  {
-    id: 't5', gameType: 'okey', name: 'Okey Pro',
-    players: [],
-    maxPlayers: 4, spectators: 0, timeLeft: 0, isStarted: false,
-  },
-];
+// GameTable type is imported from gameRoomService
 
 const GAME_TYPE_INFO: Record<GameType, { label: string; icon: keyof typeof Ionicons.glyphMap; color: string; gradient: [string, string] }> = {
   uno: { label: 'UNO', icon: 'layers-outline', color: '#EF4444', gradient: ['#EF4444', '#DC2626'] },
@@ -697,6 +660,35 @@ export const IcebreakerRoomScreen: React.FC = () => {
   // Lobby or game
   const [inGame, setInGame] = useState(false);
   const [isSpectator, setIsSpectator] = useState(false);
+
+  // Game tables fetched from API
+  const [tables, setTables] = useState<GameTable[]>([]);
+  const [tablesLoading, setTablesLoading] = useState(true);
+  const [tablesError, setTablesError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchTables = async () => {
+      setTablesLoading(true);
+      setTablesError(null);
+      try {
+        const response = await gameRoomService.getGameTables();
+        if (!cancelled) {
+          setTables(response.tables);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setTablesError('Masalar yüklenemedi. Lütfen tekrar deneyin.');
+        }
+      } finally {
+        if (!cancelled) {
+          setTablesLoading(false);
+        }
+      }
+    };
+    fetchTables();
+    return () => { cancelled = true; };
+  }, []);
 
   // Game state
   const [gameType, setGameType] = useState<GameType>('uno');
@@ -943,7 +935,7 @@ export const IcebreakerRoomScreen: React.FC = () => {
 
   // ── Lobby handlers ──
   const handleJoinTable = useCallback((tableId: string) => {
-    const table = MOCK_TABLES.find((t) => t.id === tableId);
+    const table = tables.find((t) => t.id === tableId);
     if (table) {
       haptic('success');
       setGameType(table.gameType);
@@ -951,10 +943,10 @@ export const IcebreakerRoomScreen: React.FC = () => {
       setInGame(true);
       addSystemMsg(`${table.name} masasına oturdun`);
     }
-  }, [addSystemMsg]);
+  }, [addSystemMsg, tables]);
 
   const handleWatchTable = useCallback((tableId: string) => {
-    const table = MOCK_TABLES.find((t) => t.id === tableId);
+    const table = tables.find((t) => t.id === tableId);
     if (table) {
       haptic('light');
       setGameType(table.gameType);
@@ -962,7 +954,7 @@ export const IcebreakerRoomScreen: React.FC = () => {
       setInGame(true);
       addSystemMsg(`${table.name} masasını izliyorsun`);
     }
-  }, [addSystemMsg]);
+  }, [addSystemMsg, tables]);
 
   const handleLeaveGame = useCallback(() => {
     haptic('light');
@@ -997,7 +989,7 @@ export const IcebreakerRoomScreen: React.FC = () => {
           <View style={st.headerCenter}>
             <Text style={st.headerTitle}>OYUN SALONU</Text>
             <Text style={{ fontSize: 10, color: TEXT_MUTED, letterSpacing: 0.5, lineHeight: 14 }}>
-              {MOCK_TABLES.length} masa aktif
+              {tablesLoading ? 'Yükleniyor...' : `${tables.length} masa aktif`}
             </Text>
           </View>
           <View style={{ width: 36 }} />
@@ -1005,7 +997,7 @@ export const IcebreakerRoomScreen: React.FC = () => {
 
         {/* Tables list */}
         <FlatList
-          data={MOCK_TABLES}
+          data={tables}
           keyExtractor={(t) => t.id}
           contentContainerStyle={{ padding: spacing.md, paddingBottom: insets.bottom + 80, gap: spacing.md }}
           showsVerticalScrollIndicator={false}
@@ -1014,6 +1006,34 @@ export const IcebreakerRoomScreen: React.FC = () => {
               <Text style={st.lobbyTitle}>Masalar</Text>
               <Text style={st.lobbySubtitle}>Bir masaya otur veya izleyici olarak katıl</Text>
             </View>
+          }
+          ListEmptyComponent={
+            tablesLoading ? (
+              <View style={{ alignItems: 'center', paddingVertical: spacing.xl }}>
+                <Text style={{ color: TEXT_SECONDARY, fontSize: 14 }}>Masalar yükleniyor...</Text>
+              </View>
+            ) : tablesError ? (
+              <View style={{ alignItems: 'center', paddingVertical: spacing.xl, gap: spacing.sm }}>
+                <Text style={{ color: '#EF4444', fontSize: 14 }}>{tablesError}</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setTablesLoading(true);
+                    setTablesError(null);
+                    gameRoomService.getGameTables()
+                      .then((res) => setTables(res.tables))
+                      .catch(() => setTablesError('Masalar yüklenemedi. Lütfen tekrar deneyin.'))
+                      .finally(() => setTablesLoading(false));
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={{ color: GOLD, fontSize: 14, fontWeight: fontWeights.semibold as '600' }}>Tekrar Dene</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={{ alignItems: 'center', paddingVertical: spacing.xl }}>
+                <Text style={{ color: TEXT_SECONDARY, fontSize: 14 }}>Henüz aktif masa yok</Text>
+              </View>
+            )
           }
           renderItem={({ item }) => (
             <TableCard table={item} onJoin={handleJoinTable} onWatch={handleWatchTable} />

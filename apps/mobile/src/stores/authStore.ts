@@ -8,6 +8,7 @@ import { socketService } from '../services/socketService';
 import { analyticsService, ANALYTICS_EVENTS } from '../services/analyticsService';
 import { storage } from '../utils/storage';
 import { parseApiError } from '../services/api';
+import { devMockOrThrow } from '../utils/mockGuard';
 import type { AxiosError } from 'axios';
 
 export type PackageTier = 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
@@ -105,14 +106,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
       return true;
     } catch (error: unknown) {
-      if (__DEV__) {
-        console.warn('OTP gonderme basarisiz, gelistirme modunda devam ediliyor:', error);
+      try {
+        devMockOrThrow(error, true, 'authStore.sendOTP');
         set({ isLoading: false, otpCooldownSeconds: 0, otpRemainingAttempts: 5 });
         return true;
+      } catch {
+        const apiError = parseApiError(error as AxiosError);
+        set({ isLoading: false, error: apiError.userMessage });
+        return false;
       }
-      const apiError = parseApiError(error as AxiosError);
-      set({ isLoading: false, error: apiError.userMessage });
-      return false;
     }
   },
 
@@ -161,14 +163,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       return true;
     } catch (error: unknown) {
-      if (__DEV__) {
-        console.warn('OTP dogrulama basarisiz, gelistirme modunda mock kullanici olusturuluyor:', error);
-        const mockUser: AuthUser = {
-          id: 'dev-user-001',
-          phone,
-          isVerified: false,
-          packageTier: 'FREE',
-        };
+      const mockUser: AuthUser = {
+        id: 'dev-user-001',
+        phone,
+        isVerified: false,
+        packageTier: 'FREE',
+      };
+      try {
+        devMockOrThrow(error, mockUser, 'authStore.verifyOTP');
         set({
           accessToken: 'dev-access-token',
           refreshToken: 'dev-refresh-token',
@@ -178,10 +180,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           error: null,
         });
         return true;
+      } catch {
+        const apiError = parseApiError(error as AxiosError);
+        set({ isLoading: false, error: apiError.userMessage });
+        return false;
       }
-      const apiError = parseApiError(error as AxiosError);
-      set({ isLoading: false, error: apiError.userMessage });
-      return false;
     }
   },
 
@@ -197,18 +200,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }));
       return response;
     } catch (error: unknown) {
-      if (__DEV__) {
-        console.warn('Selfie dogrulama basarisiz, gelistirme modunda devam ediliyor:', error);
+      const mockResult = { verified: true, status: 'Dev mode: otomatik onaylandi' };
+      try {
+        devMockOrThrow(error, mockResult, 'authStore.verifySelfie');
         set((state) => ({
           isLoading: false,
           user: state.user ? { ...state.user, isVerified: true } : null,
           error: null,
         }));
-        return { verified: true, status: 'Dev mode: otomatik onaylandi' };
+        return mockResult;
+      } catch {
+        const apiError = parseApiError(error as AxiosError);
+        set({ isLoading: false, error: apiError.userMessage });
+        return { verified: false, status: apiError.userMessage };
       }
-      const apiError = parseApiError(error as AxiosError);
-      set({ isLoading: false, error: apiError.userMessage });
-      return { verified: false, status: apiError.userMessage };
     }
   },
 
@@ -424,14 +429,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       socketService.reconnectWithToken(response.accessToken);
 
       return true;
-    } catch {
-      if (__DEV__) {
-        console.warn('Token yenileme basarisiz, gelistirme modunda mevcut token korunuyor');
-        return true;
+    } catch (error) {
+      try {
+        return devMockOrThrow(error, true, 'authStore.refreshTokens');
+      } catch {
+        // Refresh failed — force logout
+        await get().logout();
+        return false;
       }
-      // Refresh failed — force logout
-      await get().logout();
-      return false;
     }
   },
 
