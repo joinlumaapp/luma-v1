@@ -1519,6 +1519,8 @@ export const DiscoveryScreen: React.FC = () => {
               multiline
               maxLength={200}
               autoFocus
+              accessibilityLabel="Beğeni notu"
+              accessibilityHint="Profilinde dikkatini çeken şeyi yaz"
               testID="discovery-comment-input"
             />
             <Text style={styles.commentModalCharCount}>

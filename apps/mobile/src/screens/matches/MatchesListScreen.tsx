@@ -313,6 +313,8 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
                     <TouchableWithoutFeedback
                       key={i}
                       onPress={() => onStarterPress(item.id, item.name, item.photoUrl, text)}
+                      accessibilityLabel={`Sohbet başlatıcı: ${text}`}
+                      accessibilityRole="button"
                     >
                       <View style={styles.starterChip}>
                         <Text style={styles.starterText} numberOfLines={1}>{text}</Text>
@@ -535,7 +537,12 @@ const ViewerCard = memo<ViewerCardProps>(({ item, index }) => {
 
   return (
     <SlideIn direction="right" delay={index * 80} distance={24}>
-      <View style={styles.matchCard}>
+      <View
+        style={styles.matchCard}
+        accessible
+        accessibilityLabel={`${item.isBlurred ? 'Gizli profil' : item.firstName ?? 'Bilinmeyen'}, ${timeAgo} ziyaret etti`}
+        accessibilityRole="summary"
+      >
         {/* Avatar */}
         <View style={styles.avatarContainer}>
           {item.isBlurred ? (
@@ -543,7 +550,7 @@ const ViewerCard = memo<ViewerCardProps>(({ item, index }) => {
               <Text style={styles.blurredAvatarText}>?</Text>
             </View>
           ) : item.photoUrl ? (
-            <Image source={{ uri: item.photoUrl }} style={styles.avatarImage} />
+            <Image source={{ uri: item.photoUrl }} style={styles.avatarImage} accessible={false} />
           ) : (
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>
@@ -852,6 +859,8 @@ export const MatchesListScreen: React.FC = () => {
                 style={styles.nudgeCard}
                 activeOpacity={0.8}
                 onPress={() => handleNudgePress(match)}
+                accessibilityLabel={`${match.name} ile mesajlaş, yüzde ${match.compatibilityPercent} uyum`}
+                accessibilityRole="button"
               >
                 {match.photoUrl ? (
                   <Image source={{ uri: match.photoUrl }} style={styles.nudgeAvatar} />

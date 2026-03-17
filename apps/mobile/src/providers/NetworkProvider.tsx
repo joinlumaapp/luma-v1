@@ -43,6 +43,7 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   const wasOffline = useNetworkStore((s) => s.wasOffline);
   const clearWasOffline = useNetworkStore((s) => s.clearWasOffline);
   const startMonitoring = useNetworkStore((s) => s.startMonitoring);
+  const setPendingActionCount = useNetworkStore((s) => s.setPendingActionCount);
 
   const accessToken = useAuthStore((s) => s.accessToken);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -53,15 +54,17 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   useEffect(() => {
     const unsubscribe = startMonitoring();
 
-    // Load persisted offline queue
-    offlineQueue.init();
+    // Load persisted offline queue and sync pending count
+    offlineQueue.init().then(() => {
+      setPendingActionCount(offlineQueue.getQueueSize());
+    });
 
     hasInitializedRef.current = true;
 
     return () => {
       unsubscribe();
     };
-  }, [startMonitoring]);
+  }, [startMonitoring, setPendingActionCount]);
 
   // Handle reconnection: flush queues, reconnect WebSocket
   useEffect(() => {
@@ -84,7 +87,8 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
 
       // 2. Process the persistent offlineQueue
       try {
-        await offlineQueue.processQueue(api);
+        const result = await offlineQueue.processQueue(api);
+        setPendingActionCount(result.remaining);
       } catch {
         if (__DEV__) {
           console.warn('[NetworkProvider] offlineQueue processQueue hatasi');

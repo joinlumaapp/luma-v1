@@ -1,24 +1,43 @@
 // Animated offline indicator — slides down from top when device loses network
-// Shows amber warning when offline, green confirmation when reconnected
+// Shows amber warning when offline, brief "reconnecting" state, green confirmation when reconnected
 
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Animated, StyleSheet } from 'react-native';
+import { View, Text, Animated, StyleSheet, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useNetworkStore } from '../../stores/networkStore';
+import { offlineQueue } from '../../services/offlineQueue';
 import { palette } from '../../theme/colors';
 
-type BannerState = 'hidden' | 'offline' | 'reconnected';
+type BannerState = 'hidden' | 'offline' | 'reconnecting' | 'reconnected';
 
-const RECONNECTED_DISPLAY_MS = 2500;
+/** How long "Baglanti kuruluyor..." is shown before switching to "reconnected" */
+const RECONNECTING_DISPLAY_MS = 1200;
+/** How long "Baglanti saglandi" is shown before auto-hiding */
+const RECONNECTED_DISPLAY_MS = 2000;
 
 export const OfflineBanner: React.FC = () => {
   const isConnected = useNetworkStore((s) => s.isConnected);
   const insets = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(-100)).current;
   const [bannerState, setBannerState] = useState<BannerState>('hidden');
+  const [pendingCount, setPendingCount] = useState(0);
   const wasOfflineRef = useRef(false);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Track pending offline actions for display
+  useEffect(() => {
+    if (!isConnected) {
+      const interval = setInterval(() => {
+        setPendingCount(offlineQueue.getQueueSize());
+      }, 1000);
+      // Set initial value immediately
+      setPendingCount(offlineQueue.getQueueSize());
+      return () => clearInterval(interval);
+    }
+    return undefined;
+  }, [isConnected]);
 
   useEffect(() => {
     if (!isConnected) {
@@ -30,6 +49,10 @@ export const OfflineBanner: React.FC = () => {
         clearTimeout(hideTimerRef.current);
         hideTimerRef.current = null;
       }
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
 
       Animated.spring(slideAnim, {
         toValue: 0,
@@ -38,27 +61,35 @@ export const OfflineBanner: React.FC = () => {
         friction: 12,
       }).start();
     } else if (wasOfflineRef.current) {
-      // Coming back online after being offline
-      setBannerState('reconnected');
+      // Coming back online — show "reconnecting" first
+      setBannerState('reconnecting');
 
-      // Show reconnected message briefly, then slide up
-      hideTimerRef.current = setTimeout(() => {
-        Animated.spring(slideAnim, {
-          toValue: -100,
-          useNativeDriver: true,
-          tension: 80,
-          friction: 12,
-        }).start(() => {
-          setBannerState('hidden');
-          wasOfflineRef.current = false;
-        });
-        hideTimerRef.current = null;
-      }, RECONNECTED_DISPLAY_MS);
+      reconnectTimerRef.current = setTimeout(() => {
+        setBannerState('reconnected');
+        reconnectTimerRef.current = null;
+
+        // Then auto-hide after showing "reconnected"
+        hideTimerRef.current = setTimeout(() => {
+          Animated.spring(slideAnim, {
+            toValue: -100,
+            useNativeDriver: true,
+            tension: 80,
+            friction: 12,
+          }).start(() => {
+            setBannerState('hidden');
+            wasOfflineRef.current = false;
+          });
+          hideTimerRef.current = null;
+        }, RECONNECTED_DISPLAY_MS);
+      }, RECONNECTING_DISPLAY_MS);
     }
 
     return () => {
       if (hideTimerRef.current) {
         clearTimeout(hideTimerRef.current);
+      }
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
       }
     };
   }, [isConnected, slideAnim]);
@@ -68,11 +99,30 @@ export const OfflineBanner: React.FC = () => {
   }
 
   const isReconnected = bannerState === 'reconnected';
-  const backgroundColor = isReconnected ? palette.success : palette.warning;
-  const iconName = isReconnected ? 'cloud-done-outline' : 'cloud-offline-outline';
-  const message = isReconnected
-    ? 'Bağlantı yeniden kuruldu'
-    : 'Çevrimdışısınız \u2014 İnternet bağlantınızı kontrol edin';
+  const isReconnecting = bannerState === 'reconnecting';
+
+  let backgroundColor: string;
+  let iconName: keyof typeof Ionicons.glyphMap;
+  let message: string;
+  let showSpinner = false;
+
+  if (isReconnected) {
+    backgroundColor = palette.success;
+    iconName = 'cloud-done-outline';
+    message = 'Bağlantı sağlandı';
+  } else if (isReconnecting) {
+    backgroundColor = palette.info;
+    iconName = 'sync-outline';
+    message = 'Bağlantı kuruluyor...';
+    showSpinner = true;
+  } else {
+    backgroundColor = palette.warning;
+    iconName = 'cloud-offline-outline';
+    message =
+      pendingCount > 0
+        ? `Bağlantı yok \u2014 Çevrimdışı mod (${pendingCount} bekleyen)`
+        : 'Bağlantı yok \u2014 Çevrimdışı mod';
+  }
 
   return (
     <Animated.View
@@ -89,12 +139,20 @@ export const OfflineBanner: React.FC = () => {
       accessibilityLabel={message}
     >
       <View style={styles.content}>
-        <Ionicons
-          name={iconName}
-          size={16}
-          color={palette.white}
-          style={styles.icon}
-        />
+        {showSpinner ? (
+          <ActivityIndicator
+            size="small"
+            color={palette.white}
+            style={styles.icon}
+          />
+        ) : (
+          <Ionicons
+            name={iconName}
+            size={16}
+            color={palette.white}
+            style={styles.icon}
+          />
+        )}
         <Text style={styles.text}>{message}</Text>
       </View>
     </Animated.View>

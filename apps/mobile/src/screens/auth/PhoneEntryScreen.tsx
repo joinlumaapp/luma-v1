@@ -153,6 +153,9 @@ export const PhoneEntryScreen: React.FC = () => {
               style={styles.countrySelector}
               onPress={toggleCountryPicker}
               activeOpacity={0.7}
+              accessibilityLabel={`Ülke kodu seçici, ${selectedCountry.code}`}
+              accessibilityRole="button"
+              accessibilityHint="Ülke kodunu değiştirmek için dokunun"
             >
               <Text style={styles.countryFlag}>{selectedCountry.flag}</Text>
               <Text style={styles.countryCode}>{selectedCountry.code}</Text>
@@ -188,6 +191,8 @@ export const PhoneEntryScreen: React.FC = () => {
                     country.code === selectedCountry.code && styles.countryOptionActive,
                   ]}
                   onPress={() => selectCountry(country)}
+                  accessibilityLabel={`${country.country} ${country.code}${country.code === selectedCountry.code ? ', seçili' : ''}`}
+                  accessibilityRole="button"
                 >
                   <Text style={styles.countryOptionFlag}>{country.flag}</Text>
                   <Text style={styles.countryOptionText}>

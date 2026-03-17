@@ -158,6 +158,59 @@ api.interceptors.request.use(
   }
 );
 
+// ── Retry interceptor — retry GET requests on network/5xx errors ──────
+
+/** Max number of retry attempts for idempotent GET requests */
+const MAX_GET_RETRIES = 2;
+/** Backoff delays in milliseconds for each retry attempt */
+const RETRY_DELAYS_MS = [1000, 3000];
+
+/** Network error codes that warrant a retry */
+const RETRYABLE_CODES = new Set(['ECONNREFUSED', 'ETIMEDOUT', 'ECONNABORTED', 'ERR_NETWORK']);
+
+function isRetryableError(error: AxiosError): boolean {
+  // Only retry network errors (no response) or 5xx server errors
+  if (!error.response) {
+    const code = error.code ?? '';
+    return RETRYABLE_CODES.has(code) || error.message === 'Network Error';
+  }
+  return error.response.status >= 500;
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+api.interceptors.response.use(
+  undefined,
+  async (error: AxiosError) => {
+    const config = error.config as InternalAxiosRequestConfig & { _retryCount?: number };
+    if (!config) return Promise.reject(error);
+
+    const method = config.method?.toLowerCase();
+
+    // Only retry idempotent GET requests to avoid duplicate mutations
+    if (method !== 'get') return Promise.reject(error);
+
+    const retryCount = config._retryCount ?? 0;
+    if (retryCount >= MAX_GET_RETRIES) return Promise.reject(error);
+
+    if (!isRetryableError(error)) return Promise.reject(error);
+
+    config._retryCount = retryCount + 1;
+    const backoff = RETRY_DELAYS_MS[retryCount] ?? 3000;
+
+    if (__DEV__) {
+      console.log(
+        `[API] Retry ${config._retryCount}/${MAX_GET_RETRIES} for GET ${config.url} in ${backoff}ms`
+      );
+    }
+
+    await delay(backoff);
+    return api(config);
+  }
+);
+
 // ── Response interceptor — auto-refresh on 401, handle 429 ────────────
 
 let isRefreshing = false;

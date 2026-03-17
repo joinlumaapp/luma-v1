@@ -699,6 +699,8 @@ export const SettingsScreen: React.FC = () => {
               ]}
               onPress={() => setThemeMode(mode)}
               activeOpacity={0.7}
+              accessibilityLabel={`${label} tema${isSelected ? ', seçili' : ''}`}
+              accessibilityRole="button"
             >
               <Ionicons
                 name={icon}
@@ -775,6 +777,9 @@ export const SettingsScreen: React.FC = () => {
             style={dynamicStyles.settingRow}
             onPress={() => handleToggleFAQ(item.key)}
             activeOpacity={0.7}
+            accessibilityLabel={`${item.title}${isExpanded ? ', genişletildi' : ''}`}
+            accessibilityRole="button"
+            accessibilityHint="Cevabı görmek için dokunun"
           >
             <View style={dynamicStyles.settingLeft}>
               <View style={dynamicStyles.iconContainer}>
@@ -817,6 +822,9 @@ export const SettingsScreen: React.FC = () => {
             onValueChange={item.onToggle}
             trackColor={{ false: colors.surfaceBorder, true: colors.primary + '60' }}
             thumbColor={item.value ? colors.primary : colors.textTertiary}
+            accessibilityRole="switch"
+            accessibilityLabel={item.title}
+            accessibilityValue={{ text: item.value ? 'Açık' : 'Kapalı' }}
           />
         </View>
       );
@@ -830,6 +838,8 @@ export const SettingsScreen: React.FC = () => {
         style={dynamicStyles.settingRow}
         onPress={item.onPress}
         activeOpacity={0.7}
+        accessibilityLabel={item.title}
+        accessibilityRole="button"
       >
         <View style={dynamicStyles.settingLeft}>
           <View style={[
@@ -888,6 +898,8 @@ export const SettingsScreen: React.FC = () => {
         style={dynamicStyles.logoutButton}
         onPress={handleLogout}
         activeOpacity={0.7}
+        accessibilityLabel="Çıkış yap"
+        accessibilityRole="button"
       >
         <Ionicons name="log-out-outline" size={18} color={colors.error} />
         <Text style={dynamicStyles.logoutText}>Çıkış Yap</Text>
@@ -905,6 +917,8 @@ export const SettingsScreen: React.FC = () => {
           onPress={() => navigation.goBack()}
           style={dynamicStyles.backButton}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityLabel="Geri"
+          accessibilityRole="button"
         >
           <Ionicons name="chevron-back" size={22} color={colors.text} />
         </TouchableOpacity>

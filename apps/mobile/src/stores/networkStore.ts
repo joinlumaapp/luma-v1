@@ -16,12 +16,16 @@ interface NetworkState {
   connectionType: string;
   /** Whether we were previously offline (for reconnection detection) */
   wasOffline: boolean;
+  /** Number of actions waiting in the offline queue */
+  pendingActionCount: number;
 
   // Actions
   /** Start listening to network state changes; returns unsubscribe function */
   startMonitoring: () => () => void;
   /** Clear the wasOffline flag after handling reconnection */
   clearWasOffline: () => void;
+  /** Update the pending action count (called after queue changes) */
+  setPendingActionCount: (count: number) => void;
 }
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -31,6 +35,7 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
   isInternetReachable: true,
   connectionType: 'unknown',
   wasOffline: false,
+  pendingActionCount: 0,
 
   startMonitoring: () => {
     const unsubscribe = NetInfo.addEventListener((state: NetInfoState) => {
@@ -80,5 +85,9 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
 
   clearWasOffline: () => {
     set({ wasOffline: false });
+  },
+
+  setPendingActionCount: (count: number) => {
+    set({ pendingActionCount: count });
   },
 }));

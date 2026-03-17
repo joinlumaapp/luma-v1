@@ -475,7 +475,7 @@ export const ProfileScreen: React.FC = () => {
 
         {/* Profile completion bar */}
         {completionPercent < 100 && (
-          <TouchableOpacity onPress={handleEditProfile} activeOpacity={0.7} style={styles.completionBarContainer}>
+          <TouchableOpacity onPress={handleEditProfile} activeOpacity={0.7} style={styles.completionBarContainer} accessibilityLabel={`Profil yüzde ${completionPercent} tamamlandı, düzenlemek için dokunun`} accessibilityRole="button">
             <View style={styles.completionBarTrack}>
               <View style={[styles.completionBarFill, { width: `${completionPercent}%` }]} />
             </View>
@@ -620,6 +620,8 @@ export const ProfileScreen: React.FC = () => {
           ]}
           onPress={handleEditProfile}
           activeOpacity={0.7}
+          accessibilityLabel={`${row.label}: ${row.value}, düzenlemek için dokunun`}
+          accessibilityRole="button"
         >
           <View style={[styles.aboutIconCircle, { backgroundColor: row.iconBg }]}>
             <Ionicons name={row.icon} size={18} color={colors.text} />

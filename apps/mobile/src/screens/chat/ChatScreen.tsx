@@ -616,6 +616,8 @@ export const ChatScreen: React.FC = () => {
               }
             }}
             activeOpacity={0.7}
+            accessibilityLabel={`${partnerName} profilini görüntüle`}
+            accessibilityRole="button"
           >
             <Text style={styles.headerName}>{partnerName}</Text>
             {isTyping ? (
@@ -852,6 +854,8 @@ export const ChatScreen: React.FC = () => {
                 );
               }}
               activeOpacity={0.85}
+              accessibilityLabel={`Tek mesaj gönder, ${MESSAGE_CONFIG.SINGLE_MESSAGE_PACK_PRICE} TL`}
+              accessibilityRole="button"
               testID="chat-single-message-btn"
             >
               <Text style={styles.singleMessageButtonText}>
@@ -864,6 +868,8 @@ export const ChatScreen: React.FC = () => {
                 navigation.getParent()?.navigate('ProfileTab', { screen: 'Packages' });
               }}
               activeOpacity={0.85}
+              accessibilityLabel="Paketi yükselt"
+              accessibilityRole="button"
               testID="chat-upgrade-btn"
             >
               <Text style={styles.upgradeMessageButtonText}>Paketi Yükselt</Text>
@@ -872,6 +878,8 @@ export const ChatScreen: React.FC = () => {
               style={styles.goBackButton}
               onPress={() => navigation.goBack()}
               activeOpacity={0.85}
+              accessibilityLabel="Geri dön"
+              accessibilityRole="button"
               testID="chat-goback-btn"
             >
               <Text style={styles.goBackButtonText}>Geri Dön</Text>
