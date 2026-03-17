@@ -1029,9 +1029,9 @@ describe("AuthService", () => {
 
       // Mock the private methods to return passing scores
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      jest.spyOn(service as any, "mockLivenessCheck").mockReturnValue(0.95);
+      jest.spyOn(service as any, "verifyLiveness").mockReturnValue(0.95);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      jest.spyOn(service as any, "mockFaceComparison").mockReturnValue(0.9);
+      jest.spyOn(service as any, "verifyFaceComparison").mockReturnValue(0.9);
 
       const result = await service.verifySelfie("user-uuid-1", selfieDto);
 
@@ -1061,9 +1061,9 @@ describe("AuthService", () => {
       mockPrismaBadgeDefinition.findUnique.mockResolvedValue(null);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      jest.spyOn(service as any, "mockLivenessCheck").mockReturnValue(0.95);
+      jest.spyOn(service as any, "verifyLiveness").mockReturnValue(0.95);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      jest.spyOn(service as any, "mockFaceComparison").mockReturnValue(0.9);
+      jest.spyOn(service as any, "verifyFaceComparison").mockReturnValue(0.9);
 
       await service.verifySelfie("user-uuid-1", selfieDto);
 
@@ -1086,9 +1086,9 @@ describe("AuthService", () => {
 
       // Mock liveness below threshold (0.7)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      jest.spyOn(service as any, "mockLivenessCheck").mockReturnValue(0.3);
+      jest.spyOn(service as any, "verifyLiveness").mockReturnValue(0.3);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      jest.spyOn(service as any, "mockFaceComparison").mockReturnValue(0.9);
+      jest.spyOn(service as any, "verifyFaceComparison").mockReturnValue(0.9);
 
       const result = await service.verifySelfie("user-uuid-1", selfieDto);
 
@@ -1115,9 +1115,9 @@ describe("AuthService", () => {
 
       // Mock face match below threshold (0.8)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      jest.spyOn(service as any, "mockLivenessCheck").mockReturnValue(0.95);
+      jest.spyOn(service as any, "verifyLiveness").mockReturnValue(0.95);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      jest.spyOn(service as any, "mockFaceComparison").mockReturnValue(0.5);
+      jest.spyOn(service as any, "verifyFaceComparison").mockReturnValue(0.5);
 
       const result = await service.verifySelfie("user-uuid-1", selfieDto);
 
@@ -1154,9 +1154,9 @@ describe("AuthService", () => {
       mockPrismaGoldTransaction.create.mockResolvedValue({});
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      jest.spyOn(service as any, "mockLivenessCheck").mockReturnValue(0.95);
+      jest.spyOn(service as any, "verifyLiveness").mockReturnValue(0.95);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      jest.spyOn(service as any, "mockFaceComparison").mockReturnValue(0.9);
+      jest.spyOn(service as any, "verifyFaceComparison").mockReturnValue(0.9);
 
       await service.verifySelfie("user-uuid-1", selfieDto);
 
@@ -1203,17 +1203,17 @@ describe("AuthService", () => {
 
       // Liveness passes but face comparison is not called because no photos
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      jest.spyOn(service as any, "mockLivenessCheck").mockReturnValue(0.9);
+      jest.spyOn(service as any, "verifyLiveness").mockReturnValue(0.9);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const faceCompSpy = jest
-        .spyOn(service as any, "mockFaceComparison")
+        .spyOn(service as any, "verifyFaceComparison")
         .mockReturnValue(0.5); // Low score, but should not matter
 
       const result = await service.verifySelfie("user-uuid-1", selfieDto);
 
       // Should be verified because faceMatchScore defaults to 1.0 when no photos
       expect(result.verified).toBe(true);
-      // mockFaceComparison should NOT be called (photos.length === 0)
+      // verifyFaceComparison should NOT be called (photos.length === 0)
       expect(faceCompSpy).not.toHaveBeenCalled();
     });
   });

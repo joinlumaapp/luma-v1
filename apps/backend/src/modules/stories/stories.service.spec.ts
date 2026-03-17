@@ -1,7 +1,18 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { NotFoundException, ForbiddenException } from "@nestjs/common";
-import { StoriesService } from "./stories.service";
 import { PrismaService } from "../../prisma/prisma.service";
+
+// Mock StorageService before importing StoriesService (avoids @aws-sdk resolution)
+const mockStorageService = {
+  uploadFile: jest.fn().mockResolvedValue("https://cdn.luma.dating/stories/test.jpg"),
+  deleteFile: jest.fn().mockResolvedValue(undefined),
+};
+jest.mock("../storage/storage.service", () => ({
+  StorageService: class MockStorageService {},
+}));
+
+import { StoriesService } from "./stories.service";
+import { StorageService } from "../storage/storage.service";
 
 const mockPrisma = {
   story: {
@@ -35,6 +46,7 @@ describe("StoriesService", () => {
       providers: [
         StoriesService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: StorageService, useValue: mockStorageService },
       ],
     }).compile();
 

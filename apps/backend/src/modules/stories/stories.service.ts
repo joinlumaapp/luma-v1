@@ -10,6 +10,7 @@ import {
   InternalServerErrorException,
 } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
+import { StorageService } from "../storage/storage.service";
 import { CreateStoryDto } from "./dto/create-story.dto";
 
 /** Minimal file interface compatible with multer uploads */
@@ -27,7 +28,10 @@ export class StoriesService {
   private readonly logger = new Logger(StoriesService.name);
   private readonly STORY_TTL_HOURS = 24;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storageService: StorageService,
+  ) {}
 
   /** Get all active stories from matched/followed users */
   async getStories(userId: string) {
@@ -109,7 +113,7 @@ export class StoriesService {
   /** Create a new story */
   async createStory(userId: string, file: UploadedFile, dto: CreateStoryDto) {
     // Upload file to storage (S3/CloudFront)
-    const mediaUrl = await this.uploadStoryMedia(file);
+    const mediaUrl = await this.uploadStoryMedia(userId, file);
     const expiresAt = new Date(
       Date.now() + this.STORY_TTL_HOURS * 60 * 60 * 1000,
     );
@@ -304,20 +308,28 @@ export class StoriesService {
     return Array.from(ids);
   }
 
-  private async uploadStoryMedia(file: UploadedFile): Promise<string> {
-    // Production guard: StorageService (S3/CloudFront) integration is required
-    if (process.env.NODE_ENV === "production") {
+  private async uploadStoryMedia(
+    userId: string,
+    file: UploadedFile,
+  ): Promise<string> {
+    const targetPath = `stories/${userId}`;
+
+    try {
+      const result = await this.storageService.uploadFile(file.buffer, targetPath, {
+        contentType: file.mimetype,
+      });
+
+      this.logger.log(
+        `Story media uploaded: ${result.key} (${result.size} bytes)`,
+      );
+      return result.url;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.error(`Story media upload failed: ${message}`);
       throw new InternalServerErrorException(
-        "Story media upload is not configured for production — StorageService not integrated",
+        "Story media upload failed — please try again later",
       );
     }
-
-    // DEV/STAGING ONLY: return a placeholder CDN URL
-    const filename = `stories/${Date.now()}-${file.originalname}`;
-    this.logger.warn(
-      `[DEV] Returning placeholder CDN URL for story media: ${filename}`,
-    );
-    return `https://cdn.lumaapp.com/${filename}`;
   }
 
   private async getLikeCount(storyId: string): Promise<number> {
