@@ -980,8 +980,10 @@ export const ActivitiesScreen: React.FC = () => {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           initialNumToRender={6}
+          maxToRenderPerBatch={6}
           windowSize={5}
           removeClippedSubviews
+          updateCellsBatchingPeriod={50}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

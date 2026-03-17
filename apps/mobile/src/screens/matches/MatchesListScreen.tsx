@@ -906,6 +906,15 @@ export const MatchesListScreen: React.FC = () => {
     );
   }, [activeTab]);
 
+  // Memoized viewers header — avoids inline function in FlatList ListHeaderComponent
+  const renderViewersHeader = useMemo(() => (
+    <View style={styles.viewersHeader}>
+      <Text style={styles.viewersHeaderText}>
+        {viewersCount} kişi profilini görüntüledi
+      </Text>
+    </View>
+  ), [viewersCount]);
+
   // Shimmer skeleton loader replaces basic ActivityIndicator
   if (isLoading && matches.length === 0) {
     return (
@@ -997,13 +1006,7 @@ export const MatchesListScreen: React.FC = () => {
           keyExtractor={viewerKeyExtractor}
           renderItem={renderViewerItem}
           contentContainerStyle={styles.listContent}
-          ListHeaderComponent={() => (
-            <View style={styles.viewersHeader}>
-              <Text style={styles.viewersHeaderText}>
-                {viewersCount} kişi profilini görüntüledi
-              </Text>
-            </View>
-          )}
+          ListHeaderComponent={renderViewersHeader}
           ListEmptyComponent={renderEmptyList}
           showsVerticalScrollIndicator={false}
           ItemSeparatorComponent={ItemSeparator}

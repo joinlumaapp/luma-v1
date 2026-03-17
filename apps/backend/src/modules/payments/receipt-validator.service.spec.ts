@@ -82,7 +82,7 @@ describe("ReceiptValidatorService", () => {
       expect(result.expiresDate).toBeInstanceOf(Date);
     });
 
-    it("should return invalid result in production when APPLE_SHARED_SECRET is not configured", async () => {
+    it("should throw NotImplementedException in production when APPLE_SHARED_SECRET is not configured", async () => {
       // Recreate service with production config
       configValues["NODE_ENV"] = "production";
       const module: TestingModule = await Test.createTestingModule({
@@ -102,10 +102,9 @@ describe("ReceiptValidatorService", () => {
         ReceiptValidatorService,
       );
 
-      const result = await prodService.validateAppleReceipt("receipt-data");
-
-      expect(result.isValid).toBe(false);
-      expect(result.transactionId).toBe("");
+      await expect(
+        prodService.validateAppleReceipt("receipt-data"),
+      ).rejects.toThrow("Apple receipt validation not yet configured");
     });
 
     it("should call Apple production URL when APPLE_SHARED_SECRET is configured", async () => {

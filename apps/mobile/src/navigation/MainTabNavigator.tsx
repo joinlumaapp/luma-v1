@@ -96,6 +96,8 @@ import { MinimizedCallBar } from '../components/chat/MinimizedCallBar';
 // Heavy screens that benefit from deferred mount after navigation animation
 const DeferredCompatibilityInsight = withDeferredMount(CompatibilityInsightScreen);
 const DeferredDailyQuestion = withDeferredMount(DailyQuestionScreen);
+const DeferredChatScreen = withDeferredMount(ChatScreen);
+const DeferredEditProfile = withDeferredMount(EditProfileScreen);
 // Stack navigators for each tab
 const DiscoveryStack = createNativeStackNavigator<DiscoveryStackParamList>();
 const MatchesStack = createNativeStackNavigator<MatchesStackParamList>();
@@ -282,7 +284,7 @@ const MatchesStackNavigator: React.FC = () => (
       options={{ animation: 'slide_from_bottom' }}
     />
     <MatchesStack.Screen name="ChatList" component={ChatListScreen} />
-    <MatchesStack.Screen name="Chat" component={ChatScreen} />
+    <MatchesStack.Screen name="Chat" component={DeferredChatScreen} />
     <MatchesStack.Screen
       name="Call"
       component={CallScreen}
@@ -354,7 +356,7 @@ const ProfileStackNavigator: React.FC = () => (
     }}
   >
     <ProfileStack.Screen name="Profile" component={ProfileScreen} />
-    <ProfileStack.Screen name="EditProfile" component={EditProfileScreen} />
+    <ProfileStack.Screen name="EditProfile" component={DeferredEditProfile} />
     <ProfileStack.Screen name="Settings" component={SettingsScreen} />
     <ProfileStack.Screen name="Badges" component={BadgesScreen} />
     <ProfileStack.Screen name="Packages" component={PackagesScreen} />

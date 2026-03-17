@@ -1,7 +1,13 @@
 // LUMA V1 — Database Seed Script (Comprehensive)
 // Seeds: 45 Compatibility Questions, 30 Harmony Question Cards,
-// 5 Game Cards, Badge Definitions, 10 Demo Users with Profiles,
+// 5 Game Cards, Badge Definitions, 11 Demo Users with Profiles,
 // Photos, Answers, Matches, Chat Messages, and Badge Awards
+//
+// ADMIN NOTE: Admin access is env-based (ADMIN_USER_IDS).
+// To grant admin privileges to a seed user, copy their UUID from the
+// database after seeding and add it to the ADMIN_USER_IDS environment
+// variable (comma-separated). Recommended: use Baran (RESERVED tier,
+// phone: +905559990011) as the admin user for development.
 
 import {
   PrismaClient,
@@ -205,6 +211,22 @@ const DEMO_USERS: DemoUser[] = [
     packageTier: PackageTier.FREE,
     goldBalance: 0,
   },
+  {
+    firstName: "Baran",
+    gender: Gender.MALE,
+    birthDate: new Date("1988-03-15"),
+    city: "Istanbul",
+    country: "Turkey",
+    latitude: 41.0155,
+    longitude: 28.9795,
+    intentionTag: IntentionTag.SERIOUS_RELATIONSHIP,
+    bio: "Teknoloji girisimcisi, kitap kurdu, muzik tutkunu. Hayatta anlam arayan, kaliteli sohbete degil dedikodulara vakit ayiran biriyim.",
+    phone: "+905559990011",
+    phoneCountryCode: "+90",
+    isVerified: true,
+    packageTier: PackageTier.RESERVED,
+    goldBalance: 5000,
+  },
 ];
 
 // Per-user answer patterns (option index 0-3 for each of 20 core questions)
@@ -230,6 +252,8 @@ const USER_ANSWER_PATTERNS: number[][] = [
   [0, 0, 0, 0, 1, 2, 1, 0, 1, 2, 3, 2, 0, 1, 0, 1, 2, 2, 1, 1],
   // Kaan   — creative, observant, quiet
   [2, 3, 3, 2, 2, 1, 1, 2, 2, 3, 1, 3, 1, 1, 2, 2, 3, 2, 1, 2],
+  // Baran  — analytical, balanced, deep
+  [3, 0, 0, 0, 1, 2, 0, 0, 0, 1, 0, 2, 0, 0, 0, 1, 1, 2, 2, 1],
 ];
 
 // Match pairs (indices into DEMO_USERS) with compatibility scores
@@ -370,13 +394,14 @@ const USER_BADGE_AWARDS: Record<number, string[]> = {
   0: ["first_spark", "verified_star", "question_explorer"], // Elif
   1: ["first_spark", "verified_star", "explorer"], // Ahmet
   2: ["first_spark", "explorer"], // Zeynep
-  3: ["first_spark", "chat_master"], // Can
+  3: ["first_spark", "chat_master"], // Can — NOTE: chat_master manually awarded in seed (requires 5 Harmony sessions, not met by seed data)
   4: ["first_spark", "soul_mate"], // Selin
   5: ["first_spark"], // Burak
   6: ["first_spark", "verified_star", "deep_match"], // Defne
   7: ["first_spark", "verified_star", "deep_match"], // Emre
   8: ["first_spark"], // Ece
   9: ["first_spark", "soul_mate"], // Kaan
+  10: ["first_spark", "verified_star", "question_explorer", "deep_match"], // Baran (RESERVED)
 };
 
 // Interest tags per user (indices into INTEREST_TAGS)
@@ -391,6 +416,7 @@ const USER_INTEREST_TAGS: string[][] = [
   ["Teknoloji", "Yemek Yapma", "Seyahat", "Podcast", "Basketbol"], // Emre
   ["Yoga", "Kitap", "Siir", "Film", "Meditasyon", "Pilates"], // Ece
   ["Fotograf", "Sanat", "Film", "Seyahat", "Tasarim", "Tarih"], // Kaan
+  ["Teknoloji", "Kitap", "Muzik", "Seyahat", "Kahve", "Girisimcilik"], // Baran
 ];
 
 // Profile prompts per user (Hinge-style question-answer pairs)
@@ -554,6 +580,22 @@ const USER_PROFILE_PROMPTS: Array<Array<{ question: string; answer: string }>> =
         answer: "Balaatta kaybolalim, renkli sokaklarda fotograf cekelim",
       },
     ],
+    // Baran
+    [
+      {
+        question: "Ideal hafta sonu",
+        answer:
+          "Sabah kitap, ogleden sonra cafe, aksam canli muzik.",
+      },
+      {
+        question: "Hayat hedefim",
+        answer: "Dunyayi degistirecek bir urun gelistirmek.",
+      },
+      {
+        question: "Dealbreaker",
+        answer: "Saygisizlik ve empati eksikligi.",
+      },
+    ],
   ];
 
 // ============================================================
@@ -632,9 +674,13 @@ async function seedDemoData(): Promise<void> {
   const userIds = await seedDemoUsers();
   console.log(`  ${userIds.length} demo users created`);
 
-  // 2. Create answers
+  // 2. Create answers (core + premium)
   await seedDemoAnswers(userIds);
-  console.log("  User answers seeded (20 core questions x 10 users)");
+  console.log("  User answers seeded (20 core questions x 11 users)");
+
+  // 2b. Create premium question answers for paid-tier users
+  await seedDemoPremiumAnswers(userIds);
+  console.log("  Premium answers seeded (Q21-Q45 for GOLD/PRO/RESERVED users)");
 
   // 3. Create swipes and matches
   const matchIds = await seedDemoMatches(userIds);
@@ -762,6 +808,58 @@ async function seedDemoAnswers(userIds: string[]): Promise<void> {
     for (let qIdx = 0; qIdx < questions.length; qIdx++) {
       const question = questions[qIdx];
       const optionIdx = pattern[qIdx] % question.options.length;
+      const option = question.options[optionIdx];
+
+      await prisma.userAnswer.create({
+        data: {
+          userId,
+          questionId: question.id,
+          optionId: option.id,
+        },
+      });
+    }
+  }
+}
+
+// ============================================================
+// PREMIUM ANSWERS SEEDER (Q21-Q45 for GOLD/PRO/RESERVED users)
+// ============================================================
+
+async function seedDemoPremiumAnswers(userIds: string[]): Promise<void> {
+  // Fetch all premium questions (Q21-Q45) ordered by questionNumber
+  const premiumQuestions = await prisma.compatibilityQuestion.findMany({
+    where: { isPremium: true },
+    include: { options: { orderBy: { order: "asc" } } },
+    orderBy: { questionNumber: "asc" },
+  });
+
+  if (premiumQuestions.length === 0) {
+    console.log("    (no premium questions found, skipping)");
+    return;
+  }
+
+  // Only seed premium answers for paid-tier users (GOLD, PRO, RESERVED)
+  const paidTiers = new Set<PackageTier>([
+    PackageTier.GOLD,
+    PackageTier.PRO,
+    PackageTier.RESERVED,
+  ]);
+
+  for (let userIdx = 0; userIdx < DEMO_USERS.length; userIdx++) {
+    const demo = DEMO_USERS[userIdx];
+    if (!paidTiers.has(demo.packageTier)) continue;
+
+    const userId = userIds[userIdx];
+    // Use the core answer pattern as a seed for premium answer selection
+    // Rotate through the pattern to generate deterministic premium answers
+    const corePattern = USER_ANSWER_PATTERNS[userIdx];
+
+    for (let qIdx = 0; qIdx < premiumQuestions.length; qIdx++) {
+      const question = premiumQuestions[qIdx];
+      // Derive option index from core pattern (wrap around) + question index offset
+      const patternIdx = qIdx % corePattern.length;
+      const optionIdx =
+        (corePattern[patternIdx] + qIdx) % question.options.length;
       const option = question.options[optionIdx];
 
       await prisma.userAnswer.create({

@@ -11,6 +11,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -400,6 +401,12 @@ export const NotificationsScreen: React.FC = () => {
           onEndReachedThreshold={0.3}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          // Performance tuning
+          initialNumToRender={15}
+          maxToRenderPerBatch={10}
+          windowSize={7}
+          removeClippedSubviews={Platform.OS === 'android'}
+          updateCellsBatchingPeriod={50}
         />
       )}
     </View>

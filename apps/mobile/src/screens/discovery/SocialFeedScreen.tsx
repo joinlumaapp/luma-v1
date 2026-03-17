@@ -635,6 +635,12 @@ export const SocialFeedScreen: React.FC = () => {
               tintColor={colors.primary}
             />
           }
+          // Performance tuning
+          initialNumToRender={8}
+          maxToRenderPerBatch={8}
+          windowSize={5}
+          removeClippedSubviews={Platform.OS === 'android'}
+          updateCellsBatchingPeriod={50}
         />
       )}
 
