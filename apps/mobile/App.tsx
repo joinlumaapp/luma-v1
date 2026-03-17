@@ -38,6 +38,8 @@ import { requestQueue } from './src/services/requestQueue';
 import { api } from './src/services/api';
 import { analyticsService, ANALYTICS_EVENTS } from './src/services/analyticsService';
 import { storage } from './src/utils/storage';
+import { useAppVersion } from './src/hooks/useAppVersion';
+import { ForceUpdateModal } from './src/components/common/ForceUpdateModal';
 
 // Initialize storage eagerly (non-blocking)
 storage.initialize().catch(() => {});
@@ -306,6 +308,32 @@ const splashStyles = StyleSheet.create({
   },
 });
 
+// ─── App Version Gate ────────────────────────────────────────────────
+function AppVersionGate(): React.JSX.Element | null {
+  const {
+    forceUpdateRequired,
+    optionalUpdateAvailable,
+    maintenanceMode,
+    dismissOptionalUpdate,
+  } = useAppVersion();
+
+  if (forceUpdateRequired || maintenanceMode) {
+    return <ForceUpdateModal visible />;
+  }
+
+  if (optionalUpdateAvailable) {
+    return (
+      <ForceUpdateModal
+        visible
+        isOptional
+        onDismiss={dismissOptionalUpdate}
+      />
+    );
+  }
+
+  return null;
+}
+
 // ─── App Root ─────────────────────────────────────────────────────────
 export default function App(): React.JSX.Element {
   const [fontsLoaded] = useFonts({
@@ -349,6 +377,7 @@ export default function App(): React.JSX.Element {
           <ThemeProvider>
             <ToastProvider>
               <ThemedStatusBar />
+              <AppVersionGate />
               <NetworkMonitor />
               <NotificationInitializer />
               <TrialExpiryChecker />

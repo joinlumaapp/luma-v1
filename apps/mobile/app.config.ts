@@ -2,6 +2,7 @@ import { ExpoConfig, ConfigContext } from 'expo/config';
 
 const IS_DEV = process.env.APP_ENV === 'development';
 const IS_PREVIEW = process.env.APP_ENV === 'preview';
+const EAS_PROJECT_ID = process.env.EAS_PROJECT_ID ?? '';
 
 const getAppName = (): string => {
   if (IS_DEV) return 'LUMA (Dev)';
@@ -39,8 +40,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
 
   updates: {
-    enabled: !IS_DEV,
-    url: 'https://u.expo.dev/LUMA_PROJECT_ID',
+    enabled: !IS_DEV && !!EAS_PROJECT_ID,
+    url: EAS_PROJECT_ID ? `https://u.expo.dev/${EAS_PROJECT_ID}` : undefined,
   },
 
   runtimeVersion: {
@@ -53,7 +54,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     buildNumber: '1',
     icon: './assets/icon.png',
     config: {
-      googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY_IOS ?? 'GOOGLE_MAPS_API_KEY_IOS_PLACEHOLDER',
+      googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY_IOS ?? '',
     },
     associatedDomains: ['applinks:luma.dating', 'applinks:www.luma.dating'],
     infoPlist: {
@@ -78,6 +79,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
 
   android: {
+    config: {
+      googleMaps: {
+        apiKey: process.env.GOOGLE_MAPS_API_KEY_ANDROID ?? '',
+      },
+    },
     adaptiveIcon: {
       foregroundImage: './assets/adaptive-icon.png',
       backgroundColor: '#F5B0C0',
@@ -165,7 +171,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     revenueCatApiKeyIos: process.env.REVENUECAT_API_KEY_IOS ?? '',
     revenueCatApiKeyAndroid: process.env.REVENUECAT_API_KEY_ANDROID ?? '',
     eas: {
-      projectId: process.env.EAS_PROJECT_ID ?? 'LUMA_PROJECT_ID',
+      projectId: EAS_PROJECT_ID || undefined,
     },
   },
 });
