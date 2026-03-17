@@ -734,24 +734,21 @@ export const ProfilePreviewScreen: React.FC = () => {
         <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: spacing.sm }} />
       )}
 
-      {/* Stats card — social metrics (Akış feed integration) */}
-      {/* TODO: Replace hardcoded stat values (15/108/73) with real data from API.
-         API does not yet provide post count, follower count, or following count.
-         These are placeholder values until the social stats endpoint is implemented. */}
+      {/* Stats card — dating-relevant metrics from profile data */}
       <View style={styles.statsCard}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>15</Text>
-          <Text style={styles.statLabel}>GÖNDERİ</Text>
+          <Text style={styles.statValue}>{compatScore != null ? `%${compatScore}` : '—'}</Text>
+          <Text style={styles.statLabel}>UYUM</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>108</Text>
-          <Text style={styles.statLabel}>TAKİPÇİ</Text>
+          <Text style={styles.statValue}>{compatibility ? Object.keys(compatibility.breakdown).length : 0}</Text>
+          <Text style={styles.statLabel}>KATEGORİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>73</Text>
-          <Text style={styles.statLabel}>TAKİP</Text>
+          <Text style={styles.statValue}>{profile?.photoUrls?.length ?? 0}</Text>
+          <Text style={styles.statLabel}>FOTOĞRAF</Text>
         </View>
       </View>
     </View>

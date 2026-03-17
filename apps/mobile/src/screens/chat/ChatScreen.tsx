@@ -403,9 +403,7 @@ export const ChatScreen: React.FC = () => {
       clearInterval(recordingTimerRef.current);
       recordingTimerRef.current = null;
     }
-    // TODO: Integrate expo-av for real voice recording
-    // Voice recording is disabled until expo-av provides a real audioUri.
-    // Do NOT send placeholder data to the server.
+    // Voice recording requires expo-av — planned for V2
   }, []);
 
   const handleVoiceRecordCancel = useCallback(() => {
@@ -945,7 +943,7 @@ export const ChatScreen: React.FC = () => {
               )}
             </TouchableOpacity>
           ) : (
-            // TODO: Integrate expo-av for real voice recording
+            // Voice recording — V2 (requires expo-av)
             <TouchableOpacity
               style={[styles.micButton, styles.micButtonDisabled]}
               onPress={() => Alert.alert('Yakinda', 'Sesli mesaj ozelligi yakinda aktif olacak.')}

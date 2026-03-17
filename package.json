@@ -19,7 +19,15 @@
     "lint": "npm run lint --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "test:coverage": "npm run test:coverage --workspaces --if-present",
-    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules"
+    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules",
+    "docker:build": "docker build -t luma-backend -f apps/backend/Dockerfile .",
+    "docker:run": "docker run -p 3000:3000 --env-file apps/backend/.env luma-backend",
+    "db:migrate:prod": "cd apps/backend && npx prisma migrate deploy --schema=src/prisma/schema.prisma",
+    "db:seed:prod": "cd apps/backend && npx prisma db seed",
+    "mobile:build:android": "./scripts/build-android.sh build",
+    "mobile:submit:android": "./scripts/build-android.sh submit",
+    "mobile:release:android": "./scripts/build-android.sh both",
+    "deploy:prod": "./scripts/deploy-prod.sh"
   },
   "engines": {
     "node": ">=20.0.0",

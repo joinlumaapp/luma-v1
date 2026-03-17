@@ -23,6 +23,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 import { useProfileStore } from '../../stores/profileStore';
 import { useAuthStore } from '../../stores/authStore';
+import { useMatchStore } from '../../stores/matchStore';
 import { useCoinStore } from '../../stores/coinStore';
 import { badgeService } from '../../services/badgeService';
 import type { UserBadge } from '../../services/badgeService';
@@ -228,6 +229,8 @@ export const ProfileScreen: React.FC = () => {
   const isLoading = useProfileStore((state) => state.isLoading);
   const fetchProfile = useProfileStore((state) => state.fetchProfile);
   const user = useAuthStore((state) => state.user);
+  const matchCount = useMatchStore((state) => state.totalCount);
+  const fetchMatches = useMatchStore((state) => state.fetchMatches);
   const [badges, setBadges] = useState<Array<{ id: string; name: string; earned: boolean }>>([]);
 
   // Profile Strength Meter state
@@ -319,13 +322,14 @@ export const ProfileScreen: React.FC = () => {
     fetchStrength();
     fetchWeeklyViews();
     fetchBoostStatus();
+    fetchMatches();
     badgeService
       .getMyBadges()
       .then((earned: UserBadge[]) => {
         setBadges(earned.map((ub) => ({ id: ub.badge.id, name: ub.badge.name, earned: true })));
       })
       .catch(() => {});
-  }, [fetchProfile, fetchStrength, fetchWeeklyViews, fetchBoostStatus]);
+  }, [fetchProfile, fetchStrength, fetchWeeklyViews, fetchBoostStatus, fetchMatches]);
 
   // Shimmer for loading
   useEffect(() => {
@@ -489,16 +493,13 @@ export const ProfileScreen: React.FC = () => {
         )}
       </View>
 
-      {/* Stats row — social metrics (same as other profiles) */}
-      {/* TODO: Replace hardcoded stat values (15/108/73) with real data from API.
-         API does not yet provide post count, follower count, or following count.
-         These are placeholder values until the social stats endpoint is implemented. */}
+      {/* Stats row — dating metrics from real API data */}
       <View style={styles.statsCard}>
-        <CountUpStat target={15} label="GÖNDERİ" />
+        <CountUpStat target={matchCount} label="EŞLEŞME" />
         <View style={styles.statDivider} />
-        <CountUpStat target={108} label="TAKİPÇİ" />
+        <CountUpStat target={badges.length} label="ROZET" />
         <View style={styles.statDivider} />
-        <CountUpStat target={73} label="TAKİP" />
+        <CountUpStat target={strengthData?.percentage ?? completionPercent} label="PROFİL" suffix="%" />
       </View>
 
       {/* Action buttons row */}

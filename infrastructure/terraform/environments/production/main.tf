@@ -21,14 +21,14 @@ terraform {
     }
   }
 
-  # Uncomment once S3 backend is provisioned:
-  # backend "s3" {
-  #   bucket         = "luma-terraform-state"
-  #   key            = "production/terraform.tfstate"
-  #   region         = "eu-west-1"
-  #   encrypt        = true
-  #   dynamodb_table = "luma-terraform-locks"
-  # }
+  # Enable after running: cd infrastructure/terraform/bootstrap && terraform apply
+  backend "s3" {
+    bucket         = "luma-terraform-state"
+    key            = "production/terraform.tfstate"
+    region         = "eu-west-1"
+    encrypt        = true
+    dynamodb_table = "luma-terraform-locks"
+  }
 }
 
 provider "aws" {

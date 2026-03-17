@@ -70,6 +70,13 @@ service-account.json
 *.key
 *.p8
 *.p12
+*.jks
+*.keystore
+
+# Firebase & Google Play
+google-services.json
+google-services-key.json
+GoogleService-Info.plist
 
 # Local uploads (dev fallback for S3)
 uploads/

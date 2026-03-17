@@ -23,6 +23,7 @@ import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 import type { ProfileStackParamList } from '../../navigation/types';
 import { useScreenTracking } from '../../hooks/useAnalytics';
+import { authService } from '../../services/authService';
 
 type PrivacyNavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
 type PrivacyRouteProp = RouteProp<ProfileStackParamList, 'PrivacyPolicy'>;
@@ -191,7 +192,7 @@ export const PrivacyPolicyScreen: React.FC = () => {
   const handleExportData = useCallback(async () => {
     setIsExporting(true);
     try {
-      // TODO: await userService.requestDataExport();
+      await authService.exportData();
       Alert.alert(
         'Talep Alındı',
         'Veri indirme talebiniz alındı. Verileriniz hazır olduğunda e-posta adresinize gönderilecektir.',
