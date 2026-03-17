@@ -5,6 +5,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 import NetInfo, { type NetInfoState } from '@react-native-community/netinfo';
+import { logger } from '../utils/logger';
 import {
   socketService,
   type ConnectionState,
@@ -122,7 +123,7 @@ export const useSocket = (): UseSocketReturn => {
           accessToken &&
           appStateRef.current === 'active'
         ) {
-          console.log('[useSocket] Ag baglantisi geri geldi, yeniden baglaniliyor');
+          logger.log('[useSocket] Ag baglantisi geri geldi, yeniden baglaniliyor');
           socketService.reconnectWithToken(accessToken);
         }
       }

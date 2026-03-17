@@ -858,9 +858,66 @@ export class ProfilesService {
   }
 
   // ─── Profile Video ──────────────────────────────────────────
-  // TODO: Video fields (videoUrl, videoThumbnailUrl, videoDuration, videoKey)
-  // are not yet in the UserProfile schema. Add them via a Prisma migration
-  // before enabling video features.
+
+  /** Get the video profile for the current user */
+  async getVideo(userId: string) {
+    const profile = await this.prisma.userProfile.findUnique({
+      where: { userId },
+      select: {
+        videoUrl: true,
+        videoThumbnailUrl: true,
+        videoDuration: true,
+      },
+    });
+    if (!profile) {
+      throw new NotFoundException("Profil bulunamadi");
+    }
+    return {
+      videoUrl: profile.videoUrl,
+      videoThumbnailUrl: profile.videoThumbnailUrl,
+      videoDuration: profile.videoDuration,
+    };
+  }
+
+  /** Save video metadata after upload */
+  async saveVideo(
+    userId: string,
+    data: {
+      videoUrl: string;
+      videoKey: string;
+      videoThumbnailUrl?: string;
+      videoDuration?: number;
+    },
+  ) {
+    return this.prisma.userProfile.update({
+      where: { userId },
+      data: {
+        videoUrl: data.videoUrl,
+        videoKey: data.videoKey,
+        videoThumbnailUrl: data.videoThumbnailUrl ?? null,
+        videoDuration: data.videoDuration ?? 0,
+      },
+      select: {
+        videoUrl: true,
+        videoKey: true,
+        videoThumbnailUrl: true,
+        videoDuration: true,
+      },
+    });
+  }
+
+  /** Delete video from profile */
+  async deleteVideo(userId: string) {
+    return this.prisma.userProfile.update({
+      where: { userId },
+      data: {
+        videoUrl: null,
+        videoKey: null,
+        videoThumbnailUrl: null,
+        videoDuration: 0,
+      },
+    });
+  }
 
   // ─── Profile Prompts ─────────────────────────────────────────
 

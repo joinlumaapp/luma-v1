@@ -189,6 +189,11 @@ model UserProfile {
   // Personality types (MBTI + Enneagram)
   mbtiType       String?      @map("mbti_type") @db.VarChar(4)       // INTJ, ENFP, etc.
   enneagramType  String?      @map("enneagram_type") @db.VarChar(2)  // 1-9
+  // Video profile
+  videoUrl          String?   @map("video_url")
+  videoKey          String?   @map("video_key")
+  videoThumbnailUrl String?   @map("video_thumbnail_url")
+  videoDuration     Int?      @default(0) @map("video_duration")
   createdAt     DateTime     @default(now()) @map("created_at")
   updatedAt     DateTime     @updatedAt @map("updated_at")
 

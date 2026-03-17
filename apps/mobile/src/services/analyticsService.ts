@@ -6,6 +6,7 @@
 
 import { Platform, AppState } from 'react-native';
 import { APP_CONFIG } from '../constants/config';
+import { logger } from '../utils/logger';
 import {
   AnalyticsEvent,
   type AnalyticsEventName,
@@ -84,7 +85,7 @@ function createMixpanelProvider(token: string): AnalyticsProvider {
         instance = mp;
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : String(error);
-        console.warn(`[Analytics:Mixpanel] Init failed: ${message}`);
+        logger.warn(`[Analytics:Mixpanel] Init failed: ${message}`);
       }
     },
 
@@ -127,22 +128,22 @@ function createConsoleProvider(): AnalyticsProvider {
   return {
     name: 'console',
     async initialize(): Promise<void> {
-      console.log('[Analytics:Console] Initialized (dev mode)');
+      logger.log('[Analytics:Console] Initialized (dev mode)');
     },
     identify(userId: string, traits: Record<string, string | number | boolean>): void {
-      console.log('[Analytics] identify:', userId, traits);
+      logger.log('[Analytics] identify:', userId, traits);
     },
     track(event: string, properties: EventProperties): void {
-      console.log(`[Analytics] ${event}`, properties);
+      logger.log(`[Analytics] ${event}`, properties);
     },
     screen(screenName: string): void {
-      console.log(`[Analytics] screen: ${screenName}`);
+      logger.log(`[Analytics] screen: ${screenName}`);
     },
     setUserProperties(props: Record<string, string | number | boolean>): void {
-      console.log('[Analytics] setUserProperties:', props);
+      logger.log('[Analytics] setUserProperties:', props);
     },
     reset(): void {
-      console.log('[Analytics] reset');
+      logger.log('[Analytics] reset');
     },
     flush(): void {
       // no-op

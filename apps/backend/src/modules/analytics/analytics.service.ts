@@ -253,10 +253,10 @@ export class AnalyticsService {
         newRegistrations,
         verificationRate: Math.round(verificationRate * 10000) / 100,
         matchRate: Math.round(matchRate * 10000) / 100,
-        avgCompatibilityScore: 0, // TODO: aggregate from compatibility scores
+        avgCompatibilityScore: await this.getAvgCompatibilityScore(),
         freeToPayRate: Math.round(freeToPayRate * 10000) / 100,
-        arpu: 0, // TODO: compute from payment transactions
-        subscriptionChurn: 0, // TODO: compute from subscription cancellations
+        arpu: await this.getArpu(this.getPeriodStart(period), now),
+        subscriptionChurn: await this.getSubscriptionChurn(),
         day1Retention: day1Ret,
         day7Retention: day7Ret,
         day30Retention: day30Ret,
@@ -552,6 +552,81 @@ export class AnalyticsService {
       );
 
       return Math.round((retainedCount / cohortUsers.length) * 10000) / 100;
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * Average finalScore across all compatibility scores.
+   */
+  private async getAvgCompatibilityScore(): Promise<number> {
+    try {
+      const result = await this.prisma.compatibilityScore.aggregate({
+        _avg: { finalScore: true },
+      });
+      return Math.round((result._avg.finalScore ?? 0) * 100) / 100;
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * ARPU = total revenue (Gold purchases) / active user count in the period.
+   * Uses GoldTransaction PURCHASE type as revenue proxy since IapReceipt has no price field.
+   */
+  private async getArpu(from: Date, to: Date): Promise<number> {
+    try {
+      const [revenueResult, activeUsers] = await Promise.all([
+        this.prisma.goldTransaction.aggregate({
+          _sum: { amount: true },
+          where: {
+            type: "PURCHASE",
+            createdAt: { gte: from, lt: to },
+          },
+        }),
+        this.prisma.user.count({
+          where: { isActive: true },
+        }),
+      ]);
+      const totalRevenue = revenueResult._sum.amount ?? 0;
+      return activeUsers > 0
+        ? Math.round((totalRevenue / activeUsers) * 100) / 100
+        : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * Subscription churn = expired subscriptions this month / total subscriptions at start of month.
+   */
+  private async getSubscriptionChurn(): Promise<number> {
+    try {
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      const [expiredThisMonth, totalAtMonthStart] = await Promise.all([
+        // Subscriptions that expired (became inactive) during this month
+        this.prisma.subscription.count({
+          where: {
+            isActive: false,
+            expiryDate: { gte: monthStart, lt: now },
+          },
+        }),
+        // Total subscriptions that existed at the start of the month
+        // (created before month start and not expired before month start)
+        this.prisma.subscription.count({
+          where: {
+            createdAt: { lt: monthStart },
+            expiryDate: { gte: monthStart },
+          },
+        }),
+      ]);
+
+      return totalAtMonthStart > 0
+        ? Math.round((expiredThisMonth / totalAtMonthStart) * 10000) / 100
+        : 0;
     } catch {
       return 0;
     }

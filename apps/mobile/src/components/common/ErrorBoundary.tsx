@@ -9,6 +9,7 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { sentryService } from '../../services/sentryService';
+import { logger } from '../../utils/logger';
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -35,8 +36,8 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     const componentStack = errorInfo.componentStack ?? '';
 
     // Log full error + component stack for debugging
-    console.error('[ErrorBoundary] Hata yakalandi:', error.message);
-    console.error('[ErrorBoundary] Component stack:', componentStack);
+    logger.error('[ErrorBoundary] Hata yakalandi:', error.message);
+    logger.error('[ErrorBoundary] Component stack:', componentStack);
 
     // Report to Sentry for production error tracking
     sentryService.captureException(error, { componentStack });

@@ -5,6 +5,7 @@
 import { io, Socket } from 'socket.io-client';
 import { APP_CONFIG } from '../constants/config';
 import { WS_EVENTS } from '@luma/shared/src/constants/api';
+import { logger } from '../utils/logger';
 
 // ─── Manager Event Emitter ───────────────────────────────────
 // Socket.IO Manager is not directly importable in this bundler config.
@@ -355,7 +356,7 @@ class SocketService {
     callback: (data: ServerEventMap[K]) => void,
   ): () => void {
     if (!this.chatSocket) {
-      console.warn('[SocketService] Dinleyici eklenemedi - soket bagli degil');
+      logger.warn('[SocketService] Dinleyici eklenemedi - soket bagli degil');
       return () => {};
     }
     this.chatSocket.on(event as string, callback as (...args: unknown[]) => void);
@@ -370,7 +371,7 @@ class SocketService {
    */
   onAny(event: string, callback: (data: unknown) => void): () => void {
     if (!this.chatSocket) {
-      console.warn('[SocketService] Dinleyici eklenemedi - soket bagli degil');
+      logger.warn('[SocketService] Dinleyici eklenemedi - soket bagli degil');
       return () => {};
     }
     this.chatSocket.on(event, callback);
@@ -463,7 +464,7 @@ class SocketService {
       try {
         listener(state);
       } catch (err) {
-        console.warn('[SocketService] Baglanti durumu dinleyici hatasi:', err);
+        logger.warn('[SocketService] Baglanti durumu dinleyici hatasi:', err);
       }
     }
   }
@@ -476,9 +477,9 @@ class SocketService {
       if (this.pendingEmits.length < this.maxPendingEmits) {
         this.pendingEmits.push({ event, data });
       } else {
-        console.warn('[SocketService] Olay kuyrugu dolu, olay atiliyor:', event);
+        logger.warn('[SocketService] Olay kuyrugu dolu, olay atiliyor:', event);
       }
-      console.warn(
+      logger.warn(
         `[SocketService] "${event}" kuyruga eklendi - soket bagli degil (${this.pendingEmits.length} kuyrukta)`,
       );
       return;
@@ -494,7 +495,7 @@ class SocketService {
 
     const pending = [...this.pendingEmits];
     this.pendingEmits = [];
-    console.log(`[SocketService] ${pending.length} kuyruklanmis olay gonderiliyor`);
+    logger.log(`[SocketService] ${pending.length} kuyruklanmis olay gonderiliyor`);
 
     for (const item of pending) {
       this.chatSocket.emit(item.event, item.data);
@@ -511,7 +512,7 @@ class SocketService {
       const wasReconnect = this.reconnectAttempts > 0;
       this.reconnectAttempts = 0;
       this.setConnectionState('connected');
-      console.log(`[SocketService] Baglandi (id: ${this.chatSocket?.id})`);
+      logger.log(`[SocketService] Baglandi (id: ${this.chatSocket?.id})`);
 
       // Flush queued events and notify reconnect subscribers
       if (wasReconnect) {
@@ -520,14 +521,14 @@ class SocketService {
           try {
             callback();
           } catch (err) {
-            console.warn('[SocketService] Yeniden baglanti callback hatasi:', err);
+            logger.warn('[SocketService] Yeniden baglanti callback hatasi:', err);
           }
         }
       }
     });
 
     this.chatSocket.on('disconnect', (reason) => {
-      console.log(`[SocketService] Baglanti kesildi - sebep: ${reason}`);
+      logger.log(`[SocketService] Baglanti kesildi - sebep: ${reason}`);
 
       // If server closed connection, set disconnected. Otherwise, set reconnecting.
       if (reason === 'io server disconnect') {
@@ -542,19 +543,19 @@ class SocketService {
     manager.on('reconnect_attempt', (attempt: number) => {
       this.reconnectAttempts = attempt;
       this.setConnectionState('reconnecting');
-      console.log(
+      logger.log(
         `[SocketService] Yeniden baglanti denemesi ${attempt}/${this.maxReconnectAttempts}`,
       );
     });
 
     manager.on('reconnect_failed', () => {
       this.setConnectionState('disconnected');
-      console.error('[SocketService] Yeniden baglanti basarisiz - tum denemeler tukendi');
+      logger.error('[SocketService] Yeniden baglanti basarisiz - tum denemeler tukendi');
     });
 
     this.chatSocket.on('connect_error', (error) => {
       this.reconnectAttempts += 1;
-      console.warn(
+      logger.warn(
         `[SocketService] Baglanti hatasi (deneme ${this.reconnectAttempts}/${this.maxReconnectAttempts}):`,
         (error as Error).message,
       );
@@ -563,7 +564,7 @@ class SocketService {
     // Server-side errors
     this.chatSocket.on('chat:error' as string, (...args: unknown[]) => {
       const payload = args[0] as ServerErrorPayload;
-      console.error('[SocketService] Sunucu hatasi:', payload.message);
+      logger.error('[SocketService] Sunucu hatasi:', payload.message);
     });
   }
 }

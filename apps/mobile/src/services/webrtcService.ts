@@ -11,6 +11,7 @@ import {
   type CallType,
 } from './socketService';
 import { WS_EVENTS } from '@luma/shared/src/constants/api';
+import { logger } from '../utils/logger';
 
 // Re-export types from the module declaration for internal use.
 // These are resolved via apps/mobile/src/types/declarations.d.ts.
@@ -291,7 +292,7 @@ class WebRTCService {
    */
   initiateCall(sessionId: string, callType: CallType): void {
     if (this.callState !== 'idle') {
-      console.warn('[WebRTCService] Cannot initiate call — already in a call');
+      logger.warn('[WebRTCService] Cannot initiate call — already in a call');
       return;
     }
 
@@ -309,7 +310,7 @@ class WebRTCService {
    */
   acceptCall(sessionId: string): void {
     if (this.callState !== 'incoming') {
-      console.warn('[WebRTCService] Cannot accept — no incoming call');
+      logger.warn('[WebRTCService] Cannot accept — no incoming call');
       return;
     }
 
@@ -337,7 +338,7 @@ class WebRTCService {
    */
   rejectCall(sessionId: string, reason?: string): void {
     if (this.callState !== 'incoming') {
-      console.warn('[WebRTCService] Cannot reject — no incoming call');
+      logger.warn('[WebRTCService] Cannot reject — no incoming call');
       return;
     }
 
@@ -353,7 +354,7 @@ class WebRTCService {
    */
   endCall(): void {
     if (this.callState === 'idle') {
-      console.warn('[WebRTCService] Cannot end call — no active call');
+      logger.warn('[WebRTCService] Cannot end call — no active call');
       return;
     }
 

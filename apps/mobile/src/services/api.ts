@@ -1,6 +1,7 @@
 // Axios instance with JWT interceptor, refresh token logic, rate limit handling, and error handling
 
 import axios, { type AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
+import { Alert } from 'react-native';
 import { API_ROUTES } from '@luma/shared';
 import { APP_CONFIG } from '../constants/config';
 import { useAuthStore } from '../stores/authStore';
@@ -52,6 +53,25 @@ export const ERROR_MESSAGES = {
   UNKNOWN: 'Beklenmeyen bir hata oluştu.',
   REQUEST_QUEUED: 'Çevrimdışı: İstek bağlantınız geri geldiğinde gönderilecek.',
 } as const;
+
+/** Max retry-after (in ms) for which we auto-retry GET requests on 429 */
+const RATE_LIMIT_AUTO_RETRY_THRESHOLD_MS = 10_000;
+
+/**
+ * Format a retry-after duration (in ms) into a user-friendly Turkish message.
+ * Uses seconds for short waits, minutes for longer ones.
+ */
+function formatRateLimitMessage(retryAfterMs: number | undefined): string {
+  if (!retryAfterMs || retryAfterMs <= 0) {
+    return ERROR_MESSAGES.RATE_LIMITED;
+  }
+  const totalSeconds = Math.ceil(retryAfterMs / 1000);
+  if (totalSeconds < 60) {
+    return `Çok fazla istek. Lütfen ${totalSeconds} saniye bekleyin.`;
+  }
+  const minutes = Math.ceil(totalSeconds / 60);
+  return `Çok fazla istek. Lütfen ${minutes} dakika bekleyin.`;
+}
 
 // ── Typed API error ────────────────────────────────────────────────────
 
@@ -240,12 +260,35 @@ api.interceptors.response.use(
     // ── 429 Rate Limit ──────────────────────────────────────────
     if (error.response?.status === 429) {
       const parsed = parseApiError(error);
+      const userMsg = formatRateLimitMessage(parsed.retryAfterMs);
+      parsed.userMessage = userMsg;
+
       if (__DEV__) {
         console.warn(
           `[API] Rate limited: ${originalRequest.url}`,
           parsed.retryAfterMs ? `retry after ${parsed.retryAfterMs}ms` : ''
         );
       }
+
+      // Auto-retry GET requests when the wait is short enough
+      const method = originalRequest.method?.toLowerCase();
+      if (
+        method === 'get' &&
+        parsed.retryAfterMs &&
+        parsed.retryAfterMs <= RATE_LIMIT_AUTO_RETRY_THRESHOLD_MS
+      ) {
+        if (__DEV__) {
+          console.log(
+            `[API] Auto-retrying GET ${originalRequest.url} after ${parsed.retryAfterMs}ms`
+          );
+        }
+        await delay(parsed.retryAfterMs);
+        return api(originalRequest);
+      }
+
+      // For non-GET or long waits, show alert and reject
+      Alert.alert('Hız Sınırı', userMsg);
+
       // Attach parsed info to the error for callers
       (error as AxiosError & { apiError?: ApiError }).apiError = parsed;
       return Promise.reject(error);

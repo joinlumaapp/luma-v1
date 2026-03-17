@@ -143,8 +143,33 @@ export class ProfilesController {
   }
 
   // ── Profile Video ──────────────────────────────────────────
-  // TODO: Video endpoints disabled until videoUrl/videoKey fields are added
-  // to the UserProfile Prisma model via migration.
+
+  @Get("video")
+  @ApiOperation({ summary: "Get current user video profile" })
+  async getVideo(@CurrentUser("sub") userId: string) {
+    return this.profilesService.getVideo(userId);
+  }
+
+  @Post("video")
+  @ApiOperation({ summary: "Save video metadata after upload" })
+  async saveVideo(
+    @CurrentUser("sub") userId: string,
+    @Body()
+    dto: {
+      videoUrl: string;
+      videoKey: string;
+      videoThumbnailUrl?: string;
+      videoDuration?: number;
+    },
+  ) {
+    return this.profilesService.saveVideo(userId, dto);
+  }
+
+  @Delete("video")
+  @ApiOperation({ summary: "Delete profile video" })
+  async deleteVideo(@CurrentUser("sub") userId: string) {
+    return this.profilesService.deleteVideo(userId);
+  }
 
   // ── Profile Prompts (Hinge-style) ───────────────────────────
 
