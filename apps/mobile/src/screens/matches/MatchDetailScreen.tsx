@@ -159,15 +159,15 @@ export const MatchDetailScreen: React.FC = () => {
       {/* Premium stats row */}
       <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
         <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
-          <Text style={{ fontSize: 22, fontWeight: '800', color: palette.purple[600], letterSpacing: -0.5 }}>{(selectedMatch as unknown as { postCount?: number }).postCount ?? 0}</Text>
+          <Text style={{ fontSize: 22, fontWeight: '700', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(selectedMatch as unknown as { postCount?: number }).postCount ?? 0}</Text>
           <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Gönderi</Text>
         </View>
         <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
-          <Text style={{ fontSize: 22, fontWeight: '800', color: palette.purple[600], letterSpacing: -0.5 }}>{(selectedMatch as unknown as { followerCount?: number }).followerCount ?? 0}</Text>
+          <Text style={{ fontSize: 22, fontWeight: '700', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(selectedMatch as unknown as { followerCount?: number }).followerCount ?? 0}</Text>
           <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takipçi</Text>
         </View>
         <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
-          <Text style={{ fontSize: 22, fontWeight: '800', color: palette.purple[600], letterSpacing: -0.5 }}>{(selectedMatch as unknown as { followingCount?: number }).followingCount ?? 0}</Text>
+          <Text style={{ fontSize: 22, fontWeight: '700', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(selectedMatch as unknown as { followingCount?: number }).followingCount ?? 0}</Text>
           <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takip</Text>
         </View>
       </View>
