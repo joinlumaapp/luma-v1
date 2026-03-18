@@ -229,7 +229,6 @@ export const ProfileScreen: React.FC = () => {
   const isLoading = useProfileStore((state) => state.isLoading);
   const fetchProfile = useProfileStore((state) => state.fetchProfile);
   const user = useAuthStore((state) => state.user);
-  const matchCount = useMatchStore((state) => state.totalCount);
   const fetchMatches = useMatchStore((state) => state.fetchMatches);
   const [badges, setBadges] = useState<Array<{ id: string; name: string; earned: boolean }>>([]);
 
@@ -493,13 +492,13 @@ export const ProfileScreen: React.FC = () => {
         )}
       </View>
 
-      {/* Stats row — dating metrics from real API data */}
+      {/* Stats row — social metrics (same as all other profile views) */}
       <View style={styles.statsCard}>
-        <CountUpStat target={matchCount} label="EŞLEŞME" />
+        <CountUpStat target={(profile as unknown as { postCount?: number })?.postCount ?? 0} label="GÖNDERİ" />
         <View style={styles.statDivider} />
-        <CountUpStat target={badges.length} label="ROZET" />
+        <CountUpStat target={(profile as unknown as { followerCount?: number })?.followerCount ?? 0} label="TAKİPÇİ" />
         <View style={styles.statDivider} />
-        <CountUpStat target={strengthData?.percentage ?? completionPercent} label="PROFİL" suffix="%" />
+        <CountUpStat target={(profile as unknown as { followingCount?: number })?.followingCount ?? 0} label="TAKİP" />
       </View>
 
       {/* Action buttons row */}
@@ -952,38 +951,37 @@ const styles = StyleSheet.create({
   statsCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'transparent',
+    justifyContent: 'space-around',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
     paddingVertical: spacing.md,
-    overflow: 'visible',
+    paddingHorizontal: spacing.xs,
   },
   statItem: {
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
-    paddingHorizontal: 0,
-    minWidth: 60,
   },
   statValue: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: fontWeights.bold,
     color: colors.text,
     textAlign: 'center',
     includeFontPadding: false,
   },
   statLabel: {
-    fontSize: 12,
-    fontWeight: fontWeights.semibold,
+    fontSize: 10,
+    fontWeight: fontWeights.medium,
     color: colors.textTertiary,
-    marginTop: 2,
+    marginTop: 3,
     textAlign: 'center',
+    letterSpacing: 0.3,
     includeFontPadding: false,
   },
   statDivider: {
     width: 1,
-    height: 28,
+    height: 24,
     backgroundColor: colors.surfaceBorder,
-    marginHorizontal: spacing.sm,
   },
 
   // ── Action buttons row ──
