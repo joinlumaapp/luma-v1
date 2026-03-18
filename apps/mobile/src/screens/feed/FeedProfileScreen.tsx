@@ -264,21 +264,21 @@ export const FeedProfileScreen: React.FC = () => {
         )}
       </View>
 
-      {/* Stats row — minimalist */}
-      <View style={styles.statsCard}>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>{profile.postCount}</Text>
-          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>GÖNDERİ</Text>
+      {/* Stats row (inline styles for reliable rendering) */}
+      <View style={{ flexDirection: 'row', backgroundColor: colors.surface, borderRadius: 12, paddingVertical: 14, marginTop: 8 }}>
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>{profile.postCount}</Text>
+          <Text style={{ fontSize: 10, fontWeight: '500', color: colors.textTertiary, marginTop: 2 }}>GÖNDERİ</Text>
         </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>{profile.followerCount}</Text>
-          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>TAKİPÇİ</Text>
+        <View style={{ width: 1, height: 24, backgroundColor: colors.surfaceBorder, alignSelf: 'center' }} />
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>{profile.followerCount}</Text>
+          <Text style={{ fontSize: 10, fontWeight: '500', color: colors.textTertiary, marginTop: 2 }}>TAKİPÇİ</Text>
         </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>{profile.followingCount}</Text>
-          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>TAKİP</Text>
+        <View style={{ width: 1, height: 24, backgroundColor: colors.surfaceBorder, alignSelf: 'center' }} />
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>{profile.followingCount}</Text>
+          <Text style={{ fontSize: 10, fontWeight: '500', color: colors.textTertiary, marginTop: 2 }}>TAKİP</Text>
         </View>
       </View>
 

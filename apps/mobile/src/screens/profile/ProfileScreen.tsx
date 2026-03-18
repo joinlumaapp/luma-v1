@@ -492,13 +492,22 @@ export const ProfileScreen: React.FC = () => {
         )}
       </View>
 
-      {/* Stats row — social metrics (same as all other profile views) */}
-      <View style={styles.statsCard}>
-        <CountUpStat target={(profile as unknown as { postCount?: number })?.postCount ?? 0} label="GÖNDERİ" />
-        <View style={styles.statDivider} />
-        <CountUpStat target={(profile as unknown as { followerCount?: number })?.followerCount ?? 0} label="TAKİPÇİ" />
-        <View style={styles.statDivider} />
-        <CountUpStat target={(profile as unknown as { followingCount?: number })?.followingCount ?? 0} label="TAKİP" />
+      {/* Stats row (inline styles for reliable rendering) */}
+      <View style={{ flexDirection: 'row', backgroundColor: colors.surface, borderRadius: 12, paddingVertical: 14, marginTop: 8 }}>
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>{(profile as unknown as { postCount?: number })?.postCount ?? 0}</Text>
+          <Text style={{ fontSize: 10, fontWeight: '500', color: colors.textTertiary, marginTop: 2 }}>GÖNDERİ</Text>
+        </View>
+        <View style={{ width: 1, height: 24, backgroundColor: colors.surfaceBorder, alignSelf: 'center' }} />
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>{(profile as unknown as { followerCount?: number })?.followerCount ?? 0}</Text>
+          <Text style={{ fontSize: 10, fontWeight: '500', color: colors.textTertiary, marginTop: 2 }}>TAKİPÇİ</Text>
+        </View>
+        <View style={{ width: 1, height: 24, backgroundColor: colors.surfaceBorder, alignSelf: 'center' }} />
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>{(profile as unknown as { followingCount?: number })?.followingCount ?? 0}</Text>
+          <Text style={{ fontSize: 10, fontWeight: '500', color: colors.textTertiary, marginTop: 2 }}>TAKİP</Text>
+        </View>
       </View>
 
       {/* Action buttons row */}

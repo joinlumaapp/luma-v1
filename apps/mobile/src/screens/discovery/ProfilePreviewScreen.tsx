@@ -734,21 +734,21 @@ export const ProfilePreviewScreen: React.FC = () => {
         <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: spacing.sm }} />
       )}
 
-      {/* Stats card — social metrics */}
-      <View style={styles.statsCard}>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>{(profile as unknown as { postCount?: number }).postCount ?? 0}</Text>
-          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>GÖNDERİ</Text>
+      {/* Stats card — social metrics (inline styles for reliable rendering) */}
+      <View style={{ flexDirection: 'row', backgroundColor: colors.surface, borderRadius: 12, paddingVertical: 14, marginTop: 8 }}>
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>{(profile as unknown as { postCount?: number }).postCount ?? 0}</Text>
+          <Text style={{ fontSize: 10, fontWeight: '500', color: colors.textTertiary, marginTop: 2 }}>GÖNDERİ</Text>
         </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>{(profile as unknown as { followerCount?: number }).followerCount ?? 0}</Text>
-          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>TAKİPÇİ</Text>
+        <View style={{ width: 1, height: 24, backgroundColor: colors.surfaceBorder, alignSelf: 'center' }} />
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>{(profile as unknown as { followerCount?: number }).followerCount ?? 0}</Text>
+          <Text style={{ fontSize: 10, fontWeight: '500', color: colors.textTertiary, marginTop: 2 }}>TAKİPÇİ</Text>
         </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>{(profile as unknown as { followingCount?: number }).followingCount ?? 0}</Text>
-          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>TAKİP</Text>
+        <View style={{ width: 1, height: 24, backgroundColor: colors.surfaceBorder, alignSelf: 'center' }} />
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>{(profile as unknown as { followingCount?: number }).followingCount ?? 0}</Text>
+          <Text style={{ fontSize: 10, fontWeight: '500', color: colors.textTertiary, marginTop: 2 }}>TAKİP</Text>
         </View>
       </View>
     </View>
