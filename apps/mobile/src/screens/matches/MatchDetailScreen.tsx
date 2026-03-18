@@ -125,7 +125,7 @@ export const MatchDetailScreen: React.FC = () => {
       {/* Identity — name, age, verified, city, intention */}
       <View style={styles.identityBlock}>
         <View style={styles.nameRow}>
-          <Text style={styles.userName}>{selectedMatch.name}, {selectedMatch.age}</Text>
+          <Text style={styles.userName} numberOfLines={1} adjustsFontSizeToFit>{selectedMatch.name}, {selectedMatch.age}</Text>
           {selectedMatch.isVerified && <VerifiedBadge size="large" animated />}
           {selectedMatch.packageTier && <SubscriptionBadge tier={selectedMatch.packageTier} compact />}
         </View>
@@ -159,18 +159,18 @@ export const MatchDetailScreen: React.FC = () => {
       {/* Stats row — social metrics */}
       <View style={styles.statsCard}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{(selectedMatch as unknown as { postCount?: number }).postCount ?? 0}</Text>
-          <Text style={styles.statLabel}>GÖNDERİ</Text>
+          <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>{(selectedMatch as unknown as { postCount?: number }).postCount ?? 0}</Text>
+          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>GÖNDERİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{(selectedMatch as unknown as { followerCount?: number }).followerCount ?? 0}</Text>
-          <Text style={styles.statLabel}>TAKİPÇİ</Text>
+          <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>{(selectedMatch as unknown as { followerCount?: number }).followerCount ?? 0}</Text>
+          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>TAKİPÇİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{(selectedMatch as unknown as { followingCount?: number }).followingCount ?? 0}</Text>
-          <Text style={styles.statLabel}>TAKİP</Text>
+          <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>{(selectedMatch as unknown as { followingCount?: number }).followingCount ?? 0}</Text>
+          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>TAKİP</Text>
         </View>
       </View>
     </View>

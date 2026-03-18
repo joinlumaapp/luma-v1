@@ -685,7 +685,7 @@ export const ProfilePreviewScreen: React.FC = () => {
       {/* Identity block */}
       <View style={styles.identityBlock}>
         <View style={styles.nameRow}>
-          <Text style={styles.userName}>{profile.name}, {profile.age}</Text>
+          <Text style={styles.userName} numberOfLines={1} adjustsFontSizeToFit>{profile.name}, {profile.age}</Text>
           {profile.isVerified && <VerifiedBadge size="large" animated />}
           {profile.packageTier && <SubscriptionBadge tier={profile.packageTier} compact />}
         </View>
@@ -737,18 +737,18 @@ export const ProfilePreviewScreen: React.FC = () => {
       {/* Stats card — social metrics */}
       <View style={styles.statsCard}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{(profile as unknown as { postCount?: number }).postCount ?? 0}</Text>
-          <Text style={styles.statLabel}>GÖNDERİ</Text>
+          <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>{(profile as unknown as { postCount?: number }).postCount ?? 0}</Text>
+          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>GÖNDERİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{(profile as unknown as { followerCount?: number }).followerCount ?? 0}</Text>
-          <Text style={styles.statLabel}>TAKİPÇİ</Text>
+          <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>{(profile as unknown as { followerCount?: number }).followerCount ?? 0}</Text>
+          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>TAKİPÇİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{(profile as unknown as { followingCount?: number }).followingCount ?? 0}</Text>
-          <Text style={styles.statLabel}>TAKİP</Text>
+          <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>{(profile as unknown as { followingCount?: number }).followingCount ?? 0}</Text>
+          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>TAKİP</Text>
         </View>
       </View>
     </View>

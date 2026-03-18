@@ -134,10 +134,10 @@ const CountUpStat: React.FC<{ target: number; label: string; suffix?: string }> 
 
   return (
     <View style={styles.statItem}>
-      <Text style={styles.statValue}>
+      <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>
         {displayValue}{suffix ?? ''}
       </Text>
-      <Text style={styles.statLabel}>
+      <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>
         {label}
       </Text>
     </View>

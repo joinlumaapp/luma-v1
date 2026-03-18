@@ -235,7 +235,7 @@ export const FeedProfileScreen: React.FC = () => {
       {/* Identity — name, age, verified, city, job, intention */}
       <View style={styles.identityBlock}>
         <View style={styles.nameRow}>
-          <Text style={styles.userName}>{profile.name}, {profile.age}</Text>
+          <Text style={styles.userName} numberOfLines={1} adjustsFontSizeToFit>{profile.name}, {profile.age}</Text>
           {profile.isVerified && <VerifiedBadge size="large" animated />}
           {profile.packageTier && <SubscriptionBadge tier={profile.packageTier} compact />}
         </View>
@@ -267,18 +267,18 @@ export const FeedProfileScreen: React.FC = () => {
       {/* Stats row — minimalist */}
       <View style={styles.statsCard}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{profile.postCount}</Text>
-          <Text style={styles.statLabel}>GÖNDERİ</Text>
+          <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>{profile.postCount}</Text>
+          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>GÖNDERİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{profile.followerCount}</Text>
-          <Text style={styles.statLabel}>TAKİPÇİ</Text>
+          <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>{profile.followerCount}</Text>
+          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>TAKİPÇİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{profile.followingCount}</Text>
-          <Text style={styles.statLabel}>TAKİP</Text>
+          <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>{profile.followingCount}</Text>
+          <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>TAKİP</Text>
         </View>
       </View>
 
