@@ -1,6 +1,6 @@
 // Matches list screen — premium animations, skeleton loader, PulseGlow for high compatibility
 // Tabs: 💞 Eşleşmeler | 💬 Mesajlar | 💜 Beğenenler | 👀 Seni Kim Gördü
-// Performance: InteractionManager, FlatList tuning, memoized components
+// Performance: eager fetch on mount, FlatList tuning, memoized components
 
 import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import {
@@ -13,7 +13,6 @@ import {
   StyleSheet,
   FlatList,
   Animated,
-  InteractionManager,
   RefreshControl,
 } from 'react-native';
 import { CachedAvatar } from '../../components/common/CachedAvatar';
@@ -628,10 +627,10 @@ export const MatchesListScreen: React.FC = () => {
     fetchLikesCount();
   }, []);
 
-  // Defer initial fetch until navigation animation completes
-  // Then hydrate chat persistence so lastMessage values survive
+  // Fetch matches immediately on mount — no InteractionManager deferral
+  // since lazy:false pre-mounts all tabs, data should load eagerly
   useEffect(() => {
-    const task = InteractionManager.runAfterInteractions(async () => {
+    const hydrate = async () => {
       await fetchMatches();
       // Hydrate chat storage and restore lastMessage from persisted meta
       await hydrateFromStorage();
@@ -641,8 +640,8 @@ export const MatchesListScreen: React.FC = () => {
           updateMatchActivity(matchId, entry.lastMessage, entry.lastMessageAt);
         }
       }
-    });
-    return () => task.cancel();
+    };
+    hydrate();
   }, [fetchMatches, hydrateFromStorage, updateMatchActivity]);
 
   // Set match countdowns for new matches that don't have messages

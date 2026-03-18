@@ -1,7 +1,8 @@
 // Main tab navigator — 5 tabs: Feed, Discovery, Activities, Matches, Profile
 // Enhanced: default slide_from_right, modal slide_from_bottom, premium tab bar
 // Enhanced: unread message badge on Matches tab
-// Performance: deferred mount for heavy sub-screens
+// Performance: lazy:false pre-mounts all tabs, React.memo stack navigators,
+//   deferred mount for heavy sub-screens (chat, edit profile, etc.)
 
 import React, { useEffect } from 'react';
 import { StyleSheet, View, Text, Platform } from 'react-native';
@@ -191,7 +192,7 @@ const TabIconWithBadge: React.FC<{
 };
 
 // Discovery tab stack — default slide_from_right, modals slide_from_bottom
-const DiscoveryStackNavigator: React.FC = () => (
+const DiscoveryStackNavigator: React.FC = React.memo(() => (
   <DiscoveryStack.Navigator
     screenOptions={{
       headerShown: false,
@@ -261,10 +262,11 @@ const DiscoveryStackNavigator: React.FC = () => (
       options={{ animation: 'slide_from_bottom', presentation: 'fullScreenModal' }}
     />
   </DiscoveryStack.Navigator>
-);
+));
+DiscoveryStackNavigator.displayName = 'DiscoveryStackNavigator';
 
 // Matches tab stack — default slide_from_right, modals slide_from_bottom
-const MatchesStackNavigator: React.FC = () => (
+const MatchesStackNavigator: React.FC = React.memo(() => (
   <MatchesStack.Navigator
     screenOptions={{
       headerShown: false,
@@ -308,10 +310,11 @@ const MatchesStackNavigator: React.FC = () => (
       options={{ animation: 'slide_from_bottom' }}
     />
   </MatchesStack.Navigator>
-);
+));
+MatchesStackNavigator.displayName = 'MatchesStackNavigator';
 
 // Feed tab stack — social feed as tab root
-const FeedStackNavigator: React.FC = () => (
+const FeedStackNavigator: React.FC = React.memo(() => (
   <FeedStack.Navigator
     screenOptions={{
       headerShown: false,
@@ -321,10 +324,11 @@ const FeedStackNavigator: React.FC = () => (
     <FeedStack.Screen name="SocialFeed" component={SocialFeedScreen} />
     <FeedStack.Screen name="FeedProfile" component={FeedProfileScreen} />
   </FeedStack.Navigator>
-);
+));
+FeedStackNavigator.displayName = 'FeedStackNavigator';
 
 // Activities tab stack — activities as tab root
-const ActivitiesStackNavigator: React.FC = () => (
+const ActivitiesStackNavigator: React.FC = React.memo(() => (
   <ActivitiesStack.Navigator
     screenOptions={{
       headerShown: false,
@@ -345,10 +349,11 @@ const ActivitiesStackNavigator: React.FC = () => (
       options={{ animation: 'slide_from_bottom' }}
     />
   </ActivitiesStack.Navigator>
-);
+));
+ActivitiesStackNavigator.displayName = 'ActivitiesStackNavigator';
 
 // Profile tab stack — default slide_from_right for push screens
-const ProfileStackNavigator: React.FC = () => (
+const ProfileStackNavigator: React.FC = React.memo(() => (
   <ProfileStack.Navigator
     screenOptions={{
       headerShown: false,
@@ -374,7 +379,8 @@ const ProfileStackNavigator: React.FC = () => (
     <ProfileStack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
     <ProfileStack.Screen name="Questions" component={QuestionsScreen} />
   </ProfileStack.Navigator>
-);
+));
+ProfileStackNavigator.displayName = 'ProfileStackNavigator';
 
 export const MainTabNavigator: React.FC = () => {
   usePresenceTracking();
@@ -415,8 +421,11 @@ export const MainTabNavigator: React.FC = () => {
     <Tab.Navigator
       initialRouteName="DiscoveryTab"
       backBehavior="history"
+      detachInactiveScreens={false}
       screenOptions={{
         headerShown: false,
+        lazy: false,
+        freezeOnBlur: false,
         tabBarStyle: [styles.tabBar, { backgroundColor: darkTheme.tabBarBackground }],
         tabBarActiveTintColor: darkTheme.tabBarActive,
         tabBarInactiveTintColor: darkTheme.tabBarInactive,

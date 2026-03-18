@@ -955,18 +955,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'transparent',
     paddingVertical: spacing.md,
+    overflow: 'visible',
   },
   statItem: {
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
+    paddingHorizontal: 0,
+    minWidth: 60,
   },
   statValue: {
     fontSize: 22,
     fontWeight: fontWeights.bold,
     color: colors.text,
     textAlign: 'center',
-    includeFontPadding: true,
+    includeFontPadding: false,
   },
   statLabel: {
     fontSize: 12,
@@ -974,7 +977,7 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
     marginTop: 2,
     textAlign: 'center',
-    includeFontPadding: true,
+    includeFontPadding: false,
   },
   statDivider: {
     width: 1,

@@ -1,7 +1,7 @@
 // Discovery screen — premium card stack with Tinder-like swipe physics
 // Uses react-native-gesture-handler v2 + react-native-reanimated for real-time
 // finger-tracking, velocity-based throws, spring-back, and haptic feedback.
-// Performance: InteractionManager for deferred fetch, memoized card rendering
+// Performance: eager fetch on mount, memoized card rendering
 
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import {
@@ -13,7 +13,6 @@ import {
   Dimensions,
   Platform,
   ActivityIndicator,
-  InteractionManager,
   Modal,
   KeyboardAvoidingView,
   ScrollView,
@@ -522,13 +521,11 @@ export const DiscoveryScreen: React.FC = () => {
 
   // ─── Effects ───────────────────────────────────────────────
 
-  // Deferred feed fetch with batch cooldown check
+  // Feed fetch with batch cooldown check — no InteractionManager deferral
+  // since lazy:false pre-mounts all tabs, data should load immediately
   useEffect(() => {
-    const task = InteractionManager.runAfterInteractions(() => {
-      checkAndLoadBatch();
-      fetchNotifications();
-    });
-    return () => task.cancel();
+    checkAndLoadBatch();
+    fetchNotifications();
   }, [checkAndLoadBatch, fetchNotifications]);
 
   // Countdown timer for batch cooldown
@@ -1639,6 +1636,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm + 2,
+    overflow: 'visible',
   },
   headerLeft: {
     flex: 1,
@@ -1659,6 +1657,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     flexShrink: 0,
+    overflow: 'visible',
     zIndex: 100,
   },
   filterButton: {

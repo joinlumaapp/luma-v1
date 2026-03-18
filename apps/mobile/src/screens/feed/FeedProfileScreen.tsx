@@ -569,19 +569,22 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     paddingVertical: spacing.md + 4,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.sm,
+    overflow: 'visible',
   },
   statItem: {
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
-    paddingHorizontal: 4,
+    paddingHorizontal: 0,
+    minWidth: 60,
   },
   statValue: {
     fontSize: 22,
     fontWeight: fontWeights.bold,
     color: colors.text,
     textAlign: 'center',
+    includeFontPadding: false,
   },
   statLabel: {
     fontSize: 11,
@@ -590,6 +593,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center',
     letterSpacing: 0.3,
+    includeFontPadding: false,
   },
   statDivider: {
     width: 1,
