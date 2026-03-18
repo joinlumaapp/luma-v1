@@ -314,8 +314,15 @@ function AppVersionGate(): React.JSX.Element | null {
     forceUpdateRequired,
     optionalUpdateAvailable,
     maintenanceMode,
+    isChecking,
+    error,
     dismissOptionalUpdate,
   } = useAppVersion();
+
+  // Don't block app while checking or if check failed (no backend yet)
+  if (isChecking || error) {
+    return null;
+  }
 
   if (forceUpdateRequired || maintenanceMode) {
     return <ForceUpdateModal visible />;
