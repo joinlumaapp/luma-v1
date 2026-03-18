@@ -504,11 +504,11 @@ const styles = StyleSheet.create({
   statsCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
+    justifyContent: 'flex-start',
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     paddingVertical: spacing.md,
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: spacing.md,
     marginHorizontal: -spacing.lg,
   },
   statItem: {
