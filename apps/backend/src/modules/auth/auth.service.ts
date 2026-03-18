@@ -8,6 +8,7 @@ import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { PrismaService } from "../../prisma/prisma.service";
 import { LumaCacheService } from "../cache/cache.service";
+import { calculateAge } from "../../common/utils/date.utils";
 import { SmsProvider } from "./sms.provider";
 import {
   RegisterDto,
@@ -298,7 +299,7 @@ export class AuthService {
 
     // Age verification: if user has a profile with birthDate, enforce 18+ requirement
     if (user.profile?.birthDate) {
-      const age = this.calculateAge(new Date(user.profile.birthDate));
+      const age = calculateAge(new Date(user.profile.birthDate));
       if (age < 18) {
         throw new BadRequestException(
           "18 yasindan kucukler kayit olamaz",
@@ -867,7 +868,7 @@ export class AuthService {
       sub: userId,
       phone,
       isVerified: isSelfieVerified,
-      packageTier: packageTier.toLowerCase(),
+      packageTier,
     };
 
     const [accessToken, refreshToken] = await Promise.all([
@@ -915,22 +916,6 @@ export class AuthService {
         expiresIn: this.configService.get<string>("JWT_REFRESH_EXPIRY", "7d"),
       },
     );
-  }
-
-  /**
-   * Calculate age from a birth date.
-   */
-  private calculateAge(birthDate: Date): number {
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
-    return age;
   }
 
   /**

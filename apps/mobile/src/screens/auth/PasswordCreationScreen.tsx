@@ -17,7 +17,9 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../stores/authStore';
 import { onboardingColors } from '../../components/onboarding/OnboardingLayout';
+import { palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
+import { fontWeights } from '../../theme/typography';
 
 type NavProp = NativeStackNavigationProp<AuthStackParamList, 'PasswordCreation'>;
 
@@ -191,7 +193,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: onboardingColors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontWeight: fontWeights.semibold,
   },
   content: {
     flex: 1,
@@ -201,7 +203,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontWeight: fontWeights.bold,
     color: onboardingColors.text,
     marginBottom: 8,
   },
@@ -232,7 +234,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
     color: onboardingColors.text,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontWeight: fontWeights.medium,
   },
   toggleButton: {
     paddingHorizontal: 8,
@@ -242,7 +244,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: onboardingColors.textSecondary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontWeight: fontWeights.semibold,
   },
   rulesContainer: {
     marginTop: 12,
@@ -261,18 +263,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   ruleIconPassed: {
-    color: '#10B981',
+    color: palette.success,
   },
   ruleText: {
     fontSize: 13,
     color: onboardingColors.textSecondary,
   },
   ruleTextPassed: {
-    color: '#10B981',
+    color: palette.success,
   },
   errorText: {
     fontSize: 13,
-    color: '#EF4444',
+    color: palette.error,
     marginTop: 8,
     marginLeft: 4,
   },
@@ -292,7 +294,7 @@ const styles = StyleSheet.create({
   continueText: {
     fontSize: 17,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontWeight: fontWeights.semibold,
     color: onboardingColors.background,
   },
   continueTextDisabled: {

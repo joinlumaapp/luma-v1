@@ -59,6 +59,25 @@ export interface UserFunnelResult {
   completionRate: number;
 }
 
+// ─── A/B Test Framework ──────────────────────────────────────────────────────
+// TODO: A/B test framework is ready. Add experiment definitions here.
+// Each experiment should define: id, name, variants (control/treatment),
+// allocation percentage, and target metric.
+// Example experiments to implement:
+//   - "discovery_card_layout": test compact vs expanded profile cards
+//   - "onboarding_flow": test 3-step vs 5-step onboarding
+//   - "match_animation": test current animation vs alternative
+//
+// Planned structure:
+// interface Experiment {
+//   id: string;
+//   name: string;
+//   variants: string[];
+//   allocationPercent: number;
+//   targetMetric: string;
+//   isActive: boolean;
+// }
+
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 @Injectable()

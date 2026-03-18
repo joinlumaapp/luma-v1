@@ -9,8 +9,8 @@ import * as crypto from "crypto";
 
 // ─── TTL Constants (seconds) ────────────────────────────────
 
-/** Discovery feed: short TTL because feed changes frequently */
-export const TTL_DISCOVERY_FEED = 30;
+/** Discovery feed: 5-minute TTL balances freshness with performance */
+export const TTL_DISCOVERY_FEED = 300; // 5 minutes
 
 /** User profile: moderate TTL */
 export const TTL_USER_PROFILE = 60;

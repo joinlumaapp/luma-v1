@@ -416,13 +416,21 @@ export const DiscoveryScreen: React.FC = () => {
   // ─── Boost state ────────────────────────────────────────
   const [showBoostModal, setShowBoostModal] = useState(false);
   const [boostStatus, setBoostStatus] = useState<BoostStatusResponse>({ isActive: false });
-  const [goldBalance, setGoldBalance] = useState(500); // Mock balance
+  const goldBalanceFromStore = useCoinStore((s) => s.balance);
+  const [goldBalance, setGoldBalance] = useState(0);
+
+  // Sync gold balance from store on mount and when store changes
+  useEffect(() => {
+    setGoldBalance(goldBalanceFromStore);
+  }, [goldBalanceFromStore]);
 
   const boostFetched = useRef(false);
   useEffect(() => {
     if (boostFetched.current) return;
     boostFetched.current = true;
-    discoveryService.getBoostStatus().then(setBoostStatus).catch(() => {});
+    discoveryService.getBoostStatus().then(setBoostStatus).catch(() => {
+      // Boost status fetch is non-critical, silently ignore
+    });
   }, []);
 
   // ─── FOMO engagement state ──────────────────────────────

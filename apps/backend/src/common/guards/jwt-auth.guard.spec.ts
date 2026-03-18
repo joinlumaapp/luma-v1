@@ -3,12 +3,14 @@ import { JwtService, TokenExpiredError } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import { Reflector } from "@nestjs/core";
 import { JwtAuthGuard, IS_PUBLIC_KEY } from "./jwt-auth.guard";
+import { LumaCacheService } from "../../modules/cache/cache.service";
 
 describe("JwtAuthGuard", () => {
   let guard: JwtAuthGuard;
   let jwtService: JwtService;
   let configService: ConfigService;
   let reflector: Reflector;
+  let cacheService: LumaCacheService;
 
   const mockPayload = {
     sub: "user-123",
@@ -27,7 +29,7 @@ describe("JwtAuthGuard", () => {
     configService = {
       get: jest.fn((key: string) => {
         if (key === "JWT_SECRET") return "test-secret";
-        return undefined; // No REDIS_URL — skip Redis init
+        return undefined;
       }),
     } as unknown as ConfigService;
 
@@ -35,7 +37,12 @@ describe("JwtAuthGuard", () => {
       getAllAndOverride: jest.fn().mockReturnValue(false),
     } as unknown as Reflector;
 
-    guard = new JwtAuthGuard(jwtService, configService, reflector);
+    cacheService = {
+      isRedisConnected: jest.fn().mockReturnValue(true),
+      get: jest.fn().mockResolvedValue(null),
+    } as unknown as LumaCacheService;
+
+    guard = new JwtAuthGuard(jwtService, configService, reflector, cacheService);
   });
 
   function createMockContext(authHeader?: string) {
@@ -130,5 +137,29 @@ describe("JwtAuthGuard", () => {
 
   it("should export IS_PUBLIC_KEY constant", () => {
     expect(IS_PUBLIC_KEY).toBe("isPublic");
+  });
+
+  it("should reject token when Redis is unavailable (fail-closed)", async () => {
+    (cacheService.isRedisConnected as jest.Mock).mockReturnValue(false);
+
+    await expect(
+      guard.canActivate(createMockContext("Bearer valid.jwt.token")),
+    ).rejects.toThrow("Bu oturum sonlandirildi");
+  });
+
+  it("should reject token when it is blacklisted in cache", async () => {
+    (cacheService.get as jest.Mock).mockResolvedValue(true);
+
+    await expect(
+      guard.canActivate(createMockContext("Bearer blacklisted.token")),
+    ).rejects.toThrow("Bu oturum sonlandirildi");
+  });
+
+  it("should allow token when cache returns null (not blacklisted)", async () => {
+    (cacheService.get as jest.Mock).mockResolvedValue(null);
+
+    const context = createMockContext("Bearer valid.jwt.token");
+    const result = await guard.canActivate(context);
+    expect(result).toBe(true);
   });
 });

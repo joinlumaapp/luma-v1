@@ -5,10 +5,10 @@ import { IsNotEmpty, IsString, IsEnum, IsIn } from "class-validator";
  * LUMA has exactly 4 package tiers (locked architecture).
  */
 export enum PackageTier {
-  FREE = "free",
-  GOLD = "gold",
-  PRO = "pro",
-  RESERVED = "reserved",
+  FREE = "FREE",
+  GOLD = "GOLD",
+  PRO = "PRO",
+  RESERVED = "RESERVED",
 }
 
 export class SubscribeDto {

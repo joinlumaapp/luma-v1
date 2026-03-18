@@ -12,22 +12,23 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { colors, palette, surfaces } from '../../theme/colors';
 
-// Onboarding-specific cream theme colors
+// Onboarding-specific cream theme colors — mapped to design system tokens
 export const onboardingColors = {
-  background: '#F5F0E8',
-  surface: '#FFFFFF',
-  surfaceBorder: '#E8E3DB',
-  text: '#1A1A1A',
-  textSecondary: '#6B6B6B',
-  textTertiary: '#9CA3AF',
-  selectedBg: '#1A1A1A',
-  selectedText: '#FFFFFF',
-  checkGreen: '#22C55E',
-  buttonBg: '#1A1A1A',
-  buttonText: '#FFFFFF',
-  progressFill: '#1A1A1A',
-  progressBg: '#D4CFC7',
+  background: surfaces.cream.background,
+  surface: surfaces.cream.surface1,
+  surfaceBorder: surfaces.cream.surface3,
+  text: colors.text,
+  textSecondary: colors.textSecondary,
+  textTertiary: palette.gray[400],
+  selectedBg: colors.text,
+  selectedText: palette.white,
+  checkGreen: palette.success,
+  buttonBg: colors.text,
+  buttonText: palette.white,
+  progressFill: colors.text,
+  progressBg: colors.border,
 } as const;
 
 interface OnboardingLayoutProps {
@@ -164,13 +165,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   backButton: {
-    width: 32,
-    height: 32,
+    width: 44,
+    height: 44,
     justifyContent: 'center',
     alignItems: 'center',
   },
   backPlaceholder: {
-    width: 32,
+    width: 44,
   },
   progressContainer: {
     flex: 1,

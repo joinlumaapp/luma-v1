@@ -4,7 +4,7 @@
 // - Bildirim tiklamasini yakalar ve dogru ekrana yonlendirir
 // - Unmount'ta temizlik yapar
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { AppState } from 'react-native';
 import type { NavigationContainerRef } from '@react-navigation/native';
 import type { RootStackParamList } from '../navigation/types';
@@ -23,11 +23,23 @@ interface UseNotificationHandlerOptions {
   isAuthenticated: boolean;
 }
 
+/** Badge earned overlay data for display */
+export interface BadgeEarnedData {
+  badgeName: string;
+  badgeDescription: string;
+  badgeKey: string;
+  goldReward: number;
+}
+
 interface UseNotificationHandlerReturn {
   /** Manuel olarak bildirim iznini yeniden iste */
   requestPermission: () => Promise<boolean>;
   /** Bildirim izni durumu */
   hasPermission: boolean;
+  /** Badge earned overlay data — non-null when overlay should be shown */
+  badgeEarned: BadgeEarnedData | null;
+  /** Dismiss the badge earned overlay */
+  dismissBadgeOverlay: () => void;
 }
 
 /**
@@ -57,6 +69,13 @@ export function useNotificationHandler(
   const registerDevice = useNotificationStore((s) => s.registerDevice);
   const addNotification = useNotificationStore((s) => s.addNotification);
   const refresh = useNotificationStore((s) => s.refresh);
+
+  // Badge earned overlay state
+  const [badgeEarned, setBadgeEarned] = useState<BadgeEarnedData | null>(null);
+
+  const dismissBadgeOverlay = useCallback(() => {
+    setBadgeEarned(null);
+  }, []);
 
   // Cold start bildirim verisi icin ref
   const pendingNotificationData = useRef<Record<string, unknown> | null>(null);
@@ -120,6 +139,17 @@ export function useNotificationHandler(
         isRead: false,
         createdAt: new Date().toISOString(),
       });
+
+      // Check if this is a BADGE_EARNED notification — show overlay instead of banner
+      if (notifType.toUpperCase() === 'BADGE_EARNED') {
+        setBadgeEarned({
+          badgeName: (notification.data?.badgeName as string) || notification.title || 'Yeni Rozet',
+          badgeDescription: notification.body || '',
+          badgeKey: (notification.data?.badgeKey as string) || '',
+          goldReward: (notification.data?.goldReward as number) || 0,
+        });
+        return; // Skip banner for badge notifications — overlay handles display
+      }
 
       // In-app banner'a gonder
       handleForegroundNotification(notification);
@@ -198,5 +228,7 @@ export function useNotificationHandler(
   return {
     requestPermission,
     hasPermission,
+    badgeEarned,
+    dismissBadgeOverlay,
   };
 }

@@ -97,7 +97,7 @@ export const useUserPresence = (
         [payload.userId]: {
           userId: payload.userId,
           isOnline: true,
-          lastActiveAt: payload.lastActiveAt,
+          lastActiveAt: payload.lastSeen,
         },
       }));
     });
@@ -111,7 +111,7 @@ export const useUserPresence = (
         [payload.userId]: {
           userId: payload.userId,
           isOnline: false,
-          lastActiveAt: payload.lastActiveAt,
+          lastActiveAt: payload.lastSeen,
         },
       }));
     });

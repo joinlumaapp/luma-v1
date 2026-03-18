@@ -24,6 +24,20 @@ export interface SubscribeResponse {
   expiresAt: string;
 }
 
+export interface DowngradeRequest {
+  targetTier: string;
+  platform: string;
+  receipt: string;
+}
+
+export interface DowngradeResponse {
+  downgraded: boolean;
+  previousTier: string;
+  newTier: string;
+  subscriptionId: string;
+  expiresAt: string;
+}
+
 export interface ValidateReceiptRequest {
   receipt: string;
   platform: string;
@@ -61,21 +75,24 @@ export interface SubscriptionStatusResponse {
   startDate: string | null;
   cancelledAt: string | null;
   isExpiringSoon: boolean;
+  isTrial: boolean;
+  trialDaysRemaining: number;
+  isInGracePeriod: boolean;
   platform: string | null;
   goldBalance: number;
   features: {
     dailySwipes: number;
-    superLikesDaily: number;
-    monthlyBoosts: number;
+    coreQuestions: number;
+    premiumQuestions: number;
+    harmonyMinutes: number;
     monthlyGold: number;
+    dailyCompatibilityChecks: number;
+    dailySuperCompatibility: number;
     seeWhoLikesYou: boolean;
     profileBoost: boolean;
     readReceipts: boolean;
     undoSwipe: boolean;
     priorityInFeed: boolean;
-    priorityLikes: boolean;
-    nearbyProfiles: boolean;
-    adFree: boolean;
   };
 }
 
@@ -119,6 +136,15 @@ export const paymentService = {
   // Cancel current subscription
   cancelSubscription: async (): Promise<void> => {
     await api.delete('/payments/subscribe');
+  },
+
+  // Downgrade to a lower package tier
+  downgradePackage: async (data: DowngradeRequest): Promise<DowngradeResponse> => {
+    const response = await api.post<DowngradeResponse>(
+      '/payments/package/downgrade',
+      data,
+    );
+    return response.data;
   },
 
   // Validate App Store / Play Store receipt

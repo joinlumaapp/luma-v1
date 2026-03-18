@@ -9,14 +9,15 @@ import { ConfigService } from "@nestjs/config";
 import { Reflector } from "@nestjs/core";
 import { JwtService, TokenExpiredError } from "@nestjs/jwt";
 import { Request } from "express";
-import Redis from "ioredis";
 import { createHash } from "crypto";
+import { LumaCacheService } from "../../modules/cache/cache.service";
 
 export const IS_PUBLIC_KEY = "isPublic";
 
 /** Prefix for blacklisted (logged-out) tokens in Redis.
- *  Must include the 'luma:' namespace used by LumaCacheService. */
-const TOKEN_BLACKLIST_PREFIX = "luma:token:blacklist:";
+ *  LumaCacheService automatically prepends 'luma:', so the final Redis key
+ *  becomes 'luma:token:blacklist:<hash>' — matching auth.service.ts. */
+const TOKEN_BLACKLIST_PREFIX = "token:blacklist:";
 
 interface JwtTokenPayload {
   sub: string;
@@ -30,29 +31,13 @@ interface JwtTokenPayload {
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   private readonly logger = new Logger("JwtAuthGuard");
-  private redis: Redis | null = null;
 
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly reflector: Reflector,
-  ) {
-    const redisUrl = this.configService.get<string>("REDIS_URL");
-    if (redisUrl) {
-      this.redis = new Redis(redisUrl, {
-        maxRetriesPerRequest: 1,
-        enableOfflineQueue: false,
-        lazyConnect: true,
-      });
-
-      this.redis.connect().catch((err: Error) => {
-        this.logger.warn(
-          `Redis connection failed for token blacklist: ${err.message}`,
-        );
-        this.redis = null;
-      });
-    }
-  }
+    private readonly cache: LumaCacheService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // Check if route is marked as public
@@ -115,24 +100,31 @@ export class JwtAuthGuard implements CanActivate {
   /**
    * Check if a token has been blacklisted (e.g., after logout).
    * Uses a hash of the token as the key to avoid storing raw tokens.
+   *
+   * SECURITY: Fail-closed — if Redis is unavailable, treat the token as
+   * blacklisted (return true) so that a Redis outage cannot be exploited
+   * to bypass logout/token revocation.
    */
   private async isTokenBlacklisted(token: string): Promise<boolean> {
-    if (!this.redis) {
-      return false;
+    if (!this.cache.isRedisConnected()) {
+      this.logger.error(
+        "Redis unavailable during token blacklist check. Rejecting token (fail-closed).",
+      );
+      return true;
     }
 
     try {
-      // Use a simple hash of the token for the key
       const tokenKey = this.hashToken(token);
-      const result = await this.redis.exists(
+      const result = await this.cache.get<boolean>(
         `${TOKEN_BLACKLIST_PREFIX}${tokenKey}`,
       );
-      return result === 1;
+      return result === true;
     } catch (err: unknown) {
-      // On Redis error, allow the request (fail-open for availability)
       const message = err instanceof Error ? err.message : String(err);
-      this.logger.warn(`Token blacklist check failed: ${message}`);
-      return false;
+      this.logger.error(
+        `Token blacklist check failed: ${message}. Rejecting token (fail-closed).`,
+      );
+      return true;
     }
   }
 

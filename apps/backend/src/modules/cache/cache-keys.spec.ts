@@ -14,7 +14,7 @@ describe("CacheKeys", () => {
 
   describe("TTL constants", () => {
     it("should have correct TTL values", () => {
-      expect(TTL_DISCOVERY_FEED).toBe(30);
+      expect(TTL_DISCOVERY_FEED).toBe(300);
       expect(TTL_USER_PROFILE).toBe(60);
       expect(TTL_COMPATIBILITY_SCORE).toBe(300);
       expect(TTL_PACKAGE_FEATURES).toBe(3600);

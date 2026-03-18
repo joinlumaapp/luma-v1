@@ -1,7 +1,9 @@
 // AsyncStorage-backed storage with synchronous in-memory cache
 // Drop-in replacement for MMKV — Expo Go compatible
+// Tokens are stored in SecureStore (encrypted keychain/keystore) when available
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 
 // In-memory cache for synchronous reads
 const cache = new Map<string, string>();
@@ -15,6 +17,7 @@ const KEYS = {
   THEME: 'prefs.theme',
   LANGUAGE: 'prefs.language',
   PUSH_ENABLED: 'prefs.pushEnabled',
+  LOCATION_ENABLED: 'prefs.locationEnabled',
   LAST_FEED_REFRESH: 'discovery.lastFeedRefresh',
 } as const;
 
@@ -60,25 +63,55 @@ export const storage = {
     return _initialized;
   },
 
-  // Token management
+  // Token management — stored in SecureStore (encrypted keychain/keystore)
   setTokens: async (accessToken: string, refreshToken: string): Promise<void> => {
-    persistString(KEYS.ACCESS_TOKEN, accessToken);
-    persistString(KEYS.REFRESH_TOKEN, refreshToken);
+    cache.set(KEYS.ACCESS_TOKEN, accessToken);
+    cache.set(KEYS.REFRESH_TOKEN, refreshToken);
+    try {
+      await SecureStore.setItemAsync(KEYS.ACCESS_TOKEN, accessToken);
+      await SecureStore.setItemAsync(KEYS.REFRESH_TOKEN, refreshToken);
+    } catch {
+      // Fallback to AsyncStorage if SecureStore is unavailable (e.g. older Expo Go)
+      AsyncStorage.setItem(KEYS.ACCESS_TOKEN, accessToken).catch(() => {});
+      AsyncStorage.setItem(KEYS.REFRESH_TOKEN, refreshToken).catch(() => {});
+    }
   },
 
   getTokens: async (): Promise<{
     accessToken: string | null;
     refreshToken: string | null;
   }> => {
-    return {
-      accessToken: cache.get(KEYS.ACCESS_TOKEN) ?? null,
-      refreshToken: cache.get(KEYS.REFRESH_TOKEN) ?? null,
-    };
+    // Try in-memory cache first
+    const cachedAccess = cache.get(KEYS.ACCESS_TOKEN) ?? null;
+    const cachedRefresh = cache.get(KEYS.REFRESH_TOKEN) ?? null;
+    if (cachedAccess && cachedRefresh) {
+      return { accessToken: cachedAccess, refreshToken: cachedRefresh };
+    }
+    // Try SecureStore
+    try {
+      const accessToken = await SecureStore.getItemAsync(KEYS.ACCESS_TOKEN);
+      const refreshToken = await SecureStore.getItemAsync(KEYS.REFRESH_TOKEN);
+      if (accessToken) cache.set(KEYS.ACCESS_TOKEN, accessToken);
+      if (refreshToken) cache.set(KEYS.REFRESH_TOKEN, refreshToken);
+      return { accessToken, refreshToken };
+    } catch {
+      // Fallback to AsyncStorage
+      return {
+        accessToken: cache.get(KEYS.ACCESS_TOKEN) ?? null,
+        refreshToken: cache.get(KEYS.REFRESH_TOKEN) ?? null,
+      };
+    }
   },
 
   clearTokens: async (): Promise<void> => {
     cache.delete(KEYS.ACCESS_TOKEN);
     cache.delete(KEYS.REFRESH_TOKEN);
+    try {
+      await SecureStore.deleteItemAsync(KEYS.ACCESS_TOKEN);
+      await SecureStore.deleteItemAsync(KEYS.REFRESH_TOKEN);
+    } catch {
+      // Fallback
+    }
     AsyncStorage.multiRemove([KEYS.ACCESS_TOKEN, KEYS.REFRESH_TOKEN]).catch(() => {});
   },
 
@@ -114,6 +147,18 @@ export const storage = {
 
   getPushEnabled: (): boolean => {
     return cache.get(KEYS.PUSH_ENABLED) !== '0';
+  },
+
+  // Location sharing preference (default: enabled)
+  setLocationEnabled: (enabled: boolean): void => {
+    persistBoolean(KEYS.LOCATION_ENABLED, enabled);
+  },
+
+  getLocationEnabled: (): boolean => {
+    // Default to true if not set
+    const value = cache.get(KEYS.LOCATION_ENABLED);
+    if (value === undefined) return true;
+    return value !== '0';
   },
 
   // Generic helpers

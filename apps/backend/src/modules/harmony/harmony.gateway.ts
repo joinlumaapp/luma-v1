@@ -65,6 +65,9 @@ export class HarmonyGateway
   /** Maps socketId → Set of sessionIds the socket has joined */
   private readonly socketSessions = new Map<string, Set<string>>();
 
+  /** Maps sessionId → timer interval for periodic timer sync broadcasts */
+  private readonly sessionTimerIntervals = new Map<string, ReturnType<typeof setInterval>>();
+
   /** Tracks last event timestamps per socket for rate limiting */
   private eventTimestamps = new Map<string, Map<string, number[]>>();
 
@@ -276,6 +279,43 @@ export class HarmonyGateway
       hasVideoChat: session.hasVideoChat,
     });
 
+    // Start periodic timer sync if not already running for this session
+    if (!this.sessionTimerIntervals.has(data.sessionId)) {
+      const timerInterval = setInterval(async () => {
+        const sess = await this.prisma.harmonySession.findUnique({
+          where: { id: data.sessionId },
+        });
+        if (!sess || !["ACTIVE", "EXTENDED"].includes(sess.status)) {
+          this.clearSessionTimer(data.sessionId);
+          return;
+        }
+        const remaining = sess.endsAt
+          ? Math.max(0, sess.endsAt.getTime() - Date.now())
+          : 0;
+        if (remaining === 0) {
+          // Auto-end expired session
+          await this.prisma.harmonySession.update({
+            where: { id: data.sessionId },
+            data: { status: "ENDED", actualEndedAt: new Date() },
+          });
+          this.server
+            .to(`harmony:${data.sessionId}`)
+            .emit("harmony:session_ended", {
+              sessionId: data.sessionId,
+              reason: "time_expired",
+            });
+          this.clearSessionTimer(data.sessionId);
+          return;
+        }
+        this.server.to(`harmony:${data.sessionId}`).emit("harmony:timer_sync", {
+          sessionId: data.sessionId,
+          remainingSeconds: Math.floor(remaining / 1000),
+          status: sess.status,
+        });
+      }, 30_000); // Broadcast every 30 seconds
+      this.sessionTimerIntervals.set(data.sessionId, timerInterval);
+    }
+
     // Notify partner
     this.server.to(roomName).emit("harmony:user_joined", {
       userId,
@@ -310,6 +350,12 @@ export class HarmonyGateway
     const sessions = this.socketSessions.get(client.id);
     if (sessions) {
       sessions.delete(data.sessionId);
+    }
+
+    // Clear periodic timer if no more sockets are in this session room
+    const roomSockets = await this.server.in(roomName).fetchSockets();
+    if (roomSockets.length === 0) {
+      this.clearSessionTimer(data.sessionId);
     }
 
     this.logger.log(`User ${userId} left session ${data.sessionId}`);
@@ -373,7 +419,21 @@ export class HarmonyGateway
           gameType: usedCard.gameCard!.gameType,
         };
 
-    // Broadcast card reveal to room (client-side tracking for reveal state)
+    // Log card reveal to database as a SYSTEM message for analytics
+    this.prisma.harmonyMessage
+      .create({
+        data: {
+          sessionId: data.sessionId,
+          senderId: userId,
+          content: `card_revealed:${data.cardId}`,
+          type: "SYSTEM",
+        },
+      })
+      .catch((err: Error) =>
+        this.logger.warn(`Failed to persist card reveal: ${err.message}`),
+      );
+
+    // Broadcast card reveal to room
     this.server.to(`harmony:${data.sessionId}`).emit("harmony:card_revealed", {
       ...cardData,
       revealedBy: userId,
@@ -418,6 +478,20 @@ export class HarmonyGateway
       client.emit("harmony:error", { message: "Gecersiz reaksiyon tipi" });
       return;
     }
+
+    // Log reaction to database for analytics (non-blocking)
+    this.prisma.harmonyMessage
+      .create({
+        data: {
+          sessionId: data.sessionId,
+          senderId: userId,
+          content: `reaction:${data.reaction}:${data.cardId}`,
+          type: "SYSTEM",
+        },
+      })
+      .catch((err: Error) =>
+        this.logger.warn(`Failed to persist reaction: ${err.message}`),
+      );
 
     // Broadcast reaction to room
     this.server.to(`harmony:${data.sessionId}`).emit("harmony:reaction", {
@@ -969,6 +1043,18 @@ export class HarmonyGateway
   }
 
   // ─── Helpers ─────────────────────────────────────────────────
+
+  /**
+   * Clear the periodic timer sync interval for a session.
+   */
+  private clearSessionTimer(sessionId: string): void {
+    const interval = this.sessionTimerIntervals.get(sessionId);
+    if (interval) {
+      clearInterval(interval);
+      this.sessionTimerIntervals.delete(sessionId);
+      this.logger.log(`Timer sync cleared for session ${sessionId}`);
+    }
+  }
 
   private getUserId(client: AuthenticatedSocket): string {
     const userId = client.data?.userId;

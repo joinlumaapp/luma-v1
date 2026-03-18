@@ -8,6 +8,6 @@ import { BadgesModule } from "../badges/badges.module";
   imports: [BadgesModule],
   controllers: [HarmonyController],
   providers: [HarmonyService, HarmonyGateway],
-  exports: [HarmonyService],
+  exports: [HarmonyService, HarmonyGateway],
 })
 export class HarmonyModule {}

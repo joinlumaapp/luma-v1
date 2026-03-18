@@ -16,14 +16,14 @@ import { typography } from '../../theme/typography';
 
 // ─── Score-based ring color ────────────────────────────────────
 
-const RING_GRAY = '#6B7280';
+const RING_GREEN = '#10B981';
+const RING_AMBER = '#F59E0B';
 const RING_PURPLE = '#8B5CF6';
-const RING_GOLD = '#FBBF24';
 
 function getRingColor(score: number): string {
-  if (score >= 75) return RING_GOLD;
-  if (score >= 50) return RING_PURPLE;
-  return RING_GRAY;
+  if (score >= 90) return RING_GREEN;
+  if (score >= 70) return RING_AMBER;
+  return RING_PURPLE;
 }
 
 // ─── Props ─────────────────────────────────────────────────────
@@ -152,11 +152,11 @@ export const CompatibilityBadge: React.FC<CompatibilityBadgeProps> = ({
   const innerSize = size - borderWidth * 2 - 4; // gap between track and center
   const fontSize = size * 0.32;
 
-  // Shadow for gold tier
-  const goldShadow = isSuper || clampedScore >= 75
+  // Shadow for high scores
+  const scoreShadow = isSuper || clampedScore >= 90
     ? Platform.select({
         ios: {
-          shadowColor: RING_GOLD,
+          shadowColor: RING_GREEN,
           shadowOffset: { width: 0, height: 0 },
           shadowOpacity: 0.45,
           shadowRadius: size * 0.15,
@@ -170,7 +170,7 @@ export const CompatibilityBadge: React.FC<CompatibilityBadgeProps> = ({
       style={[
         localStyles.wrapper,
         { width: size, height: size },
-        goldShadow,
+        scoreShadow,
       ]}
       accessibilityLabel={`Uyum skoru yüzde ${clampedScore}`}
       accessibilityRole="text"
@@ -220,7 +220,7 @@ export const CompatibilityBadge: React.FC<CompatibilityBadgeProps> = ({
         ]}
       >
         {isSuper && (
-          <Text style={[localStyles.starIcon, { fontSize: size * 0.14, color: RING_GOLD }]}>
+          <Text style={[localStyles.starIcon, { fontSize: size * 0.14, color: RING_GREEN }]}>
             {'\u2605'}
           </Text>
         )}

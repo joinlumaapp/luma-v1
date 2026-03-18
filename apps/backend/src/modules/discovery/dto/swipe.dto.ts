@@ -8,9 +8,9 @@ import {
 } from "class-validator";
 
 export enum SwipeDirection {
-  LIKE = "like",
-  PASS = "pass",
-  SUPER_LIKE = "super_like",
+  LIKE = "LIKE",
+  PASS = "PASS",
+  SUPER_LIKE = "SUPER_LIKE",
 }
 
 export class SwipeDto {

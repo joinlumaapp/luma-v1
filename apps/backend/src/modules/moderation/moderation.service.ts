@@ -311,6 +311,34 @@ export class ModerationService {
         },
       });
 
+      // 4. Soft-delete chat messages between blocked users
+      //    Find all matches (including just-deactivated ones) and mark messages as DELETED
+      const affectedMatches = await tx.match.findMany({
+        where: {
+          OR: [
+            { userAId: blockerId, userBId: dto.blockedUserId },
+            { userAId: dto.blockedUserId, userBId: blockerId },
+          ],
+        },
+        select: { id: true },
+      });
+
+      const matchIds = affectedMatches.map(
+        (m: { id: string }) => m.id,
+      );
+
+      if (matchIds.length > 0) {
+        await tx.chatMessage.updateMany({
+          where: {
+            matchId: { in: matchIds },
+            status: { not: "DELETED" },
+          },
+          data: {
+            status: "DELETED",
+          },
+        });
+      }
+
       return newBlock;
     });
 

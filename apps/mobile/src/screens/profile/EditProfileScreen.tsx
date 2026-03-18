@@ -95,6 +95,13 @@ const calculateAge = (birthDate: string): number => {
   return age;
 };
 
+// ── Intention tag options ──────────────────────────────────────────────────
+const INTENTION_OPTIONS: LifestyleOption[] = [
+  { value: 'SERIOUS_RELATIONSHIP', label: 'Ciddi İlişki' },
+  { value: 'EXPLORING', label: 'Keşfediyorum' },
+  { value: 'NOT_SURE', label: 'Emin Değilim' },
+];
+
 // ── Height values ──────────────────────────────────────────────────────────
 const HEIGHT_VALUES: number[] = [];
 for (let i = 140; i <= 220; i++) {
@@ -126,6 +133,9 @@ export const EditProfileScreen: React.FC = () => {
   // Local state
   const [bio, setBio] = useState(profile.bio);
   const [city, setCity] = useState(profile.city);
+  const [job, setJob] = useState(profile.job);
+  const [education, setEducation] = useState(profile.education);
+  const [intentionTag, setIntentionTag] = useState(profile.intentionTag);
   const [height, setHeight] = useState<number | null>(profile.height);
   const [smoking, setSmoking] = useState(profile.smoking);
   const [exercise, setExercise] = useState(profile.sports);
@@ -143,13 +153,17 @@ export const EditProfileScreen: React.FC = () => {
   useEffect(() => {
     setBio(profile.bio);
     setCity(profile.city);
+    setJob(profile.job);
+    setEducation(profile.education);
+    setIntentionTag(profile.intentionTag);
     setHeight(profile.height);
     setSmoking(profile.smoking);
     setExercise(profile.sports);
     setChildren(profile.children);
     setSelectedInterests(profile.interestTags);
   }, [
-    profile.bio, profile.city, profile.height, profile.smoking,
+    profile.bio, profile.city, profile.job, profile.education,
+    profile.intentionTag, profile.height, profile.smoking,
     profile.sports, profile.children, profile.interestTags,
   ]);
 
@@ -352,6 +366,9 @@ export const EditProfileScreen: React.FC = () => {
       await updateProfile({
         bio,
         city,
+        job,
+        education,
+        intentionTag,
         height,
         smoking,
         sports: exercise,
@@ -365,13 +382,16 @@ export const EditProfileScreen: React.FC = () => {
       setIsSaving(false);
     }
   }, [
-    bio, city, height, smoking, exercise, children, selectedInterests,
-    isSaving, updateProfile, navigation,
+    bio, city, job, education, intentionTag, height, smoking, exercise,
+    children, selectedInterests, isSaving, updateProfile, navigation,
   ]);
 
   const hasChanges =
     bio !== profile.bio ||
     city !== profile.city ||
+    job !== profile.job ||
+    education !== profile.education ||
+    intentionTag !== profile.intentionTag ||
     height !== profile.height ||
     smoking !== profile.smoking ||
     exercise !== profile.sports ||
@@ -766,6 +786,82 @@ export const EditProfileScreen: React.FC = () => {
                 </ScrollView>
               </View>
             )}
+          </View>
+
+          {/* ── Meslek & Eğitim ──────────────────────────────────────── */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Meslek & Eğitim</Text>
+
+            {/* Job */}
+            <View style={styles.textFieldRow}>
+              <View style={styles.infoIconCircle}>
+                <Ionicons name="briefcase-outline" size={18} color={colors.text} />
+              </View>
+              <View style={styles.textFieldContent}>
+                <Text style={styles.infoLabel}>Meslek</Text>
+                <TextInput
+                  style={styles.textFieldInput}
+                  value={job}
+                  onChangeText={setJob}
+                  placeholder="Mesleğini yaz..."
+                  placeholderTextColor={colors.textTertiary}
+                  maxLength={60}
+                  returnKeyType="done"
+                />
+              </View>
+            </View>
+
+            {/* Education */}
+            <View style={[styles.textFieldRow, styles.lifestyleRowLast]}>
+              <View style={styles.infoIconCircle}>
+                <Ionicons name="school-outline" size={18} color={colors.text} />
+              </View>
+              <View style={styles.textFieldContent}>
+                <Text style={styles.infoLabel}>Eğitim</Text>
+                <TextInput
+                  style={styles.textFieldInput}
+                  value={education}
+                  onChangeText={setEducation}
+                  placeholder="Okulunu veya eğitimini yaz..."
+                  placeholderTextColor={colors.textTertiary}
+                  maxLength={80}
+                  returnKeyType="done"
+                />
+              </View>
+            </View>
+          </View>
+
+          {/* ── Niyet Etiketi ─────────────────────────────────────────── */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Ne Arıyorsun?</Text>
+            <View style={styles.intentionGrid}>
+              {INTENTION_OPTIONS.map((option) => {
+                const isSelected = intentionTag === option.value;
+                return (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={[
+                      styles.intentionChip,
+                      isSelected && styles.intentionChipSelected,
+                    ]}
+                    onPress={() => setIntentionTag(option.value)}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.intentionLabel,
+                        isSelected && styles.intentionLabelSelected,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                    {isSelected && (
+                      <Ionicons name="checkmark-circle" size={16} color={palette.purple[500]} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
 
           {/* ── İlgi Alanları ─────────────────────────────────────────── */}
@@ -1285,6 +1381,61 @@ const styles = StyleSheet.create({
     fontFamily: poppinsFonts.semibold,
     fontWeight: fontWeights.semibold,
     color: palette.gold[600],
+  },
+
+  // ── Text field rows (job, education) ──
+  textFieldRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surfaceBorder + '80',
+  },
+  textFieldContent: {
+    flex: 1,
+  },
+  textFieldInput: {
+    fontSize: 15,
+    fontFamily: poppinsFonts.regular,
+    fontWeight: fontWeights.regular,
+    color: colors.text,
+    paddingVertical: 2,
+    paddingHorizontal: 0,
+    includeFontPadding: false,
+  },
+
+  // ── Intention tag ──
+  intentionGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  intentionChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderWidth: 1.5,
+    borderColor: colors.surfaceBorder,
+  },
+  intentionChipSelected: {
+    borderColor: palette.purple[500],
+    backgroundColor: palette.purple[500] + '12',
+  },
+  intentionLabel: {
+    fontSize: 14,
+    fontFamily: poppinsFonts.medium,
+    fontWeight: fontWeights.medium,
+    color: colors.text,
+    includeFontPadding: false,
+  },
+  intentionLabelSelected: {
+    color: palette.purple[600],
+    fontFamily: poppinsFonts.semibold,
+    fontWeight: fontWeights.semibold,
   },
 
   // ── Interests ──

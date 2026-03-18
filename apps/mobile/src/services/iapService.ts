@@ -24,9 +24,9 @@ const PRODUCT_IDS = {
 
 /** Maps package tier IDs to store product IDs */
 const TIER_TO_PRODUCT_ID: Record<string, string> = {
-  gold: 'com.luma.dating.gold.monthly',
-  pro: 'com.luma.dating.pro.monthly',
-  reserved: 'com.luma.dating.reserved.monthly',
+  GOLD: 'com.luma.dating.gold.monthly',
+  PRO: 'com.luma.dating.pro.monthly',
+  RESERVED: 'com.luma.dating.reserved.monthly',
 };
 
 /** Result of a successful purchase containing receipt data */
@@ -116,7 +116,8 @@ async function initIAP(): Promise<IAPStatus> {
 async function purchaseSubscription(
   packageTier: string,
 ): Promise<IAPPurchaseResult> {
-  const productId = TIER_TO_PRODUCT_ID[packageTier];
+  const normalizedTier = packageTier.toUpperCase();
+  const productId = TIER_TO_PRODUCT_ID[normalizedTier];
   if (!productId) {
     throw new Error(`Unknown package tier: ${packageTier}`);
   }

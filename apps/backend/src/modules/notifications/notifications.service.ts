@@ -1,6 +1,7 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, Inject, forwardRef } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 import { FirebaseProvider } from "./firebase.provider";
+import { HarmonyGateway } from "../harmony/harmony.gateway";
 import {
   RegisterDeviceDto,
   MarkReadDto,
@@ -106,6 +107,8 @@ export class NotificationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly firebase: FirebaseProvider,
+    @Inject(forwardRef(() => HarmonyGateway))
+    private readonly harmonyGateway: HarmonyGateway,
   ) {}
 
   // ─── Template Helpers ───────────────────────────────────────────────
@@ -218,6 +221,50 @@ export class NotificationsService {
         "Quiet hours timezone parse failed, skipping quiet hours check",
       );
       return false;
+    }
+  }
+
+  // ─── WebSocket Event Emitter ───────────────────────────────────────
+
+  /** Maps notification types to WebSocket event names. */
+  private static readonly TYPE_TO_WS_EVENT: Partial<
+    Record<NotificationType, string>
+  > = {
+    NEW_MATCH: "notification:new_match",
+    BADGE_EARNED: "notification:badge_earned",
+    HARMONY_INVITE: "notification:harmony_invite",
+  };
+
+  /**
+   * Emit a real-time WebSocket event for a notification.
+   * Only emits for notification types that have a mapped WS event.
+   */
+  private emitNotificationEvent(
+    userId: string,
+    type: NotificationType,
+    notificationId: string,
+    title: string,
+    body: string,
+    data?: Record<string, unknown>,
+  ): void {
+    const wsEvent = NotificationsService.TYPE_TO_WS_EVENT[type];
+    if (!wsEvent) {
+      return;
+    }
+
+    try {
+      this.harmonyGateway.notifyUser(userId, wsEvent, {
+        notificationId,
+        type,
+        title,
+        body,
+        data: data ?? {},
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      this.logger.warn(
+        `WS event emit basarisiz — kullanici: ${userId}, event: ${wsEvent}`,
+      );
     }
   }
 
@@ -514,6 +561,9 @@ export class NotificationsService {
         },
       });
 
+      // Emit real-time WS event even during quiet hours (push is suppressed, not WS)
+      this.emitNotificationEvent(userId, type, notification.id, title, body, data);
+
       this.logger.debug(
         `Sessiz saatler aktif — bildirim sadece DB'ye kaydedildi: ${userId}, tip: ${type}`,
       );
@@ -539,6 +589,9 @@ export class NotificationsService {
         },
       });
 
+      // Emit real-time WS event even when rate-limited (push is suppressed, not WS)
+      this.emitNotificationEvent(userId, type, notification.id, title, body, data);
+
       this.logger.warn(
         `Rate limit asildi — bildirim sadece DB'ye kaydedildi: ${userId} (max ${MAX_PUSH_PER_HOUR}/saat)`,
       );
@@ -561,6 +614,9 @@ export class NotificationsService {
         data: (data as object) ?? undefined,
       },
     });
+
+    // Emit real-time WS event for the notification
+    this.emitNotificationEvent(userId, type, notification.id, title, body, data);
 
     // Get user's active device tokens
     const devices = await this.prisma.deviceToken.findMany({

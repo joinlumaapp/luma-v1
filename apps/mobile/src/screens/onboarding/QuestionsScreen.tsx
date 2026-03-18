@@ -33,6 +33,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { OnboardingStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../stores/profileStore';
+import { useAuthStore } from '../../stores/authStore';
 import { compatibilityService } from '../../services/compatibilityService';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { onboardingColors, FullWidthButton } from '../../components/onboarding/OnboardingLayout';
@@ -66,7 +67,7 @@ const CORE_QUESTIONS = [
 interface NormalizedQuestion {
   id: string;
   question: string;
-  options: string[];
+  options: { id: string; label: string }[];
   isPremium: boolean;
 }
 
@@ -95,19 +96,19 @@ type SlideDirection = 'forward' | 'backward';
 
 export const QuestionsScreen: React.FC = () => {
   const navigation = useNavigation<QuestionsNavigationProp>();
-  const selectedMode = useProfileStore((s) => s.profile.intentionTag);
   const setProfileField = useProfileStore((s) => s.setField);
+  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE');
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, number>>({});
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [questions, setQuestions] = useState<NormalizedQuestion[]>([]);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
   const [phase, setPhase] = useState<ScreenPhase>('questions');
   const [cardKey, setCardKey] = useState(0);
   const [slideDirection, setSlideDirection] = useState<SlideDirection>('forward');
 
-  const showPremium = selectedMode === 'SERIOUS_RELATIONSHIP';
+  const showPremium = packageTier !== 'FREE';
 
   // Animated progress bar
   const progressWidth = useSharedValue(0);
@@ -117,7 +118,10 @@ export const QuestionsScreen: React.FC = () => {
   // Load questions
   useEffect(() => {
     const fallback = CORE_QUESTIONS.map((q) => ({
-      ...q, id: String(q.id), isPremium: false,
+      id: String(q.id),
+      question: q.question,
+      options: q.options.map((label, index) => ({ id: `q${q.id}-opt${index}`, label })),
+      isPremium: false,
     }));
     setQuestions(fallback);
     setIsLoadingQuestions(false);
@@ -131,7 +135,11 @@ export const QuestionsScreen: React.FC = () => {
             id: q.id,
             question: q.textTr || q.text || '',
             options: Array.isArray(q.options)
-              ? q.options.map((o) => (typeof o === 'string' ? o : o.labelTr))
+              ? q.options.map((o, index) =>
+                  typeof o === 'string'
+                    ? { id: `q${q.id}-opt${index}`, label: o }
+                    : { id: o.id, label: o.labelTr },
+                )
               : [],
             isPremium: q.isPremium,
           }));
@@ -182,7 +190,7 @@ export const QuestionsScreen: React.FC = () => {
   }, []);
 
   const showAnalysisAndResult = useCallback(
-    (finalAnswers: Record<string, number>) => {
+    (finalAnswers: Record<string, string>) => {
       setProfileField('answers', finalAnswers);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
@@ -223,16 +231,16 @@ export const QuestionsScreen: React.FC = () => {
     [phaseOpacity, phaseScale],
   );
 
-  const handleSelectOption = useCallback((idx: number) => {
+  const handleSelectOption = useCallback((option: { id: string; label: string }) => {
     // Haptic feedback on selection
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSelectedOption(idx);
+    setSelectedOption(option.id);
 
     // Auto-advance after 400ms
     if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
     autoAdvanceTimer.current = setTimeout(() => {
       if (!currentQuestion) return;
-      const newAnswers = { ...answers, [currentQuestion.id]: idx };
+      const newAnswers = { ...answers, [currentQuestion.id]: option.id };
       setAnswers(newAnswers);
       setSelectedOption(null);
       setSlideDirection('forward');
@@ -424,12 +432,12 @@ export const QuestionsScreen: React.FC = () => {
           <Text style={styles.questionText}>{currentQuestion.question}</Text>
           <View style={styles.optionsContainer}>
             {currentQuestion.options.map((option, index) => {
-              const isSelected = selectedOption === index;
+              const isSelected = selectedOption === option.id || answers[currentQuestion.id] === option.id;
               return (
                 <Pressable
-                  key={index}
-                  onPress={() => handleSelectOption(index)}
-                  accessibilityLabel={option}
+                  key={option.id}
+                  onPress={() => handleSelectOption(option)}
+                  accessibilityLabel={option.label}
                   accessibilityRole="button"
                   accessibilityState={{ selected: isSelected }}
                 >
@@ -449,7 +457,7 @@ export const QuestionsScreen: React.FC = () => {
                       )}
                     </View>
                     <Text style={[styles.optionText, isSelected && styles.optionTextSelected]}>
-                      {option}
+                      {option.label}
                     </Text>
                   </Animated.View>
                 </Pressable>

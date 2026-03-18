@@ -21,7 +21,10 @@ import { useTestModeStore } from '../../stores/testModeStore';
 import { useCoinStore } from '../../stores/coinStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { onboardingColors } from '../../components/onboarding/OnboardingLayout';
+import { surfaces, semanticColors } from '../../theme/colors';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
+import { fontWeights } from '../../theme/typography';
+import { analyticsService, ANALYTICS_EVENTS } from '../../services/analyticsService';
 
 type OTPNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'OTPVerification'>;
 type OTPRouteProp = RouteProp<AuthStackParamList, 'OTPVerification'>;
@@ -115,6 +118,9 @@ export const OTPVerificationScreen: React.FC = () => {
         inputRefs.current[0]?.focus();
         return;
       }
+
+      // Track OTP verified event
+      analyticsService.track(ANALYTICS_EVENTS.OTP_VERIFIED, {});
 
       // verifyOTP succeeded — check if user is new (not yet onboarded)
       const { isOnboarded, user, activateTrial } = useAuthStore.getState();
@@ -369,7 +375,7 @@ const styles = StyleSheet.create({
   backText: {
     fontSize: 20,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontWeight: fontWeights.semibold,
     color: onboardingColors.text,
   },
   content: {
@@ -380,31 +386,31 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontWeight: fontWeights.bold,
     color: onboardingColors.text,
     marginBottom: spacing.sm,
   },
   subtitle: {
     fontSize: 15,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: fontWeights.regular,
     color: onboardingColors.textSecondary,
     marginBottom: spacing.xl,
     lineHeight: 22,
   },
   warningBanner: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: semanticColors.error.light,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: '#FECACA',
+    borderColor: semanticColors.error.light,
   },
   warningText: {
     fontSize: 13,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-    color: '#DC2626',
+    fontWeight: fontWeights.medium,
+    color: semanticColors.error.dark,
     textAlign: 'center',
   },
   otpContainer: {
@@ -423,7 +429,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 24,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontWeight: fontWeights.bold,
     color: onboardingColors.text,
   },
   otpInputActive: {
@@ -431,7 +437,7 @@ const styles = StyleSheet.create({
   },
   otpInputFilled: {
     borderColor: onboardingColors.text,
-    backgroundColor: '#EDE8DF',
+    backgroundColor: surfaces.cream.backgroundElevated,
   },
   resendContainer: {
     alignItems: 'center',
@@ -441,13 +447,13 @@ const styles = StyleSheet.create({
   resendTimerText: {
     fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: fontWeights.regular,
     color: onboardingColors.textTertiary,
   },
   resendButton: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontWeight: fontWeights.semibold,
     color: onboardingColors.text,
   },
   verifyingContainer: {
@@ -457,7 +463,7 @@ const styles = StyleSheet.create({
   verifyingText: {
     fontSize: 15,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontWeight: fontWeights.medium,
     color: onboardingColors.textSecondary,
   },
   footer: {
@@ -477,7 +483,7 @@ const styles = StyleSheet.create({
   verifyButtonText: {
     fontSize: 16,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontWeight: fontWeights.semibold,
     color: onboardingColors.buttonText,
   },
   verifyButtonTextDisabled: {

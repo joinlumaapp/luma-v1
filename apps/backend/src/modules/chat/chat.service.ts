@@ -135,6 +135,11 @@ export class ChatService {
       throw new ForbiddenException("Bu konusmaya erisim yetkiniz yok");
     }
 
+    // Block access to messages if the match has been deactivated (unmatch)
+    if (!match.isActive) {
+      return { messages: [], hasMore: false };
+    }
+
     // Mark undelivered messages from the OTHER user as DELIVERED
     await this.prisma.chatMessage.updateMany({
       where: {

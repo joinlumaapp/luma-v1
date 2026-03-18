@@ -8,6 +8,12 @@ import { spacing, borderRadius, shadows } from '../../theme/spacing';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
+const INTENTION_TAG_LABELS: Record<string, string> = {
+  SERIOUS_RELATIONSHIP: 'Ciddi İlişki',
+  EXPLORING: 'Keşfediyorum',
+  NOT_SURE: 'Emin Değilim',
+};
+
 interface ProfileCardProps {
   name: string;
   age: number;
@@ -85,7 +91,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           {bio}
         </Text>
         <View style={styles.intentionChip}>
-          <Text style={styles.intentionText}>{intentionTag}</Text>
+          <Text style={styles.intentionText}>{INTENTION_TAG_LABELS[intentionTag] ?? intentionTag}</Text>
         </View>
       </View>
     </View>

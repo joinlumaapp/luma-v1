@@ -1,5 +1,6 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, Inject, forwardRef } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
+import { NotificationsService } from "../notifications/notifications.service";
 
 // Badge progress item returned by getBadgeProgress
 export interface BadgeProgressItem {
@@ -25,7 +26,11 @@ interface BadgeCriteria {
 export class BadgesService {
   private readonly logger = new Logger(BadgesService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(forwardRef(() => NotificationsService))
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   /**
    * Get all available badges in the system.
@@ -271,6 +276,12 @@ export class BadgesService {
     });
 
     this.logger.log(`Badge "${badgeKey}" awarded to user ${userId}`);
+
+    // Send push notification for badge earned (fire-and-forget)
+    this.notificationsService
+      .notifyBadgeEarned(userId, badge.nameTr)
+      .catch(() => {});
+
     return { awarded: true, goldReward: badge.goldReward };
   }
 
@@ -289,7 +300,8 @@ export class BadgesService {
       | "verification"
       | "relationship"
       | "swipe"
-      | "subscription",
+      | "subscription"
+      | "checkin",
   ): Promise<{ awarded: string[] }> {
     const awarded: string[] = [];
 
@@ -298,11 +310,12 @@ export class BadgesService {
       match: ["first_spark", "soul_mate"],
       harmony: ["chat_master"],
       answer: ["question_explorer"],
-      compatibility: ["soul_mate", "deep_match"],
+      compatibility: ["soul_mate"],
       verification: ["verified_star"],
       relationship: ["couple_goal"],
-      swipe: ["explorer"],
-      subscription: [],
+      swipe: [],
+      subscription: ["gold_member"],
+      checkin: ["explorer"],
     };
 
     const keysToCheck = hint
@@ -396,39 +409,23 @@ export class BadgesService {
       }
 
       case "explorer": {
-        // 50 swipes (profile explorations)
-        const swipeCount = await this.prisma.swipe.count({
-          where: { swiperId: userId },
-        });
-        return swipeCount >= 50;
-      }
-
-      case "deep_match": {
-        // Both users in a match have answered all 45 questions
-        const userAnswerCount = await this.prisma.userAnswer.count({
+        // 10 place check-ins (location explorer)
+        const checkInCount = await this.prisma.placeCheckIn.count({
           where: { userId },
         });
-        if (userAnswerCount < 45) return false;
+        return checkInCount >= 10;
+      }
 
-        // Check if any matched partner also answered all 45
-        const matches = await this.prisma.match.findMany({
+      case "gold_member": {
+        // User has an active Gold or higher subscription
+        const subscription = await this.prisma.subscription.findFirst({
           where: {
-            OR: [{ userAId: userId }, { userBId: userId }],
+            userId,
             isActive: true,
+            packageTier: { in: ["GOLD", "PRO", "RESERVED"] },
           },
-          select: { userAId: true, userBId: true },
-          take: 10,
         });
-
-        for (const match of matches) {
-          const partnerId =
-            match.userAId === userId ? match.userBId : match.userAId;
-          const partnerAnswerCount = await this.prisma.userAnswer.count({
-            where: { userId: partnerId },
-          });
-          if (partnerAnswerCount >= 45) return true;
-        }
-        return false;
+        return subscription !== null;
       }
 
       default:
@@ -527,20 +524,25 @@ export class BadgesService {
         break;
       }
 
-      case "swipe_count": {
-        currentValue = await this.prisma.swipe.count({
-          where: { swiperId: userId },
+      case "swipe_count":
+      case "checkin_count": {
+        currentValue = await this.prisma.placeCheckIn.count({
+          where: { userId },
         });
-        description = `${targetValue} profil kesfet`;
+        description = `${targetValue} mekana check-in yap`;
         break;
       }
 
-      case "deep_match": {
-        currentValue = await this.prisma.userAnswer.count({
-          where: { userId },
+      case "subscription": {
+        const activeSub = await this.prisma.subscription.findFirst({
+          where: {
+            userId,
+            isActive: true,
+            packageTier: { in: ["GOLD", "PRO", "RESERVED"] },
+          },
         });
-        description =
-          "45 uyumluluk sorusunu tamamla ve bir eslesmende de tamamlansin";
+        currentValue = activeSub ? 1 : 0;
+        description = "Gold veya ustu abonelik baslat";
         break;
       }
 

@@ -13,7 +13,7 @@ export interface RelationshipPartner {
 
 export interface RelationshipDetail {
   id: string;
-  status: 'PROPOSED' | 'ACTIVE' | 'HIDDEN' | 'ENDED';
+  status: 'PROPOSED' | 'ACTIVE' | 'HIDDEN' | 'ENDING' | 'ENDED';
   isVisible: boolean;
   activatedAt: string | null;
   durationDays: number;
@@ -27,10 +27,11 @@ export interface RelationshipStatusResponse {
 }
 
 export interface ActivateResponse {
-  id: string;
+  relationshipId: string;
   matchId: string;
   status: string;
   activatedAt: string;
+  message: string;
 }
 
 /** A single relationship milestone (achieved or upcoming) */
@@ -48,6 +49,15 @@ export interface RelationshipMilestone {
   currentValue: number;
   /** Target count for this milestone */
   targetValue: number;
+}
+
+/** Couple match entry for Couples Club feed */
+export interface CoupleMatch {
+  relationshipId: string;
+  userA: { userId: string; firstName: string; photoUrl: string };
+  userB: { userId: string; firstName: string; photoUrl: string };
+  compatibilityScore: number;
+  activeSince: string;
 }
 
 export interface MilestonesResponse {
@@ -86,6 +96,12 @@ export const relationshipService = {
   // Get relationship milestones
   getMilestones: async (): Promise<MilestonesResponse> => {
     const response = await api.get<MilestonesResponse>('/relationships/milestones');
+    return response.data;
+  },
+
+  // Get couple matches for Couples Club feed
+  getCoupleMatches: async (): Promise<CoupleMatch[]> => {
+    const response = await api.get<CoupleMatch[]>('/relationships/couple-matches');
     return response.data;
   },
 };

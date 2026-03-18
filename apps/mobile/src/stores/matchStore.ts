@@ -129,7 +129,7 @@ export const useMatchStore = create<MatchState>((set, get) => ({
   },
 
   getMatch: async (matchId) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
       const data = await matchService.getMatch(matchId);
       const matchDetail = mapDetailToMatchDetail(data);
@@ -151,9 +151,9 @@ export const useMatchStore = create<MatchState>((set, get) => ({
             { category: 'Sosyal Uyum', score: Math.max(0, percent - 5) },
           ],
         };
-        set({ selectedMatch: fallbackDetail, isLoading: false });
+        set({ selectedMatch: fallbackDetail, isLoading: false, error: 'Eşleşme bilgisi yüklenemedi' });
       } else {
-        set({ isLoading: false });
+        set({ isLoading: false, error: 'Eşleşme bilgisi yüklenemedi' });
       }
     }
   },

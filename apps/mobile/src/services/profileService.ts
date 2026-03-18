@@ -71,11 +71,21 @@ export const profileService = {
     photoUri: string,
     order: number
   ): Promise<{ id: string; url: string }> => {
+    // Determine MIME type from file extension
+    const extension = photoUri.split('.').pop()?.toLowerCase() ?? 'jpg';
+    const mimeTypes: Record<string, string> = {
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      webp: 'image/webp',
+    };
+    const mimeType = mimeTypes[extension] ?? 'image/jpeg';
+
     const formData = new FormData();
     formData.append('photo', {
       uri: photoUri,
-      type: 'image/jpeg',
-      name: `photo_${order}.jpg`,
+      type: mimeType,
+      name: `photo_${order}.${extension === 'jpeg' ? 'jpg' : extension}`,
     } as unknown as Blob);
     formData.append('order', String(order));
 

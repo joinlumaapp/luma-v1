@@ -9,26 +9,29 @@ import { BadgesService } from "../badges/badges.service";
 import { NotificationsService } from "../notifications/notifications.service";
 import { SearchService } from "../search/search.service";
 import { LumaCacheService, CACHE_KEYS } from "../cache/cache.service";
+import { TTL_DISCOVERY_FEED } from "../cache/cache-keys";
+import { HarmonyGateway } from "../harmony/harmony.gateway";
 import { SwipeDto, SwipeDirection } from "./dto";
 import { FeedFilterDto, GenderPreferenceParam } from "./dto/feed-filter.dto";
+import { calculateAge } from "../../common/utils/date.utils";
 
 // Turkish labels for compatibility dimension categories
 const DIMENSION_LABELS_TR: Record<string, string> = {
-  COMMUNICATION: "Iletisim Tarzi",
-  LIFE_GOALS: "Yasam Hedefleri",
-  VALUES: "Degerler",
-  LIFESTYLE: "Yasam Tarzi",
-  EMOTIONAL_INTELLIGENCE: "Duygusal Zeka",
-  RELATIONSHIP_EXPECTATIONS: "Iliski Beklentileri",
+  COMMUNICATION: "İletişim Tarzı",
+  LIFE_GOALS: "Yaşam Hedefleri",
+  VALUES: "Değerler",
+  LIFESTYLE: "Yaşam Tarzı",
+  EMOTIONAL_INTELLIGENCE: "Duygusal Zekâ",
+  RELATIONSHIP_EXPECTATIONS: "İlişki Beklentileri",
   SOCIAL_COMPATIBILITY: "Sosyal Uyum",
-  ATTACHMENT_STYLE: "Baglanma Tarzi",
+  ATTACHMENT_STYLE: "Bağlanma Tarzı",
   LOVE_LANGUAGE: "Sevgi Dili",
-  CONFLICT_STYLE: "Catisma Yaklasimi",
+  CONFLICT_STYLE: "Çatışma Yaklaşımı",
   FUTURE_VISION: "Gelecek Vizyonu",
-  INTELLECTUAL: "Entelektuel Uyum",
-  INTIMACY: "Yakinlik",
-  GROWTH_MINDSET: "Gelisim Odaklilik",
-  CORE_FEARS: "Temel Kaygilar",
+  INTELLECTUAL: "Entelektüel Uyum",
+  INTIMACY: "Yakınlık",
+  GROWTH_MINDSET: "Gelişim Odaklılık",
+  CORE_FEARS: "Temel Kaygılar",
 };
 
 // Threshold for a dimension to be considered "strong"
@@ -104,8 +107,8 @@ const MAX_PHOTO_COUNT_FOR_SCORE = 6;
 // ES relevance score weight (10% of total feed score)
 const ES_RELEVANCE_WEIGHT = 0.1;
 
-// Cache TTLs (seconds) — override shared defaults for discovery-specific durations
-const DISCOVERY_FEED_TTL = 300; // 5 minutes
+// Cache TTLs (seconds) — discovery-specific durations
+// TTL_DISCOVERY_FEED imported from cache-keys.ts (single source of truth: 300s / 5 min)
 const PROFILE_VIEW_TTL = 600; // 10 minutes
 const DAILY_PICKS_TTL = 3600; // 1 hour
 
@@ -155,6 +158,7 @@ export class DiscoveryService {
     private readonly notificationsService: NotificationsService,
     private readonly searchService: SearchService,
     private readonly cache: LumaCacheService,
+    private readonly harmonyGateway: HarmonyGateway,
   ) {}
 
   // ─── Public: Discovery Feed ─────────────────────────────────────
@@ -441,7 +445,7 @@ export class DiscoveryService {
     }> = [];
 
     for (const profile of candidates) {
-      const age = this.calculateAge(profile.birthDate);
+      const age = calculateAge(profile.birthDate);
       if (age < minAge || age > maxAge) continue;
 
       let distanceKm: number | null = null;
@@ -667,7 +671,7 @@ export class DiscoveryService {
     if (!cursor) {
       const cacheKey = CACHE_KEYS.discoveryFeed(userId);
       this.cache
-        .set(cacheKey, result, DISCOVERY_FEED_TTL)
+        .set(cacheKey, result, TTL_DISCOVERY_FEED)
         .catch((err) =>
           this.logger.warn("Feed cache write failed", String(err)),
         );
@@ -698,7 +702,7 @@ export class DiscoveryService {
   async swipe(userId: string, dto: SwipeDto) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { packageTier: true },
+      select: { packageTier: true, profile: { select: { firstName: true } } },
     });
 
     if (!user) {
@@ -927,13 +931,35 @@ export class DiscoveryService {
       };
     });
 
-    // Send push notifications for matches and super likes (outside transaction, fire-and-forget)
+    // Send push notifications + real-time WS events for matches (outside transaction, fire-and-forget)
     if (result.isMatch && result.swiperName && result.targetName) {
       this.notificationsService
         .notifyNewMatch(dto.targetUserId, result.swiperName)
         .catch(() => {});
       this.notificationsService
         .notifyNewMatch(userId, result.targetName)
+        .catch(() => {});
+
+      // Emit real-time WebSocket match event to both users
+      const matchEventData = {
+        matchId: result.matchId,
+        animationType: result.animationType,
+      };
+      this.harmonyGateway.notifyUser(userId, 'notification:new_match', {
+        ...matchEventData,
+        partnerName: result.targetName,
+      });
+      this.harmonyGateway.notifyUser(dto.targetUserId, 'notification:new_match', {
+        ...matchEventData,
+        partnerName: result.swiperName,
+      });
+    }
+
+    // Send push notification for super likes (outside transaction, fire-and-forget)
+    if (action === "SUPER_LIKE") {
+      const swiperName = user.profile?.firstName ?? "Biri";
+      this.notificationsService
+        .notifySuperLike(dto.targetUserId, swiperName)
         .catch(() => {});
     }
 
@@ -1122,7 +1148,7 @@ export class DiscoveryService {
         userId: swipe.swiperId,
         firstName: swipe.swiper.profile?.firstName ?? "",
         age: swipe.swiper.profile?.birthDate
-          ? this.calculateAge(swipe.swiper.profile.birthDate)
+          ? calculateAge(swipe.swiper.profile.birthDate)
           : 0,
         photoUrl: photo?.thumbnailUrl ?? photo?.url ?? "",
         compatibilityPercent: Math.round(score),
@@ -1280,7 +1306,7 @@ export class DiscoveryService {
         return {
           userId: pickedUserId,
           firstName: profile.firstName,
-          age: this.calculateAge(profile.birthDate),
+          age: calculateAge(profile.birthDate),
           city: profile.city ?? "",
           bio: profile.bio ?? "",
           photoUrl: photo?.thumbnailUrl ?? photo?.url ?? "",
@@ -1489,16 +1515,6 @@ export class DiscoveryService {
 
   private orderIds(a: string, b: string): { first: string; second: string } {
     return a < b ? { first: a, second: b } : { first: b, second: a };
-  }
-
-  private calculateAge(birthDate: Date): number {
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
   }
 
   private getToday(): Date {

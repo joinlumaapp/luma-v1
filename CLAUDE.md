@@ -6,7 +6,7 @@ LUMA is a premium compatibility-based dating app with a **LOCKED** V1 architectu
 - **45 Questions** (20 core + 25 premium)
 - **3 Intention Tags**: Serious Relationship, Exploring, Not Sure
 - **4 Packages**: Free, Gold, Pro, Reserved
-- **4 Menu Tabs**, **2 Match Animations**, **2 Compatibility Levels**
+- **5 Menu Tabs**, **2 Match Animations**, **2 Compatibility Levels**
 
 ## Tech Stack
 - **Mobile**: React Native + TypeScript (apps/mobile/)

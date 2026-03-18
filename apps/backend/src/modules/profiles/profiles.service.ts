@@ -6,9 +6,12 @@ import {
 } from "@nestjs/common";
 import * as crypto from "crypto";
 import { PrismaService } from "../../prisma/prisma.service";
+import { ContentScannerService } from "../moderation/content-scanner.service";
+import { LumaCacheService } from "../cache/cache.service";
 import { UpdateProfileDto, SetIntentionTagDto, ReorderPhotosDto } from "./dto";
+import { calculateAge } from "../../common/utils/date.utils";
 
-const MAX_PHOTOS = 20;
+const MAX_PHOTOS = 6;
 const MIN_PHOTOS = 2;
 const MAX_PHOTO_SIZE_MB = 10;
 const MIN_AGE = 18;
@@ -19,7 +22,11 @@ const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 export class ProfilesService {
   private readonly logger = new Logger(ProfilesService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly contentScanner: ContentScannerService,
+    private readonly cache: LumaCacheService,
+  ) {}
 
   /**
    * Get a user's profile. When `isOwner` is true (default, for /profiles/me),
@@ -81,7 +88,7 @@ export class ProfilesService {
 
     // Validate age if birthDate is provided
     if (dto.birthDate) {
-      const age = this.calculateAge(new Date(dto.birthDate));
+      const age = calculateAge(new Date(dto.birthDate));
       if (age < MIN_AGE) {
         throw new BadRequestException(
           "Uygulamayı kullanmak için en az 18 yaşında olmalısınız",
@@ -248,6 +255,33 @@ export class ProfilesService {
     photoId: string,
     userId: string,
   ): Promise<{ approved: boolean; reason: string }> {
+    // Retrieve the photo URL for content scanning
+    const photo = await this.prisma.userPhoto.findUnique({
+      where: { id: photoId },
+      select: { url: true },
+    });
+
+    if (!photo) {
+      return { approved: false, reason: "photo_not_found" };
+    }
+
+    // Run content scanner (auto-approves in dev, scans via AWS Rekognition in prod)
+    const scanResult = await this.contentScanner.scanPhoto(photo.url);
+
+    if (!scanResult.safe) {
+      // Content scanner flagged the photo — reject and delete it
+      this.logger.warn(
+        `Photo ${photoId} for user ${userId} rejected by content scanner. ` +
+          `Labels: ${scanResult.labels.join(", ")}. Confidence: ${scanResult.confidence}`,
+      );
+
+      await this.prisma.userPhoto.delete({
+        where: { id: photoId },
+      });
+
+      return { approved: false, reason: "content_policy_violation" };
+    }
+
     const isDev = process.env.NODE_ENV !== "production";
 
     if (isDev) {
@@ -268,7 +302,8 @@ export class ProfilesService {
     // PRODUCTION: Photo stays as isApproved=false, awaiting review
     this.logger.log(
       `Photo ${photoId} for user ${userId} queued for moderation review. ` +
-        `Manual approval or AWS Rekognition integration required.`,
+        `Content scanner passed (confidence: ${scanResult.confidence}). ` +
+        `Manual approval or additional AI review required.`,
     );
 
     return { approved: false, reason: "pending_moderation_review" };
@@ -278,6 +313,15 @@ export class ProfilesService {
    * Delete a specific photo by ID.
    */
   async deletePhoto(userId: string, photoId: string) {
+    // Check minimum photo count before deletion
+    const photoCount = await this.prisma.userPhoto.count({
+      where: { userId },
+    });
+
+    if (photoCount <= MIN_PHOTOS) {
+      throw new BadRequestException("Minimum fotoğraf sayısına ulaşıldı");
+    }
+
     // Verify photo belongs to user
     const photo = await this.prisma.userPhoto.findFirst({
       where: { id: photoId, userId },
@@ -532,35 +576,33 @@ export class ProfilesService {
   ): Promise<void> {
     if (viewerId === viewedUserId) return;
 
-    // Store in memory cache (keyed by viewed user)
-    const now = new Date();
-    const viewKey = `${viewerId}:${viewedUserId}`;
+    const dedupKey = `profile:view:dedup:${viewerId}:${viewedUserId}`;
 
-    // Prevent duplicate views within 1 hour
-    const existingView = ProfilesService.profileViews.get(viewKey);
-    if (
-      existingView &&
-      now.getTime() - existingView.viewedAt.getTime() < 60 * 60 * 1000
-    ) {
+    // Prevent duplicate views within 1 hour using Redis
+    const existing = await this.cache.get<string>(dedupKey);
+    if (existing) {
       return;
     }
 
-    // Evict expired entries when the map grows too large to prevent memory leaks.
-    // Entries older than 1 hour are no longer useful (duplicate-check window).
-    if (ProfilesService.profileViews.size > 10_000) {
-      const oneHourAgo = now.getTime() - 60 * 60 * 1000;
-      for (const [key, view] of ProfilesService.profileViews) {
-        if (view.viewedAt.getTime() < oneHourAgo) {
-          ProfilesService.profileViews.delete(key);
-        }
-      }
-    }
+    // Set dedup key with 1-hour TTL
+    await this.cache.set(dedupKey, "1", 3600);
 
-    ProfilesService.profileViews.set(viewKey, {
-      viewerId,
-      viewedUserId,
-      viewedAt: now,
-    });
+    // Append view record to the viewed user's visitor list in Redis.
+    // The list is stored as a JSON array with a 7-day TTL.
+    const now = Date.now();
+    const visitorsKey = `profile:visitors:${viewedUserId}`;
+    const visitors =
+      (await this.cache.get<
+        Array<{ viewerId: string; viewedAt: number }>
+      >(visitorsKey)) ?? [];
+
+    // Prune entries older than 7 days
+    const sevenDaysAgoMs = now - 7 * 24 * 3600 * 1000;
+    const pruned = visitors.filter((v) => v.viewedAt >= sevenDaysAgoMs);
+
+    pruned.push({ viewerId, viewedAt: now });
+
+    await this.cache.set(visitorsKey, pruned, 7 * 24 * 3600);
   }
 
   /**
@@ -591,16 +633,20 @@ export class ProfilesService {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    // Collect visitor IDs from in-memory store
-    const visitorEntries: Array<{ viewerId: string; viewedAt: Date }> = [];
-    for (const [, view] of ProfilesService.profileViews) {
-      if (view.viewedUserId === userId && view.viewedAt >= sevenDaysAgo) {
-        visitorEntries.push({
-          viewerId: view.viewerId,
-          viewedAt: view.viewedAt,
-        });
-      }
-    }
+    // Collect visitor IDs from Redis store
+    const visitorsKey = `profile:visitors:${userId}`;
+    const rawVisitors =
+      (await this.cache.get<
+        Array<{ viewerId: string; viewedAt: number }>
+      >(visitorsKey)) ?? [];
+
+    const visitorEntries: Array<{ viewerId: string; viewedAt: Date }> =
+      rawVisitors
+        .filter((v) => v.viewedAt >= sevenDaysAgo.getTime())
+        .map((v) => ({
+          viewerId: v.viewerId,
+          viewedAt: new Date(v.viewedAt),
+        }));
 
     // Sort by most recent first
     visitorEntries.sort((a, b) => b.viewedAt.getTime() - a.viewedAt.getTime());
@@ -760,27 +806,11 @@ export class ProfilesService {
     return degrees * (Math.PI / 180);
   }
 
-  // ─── In-Memory Profile View Store ──────────────────────────────
-
-  private static profileViews: Map<
-    string,
-    { viewerId: string; viewedUserId: string; viewedAt: Date }
-  > = new Map();
+  // Profile view data is now stored in Redis via LumaCacheService.
+  // Keys: profile:view:dedup:{viewerId}:{viewedUserId} (1h TTL, dedup)
+  //        profile:visitors:{viewedUserId} (7d TTL, visitor list)
 
   // ─── Private Helpers ───────────────────────────────────────────
-
-  private calculateAge(birthDate: Date): number {
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
-    return age;
-  }
 
   private calculateCompletion(user: {
     isSmsVerified: boolean;

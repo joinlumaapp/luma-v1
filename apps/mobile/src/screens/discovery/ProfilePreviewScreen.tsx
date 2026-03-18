@@ -734,21 +734,21 @@ export const ProfilePreviewScreen: React.FC = () => {
         <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: spacing.sm }} />
       )}
 
-      {/* Stats card — dating-relevant metrics from profile data */}
+      {/* Stats card — social metrics */}
       <View style={styles.statsCard}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{compatScore != null ? `%${compatScore}` : '—'}</Text>
-          <Text style={styles.statLabel}>UYUM</Text>
+          <Text style={styles.statValue}>{(profile as Record<string, unknown>)?.postCount as number ?? 0}</Text>
+          <Text style={styles.statLabel}>GÖNDERİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{compatibility ? Object.keys(compatibility.breakdown).length : 0}</Text>
-          <Text style={styles.statLabel}>KATEGORİ</Text>
+          <Text style={styles.statValue}>{(profile as Record<string, unknown>)?.followerCount as number ?? 0}</Text>
+          <Text style={styles.statLabel}>TAKİPÇİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{profile?.photoUrls?.length ?? 0}</Text>
-          <Text style={styles.statLabel}>FOTOĞRAF</Text>
+          <Text style={styles.statValue}>{(profile as Record<string, unknown>)?.followingCount as number ?? 0}</Text>
+          <Text style={styles.statLabel}>TAKİP</Text>
         </View>
       </View>
     </View>
@@ -922,6 +922,7 @@ const styles = StyleSheet.create({
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   userName: {
@@ -930,6 +931,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
     letterSpacing: -0.5,
+    flexShrink: 1,
   },
   jobTitle: {
     fontSize: 15,
@@ -1003,13 +1005,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     paddingVertical: spacing.md + 4,
-    paddingHorizontal: spacing.xl,
+    paddingHorizontal: spacing.md,
   },
   statItem: {
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
-    paddingHorizontal: 12,
+    paddingHorizontal: 4,
   },
   statValue: {
     fontSize: 22,

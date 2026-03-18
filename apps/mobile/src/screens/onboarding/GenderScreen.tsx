@@ -20,16 +20,18 @@ import {
 
 type GenderNavigationProp = NativeStackNavigationProp<OnboardingStackParamList, 'Gender'>;
 
-type GenderOption = 'MALE' | 'FEMALE';
+type GenderOption = 'MALE' | 'FEMALE' | 'OTHER';
 
 interface GenderChoice {
   value: GenderOption;
   label: string;
+  icon: string;
 }
 
 const GENDER_OPTIONS: GenderChoice[] = [
-  { value: 'MALE', label: 'Erkek' },
-  { value: 'FEMALE', label: 'Kadın' },
+  { value: 'MALE', label: 'Erkek', icon: 'male-outline' },
+  { value: 'FEMALE', label: 'Kadın', icon: 'female-outline' },
+  { value: 'OTHER', label: 'Diğer', icon: 'people-outline' },
 ];
 
 export const GenderScreen: React.FC = () => {

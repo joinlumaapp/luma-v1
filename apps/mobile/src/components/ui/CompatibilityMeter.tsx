@@ -8,7 +8,7 @@
  *   - 50-80: yellow to green
  *   - 80-100: green to blue (LUMA brand purple)
  * - Large centered percentage number
- * - "Super Uyumlu" label for scores >= 80
+ * - "Super Uyumlu" label for scores >= 90
  * - Smooth mount animation with configurable duration
  *
  * @example
@@ -59,17 +59,15 @@ interface CompatibilityMeterProps {
 // ─── Score-based color calculation ────────────────────────────
 
 function getScoreColor(score: number): string {
-  if (score >= 80) return palette.purple[500]; // LUMA brand purple for excellent
-  if (score >= 65) return '#10B981';            // Green for good
-  if (score >= 50) return palette.gold[500];    // Yellow/gold for moderate
-  if (score >= 30) return '#F59E0B';            // Orange for low
-  return '#EF4444';                              // Red for very low
+  if (score >= 90) return '#10B981';            // Green for super compatibility
+  if (score >= 70) return '#F59E0B';            // Amber/orange for good
+  return palette.purple[500];                    // LUMA brand purple for standard
 }
 
 function getGlowColor(score: number): string {
-  if (score >= 80) return palette.purple[400];
-  if (score >= 50) return '#10B981';
-  return palette.gold[500];
+  if (score >= 90) return '#10B981';
+  if (score >= 70) return '#F59E0B';
+  return palette.purple[400];
 }
 
 // ─── Half-ring segment ────────────────────────────────────────
@@ -136,7 +134,7 @@ const CompatibilityMeterInner: React.FC<CompatibilityMeterProps> = ({
   const effectiveStrokeWidth = strokeWidth ?? Math.max(3, size * 0.04);
   const ringColor = getScoreColor(clampedScore);
   const glowColor = getGlowColor(clampedScore);
-  const isSuper = clampedScore >= 80;
+  const isSuper = clampedScore >= 90;
   const trackColor = 'rgba(255, 255, 255, 0.1)';
 
   // Animation shared values

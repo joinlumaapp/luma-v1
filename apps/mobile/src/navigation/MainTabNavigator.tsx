@@ -158,7 +158,7 @@ const TAB_ICONS: Record<string, { active: keyof typeof Ionicons.glyphMap; inacti
 const TabIcon: React.FC<{ name: string; focused: boolean }> = ({ name, focused }) => {
   const icons = TAB_ICONS[name];
   const iconName = icons ? (focused ? icons.active : icons.inactive) : 'help-outline';
-  const iconColor = focused ? '#8B5CF6' : 'rgba(255, 255, 255, 0.5)';
+  const iconColor = focused ? '#8B5CF6' : 'rgba(150, 150, 150, 0.7)';
 
   return (
     <View style={styles.tabIconContainer}>
@@ -401,17 +401,14 @@ export const MainTabNavigator: React.FC = () => {
   // Notification store integration
   const notifUnreadCount = useNotificationStore((s) => s.unreadCount);
   const showPermissionModal = useNotificationStore((s) => s.showPermissionModal);
-  const setupForegroundListener = useNotificationStore((s) => s.setupForegroundListener);
   const checkAndPromptPermission = useNotificationStore((s) => s.checkAndPromptPermission);
   const allowPermission = useNotificationStore((s) => s.allowPermission);
   const dismissPermissionModal = useNotificationStore((s) => s.dismissPermissionModal);
 
-  // Setup foreground listener + permission prompt on mount
+  // Permission prompt on mount (foreground listener is handled by useNotificationHandler hook)
   useEffect(() => {
-    const cleanup = setupForegroundListener();
     checkAndPromptPermission();
-    return cleanup;
-  }, [setupForegroundListener, checkAndPromptPermission]);
+  }, [checkAndPromptPermission]);
 
   return (
     <>

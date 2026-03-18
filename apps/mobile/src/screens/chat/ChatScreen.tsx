@@ -297,7 +297,9 @@ export const ChatScreen: React.FC = () => {
       presenceService.getBatchPresence([matchId]).then((data) => {
         const presence = data[matchId];
         if (presence) setPartnerLastActive(presence.lastActiveAt);
-      }).catch(() => {});
+      }).catch(() => {
+        // Presence fetch is non-critical, silently ignore
+      });
     });
     return () => task.cancel();
   }, [matchId, fetchMessages, markAsRead, hydrateFromStorage]);
@@ -338,13 +340,17 @@ export const ChatScreen: React.FC = () => {
     // Free users: matched chats are free, only DMs to non-matches cost Jeton
     // Since ChatScreen is only reachable from matched conversations, messages are free
 
-    const sent = await sendMessage(matchId, trimmed);
-    if (sent) {
-      setInputText('');
-      setShowLimitReached(false);
-      stopTyping();
-    } else {
-      setShowLimitReached(true);
+    try {
+      const sent = await sendMessage(matchId, trimmed);
+      if (sent) {
+        setInputText('');
+        setShowLimitReached(false);
+        stopTyping();
+      } else {
+        setShowLimitReached(true);
+      }
+    } catch {
+      Alert.alert('Hata', 'Mesaj gönderilemedi. Lütfen tekrar deneyin.');
     }
   }, [inputText, isSending, matchId, sendMessage, isPremiumTier, coinBalance, sendInstantMessage, navigation, stopTyping]);
 

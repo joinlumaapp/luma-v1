@@ -71,6 +71,8 @@ const MemoizedConversationCard = memo<ConversationCardProps>(({ item, onPress, o
       style={styles.conversationCard}
       onPress={() => onPress(item.matchId, item.name, item.photoUrl)}
       activeOpacity={0.7}
+      accessibilityLabel={`${item.name} ile sohbet${item.unreadCount > 0 ? `, ${item.unreadCount} okunmamış mesaj` : ''}${item.isOnline ? ', çevrimiçi' : ''}`}
+      accessibilityRole="button"
     >
       {/* Avatar — tappable to open profile */}
       <TouchableWithoutFeedback

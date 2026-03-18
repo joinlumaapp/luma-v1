@@ -207,10 +207,9 @@ export const CompatibilityPreviewCard: React.FC<CompatibilityPreviewCardProps> =
   const isSuper = level === 'super';
 
   const getScoreColor = (score: number): string => {
-    if (score >= 90) return colors.success;
-    if (score >= 70) return colors.accent;
-    if (score >= 50) return colors.warning;
-    return colors.textSecondary;
+    if (score >= 90) return '#10B981';   // Green for super compatibility
+    if (score >= 70) return '#F59E0B';   // Amber/orange for good
+    return colors.primary;               // Purple for standard
   };
 
   const scoreColor = getScoreColor(compatibilityPercent);
@@ -302,9 +301,9 @@ export const CompatibilityPreviewCard: React.FC<CompatibilityPreviewCardProps> =
             {
               backgroundColor:
                 compatibilityPercent >= 90
-                  ? colors.success + '15'
+                  ? '#10B981' + '15'
                   : compatibilityPercent >= 70
-                    ? colors.accent + '15'
+                    ? '#F59E0B' + '15'
                     : colors.primary + '15',
             },
           ]}
@@ -315,9 +314,9 @@ export const CompatibilityPreviewCard: React.FC<CompatibilityPreviewCardProps> =
               {
                 color:
                   compatibilityPercent >= 90
-                    ? colors.success
+                    ? '#10B981'
                     : compatibilityPercent >= 70
-                      ? colors.accent
+                      ? '#F59E0B'
                       : colors.primary,
               },
             ]}

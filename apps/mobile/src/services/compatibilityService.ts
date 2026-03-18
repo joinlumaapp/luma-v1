@@ -113,13 +113,13 @@ export const compatibilityService = {
     await api.post('/compatibility/answers/bulk', { answers });
   },
 
-  // Submit answers as a Record<questionId, answerIndex> (onboarding compat)
+  // Submit answers as a Record<questionId, optionId> (onboarding compat)
   // Uses bulk endpoint to send all answers in a single request
-  submitAnswers: async (answers: Record<string, number>): Promise<void> => {
+  submitAnswers: async (answers: Record<string, string>): Promise<void> => {
     const bulkItems: BulkAnswerItem[] = Object.entries(answers).map(
-      ([questionId, answerIndex]) => ({
+      ([questionId, optionId]) => ({
         questionId,
-        optionId: String(answerIndex),
+        optionId,
       }),
     );
     await api.post('/compatibility/answers/bulk', { answers: bulkItems });

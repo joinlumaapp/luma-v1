@@ -45,8 +45,8 @@ const TIER_COLORS: Record<PackageTier, string> = {
 
 const TIER_LABELS: Record<PackageTier, string> = {
   FREE: 'Ücretsiz',
-  GOLD: 'Premium',
-  PRO: 'Supreme',
+  GOLD: 'Gold',
+  PRO: 'Pro',
   RESERVED: 'Reserved',
 };
 
@@ -65,14 +65,14 @@ const FEATURES: ComparisonFeature[] = [
   {
     label: 'Beğeni limiti',
     FREE: '20/gün',
-    GOLD: 'Sınırsız',
+    GOLD: '50/gün',
     PRO: 'Sınırsız',
     RESERVED: 'Sınırsız',
   },
   {
     label: 'Süper Beğeni',
     FREE: '1/gün',
-    GOLD: '5/gün',
+    GOLD: '10/gün',
     PRO: 'Sınırsız',
     RESERVED: 'Sınırsız',
   },
@@ -100,9 +100,9 @@ const FEATURES: ComparisonFeature[] = [
   {
     label: 'Boost hediye',
     FREE: '\u2717',
-    GOLD: '\u2717',
-    PRO: '3/ay',
-    RESERVED: '5/ay',
+    GOLD: '4/ay',
+    PRO: '4/ay',
+    RESERVED: 'Sınırsız',
   },
   {
     label: 'Beğenilerin öncelikli',
@@ -142,7 +142,7 @@ const FEATURES: ComparisonFeature[] = [
   {
     label: 'Günlük mesaj',
     FREE: '1/gün',
-    GOLD: '5/gün',
+    GOLD: '10/gün',
     PRO: '10/gün',
     RESERVED: 'Sınırsız',
   },

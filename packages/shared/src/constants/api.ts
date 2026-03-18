@@ -239,9 +239,23 @@ export const WS_EVENTS = {
   HARMONY_CARD_REVEALED: 'harmony:card_revealed',
   HARMONY_REACTION: 'harmony:reaction',
   HARMONY_SESSION_STATE: 'harmony:session_state',
-  HARMONY_TIMER_UPDATE: 'harmony:timer_sync', // was 'harmony:timer_update'
   HARMONY_EXTENDED: 'harmony:extended',
-  HARMONY_ENDED: 'harmony:session_ended', // was 'harmony:ended'
+  // Harmony Room — Client-to-Server events
+  HARMONY_SEND_MESSAGE: 'harmony:send_message',
+  HARMONY_REVEAL_CARD: 'harmony:reveal_card',
+  HARMONY_REACT: 'harmony:react',
+  HARMONY_REQUEST_TIMER: 'harmony:request_timer',
+  // Harmony Room — Server-to-Client events
+  HARMONY_USER_JOINED: 'harmony:user_joined',
+  HARMONY_USER_LEFT: 'harmony:user_left',
+  HARMONY_ERROR: 'harmony:error',
+  HARMONY_SESSION_ENDED: 'harmony:session_ended',
+  HARMONY_TIMER_SYNC: 'harmony:timer_sync',
+  // Video Consent
+  HARMONY_VIDEO_CONSENT_REQUEST: 'harmony:video_consent_request',
+  HARMONY_VIDEO_CONSENT_RESPONSE: 'harmony:video_consent_response',
+  HARMONY_VIDEO_CONSENT_ACCEPTED: 'harmony:video_consent_accepted',
+  HARMONY_VIDEO_CONSENT_REJECTED: 'harmony:video_consent_rejected',
   // Voice/Video — WebRTC Signaling
   HARMONY_VOICE_START: 'harmony:voice_start',
   HARMONY_VOICE_END: 'harmony:voice_end',

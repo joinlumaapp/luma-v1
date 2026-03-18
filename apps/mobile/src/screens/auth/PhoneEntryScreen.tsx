@@ -29,7 +29,10 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../navigation/types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { onboardingColors } from '../../components/onboarding/OnboardingLayout';
+import { surfaces } from '../../theme/colors';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
+import { fontWeights } from '../../theme/typography';
+import { analyticsService, ANALYTICS_EVENTS } from '../../services/analyticsService';
 
 type PhoneEntryNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'PhoneEntry'>;
 
@@ -74,6 +77,10 @@ export const PhoneEntryScreen: React.FC = () => {
 
   const handleSendCode = async () => {
     if (!isValid) return;
+    // Track signup_started event when user initiates phone verification
+    analyticsService.track(ANALYTICS_EVENTS.SIGNUP_STARTED, {
+      country_code: selectedCountry.code,
+    });
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     buttonScale.value = withSequence(
       withTiming(0.95, { duration: 80 }),
@@ -276,14 +283,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontWeight: fontWeights.bold,
     color: onboardingColors.text,
     marginBottom: spacing.sm,
   },
   subtitle: {
     fontSize: 15,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: fontWeights.regular,
     color: onboardingColors.textSecondary,
     marginBottom: spacing.xl,
     lineHeight: 22,
@@ -309,7 +316,7 @@ const styles = StyleSheet.create({
   countryCode: {
     fontSize: 15,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontWeight: fontWeights.semibold,
     color: onboardingColors.text,
   },
   dropdownArrow: {
@@ -333,7 +340,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     fontSize: 17,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontWeight: fontWeights.medium,
     color: onboardingColors.text,
     letterSpacing: 1.5,
   },
@@ -353,7 +360,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   countryOptionActive: {
-    backgroundColor: '#EDE8DF',
+    backgroundColor: surfaces.cream.backgroundElevated,
   },
   countryOptionFlag: {
     fontSize: 20,
@@ -361,7 +368,7 @@ const styles = StyleSheet.create({
   countryOptionText: {
     fontSize: 15,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: fontWeights.regular,
     color: onboardingColors.text,
     flex: 1,
   },
@@ -369,7 +376,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: onboardingColors.checkGreen,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontWeight: fontWeights.semibold,
   },
   footer: {
     paddingHorizontal: spacing.lg,
@@ -389,7 +396,7 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontSize: 16,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontWeight: fontWeights.semibold,
     color: onboardingColors.buttonText,
     letterSpacing: 0.3,
   },
@@ -399,7 +406,7 @@ const styles = StyleSheet.create({
   securityNote: {
     fontSize: 13,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: fontWeights.regular,
     color: onboardingColors.textTertiary,
     textAlign: 'center',
   },

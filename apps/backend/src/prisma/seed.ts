@@ -397,11 +397,11 @@ const USER_BADGE_AWARDS: Record<number, string[]> = {
   3: ["first_spark", "chat_master"], // Can — NOTE: chat_master manually awarded in seed (requires 5 Harmony sessions, not met by seed data)
   4: ["first_spark", "soul_mate"], // Selin
   5: ["first_spark"], // Burak
-  6: ["first_spark", "verified_star", "deep_match"], // Defne
-  7: ["first_spark", "verified_star", "deep_match"], // Emre
+  6: ["first_spark", "verified_star", "gold_member"], // Defne
+  7: ["first_spark", "verified_star", "gold_member"], // Emre
   8: ["first_spark"], // Ece
   9: ["first_spark", "soul_mate"], // Kaan
-  10: ["first_spark", "verified_star", "question_explorer", "deep_match"], // Baran (RESERVED)
+  10: ["first_spark", "verified_star", "question_explorer", "gold_member"], // Baran (RESERVED)
 };
 
 // Interest tags per user (indices into INTEREST_TAGS)
@@ -686,6 +686,10 @@ async function seedDemoData(): Promise<void> {
   const matchIds = await seedDemoMatches(userIds);
   console.log(`  ${matchIds.length} matches created`);
 
+  // 3b. Create additional compatibility scores (non-matched pairs)
+  await seedAdditionalCompatibilityScores(userIds);
+  console.log("  Additional compatibility scores seeded");
+
   // 4. Create chat messages
   await seedDemoMessages(userIds, matchIds);
   console.log("  Chat messages seeded");
@@ -965,6 +969,61 @@ async function seedDemoMatches(userIds: string[]): Promise<string[]> {
   }
 
   return matchIds;
+}
+
+// ============================================================
+// ADDITIONAL COMPATIBILITY SCORES (non-matched pairs)
+// ============================================================
+
+async function seedAdditionalCompatibilityScores(
+  userIds: string[],
+): Promise<void> {
+  // Pre-computed pairs that already have scores via seedDemoMatches
+  const existingPairs = new Set(
+    MATCH_PAIRS.map((p) => `${p.userAIdx}-${p.userBIdx}`),
+  );
+
+  // Additional cross-gender pairs for discovery feed realism
+  const additionalPairs: Array<{
+    aIdx: number;
+    bIdx: number;
+    score: number;
+    level: CompatibilityLevel;
+  }> = [
+    { aIdx: 1, bIdx: 2, score: 68.4, level: CompatibilityLevel.NORMAL },  // Ahmet & Zeynep
+    { aIdx: 3, bIdx: 0, score: 72.9, level: CompatibilityLevel.NORMAL },  // Can & Elif
+    { aIdx: 5, bIdx: 4, score: 61.5, level: CompatibilityLevel.NORMAL },  // Burak & Selin
+    { aIdx: 7, bIdx: 8, score: 78.6, level: CompatibilityLevel.NORMAL },  // Emre & Ece
+    { aIdx: 9, bIdx: 6, score: 65.2, level: CompatibilityLevel.NORMAL },  // Kaan & Defne
+    { aIdx: 10, bIdx: 0, score: 85.1, level: CompatibilityLevel.SUPER },  // Baran & Elif
+    { aIdx: 10, bIdx: 4, score: 59.3, level: CompatibilityLevel.NORMAL }, // Baran & Selin
+    { aIdx: 1, bIdx: 6, score: 76.0, level: CompatibilityLevel.NORMAL },  // Ahmet & Defne
+  ];
+
+  const scoresToCreate = additionalPairs.filter(
+    (p) => !existingPairs.has(`${p.aIdx}-${p.bIdx}`),
+  );
+
+  for (const pair of scoresToCreate) {
+    await prisma.compatibilityScore.create({
+      data: {
+        userAId: userIds[pair.aIdx],
+        userBId: userIds[pair.bIdx],
+        baseScore: pair.score,
+        finalScore: pair.score,
+        level: pair.level,
+        dimensionScores: {
+          communication: Math.round(50 + Math.random() * 40),
+          values: Math.round(50 + Math.random() * 40),
+          lifestyle: Math.round(45 + Math.random() * 45),
+          emotional_intelligence: Math.round(50 + Math.random() * 40),
+          relationship_expectations: Math.round(45 + Math.random() * 45),
+          social: Math.round(50 + Math.random() * 40),
+          life_goals: Math.round(45 + Math.random() * 45),
+        },
+      },
+    });
+  }
 }
 
 // ============================================================
@@ -2731,73 +2790,73 @@ async function seedBadgeDefinitions(): Promise<void> {
     {
       key: "first_spark",
       nameEn: "First Spark",
-      nameTr: "Ilk Kivilcim",
+      nameTr: "İlk Kıvılcım",
       descriptionEn: "Celebrate your first match!",
-      descriptionTr: "Ilk eslesmeni kutla!",
+      descriptionTr: "İlk eşleşmeni kutla!",
       criteria: { type: "match_count", count: 1 },
       goldReward: 5,
     },
     {
       key: "chat_master",
       nameEn: "Chat Master",
-      nameTr: "Sohbet Ustasi",
+      nameTr: "Sohbet Ustası",
       descriptionEn: "Complete 5 Harmony Room sessions!",
-      descriptionTr: "5 Harmony odasini tamamladin!",
+      descriptionTr: "5 Harmony odasını tamamladın!",
       criteria: { type: "harmony_session_count", count: 5 },
       goldReward: 10,
     },
     {
       key: "question_explorer",
       nameEn: "Question Explorer",
-      nameTr: "Merak Uzmani",
+      nameTr: "Merak Uzmanı",
       descriptionEn: "Answer all core compatibility questions!",
-      descriptionTr: "Tum temel uyumluluk sorularini yanitladin!",
+      descriptionTr: "Tüm temel uyumluluk sorularını yanıtladın!",
       criteria: { type: "answer_count", count: 20 },
       goldReward: 10,
     },
     {
       key: "soul_mate",
       nameEn: "Soul Mate",
-      nameTr: "Ruh Ikizi",
+      nameTr: "Ruh İkizi",
       descriptionEn: "Found a Super Compatibility match!",
-      descriptionTr: "Super uyumluluk buldun!",
+      descriptionTr: "Süper uyumluluk buldun!",
       criteria: { type: "super_compatibility_match", count: 1 },
       goldReward: 15,
     },
     {
       key: "verified_star",
       nameEn: "Verified Star",
-      nameTr: "Dogrulanmis Yildiz",
+      nameTr: "Doğrulanmış Yıldız",
       descriptionEn: "Your selfie is verified!",
-      descriptionTr: "Selfie dogrulaman tamamlandi!",
+      descriptionTr: "Selfie doğrulaman tamamlandı!",
       criteria: { type: "selfie_verification", count: 1 },
       goldReward: 5,
     },
     {
       key: "couple_goal",
       nameEn: "Couple Goal",
-      nameTr: "Cift Hedefi",
+      nameTr: "Çift Hedefi",
       descriptionEn: "Activated Relationship Mode!",
-      descriptionTr: "Iliski modunu aktiflestirdin!",
+      descriptionTr: "İlişki modunu aktifleştirdin!",
       criteria: { type: "relationship_activated", count: 1 },
       goldReward: 20,
     },
     {
       key: "explorer",
       nameEn: "Explorer",
-      nameTr: "Kasif",
-      descriptionEn: "Explored 50 profiles in discovery!",
-      descriptionTr: "50 profil kesfettin!",
-      criteria: { type: "swipe_count", count: 50 },
+      nameTr: "Kâşif",
+      descriptionEn: "Checked in to 10 different places!",
+      descriptionTr: "10 farklı mekâna check-in yaptın!",
+      criteria: { type: "checkin_count", count: 10 },
       goldReward: 5,
     },
     {
-      key: "deep_match",
-      nameEn: "Deep Match",
-      nameTr: "Derin Uyum",
-      descriptionEn: "Both you and a match completed all 45 questions!",
-      descriptionTr: "45 soruyu tamamladin ve bir eslesmende de tamamlandi!",
-      criteria: { type: "deep_match", count: 1 },
+      key: "gold_member",
+      nameEn: "Gold Member",
+      nameTr: "Gold Üye",
+      descriptionEn: "Upgrade to Gold or higher subscription!",
+      descriptionTr: "Gold veya üstü abonelik başlattın!",
+      criteria: { type: "subscription", count: 1 },
       goldReward: 15,
     },
   ];
@@ -2882,8 +2941,8 @@ async function seedDemoNotifications(
   notifications.push({
     userId: userIds[0],
     type: NotificationType.BADGE_EARNED,
-    title: "Yeni Rozet Kazandiniz!",
-    body: "Merak Uzmani rozetini kazandiniz! +10 Gold odullendirildiniz.",
+    title: "Yeni Rozet Kazandınız!",
+    body: "Merak Uzmanı rozetini kazandınız! +10 Gold ödüllendirildiniz.",
     data: { badgeKey: "question_explorer" },
     isRead: true,
     createdAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
@@ -3082,7 +3141,7 @@ async function seedDemoGoldTransactions(userIds: string[]): Promise<void> {
       type: GoldTransactionType.BADGE_REWARD,
       amount: 5,
       balance: runningBalance + 5,
-      description: "Ilk Kivilcim rozeti odulu",
+      description: "İlk Kıvılcım rozeti ödülü",
       createdAt: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000),
     });
     runningBalance += 5;

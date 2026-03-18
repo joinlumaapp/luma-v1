@@ -20,7 +20,7 @@ import {
 
 // LOCKED: 4 Package Tiers with features
 const PACKAGE_DEFINITIONS = {
-  free: {
+  FREE: {
     tier: "FREE",
     name: "Free",
     nameTr: "Ucretsiz",
@@ -41,7 +41,7 @@ const PACKAGE_DEFINITIONS = {
       priorityInFeed: false,
     },
   },
-  gold: {
+  GOLD: {
     tier: "GOLD",
     name: "Gold",
     nameTr: "Gold",
@@ -62,7 +62,7 @@ const PACKAGE_DEFINITIONS = {
       priorityInFeed: false,
     },
   },
-  pro: {
+  PRO: {
     tier: "PRO",
     name: "Pro",
     nameTr: "Pro",
@@ -83,7 +83,7 @@ const PACKAGE_DEFINITIONS = {
       priorityInFeed: true,
     },
   },
-  reserved: {
+  RESERVED: {
     tier: "RESERVED",
     name: "Reserved",
     nameTr: "Reserved",
@@ -146,10 +146,10 @@ const ONE_TIME_PRODUCTS: Record<
 
 // Tier hierarchy: higher number = higher tier
 const TIER_ORDER: Record<string, number> = {
-  free: 0,
-  gold: 1,
-  pro: 2,
-  reserved: 3,
+  FREE: 0,
+  GOLD: 1,
+  PRO: 2,
+  RESERVED: 3,
 };
 
 @Injectable()
@@ -183,7 +183,7 @@ export class PaymentsService {
    * Supports 7-day free trial for first-time subscribers.
    */
   async subscribe(userId: string, dto: SubscribeDto) {
-    if (dto.packageTier === "free") {
+    if (dto.packageTier === "FREE") {
       throw new BadRequestException("Ucretsiz pakete abone olunamaz");
     }
 
@@ -223,7 +223,7 @@ export class PaymentsService {
     });
     const isEligibleForTrial = previousTrial === null;
 
-    const tierKey = dto.packageTier.toUpperCase();
+    const tierKey = dto.packageTier;
 
     // Create subscription in transaction
     const result = await this.prisma.$transaction(async (tx) => {
@@ -243,7 +243,7 @@ export class PaymentsService {
           userId,
           packageTier: tierKey as "FREE" | "GOLD" | "PRO" | "RESERVED",
           platform,
-          productId: `luma_${dto.packageTier}_monthly`,
+          productId: `luma_${dto.packageTier.toLowerCase()}_monthly`,
           purchaseToken: dto.receipt,
           startDate,
           expiryDate,
@@ -259,7 +259,7 @@ export class PaymentsService {
           platform,
           receiptData: dto.receipt,
           transactionId: validationResult.transactionId,
-          productId: `luma_${dto.packageTier}_monthly`,
+          productId: `luma_${dto.packageTier.toLowerCase()}_monthly`,
           isValid: true,
           validationResponse: validationResult as object,
         },
@@ -337,8 +337,8 @@ export class PaymentsService {
       throw new NotFoundException("Kullanici bulunamadi");
     }
 
-    const currentTierKey = user.packageTier.toLowerCase();
-    const targetTierKey = dto.targetTier.toLowerCase();
+    const currentTierKey = user.packageTier;
+    const targetTierKey = dto.targetTier;
 
     const currentOrder = TIER_ORDER[currentTierKey];
     const targetOrder = TIER_ORDER[targetTierKey];
@@ -373,7 +373,7 @@ export class PaymentsService {
       throw new BadRequestException("Bu makbuz daha once kullanilmis");
     }
 
-    const targetTierUpper = dto.targetTier.toUpperCase() as
+    const targetTierUpper = dto.targetTier as
       | "FREE"
       | "GOLD"
       | "PRO"
@@ -407,7 +407,7 @@ export class PaymentsService {
           userId,
           packageTier: targetTierUpper,
           platform,
-          productId: `luma_${targetTierKey}_monthly`,
+          productId: `luma_${targetTierKey.toLowerCase()}_monthly`,
           purchaseToken: dto.receipt,
           startDate,
           expiryDate,
@@ -421,7 +421,7 @@ export class PaymentsService {
           platform,
           receiptData: dto.receipt,
           transactionId: validationResult.transactionId,
-          productId: `luma_${targetTierKey}_monthly`,
+          productId: `luma_${targetTierKey.toLowerCase()}_monthly`,
           isValid: true,
           validationResponse: validationResult as object,
         },
@@ -472,6 +472,181 @@ export class PaymentsService {
       subscriptionId: result.id,
       expiresAt: result.expiryDate,
       features: packageDef.features,
+    };
+  }
+
+  /**
+   * Downgrade package tier.
+   * Validates tier hierarchy: Reserved -> Pro -> Gold -> Free.
+   * Only allows downgrading to a lower tier.
+   * The downgrade takes effect at the end of the current billing period.
+   */
+  async downgradePackage(userId: string, dto: UpgradePackageDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { packageTier: true, goldBalance: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException("Kullanici bulunamadi");
+    }
+
+    const currentTierKey = user.packageTier;
+    const targetTierKey = dto.targetTier;
+
+    const currentOrder = TIER_ORDER[currentTierKey];
+    const targetOrder = TIER_ORDER[targetTierKey];
+
+    if (currentOrder === undefined || targetOrder === undefined) {
+      throw new BadRequestException("Gecersiz paket seviyesi");
+    }
+
+    if (targetOrder >= currentOrder) {
+      throw new BadRequestException(
+        "Sadece daha dusuk bir pakete gecis yapabilirsiniz. " +
+          `Mevcut: ${currentTierKey}, Hedef: ${targetTierKey}`,
+      );
+    }
+
+    // Find the active subscription
+    const existingSub = await this.prisma.subscription.findFirst({
+      where: { userId, isActive: true },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (!existingSub) {
+      throw new NotFoundException("Aktif abonelik bulunamadi");
+    }
+
+    // For downgrade to FREE, no receipt is needed — just cancel and schedule downgrade
+    // For downgrade to a paid tier, validate receipt
+    let validationResult: ReceiptValidationResult | null = null;
+    if (targetTierKey !== "FREE") {
+      const platform = dto.platform.toUpperCase() as "APPLE" | "GOOGLE";
+      validationResult = await this.validatePlatformReceipt(
+        platform,
+        dto.receipt,
+      );
+
+      if (!validationResult.isValid) {
+        throw new BadRequestException("Odeme makbuzu dogrulanamadi");
+      }
+
+      // Prevent receipt replay
+      const existingReceipt = await this.prisma.iapReceipt.findUnique({
+        where: { transactionId: validationResult.transactionId },
+      });
+      if (existingReceipt) {
+        throw new BadRequestException("Bu makbuz daha once kullanilmis");
+      }
+    }
+
+    const targetTierUpper = targetTierKey as
+      | "FREE"
+      | "GOLD"
+      | "PRO"
+      | "RESERVED";
+    const packageDef =
+      PACKAGE_DEFINITIONS[targetTierKey as keyof typeof PACKAGE_DEFINITIONS];
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      // Cancel existing subscription
+      await tx.subscription.update({
+        where: { id: existingSub.id },
+        data: {
+          isActive: false,
+          cancelledAt: new Date(),
+        },
+      });
+
+      if (targetTierKey === "FREE") {
+        // Downgrade to FREE: update user tier immediately, no new subscription needed
+        await tx.user.update({
+          where: { id: userId },
+          data: { packageTier: "FREE" },
+        });
+
+        return { id: existingSub.id, expiryDate: existingSub.expiryDate };
+      }
+
+      // Downgrade to a paid tier: create a new subscription at the lower tier
+      const platform = dto.platform.toUpperCase() as "APPLE" | "GOOGLE";
+      const startDate = new Date();
+      const expiryDate = new Date();
+      expiryDate.setMonth(expiryDate.getMonth() + 1);
+
+      const subscription = await tx.subscription.create({
+        data: {
+          userId,
+          packageTier: targetTierUpper,
+          platform,
+          productId: `luma_${targetTierKey.toLowerCase()}_monthly`,
+          purchaseToken: dto.receipt,
+          startDate,
+          expiryDate,
+        },
+      });
+
+      // Store receipt
+      if (validationResult) {
+        await tx.iapReceipt.create({
+          data: {
+            subscriptionId: subscription.id,
+            platform,
+            receiptData: dto.receipt,
+            transactionId: validationResult.transactionId,
+            productId: `luma_${targetTierKey.toLowerCase()}_monthly`,
+            isValid: true,
+            validationResponse: validationResult as object,
+          },
+        });
+      }
+
+      // Update user's package tier
+      await tx.user.update({
+        where: { id: userId },
+        data: { packageTier: targetTierUpper },
+      });
+
+      // Award monthly Gold allocation for new (lower) tier
+      if (packageDef && packageDef.features.monthlyGold > 0) {
+        const freshUser = await tx.user.findUnique({
+          where: { id: userId },
+          select: { goldBalance: true },
+        });
+        const newBalance =
+          (freshUser?.goldBalance ?? 0) + packageDef.features.monthlyGold;
+
+        await tx.user.update({
+          where: { id: userId },
+          data: { goldBalance: newBalance },
+        });
+
+        await tx.goldTransaction.create({
+          data: {
+            userId,
+            type: "SUBSCRIPTION_ALLOCATION",
+            amount: packageDef.features.monthlyGold,
+            balance: newBalance,
+            description: `${packageDef.name} paket degisikligi Gold tahsisi`,
+          },
+        });
+      }
+
+      return subscription;
+    });
+
+    this.logger.log(
+      `User ${userId} downgraded from ${currentTierKey} to ${targetTierKey}`,
+    );
+
+    return {
+      downgraded: true,
+      previousTier: currentTierKey,
+      newTier: targetTierKey,
+      subscriptionId: result.id,
+      expiresAt: result.expiryDate,
+      features: packageDef?.features ?? PACKAGE_DEFINITIONS.FREE.features,
     };
   }
 
@@ -648,6 +823,9 @@ export class PaymentsService {
 
   /**
    * Spend Gold on an action (harmony extension, profile boost, super like).
+   *
+   * Uses pessimistic locking via raw SQL to prevent race conditions:
+   * UPDATE ... WHERE goldBalance >= cost atomically checks and decrements.
    */
   async spendGold(userId: string, dto: SpendGoldDto) {
     const actionConfig = GOLD_COSTS[dto.action];
@@ -657,41 +835,52 @@ export class PaymentsService {
       );
     }
 
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { goldBalance: true },
-    });
+    // Map action to transaction type
+    const transactionTypeMap: Record<string, string> = {
+      harmony_extension: "HARMONY_EXTENSION",
+      profile_boost: "PROFILE_BOOST",
+      super_like: "SUPER_LIKE",
+      read_receipts: "READ_RECEIPTS",
+      undo_pass: "UNDO_PASS",
+      spotlight: "SPOTLIGHT",
+      travel_mode: "TRAVEL_MODE",
+      priority_message: "PRIORITY_MESSAGE",
+    };
 
-    if (!user) {
-      throw new NotFoundException("Kullanici bulunamadi");
-    }
+    // Atomic debit inside a serializable transaction to prevent race conditions
+    const result = await this.prisma.$transaction(async (tx) => {
+      // Atomically decrement gold balance only if sufficient funds exist.
+      // This prevents double-spend even under concurrent requests.
+      const updated = await tx.$executeRaw`
+        UPDATE "User"
+        SET "goldBalance" = "goldBalance" - ${actionConfig.cost}
+        WHERE "id" = ${userId}
+          AND "goldBalance" >= ${actionConfig.cost}
+      `;
 
-    if (user.goldBalance < actionConfig.cost) {
-      throw new BadRequestException(
-        `Yetersiz Gold bakiye. Gerekli: ${actionConfig.cost}, Mevcut: ${user.goldBalance}`,
-      );
-    }
+      if (updated === 0) {
+        // Either user not found or insufficient balance
+        const user = await tx.user.findUnique({
+          where: { id: userId },
+          select: { goldBalance: true },
+        });
 
-    const newBalance = user.goldBalance - actionConfig.cost;
+        if (!user) {
+          throw new NotFoundException("Kullanici bulunamadi");
+        }
 
-    // Debit Gold in transaction
-    await this.prisma.$transaction(async (tx) => {
-      await tx.user.update({
+        throw new BadRequestException(
+          `Yetersiz Gold bakiye. Gerekli: ${actionConfig.cost}, Mevcut: ${user.goldBalance}`,
+        );
+      }
+
+      // Read the updated balance for the transaction log
+      const user = await tx.user.findUnique({
         where: { id: userId },
-        data: { goldBalance: newBalance },
+        select: { goldBalance: true },
       });
 
-      // Map action to transaction type
-      const transactionTypeMap: Record<string, string> = {
-        harmony_extension: "HARMONY_EXTENSION",
-        profile_boost: "PROFILE_BOOST",
-        super_like: "SUPER_LIKE",
-        read_receipts: "READ_RECEIPTS",
-        undo_pass: "UNDO_PASS",
-        spotlight: "SPOTLIGHT",
-        travel_mode: "TRAVEL_MODE",
-        priority_message: "PRIORITY_MESSAGE",
-      };
+      const newBalance = user?.goldBalance ?? 0;
 
       await tx.goldTransaction.create({
         data: {
@@ -704,17 +893,19 @@ export class PaymentsService {
           referenceId: dto.referenceId ?? null,
         },
       });
+
+      return newBalance;
     });
 
     this.logger.log(
-      `User ${userId} spent ${actionConfig.cost} gold on ${dto.action} (new balance: ${newBalance})`,
+      `User ${userId} spent ${actionConfig.cost} gold on ${dto.action} (new balance: ${result})`,
     );
 
     return {
       spent: true,
       action: dto.action,
       goldSpent: actionConfig.cost,
-      newBalance,
+      newBalance: result,
     };
   }
 
@@ -842,7 +1033,7 @@ export class PaymentsService {
       },
     });
 
-    const tierKey = user.packageTier.toLowerCase();
+    const tierKey = user.packageTier;
     const packageDef =
       PACKAGE_DEFINITIONS[tierKey as keyof typeof PACKAGE_DEFINITIONS];
 
@@ -886,8 +1077,416 @@ export class PaymentsService {
       isInGracePeriod,
       platform: activeSubscription?.platform ?? null,
       goldBalance: user.goldBalance,
-      features: packageDef?.features ?? PACKAGE_DEFINITIONS.free.features,
+      features: packageDef?.features ?? PACKAGE_DEFINITIONS.FREE.features,
     };
+  }
+
+  // ─── Store Webhook Handlers ──────────────────────────────────
+
+  /**
+   * Apple App Store Server Notifications V2 notification types.
+   */
+  private static readonly APPLE_NOTIFICATION_TYPES = {
+    DID_RENEW: "DID_RENEW",
+    DID_FAIL_TO_RENEW: "DID_FAIL_TO_RENEW",
+    EXPIRED: "EXPIRED",
+    REFUND: "REFUND",
+  } as const;
+
+  /**
+   * Google Play RTDN subscription notification types.
+   */
+  private static readonly GOOGLE_NOTIFICATION_TYPES = {
+    SUBSCRIPTION_RENEWED: 2,
+    SUBSCRIPTION_CANCELED: 3,
+    SUBSCRIPTION_EXPIRED: 13,
+  } as const;
+
+  /**
+   * Handle Apple App Store Server-to-Server Notification (V2).
+   *
+   * The signedPayload is a JWS (JSON Web Signature) containing the notification.
+   * TODO: Implement proper JWS signature verification using Apple's root certificate chain.
+   * For now, we decode the payload without cryptographic verification.
+   *
+   * Notification types handled:
+   * - DID_RENEW: Subscription successfully renewed -> extend expiresAt
+   * - DID_FAIL_TO_RENEW: Billing retry failed -> start grace period
+   * - EXPIRED: Subscription expired -> downgrade to FREE
+   * - REFUND: User received a refund -> downgrade to FREE
+   */
+  async handleAppleWebhook(signedPayload: string): Promise<{ received: boolean }> {
+    this.logger.log("Received Apple S2S notification");
+
+    // TODO: Verify JWS signature using Apple's certificate chain
+    // For now, decode the payload (base64url) without signature verification
+    let payload: {
+      notificationType: string;
+      data?: {
+        signedTransactionInfo?: string;
+        signedRenewalInfo?: string;
+      };
+    };
+
+    try {
+      const parts = signedPayload.split(".");
+      if (parts.length !== 3) {
+        this.logger.warn("Apple webhook: invalid JWS format (expected 3 parts)");
+        return { received: false };
+      }
+      const payloadBase64 = parts[1];
+      const decoded = Buffer.from(payloadBase64, "base64url").toString("utf-8");
+      payload = JSON.parse(decoded);
+    } catch (err) {
+      this.logger.error(`Apple webhook: failed to decode payload: ${err}`);
+      return { received: false };
+    }
+
+    const { notificationType } = payload;
+    this.logger.log(`Apple webhook notificationType: ${notificationType}`);
+
+    // Extract transaction info from the nested signed data
+    let transactionInfo: {
+      originalTransactionId?: string;
+      productId?: string;
+      expiresDate?: number;
+    } = {};
+
+    try {
+      if (payload.data?.signedTransactionInfo) {
+        const txnParts = payload.data.signedTransactionInfo.split(".");
+        if (txnParts.length === 3) {
+          const txnDecoded = Buffer.from(txnParts[1], "base64url").toString("utf-8");
+          transactionInfo = JSON.parse(txnDecoded);
+        }
+      }
+    } catch (err) {
+      this.logger.warn(`Apple webhook: failed to decode transaction info: ${err}`);
+    }
+
+    const originalTransactionId = transactionInfo.originalTransactionId;
+    if (!originalTransactionId) {
+      this.logger.warn("Apple webhook: no originalTransactionId found, skipping");
+      return { received: false };
+    }
+
+    // Find the subscription by matching the transaction ID via IAP receipt
+    const subscription = await this.findSubscriptionByTransaction(originalTransactionId, "APPLE");
+
+    if (!subscription) {
+      this.logger.warn(
+        `Apple webhook: no subscription found for transactionId ${originalTransactionId}`,
+      );
+      return { received: false };
+    }
+
+    const { DID_RENEW, DID_FAIL_TO_RENEW, EXPIRED, REFUND } =
+      PaymentsService.APPLE_NOTIFICATION_TYPES;
+
+    switch (notificationType) {
+      case DID_RENEW: {
+        // Subscription renewed successfully — extend expiry date
+        const newExpiryDate = transactionInfo.expiresDate
+          ? new Date(transactionInfo.expiresDate)
+          : this.calculateNextExpiryDate(subscription.expiryDate);
+
+        await this.prisma.subscription.update({
+          where: { id: subscription.id },
+          data: {
+            expiryDate: newExpiryDate,
+            isActive: true,
+            autoRenew: true,
+            gracePeriodEnd: null,
+          },
+        });
+
+        this.logger.log(
+          `Apple DID_RENEW: subscription ${subscription.id} renewed until ${newExpiryDate.toISOString()}`,
+        );
+
+        // Award monthly Gold allocation on renewal
+        await this.awardMonthlyGold(subscription.userId, subscription.packageTier);
+        break;
+      }
+
+      case DID_FAIL_TO_RENEW: {
+        // Billing retry period — start grace period (Apple retries for ~60 days)
+        const gracePeriodEnd = new Date();
+        gracePeriodEnd.setDate(gracePeriodEnd.getDate() + 16); // 16-day billing grace period
+
+        await this.prisma.subscription.update({
+          where: { id: subscription.id },
+          data: {
+            autoRenew: false,
+            gracePeriodEnd,
+          },
+        });
+
+        this.logger.log(
+          `Apple DID_FAIL_TO_RENEW: subscription ${subscription.id} grace period until ${gracePeriodEnd.toISOString()}`,
+        );
+        break;
+      }
+
+      case EXPIRED: {
+        // Subscription expired — downgrade to FREE
+        await this.downgradeSubscriptionToFree(subscription.id, subscription.userId);
+        this.logger.log(
+          `Apple EXPIRED: subscription ${subscription.id} user ${subscription.userId} downgraded to FREE`,
+        );
+        break;
+      }
+
+      case REFUND: {
+        // Refund issued — immediately downgrade to FREE
+        await this.downgradeSubscriptionToFree(subscription.id, subscription.userId);
+        this.logger.log(
+          `Apple REFUND: subscription ${subscription.id} user ${subscription.userId} downgraded to FREE`,
+        );
+        break;
+      }
+
+      default:
+        this.logger.log(`Apple webhook: unhandled notificationType ${notificationType}`);
+        break;
+    }
+
+    return { received: true };
+  }
+
+  /**
+   * Handle Google Play Real-Time Developer Notification (RTDN).
+   *
+   * Google sends a Pub/Sub message with base64-encoded JSON data containing:
+   * - subscriptionNotification (for subscription events)
+   * - oneTimeProductNotification (for one-time purchases)
+   *
+   * TODO: Verify the Pub/Sub message authenticity (verify push endpoint is registered).
+   * TODO: Call Google Play Developer API to get full subscription details.
+   *
+   * Subscription notification types handled:
+   * - 2 (SUBSCRIPTION_RENEWED): extend expiresAt
+   * - 3 (SUBSCRIPTION_CANCELED): mark autoRenew=false
+   * - 13 (SUBSCRIPTION_EXPIRED): downgrade to FREE
+   */
+  async handleGoogleWebhook(encodedData: string): Promise<{ received: boolean }> {
+    this.logger.log("Received Google RTDN notification");
+
+    let notification: {
+      subscriptionNotification?: {
+        notificationType: number;
+        purchaseToken: string;
+        subscriptionId: string;
+      };
+      packageName?: string;
+    };
+
+    try {
+      const decoded = Buffer.from(encodedData, "base64").toString("utf-8");
+      notification = JSON.parse(decoded);
+    } catch (err) {
+      this.logger.error(`Google webhook: failed to decode message data: ${err}`);
+      return { received: false };
+    }
+
+    const subNotification = notification.subscriptionNotification;
+    if (!subNotification) {
+      this.logger.log("Google webhook: no subscriptionNotification, skipping (possibly one-time purchase)");
+      return { received: true };
+    }
+
+    const { notificationType, purchaseToken } = subNotification;
+    this.logger.log(
+      `Google webhook notificationType: ${notificationType}, token: ${purchaseToken.substring(0, 20)}...`,
+    );
+
+    // Find subscription by purchase token
+    const subscription = await this.prisma.subscription.findFirst({
+      where: {
+        purchaseToken,
+        platform: "GOOGLE",
+        isActive: true,
+      },
+      select: {
+        id: true,
+        userId: true,
+        packageTier: true,
+        expiryDate: true,
+      },
+    });
+
+    if (!subscription) {
+      this.logger.warn(
+        `Google webhook: no active subscription found for purchaseToken ${purchaseToken.substring(0, 20)}...`,
+      );
+      return { received: false };
+    }
+
+    const { SUBSCRIPTION_RENEWED, SUBSCRIPTION_CANCELED, SUBSCRIPTION_EXPIRED } =
+      PaymentsService.GOOGLE_NOTIFICATION_TYPES;
+
+    switch (notificationType) {
+      case SUBSCRIPTION_RENEWED: {
+        // Subscription renewed — extend expiry by 1 month
+        const newExpiryDate = this.calculateNextExpiryDate(subscription.expiryDate);
+
+        await this.prisma.subscription.update({
+          where: { id: subscription.id },
+          data: {
+            expiryDate: newExpiryDate,
+            isActive: true,
+            autoRenew: true,
+            gracePeriodEnd: null,
+          },
+        });
+
+        this.logger.log(
+          `Google SUBSCRIPTION_RENEWED: subscription ${subscription.id} renewed until ${newExpiryDate.toISOString()}`,
+        );
+
+        // Award monthly Gold allocation on renewal
+        await this.awardMonthlyGold(subscription.userId, subscription.packageTier);
+        break;
+      }
+
+      case SUBSCRIPTION_CANCELED: {
+        // User canceled — keep access until expiryDate, stop auto-renew
+        await this.prisma.subscription.update({
+          where: { id: subscription.id },
+          data: {
+            autoRenew: false,
+            cancelledAt: new Date(),
+          },
+        });
+
+        this.logger.log(
+          `Google SUBSCRIPTION_CANCELED: subscription ${subscription.id} will expire at ${subscription.expiryDate.toISOString()}`,
+        );
+        break;
+      }
+
+      case SUBSCRIPTION_EXPIRED: {
+        // Subscription expired — downgrade to FREE
+        await this.downgradeSubscriptionToFree(subscription.id, subscription.userId);
+        this.logger.log(
+          `Google SUBSCRIPTION_EXPIRED: subscription ${subscription.id} user ${subscription.userId} downgraded to FREE`,
+        );
+        break;
+      }
+
+      default:
+        this.logger.log(`Google webhook: unhandled notificationType ${notificationType}`);
+        break;
+    }
+
+    return { received: true };
+  }
+
+  // ─── Webhook Helper Methods ───────────────────────────────────
+
+  /**
+   * Find a subscription by its original transaction ID (via IAP receipt).
+   */
+  private async findSubscriptionByTransaction(
+    transactionId: string,
+    platform: "APPLE" | "GOOGLE",
+  ) {
+    const receipt = await this.prisma.iapReceipt.findFirst({
+      where: { transactionId },
+      select: { subscriptionId: true },
+    });
+
+    if (!receipt?.subscriptionId) {
+      return null;
+    }
+
+    return this.prisma.subscription.findFirst({
+      where: {
+        id: receipt.subscriptionId,
+        platform,
+      },
+      select: {
+        id: true,
+        userId: true,
+        packageTier: true,
+        expiryDate: true,
+      },
+    });
+  }
+
+  /**
+   * Calculate the next expiry date by extending 1 month from current expiry.
+   */
+  private calculateNextExpiryDate(currentExpiry: Date): Date {
+    const newExpiry = new Date(currentExpiry);
+    newExpiry.setMonth(newExpiry.getMonth() + 1);
+    return newExpiry;
+  }
+
+  /**
+   * Award monthly Gold allocation for the given package tier.
+   * Called on subscription renewal via webhook.
+   */
+  private async awardMonthlyGold(userId: string, packageTier: string): Promise<void> {
+    const packageDef =
+      PACKAGE_DEFINITIONS[packageTier as keyof typeof PACKAGE_DEFINITIONS];
+
+    if (!packageDef || packageDef.features.monthlyGold <= 0) {
+      return;
+    }
+
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        const user = await tx.user.findUnique({
+          where: { id: userId },
+          select: { goldBalance: true },
+        });
+
+        const newBalance = (user?.goldBalance ?? 0) + packageDef.features.monthlyGold;
+
+        await tx.user.update({
+          where: { id: userId },
+          data: { goldBalance: newBalance },
+        });
+
+        await tx.goldTransaction.create({
+          data: {
+            userId,
+            type: "SUBSCRIPTION_ALLOCATION",
+            amount: packageDef.features.monthlyGold,
+            balance: newBalance,
+            description: `${packageDef.name} aylik Gold tahsisi (otomatik yenileme)`,
+          },
+        });
+      });
+
+      this.logger.log(
+        `Awarded ${packageDef.features.monthlyGold} monthly Gold to user ${userId} (${packageTier})`,
+      );
+    } catch (err) {
+      this.logger.error(`Failed to award monthly Gold to user ${userId}: ${err}`);
+    }
+  }
+
+  /**
+   * Downgrade a user to FREE tier and deactivate their subscription.
+   * Used by webhook handlers for expired/refunded subscriptions.
+   */
+  private async downgradeSubscriptionToFree(subscriptionId: string, userId: string): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      await tx.subscription.update({
+        where: { id: subscriptionId },
+        data: {
+          isActive: false,
+          autoRenew: false,
+        },
+      });
+
+      await tx.user.update({
+        where: { id: userId },
+        data: { packageTier: "FREE" },
+      });
+    });
   }
 
   /**

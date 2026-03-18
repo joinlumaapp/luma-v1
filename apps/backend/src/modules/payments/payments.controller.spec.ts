@@ -125,7 +125,7 @@ describe("PaymentsController", () => {
       const expected = {
         subscribed: true,
         subscriptionId: "sub-1",
-        packageTier: "gold",
+        packageTier: "GOLD",
         expiresAt: new Date("2026-03-23"),
       };
       mockPaymentsService.subscribe.mockResolvedValue(expected);
@@ -133,7 +133,7 @@ describe("PaymentsController", () => {
       const result = await controller.subscribe(userId, dto);
 
       expect(result.subscribed).toBe(true);
-      expect(result.packageTier).toBe("gold");
+      expect(result.packageTier).toBe("GOLD");
       expect(result.subscriptionId).toBe("sub-1");
     });
 

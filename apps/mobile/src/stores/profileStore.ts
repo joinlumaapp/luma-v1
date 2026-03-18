@@ -29,7 +29,7 @@ export interface ProfileData {
   interestTags: string[];
   photos: string[];
   bio: string;
-  answers: Record<number, number>;
+  answers: Record<string, string>;
   city: string;
   job: string;
   education: string;

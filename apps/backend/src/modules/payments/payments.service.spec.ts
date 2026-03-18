@@ -1015,7 +1015,7 @@ describe("PaymentsService", () => {
       });
 
       expect(result.subscribed).toBe(true);
-      expect(result.packageTier).toBe("gold");
+      expect(result.packageTier).toBe("GOLD");
       expect(result.isTrial).toBe(true);
       expect(result.trialEndDate).toBeDefined();
     });

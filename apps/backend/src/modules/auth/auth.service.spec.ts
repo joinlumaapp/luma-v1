@@ -1245,7 +1245,7 @@ describe("AuthService", () => {
           sub: user.id,
           phone: user.phone,
           isVerified: user.isSelfieVerified,
-          packageTier: "free",
+          packageTier: "FREE",
         }),
         expect.objectContaining({
           secret: "test-jwt-secret",

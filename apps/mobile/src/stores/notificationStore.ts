@@ -1,10 +1,9 @@
 // Notification store — Zustand store for notification state
 // Enhanced: grouped notifications by type (Yeni Eşleşme, Mesaj, Rozet, etc.)
 
-import { Platform, AppState } from 'react-native';
+import { Platform } from 'react-native';
 import { create } from 'zustand';
 import { notificationService } from '../services/notificationService';
-import { handleForegroundNotification } from '../services/notificationHandlerService';
 import { useAuthStore } from './authStore';
 import type {
   Notification,
@@ -299,45 +298,15 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   },
 
   /**
-   * Setup foreground listeners:
-   * 1. AppState change → refresh on foreground
-   * 2. Real-time push notification received → add to store
-   * 3. Notification tapped → could be used for navigation
-   * Returns a cleanup function to remove all listeners.
+   * @deprecated Foreground listener is now handled by useNotificationHandler hook.
+   * This method is kept as a no-op for backward compatibility.
+   * Returns a cleanup function (no-op) to maintain the interface contract.
    */
   setupForegroundListener: () => {
-    const appStateCleanup = AppState.addEventListener('change', (nextAppState) => {
-      if (nextAppState === 'active') {
-        get().refresh();
-      }
-    });
-
-    const notifReceivedCleanup = notificationService.onNotificationReceived(
-      (notification) => {
-        const notifType = (notification.data?.type as string) || 'SYSTEM';
-        get().addNotification({
-          id: `push_${Date.now()}`,
-          type: notifType,
-          title: notification.title,
-          body: notification.body,
-          data: notification.data,
-          isRead: false,
-          createdAt: new Date().toISOString(),
-        });
-
-        // On plan bildirimi icin in-app banner goster
-        handleForegroundNotification(notification);
-      },
-    );
-
-    const notifTappedCleanup = notificationService.onNotificationTapped(() => {
-      get().refresh();
-    });
-
+    // No-op: foreground listener setup moved to useNotificationHandler hook
+    // to prevent duplicate listeners (see issue #25)
     return () => {
-      appStateCleanup.remove();
-      notifReceivedCleanup();
-      notifTappedCleanup();
+      // no-op cleanup
     };
   },
 }));

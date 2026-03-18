@@ -7,8 +7,6 @@ export { PulseGlow } from './PulseGlow';
 export { SlideIn } from './SlideIn';
 export { LikeSentToast } from './LikeSentToast';
 export { BadgeEarnedOverlay } from './BadgeEarnedOverlay';
-export { CoinTossAnimation } from './CoinTossAnimation';
-
 // New — world-class dating app animations
 export { SuperLikeAnimation } from './SuperLikeAnimation';
 export { CardSkeleton } from './CardSkeleton';

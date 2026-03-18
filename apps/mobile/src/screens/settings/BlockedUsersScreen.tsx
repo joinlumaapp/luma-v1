@@ -52,8 +52,28 @@ export const BlockedUsersScreen: React.FC = () => {
     const fetchBlockedUsers = async () => {
       setIsLoading(true);
       try {
-        const response = await api.get<BlockedUser[]>(API_ROUTES.MODERATION.BLOCKED_LIST);
-        setBlockedUsers(response.data);
+        // Backend returns { blockedUsers: Array<{ userId, firstName, photoUrl, blockedAt }>, total }
+        // Map to our BlockedUser interface (id, name, avatarUrl, blockedAt)
+        interface BackendBlockedUser {
+          userId: string;
+          firstName: string;
+          photoUrl: string | null;
+          blockedAt: string;
+        }
+        interface BackendBlockedResponse {
+          blockedUsers: BackendBlockedUser[];
+          total: number;
+        }
+        const response = await api.get<BackendBlockedResponse>(API_ROUTES.MODERATION.BLOCKED_LIST);
+        const mapped: BlockedUser[] = (response.data.blockedUsers ?? []).map(
+          (u: BackendBlockedUser) => ({
+            id: u.userId,
+            name: u.firstName,
+            avatarUrl: u.photoUrl,
+            blockedAt: u.blockedAt,
+          }),
+        );
+        setBlockedUsers(mapped);
       } catch (error) {
         try {
           const mockData = devMockOrThrow(error, DEV_MOCK_BLOCKED_USERS, 'BlockedUsersScreen.fetchBlockedUsers');

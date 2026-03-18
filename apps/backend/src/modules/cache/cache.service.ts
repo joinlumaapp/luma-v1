@@ -12,8 +12,8 @@ import Redis from "ioredis";
 export const CACHE_TTL = {
   /** User profile data — moderate TTL, invalidate on profile update */
   USER_PROFILE: 300, // 5 minutes
-  /** Discovery feed — short TTL, feed changes frequently */
-  DISCOVERY_FEED: 60, // 1 minute
+  /** Discovery feed — 5-minute TTL balances freshness with performance */
+  DISCOVERY_FEED: 300, // 5 minutes
   /** Compatibility scores — long TTL, recalculated infrequently */
   COMPATIBILITY_SCORE: 3600, // 1 hour
   /** Match list — moderate TTL, invalidate on new match/unmatch */

@@ -25,7 +25,9 @@ import { useTestModeStore } from '../../stores/testModeStore';
 import { useProfileStore } from '../../stores/profileStore';
 import { storage } from '../../utils/storage';
 import { seedDevData } from '../../utils/devSeedData';
-import { spacing } from '../../theme/spacing';
+import { palette, surfaces, semanticColors } from '../../theme/colors';
+import { spacing, borderRadius } from '../../theme/spacing';
+import { fontWeights } from '../../theme/typography';
 
 type IntroNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'EmotionalIntro'>;
 
@@ -234,7 +236,7 @@ const EmotionalIntroScreen: React.FC = () => {
             accessibilityLabel="Google ile bağlan, çok yakında"
             accessibilityState={{ disabled: true }}
           >
-            <Ionicons name="logo-google" size={20} color="#1A1A1A" />
+            <Ionicons name="logo-google" size={20} color={palette.gray[900]} />
             <Text style={styles.googleButtonText}>Google ile bağlan</Text>
             <Text style={styles.comingSoonBadge}>Çok yakında</Text>
           </TouchableOpacity>
@@ -305,7 +307,7 @@ export default EmotionalIntroScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: palette.gray[900],
   },
   gradientBackground: {
     flex: 1,
@@ -317,17 +319,17 @@ const styles = StyleSheet.create({
     right: 20,
     zIndex: 100,
     backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 10,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.sm + 2,
     borderWidth: 1.5,
     borderColor: 'rgba(255, 255, 255, 0.5)',
   },
   devButtonText: {
     fontSize: 13,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
-    color: '#FFFFFF',
+    fontWeight: fontWeights.extrabold,
+    color: palette.white,
     letterSpacing: 1.5,
   },
   topSpacer: {
@@ -342,8 +344,8 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: 64,
     fontFamily: 'Poppins_300Light',
-    fontWeight: '300',
-    color: '#FFFFFF',
+    fontWeight: fontWeights.light,
+    color: palette.white,
     letterSpacing: 28,
     textShadowColor: 'rgba(0, 0, 0, 0.25)',
     textShadowOffset: { width: 0, height: 2 },
@@ -364,14 +366,14 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: palette.white,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 10,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: palette.black,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.15,
         shadowRadius: 12,
@@ -384,8 +386,8 @@ const styles = StyleSheet.create({
   googleButtonText: {
     fontSize: 16,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    color: '#1A1A1A',
+    fontWeight: fontWeights.semibold,
+    color: palette.gray[900],
   },
   // Other options button — dark/transparent
   otherButton: {
@@ -401,20 +403,20 @@ const styles = StyleSheet.create({
   otherButtonText: {
     fontSize: 16,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontWeight: fontWeights.semibold,
+    color: palette.white,
   },
   // Login link
   loginText: {
     fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: fontWeights.regular,
     color: 'rgba(255, 255, 255, 0.6)',
   },
   loginLink: {
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: fontWeights.bold,
+    color: palette.white,
     textDecorationLine: 'underline',
   },
   // Google button disabled state
@@ -423,7 +425,7 @@ const styles = StyleSheet.create({
   },
   comingSoonBadge: {
     fontSize: 10,
-    color: '#6B6B6B',
+    color: palette.gray[500],
     marginLeft: 4,
     fontStyle: 'italic' as const,
   },
@@ -450,62 +452,62 @@ const styles = StyleSheet.create({
   },
   testPanel: {
     width: '100%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    backgroundColor: palette.white,
+    borderRadius: borderRadius.xl,
     padding: spacing.lg,
     gap: spacing.md,
     borderWidth: 1,
-    borderColor: '#E8E3DB',
+    borderColor: surfaces.cream.surface3,
   },
   testPanelTitle: {
     fontSize: 20,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
-    color: '#1A1A1A',
+    fontWeight: fontWeights.bold,
+    color: palette.gray[900],
     textAlign: 'center',
   },
   testPanelSubtitle: {
     fontSize: 13,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
-    color: '#6B6B6B',
+    fontWeight: fontWeights.regular,
+    color: palette.gray[500],
     textAlign: 'center',
     marginBottom: spacing.sm,
   },
   testPanelButton: {
-    backgroundColor: '#1A1A1A',
-    borderRadius: 14,
+    backgroundColor: palette.gray[900],
+    borderRadius: borderRadius.md + 2,
     padding: spacing.md,
     gap: 4,
   },
   testPanelButtonOutline: {
-    backgroundColor: 'transparent',
+    backgroundColor: palette.transparent,
     borderWidth: 1,
-    borderColor: '#E8E3DB',
+    borderColor: surfaces.cream.surface3,
   },
   testPanelButtonOnboarding: {
-    backgroundColor: '#7C3AED',
+    backgroundColor: palette.purple[600],
   },
   testPanelButtonReset: {
-    backgroundColor: '#DC2626',
+    backgroundColor: semanticColors.error.dark,
   },
   testPanelButtonText: {
     fontSize: 15,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontWeight: fontWeights.semibold,
+    color: palette.white,
   },
   testPanelButtonDesc: {
     fontSize: 12,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
-    color: '#9A9A9A',
+    fontWeight: fontWeights.regular,
+    color: palette.gray[400],
   },
   testPanelCancel: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-    color: '#6B6B6B',
+    fontWeight: fontWeights.medium,
+    color: palette.gray[500],
     textAlign: 'center',
     marginTop: spacing.sm,
   },

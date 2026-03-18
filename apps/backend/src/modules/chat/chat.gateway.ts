@@ -16,6 +16,7 @@ import { Server, Socket } from "socket.io";
 import { ChatService } from "./chat.service";
 import { PrismaService } from "../../prisma/prisma.service";
 import { WsConnectionService } from "../../common/providers/ws-connection.service";
+import { PresenceService } from "../presence/presence.service";
 import { SendMessageDto } from "./dto/send-message.dto";
 
 /**
@@ -67,6 +68,7 @@ export class ChatGateway
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
     private readonly wsConnectionService: WsConnectionService,
+    private readonly presenceService: PresenceService,
   ) {}
 
   afterInit(): void {
@@ -109,6 +111,10 @@ export class ChatGateway
         "/chat",
       );
 
+      // Update presence in Redis and broadcast online status to matched users
+      await this.presenceService.heartbeat(payload.sub);
+      await this.broadcastPresence(payload.sub, true);
+
       this.logger.log(`Client connected: ${client.id} (user: ${payload.sub})`);
     } catch {
       this.logger.warn(`Unauthorized connection attempt: ${client.id}`);
@@ -125,6 +131,10 @@ export class ChatGateway
         sockets.delete(client.id);
         if (sockets.size === 0) {
           this.userSockets.delete(userId);
+
+          // Only broadcast offline when no remaining connections for this user
+          void this.presenceService.setOffline(userId);
+          void this.broadcastPresence(userId, false);
         }
       }
       this.eventTimestamps.delete(client.id);
@@ -201,6 +211,20 @@ export class ChatGateway
     }
 
     return true;
+  }
+
+  // ─── Heartbeat ──────────────────────────────────────────────
+
+  /**
+   * Handle heartbeat from client to keep presence alive in Redis.
+   * Refreshes the 5-minute TTL so the user does not appear falsely offline.
+   */
+  @SubscribeMessage("heartbeat")
+  async handleHeartbeat(
+    @ConnectedSocket() client: AuthenticatedSocket,
+  ): Promise<void> {
+    const userId = this.getUserId(client);
+    await this.presenceService.heartbeat(userId);
   }
 
   // ─── Conversation Events ──────────────────────────────────
@@ -442,6 +466,42 @@ export class ChatGateway
       throw new WsException("Kimlik dogrulama gerekli");
     }
     return userId;
+  }
+
+  /**
+   * Broadcast user:online or user:offline to all matched users who are currently connected.
+   * Fetches the user's active matches and sends the presence event to each matched partner.
+   */
+  private async broadcastPresence(
+    userId: string,
+    isOnline: boolean,
+  ): Promise<void> {
+    try {
+      const matches = await this.prisma.match.findMany({
+        where: {
+          isActive: true,
+          OR: [{ userAId: userId }, { userBId: userId }],
+        },
+        select: { userAId: true, userBId: true },
+      });
+
+      const event = isOnline ? "user:online" : "user:offline";
+      const payload = {
+        userId,
+        isOnline,
+        lastSeen: new Date().toISOString(),
+      };
+
+      for (const match of matches) {
+        const partnerId =
+          match.userAId === userId ? match.userBId : match.userAId;
+        this.notifyUser(partnerId, event, payload);
+      }
+    } catch (err) {
+      this.logger.warn(
+        `Failed to broadcast presence for user ${userId}: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
   }
 
   /**

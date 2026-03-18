@@ -25,6 +25,7 @@ import {
   UpdatePersonalityDto,
   SavePromptsDto,
   ToggleIncognitoDto,
+  SaveVideoDto,
 } from "./dto";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
 
@@ -154,13 +155,7 @@ export class ProfilesController {
   @ApiOperation({ summary: "Save video metadata after upload" })
   async saveVideo(
     @CurrentUser("sub") userId: string,
-    @Body()
-    dto: {
-      videoUrl: string;
-      videoKey: string;
-      videoThumbnailUrl?: string;
-      videoDuration?: number;
-    },
+    @Body() dto: SaveVideoDto,
   ) {
     return this.profilesService.saveVideo(userId, dto);
   }

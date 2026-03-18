@@ -36,6 +36,7 @@ const SHORT_TEXT_FIELDS = new Set([
  */
 const SKIP_SANITIZE_FIELDS = new Set([
   "selfieBase64",
+  "selfieImage",
   "imageBase64",
   "photoData",
   "refreshToken",

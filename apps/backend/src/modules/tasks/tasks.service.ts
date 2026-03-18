@@ -3,6 +3,7 @@ import { Cron, CronExpression } from "@nestjs/schedule";
 import { PrismaService } from "../../prisma/prisma.service";
 import { RelationshipsService } from "../relationships/relationships.service";
 import { StoriesService } from "../stories/stories.service";
+import { PaymentsService } from "../payments/payments.service";
 
 /**
  * Scheduled tasks (cron jobs) for LUMA V1.
@@ -17,6 +18,8 @@ import { StoriesService } from "../stories/stories.service";
  * 8. Clean old daily swipe counts
  * 9. Auto-end expired relationship deactivations (48-hour deadline)
  * 10. Clean up expired stories (24-hour TTL)
+ * 11. Process expired subscriptions with grace period
+ * 12. Clean up expired moods (24-hour TTL)
  */
 @Injectable()
 export class TasksService {
@@ -26,6 +29,7 @@ export class TasksService {
     private readonly prisma: PrismaService,
     private readonly relationshipsService: RelationshipsService,
     private readonly storiesService: StoriesService,
+    private readonly paymentsService: PaymentsService,
   ) {}
 
   // ─── 1. End Expired Harmony Sessions ─────────────────────────
@@ -83,44 +87,17 @@ export class TasksService {
     }
   }
 
-  // ─── 4. Expire Stale Subscriptions ───────────────────────────
-  // Runs every hour
+  // ─── 4. Process Expired Subscriptions (with Grace Period) ────
+  // Runs every hour — delegates to PaymentsService which handles
+  // the 3-day grace period logic (Phase 1: assign grace, Phase 2: downgrade)
   @Cron(CronExpression.EVERY_HOUR)
-  async expireSubscriptions(): Promise<void> {
-    const now = new Date();
+  async processExpiredSubscriptions(): Promise<void> {
+    const count = await this.paymentsService.processExpiredSubscriptions();
 
-    const result = await this.prisma.subscription.updateMany({
-      where: {
-        isActive: true,
-        autoRenew: false,
-        expiryDate: { lt: now },
-      },
-      data: { isActive: false },
-    });
-
-    if (result.count > 0) {
-      this.logger.log(`Expired ${result.count} subscription(s)`);
-
-      // Downgrade expired users to FREE tier
-      const expiredSubs = await this.prisma.subscription.findMany({
-        where: {
-          isActive: false,
-          expiryDate: {
-            gte: new Date(now.getTime() - 60 * 60 * 1000), // last hour
-            lt: now,
-          },
-        },
-        select: { userId: true },
-      });
-
-      if (expiredSubs.length > 0) {
-        const userIds = expiredSubs.map((s: { userId: string }) => s.userId);
-        await this.prisma.user.updateMany({
-          where: { id: { in: userIds } },
-          data: { packageTier: "FREE" },
-        });
-        this.logger.log(`Downgraded ${userIds.length} user(s) to FREE tier`);
-      }
+    if (count > 0) {
+      this.logger.log(
+        `Processed ${count} expired subscription(s) (with grace period)`,
+      );
     }
   }
 
@@ -222,6 +199,28 @@ export class TasksService {
 
     if (cleanedCount > 0) {
       this.logger.log(`Cleaned up ${cleanedCount} expired story/stories`);
+    }
+  }
+
+  // ─── 12. Clean Up Expired Moods ─────────────────────────────
+  // Runs every hour — clears moods older than 24 hours
+  @Cron(CronExpression.EVERY_HOUR)
+  async cleanupExpiredMoods(): Promise<void> {
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    const result = await this.prisma.userProfile.updateMany({
+      where: {
+        currentMood: { not: null },
+        moodSetAt: { lt: twentyFourHoursAgo },
+      },
+      data: {
+        currentMood: null,
+        moodSetAt: null,
+      },
+    });
+
+    if (result.count > 0) {
+      this.logger.log(`Cleared ${result.count} expired mood(s)`);
     }
   }
 }

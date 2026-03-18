@@ -1,8 +1,10 @@
 import { Module } from "@nestjs/common";
 import { PlacesController } from "./places.controller";
 import { PlacesService } from "./places.service";
+import { BadgesModule } from "../badges/badges.module";
 
 @Module({
+  imports: [BadgesModule],
   controllers: [PlacesController],
   providers: [PlacesService],
   exports: [PlacesService],

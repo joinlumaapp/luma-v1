@@ -3,6 +3,7 @@ import { TasksService } from "./tasks.service";
 import { PrismaService } from "../../prisma/prisma.service";
 import { RelationshipsService } from "../relationships/relationships.service";
 import { StoriesService } from "../stories/stories.service";
+import { PaymentsService } from "../payments/payments.service";
 
 describe("TasksService", () => {
   let service: TasksService;
@@ -15,6 +16,7 @@ describe("TasksService", () => {
     user: { updateMany: jest.fn() },
     userSession: { deleteMany: jest.fn() },
     notification: { deleteMany: jest.fn() },
+    userProfile: { updateMany: jest.fn() },
   };
 
   const mockRelationshipsService = {
@@ -23,6 +25,10 @@ describe("TasksService", () => {
 
   const mockStoriesService = {
     cleanupExpiredStories: jest.fn().mockResolvedValue(0),
+  };
+
+  const mockPaymentsService = {
+    processExpiredSubscriptions: jest.fn().mockResolvedValue(0),
   };
 
   beforeEach(async () => {
@@ -34,6 +40,7 @@ describe("TasksService", () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: RelationshipsService, useValue: mockRelationshipsService },
         { provide: StoriesService, useValue: mockStoriesService },
+        { provide: PaymentsService, useValue: mockPaymentsService },
       ],
     }).compile();
 
@@ -127,61 +134,26 @@ describe("TasksService", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════
-  // expireSubscriptions()
+  // processExpiredSubscriptions()
   // ═══════════════════════════════════════════════════════════════
 
-  describe("expireSubscriptions()", () => {
-    it("should deactivate expired non-renewing subscriptions", async () => {
-      mockPrisma.subscription.updateMany.mockResolvedValue({ count: 2 });
-      mockPrisma.subscription.findMany.mockResolvedValue([
-        { userId: "user-1" },
-        { userId: "user-2" },
-      ]);
-      mockPrisma.user.updateMany.mockResolvedValue({ count: 2 });
+  describe("processExpiredSubscriptions()", () => {
+    it("should delegate to paymentsService.processExpiredSubscriptions", async () => {
+      mockPaymentsService.processExpiredSubscriptions.mockResolvedValue(3);
 
-      await service.expireSubscriptions();
+      await service.processExpiredSubscriptions();
 
-      expect(mockPrisma.subscription.updateMany).toHaveBeenCalledWith({
-        where: {
-          isActive: true,
-          autoRenew: false,
-          expiryDate: { lt: expect.any(Date) },
-        },
-        data: { isActive: false },
-      });
+      expect(
+        mockPaymentsService.processExpiredSubscriptions,
+      ).toHaveBeenCalledTimes(1);
     });
 
-    it("should downgrade expired users to FREE tier", async () => {
-      mockPrisma.subscription.updateMany.mockResolvedValue({ count: 1 });
-      mockPrisma.subscription.findMany.mockResolvedValue([
-        { userId: "user-expired-1" },
-      ]);
-      mockPrisma.user.updateMany.mockResolvedValue({ count: 1 });
+    it("should not throw when no subscriptions to process", async () => {
+      mockPaymentsService.processExpiredSubscriptions.mockResolvedValue(0);
 
-      await service.expireSubscriptions();
-
-      expect(mockPrisma.user.updateMany).toHaveBeenCalledWith({
-        where: { id: { in: ["user-expired-1"] } },
-        data: { packageTier: "FREE" },
-      });
-    });
-
-    it("should not downgrade users when no subscriptions expired", async () => {
-      mockPrisma.subscription.updateMany.mockResolvedValue({ count: 0 });
-
-      await service.expireSubscriptions();
-
-      expect(mockPrisma.subscription.findMany).not.toHaveBeenCalled();
-      expect(mockPrisma.user.updateMany).not.toHaveBeenCalled();
-    });
-
-    it("should handle expired subs with no recently expired users", async () => {
-      mockPrisma.subscription.updateMany.mockResolvedValue({ count: 1 });
-      mockPrisma.subscription.findMany.mockResolvedValue([]);
-
-      await service.expireSubscriptions();
-
-      expect(mockPrisma.user.updateMany).not.toHaveBeenCalled();
+      await expect(
+        service.processExpiredSubscriptions(),
+      ).resolves.toBeUndefined();
     });
   });
 
@@ -256,6 +228,35 @@ describe("TasksService", () => {
       await expect(
         service.autoEndExpiredRelationships(),
       ).resolves.toBeUndefined();
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // cleanupExpiredMoods()
+  // ═══════════════════════════════════════════════════════════════
+
+  describe("cleanupExpiredMoods()", () => {
+    it("should clear moods older than 24 hours", async () => {
+      mockPrisma.userProfile.updateMany.mockResolvedValue({ count: 5 });
+
+      await service.cleanupExpiredMoods();
+
+      expect(mockPrisma.userProfile.updateMany).toHaveBeenCalledWith({
+        where: {
+          currentMood: { not: null },
+          moodSetAt: { lt: expect.any(Date) },
+        },
+        data: {
+          currentMood: null,
+          moodSetAt: null,
+        },
+      });
+    });
+
+    it("should not throw when no moods to clean", async () => {
+      mockPrisma.userProfile.updateMany.mockResolvedValue({ count: 0 });
+
+      await expect(service.cleanupExpiredMoods()).resolves.toBeUndefined();
     });
   });
 });

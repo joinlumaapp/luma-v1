@@ -20,6 +20,8 @@ import {
   PurchaseGoldDto,
   UpgradePackageDto,
   SpendGoldDto,
+  AppleWebhookDto,
+  GoogleWebhookDto,
 } from "./dto";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import {
@@ -96,6 +98,21 @@ export class PaymentsController {
     @Body() dto: UpgradePackageDto,
   ) {
     return this.paymentsService.upgradePackage(userId, dto);
+  }
+
+  // ─── Package Downgrade ─────────────────────────────────────────
+
+  @UseGuards(JwtAuthGuard)
+  @Post("package/downgrade")
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: "Downgrade package tier (Reserved -> Pro -> Gold -> Free)",
+  })
+  async downgradePackage(
+    @CurrentUser("sub") userId: string,
+    @Body() dto: UpgradePackageDto,
+  ) {
+    return this.paymentsService.downgradePackage(userId, dto);
   }
 
   // ─── Gold Endpoints ─────────────────────────────────────────────
@@ -181,5 +198,25 @@ export class PaymentsController {
       pageNum,
       limitNum,
     );
+  }
+
+  // ─── Store Webhook Endpoints ──────────────────────────────────
+
+  @Public()
+  @Post("webhook/apple")
+  @ApiOperation({
+    summary: "Apple App Store Server Notifications (S2S) webhook",
+  })
+  async handleAppleWebhook(@Body() dto: AppleWebhookDto) {
+    return this.paymentsService.handleAppleWebhook(dto.signedPayload);
+  }
+
+  @Public()
+  @Post("webhook/google")
+  @ApiOperation({
+    summary: "Google Play Real-Time Developer Notifications (RTDN) webhook",
+  })
+  async handleGoogleWebhook(@Body() dto: GoogleWebhookDto) {
+    return this.paymentsService.handleGoogleWebhook(dto.message.data);
   }
 }

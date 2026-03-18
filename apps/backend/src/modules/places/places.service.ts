@@ -3,9 +3,14 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Logger,
 } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
+import { BadgesService } from "../badges/badges.service";
 import { CheckInDto, AddMemoryDto } from "./dto";
+
+/** Maximum allowed distance (in meters) between user and place for check-in */
+const CHECKIN_MAX_DISTANCE_METERS = 500;
 
 export interface PopularPlace {
   id: string;
@@ -19,13 +24,48 @@ export interface PopularPlace {
 
 @Injectable()
 export class PlacesService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(PlacesService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly badgesService: BadgesService,
+  ) {}
 
   /**
    * Check in to a place (record a visit).
    * Creates the place record if it doesn't exist yet.
    */
   async checkIn(userId: string, dto: CheckInDto) {
+    // Geofencing: verify user is within 500m of the place
+    const userProfile = await this.prisma.userProfile.findUnique({
+      where: { userId },
+      select: { latitude: true, longitude: true },
+    });
+
+    if (
+      userProfile?.latitude != null &&
+      userProfile?.longitude != null
+    ) {
+      const distanceMeters =
+        this.calculateDistanceKm(
+          userProfile.latitude,
+          userProfile.longitude,
+          dto.latitude,
+          dto.longitude,
+        ) * 1000;
+
+      if (distanceMeters > CHECKIN_MAX_DISTANCE_METERS) {
+        throw new BadRequestException(
+          `Check-in yapmak icin mekana ${CHECKIN_MAX_DISTANCE_METERS}m yakininda olmaniz gerekiyor. ` +
+            `Mevcut mesafe: ${Math.round(distanceMeters)}m`,
+        );
+      }
+    } else {
+      this.logger.warn(
+        `User ${userId} has no location data — skipping geofencing check for check-in`,
+      );
+    }
+
     // Find or create place
     let place = await this.prisma.discoveredPlace.findFirst({
       where: {
@@ -90,6 +130,11 @@ export class PlacesService {
         },
       });
     }
+
+    // Check if user earned the explorer badge (fire-and-forget)
+    this.badgesService
+      .checkAndAwardBadges(userId, "checkin")
+      .catch(() => {});
 
     return {
       checkInId: checkIn.id,
@@ -338,8 +383,24 @@ export class PlacesService {
     longitude: number,
     radiusKm: number,
   ) {
-    // Fetch all discovered places
+    // Bounding box filter: approximate lat/lng range for the given radius
+    // 1 degree latitude ~ 111 km, 1 degree longitude ~ 111 km * cos(lat)
+    const latDelta = radiusKm / 111;
+    const lonDelta = radiusKm / (111 * Math.cos(this.toRad(latitude)));
+
+    // Fetch discovered places within bounding box (SQL-level filtering) with limit
     const allPlaces = await this.prisma.discoveredPlace.findMany({
+      where: {
+        latitude: {
+          gte: latitude - latDelta,
+          lte: latitude + latDelta,
+        },
+        longitude: {
+          gte: longitude - lonDelta,
+          lte: longitude + lonDelta,
+        },
+      },
+      take: 100,
       include: {
         checkIns: {
           select: { checkedInAt: true },

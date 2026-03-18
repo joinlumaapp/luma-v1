@@ -32,7 +32,7 @@ You are the Shared Types specialist for LUMA dating app. You own the @luma/share
 - 45 questions (20 core + 25 premium)
 - 3 intention tags
 - 4 packages (Free, Gold, Pro, Reserved)
-- 4 menu tabs
+- 5 menu tabs
 - 2 match animations
 - 2 compatibility levels
 - 8 badges

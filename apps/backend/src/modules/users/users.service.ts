@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 import { UpdateUserDto } from "./dto";
+import { calculateAge } from "../../common/utils/date.utils";
 
 @Injectable()
 export class UsersService {
@@ -40,7 +41,7 @@ export class UsersService {
 
     // Compute age from birthDate
     const age = user.profile?.birthDate
-      ? this.calculateAge(user.profile.birthDate)
+      ? calculateAge(user.profile.birthDate)
       : null;
 
     // Compute profile completion percentage
@@ -94,18 +95,6 @@ export class UsersService {
 
   // ─── Private Helpers ───────────────────────────────────────────
 
-  private calculateAge(birthDate: Date): number {
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
-    return age;
-  }
 
   private calculateProfileCompletion(user: {
     isSmsVerified: boolean;

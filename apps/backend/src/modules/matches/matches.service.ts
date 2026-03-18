@@ -4,6 +4,7 @@ import {
   ForbiddenException,
 } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
+import { calculateAge } from "../../common/utils/date.utils";
 
 @Injectable()
 export class MatchesService {
@@ -74,7 +75,7 @@ export class MatchesService {
       const isUserA = match.userAId === userId;
       const partner = isUserA ? match.userB : match.userA;
       const partnerAge = partner.profile
-        ? this.calculateAge(partner.profile.birthDate)
+        ? calculateAge(partner.profile.birthDate)
         : null;
 
       return {
@@ -194,7 +195,7 @@ export class MatchesService {
     const isUserA = match.userAId === userId;
     const partner = isUserA ? match.userB : match.userA;
     const partnerAge = partner.profile
-      ? this.calculateAge(partner.profile.birthDate)
+      ? calculateAge(partner.profile.birthDate)
       : null;
 
     // Get compatibility breakdown
@@ -295,6 +296,12 @@ export class MatchesService {
           isActive: false,
           unmatchedAt: new Date(),
         },
+      });
+
+      // Soft-delete chat messages — mark all as READ to prevent further delivery
+      await tx.chatMessage.updateMany({
+        where: { matchId, status: { in: ["SENT", "DELIVERED"] } },
+        data: { status: "READ" },
       });
 
       // End any active harmony sessions
@@ -461,16 +468,6 @@ export class MatchesService {
     if (!starters || score < 60) return null;
 
     return starters[Math.floor(Math.random() * starters.length)];
-  }
-
-  private calculateAge(birthDate: Date): number {
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
   }
 
   private orderIds(a: string, b: string) {

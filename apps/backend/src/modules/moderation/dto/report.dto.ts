@@ -5,17 +5,18 @@ import {
   IsEnum,
   IsOptional,
   MaxLength,
+  Matches,
   IsUUID,
 } from "class-validator";
 
 export enum ReportReasonDto {
-  SPAM = "spam",
-  INAPPROPRIATE_PHOTO = "inappropriate_photo",
-  HARASSMENT = "harassment",
-  UNDERAGE = "underage",
-  FAKE_PROFILE = "fake_profile",
-  SCAM = "scam",
-  OTHER = "other",
+  SPAM = "SPAM",
+  INAPPROPRIATE_PHOTO = "INAPPROPRIATE_PHOTO",
+  HARASSMENT = "HARASSMENT",
+  UNDERAGE = "UNDERAGE",
+  FAKE_PROFILE = "FAKE_PROFILE",
+  SCAM = "SCAM",
+  OTHER = "OTHER",
 }
 
 export class CreateReportDto {
@@ -43,5 +44,8 @@ export class CreateReportDto {
   @IsOptional()
   @IsString()
   @MaxLength(1000)
+  @Matches(/^[^<>]*$/, {
+    message: "HTML etiketleri kullanilamaz",
+  })
   details?: string;
 }

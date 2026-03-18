@@ -12,7 +12,7 @@ export const APP_CONFIG: {
   APP_VERSION: '0.1.0',
   API_BASE_URL: __DEV__ ? 'http://localhost:3000' : 'https://api.luma.dating',
   WS_BASE_URL: __DEV__ ? 'ws://localhost:3000' : 'wss://api.luma.dating',
-  MIXPANEL_TOKEN: '', // Set via environment or build config — empty string disables Mixpanel
+  MIXPANEL_TOKEN: process.env.EXPO_PUBLIC_MIXPANEL_TOKEN ?? '', // Read from environment — empty string disables Mixpanel
   GIPHY_API_KEY: '', // Set via environment — falls back to Giphy public beta key in giphyService
 };
 
@@ -71,7 +71,7 @@ export const PACKAGE_TIERS = [
     name: 'Ücretsiz',
     price: 0,
     features: [
-      'Sınırsız beğeni',
+      '20 beğeni / gün',
       '1 Süper Beğeni / gün',
       'Temel uyumluluk skoru',
       'Reklamlı deneyim',
@@ -79,10 +79,10 @@ export const PACKAGE_TIERS = [
   },
   {
     id: 'GOLD',
-    name: 'Premium',
+    name: 'Gold',
     price: 349.99,
     features: [
-      'Sınırsız beğeni',
+      '50 beğeni / gün',
       '10 Süper Beğeni / gün',
       'Kimin beğendiğini gör',
       'Geri al',
@@ -92,24 +92,24 @@ export const PACKAGE_TIERS = [
   },
   {
     id: 'PRO',
-    name: 'Supreme',
+    name: 'Pro',
     price: 599.99,
     features: [
-      'Premium özelliklerin tümü',
+      'Gold özelliklerin tümü',
+      'Sınırsız beğeni',
       'Sınırsız Süper Beğeni',
-      'Ayda 3 Boost hediye',
+      'Ayda 4 Boost hediye',
       'Tüm beğenilerin öncelikli',
       'Gelişmiş filtreler',
-      'Yakın çevredeki profiller',
     ],
   },
   {
     id: 'RESERVED',
-    name: 'Sınırsız',
+    name: 'Reserved',
     price: 1299.99,
     features: [
-      'Supreme özelliklerin tümü',
-      'Ayda 5 Boost hediye',
+      'Pro özelliklerin tümü',
+      'Sınırsız Boost',
       'Özel eşleştirme algoritması',
       'VIP müşteri desteği',
       'Özel etkinlik davetleri',
@@ -120,8 +120,8 @@ export const PACKAGE_TIERS = [
 
 // Profile configuration
 export const PROFILE_CONFIG = {
-  MAX_PHOTOS: 20,
-  MIN_PHOTOS: 1,
+  MAX_PHOTOS: 6,
+  MIN_PHOTOS: 2,
   MIN_BIO_LENGTH: 10,
   MAX_BIO_LENGTH: 500,
   MIN_AGE: 18,
@@ -133,8 +133,8 @@ const isSaturday = (): boolean => new Date().getDay() === 6;
 
 // Base daily like limits per tier (before any bonuses)
 const BASE_DAILY_LIKES = {
-  FREE: 999999,
-  GOLD: 999999,
+  FREE: 20,
+  GOLD: 50,
   PRO: 999999,
   RESERVED: 999999,
 } as const;
@@ -146,18 +146,18 @@ export const getDailyLikesForTier = (tier: keyof typeof BASE_DAILY_LIKES): numbe
   return base;
 };
 
-// Discovery configuration (limits must match backend DAILY_SWIPE_LIMITS)
+// Discovery configuration (limits must match backend DAILY_FEED_VIEW_LIMITS)
 export const DISCOVERY_CONFIG = {
-  FREE_DAILY_LIKES: 999999,
+  FREE_DAILY_LIKES: 20,
   CARD_STACK_SIZE: 60,
   DEFAULT_DISTANCE_KM: 50,
   MAX_DISTANCE_KM: 200,
-  /** Per-tier daily like limits — must match PACKAGE_FEATURES in @luma/shared */
+  /** Per-tier daily like limits — must match backend DAILY_FEED_VIEW_LIMITS */
   DAILY_LIKES: {
-    FREE: 999999,
-    GOLD: 999999,
-    PRO: 999999,
-    RESERVED: 999999,
+    FREE: 20,
+    GOLD: 50,
+    PRO: 999999,    // Unlimited
+    RESERVED: 999999, // Unlimited
   },
   /** Whether Saturday 2x bonus is currently active */
   IS_SATURDAY_BONUS: isSaturday(),
@@ -172,8 +172,8 @@ export const SUPER_LIKE_CONFIG = {
   DAILY_LIMITS: {
     FREE: 1,
     GOLD: 10,
-    PRO: 10,
-    RESERVED: -1,
+    PRO: -1,       // Unlimited (matches backend)
+    RESERVED: -1,  // Unlimited
   },
 } as const;
 

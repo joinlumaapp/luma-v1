@@ -9,7 +9,7 @@ export interface RelationshipInfo {
   partnerId: string;
   partnerName: string;
   partnerPhotoUrl: string;
-  status: 'active' | 'inactive';
+  status: 'active' | 'ending' | 'inactive';
   activatedAt: string;
   durationDays: number;
   isVisible: boolean;
@@ -36,7 +36,7 @@ const mapDetailToInfo = (detail: RelationshipDetail): RelationshipInfo => {
     partnerId: detail.partner?.userId ?? '',
     partnerName: detail.partner?.firstName ?? '',
     partnerPhotoUrl: detail.partner?.photo?.thumbnailUrl ?? detail.partner?.photo?.url ?? '',
-    status: detail.status === 'ACTIVE' ? 'active' : 'inactive',
+    status: detail.status === 'ACTIVE' ? 'active' : detail.status === 'ENDING' ? 'ending' : 'inactive',
     activatedAt: detail.activatedAt ?? '',
     durationDays: detail.durationDays,
     isVisible: detail.isVisible,
@@ -87,12 +87,12 @@ export const useRelationshipStore = create<RelationshipState>((set, get) => ({
       const response = await relationshipService.activate(matchId);
       set({
         relationship: {
-          id: response.id,
+          id: response.relationshipId,
           partnerId: response.matchId,
           partnerName: '',
           partnerPhotoUrl: '',
-          status: response.status as 'active' | 'inactive',
-          activatedAt: response.activatedAt,
+          status: response.status === 'ACTIVE' ? 'active' : response.status === 'ENDING' ? 'ending' : 'inactive',
+          activatedAt: response.activatedAt ?? '',
           durationDays: 0,
           isVisible: true,
         },

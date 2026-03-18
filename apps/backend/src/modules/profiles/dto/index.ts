@@ -7,3 +7,4 @@ export { UpdateLocationDto } from "./update-location.dto";
 export { UpdatePersonalityDto } from "./update-personality.dto";
 export { SavePromptsDto, PromptItemDto } from "./save-prompts.dto";
 export { ToggleIncognitoDto } from "./toggle-incognito.dto";
+export { SaveVideoDto } from "./save-video.dto";

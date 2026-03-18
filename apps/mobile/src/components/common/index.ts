@@ -2,7 +2,6 @@ export { LoadingScreen } from './LoadingScreen';
 export { EmptyState } from './EmptyState';
 export { Avatar } from './Avatar';
 export { Badge } from './Badge';
-export { GradientCard } from './GradientCard';
 export { VerifiedBadge } from './VerifiedBadge';
 export { SubscriptionBadge } from './SubscriptionBadge';
 export { PremiumButton } from './PremiumButton';

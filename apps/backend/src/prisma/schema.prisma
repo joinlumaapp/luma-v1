@@ -82,6 +82,8 @@ model User {
   followersGiven         UserFollow[]      @relation("FollowsGiven")
   followersReceived      UserFollow[]      @relation("FollowsReceived")
 
+  @@index([deletedAt])                // Soft-delete: filter active/deleted users
+  @@index([packageTier])              // Tier filtering: find users by package
   @@map("users")
 }
 
@@ -204,6 +206,7 @@ model UserProfile {
   @@index([lastActiveAt])
   @@index([gender, isComplete]) // Discovery: filter by gender + complete profiles
   @@index([isComplete, lastActiveAt]) // Discovery: active complete profiles
+  @@index([latitude, longitude])     // Location: proximity-based discovery queries
   @@map("user_profiles")
 }
 
@@ -440,7 +443,7 @@ model HarmonySession {
   hasVideoChat          Boolean              @default(false) @map("has_video_chat")
   createdAt             DateTime             @default(now()) @map("created_at")
 
-  match      Match              @relation(fields: [matchId], references: [id])
+  match      Match              @relation(fields: [matchId], references: [id], onDelete: Cascade)
   userA      User               @relation("HarmonyUserA", fields: [userAId], references: [id])
   userB      User               @relation("HarmonyUserB", fields: [userBId], references: [id])
   messages   HarmonyMessage[]
@@ -472,7 +475,7 @@ model HarmonyMessage {
   createdAt DateTime           @default(now()) @map("created_at")
 
   session HarmonySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  sender  User           @relation(fields: [senderId], references: [id])
+  sender  User           @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([sessionId, createdAt])
   @@index([senderId]) // Query: messages by sender
@@ -541,13 +544,13 @@ model HarmonyUsedCard {
 model HarmonyExtension {
   id           String   @id @default(uuid()) @db.Uuid
   sessionId    String   @map("session_id") @db.Uuid
-  userId       String   @map("user_id") @db.Uuid
+  userId       String?  @map("user_id") @db.Uuid
   goldSpent    Int      @map("gold_spent")
   minutesAdded Int      @map("minutes_added")
   createdAt    DateTime @default(now()) @map("created_at")
 
-  session HarmonySession @relation(fields: [sessionId], references: [id])
-  user    User           @relation(fields: [userId], references: [id])
+  session HarmonySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([sessionId])
   @@map("harmony_extensions")
@@ -606,6 +609,9 @@ model CoupleBadge {
 // ============================================================
 // SUBSYSTEM 12: Couples Club
 // Couples-only access, 2v2 interactions, Group events
+// STATUS: Active — used in RelationshipsService and AppInfoController.
+// DO NOT remove: referenced by relationships.service.ts (CRUD operations)
+// and app-info.controller.ts (feature flags).
 // ============================================================
 
 model CouplesClubEvent {
@@ -670,8 +676,8 @@ model PlaceCheckIn {
   relationshipId String?  @map("relationship_id") @db.Uuid
   checkedInAt    DateTime @default(now()) @map("checked_in_at")
 
-  place DiscoveredPlace @relation(fields: [placeId], references: [id])
-  user  User            @relation(fields: [userId], references: [id])
+  place DiscoveredPlace @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  user  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([placeId])

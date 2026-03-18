@@ -6,6 +6,7 @@ import {
   Logger,
 } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
+import { calculateAge } from "../utils/date.utils";
 
 /**
  * Guard that verifies the authenticated user is at least 18 years old.
@@ -49,7 +50,7 @@ export class AgeVerificationGuard implements CanActivate {
       );
     }
 
-    const age = this.calculateAge(profile.birthDate);
+    const age = calculateAge(profile.birthDate);
 
     if (age < 18) {
       this.logger.warn(
@@ -63,16 +64,4 @@ export class AgeVerificationGuard implements CanActivate {
     return true;
   }
 
-  private calculateAge(birthDate: Date): number {
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
-    return age;
-  }
 }

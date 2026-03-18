@@ -15,6 +15,11 @@
 
 import { Dimensions, Platform } from 'react-native';
 
+// TODO: Dimensions.get('window') is called at module level which returns a static
+// snapshot. This is acceptable here because spacing.ts is a module-level constant
+// file and cannot use React hooks. If dynamic screen dimensions are needed (e.g.,
+// for split-screen or rotation), use the useWindowDimensions() hook inside
+// components instead of referencing layout.screenWidth / layout.screenHeight.
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // ─────────────────────────────────────────────────────────────────────────────

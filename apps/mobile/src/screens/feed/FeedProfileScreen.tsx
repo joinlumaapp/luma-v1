@@ -501,12 +501,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
+    flexWrap: 'wrap',
   },
   userName: {
     fontSize: 28,
     fontWeight: fontWeights.bold,
     color: colors.text,
     letterSpacing: -0.5,
+    flexShrink: 1,
   },
   jobTitle: {
     fontSize: 15,
@@ -567,13 +569,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     paddingVertical: spacing.md + 4,
-    paddingHorizontal: spacing.xl,
+    paddingHorizontal: spacing.md,
   },
   statItem: {
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
-    paddingHorizontal: 12,
+    paddingHorizontal: 4,
   },
   statValue: {
     fontSize: 22,

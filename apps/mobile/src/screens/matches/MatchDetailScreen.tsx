@@ -130,6 +130,10 @@ export const MatchDetailScreen: React.FC = () => {
           {selectedMatch.packageTier && <SubscriptionBadge tier={selectedMatch.packageTier} compact />}
         </View>
 
+        {(selectedMatch as Record<string, unknown>)?.job && (selectedMatch as Record<string, unknown>).job !== 'Belirtilmedi' ? (
+          <Text style={styles.jobTitle}>{String((selectedMatch as Record<string, unknown>).job)}</Text>
+        ) : null}
+
         {selectedMatch.city ? (
           <Text style={styles.cityText}>{selectedMatch.city}</Text>
         ) : null}
@@ -152,21 +156,21 @@ export const MatchDetailScreen: React.FC = () => {
         )}
       </View>
 
-      {/* Stats row — dating-relevant metrics from match data */}
+      {/* Stats row — social metrics */}
       <View style={styles.statsCard}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>%{compatPercent}</Text>
-          <Text style={styles.statLabel}>UYUM</Text>
+          <Text style={styles.statValue}>{(selectedMatch as Record<string, unknown>)?.postCount as number ?? 0}</Text>
+          <Text style={styles.statLabel}>GÖNDERİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{selectedMatch.compatibilityBreakdown?.length ?? 0}</Text>
-          <Text style={styles.statLabel}>KATEGORİ</Text>
+          <Text style={styles.statValue}>{(selectedMatch as Record<string, unknown>)?.followerCount as number ?? 0}</Text>
+          <Text style={styles.statLabel}>TAKİPÇİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{selectedMatch.photos?.length ?? 0}</Text>
-          <Text style={styles.statLabel}>FOTOĞRAF</Text>
+          <Text style={styles.statValue}>{(selectedMatch as Record<string, unknown>)?.followingCount as number ?? 0}</Text>
+          <Text style={styles.statLabel}>TAKİP</Text>
         </View>
       </View>
     </View>
@@ -435,6 +439,7 @@ const styles = StyleSheet.create({
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   userName: {
@@ -442,6 +447,13 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.bold,
     color: colors.text,
     letterSpacing: -0.5,
+    flexShrink: 1,
+  },
+  jobTitle: {
+    fontSize: 15,
+    fontWeight: fontWeights.semibold,
+    color: palette.purple[600],
+    letterSpacing: 0.1,
   },
   cityText: {
     fontSize: 14,
@@ -496,13 +508,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     paddingVertical: spacing.md + 4,
-    paddingHorizontal: spacing.xl,
+    paddingHorizontal: spacing.md,
   },
   statItem: {
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
-    paddingHorizontal: 12,
+    paddingHorizontal: 4,
   },
   statValue: {
     fontSize: 22,

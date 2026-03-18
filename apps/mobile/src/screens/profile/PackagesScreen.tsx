@@ -21,7 +21,7 @@ import { PACKAGE_TIERS } from '../../constants/config';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
 import { paymentService } from '../../services/paymentService';
 import { iapService } from '../../services/iapService';
-import { useScreenTracking } from '../../hooks/useAnalytics';
+import { useScreenTracking, analyticsService, ANALYTICS_EVENTS } from '../../hooks/useAnalytics';
 
 // Package accent colors
 const PACKAGE_COLORS: Record<string, string> = {
@@ -44,8 +44,8 @@ const FEATURE_COMPARISON: FeatureRow[] = [
   {
     label: 'Beğeni Limiti',
     values: {
-      FREE: 'Sınırsız',
-      GOLD: 'Sınırsız',
+      FREE: '20/gün',
+      GOLD: '50/gün',
       PRO: 'Sınırsız',
       RESERVED: 'Sınırsız',
     },
@@ -55,7 +55,7 @@ const FEATURE_COMPARISON: FeatureRow[] = [
     values: {
       FREE: '1/gün',
       GOLD: '10/gün',
-      PRO: '10/gün',
+      PRO: 'Sınırsız',
       RESERVED: 'Sınırsız',
     },
   },
@@ -176,6 +176,10 @@ const formatPrice = (price: number): string => {
 
 export const PackagesScreen: React.FC = () => {
   useScreenTracking('Packages');
+  // Track package_viewed event when user opens the packages screen
+  React.useEffect(() => {
+    analyticsService.track(ANALYTICS_EVENTS.PACKAGE_VIEWED, {});
+  }, []);
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const currentPlan = useAuthStore((state) => state.user?.packageTier ?? 'FREE');
@@ -253,6 +257,77 @@ export const PackagesScreen: React.FC = () => {
     [currentPlan, isSubscribing, updatePackageTier],
   );
 
+  const handleDowngrade = useCallback(
+    (packageId: string) => {
+      if (packageId === currentPlan || isSubscribing) return;
+
+      const targetPkg = PACKAGE_TIERS.find((p) => p.id === packageId);
+      if (!targetPkg) return;
+
+      Alert.alert(
+        'Paket Düşürme',
+        `${targetPkg.name} paketine geçmek istediğinize emin misiniz? Mevcut premium özelliklerinizi kaybedeceksiniz.`,
+        [
+          { text: 'Vazgeç', style: 'cancel' },
+          {
+            text: 'Düşür',
+            style: 'destructive',
+            onPress: async () => {
+              setIsSubscribing(true);
+              try {
+                if (packageId === 'FREE') {
+                  // Downgrade to FREE: cancel subscription, no purchase needed
+                  await paymentService.downgradePackage({
+                    targetTier: packageId,
+                    platform: 'google',
+                    receipt: '',
+                  });
+                } else {
+                  // Downgrade to a paid tier: need IAP purchase for the new tier
+                  const status = await iapService.initIAP();
+                  if (__DEV__ && status.isMockMode) {
+                    console.log(
+                      '[PackagesScreen] IAP is in mock mode — using dev receipt for downgrade',
+                    );
+                  }
+
+                  const purchase = await iapService.purchaseSubscription(packageId);
+
+                  await paymentService.downgradePackage({
+                    targetTier: packageId,
+                    platform: purchase.platform,
+                    receipt: purchase.receipt,
+                  });
+                }
+
+                if (updatePackageTier) {
+                  updatePackageTier(packageId as PackageTier);
+                }
+                Alert.alert(
+                  'Başarılı',
+                  `Paketiniz ${targetPkg.name} olarak değiştirildi.`,
+                );
+              } catch (error: unknown) {
+                const message =
+                  error instanceof Error ? error.message : '';
+                if (message.includes('cancelled')) {
+                  return;
+                }
+                Alert.alert(
+                  'Hata',
+                  'Paket değişikliği başarısız oldu. Lütfen tekrar deneyin.',
+                );
+              } finally {
+                setIsSubscribing(false);
+              }
+            },
+          },
+        ],
+      );
+    },
+    [currentPlan, isSubscribing, updatePackageTier],
+  );
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
@@ -284,6 +359,7 @@ export const PackagesScreen: React.FC = () => {
           const accentColor = PACKAGE_COLORS[pkg.id] ?? colors.textSecondary;
           const tierIndex = TIER_ORDER.indexOf(pkg.id as PackageTier);
           const isUpgrade = tierIndex > currentTierIndex;
+          const isDowngrade = tierIndex < currentTierIndex;
 
           return (
             <View
@@ -360,6 +436,20 @@ export const PackagesScreen: React.FC = () => {
                 </TouchableOpacity>
               )}
 
+              {!isCurrent && isDowngrade && (
+                <TouchableOpacity
+                  style={[styles.downgradeButton, { borderColor: accentColor }]}
+                  onPress={() => handleDowngrade(pkg.id)}
+                  activeOpacity={0.85}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${pkg.name} paketine düşür`}
+                >
+                  <Text style={[styles.downgradeButtonText, { color: accentColor }]}>
+                    Düşür
+                  </Text>
+                </TouchableOpacity>
+              )}
+
               {isCurrent && (
                 <View style={[styles.currentIndicator, { borderColor: accentColor }]}>
                   <Text style={[styles.currentIndicatorText, { color: accentColor }]}>
@@ -431,6 +521,42 @@ export const PackagesScreen: React.FC = () => {
             </View>
           ))}
         </View>
+
+        {/* Restore Purchases — required by Apple App Store review guidelines */}
+        <TouchableOpacity
+          style={styles.restoreButton}
+          onPress={async () => {
+            try {
+              const status = await iapService.initIAP();
+              if (status.isMockMode && __DEV__) {
+                Alert.alert('Geliştirme Modu', 'Mock modda geri yükleme yapılamaz.');
+                return;
+              }
+              const result = await iapService.restorePurchases();
+              if (result) {
+                // Send restored receipt to backend for validation
+                const validated = await paymentService.subscribe({
+                  packageTier: '',
+                  platform: result.platform,
+                  receipt: result.receipt,
+                });
+                if (updatePackageTier && validated.packageTier) {
+                  updatePackageTier(validated.packageTier as PackageTier);
+                }
+                Alert.alert('Başarılı', 'Satın alımlarınız geri yüklendi.');
+              } else {
+                Alert.alert('Bilgi', 'Geri yüklenecek satın alım bulunamadı.');
+              }
+            } catch {
+              Alert.alert('Hata', 'Satın alımlar geri yüklenirken bir hata oluştu.');
+            }
+          }}
+          activeOpacity={0.7}
+          accessibilityLabel="Satın alımları geri yükle"
+          accessibilityRole="button"
+        >
+          <Text style={styles.restoreButtonText}>Satın Alımları Geri Yükle</Text>
+        </TouchableOpacity>
 
         {/* Bottom note */}
         <View style={styles.noteContainer}>
@@ -624,6 +750,19 @@ const styles = StyleSheet.create({
     ...typography.button,
     color: colors.text,
   },
+  downgradeButton: {
+    height: layout.buttonSmallHeight,
+    borderRadius: borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    backgroundColor: 'transparent',
+  },
+  downgradeButtonText: {
+    ...typography.button,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+  },
   currentIndicator: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
@@ -710,9 +849,22 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
   },
 
+  // Restore Purchases
+  restoreButton: {
+    marginTop: spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+  },
+  restoreButtonText: {
+    ...typography.bodySmall,
+    color: colors.primary,
+    textDecorationLine: 'underline',
+  },
+
   // Note
   noteContainer: {
-    marginTop: spacing.lg,
+    marginTop: spacing.md,
     paddingHorizontal: spacing.sm,
   },
   noteText: {

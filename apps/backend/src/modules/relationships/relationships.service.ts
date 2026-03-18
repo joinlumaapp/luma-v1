@@ -6,6 +6,7 @@ import {
   Logger,
 } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
+import { calculateAge } from "../../common/utils/date.utils";
 import { BadgesService } from "../badges/badges.service";
 import {
   ActivateRelationshipDto,
@@ -448,7 +449,7 @@ export class RelationshipsService {
               userId: partner.id,
               firstName: partner.profile?.firstName,
               age: partner.profile
-                ? this.calculateAge(partner.profile.birthDate)
+                ? calculateAge(partner.profile.birthDate)
                 : null,
               city: partner.profile?.city,
               isVerified: partner.isSelfieVerified,
@@ -547,8 +548,8 @@ export class RelationshipsService {
       {
         id: "tm_1w",
         key: "first_week",
-        title: "Ilk Haftaniz!",
-        description: "Birlikte ilk haftanizi tamamladiniz.",
+        title: "İlk Haftanız!",
+        description: "Birlikte ilk haftanızı tamamladınız.",
         icon: "week",
         currentValue: daysSinceActivation,
         targetValue: 7,
@@ -560,8 +561,8 @@ export class RelationshipsService {
       {
         id: "tm_1m",
         key: "first_month",
-        title: "1 Aylik!",
-        description: "Bir aydir birliktesiniz. Tebrikler!",
+        title: "1 Aylık!",
+        description: "Bir aydır birliktesiniz. Tebrikler!",
         icon: "month",
         currentValue: daysSinceActivation,
         targetValue: 30,
@@ -573,8 +574,8 @@ export class RelationshipsService {
       {
         id: "tm_3m",
         key: "three_months",
-        title: "3 Aylik!",
-        description: "Uc aydir guclu bir bag kuruyorsunuz.",
+        title: "3 Aylık!",
+        description: "Üç aydır güçlü bir bağ kuruyorsunuz.",
         icon: "quarter",
         currentValue: daysSinceActivation,
         targetValue: 90,
@@ -586,8 +587,8 @@ export class RelationshipsService {
       {
         id: "tm_6m",
         key: "six_months",
-        title: "6 Aylik!",
-        description: "Alti ay boyunca birbirinizi tanidiniz.",
+        title: "6 Aylık!",
+        description: "Altı ay boyunca birbirinizi tanıdınız.",
         icon: "half_year",
         currentValue: daysSinceActivation,
         targetValue: 180,
@@ -599,8 +600,8 @@ export class RelationshipsService {
       {
         id: "tm_1y",
         key: "one_year",
-        title: "1 Yillik!",
-        description: "Bir yildir birliktesiniz. Muhtesem!",
+        title: "1 Yıllık!",
+        description: "Bir yıldır birliktesiniz. Muhteşem!",
         icon: "year",
         currentValue: daysSinceActivation,
         targetValue: 365,
@@ -616,7 +617,7 @@ export class RelationshipsService {
         id: "cm_10msg",
         key: "ten_messages",
         title: "10 Mesaj!",
-        description: "Birbirinize ilk 10 mesajinizi gonderdiniz.",
+        description: "Birbirinize ilk 10 mesajınızı gönderdiniz.",
         icon: "messages",
         currentValue: messageCount,
         targetValue: 10,
@@ -626,7 +627,7 @@ export class RelationshipsService {
         id: "cm_100msg",
         key: "hundred_messages",
         title: "100 Mesaj!",
-        description: "Ilk 100 mesaj! Iletisim cok guclu.",
+        description: "İlk 100 mesaj! İletişim çok güçlü.",
         icon: "messages_100",
         currentValue: messageCount,
         targetValue: 100,
@@ -635,8 +636,8 @@ export class RelationshipsService {
       {
         id: "cm_harmony",
         key: "first_harmony",
-        title: "Ilk Harmony Oturumu!",
-        description: "Ilk Harmony oturumunuzu gerceklestirdiniz.",
+        title: "İlk Harmony Oturumu!",
+        description: "İlk Harmony oturumunuzu gerçekleştirdiniz.",
         icon: "harmony",
         currentValue: harmonyCount,
         targetValue: 1,
@@ -646,7 +647,7 @@ export class RelationshipsService {
         id: "cm_5places",
         key: "five_shared_places",
         title: "5 Ortak Mekan!",
-        description: "Birlikte 5 farkli mekan kesfettiniz.",
+        description: "Birlikte 5 farklı mekan keşfettiniz.",
         icon: "places",
         currentValue: sharedPlaceCount,
         targetValue: 5,
@@ -1097,11 +1098,4 @@ export class RelationshipsService {
     return a < b ? { first: a, second: b } : { first: b, second: a };
   }
 
-  private calculateAge(birthDate: Date): number {
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
-    return age;
-  }
 }

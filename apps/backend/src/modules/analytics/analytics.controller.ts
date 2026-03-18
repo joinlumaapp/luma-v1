@@ -21,6 +21,7 @@ import {
   UserFunnelResult,
 } from "./analytics.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
+import { AdminGuard } from "../../common/guards/admin.guard";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
 import {
   BatchEventsDto,
@@ -55,6 +56,7 @@ export class AnalyticsController {
    * Returns DAU, WAU, MAU, conversion rates, retention, session stats.
    */
   @Get("dashboard")
+  @UseGuards(AdminGuard)
   @ApiOperation({ summary: "Get admin dashboard metrics" })
   async getDashboard(
     @Query() query: DashboardQueryDto,
@@ -67,6 +69,7 @@ export class AnalyticsController {
    * Weekly retention cohort data for the last N weeks.
    */
   @Get("retention")
+  @UseGuards(AdminGuard)
   @ApiOperation({ summary: "Get retention cohort data" })
   async getRetention(
     @Query() query: RetentionQueryDto,
@@ -80,6 +83,7 @@ export class AnalyticsController {
    * Query param ?funnel=registration|onboarding|first_match|conversion
    */
   @Get("funnel/:userId")
+  @UseGuards(AdminGuard)
   @ApiOperation({ summary: "Get user funnel progress" })
   async getUserFunnel(
     @Param("userId") userId: string,

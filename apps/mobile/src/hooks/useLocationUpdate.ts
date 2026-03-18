@@ -4,6 +4,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { AppState } from 'react-native';
 import { locationService, type UserCoordinates } from '../services/locationService';
+import { storage } from '../utils/storage';
 
 // Refresh interval: 15 minutes in milliseconds
 const LOCATION_REFRESH_INTERVAL_MS = 15 * 60 * 1000;
@@ -25,6 +26,11 @@ export function useLocationUpdate(): UseLocationUpdateResult {
 
   const syncLocation = useCallback(async () => {
     try {
+      // Check if user has disabled location sharing in settings
+      if (!storage.getLocationEnabled()) {
+        return;
+      }
+
       const granted = await locationService.checkPermission();
       if (!granted) return;
 
