@@ -264,21 +264,19 @@ export const FeedProfileScreen: React.FC = () => {
         )}
       </View>
 
-      {/* Stats row (inline styles for reliable rendering) */}
-      <View style={{ flexDirection: 'row', backgroundColor: colors.surface, borderRadius: 12, paddingVertical: 14, marginTop: 8 }}>
-        <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>{profile.postCount}</Text>
-          <Text style={{ fontSize: 10, fontWeight: '500', color: colors.textTertiary, marginTop: 2 }}>GÖNDERİ</Text>
+      {/* Premium stats row */}
+      <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+        <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
+          <Text style={{ fontSize: 22, fontWeight: '800', color: palette.purple[600], letterSpacing: -0.5 }}>{profile.postCount}</Text>
+          <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Gönderi</Text>
         </View>
-        <View style={{ width: 1, height: 24, backgroundColor: colors.surfaceBorder, alignSelf: 'center' }} />
-        <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>{profile.followerCount}</Text>
-          <Text style={{ fontSize: 10, fontWeight: '500', color: colors.textTertiary, marginTop: 2 }}>TAKİPÇİ</Text>
+        <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
+          <Text style={{ fontSize: 22, fontWeight: '800', color: palette.purple[600], letterSpacing: -0.5 }}>{profile.followerCount}</Text>
+          <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takipçi</Text>
         </View>
-        <View style={{ width: 1, height: 24, backgroundColor: colors.surfaceBorder, alignSelf: 'center' }} />
-        <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>{profile.followingCount}</Text>
-          <Text style={{ fontSize: 10, fontWeight: '500', color: colors.textTertiary, marginTop: 2 }}>TAKİP</Text>
+        <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
+          <Text style={{ fontSize: 22, fontWeight: '800', color: palette.purple[600], letterSpacing: -0.5 }}>{profile.followingCount}</Text>
+          <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takip</Text>
         </View>
       </View>
 
