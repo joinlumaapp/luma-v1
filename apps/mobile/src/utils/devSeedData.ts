@@ -829,7 +829,7 @@ const devUserProfile = {
     'https://i.pravatar.cc/400?img=52',
   ],
   bio: 'Girişimci, teknoloji tutkunu. İyi bir kahve eşliğinde derin sohbetlere bayılırım. Seyahat etmeyi, yeni kültürler keşfetmeyi ve hayatı anlamlandırmayı seviyorum.',
-  answers: { 1: 3, 2: 4, 3: 2, 4: 5, 5: 1, 6: 3, 7: 4, 8: 2, 9: 5, 10: 3 },
+  answers: { '1': 'opt-3', '2': 'opt-4', '3': 'opt-2', '4': 'opt-5', '5': 'opt-1', '6': 'opt-3', '7': 'opt-4', '8': 'opt-2', '9': 'opt-5', '10': 'opt-3' },
   city: 'İstanbul',
   job: 'Yazılım Mühendisi',
   education: 'Boğaziçi Üniversitesi',

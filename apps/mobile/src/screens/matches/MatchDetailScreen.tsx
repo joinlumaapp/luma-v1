@@ -130,8 +130,8 @@ export const MatchDetailScreen: React.FC = () => {
           {selectedMatch.packageTier && <SubscriptionBadge tier={selectedMatch.packageTier} compact />}
         </View>
 
-        {(selectedMatch as Record<string, unknown>)?.job && (selectedMatch as Record<string, unknown>).job !== 'Belirtilmedi' ? (
-          <Text style={styles.jobTitle}>{String((selectedMatch as Record<string, unknown>).job)}</Text>
+        {(selectedMatch as unknown as { job?: string }).job && (selectedMatch as unknown as { job?: string }).job !== 'Belirtilmedi' ? (
+          <Text style={styles.jobTitle}>{(selectedMatch as unknown as { job?: string }).job}</Text>
         ) : null}
 
         {selectedMatch.city ? (
@@ -159,17 +159,17 @@ export const MatchDetailScreen: React.FC = () => {
       {/* Stats row — social metrics */}
       <View style={styles.statsCard}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{(selectedMatch as Record<string, unknown>)?.postCount as number ?? 0}</Text>
+          <Text style={styles.statValue}>{(selectedMatch as unknown as { postCount?: number }).postCount ?? 0}</Text>
           <Text style={styles.statLabel}>GÖNDERİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{(selectedMatch as Record<string, unknown>)?.followerCount as number ?? 0}</Text>
+          <Text style={styles.statValue}>{(selectedMatch as unknown as { followerCount?: number }).followerCount ?? 0}</Text>
           <Text style={styles.statLabel}>TAKİPÇİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{(selectedMatch as Record<string, unknown>)?.followingCount as number ?? 0}</Text>
+          <Text style={styles.statValue}>{(selectedMatch as unknown as { followingCount?: number }).followingCount ?? 0}</Text>
           <Text style={styles.statLabel}>TAKİP</Text>
         </View>
       </View>

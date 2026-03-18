@@ -737,17 +737,17 @@ export const ProfilePreviewScreen: React.FC = () => {
       {/* Stats card — social metrics */}
       <View style={styles.statsCard}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{(profile as Record<string, unknown>)?.postCount as number ?? 0}</Text>
+          <Text style={styles.statValue}>{(profile as unknown as { postCount?: number }).postCount ?? 0}</Text>
           <Text style={styles.statLabel}>GÖNDERİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{(profile as Record<string, unknown>)?.followerCount as number ?? 0}</Text>
+          <Text style={styles.statValue}>{(profile as unknown as { followerCount?: number }).followerCount ?? 0}</Text>
           <Text style={styles.statLabel}>TAKİPÇİ</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{(profile as Record<string, unknown>)?.followingCount as number ?? 0}</Text>
+          <Text style={styles.statValue}>{(profile as unknown as { followingCount?: number }).followingCount ?? 0}</Text>
           <Text style={styles.statLabel}>TAKİP</Text>
         </View>
       </View>
