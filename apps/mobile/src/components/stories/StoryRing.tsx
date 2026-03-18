@@ -241,8 +241,8 @@ const styles = StyleSheet.create({
   },
   plusIcon: {
     color: '#FFFFFF',
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     marginTop: -1,
   },
   label: {

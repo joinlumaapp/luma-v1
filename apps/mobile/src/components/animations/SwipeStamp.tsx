@@ -156,8 +156,8 @@ const styles = StyleSheet.create({
   },
   label: {
     ...typography.h2,
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     letterSpacing: 3,
     includeFontPadding: false,
   },

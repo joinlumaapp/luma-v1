@@ -1151,16 +1151,16 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.2,
       isPremium: false,
       textEn: "What do you do during an argument?",
-      textTr: "Bir tartismada ne yaparsin?",
+      textTr: "Bir tartışmada ne yaparsın?",
       options: [
         {
           labelEn: "I wait until I calm down",
-          labelTr: "Sakinlesene kadar beklerim",
+          labelTr: "Sakinleşene kadar beklerim",
           value: 0.25,
         },
         {
           labelEn: "I resolve it by talking immediately",
-          labelTr: "Hemen konusarak cozerim",
+          labelTr: "Hemen konuşarak çözerim",
           value: 0.75,
         },
         {
@@ -1170,7 +1170,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
         },
         {
           labelEn: "I listen to the other person",
-          labelTr: "Karsimdakini dinlerim",
+          labelTr: "Karşımdakini dinlerim",
           value: 1.0,
         },
       ],
@@ -1181,16 +1181,16 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.2,
       isPremium: false,
       textEn: "How do you express your feelings?",
-      textTr: "Duygularini nasil ifade edersin?",
+      textTr: "Duygularını nasıl ifade edersin?",
       options: [
         {
           labelEn: "With words, openly",
-          labelTr: "Sozlerle, acikca",
+          labelTr: "Sözlerle, açıkça",
           value: 1.0,
         },
         {
           labelEn: "I show through my actions",
-          labelTr: "Davranislarimla gosteririm",
+          labelTr: "Davranışlarımla gösteririm",
           value: 0.75,
         },
         {
@@ -1200,7 +1200,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
         },
         {
           labelEn: "I express better in writing",
-          labelTr: "Yazarak daha iyi anlatirim",
+          labelTr: "Yazarak daha iyi anlatırım",
           value: 0.25,
         },
       ],
@@ -1211,7 +1211,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.2,
       isPremium: false,
       textEn: "What does an ideal evening conversation look like?",
-      textTr: "Ideal bir aksam sohbeti nasil olur?",
+      textTr: "İdeal bir akşam sohbeti nasıl olur?",
       options: [
         {
           labelEn: "Deep, philosophical topics",
@@ -1220,17 +1220,17 @@ async function seedCompatibilityQuestions(): Promise<void> {
         },
         {
           labelEn: "Casual, relaxed chat",
-          labelTr: "Gunluk, rahat sohbet",
+          labelTr: "Günlük, rahat sohbet",
           value: 0.5,
         },
         {
           labelEn: "While doing something together",
-          labelTr: "Birlikte bir sey yaparken",
+          labelTr: "Birlikte bir şey yaparken",
           value: 0.75,
         },
         {
           labelEn: "Silence is fine too",
-          labelTr: "Sessizlik de guzeldir",
+          labelTr: "Sessizlik de güzeldir",
           value: 0.25,
         },
       ],
@@ -1243,26 +1243,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.2,
       isPremium: false,
       textEn: "Where do you see yourself in 5 years?",
-      textTr: "5 yil sonra kendini nerede goruyorsun?",
+      textTr: "5 yıl sonra kendini nerede görüyorsun?",
       options: [
         {
           labelEn: "Near the top of my career",
-          labelTr: "Kariyerimde zirveye yakin",
+          labelTr: "Kariyerimde zirveye yakın",
           value: 1.0,
         },
         {
           labelEn: "In a peaceful family life",
-          labelTr: "Huzurlu bir aile hayatinda",
+          labelTr: "Huzurlu bir aile hayatında",
           value: 0.75,
         },
         {
           labelEn: "Exploring the world",
-          labelTr: "Dunyayi kesfederken",
+          labelTr: "Dünyayı keşfederken",
           value: 0.5,
         },
         {
           labelEn: "Life is full of surprises, I don't plan",
-          labelTr: "Hayat surprizlerle dolu, planlamam",
+          labelTr: "Hayat sürprizlerle dolu, planlamam",
           value: 0.25,
         },
       ],
@@ -1273,26 +1273,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.2,
       isPremium: false,
       textEn: "How should work-life balance be?",
-      textTr: "Is-yasam dengesi sence nasil olmali?",
+      textTr: "İş-yaşam dengesi sence nasıl olmalı?",
       options: [
         {
           labelEn: "Work first, then rest",
-          labelTr: "Is oncelikli, sonra dinlenme",
+          labelTr: "İş öncelikli, sonra dinlenme",
           value: 0.25,
         },
         {
           labelEn: "Equal balance is essential",
-          labelTr: "Esit denge sart",
+          labelTr: "Eşit denge şart",
           value: 1.0,
         },
         {
           labelEn: "Life first, work is a tool",
-          labelTr: "Yasam oncelikli, is arac",
+          labelTr: "Yaşam öncelikli, iş araç",
           value: 0.75,
         },
         {
           labelEn: "It depends on the situation",
-          labelTr: "Duruma gore degisir",
+          labelTr: "Duruma göre değişir",
           value: 0.5,
         },
       ],
@@ -1303,26 +1303,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.2,
       isPremium: false,
       textEn: "What is your approach to money?",
-      textTr: "Para konusundaki yaklasiminiz?",
+      textTr: "Para konusundaki yaklaşımınız?",
       options: [
         {
           labelEn: "I like saving, it makes me feel secure",
-          labelTr: "Biriktirmeyi severim, guvende hissederim",
+          labelTr: "Biriktirmeyi severim, güvende hissederim",
           value: 0.25,
         },
         {
           labelEn: "I spend on experiences, memories matter",
-          labelTr: "Deneyimlere harcarim, anilar onemli",
+          labelTr: "Deneyimlere harcarım, anılar önemli",
           value: 0.75,
         },
         {
           labelEn: "I have a balanced approach",
-          labelTr: "Dengeli bir yaklasimim var",
+          labelTr: "Dengeli bir yaklaşımım var",
           value: 1.0,
         },
         {
           labelEn: "I don't think about it much",
-          labelTr: "Cok dusunmem, akar gider",
+          labelTr: "Çok düşünmem, akar gider",
           value: 0.5,
         },
       ],
@@ -1335,16 +1335,16 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.5,
       isPremium: false,
       textEn: "What is the most important value in a relationship?",
-      textTr: "Bir iliskide en onemli deger?",
+      textTr: "Bir ilişkide en önemli değer?",
       options: [
         {
           labelEn: "Trust and loyalty",
-          labelTr: "Guven ve sadakat",
+          labelTr: "Güven ve sadakat",
           value: 1.0,
         },
         {
           labelEn: "Freedom and respect",
-          labelTr: "Ozgurluk ve saygi",
+          labelTr: "Özgürlük ve saygı",
           value: 0.75,
         },
         {
@@ -1354,7 +1354,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
         },
         {
           labelEn: "Understanding and patience",
-          labelTr: "Anlayis ve sabir",
+          labelTr: "Anlayış ve sabır",
           value: 0.85,
         },
       ],
@@ -1365,16 +1365,16 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.5,
       isPremium: false,
       textEn: "How do you approach different opinions?",
-      textTr: "Farkli goruslere nasil yaklasirsin?",
+      textTr: "Farklı görüşlere nasıl yaklaşırsın?",
       options: [
         {
           labelEn: "I listen and try to understand",
-          labelTr: "Dinlerim ve anlamaya calisirim",
+          labelTr: "Dinlerim ve anlamaya çalışırım",
           value: 1.0,
         },
         {
           labelEn: "I defend my own view",
-          labelTr: "Kendi gorusumu savunurum",
+          labelTr: "Kendi görüşümü savunurum",
           value: 0.25,
         },
         {
@@ -1384,7 +1384,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
         },
         {
           labelEn: "I change the subject",
-          labelTr: "Konuyu degistiririm",
+          labelTr: "Konuyu değiştiririm",
           value: 0.5,
         },
       ],
@@ -1399,22 +1399,22 @@ async function seedCompatibilityQuestions(): Promise<void> {
       options: [
         {
           labelEn: "The foundation of everything",
-          labelTr: "Her seyin temeli",
+          labelTr: "Her şeyin temeli",
           value: 1.0,
         },
         {
           labelEn: "Important but independence is essential too",
-          labelTr: "Onemli ama bagimsizlik da sart",
+          labelTr: "Önemli ama bağımsızlık da şart",
           value: 0.75,
         },
         {
           labelEn: "We build our own family",
-          labelTr: "Kendi ailemizi kurariz",
+          labelTr: "Kendi ailemizi kurarız",
           value: 0.5,
         },
         {
           labelEn: "Extended family included, big picture",
-          labelTr: "Genis aile de dahil, buyuk tablo",
+          labelTr: "Geniş aile de dahil, büyük tablo",
           value: 0.85,
         },
       ],
@@ -1427,11 +1427,11 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.0,
       isPremium: false,
       textEn: "Your ideal weekend?",
-      textTr: "Ideal hafta sonun?",
+      textTr: "İdeal hafta sonun?",
       options: [
         {
           labelEn: "Social, out with friends",
-          labelTr: "Sosyal, arkadaslarla disarida",
+          labelTr: "Sosyal, arkadaşlarla dışarıda",
           value: 1.0,
         },
         {
@@ -1439,10 +1439,10 @@ async function seedCompatibilityQuestions(): Promise<void> {
           labelTr: "Evde, kitap ve film",
           value: 0.25,
         },
-        { labelEn: "In nature, active", labelTr: "Dogada, aktif", value: 0.75 },
+        { labelEn: "In nature, active", labelTr: "Doğada, aktif", value: 0.75 },
         {
           labelEn: "Spontaneous, unplanned",
-          labelTr: "Spontane, plansiz",
+          labelTr: "Spontane, plansız",
           value: 0.5,
         },
       ],
@@ -1453,26 +1453,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.0,
       isPremium: false,
       textEn: "How about health and fitness?",
-      textTr: "Saglik ve fitness konusunda?",
+      textTr: "Sağlık ve fitness konusunda?",
       options: [
         {
           labelEn: "I exercise regularly",
-          labelTr: "Duzenli spor yaparim",
+          labelTr: "Düzenli spor yaparım",
           value: 1.0,
         },
         {
           labelEn: "I move occasionally",
-          labelTr: "Ara sira hareket ederim",
+          labelTr: "Ara sıra hareket ederim",
           value: 0.5,
         },
         {
           labelEn: "Food is more important",
-          labelTr: "Yemek daha onemli",
+          labelTr: "Yemek daha önemli",
           value: 0.25,
         },
         {
           labelEn: "Mental health is my priority",
-          labelTr: "Ruhsal saglik onceligim",
+          labelTr: "Ruhsal sağlık önceliğim",
           value: 0.75,
         },
       ],
@@ -1483,26 +1483,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.0,
       isPremium: false,
       textEn: "Your social media usage?",
-      textTr: "Sosyal medya kullaniminin?",
+      textTr: "Sosyal medya kullanımının?",
       options: [
         {
           labelEn: "I actively share",
-          labelTr: "Aktif paylasirim",
+          labelTr: "Aktif paylaşırım",
           value: 1.0,
         },
         {
           labelEn: "I follow but rarely share",
-          labelTr: "Takip ederim ama az paylasirim",
+          labelTr: "Takip ederim ama az paylaşırım",
           value: 0.75,
         },
         {
           labelEn: "I barely use it",
-          labelTr: "Cok az kullanirim",
+          labelTr: "Çok az kullanırım",
           value: 0.5,
         },
         {
           labelEn: "I don't use it at all",
-          labelTr: "Hic kullanmam",
+          labelTr: "Hiç kullanmam",
           value: 0.25,
         },
       ],
@@ -1515,26 +1515,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.2,
       isPremium: false,
       textEn: "What do you do when you have a tough day?",
-      textTr: "Zor bir gun gecirdiginde ne yaparsin?",
+      textTr: "Zor bir gün geçirdiğinde ne yaparsın?",
       options: [
         {
           labelEn: "I talk to someone",
-          labelTr: "Birileriyle konusurum",
+          labelTr: "Birileriyle konuşurum",
           value: 1.0,
         },
         {
           labelEn: "I want to be alone",
-          labelTr: "Yalniz kalmak isterim",
+          labelTr: "Yalnız kalmak isterim",
           value: 0.25,
         },
         {
           labelEn: "I distract myself with an activity",
-          labelTr: "Bir aktiviteyle dagitirim",
+          labelTr: "Bir aktiviteyle dağıtırım",
           value: 0.75,
         },
         {
           labelEn: "I sleep, tomorrow is a new day",
-          labelTr: "Uyurum, yarin yeni gun",
+          labelTr: "Uyurum, yarın yeni gün",
           value: 0.5,
         },
       ],
@@ -1545,26 +1545,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.2,
       isPremium: false,
       textEn: "When you notice your partner is sad?",
-      textTr: "Partnerinin uzgun oldugunu fark ettiginde?",
+      textTr: "Partnerinin üzgün olduğunu fark ettiğinde?",
       options: [
         {
           labelEn: "I immediately ask and listen",
-          labelTr: "Hemen sorarim ve dinlerim",
+          labelTr: "Hemen sorarım ve dinlerim",
           value: 1.0,
         },
         {
           labelEn: "I stay beside them, wait for them to talk",
-          labelTr: "Yaninda olurum, konusmasini beklerim",
+          labelTr: "Yanında olurum, konuşmasını beklerim",
           value: 0.75,
         },
         {
           labelEn: "I try to cheer them up",
-          labelTr: "Onu neselendirmeye calisirim",
+          labelTr: "Onu neşlendirmeye çalışırım",
           value: 0.5,
         },
         {
           labelEn: "I give them space",
-          labelTr: "Kendi alanini veririm",
+          labelTr: "Kendi alanını veririm",
           value: 0.25,
         },
       ],
@@ -1575,11 +1575,11 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.2,
       isPremium: false,
       textEn: "What do you think about vulnerability?",
-      textTr: "Kirilganlik hakkinda ne dusunuyorsun?",
+      textTr: "Kırılganlık hakkında ne düşünüyorsun?",
       options: [
         {
           labelEn: "It's a sign of strength",
-          labelTr: "Gucluluk isareti",
+          labelTr: "Güçlülük işareti",
           value: 1.0,
         },
         {
@@ -1589,12 +1589,12 @@ async function seedCompatibilityQuestions(): Promise<void> {
         },
         {
           labelEn: "Only with someone I trust",
-          labelTr: "Sadece guvendigim biriyle",
+          labelTr: "Sadece güvendiğim biriyle",
           value: 0.5,
         },
         {
           labelEn: "I'm not very comfortable with it",
-          labelTr: "Cok rahat degilim",
+          labelTr: "Çok rahat değilim",
           value: 0.25,
         },
       ],
@@ -1607,26 +1607,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.5,
       isPremium: false,
       textEn: "How much time together in a relationship?",
-      textTr: "Iliskide ne kadar birlikte zaman?",
+      textTr: "İlişkide ne kadar birlikte zaman?",
       options: [
         {
           labelEn: "As much as possible",
-          labelTr: "Mumkun oldugunca cok",
+          labelTr: "Mümkün olduğunca çok",
           value: 1.0,
         },
         {
           labelEn: "Balanced, everyone needs their own time",
-          labelTr: "Dengeli, herkesin kendi zamani da olmali",
+          labelTr: "Dengeli, herkesin kendi zamanı da olmalı",
           value: 0.75,
         },
         {
           labelEn: "Quality matters, not quantity",
-          labelTr: "Kalite onemli, miktar degil",
+          labelTr: "Kalite önemli, miktar değil",
           value: 0.5,
         },
         {
           labelEn: "Independence is very important",
-          labelTr: "Bagimsizlik cok onemli",
+          labelTr: "Bağımsızlık çok önemli",
           value: 0.25,
         },
       ],
@@ -1637,26 +1637,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.5,
       isPremium: false,
       textEn: "Physical closeness for you?",
-      textTr: "Fiziksel yakinlik sence?",
+      textTr: "Fiziksel yakınlık sence?",
       options: [
         {
           labelEn: "Very important, every day",
-          labelTr: "Cok onemli, her gun",
+          labelTr: "Çok önemli, her gün",
           value: 1.0,
         },
         {
           labelEn: "Important but not excessive",
-          labelTr: "Onemli ama abartisiz",
+          labelTr: "Önemli ama abartısız",
           value: 0.75,
         },
         {
           labelEn: "Emotional closeness matters more",
-          labelTr: "Duygusal yakinlik daha onemli",
+          labelTr: "Duygusal yakınlık daha önemli",
           value: 0.5,
         },
         {
           labelEn: "It develops over time",
-          labelTr: "Zamanla gelisir",
+          labelTr: "Zamanla gelişir",
           value: 0.25,
         },
       ],
@@ -1667,26 +1667,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.5,
       isPremium: false,
       textEn: "Which is your love language?",
-      textTr: "Ask dili hangisi?",
+      textTr: "Aşk dili hangisi?",
       options: [
         {
           labelEn: "Words and compliments",
-          labelTr: "Sozler ve iltifatlar",
+          labelTr: "Sözler ve iltifatlar",
           value: 1.0,
         },
         {
           labelEn: "Touch and hugs",
-          labelTr: "Dokunma ve sarilma",
+          labelTr: "Dokunma ve sarılma",
           value: 0.75,
         },
         {
           labelEn: "Spending quality time together",
-          labelTr: "Birlikte vakit gecirme",
+          labelTr: "Birlikte vakit geçirme",
           value: 0.5,
         },
         {
           labelEn: "Gifts and surprises",
-          labelTr: "Hediyeler ve surprizler",
+          labelTr: "Hediyeler ve sürprizler",
           value: 0.25,
         },
       ],
@@ -1699,26 +1699,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.0,
       isPremium: false,
       textEn: "Your partner's friend circle?",
-      textTr: "Partnerinin arkadas cevresi?",
+      textTr: "Partnerinin arkadaş çevresi?",
       options: [
         {
           labelEn: "They should be my friends too",
-          labelTr: "Benim de arkadaslarim olsun",
+          labelTr: "Benim de arkadaşlarım olsun",
           value: 1.0,
         },
         {
           labelEn: "Separate circles are healthy",
-          labelTr: "Ayri cevreler saglikli",
+          labelTr: "Ayrı çevreler sağlıklı",
           value: 0.5,
         },
         {
           labelEn: "They blend over time",
-          labelTr: "Zamanla kaynasir",
+          labelTr: "Zamanla kaynaşır",
           value: 0.75,
         },
         {
           labelEn: "It's not very important",
-          labelTr: "Cok onemli degil",
+          labelTr: "Çok önemli değil",
           value: 0.25,
         },
       ],
@@ -1729,7 +1729,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.0,
       isPremium: false,
       textEn: "What kind of person are you in a group?",
-      textTr: "Topluluk icinde nasil birisin?",
+      textTr: "Topluluk içinde nasıl birisin?",
       options: [
         {
           labelEn: "Energetic, social butterfly",
@@ -1738,17 +1738,17 @@ async function seedCompatibilityQuestions(): Promise<void> {
         },
         {
           labelEn: "I prefer small groups",
-          labelTr: "Kucuk gruplari severim",
+          labelTr: "Küçük grupları severim",
           value: 0.75,
         },
         {
           labelEn: "A few close friends is enough",
-          labelTr: "Birkac yakin arkadas yeter",
+          labelTr: "Birkaç yakın arkadaş yeter",
           value: 0.5,
         },
         {
           labelEn: "I'm introverted but warm",
-          labelTr: "Icedonugum ama sicakkanliiyim",
+          labelTr: "İçedönüğüm ama sıcakkanlıyım",
           value: 0.25,
         },
       ],
@@ -1767,22 +1767,22 @@ async function seedCompatibilityQuestions(): Promise<void> {
       options: [
         {
           labelEn: "I trust them, they must be busy",
-          labelTr: "Guvenirim, mesguldur",
+          labelTr: "Güvenirim, meşguldür",
           value: 1.0,
         },
         {
           labelEn: "I get a little anxious",
-          labelTr: "Biraz endiselenirm",
+          labelTr: "Biraz endişelenirim",
           value: 0.5,
         },
         {
           labelEn: "I enjoy the space",
-          labelTr: "Kendi alanimin tadini cikaririm",
+          labelTr: "Kendi alanımın tadını çıkarırım",
           value: 0.75,
         },
         {
           labelEn: "I start overthinking",
-          labelTr: "Kafamda senaryolar kurarim",
+          labelTr: "Kafamda senaryolar kurarım",
           value: 0.25,
         },
       ],
@@ -1793,26 +1793,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.5,
       isPremium: true,
       textEn: "How fast do you get emotionally attached?",
-      textTr: "Duygusal olarak ne kadar hizli baglanirsin?",
+      textTr: "Duygusal olarak ne kadar hızlı bağlanırsın?",
       options: [
         {
           labelEn: "Slowly, I need time",
-          labelTr: "Yavas, zamana ihtiyacim var",
+          labelTr: "Yavaş, zamana ihtiyacım var",
           value: 0.75,
         },
         {
           labelEn: "I feel things quickly",
-          labelTr: "Hizli hissederim",
+          labelTr: "Hızlı hissederim",
           value: 0.5,
         },
         {
           labelEn: "Depends on the connection",
-          labelTr: "Baglantiya bagli",
+          labelTr: "Bağlantıya bağlı",
           value: 1.0,
         },
         {
           labelEn: "I keep my guard up",
-          labelTr: "Duvarlarimi yuksek tutarim",
+          labelTr: "Duvarlarımı yüksek tutarım",
           value: 0.25,
         },
       ],
@@ -1823,26 +1823,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.5,
       isPremium: true,
       textEn: "After a breakup, how do you cope?",
-      textTr: "Bir ayriliktan sonra nasil basa cikarsin?",
+      textTr: "Bir ayrılıktan sonra nasıl başa çıkarsın?",
       options: [
         {
           labelEn: "I process and heal gradually",
-          labelTr: "Zamanla isler ve iyilesirim",
+          labelTr: "Zamanla işler ve iyileşirim",
           value: 1.0,
         },
         {
           labelEn: "I keep myself busy",
-          labelTr: "Kendimi mesgul ederim",
+          labelTr: "Kendimi meşgul ederim",
           value: 0.5,
         },
         {
           labelEn: "I lean on friends for support",
-          labelTr: "Arkadaslarimdan destek alirim",
+          labelTr: "Arkadaşlarımdan destek alırım",
           value: 0.75,
         },
         {
           labelEn: "I move on quickly",
-          labelTr: "Hizlica gecerim",
+          labelTr: "Hızlıca geçerim",
           value: 0.25,
         },
       ],
@@ -1853,26 +1853,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.5,
       isPremium: true,
       textEn: "What makes you feel most secure in a relationship?",
-      textTr: "Iliskide seni en cok ne guvende hissettirir?",
+      textTr: "İlişkide seni en çok ne güvende hissettirir?",
       options: [
         {
           labelEn: "Consistent actions, not just words",
-          labelTr: "Sadece sozler degil, tutarli davranislar",
+          labelTr: "Sadece sözler değil, tutarlı davranışlar",
           value: 1.0,
         },
         {
           labelEn: "Regular communication",
-          labelTr: "Duzenli iletisim",
+          labelTr: "Düzenli iletişim",
           value: 0.75,
         },
         {
           labelEn: "Knowing they choose me every day",
-          labelTr: "Her gun beni sectigini bilmek",
+          labelTr: "Her gün beni seçtiğini bilmek",
           value: 0.5,
         },
         {
           labelEn: "Giving each other freedom",
-          labelTr: "Birbirimize ozgurluk tanimak",
+          labelTr: "Birbirimize özgürlük tanımak",
           value: 0.25,
         },
       ],
@@ -1885,7 +1885,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.2,
       isPremium: true,
       textEn: "How do you most like to receive love?",
-      textTr: "Sevgiyi en cok nasil almak istersin?",
+      textTr: "Sevgiyi en çok nasıl almak istersin?",
       options: [
         {
           labelEn: 'Hearing "I love you" and affirmations',
@@ -1894,7 +1894,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
         },
         {
           labelEn: "Physical touch and closeness",
-          labelTr: "Fiziksel dokunus ve yakinlik",
+          labelTr: "Fiziksel dokunuş ve yakınlık",
           value: 0.75,
         },
         {
@@ -1904,7 +1904,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
         },
         {
           labelEn: "Thoughtful gestures and acts of service",
-          labelTr: "Dusunceli hareketler ve yardimlar",
+          labelTr: "Düşünceli hareketler ve yardımlar",
           value: 0.25,
         },
       ],
@@ -1915,26 +1915,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.2,
       isPremium: true,
       textEn: "You want to show love to your partner. What do you do?",
-      textTr: "Partnerine sevgini gostermek istiyorsun. Ne yaparsin?",
+      textTr: "Partnerine sevgini göstermek istiyorsun. Ne yaparsın?",
       options: [
         {
           labelEn: "Write a heartfelt message",
-          labelTr: "Icten bir mesaj yazarim",
+          labelTr: "İçten bir mesaj yazarım",
           value: 1.0,
         },
         {
           labelEn: "Plan a surprise date",
-          labelTr: "Surpriz bir bulusma planlarim",
+          labelTr: "Sürpriz bir buluşma planlarım",
           value: 0.75,
         },
         {
           labelEn: "Cook their favorite meal",
-          labelTr: "En sevdigi yemegi pisiririm",
+          labelTr: "En sevdiği yemeği pişiririm",
           value: 0.5,
         },
         {
           labelEn: "Just hold them close",
-          labelTr: "Sadece sarilirim",
+          labelTr: "Sadece sarılırım",
           value: 0.25,
         },
       ],
@@ -1945,26 +1945,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.2,
       isPremium: true,
       textEn: "What makes you feel most appreciated?",
-      textTr: "Seni en cok ne takdir edilmis hissettirir?",
+      textTr: "Seni en çok ne takdir edilmiş hissettirir?",
       options: [
         {
           labelEn: "Verbal recognition and praise",
-          labelTr: "Sozlu takdir ve ovgu",
+          labelTr: "Sözlü takdir ve övgü",
           value: 1.0,
         },
         {
           labelEn: "Someone remembering small details",
-          labelTr: "Birinin kucuk detaylari hatirlamasi",
+          labelTr: "Birinin küçük detayları hatırlaması",
           value: 0.75,
         },
         {
           labelEn: "Someone making time for me",
-          labelTr: "Birinin bana zaman ayirmasi",
+          labelTr: "Birinin bana zaman ayırması",
           value: 0.5,
         },
         {
           labelEn: "Receiving a meaningful gift",
-          labelTr: "Anlamli bir hediye almak",
+          labelTr: "Anlamlı bir hediye almak",
           value: 0.25,
         },
       ],
@@ -1977,26 +1977,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.5,
       isPremium: true,
       textEn: "During a conflict with your partner, you typically...",
-      textTr: "Partnerinle bir catismada genellikle...",
+      textTr: "Partnerinle bir çatışmada genellikle...",
       options: [
         {
           labelEn: "Stay calm and discuss rationally",
-          labelTr: "Sakin kalir ve mantikli tartisirim",
+          labelTr: "Sakin kalır ve mantıklı tartışırım",
           value: 1.0,
         },
         {
           labelEn: "Get emotional and need time",
-          labelTr: "Duygusalllasirim ve zamana ihtiyac duyarim",
+          labelTr: "Duygusallaşırım ve zamana ihtiyaç duyarım",
           value: 0.5,
         },
         {
           labelEn: "Compromise to keep the peace",
-          labelTr: "Baris icin uzlasirim",
+          labelTr: "Barış için uzlaşırım",
           value: 0.75,
         },
         {
           labelEn: "Avoid the conflict altogether",
-          labelTr: "Catismadan tamamen kacarim",
+          labelTr: "Çatışmadan tamamen kaçarım",
           value: 0.25,
         },
       ],
@@ -2007,26 +2007,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.5,
       isPremium: true,
       textEn: "After a fight, how do you reconcile?",
-      textTr: "Bir kavgadan sonra nasil barisirsin?",
+      textTr: "Bir kavgadan sonra nasıl barışırsın?",
       options: [
         {
           labelEn: "I initiate a calm conversation",
-          labelTr: "Sakin bir konusma baslatirim",
+          labelTr: "Sakin bir konuşma başlatırım",
           value: 1.0,
         },
         {
           labelEn: "I show affection without words",
-          labelTr: "Sozsuz sevgi gosteririm",
+          labelTr: "Sözsüz sevgi gösteririm",
           value: 0.75,
         },
         {
           labelEn: "I wait for the other person to reach out",
-          labelTr: "Karsi tarafin gelmesini beklerim",
+          labelTr: "Karşı tarafın gelmesini beklerim",
           value: 0.25,
         },
         {
           labelEn: "I act like nothing happened",
-          labelTr: "Hicbir sey olmamis gibi davranirim",
+          labelTr: "Hiçbir şey olmamış gibi davranırım",
           value: 0.5,
         },
       ],
@@ -2037,22 +2037,22 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.5,
       isPremium: true,
       textEn: "What is your biggest relationship deal-breaker?",
-      textTr: "Iliskide en buyuk kirmizi cizgin ne?",
+      textTr: "İlişkide en büyük kırmızı çizgin ne?",
       options: [
         {
           labelEn: "Dishonesty and betrayal of trust",
-          labelTr: "Durust olmamak ve guven ihaneti",
+          labelTr: "Dürüst olmamak ve güven ihaneti",
           value: 1.0,
         },
-        { labelEn: "Lack of respect", labelTr: "Saygisizlik", value: 0.75 },
+        { labelEn: "Lack of respect", labelTr: "Saygısızlık", value: 0.75 },
         {
           labelEn: "Emotional unavailability",
-          labelTr: "Duygusal uzaklik",
+          labelTr: "Duygusal uzaklık",
           value: 0.5,
         },
         {
           labelEn: "Controlling behavior",
-          labelTr: "Kontrol edici davranis",
+          labelTr: "Kontrol edici davranış",
           value: 0.25,
         },
       ],
@@ -2065,7 +2065,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.5,
       isPremium: true,
       textEn: "Do you want children?",
-      textTr: "Cocuk istiyor musun?",
+      textTr: "Çocuk istiyor musun?",
       options: [
         { labelEn: "Yes, definitely", labelTr: "Evet, kesinlikle", value: 1.0 },
         {
@@ -2073,10 +2073,10 @@ async function seedCompatibilityQuestions(): Promise<void> {
           labelTr: "Belki, ileride",
           value: 0.75,
         },
-        { labelEn: "I'm not sure", labelTr: "Emin degilim", value: 0.5 },
+        { labelEn: "I'm not sure", labelTr: "Emin değilim", value: 0.5 },
         {
           labelEn: "No, I don't want children",
-          labelTr: "Hayir, cocuk istemiyorum",
+          labelTr: "Hayır, çocuk istemiyorum",
           value: 0.25,
         },
       ],
@@ -2087,21 +2087,21 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.5,
       isPremium: true,
       textEn: "Where would you ideally live?",
-      textTr: "Ideal olarak nerede yasamak istersin?",
+      textTr: "İdeal olarak nerede yaşamak istersin?",
       options: [
         {
           labelEn: "In a big city, full of energy",
-          labelTr: "Buyuk sehirde, enerji dolu",
+          labelTr: "Büyük şehirde, enerji dolu",
           value: 1.0,
         },
         {
           labelEn: "Suburbs, peaceful but connected",
-          labelTr: "Banliyode, huzurlu ama baglantili",
+          labelTr: "Banliyöde, huzurlu ama bağlantılı",
           value: 0.75,
         },
         {
           labelEn: "Countryside, close to nature",
-          labelTr: "Kirsal, dogaya yakin",
+          labelTr: "Kırsal, doğaya yakın",
           value: 0.5,
         },
         {
@@ -2117,26 +2117,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.5,
       isPremium: true,
       textEn: "Describe your ideal life in 10 years.",
-      textTr: "10 yil sonra ideal hayatini anlat.",
+      textTr: "10 yıl sonra ideal hayatını anlat.",
       options: [
         {
           labelEn: "Stable career, family, home",
-          labelTr: "Istikrarli kariyer, aile, yuva",
+          labelTr: "İstikrarlı kariyer, aile, yuva",
           value: 1.0,
         },
         {
           labelEn: "Traveling and experiencing the world",
-          labelTr: "Dunyayi gezip deneyimlemek",
+          labelTr: "Dünyayı gezip deneyimlemek",
           value: 0.5,
         },
         {
           labelEn: "Running my own business",
-          labelTr: "Kendi isimi yurutmek",
+          labelTr: "Kendi işimi yürütmek",
           value: 0.75,
         },
         {
           labelEn: "Living simply, focusing on happiness",
-          labelTr: "Sade yasamak, mutluluga odaklanmak",
+          labelTr: "Sade yaşamak, mutluluğa odaklanmak",
           value: 0.25,
         },
       ],
@@ -2147,26 +2147,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.5,
       isPremium: true,
       textEn: "How important is financial stability before marriage?",
-      textTr: "Evlilik oncesi finansal guvence ne kadar onemli?",
+      textTr: "Evlilik öncesi finansal güvence ne kadar önemli?",
       options: [
         {
           labelEn: "Very important, foundation first",
-          labelTr: "Cok onemli, once temel",
+          labelTr: "Çok önemli, önce temel",
           value: 1.0,
         },
         {
           labelEn: "Important but love comes first",
-          labelTr: "Onemli ama sevgi once gelir",
+          labelTr: "Önemli ama sevgi önce gelir",
           value: 0.75,
         },
         {
           labelEn: "We can build it together",
-          labelTr: "Birlikte insa ederiz",
+          labelTr: "Birlikte inşa ederiz",
           value: 0.5,
         },
         {
           labelEn: "Money shouldn't dictate love",
-          labelTr: "Para aska yon vermemeli",
+          labelTr: "Para aşka yön vermemeli",
           value: 0.25,
         },
       ],
@@ -2179,21 +2179,21 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.0,
       isPremium: true,
       textEn: "How curious are you about learning new things?",
-      textTr: "Yeni seyler ogrenmeye ne kadar meraklisin?",
+      textTr: "Yeni şeyler öğrenmeye ne kadar meraklısın?",
       options: [
         {
           labelEn: "Extremely, I'm always learning",
-          labelTr: "Son derece, surekli ogrenirim",
+          labelTr: "Son derece, sürekli öğrenirim",
           value: 1.0,
         },
         {
           labelEn: "When a topic interests me",
-          labelTr: "Ilgimi ceken konularda",
+          labelTr: "İlgimi çeken konularda",
           value: 0.75,
         },
         {
           labelEn: "Occasionally, when needed",
-          labelTr: "Ara sira, gerektiginde",
+          labelTr: "Ara sıra, gerektiğinde",
           value: 0.5,
         },
         {
@@ -2209,7 +2209,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.0,
       isPremium: true,
       textEn: "Do you enjoy intellectual debates?",
-      textTr: "Entelektuel tartismalardan hoslanir misin?",
+      textTr: "Entelektüel tartışmalardan hoşlanır mısın?",
       options: [
         {
           labelEn: "Love them, they energize me",
@@ -2218,7 +2218,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
         },
         {
           labelEn: "Sometimes, with the right person",
-          labelTr: "Bazen, dogru insanla",
+          labelTr: "Bazen, doğru insanla",
           value: 0.75,
         },
         {
@@ -2228,7 +2228,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
         },
         {
           labelEn: "I avoid debates",
-          labelTr: "Tartismalardan kacarim",
+          labelTr: "Tartışmalardan kaçarım",
           value: 0.25,
         },
       ],
@@ -2239,7 +2239,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.0,
       isPremium: true,
       textEn: "How do you prefer to learn?",
-      textTr: "Nasil ogrenmeyi tercih edersin?",
+      textTr: "Nasıl öğrenmeyi tercih edersin?",
       options: [
         {
           labelEn: "Reading books and articles",
@@ -2258,7 +2258,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
         },
         {
           labelEn: "Through conversations with others",
-          labelTr: "Baskalariyla sohbetle",
+          labelTr: "Başkalarıyla sohbetle",
           value: 0.25,
         },
       ],
@@ -2271,21 +2271,21 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.2,
       isPremium: true,
       textEn: "How comfortable are you with emotional intimacy?",
-      textTr: "Duygusal yakinlik konusunda ne kadar rahatsin?",
+      textTr: "Duygusal yakınlık konusunda ne kadar rahatsın?",
       options: [
         {
           labelEn: "Very comfortable, I open up easily",
-          labelTr: "Cok rahat, kolayca acilirim",
+          labelTr: "Çok rahat, kolayca açılırım",
           value: 1.0,
         },
         {
           labelEn: "Comfortable once trust is built",
-          labelTr: "Guven olusunca rahat",
+          labelTr: "Güven oluşunca rahat",
           value: 0.75,
         },
         {
           labelEn: "It takes me a long time",
-          labelTr: "Uzun zaman alir",
+          labelTr: "Uzun zaman alır",
           value: 0.5,
         },
         {
@@ -2301,26 +2301,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.2,
       isPremium: true,
       textEn: "How important is physical intimacy in a relationship?",
-      textTr: "Iliskide fiziksel yakinlik ne kadar onemli?",
+      textTr: "İlişkide fiziksel yakınlık ne kadar önemli?",
       options: [
         {
           labelEn: "Essential, a core part of connection",
-          labelTr: "Temel, baglantinin ozu",
+          labelTr: "Temel, bağlantının özü",
           value: 1.0,
         },
         {
           labelEn: "Important but not everything",
-          labelTr: "Onemli ama her sey degil",
+          labelTr: "Önemli ama her şey değil",
           value: 0.75,
         },
         {
           labelEn: "Emotional bond matters more",
-          labelTr: "Duygusal bag daha onemli",
+          labelTr: "Duygusal bağ daha önemli",
           value: 0.5,
         },
         {
           labelEn: "It develops naturally over time",
-          labelTr: "Zamanla dogal olarak gelisir",
+          labelTr: "Zamanla doğal olarak gelişir",
           value: 0.25,
         },
       ],
@@ -2331,26 +2331,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.2,
       isPremium: true,
       textEn: "How quickly do you share your deepest secrets?",
-      textTr: "En derin sirlarini ne kadar hizli paylasirsin?",
+      textTr: "En derin sırlarını ne kadar hızlı paylaşırsın?",
       options: [
         {
           labelEn: "When I feel a genuine connection",
-          labelTr: "Gercek bir bag hissettigimde",
+          labelTr: "Gerçek bir bağ hissettiğimde",
           value: 1.0,
         },
         {
           labelEn: "After months of building trust",
-          labelTr: "Aylarca guven insa ettikten sonra",
+          labelTr: "Aylarca güven inşa ettikten sonra",
           value: 0.75,
         },
         {
           labelEn: "Only with very close people",
-          labelTr: "Sadece cok yakin insanlarla",
+          labelTr: "Sadece çok yakın insanlarla",
           value: 0.5,
         },
         {
           labelEn: "I rarely share them",
-          labelTr: "Nadiren paylasiarim",
+          labelTr: "Nadiren paylaşırım",
           value: 0.25,
         },
       ],
@@ -2363,26 +2363,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.0,
       isPremium: true,
       textEn: "How do you handle constructive criticism?",
-      textTr: "Yapici elestiriyi nasil karsilrsin?",
+      textTr: "Yapıcı eleştiriyi nasıl karşılarsın?",
       options: [
         {
           labelEn: "I welcome it, it helps me grow",
-          labelTr: "Hos karsilarim, buyumeme yardimci olur",
+          labelTr: "Hoş karşılarım, büyümeme yardımcı olur",
           value: 1.0,
         },
         {
           labelEn: "I try to accept it, though it stings",
-          labelTr: "Kabul etmeye calisirim, acisa da",
+          labelTr: "Kabul etmeye çalışırım, acısa da",
           value: 0.75,
         },
         {
           labelEn: "Depends on who it comes from",
-          labelTr: "Kimden geldigine bagli",
+          labelTr: "Kimden geldiğine bağlı",
           value: 0.5,
         },
         {
           labelEn: "I tend to get defensive",
-          labelTr: "Savunmaya gecerim",
+          labelTr: "Savunmaya geçerim",
           value: 0.25,
         },
       ],
@@ -2393,26 +2393,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.0,
       isPremium: true,
       textEn: "When faced with a big change in life, you...",
-      textTr: "Hayatinda buyuk bir degisiklikle karsilastiginda...",
+      textTr: "Hayatında büyük bir değişiklikle karşılaştığında...",
       options: [
         {
           labelEn: "Embrace it as an opportunity",
-          labelTr: "Bir firsat olarak kucaklarim",
+          labelTr: "Bir fırsat olarak kucaklarım",
           value: 1.0,
         },
         {
           labelEn: "Adapt gradually",
-          labelTr: "Yavas yavas uyum saglarim",
+          labelTr: "Yavaş yavaş uyum sağlarım",
           value: 0.75,
         },
         {
           labelEn: "Feel anxious but push through",
-          labelTr: "Endiseleniirim ama ustesinden gelirim",
+          labelTr: "Endişelenirim ama üstesinden gelirim",
           value: 0.5,
         },
         {
           labelEn: "Resist change, prefer stability",
-          labelTr: "Degisime direnc gosteririm, istikrar isterim",
+          labelTr: "Değişime direnç gösteririm, istikrar isterim",
           value: 0.25,
         },
       ],
@@ -2423,26 +2423,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.0,
       isPremium: true,
       textEn: "Do you believe people can fundamentally change?",
-      textTr: "Insanlarin temelden degisebilecegine inaniyor musun?",
+      textTr: "İnsanların temelden değişebileceğine inanıyor musun?",
       options: [
         {
           labelEn: "Yes, with effort and willingness",
-          labelTr: "Evet, caba ve istekle",
+          labelTr: "Evet, çaba ve istekle",
           value: 1.0,
         },
         {
           labelEn: "Somewhat, but core traits remain",
-          labelTr: "Kismen, ama temel ozellikler kalir",
+          labelTr: "Kısmen, ama temel özellikler kalır",
           value: 0.75,
         },
         {
           labelEn: "Small changes are possible",
-          labelTr: "Kucuk degisiklikler mumkun",
+          labelTr: "Küçük değişiklikler mümkün",
           value: 0.5,
         },
         {
           labelEn: "People don't really change",
-          labelTr: "Insanlar gercekten degismez",
+          labelTr: "İnsanlar gerçekten değişmez",
           value: 0.25,
         },
       ],
@@ -2455,26 +2455,26 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.5,
       isPremium: true,
       textEn: "What is your biggest fear in a relationship?",
-      textTr: "Iliskide en buyuk korkun ne?",
+      textTr: "İlişkide en büyük korkun ne?",
       options: [
         {
           labelEn: "Being betrayed or cheated on",
-          labelTr: "Aldatilmak veya ihanete ugramak",
+          labelTr: "Aldatılmak veya ihanete uğramak",
           value: 1.0,
         },
         {
           labelEn: "Losing my independence",
-          labelTr: "Bagimsizligimi kaybetmek",
+          labelTr: "Bağımsızlığımı kaybetmek",
           value: 0.5,
         },
         {
           labelEn: "Not being truly loved",
-          labelTr: "Gercekten sevilmemek",
+          labelTr: "Gerçekten sevilmemek",
           value: 0.75,
         },
         {
           labelEn: "Growing apart over time",
-          labelTr: "Zamanla birbirinden uzaklasmak",
+          labelTr: "Zamanla birbirinden uzaklaşmak",
           value: 0.25,
         },
       ],
@@ -2485,7 +2485,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       weight: 1.5,
       isPremium: true,
       textEn: "What would make you end a relationship?",
-      textTr: "Seni bir iliskiyi bitirmeye ne iter?",
+      textTr: "Seni bir ilişkiyi bitirmeye ne iter?",
       options: [
         {
           labelEn: "Repeated lying",
@@ -2499,12 +2499,12 @@ async function seedCompatibilityQuestions(): Promise<void> {
         },
         {
           labelEn: "Growing in different directions",
-          labelTr: "Farkli yonlere buyumek",
+          labelTr: "Farklı yönlere büyümek",
           value: 0.5,
         },
         {
           labelEn: "Lack of effort from the other side",
-          labelTr: "Karsi tarafin caba gostermemesi",
+          labelTr: "Karşı tarafın çaba göstermemesi",
           value: 0.25,
         },
       ],
@@ -2549,43 +2549,43 @@ async function seedHarmonyQuestionCards(): Promise<void> {
     {
       category: "ICEBREAKER",
       textEn: "What was the moment you laughed the most in your life?",
-      textTr: "Hayatinda en cok guldugum an hangisiydi?",
+      textTr: "Hayatında en çok güldüğün an hangisiydi?",
     },
     {
       category: "ICEBREAKER",
       textEn: "If you had a superpower, what would it be?",
-      textTr: "Bir super gucun olsa ne olurdu?",
+      textTr: "Bir süper gücün olsa ne olurdu?",
     },
     {
       category: "ICEBREAKER",
       textEn: "What was the last show/movie you watched? Why did you like it?",
-      textTr: "Son izledigin dizi/film ne? Neden sevdin?",
+      textTr: "Son izlediğin dizi/film ne? Neden sevdin?",
     },
     {
       category: "ICEBREAKER",
       textEn: "What did you want to be when you grew up?",
-      textTr: "Cocukken buyuyunce ne olmak istiyordun?",
+      textTr: "Çocukken büyüyünce ne olmak istiyordun?",
     },
     {
       category: "ICEBREAKER",
       textEn:
         "If you could teleport anywhere in the world, where would you go?",
-      textTr: "Dunyada herhangi bir yere isinlanabilsen nereye giderdin?",
+      textTr: "Dünyada herhangi bir yere ışınlanabilsen nereye giderdin?",
     },
     {
       category: "ICEBREAKER",
       textEn: "What song are you listening to the most right now?",
-      textTr: "Playlistinde su an en cok dinledigin sarki?",
+      textTr: "Playlistinde şu an en çok dinlediğin şarkı?",
     },
     {
       category: "ICEBREAKER",
       textEn: "Are you a morning person or a night owl?",
-      textTr: "Sabah insani misin yoksa gece kusu mu?",
+      textTr: "Sabah insanı mısın yoksa gece kuşu mu?",
     },
     {
       category: "ICEBREAKER",
       textEn: "When was the last time you tried something for the first time?",
-      textTr: "En son ne zaman ilk kez bir sey denedin?",
+      textTr: "En son ne zaman ilk kez bir şey denedin?",
     },
     {
       category: "ICEBREAKER",
@@ -2595,95 +2595,95 @@ async function seedHarmonyQuestionCards(): Promise<void> {
     {
       category: "ICEBREAKER",
       textEn: "What does an ideal first date look like?",
-      textTr: "Ideal bir ilk bulusma nasil olur?",
+      textTr: "İdeal bir ilk buluşma nasıl olur?",
     },
     // Deep Connection (10)
     {
       category: "DEEP_CONNECTION",
       textEn: "What would someone who truly knows you say about you?",
-      textTr: "Seni gercekten taniyan biri hakkinda ne der?",
+      textTr: "Seni gerçekten tanıyan biri hakkında ne der?",
     },
     {
       category: "DEEP_CONNECTION",
       textEn: "What do you value most in life?",
-      textTr: "Hayatta en cok neye deger verirsin?",
+      textTr: "Hayatta en çok neye değer verirsin?",
     },
     {
       category: "DEEP_CONNECTION",
       textEn: "When was the last time you truly showed vulnerability?",
-      textTr: "En son ne zaman gercekten kirilganlik gosterdin?",
+      textTr: "En son ne zaman gerçekten kırılganlık gösterdin?",
     },
     {
       category: "DEEP_CONNECTION",
       textEn: "What has shaped you the most as a person?",
-      textTr: "Seni bir insan olarak en cok ne sekillendirdi?",
+      textTr: "Seni bir insan olarak en çok ne şekillendirdi?",
     },
     {
       category: "DEEP_CONNECTION",
       textEn: "What have you learned the most from relationships?",
-      textTr: "Iliskilerde en cok neyi ogrendin?",
+      textTr: "İlişkilerde en çok neyi öğrendin?",
     },
     {
       category: "DEEP_CONNECTION",
       textEn: "Describe your ideal day 10 years from now.",
-      textTr: "10 yil sonra ideal bir gununu anlat.",
+      textTr: "10 yıl sonra ideal bir gününü anlat.",
     },
     {
       category: "DEEP_CONNECTION",
       textEn: "Is there something in life you regret?",
-      textTr: "Hayatta pisman oldugun bir sey var mi?",
+      textTr: "Hayatta pişman olduğun bir şey var mı?",
     },
     {
       category: "DEEP_CONNECTION",
       textEn: "How do you deal with your biggest fear?",
-      textTr: "En buyuk korkunla nasil basa cikiyorsun?",
+      textTr: "En büyük korkunla nasıl başa çıkıyorsun?",
     },
     {
       category: "DEEP_CONNECTION",
       textEn: "How do you think love should be shown?",
-      textTr: "Sevgi sence nasil gosterilir?",
+      textTr: "Sevgi sence nasıl gösterilir?",
     },
     {
       category: "DEEP_CONNECTION",
       textEn: "What motivates you the most?",
-      textTr: "Seni en cok ne motive ediyor?",
+      textTr: "Seni en çok ne motive ediyor?",
     },
     // Fun & Playful (10)
     {
       category: "FUN_PLAYFUL",
       textEn: "This or that: Mountains or Sea?",
-      textTr: "Bu veya su: Dag mi, Deniz mi?",
+      textTr: "Bu veya şu: Dağ mı, Deniz mi?",
     },
     {
       category: "FUN_PLAYFUL",
       textEn: "If you could be any celebrity for a day, who would it be?",
-      textTr: "Bir gun boyunca unlu biri olabilsen kim olurdun?",
+      textTr: "Bir gün boyunca ünlü biri olabilsen kim olurdun?",
     },
     {
       category: "FUN_PLAYFUL",
       textEn: "What is your worst food experience?",
-      textTr: "En kotu yemek deneyimin ne?",
+      textTr: "En kötü yemek deneyimin ne?",
     },
     {
       category: "FUN_PLAYFUL",
       textEn: "What was the craziest thing you did during quarantine?",
-      textTr: "Karantinada en cilginca ne yaptin?",
+      textTr: "Karantinada en çılgınca ne yaptın?",
     },
     {
       category: "FUN_PLAYFUL",
       textEn:
         "If you had a time machine, would you go to the past or the future?",
-      textTr: "Bir zaman makinen olsa gecmise mi gidersin gelecege mi?",
+      textTr: "Bir zaman makinen olsa geçmişe mi gidersin geleceğe mi?",
     },
     {
       category: "FUN_PLAYFUL",
       textEn: "When was the last time you laughed so hard your stomach hurt?",
-      textTr: "En son ne zaman kahkahadan karnin agridi?",
+      textTr: "En son ne zaman kahkahadan karnın ağrıdı?",
     },
     {
       category: "FUN_PLAYFUL",
       textEn: "Are you competitive or a team player with your partner?",
-      textTr: "Partnerinle yarismali mi olursun yoksa takim mi?",
+      textTr: "Partnerinle yarışmalı mı olursun yoksa takım mı?",
     },
     {
       category: "FUN_PLAYFUL",
@@ -2693,13 +2693,13 @@ async function seedHarmonyQuestionCards(): Promise<void> {
     {
       category: "FUN_PLAYFUL",
       textEn: "What is your most embarrassing moment? (If you can share)",
-      textTr: "En utanc verici anin ne? (Paylasabilirsen)",
+      textTr: "En utanç verici anın ne? (Paylaşabilirsen)",
     },
     {
       category: "FUN_PLAYFUL",
       textEn:
         "If you want to remember me after this chat, what would you remember?",
-      textTr: "Bu sohbetten sonra beni hatirlamak istersen, ne hatirlarsin?",
+      textTr: "Bu sohbetten sonra beni hatırlamak istersen, ne hatırlarsın?",
     },
   ];
 
@@ -2732,39 +2732,39 @@ async function seedHarmonyGameCards(): Promise<void> {
     {
       gameType: "common_ground",
       nameEn: "Our Common Ground",
-      nameTr: "Ikimizin Ortak Noktasi",
+      nameTr: "İkimizin Ortak Noktası",
       descriptionEn:
         "Both guess what you have in common, reveal simultaneously.",
       descriptionTr:
-        "Ikiniz de ortak noktanizi tahmin edin, ayni anda acikladini.",
+        "İkiniz de ortak noktanızı tahmin edin, aynı anda açıklayın.",
     },
     {
       gameType: "two_truths_one_lie",
       nameEn: "Two Truths, One Lie",
-      nameTr: "Dogru mu Yanlis mi?",
+      nameTr: "Doğru mu Yanlış mı?",
       descriptionEn: "Each shares 2 truths and 1 lie, the partner guesses.",
       descriptionTr:
-        "Her biri 2 dogru 1 yanlis soylesin, partner tahmin etsin.",
+        "Her biri 2 doğru 1 yanlış söylesin, partner tahmin etsin.",
     },
     {
       gameType: "complete_sentence",
       nameEn: "Complete the Sentence",
-      nameTr: "Tamamla Cumleyi",
+      nameTr: "Tamamla Cümleyi",
       descriptionEn: "One starts a sentence, the other finishes it.",
-      descriptionTr: "Biri cumleye baslasin, digeri tamamlasin.",
+      descriptionTr: "Biri cümleye başlasın, diğeri tamamlasın.",
     },
     {
       gameType: "word_association",
       nameEn: "Word Association",
-      nameTr: "Kelime Iliskilendirme",
+      nameTr: "Kelime İlişkilendirme",
       descriptionEn:
         "Quick word association game - say the first thing that comes to mind!",
-      descriptionTr: "Hizli kelime cagrisimi - aklina gelen ilk seyi soyle!",
+      descriptionTr: "Hızlı kelime çağrışımı - aklına gelen ilk şeyi söyle!",
     },
     {
       gameType: "imagination",
       nameEn: "Imagination",
-      nameTr: "Hayal Gucu",
+      nameTr: "Hayal Gücü",
       descriptionEn: '"Together we would..." - Build a scenario together.',
       descriptionTr: '"Birlikte biz..." - Birlikte bir senaryo kurun.',
     },
@@ -2964,7 +2964,7 @@ async function seedDemoNotifications(
     notifications.push({
       userId,
       type: NotificationType.SYSTEM,
-      title: "LUMA'ya Hos Geldiniz!",
+      title: "LUMA'ya Hoş Geldiniz!",
       body: "Profilinizi tamamlayin ve eslesmeler bulmaya baslayin. Uyumluluk sorularini yanitlamayi unutmayin!",
       data: null,
       isRead: true,
@@ -2987,7 +2987,7 @@ async function seedDemoNotifications(
   notifications.push({
     userId: userIds[0],
     type: NotificationType.SUBSCRIPTION_EXPIRING,
-    title: "Abonelik Hatirlatmasi",
+    title: "Abonelik Hatırlatması",
     body: "Pro aboneliginiz 3 gun icinde sona eriyor. Yenilemeyi unutmayin!",
     data: null,
     isRead: false,

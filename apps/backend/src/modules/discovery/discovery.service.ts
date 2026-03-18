@@ -1559,12 +1559,12 @@ export class DiscoveryService {
     const label = DIMENSION_LABELS_TR[topCategory] ?? topCategory;
 
     if (topScore >= 90) {
-      return `${label} alaninda mukemmel uyum (%${Math.round(topScore)})`;
+      return `${label} alanında mükemmel uyum (%${Math.round(topScore)})`;
     }
     if (topScore >= 70) {
-      return `${label} alaninda guclu uyum (%${Math.round(topScore)})`;
+      return `${label} alanında güçlü uyum (%${Math.round(topScore)})`;
     }
-    return `${label} alaninda uyum (%${Math.round(topScore)})`;
+    return `${label} alanında uyum (%${Math.round(topScore)})`;
   }
 
   /** Get IDs of users the current user has already swiped on */

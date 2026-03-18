@@ -378,8 +378,8 @@ const styles = StyleSheet.create({
   coinAmount: {
     ...typography.h2,
     color: palette.white,
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
   },
   coinLabel: {
     ...typography.captionSmall,

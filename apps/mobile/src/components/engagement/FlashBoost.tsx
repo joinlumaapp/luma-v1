@@ -252,8 +252,8 @@ const styles = StyleSheet.create({
   title: {
     ...typography.h3,
     color: palette.white,
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
   },
   subtitle: {
     ...typography.bodySmall,
@@ -289,8 +289,8 @@ const styles = StyleSheet.create({
   newPrice: {
     ...typography.h4,
     color: palette.white,
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
   },
   ctaButton: {
     backgroundColor: palette.white,

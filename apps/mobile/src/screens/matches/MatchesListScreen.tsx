@@ -1264,8 +1264,8 @@ const styles = StyleSheet.create({
   },
   newBadgeText: {
     fontSize: 8,
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: 0.5,
   },

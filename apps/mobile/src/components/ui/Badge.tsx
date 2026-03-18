@@ -2,7 +2,7 @@
  * Badge — Colored chip/pill for intention tags and status labels.
  *
  * Features:
- * - Pre-configured intention tag variants (Ciddi Iliski, Kesfediyorum, Emin Degilim)
+ * - Pre-configured intention tag variants (Ciddi İlişki, Keşfediyorum, Emin Değilim)
  * - Color-coded backgrounds (green, blue, gray)
  * - Icon + label layout
  * - Pressable with scale feedback
@@ -78,19 +78,19 @@ interface IntentionConfig {
 
 const INTENTION_CONFIGS: Record<IntentionVariant, IntentionConfig> = {
   serious: {
-    label: 'Ciddi Iliski',
+    label: 'Ciddi İlişki',
     bg: 'rgba(16, 185, 129, 0.18)',
     text: '#10B981',
     icon: 'heart',
   },
   exploring: {
-    label: 'Kesfediyorum',
+    label: 'Keşfediyorum',
     bg: 'rgba(59, 130, 246, 0.18)',
     text: '#3B82F6',
     icon: 'compass',
   },
   not_sure: {
-    label: 'Emin Degilim',
+    label: 'Emin Değilim',
     bg: 'rgba(156, 163, 175, 0.18)',
     text: palette.gray[400],
     icon: 'help-circle',

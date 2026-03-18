@@ -1,5 +1,5 @@
 // PrivacyPolicyScreen — KVKK/GDPR compliant privacy policy display
-// Sections: Veri Toplama, Veri Isleme, Veri Paylasimi, Haklariniz, Iletisim
+// Sections: Veri Toplama, Veri İşleme, Veri Paylaşımı, Haklarınız, İletişim
 // Includes "Verilerimi Indir" (GDPR data export) and link to AccountDeletionScreen
 
 import React, { useState, useCallback, useMemo } from 'react';

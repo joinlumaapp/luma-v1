@@ -520,7 +520,7 @@ export class BadgesService {
           },
         });
         currentValue = relationship ? 1 : 0;
-        description = "Iliski modunu aktiflestir";
+        description = "İlişki modunu aktifleştir";
         break;
       }
 

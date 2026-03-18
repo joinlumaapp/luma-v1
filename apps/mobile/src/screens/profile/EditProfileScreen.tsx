@@ -1162,7 +1162,7 @@ const styles = StyleSheet.create({
     fontFamily: poppinsFonts.bold,
     fontWeight: fontWeights.bold,
     color: colors.text,
-    letterSpacing: -0.2,
+    letterSpacing: 0,
     marginBottom: spacing.sm,
     includeFontPadding: false,
   },

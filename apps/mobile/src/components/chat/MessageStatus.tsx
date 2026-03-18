@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
   },
   checkText: {
     ...typography.captionSmall,
-    letterSpacing: -1,
+    letterSpacing: 0,
   },
   sentColor: {
     color: colors.textTertiary,

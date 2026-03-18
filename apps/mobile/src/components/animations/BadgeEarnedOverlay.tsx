@@ -471,8 +471,8 @@ const styles = StyleSheet.create({
   },
   goldRewardIcon: {
     fontSize: 18,
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: palette.gold[400],
   },
   goldRewardText: {

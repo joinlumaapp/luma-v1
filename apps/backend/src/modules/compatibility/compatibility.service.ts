@@ -42,164 +42,164 @@ const SAME_CITY_BONUS_PERCENT = 5; // +5% for same city
 
 // Turkish labels for compatibility dimension categories
 const DIMENSION_LABELS_TR: Record<string, string> = {
-  COMMUNICATION: "Iletisim Tarzi",
-  LIFE_GOALS: "Yasam Hedefleri",
-  VALUES: "Degerler",
-  LIFESTYLE: "Yasam Tarzi",
-  EMOTIONAL_INTELLIGENCE: "Duygusal Zeka",
-  RELATIONSHIP_EXPECTATIONS: "Iliski Beklentileri",
+  COMMUNICATION: "İletişim Tarzı",
+  LIFE_GOALS: "Yaşam Hedefleri",
+  VALUES: "Değerler",
+  LIFESTYLE: "Yaşam Tarzı",
+  EMOTIONAL_INTELLIGENCE: "Duygusal Zekâ",
+  RELATIONSHIP_EXPECTATIONS: "İlişki Beklentileri",
   SOCIAL_COMPATIBILITY: "Sosyal Uyum",
-  ATTACHMENT_STYLE: "Baglanma Tarzi",
+  ATTACHMENT_STYLE: "Bağlanma Tarzı",
   LOVE_LANGUAGE: "Sevgi Dili",
-  CONFLICT_STYLE: "Catisma Yaklasimi",
+  CONFLICT_STYLE: "Çatışma Yaklaşımı",
   FUTURE_VISION: "Gelecek Vizyonu",
-  INTELLECTUAL: "Entelektuel Uyum",
-  INTIMACY: "Yakinlik",
-  GROWTH_MINDSET: "Gelisim Odaklilik",
-  CORE_FEARS: "Temel Kaygilar",
+  INTELLECTUAL: "Entelektüel Uyum",
+  INTIMACY: "Yakınlık",
+  GROWTH_MINDSET: "Gelişim Odaklılık",
+  CORE_FEARS: "Temel Kaygılar",
   // Lowercase variants for consistent lookup
-  communication: "Iletisim Tarzi",
-  life_goals: "Yasam Hedefleri",
-  values: "Degerler",
-  lifestyle: "Yasam Tarzi",
-  emotional_intelligence: "Duygusal Zeka",
-  relationship_expectations: "Iliski Beklentileri",
+  communication: "İletişim Tarzı",
+  life_goals: "Yaşam Hedefleri",
+  values: "Değerler",
+  lifestyle: "Yaşam Tarzı",
+  emotional_intelligence: "Duygusal Zekâ",
+  relationship_expectations: "İlişki Beklentileri",
   social_compatibility: "Sosyal Uyum",
-  attachment_style: "Baglanma Tarzi",
+  attachment_style: "Bağlanma Tarzı",
   love_language: "Sevgi Dili",
-  conflict_style: "Catisma Yaklasimi",
+  conflict_style: "Çatışma Yaklaşımı",
   future_vision: "Gelecek Vizyonu",
-  intellectual: "Entelektuel Uyum",
-  intimacy: "Yakinlik",
-  growth_mindset: "Gelisim Odaklilik",
-  core_fears: "Temel Kaygilar",
+  intellectual: "Entelektüel Uyum",
+  intimacy: "Yakınlık",
+  growth_mindset: "Gelişim Odaklılık",
+  core_fears: "Temel Kaygılar",
 };
 
 // Conversation starter templates per category (Turkish)
 const CONVERSATION_STARTERS_TR: Record<string, string[]> = {
   COMMUNICATION: [
-    "Iletisimde en cok neye onem verirsiniz?",
-    "Zor bir konuyu nasil dile getirirsiniz?",
+    "İletişimde en çok neye önem verirsiniz?",
+    "Zor bir konuyu nasıl dile getirirsiniz?",
   ],
   LIFE_GOALS: [
-    "5 yil sonra kendinizi nerede goruyorsunuz?",
-    "Hayattaki en buyuk hedefiniz ne?",
+    "5 yıl sonra kendinizi nerede görüyorsunuz?",
+    "Hayattaki en büyük hedefiniz ne?",
   ],
   VALUES: [
-    "Sizin icin vazgecilmez degerleriniz neler?",
-    "Hayatta en cok neye onem verirsiniz?",
+    "Sizin için vazgeçilmez değerleriniz neler?",
+    "Hayatta en çok neye önem verirsiniz?",
   ],
   LIFESTYLE: [
-    "Ideal bir hafta sonu nasil gecirir?",
-    "Serbest zamaninizda en cok ne yapmayi seversiniz?",
+    "İdeal bir hafta sonu nasıl geçirir?",
+    "Serbest zamanınızda en çok ne yapmayı seversiniz?",
   ],
   EMOTIONAL_INTELLIGENCE: [
-    "Duygularinizi nasil ifade edersiniz?",
-    "Zor zamanlarla nasil basa cikarsiniz?",
+    "Duygularınızı nasıl ifade edersiniz?",
+    "Zor zamanlarla nasıl başa çıkarsınız?",
   ],
   RELATIONSHIP_EXPECTATIONS: [
-    "Ideal bir iliskide en onemli sey sizce ne?",
-    "Bir iliskiden beklentileriniz neler?",
+    "İdeal bir ilişkide en önemli şey sizce ne?",
+    "Bir ilişkiden beklentileriniz neler?",
   ],
   SOCIAL_COMPATIBILITY: [
-    "Arkadasliklariniz sizin icin ne ifade ediyor?",
-    "Sosyal ortamlarda kendinizi nasil hissedersiniz?",
+    "Arkadaşlıklarınız sizin için ne ifade ediyor?",
+    "Sosyal ortamlarda kendinizi nasıl hissedersiniz?",
   ],
   ATTACHMENT_STYLE: [
-    "Yakinlik kurarken kendinizi rahat hisseder misiniz?",
-    "Guven sizin icin ne anlama geliyor?",
+    "Yakınlık kurarken kendinizi rahat hisseder misiniz?",
+    "Güven sizin için ne anlama geliyor?",
   ],
   LOVE_LANGUAGE: [
-    "Sevginizi nasil gosterirsiniz?",
-    "Sevildigini en cok ne zaman hissedersiniz?",
+    "Sevginizi nasıl gösterirsiniz?",
+    "Sevildiğini en çok ne zaman hissedersiniz?",
   ],
   CONFLICT_STYLE: [
-    "Bir anlasmazlik yasandiginda nasil tepki verirsiniz?",
-    "Cozum odakli misiniz yoksa once duygulari mi konusursunuz?",
+    "Bir anlaşmazlık yaşandığında nasıl tepki verirsiniz?",
+    "Çözüm odaklı mısınız yoksa önce duyguları mı konuşursunuz?",
   ],
   FUTURE_VISION: [
-    "Gelecege dair en buyuk hayaliniz ne?",
-    "Hayatinizda neyi degistirmek isterdiniz?",
+    "Geleceğe dair en büyük hayaliniz ne?",
+    "Hayatınızda neyi değiştirmek isterdiniz?",
   ],
   INTELLECTUAL: [
-    "Yeni bir sey ogrenmeyi sever misiniz?",
-    "Hangi konularda tutkulu sayilirsiniz?",
+    "Yeni bir şey öğrenmeyi sever misiniz?",
+    "Hangi konularda tutkulu sayılırsınız?",
   ],
   INTIMACY: [
-    "Yakinlik sizin icin ne anlam tasiyor?",
-    "Bir iliskide fiziksel ve duygusal yakinlik dengesi nasil olmali?",
+    "Yakınlık sizin için ne anlam taşıyor?",
+    "Bir ilişkide fiziksel ve duygusal yakınlık dengesi nasıl olmalı?",
   ],
   GROWTH_MINDSET: [
-    "Kendinizi gelistirmek icin neler yapiyorsunuz?",
-    "Hatalarinizdan nasil ders cikarirsiniz?",
+    "Kendinizi geliştirmek için neler yapıyorsunuz?",
+    "Hatalarınızdan nasıl ders çıkarırsınız?",
   ],
   CORE_FEARS: [
-    "Bir iliskide sizi en cok ne endiselendirir?",
-    "Guven konusunda nasil hissediyorsunuz?",
+    "Bir ilişkide sizi en çok ne endişelendirir?",
+    "Güven konusunda nasıl hissediyorsunuz?",
   ],
 };
 
 // Turkish reason templates based on category scores
 const REASON_TEMPLATES_TR: Record<string, { high: string; medium: string }> = {
   communication: {
-    high: "Iletisim tarzlariniz cok uyumlu",
-    medium: "Iletisim konusunda birbirinizi tamamliyorsunuz",
+    high: "İletişim tarzlarınız çok uyumlu",
+    medium: "İletişim konusunda birbirinizi tamamlıyorsunuz",
   },
   life_goals: {
-    high: "Yasam hedefleriniz ortusuyor",
-    medium: "Benzer yasam hedeflerine sahipsiniz",
+    high: "Yaşam hedefleriniz örtüşüyor",
+    medium: "Benzer yaşam hedeflerine sahipsiniz",
   },
   values: {
-    high: "Temel degerleriniz ayni noktada",
-    medium: "Ortak degerleriniz var",
+    high: "Temel değerleriniz aynı noktada",
+    medium: "Ortak değerleriniz var",
   },
   lifestyle: {
-    high: "Yasam tarzlariniz birbiriyle uyumlu",
-    medium: "Birbirinize denk bir yasam tempoinuz var",
+    high: "Yaşam tarzlarınız birbiriyle uyumlu",
+    medium: "Birbirinize denk bir yaşam tempoinuz var",
   },
   emotional_intelligence: {
-    high: "Duygusal zeka seviyeniz birbirine cok yakin",
-    medium: "Duygusal anlayisiniz uyumlu",
+    high: "Duygusal zekâ seviyeniz birbirine çok yakın",
+    medium: "Duygusal anlayışınız uyumlu",
   },
   relationship_expectations: {
-    high: "Iliski beklentileriniz neredeyse ayni",
-    medium: "Iliskide ortak beklentileriniz var",
+    high: "İlişki beklentileriniz neredeyse aynı",
+    medium: "İlişkide ortak beklentileriniz var",
   },
   social_compatibility: {
-    high: "Sosyal uyumunuz mukemmel",
-    medium: "Sosyal dunyalariniz birbirine yakin",
+    high: "Sosyal uyumunuz mükemmel",
+    medium: "Sosyal dünyalarınız birbirine yakın",
   },
   attachment_style: {
-    high: "Baglanma tarzlariniz birbirine cok uygun",
-    medium: "Guven ve yakinlik konusunda birbirinizi tamamliyorsunuz",
+    high: "Bağlanma tarzlarınız birbirine çok uygun",
+    medium: "Güven ve yakınlık konusunda birbirinizi tamamlıyorsunuz",
   },
   love_language: {
-    high: "Sevgi dilleriniz ortusuyor",
-    medium: "Sevgiyi ifade bicimleriniz uyumlu",
+    high: "Sevgi dilleriniz örtüşüyor",
+    medium: "Sevgiyi ifade biçimleriniz uyumlu",
   },
   conflict_style: {
-    high: "Catisma cozme yaklasimlariniz benzer",
-    medium: "Sorunlara birlikte yaklasabilirsiniz",
+    high: "Çatışma çözme yaklaşımlarınız benzer",
+    medium: "Sorunlara birlikte yaklaşabilirsiniz",
   },
   future_vision: {
-    high: "Gelecek vizyonunuz ortak bir noktada bulusuyor",
-    medium: "Gelecege benzer gozlerle bakiyorsunuz",
+    high: "Gelecek vizyonunuz ortak bir noktada buluşuyor",
+    medium: "Geleceğe benzer gözlerle bakıyorsunuz",
   },
   intellectual: {
-    high: "Entelektuel uyumunuz harika",
-    medium: "Dusunce dunya size yakin",
+    high: "Entelektüel uyumunuz harika",
+    medium: "Düşünce dünyanız birbirine yakın",
   },
   intimacy: {
-    high: "Yakinlik anlayisiniz birbirinize cok uygun",
-    medium: "Yakinlik konusunda uyumlu bir ciftsiniz",
+    high: "Yakınlık anlayışınız birbirinize çok uygun",
+    medium: "Yakınlık konusunda uyumlu bir çiftsiniz",
   },
   growth_mindset: {
-    high: "Birlikte gelismeye cok uygunsunuz",
-    medium: "Gelisim odakli bakis aciniz ortak",
+    high: "Birlikte gelişmeye çok uygunsunuz",
+    medium: "Gelişim odaklı bakış açınız ortak",
   },
   core_fears: {
-    high: "Temel kaygilariniz benzer, birbirinizi anlayabilirsiniz",
-    medium: "Endiselerinizi paylasarak baglarinizi guclendirirsiniz",
+    high: "Temel kaygılarınız benzer, birbirinizi anlayabilirsiniz",
+    medium: "Endişelerinizi paylaşarak bağlarınızı güçlendirirsiniz",
   },
 };
 
@@ -1186,8 +1186,8 @@ export class CompatibilityService {
           labelTr,
           description:
             score >= 90
-              ? `${labelTr} alaninda mukemmel bir uyumunuz var (%${Math.round(score)})`
-              : `${labelTr} alaninda guclu bir uyumunuz var (%${Math.round(score)})`,
+              ? `${labelTr} alanında mükemmel bir uyumunuz var (%${Math.round(score)})`
+              : `${labelTr} alanında güçlü bir uyumunuz var (%${Math.round(score)})`,
         });
       } else {
         differences.push({

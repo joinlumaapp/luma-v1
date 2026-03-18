@@ -1645,7 +1645,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.h3,
     color: colors.text,
-    letterSpacing: -0.3,
+    letterSpacing: 0,
   },
   headerSubtitle: {
     ...typography.caption,
@@ -1796,8 +1796,8 @@ const styles = StyleSheet.create({
   },
   washLabelText: {
     fontSize: 22,
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: '#FFFFFF',
     includeFontPadding: false,
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
@@ -1846,8 +1846,8 @@ const styles = StyleSheet.create({
   },
   undoGoldText: {
     fontSize: 9,
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: '#fff',
   },
   undoLockBadge: {

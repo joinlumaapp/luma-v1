@@ -373,8 +373,8 @@ const styles = StyleSheet.create({
   },
   scoreText: {
     ...typography.h3,
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
   },
   scoreLabel: {
     ...typography.captionSmall,

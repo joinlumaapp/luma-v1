@@ -30,40 +30,40 @@ interface NotificationTemplate {
 
 const NOTIFICATION_TEMPLATES: Record<NotificationType, NotificationTemplate> = {
   NEW_MATCH: {
-    title: "Yeni bir eslesmen var!",
-    body: "Sen ve {name} birbirinizi begendiniz!",
+    title: "Yeni bir eşleşmen var!",
+    body: "Sen ve {name} birbirinizi beğendiniz!",
   },
   NEW_MESSAGE: {
     title: "{name}",
-    body: "{name} sana mesaj gonderdi",
+    body: "{name} sana mesaj gönderdi",
   },
   SUPER_LIKE: {
-    title: "Super Begeni!",
-    body: "{name} seni super begendi!",
+    title: "Süper Beğeni!",
+    body: "{name} seni süper beğendi!",
   },
   MATCH_REMOVED: {
-    title: "Eslesme Kaldirildi",
-    body: "Bir eslesmen sona erdi",
+    title: "Eşleşme Kaldırıldı",
+    body: "Bir eşleşmen sona erdi",
   },
   HARMONY_INVITE: {
     title: "Harmony Daveti",
     body: "{name} seni Harmony'ye davet etti",
   },
   HARMONY_REMINDER: {
-    title: "Harmony Hatirlatma",
-    body: "{name} ile Harmony oturumunuz {minutesLeft} dakika icinde sona erecek",
+    title: "Harmony Hatırlatma",
+    body: "{name} ile Harmony oturumunuz {minutesLeft} dakika içinde sona erecek",
   },
   BADGE_EARNED: {
     title: "Yeni Rozet!",
-    body: "Yeni rozet kazandin: {badge_name}",
+    body: "Yeni rozet kazandın: {badge_name}",
   },
   SUBSCRIPTION_EXPIRING: {
-    title: "Abonelik Hatirlatma",
-    body: "{packageName} aboneliginiz {daysLeft} gun icinde sona erecek",
+    title: "Abonelik Hatırlatma",
+    body: "{packageName} aboneliğiniz {daysLeft} gün içinde sona erecek",
   },
   RELATIONSHIP_REQUEST: {
-    title: "Iliski Istegi",
-    body: "{name} sana iliski istegi gonderdi",
+    title: "İlişki İsteği",
+    body: "{name} sana ilişki isteği gönderdi",
   },
   SYSTEM: {
     title: "LUMA",

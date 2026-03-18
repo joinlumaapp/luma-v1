@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: fontWeights.bold,
     color: colors.text,
-    letterSpacing: -0.5,
+    letterSpacing: 0,
   },
 
   // ── Top section — seamless ──
@@ -505,7 +505,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: fontWeights.bold,
     color: colors.text,
-    letterSpacing: -0.5,
+    letterSpacing: 0,
     flexShrink: 1,
   },
   jobTitle: {
@@ -643,7 +643,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: fontWeights.bold,
     color: colors.text,
-    letterSpacing: -0.2,
+    letterSpacing: 0,
     marginBottom: spacing.md,
   },
   bioText: {

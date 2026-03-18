@@ -5,30 +5,30 @@ import { PrismaService } from "../../prisma/prisma.service";
 const TURKISH_DAY_NAMES: Record<number, string> = {
   0: "Pazar",
   1: "Pazartesi",
-  2: "Sali",
-  3: "Carsamba",
-  4: "Persembe",
+  2: "Salı",
+  3: "Çarşamba",
+  4: "Perşembe",
   5: "Cuma",
   6: "Cumartesi",
 };
 
 // Turkish category labels for top category display
 const CATEGORY_LABELS_TR: Record<string, string> = {
-  COMMUNICATION: "Iletisim Tarzi",
-  LIFE_GOALS: "Yasam Hedefleri",
-  VALUES: "Degerler",
-  LIFESTYLE: "Yasam Tarzi",
-  EMOTIONAL_INTELLIGENCE: "Duygusal Zeka",
-  RELATIONSHIP_EXPECTATIONS: "Iliski Beklentileri",
+  COMMUNICATION: "İletişim Tarzı",
+  LIFE_GOALS: "Yaşam Hedefleri",
+  VALUES: "Değerler",
+  LIFESTYLE: "Yaşam Tarzı",
+  EMOTIONAL_INTELLIGENCE: "Duygusal Zekâ",
+  RELATIONSHIP_EXPECTATIONS: "İlişki Beklentileri",
   SOCIAL_COMPATIBILITY: "Sosyal Uyum",
-  ATTACHMENT_STYLE: "Baglanma Tarzi",
+  ATTACHMENT_STYLE: "Bağlanma Tarzı",
   LOVE_LANGUAGE: "Sevgi Dili",
-  CONFLICT_STYLE: "Catisma Yaklasimi",
+  CONFLICT_STYLE: "Çatışma Yaklaşımı",
   FUTURE_VISION: "Gelecek Vizyonu",
-  INTELLECTUAL: "Entelektuel Uyum",
-  INTIMACY: "Yakinlik",
-  GROWTH_MINDSET: "Gelisim Odaklilik",
-  CORE_FEARS: "Temel Kaygilar",
+  INTELLECTUAL: "Entelektüel Uyum",
+  INTIMACY: "Yakınlık",
+  GROWTH_MINDSET: "Gelişim Odaklılık",
+  CORE_FEARS: "Temel Kaygılar",
 };
 
 // Maximum number of trending interests to return

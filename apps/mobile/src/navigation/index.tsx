@@ -42,7 +42,7 @@ export const Navigation: React.FC = () => {
         regular: { fontFamily: 'Poppins_400Regular', fontWeight: '400' as const },
         medium: { fontFamily: 'Poppins_500Medium', fontWeight: '500' as const },
         bold: { fontFamily: 'Poppins_700Bold', fontWeight: '700' as const },
-        heavy: { fontFamily: 'Poppins_800ExtraBold', fontWeight: '800' as const },
+        heavy: { fontFamily: 'Poppins_700Bold', fontWeight: '700' as const },
       },
     }),
     [isDark, colors],

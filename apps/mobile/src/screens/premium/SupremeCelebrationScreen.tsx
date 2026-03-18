@@ -623,7 +623,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#1A0A2E',
     letterSpacing: 3,
   },

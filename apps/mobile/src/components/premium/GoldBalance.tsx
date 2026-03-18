@@ -247,8 +247,8 @@ const styles = StyleSheet.create({
   coinText: {
     ...typography.captionSmall,
     color: '#FFFFFF',
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     fontSize: 11,
   },
   balanceText: {
@@ -327,8 +327,8 @@ const historyStyles = StyleSheet.create({
   balanceCoinLargeText: {
     ...typography.h4,
     color: '#FFFFFF',
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
   },
   balanceLabelText: {
     ...typography.caption,

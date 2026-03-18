@@ -57,7 +57,7 @@ export const fontWeights = {
   medium: '500' as const,
   semibold: '600' as const,
   bold: '700' as const,
-  extrabold: '800' as const,
+  extrabold: '700' as const,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -159,7 +159,7 @@ export const typography = {
     fontSize: fontSizes['5xl'],
     lineHeight: lineHeights['5xl'],
     fontWeight: fontWeights.bold,
-    letterSpacing: letterSpacing.tight,
+    letterSpacing: letterSpacing.normal,
     ...androidFix,
   },
 
@@ -170,7 +170,7 @@ export const typography = {
     fontSize: fontSizes['4xl'],
     lineHeight: lineHeights['4xl'],
     fontWeight: fontWeights.bold,
-    letterSpacing: letterSpacing.tight,
+    letterSpacing: letterSpacing.normal,
     ...androidFix,
   },
   /** 30px bold — Section title */
@@ -179,7 +179,7 @@ export const typography = {
     fontSize: fontSizes['3xl'],
     lineHeight: lineHeights['3xl'],
     fontWeight: fontWeights.bold,
-    letterSpacing: letterSpacing.snug,
+    letterSpacing: letterSpacing.normal,
     ...androidFix,
   },
   /** 24px semibold — Card title, modal header */
@@ -308,11 +308,11 @@ export const typography = {
   },
   /** 30px extrabold — Large numeric hero (match %, big stats) */
   numericLarge: {
-    fontFamily: poppinsFonts.extrabold,
+    fontFamily: poppinsFonts.bold,
     fontSize: fontSizes['3xl'],
     lineHeight: lineHeights['3xl'],
-    fontWeight: fontWeights.extrabold,
-    letterSpacing: letterSpacing.tight,
+    fontWeight: fontWeights.bold,
+    letterSpacing: letterSpacing.normal,
     ...androidFix,
   },
 } as const;

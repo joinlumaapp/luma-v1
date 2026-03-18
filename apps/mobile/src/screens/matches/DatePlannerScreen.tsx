@@ -1024,8 +1024,8 @@ const styles = StyleSheet.create({
   },
   superBadgeText: {
     fontSize: 9,
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: palette.gold[400],
     letterSpacing: 1,
   },

@@ -327,8 +327,8 @@ const styles = StyleSheet.create({
   },
   devButtonText: {
     fontSize: 13,
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: fontWeights.extrabold,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: fontWeights.bold,
     color: palette.white,
     letterSpacing: 1.5,
   },

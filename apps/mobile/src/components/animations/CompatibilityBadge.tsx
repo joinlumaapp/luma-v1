@@ -272,6 +272,7 @@ const localStyles = StyleSheet.create({
   scoreText: {
     fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
+    paddingHorizontal: 2,
   },
   label: {
     ...typography.captionSmall,

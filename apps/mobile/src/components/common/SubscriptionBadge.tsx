@@ -225,8 +225,8 @@ const badgeStyles = StyleSheet.create({
     overflow: 'hidden',
   },
   supremeLabel: {
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: GOLD_24K.light,
     includeFontPadding: false,
   },

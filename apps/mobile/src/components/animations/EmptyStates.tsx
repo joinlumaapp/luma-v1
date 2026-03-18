@@ -593,8 +593,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   loadingLetter: {
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: colors.text,
     textShadowColor: palette.purple[400],
     textShadowOffset: { width: 0, height: 0 },

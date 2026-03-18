@@ -245,8 +245,8 @@ const styles = StyleSheet.create({
   letter: {
     ...typography.h1,
     color: colors.text,
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     textShadowColor: palette.purple[400],
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 20,

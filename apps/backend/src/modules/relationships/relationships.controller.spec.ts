@@ -62,7 +62,7 @@ describe("RelationshipsController", () => {
         relationshipId: "rel-1",
         status: "PROPOSED",
         message:
-          "Iliski modu teklifi gonderildi. Partnerinizin onayi bekleniyor.",
+          "İlişki modu teklifi gönderildi. Partnerinizin onayı bekleniyor.",
       };
       mockRelationshipsService.activate.mockResolvedValue(expected);
 
@@ -77,7 +77,7 @@ describe("RelationshipsController", () => {
       const expected = {
         relationshipId: "rel-1",
         status: "ACTIVE",
-        message: "Iliski modu aktif edildi!",
+        message: "İlişki modu aktif edildi!",
       };
       mockRelationshipsService.activate.mockResolvedValue(expected);
 
@@ -89,7 +89,7 @@ describe("RelationshipsController", () => {
     it("should throw NotFoundException when match does not exist", async () => {
       const dto = { matchId: "bad-id" };
       mockRelationshipsService.activate.mockRejectedValue(
-        new NotFoundException("Eslesme bulunamadi veya aktif degil"),
+        new NotFoundException("Eşleşme bulunamadı veya aktif değil"),
       );
 
       await expect(controller.activate(userId, dto)).rejects.toThrow(
@@ -100,7 +100,7 @@ describe("RelationshipsController", () => {
     it("should throw ForbiddenException when user is not a match participant", async () => {
       const dto = { matchId: "match-other" };
       mockRelationshipsService.activate.mockRejectedValue(
-        new ForbiddenException("Bu eslesmenin katilimcisi degilsiniz"),
+        new ForbiddenException("Bu eşleşmenin katılımcısı değilsiniz"),
       );
 
       await expect(controller.activate(userId, dto)).rejects.toThrow(
@@ -112,7 +112,7 @@ describe("RelationshipsController", () => {
       const dto = { matchId: "match-1" };
       mockRelationshipsService.activate.mockRejectedValue(
         new BadRequestException(
-          "Zaten aktif bir iliskiniz veya bekleyen bir teklifiniz var",
+          "Zaten aktif bir ilişkiniz veya bekleyen bir teklifiniz var",
         ),
       );
 
@@ -149,7 +149,7 @@ describe("RelationshipsController", () => {
         deactivated: false,
         status: "ENDING",
         deactivationDeadline: new Date(),
-        message: "Iliski sonlandirma talebi gonderildi.",
+        message: "İlişki sonlandırma talebi gönderildi.",
       });
 
       const result = await controller.deactivate(userId);
@@ -160,7 +160,7 @@ describe("RelationshipsController", () => {
 
     it("should throw NotFoundException when no active relationship", async () => {
       mockRelationshipsService.deactivate.mockRejectedValue(
-        new NotFoundException("Aktif bir iliskiniz bulunmuyor"),
+        new NotFoundException("Aktif bir ilişkiniz bulunmuyor"),
       );
 
       await expect(controller.deactivate(userId)).rejects.toThrow(
@@ -187,7 +187,7 @@ describe("RelationshipsController", () => {
     it("should confirm deactivation successfully", async () => {
       mockRelationshipsService.confirmDeactivation.mockResolvedValue({
         confirmed: true,
-        message: "Iliski modu sonlandirildi",
+        message: "İlişki modu sonlandırıldı",
       });
 
       const result = await controller.confirmDeactivation(userId);
@@ -214,7 +214,7 @@ describe("RelationshipsController", () => {
     it("should cancel deactivation successfully", async () => {
       mockRelationshipsService.cancelDeactivation.mockResolvedValue({
         cancelled: true,
-        message: "Iliski sonlandirma talebi iptal edildi.",
+        message: "İlişki sonlandırma talebi iptal edildi.",
       });
 
       const result = await controller.cancelDeactivation(userId);
@@ -269,7 +269,7 @@ describe("RelationshipsController", () => {
     it("should throw NotFoundException when no active relationship", async () => {
       const dto = { isVisible: true };
       mockRelationshipsService.toggleVisibility.mockRejectedValue(
-        new NotFoundException("Aktif bir iliskiniz bulunmuyor"),
+        new NotFoundException("Aktif bir ilişkiniz bulunmuyor"),
       );
 
       await expect(controller.toggleVisibility(userId, dto)).rejects.toThrow(
@@ -523,7 +523,7 @@ describe("RelationshipsController", () => {
         capacity: 10,
       };
       mockRelationshipsService.createEvent.mockRejectedValue(
-        new NotFoundException("Aktif bir iliskiniz bulunmuyor"),
+        new NotFoundException("Aktif bir ilişkiniz bulunmuyor"),
       );
 
       await expect(controller.createEvent(userId, dto)).rejects.toThrow(
@@ -583,7 +583,7 @@ describe("RelationshipsController", () => {
 
     it("should throw NotFoundException when no active relationship", async () => {
       mockRelationshipsService.getLeaderboard.mockRejectedValue(
-        new NotFoundException("Aktif bir iliskiniz bulunmuyor"),
+        new NotFoundException("Aktif bir ilişkiniz bulunmuyor"),
       );
 
       await expect(controller.getLeaderboard(userId)).rejects.toThrow(

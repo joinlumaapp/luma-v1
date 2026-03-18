@@ -76,19 +76,19 @@ interface EnhancedProfileCardProps {
 
 const INTENTION_CONFIG: Record<IntentionTag, { label: string; bg: string; text: string; icon: string }> = {
   SERIOUS_RELATIONSHIP: {
-    label: 'Ciddi Iliski',
+    label: 'Ciddi İlişki',
     bg: 'rgba(16, 185, 129, 0.20)',
     text: palette.purple[400],
     icon: 'heart',
   },
   EXPLORING: {
-    label: 'Kesfediyorum',
+    label: 'Keşfediyorum',
     bg: 'rgba(59, 130, 246, 0.20)',
     text: palette.pink[400],
     icon: 'compass',
   },
   NOT_SURE: {
-    label: 'Emin Degilim',
+    label: 'Emin Değilim',
     bg: 'rgba(156, 163, 175, 0.20)',
     text: palette.gray[300],
     icon: 'help-circle',

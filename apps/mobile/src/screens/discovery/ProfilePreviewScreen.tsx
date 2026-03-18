@@ -893,7 +893,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.text,
-    letterSpacing: -0.5,
+    letterSpacing: 0,
   },
   emptyContainer: {
     flex: 1,
@@ -928,7 +928,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.text,
-    letterSpacing: -0.5,
+    letterSpacing: 0,
     flexShrink: 1,
   },
   jobTitle: {
