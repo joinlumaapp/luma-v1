@@ -22,7 +22,7 @@ import { fontWeights } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { socialFeedService, type FeedPost } from '../../services/socialFeedService';
 import { profileService } from '../../services/profileService';
-import { getCompatibilityPersonality, type CompatibilityPersonality } from '../../utils/formatters';
+import { getCompatibilityPersonality, type CompatibilityPersonality, translateIntentionTag } from '../../utils/formatters';
 import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
 import { VerifiedBadge } from '../../components/common/VerifiedBadge';
 import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
@@ -248,7 +248,7 @@ export const FeedProfileScreen: React.FC = () => {
 
         {profile.intentionTag && (
           <View style={styles.intentionChip}>
-            <Text style={styles.intentionText}>{profile.intentionTag}</Text>
+            <Text style={styles.intentionText}>{translateIntentionTag(profile.intentionTag)}</Text>
           </View>
         )}
       </View>
@@ -321,7 +321,7 @@ export const FeedProfileScreen: React.FC = () => {
             <View style={{ flexDirection: 'row' }}>
               <View style={{ backgroundColor: 'rgba(139,92,246,0.12)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20 }}>
                 <Text style={{ fontSize: 13, fontWeight: fontWeights.medium, color: '#8B5CF6' }}>
-                  {profile.intentionTag}
+                  {translateIntentionTag(profile.intentionTag)}
                 </Text>
               </View>
             </View>
@@ -386,17 +386,17 @@ export const FeedProfileScreen: React.FC = () => {
       {isPremium ? (
         <View style={styles.detailsGrid}>
           <DetailRow icon="resize-outline" iconBg="rgba(139, 92, 246, 0.10)" label="Boy" value={profile.height} />
-          <DetailRow icon="briefcase-outline" iconBg="rgba(16, 185, 129, 0.10)" label="Is" value={profile.job} />
-          <DetailRow icon="school-outline" iconBg="rgba(236, 72, 153, 0.10)" label="Egitim" value={profile.education} />
-          <DetailRow icon="heart-outline" iconBg="rgba(245, 158, 11, 0.10)" label="Amac" value={profile.intentionTag} />
-          <DetailRow icon="star-outline" iconBg="rgba(59, 130, 246, 0.10)" label="Burc" value={profile.zodiacSign} />
+          <DetailRow icon="briefcase-outline" iconBg="rgba(16, 185, 129, 0.10)" label="İş" value={profile.job} />
+          <DetailRow icon="school-outline" iconBg="rgba(236, 72, 153, 0.10)" label="Eğitim" value={profile.education} />
+          <DetailRow icon="heart-outline" iconBg="rgba(245, 158, 11, 0.10)" label="Amaç" value={translateIntentionTag(profile.intentionTag)} />
+          <DetailRow icon="star-outline" iconBg="rgba(59, 130, 246, 0.10)" label="Burç" value={profile.zodiacSign} />
         </View>
       ) : (
         <View style={styles.lockedContainer}>
           <View style={styles.detailsGrid}>
             <DetailRow icon="resize-outline" iconBg="rgba(139, 92, 246, 0.10)" label="Boy" value="***" />
-            <DetailRow icon="briefcase-outline" iconBg="rgba(16, 185, 129, 0.10)" label="Is" value="***" />
-            <DetailRow icon="school-outline" iconBg="rgba(236, 72, 153, 0.10)" label="Egitim" value="***" />
+            <DetailRow icon="briefcase-outline" iconBg="rgba(16, 185, 129, 0.10)" label="İş" value="***" />
+            <DetailRow icon="school-outline" iconBg="rgba(236, 72, 153, 0.10)" label="Eğitim" value="***" />
           </View>
           <PremiumLock onPress={handlePremiumUpgrade} />
         </View>

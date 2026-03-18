@@ -38,6 +38,7 @@ import { FavoriteSpotsCard } from '../../components/profile/FavoriteSpotsCard';
 import { CommonGroundCard } from '../../components/discovery/CommonGroundCard';
 import { useProfileStore } from '../../stores/profileStore';
 import { PaidMessageModal } from '../../components/messaging/PaidMessageModal';
+import { translateSmoking, translateSports, translateChildren, translateIntentionTag } from '../../utils/formatters';
 import { waveService } from '../../services/waveService';
 import { useChatStore } from '../../stores/chatStore';
 import { useAuthStore } from '../../stores/authStore';
@@ -506,9 +507,7 @@ export const ProfilePreviewScreen: React.FC = () => {
                 borderRadius: 20,
               }}>
                 <Text style={{ fontSize: 13, fontFamily: 'Poppins_500Medium', fontWeight: '500', color: palette.purple[500] }}>
-                  {profile.intentionTag === 'serious' ? 'Ciddi İlişki' :
-                   profile.intentionTag === 'SERIOUS_RELATIONSHIP' ? 'Ciddi İlişki' :
-                   profile.intentionTag === 'EXPLORING' ? 'Keşfediyorum' : 'Emin Değilim'}
+                  {translateIntentionTag(profile.intentionTag)}
                 </Text>
               </View>
             </View>
@@ -523,9 +522,9 @@ export const ProfilePreviewScreen: React.FC = () => {
   if (profile.job) lifestyleItems.push({ icon: 'briefcase-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'İş', value: profile.job });
   if (profile.education) lifestyleItems.push({ icon: 'school-outline', iconBg: 'rgba(236, 72, 153, 0.10)', label: 'Eğitim', value: profile.education });
   if (profile.height) lifestyleItems.push({ icon: 'resize-outline', iconBg: 'rgba(139, 92, 246, 0.10)', label: 'Boy', value: `${profile.height} cm` });
-  if (profile.sports) lifestyleItems.push({ icon: 'fitness-outline', iconBg: 'rgba(59, 130, 246, 0.10)', label: 'Spor', value: profile.sports });
-  if (profile.smoking) lifestyleItems.push({ icon: 'flame-outline', iconBg: 'rgba(239, 68, 68, 0.10)', label: 'Sigara', value: profile.smoking });
-  if (profile.children) lifestyleItems.push({ icon: 'people-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'Çocuk', value: profile.children });
+  if (profile.sports) lifestyleItems.push({ icon: 'fitness-outline', iconBg: 'rgba(59, 130, 246, 0.10)', label: 'Spor', value: translateSports(profile.sports) });
+  if (profile.smoking) lifestyleItems.push({ icon: 'flame-outline', iconBg: 'rgba(239, 68, 68, 0.10)', label: 'Sigara', value: translateSmoking(profile.smoking) });
+  if (profile.children) lifestyleItems.push({ icon: 'people-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'Çocuk', value: translateChildren(profile.children) });
 
   if (lifestyleItems.length > 0) {
     infoSections.push(
@@ -713,7 +712,7 @@ export const ProfilePreviewScreen: React.FC = () => {
         {/* Intention chip */}
         {profile.intentionTag ? (
           <View style={styles.intentionChip}>
-            <Text style={styles.intentionText}>{profile.intentionTag}</Text>
+            <Text style={styles.intentionText}>{translateIntentionTag(profile.intentionTag)}</Text>
           </View>
         ) : null}
       </View>

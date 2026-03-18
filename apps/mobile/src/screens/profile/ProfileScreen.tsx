@@ -58,29 +58,21 @@ const calculateAge = (birthDate: string): number => {
 };
 
 // Helper: translate profile field values to Turkish display labels
-const translateSports = (v: string): string => {
-  const map: Record<string, string> = { never: 'Pek yapmam', sometimes: 'Ara sıra', often: 'Düzenli' };
-  return map[v] || 'Belirtilmedi';
-};
-const translateSmoking = (v: string): string => {
-  const map: Record<string, string> = { regular: 'İçiyor', sometimes: 'Ara sıra', never: 'İçmiyor', tolerate: 'İçmez ama karışmaz' };
-  return map[v] || 'Belirtilmedi';
-};
-const translateChildren = (v: string): string => {
-  const map: Record<string, string> = {
-    have: 'Var', no_children: 'Yok', want: 'İleride olabilir', dont_want: 'İstemiyor',
-  };
-  return map[v] || 'Belirtilmedi';
-};
-const translateGender = (v: string): string => {
-  const map: Record<string, string> = { male: 'Erkek', female: 'Kadın' };
-  return map[v] || v || 'Belirtilmedi';
-};
+// Uses centralized translations from formatters.ts
+import {
+  translateGender,
+  translateSmoking,
+  translateSports,
+  translateChildren,
+} from '../../utils/formatters';
+
 const translateLookingFor = (ids: string[]): string[] => {
   const map: Record<string, string> = {
     long_term: 'Uzun süreli ilişki', short_term: 'Kısa süreli ilişki',
     friendship: 'Arkadaşlık', travel_together: 'Birlikte gezmek',
     SERIOUS_RELATIONSHIP: 'Ciddi ilişki',
+    EXPLORING: 'Keşfediyorum',
+    NOT_SURE: 'Emin Değilim',
   };
   return ids.map((id) => map[id] || id);
 };
@@ -613,37 +605,37 @@ export const ProfileScreen: React.FC = () => {
     );
   }
 
-  // 3. Hakkımda — lifestyle detail rows
+  // 3. Hakkımda — premium grid card design
   infoSections.push(
     <View key="details" style={styles.section}>
       <Text style={styles.sectionTitle}>Hakkımda</Text>
-      {aboutRows.map((row, idx) => (
-        <TouchableOpacity
-          key={row.label}
-          style={[
-            styles.aboutRow,
-            idx === aboutRows.length - 1 && styles.aboutRowLast,
-          ]}
-          onPress={handleEditProfile}
-          activeOpacity={0.7}
-          accessibilityLabel={`${row.label}: ${row.value}, düzenlemek için dokunun`}
-          accessibilityRole="button"
-        >
-          <View style={[styles.aboutIconCircle, { backgroundColor: row.iconBg }]}>
-            <Ionicons name={row.icon} size={18} color={colors.text} />
-          </View>
-          <View style={styles.aboutRowContent}>
-            <Text style={styles.aboutRowLabel}>{row.label}</Text>
-            <Text style={[
-              styles.aboutRowValue,
-              row.value === 'Belirtilmedi' && styles.aboutRowValueEmpty,
-            ]}>
-              {row.value}
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />
-        </TouchableOpacity>
-      ))}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+        {aboutRows.map((row) => (
+          <TouchableOpacity
+            key={row.label}
+            onPress={handleEditProfile}
+            activeOpacity={0.7}
+            accessibilityLabel={`${row.label}: ${row.value}, düzenlemek için dokunun`}
+            accessibilityRole="button"
+            style={{
+              width: '47%' as unknown as number,
+              backgroundColor: colors.surface,
+              borderRadius: 16,
+              padding: 14,
+              borderWidth: 1,
+              borderColor: colors.surfaceBorder,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: row.iconBg, justifyContent: 'center', alignItems: 'center', marginRight: 8 }}>
+                <Ionicons name={row.icon} size={16} color={palette.purple[600]} />
+              </View>
+              <Text style={{ fontSize: 11, fontWeight: '500', color: colors.textTertiary, letterSpacing: 0.5 }}>{row.label}</Text>
+            </View>
+            <Text style={{ fontSize: 15, fontWeight: '700', color: row.value === 'Belirtilmedi' ? colors.textTertiary : colors.text }} numberOfLines={1} adjustsFontSizeToFit>{row.value}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
     </View>,
   );
 

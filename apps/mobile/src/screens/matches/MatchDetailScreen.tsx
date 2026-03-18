@@ -28,6 +28,7 @@ import { InterleavedProfileLayout } from '../../components/profile/InterleavedPr
 import { VerifiedBadge } from '../../components/common/VerifiedBadge';
 import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
 import { CoinBalance } from '../../components/common/CoinBalance';
+import { translateSmoking, translateSports, translateChildren, translateIntentionTag } from '../../utils/formatters';
 
 type MatchDetailNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'MatchDetail'>;
 type MatchDetailRouteProp = RouteProp<MatchesStackParamList, 'MatchDetail'>;
@@ -140,7 +141,7 @@ export const MatchDetailScreen: React.FC = () => {
 
         {selectedMatch.intentionTag ? (
           <View style={styles.intentionChip}>
-            <Text style={styles.intentionText}>{selectedMatch.intentionTag}</Text>
+            <Text style={styles.intentionText}>{translateIntentionTag(selectedMatch.intentionTag)}</Text>
           </View>
         ) : null}
       </View>
@@ -191,7 +192,7 @@ export const MatchDetailScreen: React.FC = () => {
             <View style={{ flexDirection: 'row' }}>
               <View style={{ backgroundColor: 'rgba(139,92,246,0.12)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20 }}>
                 <Text style={{ fontSize: 13, fontWeight: fontWeights.medium, color: '#8B5CF6' }}>
-                  {selectedMatch.intentionTag === 'serious' || selectedMatch.intentionTag === 'SERIOUS_RELATIONSHIP' ? 'Ciddi İlişki' : selectedMatch.intentionTag === 'EXPLORING' ? 'Keşfediyorum' : 'Emin Değilim'}
+                  {translateIntentionTag(selectedMatch.intentionTag)}
                 </Text>
               </View>
             </View>
@@ -227,9 +228,9 @@ export const MatchDetailScreen: React.FC = () => {
     if (m.job) lifestyleRows.push({ icon: 'briefcase-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'İş', value: String(m.job) });
     if (m.education) lifestyleRows.push({ icon: 'school-outline', iconBg: 'rgba(236, 72, 153, 0.10)', label: 'Eğitim', value: String(m.education) });
     if (m.height) lifestyleRows.push({ icon: 'resize-outline', iconBg: 'rgba(139, 92, 246, 0.10)', label: 'Boy', value: `${m.height} cm` });
-    if (m.smoking) lifestyleRows.push({ icon: 'flame-outline', iconBg: 'rgba(239, 68, 68, 0.10)', label: 'Sigara', value: String(m.smoking) });
-    if (m.sports) lifestyleRows.push({ icon: 'fitness-outline', iconBg: 'rgba(59, 130, 246, 0.10)', label: 'Spor', value: String(m.sports) });
-    if (m.children) lifestyleRows.push({ icon: 'people-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'Çocuk', value: String(m.children) });
+    if (m.smoking) lifestyleRows.push({ icon: 'flame-outline', iconBg: 'rgba(239, 68, 68, 0.10)', label: 'Sigara', value: translateSmoking(String(m.smoking)) });
+    if (m.sports) lifestyleRows.push({ icon: 'fitness-outline', iconBg: 'rgba(59, 130, 246, 0.10)', label: 'Spor', value: translateSports(String(m.sports)) });
+    if (m.children) lifestyleRows.push({ icon: 'people-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'Çocuk', value: translateChildren(String(m.children)) });
 
     if (lifestyleRows.length > 0) {
       infoSections.push(

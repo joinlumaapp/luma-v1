@@ -249,3 +249,95 @@ export const truncateText = (text: string, maxLength: number): string => {
   if (text.length <= maxLength) return text;
   return `${text.slice(0, maxLength - 3)}...`;
 };
+
+// ─── Enum → Turkish label translations ───────────────────────────
+
+const GENDER_LABELS: Record<string, string> = {
+  MALE: 'Erkek',
+  male: 'Erkek',
+  FEMALE: 'Kadın',
+  female: 'Kadın',
+  OTHER: 'Diğer',
+  other: 'Diğer',
+};
+
+const SMOKING_LABELS: Record<string, string> = {
+  NEVER: 'İçmiyor',
+  never: 'İçmiyor',
+  SOMETIMES: 'Ara sıra',
+  sometimes: 'Ara sıra',
+  OFTEN: 'Sık sık',
+  often: 'Sık sık',
+  QUIT: 'Bıraktım',
+  quit: 'Bıraktım',
+  REGULAR: 'İçiyor',
+  regular: 'İçiyor',
+  TOLERATE: 'İçmez ama karışmaz',
+  tolerate: 'İçmez ama karışmaz',
+};
+
+const SPORTS_LABELS: Record<string, string> = {
+  NEVER: 'Pek yapmam',
+  never: 'Pek yapmam',
+  SOMETIMES: 'Ara sıra',
+  sometimes: 'Ara sıra',
+  REGULAR: 'Düzenli',
+  regular: 'Düzenli',
+  OFTEN: 'Düzenli',
+  often: 'Düzenli',
+  DAILY: 'Her gün',
+  daily: 'Her gün',
+};
+
+const CHILDREN_LABELS: Record<string, string> = {
+  HAVE: 'Var',
+  have: 'Var',
+  NO_CHILDREN: 'Yok',
+  no_children: 'Yok',
+  WANT: 'İstiyor',
+  want: 'İleride olabilir',
+  MAYBE: 'Belki',
+  maybe: 'Belki',
+  DONT_WANT: 'İstemiyor',
+  dont_want: 'İstemiyor',
+};
+
+const INTENTION_TAG_LABELS: Record<string, string> = {
+  SERIOUS_RELATIONSHIP: 'Ciddi İlişki',
+  serious: 'Ciddi İlişki',
+  EXPLORING: 'Keşfediyorum',
+  exploring: 'Keşfediyorum',
+  NOT_SURE: 'Emin Değilim',
+  not_sure: 'Emin Değilim',
+};
+
+const PACKAGE_TIER_LABELS: Record<string, string> = {
+  FREE: 'Ücretsiz',
+  GOLD: 'Gold',
+  PRO: 'Pro',
+  RESERVED: 'Reserved',
+};
+
+/** Translate gender enum to Turkish display label */
+export const translateGender = (value: string | null | undefined): string =>
+  value ? GENDER_LABELS[value] ?? value : 'Belirtilmedi';
+
+/** Translate smoking enum to Turkish display label */
+export const translateSmoking = (value: string | null | undefined): string =>
+  value ? SMOKING_LABELS[value] ?? value : 'Belirtilmedi';
+
+/** Translate sports/exercise enum to Turkish display label */
+export const translateSports = (value: string | null | undefined): string =>
+  value ? SPORTS_LABELS[value] ?? value : 'Belirtilmedi';
+
+/** Translate children enum to Turkish display label */
+export const translateChildren = (value: string | null | undefined): string =>
+  value ? CHILDREN_LABELS[value] ?? value : 'Belirtilmedi';
+
+/** Translate intention tag enum to Turkish display label */
+export const translateIntentionTag = (value: string | null | undefined): string =>
+  value ? INTENTION_TAG_LABELS[value] ?? value : 'Belirtilmedi';
+
+/** Translate package tier enum to Turkish display label */
+export const translatePackageTier = (value: string | null | undefined): string =>
+  value ? PACKAGE_TIER_LABELS[value] ?? value : 'Ücretsiz';
