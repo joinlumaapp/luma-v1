@@ -380,8 +380,8 @@ const styles = StyleSheet.create({
   superText: {
     ...typography.h2,
     color: BLUE_LIGHT,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     textShadowColor: 'rgba(59, 130, 246, 0.5)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 12,

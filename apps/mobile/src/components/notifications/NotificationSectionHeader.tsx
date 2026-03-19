@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   unreadBadgeText: {
     ...typography.captionSmall,
     color: '#FFFFFF',
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
 });

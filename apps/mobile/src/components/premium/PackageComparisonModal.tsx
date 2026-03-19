@@ -366,8 +366,8 @@ const styles = StyleSheet.create({
   title: {
     ...typography.h4,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   closeButton: {
     width: 32,
@@ -380,8 +380,8 @@ const styles = StyleSheet.create({
   closeText: {
     ...typography.body,
     color: colors.textSecondary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   subtitle: {
     ...typography.bodySmall,
@@ -440,14 +440,14 @@ const styles = StyleSheet.create({
   recommendedBadgeText: {
     ...typography.captionSmall,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     fontSize: 8,
   },
   tierHeaderName: {
     ...typography.captionSmall,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     textAlign: 'center',
     marginTop: spacing.xs,
   },
@@ -491,14 +491,14 @@ const styles = StyleSheet.create({
   },
   valueTextCheck: {
     color: colors.success,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     fontSize: 16,
   },
   valueTextCross: {
     color: colors.error + '80',
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     fontSize: 16,
   },
   valueTextCustom: {
@@ -530,8 +530,8 @@ const styles = StyleSheet.create({
   upgradeBtnText: {
     ...typography.captionSmall,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     textAlign: 'center',
     lineHeight: 13,
   },

@@ -426,8 +426,8 @@ const styles = StyleSheet.create({
   countdownText: {
     ...typography.h2,
     color: colors.accent,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     marginBottom: spacing.sm,
   },
   activeDescription: {

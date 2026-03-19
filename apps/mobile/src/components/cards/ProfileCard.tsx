@@ -153,8 +153,8 @@ const styles = StyleSheet.create({
   compatText: {
     ...typography.bodySmall,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   verifiedBadge: {
     position: 'absolute',
@@ -170,8 +170,8 @@ const styles = StyleSheet.create({
   verifiedIcon: {
     fontSize: 14,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   info: {
     position: 'absolute',

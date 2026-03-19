@@ -322,8 +322,8 @@ const styles = StyleSheet.create({
   rewardText: {
     ...typography.caption,
     color: palette.gold[600],
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
 
   // Progress
@@ -367,8 +367,8 @@ const styles = StyleSheet.create({
   claimBtnText: {
     ...typography.buttonSmall,
     color: palette.white,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   claimedRow: {
     flexDirection: 'row',

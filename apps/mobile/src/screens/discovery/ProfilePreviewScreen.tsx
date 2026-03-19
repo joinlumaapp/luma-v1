@@ -472,7 +472,7 @@ export const ProfilePreviewScreen: React.FC = () => {
   if (profile.videoUrl) {
     infoSections.push(
       <View key="video-profile" style={styles.seamlessSection}>
-        <Text style={styles.sectionLabel}>VIDEO PROFIL</Text>
+        <Text style={styles.sectionLabel}>Video Profil</Text>
         <VideoProfile
           videoUrl={profile.videoUrl}
           thumbnailUrl={profile.videoThumbnailUrl}
@@ -490,7 +490,7 @@ export const ProfilePreviewScreen: React.FC = () => {
   if (profile.bio || profile.intentionTag) {
     infoSections.push(
       <View key="about-section" style={styles.seamlessSection}>
-        <Text style={styles.sectionLabel}>HAKKINDA</Text>
+        <Text style={styles.sectionLabel}>Hakkında</Text>
         {profile.bio && profile.bio.length > 0 && (
           <Text style={styles.bioText}>{profile.bio}</Text>
         )}
@@ -529,7 +529,7 @@ export const ProfilePreviewScreen: React.FC = () => {
   if (lifestyleItems.length > 0) {
     infoSections.push(
       <View key="lifestyle-block" style={styles.seamlessSection}>
-        <Text style={styles.sectionLabel}>HAKKIMDA</Text>
+        <Text style={styles.sectionLabel}>Hakkımda</Text>
         {lifestyleItems.map((item, idx) => (
           <View key={item.icon} style={{
             flexDirection: 'row',
@@ -600,7 +600,7 @@ export const ProfilePreviewScreen: React.FC = () => {
   if (compatReasons.length > 0) {
     infoSections.push(
       <View key="compat-reasons" style={styles.seamlessSection}>
-        <Text style={styles.sectionLabel}>UYUM NEDENLERİ</Text>
+        <Text style={styles.sectionLabel}>Uyum Nedenleri</Text>
         {compatReasons.map((reason, idx) => (
           <View key={idx} style={styles.reasonRow}>
             <View style={styles.reasonAccent} />
@@ -615,7 +615,7 @@ export const ProfilePreviewScreen: React.FC = () => {
   if (profile.interestTags && profile.interestTags.length > 0) {
     infoSections.push(
       <View key="interests" style={styles.seamlessSection}>
-        <Text style={styles.sectionLabel}>İLGİ ALANLARI</Text>
+        <Text style={styles.sectionLabel}>İlgi Alanları</Text>
         <View style={styles.tagsRow}>
           {profile.interestTags.map((tagId) => (
             <View key={tagId} style={styles.tagChip}>
@@ -659,7 +659,7 @@ export const ProfilePreviewScreen: React.FC = () => {
   if (profile.earnedBadges && profile.earnedBadges.length > 0) {
     infoSections.push(
       <View key="badges" style={styles.seamlessSection}>
-        <Text style={styles.sectionLabel}>ROZETLERİ</Text>
+        <Text style={styles.sectionLabel}>Rozetleri</Text>
         <BadgeShowcase badgeKeys={profile.earnedBadges} size={32} />
       </View>,
     );
@@ -669,7 +669,7 @@ export const ProfilePreviewScreen: React.FC = () => {
   if (profile.voiceIntroUrl) {
     infoSections.push(
       <View key="voice" style={styles.seamlessSection}>
-        <Text style={styles.sectionLabel}>SESİNİ DİNLE</Text>
+        <Text style={styles.sectionLabel}>Sesini Dinle</Text>
         <VoiceIntroPlayer
           voiceIntroUrl={profile.voiceIntroUrl}
           userName={profile.name}
@@ -736,15 +736,15 @@ export const ProfilePreviewScreen: React.FC = () => {
       {/* Premium stats row */}
       <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
         <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
-          <Text style={{ fontSize: 22, fontWeight: '700', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { postCount?: number }).postCount ?? 0}</Text>
+          <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { postCount?: number }).postCount ?? 0}</Text>
           <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Gönderi</Text>
         </View>
         <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
-          <Text style={{ fontSize: 22, fontWeight: '700', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { followerCount?: number }).followerCount ?? 0}</Text>
+          <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { followerCount?: number }).followerCount ?? 0}</Text>
           <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takipçi</Text>
         </View>
         <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
-          <Text style={{ fontSize: 22, fontWeight: '700', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { followingCount?: number }).followingCount ?? 0}</Text>
+          <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { followingCount?: number }).followingCount ?? 0}</Text>
           <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takip</Text>
         </View>
       </View>
@@ -889,8 +889,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 28,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: colors.text,
     letterSpacing: 0,
   },
@@ -923,12 +923,15 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   userName: {
-    fontSize: 28,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontSize: 26,
+    lineHeight: 38,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: colors.text,
     letterSpacing: 0,
     flexShrink: 1,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   jobTitle: {
     fontSize: 15,
@@ -980,13 +983,13 @@ const styles = StyleSheet.create({
   },
   compatInlineText: {
     fontSize: 17,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   compatSuperLabel: {
     fontSize: 12,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: colors.accent,
     backgroundColor: colors.accent + '18',
     borderRadius: borderRadius.full,
@@ -1012,8 +1015,8 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 20,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: colors.text,
     textAlign: 'center',
     includeFontPadding: false,
@@ -1040,13 +1043,13 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   sectionLabel: {
-    fontSize: 13,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
-    color: colors.textTertiary,
+    fontSize: 18,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: colors.text,
     includeFontPadding: false,
     marginBottom: spacing.md,
-    letterSpacing: 0.3,
+    letterSpacing: 0,
   },
 
   // ── Bio ──
@@ -1068,7 +1071,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     color: colors.textSecondary,
     marginBottom: spacing.sm,
-    fontFamily: 'Poppins_700Bold',
+    fontFamily: 'Poppins_600SemiBold',
   },
   promptQuestion: {
     fontSize: 13,
@@ -1080,8 +1083,8 @@ const styles = StyleSheet.create({
   },
   promptAnswer: {
     fontSize: 22,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700' as const,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600' as const,
     color: colors.text,
     textAlign: 'center' as const,
     lineHeight: 30,

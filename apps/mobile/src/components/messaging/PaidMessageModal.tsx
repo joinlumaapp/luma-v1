@@ -365,8 +365,8 @@ const styles = StyleSheet.create({
   priceValue: {
     ...typography.h3,
     color: colors.primary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   confirmButton: {
     alignSelf: 'stretch',
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
   confirmButtonText: {
     ...typography.button,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
 });

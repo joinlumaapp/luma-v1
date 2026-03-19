@@ -685,8 +685,8 @@ const styles = StyleSheet.create({
   },
   compatBadgeText: {
     fontSize: 12,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
 
   // ── Intention badge ──
@@ -813,8 +813,8 @@ const styles = StyleSheet.create({
   allViewedCountdownValue: {
     ...typography.bodySmall,
     color: colors.primary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },
 
@@ -870,8 +870,8 @@ const styles = StyleSheet.create({
   emptyCountdownValue: {
     ...typography.bodySmall,
     color: colors.primary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },
 

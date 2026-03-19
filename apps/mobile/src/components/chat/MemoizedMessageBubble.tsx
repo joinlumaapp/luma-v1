@@ -343,8 +343,8 @@ const styles = StyleSheet.create({
   gifLabel: {
     ...typography.captionSmall,
     color: colors.primary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     ...(Platform.OS === 'android' ? { includeFontPadding: false } : {}),
   },
   gifTime: {

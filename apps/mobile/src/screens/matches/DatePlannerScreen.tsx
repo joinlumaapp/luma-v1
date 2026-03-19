@@ -355,14 +355,14 @@ const pickerStyles = StyleSheet.create({
   },
   timeChipTextActive: {
     color: '#FFFFFF',
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   timeSeparator: {
     ...typography.h3,
     color: colors.textSecondary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   minuteRow: {
     flexDirection: 'row',
@@ -526,7 +526,7 @@ const ActivityCard: React.FC<{
     <View style={[styles.activityIconCircle, { backgroundColor: `${preset.color}20` }]}>
       <Ionicons name={preset.icon} size={22} color={preset.color} />
     </View>
-    <Text style={[styles.activityLabel, isSelected && { color: preset.color, fontWeight: '700' }]}>
+    <Text style={[styles.activityLabel, isSelected && { color: preset.color, fontWeight: '600' }]}>
       {preset.label}
     </Text>
   </Pressable>
@@ -1006,8 +1006,8 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.bodyLarge,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   headerSubtitle: {
     ...typography.caption,
@@ -1024,8 +1024,8 @@ const styles = StyleSheet.create({
   },
   superBadgeText: {
     fontSize: 9,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: palette.gold[400],
     letterSpacing: 1,
   },
@@ -1168,8 +1168,8 @@ const styles = StyleSheet.create({
   createBtnText: {
     ...typography.button,
     color: '#FFFFFF',
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     fontSize: 16,
   },
 

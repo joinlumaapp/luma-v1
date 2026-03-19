@@ -353,7 +353,7 @@ export const CallScreen: React.FC = () => {
             <View style={styles.endCallRow}>
               <ControlButton
                 icon={'\uD83D\uDCF5'}
-                label="Aramay\u0131 Bitir"
+                label="Aramayı Bitir"
                 onPress={handleEndCall}
                 variant="danger"
                 size="large"
@@ -453,15 +453,15 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: 48,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: palette.white,
   },
   displayName: {
     ...typography.h4,
     color: palette.white,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     marginBottom: spacing.xs,
   },
   statusLabel: {
@@ -481,8 +481,8 @@ const styles = StyleSheet.create({
   },
   videoAvatarInitial: {
     fontSize: 96,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: palette.purple[400],
     opacity: 0.15,
     position: 'absolute',
@@ -495,8 +495,8 @@ const styles = StyleSheet.create({
   videoOverlayName: {
     ...typography.h4,
     color: palette.white,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     marginBottom: spacing.xs,
   },
   videoOverlayStatus: {
@@ -592,8 +592,8 @@ const styles = StyleSheet.create({
   premiumTitle: {
     ...typography.h4,
     color: palette.white,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     marginBottom: spacing.sm,
     textAlign: 'center',
   },
@@ -617,8 +617,8 @@ const styles = StyleSheet.create({
   upgradeButtonText: {
     ...typography.button,
     color: '#1A1A1A',
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   premiumBackButton: {
     paddingVertical: spacing.sm,

@@ -362,8 +362,8 @@ const styles = StyleSheet.create({
   creatorInitial: {
     ...typography.bodySmall,
     color: colors.primary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   creatorName: {
     ...typography.bodySmall,
@@ -435,8 +435,8 @@ const styles = StyleSheet.create({
   participantInitial: {
     ...typography.bodySmall,
     color: colors.primary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   participantInfo: {
     flex: 1,

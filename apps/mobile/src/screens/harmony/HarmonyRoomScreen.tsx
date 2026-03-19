@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '600',
     color: TEXT_COLOR,
     flex: 1,
     marginLeft: 12,
@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: '600',
     color: TEXT_COLOR,
     textAlign: 'center',
   },

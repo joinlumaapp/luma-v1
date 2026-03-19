@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, alignItems: 'center', gap: spacing.xs,
   },
   statIcon: { fontSize: 24 },
-  statValue: { ...typography.h3, fontWeight: '700' },
+  statValue: { ...typography.h3, fontWeight: '600' },
   statLabel: { ...typography.caption, color: colors.textSecondary },
   compatSection: { marginBottom: spacing.lg },
   sectionTitle: {
@@ -250,8 +250,8 @@ const styles = StyleSheet.create({
     fontWeight: '600', marginBottom: spacing.sm,
   },
   compatRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  compatPercent: { ...typography.h2, color: colors.primary, fontFamily: 'Poppins_700Bold',
- fontWeight: '700', minWidth: 60 },
+  compatPercent: { ...typography.h2, color: colors.primary, fontFamily: 'Poppins_600SemiBold',
+ fontWeight: '600', minWidth: 60 },
   compatBarBg: {
     flex: 1, height: 8, borderRadius: 4,
     backgroundColor: colors.surface,

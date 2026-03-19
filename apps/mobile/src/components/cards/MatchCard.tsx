@@ -132,8 +132,8 @@ const styles = StyleSheet.create({
   newBadgeText: {
     ...typography.captionSmall,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   compatibility: {
     ...typography.bodySmall,

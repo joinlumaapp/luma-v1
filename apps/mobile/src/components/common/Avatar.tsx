@@ -146,8 +146,8 @@ const styles = StyleSheet.create({
   },
   initial: {
     color: colors.primary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   verifiedBadge: {
     position: 'absolute',
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
   },
   checkmark: {
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
 });

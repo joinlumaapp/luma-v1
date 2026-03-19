@@ -586,8 +586,8 @@ const styles = StyleSheet.create({
   },
   questionText: {
     fontSize: 20,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: onboardingColors.text,
     marginBottom: spacing.lg,
     lineHeight: 28,
@@ -662,8 +662,8 @@ const styles = StyleSheet.create({
   },
   celebrationTitle: {
     fontSize: 28,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: onboardingColors.text,
     textAlign: 'center',
     marginBottom: spacing.sm,
@@ -694,8 +694,8 @@ const styles = StyleSheet.create({
   },
   resultTitle: {
     fontSize: 26,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: onboardingColors.text,
     textAlign: 'center',
     marginBottom: spacing.sm,
@@ -731,8 +731,8 @@ const styles = StyleSheet.create({
   },
   resultSectionTitle: {
     fontSize: 16,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: onboardingColors.text,
     ...Platform.select({ android: { includeFontPadding: false } }),
   },

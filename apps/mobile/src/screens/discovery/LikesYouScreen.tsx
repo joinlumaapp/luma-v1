@@ -186,7 +186,7 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, onCardPress }) =
           {/* Bottom info overlay */}
           <View style={styles.cardInfoOverlay}>
             <Text style={styles.cardName} numberOfLines={1}>
-              {isBlurred ? '???' : `${card.firstName}, ${card.age}`}
+              {isBlurred ? '...' : `${card.firstName}, ${card.age}`}
             </Text>
 
             {/* Hints row — always visible (even blurred) to create curiosity */}
@@ -242,7 +242,10 @@ const HighlightCard = memo<HighlightCardProps>(({ type, card, isBlurred, onPress
     ? `%${card.compatibilityPercent} uyum${card.sharedInterests ? ` \u2022 ${card.sharedInterests} ortak ilgi` : ''}`
     : `${card.distanceKm != null ? formatDistance(card.distanceKm) + ' uzaklıkta' : ''}${card.sharedInterests ? ` \u2022 ${card.sharedInterests} ortak ilgi` : ''}`;
 
-  const badgeColor = type === 'most_compatible' ? colors.success : colors.accent;
+  const badgeColor = type === 'most_compatible' ? colors.success : '#D4AF37';
+  const ringColor = type === 'most_compatible'
+    ? 'rgba(16, 185, 129, 0.40)'
+    : 'rgba(212, 175, 55, 0.40)';
 
   return (
     <Pressable
@@ -251,7 +254,7 @@ const HighlightCard = memo<HighlightCardProps>(({ type, card, isBlurred, onPress
       accessibilityLabel={title}
       accessibilityRole="button"
     >
-      <View style={styles.highlightPhotoWrap}>
+      <View style={[styles.highlightPhotoWrap, { borderColor: ringColor }]}>
         <Image
           source={{ uri: card.photoUrl }}
           style={styles.highlightPhoto}
@@ -270,12 +273,12 @@ const HighlightCard = memo<HighlightCardProps>(({ type, card, isBlurred, onPress
           </Text>
         </View>
         <Text style={styles.highlightName} numberOfLines={1}>
-          {isBlurred ? '??? yaşında biri' : `${card.firstName}, ${card.age}`}
+          {isBlurred ? '... yaşında biri' : `${card.firstName}, ${card.age}`}
         </Text>
         <Text style={styles.highlightSubtitle}>{subtitle}</Text>
         <Text style={styles.highlightTime}>{formatLikedAgo(card.likedAt)}</Text>
       </View>
-      <View style={[styles.highlightArrow, { backgroundColor: badgeColor + '15' }]}>
+      <View style={[styles.highlightArrow, { backgroundColor: badgeColor + '15', borderWidth: 1, borderColor: badgeColor + '25' }]}>
         <Text style={[styles.highlightArrowText, { color: badgeColor }]}>{'\u203A'}</Text>
       </View>
     </Pressable>
@@ -368,7 +371,7 @@ export const LikesYouScreen: React.FC = () => {
       return;
     }
     if (!isUnlimitedViews && viewedToday >= dailyLimit) {
-      navigation.navigate('ProfileTab', { screen: 'Packages' });
+      navigation.navigate('MembershipPlans' as never);
       return;
     }
     if (!isUnlimitedViews) {
@@ -379,7 +382,7 @@ export const LikesYouScreen: React.FC = () => {
   }, [navigation, isUnlimitedViews, viewedToday, dailyLimit, unlockedUserIds]);
 
   const handleUpgradePress = useCallback(() => {
-    navigation.navigate('ProfileTab', { screen: 'Packages' });
+    navigation.navigate('MembershipPlans' as never);
   }, [navigation]);
 
   const handleDiscoverPress = useCallback(() => {
@@ -494,11 +497,11 @@ export const LikesYouScreen: React.FC = () => {
           accessibilityRole="button"
         >
           <View style={styles.upgradeBannerContent}>
-            <Text style={styles.upgradeBannerIcon}>{'\uD83D\uDD13'}</Text>
+            <Text style={styles.upgradeBannerIcon}>{'\uD83D\uDC8E'}</Text>
             <View style={styles.upgradeBannerTextContainer}>
               <Text style={styles.upgradeBannerTitle}>Premium ile Hepsini Gör</Text>
               <Text style={styles.upgradeBannerSubtitle}>
-                Seni beğenenleri gör ve hemen eşleş
+                {total} kişi seni beğendi — kilidi kaldır ve hemen eşleş
               </Text>
             </View>
             <View style={styles.upgradeBannerArrow}>
@@ -598,6 +601,14 @@ export const LikesYouScreen: React.FC = () => {
   );
 };
 
+// ─── Premium Design Constants ──────────────────────────────────
+const GOLD = '#D4AF37';
+const GOLD_LIGHT = '#E8C84A';
+const GOLD_BG = '#2A1740';
+const GOLD_BORDER = '#3D1B5B';
+const CARD_OVERLAY_GRADIENT = '#0A0A12';
+const HIGHLIGHT_BG = '#1E1035';
+
 // ─── Styles ───────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
@@ -613,24 +624,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: GRID_PADDING,
     paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: 'transparent',
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.smd,
   },
   backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
   },
   backIcon: {
-    fontSize: 24,
+    fontSize: 28,
     color: colors.text,
     fontFamily: 'Poppins_300Light',
     fontWeight: '300',
@@ -639,75 +650,96 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.h3,
     color: colors.text,
+    letterSpacing: -0.3,
   },
   countBadge: {
-    backgroundColor: colors.primary,
+    backgroundColor: GOLD,
     borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: 10,
     paddingVertical: spacing.xs,
-    minWidth: 28,
+    minWidth: 30,
     alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: GOLD,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.4,
+        shadowRadius: 6,
+      },
+      android: { elevation: 4 },
+    }),
   },
   countBadgeText: {
-    fontSize: 11,
-    color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontSize: 12,
+    color: '#1A1A2E',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
 
   // ── Summary banner ──
   summaryBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.smd,
     marginBottom: spacing.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    backgroundColor: '#1E1035',
+    borderRadius: borderRadius.xl,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
+    borderColor: '#2A1740',
   },
   summaryIcon: {
-    fontSize: 24,
+    fontSize: 26,
   },
   summaryText: {
     ...typography.body,
     color: colors.textSecondary,
   },
   summaryCount: {
-    color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
 
   // ── Highlight cards ──
   highlightCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.smd,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    backgroundColor: HIGHLIGHT_BG,
+    borderRadius: borderRadius.xl,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
+    borderColor: '#3D1B5B',
     gap: spacing.md,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#3D1B5B',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+      },
+      android: { elevation: 4 },
+    }),
   },
   highlightPhotoWrap: {
     position: 'relative',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 62,
+    height: 62,
+    borderRadius: 31,
     overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#5B2D8E',
   },
   highlightPhoto: {
-    width: 56,
-    height: 56,
+    width: 58,
+    height: 58,
   },
   highlightBlurOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(8, 8, 15, 0.3)',
+    backgroundColor: 'rgba(61, 27, 91, 0.45)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -716,38 +748,40 @@ const styles = StyleSheet.create({
   },
   highlightInfo: {
     flex: 1,
-    gap: 2,
+    gap: 3,
   },
   highlightBadge: {
     alignSelf: 'flex-start',
     borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    marginBottom: 2,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    marginBottom: 3,
   },
   highlightBadgeText: {
     fontSize: 10,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
   highlightName: {
     ...typography.bodyLarge,
-    color: colors.text,
+    color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   highlightSubtitle: {
     ...typography.caption,
-    color: colors.textSecondary,
+    color: '#C4B0DC',
+    letterSpacing: 0.15,
   },
   highlightTime: {
     ...typography.captionSmall,
-    color: colors.textTertiary,
+    color: '#A88BC5',
   },
   highlightArrow: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -759,72 +793,89 @@ const styles = StyleSheet.create({
 
   // ── View limit banner ──
   viewLimitBanner: {
-    marginBottom: spacing.sm,
+    marginBottom: spacing.smd,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
+    paddingVertical: spacing.smd,
+    backgroundColor: '#1E1035',
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
+    borderColor: '#3D1B5B',
     alignItems: 'center',
     gap: spacing.xs,
   },
   viewLimitText: {
     ...typography.caption,
-    color: colors.textSecondary,
+    color: GOLD_LIGHT,
     textAlign: 'center',
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
   },
   viewLimitUpgradeLink: {
     ...typography.caption,
-    color: colors.primary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    color: GOLD,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
 
   // ── Upgrade banner ──
   upgradeBanner: {
-    marginBottom: spacing.md,
-    borderRadius: borderRadius.lg,
+    marginBottom: spacing.lg,
+    borderRadius: borderRadius.xl,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 215, 0, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 215, 0, 0.20)',
+    backgroundColor: '#3D1B5B',
+    borderWidth: 1.5,
+    borderColor: '#5B2D8E',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#8B5CF6',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 12,
+      },
+      android: { elevation: 6 },
+    }),
   },
   upgradeBannerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.md + 4,
     gap: spacing.md,
   },
   upgradeBannerIcon: {
-    fontSize: 28,
+    fontSize: 32,
   },
   upgradeBannerTextContainer: {
     flex: 1,
   },
   upgradeBannerTitle: {
     ...typography.bodyLarge,
-    color: '#FFD700',
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    color: '#FFFFFF',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
   upgradeBannerSubtitle: {
     ...typography.caption,
-    color: colors.textSecondary,
-    marginTop: 2,
+    color: '#C4B0DC',
+    marginTop: 3,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
   },
   upgradeBannerArrow: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 215, 0, 0.15)',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#2A1740',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#5B2D8E',
   },
   upgradeBannerArrowText: {
-    fontSize: 22,
-    color: '#FFD700',
+    fontSize: 24,
+    color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
@@ -835,13 +886,17 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.smd,
+    marginTop: spacing.xs,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    fontSize: 11,
   },
 
   // ── Grid ──
   gridContent: {
     paddingHorizontal: GRID_PADDING,
-    paddingBottom: spacing.xxl,
+    paddingBottom: spacing.xxl + 20,
   },
   gridRow: {
     gap: GRID_GAP,
@@ -851,18 +906,20 @@ const styles = StyleSheet.create({
   // ── Card ──
   card: {
     width: CARD_SIZE,
-    height: CARD_SIZE * 1.2,
-    borderRadius: borderRadius.md,
+    height: CARD_SIZE * 1.3,
+    borderRadius: borderRadius.lg,
     backgroundColor: colors.surface,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#2A1740',
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
+        shadowColor: '#3D1B5B',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
       },
-      android: { elevation: 3 },
+      android: { elevation: 5 },
     }),
   },
   cardPhoto: {
@@ -874,17 +931,19 @@ const styles = StyleSheet.create({
   // ── Blur overlay ──
   blurOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(8, 8, 15, 0.3)',
+    backgroundColor: 'rgba(42, 23, 64, 0.45)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   lockIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(8, 8, 15, 0.6)',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#3D1B5B',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#D4AF37',
   },
   lockIcon: {
     fontSize: 18,
@@ -893,29 +952,34 @@ const styles = StyleSheet.create({
   // ── Compatibility badge ──
   compatBadge: {
     position: 'absolute',
-    top: spacing.xs,
-    right: spacing.xs,
-    borderRadius: borderRadius.sm,
-    paddingHorizontal: spacing.xs + 2,
-    paddingVertical: 2,
+    top: spacing.xs + 2,
+    right: spacing.xs + 2,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: '#3D1B5B',
   },
   compatBadgeText: {
     fontSize: 10,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
 
   // ── Comment badge ──
   commentBadge: {
     position: 'absolute',
-    top: spacing.xs,
-    left: spacing.xs,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: 'rgba(155, 107, 248, 0.85)',
+    top: spacing.xs + 2,
+    left: spacing.xs + 2,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#5B2D8E',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#7C3AED',
   },
   commentBadgeIcon: {
     fontSize: 12,
@@ -927,32 +991,36 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    paddingHorizontal: spacing.xs + 2,
-    paddingVertical: spacing.xs + 2,
-    backgroundColor: 'rgba(8, 8, 15, 0.65)',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+    backgroundColor: CARD_OVERLAY_GRADIENT,
   },
   cardName: {
     ...typography.caption,
-    color: colors.text,
+    color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
+    letterSpacing: 0.1,
   },
   hintsRow: {
     flexDirection: 'row',
     gap: 6,
-    marginTop: 2,
+    marginTop: 3,
   },
   hintText: {
     fontSize: 9,
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: 'rgba(255, 255, 255, 0.75)',
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
+    letterSpacing: 0.1,
   },
   cardComment: {
     fontSize: 9,
-    color: 'rgba(155, 107, 248, 0.9)',
+    color: 'rgba(167, 139, 250, 0.95)',
     fontStyle: 'italic',
-    marginTop: 2,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    marginTop: 3,
   },
 
   // ── Empty state ──
@@ -964,19 +1032,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xxl,
   },
   emptyIconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.accent + '18',
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: 'rgba(139, 92, 246, 0.10)',
     borderWidth: 2,
-    borderColor: colors.accent + '30',
+    borderColor: 'rgba(139, 92, 246, 0.20)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.lg,
   },
   emptyHeartIcon: {
-    fontSize: 32,
-    color: colors.accent,
+    fontSize: 36,
+    color: colors.primary,
   },
   emptyTitle: {
     ...typography.h4,
@@ -989,16 +1057,27 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.lg,
+    lineHeight: 24,
   },
   ctaButton: {
     backgroundColor: colors.primary,
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.xl,
+    borderRadius: borderRadius.xl,
+    paddingHorizontal: spacing.xl + 8,
     paddingVertical: spacing.md,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#8B5CF6',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.30,
+        shadowRadius: 8,
+      },
+      android: { elevation: 6 },
+    }),
   },
   ctaButtonText: {
     ...typography.button,
-    color: colors.text,
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
 
   // ── Skeleton ──
@@ -1010,8 +1089,8 @@ const styles = StyleSheet.create({
   },
   skeletonCard: {
     width: CARD_SIZE,
-    height: CARD_SIZE * 1.2,
-    borderRadius: borderRadius.md,
+    height: CARD_SIZE * 1.3,
+    borderRadius: borderRadius.lg,
     backgroundColor: colors.surface,
     overflow: 'hidden',
   },
@@ -1020,7 +1099,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceLight,
   },
   skeletonName: {
-    height: 28,
+    height: 32,
     backgroundColor: colors.surfaceLight,
   },
 });

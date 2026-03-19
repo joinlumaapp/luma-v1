@@ -29,7 +29,7 @@ export const poppinsFonts = {
   regular: 'Poppins_400Regular',
   medium: 'Poppins_500Medium',
   semibold: 'Poppins_600SemiBold',
-  bold: 'Poppins_700Bold',
+  bold: 'Poppins_600SemiBold',
   extrabold: 'Poppins_800ExtraBold',
   black: 'Poppins_900Black',
 } as const;
@@ -56,7 +56,7 @@ export const fontWeights = {
   regular: '400' as const,
   medium: '500' as const,
   semibold: '600' as const,
-  bold: '700' as const,
+  bold: '600' as const,
   extrabold: '700' as const,
 };
 

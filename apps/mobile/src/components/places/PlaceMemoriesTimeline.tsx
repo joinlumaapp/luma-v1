@@ -462,8 +462,8 @@ const timelineStyles = StyleSheet.create({
   fabIcon: {
     fontSize: 20,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   fabText: {
     ...typography.button,

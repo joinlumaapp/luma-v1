@@ -261,8 +261,8 @@ const guardStyles = StyleSheet.create({
   badgeTitle: {
     ...typography.bodyLarge,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     marginBottom: 2,
   },
   badgeDescription: {
@@ -717,8 +717,8 @@ const styles = StyleSheet.create({
   createHeaderButtonText: {
     fontSize: 22,
     color: colors.primary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   // Tabs
   tabBar: {
@@ -776,8 +776,8 @@ const styles = StyleSheet.create({
   eventTitle: {
     ...typography.bodyLarge,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     flex: 1,
   },
   proBadge: {
@@ -790,8 +790,8 @@ const styles = StyleSheet.create({
   proBadgeText: {
     ...typography.captionSmall,
     color: colors.accent,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   eventDescription: {
     ...typography.body,
@@ -862,8 +862,8 @@ const styles = StyleSheet.create({
   rankText: {
     ...typography.body,
     color: colors.textSecondary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   rankTextTop: {
     color: colors.accent,
@@ -999,8 +999,8 @@ const styles = StyleSheet.create({
   emptyIconBrandedLetter: {
     fontSize: 32,
     color: colors.primary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   emptyTitle: {
     ...typography.h4,

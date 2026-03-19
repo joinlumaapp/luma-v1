@@ -290,8 +290,8 @@ const styles = StyleSheet.create({
   },
   mbtiType: {
     ...typography.bodyLarge, color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700', fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600', fontSize: 15,
   },
   mbtiTypeSelected: { color: colors.primary },
   mbtiLabel: {
@@ -314,8 +314,8 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   enneagramNumber: {
-    ...typography.h3, color: colors.text, fontFamily: 'Poppins_700Bold',
- fontWeight: '700',
+    ...typography.h3, color: colors.text, fontFamily: 'Poppins_600SemiBold',
+ fontWeight: '600',
   },
   enneagramNumberSelected: { color: colors.primary },
   enneagramLabel: {

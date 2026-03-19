@@ -100,8 +100,8 @@ const styles = StyleSheet.create({
   },
   quoteMarks: {
     fontSize: 24,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: '#1A1A1A',
     marginTop: -4,
   },
@@ -121,8 +121,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: onboardingColors.text,
     lineHeight: 36,
     marginBottom: 12,

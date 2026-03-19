@@ -223,15 +223,15 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: 48,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: palette.white,
   },
   callerName: {
     ...typography.h3,
     color: palette.white,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     marginBottom: spacing.xs,
   },
   callerSubtext: {

@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontFamily: 'Poppins_700Bold',
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: fontWeights.bold,
     color: onboardingColors.text,
     marginBottom: spacing.sm,
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
     borderColor: onboardingColors.surfaceBorder,
     textAlign: 'center',
     fontSize: 24,
-    fontFamily: 'Poppins_700Bold',
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: fontWeights.bold,
     color: onboardingColors.text,
   },

@@ -1,7 +1,8 @@
 // Main tab navigator — 5 tabs: Feed, Discovery, Activities, Matches, Profile
 // Enhanced: default slide_from_right, modal slide_from_bottom, premium tab bar
 // Enhanced: unread message badge on Matches tab
-// Performance: lazy:false pre-mounts all tabs, React.memo stack navigators,
+// Performance: lazy:true defers tab mount, freezeOnBlur prevents hidden re-renders,
+//   detachInactiveScreens frees memory, React.memo stack navigators,
 //   deferred mount for heavy sub-screens (chat, edit profile, etc.)
 
 import React, { useEffect } from 'react';
@@ -155,8 +156,8 @@ const TAB_ICONS: Record<string, { active: keyof typeof Ionicons.glyphMap; inacti
   user: { active: 'person', inactive: 'person-outline' },
 };
 
-// Tab icon component with 6px active dot indicator
-const TabIcon: React.FC<{ name: string; focused: boolean }> = ({ name, focused }) => {
+// Tab icon component with 6px active dot indicator — memoized to prevent re-renders
+const TabIcon: React.FC<{ name: string; focused: boolean }> = React.memo(({ name, focused }) => {
   const icons = TAB_ICONS[name];
   const iconName = icons ? (focused ? icons.active : icons.inactive) : 'help-outline';
   const iconColor = focused ? '#8B5CF6' : 'rgba(150, 150, 150, 0.7)';
@@ -167,14 +168,15 @@ const TabIcon: React.FC<{ name: string; focused: boolean }> = ({ name, focused }
       {focused && <View style={styles.tabIndicator} />}
     </View>
   );
-};
+});
+TabIcon.displayName = 'TabIcon';
 
-// Tab icon with unread count badge (red circle with white number)
+// Tab icon with unread count badge (red circle with white number) — memoized
 const TabIconWithBadge: React.FC<{
   name: string;
   focused: boolean;
   badgeCount: number;
-}> = ({ name, focused, badgeCount }) => {
+}> = React.memo(({ name, focused, badgeCount }) => {
   return (
     <View style={styles.tabIconContainer}>
       <View>
@@ -189,7 +191,8 @@ const TabIconWithBadge: React.FC<{
       </View>
     </View>
   );
-};
+});
+TabIconWithBadge.displayName = 'TabIconWithBadge';
 
 // Discovery tab stack — default slide_from_right, modals slide_from_bottom
 const DiscoveryStackNavigator: React.FC = React.memo(() => (
@@ -421,11 +424,11 @@ export const MainTabNavigator: React.FC = () => {
     <Tab.Navigator
       initialRouteName="DiscoveryTab"
       backBehavior="history"
-      detachInactiveScreens={false}
+      detachInactiveScreens
       screenOptions={{
         headerShown: false,
-        lazy: false,
-        freezeOnBlur: false,
+        lazy: true,
+        freezeOnBlur: true,
         tabBarStyle: [styles.tabBar, { backgroundColor: darkTheme.tabBarBackground }],
         tabBarActiveTintColor: darkTheme.tabBarActive,
         tabBarInactiveTintColor: darkTheme.tabBarInactive,
@@ -568,8 +571,8 @@ const styles = StyleSheet.create({
   unreadBadgeText: {
     ...typography.captionSmall,
     color: '#FFFFFF',
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     fontSize: 9,
     lineHeight: 12,
   },

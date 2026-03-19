@@ -11,6 +11,7 @@ import {
   Easing,
   Share,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -487,15 +488,15 @@ export const ProfileScreen: React.FC = () => {
       {/* Premium stats row */}
       <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
         <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
-          <Text style={{ fontSize: 22, fontWeight: '700', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { postCount?: number })?.postCount ?? 0}</Text>
+          <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { postCount?: number })?.postCount ?? 0}</Text>
           <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Gönderi</Text>
         </View>
         <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
-          <Text style={{ fontSize: 22, fontWeight: '700', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { followerCount?: number })?.followerCount ?? 0}</Text>
+          <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { followerCount?: number })?.followerCount ?? 0}</Text>
           <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takipçi</Text>
         </View>
         <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
-          <Text style={{ fontSize: 22, fontWeight: '700', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { followingCount?: number })?.followingCount ?? 0}</Text>
+          <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { followingCount?: number })?.followingCount ?? 0}</Text>
           <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takip</Text>
         </View>
       </View>
@@ -632,7 +633,7 @@ export const ProfileScreen: React.FC = () => {
               </View>
               <Text style={{ fontSize: 11, fontWeight: '500', color: colors.textTertiary, letterSpacing: 0.5 }}>{row.label}</Text>
             </View>
-            <Text style={{ fontSize: 15, fontWeight: '700', color: row.value === 'Belirtilmedi' ? colors.textTertiary : colors.text }} numberOfLines={1} adjustsFontSizeToFit>{row.value}</Text>
+            <Text style={{ fontSize: 15, fontWeight: '600', color: row.value === 'Belirtilmedi' ? colors.textTertiary : colors.text }} numberOfLines={1} adjustsFontSizeToFit>{row.value}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -883,13 +884,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    paddingVertical: 4,
   },
   userName: {
-    fontSize: 28,
-    lineHeight: 40,
-    fontWeight: fontWeights.bold,
+    fontSize: 26,
+    lineHeight: 38,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: fontWeights.semibold,
     color: colors.text,
     paddingRight: 4,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   strengthPill: {
     borderWidth: 1.5,
@@ -1087,9 +1092,11 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: fontWeights.semibold,
     color: colors.text,
     letterSpacing: 0,
+    includeFontPadding: false,
     marginBottom: spacing.md,
   },
 

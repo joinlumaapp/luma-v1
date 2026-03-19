@@ -374,8 +374,8 @@ function createDynamicStyles(c: ThemeColors) {
     tipBulletText: {
       ...typography.captionSmall,
       color: c.primary,
-      fontFamily: 'Poppins_700Bold',
-      fontWeight: '700',
+      fontFamily: 'Poppins_600SemiBold',
+      fontWeight: '600',
     },
     tipText: {
       ...typography.bodySmall,

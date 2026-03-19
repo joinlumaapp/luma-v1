@@ -434,21 +434,21 @@ const styles = StyleSheet.create({
   },
   badgeIconText: {
     fontSize: 42,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   congratsTitle: {
     ...typography.h2,
     color: palette.gold[400],
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     textAlign: 'center',
     marginBottom: spacing.sm,
   },
   badgeName: {
     ...typography.h3,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     textAlign: 'center',
     marginBottom: spacing.xs,
   },
@@ -471,8 +471,8 @@ const styles = StyleSheet.create({
   },
   goldRewardIcon: {
     fontSize: 18,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: palette.gold[400],
   },
   goldRewardText: {
@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
   dismissButtonText: {
     ...typography.button,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
 });

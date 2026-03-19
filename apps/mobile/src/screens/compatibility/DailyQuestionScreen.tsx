@@ -253,8 +253,8 @@ const celebrationStyles = StyleSheet.create({
   title: {
     ...typography.h3,
     color: palette.gold[400],
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     marginBottom: spacing.md,
     textAlign: 'center',
   },
@@ -270,8 +270,8 @@ const celebrationStyles = StyleSheet.create({
   streakText: {
     ...typography.bodyLarge,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   milestoneText: {
     ...typography.body,
@@ -347,8 +347,8 @@ const streakStyles = StyleSheet.create({
   count: {
     ...typography.bodySmall,
     color: colors.accent,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   message: {
     ...typography.captionSmall,
@@ -470,7 +470,7 @@ const OptionCard: React.FC<OptionCardProps> = ({
             <Text
               style={[
                 optionStyles.insightPercent,
-                isUserChoice && { color: optionColors[index], fontWeight: '700' },
+                isUserChoice && { color: optionColors[index], fontWeight: '600' },
               ]}
             >
               %{insightPercent}
@@ -503,8 +503,8 @@ const optionStyles = StyleSheet.create({
   letter: {
     ...typography.bodySmall,
     color: colors.textTertiary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   text: {
     ...typography.body,
@@ -1030,8 +1030,8 @@ const styles = StyleSheet.create({
   dayText: {
     ...typography.captionSmall,
     color: colors.primary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
 
   // Streak
@@ -1097,8 +1097,8 @@ const styles = StyleSheet.create({
   insightTitle: {
     ...typography.bodyLarge,
     color: colors.primary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     marginBottom: spacing.xs,
   },
   insightStat: {
@@ -1220,8 +1220,8 @@ const styles = StyleSheet.create({
   },
   answerStatsBarPercentActive: {
     color: colors.primary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   answerStatsInsightMessage: {
     ...typography.bodySmall,

@@ -377,8 +377,8 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
   contactNameUnread: {
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   timestamp: {
     ...typography.caption,
@@ -412,8 +412,8 @@ const styles = StyleSheet.create({
   unreadCount: {
     ...typography.captionSmall,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   separator: {
     height: 1,

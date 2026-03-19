@@ -194,8 +194,8 @@ const styles = StyleSheet.create({
   iconText: {
     fontSize: 14,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   textContainer: {
     flex: 1,

@@ -68,6 +68,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF8E7',
     borderWidth: 1.5,
     borderColor: GOLD,
+    overflow: 'visible',
     ...Platform.select({
       ios: {
         shadowColor: GOLD,
@@ -79,26 +80,33 @@ const styles = StyleSheet.create({
     }),
   },
   pillSmall: {
-    height: 36,
     paddingHorizontal: 16,
-    borderRadius: 18,
-    gap: 6,
-    minWidth: 80,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 8,
+    minWidth: 86,
   },
   pillMedium: {
-    height: 44,
     paddingHorizontal: 20,
+    paddingVertical: 10,
     borderRadius: 22,
     gap: 8,
   },
   balanceText: {
     color: TEXT_BLACK,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   balanceSmall: {
     fontSize: 15,
+    lineHeight: 22,
+    includeFontPadding: false,
   },
   balanceMedium: {
     fontSize: 18,
+    lineHeight: 26,
+    includeFontPadding: false,
   },
 });

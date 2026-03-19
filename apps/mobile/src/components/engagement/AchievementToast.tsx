@@ -272,8 +272,8 @@ const styles = StyleSheet.create({
   title: {
     ...typography.label,
     color: palette.gold[700],
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   description: {
     ...typography.captionSmall,

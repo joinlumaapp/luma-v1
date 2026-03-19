@@ -581,7 +581,7 @@ const styles = StyleSheet.create({
   // Typography
   heading: {
     fontSize: 28,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#FFFFFF',
     textAlign: 'center',
     letterSpacing: 4,
@@ -623,7 +623,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#1A0A2E',
     letterSpacing: 3,
   },

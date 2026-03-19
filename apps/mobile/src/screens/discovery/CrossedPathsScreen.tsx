@@ -273,8 +273,8 @@ const cardStyles = StyleSheet.create({
   verifiedIcon: {
     fontSize: 10,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   info: {
     flex: 1,
@@ -302,8 +302,8 @@ const cardStyles = StyleSheet.create({
   compatText: {
     ...typography.caption,
     color: colors.primary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   locationRow: {
     flexDirection: 'row',

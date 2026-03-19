@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
   sectionBadgeText: {
     ...typography.captionSmall,
     color: '#FFFFFF',
-    fontWeight: '700',
+    fontWeight: '600',
   },
   // ---- Notification Item ----
   notifItem: {
@@ -557,7 +557,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   notifName: {
-    fontWeight: '700',
+    fontWeight: '600',
   },
   notifTime: {
     ...typography.caption,

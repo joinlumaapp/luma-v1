@@ -44,11 +44,11 @@ type TabKey = 'matches' | 'messages' | 'viewers';
 
 // Conversation starter suggestions for matches with no messages
 const CONVERSATION_STARTERS = [
-  '\u0130lk bulu\u015Fmada kahve mi yemek mi?',
-  'Hafta sonu \u015Fehir mi do\u011Fa m\u0131?',
-  'En sevdi\u011Fin m\u00FCzik t\u00FCr\u00FC?',
-  'Sabah\u00E7\u0131 m\u0131s\u0131n gece ku\u015Fu mu?',
-  'En son izledi\u011Fin dizi?',
+  'İlk buluşmada kahve mi yemek mi?',
+  'Hafta sonu şehir mi doğa mı?',
+  'En sevdiğin müzik türü?',
+  'Sabahçı mısın gece kuşu mu?',
+  'En son izlediğin dizi?',
 ];
 
 // Skeleton shimmer row component
@@ -525,53 +525,114 @@ interface ViewerCardProps {
 }
 
 const ViewerCard = memo<ViewerCardProps>(({ item, index }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = useCallback(() => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.97,
+      tension: 200,
+      friction: 10,
+      useNativeDriver: true,
+    }).start();
+  }, [scaleAnim]);
+
+  const handlePressOut = useCallback(() => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      tension: 200,
+      friction: 10,
+      useNativeDriver: true,
+    }).start();
+  }, [scaleAnim]);
+
   const timeAgo = useMemo(() => {
     const diff = Date.now() - new Date(item.viewedAt).getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    if (hours < 1) return 'Az önce';
+    const minutes = Math.floor(diff / (1000 * 60));
+    if (minutes < 1) return 'Şimdi';
+    if (minutes < 60) return `${minutes} dk önce`;
+    const hours = Math.floor(minutes / 60);
     if (hours < 24) return `${hours} saat önce`;
     const days = Math.floor(hours / 24);
+    if (days === 1) return 'Dün';
     return `${days} gün önce`;
+  }, [item.viewedAt]);
+
+  const isRecent = useMemo(() => {
+    const diff = Date.now() - new Date(item.viewedAt).getTime();
+    return diff < 1000 * 60 * 60; // less than 1 hour
   }, [item.viewedAt]);
 
   return (
     <SlideIn direction="right" delay={index * 80} distance={24}>
-      <View
-        style={styles.matchCard}
-        accessible
+      <TouchableWithoutFeedback
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
         accessibilityLabel={`${item.isBlurred ? 'Gizli profil' : item.firstName ?? 'Bilinmeyen'}, ${timeAgo} ziyaret etti`}
-        accessibilityRole="summary"
+        accessibilityRole="button"
+        accessibilityHint={item.isBlurred ? 'Premium ile profili görebilirsin' : 'Profili görmek için dokunun'}
       >
-        {/* Avatar */}
-        <View style={styles.avatarContainer}>
-          {item.isBlurred ? (
-            <View style={[styles.avatar, styles.blurredAvatar]}>
-              <Text style={styles.blurredAvatarText}>?</Text>
-            </View>
-          ) : item.photoUrl ? (
-            <Image source={{ uri: item.photoUrl }} style={styles.avatarImage} accessible={false} />
-          ) : (
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {item.firstName ? item.firstName.charAt(0) : '?'}
+        <Animated.View
+          style={[
+            styles.viewerCard,
+            isRecent && styles.viewerCardRecent,
+            { transform: [{ scale: scaleAnim }] },
+          ]}
+          testID={`viewer-card-${item.visitorId}`}
+        >
+          {/* Avatar */}
+          <View style={styles.viewerAvatarWrapper}>
+            {item.isBlurred ? (
+              <View style={styles.viewerBlurredAvatar}>
+                <View style={styles.viewerBlurredInner}>
+                  <Text style={styles.viewerBlurredInitial}>?</Text>
+                </View>
+                <View style={styles.viewerLockBadge}>
+                  <Text style={styles.viewerLockIcon}>{'\uD83D\uDD12'}</Text>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.viewerAvatarBorder}>
+                <CachedAvatar
+                  uri={item.photoUrl ?? ''}
+                  size={56}
+                  name={item.firstName ?? '?'}
+                />
+              </View>
+            )}
+          </View>
+
+          {/* Info */}
+          <View style={styles.viewerInfo}>
+            <Text style={[styles.viewerName, item.isBlurred && styles.viewerNameBlurred]} numberOfLines={1}>
+              {item.isBlurred ? 'Gizli Profil' : item.firstName ?? 'Bilinmeyen'}
+            </Text>
+            <View style={styles.viewerTimeRow}>
+              <View style={[styles.viewerTimeDot, isRecent && styles.viewerTimeDotRecent]} />
+              <Text style={[styles.viewerTimeText, isRecent && styles.viewerTimeTextRecent]}>
+                {timeAgo}
               </Text>
             </View>
-          )}
-        </View>
+            {item.isBlurred && (
+              <View style={styles.viewerPremiumHint}>
+                <Text style={styles.viewerPremiumHintText}>Premium ile gör</Text>
+              </View>
+            )}
+          </View>
 
-        {/* Info */}
-        <View style={styles.matchInfo}>
-          <Text style={styles.matchName}>
-            {item.isBlurred ? 'Gizli Profil' : item.firstName ?? 'Bilinmeyen'}
-          </Text>
-          <Text style={styles.lastActivity}>{timeAgo}</Text>
-        </View>
-
-        {/* Eye icon */}
-        <View style={styles.chatIconContainer}>
-          <Text style={styles.chatIcon}>{'\uD83D\uDC41\uFE0F'}</Text>
-        </View>
-      </View>
+          {/* Action arrow / lock */}
+          <View style={styles.viewerAction}>
+            {item.isBlurred ? (
+              <View style={styles.viewerUpgradeBadge}>
+                <Text style={styles.viewerUpgradeText}>PRO</Text>
+              </View>
+            ) : (
+              <View style={styles.viewerArrowCircle}>
+                <Text style={styles.viewerArrowText}>{'\u203A'}</Text>
+              </View>
+            )}
+          </View>
+        </Animated.View>
+      </TouchableWithoutFeedback>
     </SlideIn>
   );
 }, (prev, next) => (
@@ -917,8 +978,20 @@ export const MatchesListScreen: React.FC = () => {
   // Memoized viewers header — avoids inline function in FlatList ListHeaderComponent
   const renderViewersHeader = useMemo(() => (
     <View style={styles.viewersHeader}>
-      <Text style={styles.viewersHeaderText}>
-        {viewersCount} kişi profilini görüntüledi
+      <View style={styles.viewersHeaderRow}>
+        <Text style={styles.viewersHeaderTitle}>Profil Ziyaretlerin</Text>
+        {viewersCount > 0 && (
+          <View style={styles.viewersCountBadge}>
+            <Text style={styles.viewersCountBadgeText}>
+              {viewersCount > 99 ? '99+' : viewersCount}
+            </Text>
+          </View>
+        )}
+      </View>
+      <Text style={styles.viewersHeaderSubtitle}>
+        {viewersCount > 0
+          ? `Son zamanlarda ${viewersCount} kişi profilini inceledi`
+          : 'Henüz kimse profilini görüntülemedi'}
       </Text>
     </View>
   ), [viewersCount]);
@@ -1013,11 +1086,10 @@ export const MatchesListScreen: React.FC = () => {
           data={viewers}
           keyExtractor={viewerKeyExtractor}
           renderItem={renderViewerItem}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, styles.viewersListContent]}
           ListHeaderComponent={renderViewersHeader}
           ListEmptyComponent={renderEmptyList}
           showsVerticalScrollIndicator={false}
-          ItemSeparatorComponent={ItemSeparator}
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
@@ -1132,8 +1204,8 @@ const styles = StyleSheet.create({
   },
   tabChipTextActive: {
     color: '#FFFFFF',
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   // ── Nudge section ("not talked today") ──
   nudgeSection: {
@@ -1179,8 +1251,8 @@ const styles = StyleSheet.create({
   nudgeAvatarInitial: {
     ...typography.bodyLarge,
     color: colors.primary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   nudgeName: {
     ...typography.captionSmall,
@@ -1193,8 +1265,8 @@ const styles = StyleSheet.create({
   },
   nudgeCompat: {
     ...typography.captionSmall,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     marginBottom: 6,
   },
   nudgeCta: {
@@ -1264,8 +1336,8 @@ const styles = StyleSheet.create({
   },
   newBadgeText: {
     fontSize: 8,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: '#FFFFFF',
     letterSpacing: 0.5,
   },
@@ -1279,8 +1351,8 @@ const styles = StyleSheet.create({
   },
   newInlineBadgeText: {
     fontSize: 10,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: colors.primary,
   },
   matchNameNew: {
@@ -1311,8 +1383,8 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   matchNameUnread: {
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   messagePreviewUnread: {
     color: colors.text,
@@ -1331,8 +1403,8 @@ const styles = StyleSheet.create({
   },
   unreadCountText: {
     fontSize: 10,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
   // Tab badge for likes count — inline to avoid Android ScrollView clipping
@@ -1348,8 +1420,8 @@ const styles = StyleSheet.create({
   },
   tabBadgeText: {
     fontSize: 9,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: '#FFFFFF',
     lineHeight: 12,
   },
@@ -1424,8 +1496,8 @@ const styles = StyleSheet.create({
   },
   compatibilityPercent: {
     ...typography.bodyLarge,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   compatibilityLabel: {
     ...typography.captionSmall,
@@ -1508,16 +1580,218 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceLight,
   },
   // ── Viewers tab ──
+  viewersListContent: {
+    gap: spacing.sm,
+  },
   viewersHeader: {
-    paddingVertical: spacing.sm,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+  },
+  viewersHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
     marginBottom: spacing.xs,
   },
-  viewersHeaderText: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
+  viewersHeaderTitle: {
+    ...typography.h4,
+    color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
+  viewersCountBadge: {
+    backgroundColor: '#8B5CF6',
+    borderRadius: borderRadius.full,
+    minWidth: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 7,
+  },
+  viewersCountBadgeText: {
+    fontSize: 11,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: '#FFFFFF',
+    lineHeight: 15,
+  },
+  viewersHeaderSubtitle: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+  },
+  // ── ViewerCard ──
+  viewerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    paddingVertical: spacing.smd,
+    paddingHorizontal: spacing.md,
+    gap: spacing.smd,
+  },
+  viewerCardRecent: {
+    borderColor: '#8B5CF6' + '40',
+    backgroundColor: '#8B5CF6' + '08',
+  },
+  viewerAvatarWrapper: {
+    position: 'relative',
+  },
+  viewerAvatarBorder: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: '#8B5CF6' + '50',
+    padding: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  viewerAvatarImage: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+  },
+  viewerAvatarFallback: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#8B5CF6' + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  viewerAvatarInitial: {
+    ...typography.h4,
+    color: '#8B5CF6',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+  },
+  viewerBlurredAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    position: 'relative',
+  },
+  viewerBlurredInner: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#5B2D8E' + '25',
+    borderWidth: 2,
+    borderColor: '#5B2D8E' + '30',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  viewerBlurredInitial: {
+    ...typography.h4,
+    color: '#5B2D8E' + '60',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+  },
+  viewerLockBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.surfaceBorder,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  viewerLockIcon: {
+    fontSize: 10,
+  },
+  viewerInfo: {
+    flex: 1,
+  },
+  viewerName: {
+    ...typography.bodyLarge,
+    color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  viewerNameBlurred: {
+    color: colors.textSecondary,
+    fontStyle: 'italic',
+  },
+  viewerTimeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  viewerTimeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.textTertiary,
+  },
+  viewerTimeDotRecent: {
+    backgroundColor: '#8B5CF6',
+  },
+  viewerTimeText: {
+    ...typography.caption,
+    color: colors.textTertiary,
+  },
+  viewerTimeTextRecent: {
+    color: '#8B5CF6',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+  },
+  viewerPremiumHint: {
+    marginTop: 4,
+    backgroundColor: '#8B5CF6' + '15',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    alignSelf: 'flex-start',
+  },
+  viewerPremiumHintText: {
+    fontSize: 10,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: '#8B5CF6',
+    lineHeight: 14,
+  },
+  viewerAction: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  viewerArrowCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#8B5CF6' + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  viewerArrowText: {
+    fontSize: 20,
+    color: '#8B5CF6',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    lineHeight: 24,
+    marginTop: -1,
+  },
+  viewerUpgradeBadge: {
+    backgroundColor: '#8B5CF6',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+  },
+  viewerUpgradeText: {
+    fontSize: 10,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+    lineHeight: 14,
+  },
+  // ── Legacy blurred avatar (kept for compat) ──
   blurredAvatar: {
     backgroundColor: colors.surfaceLight,
   },

@@ -305,8 +305,8 @@ const styles = StyleSheet.create({
   },
   rankBadgeText: {
     ...typography.captionSmall,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   rankText: {
     ...typography.caption,

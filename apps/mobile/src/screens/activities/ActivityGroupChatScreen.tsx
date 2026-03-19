@@ -320,8 +320,8 @@ const styles = StyleSheet.create({
   },
   stripAvatarInitial: {
     fontSize: 11,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: colors.primary,
   },
   stripOverflow: {
@@ -336,8 +336,8 @@ const styles = StyleSheet.create({
   },
   stripOverflowText: {
     fontSize: 10,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: colors.textSecondary,
   },
 
@@ -402,8 +402,8 @@ const styles = StyleSheet.create({
   },
   bubbleAvatarInitial: {
     fontSize: 11,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: colors.primary,
   },
   bubble: {
@@ -425,8 +425,8 @@ const styles = StyleSheet.create({
   bubbleSender: {
     ...typography.captionSmall,
     color: colors.primary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     marginBottom: 2,
   },
   bubbleText: {

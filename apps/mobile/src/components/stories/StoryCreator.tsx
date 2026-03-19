@@ -712,8 +712,8 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.sm,
   },
   overlayText: {
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
@@ -744,8 +744,8 @@ const styles = StyleSheet.create({
   },
   textInputField: {
     color: '#FFFFFF',
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     textAlign: 'center',
     minHeight: 60,
     textShadowColor: 'rgba(0,0,0,0.5)',

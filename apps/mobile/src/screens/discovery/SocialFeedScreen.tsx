@@ -798,8 +798,8 @@ const tabStyles = StyleSheet.create({
   },
   tabTextActive: {
     color: palette.purple[400],
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
 });
 
@@ -860,8 +860,8 @@ const modalStyles = StyleSheet.create({
   submitText: {
     ...typography.body,
     color: colors.primary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   submitTextDisabled: {
     opacity: 0.4,
@@ -947,8 +947,8 @@ const modalStyles = StyleSheet.create({
   mediaRemoveText: {
     color: '#FFFFFF',
     fontSize: 10,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   videoOverlay: {
     ...StyleSheet.absoluteFillObject,

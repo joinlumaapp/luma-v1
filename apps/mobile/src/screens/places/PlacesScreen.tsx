@@ -172,7 +172,7 @@ const emptyHintStyles = StyleSheet.create({
   iconLetter: {
     fontSize: 38,
     color: colors.primary,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   title: {
     ...typography.h3,
@@ -986,7 +986,7 @@ const styles = StyleSheet.create({
   emptyIconBrandedLetter: {
     fontSize: 32,
     color: colors.primary,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   emptyTitle: {
     ...typography.h4,
@@ -1046,7 +1046,7 @@ const styles = StyleSheet.create({
   fabIcon: {
     fontSize: 20,
     color: colors.text,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   fabText: {
     ...typography.button,

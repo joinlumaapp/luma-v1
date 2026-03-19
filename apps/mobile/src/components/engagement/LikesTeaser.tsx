@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
   countText: {
     ...typography.caption,
     color: palette.white,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
 });

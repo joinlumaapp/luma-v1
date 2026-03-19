@@ -11,7 +11,9 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import * as Updates from 'expo-updates';
+// expo-updates is only available in EAS builds, not in Expo Go dev client.
+// We lazy-import it in the error boundary restart handler to avoid crashes.
+// import * as Updates from 'expo-updates';
 import { useFonts } from 'expo-font';
 import {
   Poppins_300Light,
@@ -24,6 +26,10 @@ import {
 } from '@expo-google-fonts/poppins';
 import type { AppStateStatus } from 'react-native';
 import type { ReactNode, ErrorInfo } from 'react';
+
+// ─── Enable native screens for performance ───────────────────────────
+import { enableScreens } from 'react-native-screens';
+enableScreens(true);
 
 // ─── Static imports (no lazy loading overhead) ────────────────────────
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -76,9 +82,10 @@ class AppErrorBoundary extends Component<
 
   handleRestart = async (): Promise<void> => {
     try {
+      const Updates = await import('expo-updates');
       await Updates.reloadAsync();
     } catch {
-      // expo-updates may not be available in dev — fallback to retry
+      // expo-updates not available (Expo Go / dev) — fallback to retry
       this.setState({ hasError: false, error: null });
     }
   };

@@ -1065,8 +1065,8 @@ const styles = StyleSheet.create({
   headerAvatarText: {
     ...typography.bodyLarge,
     color: colors.primary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   headerName: {
     ...typography.bodyLarge,
@@ -1123,8 +1123,8 @@ const styles = StyleSheet.create({
   moreButtonText: {
     fontSize: 20,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     lineHeight: 22,
   },
   messagesArea: {
@@ -1224,8 +1224,8 @@ const styles = StyleSheet.create({
   sendButtonText: {
     fontSize: 20,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   // Media button (image picker)
   mediaButton: {
@@ -1304,8 +1304,8 @@ const styles = StyleSheet.create({
   gifButtonText: {
     fontSize: 11,
     color: colors.primary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   // Mic button (voice record trigger)
   micButton: {
@@ -1345,8 +1345,8 @@ const styles = StyleSheet.create({
   voiceRecordingTime: {
     ...typography.bodyLarge,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     fontVariant: ['tabular-nums'] as const,
   },
   voiceRecordingLabel: {
@@ -1369,8 +1369,8 @@ const styles = StyleSheet.create({
   voiceRecordCancelText: {
     fontSize: 16,
     color: '#EF4444',
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   voiceRecordSendBtn: {
     width: 40,
@@ -1383,8 +1383,8 @@ const styles = StyleSheet.create({
   voiceRecordSendText: {
     fontSize: 18,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   // GIF picker modal overlay
   gifPickerOverlay: {
@@ -1450,8 +1450,8 @@ const styles = StyleSheet.create({
   limitReachedTitle: {
     ...typography.bodyLarge,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   limitReachedSubtitle: {
     ...typography.caption,
@@ -1470,8 +1470,8 @@ const styles = StyleSheet.create({
   singleMessageButtonText: {
     ...typography.button,
     color: '#1A1A1A',
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   upgradeMessageButton: {
     width: '100%',
@@ -1485,8 +1485,8 @@ const styles = StyleSheet.create({
   upgradeMessageButtonText: {
     ...typography.button,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   goBackButton: {
     paddingVertical: spacing.sm,

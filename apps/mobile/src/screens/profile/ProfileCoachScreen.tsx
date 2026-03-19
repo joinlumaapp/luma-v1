@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'baseline',
     justifyContent: 'space-between', marginBottom: spacing.sm,
   },
-  strengthPercent: { ...typography.h2, fontWeight: '700' },
+  strengthPercent: { ...typography.h2, fontWeight: '600' },
   strengthStatus: { ...typography.bodyLarge, fontWeight: '600' },
   strengthBarBg: {
     height: 8, borderRadius: 4,

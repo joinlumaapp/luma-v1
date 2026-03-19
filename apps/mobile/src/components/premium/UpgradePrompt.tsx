@@ -375,8 +375,8 @@ const styles = StyleSheet.create({
   title: {
     ...typography.h4,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     textAlign: 'center',
     marginBottom: spacing.sm,
   },
@@ -419,8 +419,8 @@ const styles = StyleSheet.create({
   upgradeButtonText: {
     ...typography.button,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     zIndex: 1,
   },
   shimmerOverlay: {

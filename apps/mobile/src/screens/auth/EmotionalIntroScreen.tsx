@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
   },
   devButtonText: {
     fontSize: 13,
-    fontFamily: 'Poppins_700Bold',
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: fontWeights.bold,
     color: palette.white,
     letterSpacing: 1.5,
@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.6)',
   },
   loginLink: {
-    fontFamily: 'Poppins_700Bold',
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: fontWeights.bold,
     color: palette.white,
     textDecorationLine: 'underline',
@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
   },
   testPanelTitle: {
     fontSize: 20,
-    fontFamily: 'Poppins_700Bold',
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: fontWeights.bold,
     color: palette.gray[900],
     textAlign: 'center',

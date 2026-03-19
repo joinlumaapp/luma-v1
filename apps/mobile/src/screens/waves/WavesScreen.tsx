@@ -199,7 +199,7 @@ const cardStyles = StyleSheet.create({
     marginBottom: 2,
   },
   senderName: {
-    fontWeight: '700',
+    fontWeight: '600',
   },
   time: {
     ...typography.caption,
@@ -223,7 +223,7 @@ const cardStyles = StyleSheet.create({
   ignoreBtnText: {
     ...typography.captionSmall,
     color: colors.textSecondary,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   respondBtn: {
     paddingHorizontal: spacing.lg,
@@ -235,7 +235,7 @@ const cardStyles = StyleSheet.create({
   respondBtnText: {
     ...typography.captionSmall,
     color: colors.text,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   statusRow: {
     flexDirection: 'row',

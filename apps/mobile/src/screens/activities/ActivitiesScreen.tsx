@@ -258,8 +258,8 @@ const filterStyles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: '#FFFFFF',
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     letterSpacing: 0.3,
   },
   liveDot: {
@@ -314,8 +314,8 @@ const tagStyles = StyleSheet.create({
   },
   text: {
     fontSize: 10,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: palette.error,
     letterSpacing: 0.3,
   },
@@ -392,8 +392,8 @@ const facepileStyles = StyleSheet.create({
   initial: {
     fontSize: 11,
     color: palette.purple[400],
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   overflowBadge: {
     backgroundColor: colors.surfaceBorder,
@@ -403,8 +403,8 @@ const facepileStyles = StyleSheet.create({
   overflowText: {
     fontSize: 9,
     color: colors.textSecondary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   countText: {
     ...typography.caption,
@@ -620,8 +620,8 @@ const cardStyles = StyleSheet.create({
   imageTitle: {
     ...typography.bodyLarge,
     color: '#FFFFFF',
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     marginBottom: 2,
     textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 0, height: 1 },
@@ -696,8 +696,8 @@ const cardStyles = StyleSheet.create({
   joinBtnText: {
     fontSize: 12,
     color: '#FFFFFF',
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     letterSpacing: 0.8,
   },
   joinedBadge: {
@@ -714,8 +714,8 @@ const cardStyles = StyleSheet.create({
   joinedText: {
     fontSize: 12,
     color: colors.success,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   fullBadge: {
     paddingHorizontal: spacing.md,
@@ -1016,8 +1016,8 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.h3,
     color: colors.text,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   headerSubtitle: {
     ...typography.bodySmall,

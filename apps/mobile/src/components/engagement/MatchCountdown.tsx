@@ -204,8 +204,8 @@ const styles = StyleSheet.create({
   },
   inlineExtendText: {
     ...typography.captionSmall,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: palette.error,
   },
 
@@ -231,8 +231,8 @@ const styles = StyleSheet.create({
   bannerTitle: {
     ...typography.label,
     color: palette.white,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   bannerSubtitle: {
     ...typography.captionSmall,

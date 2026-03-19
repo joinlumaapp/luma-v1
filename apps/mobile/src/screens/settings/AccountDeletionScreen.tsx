@@ -417,8 +417,8 @@ function createDynamicStyles(c: ThemeColors) {
     warningTitle: {
       ...typography.bodyLarge,
       color: c.error,
-      fontFamily: 'Poppins_700Bold',
-      fontWeight: '700',
+      fontFamily: 'Poppins_600SemiBold',
+      fontWeight: '600',
       marginBottom: spacing.sm,
       textAlign: 'center',
       includeFontPadding: false,
@@ -567,8 +567,8 @@ function createDynamicStyles(c: ThemeColors) {
     otpTitle: {
       ...typography.h4,
       color: c.text,
-      fontFamily: 'Poppins_700Bold',
-      fontWeight: '700',
+      fontFamily: 'Poppins_600SemiBold',
+      fontWeight: '600',
       marginBottom: spacing.sm,
       includeFontPadding: false,
     },
@@ -648,8 +648,8 @@ function createDynamicStyles(c: ThemeColors) {
     modalTitle: {
       ...typography.h4,
       color: c.error,
-      fontFamily: 'Poppins_700Bold',
-      fontWeight: '700',
+      fontFamily: 'Poppins_600SemiBold',
+      fontWeight: '600',
       marginBottom: spacing.md,
       textAlign: 'center',
       includeFontPadding: false,
@@ -686,8 +686,8 @@ function createDynamicStyles(c: ThemeColors) {
     modalDeleteText: {
       ...typography.button,
       color: '#FFFFFF',
-      fontFamily: 'Poppins_700Bold',
-      fontWeight: '700',
+      fontFamily: 'Poppins_600SemiBold',
+      fontWeight: '600',
       includeFontPadding: false,
     },
   });

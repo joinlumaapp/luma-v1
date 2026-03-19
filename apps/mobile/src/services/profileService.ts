@@ -204,9 +204,9 @@ export const profileService = {
       // Mock fallback for development
       return {
         visitors: [
-          { visitorId: 'v1', firstName: 'Elif', photoUrl: null, viewedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), isBlurred: false },
-          { visitorId: 'v2', firstName: 'Selin', photoUrl: null, viewedAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), isBlurred: false },
-          { visitorId: 'v3', firstName: 'Merve', photoUrl: null, viewedAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(), isBlurred: false },
+          { visitorId: 'v1', firstName: 'Elif', photoUrl: 'https://i.pravatar.cc/200?img=5', viewedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), isBlurred: false },
+          { visitorId: 'v2', firstName: 'Selin', photoUrl: 'https://i.pravatar.cc/200?img=9', viewedAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), isBlurred: false },
+          { visitorId: 'v3', firstName: 'Merve', photoUrl: 'https://i.pravatar.cc/200?img=16', viewedAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(), isBlurred: false },
           { visitorId: 'v4', firstName: null, photoUrl: null, viewedAt: new Date(Date.now() - 14 * 60 * 60 * 1000).toISOString(), isBlurred: true },
           { visitorId: 'v5', firstName: null, photoUrl: null, viewedAt: new Date(Date.now() - 20 * 60 * 60 * 1000).toISOString(), isBlurred: true },
         ],

@@ -1088,8 +1088,8 @@ function createDynamicStyles(c: ThemeColors) {
     supremeActiveText: {
       ...typography.captionSmall,
       color: SUPREME_GOLD,
-      fontFamily: 'Poppins_700Bold',
-      fontWeight: '700',
+      fontFamily: 'Poppins_600SemiBold',
+      fontWeight: '600',
       letterSpacing: 0.3,
     },
 
@@ -1153,8 +1153,8 @@ function createDynamicStyles(c: ThemeColors) {
     },
     themeOptionTextSelected: {
       color: c.primary,
-      fontFamily: 'Poppins_700Bold',
-      fontWeight: '700',
+      fontFamily: 'Poppins_600SemiBold',
+      fontWeight: '600',
     },
 
     // Logout button

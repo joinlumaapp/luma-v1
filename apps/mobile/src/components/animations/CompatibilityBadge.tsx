@@ -270,8 +270,8 @@ const localStyles = StyleSheet.create({
     top: 2,
   },
   scoreText: {
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     paddingHorizontal: 2,
   },
   label: {

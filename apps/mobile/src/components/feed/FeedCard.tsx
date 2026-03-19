@@ -368,8 +368,8 @@ const styles = StyleSheet.create({
   verifiedBadge: {
     fontSize: 14,
     color: colors.primary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   dotSeparator: {
     fontSize: 10,
@@ -399,8 +399,8 @@ const styles = StyleSheet.create({
   followButtonText: {
     ...typography.captionSmall,
     color: '#FFFFFF',
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   followButtonTextActive: {
     color: colors.textSecondary,
@@ -434,8 +434,8 @@ const styles = StyleSheet.create({
   readMore: {
     fontSize: 14,
     color: colors.primary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     marginTop: -spacing.xs,
     marginBottom: spacing.sm,
     paddingVertical: spacing.xs,
@@ -505,8 +505,8 @@ const styles = StyleSheet.create({
   profileButtonText: {
     ...typography.captionSmall,
     color: colors.primary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
 });
 

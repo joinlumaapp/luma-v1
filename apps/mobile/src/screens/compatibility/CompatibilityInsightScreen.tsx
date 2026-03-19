@@ -323,8 +323,8 @@ const radarStyles = StyleSheet.create({
   dimensionLabelText: {
     ...typography.captionSmall,
     color: colors.primary,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     textAlign: 'center',
   },
   dimensionLabelLocked: {
@@ -805,8 +805,8 @@ const styles = StyleSheet.create({
   },
   scoreValue: {
     ...typography.h1,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   scoreLabel: {
     ...typography.captionSmall,
@@ -825,8 +825,8 @@ const styles = StyleSheet.create({
   },
   levelText: {
     ...typography.bodySmall,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
 
   // Radar section
@@ -889,8 +889,8 @@ const styles = StyleSheet.create({
   },
   dimensionScore: {
     ...typography.bodyLarge,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   expandIcon: {
     fontSize: 10,

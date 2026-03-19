@@ -300,8 +300,8 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.h3,
     color: palette.white,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   headerSubtitle: {
     ...typography.bodySmall,
@@ -351,8 +351,8 @@ const styles = StyleSheet.create({
   },
   dayJetons: {
     ...typography.captionSmall,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: colors.textSecondary,
   },
   dayJetonsCurrent: {
@@ -378,8 +378,8 @@ const styles = StyleSheet.create({
   coinAmount: {
     ...typography.h2,
     color: palette.white,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   coinLabel: {
     ...typography.captionSmall,
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
   claimButtonText: {
     ...typography.button,
     color: palette.white,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
 });

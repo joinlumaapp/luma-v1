@@ -441,8 +441,8 @@ const styles = StyleSheet.create({
   // Header text
   title: {
     fontSize: 28,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: onboardingColors.text,
     lineHeight: 36,
     marginBottom: 8,

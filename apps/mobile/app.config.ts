@@ -44,9 +44,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     url: EAS_PROJECT_ID ? `https://u.expo.dev/${EAS_PROJECT_ID}` : undefined,
   },
 
-  runtimeVersion: {
-    policy: 'appVersion',
-  },
+  // Only set runtimeVersion when EAS project is configured — otherwise
+  // Expo Go may attempt to check for OTA updates and crash on startup
+  ...(EAS_PROJECT_ID
+    ? { runtimeVersion: { policy: 'appVersion' as const } }
+    : {}),
 
   ios: {
     supportsTablet: false,
