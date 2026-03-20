@@ -636,20 +636,6 @@ export const SettingsScreen: React.FC = () => {
       ],
     },
 
-    // 6. Görünüm
-    {
-      title: 'Görünüm',
-      icon: 'color-palette-outline',
-      data: [
-        {
-          key: 'theme_selector',
-          icon: 'contrast-outline',
-          title: 'Tema',
-          type: 'theme',
-        },
-      ],
-    },
-
     // DEV section
     ...(__DEV__ ? [{
       title: 'Geliştirici',

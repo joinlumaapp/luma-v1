@@ -1,4 +1,4 @@
-// Splash / Loading screen — 3D LUMA heart logo on deep purple background
+// Splash / Loading screen — 3D LUMA heart logo on pink gradient background
 // Features: centered HD logo, spring entrance, gentle pulse while loading, sweeping glint
 
 import React, { useEffect, useRef } from 'react';
@@ -10,16 +10,14 @@ import {
   Dimensions,
   Easing,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-// Logo sized at ~40% of screen width for elegant presentation
-const LOGO_SIZE = SCREEN_WIDTH * 0.40;
+// Logo sized at ~60% of screen width
+const LOGO_SIZE = SCREEN_WIDTH * 0.60;
 
 const splashLogo = require('../../../assets/splash-logo.png');
-
-// Deep dark purple — unified LUMA brand identity
-const SPLASH_BG = '#3D1B5B';
 
 export const LoadingScreen: React.FC = () => {
   const logoScale = useRef(new Animated.Value(0.6)).current;
@@ -80,15 +78,11 @@ export const LoadingScreen: React.FC = () => {
   }, [logoScale, logoOpacity, pulseScale, glintX, glintOpacity]);
 
   return (
-    <View style={styles.container}>
-      {/* Subtle radial glow behind logo */}
-      <Animated.View
-        style={[
-          styles.glow,
-          { opacity: logoOpacity },
-        ]}
-      />
-
+    <LinearGradient
+      colors={['#E8959E', '#EDACB4', '#F2C0C6', '#F7D5D9', '#FFFFFF']}
+      locations={[0, 0.3, 0.55, 0.8, 1]}
+      style={styles.container}
+    >
       {/* Logo with spring entrance + pulse */}
       <Animated.View
         style={[
@@ -124,30 +118,20 @@ export const LoadingScreen: React.FC = () => {
           <View style={styles.glintLine} />
         </Animated.View>
       </Animated.View>
-    </View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SPLASH_BG,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  // Soft radial glow behind the logo
-  glow: {
-    position: 'absolute',
-    width: LOGO_SIZE * 2,
-    height: LOGO_SIZE * 2,
-    borderRadius: LOGO_SIZE,
-    backgroundColor: 'rgba(200, 120, 180, 0.12)',
   },
   logoWrapper: {
     width: LOGO_SIZE,
     height: LOGO_SIZE,
     overflow: 'hidden',
-    borderRadius: LOGO_SIZE * 0.18,
   },
   logo: {
     width: '100%',

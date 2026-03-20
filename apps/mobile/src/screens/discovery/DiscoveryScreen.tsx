@@ -18,6 +18,7 @@ import {
   ScrollView,
   Alert,
   RefreshControl,
+  Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -982,7 +983,7 @@ export const DiscoveryScreen: React.FC = () => {
         <View style={styles.darkHeaderArea}>
           <View style={styles.header}>
             <View style={styles.headerLeft}>
-              <Text style={styles.headerTitle}>{'LUMA'}</Text>
+              <Image source={require('../../../assets/splash-logo.png')} style={styles.headerLogo} resizeMode="contain" />
               <Text style={styles.headerSubtitle}>
                 {isUnlimitedLikes ? 'Sınırsız beğeni' : `Bugün ${dailyRemaining} profil kaldı`}
               </Text>
@@ -1043,7 +1044,7 @@ export const DiscoveryScreen: React.FC = () => {
         <View style={styles.darkHeaderArea}>
           <View style={styles.header}>
             <View style={styles.headerLeft}>
-              <Text style={styles.headerTitle}>{'LUMA'}</Text>
+              <Image source={require('../../../assets/splash-logo.png')} style={styles.headerLogo} resizeMode="contain" />
               <Text style={styles.headerSubtitle}>
                 {isUnlimitedLikes ? 'Sınırsız beğeni' : `Bugün ${dailyRemaining} profil kaldı`}
               </Text>
@@ -1228,7 +1229,7 @@ export const DiscoveryScreen: React.FC = () => {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={styles.headerTitle}>{'LUMA'}</Text>
+            <Image source={require('../../../assets/splash-logo.png')} style={styles.headerLogo} resizeMode="contain" />
             <Text style={styles.headerSubtitle}>
               {isUnlimitedLikes ? 'Sınırsız beğeni' : `Bugün ${dailyRemaining} profil kaldı`}
             </Text>
@@ -1265,6 +1266,24 @@ export const DiscoveryScreen: React.FC = () => {
             >
               <View style={[styles.filterButton, boostStatus.isActive && styles.boostButtonActive]} testID="discovery-boost-btn">
                 <Ionicons name="flash" size={18} color={colors.primary} />
+              </View>
+            </Pressable>
+            <Pressable
+              onPress={() => navigation.navigate('VideoFeed')}
+              accessibilityLabel="Video Kesfet"
+              accessibilityRole="button"
+            >
+              <View style={styles.filterButton}>
+                <Ionicons name="videocam" size={18} color={colors.primary} />
+              </View>
+            </Pressable>
+            <Pressable
+              onPress={() => navigation.navigate('InstantConnect')}
+              accessibilityLabel="Aninda Baglan"
+              accessibilityRole="button"
+            >
+              <View style={[styles.filterButton, styles.instantConnectButton]}>
+                <Ionicons name="pulse" size={18} color="#FFFFFF" />
               </View>
             </Pressable>
             <Pressable
@@ -1647,6 +1666,10 @@ const styles = StyleSheet.create({
     color: colors.text,
     letterSpacing: 0,
   },
+  headerLogo: {
+    width: 52,
+    height: 52,
+  },
   headerSubtitle: {
     ...typography.caption,
     color: colors.textSecondary,
@@ -1655,15 +1678,13 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: 6,
     flexShrink: 0,
-    overflow: 'visible',
-    zIndex: 100,
   },
   filterButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1677,6 +1698,10 @@ const styles = StyleSheet.create({
   boostButtonActive: {
     borderColor: colors.primary,
     backgroundColor: colors.primary + '15',
+  },
+  instantConnectButton: {
+    backgroundColor: palette.purple[600],
+    borderColor: palette.purple[400],
   },
   // ── Persistent streak badge ──
   streakBadge: {
@@ -1727,7 +1752,7 @@ const styles = StyleSheet.create({
   notifBadge: {
     position: 'absolute',
     top: -4,
-    right: -4,
+    right: -2,
     backgroundColor: '#EF4444',
     borderRadius: 8,
     minWidth: 16,

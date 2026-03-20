@@ -407,20 +407,6 @@ export const ProfileScreen: React.FC = () => {
     <View style={[styles.headerBar, { paddingTop: insets.top }]}>
       <View style={styles.headerLeft}>
         <Text style={styles.headerTitle}>Profil</Text>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('MembershipPlans')}
-          activeOpacity={0.8}
-          accessibilityLabel="Üyelik planları"
-          accessibilityRole="button"
-        >
-          <SubscriptionBadge tier={packageTier} />
-        </TouchableOpacity>
-        {packageTier === 'RESERVED' && (
-          <View style={styles.supremeHeaderBadge}>
-            <Ionicons name="diamond" size={12} color="#D4AF37" />
-            <Text style={styles.supremeHeaderBadgeText}>SUPREME</Text>
-          </View>
-        )}
       </View>
       <View style={styles.headerRight}>
         <CoinBalance size="small" />

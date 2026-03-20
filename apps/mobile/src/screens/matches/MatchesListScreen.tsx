@@ -1018,6 +1018,7 @@ export const MatchesListScreen: React.FC = () => {
       <View style={styles.darkHeaderArea}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Eşleşmeler</Text>
+          <Image source={require('../../../assets/splash-logo.png')} style={styles.headerLogo} resizeMode="contain" />
           <Text style={styles.matchCount}>{totalCount} eşleşme</Text>
         </View>
       </View>
@@ -1157,7 +1158,10 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.h3,
     color: colors.text,
-    flex: 1,
+  },
+  headerLogo: {
+    width: 52,
+    height: 52,
   },
   matchCount: {
     ...typography.bodySmall,

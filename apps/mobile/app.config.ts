@@ -88,7 +88,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     adaptiveIcon: {
       foregroundImage: './assets/adaptive-icon.png',
-      backgroundColor: '#F5B0C0',
+      backgroundColor: '#3D1B5B',
     },
     softwareKeyboardLayoutMode: 'resize',
     package: getUniqueIdentifier(),

@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   StatusBar,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -127,8 +128,12 @@ export const PhoneEntryScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={onboardingColors.background} translucent />
+    <LinearGradient
+      colors={['#E8959E', '#EDACB4', '#F2C0C6', '#F7D5D9', '#FFFFFF']}
+      locations={[0, 0.3, 0.55, 0.8, 1]}
+      style={styles.container}
+    >
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
       <KeyboardAvoidingView
         style={styles.flex}
@@ -245,14 +250,13 @@ export const PhoneEntryScreen: React.FC = () => {
           </Text>
         </View>
       </KeyboardAvoidingView>
-    </View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: onboardingColors.background,
   },
   flex: {
     flex: 1,
@@ -385,8 +389,8 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     height: layout.buttonHeight,
-    borderRadius: borderRadius.lg,
-    backgroundColor: onboardingColors.buttonBg,
+    borderRadius: 28,
+    backgroundColor: '#C4405A',
     justifyContent: 'center',
     alignItems: 'center',
   },

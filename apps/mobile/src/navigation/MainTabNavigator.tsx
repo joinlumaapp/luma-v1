@@ -25,6 +25,7 @@ import { typography } from '../theme/typography';
 import { useChatStore } from '../stores/chatStore';
 import { useNotificationStore } from '../stores/notificationStore';
 import { NotificationPermissionModal } from '../components/notifications/NotificationPermissionModal';
+import { PromotionModal } from '../components/premium/PromotionModal';
 import { usePresenceTracking } from '../hooks/usePresence';
 import { useSocket } from '../hooks/useSocket';
 import { setupCallStoreListeners } from '../stores/callStore';
@@ -74,6 +75,8 @@ import { WeeklyReportScreen } from '../screens/discovery/WeeklyReportScreen';
 import { CrossedPathsScreen } from '../screens/discovery/CrossedPathsScreen';
 import { SocialFeedScreen } from '../screens/discovery/SocialFeedScreen';
 import { StoryViewerScreen } from '../screens/discovery/StoryViewerScreen';
+import { VideoFeedScreen } from '../screens/discovery/VideoFeedScreen';
+import { InstantConnectScreen } from '../screens/discovery/InstantConnectScreen';
 import { StoryCreator } from '../components/stories/StoryCreator';
 
 // Activities screens
@@ -81,6 +84,7 @@ import { ActivitiesScreen } from '../screens/activities/ActivitiesScreen';
 import { CreateActivityScreen } from '../screens/activities/CreateActivityScreen';
 import { ActivityDetailScreen } from '../screens/activities/ActivityDetailScreen';
 import { ActivityGroupChatScreen } from '../screens/activities/ActivityGroupChatScreen';
+import { EventMapScreen } from '../screens/activities/EventMapScreen';
 import { IcebreakerRoomScreen } from '../screens/harmony/IcebreakerRoomScreen';
 
 // Waves screen
@@ -203,6 +207,16 @@ const DiscoveryStackNavigator: React.FC = React.memo(() => (
     }}
   >
     <DiscoveryStack.Screen name="Discovery" component={DiscoveryScreen} />
+    <DiscoveryStack.Screen
+      name="VideoFeed"
+      component={VideoFeedScreen}
+      options={{ animation: 'fade', presentation: 'fullScreenModal' }}
+    />
+    <DiscoveryStack.Screen
+      name="InstantConnect"
+      component={InstantConnectScreen}
+      options={{ animation: 'fade', presentation: 'fullScreenModal' }}
+    />
     <DiscoveryStack.Screen name="Notifications" component={NotificationsScreen} />
     <DiscoveryStack.Screen
       name="ProfilePreview"
@@ -326,6 +340,7 @@ const FeedStackNavigator: React.FC = React.memo(() => (
   >
     <FeedStack.Screen name="SocialFeed" component={SocialFeedScreen} />
     <FeedStack.Screen name="FeedProfile" component={FeedProfileScreen} />
+    <FeedStack.Screen name="ProfilePreview" component={ProfilePreviewScreen} />
   </FeedStack.Navigator>
 ));
 FeedStackNavigator.displayName = 'FeedStackNavigator';
@@ -346,6 +361,7 @@ const ActivitiesStackNavigator: React.FC = React.memo(() => (
     />
     <ActivitiesStack.Screen name="ActivityDetail" component={ActivityDetailScreen} />
     <ActivitiesStack.Screen name="ActivityGroupChat" component={ActivityGroupChatScreen} />
+    <ActivitiesStack.Screen name="EventMap" component={EventMapScreen} />
     <ActivitiesStack.Screen
       name="IcebreakerRoom"
       component={IcebreakerRoomScreen}
@@ -520,6 +536,7 @@ export const MainTabNavigator: React.FC = () => {
     />
     <IncomingCallOverlay />
     <MinimizedCallBar />
+    <PromotionModal />
     </>
   );
 };

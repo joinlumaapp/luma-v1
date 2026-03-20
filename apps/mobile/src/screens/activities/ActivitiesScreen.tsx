@@ -954,8 +954,11 @@ export const ActivitiesScreen: React.FC = () => {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Aktiviteler</Text>
-        <Text style={styles.headerSubtitle}>Yeni insanlarla tanış</Text>
+        <View>
+          <Text style={styles.headerTitle}>Aktiviteler</Text>
+          <Text style={styles.headerSubtitle}>Yeni insanlarla tanış</Text>
+        </View>
+        <Image source={require('../../../assets/splash-logo.png')} style={styles.headerLogo} resizeMode="contain" />
       </View>
 
       {/* Filter chips */}
@@ -1012,6 +1015,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
     paddingBottom: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerLogo: {
+    width: 52,
+    height: 52,
   },
   headerTitle: {
     ...typography.h3,

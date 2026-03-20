@@ -55,6 +55,8 @@ export type MainTabParamList = {
 // -- Discovery Stack --
 export type DiscoveryStackParamList = {
   Discovery: undefined;
+  VideoFeed: undefined;
+  InstantConnect: undefined;
   Notifications: undefined;
   ProfilePreview: { userId: string };
   StoryViewer: {
@@ -98,6 +100,7 @@ export type ActivitiesStackParamList = {
   CreateActivity: undefined;
   ActivityDetail: { activityId: string };
   ActivityGroupChat: { activityId: string; activityTitle: string };
+  EventMap: undefined;
   IcebreakerRoom: { roomId: string };
 };
 
@@ -105,6 +108,7 @@ export type ActivitiesStackParamList = {
 export type FeedStackParamList = {
   SocialFeed: undefined;
   FeedProfile: { userId: string };
+  ProfilePreview: { userId: string };
 };
 
 // -- Profile Stack --

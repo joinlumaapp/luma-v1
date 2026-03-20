@@ -6,6 +6,7 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   TouchableOpacity,
   StatusBar,
@@ -13,6 +14,7 @@ import {
   Modal,
   Pressable,
   Linking,
+  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,6 +30,10 @@ import { seedDevData } from '../../utils/devSeedData';
 import { palette, surfaces, semanticColors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { fontWeights } from '../../theme/typography';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const LOGO_SIZE = SCREEN_WIDTH * 0.90;
+const lumaLogo = require('../../../assets/splash-logo.png');
 
 type IntroNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'EmotionalIntro'>;
 
@@ -131,7 +137,7 @@ const EmotionalIntroScreen: React.FC = () => {
   // Navigation handlers
   const handleOtherOptions = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    navigation.navigate('SignUpChoice');
+    navigation.navigate('PhoneEntry');
   }, [navigation]);
 
   const handleLogin = useCallback(() => {
@@ -196,8 +202,8 @@ const EmotionalIntroScreen: React.FC = () => {
 
       {/* Full-screen gradient background */}
       <LinearGradient
-        colors={['rgba(180, 140, 200, 0.3)', 'rgba(160, 110, 180, 0.7)', 'rgba(130, 80, 160, 0.92)']}
-        locations={[0, 0.5, 1]}
+        colors={['#E8959E', '#EDACB4', '#F2C0C6', '#F7D5D9', '#FFFFFF']}
+        locations={[0, 0.35, 0.6, 0.85, 1]}
         style={styles.gradientBackground}
       >
         {/* DEV test button */}
@@ -217,12 +223,17 @@ const EmotionalIntroScreen: React.FC = () => {
         {/* Top spacer */}
         <View style={styles.topSpacer} />
 
-        {/* Center — LUMA logo */}
+        {/* Center — LUMA 3D logo */}
         <View style={styles.logoSection}>
           <Pressable onLongPress={handleLogoLongPress} delayLongPress={3000}>
-            <Text style={styles.logoText}>LUMA</Text>
+            <View style={styles.logoContainer}>
+              <Image
+                source={lumaLogo}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
+            </View>
           </Pressable>
-          <Ionicons name="heart" size={20} color="rgba(255,255,255,0.7)" style={styles.heartIcon} />
         </View>
 
         {/* Bottom section — buttons */}
@@ -247,9 +258,9 @@ const EmotionalIntroScreen: React.FC = () => {
             onPress={handleOtherOptions}
             activeOpacity={0.9}
             accessibilityRole="button"
-            accessibilityLabel="Diğer seçenekler"
+            accessibilityLabel="Telefon ile devam et"
           >
-            <Text style={styles.otherButtonText}>Diğer seçenekler</Text>
+            <Text style={styles.otherButtonText}>Telefon ile devam et</Text>
           </TouchableOpacity>
 
           {/* Login link for existing users */}
@@ -307,7 +318,7 @@ export default EmotionalIntroScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: palette.gray[900],
+    backgroundColor: '#FFFFFF',
   },
   gradientBackground: {
     flex: 1,
@@ -341,18 +352,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flex: 1,
   },
-  logoText: {
-    fontSize: 64,
-    fontFamily: 'Poppins_300Light',
-    fontWeight: fontWeights.light,
-    color: palette.white,
-    letterSpacing: 28,
-    textShadowColor: 'rgba(0, 0, 0, 0.25)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
+  logoContainer: {
+    width: LOGO_SIZE,
+    height: LOGO_SIZE,
   },
-  heartIcon: {
-    marginTop: 8,
+  logoImage: {
+    width: '100%',
+    height: '100%',
   },
   // Bottom section
   bottomSection: {
@@ -371,15 +377,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(200, 160, 170, 0.3)',
     ...Platform.select({
       ios: {
-        shadowColor: palette.black,
+        shadowColor: 'rgba(200, 100, 120, 0.3)',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
+        shadowOpacity: 0.2,
         shadowRadius: 12,
       },
       android: {
-        elevation: 6,
+        elevation: 4,
       },
     }),
   },
@@ -389,16 +397,14 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semibold,
     color: palette.gray[900],
   },
-  // Other options button — dark/transparent
+  // Other options button — dark/elegant
   otherButton: {
     width: '100%',
     height: 56,
     borderRadius: 28,
-    backgroundColor: 'rgba(30, 30, 30, 0.75)',
+    backgroundColor: '#C4405A',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   otherButtonText: {
     fontSize: 16,
@@ -411,12 +417,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Poppins_400Regular',
     fontWeight: fontWeights.regular,
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: 'rgba(80, 40, 60, 0.6)',
   },
   loginLink: {
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: fontWeights.bold,
-    color: palette.white,
+    color: '#C4405A',
     textDecorationLine: 'underline',
   },
   // Google button disabled state
@@ -433,14 +439,14 @@ const styles = StyleSheet.create({
   privacyText: {
     fontSize: 11,
     lineHeight: 16,
-    color: 'rgba(255, 255, 255, 0.55)',
+    color: 'rgba(80, 40, 60, 0.5)',
     textAlign: 'center',
     paddingHorizontal: spacing.lg,
     marginTop: 4,
   },
   privacyLink: {
     textDecorationLine: 'underline' as const,
-    color: 'rgba(255, 255, 255, 0.75)',
+    color: 'rgba(80, 40, 60, 0.7)',
   },
   // Test panel modal
   modalOverlay: {

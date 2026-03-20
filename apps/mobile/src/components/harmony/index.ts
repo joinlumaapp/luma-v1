@@ -1,0 +1,1 @@
+export { PostGameMatchModal } from './PostGameMatchModal';

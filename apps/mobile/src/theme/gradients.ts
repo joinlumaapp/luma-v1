@@ -184,13 +184,13 @@ export const matchGradients = {
  * Mesh gradients use multiple color stops for a rich, dimensional effect.
  */
 export const backgroundGradients = {
-  /** Light mode page background — subtle warm tint */
+  /** Light mode page background — soft pink tint */
   warmBackground: ['#FAF7F2', '#F5F0E8', '#F0EBE3'] as readonly string[],
 
   /** Dark mode page background — deep space with purple tint */
   darkBackground: ['#0E0E1A', '#08080F', '#050510'] as readonly string[],
 
-  /** Onboarding background — warm, inviting mesh */
+  /** Onboarding background — warm pink mesh */
   onboarding: ['#FFF5F5', '#FDF2F8', '#F5F3FF'] as readonly string[],
 
   /** Auth/splash background — dramatic, brand-forward */
@@ -199,7 +199,7 @@ export const backgroundGradients = {
   /** Premium background — the signature LUMA powder pink */
   premiumPage: ['#E8A4B8', '#F0B8C8', '#F5C8D4'] as readonly string[],
 
-  /** Settings/profile background — calm neutral */
+  /** Settings/profile background — soft pink */
   neutral: ['#F9FAFB', '#F3F4F6', '#E5E7EB'] as readonly string[],
 } as const;
 

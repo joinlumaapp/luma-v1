@@ -499,7 +499,7 @@ export const SocialFeedScreen: React.FC = () => {
 
   const handleProfilePress = useCallback(
     (userId: string) => {
-      navigation.navigate('FeedProfile', { userId });
+      navigation.navigate('ProfilePreview', { userId });
     },
     [navigation],
   );
@@ -611,6 +611,11 @@ export const SocialFeedScreen: React.FC = () => {
       {/* Header */}
       <View style={styles.headerArea}>
         <Text style={styles.headerTitle}>Akış</Text>
+        <Image
+          source={require('../../../assets/splash-logo.png')}
+          style={styles.headerLogo}
+          resizeMode="contain"
+        />
       </View>
 
       {/* Feed List */}
@@ -755,10 +760,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   headerTitle: {
     ...typography.h3,
     color: colors.text,
+  },
+  headerLogo: {
+    width: 52,
+    height: 52,
   },
   loadingContainer: {
     flex: 1,
