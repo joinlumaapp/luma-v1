@@ -40,7 +40,7 @@ export const useDeepLink = (): UseDeepLinkReturn => {
       switch (parsed.screen) {
         case 'MatchDetail':
           navigation.navigate('MainTabs', {
-            screen: 'MatchesTab',
+            screen: 'ProfileTab',
             params: {
               screen: 'MatchDetail',
               params: parsed.params,
@@ -50,7 +50,7 @@ export const useDeepLink = (): UseDeepLinkReturn => {
 
         case 'Chat':
           navigation.navigate('MainTabs', {
-            screen: 'MatchesTab',
+            screen: 'ProfileTab',
             params: {
               screen: 'Chat',
               params: parsed.params,
@@ -130,7 +130,7 @@ export const useDeepLink = (): UseDeepLinkReturn => {
 
         case 'CompatibilityInsight':
           navigation.navigate('MainTabs', {
-            screen: 'MatchesTab',
+            screen: 'ProfileTab',
             params: {
               screen: 'CompatibilityInsight',
               params: parsed.params,

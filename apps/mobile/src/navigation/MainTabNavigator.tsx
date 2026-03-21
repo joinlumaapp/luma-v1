@@ -489,7 +489,7 @@ export const MainTabNavigator: React.FC = () => {
         name="ActivitiesTab"
         component={ActivitiesStackNavigator}
         options={{
-          tabBarLabel: 'Etkinlik',
+          tabBarLabel: 'Aktiviteler',
           tabBarIcon: ({ focused }) => (
             <TabIcon name="activities" focused={focused} />
           ),

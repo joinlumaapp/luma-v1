@@ -121,8 +121,8 @@ export const layout = {
   // ── Discovery Card ──
   /** Full-bleed card width (screen minus horizontal padding) */
   cardWidth: SCREEN_WIDTH - spacing.md * 2,
-  /** Immersive card height (62% of screen — Tinder proportion) */
-  cardHeight: SCREEN_HEIGHT * 0.62,
+  /** Immersive card height (52% of screen — fits with toggle + stories + action buttons) */
+  cardHeight: SCREEN_HEIGHT * 0.52,
 
   // ── Avatar Sizes ──
   /** 32px — Inline mentions, tiny indicators */

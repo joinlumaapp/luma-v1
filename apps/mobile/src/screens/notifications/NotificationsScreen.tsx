@@ -254,7 +254,7 @@ export const NotificationsScreen: React.FC = () => {
           break;
         case 'NEW_MATCH':
           if (data.matchId && tabNav) {
-            tabNav.navigate('MatchesTab', {
+            tabNav.navigate('ProfileTab', {
               screen: 'MatchDetail',
               params: { matchId: data.matchId as string },
             });
@@ -263,7 +263,7 @@ export const NotificationsScreen: React.FC = () => {
         case 'MESSAGE':
         case 'NEW_MESSAGE':
           if (data.matchId && tabNav) {
-            tabNav.navigate('MatchesTab', {
+            tabNav.navigate('ProfileTab', {
               screen: 'Chat',
               params: {
                 matchId: data.matchId as string,

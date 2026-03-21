@@ -854,6 +854,31 @@ const styles = StyleSheet.create({
     overflow: 'visible',
     ...shadows.small,
   },
+  boostHeaderButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.small,
+  },
+  boostHeaderButtonActive: {
+    borderWidth: 1.5,
+    borderColor: palette.gold[500] + '50',
+    backgroundColor: palette.gold[500] + '12',
+  },
+  boostHeaderDot: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: palette.gold[500],
+    borderWidth: 1.5,
+    borderColor: colors.background,
+  },
 
   // ── Top section (below hero photo) ──
   topSection: {

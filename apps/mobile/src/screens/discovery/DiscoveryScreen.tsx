@@ -62,19 +62,17 @@ import type { LoginStreakResponse } from '../../services/discoveryService';
 import { StreakBanner } from '../../components/streak/StreakBanner';
 import { SUPER_LIKE_CONFIG, DISCOVERY_CONFIG } from '../../constants/config';
 import { generateCompactReasons } from '../../utils/compatReasons';
-import { BoostModal } from '../../components/boost/BoostModal';
-import type { BoostStatusResponse } from '../../services/discoveryService';
 import { StoryRing } from '../../components/stories/StoryRing';
 import {
   DailyRewardModal,
   DailyChallenge,
   LikesTeaser,
-  FlashBoost,
   AchievementToast,
 } from '../../components/engagement';
 import { useEngagementStore } from '../../stores/engagementStore';
+import { LinearGradient } from 'expo-linear-gradient';
 import { colors, palette } from '../../theme/colors';
-import { typography } from '../../theme/typography';
+import { typography, fontWeights } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -293,14 +291,13 @@ export const DiscoveryScreen: React.FC = () => {
     [getSuperLikeStorageKey],
   );
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
-  const [upgradeFeature, setUpgradeFeature] = useState<'super_like' | 'boost' | 'daily_likes'>('super_like');
+  const [upgradeFeature, setUpgradeFeature] = useState<'super_like' | 'daily_likes'>('super_like');
 
   // ─── Engagement system ──────────────────────────────────
   const showDailyRewardModal = useEngagementStore((s) => s.showDailyRewardModal);
   const initDailyReward = useEngagementStore((s) => s.initDailyReward);
   const initDailyChallenge = useEngagementStore((s) => s.initDailyChallenge);
   const hydrateEngagement = useEngagementStore((s) => s.hydrate);
-  const triggerFlashBoost = useEngagementStore((s) => s.triggerFlashBoost);
   const incrementChallenge = useEngagementStore((s) => s.incrementChallengeProgress);
   const checkAchievement = useEngagementStore((s) => s.checkAchievement);
   const likesTeaserCount = useEngagementStore((s) => s.likesTeaserCount);
@@ -310,14 +307,6 @@ export const DiscoveryScreen: React.FC = () => {
     hydrateEngagement();
     initDailyReward();
     initDailyChallenge();
-
-    // Randomly trigger flash boost (20% chance, once per day)
-    const shouldTrigger = Math.random() < 0.2;
-    if (shouldTrigger) {
-      const delay = 30000 + Math.random() * 120000; // 30s to 2.5min after mount
-      const timer = setTimeout(() => triggerFlashBoost(), delay);
-      return () => clearTimeout(timer);
-    }
     return undefined;
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -328,13 +317,6 @@ export const DiscoveryScreen: React.FC = () => {
     // Nothing extra needed — store handles dismiss
   }, []);
 
-  const handleFlashBoostPurchase = useCallback(() => {
-    // Boost activated via flash discount
-  }, []);
-
-  const handleFlashBoostDismiss = useCallback(() => {
-    // Flash boost dismissed
-  }, []);
 
   const handleLikesTeaserPressPremium = useCallback(() => {
     // Gold+ users can see who liked them — navigate to LikesYou screen
@@ -349,9 +331,6 @@ export const DiscoveryScreen: React.FC = () => {
   const handleAchievementToastPress = useCallback(() => {
     navigation.navigate('ProfileTab', { screen: 'Badges' } as never);
   }, [navigation]);
-
-  // ─── Boost access gate ─────────────────────────────────
-  const canUseBoost = packageTier !== 'FREE';
 
   // ─── Undo access gate — tier-based daily limits ─────────
   const canUseUndo = packageTier !== 'FREE';
@@ -413,29 +392,8 @@ export const DiscoveryScreen: React.FC = () => {
     setStreakData(null);
   }, []);
 
-  // ─── Boost state ────────────────────────────────────────
-  const [showBoostModal, setShowBoostModal] = useState(false);
-  const [boostStatus, setBoostStatus] = useState<BoostStatusResponse>({ isActive: false });
-  const goldBalanceFromStore = useCoinStore((s) => s.balance);
-  const [goldBalance, setGoldBalance] = useState(0);
-
-  // Sync gold balance from store on mount and when store changes
-  useEffect(() => {
-    setGoldBalance(goldBalanceFromStore);
-  }, [goldBalanceFromStore]);
-
-  const boostFetched = useRef(false);
-  useEffect(() => {
-    if (boostFetched.current) return;
-    boostFetched.current = true;
-    discoveryService.getBoostStatus().then(setBoostStatus).catch(() => {
-      // Boost status fetch is non-critical, silently ignore
-    });
-  }, []);
-
   // ─── FOMO engagement state ──────────────────────────────
   const isFreeTier = packageTier === 'FREE';
-  const isSaturdayBonus = DISCOVERY_CONFIG.IS_SATURDAY_BONUS;
 
   // FOMO: midnight countdown + teaser pulse (declared here, effects after hasMoreCards)
   const [midnightMs, setMidnightMs] = useState(getMsUntilMidnight());
@@ -454,20 +412,6 @@ export const DiscoveryScreen: React.FC = () => {
   }, [navigation]);
 
   // ─── Like sent toast removed (was too repetitive) ─────────
-
-  const handleBoostActivate = useCallback(async (durationMinutes: number) => {
-    const result = await discoveryService.activateBoost(durationMinutes);
-    if (result.success) {
-      setBoostStatus({ isActive: true, endsAt: result.endsAt, remainingSeconds: durationMinutes * 60 });
-      setGoldBalance(result.goldBalance);
-    }
-  }, []);
-
-  const handleBoostBuyGold = useCallback(() => {
-    setShowBoostModal(false);
-    navigation.navigate('MembershipPlans');
-  }, [navigation]);
-
 
   // Match detail state
   const [matchConversationStarters, setMatchConversationStarters] = useState<string[]>([]);
@@ -1251,33 +1195,6 @@ export const DiscoveryScreen: React.FC = () => {
               </View>
             </Pressable>
             <Pressable
-              onPress={() => {
-                if (canUseBoost) {
-                  setShowBoostModal(true);
-                } else {
-                  setUpgradeFeature('boost');
-                  setShowUpgradePrompt(true);
-                }
-              }}
-              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-              accessibilityLabel="Boost"
-              accessibilityRole="button"
-              accessibilityHint={canUseBoost ? 'Profilini öne çıkarmak için dokunun' : 'Premium pakete yükselt'}
-            >
-              <View style={[styles.filterButton, boostStatus.isActive && styles.boostButtonActive]} testID="discovery-boost-btn">
-                <Ionicons name="flash" size={18} color={colors.primary} />
-              </View>
-            </Pressable>
-            <Pressable
-              onPress={() => navigation.navigate('VideoFeed')}
-              accessibilityLabel="Video Kesfet"
-              accessibilityRole="button"
-            >
-              <View style={styles.filterButton}>
-                <Ionicons name="videocam" size={18} color={colors.primary} />
-              </View>
-            </Pressable>
-            <Pressable
               onPress={() => navigation.navigate('InstantConnect')}
               accessibilityLabel="Aninda Baglan"
               accessibilityRole="button"
@@ -1311,14 +1228,30 @@ export const DiscoveryScreen: React.FC = () => {
         <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} currentUserId={currentUserId} />
       </View>
 
-      {/* Saturday 2x bonus banner */}
-      {isSaturdayBonus && isFreeTier && (
-        <View style={styles.saturdayBanner} testID="discovery-saturday-banner">
-          <Text style={styles.saturdayBannerText}>
-            Hafta sonu bonusu! 2x begeni hakki {'\uD83C\uDF89'}
-          </Text>
-        </View>
-      )}
+      {/* Video Discover entry card */}
+      <Pressable
+        onPress={() => navigation.navigate('VideoFeed')}
+        style={styles.videoDiscoverCard}
+        accessibilityLabel="Video Kesfet"
+        accessibilityRole="button"
+        accessibilityHint="Video ile profilleri kesfetmek icin dokun"
+        testID="discovery-video-card"
+      >
+        <LinearGradient
+          colors={[palette.purple[600], palette.pink[500]] as [string, string, ...string[]]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.videoDiscoverGradient}
+        >
+          <View style={styles.videoDiscoverContent}>
+            <Text style={styles.videoDiscoverTitle}>Video Kesfet</Text>
+            <Text style={styles.videoDiscoverSubtitle}>Kisa videolarla insanlari kesfet</Text>
+          </View>
+          <View style={styles.videoDiscoverIconCircle}>
+            <Ionicons name="play" size={20} color={palette.purple[600]} />
+          </View>
+        </LinearGradient>
+      </Pressable>
 
       {/* Card stack */}
       <View style={styles.cardStack}>
@@ -1598,16 +1531,6 @@ export const DiscoveryScreen: React.FC = () => {
         />
       )}
 
-      {/* Boost modal */}
-      <BoostModal
-        visible={showBoostModal}
-        onClose={() => setShowBoostModal(false)}
-        goldBalance={goldBalance}
-        boostStatus={boostStatus}
-        onActivate={handleBoostActivate}
-        onBuyGold={handleBoostBuyGold}
-      />
-
       {/* ── Engagement Overlays ── */}
 
       {/* Daily reward modal — shows on first open each day */}
@@ -1618,12 +1541,6 @@ export const DiscoveryScreen: React.FC = () => {
 
       {/* Daily challenge floating pill */}
       <DailyChallenge variant="pill" />
-
-      {/* Flash boost time-limited offer */}
-      <FlashBoost
-        onPurchase={handleFlashBoostPurchase}
-        onDismiss={handleFlashBoostDismiss}
-      />
 
       {/* Achievement toast */}
       <AchievementToast onPress={handleAchievementToastPress} />
@@ -1694,10 +1611,6 @@ const styles = StyleSheet.create({
   filterIcon: {
     ...typography.bodyLarge,
     color: colors.text,
-  },
-  boostButtonActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary + '15',
   },
   instantConnectButton: {
     backgroundColor: palette.purple[600],
@@ -1972,10 +1885,48 @@ const styles = StyleSheet.create({
   fomoLikesEmoji: { fontSize: 12 },
   fomoLikesText: { fontSize: 12, fontFamily: 'Poppins_600SemiBold',
  fontWeight: '600', color: '#EF4444', letterSpacing: 0.2 },
-  // ── Saturday banner ──
-  saturdayBanner: { backgroundColor: palette.gold[500] + '18', borderWidth: 1, borderColor: palette.gold[500] + '30', borderRadius: borderRadius.md, marginHorizontal: spacing.lg, marginBottom: spacing.xs, paddingVertical: spacing.xs + 2, paddingHorizontal: spacing.md, alignItems: 'center' },
-  saturdayBannerText: { ...typography.caption, color: palette.gold[400], fontFamily: 'Poppins_600SemiBold',
- fontWeight: '600', letterSpacing: 0.3 },
+  // ── Video Discover card ──
+  videoDiscoverCard: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+    ...shadows.medium,
+    shadowColor: palette.purple[500],
+    shadowOpacity: 0.25,
+  },
+  videoDiscoverGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: spacing.md,
+  },
+  videoDiscoverContent: {
+    flex: 1,
+  },
+  videoDiscoverTitle: {
+    fontSize: 16,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: fontWeights.bold,
+    color: '#FFFFFF',
+    letterSpacing: 0.2,
+    marginBottom: 2,
+  },
+  videoDiscoverSubtitle: {
+    fontSize: 12,
+    fontWeight: fontWeights.regular,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  videoDiscoverIconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: spacing.md,
+  },
   // ── Teaser card ──
   teaserCard: { backgroundColor: colors.surface, borderRadius: borderRadius.xl, borderWidth: 2, paddingVertical: spacing.lg, paddingHorizontal: spacing.xl, alignItems: 'center', marginBottom: spacing.lg, width: SCREEN_WIDTH - spacing.xxl * 2, shadowColor: palette.gold[500], shadowOffset: { width: 0, height: 4 }, shadowRadius: 12, elevation: 6 },
   teaserAvatarRow: { flexDirection: 'row', marginBottom: spacing.sm },

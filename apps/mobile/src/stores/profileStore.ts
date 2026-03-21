@@ -44,6 +44,10 @@ export interface ProfileData {
   isIncognito: boolean;
   /** Timestamp (ms) when incognito expires, null = indefinite while active */
   incognitoExpiresAt: number | null;
+  /** Social stats — post, follower, following counts */
+  postCount: number;
+  followerCount: number;
+  followingCount: number;
 }
 
 interface ProfileState {
@@ -101,6 +105,9 @@ const initialProfile: ProfileData = {
   favoriteSpots: [],
   isIncognito: false,
   incognitoExpiresAt: null,
+  postCount: 0,
+  followerCount: 0,
+  followingCount: 0,
 };
 
 // Transform backend ProfileResponse to store ProfileData
@@ -134,6 +141,9 @@ const mapResponseToProfile = (data: ProfileResponse): ProfileData => {
     favoriteSpots: Array.isArray((data as { favoriteSpots?: ProfileData['favoriteSpots'] }).favoriteSpots) ? (data as { favoriteSpots?: ProfileData['favoriteSpots'] }).favoriteSpots! : [],
     isIncognito: (data as { isIncognito?: boolean }).isIncognito ?? false,
     incognitoExpiresAt: (data as { incognitoExpiresAt?: number | null }).incognitoExpiresAt ?? null,
+    postCount: (data as { postCount?: number }).postCount ?? 0,
+    followerCount: (data as { followerCount?: number }).followerCount ?? 0,
+    followingCount: (data as { followingCount?: number }).followingCount ?? 0,
   };
 };
 

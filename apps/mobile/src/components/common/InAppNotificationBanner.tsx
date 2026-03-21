@@ -213,13 +213,13 @@ export const InAppNotificationBanner: React.FC = () => {
       switch (parsed.screen) {
         case 'MatchDetail':
           nav.navigate('MainTabs', {
-            screen: 'MatchesTab',
+            screen: 'ProfileTab',
             params: { screen: 'MatchDetail', params: parsed.params },
           });
           break;
         case 'Chat':
           nav.navigate('MainTabs', {
-            screen: 'MatchesTab',
+            screen: 'ProfileTab',
             params: { screen: 'Chat', params: parsed.params },
           });
           break;
@@ -267,7 +267,7 @@ export const InAppNotificationBanner: React.FC = () => {
           break;
         case 'CompatibilityInsight':
           nav.navigate('MainTabs', {
-            screen: 'MatchesTab',
+            screen: 'ProfileTab',
             params: { screen: 'CompatibilityInsight', params: parsed.params },
           });
           break;
