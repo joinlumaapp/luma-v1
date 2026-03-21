@@ -10,12 +10,14 @@ import {
   StyleSheet,
   Animated,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 import { FEED_TOPICS, type FeedPost } from '../../services/socialFeedService';
 
-const CARD_PADDING = spacing.lg;
+const CARD_PADDING = spacing.lg + 2;
 
 // ─── Time Ago Helper ──────────────────────────────────────────
 
@@ -49,7 +51,12 @@ const MediaSection: React.FC<MediaSectionProps> = ({ photos, videoUrl }) => {
   if (videoUrl) {
     return (
       <View style={mediaStyles.videoContainer}>
-        <Image source={{ uri: videoUrl }} style={mediaStyles.videoThumb} />
+        <Image source={{ uri: videoUrl }} style={mediaStyles.videoThumb} resizeMode="cover" />
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.5)']}
+          style={mediaStyles.imageGradientOverlay}
+          pointerEvents="none"
+        />
         <View style={mediaStyles.playOverlay}>
           <View style={mediaStyles.playButton}>
             <Text style={mediaStyles.playIcon}>{'▶'}</Text>
@@ -67,7 +74,13 @@ const MediaSection: React.FC<MediaSectionProps> = ({ photos, videoUrl }) => {
   if (photos.length === 1) {
     return (
       <View style={mediaStyles.singleContainer}>
-        <Image source={{ uri: photos[0] }} style={mediaStyles.singlePhoto} />
+        <Image source={{ uri: photos[0] }} style={mediaStyles.singlePhoto} resizeMode="cover" />
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.45)']}
+          locations={[0.5, 1]}
+          style={mediaStyles.imageGradientOverlay}
+          pointerEvents="none"
+        />
       </View>
     );
   }
@@ -144,12 +157,17 @@ interface FeedCardProps {
 export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onSave, onFollow, onProfilePress }) => {
   const [expanded, setExpanded] = useState(false);
   const likeScale = useRef(new Animated.Value(1)).current;
+  const followScale = useRef(new Animated.Value(1)).current;
 
   const topicOption = FEED_TOPICS.find((t) => t.type === post.topic);
 
   const handleFollowPress = useCallback(() => {
+    Animated.sequence([
+      Animated.timing(followScale, { toValue: 0.9, duration: 80, useNativeDriver: true }),
+      Animated.spring(followScale, { toValue: 1, friction: 4, tension: 200, useNativeDriver: true }),
+    ]).start();
     onFollow(post.userId);
-  }, [onFollow, post.userId]);
+  }, [onFollow, post.userId, followScale]);
 
   const handleLikePress = useCallback(() => {
     Animated.sequence([
@@ -189,9 +207,21 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onS
   const isQuestion = post.postType === 'question';
   const isMusic = post.postType === 'music' && post.musicTitle && post.musicArtist;
 
+  // Generate deterministic view count from post id
+  const viewCount = ((post.id.charCodeAt(0) * 7 + post.id.charCodeAt(1) * 3) % 80) + 15;
+
+  // Build the subtitle line: distance + time
+  const timeAgo = formatTimeAgo(post.createdAt);
+  const subtitleParts: string[] = [];
+  if (post.distance > 0) {
+    subtitleParts.push(`${post.distance} km uzakta`);
+  }
+  subtitleParts.push(timeAgo);
+  const subtitleText = subtitleParts.join(' \u00B7 ');
+
   return (
     <View style={styles.card}>
-      {/* ── Top Section: Avatar, Name, Distance ── */}
+      {/* ── Top Section: Avatar, Name, Distance, Follow ── */}
       <View style={styles.userRow}>
         <TouchableOpacity onPress={handleProfilePress} activeOpacity={0.7}>
           <Image source={{ uri: post.userAvatarUrl }} style={styles.avatar} />
@@ -200,25 +230,27 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onS
           <View style={styles.nameRow}>
             <Text style={styles.userName}>{post.userName}</Text>
             {post.isVerified && <Text style={styles.verifiedBadge}>{'✓'}</Text>}
-            {post.distance > 0 && (
-              <>
-                <Text style={styles.dotSeparator}>{'•'}</Text>
-                <Text style={styles.distanceText}>{post.distance} km uzakta</Text>
-              </>
-            )}
           </View>
-          <Text style={styles.timeText}>{formatTimeAgo(post.createdAt)}</Text>
+          <Text style={styles.subtitleText}>{subtitleText}</Text>
         </TouchableOpacity>
         {!isOwnPost && (
-          <TouchableOpacity
-            style={[styles.followButton, post.isFollowing && styles.followButtonActive]}
-            onPress={handleFollowPress}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.followButtonText, post.isFollowing && styles.followButtonTextActive]}>
-              {post.isFollowing ? 'Takip Ediliyor' : 'Takip Et'}
-            </Text>
-          </TouchableOpacity>
+          <Animated.View style={{ transform: [{ scale: followScale }] }}>
+            <TouchableOpacity
+              style={[styles.followButton, post.isFollowing && styles.followButtonActive]}
+              onPress={handleFollowPress}
+              activeOpacity={0.7}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+            >
+              <Ionicons
+                name={post.isFollowing ? 'checkmark' : 'add'}
+                size={13}
+                color={post.isFollowing ? colors.textTertiary : palette.purple[400]}
+              />
+              <Text style={[styles.followButtonText, post.isFollowing && styles.followButtonTextActive]}>
+                {post.isFollowing ? 'Takip' : 'Takip Et'}
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
         )}
       </View>
 
@@ -269,49 +301,56 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onS
         </View>
       )}
 
-      {/* ── Bottom Section: Like, Comment, View Profile ── */}
+      {/* ── Bottom Section: Actions ── */}
       <View style={styles.actionRow}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={handleLikePress}
-          activeOpacity={0.7}
-        >
-          <Animated.Text
-            style={[
-              styles.actionIcon,
-              post.isLiked && styles.actionIconLiked,
-              { transform: [{ scale: likeScale }] },
-            ]}
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={handleLikePress}
+            activeOpacity={0.7}
           >
-            {post.isLiked ? '\uD83D\uDC9C' : '♡'}
-          </Animated.Text>
-          <Text style={[styles.actionCount, post.isLiked && styles.actionCountLiked]}>
-            {post.likeCount > 0 ? post.likeCount : ''}
-          </Text>
-        </TouchableOpacity>
+            <Animated.Text
+              style={[
+                styles.actionIcon,
+                post.isLiked && styles.actionIconLiked,
+                { transform: [{ scale: likeScale }] },
+              ]}
+            >
+              {post.isLiked ? '\uD83D\uDC9C' : '♡'}
+            </Animated.Text>
+            <Text style={[styles.actionCount, post.isLiked && styles.actionCountLiked]}>
+              {post.likeCount > 0 ? post.likeCount : ''}
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={handleCommentPress}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.actionIcon}>{'\uD83D\uDCAC'}</Text>
-          <Text style={styles.actionCount}>
-            {post.commentCount > 0 ? post.commentCount : ''}
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={handleCommentPress}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.actionIcon}>{'\uD83D\uDCAC'}</Text>
+            <Text style={styles.actionCount}>
+              {post.commentCount > 0 ? post.commentCount : ''}
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={handleSavePress}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.actionIcon, post.isSaved && styles.actionIconSaved]}>
-            {post.isSaved ? '\uD83D\uDD16' : '\u2606'}
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={handleSavePress}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.actionIcon, post.isSaved && styles.actionIconSaved]}>
+              {post.isSaved ? '\uD83D\uDD16' : '\u2606'}
+            </Text>
+          </TouchableOpacity>
 
-        <View style={{ flex: 1 }} />
+          <TouchableOpacity style={styles.actionButton} activeOpacity={0.7}>
+            <Text style={styles.actionIcon}>{'👀'}</Text>
+            <Text style={styles.actionCount}>{viewCount}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.actionSpacer} />
 
         {!isOwnPost && (
           <TouchableOpacity
@@ -319,7 +358,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onS
             onPress={handleProfilePress}
             activeOpacity={0.7}
           >
-            <Text style={styles.profileButtonText}>Profili Gör</Text>
+            <Text style={styles.profileButtonText} numberOfLines={1}>Profil</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -335,7 +374,9 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     padding: CARD_PADDING,
     marginHorizontal: spacing.md,
-    marginBottom: spacing.sm + 4,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
     ...shadows.small,
   },
   // User row
@@ -360,7 +401,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   userName: {
-    ...typography.body,
+    fontSize: 15,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
@@ -371,39 +412,38 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
-  dotSeparator: {
-    fontSize: 10,
-    color: colors.textTertiary,
-  },
-  distanceText: {
-    ...typography.caption,
-    color: colors.textTertiary,
-  },
-  timeText: {
+  subtitleText: {
     ...typography.caption,
     color: colors.textTertiary,
     marginTop: 2,
   },
   // Follow button
   followButton: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
+    flexShrink: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginLeft: spacing.sm,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: borderRadius.full,
-    backgroundColor: colors.primary,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: palette.purple[400] + '50',
   },
   followButtonActive: {
-    backgroundColor: colors.surfaceLight,
-    borderWidth: 1,
     borderColor: colors.surfaceBorder,
+    backgroundColor: 'transparent',
   },
   followButtonText: {
-    ...typography.captionSmall,
-    color: '#FFFFFF',
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontSize: 11,
+    lineHeight: 14,
+    color: palette.purple[400],
+    fontWeight: '500',
   },
   followButtonTextActive: {
-    color: colors.textSecondary,
+    color: colors.textTertiary,
+    fontWeight: '400',
   },
   // Topic badge
   topicBadge: {
@@ -461,23 +501,29 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
-  // Action row
+  // Action row — two-column: stats left, profile button right
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: spacing.sm,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.sm + 2,
     borderTopWidth: 1,
     borderTopColor: colors.divider,
-    gap: spacing.lg,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm + 2,
+    flexShrink: 1,
+    flexWrap: 'nowrap' as const,
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: 3,
   },
   actionIcon: {
-    fontSize: 20,
+    fontSize: 18,
     color: colors.textSecondary,
   },
   actionIconLiked: {
@@ -487,26 +533,34 @@ const styles = StyleSheet.create({
     color: palette.gold[600],
   },
   actionCount: {
-    ...typography.caption,
+    fontSize: 12,
     color: colors.textSecondary,
+    lineHeight: 16,
   },
   actionCountLiked: {
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
+  actionSpacer: {
+    flex: 1,
+    minWidth: 8,
+  },
   profileButton: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
+    flexShrink: 0,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: borderRadius.full,
     borderWidth: 1,
     borderColor: colors.primary,
+    marginLeft: 0,
   },
   profileButtonText: {
-    ...typography.captionSmall,
+    fontSize: 11,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
+    lineHeight: 14,
   },
 });
 
@@ -518,8 +572,9 @@ const mediaStyles = StyleSheet.create({
     borderRadius: borderRadius.md,
     overflow: 'hidden',
     marginBottom: spacing.sm,
-    height: 220,
+    height: 240,
     backgroundColor: colors.surfaceLight,
+    position: 'relative' as const,
   },
   videoThumb: {
     width: '100%',
@@ -560,15 +615,24 @@ const mediaStyles = StyleSheet.create({
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
+  // Gradient overlay for images
+  imageGradientOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '50%',
+  },
   // Photos
   singleContainer: {
     borderRadius: borderRadius.md,
     overflow: 'hidden',
     marginBottom: spacing.sm,
+    position: 'relative' as const,
   },
   singlePhoto: {
     width: '100%',
-    height: 220,
+    height: 240,
     backgroundColor: colors.surfaceLight,
   },
   doubleContainer: {

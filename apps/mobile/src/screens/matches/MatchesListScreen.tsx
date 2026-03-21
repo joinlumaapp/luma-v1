@@ -15,6 +15,8 @@ import {
   Animated,
   RefreshControl,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { CachedAvatar } from '../../components/common/CachedAvatar';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -36,6 +38,8 @@ import { formatMatchActivity, formatActivityStatus } from '../../utils/formatter
 import { TierIndicator } from '../../components/common/SubscriptionBadge';
 import { MatchCountdown } from '../../components/engagement/MatchCountdown';
 import { useEngagementStore } from '../../stores/engagementStore';
+import { useAuthStore } from '../../stores/authStore';
+import { palette } from '../../theme/colors';
 
 type MatchesNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'MatchesList'>;
 
@@ -665,6 +669,8 @@ export const MatchesListScreen: React.FC = () => {
   const [likesYouCount, setLikesYouCount] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const tabScrollRef = useRef<ScrollView>(null);
+  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE');
+  const isPremium = ['GOLD', 'PRO', 'RESERVED'].includes(packageTier);
 
   // Fetch profile visitors + likes-you count
   useEffect(() => {
@@ -769,6 +775,22 @@ export const MatchesListScreen: React.FC = () => {
     }
     return map;
   }, [conversations]);
+
+  // Dynamic subtitle for header
+  const totalUnread = useMemo(() => {
+    let count = 0;
+    for (const [, v] of unreadMap) count += v;
+    return count;
+  }, [unreadMap]);
+
+  const newMatchCount = useMemo(() => matches.filter((m) => m.isNew).length, [matches]);
+
+  const dynamicSubtitle = useMemo(() => {
+    if (totalUnread > 0) return `${totalUnread} okunmamış mesajın var 💬`;
+    if (newMatchCount > 0) return `Bugün ${newMatchCount} yeni eşleşme 💜`;
+    if (matches.length > 0) return 'Seni bekleyen eşleşmeler var ✨';
+    return 'Keşfet\'te yeni insanlar seni bekliyor';
+  }, [totalUnread, newMatchCount, matches.length]);
 
   const messagesList = useMemo(() => {
     const convMap = new Map(conversations.map((c) => [c.matchId, c]));
@@ -1017,9 +1039,16 @@ export const MatchesListScreen: React.FC = () => {
       {/* Header */}
       <View style={styles.darkHeaderArea}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Eşleşmeler</Text>
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+              <Text style={styles.headerTitle}>Eşleşmeler</Text>
+              <View style={styles.matchCountBadge}>
+                <Text style={styles.matchCountBadgeText}>{totalCount}</Text>
+              </View>
+            </View>
+            <Text style={styles.dynamicSubtitle}>{dynamicSubtitle}</Text>
+          </View>
           <Image source={require('../../../assets/splash-logo.png')} style={styles.headerLogo} resizeMode="contain" />
-          <Text style={styles.matchCount}>{totalCount} eşleşme</Text>
         </View>
       </View>
 
@@ -1034,21 +1063,29 @@ export const MatchesListScreen: React.FC = () => {
         style={styles.tabScrollView}
       >
         {([
-          { key: 'matches' as const, label: '\uD83D\uDC9E Eşleşmeler', isNav: false },
-          { key: 'messages' as const, label: '\uD83D\uDCAC Mesajlar', isNav: false },
-          { key: 'likes' as const, label: '\uD83D\uDC9C Beğenenler', isNav: true },
-          { key: 'viewers' as const, label: '\uD83D\uDC40 Seni Kim Gördü', isNav: false },
+          { key: 'matches' as const, label: 'Eşleşmeler', emoji: '💞', isNav: false, isPremiumOnly: false },
+          { key: 'messages' as const, label: 'Mesajlar', emoji: '💬', isNav: false, isPremiumOnly: false },
+          { key: 'likes' as const, label: 'Beğenenler', emoji: '💜', isNav: true, isPremiumOnly: true },
+          { key: 'viewers' as const, label: 'Kim Gördü', emoji: '👀', isNav: false, isPremiumOnly: true },
         ]).map((tab, tabIndex) => {
           const isActive = tab.isNav ? false : activeTab === tab.key;
+          const isLocked = tab.isPremiumOnly && !isPremium;
+          const badgeCount = tab.key === 'likes' ? likesYouCount
+            : tab.key === 'messages' ? totalUnread
+            : tab.key === 'viewers' ? viewersCount
+            : 0;
+
           return (
             <TouchableWithoutFeedback
               key={tab.key}
               onPress={() => {
                 if (tab.isNav) {
                   navigation.navigate('LikesYou');
+                } else if (isLocked && tab.key === 'viewers') {
+                  (navigation as { getParent?: () => { navigate: (s: string, p?: object) => void } | undefined })
+                    .getParent?.()?.navigate('ProfileTab', { screen: 'Packages' });
                 } else {
                   setActiveTab(tab.key as TabKey);
-                  // Auto-scroll to show active tab
                   if (tabIndex >= 2 && tabScrollRef.current) {
                     tabScrollRef.current.scrollToEnd({ animated: true });
                   } else if (tabScrollRef.current) {
@@ -1060,18 +1097,38 @@ export const MatchesListScreen: React.FC = () => {
               accessibilityRole="tab"
               accessibilityState={{ selected: isActive }}
             >
-              <View
-                style={[styles.tabChip, isActive && styles.tabChipActive]}
-                testID={`matches-tab-${tab.key}`}
-              >
-                <Text style={[styles.tabChipText, isActive && styles.tabChipTextActive]}>
-                  {tab.label}
-                </Text>
-                {tab.key === 'likes' && likesYouCount > 0 && (
-                  <View style={styles.tabBadge}>
-                    <Text style={styles.tabBadgeText}>
-                      {likesYouCount > 99 ? '99+' : likesYouCount}
-                    </Text>
+              <View testID={`matches-tab-${tab.key}`}>
+                {isActive ? (
+                  <LinearGradient
+                    colors={[palette.purple[500], palette.pink[500]]}
+                    style={styles.tabChipGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    <Text style={styles.tabChipEmoji}>{tab.emoji}</Text>
+                    <Text style={styles.tabChipTextActive}>{tab.label}</Text>
+                    {badgeCount > 0 && (
+                      <View style={styles.tabBadgeActive}>
+                        <Text style={styles.tabBadgeTextActive}>
+                          {badgeCount > 99 ? '99+' : badgeCount}
+                        </Text>
+                      </View>
+                    )}
+                  </LinearGradient>
+                ) : (
+                  <View style={styles.tabChip}>
+                    <Text style={styles.tabChipEmoji}>{tab.emoji}</Text>
+                    <Text style={styles.tabChipText}>{tab.label}</Text>
+                    {isLocked && (
+                      <Ionicons name="lock-closed" size={10} color={palette.gold[400]} style={{ marginLeft: 2 }} />
+                    )}
+                    {badgeCount > 0 && !isLocked && (
+                      <View style={styles.tabBadge}>
+                        <Text style={styles.tabBadgeText}>
+                          {badgeCount > 99 ? '99+' : badgeCount}
+                        </Text>
+                      </View>
+                    )}
                   </View>
                 )}
               </View>
@@ -1160,14 +1217,28 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   headerLogo: {
-    width: 52,
-    height: 52,
+    width: 44,
+    height: 44,
   },
-  matchCount: {
-    ...typography.bodySmall,
+  matchCountBadge: {
+    backgroundColor: palette.purple[500] + '20',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: palette.purple[500] + '30',
+  },
+  matchCountBadgeText: {
+    fontSize: 12,
+    color: palette.purple[400],
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+  },
+  dynamicSubtitle: {
+    fontSize: 12,
     color: colors.textSecondary,
-    flexShrink: 0,
-    marginLeft: spacing.sm,
+    marginTop: 3,
+    lineHeight: 16,
   },
   // ── Tabs ──
   tabScrollWrapper: {
@@ -1187,26 +1258,56 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: colors.surface,
     borderRadius: borderRadius.full,
-    paddingVertical: 10,
-    paddingHorizontal: spacing.md,
-    minHeight: 44,
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    minHeight: 40,
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 4,
   },
-  tabChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+  tabChipGradient: {
+    flexDirection: 'row',
+    borderRadius: borderRadius.full,
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    minHeight: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 4,
+    shadowColor: palette.purple[500],
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  tabChipEmoji: {
+    fontSize: 13,
   },
   tabChipText: {
-    fontSize: 13,
-    lineHeight: 20,
-    color: '#4A3728',
+    fontSize: 12,
+    lineHeight: 16,
+    color: colors.textSecondary,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   tabChipTextActive: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: '#FFFFFF',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+  },
+  tabBadgeActive: {
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    borderRadius: 8,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    marginLeft: 2,
+  },
+  tabBadgeTextActive: {
+    fontSize: 10,
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',

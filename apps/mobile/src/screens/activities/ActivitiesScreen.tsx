@@ -548,10 +548,24 @@ const limitStyles = StyleSheet.create({
 
 // ─── Suggested Activities Horizontal Section ────────────────────────────────
 
-const SuggestedActivities: React.FC = () => {
-  const handlePress = useCallback(() => {
-    Alert.alert('Yakinda!', 'Bu ozellik cok yakinda aktif olacak.');
-  }, []);
+// Map suggested activity IDs to filter keys for navigation
+const SUGGESTED_FILTER_MAP: Record<string, FilterKey> = {
+  sug1: 'chill',    // Sesli Sohbet → Chill activities
+  sug2: 'games',    // Mini Oyun → Game activities
+  sug3: 'flirt',    // Aksam Sohbeti → Flirt activities
+  sug4: 'chill',    // Film Izle → Chill activities
+  sug5: 'all',      // Sadece Sohbet → All activities
+};
+
+interface SuggestedActivitiesProps {
+  onFilterChange: (key: FilterKey) => void;
+}
+
+const SuggestedActivities: React.FC<SuggestedActivitiesProps> = ({ onFilterChange }) => {
+  const handlePress = useCallback((itemId: string) => {
+    const targetFilter = SUGGESTED_FILTER_MAP[itemId] ?? 'all';
+    onFilterChange(targetFilter);
+  }, [onFilterChange]);
 
   return (
     <View style={suggestedStyles.container}>
@@ -562,7 +576,7 @@ const SuggestedActivities: React.FC = () => {
         contentContainerStyle={suggestedStyles.scrollContent}
       >
         {SUGGESTED_ACTIVITIES.map((item) => (
-          <TouchableOpacity key={item.id} onPress={handlePress} activeOpacity={0.8}>
+          <TouchableOpacity key={item.id} onPress={() => handlePress(item.id)} activeOpacity={0.8}>
             <LinearGradient
               colors={item.gradientColors}
               style={suggestedStyles.card}
@@ -574,7 +588,7 @@ const SuggestedActivities: React.FC = () => {
               </View>
               <Text style={suggestedStyles.cardTitle} numberOfLines={2}>{item.title}</Text>
               <View style={suggestedStyles.comingSoon}>
-                <Text style={suggestedStyles.comingSoonText}>Yakinda</Text>
+                <Text style={suggestedStyles.comingSoonText}>Kesfet</Text>
               </View>
             </LinearGradient>
           </TouchableOpacity>
@@ -879,11 +893,16 @@ const chatPreviewStyles = StyleSheet.create({
 
 interface FlirtActionsProps {
   activityId: string;
+  activityTitle: string;
   isPremium: boolean;
   onNavigateDetail: (id: string) => void;
+  onNavigateChat: (id: string, title: string) => void;
+  onUpgrade: () => void;
 }
 
-const FlirtActions: React.FC<FlirtActionsProps> = ({ activityId, isPremium, onNavigateDetail }) => (
+const FlirtActions: React.FC<FlirtActionsProps> = ({
+  activityId, activityTitle, isPremium, onNavigateDetail, onNavigateChat, onUpgrade,
+}) => (
   <View style={flirtStyles.container}>
     <TouchableOpacity
       style={flirtStyles.chip}
@@ -898,10 +917,17 @@ const FlirtActions: React.FC<FlirtActionsProps> = ({ activityId, isPremium, onNa
       style={flirtStyles.chip}
       onPress={() => {
         if (!isPremium) {
-          Alert.alert('Premium Ozellik', 'Mesaj gonderme ozelligi Premium uyelere ozeldir.');
+          Alert.alert(
+            'Premium Ozellik',
+            'Katilimcilara mesaj gondermek icin Premium\'a yukselt.',
+            [
+              { text: 'Tamam', style: 'cancel' },
+              { text: 'Premium\'a Yukselt', onPress: onUpgrade },
+            ],
+          );
           return;
         }
-        onNavigateDetail(activityId);
+        onNavigateChat(activityId, activityTitle);
       }}
       activeOpacity={0.7}
     >
@@ -957,6 +983,8 @@ interface ActivityCardProps {
   onJoin: (id: string) => void;
   onPass: (id: string) => void;
   onPress: (id: string) => void;
+  onNavigateChat: (id: string, title: string) => void;
+  onUpgrade: () => void;
   isCurrentUser: boolean;
   hasJoined: boolean;
   isPremium: boolean;
@@ -970,6 +998,8 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
   onJoin,
   onPass,
   onPress,
+  onNavigateChat,
+  onUpgrade,
   isCurrentUser,
   hasJoined,
   isPremium,
@@ -1078,8 +1108,11 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
           {/* Flirt action chips */}
           <FlirtActions
             activityId={activity.id}
+            activityTitle={activity.title}
             isPremium={isPremium}
             onNavigateDetail={onPress}
+            onNavigateChat={onNavigateChat}
+            onUpgrade={onUpgrade}
           />
 
           {/* Chat preview */}
@@ -1320,20 +1353,30 @@ const cardStyles = StyleSheet.create({
 
 // ─── Empty State ─────────────────────────────────────────────────────────────
 
-const EmptyState: React.FC = () => (
-  <View style={emptyStyles.container}>
-    <LinearGradient
-      colors={[palette.purple[500] + '30', palette.pink[500] + '20']}
-      style={emptyStyles.iconCircle}
-    >
-      <Ionicons name="calendar" size={44} color={palette.purple[400]} />
-    </LinearGradient>
-    <Text style={emptyStyles.title}>Henuz aktivite yok</Text>
-    <Text style={emptyStyles.subtitle}>
-      {'Ilk aktiviteyi olusturarak\ntanismaya basla!'}
-    </Text>
-  </View>
-);
+const EMPTY_MESSAGES: Record<FilterKey, { title: string; subtitle: string }> = {
+  all: { title: 'Henuz aktivite yok', subtitle: 'Ilk aktiviteyi olusturarak\ntanismaya basla!' },
+  nearby: { title: 'Yakininda aktivite yok', subtitle: 'Baska filtreler deneyebilir veya\nyeni bir aktivite olusturabilirsin.' },
+  popular: { title: 'Populer aktivite bulunamadi', subtitle: 'Henuz yeterli katilim yok.\nIlk aktiviteyi sen baslat!' },
+  flirt: { title: 'Flort odakli aktivite yok', subtitle: 'Yeni bir bulusma aktivitesi\nolusturmaya ne dersin?' },
+  games: { title: 'Oyunlu aktivite yok', subtitle: 'Oyun Odasindan hemen\nbir oyun baslat!' },
+  chill: { title: 'Chill aktivite yok', subtitle: 'Rahat bir kahve bulusmasi\nolusturabilirsin.' },
+};
+
+const EmptyState: React.FC<{ filterKey?: FilterKey }> = ({ filterKey = 'all' }) => {
+  const msg = EMPTY_MESSAGES[filterKey];
+  return (
+    <View style={emptyStyles.container}>
+      <LinearGradient
+        colors={[palette.purple[500] + '30', palette.pink[500] + '20']}
+        style={emptyStyles.iconCircle}
+      >
+        <Ionicons name="calendar" size={44} color={palette.purple[400]} />
+      </LinearGradient>
+      <Text style={emptyStyles.title}>{msg.title}</Text>
+      <Text style={emptyStyles.subtitle}>{msg.subtitle}</Text>
+    </View>
+  );
+};
 
 const emptyStyles = StyleSheet.create({
   container: {
@@ -1757,7 +1800,11 @@ export const ActivitiesScreen: React.FC = () => {
   );
 
   const navigateToPackages = useCallback(() => {
-    (navigation as any).getParent()?.navigate('ProfileTab', { screen: 'Packages' });
+    (navigation as { getParent?: () => { navigate: (s: string, p?: object) => void } | undefined }).getParent?.()?.navigate('ProfileTab', { screen: 'Packages' });
+  }, [navigation]);
+
+  const handleNavigateChat = useCallback((activityId: string, activityTitle: string) => {
+    navigation.navigate('ActivityGroupChat', { activityId, activityTitle });
   }, [navigation]);
 
   const renderItem = useCallback(
@@ -1770,6 +1817,8 @@ export const ActivitiesScreen: React.FC = () => {
           onJoin={handleJoin}
           onPass={handlePass}
           onPress={handlePress}
+          onNavigateChat={handleNavigateChat}
+          onUpgrade={navigateToPackages}
           isCurrentUser={isCurrentUser}
           hasJoined={hasJoined}
           isPremium={premium}
@@ -1777,7 +1826,7 @@ export const ActivitiesScreen: React.FC = () => {
         />
       );
     },
-    [userId, handleJoin, handlePass, handlePress, premium, joinLimitReached],
+    [userId, handleJoin, handlePass, handlePress, handleNavigateChat, navigateToPackages, premium, joinLimitReached],
   );
 
   const keyExtractor = useCallback((item: Activity) => item.id, []);
@@ -1801,9 +1850,9 @@ export const ActivitiesScreen: React.FC = () => {
       )}
 
       {/* Suggested activities section */}
-      <SuggestedActivities />
+      <SuggestedActivities onFilterChange={setFilter} />
     </View>
-  ), [showBoostBanner, premium, joinLimitReached, dailyJoins, navigateToPackages]);
+  ), [showBoostBanner, premium, joinLimitReached, dailyJoins, navigateToPackages, setFilter]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -1843,7 +1892,7 @@ export const ActivitiesScreen: React.FC = () => {
           keyExtractor={keyExtractor}
           renderItem={renderItem}
           ListHeaderComponent={ListHeaderComponent}
-          ListEmptyComponent={<EmptyState />}
+          ListEmptyComponent={<EmptyState filterKey={filter} />}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           initialNumToRender={6}

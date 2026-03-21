@@ -37,6 +37,7 @@ import { generateExpandedReasons } from '../../utils/compatReasons';
 import { FavoriteSpotsCard } from '../../components/profile/FavoriteSpotsCard';
 import { CommonGroundCard } from '../../components/discovery/CommonGroundCard';
 import { useProfileStore } from '../../stores/profileStore';
+import { useCoinStore, SUPER_LIKE_COST } from '../../stores/coinStore';
 import { PaidMessageModal } from '../../components/messaging/PaidMessageModal';
 import { translateSmoking, translateSports, translateChildren, translateIntentionTag } from '../../utils/formatters';
 import { waveService } from '../../services/waveService';
@@ -431,6 +432,32 @@ export const ProfilePreviewScreen: React.FC = () => {
     navigation.goBack();
   };
 
+  const { sendSuperLike, balance: coinBalance } = useCoinStore();
+
+  const handleSuperLike = useCallback(async () => {
+    if (!profile) return;
+    if (coinBalance < SUPER_LIKE_COST) {
+      Alert.alert(
+        'Yetersiz Jeton',
+        `Super Like göndermek için ${SUPER_LIKE_COST} jeton gerekli. Mevcut: ${coinBalance}`,
+        [
+          { text: 'Tamam', style: 'cancel' },
+          {
+            text: 'Jeton Al',
+            onPress: () => (navigation as { getParent?: () => { navigate: (s: string, p?: object) => void } | undefined }).getParent?.()?.navigate('ProfileTab', { screen: 'Packages' }),
+          },
+        ],
+      );
+      return;
+    }
+    const success = await sendSuperLike(profile.id);
+    if (success) {
+      swipeAction('right', profile.id);
+      Alert.alert('Super Like! ⭐', `${profile.firstName} seni fark edecek!`);
+      navigation.goBack();
+    }
+  }, [profile, coinBalance, sendSuperLike, swipeAction, navigation]);
+
   // ── Loading state ──
   if (!profile) {
     return (
@@ -762,7 +789,18 @@ export const ProfilePreviewScreen: React.FC = () => {
     </View>
   );
 
-  // ── Footer: Premium glassmorphic action buttons (icon-only, no text) ──
+  // ── Footer: Premium 4-button action bar with clear hierarchy ──
+  // Pulse animation for Super Like
+  const superLikePulse = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(superLikePulse, { toValue: 1.08, duration: 1200, useNativeDriver: true }),
+        Animated.timing(superLikePulse, { toValue: 1, duration: 1200, useNativeDriver: true }),
+      ]),
+    ).start();
+  }, [superLikePulse]);
+
   const footer = (
     <LinearGradient
       colors={['transparent', colors.background + 'CC', colors.background] as [string, string, ...string[]]}
@@ -770,35 +808,56 @@ export const ProfilePreviewScreen: React.FC = () => {
       style={[styles.actionsBar, { paddingBottom: insets.bottom + spacing.sm }]}
       pointerEvents="box-none"
     >
-      {/* Pass — deep red glow */}
-      <GlassActionButton
-        icon="close"
-        iconSize={28}
-        glowColor="#DC2626"
-        size={62}
-        onPress={() => handleSwipe('left')}
-        accessibilityLabel="Geç"
-      />
+      {/* Pass — secondary, low emphasis */}
+      <View style={styles.actionItem}>
+        <GlassActionButton
+          icon="close"
+          iconSize={24}
+          glowColor="#DC2626"
+          size={52}
+          onPress={() => handleSwipe('left')}
+          accessibilityLabel="Geç"
+        />
+      </View>
 
-      {/* Message — premium blue glow */}
-      <GlassActionButton
-        icon="mail-outline"
-        iconSize={22}
-        glowColor="#3B82F6"
-        size={50}
-        onPress={() => setShowPaidMessageModal(true)}
-        accessibilityLabel="Mesaj Gönder"
-      />
+      {/* Message — medium emphasis */}
+      <View style={styles.actionItem}>
+        <GlassActionButton
+          icon="chatbubble-outline"
+          iconSize={20}
+          glowColor="#3B82F6"
+          size={48}
+          onPress={() => setShowPaidMessageModal(true)}
+          accessibilityLabel="Mesaj Gönder"
+        />
+      </View>
 
-      {/* Like — purple glow */}
-      <GlassActionButton
-        icon="heart"
-        iconSize={28}
-        glowColor={palette.purple[500]}
-        size={62}
-        onPress={() => handleSwipe('right')}
-        accessibilityLabel="Beğen"
-      />
+      {/* Like — PRIMARY, largest */}
+      <View style={styles.actionItem}>
+        <GlassActionButton
+          icon="heart"
+          iconSize={30}
+          glowColor={palette.purple[500]}
+          size={64}
+          onPress={() => handleSwipe('right')}
+          accessibilityLabel="Beğen"
+        />
+      </View>
+
+      {/* Super Like — PREMIUM, gold elevated with label + pulse */}
+      <View style={styles.actionItem}>
+        <Animated.View style={{ transform: [{ scale: superLikePulse }] }}>
+          <GlassActionButton
+            icon="star"
+            iconSize={24}
+            glowColor="#D4AF37"
+            size={52}
+            onPress={handleSuperLike}
+            accessibilityLabel="Super Like"
+          />
+        </Animated.View>
+        <Text style={styles.superLikeLabel}>Öne Çık</Text>
+      </View>
     </LinearGradient>
   );
 
@@ -1160,8 +1219,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'flex-end',
-    gap: 28,
+    gap: 16,
     paddingTop: 40,
     paddingBottom: spacing.md,
+  },
+  actionItem: {
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  superLikeLabel: {
+    fontSize: 9,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: '#D4AF37',
+    marginTop: 4,
+    letterSpacing: 0.3,
+    textAlign: 'center',
   },
 });
