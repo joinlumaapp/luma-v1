@@ -1,5 +1,5 @@
-// Likes You screen — "Beğenenler" — engaging grid with hints, highlights, and curiosity hooks
-// #1 monetization driver: Free users see blurred photos with hints + Gold upgrade CTA.
+// Likes You screen — "Beğenenler" — premium redesign with curiosity hooks, elegant upsell, clear hierarchy
+// #1 monetization driver: Free users see blurred photos with hints + Premium upgrade CTA.
 // Gold+ users see clear photos with tap-to-preview navigation.
 // Performance: InteractionManager deferred fetch, memoized cards, FlatList tuning.
 
@@ -16,7 +16,10 @@ import {
   InteractionManager,
   RefreshControl,
   Platform,
+  Modal,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { CompositeNavigationProp } from '@react-navigation/native';
@@ -29,7 +32,7 @@ import { useAuthStore, type PackageTier } from '../../stores/authStore';
 import { LIKES_VIEW_CONFIG } from '../../constants/config';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { SlideIn } from '../../components/animations/SlideIn';
-import { colors } from '../../theme/colors';
+import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 
@@ -69,6 +72,22 @@ const getCompatColor = (percent: number): string => {
   return colors.textSecondary;
 };
 
+// Determine smart label for a card
+const getSmartLabel = (card: LikeYouCard, likes: LikeYouCard[]): string | null => {
+  // Highest compatibility
+  const maxCompat = Math.max(...likes.map((l) => l.compatibilityPercent));
+  if (card.compatibilityPercent === maxCompat && card.compatibilityPercent >= 80) return 'En yüksek uyum';
+  // Nearest
+  if (card.distanceKm != null && card.distanceKm < 2) return 'Sana yakın';
+  // Most shared interests
+  const maxShared = Math.max(...likes.map((l) => l.sharedInterests ?? 0));
+  if ((card.sharedInterests ?? 0) === maxShared && maxShared >= 3) return 'Yüksek uyum';
+  // Recent
+  const diffMs = Date.now() - new Date(card.likedAt).getTime();
+  if (diffMs < 3600_000) return 'Yeni beğeni';
+  return null;
+};
+
 // ─── Skeleton shimmer card ────────────────────────────────────
 
 const SKELETON_COUNT = 6;
@@ -104,21 +123,192 @@ const SkeletonCard: React.FC<{ index: number }> = ({ index }) => {
   );
 };
 
+// ─── Premium Unlock Modal ───────────────────────────────────
+
+interface UnlockModalProps {
+  visible: boolean;
+  card: LikeYouCard | null;
+  onUpgrade: () => void;
+  onDismiss: () => void;
+  onFreePreview: () => void;
+  hasFreePreview: boolean;
+}
+
+const UnlockModal = memo<UnlockModalProps>(({
+  visible, card, onUpgrade, onDismiss, onFreePreview, hasFreePreview,
+}) => {
+  if (!card) return null;
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onDismiss}
+    >
+      <Pressable style={styles.modalOverlay} onPress={onDismiss}>
+        <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+          {/* Blurred preview */}
+          <View style={styles.modalPhotoContainer}>
+            <Image
+              source={{ uri: card.photoUrl }}
+              style={styles.modalPhoto}
+              blurRadius={25}
+            />
+            <LinearGradient
+              colors={['transparent', 'rgba(20, 20, 34, 0.95)']}
+              style={styles.modalPhotoGradient}
+            />
+            <View style={styles.modalLockRing}>
+              <LinearGradient
+                colors={[palette.purple[400], palette.pink[400]]}
+                style={styles.modalLockGradient}
+              >
+                <Ionicons name="lock-closed" size={24} color="#FFFFFF" />
+              </LinearGradient>
+            </View>
+          </View>
+
+          {/* Info */}
+          <View style={styles.modalInfo}>
+            <Text style={styles.modalTitle}>Seni beğenen kişiyi gör</Text>
+            <Text style={styles.modalSubtitle}>
+              Kilidi aç, eşleş ve hemen konuşmaya başla
+            </Text>
+
+            {/* Compat hint */}
+            <View style={styles.modalHintRow}>
+              <View style={styles.modalHintChip}>
+                <Text style={styles.modalHintText}>%{card.compatibilityPercent} uyum</Text>
+              </View>
+              {card.distanceKm != null && (
+                <View style={styles.modalHintChip}>
+                  <Text style={styles.modalHintText}>{formatDistance(card.distanceKm)}</Text>
+                </View>
+              )}
+              {(card.sharedInterests ?? 0) > 0 && (
+                <View style={styles.modalHintChip}>
+                  <Text style={styles.modalHintText}>{card.sharedInterests} uyum noktası</Text>
+                </View>
+              )}
+            </View>
+
+            {/* CTA */}
+            <Pressable onPress={onUpgrade}>
+              <LinearGradient
+                colors={[palette.purple[500], palette.pink[500]]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.modalCtaButton}
+              >
+                <Ionicons name="diamond" size={18} color="#FFFFFF" />
+                <Text style={styles.modalCtaText}>Premium'a Geç</Text>
+              </LinearGradient>
+            </Pressable>
+
+            {hasFreePreview && (
+              <Pressable onPress={onFreePreview} style={styles.modalFreePreviewBtn}>
+                <Text style={styles.modalFreePreviewText}>Ücretsiz önizleme kullan</Text>
+              </Pressable>
+            )}
+
+            <Pressable onPress={onDismiss} style={styles.modalDismissBtn}>
+              <Text style={styles.modalDismissText}>Daha Sonra</Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+});
+UnlockModal.displayName = 'UnlockModal';
+
+// ─── Animated Lock with Progress Ring ────────────────────────
+
+const AnimatedLock: React.FC<{ index: number }> = ({ index }) => {
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const glowAnim = useRef(new Animated.Value(0.2)).current;
+
+  useEffect(() => {
+    // Pulse the lock icon
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.08, duration: 1200, delay: index * 300, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 1200, useNativeDriver: true }),
+      ]),
+    );
+    // Glow aura
+    const glow = Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowAnim, { toValue: 0.5, duration: 1500, delay: index * 200, useNativeDriver: true }),
+        Animated.timing(glowAnim, { toValue: 0.2, duration: 1500, useNativeDriver: true }),
+      ]),
+    );
+    pulse.start();
+    glow.start();
+    return () => { pulse.stop(); glow.stop(); };
+  }, [pulseAnim, glowAnim, index]);
+
+  // Fake progress ring — random 80-95%
+  const progress = useMemo(() => 0.80 + (index * 0.05) % 0.16, [index]);
+
+  return (
+    <View style={styles.lockCenter}>
+      {/* Glow aura behind */}
+      <Animated.View style={[styles.lockGlowAura, { opacity: glowAnim }]} />
+
+      {/* SVG-like progress ring using border trick */}
+      <View style={styles.progressRingContainer}>
+        {/* Background ring */}
+        <View style={styles.progressRingBg} />
+        {/* Filled ring — we use a gradient border overlay */}
+        <View style={[styles.progressRingFill, { borderTopColor: 'transparent', transform: [{ rotate: `${progress * 360}deg` }] }]} />
+      </View>
+
+      {/* Lock icon */}
+      <Animated.View style={[styles.lockIconContainer, { transform: [{ scale: pulseAnim }] }]}>
+        <LinearGradient
+          colors={[palette.purple[400], palette.pink[400]]}
+          style={styles.lockGradientCircle}
+        >
+          <Ionicons name="lock-closed" size={14} color="#FFFFFF" />
+        </LinearGradient>
+      </Animated.View>
+    </View>
+  );
+};
+
 // ─── Like card (blurred or clear) with hints ─────────────────
 
 interface LikeCardProps {
   card: LikeYouCard;
   index: number;
   isBlurred: boolean;
+  smartLabel: string | null;
   onCardPress: (userId: string) => void;
 }
 
-const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, onCardPress }) => {
+const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, smartLabel, onCardPress }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const badgeBounce = useRef(new Animated.Value(0)).current;
+
+  // Smart label bounce on mount
+  useEffect(() => {
+    if (!smartLabel) return;
+    Animated.sequence([
+      Animated.delay(index * 80 + 300),
+      Animated.spring(badgeBounce, {
+        toValue: 1,
+        tension: 200,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [badgeBounce, smartLabel, index]);
 
   const handlePressIn = useCallback(() => {
     Animated.spring(scaleAnim, {
-      toValue: 0.95, tension: 200, friction: 10, useNativeDriver: true,
+      toValue: 1.03, tension: 200, friction: 10, useNativeDriver: true,
     }).start();
   }, [scaleAnim]);
 
@@ -133,6 +323,11 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, onCardPress }) =
   }, [card.userId, onCardPress]);
 
   const compatColor = getCompatColor(card.compatibilityPercent);
+
+  const badgeScale = badgeBounce.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.5, 1],
+  });
 
   return (
     <SlideIn direction="up" delay={index * 60} distance={20}>
@@ -155,22 +350,34 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, onCardPress }) =
           <Image
             source={{ uri: card.photoUrl }}
             style={styles.cardPhoto}
-            blurRadius={isBlurred ? 15 : 0}
+            blurRadius={isBlurred ? 20 : 0}
           />
 
-          {/* Blur overlay with lock */}
+          {/* Blur overlay with animated lock + progress ring */}
           {isBlurred && (
             <View style={styles.blurOverlay}>
-              <View style={styles.lockIconContainer}>
-                <Text style={styles.lockIcon}>{'\uD83D\uDD12'}</Text>
+              <View style={styles.lockPositioner}>
+                <AnimatedLock index={index} />
               </View>
             </View>
           )}
 
+          {/* Smart label with bounce */}
+          {smartLabel && (
+            <Animated.View style={[styles.smartLabelContainer, { transform: [{ scale: badgeScale }] }]}>
+              <LinearGradient
+                colors={[palette.purple[500] + 'E0', palette.pink[500] + 'E0']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.smartLabelGradient}
+              >
+                <Text style={styles.smartLabelText}>{smartLabel}</Text>
+              </LinearGradient>
+            </Animated.View>
+          )}
+
           {/* Compatibility badge */}
-          <View
-            style={[styles.compatBadge, { backgroundColor: compatColor + '20' }]}
-          >
+          <View style={[styles.compatBadge, { backgroundColor: compatColor + '25', borderColor: compatColor + '40' }]}>
             <Text style={[styles.compatBadgeText, { color: compatColor }]}>
               %{card.compatibilityPercent}
             </Text>
@@ -179,29 +386,41 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, onCardPress }) =
           {/* Comment indicator badge */}
           {!isBlurred && card.comment && (
             <View style={styles.commentBadge}>
-              <Text style={styles.commentBadgeIcon}>{'\uD83D\uDCAC'}</Text>
+              <Ionicons name="chatbubble" size={10} color="#FFFFFF" />
             </View>
           )}
 
-          {/* Bottom info overlay */}
-          <View style={styles.cardInfoOverlay}>
+          {/* Bottom info overlay — glassmorphism feel */}
+          <LinearGradient
+            colors={['transparent', 'rgba(8, 8, 15, 0.50)', 'rgba(8, 8, 15, 0.90)']}
+            locations={[0, 0.25, 1]}
+            style={styles.cardInfoOverlay}
+          >
             <Text style={styles.cardName} numberOfLines={1}>
               {isBlurred ? '...' : `${card.firstName}, ${card.age}`}
             </Text>
 
-            {/* Hints row — always visible (even blurred) to create curiosity */}
-            <View style={styles.hintsRow}>
-              {card.distanceKm != null && (
-                <Text style={styles.hintText}>
-                  {formatDistance(card.distanceKm)}
-                </Text>
-              )}
-              {card.sharedInterests != null && card.sharedInterests > 0 && (
-                <Text style={styles.hintText}>
-                  {card.sharedInterests} ortak
-                </Text>
-              )}
-            </View>
+            {/* Hint pills — glassmorphism style */}
+            {(card.distanceKm != null || (card.sharedInterests != null && card.sharedInterests > 0)) && (
+              <View style={styles.hintsRow}>
+                {card.distanceKm != null && (
+                  <View style={styles.hintChip}>
+                    <Ionicons name="location-outline" size={9} color="rgba(255,255,255,0.85)" />
+                    <Text style={styles.hintText}>
+                      {formatDistance(card.distanceKm)}
+                    </Text>
+                  </View>
+                )}
+                {card.sharedInterests != null && card.sharedInterests > 0 && (
+                  <View style={styles.hintChip}>
+                    <Ionicons name="sparkles-outline" size={9} color="rgba(255,255,255,0.85)" />
+                    <Text style={styles.hintText}>
+                      {card.sharedInterests} uyum noktası
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
 
             {/* Comment for unlocked cards */}
             {!isBlurred && card.comment && (
@@ -209,7 +428,7 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, onCardPress }) =
                 {`"${card.comment}"`}
               </Text>
             )}
-          </View>
+          </LinearGradient>
         </Animated.View>
       </Pressable>
     </SlideIn>
@@ -218,6 +437,7 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, onCardPress }) =
   prev.card.userId === next.card.userId &&
   prev.isBlurred === next.isBlurred &&
   prev.index === next.index &&
+  prev.smartLabel === next.smartLabel &&
   prev.card.compatibilityPercent === next.card.compatibilityPercent &&
   prev.card.comment === next.card.comment
 ));
@@ -234,53 +454,85 @@ interface HighlightCardProps {
 }
 
 const HighlightCard = memo<HighlightCardProps>(({ type, card, isBlurred, onPress }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
   const title = type === 'most_compatible'
     ? 'En uyumlu beğeni'
     : 'Yakınında seni beğenen biri var';
 
   const subtitle = type === 'most_compatible'
-    ? `%${card.compatibilityPercent} uyum${card.sharedInterests ? ` \u2022 ${card.sharedInterests} ortak ilgi` : ''}`
-    : `${card.distanceKm != null ? formatDistance(card.distanceKm) + ' uzaklıkta' : ''}${card.sharedInterests ? ` \u2022 ${card.sharedInterests} ortak ilgi` : ''}`;
+    ? `%${card.compatibilityPercent} uyum${card.sharedInterests ? ` \u2022 ${card.sharedInterests} uyum noktası` : ''}`
+    : `${card.distanceKm != null ? formatDistance(card.distanceKm) + ' uzaklıkta' : ''}${card.sharedInterests ? ` \u2022 ${card.sharedInterests} uyum noktası` : ''}`;
 
-  const badgeColor = type === 'most_compatible' ? colors.success : '#D4AF37';
-  const ringColor = type === 'most_compatible'
-    ? 'rgba(16, 185, 129, 0.40)'
-    : 'rgba(212, 175, 55, 0.40)';
+  const isCompat = type === 'most_compatible';
+  const accentColor = isCompat ? colors.success : palette.gold[400];
+  const iconName = isCompat ? 'sparkles' : 'location';
+  const gradientColors = isCompat
+    ? [colors.success + '12', colors.success + '06'] as [string, string]
+    : [palette.gold[400] + '12', palette.gold[400] + '06'] as [string, string];
+
+  const handlePressIn = useCallback(() => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.97, tension: 200, friction: 10, useNativeDriver: true,
+    }).start();
+  }, [scaleAnim]);
+
+  const handlePressOut = useCallback(() => {
+    Animated.spring(scaleAnim, {
+      toValue: 1, tension: 200, friction: 10, useNativeDriver: true,
+    }).start();
+  }, [scaleAnim]);
 
   return (
     <Pressable
       onPress={() => onPress(card.userId)}
-      style={styles.highlightCard}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
       accessibilityLabel={title}
       accessibilityRole="button"
     >
-      <View style={[styles.highlightPhotoWrap, { borderColor: ringColor }]}>
-        <Image
-          source={{ uri: card.photoUrl }}
-          style={styles.highlightPhoto}
-          blurRadius={isBlurred ? 20 : 0}
-        />
-        {isBlurred && (
-          <View style={styles.highlightBlurOverlay}>
-            <Text style={styles.highlightLockIcon}>{'\uD83D\uDD12'}</Text>
+      <Animated.View style={[{ transform: [{ scale: scaleAnim }] }]}>
+        <LinearGradient
+          colors={gradientColors}
+          style={styles.highlightCard}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          {/* Photo */}
+          <View style={[styles.highlightPhotoWrap, { borderColor: accentColor + '50' }]}>
+            <Image
+              source={{ uri: card.photoUrl }}
+              style={styles.highlightPhoto}
+              blurRadius={isBlurred ? 20 : 0}
+            />
+            {isBlurred && (
+              <View style={styles.highlightBlurOverlay}>
+                <Ionicons name="lock-closed" size={16} color="rgba(255,255,255,0.8)" />
+              </View>
+            )}
           </View>
-        )}
-      </View>
-      <View style={styles.highlightInfo}>
-        <View style={[styles.highlightBadge, { backgroundColor: badgeColor + '18' }]}>
-          <Text style={[styles.highlightBadgeText, { color: badgeColor }]}>
-            {type === 'most_compatible' ? '\u2728' : '\uD83D\uDCCD'} {title}
-          </Text>
-        </View>
-        <Text style={styles.highlightName} numberOfLines={1}>
-          {isBlurred ? '... yaşında biri' : `${card.firstName}, ${card.age}`}
-        </Text>
-        <Text style={styles.highlightSubtitle}>{subtitle}</Text>
-        <Text style={styles.highlightTime}>{formatLikedAgo(card.likedAt)}</Text>
-      </View>
-      <View style={[styles.highlightArrow, { backgroundColor: badgeColor + '15', borderWidth: 1, borderColor: badgeColor + '25' }]}>
-        <Text style={[styles.highlightArrowText, { color: badgeColor }]}>{'\u203A'}</Text>
-      </View>
+
+          {/* Info */}
+          <View style={styles.highlightInfo}>
+            <View style={[styles.highlightBadge, { backgroundColor: accentColor + '18' }]}>
+              <Ionicons name={iconName} size={10} color={accentColor} />
+              <Text style={[styles.highlightBadgeText, { color: accentColor }]}>
+                {title}
+              </Text>
+            </View>
+            <Text style={styles.highlightName} numberOfLines={1}>
+              {isBlurred ? '... yaşında biri' : `${card.firstName}, ${card.age}`}
+            </Text>
+            <Text style={styles.highlightSubtitle}>{subtitle}</Text>
+            <Text style={styles.highlightTime}>{formatLikedAgo(card.likedAt)}</Text>
+          </View>
+
+          {/* Arrow button */}
+          <View style={[styles.highlightArrow, { borderColor: accentColor + '30' }]}>
+            <Ionicons name="chevron-forward" size={18} color={accentColor} />
+          </View>
+        </LinearGradient>
+      </Animated.View>
     </Pressable>
   );
 });
@@ -319,6 +571,10 @@ export const LikesYouScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // Unlock modal state
+  const [modalCard, setModalCard] = useState<LikeYouCard | null>(null);
+  const [showModal, setShowModal] = useState(false);
+
   // ─── Data fetching ──────────────────────────────────────────
 
   const fetchLikes = useCallback(async () => {
@@ -356,10 +612,19 @@ export const LikesYouScreen: React.FC = () => {
   const nearestLike = useMemo(() => {
     const withDistance = likes.filter((l) => l.distanceKm != null && l.distanceKm < 5);
     if (withDistance.length === 0) return null;
-    // Find the nearest one that isn't the same as mostCompatible
     const sorted = [...withDistance].sort((a, b) => (a.distanceKm ?? 999) - (b.distanceKm ?? 999));
     return sorted.find((l) => l.userId !== mostCompatible?.userId) ?? sorted[0];
   }, [likes, mostCompatible]);
+
+  // Smart labels map
+  const smartLabelsMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const like of likes) {
+      const label = getSmartLabel(like, likes);
+      if (label) map.set(like.userId, label);
+    }
+    return map;
+  }, [likes]);
 
   // ─── Navigation handlers ────────────────────────────────────
 
@@ -370,6 +635,17 @@ export const LikesYouScreen: React.FC = () => {
       navigation.navigate('ProfilePreview', { userId });
       return;
     }
+
+    // If blurred and tapped — show unlock modal
+    if (isBlurred) {
+      const card = likes.find((l) => l.userId === userId);
+      if (card) {
+        setModalCard(card);
+        setShowModal(true);
+      }
+      return;
+    }
+
     if (!isUnlimitedViews && viewedToday >= dailyLimit) {
       navigation.navigate('MembershipPlans' as never);
       return;
@@ -379,11 +655,25 @@ export const LikesYouScreen: React.FC = () => {
       setUnlockedUserIds((prev) => new Set(prev).add(userId));
     }
     navigation.navigate('ProfilePreview', { userId });
-  }, [navigation, isUnlimitedViews, viewedToday, dailyLimit, unlockedUserIds]);
+  }, [navigation, isBlurred, isUnlimitedViews, viewedToday, dailyLimit, unlockedUserIds, likes]);
 
   const handleUpgradePress = useCallback(() => {
+    setShowModal(false);
     navigation.navigate('MembershipPlans' as never);
   }, [navigation]);
+
+  const handleModalFreePreview = useCallback(() => {
+    if (!modalCard) return;
+    setShowModal(false);
+    setViewedToday((prev) => prev + 1);
+    setUnlockedUserIds((prev) => new Set(prev).add(modalCard.userId));
+    navigation.navigate('ProfilePreview', { userId: modalCard.userId });
+  }, [modalCard, navigation]);
+
+  const handleModalDismiss = useCallback(() => {
+    setShowModal(false);
+    setModalCard(null);
+  }, []);
 
   const handleDiscoverPress = useCallback(() => {
     navigation.goBack();
@@ -400,11 +690,12 @@ export const LikesYouScreen: React.FC = () => {
           card={item}
           index={index}
           isBlurred={cardBlurred}
+          smartLabel={smartLabelsMap.get(item.userId) ?? null}
           onCardPress={handleCardPress}
         />
       );
     },
-    [isBlurred, unlockedUserIds, handleCardPress],
+    [isBlurred, unlockedUserIds, handleCardPress, smartLabelsMap],
   );
 
   const keyExtractor = useCallback((item: LikeYouCard) => item.userId, []);
@@ -412,16 +703,21 @@ export const LikesYouScreen: React.FC = () => {
   const renderEmpty = useCallback(() => (
     <View style={styles.emptyContainer}>
       <View style={styles.emptyIconCircle}>
-        <Text style={styles.emptyHeartIcon}>{'\u2665'}</Text>
+        <Ionicons name="heart" size={36} color={colors.primary} />
       </View>
       <Text style={styles.emptyTitle}>Henüz seni beğenen yok</Text>
       <Text style={styles.emptySubtitle}>
         Profilini tamamla ve keşfette aktif ol.{'\n'}Beğenenler burada görünecek.
       </Text>
       <Pressable onPress={handleDiscoverPress}>
-        <View style={styles.ctaButton} testID="likes-you-discover-btn">
+        <LinearGradient
+          colors={[palette.purple[500], palette.pink[500]]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.ctaButton}
+        >
           <Text style={styles.ctaButtonText}>Keşfet</Text>
-        </View>
+        </LinearGradient>
       </Pressable>
     </View>
   ), [handleDiscoverPress]);
@@ -429,19 +725,37 @@ export const LikesYouScreen: React.FC = () => {
   const renderHeader = useCallback(() => {
     const elements: React.ReactNode[] = [];
 
-    // Summary banner — "Seni X kişi beğendi"
+    // ── Summary card — "Seni X kişi beğendi" ──
     if (total > 0) {
       elements.push(
-        <View key="summary-banner" style={styles.summaryBanner}>
-          <Text style={styles.summaryIcon}>{'\uD83D\uDC9C'}</Text>
-          <Text style={styles.summaryText}>
-            Seni <Text style={styles.summaryCount}>{total} kişi</Text> beğendi
-          </Text>
+        <View key="summary-card" style={styles.summaryCard}>
+          <LinearGradient
+            colors={[palette.purple[500] + '15', palette.pink[500] + '08', 'transparent']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.summaryCardGradient}
+          >
+            <View style={styles.summaryIconCircle}>
+              <Ionicons name="heart" size={22} color={palette.purple[400]} />
+            </View>
+            <View style={styles.summaryTextContainer}>
+              <Text style={styles.summaryMainText}>
+                Seni <Text style={styles.summaryCountHighlight}>{total} kişi</Text> beğendi
+              </Text>
+              <Text style={styles.summarySubText}>
+                {isBlurred
+                  ? viewsRemaining > 0
+                    ? 'İlk profili ücretsiz görüntüle'
+                    : 'Premium ile hepsini keşfet'
+                  : 'Profillere dokunarak keşfet'}
+              </Text>
+            </View>
+          </LinearGradient>
         </View>,
       );
     }
 
-    // Highlight cards
+    // ── Highlight cards ──
     if (mostCompatible && likes.length >= 3) {
       const isUnlocked = unlockedUserIds.has(mostCompatible.userId);
       elements.push(
@@ -468,51 +782,85 @@ export const LikesYouScreen: React.FC = () => {
       );
     }
 
-    // View limit info banner
-    if (!isUnlimitedViews && likes.length > 0) {
+    // ── Free preview status card ──
+    if (!isUnlimitedViews && likes.length > 0 && isBlurred) {
       elements.push(
-        <View key="limit-banner" style={styles.viewLimitBanner}>
-          <Text style={styles.viewLimitText}>
-            {viewsRemaining > 0
-              ? `Bugün ${viewsRemaining}/${dailyLimit} profil görüntüleme hakkın kaldı`
-              : 'Günlük profil görüntüleme limitine ulaştın'}
-          </Text>
-          {viewsRemaining <= 0 && (
-            <Pressable onPress={handleUpgradePress}>
-              <Text style={styles.viewLimitUpgradeLink}>Paketi Yükselt</Text>
-            </Pressable>
-          )}
+        <View key="limit-card" style={styles.viewLimitCard}>
+          <View style={styles.viewLimitIconContainer}>
+            <Ionicons
+              name={viewsRemaining > 0 ? 'eye-outline' : 'eye-off-outline'}
+              size={18}
+              color={viewsRemaining > 0 ? palette.gold[400] : colors.textTertiary}
+            />
+          </View>
+          <View style={styles.viewLimitTextContainer}>
+            <Text style={styles.viewLimitTitle}>
+              {viewsRemaining > 0
+                ? `Bugün ${viewsRemaining} ücretsiz profil görüntüleme hakkın var`
+                : 'Günlük ücretsiz hakkın bitti'}
+            </Text>
+            {viewsRemaining > 0 ? (
+              <Text style={styles.viewLimitHelper}>İstersen şimdi kullan</Text>
+            ) : (
+              <Pressable onPress={handleUpgradePress}>
+                <Text style={styles.viewLimitUpgradeLink}>Premium ile sınırsız gör</Text>
+              </Pressable>
+            )}
+          </View>
         </View>,
       );
     }
 
-    // Upgrade banner for free users
+    // ── Premium upgrade card — for free users ──
     if (isBlurred && likes.length > 0) {
       elements.push(
-        <Pressable
-          key="upgrade-banner"
-          onPress={handleUpgradePress}
-          style={styles.upgradeBanner}
-          accessibilityLabel="Premium paketine yükselt"
-          accessibilityRole="button"
-        >
-          <View style={styles.upgradeBannerContent}>
-            <Text style={styles.upgradeBannerIcon}>{'\uD83D\uDC8E'}</Text>
-            <View style={styles.upgradeBannerTextContainer}>
-              <Text style={styles.upgradeBannerTitle}>Premium ile Hepsini Gör</Text>
-              <Text style={styles.upgradeBannerSubtitle}>
-                {total} kişi seni beğendi — kilidi kaldır ve hemen eşleş
-              </Text>
+        <Pressable key="upgrade-card" onPress={handleUpgradePress}>
+          <LinearGradient
+            colors={[palette.purple[600], palette.purple[800]]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.upgradeCard}
+          >
+            <View style={styles.upgradeCardHeader}>
+              <Ionicons name="diamond" size={24} color={palette.gold[400]} />
+              <Text style={styles.upgradeCardTitle}>Hepsini Gör</Text>
             </View>
-            <View style={styles.upgradeBannerArrow}>
-              <Text style={styles.upgradeBannerArrowText}>{'\u203A'}</Text>
+            <Text style={styles.upgradeCardSubtitle}>
+              {total} kişi seni beğendi — kilidi kaldır ve hemen eşleş
+            </Text>
+
+            {/* Benefits */}
+            <View style={styles.upgradeBenefits}>
+              {[
+                { icon: 'heart' as const, text: 'Seni beğenenleri gör' },
+                { icon: 'flash' as const, text: 'Anında eşleş' },
+                { icon: 'people' as const, text: 'Daha fazla profile eriş' },
+              ].map((benefit) => (
+                <View key={benefit.text} style={styles.upgradeBenefitRow}>
+                  <Ionicons name={benefit.icon} size={14} color={palette.purple[300]} />
+                  <Text style={styles.upgradeBenefitText}>{benefit.text}</Text>
+                </View>
+              ))}
             </View>
-          </View>
+
+            {/* CTA */}
+            <View style={styles.upgradeCtaContainer}>
+              <LinearGradient
+                colors={[palette.gold[400], palette.gold[500]]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.upgradeCta}
+              >
+                <Ionicons name="lock-open" size={16} color={palette.purple[900]} />
+                <Text style={styles.upgradeCtaText}>Kilidi Aç</Text>
+              </LinearGradient>
+            </View>
+          </LinearGradient>
         </Pressable>,
       );
     }
 
-    // Section label before grid
+    // ── Section label before grid ──
     if (likes.length > 0) {
       elements.push(
         <Text key="grid-label" style={styles.gridSectionLabel}>
@@ -524,7 +872,7 @@ export const LikesYouScreen: React.FC = () => {
     return elements.length > 0 ? <>{elements}</> : null;
   }, [
     total, likes.length, mostCompatible, nearestLike,
-    isBlurred, isUnlimitedViews, viewsRemaining, dailyLimit,
+    isBlurred, isUnlimitedViews, viewsRemaining,
     handleUpgradePress, handleCardPress, unlockedUserIds,
   ]);
 
@@ -534,7 +882,17 @@ export const LikesYouScreen: React.FC = () => {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Beğenenler</Text>
+          <View style={styles.headerLeft}>
+            <Pressable
+              onPress={() => navigation.goBack()}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <View style={styles.backButton}>
+                <Ionicons name="chevron-back" size={22} color={colors.text} />
+              </View>
+            </Pressable>
+            <Text style={styles.headerTitle}>Beğenenler</Text>
+          </View>
         </View>
         <View style={styles.skeletonGrid}>
           {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
@@ -559,15 +917,23 @@ export const LikesYouScreen: React.FC = () => {
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <View style={styles.backButton}>
-              <Text style={styles.backIcon}>{'\u2039'}</Text>
+              <Ionicons name="chevron-back" size={22} color={colors.text} />
             </View>
           </Pressable>
-          <Text style={styles.headerTitle}>Beğenenler</Text>
-          {total > 0 && (
-            <View style={styles.countBadge}>
-              <Text style={styles.countBadgeText}>{total}</Text>
+          <View>
+            <View style={styles.headerTitleRow}>
+              <Text style={styles.headerTitle}>Beğenenler</Text>
+              {total > 0 && (
+                <LinearGradient
+                  colors={[palette.gold[400], palette.gold[500]]}
+                  style={styles.countBadge}
+                >
+                  <Text style={styles.countBadgeText}>{total}</Text>
+                </LinearGradient>
+              )}
             </View>
-          )}
+            <Text style={styles.headerSubtitle}>Sana ilgi duyan kişiler burada</Text>
+          </View>
         </View>
       </View>
 
@@ -597,17 +963,19 @@ export const LikesYouScreen: React.FC = () => {
         removeClippedSubviews={true}
         updateCellsBatchingPeriod={50}
       />
+
+      {/* Premium unlock modal */}
+      <UnlockModal
+        visible={showModal}
+        card={modalCard}
+        onUpgrade={handleUpgradePress}
+        onDismiss={handleModalDismiss}
+        onFreePreview={handleModalFreePreview}
+        hasFreePreview={viewsRemaining > 0}
+      />
     </View>
   );
 };
-
-// ─── Premium Design Constants ──────────────────────────────────
-const GOLD = '#D4AF37';
-const GOLD_LIGHT = '#E8C84A';
-const GOLD_BG = '#2A1740';
-const GOLD_BORDER = '#3D1B5B';
-const CARD_OVERLAY_GRADIENT = '#0A0A12';
-const HIGHLIGHT_BG = '#1E1035';
 
 // ─── Styles ───────────────────────────────────────────────────
 
@@ -624,8 +992,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: GRID_PADDING,
     paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: 'transparent',
   },
   headerLeft: {
     flexDirection: 'row',
@@ -639,31 +1005,37 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
   },
-  backIcon: {
-    fontSize: 28,
-    color: colors.text,
-    fontFamily: 'Poppins_300Light',
-    fontWeight: '300',
-    marginTop: -2,
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   headerTitle: {
     ...typography.h3,
     color: colors.text,
     letterSpacing: -0.3,
   },
+  headerSubtitle: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 2,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+  },
   countBadge: {
-    backgroundColor: GOLD,
     borderRadius: borderRadius.full,
     paddingHorizontal: 10,
-    paddingVertical: spacing.xs,
-    minWidth: 30,
+    paddingVertical: 3,
+    minWidth: 28,
     alignItems: 'center',
     ...Platform.select({
       ios: {
-        shadowColor: GOLD,
+        shadowColor: palette.gold[400],
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.4,
+        shadowOpacity: 0.35,
         shadowRadius: 6,
       },
       android: { elevation: 4 },
@@ -676,30 +1048,52 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // ── Summary banner ──
-  summaryBanner: {
+  // ── Summary card ──
+  summaryCard: {
+    marginBottom: spacing.md,
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: palette.purple[500] + '20',
+  },
+  summaryCardGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.smd,
-    marginBottom: spacing.md,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    backgroundColor: '#1E1035',
-    borderRadius: borderRadius.xl,
+    paddingVertical: spacing.md + 2,
+    gap: spacing.md,
+  },
+  summaryIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: palette.purple[500] + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#2A1740',
+    borderColor: palette.purple[500] + '25',
   },
-  summaryIcon: {
-    fontSize: 26,
+  summaryTextContainer: {
+    flex: 1,
   },
-  summaryText: {
+  summaryMainText: {
     ...typography.body,
-    color: colors.textSecondary,
+    color: colors.text,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
   },
-  summaryCount: {
-    color: colors.primary,
+  summaryCountHighlight: {
+    color: palette.purple[400],
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
+    fontSize: 18,
+  },
+  summarySubText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 3,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
   },
 
   // ── Highlight cards ──
@@ -709,20 +1103,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.smd,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
-    backgroundColor: HIGHLIGHT_BG,
     borderRadius: borderRadius.xl,
     borderWidth: 1,
-    borderColor: '#3D1B5B',
+    borderColor: colors.surfaceBorder,
     gap: spacing.md,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#3D1B5B',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.4,
-        shadowRadius: 8,
-      },
-      android: { elevation: 4 },
-    }),
   },
   highlightPhotoWrap: {
     position: 'relative',
@@ -730,21 +1114,17 @@ const styles = StyleSheet.create({
     height: 62,
     borderRadius: 31,
     overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: '#5B2D8E',
+    borderWidth: 2.5,
   },
   highlightPhoto: {
-    width: 58,
-    height: 58,
+    width: 57,
+    height: 57,
   },
   highlightBlurOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(61, 27, 91, 0.45)',
+    backgroundColor: 'rgba(30, 16, 53, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  highlightLockIcon: {
-    fontSize: 18,
   },
   highlightInfo: {
     flex: 1,
@@ -752,10 +1132,13 @@ const styles = StyleSheet.create({
   },
   highlightBadge: {
     alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     borderRadius: borderRadius.full,
     paddingHorizontal: 10,
     paddingVertical: 3,
-    marginBottom: 3,
+    marginBottom: 2,
   },
   highlightBadgeText: {
     fontSize: 10,
@@ -765,119 +1148,141 @@ const styles = StyleSheet.create({
   },
   highlightName: {
     ...typography.bodyLarge,
-    color: '#FFFFFF',
+    color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   highlightSubtitle: {
     ...typography.caption,
-    color: '#C4B0DC',
+    color: colors.textSecondary,
     letterSpacing: 0.15,
   },
   highlightTime: {
     ...typography.captionSmall,
-    color: '#A88BC5',
+    color: colors.textTertiary,
   },
   highlightArrow: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  highlightArrowText: {
-    fontSize: 22,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-  },
-
-  // ── View limit banner ──
-  viewLimitBanner: {
-    marginBottom: spacing.smd,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.smd,
-    backgroundColor: '#1E1035',
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: '#3D1B5B',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  viewLimitText: {
-    ...typography.caption,
-    color: GOLD_LIGHT,
-    textAlign: 'center',
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-  },
-  viewLimitUpgradeLink: {
-    ...typography.caption,
-    color: GOLD,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    letterSpacing: 0.3,
-  },
-
-  // ── Upgrade banner ──
-  upgradeBanner: {
-    marginBottom: spacing.lg,
-    borderRadius: borderRadius.xl,
-    overflow: 'hidden',
-    backgroundColor: '#3D1B5B',
-    borderWidth: 1.5,
-    borderColor: '#5B2D8E',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#8B5CF6',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.25,
-        shadowRadius: 12,
-      },
-      android: { elevation: 6 },
-    }),
-  },
-  upgradeBannerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md + 4,
-    gap: spacing.md,
-  },
-  upgradeBannerIcon: {
-    fontSize: 32,
-  },
-  upgradeBannerTextContainer: {
-    flex: 1,
-  },
-  upgradeBannerTitle: {
-    ...typography.bodyLarge,
-    color: '#FFFFFF',
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    letterSpacing: 0.3,
-  },
-  upgradeBannerSubtitle: {
-    ...typography.caption,
-    color: '#C4B0DC',
-    marginTop: 3,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-  },
-  upgradeBannerArrow: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#2A1740',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#5B2D8E',
   },
-  upgradeBannerArrowText: {
-    fontSize: 24,
-    color: '#FFFFFF',
+
+  // ── View limit card ──
+  viewLimitCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.smd,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    gap: spacing.smd,
+  },
+  viewLimitIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: palette.gold[400] + '12',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  viewLimitTextContainer: {
+    flex: 1,
+  },
+  viewLimitTitle: {
+    ...typography.caption,
+    color: colors.text,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+  },
+  viewLimitHelper: {
+    fontSize: 11,
+    color: palette.gold[400],
+    marginTop: 2,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+  },
+  viewLimitUpgradeLink: {
+    fontSize: 11,
+    color: palette.purple[400],
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
+    marginTop: 2,
+  },
+
+  // ── Premium upgrade card ──
+  upgradeCard: {
+    marginBottom: spacing.lg,
+    borderRadius: borderRadius.xl,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
+    ...Platform.select({
+      ios: {
+        shadowColor: palette.purple[500],
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.3,
+        shadowRadius: 16,
+      },
+      android: { elevation: 8 },
+    }),
+  },
+  upgradeCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  upgradeCardTitle: {
+    ...typography.h4,
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
+  },
+  upgradeCardSubtitle: {
+    ...typography.caption,
+    color: palette.purple[200],
+    marginBottom: spacing.md,
+    lineHeight: 20,
+  },
+  upgradeBenefits: {
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  upgradeBenefitRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  upgradeBenefitText: {
+    ...typography.caption,
+    color: 'rgba(255, 255, 255, 0.85)',
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+  },
+  upgradeCtaContainer: {
+    alignItems: 'center',
+  },
+  upgradeCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.xl + 8,
+    paddingVertical: spacing.smd,
+    width: '100%',
+  },
+  upgradeCtaText: {
+    ...typography.button,
+    color: palette.purple[900],
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    letterSpacing: 0.5,
   },
 
   // ── Grid section label ──
@@ -906,20 +1311,20 @@ const styles = StyleSheet.create({
   // ── Card ──
   card: {
     width: CARD_SIZE,
-    height: CARD_SIZE * 1.3,
-    borderRadius: borderRadius.lg,
+    height: CARD_SIZE * 1.45,
+    borderRadius: borderRadius.lg + 4,
     backgroundColor: colors.surface,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#2A1740',
+    borderColor: palette.purple[500] + '15',
     ...Platform.select({
       ios: {
-        shadowColor: '#3D1B5B',
+        shadowColor: palette.purple[500],
         shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.4,
+        shadowOpacity: 0.12,
         shadowRadius: 8,
       },
-      android: { elevation: 5 },
+      android: { elevation: 4 },
     }),
   },
   cardPhoto: {
@@ -931,37 +1336,109 @@ const styles = StyleSheet.create({
   // ── Blur overlay ──
   blurOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(42, 23, 64, 0.45)',
+    backgroundColor: 'rgba(30, 16, 53, 0.25)',
+  },
+  lockPositioner: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: '35%',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  // ── Animated Lock with Progress Ring ──
+  lockCenter: {
+    width: 52,
+    height: 52,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  lockGlowAura: {
+    position: 'absolute',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: palette.purple[400],
+    ...Platform.select({
+      ios: {
+        shadowColor: palette.purple[400],
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.6,
+        shadowRadius: 16,
+      },
+      android: { elevation: 6 },
+    }),
+  },
+  progressRingContainer: {
+    position: 'absolute',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  progressRingBg: {
+    position: 'absolute',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: 'rgba(167, 139, 250, 0.15)',
+  },
+  progressRingFill: {
+    position: 'absolute',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: palette.purple[400],
+    borderRightColor: palette.pink[400],
+    borderBottomColor: 'transparent',
   },
   lockIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#3D1B5B',
+    zIndex: 2,
+  },
+  lockGradientCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: '#D4AF37',
   },
-  lockIcon: {
-    fontSize: 18,
+
+  // ── Smart label ──
+  smartLabelContainer: {
+    position: 'absolute',
+    top: spacing.xs + 2,
+    left: spacing.xs,
+    zIndex: 2,
+  },
+  smartLabelGradient: {
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  smartLabelText: {
+    fontSize: 7,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
   },
 
   // ── Compatibility badge ──
   compatBadge: {
     position: 'absolute',
     top: spacing.xs + 2,
-    right: spacing.xs + 2,
+    right: spacing.xs,
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.sm,
     paddingVertical: 3,
     borderWidth: 1,
-    borderColor: '#3D1B5B',
   },
   compatBadgeText: {
-    fontSize: 10,
+    fontSize: 9,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     letterSpacing: 0.2,
@@ -972,55 +1449,70 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: spacing.xs + 2,
     left: spacing.xs + 2,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#5B2D8E',
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: palette.purple[500],
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#7C3AED',
-  },
-  commentBadgeIcon: {
-    fontSize: 12,
+    borderColor: palette.purple[400],
   },
 
-  // ── Card info overlay ──
+  // ── Card info overlay — glassmorphism feel ──
   cardInfoOverlay: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm,
-    backgroundColor: CARD_OVERLAY_GRADIENT,
+    paddingHorizontal: spacing.smd,
+    paddingTop: spacing.xl + 4,
+    paddingBottom: spacing.smd,
   },
   cardName: {
-    ...typography.caption,
+    fontSize: 12,
+    lineHeight: 16,
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     letterSpacing: 0.1,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   hintsRow: {
     flexDirection: 'row',
-    gap: 6,
-    marginTop: 3,
+    flexWrap: 'wrap',
+    gap: 4,
+    marginTop: 5,
+  },
+  hintChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   hintText: {
     fontSize: 9,
-    color: 'rgba(255, 255, 255, 0.75)',
+    lineHeight: 13,
+    color: 'rgba(255, 255, 255, 0.95)',
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     letterSpacing: 0.1,
   },
   cardComment: {
     fontSize: 9,
-    color: 'rgba(167, 139, 250, 0.95)',
+    lineHeight: 13,
+    color: palette.purple[300],
     fontStyle: 'italic',
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
-    marginTop: 3,
+    marginTop: 4,
   },
 
   // ── Empty state ──
@@ -1035,16 +1527,12 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: 'rgba(139, 92, 246, 0.10)',
+    backgroundColor: palette.purple[500] + '12',
     borderWidth: 2,
-    borderColor: 'rgba(139, 92, 246, 0.20)',
+    borderColor: palette.purple[500] + '25',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.lg,
-  },
-  emptyHeartIcon: {
-    fontSize: 36,
-    color: colors.primary,
   },
   emptyTitle: {
     ...typography.h4,
@@ -1060,13 +1548,12 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   ctaButton: {
-    backgroundColor: colors.primary,
     borderRadius: borderRadius.xl,
     paddingHorizontal: spacing.xl + 8,
     paddingVertical: spacing.md,
     ...Platform.select({
       ios: {
-        shadowColor: '#8B5CF6',
+        shadowColor: palette.purple[500],
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.30,
         shadowRadius: 8,
@@ -1078,6 +1565,7 @@ const styles = StyleSheet.create({
     ...typography.button,
     color: '#FFFFFF',
     letterSpacing: 0.5,
+    textAlign: 'center',
   },
 
   // ── Skeleton ──
@@ -1089,8 +1577,8 @@ const styles = StyleSheet.create({
   },
   skeletonCard: {
     width: CARD_SIZE,
-    height: CARD_SIZE * 1.3,
-    borderRadius: borderRadius.lg,
+    height: CARD_SIZE * 1.45,
+    borderRadius: borderRadius.lg + 2,
     backgroundColor: colors.surface,
     overflow: 'hidden',
   },
@@ -1101,5 +1589,151 @@ const styles = StyleSheet.create({
   skeletonName: {
     height: 32,
     backgroundColor: colors.surfaceLight,
+  },
+
+  // ── Unlock Modal ──
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 340,
+    borderRadius: borderRadius.xl + 4,
+    backgroundColor: colors.surface,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.3,
+        shadowRadius: 24,
+      },
+      android: { elevation: 16 },
+    }),
+  },
+  modalPhotoContainer: {
+    height: 180,
+    position: 'relative',
+  },
+  modalPhoto: {
+    width: '100%',
+    height: '100%',
+  },
+  modalPhotoGradient: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  modalLockRing: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginTop: -30,
+    marginLeft: -30,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: 'rgba(167, 139, 250, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: palette.purple[400],
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.6,
+        shadowRadius: 16,
+      },
+      android: { elevation: 8 },
+    }),
+  },
+  modalLockGradient: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalInfo: {
+    padding: spacing.lg,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    ...typography.h4,
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: spacing.xs,
+  },
+  modalSubtitle: {
+    ...typography.body,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.md,
+    lineHeight: 22,
+  },
+  modalHintRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  modalHintChip: {
+    backgroundColor: palette.purple[500] + '15',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.smd,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: palette.purple[500] + '25',
+  },
+  modalHintText: {
+    fontSize: 11,
+    color: palette.purple[400],
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+  },
+  modalCtaButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.smd + 2,
+    width: '100%',
+    ...Platform.select({
+      ios: {
+        shadowColor: palette.purple[500],
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.35,
+        shadowRadius: 12,
+      },
+      android: { elevation: 6 },
+    }),
+  },
+  modalCtaText: {
+    ...typography.button,
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  modalFreePreviewBtn: {
+    marginTop: spacing.smd,
+    paddingVertical: spacing.sm,
+  },
+  modalFreePreviewText: {
+    ...typography.caption,
+    color: palette.gold[400],
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+  },
+  modalDismissBtn: {
+    marginTop: spacing.xs,
+    paddingVertical: spacing.sm,
+  },
+  modalDismissText: {
+    ...typography.caption,
+    color: colors.textTertiary,
   },
 });

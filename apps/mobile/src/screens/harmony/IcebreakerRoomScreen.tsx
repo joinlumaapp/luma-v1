@@ -2921,7 +2921,7 @@ export const IcebreakerRoomScreen: React.FC = () => {
 
   // ── GAME VIEW ──
   return (
-    <KeyboardAvoidingView style={st.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={st.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <StatusBar barStyle="light-content" />
 
       {/* Background */}

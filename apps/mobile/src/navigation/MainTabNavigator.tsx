@@ -23,6 +23,7 @@ import { darkTheme } from '../theme/colors';
 import { spacing, layout, borderRadius } from '../theme/spacing';
 import { typography } from '../theme/typography';
 import { useChatStore } from '../stores/chatStore';
+import { useMatchStore } from '../stores/matchStore';
 import { useNotificationStore } from '../stores/notificationStore';
 import { NotificationPermissionModal } from '../components/notifications/NotificationPermissionModal';
 import { PromotionModal } from '../components/premium/PromotionModal';
@@ -41,6 +42,7 @@ import { DailyQuestionScreen } from '../screens/compatibility/DailyQuestionScree
 
 // Matches screens
 import { MatchesListScreen } from '../screens/matches/MatchesListScreen';
+import { ViewersPreviewScreen } from '../screens/matches/ViewersPreviewScreen';
 import { MatchDetailScreen } from '../screens/matches/MatchDetailScreen';
 import { CompatibilityInsightScreen } from '../screens/compatibility/CompatibilityInsightScreen';
 import { ChatListScreen } from '../screens/chat/ChatListScreen';
@@ -292,6 +294,11 @@ const MatchesStackNavigator: React.FC = React.memo(() => (
   >
     <MatchesStack.Screen name="MatchesList" component={MatchesListScreen} />
     <MatchesStack.Screen
+      name="ViewersPreview"
+      component={ViewersPreviewScreen}
+      options={{ animation: 'slide_from_bottom' }}
+    />
+    <MatchesStack.Screen
       name="ProfilePreview"
       component={ProfilePreviewScreen}
       options={{ animation: 'fade_from_bottom', gestureEnabled: true, gestureDirection: 'vertical' }}
@@ -422,6 +429,9 @@ export const MainTabNavigator: React.FC = () => {
   }, []);
 
   const totalUnread = useChatStore((state) => state.totalUnread);
+  const newMatchCount = useMatchStore((state) => state.newMatchCount);
+  // Single source of truth: new matches + unread messages
+  const matchesTabBadge = newMatchCount + totalUnread;
 
   // Notification store integration
   const notifUnreadCount = useNotificationStore((s) => s.unreadCount);
@@ -507,10 +517,10 @@ export const MainTabNavigator: React.FC = () => {
             <TabIconWithBadge
               name="heart"
               focused={focused}
-              badgeCount={totalUnread}
+              badgeCount={matchesTabBadge}
             />
           ),
-          tabBarAccessibilityLabel: `Eşleşmeler${totalUnread > 0 ? `, ${totalUnread} okunmamış mesaj` : ''}`,
+          tabBarAccessibilityLabel: `Eşleşmeler${matchesTabBadge > 0 ? `, ${newMatchCount} yeni eşleşme, ${totalUnread} okunmamış mesaj` : ''}`,
           tabBarButtonTestID: 'tab-matches',
         }}
         listeners={({ navigation, route }) => createTabResetListener(navigation, route)}

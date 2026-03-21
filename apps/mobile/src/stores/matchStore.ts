@@ -42,6 +42,8 @@ interface MatchState {
   selectedMatch: MatchDetail | null;
   isLoading: boolean;
   totalCount: number;
+  /** Number of matches user has NOT opened yet (isNew === true) */
+  newMatchCount: number;
   error: string | null;
 
   // Actions
@@ -49,6 +51,7 @@ interface MatchState {
   getMatch: (matchId: string) => Promise<void>;
   unmatch: (matchId: string) => Promise<void>;
   markAsRead: (matchId: string) => void;
+  markAllAsSeen: () => void;
   clearSelected: () => void;
   addMatch: (match: Match) => void;
   updateMatchActivity: (matchId: string, lastMessage: string, lastActivity: string) => void;
@@ -84,6 +87,7 @@ export const useMatchStore = create<MatchState>((set, get) => ({
   selectedMatch: null,
   isLoading: false,
   totalCount: 0,
+  newMatchCount: 0,
   error: null,
 
   // Actions
@@ -113,9 +117,11 @@ export const useMatchStore = create<MatchState>((set, get) => ({
         return m;
       });
 
+      const newCount = merged.filter((m) => m.isNew).length;
       set({
         matches: merged,
         totalCount: response.total,
+        newMatchCount: newCount,
         isLoading: false,
         error: null,
       });
@@ -188,10 +194,21 @@ export const useMatchStore = create<MatchState>((set, get) => ({
   },
 
   markAsRead: (matchId) =>
+    set((state) => {
+      const match = state.matches.find((m) => m.id === matchId);
+      const wasNew = match?.isNew ?? false;
+      return {
+        matches: state.matches.map((m) =>
+          m.id === matchId ? { ...m, isNew: false } : m
+        ),
+        newMatchCount: wasNew ? Math.max(0, state.newMatchCount - 1) : state.newMatchCount,
+      };
+    }),
+
+  markAllAsSeen: () =>
     set((state) => ({
-      matches: state.matches.map((m) =>
-        m.id === matchId ? { ...m, isNew: false } : m
-      ),
+      matches: state.matches.map((m) => ({ ...m, isNew: false })),
+      newMatchCount: 0,
     })),
 
   clearSelected: () =>
@@ -201,6 +218,7 @@ export const useMatchStore = create<MatchState>((set, get) => ({
     set((state) => ({
       matches: [match, ...state.matches],
       totalCount: state.totalCount + 1,
+      newMatchCount: match.isNew ? state.newMatchCount + 1 : state.newMatchCount,
     })),
 
   updateMatchActivity: (matchId, lastMessage, lastActivity) =>

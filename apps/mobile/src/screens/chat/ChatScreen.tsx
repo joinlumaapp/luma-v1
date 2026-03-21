@@ -692,7 +692,7 @@ export const ChatScreen: React.FC = () => {
       {/* Messages */}
       <KeyboardAvoidingView
         style={styles.messagesArea}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top + CHAT_HEADER_HEIGHT : 0}
       >
         {isLoadingMessages && messages.length === 0 ? (

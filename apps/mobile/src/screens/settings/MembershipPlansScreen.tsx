@@ -3,7 +3,7 @@
 // 3 tiers: Supreme (Reserved), Premium (Gold/Pro), Free
 // Jeton: 3 coin packs + ad reward section
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,10 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Animated,
+  Modal,
+  Pressable,
+  BackHandler,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -738,6 +742,63 @@ export const MembershipPlansScreen: React.FC = () => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  // ── Emotional hooks & conversion boosters ──
+  const EMOTIONAL_HOOKS = useMemo(() => [
+    'Seni beğenen kişiler seni bekliyor',
+    'Bir eşleşmeyi kaçırıyor olabilirsin',
+    'Profilin dikkat çekiyor',
+    'Sana ilgi duyan kişiler var',
+  ], []);
+  const [hookIndex, setHookIndex] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHookIndex((prev) => (prev + 1) % EMOTIONAL_HOOKS.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [EMOTIONAL_HOOKS.length]);
+
+  // Pulse animation for CTA
+  const ctaPulse = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(ctaPulse, { toValue: 1.03, duration: 1500, useNativeDriver: true }),
+        Animated.timing(ctaPulse, { toValue: 1, duration: 1500, useNativeDriver: true }),
+      ]),
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [ctaPulse]);
+
+  // Exit interception modal
+  const [showExitModal, setShowExitModal] = useState(false);
+  const hasShownExitModal = useRef(false);
+
+  const handleBack = useCallback(() => {
+    if (currentCategory === 'free' && !hasShownExitModal.current && activeTab === 'packages') {
+      hasShownExitModal.current = true;
+      setShowExitModal(true);
+      return true; // Prevent back
+    }
+    return false; // Allow back
+  }, [currentCategory, activeTab]);
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', handleBack);
+    return () => sub.remove();
+  }, [handleBack]);
+
+  const handleExitDismiss = useCallback(() => {
+    setShowExitModal(false);
+    navigation.goBack();
+  }, [navigation]);
+
+  const handleExitFreePreview = useCallback(() => {
+    setShowExitModal(false);
+    // Could navigate to a free preview flow — for now just close
+    navigation.goBack();
+  }, [navigation]);
+
   const handleSelectPlan = useCallback((plan: 'free' | 'premium' | 'supreme') => {
     if (isPurchasing) return;
 
@@ -960,6 +1021,33 @@ export const MembershipPlansScreen: React.FC = () => {
       >
         {activeTab === 'packages' ? (
           <>
+            {/* ── Emotional Hook — rotating message ── */}
+            {currentCategory === 'free' && (
+              <View style={emotionalStyles.hookCard}>
+                <LinearGradient
+                  colors={[palette.purple[500] + '18', palette.pink[500] + '10', 'transparent']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={emotionalStyles.hookGradient}
+                >
+                  <Ionicons name="heart" size={20} color={palette.purple[400]} />
+                  <Text style={emotionalStyles.hookText}>
+                    {EMOTIONAL_HOOKS[hookIndex]}
+                  </Text>
+                </LinearGradient>
+              </View>
+            )}
+
+            {/* ── Urgency Bar ── */}
+            {currentCategory === 'free' && (
+              <View style={emotionalStyles.urgencyBar}>
+                <Ionicons name="time-outline" size={14} color={palette.gold[400]} />
+                <Text style={emotionalStyles.urgencyText}>
+                  Bugün sadece 1 ücretsiz profil görüntüleme hakkın var
+                </Text>
+              </View>
+            )}
+
             {/* Subtitle */}
             <Text style={screenStyles.subtitle}>
               Sana en uygun planı seç ve Luma deneyimini zirveye taşı.
@@ -982,6 +1070,43 @@ export const MembershipPlansScreen: React.FC = () => {
               isCurrentPlan={currentCategory === 'free'}
               onSelect={() => handleSelectPlan('free')}
             />
+
+            {/* ── Social Proof ── */}
+            {currentCategory === 'free' && (
+              <View style={emotionalStyles.socialProofCard}>
+                <Ionicons name="people" size={16} color={palette.purple[400]} />
+                <Text style={emotionalStyles.socialProofText}>
+                  Kullanıcıların %78'i ilk gün eşleşiyor
+                </Text>
+              </View>
+            )}
+
+            {/* ── Loss Aversion ── */}
+            {currentCategory === 'free' && (
+              <Text style={emotionalStyles.lossText}>
+                Seni beğenenler başka biriyle eşleşebilir
+              </Text>
+            )}
+
+            {/* ── Quick CTA for free users ── */}
+            {currentCategory === 'free' && (
+              <Animated.View style={{ transform: [{ scale: ctaPulse }] }}>
+                <TouchableOpacity
+                  onPress={() => handleSelectPlan('premium')}
+                  activeOpacity={0.85}
+                >
+                  <LinearGradient
+                    colors={[palette.purple[500], palette.pink[500]]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={emotionalStyles.quickCta}
+                  >
+                    <Ionicons name="lock-open" size={18} color="#FFFFFF" />
+                    <Text style={emotionalStyles.quickCtaText}>Hemen Eşleşmeye Başla</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </Animated.View>
+            )}
 
             {/* Disclaimer */}
             <Text style={screenStyles.disclaimer}>
@@ -1058,6 +1183,38 @@ export const MembershipPlansScreen: React.FC = () => {
           </>
         )}
       </ScrollView>
+
+      {/* ── Exit Interception Modal ── */}
+      <Modal
+        visible={showExitModal}
+        transparent
+        animationType="fade"
+        onRequestClose={handleExitDismiss}
+      >
+        <Pressable style={emotionalStyles.exitOverlay} onPress={handleExitDismiss}>
+          <Pressable style={emotionalStyles.exitCard} onPress={(e) => e.stopPropagation()}>
+            <Ionicons name="eye" size={32} color={palette.purple[400]} />
+            <Text style={emotionalStyles.exitTitle}>Gitmeden önce</Text>
+            <Text style={emotionalStyles.exitSubtitle}>
+              1 profili ücretsiz görmek ister misin?
+            </Text>
+            <TouchableOpacity onPress={handleExitFreePreview} activeOpacity={0.85}>
+              <LinearGradient
+                colors={[palette.purple[500], palette.pink[500]]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={emotionalStyles.exitCtaButton}
+              >
+                <Ionicons name="eye-outline" size={18} color="#FFFFFF" />
+                <Text style={emotionalStyles.exitCtaText}>Ücretsiz Gör</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleExitDismiss} style={emotionalStyles.exitDismissBtn}>
+              <Text style={emotionalStyles.exitDismissText}>Vazgeç</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 };
@@ -1431,5 +1588,148 @@ const cardStyles = StyleSheet.create({
     ...typography.button,
     color: GLASS.textPrimary,
     fontWeight: fontWeights.semibold,
+  },
+});
+
+// ─── Emotional / Conversion Styles ───────────────────────────
+
+const emotionalStyles = StyleSheet.create({
+  // ── Hook card ──
+  hookCard: {
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+    marginBottom: spacing.smd,
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.15)',
+  },
+  hookGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.smd,
+    gap: spacing.smd,
+  },
+  hookText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: fontWeights.medium,
+    color: GLASS.textPrimary,
+  },
+
+  // ── Urgency bar ──
+  urgencyBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: 'rgba(251, 191, 36, 0.08)',
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(251, 191, 36, 0.15)',
+  },
+  urgencyText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: fontWeights.medium,
+    color: palette.gold[400],
+  },
+
+  // ── Social proof ──
+  socialProofCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.smd,
+    marginBottom: spacing.sm,
+  },
+  socialProofText: {
+    fontSize: 13,
+    fontWeight: fontWeights.medium,
+    color: GLASS.textSecondary,
+  },
+
+  // ── Loss aversion ──
+  lossText: {
+    fontSize: 12,
+    fontWeight: fontWeights.regular,
+    color: GLASS.textTertiary,
+    textAlign: 'center',
+    marginBottom: spacing.md,
+    fontStyle: 'italic',
+  },
+
+  // ── Quick CTA ──
+  quickCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    borderRadius: borderRadius.full,
+    paddingVertical: spacing.md,
+    marginBottom: spacing.md,
+  },
+  quickCtaText: {
+    ...typography.button,
+    color: '#FFFFFF',
+    fontWeight: fontWeights.semibold,
+    letterSpacing: 0.5,
+  },
+
+  // ── Exit Modal ──
+  exitOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  exitCard: {
+    width: '100%',
+    maxWidth: 320,
+    borderRadius: borderRadius.xl + 4,
+    backgroundColor: SCREEN_BG,
+    padding: spacing.xl,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.2)',
+  },
+  exitTitle: {
+    ...typography.h4,
+    color: GLASS.textPrimary,
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  exitSubtitle: {
+    ...typography.body,
+    color: GLASS.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+    lineHeight: 22,
+  },
+  exitCtaButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.smd + 2,
+    width: '100%',
+  },
+  exitCtaText: {
+    ...typography.button,
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  exitDismissBtn: {
+    marginTop: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  exitDismissText: {
+    ...typography.caption,
+    color: GLASS.textTertiary,
   },
 });

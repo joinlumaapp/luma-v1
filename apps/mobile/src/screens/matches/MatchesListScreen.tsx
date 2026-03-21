@@ -14,6 +14,7 @@ import {
   FlatList,
   Animated,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -93,57 +94,20 @@ const SkeletonRow: React.FC<{ index: number }> = ({ index }) => {
   );
 };
 
-// ─── New Match pulsing border animation ──────────────────────
-const NewMatchGlow: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const borderAnim = useRef(new Animated.Value(0)).current;
+// ─── New Match subtle avatar ring ──────────────────────────
+const NewMatchRing: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <View
+    style={{
+      borderRadius: layout.avatarMedium / 2 + 3,
+      borderWidth: 2,
+      borderColor: palette.purple[400] + '50',
+      padding: 1,
+    }}
+  >
+    {children}
+  </View>
+);
 
-  useEffect(() => {
-    const animation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(borderAnim, {
-          toValue: 1,
-          duration: 1200,
-          useNativeDriver: false,
-        }),
-        Animated.timing(borderAnim, {
-          toValue: 0,
-          duration: 1200,
-          useNativeDriver: false,
-        }),
-      ]),
-    );
-    animation.start();
-    return () => animation.stop();
-  }, [borderAnim]);
-
-  const borderColor = borderAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [colors.primary + '60', colors.primary],
-  });
-
-  const shadowOpacity = borderAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.1, 0.5],
-  });
-
-  return (
-    <Animated.View
-      style={{
-        borderRadius: layout.avatarMedium / 2 + 3,
-        borderWidth: 2.5,
-        borderColor: borderColor as unknown as string,
-        padding: 1,
-        shadowColor: colors.primary,
-        shadowOffset: { width: 0, height: 0 },
-        shadowRadius: 10,
-        shadowOpacity: shadowOpacity as unknown as number,
-        elevation: 6,
-      }}
-    >
-      {children}
-    </Animated.View>
-  );
-};
 
 // ─── Match card (Eşleşmeler tab) — avatar taps open profile, row taps open detail ────────
 interface MatchCardProps {
@@ -210,25 +174,13 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
     />
   );
 
-  // Wrap avatar in pulsing glow for new matches, PulseGlow for super compat
+  // Simple avatar render: subtle ring for new, PulseGlow for super compat only
   const renderAvatar = () => {
     if (item.isNew) {
       return (
-        <NewMatchGlow>
-          {isSuperCompatible ? (
-            <PulseGlow
-              color={colors.success}
-              size={layout.avatarMedium}
-              glowRadius={12}
-              duration={2000}
-              style={styles.pulseGlowAvatar}
-            >
-              {avatarContent}
-            </PulseGlow>
-          ) : (
-            avatarContent
-          )}
-        </NewMatchGlow>
+        <NewMatchRing>
+          {avatarContent}
+        </NewMatchRing>
       );
     }
     if (isSuperCompatible) {
@@ -247,60 +199,76 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
     return avatarContent;
   };
 
-  return (
-    <SlideIn direction="right" delay={index * 80} distance={24}>
-      <TouchableWithoutFeedback
-        onPress={() => onPress(item.id)}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        accessibilityLabel={`${item.name}, ${item.age} yaşında, yüzde ${item.compatibilityPercent} uyum${item.isNew ? ', yeni eşleşme' : ''}`}
-        accessibilityRole="button"
-        accessibilityHint="Eşleşme detaylarını görmek için dokunun"
-      >
-        <Animated.View
-          style={[
-            styles.matchCard,
-            item.isNew && styles.matchCardNew,
-            { transform: [{ scale: scaleAnim }] },
-          ]}
-          testID={`matches-card-${item.id}`}
-        >
-          {/* Avatar — tappable to open profile */}
-          <TouchableWithoutFeedback
-            onPress={() => onAvatarPress(item.userId)}
-            onPressIn={handleAvatarPressIn}
-            onPressOut={handleAvatarPressOut}
-            accessibilityLabel={`${item.name} profilini aç`}
-            accessibilityRole="button"
-            accessibilityHint="Profili görmek için fotoğrafa dokunun"
-          >
-            <Animated.View
-              style={[styles.avatarContainer, { transform: [{ scale: avatarScaleAnim }] }]}
-            >
-              {renderAvatar()}
-              {item.isNew && (
-                <View style={styles.newBadge}>
-                  <Text style={styles.newBadgeText}>YENİ</Text>
-                </View>
-              )}
-              {!item.isNew && formatActivityStatus(item.lastActivity)?.isOnline && (
-                <View style={styles.onlineDot} />
-              )}
-            </Animated.View>
-          </TouchableWithoutFeedback>
+  const matchStatus = useMemo(() => {
+    if (item.isNew) return 'new';
+    const actStatus = formatActivityStatus(item.lastActivity);
+    if (actStatus?.isOnline) return 'active';
+    return 'seen';
+  }, [item.isNew, item.lastActivity]);
 
-          {/* Info */}
-          <View style={styles.matchInfo}>
-            <View style={styles.nameRow}>
-              <Text style={[styles.matchName, item.isNew && styles.matchNameNew]}>
-                {item.name}, {item.age}
-              </Text>
-              {item.packageTier && <TierIndicator tier={item.packageTier} />}
-              {item.isNew && (
-                <View style={styles.newInlineBadge}>
-                  <Text style={styles.newInlineBadgeText}>Yeni Eşleşme</Text>
-                </View>
-              )}
+  const cardContent = (
+    <TouchableWithoutFeedback
+      onPress={() => onPress(item.id)}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      accessibilityLabel={`${item.name}, ${item.age} yaşında, yüzde ${item.compatibilityPercent} uyum${item.isNew ? ', yeni eşleşme' : ''}`}
+      accessibilityRole="button"
+      accessibilityHint="Eşleşme detaylarını görmek için dokunun"
+    >
+      <Animated.View
+        style={[
+          styles.matchCard,
+          item.isNew && styles.matchCardNew,
+          { transform: [{ scale: scaleAnim }] },
+        ]}
+        testID={`matches-card-${item.id}`}
+      >
+        {/* Avatar — tappable to open profile */}
+        <TouchableWithoutFeedback
+          onPress={() => onAvatarPress(item.userId)}
+          onPressIn={handleAvatarPressIn}
+          onPressOut={handleAvatarPressOut}
+          accessibilityLabel={`${item.name} profilini aç`}
+          accessibilityRole="button"
+          accessibilityHint="Profili görmek için fotoğrafa dokunun"
+        >
+          <Animated.View
+            style={[styles.avatarContainer, { transform: [{ scale: avatarScaleAnim }] }]}
+          >
+            {renderAvatar()}
+            {item.isNew && (
+              <LinearGradient
+                colors={[palette.purple[500], palette.pink[500]]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.newBadge}
+              >
+                <Text style={styles.newBadgeText}>YENİ</Text>
+              </LinearGradient>
+            )}
+            {!item.isNew && matchStatus === 'active' && (
+              <View style={styles.onlineDot} />
+            )}
+          </Animated.View>
+        </TouchableWithoutFeedback>
+
+        {/* Info */}
+        <View style={styles.matchInfo}>
+          <View style={styles.nameRow}>
+            <Text style={[styles.matchName, item.isNew && styles.matchNameNew]}>
+              {item.name}, {item.age}
+            </Text>
+            {item.packageTier && <TierIndicator tier={item.packageTier} />}
+            {item.isNew && (
+              <LinearGradient
+                colors={[palette.purple[500], palette.pink[500]]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.newInlineBadge}
+              >
+                <Text style={styles.newInlineBadgeText}>Yeni Eşleşme</Text>
+              </LinearGradient>
+            )}
             </View>
             {item.lastMessage ? (
               <Text style={styles.messagePreview} numberOfLines={1}>
@@ -358,6 +326,11 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
           </View>
         </Animated.View>
       </TouchableWithoutFeedback>
+  );
+
+  return (
+    <SlideIn direction="right" delay={index * 80} distance={24}>
+      {cardContent}
     </SlideIn>
   );
 }, (prev, next) => (
@@ -656,7 +629,6 @@ export const MatchesListScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
 
   const matches = useMatchStore((state) => state.matches);
-  const totalCount = useMatchStore((state) => state.totalCount);
   const isLoading = useMatchStore((state) => state.isLoading);
   const fetchMatches = useMatchStore((state) => state.fetchMatches);
   const markAsRead = useMatchStore((state) => state.markAsRead);
@@ -783,7 +755,7 @@ export const MatchesListScreen: React.FC = () => {
     return count;
   }, [unreadMap]);
 
-  const newMatchCount = useMemo(() => matches.filter((m) => m.isNew).length, [matches]);
+  const newMatchCount = useMatchStore((state) => state.newMatchCount);
 
   const dynamicSubtitle = useMemo(() => {
     if (totalUnread > 0) return `${totalUnread} okunmamış mesajın var 💬`;
@@ -825,18 +797,30 @@ export const MatchesListScreen: React.FC = () => {
 
   const viewerKeyExtractor = useCallback((item: ProfileVisitor) => item.visitorId, []);
 
-  // Matches not talked to today — shown only on Eşleşmeler tab
+  // Matches not talked to today — checks both matchStore and chatStore for real-time accuracy
   const notTalkedToday = useMemo(() => {
     const todayStr = new Date().toISOString().slice(0, 10);
+    // Build a map of conversation activity from chatStore (source of truth for sent messages)
+    const convMap = new Map(conversations.map((c) => [c.matchId, c]));
+
     return matches
       .filter((m) => {
-        if (!m.lastMessage) return true;
-        const activityDate = m.lastActivity ? m.lastActivity.slice(0, 10) : '';
-        return activityDate !== todayStr;
+        // Check chatStore first (immediate updates after sending)
+        const conv = convMap.get(m.id);
+        if (conv?.lastMessage) {
+          const convDate = conv.lastMessageAt ? conv.lastMessageAt.slice(0, 10) : '';
+          if (convDate === todayStr) return false; // Talked today via chatStore
+        }
+        // Then check matchStore
+        if (m.lastMessage) {
+          const activityDate = m.lastActivity ? m.lastActivity.slice(0, 10) : '';
+          if (activityDate === todayStr) return false; // Talked today via matchStore
+        }
+        return true; // No conversation today
       })
       .sort((a, b) => b.compatibilityPercent - a.compatibilityPercent)
       .slice(0, 6);
-  }, [matches]);
+  }, [matches, conversations]);
 
   // ── Navigation handlers ──────────────────────────────────────
 
@@ -919,7 +903,19 @@ export const MatchesListScreen: React.FC = () => {
   );
 
   const renderNudgeSection = useCallback(() => {
-    if (activeTab !== 'matches' || notTalkedToday.length === 0) return null;
+    if (activeTab !== 'matches') return null;
+
+    // Show completion message when user talked to all matches today
+    if (notTalkedToday.length === 0 && matches.length > 0) {
+      return (
+        <View style={styles.nudgeCompletedSection}>
+          <Text style={styles.nudgeCompletedText}>Bugün tüm eşleşmelerinle konuştun</Text>
+        </View>
+      );
+    }
+
+    if (notTalkedToday.length === 0) return null;
+
     return (
       <View style={styles.nudgeSection}>
         <Text style={styles.nudgeTitle}>Bugün konuşmadığın eşleşmelerin</Text>
@@ -964,7 +960,7 @@ export const MatchesListScreen: React.FC = () => {
         </ScrollView>
       </View>
     );
-  }, [activeTab, notTalkedToday, handleNudgePress]);
+  }, [activeTab, notTalkedToday, matches.length, handleNudgePress]);
 
   // Stable key extractor reference
   const keyExtractor = useCallback((item: Match) => item.id, []);
@@ -1042,9 +1038,11 @@ export const MatchesListScreen: React.FC = () => {
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
               <Text style={styles.headerTitle}>Eşleşmeler</Text>
-              <View style={styles.matchCountBadge}>
-                <Text style={styles.matchCountBadgeText}>{totalCount}</Text>
-              </View>
+              {newMatchCount > 0 && (
+                <View style={styles.matchCountBadge}>
+                  <Text style={styles.matchCountBadgeText}>{newMatchCount} yeni</Text>
+                </View>
+              )}
             </View>
             <Text style={styles.dynamicSubtitle}>{dynamicSubtitle}</Text>
           </View>
@@ -1082,8 +1080,7 @@ export const MatchesListScreen: React.FC = () => {
                 if (tab.isNav) {
                   navigation.navigate('LikesYou');
                 } else if (isLocked && tab.key === 'viewers') {
-                  (navigation as { getParent?: () => { navigate: (s: string, p?: object) => void } | undefined })
-                    .getParent?.()?.navigate('ProfileTab', { screen: 'Packages' });
+                  navigation.navigate('ViewersPreview');
                 } else {
                   setActiveTab(tab.key as TabKey);
                   if (tabIndex >= 2 && tabScrollRef.current) {
@@ -1313,6 +1310,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   // ── Nudge section ("not talked today") ──
+  nudgeCompletedSection: {
+    marginBottom: spacing.md,
+    paddingTop: spacing.xs,
+    paddingVertical: spacing.smd,
+    alignItems: 'center',
+  },
+  nudgeCompletedText: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+  },
   nudgeSection: {
     marginBottom: spacing.md,
     paddingTop: spacing.xs,
@@ -1421,23 +1430,33 @@ const styles = StyleSheet.create({
     ...typography.h4,
     color: colors.primary,
   },
-  // New match visual indicators
+  // New match card — clean tinted background, subtle border, no gradient
   matchCardNew: {
-    backgroundColor: colors.primary + '08',
+    backgroundColor: palette.purple[50] + '12',
     borderRadius: borderRadius.lg,
     marginHorizontal: -spacing.xs,
     paddingHorizontal: spacing.xs,
+    borderWidth: 1,
+    borderColor: palette.purple[300] + '18',
   },
   newBadge: {
     position: 'absolute',
     top: -4,
     right: -6,
-    backgroundColor: colors.primary,
     borderRadius: borderRadius.full,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderWidth: 1.5,
     borderColor: colors.background,
+    ...Platform.select({
+      ios: {
+        shadowColor: palette.purple[500],
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3,
+      },
+      android: { elevation: 3 },
+    }),
   },
   newBadgeText: {
     fontSize: 8,
@@ -1447,21 +1466,18 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   newInlineBadge: {
-    backgroundColor: colors.primary + '20',
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
-    borderWidth: 1,
-    borderColor: colors.primary + '40',
   },
   newInlineBadgeText: {
     fontSize: 10,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
-    color: colors.primary,
+    color: '#FFFFFF',
   },
   matchNameNew: {
-    color: colors.primary,
+    color: colors.text,
   },
   // Unread message indicators
   matchCardUnread: {

@@ -11,6 +11,7 @@ import {
   Image,
   Modal,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
   ActivityIndicator,
   Alert,
@@ -157,6 +158,16 @@ export const CommentSheet: React.FC<CommentSheetProps> = ({
   // Reply mode state
   const [replyingTo, setReplyingTo] = useState<{ commentId: string; userName: string } | null>(null);
 
+  // Track keyboard visibility for dynamic input padding
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+    return () => { showSub.remove(); hideSub.remove(); };
+  }, []);
+
   useEffect(() => {
     if (visible && postId) {
       setIsLoading(true);
@@ -274,12 +285,12 @@ export const CommentSheet: React.FC<CommentSheetProps> = ({
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView
         style={styles.overlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         {/* Tap outside to close */}
         <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={onClose} />
 
-        <View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.sm }]}>
+        <View style={[styles.sheet, { paddingBottom: keyboardVisible ? spacing.xs : Math.max(insets.bottom, spacing.sm) }]}>
           {/* Handle bar */}
           <View style={styles.handleBar} />
 

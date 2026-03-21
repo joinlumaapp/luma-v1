@@ -82,6 +82,7 @@ export type DiscoveryStackParamList = {
 export type MatchesStackParamList = {
   MatchesList: undefined;
   LikesYou: undefined;
+  ViewersPreview: undefined;
   ProfilePreview: { userId: string };
   MatchDetail: { matchId: string };
   CompatibilityInsight: { matchId: string; partnerName: string };
