@@ -198,8 +198,8 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
           pointerEvents="none"
         />
 
-        {/* Overlay info — bottom-left: Name, City+Distance */}
-        <View style={styles.overlayInfo}>
+        {/* Overlay info — bottom-left: Name, City+Distance (box-none to not block swipe) */}
+        <View style={styles.overlayInfo} pointerEvents="box-none">
           <View style={styles.overlayNameRow}>
             <Text style={styles.overlayName} numberOfLines={1}>
               {profile.firstName}, {profile.age}
