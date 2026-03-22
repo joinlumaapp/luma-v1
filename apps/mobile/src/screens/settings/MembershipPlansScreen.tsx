@@ -3,7 +3,7 @@
 // 3 tiers: Supreme (Reserved), Premium (Gold/Pro), Free
 // Jeton: 3 coin packs + ad reward section
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -742,20 +742,27 @@ export const MembershipPlansScreen: React.FC = () => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  // ── Emotional hooks & conversion boosters ──
-  const EMOTIONAL_HOOKS = useMemo(() => [
-    'Seni beğenen kişiler seni bekliyor',
-    'Bir eşleşmeyi kaçırıyor olabilirsin',
-    'Profilin dikkat çekiyor',
-    'Sana ilgi duyan kişiler var',
-  ], []);
-  const [hookIndex, setHookIndex] = useState(0);
+  // ── Urgency banner animations ──
+  const numberPulse = useRef(new Animated.Value(1)).current;
+  const heartFloat = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    const interval = setInterval(() => {
-      setHookIndex((prev) => (prev + 1) % EMOTIONAL_HOOKS.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [EMOTIONAL_HOOKS.length]);
+    const pulseLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(numberPulse, { toValue: 1.15, duration: 600, useNativeDriver: true }),
+        Animated.timing(numberPulse, { toValue: 1, duration: 600, useNativeDriver: true }),
+        Animated.delay(1800),
+      ]),
+    );
+    const floatLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(heartFloat, { toValue: -6, duration: 900, useNativeDriver: true }),
+        Animated.timing(heartFloat, { toValue: 0, duration: 900, useNativeDriver: true }),
+      ]),
+    );
+    pulseLoop.start();
+    floatLoop.start();
+    return () => { pulseLoop.stop(); floatLoop.stop(); };
+  }, [numberPulse, heartFloat]);
 
   // Pulse animation for CTA
   const ctaPulse = useRef(new Animated.Value(1)).current;
@@ -1021,30 +1028,51 @@ export const MembershipPlansScreen: React.FC = () => {
       >
         {activeTab === 'packages' ? (
           <>
-            {/* ── Emotional Hook — rotating message ── */}
+            {/* ── Urgency Banner ── */}
             {currentCategory === 'free' && (
-              <View style={emotionalStyles.hookCard}>
+              <View style={emotionalStyles.urgencyBanner}>
                 <LinearGradient
-                  colors={[palette.purple[500] + '18', palette.pink[500] + '10', 'transparent']}
+                  colors={[palette.purple[600], palette.pink[500]]}
                   start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={emotionalStyles.hookGradient}
+                  end={{ x: 1, y: 0 }}
+                  style={emotionalStyles.urgencyBannerGradient}
                 >
-                  <Ionicons name="heart" size={20} color={palette.purple[400]} />
-                  <Text style={emotionalStyles.hookText}>
-                    {EMOTIONAL_HOOKS[hookIndex]}
-                  </Text>
-                </LinearGradient>
-              </View>
-            )}
+                  {/* Glow overlay */}
+                  <View style={emotionalStyles.urgencyBannerGlow} />
 
-            {/* ── Urgency Bar ── */}
-            {currentCategory === 'free' && (
-              <View style={emotionalStyles.urgencyBar}>
-                <Ionicons name="time-outline" size={14} color={palette.gold[400]} />
-                <Text style={emotionalStyles.urgencyText}>
-                  Bugün sadece 1 ücretsiz profil görüntüleme hakkın var
-                </Text>
+                  {/* Floating heart */}
+                  <Animated.Text
+                    style={[
+                      emotionalStyles.urgencyBannerHeart,
+                      { transform: [{ translateY: heartFloat }] },
+                    ]}
+                  >
+                    {'💜'}
+                  </Animated.Text>
+
+                  {/* Text block */}
+                  <View style={emotionalStyles.urgencyBannerTextBlock}>
+                    <View style={emotionalStyles.urgencyBannerRow}>
+                      <Text style={emotionalStyles.urgencyBannerPrimary}>
+                        {'Seni bekleyen '}
+                      </Text>
+                      <Animated.Text
+                        style={[
+                          emotionalStyles.urgencyBannerNumber,
+                          { transform: [{ scale: numberPulse }] },
+                        ]}
+                      >
+                        {'8'}
+                      </Animated.Text>
+                      <Text style={emotionalStyles.urgencyBannerPrimary}>
+                        {' kişi var 💜'}
+                      </Text>
+                    </View>
+                    <Text style={emotionalStyles.urgencyBannerSecondary}>
+                      {'Kilidi aç ve hemen eşleş'}
+                    </Text>
+                  </View>
+                </LinearGradient>
               </View>
             )}
 
@@ -1594,46 +1622,62 @@ const cardStyles = StyleSheet.create({
 // ─── Emotional / Conversion Styles ───────────────────────────
 
 const emotionalStyles = StyleSheet.create({
-  // ── Hook card ──
-  hookCard: {
+  // ── Urgency banner ──
+  urgencyBanner: {
     borderRadius: borderRadius.xl,
     overflow: 'hidden',
-    marginBottom: spacing.smd,
-    borderWidth: 1,
-    borderColor: 'rgba(167, 139, 250, 0.15)',
-  },
-  hookGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.smd,
-    gap: spacing.smd,
-  },
-  hookText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: fontWeights.medium,
-    color: GLASS.textPrimary,
-  },
-
-  // ── Urgency bar ──
-  urgencyBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: 'rgba(251, 191, 36, 0.08)',
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
     marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: 'rgba(251, 191, 36, 0.15)',
+    shadowColor: palette.purple[500],
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
+    elevation: 10,
   },
-  urgencyText: {
+  urgencyBannerGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    gap: spacing.smd,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  urgencyBannerGlow: {
+    position: 'absolute',
+    top: -30,
+    left: '30%',
+    width: 120,
+    height: 80,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+  },
+  urgencyBannerHeart: {
+    fontSize: 28,
+  },
+  urgencyBannerTextBlock: {
     flex: 1,
-    fontSize: 12,
+    gap: 2,
+  },
+  urgencyBannerRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    flexWrap: 'wrap',
+  },
+  urgencyBannerPrimary: {
+    fontSize: 16,
+    fontWeight: fontWeights.bold,
+    color: '#FFFFFF',
+  },
+  urgencyBannerNumber: {
+    fontSize: 20,
+    fontWeight: fontWeights.bold,
+    color: '#FFFFFF',
+    includeFontPadding: false,
+  },
+  urgencyBannerSecondary: {
+    fontSize: 13,
     fontWeight: fontWeights.medium,
-    color: palette.gold[400],
+    color: 'rgba(255,255,255,0.8)',
   },
 
   // ── Social proof ──
