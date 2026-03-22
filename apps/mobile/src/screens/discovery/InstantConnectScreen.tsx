@@ -37,17 +37,24 @@ const SearchingPhase: React.FC<{ duration: number; onCancel: () => void }> = ({ 
 
   useEffect(() => {
     // Pulse animation
-    Animated.loop(
+    const pulseLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, { toValue: 1.2, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
         Animated.timing(pulseAnim, { toValue: 1, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
       ]),
-    ).start();
+    );
+    pulseLoop.start();
 
     // Rotate animation
-    Animated.loop(
+    const rotateLoop = Animated.loop(
       Animated.timing(rotateAnim, { toValue: 1, duration: 3000, easing: Easing.linear, useNativeDriver: true }),
-    ).start();
+    );
+    rotateLoop.start();
+
+    return () => {
+      pulseLoop.stop();
+      rotateLoop.stop();
+    };
   }, [pulseAnim, rotateAnim]);
 
   const rotate = rotateAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });

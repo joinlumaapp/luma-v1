@@ -574,7 +574,7 @@ function GoldenGlowBackground() {
   const pulseAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.loop(
+    const anim = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
           toValue: 1,
@@ -587,7 +587,9 @@ function GoldenGlowBackground() {
           useNativeDriver: false,
         }),
       ])
-    ).start();
+    );
+    anim.start();
+    return () => anim.stop();
   }, [pulseAnim]);
 
   const glowOpacity = pulseAnim.interpolate({
@@ -637,12 +639,14 @@ export const DatePlannerScreen: React.FC = () => {
   // Sparkle animation
   const sparkleAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    Animated.loop(
+    const anim = Animated.loop(
       Animated.sequence([
         Animated.timing(sparkleAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
         Animated.timing(sparkleAnim, { toValue: 0, duration: 1500, useNativeDriver: true }),
       ])
-    ).start();
+    );
+    anim.start();
+    return () => anim.stop();
   }, [sparkleAnim]);
 
   const sparkleScale = sparkleAnim.interpolate({

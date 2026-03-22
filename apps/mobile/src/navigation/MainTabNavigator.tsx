@@ -310,7 +310,11 @@ const MatchesStackNavigator: React.FC = React.memo(() => (
       options={{ animation: 'slide_from_bottom' }}
     />
     <MatchesStack.Screen name="ChatList" component={ChatListScreen} />
-    <MatchesStack.Screen name="Chat" component={DeferredChatScreen} />
+    <MatchesStack.Screen
+      name="Chat"
+      component={DeferredChatScreen}
+      options={{ gestureEnabled: true }}
+    />
     <MatchesStack.Screen
       name="Call"
       component={CallScreen}

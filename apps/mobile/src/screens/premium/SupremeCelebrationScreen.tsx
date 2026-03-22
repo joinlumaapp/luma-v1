@@ -250,6 +250,9 @@ export const SupremeCelebrationScreen: React.FC = () => {
   const buttonTranslateY = useRef(new Animated.Value(40)).current;
   const buttonShine = useRef(new Animated.Value(-1)).current;
 
+  // Ref to track the button shine interval so it can be cleared on unmount
+  const shineIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   // Memoize particle configs so they don't regenerate on re-render
   const stars = useMemo(() => generateStars(), []);
   const confetti = useMemo(() => generateConfetti(), []);
@@ -377,9 +380,18 @@ export const SupremeCelebrationScreen: React.FC = () => {
       };
 
       startShine();
-      const interval = setInterval(startShine, 3000);
-      return () => clearInterval(interval);
+      shineIntervalRef.current = setInterval(startShine, 3000);
     }, 1400);
+
+    // Cleanup: stop all animation loops and the shine interval when component unmounts
+    return () => {
+      if (shineIntervalRef.current) {
+        clearInterval(shineIntervalRef.current);
+        shineIntervalRef.current = null;
+      }
+      logoPulse.stopAnimation();
+      logoRotateY.stopAnimation();
+    };
   }, [
     logoScale, logoOpacity, logoPulse, logoRotateY, glowOpacity,
     headingOpacity, headingTranslateY, subOpacity, subTranslateY,
