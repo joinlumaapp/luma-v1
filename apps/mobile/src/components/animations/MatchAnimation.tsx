@@ -159,11 +159,11 @@ const getScoreLabel = (score: number): string => {
 };
 
 // ─── Score Ring ───────────────────────────────────────────────────────────────
-// Drawn as a simple animated border arc simulation using two half-circle masks.
-// No SVG dependency — pure RN Animated approach.
+// Clean two-layer ring: dim track + colored fill that fades in over 400ms.
+// Glow via wrapper shadow — no overflow clipping issues.
 
-const RING_SIZE = 100;
-const RING_THICKNESS = 5;
+const RING_SIZE = 96;
+const RING_STROKE = 4;
 
 interface ScoreRingProps {
   score: number;
@@ -172,43 +172,31 @@ interface ScoreRingProps {
 }
 
 const ScoreRing: React.FC<ScoreRingProps> = ({ score, accentColor, progressAnim }) => {
-  // Glow appears after ring finishes filling
-  const glowOpacity = progressAnim.interpolate({
-    inputRange: [0.8, 1],
+  const ringOpacity = progressAnim.interpolate({
+    inputRange: [0, 1],
     outputRange: [0, 1],
     extrapolate: 'clamp',
   });
 
   return (
     <View style={ringStyles.wrapper}>
-      {/* Outer glow ring — fades in when fill completes */}
+      {/* Track ring */}
+      <View style={[ringStyles.track, { borderColor: accentColor + '25' }]} />
+
+      {/* Colored fill ring — fades in cleanly */}
       <Animated.View
         style={[
-          ringStyles.glowRing,
+          ringStyles.fill,
           {
             borderColor: accentColor,
-            opacity: glowOpacity,
+            opacity: ringOpacity,
             shadowColor: accentColor,
           },
         ]}
       />
 
-      {/* Static base ring (dim) */}
-      <View style={[ringStyles.baseRing, { borderColor: accentColor + '30' }]} />
-
-      {/* Filled ring — opacity animates from 0 to 1 over 400ms */}
-      <Animated.View
-        style={[
-          ringStyles.filledRing,
-          {
-            borderColor: accentColor,
-            opacity: progressAnim,
-          },
-        ]}
-      />
-
-      {/* Center: numeric counter driven by animation listener */}
-      <View style={ringStyles.center}>
+      {/* Centered score number */}
+      <View style={ringStyles.center} pointerEvents="none">
         <AnimatedCounter
           rawAnim={progressAnim}
           targetScore={score}
@@ -219,7 +207,6 @@ const ScoreRing: React.FC<ScoreRingProps> = ({ score, accentColor, progressAnim 
   );
 };
 
-// Displays an animated integer counter driven by a listener on the raw Animated.Value
 const AnimatedCounter: React.FC<{
   rawAnim: Animated.Value;
   targetScore: number;
@@ -248,31 +235,23 @@ const ringStyles = StyleSheet.create({
     height: RING_SIZE,
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'relative',
   },
-  baseRing: {
+  track: {
     position: 'absolute',
     width: RING_SIZE,
     height: RING_SIZE,
     borderRadius: RING_SIZE / 2,
-    borderWidth: RING_THICKNESS,
+    borderWidth: RING_STROKE,
   },
-  filledRing: {
+  fill: {
     position: 'absolute',
     width: RING_SIZE,
     height: RING_SIZE,
     borderRadius: RING_SIZE / 2,
-    borderWidth: RING_THICKNESS,
-  },
-  glowRing: {
-    position: 'absolute',
-    width: RING_SIZE + 8,
-    height: RING_SIZE + 8,
-    borderRadius: (RING_SIZE + 8) / 2,
-    borderWidth: 2,
+    borderWidth: RING_STROKE,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 10,
+    shadowOpacity: 0.55,
+    shadowRadius: 8,
     elevation: 6,
   },
   center: {
@@ -281,8 +260,8 @@ const ringStyles = StyleSheet.create({
   },
   scoreText: {
     fontSize: 22,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     includeFontPadding: false,
   },
 });
@@ -747,9 +726,11 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const CARD_MAX_WIDTH = Math.min(SCREEN_WIDTH - 32, 420);
-const AVATAR_SIZE = 84;
-const AVATAR_BORDER = 3;
-const AVATAR_TOTAL = AVATAR_SIZE + AVATAR_BORDER * 2 + 4; // gradient border padding
+// Avatar ring math: PHOTO inside a LinearGradient border.
+// Container = PHOTO + (STROKE * 2). Inner View = PHOTO exactly. Zero asymmetry.
+const AVATAR_PHOTO = 82;
+const AVATAR_STROKE = 3;
+const AVATAR_CONTAINER = AVATAR_PHOTO + AVATAR_STROKE * 2; // = 88
 
 const styles = StyleSheet.create({
   // Backdrop
@@ -819,74 +800,77 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
-  // Avatar row
+  // Avatar row — align to circle center, not bottom of names
   avatarRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'center',
     marginBottom: spacing.md,
-    gap: spacing.smd,
+    gap: 20,
   },
   avatarWrapper: {
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
   avatarGradientBorder: {
-    width: AVATAR_TOTAL,
-    height: AVATAR_TOTAL,
-    borderRadius: AVATAR_TOTAL / 2,
-    padding: AVATAR_BORDER,
+    width: AVATAR_CONTAINER,
+    height: AVATAR_CONTAINER,
+    borderRadius: AVATAR_CONTAINER / 2,
+    padding: AVATAR_STROKE,
     shadowColor: palette.purple[400],
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
     elevation: 8,
   },
   avatarInner: {
-    width: AVATAR_SIZE,
-    height: AVATAR_SIZE,
-    borderRadius: AVATAR_SIZE / 2,
+    width: AVATAR_PHOTO,
+    height: AVATAR_PHOTO,
+    borderRadius: AVATAR_PHOTO / 2,
     backgroundColor: '#1C0A3A',
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarPhoto: {
-    width: '100%',
-    height: '100%',
+    width: AVATAR_PHOTO,
+    height: AVATAR_PHOTO,
   },
   avatarInitials: {
-    fontSize: 28,
+    fontSize: 26,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
+    includeFontPadding: false,
   },
   avatarName: {
     ...typography.captionSmall,
     color: 'rgba(255,255,255,0.75)',
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
-    maxWidth: AVATAR_TOTAL,
+    maxWidth: AVATAR_CONTAINER,
     textAlign: 'center',
   },
 
-  // Heart connector
+  // Heart connector — sits level with the avatar circles
+  // marginTop = (AVATAR_CONTAINER - HEART_CIRCLE) / 2 = (88 - 48) / 2 = 20
   heartWrapper: {
-    marginBottom: 20, // shift up from avatar names
+    marginTop: 20,
   },
   heartCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: palette.pink[500],
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.7,
-    shadowRadius: 14,
+    shadowOpacity: 0.65,
+    shadowRadius: 12,
     elevation: 10,
   },
   heartEmoji: {
-    fontSize: 26,
+    fontSize: 24,
+    includeFontPadding: false,
   },
 
   // Title
@@ -900,17 +884,18 @@ const styles = StyleSheet.create({
     textShadowRadius: 10,
   },
 
-  // Score section
+  // Score section — ring + label stacked, no overlap
   scoreSection: {
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: 10,
     marginBottom: spacing.lg,
   },
   scoreLabel: {
-    ...typography.caption,
+    fontSize: 13,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     textAlign: 'center',
+    includeFontPadding: false,
   },
 
   // Buttons section
