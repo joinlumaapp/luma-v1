@@ -393,22 +393,24 @@ export const ChatScreen: React.FC = () => {
     const trimmed = inputText.trim();
     if (!trimmed || isSending) return;
 
-    // Free users: matched chats are free, only DMs to non-matches cost Jeton
-    // Since ChatScreen is only reachable from matched conversations, messages are free
-
-    try {
-      const sent = await sendMessage(matchId, trimmed);
-      if (sent) {
-        setInputText('');
-        setShowLimitReached(false);
-        stopTyping();
-      } else {
-        setShowLimitReached(true);
-      }
-    } catch {
-      Alert.alert('Hata', 'Mesaj gönderilemedi. Lütfen tekrar deneyin.');
+    // Check limit BEFORE sending — if blocked, show limit UI and return.
+    // sendMessage returning false means API failure, handled inline by the
+    // FAILED bubble — we must NOT show showLimitReached in that case.
+    const limitInfo = messageLimitInfo;
+    if (!limitInfo.allowed) {
+      setShowLimitReached(true);
+      return;
     }
-  }, [inputText, isSending, matchId, sendMessage, isPremiumTier, coinBalance, sendInstantMessage, navigation, stopTyping]);
+
+    // Clear input immediately for responsive feel — message is shown optimistically
+    setInputText('');
+    setShowLimitReached(false);
+    stopTyping();
+
+    // sendMessage adds the optimistic bubble immediately (status: SENDING).
+    // On failure it marks the bubble as FAILED with inline retry — no Alert needed.
+    await sendMessage(matchId, trimmed);
+  }, [inputText, isSending, matchId, sendMessage, messageLimitInfo, stopTyping]);
 
   // Image picker handler
   const handlePickImage = useCallback(async () => {
@@ -580,33 +582,6 @@ export const ChatScreen: React.FC = () => {
       return <MemoizedSystemMessage content={message.content} />;
     }
 
-    // Failed message: show red indicator and tap-to-retry
-    if (message.status === 'FAILED' && isMine) {
-      return (
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => handleRetryMessage(message.id)}
-          accessibilityLabel="Mesaj gonderilemedi, tekrar denemek icin dokunun"
-          accessibilityRole="button"
-        >
-          <View style={failedStyles.wrapper}>
-            <MemoizedMessageBubble
-              message={message}
-              isMine={isMine}
-              isLastInBlock={item.isLastInBlock}
-              showReadReceipts={showReadReceipts}
-              onReact={handleReaction}
-              onImagePress={handleImagePress}
-            />
-            <View style={failedStyles.indicator}>
-              <Text style={failedStyles.icon}>{'\u26A0'}</Text>
-              <Text style={failedStyles.text}>Gönderilemedi. Tekrar denemek için dokunun.</Text>
-            </View>
-          </View>
-        </TouchableOpacity>
-      );
-    }
-
     return (
       <MemoizedMessageBubble
         message={message}
@@ -615,6 +590,7 @@ export const ChatScreen: React.FC = () => {
         showReadReceipts={showReadReceipts}
         onReact={handleReaction}
         onImagePress={handleImagePress}
+        onRetry={handleRetryMessage}
       />
     );
   }, [currentUserId, handleReaction, handleImagePress, handleRetryMessage, showReadReceipts]);
@@ -1554,25 +1530,4 @@ const styles = StyleSheet.create({
 });
 
 // Failed message indicator styles (Issue 1)
-const failedStyles = StyleSheet.create({
-  wrapper: {
-    alignSelf: 'flex-end',
-    maxWidth: '80%',
-  },
-  indicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 4,
-    marginTop: 2,
-    paddingRight: 4,
-  },
-  icon: {
-    fontSize: 12,
-    color: colors.error,
-  },
-  text: {
-    ...typography.captionSmall,
-    color: colors.error,
-  },
-});
+// failedStyles removed — retry UI is now handled inside MemoizedMessageBubble

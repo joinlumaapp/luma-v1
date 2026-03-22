@@ -1,31 +1,28 @@
 // MessageStatus — Shows delivery/read status icons next to sent messages
-// Sent: single gray check, Delivered: double gray checks, Read: double blue checks
+// Sending: spinner, Sent: single gray check, Delivered: double gray checks, Read: double blue checks, Failed: warning
 
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 
-export type MessageStatusType = 'SENT' | 'DELIVERED' | 'READ' | 'FAILED';
+export type MessageStatusType = 'SENDING' | 'SENT' | 'DELIVERED' | 'READ' | 'FAILED';
 
 interface MessageStatusProps {
   status: MessageStatusType;
 }
 
-/**
- * Renders message delivery/read status indicators:
- * - SENT: single gray check
- * - DELIVERED: double gray checks
- * - READ: double blue/primary checks
- */
 export const MessageStatus: React.FC<MessageStatusProps> = ({ status }) => {
   switch (status) {
-    case 'FAILED':
+    case 'SENDING':
       return (
         <View style={styles.container}>
-          <Text style={[styles.checkText, styles.failedColor]}>{'\u26A0'}</Text>
+          <ActivityIndicator size={10} color={colors.textTertiary} />
         </View>
       );
+    case 'FAILED':
+      // No icon here — the retry row on the bubble handles the failed state visually
+      return null;
     case 'READ':
       return (
         <View style={styles.container}>
@@ -53,6 +50,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginLeft: 2,
+    minWidth: 14,
+    minHeight: 14,
+    justifyContent: 'center',
   },
   checkText: {
     ...typography.captionSmall,
@@ -66,8 +66,5 @@ const styles = StyleSheet.create({
   },
   readColor: {
     color: colors.primary,
-  },
-  failedColor: {
-    color: colors.error,
   },
 });

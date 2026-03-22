@@ -38,7 +38,7 @@ export interface ReactionCount {
   hasReacted: boolean;
 }
 
-export type MessageStatusType = 'SENT' | 'DELIVERED' | 'READ' | 'FAILED';
+export type MessageStatusType = 'SENDING' | 'SENT' | 'DELIVERED' | 'READ' | 'FAILED';
 
 export interface ChatMessage {
   id: string;

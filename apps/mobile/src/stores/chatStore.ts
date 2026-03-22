@@ -304,7 +304,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       senderId: userId,
       content,
       type: 'TEXT',
-      status: 'SENT',
+      status: 'SENDING',
       createdAt: now,
       isRead: false,
       reactions: [],
@@ -378,7 +378,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const userId = useAuthStore.getState().user?.id ?? 'dev-user-001';
     const optimisticMessage: ChatMessage = {
       id: tempId, matchId, senderId: userId, content: 'Fotoğraf',
-      type: 'IMAGE', status: 'SENT', mediaUrl: imageUri,
+      type: 'IMAGE', status: 'SENDING', mediaUrl: imageUri,
       createdAt: now, isRead: false, reactions: [],
     };
 
@@ -415,7 +415,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }));
       await replaceMessageById(matchId, tempId, response.message);
     } catch {
-      set({ isSending: false, imageUploadProgress: null });
+      set((state) => ({
+        messages: {
+          ...state.messages,
+          [matchId]: (state.messages[matchId] ?? []).map((msg) =>
+            msg.id === tempId ? { ...msg, status: 'FAILED' as const } : msg
+          ),
+        },
+        isSending: false,
+        imageUploadProgress: null,
+      }));
     }
   },
 
@@ -425,7 +434,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const userId = useAuthStore.getState().user?.id ?? 'dev-user-001';
     const optimisticMessage: ChatMessage = {
       id: tempId, matchId, senderId: userId, content: 'GIF',
-      type: 'GIF', status: 'SENT', mediaUrl: gifUrl,
+      type: 'GIF', status: 'SENDING', mediaUrl: gifUrl,
       createdAt: now, isRead: false, reactions: [],
     };
 
@@ -454,7 +463,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }));
       await replaceMessageById(matchId, tempId, response.message);
     } catch {
-      set({ isSending: false });
+      set((state) => ({
+        messages: {
+          ...state.messages,
+          [matchId]: (state.messages[matchId] ?? []).map((msg) =>
+            msg.id === tempId ? { ...msg, status: 'FAILED' as const } : msg
+          ),
+        },
+        isSending: false,
+      }));
     }
   },
 
@@ -464,7 +481,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const userId = useAuthStore.getState().user?.id ?? 'dev-user-001';
     const optimisticMessage: ChatMessage = {
       id: tempId, matchId, senderId: userId, content: 'Sesli mesaj',
-      type: 'VOICE', status: 'SENT', mediaUrl: audioUri, mediaDuration: duration,
+      type: 'VOICE', status: 'SENDING', mediaUrl: audioUri, mediaDuration: duration,
       createdAt: now, isRead: false, reactions: [],
     };
 
@@ -493,7 +510,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }));
       await replaceMessageById(matchId, tempId, response.message);
     } catch {
-      set({ isSending: false });
+      set((state) => ({
+        messages: {
+          ...state.messages,
+          [matchId]: (state.messages[matchId] ?? []).map((msg) =>
+            msg.id === tempId ? { ...msg, status: 'FAILED' as const } : msg
+          ),
+        },
+        isSending: false,
+      }));
     }
   },
 
@@ -672,18 +697,50 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const failedMessage = (messages[matchId] ?? []).find(
       (msg) => msg.id === messageId && msg.status === 'FAILED'
     );
+    // Guard: already retrying or not a failed message
     if (!failedMessage) return false;
 
-    // Remove the failed message from state
+    // Update to SENDING in place — message stays at same position, no jump
     set((state) => ({
       messages: {
         ...state.messages,
-        [matchId]: (state.messages[matchId] ?? []).filter((msg) => msg.id !== messageId),
+        [matchId]: (state.messages[matchId] ?? []).map((msg) =>
+          msg.id === messageId ? { ...msg, status: 'SENDING' as const } : msg
+        ),
       },
     }));
 
-    // Re-send via the normal sendMessage flow
-    return get().sendMessage(matchId, failedMessage.content);
+    try {
+      const response = await chatService.sendMessage(matchId, {
+        content: failedMessage.content,
+        type: failedMessage.type as 'TEXT' | 'IMAGE' | 'GIF' | 'VOICE',
+        mediaUrl: failedMessage.mediaUrl,
+        mediaDuration: failedMessage.mediaDuration,
+      });
+      // Replace in place with server-confirmed message
+      set((state) => ({
+        messages: {
+          ...state.messages,
+          [matchId]: (state.messages[matchId] ?? []).map((msg) =>
+            msg.id === messageId ? response.message : msg
+          ),
+        },
+      }));
+      await replaceMessageById(matchId, messageId, response.message);
+      analyticsService.track(ANALYTICS_EVENTS.MESSAGE_SENT, { matchId, retried: true });
+      return true;
+    } catch {
+      // Mark failed again — prevents infinite SENDING spinner
+      set((state) => ({
+        messages: {
+          ...state.messages,
+          [matchId]: (state.messages[matchId] ?? []).map((msg) =>
+            msg.id === messageId ? { ...msg, status: 'FAILED' as const } : msg
+          ),
+        },
+      }));
+      return false;
+    }
   },
 
   updateMessageStatus: (matchId, messageId, status, readAt) => {

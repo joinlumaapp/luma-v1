@@ -2,7 +2,7 @@
 // with custom equality check to prevent expensive re-renders during scrolling
 
 import React, { memo, useCallback } from 'react';
-import { View, Text, Image, StyleSheet, Platform } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
@@ -61,6 +61,8 @@ interface MessageBubbleProps {
   showReadReceipts?: boolean;
   onReact: (messageId: string, emoji: ReactionEmoji) => void;
   onImagePress: (mediaUrl: string) => void;
+  /** Called when user taps "Tekrar dene" on a failed message */
+  onRetry?: (messageId: string) => void;
 }
 
 /**
@@ -84,6 +86,7 @@ function areMessageBubblePropsEqual(
     prevProps.isMine === nextProps.isMine &&
     prevProps.isLastInBlock === nextProps.isLastInBlock &&
     prevProps.showReadReceipts === nextProps.showReadReceipts &&
+    prevProps.onRetry === nextProps.onRetry &&
     prev.reactions.length === next.reactions.length &&
     prev.reactions.every(
       (r, i) =>
@@ -95,7 +98,7 @@ function areMessageBubblePropsEqual(
 }
 
 export const MemoizedMessageBubble = memo<MessageBubbleProps>(
-  ({ message, isMine, isLastInBlock, showReadReceipts = true, onReact, onImagePress }) => {
+  ({ message, isMine, isLastInBlock, showReadReceipts = true, onReact, onImagePress, onRetry }) => {
     const handleReact = useCallback(
       (_messageId: string, emoji: ReactionEmoji) => {
         onReact(message.id, emoji);
@@ -109,8 +112,16 @@ export const MemoizedMessageBubble = memo<MessageBubbleProps>(
       }
     }, [message.mediaUrl, onImagePress]);
 
+    const handleRetry = useCallback(() => {
+      onRetry?.(message.id);
+    }, [message.id, onRetry]);
+
     // Whether to show the read receipt indicator below the bubble (tier-gated)
-    const showReadReceipt = isMine && isLastInBlock && showReadReceipts;
+    // Don't show read receipts for SENDING/FAILED states — status handles those
+    const showReadReceipt = isMine && isLastInBlock && showReadReceipts && message.status !== 'FAILED';
+
+    // Show retry row for own messages that failed
+    const showRetryRow = isMine && message.status === 'FAILED';
 
     // Image messages
     if (message.type === 'IMAGE' && message.mediaUrl) {
@@ -204,6 +215,7 @@ export const MemoizedMessageBubble = memo<MessageBubbleProps>(
             style={[
               styles.messageBubble,
               isMine ? styles.messageBubbleMine : styles.messageBubbleTheirs,
+              message.status === 'FAILED' && styles.messageBubbleFailed,
             ]}
           >
             <Text
@@ -223,9 +235,24 @@ export const MemoizedMessageBubble = memo<MessageBubbleProps>(
               >
                 {formatMessageTime(message.createdAt)}
               </Text>
+              {isMine && (
+                <MessageStatus status={message.status} />
+              )}
             </View>
           </View>
         </MessageReactionWrapper>
+
+        {/* Retry row — only for own failed messages */}
+        {showRetryRow && (
+          <View style={styles.retryRow}>
+            <Text style={styles.retryErrorText}>{'Gönderilemedi'}</Text>
+            <Text style={styles.retrySeparator}>{' · '}</Text>
+            <TouchableOpacity onPress={handleRetry} activeOpacity={0.7} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Text style={styles.retryAction}>{'Tekrar dene'}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {showReadReceipt && (
           <View style={styles.readReceiptContainer}>
             <MessageStatus status={message.status} />
@@ -367,5 +394,33 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
     marginTop: 2,
     marginRight: 4,
+  },
+
+  // Failed bubble — slightly muted to signal something went wrong
+  messageBubbleFailed: {
+    opacity: 0.65,
+  },
+
+  // Retry row — shown below failed messages
+  retryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-end',
+    marginTop: 3,
+    marginRight: 4,
+  },
+  retryErrorText: {
+    ...typography.captionSmall,
+    color: colors.error,
+  },
+  retrySeparator: {
+    ...typography.captionSmall,
+    color: colors.textTertiary,
+  },
+  retryAction: {
+    ...typography.captionSmall,
+    color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
 });
