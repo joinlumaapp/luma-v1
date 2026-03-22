@@ -9,6 +9,7 @@ import { analyticsService, ANALYTICS_EVENTS } from '../services/analyticsService
 import { storage } from '../utils/storage';
 import { parseApiError } from '../services/api';
 import { devMockOrThrow } from '../utils/mockGuard';
+import { clearAllChatData } from '../services/chatPersistence';
 import type { AxiosError } from 'axios';
 
 export type PackageTier = 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
@@ -246,31 +247,42 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   // ─── Logout ───────────────────────────────────────────────
   logout: async () => {
-    // Stop token refresh timer
+    // 1. Stop token refresh timer immediately — no more background API calls
     get()._stopTokenRefreshTimer();
 
-    // Disconnect WebSocket
+    // 2. Disconnect socket and remove all chatStore event listeners.
+    //    Order matters: disconnect socket FIRST so no incoming events race
+    //    with the state reset below.
+    try {
+      const { useChatStore } = require('./chatStore') as typeof import('./chatStore');
+      useChatStore.getState().disconnectSocketListeners();
+    } catch { /* store may not be initialized */ }
     socketService.disconnect();
 
-    // Track analytics
+    // 3. Track analytics then reset identity — must happen before clearing tokens
     analyticsService.track(ANALYTICS_EVENTS.LOGOUT);
     analyticsService.reset();
 
-    // Clear persisted data
+    // 4. Clear all chat data: in-memory cache + AsyncStorage + resets hydration flag.
+    //    Run concurrently with token/storage cleanup.
+    const [_chatClear] = await Promise.allSettled([
+      clearAllChatData(),
+      storage.clearTokens(),
+      storage.clearOnboarded(),
+    ]);
     storage.delete(TRIAL_EXPIRY_KEY);
-    await storage.clearOnboarded();
-    await storage.clearTokens();
 
-    // Call API to invalidate server-side session
+    // 5. Call API to invalidate server-side session (best-effort)
     try {
       await authService.logout();
     } catch {
-      // Non-critical — server token will expire naturally
+      // Non-critical — server token expires naturally
       if (__DEV__) {
-        console.warn('Cikis API cagrisi basarisiz, yerel temizlik tamamlandi');
+        console.warn('[auth] Logout API call failed — local cleanup complete');
       }
     }
 
+    // 6. Reset own auth state first so navigation immediately sees unauthenticated
     set({
       accessToken: null,
       refreshToken: null,
@@ -284,31 +296,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       _refreshTimerId: null,
     });
 
-    // Reset all other stores to prevent stale data leaking between sessions.
-    // Lazy require pattern avoids circular dependency issues.
-    try {
-      const { useProfileStore } = require('./profileStore') as typeof import('./profileStore');
-      useProfileStore.getState().reset();
-    } catch { /* store may not be initialized */ }
+    // 7. Reset all feature stores — lazy require avoids circular deps.
+    //    Every store that holds user-specific data must be listed here.
+    const resetStore = <T>(
+      loader: () => { getState: () => T & { reset?: () => void } } | { setState: (s: Partial<T>) => void },
+      fallbackState?: Partial<T>,
+    ) => {
+      try {
+        const store = loader() as ReturnType<typeof loader>;
+        if ('getState' in store && typeof (store as { getState: () => { reset?: () => void } }).getState().reset === 'function') {
+          (store as { getState: () => { reset: () => void } }).getState().reset();
+        } else if (fallbackState && 'setState' in store) {
+          (store as { setState: (s: Partial<T>) => void }).setState(fallbackState);
+        }
+      } catch { /* store may not be initialized */ }
+    };
 
-    try {
-      const { useCoinStore } = require('./coinStore') as typeof import('./coinStore');
-      useCoinStore.setState({
-        balance: 0,
-        transactions: [],
-        isLoading: false,
-        error: null,
-        adCooldownUntil: null,
-        lastDailyCheckin: null,
-        boostActiveUntil: null,
-      });
-    } catch { /* store may not be initialized */ }
-
-    try {
-      const { useBadgeStore } = require('./badgeStore') as typeof import('./badgeStore');
-      useBadgeStore.setState({ badges: [], isLoading: false, error: null, earnedCount: 0, totalCount: 0 });
-    } catch { /* store may not be initialized */ }
-
+    // Chat store — isHydrated MUST be reset so hydrateFromStorage() re-runs for next user
     try {
       const { useChatStore } = require('./chatStore') as typeof import('./chatStore');
       useChatStore.setState({
@@ -318,95 +322,102 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isLoadingMessages: false,
         isSending: false,
         typingUsers: {},
+        hasMore: {},
+        cursors: {},
         totalUnread: 0,
+        isHydrated: false,   // ← critical: allows hydrateFromStorage to re-run for next user
         error: null,
+        imageUploadProgress: null,
         dailyMessagesSent: 0,
         singleMessageCredits: 0,
+        _socketCleanups: [],
       });
+    } catch { /* store may not be initialized */ }
+
+    resetStore(() => require('./profileStore').useProfileStore);
+    resetStore(() => require('./callStore').useCallStore);
+    resetStore(() => require('./gameMatchStore').useGameMatchStore);
+    resetStore(() => require('./instantConnectStore').useInstantConnectStore);
+
+    try {
+      const { useCoinStore } = require('./coinStore') as typeof import('./coinStore');
+      useCoinStore.setState({ balance: 0, transactions: [], isLoading: false, error: null,
+        adCooldownUntil: null, lastDailyCheckin: null, boostActiveUntil: null });
+    } catch { /* store may not be initialized */ }
+
+    try {
+      const { useBadgeStore } = require('./badgeStore') as typeof import('./badgeStore');
+      useBadgeStore.setState({ badges: [], isLoading: false, error: null, earnedCount: 0, totalCount: 0 });
     } catch { /* store may not be initialized */ }
 
     try {
       const { useMatchStore } = require('./matchStore') as typeof import('./matchStore');
-      useMatchStore.setState({
-        matches: [],
-        selectedMatch: null,
-        isLoading: false,
-        totalCount: 0,
-        error: null,
-      });
+      useMatchStore.setState({ matches: [], selectedMatch: null, isLoading: false, totalCount: 0, error: null });
     } catch { /* store may not be initialized */ }
 
     try {
       const { useDiscoveryStore } = require('./discoveryStore') as typeof import('./discoveryStore');
       useDiscoveryStore.setState({
-        cards: [],
-        currentIndex: 0,
-        dailyRemaining: 0,
-        isLoading: false,
-        showMatchAnimation: false,
-        currentMatchId: null,
-        matchAnimationType: null,
-        error: null,
-        canUndo: false,
-        lastSwipedProfile: null,
-        lastSwipeDirection: null,
-        undosUsedToday: 0,
-        showSuperLikeGlow: false,
-        batchCooldownEnd: null,
-        totalCandidates: 0,
-        premiumImpressions: 0,
+        cards: [], currentIndex: 0, dailyRemaining: 0, isLoading: false,
+        showMatchAnimation: false, currentMatchId: null, matchAnimationType: null,
+        error: null, canUndo: false, lastSwipedProfile: null, lastSwipeDirection: null,
+        undosUsedToday: 0, showSuperLikeGlow: false, batchCooldownEnd: null,
+        totalCandidates: 0, premiumImpressions: 0,
       });
     } catch { /* store may not be initialized */ }
 
     try {
       const { useEngagementStore } = require('./engagementStore') as typeof import('./engagementStore');
       useEngagementStore.setState({
-        currentRewardDay: 1,
-        dailyRewardStreak: 0,
-        lastRewardClaimDate: null,
-        collectedDays: [],
-        showDailyRewardModal: false,
-        currentChallenge: null,
-        challengeProgress: 0,
-        challengeCompleted: false,
-        challengeRewardClaimed: false,
-        challengeDate: null,
-        likesTeaserCount: 0,
-        likesTeaserProfiles: [],
-        showFlashBoost: false,
-        flashBoostShownToday: false,
-        flashBoostExpiresAt: null,
-        matchCountdowns: {},
-        leaderboard: [],
-        userRank: null,
-        unlockedAchievements: [],
-        pendingAchievementToast: null,
-        isLoading: false,
+        currentRewardDay: 1, dailyRewardStreak: 0, lastRewardClaimDate: null,
+        collectedDays: [], showDailyRewardModal: false, currentChallenge: null,
+        challengeProgress: 0, challengeCompleted: false, challengeRewardClaimed: false,
+        challengeDate: null, likesTeaserCount: 0, likesTeaserProfiles: [],
+        showFlashBoost: false, flashBoostShownToday: false, flashBoostExpiresAt: null,
+        matchCountdowns: {}, leaderboard: [], userRank: null,
+        unlockedAchievements: [], pendingAchievementToast: null, isLoading: false,
       });
     } catch { /* store may not be initialized */ }
 
     try {
       const { useStoryStore } = require('./storyStore') as typeof import('./storyStore');
-      useStoryStore.setState({
-        storyUsers: [],
-        myStories: [],
-        isLoading: false,
-        isCreating: false,
-      });
+      useStoryStore.setState({ storyUsers: [], myStories: [], isLoading: false, isCreating: false });
     } catch { /* store may not be initialized */ }
 
     try {
       const { useNotificationStore } = require('./notificationStore') as typeof import('./notificationStore');
-      useNotificationStore.setState({
-        notifications: [],
-        unreadCount: 0,
-        isLoading: false,
-      });
+      useNotificationStore.setState({ notifications: [], unreadCount: 0, isLoading: false });
+    } catch { /* store may not be initialized */ }
+
+    // Previously missing stores — now included
+    try {
+      const { useSocialFeedStore } = require('./socialFeedStore') as typeof import('./socialFeedStore');
+      useSocialFeedStore.setState({ posts: [], isLoading: false, error: null, hasMore: false, cursor: null });
     } catch { /* store may not be initialized */ }
 
     try {
-      const { useCallStore } = require('./callStore') as typeof import('./callStore');
-      useCallStore.getState().reset();
+      const { useActivityStore } = require('./activityStore') as typeof import('./activityStore');
+      useActivityStore.setState({ activities: [], isLoading: false, error: null });
+    } catch { /* store may not be initialized */ }
+
+    try {
+      const { useCrossedPathsStore } = require('./crossedPathsStore') as typeof import('./crossedPathsStore');
+      useCrossedPathsStore.setState({ paths: [], isLoading: false, error: null });
+    } catch { /* store may not be initialized */ }
+
+    try {
+      const { useMoodStore } = require('./moodStore') as typeof import('./moodStore');
+      useMoodStore.setState({ currentMood: null, isLoading: false });
+    } catch { /* store may not be initialized */ }
+
+    try {
+      const { useRelationshipStore } = require('./relationshipStore') as typeof import('./relationshipStore');
+      useRelationshipStore.setState({ relationship: null, isLoading: false, error: null });
+    } catch { /* store may not be initialized */ }
+
+    try {
+      const { useWaveStore } = require('./waveStore') as typeof import('./waveStore');
+      useWaveStore.setState({ waves: [], isLoading: false, error: null });
     } catch { /* store may not be initialized */ }
   },
 

@@ -171,3 +171,34 @@ export const clearConversation = async (matchId: string): Promise<void> => {
     // Cleanup failed
   }
 };
+
+/**
+ * Full session wipe — called on logout.
+ * Clears the in-memory caches AND all AsyncStorage chat keys so the next
+ * user's session starts from a clean slate.
+ */
+export const clearAllChatData = async (): Promise<void> => {
+  // 1. Wipe module-level in-memory caches immediately (synchronous)
+  for (const key of Object.keys(messageCache)) {
+    delete messageCache[key];
+  }
+  for (const key of Object.keys(metaCache)) {
+    delete metaCache[key];
+  }
+  // Reset hydration flag so the next user's hydrateFromStorage() runs fully
+  hydrated = false;
+
+  // 2. Remove all chat-related AsyncStorage keys
+  try {
+    const allKeys = await AsyncStorage.getAllKeys();
+    const chatKeys = allKeys.filter(
+      (k) => k.startsWith(MESSAGES_KEY_PREFIX) || k === CONVERSATIONS_META_KEY,
+    );
+    if (chatKeys.length > 0) {
+      await AsyncStorage.multiRemove(chatKeys);
+    }
+  } catch {
+    // Storage removal failed — in-memory caches are already clear, which is
+    // the higher-priority guarantee. AsyncStorage will be overwritten on next login.
+  }
+};
