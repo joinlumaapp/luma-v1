@@ -12,6 +12,7 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Keyboard,
+  BackHandler,
   Platform,
   Animated,
   ActivityIndicator,
@@ -257,13 +258,48 @@ export const ChatScreen: React.FC = () => {
   const [recordingDuration, setRecordingDuration] = useState(0);
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Dismiss keyboard and reset transient overlay/modal state when leaving the screen.
-  // This prevents ghost UI: a visible keyboard or open modal freezing on top of the
-  // previous screen after navigation.goBack() completes.
+  // ── Android back button priority chain ──────────────────────────────────────
+  // Each back press handles ONE layer at a time (modal → keyboard → navigation).
+  // Without this, Android fires navigation.goBack() while a Modal is still
+  // mounted in the React tree, causing the modal to render over the previous
+  // screen (ghost UI).
   useFocusEffect(
     React.useCallback(() => {
+      const onBack = (): boolean => {
+        // Priority 1: close fullscreen image viewer
+        if (fullscreenImage !== null) {
+          setFullscreenImage(null);
+          return true; // consumed — do NOT pop navigation
+        }
+        // Priority 2: close GIF picker
+        if (showGifPicker) {
+          setShowGifPicker(false);
+          return true;
+        }
+        // Priority 3: close image preview bar
+        if (imagePreview !== null) {
+          setImagePreview(null);
+          return true;
+        }
+        // Priority 4: dismiss keyboard (without leaving screen)
+        if (keyboardVisible) {
+          Keyboard.dismiss();
+          return true;
+        }
+        // Priority 5: stop typing indicator before leaving
+        stopTyping();
+        // Let React Navigation handle the actual back navigation
+        return false;
+      };
+
+      const sub = BackHandler.addEventListener('hardwareBackPress', onBack);
+
+      // Cleanup when screen blurs (user navigated away by any means):
+      // dismiss keyboard, close all overlays, stop typing indicator, clear timers.
       return () => {
+        sub.remove();
         Keyboard.dismiss();
+        stopTyping();
         setShowGifPicker(false);
         setFullscreenImage(null);
         setImagePreview(null);
@@ -274,7 +310,7 @@ export const ChatScreen: React.FC = () => {
           recordingTimerRef.current = null;
         }
       };
-    }, [])
+    }, [fullscreenImage, showGifPicker, imagePreview, keyboardVisible, stopTyping])
   );
 
   const currentUserId = useAuthStore((state) => state.user?.id);
