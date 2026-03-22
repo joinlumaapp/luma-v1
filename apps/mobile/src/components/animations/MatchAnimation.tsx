@@ -1,8 +1,8 @@
-// Premium match celebration — immersive emotional WOW moment
-// Blurred profile background, floating particles, animated score ring,
-// slide-in photos, sparkle burst, haptic feedback, conversation suggestion
+// MatchAnimation — Premium match celebration popup
+// Fast (max 800ms), exciting, and clean.
+// Gradient background, animated avatars, heart pulse, score ring, CTA with suggestion chip.
 
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -10,18 +10,20 @@ import {
   TouchableOpacity,
   StyleSheet,
   Animated,
+  Easing,
   Modal,
   Dimensions,
+  Platform,
 } from 'react-native';
-import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { colors, palette } from '../../theme/colors';
+import { palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// ─── Props Interface ──────────────────────────────────────────────────────────
 
 interface MatchAnimationProps {
   visible: boolean;
@@ -39,152 +41,64 @@ interface MatchAnimationProps {
   onClose: () => void;
 }
 
-// ── Emotional title variations ──────────────────────────────
-const TITLES_NORMAL = [
-  'Harika Bir Eşleşme!',
-  'Birbirinizi Buldunuz!',
-];
-const TITLES_SUPER = [
-  'Kaçırılmayacak Bir Uyum!',
-  'Mükemmel Eşleşme!',
+// ─── Constants ───────────────────────────────────────────────────────────────
+
+const GRADIENT_BG: readonly [string, string, string, string] = [
+  'rgba(10, 4, 28, 0.96)',
+  'rgba(80, 20, 120, 0.88)',
+  'rgba(180, 40, 120, 0.72)',
+  'rgba(10, 4, 28, 0.96)',
 ];
 
-const getEmotionalTitle = (isSuper: boolean, isSupreme: boolean): string => {
-  if (isSupreme) return 'Supreme Eşleşme!';
-  const pool = isSuper ? TITLES_SUPER : TITLES_NORMAL;
-  return pool[Math.floor(Math.random() * pool.length)];
-};
+const GRADIENT_CTA: readonly [string, string] = [
+  palette.purple[500],
+  palette.pink[500],
+];
 
-// Suggested first message
+const WOW_TITLES = [
+  '💜 Birbirinizi Buldunuz!',
+  '🔥 Mükemmel Bir Eşleşme!',
+  '😍 Kaçırılmayacak Uyum!',
+];
+
 const SUGGESTIONS = [
-  'Selam! Sanırım iyi anlaşacağız',
+  'Selam! Bence iyi anlaşacağız',
   'Merhaba! Profilin çok dikkat çekici',
   'Hey! Bu uyum tesadüf olamaz',
 ];
 
-const getSuggestion = (): string =>
-  SUGGESTIONS[Math.floor(Math.random() * SUGGESTIONS.length)];
+// ─── Floating Hearts ─────────────────────────────────────────────────────────
 
-// ── Confetti / particle config ──────────────────────────────
-const SUPER_PARTICLE_COUNT = 30;
-const NORMAL_PARTICLE_COUNT = 20;
-// Floating ambient particles (hearts + sparkles)
-const FLOATING_COUNT = 12;
-
-interface ParticleConfig {
-  startX: number;
-  startY: number;
-  endX: number;
-  endY: number;
-  size: number;
-  color: string;
-  isHeart: boolean;
-}
-
-const generateParticles = (isSuper: boolean, isSupreme: boolean): ParticleConfig[] => {
-  const count = isSupreme ? 35 : isSuper ? SUPER_PARTICLE_COUNT : NORMAL_PARTICLE_COUNT;
-  const baseColors = isSupreme
-    ? ['#FFD700', '#D4AF37', '#B8860B', '#C5A028', '#FFFFFF']
-    : isSuper
-      ? [palette.gold[300], palette.gold[400], palette.gold[500], palette.gold[200], palette.white]
-      : [palette.purple[300], palette.purple[400], palette.pink[400], palette.pink[300], palette.white];
-
-  const centerX = SCREEN_WIDTH / 2;
-  const centerY = SCREEN_HEIGHT / 2;
-
-  return Array.from({ length: count }, (_, i) => {
-    const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.8;
-    const distance = 120 + Math.random() * (SCREEN_WIDTH * 0.6);
-    return {
-      startX: centerX - 4,
-      startY: centerY - 4,
-      endX: centerX + Math.cos(angle) * distance,
-      endY: centerY + Math.sin(angle) * distance - 100,
-      size: isSuper || isSupreme ? 5 + Math.random() * 8 : 4 + Math.random() * 6,
-      color: baseColors[i % baseColors.length],
-      isHeart: !isSuper && !isSupreme && i % 3 === 0,
-    };
-  });
-};
-
-// Floating ambient particles config
-interface FloatingConfig {
-  startX: number;
-  endY: number;
-  size: number;
-  emoji: string;
-  duration: number;
+interface FloatingHeartConfig {
+  x: number;
   delay: number;
+  duration: number;
+  size: number;
 }
 
-const generateFloating = (): FloatingConfig[] =>
-  Array.from({ length: FLOATING_COUNT }, (_, i) => ({
-    startX: Math.random() * SCREEN_WIDTH,
-    endY: -(50 + Math.random() * 200),
+const FLOATING_HEART_COUNT = 8;
+
+const generateFloatingHearts = (): FloatingHeartConfig[] =>
+  Array.from({ length: FLOATING_HEART_COUNT }, (_, i) => ({
+    x: (SCREEN_WIDTH / FLOATING_HEART_COUNT) * i + Math.random() * (SCREEN_WIDTH / FLOATING_HEART_COUNT),
+    delay: i * 200,
+    duration: 2800 + Math.random() * 1200,
     size: 12 + Math.random() * 10,
-    emoji: i % 3 === 0 ? '\u2764\uFE0F' : i % 3 === 1 ? '\u2728' : '\uD83D\uDC9C',
-    duration: 3000 + Math.random() * 2000,
-    delay: Math.random() * 4000,
   }));
 
-// ── Helper ──────────────────────────────────────────────────
-const getInitials = (name: string): string => {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
-};
-
-// ── Confetti particle ───────────────────────────────────────
-const ConfettiDot: React.FC<{ config: ParticleConfig; progress: Animated.Value }> = ({ config, progress }) => {
-  const translateX = progress.interpolate({
-    inputRange: [0, 0.15, 1],
-    outputRange: [config.startX, config.startX, config.endX],
-  });
-  const translateY = progress.interpolate({
-    inputRange: [0, 0.15, 0.7, 1],
-    outputRange: [config.startY, config.startY, config.endY - 30, config.endY + 80],
-  });
-  const opacity = progress.interpolate({
-    inputRange: [0, 0.15, 0.2, 0.75, 1],
-    outputRange: [0, 0, 1, 1, 0],
-  });
-  const scale = progress.interpolate({
-    inputRange: [0, 0.2, 0.5, 1],
-    outputRange: [0.3, 1.2, 1, 0.6],
-  });
-  const rotate = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', `${360 + Math.random() * 720}deg`],
-  });
-
-  if (config.isHeart) {
-    return (
-      <Animated.View style={[styles.confettiDot, { opacity, transform: [{ translateX }, { translateY }, { scale }, { rotate }] }]}>
-        <Text style={{ fontSize: config.size * 2, color: config.color }}>{'\u2764'}</Text>
-      </Animated.View>
-    );
-  }
-
-  return (
-    <Animated.View
-      style={[styles.confettiDot, {
-        width: config.size, height: config.size, borderRadius: config.size / 2,
-        backgroundColor: config.color, opacity,
-        transform: [{ translateX }, { translateY }, { scale }, { rotate }],
-      }]}
-    />
-  );
-};
-
-// ── Floating ambient particle ───────────────────────────────
-const FloatingParticle: React.FC<{ config: FloatingConfig }> = ({ config }) => {
+const FloatingHeart: React.FC<{ config: FloatingHeartConfig }> = ({ config }) => {
   const anim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
         Animated.delay(config.delay),
-        Animated.timing(anim, { toValue: 1, duration: config.duration, useNativeDriver: true }),
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: config.duration,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
         Animated.timing(anim, { toValue: 0, duration: 0, useNativeDriver: true }),
       ]),
     );
@@ -194,28 +108,187 @@ const FloatingParticle: React.FC<{ config: FloatingConfig }> = ({ config }) => {
 
   const translateY = anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [SCREEN_HEIGHT + 50, config.endY],
+    outputRange: [400, -120],
   });
   const opacity = anim.interpolate({
-    inputRange: [0, 0.1, 0.7, 1],
-    outputRange: [0, 0.6, 0.6, 0],
+    inputRange: [0, 0.08, 0.75, 1],
+    outputRange: [0, 0.55, 0.55, 0],
   });
-  const translateX = anim.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [config.startX, config.startX + (Math.random() - 0.5) * 40, config.startX],
+  const sway = anim.interpolate({
+    inputRange: [0, 0.3, 0.7, 1],
+    outputRange: [config.x, config.x + 16, config.x - 16, config.x],
   });
 
   return (
-    <Animated.View
-      style={[styles.confettiDot, { opacity, transform: [{ translateX }, { translateY }] }]}
+    <Animated.Text
+      style={[
+        floatStyles.heart,
+        {
+          fontSize: config.size,
+          opacity,
+          transform: [{ translateX: sway }, { translateY }],
+        },
+      ]}
       pointerEvents="none"
     >
-      <Text style={{ fontSize: config.size }}>{config.emoji}</Text>
-    </Animated.View>
+      {'💜'}
+    </Animated.Text>
   );
 };
 
-// ── Main component ──────────────────────────────────────────
+const floatStyles = StyleSheet.create({
+  heart: {
+    position: 'absolute',
+    bottom: 0,
+  },
+});
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+const getInitials = (name: string): string => {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+};
+
+const getScoreLabel = (score: number): string => {
+  if (score >= 90) return 'Mükemmel Uyum 🔥';
+  if (score >= 75) return 'Çok Yüksek Uyum 🔥';
+  if (score >= 60) return 'Yüksek Uyum ✨';
+  return 'İyi Uyum ✨';
+};
+
+// ─── Score Ring ───────────────────────────────────────────────────────────────
+// Drawn as a simple animated border arc simulation using two half-circle masks.
+// No SVG dependency — pure RN Animated approach.
+
+const RING_SIZE = 100;
+const RING_THICKNESS = 5;
+
+interface ScoreRingProps {
+  score: number;
+  accentColor: string;
+  progressAnim: Animated.Value;
+}
+
+const ScoreRing: React.FC<ScoreRingProps> = ({ score, accentColor, progressAnim }) => {
+  // Glow appears after ring finishes filling
+  const glowOpacity = progressAnim.interpolate({
+    inputRange: [0.8, 1],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
+
+  return (
+    <View style={ringStyles.wrapper}>
+      {/* Outer glow ring — fades in when fill completes */}
+      <Animated.View
+        style={[
+          ringStyles.glowRing,
+          {
+            borderColor: accentColor,
+            opacity: glowOpacity,
+            shadowColor: accentColor,
+          },
+        ]}
+      />
+
+      {/* Static base ring (dim) */}
+      <View style={[ringStyles.baseRing, { borderColor: accentColor + '30' }]} />
+
+      {/* Filled ring — opacity animates from 0 to 1 over 400ms */}
+      <Animated.View
+        style={[
+          ringStyles.filledRing,
+          {
+            borderColor: accentColor,
+            opacity: progressAnim,
+          },
+        ]}
+      />
+
+      {/* Center: numeric counter driven by animation listener */}
+      <View style={ringStyles.center}>
+        <AnimatedCounter
+          rawAnim={progressAnim}
+          targetScore={score}
+          accentColor={accentColor}
+        />
+      </View>
+    </View>
+  );
+};
+
+// Displays an animated integer counter driven by a listener on the raw Animated.Value
+const AnimatedCounter: React.FC<{
+  rawAnim: Animated.Value;
+  targetScore: number;
+  accentColor: string;
+}> = ({ rawAnim, targetScore, accentColor }) => {
+  const [displayed, setDisplayed] = useState(0);
+
+  useEffect(() => {
+    setDisplayed(0);
+    const id = rawAnim.addListener(({ value }) => {
+      setDisplayed(Math.round(value * targetScore));
+    });
+    return () => rawAnim.removeListener(id);
+  }, [rawAnim, targetScore]);
+
+  return (
+    <Text style={[ringStyles.scoreText, { color: accentColor }]}>
+      {`${displayed}%`}
+    </Text>
+  );
+};
+
+const ringStyles = StyleSheet.create({
+  wrapper: {
+    width: RING_SIZE,
+    height: RING_SIZE,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  baseRing: {
+    position: 'absolute',
+    width: RING_SIZE,
+    height: RING_SIZE,
+    borderRadius: RING_SIZE / 2,
+    borderWidth: RING_THICKNESS,
+  },
+  filledRing: {
+    position: 'absolute',
+    width: RING_SIZE,
+    height: RING_SIZE,
+    borderRadius: RING_SIZE / 2,
+    borderWidth: RING_THICKNESS,
+  },
+  glowRing: {
+    position: 'absolute',
+    width: RING_SIZE + 8,
+    height: RING_SIZE + 8,
+    borderRadius: (RING_SIZE + 8) / 2,
+    borderWidth: 2,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  center: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scoreText: {
+    fontSize: 22,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    includeFontPadding: false,
+  },
+});
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
 export const MatchAnimation: React.FC<MatchAnimationProps> = ({
   visible,
   matchName,
@@ -225,369 +298,445 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
   compatibilityScore,
   isSuperCompatible,
   isSupremeMember,
-  compatibilityExplanation,
-  conversationStarters,
+  compatibilityExplanation: _compatibilityExplanation,
+  conversationStarters: _conversationStarters,
   onSendMessage,
   onActivitySuggest,
   onClose,
 }) => {
-  // Animations
+  // ── Animation refs ──
   const overlayOpacity = useRef(new Animated.Value(0)).current;
-  const cardScale = useRef(new Animated.Value(0)).current;
+  const cardTranslateY = useRef(new Animated.Value(60)).current;
   const cardOpacity = useRef(new Animated.Value(0)).current;
-  const titleScale = useRef(new Animated.Value(0.3)).current;
-  const titleOpacity = useRef(new Animated.Value(0)).current;
-  const confettiProgress = useRef(new Animated.Value(0)).current;
-  const glowPulse = useRef(new Animated.Value(0)).current;
-  const buttonSlide = useRef(new Animated.Value(40)).current;
-  const buttonOpacity = useRef(new Animated.Value(0)).current;
-  const userPhotoSlide = useRef(new Animated.Value(-SCREEN_WIDTH * 0.4)).current;
-  const matchPhotoSlide = useRef(new Animated.Value(SCREEN_WIDTH * 0.4)).current;
-  const photoOpacity = useRef(new Animated.Value(0)).current;
+
+  // Avatars
+  const userSlide = useRef(new Animated.Value(-SCREEN_WIDTH * 0.35)).current;
+  const matchSlide = useRef(new Animated.Value(SCREEN_WIDTH * 0.35)).current;
+  const avatarOpacity = useRef(new Animated.Value(0)).current;
+
+  // Heart
   const heartScale = useRef(new Animated.Value(0)).current;
   const heartPulse = useRef(new Animated.Value(1)).current;
+
+  // Title
+  const titleScale = useRef(new Animated.Value(0.75)).current;
+  const titleOpacity = useRef(new Animated.Value(0)).current;
+
+  // Score ring
   const scoreProgress = useRef(new Animated.Value(0)).current;
-  const buttonGlow = useRef(new Animated.Value(0)).current;
+
+  // Buttons
+  const buttonsOpacity = useRef(new Animated.Value(0)).current;
+  const buttonsTranslateY = useRef(new Animated.Value(24)).current;
+
+  // CTA pulse
   const ctaPulse = useRef(new Animated.Value(1)).current;
 
-  const particles = useMemo(() => generateParticles(isSuperCompatible, isSupremeMember ?? false), [isSuperCompatible, isSupremeMember]);
-  const floatingParticles = useMemo(() => generateFloating(), []);
-  const emotionalTitle = useMemo(() => getEmotionalTitle(isSuperCompatible, isSupremeMember ?? false), [isSuperCompatible, isSupremeMember]);
-  const suggestion = useMemo(() => getSuggestion(), []);
+  // ── Memos ──
+  const floatingHearts = useMemo(() => generateFloatingHearts(), []);
+  const title = useMemo(
+    () => WOW_TITLES[Math.floor(Math.random() * WOW_TITLES.length)],
+    [],
+  );
+  const suggestion = useMemo(
+    () => SUGGESTIONS[Math.floor(Math.random() * SUGGESTIONS.length)],
+    [],
+  );
 
-  const accentColor = isSupremeMember ? '#D4AF37' : isSuperCompatible ? colors.accent : colors.primary;
+  const accentColor = isSupremeMember
+    ? '#D4AF37'
+    : isSuperCompatible
+      ? palette.gold[400]
+      : palette.purple[400];
+
   const userInitials = getInitials(userName);
   const matchInitials = getInitials(matchName);
 
+  // ── Orchestration ──
   useEffect(() => {
     if (!visible) return;
 
-    // Reset all
-    [overlayOpacity, cardScale, cardOpacity, confettiProgress, glowPulse,
-     buttonOpacity, photoOpacity, heartScale, scoreProgress, buttonGlow].forEach(a => a.setValue(0));
-    titleScale.setValue(0.3);
-    titleOpacity.setValue(0);
-    buttonSlide.setValue(40);
-    userPhotoSlide.setValue(-SCREEN_WIDTH * 0.4);
-    matchPhotoSlide.setValue(SCREEN_WIDTH * 0.4);
+    // Reset
+    overlayOpacity.setValue(0);
+    cardTranslateY.setValue(60);
+    cardOpacity.setValue(0);
+    userSlide.setValue(-SCREEN_WIDTH * 0.35);
+    matchSlide.setValue(SCREEN_WIDTH * 0.35);
+    avatarOpacity.setValue(0);
+    heartScale.setValue(0);
     heartPulse.setValue(1);
+    titleScale.setValue(0.75);
+    titleOpacity.setValue(0);
+    scoreProgress.setValue(0);
+    buttonsOpacity.setValue(0);
+    buttonsTranslateY.setValue(24);
     ctaPulse.setValue(1);
 
     // Haptics
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    if (isSupremeMember) {
-      setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 200);
-      setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 400);
-    }
 
-    // Orchestrated sequence
+    // Main sequence — total target: ~800ms
     Animated.sequence([
-      // 1. Overlay fades in
-      Animated.timing(overlayOpacity, { toValue: 1, duration: 250, useNativeDriver: true }),
-      // 2. Card + confetti + photos slide in
+      // Step 1: Overlay + card appear simultaneously (200ms)
       Animated.parallel([
-        Animated.spring(cardScale, { toValue: 1, tension: 100, friction: 7, useNativeDriver: true }),
-        Animated.timing(cardOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
-        Animated.timing(confettiProgress, { toValue: 1, duration: 2000, useNativeDriver: true }),
-        Animated.timing(photoOpacity, { toValue: 1, duration: 250, delay: 100, useNativeDriver: true }),
-        Animated.spring(userPhotoSlide, { toValue: 0, tension: 60, friction: 8, delay: 150, useNativeDriver: true }),
-        Animated.spring(matchPhotoSlide, { toValue: 0, tension: 60, friction: 8, delay: 150, useNativeDriver: true }),
+        Animated.timing(overlayOpacity, {
+          toValue: 1,
+          duration: 200,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(cardOpacity, {
+          toValue: 1,
+          duration: 200,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(cardTranslateY, {
+          toValue: 0,
+          duration: 250,
+          easing: Easing.out(Easing.back(1.4)),
+          useNativeDriver: true,
+        }),
       ]),
-      // 3. Heart appears (scale 0 → 1.3 → 1)
-      Animated.spring(heartScale, { toValue: 1, tension: 150, friction: 6, useNativeDriver: true }),
-      // 4. Title fade + scale
+
+      // Step 2: Avatars slide in (200ms ease-out)
       Animated.parallel([
-        Animated.spring(titleScale, { toValue: 1, tension: 120, friction: 8, useNativeDriver: true }),
-        Animated.timing(titleOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+        Animated.timing(avatarOpacity, {
+          toValue: 1,
+          duration: 200,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(userSlide, {
+          toValue: 0,
+          duration: 200,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(matchSlide, {
+          toValue: 0,
+          duration: 200,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
       ]),
-      // 5. Score ring fills
-      Animated.timing(scoreProgress, { toValue: 1, duration: 800, useNativeDriver: false }),
-      // 6. Buttons slide up
+
+      // Step 3: Heart pops in (100ms bounce)
+      Animated.spring(heartScale, {
+        toValue: 1,
+        tension: 200,
+        friction: 6,
+        useNativeDriver: true,
+      }),
+
+      // Step 4: Title + score ring + buttons all together (400ms)
       Animated.parallel([
-        Animated.timing(buttonSlide, { toValue: 0, duration: 200, useNativeDriver: true }),
-        Animated.timing(buttonOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.timing(titleOpacity, {
+          toValue: 1,
+          duration: 250,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.spring(titleScale, {
+          toValue: 1,
+          tension: 120,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scoreProgress, {
+          toValue: 1,
+          duration: 400,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: false, // must be false for interpolation used in non-transform
+        }),
+        Animated.timing(buttonsOpacity, {
+          toValue: 1,
+          duration: 300,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(buttonsTranslateY, {
+          toValue: 0,
+          duration: 300,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
       ]),
     ]).start();
 
-    // Continuous loops
-    const heartLoop = Animated.loop(Animated.sequence([
-      Animated.timing(heartPulse, { toValue: 1.2, duration: 600, useNativeDriver: true }),
-      Animated.timing(heartPulse, { toValue: 0.95, duration: 600, useNativeDriver: true }),
-    ]));
+    // Heart continuous pulse every 1.5s
+    const heartLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(heartPulse, {
+          toValue: 1.18,
+          duration: 500,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(heartPulse, {
+          toValue: 0.92,
+          duration: 400,
+          easing: Easing.in(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(heartPulse, {
+          toValue: 1,
+          duration: 200,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.delay(400),
+      ]),
+    );
     heartLoop.start();
 
-    const glowLoop = Animated.loop(Animated.sequence([
-      Animated.timing(glowPulse, { toValue: 1, duration: 1500, useNativeDriver: true }),
-      Animated.timing(glowPulse, { toValue: 0, duration: 1500, useNativeDriver: true }),
-    ]));
-    glowLoop.start();
-
-    const ctaLoop = Animated.loop(Animated.sequence([
-      Animated.timing(ctaPulse, { toValue: 1.03, duration: 1500, useNativeDriver: true }),
-      Animated.timing(ctaPulse, { toValue: 1, duration: 1500, useNativeDriver: true }),
-    ]));
+    // CTA pulse every 3s
+    const ctaLoop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(2000),
+        Animated.timing(ctaPulse, {
+          toValue: 1.04,
+          duration: 200,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(ctaPulse, {
+          toValue: 1,
+          duration: 200,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.delay(600),
+      ]),
+    );
     ctaLoop.start();
 
-    let buttonGlowLoop: Animated.CompositeAnimation | undefined;
-    if (isSuperCompatible) {
-      buttonGlowLoop = Animated.loop(Animated.sequence([
-        Animated.timing(buttonGlow, { toValue: 1, duration: 1200, useNativeDriver: false }),
-        Animated.timing(buttonGlow, { toValue: 0, duration: 1200, useNativeDriver: false }),
-      ]));
-      buttonGlowLoop.start();
-    }
+    return () => {
+      heartLoop.stop();
+      ctaLoop.stop();
+    };
+  }, [
+    visible,
+    overlayOpacity,
+    cardTranslateY,
+    cardOpacity,
+    userSlide,
+    matchSlide,
+    avatarOpacity,
+    heartScale,
+    heartPulse,
+    titleScale,
+    titleOpacity,
+    scoreProgress,
+    buttonsOpacity,
+    buttonsTranslateY,
+    ctaPulse,
+  ]);
 
-    return () => { heartLoop.stop(); glowLoop.stop(); ctaLoop.stop(); buttonGlowLoop?.stop(); };
-  }, [visible, isSuperCompatible, isSupremeMember, overlayOpacity, cardScale, cardOpacity, titleScale, titleOpacity, confettiProgress, glowPulse, buttonSlide, buttonOpacity, userPhotoSlide, matchPhotoSlide, photoOpacity, heartScale, heartPulse, scoreProgress, buttonGlow, ctaPulse]);
-
-  const glowShadowOpacity = glowPulse.interpolate({ inputRange: [0, 1], outputRange: [0.3, 0.8] });
-  const scoreGlowScale = glowPulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.06] });
-  const buttonGlowShadowOpacity = buttonGlow.interpolate({ inputRange: [0, 1], outputRange: [0.3, 0.9] });
-  const buttonGlowShadowRadius = buttonGlow.interpolate({ inputRange: [0, 1], outputRange: [4, 16] });
-
-  // Score ring fill (animated width percentage)
-  const scoreRingFill = scoreProgress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, compatibilityScore],
-  });
-
-  // Heart entrance: 0 → 1.3 → 1
-  const heartEntranceScale = heartScale.interpolate({
-    inputRange: [0, 0.7, 1],
-    outputRange: [0, 1.3, 1],
-  });
-
-  const getScoreLabel = (): string => {
-    if (compatibilityScore >= 90) return 'Mükemmel Uyum';
-    if (compatibilityScore >= 75) return 'Çok Yüksek Uyum';
-    if (compatibilityScore >= 60) return 'Yüksek Uyum';
-    return 'İyi Uyum';
-  };
+  const heartCompositeScale = Animated.multiply(
+    heartScale.interpolate({
+      inputRange: [0, 0.6, 1],
+      outputRange: [0, 1.3, 1],
+    }),
+    heartPulse,
+  );
 
   return (
-    <Modal visible={visible} transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
-      <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]}>
-        {/* Blurred background with profile images */}
-        {(matchPhotoUrl || userPhotoUrl) && (
-          <View style={styles.bgImageContainer}>
-            {matchPhotoUrl && (
-              <Image source={{ uri: matchPhotoUrl }} style={styles.bgImage} blurRadius={30} />
-            )}
-          </View>
-        )}
+    <Modal
+      visible={visible}
+      transparent
+      animationType="none"
+      statusBarTranslucent
+      onRequestClose={onClose}
+    >
+      {/* Full-screen backdrop */}
+      <Animated.View style={[styles.backdrop, { opacity: overlayOpacity }]}>
+        {/* Gradient background — purple to pink */}
+        <LinearGradient colors={GRADIENT_BG} style={StyleSheet.absoluteFill} />
 
-        <BlurView intensity={50} tint="dark" style={StyleSheet.absoluteFill} />
+        {/* Glow edges */}
+        <View style={styles.glowTopLeft} />
+        <View style={styles.glowBottomRight} />
 
-        {/* Gradient overlay */}
-        <LinearGradient
-          colors={
-            isSupremeMember
-              ? ['rgba(30,20,10,0.80)', 'rgba(139,92,246,0.20)', 'rgba(236,72,153,0.15)', 'rgba(30,20,10,0.80)']
-              : isSuperCompatible
-                ? ['rgba(30,20,10,0.75)', 'rgba(139,92,246,0.25)', 'rgba(30,20,10,0.75)']
-                : ['rgba(20,10,30,0.75)', 'rgba(139,92,246,0.20)', 'rgba(236,72,153,0.10)', 'rgba(20,10,30,0.75)']
-          }
-          style={StyleSheet.absoluteFill}
-        />
-
-        {/* Floating ambient particles */}
-        {floatingParticles.map((cfg, idx) => (
-          <FloatingParticle key={`float-${idx}`} config={cfg} />
+        {/* Floating hearts */}
+        {floatingHearts.map((cfg, i) => (
+          <FloatingHeart key={`fh-${i}`} config={cfg} />
         ))}
 
-        {/* Confetti burst */}
-        {particles.map((config, idx) => (
-          <ConfettiDot key={`confetti-${idx}`} config={config} progress={confettiProgress} />
-        ))}
-
-        {/* Main card */}
+        {/* Card */}
         <Animated.View
           style={[
             styles.card,
-            isSuperCompatible ? styles.cardSuper : styles.cardNormal,
-            { transform: [{ scale: cardScale }], opacity: cardOpacity },
+            {
+              opacity: cardOpacity,
+              transform: [{ translateY: cardTranslateY }],
+            },
           ]}
         >
-          {/* Photos row */}
-          <View style={styles.photosRow}>
-            {/* User photo */}
-            <Animated.View style={[styles.photoSlideWrapper, { opacity: photoOpacity, transform: [{ translateX: userPhotoSlide }] }]}>
-              <View style={[styles.photoRing, { borderColor: accentColor + '60' }]}>
-                <View style={[styles.photoCircle, { borderColor: accentColor }]}>
+          {/* Close button */}
+          <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
+            <Text style={styles.closeBtnText}>{'✕'}</Text>
+          </TouchableOpacity>
+
+          {/* ── Avatar row ── */}
+          <View style={styles.avatarRow}>
+            {/* User avatar */}
+            <Animated.View
+              style={[
+                styles.avatarWrapper,
+                {
+                  opacity: avatarOpacity,
+                  transform: [{ translateX: userSlide }],
+                },
+              ]}
+            >
+              <LinearGradient
+                colors={[palette.purple[400], palette.pink[400]]}
+                style={styles.avatarGradientBorder}
+              >
+                <View style={styles.avatarInner}>
                   {userPhotoUrl ? (
-                    <Image source={{ uri: userPhotoUrl }} style={styles.profilePhoto} />
+                    <Image source={{ uri: userPhotoUrl }} style={styles.avatarPhoto} />
                   ) : (
-                    <Text style={[styles.initialsText, { color: accentColor }]}>{userInitials}</Text>
+                    <Text style={[styles.avatarInitials, { color: accentColor }]}>
+                      {userInitials}
+                    </Text>
                   )}
                 </View>
-              </View>
-              <Text style={styles.photoName} numberOfLines={1}>{userName}</Text>
+              </LinearGradient>
+              <Text style={styles.avatarName} numberOfLines={1}>
+                {userName}
+              </Text>
             </Animated.View>
 
-            {/* Heart connector — animated entrance + pulse */}
-            <Animated.View style={[styles.heartContainer, { opacity: photoOpacity, transform: [{ scale: Animated.multiply(heartEntranceScale, heartPulse) }] }]}>
+            {/* Heart connector */}
+            <Animated.View
+              style={[
+                styles.heartWrapper,
+                { transform: [{ scale: heartCompositeScale }] },
+              ]}
+            >
               <LinearGradient
-                colors={[palette.pink[400], palette.purple[400]]}
-                style={styles.heartGradient}
+                colors={[palette.pink[400], palette.purple[500]]}
+                style={styles.heartCircle}
               >
-                <Text style={styles.heartEmoji}>
-                  {isSuperCompatible ? '\u2B50' : '\u2764\uFE0F'}
-                </Text>
+                <Text style={styles.heartEmoji}>{'❤️'}</Text>
               </LinearGradient>
             </Animated.View>
 
-            {/* Match photo */}
-            <Animated.View style={[styles.photoSlideWrapper, { opacity: photoOpacity, transform: [{ translateX: matchPhotoSlide }] }]}>
-              <View style={[styles.photoRing, { borderColor: accentColor + '60' }]}>
-                <View style={[styles.photoCircle, { borderColor: accentColor }]}>
+            {/* Match avatar */}
+            <Animated.View
+              style={[
+                styles.avatarWrapper,
+                {
+                  opacity: avatarOpacity,
+                  transform: [{ translateX: matchSlide }],
+                },
+              ]}
+            >
+              <LinearGradient
+                colors={[palette.purple[400], palette.pink[400]]}
+                style={styles.avatarGradientBorder}
+              >
+                <View style={styles.avatarInner}>
                   {matchPhotoUrl ? (
-                    <Image source={{ uri: matchPhotoUrl }} style={styles.profilePhoto} />
+                    <Image source={{ uri: matchPhotoUrl }} style={styles.avatarPhoto} />
                   ) : (
-                    <Text style={[styles.initialsText, { color: accentColor }]}>{matchInitials}</Text>
+                    <Text style={[styles.avatarInitials, { color: accentColor }]}>
+                      {matchInitials}
+                    </Text>
                   )}
                 </View>
-              </View>
-              <Text style={styles.photoName} numberOfLines={1}>{matchName}</Text>
+              </LinearGradient>
+              <Text style={styles.avatarName} numberOfLines={1}>
+                {matchName}
+              </Text>
             </Animated.View>
           </View>
 
-          {/* Title — animated fade + scale */}
-          <Animated.Text style={[styles.title, { transform: [{ scale: titleScale }], opacity: titleOpacity }]}>
-            {emotionalTitle}
+          {/* ── Title ── */}
+          <Animated.Text
+            style={[
+              styles.title,
+              {
+                opacity: titleOpacity,
+                transform: [{ scale: titleScale }],
+              },
+            ]}
+          >
+            {title}
           </Animated.Text>
 
-          <Text style={styles.subtitle}>
-            Sen ve {matchName} birbirinizi beğendiniz
-          </Text>
+          {/* ── Score ring ── */}
+          <View style={styles.scoreSection}>
+            <ScoreRing
+              score={compatibilityScore}
+              accentColor={accentColor}
+              progressAnim={scoreProgress}
+            />
+            <Text style={[styles.scoreLabel, { color: accentColor + 'CC' }]}>
+              {getScoreLabel(compatibilityScore)}
+            </Text>
+          </View>
 
-          <Text style={styles.subtitleHint}>
-            İlk mesajı atmak için harika bir an
-          </Text>
-
-          {/* Supreme / Super badge */}
-          {isSupremeMember && (
-            <View style={[styles.tierBadge, { backgroundColor: 'rgba(212, 175, 55, 0.15)', borderColor: 'rgba(212, 175, 55, 0.4)' }]}>
-              <Ionicons name="diamond" size={12} color="#D4AF37" />
-              <Text style={[styles.tierBadgeText, { color: '#D4AF37' }]}>SUPREME ÜYE</Text>
-            </View>
-          )}
-          {!isSupremeMember && isSuperCompatible && (
-            <View style={[styles.tierBadge, { backgroundColor: colors.accent + '15', borderColor: colors.accent + '40' }]}>
-              <Ionicons name="sparkles" size={12} color={colors.accent} />
-              <Text style={[styles.tierBadgeText, { color: colors.accent }]}>SÜPER UYUMLU</Text>
-            </View>
-          )}
-
-          {/* Score circle with animated fill + glow */}
+          {/* ── Buttons ── */}
           <Animated.View
-            style={[styles.scoreCircle, {
-              borderColor: accentColor,
-              shadowColor: accentColor,
-              shadowOpacity: glowShadowOpacity as unknown as number,
-              transform: [{ scale: scoreGlowScale }],
-            }]}
+            style={[
+              styles.buttonsSection,
+              {
+                opacity: buttonsOpacity,
+                transform: [{ translateY: buttonsTranslateY }],
+              },
+            ]}
           >
-            <Animated.Text style={[styles.scoreText, { color: accentColor }]}>
-              {scoreRingFill.interpolate({
-                inputRange: [0, 100],
-                outputRange: ['%0', `%${compatibilityScore}`],
-                extrapolate: 'clamp',
-              }) as unknown as string}
-            </Animated.Text>
-            <Text style={styles.scoreLabel}>{getScoreLabel()}</Text>
-          </Animated.View>
-
-          {/* Compatibility explanation */}
-          {compatibilityExplanation ? (
-            <Text style={styles.explanationText}>{compatibilityExplanation}</Text>
-          ) : null}
-
-          {/* Buttons */}
-          <Animated.View style={[styles.buttonsContainer, { opacity: buttonOpacity, transform: [{ translateY: buttonSlide }] }]}>
-            {/* Primary CTA — gradient + pulse */}
-            <Animated.View style={{ transform: [{ scale: ctaPulse }] }}>
-              {isSuperCompatible ? (
-                <Animated.View style={[styles.glowButtonWrapper, {
-                  shadowColor: colors.accent,
-                  shadowOpacity: buttonGlowShadowOpacity as unknown as number,
-                  shadowRadius: buttonGlowShadowRadius as unknown as number,
-                }]}>
-                  <TouchableOpacity
-                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onSendMessage(); }}
-                    activeOpacity={0.85}
-                  >
-                    <LinearGradient
-                      colors={[palette.gold[400], palette.gold[500]]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.primaryButtonGradient}
-                    >
-                      <Ionicons name="chatbubble" size={18} color="#1A1A2E" />
-                      <Text style={styles.primaryButtonTextDark}>Mesaj Gönder</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </Animated.View>
-              ) : (
-                <TouchableOpacity
-                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onSendMessage(); }}
-                  activeOpacity={0.85}
+            {/* Primary CTA */}
+            <Animated.View style={{ transform: [{ scale: ctaPulse }], width: '100%' }}>
+              <TouchableOpacity
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  onSendMessage();
+                }}
+                activeOpacity={0.85}
+              >
+                <LinearGradient
+                  colors={GRADIENT_CTA}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.primaryBtn}
                 >
-                  <LinearGradient
-                    colors={[palette.purple[500], palette.pink[500]]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.primaryButtonGradient}
-                  >
-                    <Ionicons name="chatbubble" size={18} color="#FFFFFF" />
-                    <Text style={styles.primaryButtonText}>Mesaj Gönder</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              )}
+                  <Text style={styles.primaryBtnText}>{'Mesaj Gönder 💬'}</Text>
+                </LinearGradient>
+              </TouchableOpacity>
             </Animated.View>
 
-            {/* Suggestion line */}
+            {/* Suggestion chip */}
             <TouchableOpacity
-              style={styles.suggestionCard}
-              onPress={() => onSendMessage(suggestion)}
-              activeOpacity={0.7}
+              style={styles.suggestionChip}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                onSendMessage(suggestion);
+              }}
+              activeOpacity={0.75}
             >
-              <Ionicons name="bulb-outline" size={14} color={palette.purple[400]} />
-              <Text style={styles.suggestionLabel}>Ona şunu yazabilirsin:</Text>
-              <Text style={styles.suggestionText} numberOfLines={1}>"{suggestion}"</Text>
+              <Text style={styles.suggestionLabel}>{'💡 Ona şunu yaz:'}</Text>
+              <Text style={styles.suggestionText} numberOfLines={1}>
+                {`"${suggestion} 😊"`}
+              </Text>
             </TouchableOpacity>
 
-            {/* Conversation starters */}
-            {conversationStarters && conversationStarters.length > 0 && (
-              <View style={styles.startersContainer}>
-                {conversationStarters.slice(0, 2).map((starter, idx) => (
-                  <TouchableOpacity
-                    key={`starter-${idx}`}
-                    style={styles.starterChip}
-                    onPress={() => onSendMessage(starter)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.starterText} numberOfLines={1}>{starter}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-
-            {/* Activity suggest */}
+            {/* Activity suggest button */}
             {onActivitySuggest && (
               <TouchableOpacity
-                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); onActivitySuggest(); }}
-                activeOpacity={0.7}
-                style={styles.activityButton}
+                style={styles.secondaryBtn}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  onActivitySuggest();
+                }}
+                activeOpacity={0.75}
               >
-                <Ionicons name="compass-outline" size={16} color={colors.primary} />
-                <Text style={styles.activityButtonText}>Aktivite Öner</Text>
+                <Text style={styles.secondaryBtnText}>{'🎯 Aktivite Öner'}</Text>
               </TouchableOpacity>
             )}
-
-            {/* Continue */}
-            <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>Keşfetmeye Devam Et</Text>
-            </TouchableOpacity>
           </Animated.View>
         </Animated.View>
       </Animated.View>
@@ -595,298 +744,241 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
   );
 };
 
-// ─── Styles ─────────────────────────────────────────────────
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
+const CARD_MAX_WIDTH = Math.min(SCREEN_WIDTH - 32, 420);
+const AVATAR_SIZE = 84;
+const AVATAR_BORDER = 3;
+const AVATAR_TOTAL = AVATAR_SIZE + AVATAR_BORDER * 2 + 4; // gradient border padding
 
 const styles = StyleSheet.create({
-  overlay: {
+  // Backdrop
+  backdrop: {
     flex: 1,
-    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.lg,
-  },
-  bgImageContainer: {
-    ...StyleSheet.absoluteFillObject,
-    overflow: 'hidden',
-  },
-  bgImage: {
-    width: '100%',
-    height: '100%',
-    opacity: 0.3,
-  },
-  confettiDot: {
-    position: 'absolute',
-  },
-  card: {
-    width: '100%',
-    borderRadius: borderRadius.xxl,
-    padding: spacing.lg,
-    alignItems: 'center',
-    ...shadows.large,
-  },
-  cardNormal: {
-    backgroundColor: 'rgba(245, 240, 232, 0.95)',
-    borderWidth: 1,
-    borderColor: colors.primary + '50',
-  },
-  cardSuper: {
-    backgroundColor: 'rgba(245, 240, 232, 0.97)',
-    borderWidth: 2,
-    borderColor: colors.accent,
-    shadowColor: colors.accent,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 20,
-    elevation: 12,
+    paddingHorizontal: spacing.md,
   },
 
-  // ── Photos ──
-  photosRow: {
+  // Glow edges
+  glowTopLeft: {
+    position: 'absolute',
+    top: -60,
+    left: -60,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: palette.purple[600],
+    opacity: 0.35,
+  },
+  glowBottomRight: {
+    position: 'absolute',
+    bottom: -60,
+    right: -60,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: palette.pink[600],
+    opacity: 0.3,
+  },
+
+  // Card
+  card: {
+    width: CARD_MAX_WIDTH,
+    backgroundColor: 'rgba(18, 8, 40, 0.97)',
+    borderRadius: borderRadius.xxl,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xl,
+    paddingBottom: Platform.OS === 'ios' ? spacing.xl : spacing.lg,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.35)',
+    ...(shadows.large ?? {}),
+    shadowColor: palette.purple[600],
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 30,
+    elevation: 16,
+  },
+
+  // Close button
+  closeBtn: {
+    position: 'absolute',
+    top: spacing.md,
+    right: spacing.md,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeBtnText: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.6)',
+    lineHeight: 18,
+  },
+
+  // Avatar row
+  avatarRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
-    gap: spacing.xs,
+    gap: spacing.smd,
   },
-  photoSlideWrapper: {
+  avatarWrapper: {
     alignItems: 'center',
     gap: 6,
   },
-  photoRing: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
-    borderWidth: 2,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 2,
-  },
-  photoCircle: {
-    width: 82,
-    height: 82,
-    borderRadius: 41,
-    borderWidth: 3,
-    backgroundColor: 'rgba(245, 240, 232, 0.95)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  profilePhoto: {
-    width: '100%',
-    height: '100%',
-  },
-  photoName: {
-    ...typography.captionSmall,
-    color: colors.textSecondary,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    maxWidth: 80,
-    textAlign: 'center',
-  },
-  initialsText: {
-    ...typography.h3,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-  },
-
-  // ── Heart ──
-  heartContainer: {
-    marginBottom: 20,
-  },
-  heartGradient: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: palette.pink[400],
+  avatarGradientBorder: {
+    width: AVATAR_TOTAL,
+    height: AVATAR_TOTAL,
+    borderRadius: AVATAR_TOTAL / 2,
+    padding: AVATAR_BORDER,
+    shadowColor: palette.purple[400],
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 12,
-    elevation: 6,
-  },
-  heartEmoji: {
-    fontSize: 24,
-  },
-
-  // ── Title ──
-  title: {
-    ...typography.h2,
-    color: colors.text,
-    marginBottom: spacing.xs,
-    textAlign: 'center',
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: 2,
-  },
-  subtitleHint: {
-    ...typography.caption,
-    color: colors.textTertiary,
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-
-  // ── Tier badge ──
-  tierBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-  },
-  tierBadgeText: {
-    ...typography.captionSmall,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    includeFontPadding: false,
-  },
-
-  // ── Score ──
-  scoreCircle: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
-    borderWidth: 3,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 16,
     elevation: 8,
   },
-  scoreText: {
-    ...typography.h3,
+  avatarInner: {
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+    borderRadius: AVATAR_SIZE / 2,
+    backgroundColor: '#1C0A3A',
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarPhoto: {
+    width: '100%',
+    height: '100%',
+  },
+  avatarInitials: {
+    fontSize: 28,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
-  scoreLabel: {
+  avatarName: {
     ...typography.captionSmall,
-    color: colors.textSecondary,
-    marginTop: -2,
-  },
-
-  // ── Explanation ──
-  explanationText: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
+    color: 'rgba(255,255,255,0.75)',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    maxWidth: AVATAR_TOTAL,
     textAlign: 'center',
-    marginBottom: spacing.md,
-    paddingHorizontal: spacing.sm,
-    lineHeight: 20,
-    fontStyle: 'italic',
   },
 
-  // ── Buttons ──
-  buttonsContainer: {
-    width: '100%',
-    gap: spacing.sm,
+  // Heart connector
+  heartWrapper: {
+    marginBottom: 20, // shift up from avatar names
   },
-  glowButtonWrapper: {
-    width: '100%',
-    borderRadius: borderRadius.lg,
+  heartCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: palette.pink[500],
     shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.7,
+    shadowRadius: 14,
     elevation: 10,
   },
-  primaryButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    width: '100%',
-    height: 52,
-    borderRadius: borderRadius.lg,
-  },
-  primaryButtonText: {
-    ...typography.button,
-    color: '#FFFFFF',
-    letterSpacing: 0.5,
-  },
-  primaryButtonTextDark: {
-    ...typography.button,
-    color: '#1A1A2E',
-    letterSpacing: 0.5,
+  heartEmoji: {
+    fontSize: 26,
   },
 
-  // ── Suggestion ──
-  suggestionCard: {
+  // Title
+  title: {
+    ...typography.h2,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: spacing.md,
+    textShadowColor: palette.purple[400],
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+  },
+
+  // Score section
+  scoreSection: {
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  scoreLabel: {
+    ...typography.caption,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+
+  // Buttons section
+  buttonsSection: {
+    width: '100%',
+    gap: spacing.smd,
+    alignItems: 'center',
+  },
+
+  // Primary button
+  primaryBtn: {
+    width: '100%',
+    height: 54,
+    borderRadius: borderRadius.xl ?? 20,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: palette.purple[500],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.55,
+    shadowRadius: 14,
+    elevation: 10,
+  },
+  primaryBtnText: {
+    ...typography.button,
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
+  },
+
+  // Suggestion chip
+  suggestionChip: {
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.surfaceLight,
-    borderRadius: borderRadius.md,
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+    borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.smd,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
+    borderColor: 'rgba(139, 92, 246, 0.3)',
   },
   suggestionLabel: {
     ...typography.captionSmall,
-    color: colors.textTertiary,
+    color: 'rgba(255,255,255,0.55)',
+    flexShrink: 0,
   },
   suggestionText: {
     flex: 1,
     ...typography.bodySmall,
-    color: colors.primary,
+    color: palette.purple[300],
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
   },
 
-  // ── Starters ──
-  startersContainer: {
+  // Secondary / outline button
+  secondaryBtn: {
     width: '100%',
-    flexDirection: 'row',
-    gap: spacing.xs,
-  },
-  starterChip: {
-    flex: 1,
-    backgroundColor: colors.surfaceLight,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.smd,
-    paddingVertical: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-  },
-  starterText: {
-    ...typography.captionSmall,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-
-  // ── Activity ──
-  activityButton: {
-    width: '100%',
-    height: 48,
+    height: 46,
     borderRadius: borderRadius.lg,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: spacing.sm,
     borderWidth: 1.5,
-    borderColor: colors.primary + '40',
-    backgroundColor: colors.primary + '08',
-  },
-  activityButtonText: {
-    ...typography.button,
-    color: colors.primary,
-  },
-
-  // ── Secondary ──
-  secondaryButton: {
-    width: '100%',
-    height: 44,
-    borderRadius: borderRadius.lg,
+    borderColor: 'rgba(139, 92, 246, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'transparent',
   },
-  secondaryButtonText: {
-    ...typography.bodySmall,
-    color: colors.textTertiary,
+  secondaryBtnText: {
+    ...typography.buttonSmall,
+    color: palette.purple[300],
   },
 });
