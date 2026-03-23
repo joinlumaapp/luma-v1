@@ -1,7 +1,7 @@
 // Activity group chat screen — shared chat room for activity participants
 // All joined participants can send and read messages here
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useEffect, useCallback, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import { useKeyboard } from '../../hooks/useKeyboard';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -92,16 +93,11 @@ export const ActivityGroupChatScreen: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [isSending, setIsSending] = useState(false);
   const listRef = useRef<FlatList>(null);
+  const textInputRef = useRef<TextInput>(null);
 
-  // Track keyboard visibility for dynamic input padding
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
-  useEffect(() => {
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-    const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
-    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
-    return () => { showSub.remove(); hideSub.remove(); };
-  }, []);
+  // Centralised keyboard state — replaces inline Keyboard.addListener pattern
+  const keyboard = useKeyboard();
+  const keyboardVisible = keyboard.isVisible;
 
   // Fetch messages
   useEffect(() => {
@@ -125,6 +121,16 @@ export const ActivityGroupChatScreen: React.FC = () => {
   }, [activityId, activity]);
 
   // Send message
+  // Dismiss keyboard + blur input when navigating away so the keyboard doesn't
+  // carry over to the previous screen.
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('blur', () => {
+      textInputRef.current?.blur();
+      Keyboard.dismiss();
+    });
+    return unsubscribe;
+  }, [navigation]);
+
   const handleSend = useCallback(async () => {
     const text = inputText.trim();
     if (!text || isSending) return;
@@ -141,11 +147,6 @@ export const ActivityGroupChatScreen: React.FC = () => {
 
     setMessages((prev) => [...prev, msg]);
     setIsSending(false);
-
-    // Scroll to bottom
-    setTimeout(() => {
-      listRef.current?.scrollToEnd({ animated: true });
-    }, 100);
   }, [inputText, isSending, activityId, userName, userPhoto]);
 
   const renderMessage = useCallback(
@@ -162,8 +163,8 @@ export const ActivityGroupChatScreen: React.FC = () => {
   return (
     <KeyboardAvoidingView
       style={[styles.container, { paddingTop: insets.top }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top : 0}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={insets.top}
     >
       {/* Header */}
       <View style={styles.header}>
@@ -218,8 +219,11 @@ export const ActivityGroupChatScreen: React.FC = () => {
           renderItem={renderMessage}
           contentContainerStyle={styles.messageList}
           showsVerticalScrollIndicator={false}
+          // Scroll to bottom whenever content grows (new message added).
+          // animated:false on initial load, animated:true after first render
+          // is handled by the ref's first-call detection.
           onContentSizeChange={() => {
-            listRef.current?.scrollToEnd({ animated: false });
+            listRef.current?.scrollToEnd({ animated: true });
           }}
         />
       )}
@@ -227,6 +231,7 @@ export const ActivityGroupChatScreen: React.FC = () => {
       {/* Input bar */}
       <View style={[styles.inputBar, { paddingBottom: keyboardVisible ? spacing.xs : Math.max(insets.bottom, spacing.sm) }]}>
         <TextInput
+          ref={textInputRef}
           style={styles.textInput}
           placeholder="Mesaj yaz..."
           placeholderTextColor={colors.textTertiary}
@@ -234,6 +239,7 @@ export const ActivityGroupChatScreen: React.FC = () => {
           onChangeText={setInputText}
           maxLength={500}
           multiline
+          scrollEnabled
           returnKeyType="send"
           onSubmitEditing={handleSend}
           blurOnSubmit

@@ -32,7 +32,6 @@ import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 import { useChatStore } from '../../stores/chatStore';
 import { useAuthStore } from '../../stores/authStore';
 import { useMatchStore } from '../../stores/matchStore';
-import { useCoinStore } from '../../stores/coinStore';
 import { useCallStore, type RemoteCallUser } from '../../stores/callStore';
 import { MESSAGE_CONFIG } from '../../constants/config';
 import {
@@ -44,6 +43,7 @@ import type { ReactionEmoji } from '../../components/chat/MessageReactions';
 import type { ChatMessage } from '../../services/chatService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { useTypingIndicator } from '../../hooks/useTypingIndicator';
+import { useKeyboard } from '../../hooks/useKeyboard';
 import { presenceService } from '../../services/presenceService';
 import { formatActivityStatus } from '../../utils/formatters';
 import { GiphyPicker } from '../../components/chat/GiphyPicker';
@@ -51,8 +51,6 @@ import { GiphyPicker } from '../../components/chat/GiphyPicker';
 type ChatNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'Chat'>;
 type ChatRouteProp = RouteProp<MatchesStackParamList, 'Chat'>;
 
-// Actual chat header height: paddingVertical (16*2) + backButton (40) + borderBottom (1)
-const CHAT_HEADER_HEIGHT = 73;
 
 const formatDateHeader = (dateString: string): string => {
   const date = new Date(dateString);
@@ -207,16 +205,15 @@ export const ChatScreen: React.FC = () => {
   const route = useRoute<ChatRouteProp>();
   const insets = useSafeAreaInsets();
   const flatListRef = useRef<FlatList>(null);
+  // Ref for the text input — used to blur (dismiss keyboard) imperatively on
+  // screen blur/back navigation, preventing the keyboard from "leaking" to the
+  // previous screen.
+  const textInputRef = useRef<TextInput>(null);
 
-  // Track keyboard visibility to adjust bottom padding
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
-  useEffect(() => {
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-    const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
-    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
-    return () => { showSub.remove(); hideSub.remove(); };
-  }, []);
+  // Centralised keyboard state (replaces per-screen Keyboard.addListener pattern).
+  // isVisible drives input bar padding; used for BackHandler priority chain too.
+  const keyboard = useKeyboard();
+  const keyboardVisible = keyboard.isVisible; // alias keeps existing references valid
 
   const { matchId, partnerName: rawPartnerName, partnerPhotoUrl: _partnerPhotoUrl, initialMessage } = route.params;
 
@@ -298,6 +295,9 @@ export const ChatScreen: React.FC = () => {
       // dismiss keyboard, close all overlays, stop typing indicator, clear timers.
       return () => {
         sub.remove();
+        // Blur the input before dismissing — prevents the keyboard from
+        // animating in on the previous screen after navigation.
+        textInputRef.current?.blur();
         Keyboard.dismiss();
         stopTyping();
         setShowGifPicker(false);
@@ -360,19 +360,19 @@ export const ChatScreen: React.FC = () => {
     return () => task.cancel();
   }, [matchId, fetchMessages, markAsRead, hydrateFromStorage]);
 
-  // Scroll to bottom when new messages arrive
+  // Scroll to bottom when messages are added.
+  // Tracks previous length so we can distinguish initial load (no animation,
+  // avoids a visible jump) from new incoming/sent messages (animated).
+  const prevMessageLengthRef = useRef(0);
   useEffect(() => {
-    if (messages.length > 0) {
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
+    if (messages.length > prevMessageLengthRef.current) {
+      const wasEmpty = prevMessageLengthRef.current === 0;
+      flatListRef.current?.scrollToEnd({ animated: !wasEmpty });
     }
+    prevMessageLengthRef.current = messages.length;
   }, [messages.length]);
 
-  const coinBalance = useCoinStore((state) => state.balance);
-  const sendInstantMessage = useCoinStore((state) => state.sendInstantMessage);
   const packageTier = useAuthStore((state) => state.user?.packageTier ?? 'FREE');
-  const isPremiumTier = packageTier !== 'FREE';
   const showReadReceipts = packageTier === 'PRO' || packageTier === 'RESERVED';
 
   // Call feature
@@ -614,6 +614,25 @@ export const ChatScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      {/*
+        KeyboardAvoidingView wraps header + messages + input together.
+        This is the correct placement: by including the header inside KAV,
+        keyboardVerticalOffset needs only to account for insets.top (the safe
+        area above the screen content), not a hardcoded header pixel height.
+
+        iOS:   behavior="padding" — KAV adds paddingBottom equal to keyboard
+               height, pushing header+messages+input above the keyboard.
+        Android: behavior={undefined} — app.json already sets
+               softwareKeyboardLayoutMode:"resize" which makes the OS resize
+               the window. Using behavior="height" on top of that causes
+               double-compensation (OS shrinks window AND KAV shrinks too),
+               producing layout jumps. undefined = KAV does nothing on Android.
+      */}
+      <KeyboardAvoidingView
+        style={styles.messagesArea}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={insets.top}
+      >
       {/* Chat header with partner info */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -721,12 +740,7 @@ export const ChatScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* Messages */}
-      <KeyboardAvoidingView
-        style={styles.messagesArea}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top + CHAT_HEADER_HEIGHT : 0}
-      >
+      {/* Messages — flex: 1 so FlatList fills remaining space inside KAV */}
         {isLoadingMessages && messages.length === 0 ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
@@ -954,6 +968,7 @@ export const ChatScreen: React.FC = () => {
           </TouchableOpacity>
           <View style={styles.inputContainer}>
             <TextInput
+              ref={textInputRef}
               style={styles.textInput}
               value={inputText}
               onChangeText={(text) => { setInputText(text); onTypingChange(); }}
@@ -962,6 +977,7 @@ export const ChatScreen: React.FC = () => {
               multiline
               maxLength={1000}
               returnKeyType="default"
+              scrollEnabled
               accessibilityLabel="Mesaj yaz"
               accessibilityRole="text"
               accessibilityHint="Mesajınızı buraya yazın"
