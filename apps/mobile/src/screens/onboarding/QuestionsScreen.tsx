@@ -11,6 +11,7 @@ import {
   Pressable,
   StyleSheet,
   ActivityIndicator,
+  Alert,
   Platform,
   TouchableOpacity,
 } from 'react-native';
@@ -181,10 +182,13 @@ export const QuestionsScreen: React.FC = () => {
   }));
 
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
 
-  // Cleanup timer on unmount
+  // Cleanup on unmount — cancel pending timers, prevent setState on dead component
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
+      mountedRef.current = false;
       if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
     };
   }, []);
@@ -199,6 +203,7 @@ export const QuestionsScreen: React.FC = () => {
       phaseOpacity.value = withDelay(100, withTiming(1, { duration: 500 }));
       phaseScale.value = withDelay(100, withSpring(1, { damping: 12, stiffness: 100 }));
       setTimeout(() => {
+        if (!mountedRef.current) return;
         // Show result screen
         phaseOpacity.value = 0;
         phaseScale.value = 0.85;
@@ -219,6 +224,7 @@ export const QuestionsScreen: React.FC = () => {
         phaseOpacity.value = withDelay(50, withTiming(1, { duration: 400 }));
         phaseScale.value = withDelay(50, withSpring(1, { damping: 12, stiffness: 100 }));
         setTimeout(() => {
+          if (!mountedRef.current) return;
           phaseOpacity.value = 0;
           phaseScale.value = 0.85;
           setPhase('questions');
@@ -246,7 +252,17 @@ export const QuestionsScreen: React.FC = () => {
       setSlideDirection('forward');
 
       if (isLastQuestion) {
-        compatibilityService.submitAnswers(newAnswers).catch(() => {});
+        // Submit answers before showing analysis — failure should be visible to the user
+        // so their answers are not silently lost. submitAnswers is fast; we show analysis
+        // immediately and handle errors in the background.
+        compatibilityService.submitAnswers(newAnswers).catch(() => {
+          if (!mountedRef.current) return;
+          Alert.alert(
+            'Cevaplar kaydedilemedi',
+            'Cevaplarınız sunucuya gönderilemedi. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.',
+            [{ text: 'Tamam' }],
+          );
+        });
         showAnalysisAndResult(newAnswers);
       } else {
         const nextIndex = currentIndex + 1;

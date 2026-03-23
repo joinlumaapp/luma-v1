@@ -363,6 +363,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         error: null, canUndo: false, lastSwipedProfile: null, lastSwipeDirection: null,
         undosUsedToday: 0, showSuperLikeGlow: false, batchCooldownEnd: null,
         totalCandidates: 0, premiumImpressions: 0,
+        // Reset filters so next user does not inherit previous user's age/distance/gender prefs
+        filters: { minAge: 18, maxAge: 40, maxDistance: 50, intentionTags: [], genderPreference: 'all', height: null, education: [], smoking: [], drinking: [], exercise: [], zodiac: [] },
       });
     } catch { /* store may not be initialized */ }
 
