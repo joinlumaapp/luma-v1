@@ -545,19 +545,63 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   addIncomingMessage: (message) => {
-    set((state) => ({
-      messages: {
-        ...state.messages,
-        [message.matchId]: [
-          ...(state.messages[message.matchId] ?? []),
-          message,
-        ],
-      },
-    }));
+    set((state) => {
+      // Update conversation: increment unreadCount and update last message preview.
+      // Done atomically with the message append so totalUnread stays consistent.
+      const existingConv = state.conversations.find((c) => c.matchId === message.matchId);
+      let updatedConversations: typeof state.conversations;
+
+      if (existingConv) {
+        updatedConversations = state.conversations.map((conv) =>
+          conv.matchId === message.matchId
+            ? {
+                ...conv,
+                lastMessage: message.content,
+                lastMessageAt: message.createdAt,
+                unreadCount: conv.unreadCount + 1,
+              }
+            : conv
+        );
+      } else {
+        // First message from this match — create a conversation entry
+        const match = useMatchStore.getState().matches.find((m) => m.id === message.matchId);
+        if (match) {
+          const newConv: ConversationSummary = {
+            matchId: match.id,
+            userId: match.userId,
+            name: match.name,
+            photoUrl: match.photoUrl,
+            lastMessage: message.content,
+            lastMessageAt: message.createdAt,
+            unreadCount: 1,
+            isOnline: false,
+          };
+          updatedConversations = [newConv, ...state.conversations];
+        } else {
+          updatedConversations = state.conversations;
+        }
+      }
+
+      const newTotalUnread = updatedConversations.reduce(
+        (sum, c) => sum + c.unreadCount,
+        0,
+      );
+
+      return {
+        messages: {
+          ...state.messages,
+          [message.matchId]: [
+            ...(state.messages[message.matchId] ?? []),
+            message,
+          ],
+        },
+        conversations: updatedConversations,
+        totalUnread: newTotalUnread,
+      };
+    });
     // Persist incoming message
     persistMessage(message.matchId, message);
-    // Update match activity
-    get().updateLastMessage(message.matchId, message.content, message.createdAt);
+    // Keep matchStore in sync (lastMessage preview + lastActivity sort order)
     useMatchStore.getState().updateMatchActivity(message.matchId, message.content, message.createdAt);
   },
 
