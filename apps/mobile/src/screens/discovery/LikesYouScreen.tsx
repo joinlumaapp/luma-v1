@@ -32,6 +32,7 @@ import { useAuthStore, type PackageTier } from '../../stores/authStore';
 import { LIKES_VIEW_CONFIG } from '../../constants/config';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { SlideIn } from '../../components/animations/SlideIn';
+import { UpgradePrompt } from '../../components/premium/UpgradePrompt';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
@@ -575,6 +576,10 @@ export const LikesYouScreen: React.FC = () => {
   const [modalCard, setModalCard] = useState<LikeYouCard | null>(null);
   const [showModal, setShowModal] = useState(false);
 
+  // UpgradePrompt bottom sheet — shown instead of hard-navigating to MembershipPlans.
+  // Keeps the user in context; they navigate to plans only if they explicitly tap "Yükselt".
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+
   // ─── Data fetching ──────────────────────────────────────────
 
   const fetchLikes = useCallback(async () => {
@@ -647,7 +652,9 @@ export const LikesYouScreen: React.FC = () => {
     }
 
     if (!isUnlimitedViews && viewedToday >= dailyLimit) {
-      navigation.navigate('MembershipPlans' as never);
+      // Show contextual upgrade sheet instead of blind paywall navigation.
+      // User stays on this screen and can dismiss without losing their place.
+      setShowUpgradePrompt(true);
       return;
     }
     if (!isUnlimitedViews) {
@@ -658,9 +665,14 @@ export const LikesYouScreen: React.FC = () => {
   }, [navigation, isBlurred, isUnlimitedViews, viewedToday, dailyLimit, unlockedUserIds, likes]);
 
   const handleUpgradePress = useCallback(() => {
+    // Close the UnlockModal first, then show the UpgradePrompt bottom sheet.
+    // Two-step flow: teaser modal → contextual upgrade sheet → plans screen.
+    // This prevents stacking two modals simultaneously.
     setShowModal(false);
-    navigation.navigate('MembershipPlans' as never);
-  }, [navigation]);
+    // Small delay so the UnlockModal dismiss animation completes before
+    // the UpgradePrompt slide-in begins — prevents animation conflict.
+    setTimeout(() => setShowUpgradePrompt(true), 200);
+  }, []);
 
   const handleModalFreePreview = useCallback(() => {
     if (!modalCard) return;
@@ -964,7 +976,7 @@ export const LikesYouScreen: React.FC = () => {
         updateCellsBatchingPeriod={50}
       />
 
-      {/* Premium unlock modal */}
+      {/* Premium unlock modal — blurred teaser with compat hints */}
       <UnlockModal
         visible={showModal}
         card={modalCard}
@@ -972,6 +984,23 @@ export const LikesYouScreen: React.FC = () => {
         onDismiss={handleModalDismiss}
         onFreePreview={handleModalFreePreview}
         hasFreePreview={viewsRemaining > 0}
+      />
+
+      {/*
+        UpgradePrompt — contextual bottom sheet paywall.
+        Shown INSTEAD of a hard navigation.navigate('MembershipPlans') so the
+        user stays in context and can dismiss without losing their place.
+        Only navigates to plans when the user explicitly taps "Yükselt".
+        Android back button and backdrop tap both dismiss it (built into UpgradePrompt).
+      */}
+      <UpgradePrompt
+        visible={showUpgradePrompt}
+        feature="who_likes"
+        onUpgrade={() => {
+          setShowUpgradePrompt(false);
+          navigation.navigate('MembershipPlans' as never);
+        }}
+        onDismiss={() => setShowUpgradePrompt(false)}
       />
     </View>
   );

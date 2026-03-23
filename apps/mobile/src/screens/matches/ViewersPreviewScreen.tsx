@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MatchesStackParamList } from '../../navigation/types';
 import { profileService } from '../../services/profileService';
 import type { ProfileVisitor } from '../../services/profileService';
+import { UpgradePrompt } from '../../components/premium/UpgradePrompt';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
@@ -214,6 +215,9 @@ export const ViewersPreviewScreen: React.FC = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
+  // UpgradePrompt bottom sheet — replaces hard navigation.navigate('MembershipPlans')
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+
   // Hero card pulse animation
   const heroPulse = useRef(new Animated.Value(1)).current;
   useEffect(() => {
@@ -252,12 +256,15 @@ export const ViewersPreviewScreen: React.FC = () => {
   const remainingCount = Math.max(0, totalCount - 4);
 
   const handleUpgrade = useCallback(() => {
-    navigation.navigate('MembershipPlans');
-  }, [navigation]);
+    // Show contextual upgrade bottom sheet instead of blind paywall navigation.
+    // User understands WHY they're being asked to upgrade, and can dismiss.
+    setShowUpgradePrompt(true);
+  }, []);
 
   const handleCardPress = useCallback(() => {
-    navigation.navigate('MembershipPlans');
-  }, [navigation]);
+    // Blurred viewer card tap — same contextual upgrade flow.
+    setShowUpgradePrompt(true);
+  }, []);
 
   const handleBack = useCallback(() => {
     navigation.goBack();
@@ -421,6 +428,23 @@ export const ViewersPreviewScreen: React.FC = () => {
           <Text style={styles.dismissText}>Daha sonra</Text>
         </Pressable>
       </ScrollView>
+
+      {/*
+        UpgradePrompt bottom sheet — contextual paywall for "Seni Kim Gördü".
+        Replaces the previous hard navigation.navigate('MembershipPlans') so
+        users understand the value, can dismiss, and only navigate if they
+        explicitly choose to upgrade.
+        Android back and backdrop tap both dismiss (built into UpgradePrompt).
+      */}
+      <UpgradePrompt
+        visible={showUpgradePrompt}
+        feature="visitors"
+        onUpgrade={() => {
+          setShowUpgradePrompt(false);
+          navigation.navigate('MembershipPlans');
+        }}
+        onDismiss={() => setShowUpgradePrompt(false)}
+      />
     </View>
   );
 };
