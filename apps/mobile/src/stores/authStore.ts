@@ -419,6 +419,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { useWaveStore } = require('./waveStore') as typeof import('./waveStore');
       useWaveStore.setState({ waves: [], isLoading: false, error: null });
     } catch { /* store may not be initialized */ }
+
+    // Reset premium store — critical: next user must not inherit stale tier/snapshot
+    try {
+      const { usePremiumStore } = require('./premiumStore') as typeof import('./premiumStore');
+      usePremiumStore.getState().reset();
+    } catch { /* store may not be initialized */ }
   },
 
   // ─── Refresh Tokens ───────────────────────────────────────
@@ -499,6 +505,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         // Start token refresh timer
         get()._startTokenRefreshTimer();
+
+        // Background-sync premium state from /payments/status.
+        // Fire-and-forget: session restore succeeds regardless of premium sync result.
+        // premiumStore will push the confirmed tier back to authStore.user.packageTier.
+        import('./premiumStore').then(({ usePremiumStore }) => {
+          usePremiumStore.getState().syncPremiumState();
+        }).catch(() => {});
 
         return true;
       } catch {
@@ -594,13 +607,37 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // Not stored locally for security — handled by backend
   },
 
-  activateTrial: () => {
-    const expiresAt = Date.now() + TRIAL_DURATION_MS;
-    storage.setNumber(TRIAL_EXPIRY_KEY, expiresAt);
-    set((state) => ({
-      trialExpiresAt: expiresAt,
-      user: state.user ? { ...state.user, packageTier: 'GOLD' as PackageTier } : null,
-    }));
+  activateTrial: async () => {
+    // Trial activation MUST be confirmed by the server before we grant GOLD access.
+    // The server validates eligibility (first-time user, not previously trialed, etc.)
+    // and returns the canonical expiresAt that we persist locally.
+    try {
+      const api = (await import('../services/api')).default;
+      const res = await api.post<{ packageTier: string; expiresAt: string }>('/payments/trial/activate');
+      const expiresAt = new Date(res.data.expiresAt).getTime();
+      storage.setNumber(TRIAL_EXPIRY_KEY, expiresAt);
+      set((state) => ({
+        trialExpiresAt: expiresAt,
+        user: state.user ? { ...state.user, packageTier: (res.data.packageTier as PackageTier) ?? 'GOLD' } : null,
+      }));
+      // Sync premiumStore so the new tier is immediately reflected everywhere
+      const { usePremiumStore } = await import('./premiumStore');
+      usePremiumStore.getState().syncPremiumState();
+    } catch (error) {
+      if (__DEV__) {
+        // Dev fallback: allow local trial without server confirmation
+        if (__DEV__) console.warn('[TRIAL] Server unavailable, using local trial for dev', error);
+        const expiresAt = Date.now() + TRIAL_DURATION_MS;
+        storage.setNumber(TRIAL_EXPIRY_KEY, expiresAt);
+        set((state) => ({
+          trialExpiresAt: expiresAt,
+          user: state.user ? { ...state.user, packageTier: 'GOLD' as PackageTier } : null,
+        }));
+      } else {
+        // In production, bubble the error so the UI can show a proper message
+        throw error;
+      }
+    }
   },
 
   checkTrialExpiry: () => {
@@ -620,19 +657,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   loadTrialState: () => {
+    // Restore the trial expiry timestamp for UI display (e.g. TrialBanner countdown).
+    // We intentionally do NOT promote packageTier to GOLD here — the server-confirmed
+    // tier comes from restoreSession → premiumStore.syncPremiumState which runs on
+    // every app startup. Local storage is only used to show the remaining time, not
+    // to grant access.
     const saved = storage.getNumber(TRIAL_EXPIRY_KEY);
     if (saved && saved > Date.now()) {
-      set((state) => ({
-        trialExpiresAt: saved,
-        user: state.user ? { ...state.user, packageTier: 'GOLD' as PackageTier } : null,
-      }));
+      set({ trialExpiresAt: saved });
     } else if (saved) {
-      // Persisted trial has expired — clean up
+      // Locally tracked trial has expired — clean up the timestamp
       storage.delete(TRIAL_EXPIRY_KEY);
-      set((state) => ({
-        trialExpiresAt: null,
-        user: state.user ? { ...state.user, packageTier: 'FREE' as PackageTier } : null,
-      }));
+      set({ trialExpiresAt: null });
     }
   },
 

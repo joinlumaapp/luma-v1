@@ -25,6 +25,7 @@ import { palette } from '../../theme/colors';
 import { typography, fontWeights, fontSizes } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
+import { usePremiumStore } from '../../stores/premiumStore';
 import { useCoinStore, COIN_PACKS, type CoinPack } from '../../stores/coinStore';
 import { CoinBalance } from '../../components/common/CoinBalance';
 import { iapService } from '../../services/iapService';
@@ -822,8 +823,10 @@ export const MembershipPlansScreen: React.FC = () => {
               setIsPurchasing(true);
               try {
                 await paymentService.cancelSubscription();
-                useAuthStore.getState().updatePackageTier('FREE');
-                Alert.alert('Başarılı', 'Ücretsiz plana geçiş yapıldı.');
+                // Sync from server after cancel — server is authoritative on the
+                // actual cancellation date (may still be active until period end)
+                await usePremiumStore.getState().syncPremiumState();
+                Alert.alert('Başarılı', 'Aboneliğiniz iptal edildi. Mevcut dönem sonunda ücretsiz plana geçeceksiniz.');
               } catch (error: unknown) {
                 const message = error instanceof Error ? error.message : '';
                 if (__DEV__) {
@@ -867,14 +870,27 @@ export const MembershipPlansScreen: React.FC = () => {
                   );
                 }
 
-                // Send receipt to backend for validation
-                const result = await paymentService.subscribe({
+                // Send receipt to backend for server-side validation.
+                // Backend verifies the receipt with Apple/Google and returns the confirmed tier.
+                await paymentService.subscribe({
                   packageTier: tier,
                   platform: purchase.platform,
                   receipt: purchase.receipt,
                 });
 
-                useAuthStore.getState().updatePackageTier(result.packageTier as PackageTier);
+                // Sync premiumStore: retries until server reflects the new tier.
+                // This handles IAP confirmation delays (App Store webhooks can take 2–10s).
+                // premiumStore.onPurchaseSuccess also pushes the confirmed tier to authStore.
+                try {
+                  await usePremiumStore.getState().onPurchaseSuccess(tier as PackageTier);
+                } catch {
+                  // Retries exhausted — tier will sync on next app foreground.
+                  // Show a soft warning rather than marking the purchase as failed.
+                  Alert.alert(
+                    'Satın alma onaylandı',
+                    'Hesabınız birazdan güncelleniyor. Birkaç saniye bekleyin.',
+                  );
+                }
 
                 // Supreme → luxury celebration screen; others → simple alert
                 if (plan === 'supreme') {

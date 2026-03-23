@@ -4,10 +4,11 @@
 // 2. Onboarding (Gender → ... → Questions → Phone → OTP → Selfie)
 // 3. MainTabs (authenticated + onboarded)
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { RootStackParamList } from './types';
 import { useAuth } from '../hooks/useAuth';
+import { usePremiumStore } from '../stores/premiumStore';
 
 import { AuthNavigator } from './AuthNavigator';
 import { OnboardingNavigator } from './OnboardingNavigator';
@@ -19,6 +20,14 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const RootNavigatorInner: React.FC = () => {
   const { isAuthenticated, isOnboarded, hasStartedOnboarding } = useAuth();
+  const initAppStateSync = usePremiumStore((s) => s.initAppStateSync);
+
+  // Register AppState listener for foreground premium refresh.
+  // Mounted once at the root so it covers the entire app lifetime.
+  useEffect(() => {
+    const cleanup = initAppStateSync();
+    return cleanup;
+  }, [initAppStateSync]);
 
   // Determine which flow to show
   // 1. Authenticated + Onboarded → MainTabs
