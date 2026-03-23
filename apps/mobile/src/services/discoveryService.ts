@@ -207,6 +207,92 @@ export interface PersonalityResponse {
   enneagramType: string | null;
 }
 
+// ─── Video Discovery Feed type ───────────────────────────────
+// Shape returned by GET /discovery/video-feed
+// Also used by VideoFeedScreen and VideoCard component.
+
+export interface VideoFeedCard {
+  userId: string;
+  name: string;
+  age: number;
+  city: string;
+  distance: string;
+  compatibilityPercent: number;
+  videoUrl: string;
+  thumbnailUrl?: string;
+  avatarUrl: string;
+  isVerified: boolean;
+  intentionTag?: string;
+  bio?: string;
+}
+
+// Dev-only mock cards for video feed — only used via devMockOrThrow (never in production)
+const MOCK_VIDEO_FEED_CARDS: VideoFeedCard[] = [
+  {
+    userId: 'vid-001',
+    name: 'Elif',
+    age: 26,
+    city: 'İstanbul',
+    distance: '2.3 km',
+    compatibilityPercent: 92,
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    avatarUrl: 'https://i.pravatar.cc/150?img=1',
+    isVerified: true,
+    intentionTag: 'Ciddi İlişki',
+    bio: 'Sahilde yürümek, kitap okumak ve yeni keşfetmek.',
+  },
+  {
+    userId: 'vid-002',
+    name: 'Zeynep',
+    age: 24,
+    city: 'Ankara',
+    distance: '5.1 km',
+    compatibilityPercent: 78,
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+    avatarUrl: 'https://i.pravatar.cc/150?img=5',
+    isVerified: true,
+    bio: 'Dans, müzik ve hayatın tadını çıkarmak.',
+  },
+  {
+    userId: 'vid-003',
+    name: 'Ayşe',
+    age: 28,
+    city: 'İzmir',
+    distance: '1.8 km',
+    compatibilityPercent: 85,
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+    avatarUrl: 'https://i.pravatar.cc/150?img=9',
+    isVerified: false,
+    intentionTag: 'Keşfediyorum',
+    bio: 'Yoga, seyahat ve iyi kahve.',
+  },
+  {
+    userId: 'vid-004',
+    name: 'Merve',
+    age: 25,
+    city: 'İstanbul',
+    distance: '3.7 km',
+    compatibilityPercent: 68,
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+    avatarUrl: 'https://i.pravatar.cc/150?img=16',
+    isVerified: true,
+    bio: 'Fotoğrafçılık ve doğayla iç içe.',
+  },
+  {
+    userId: 'vid-005',
+    name: 'Selin',
+    age: 27,
+    city: 'Bursa',
+    distance: '4.2 km',
+    compatibilityPercent: 94,
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+    avatarUrl: 'https://i.pravatar.cc/150?img=20',
+    isVerified: true,
+    intentionTag: 'Ciddi İlişki',
+    bio: 'Kitap kurdu, kahve tutkunu.',
+  },
+];
+
 // ─── Mock Data (fallback when API is unavailable) ────────────
 
 const MOCK_CARDS: FeedCard[] = [
@@ -1033,5 +1119,18 @@ export const discoveryService = {
       enneagramType,
     });
     return response.data;
+  },
+
+  // ── Video Discovery Feed ───────────────────────────────────
+  // Returns profiles that have a profile video — powers the TikTok-style Video Keşfet screen.
+  // Endpoint: GET /discovery/video-feed
+  getVideoFeed: async (): Promise<VideoFeedCard[]> => {
+    try {
+      const response = await api.get<VideoFeedCard[]>('/discovery/video-feed');
+      return response.data;
+    } catch (error) {
+      // Dev fallback only — production surfaces the error so the screen shows retry UI.
+      return devMockOrThrow(error, MOCK_VIDEO_FEED_CARDS, 'discoveryService.getVideoFeed');
+    }
   },
 };

@@ -176,8 +176,13 @@ const getLiveIndicator = (activityId: string): { emoji: string; text: string } =
   return { emoji: ind.emoji, text: ind.template(num) };
 };
 
-/** Get a stable mock chat message for a given activity id */
-const getChatPreview = (activityId: string): { name: string; text: string } => {
+/**
+ * Returns a dev-only fake chat preview for an activity card.
+ * In production this returns null — activity cards show no fake chat snippets.
+ * Real chat previews will come from the activity participants API.
+ */
+const getChatPreview = (activityId: string): { name: string; text: string } | null => {
+  if (!__DEV__) return null;
   const idx = seededRandom(activityId + '_chat', 0, MOCK_CHAT_MESSAGES.length - 1);
   return MOCK_CHAT_MESSAGES[idx];
 };
@@ -856,6 +861,9 @@ const liveStyles = StyleSheet.create({
 
 const ChatPreview: React.FC<{ activityId: string }> = ({ activityId }) => {
   const message = useMemo(() => getChatPreview(activityId), [activityId]);
+
+  // Returns null in production — no fake chat previews shown to real users
+  if (!message) return null;
 
   return (
     <View style={chatPreviewStyles.container}>

@@ -157,7 +157,7 @@ const EmotionalIntroScreen: React.FC = () => {
     setOnboarded(true);
     await storage.setTokens('dev-access-token', 'dev-refresh-token');
     await storage.setOnboarded(true);
-    seedDevData();
+    if (__DEV__) { seedDevData(); }
   }, []);
 
   const handleOnboardingTest = useCallback(() => {

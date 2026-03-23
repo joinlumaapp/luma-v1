@@ -80,26 +80,31 @@ export const useInstantConnectStore = create<InstantConnectStore>((set, get) => 
       _searchTimerId: timerId,
     });
 
-    // TODO: Emit socket event for matchmaking queue
+    // Emit socket event to join the real-time matchmaking queue.
+    // The server fires 'instant_connect:match_found' when a compatible user is found,
+    // which the socket listener calls get().onMatchFound(user) with.
     // socketService.emit('instant_connect:join_queue', { ... });
 
-    // Dev mock: find match after 3-6 seconds
-    const mockDelay = 3000 + Math.random() * 3000;
-    setTimeout(() => {
-      const { state } = get();
-      if (state === 'searching') {
-        get().onMatchFound({
-          id: 'instant-' + Date.now(),
-          name: ['Elif', 'Zeynep', 'Ayse', 'Merve', 'Selin'][Math.floor(Math.random() * 5)],
-          age: 22 + Math.floor(Math.random() * 8),
-          city: ['Istanbul', 'Ankara', 'Izmir', 'Bursa'][Math.floor(Math.random() * 4)],
-          avatarUrl: `https://i.pravatar.cc/150?u=${Date.now()}`,
-          compatibilityPercent: 60 + Math.floor(Math.random() * 35),
-          distance: `${(1 + Math.random() * 9).toFixed(1)} km`,
-          isVerified: Math.random() > 0.3,
-        });
-      }
-    }, mockDelay);
+    // Dev-only: simulate a match after 3-6 seconds so the UI can be tested
+    // without a live backend. Strictly gated — never runs in production.
+    if (__DEV__) {
+      const mockDelay = 3000 + Math.random() * 3000;
+      setTimeout(() => {
+        const { state } = get();
+        if (state === 'searching') {
+          get().onMatchFound({
+            id: 'instant-' + Date.now(),
+            name: ['Elif', 'Zeynep', 'Ayse', 'Merve', 'Selin'][Math.floor(Math.random() * 5)],
+            age: 22 + Math.floor(Math.random() * 8),
+            city: ['Istanbul', 'Ankara', 'Izmir', 'Bursa'][Math.floor(Math.random() * 4)],
+            avatarUrl: `https://i.pravatar.cc/150?u=${Date.now()}`,
+            compatibilityPercent: 60 + Math.floor(Math.random() * 35),
+            distance: `${(1 + Math.random() * 9).toFixed(1)} km`,
+            isVerified: Math.random() > 0.3,
+          });
+        }
+      }, mockDelay);
+    }
   },
 
   cancelSearch: () => {

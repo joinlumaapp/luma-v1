@@ -20,8 +20,11 @@ import type { FeedStackParamList } from '../../navigation/types';
 import { colors, palette } from '../../theme/colors';
 import { fontWeights } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
+import api from '../../services/api';
 import { socialFeedService, type FeedPost } from '../../services/socialFeedService';
 import { profileService } from '../../services/profileService';
+import { devMockOrThrow } from '../../utils/mockGuard';
+import { useAuthStore } from '../../stores/authStore';
 import { getCompatibilityPersonality, type CompatibilityPersonality, translateIntentionTag } from '../../utils/formatters';
 import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
 import { VerifiedBadge } from '../../components/common/VerifiedBadge';
@@ -30,7 +33,7 @@ import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
 type FeedProfileRouteProp = RouteProp<FeedStackParamList, 'FeedProfile'>;
 type FeedProfileNavProp = NativeStackNavigationProp<FeedStackParamList, 'FeedProfile'>;
 
-// Mock user profile data — will come from API when backend is ready
+// Public profile shape — returned by GET /profiles/:userId/public
 interface FeedUserProfile {
   userId: string;
   name: string;
@@ -54,7 +57,10 @@ interface FeedUserProfile {
   packageTier?: 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
 }
 
-const MOCK_PROFILES: Record<string, FeedUserProfile> = {
+// ─── Dev-only mock profiles ────────────────────────────────────────────────
+// Only used via devMockOrThrow — never rendered in production builds.
+
+const DEV_MOCK_PROFILES: Record<string, FeedUserProfile> | null = __DEV__ ? {
   'bot-001': {
     userId: 'bot-001', name: 'Elif', age: 26, city: 'İstanbul',
     avatarUrl: 'https://i.pravatar.cc/150?img=1', bio: 'Sahilde yürümeyi, kitap okumayı ve yeni insanlarla tanışmayı seviyorum.',
@@ -67,17 +73,18 @@ const MOCK_PROFILES: Record<string, FeedUserProfile> = {
   },
   'bot-002': {
     userId: 'bot-002', name: 'Zeynep', age: 24, city: 'Ankara',
-    avatarUrl: 'https://i.pravatar.cc/150?img=5', bio: 'Muzip, merakli, biraz da deli. Hayati dolu dolu yasamak istiyorum.',
+    avatarUrl: 'https://i.pravatar.cc/150?img=5', bio: 'Muzip, meraklı, biraz da deli. Hayatı dolu dolu yaşamak istiyorum.',
     isVerified: true, isFollowing: false, followerCount: 567, followingCount: 234, postCount: 41,
-    photos: ['https://picsum.photos/seed/zeynep1/400/500', 'https://picsum.photos/seed/zeynep2/400/500', 'https://picsum.photos/seed/zeynep3/400/500'],
+    photos: ['https://picsum.photos/seed/zeynep1/400/500', 'https://picsum.photos/seed/zeynep2/400/500'],
     compatibilityPercent: 68,
-    hobbies: ['Dans', 'Muzik', 'Yuzme', 'Pilates', 'Sinema'],
-    height: '172 cm', job: 'Pazarlama Uzmani', education: 'Bilkent Universitesi', intentionTag: 'Kesfediyorum', zodiacSign: 'Ikizler',
+    hobbies: ['Dans', 'Müzik', 'Yüzme', 'Pilates', 'Sinema'],
+    height: '172 cm', job: 'Pazarlama Uzmanı', education: 'Bilkent Üniversitesi', intentionTag: 'Keşfediyorum', zodiacSign: 'İkizler',
     packageTier: 'RESERVED',
   },
-};
+} : null;
 
-const getDefaultProfile = (userId: string): FeedUserProfile => ({
+// Dev fallback when a userId isn't in DEV_MOCK_PROFILES
+const getDevFallbackProfile = (userId: string): FeedUserProfile => ({
   userId,
   name: 'Kullanıcı',
   age: 25,
@@ -86,17 +93,17 @@ const getDefaultProfile = (userId: string): FeedUserProfile => ({
   bio: 'Henüz bir şey yazmamış.',
   isVerified: false,
   isFollowing: false,
-  followerCount: Math.floor(Math.random() * 300) + 20,
-  followingCount: Math.floor(Math.random() * 200) + 10,
-  postCount: Math.floor(Math.random() * 30) + 1,
-  photos: [`https://picsum.photos/seed/${userId}/400/500`],
-  compatibilityPercent: Math.floor(Math.random() * 60) + 30,
-  hobbies: ['Spor', 'Muzik', 'Seyahat'],
-  height: '170 cm',
-  job: 'Belirtilmedi',
-  education: 'Belirtilmedi',
-  intentionTag: 'Kesfediyorum',
-  zodiacSign: 'Belirtilmedi',
+  followerCount: 0,
+  followingCount: 0,
+  postCount: 0,
+  photos: [],
+  compatibilityPercent: 50,
+  hobbies: [],
+  height: '',
+  job: '',
+  education: '',
+  intentionTag: '',
+  zodiacSign: '',
 });
 
 const getScoreColor = (score: number): string => {
@@ -171,26 +178,55 @@ export const FeedProfileScreen: React.FC = () => {
   const [profile, setProfile] = useState<FeedUserProfile | null>(null);
   const [userPosts, setUserPosts] = useState<FeedPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
 
-  // Mock: user is not premium
-  const isPremium = false;
+  const packageTier = useAuthStore((s) => s.user?.packageTier);
+  const isPremium = packageTier === 'GOLD' || packageTier === 'PRO' || packageTier === 'RESERVED';
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const found = MOCK_PROFILES[userId] ?? getDefaultProfile(userId);
-      setProfile(found);
-      setIsFollowing(found.isFollowing);
-      setIsLoading(false);
-    }, 300);
+    let cancelled = false;
 
-    socialFeedService.getFeed('ONERILEN', null, null).then((res) => {
-      setUserPosts(res.posts.filter((p) => p.userId === userId).slice(0, 6));
-    });
+    const load = async () => {
+      setIsLoading(true);
+      setHasError(false);
+      try {
+        // Fetch real public profile from backend.
+        // Endpoint: GET /profiles/:userId/public
+        const res = await api.get<FeedUserProfile>(`/profiles/${userId}/public`);
+        if (cancelled) return;
+        setProfile(res.data);
+        setIsFollowing(res.data.isFollowing);
+      } catch (error) {
+        if (cancelled) return;
+        // Dev fallback: use static bot data or a generic placeholder.
+        // In production devMockOrThrow re-throws, which sets hasError.
+        try {
+          const mockData = (DEV_MOCK_PROFILES?.[userId] ?? getDevFallbackProfile(userId));
+          const fallback = devMockOrThrow(error, mockData, 'FeedProfileScreen.loadProfile');
+          setProfile(fallback);
+          setIsFollowing(fallback.isFollowing);
+        } catch {
+          setHasError(true);
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
 
+    load();
     profileService.trackProfileView(userId);
 
-    return () => clearTimeout(timer);
+    // Load this user's recent feed posts (best-effort, non-blocking)
+    socialFeedService.getFeed('ONERILEN', null, null)
+      .then((res) => {
+        if (!cancelled) {
+          setUserPosts(res.posts.filter((p) => p.userId === userId).slice(0, 6));
+        }
+      })
+      .catch(() => {}); // Silently ignore — posts are supplementary
+
+    return () => { cancelled = true; };
   }, [userId]);
 
   const handleFollow = useCallback(async () => {
@@ -206,11 +242,31 @@ export const FeedProfileScreen: React.FC = () => {
     navigation.navigate('MembershipPlans' as never);
   }, [navigation]);
 
-  if (isLoading || !profile) {
+  if (isLoading) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </View>
+    );
+  }
+
+  if (hasError || !profile) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={[styles.loadingContainer, { gap: 12 }]}>
+          <Ionicons name="person-outline" size={40} color={colors.textTertiary} />
+          <Text style={{ fontSize: 15, color: colors.textSecondary, textAlign: 'center' }}>
+            {'Profil yüklenemedi'}
+          </Text>
+          <TouchableOpacity
+            onPress={() => { setIsLoading(true); setHasError(false); }}
+            style={{ paddingHorizontal: 20, paddingVertical: 10, backgroundColor: colors.primary + '18', borderRadius: 20 }}
+            activeOpacity={0.7}
+          >
+            <Text style={{ fontSize: 14, color: colors.primary, fontWeight: '600' }}>{'Tekrar dene'}</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );

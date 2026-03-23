@@ -1,8 +1,8 @@
-// VideoFeedScreen — TikTok/Reels style vertical video discovery for dating
-// Features: fullscreen vertical scroll, autoplay active video, preload next,
-// like/skip/instant-connect actions, match detection, smooth transitions
+// VideoFeedScreen — TikTok/Reels style vertical video discovery
+// API-first: calls /discovery/video-feed. Dev fallback via devMockOrThrow.
+// Shows loading → content | empty | error states. No mock data in production.
 
-import React, { useState, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   FlatList,
@@ -14,89 +14,68 @@ import {
   Alert,
   ViewToken,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { VideoCard, type VideoProfile } from '../../components/video';
+import { VideoCard } from '../../components/video';
+import type { VideoProfile } from '../../components/video/VideoCard';
+import { discoveryService } from '../../services/discoveryService';
+import type { VideoFeedCard } from '../../services/discoveryService';
 import { palette } from '../../theme/colors';
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// Mock video profiles for dev/testing
-const MOCK_VIDEO_PROFILES: VideoProfile[] = [
-  {
-    userId: 'vid-001',
-    name: 'Elif',
-    age: 26,
-    city: 'Istanbul',
-    distance: '2.3 km',
-    compatibilityPercent: 92,
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-    avatarUrl: 'https://i.pravatar.cc/150?img=1',
-    isVerified: true,
-    intentionTag: 'Ciddi Iliski',
-    bio: 'Sahilde yurumek, kitap okumak ve yeni kesfetmek.',
-  },
-  {
-    userId: 'vid-002',
-    name: 'Zeynep',
-    age: 24,
-    city: 'Ankara',
-    distance: '5.1 km',
-    compatibilityPercent: 78,
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-    avatarUrl: 'https://i.pravatar.cc/150?img=5',
-    isVerified: true,
-    bio: 'Dans, muzik ve hayatin tadini cikarmak.',
-  },
-  {
-    userId: 'vid-003',
-    name: 'Ayse',
-    age: 28,
-    city: 'Izmir',
-    distance: '1.8 km',
-    compatibilityPercent: 85,
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-    avatarUrl: 'https://i.pravatar.cc/150?img=9',
-    isVerified: false,
-    intentionTag: 'Kesfediyorum',
-    bio: 'Yoga, seyahat ve iyi kahve.',
-  },
-  {
-    userId: 'vid-004',
-    name: 'Merve',
-    age: 25,
-    city: 'Istanbul',
-    distance: '3.7 km',
-    compatibilityPercent: 68,
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
-    avatarUrl: 'https://i.pravatar.cc/150?img=16',
-    isVerified: true,
-    bio: 'Fotografcilik ve dogayla ic ice.',
-  },
-  {
-    userId: 'vid-005',
-    name: 'Selin',
-    age: 27,
-    city: 'Bursa',
-    distance: '4.2 km',
-    compatibilityPercent: 94,
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
-    avatarUrl: 'https://i.pravatar.cc/150?img=20',
-    isVerified: true,
-    intentionTag: 'Ciddi Iliski',
-    bio: 'Kitap kurdu, kahve tutkunu.',
-  },
-];
+// ─── Adapter ─────────────────────────────────────────────────
+// VideoFeedCard (API shape) → VideoProfile (component shape)
+const toVideoProfile = (card: VideoFeedCard): VideoProfile => ({
+  userId: card.userId,
+  name: card.name,
+  age: card.age,
+  city: card.city,
+  distance: card.distance,
+  compatibilityPercent: card.compatibilityPercent,
+  videoUrl: card.videoUrl,
+  thumbnailUrl: card.thumbnailUrl,
+  avatarUrl: card.avatarUrl,
+  isVerified: card.isVerified,
+  intentionTag: card.intentionTag,
+  bio: card.bio,
+});
+
+// ─── Screen ──────────────────────────────────────────────────
 
 export const VideoFeedScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const [activeIndex, setActiveIndex] = useState(0);
+  const [profiles, setProfiles] = useState<VideoProfile[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
-  // Track visible item
+  // ─── Data fetching ─────────────────────────────────────────
+
+  const fetchFeed = useCallback(async () => {
+    setIsLoading(true);
+    setHasError(false);
+    try {
+      const cards = await discoveryService.getVideoFeed();
+      setProfiles(cards.map(toVideoProfile));
+    } catch {
+      setHasError(true);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchFeed();
+  }, [fetchFeed]);
+
+  // ─── Viewability ───────────────────────────────────────────
+
   const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
     if (viewableItems.length > 0 && viewableItems[0].index !== null) {
       setActiveIndex(viewableItems[0].index);
@@ -107,31 +86,30 @@ export const VideoFeedScreen: React.FC = () => {
     itemVisiblePercentThreshold: 60,
   }).current;
 
-  // Action handlers
-  const handleLike = useCallback((userId: string) => {
-    // TODO: Send like via matchService
-    // Check for mutual like → trigger match animation
+  // ─── Action handlers ───────────────────────────────────────
+
+  const handleLike = useCallback((_userId: string) => {
+    // TODO: call matchService.swipe({ direction: 'LIKE', targetUserId })
   }, []);
 
-  const handleSkip = useCallback((userId: string) => {
-    // Auto-scroll to next video
+  const handleSkip = useCallback((_userId: string) => {
     const nextIndex = activeIndex + 1;
-    if (nextIndex < MOCK_VIDEO_PROFILES.length) {
+    if (nextIndex < profiles.length) {
       flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
     }
-  }, [activeIndex]);
+  }, [activeIndex, profiles.length]);
 
   const handleProfile = useCallback((userId: string) => {
-    navigation.navigate('ProfilePreview' as never, { userId } as never);
+    (navigation.navigate as (screen: string, params: object) => void)('ProfilePreview', { userId });
   }, [navigation]);
 
-  const handleInstantConnect = useCallback((userId: string) => {
+  const handleInstantConnect = useCallback((_userId: string) => {
     Alert.alert(
-      'Aninda Baglan',
-      'Bu kisiye direkt mesaj gondermek ister misin? (Premium ozellik)',
+      'Anında Bağlan',
+      'Bu kişiye direkt mesaj göndermek ister misin? (Premium özellik)',
       [
-        { text: 'Vazgec', style: 'cancel' },
-        { text: 'Mesaj Gonder', onPress: () => {} },
+        { text: 'Vazgeç', style: 'cancel' },
+        { text: 'Mesaj Gönder', onPress: () => {} },
       ],
     );
   }, []);
@@ -159,13 +137,67 @@ export const VideoFeedScreen: React.FC = () => {
     index,
   }), []);
 
+  // ─── Render helpers ────────────────────────────────────────
+
+  const topBar = (
+    <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
+      <TouchableOpacity onPress={handleBack} style={styles.backButton} activeOpacity={0.7}>
+        <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+      </TouchableOpacity>
+      <Text style={styles.topTitle}>Video Keşfet</Text>
+      <View style={{ width: 36 }} />
+    </View>
+  );
+
+  // ── Loading ──
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centeredContent]}>
+        <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+        {topBar}
+        <ActivityIndicator size="large" color={palette.purple[400]} />
+        <Text style={styles.statusText}>Videolar yükleniyor...</Text>
+      </View>
+    );
+  }
+
+  // ── Error ──
+  if (hasError) {
+    return (
+      <View style={[styles.container, styles.centeredContent]}>
+        <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+        {topBar}
+        <Ionicons name="wifi-outline" size={48} color="rgba(255,255,255,0.4)" />
+        <Text style={styles.statusText}>Videolar yüklenemedi</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={fetchFeed} activeOpacity={0.75}>
+          <Ionicons name="refresh" size={16} color="#FFFFFF" />
+          <Text style={styles.retryButtonText}>Tekrar dene</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // ── Empty ──
+  if (profiles.length === 0) {
+    return (
+      <View style={[styles.container, styles.centeredContent]}>
+        <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+        {topBar}
+        <Ionicons name="videocam-off-outline" size={48} color="rgba(255,255,255,0.4)" />
+        <Text style={styles.statusText}>Şu an gösterilecek video yok</Text>
+        <Text style={styles.statusSubText}>Yakında yeni profiller eklenecek</Text>
+      </View>
+    );
+  }
+
+  // ── Feed ──
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
 
       <FlatList
         ref={flatListRef}
-        data={MOCK_VIDEO_PROFILES}
+        data={profiles}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
         pagingEnabled
@@ -176,29 +208,28 @@ export const VideoFeedScreen: React.FC = () => {
         getItemLayout={getItemLayout}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
-        // Performance: preload 1 video ahead
         windowSize={3}
         maxToRenderPerBatch={2}
         initialNumToRender={2}
         removeClippedSubviews={Platform.OS === 'android'}
       />
 
-      {/* Top bar — back button + title */}
-      <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-        <TouchableOpacity onPress={handleBack} style={styles.backButton} activeOpacity={0.7}>
-          <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-        <Text style={styles.topTitle}>Video Kesfet</Text>
-        <View style={{ width: 36 }} />
-      </View>
+      {topBar}
     </View>
   );
 };
+
+// ─── Styles ──────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
+  },
+  centeredContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
   },
   topBar: {
     position: 'absolute',
@@ -228,5 +259,37 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
+  },
+  statusText: {
+    fontSize: 15,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.7)',
+    textAlign: 'center',
+  },
+  statusSubText: {
+    fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: 'rgba(255,255,255,0.4)',
+    textAlign: 'center',
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+    marginTop: 4,
+  },
+  retryButtonText: {
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: '#FFFFFF',
   },
 });
