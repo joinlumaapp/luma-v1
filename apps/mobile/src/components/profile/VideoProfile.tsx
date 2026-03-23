@@ -1,6 +1,7 @@
 // VideoProfile — Auto-playing looped video player for profile display
 // Features: muted by default, tap to play/pause, tap speaker to unmute,
 // double-tap for fullscreen, gold progress bar, shimmer loading, error fallback
+// Resilient loading: 3s timeout → fallback + retry, proper unmount cleanup
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
@@ -8,7 +9,6 @@ import {
   Text,
   Pressable,
   StyleSheet,
-  ActivityIndicator,
   Animated,
 } from 'react-native';
 import { Video, ResizeMode, type AVPlaybackStatus } from 'expo-av';
@@ -18,6 +18,11 @@ import { colors, palette } from '../../theme/colors';
 import { fontWeights } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { CachedImage } from '../common/CachedImage';
+
+// ─── Constants ───────────────────────────────────────────────
+
+// Time to wait for buffering before showing fallback
+const VIDEO_LOAD_TIMEOUT_MS = 3000;
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -60,53 +65,107 @@ export const VideoProfile: React.FC<VideoProfileProps> = ({
   const [isMuted, setIsMuted] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
+  // Incrementing forces <Video> remount on retry
+  const [retryKey, setRetryKey] = useState(0);
   const [progress, setProgress] = useState(0);
   const lastTapRef = useRef<number>(0);
   const shimmerAnim = useRef(new Animated.Value(0)).current;
 
-  // Shimmer animation for loading state
+  // Guard stale updates after unmount
+  const mountedRef = useRef(true);
+  const loadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Track the single-tap delay timer so we can cancel it on double-tap or unmount
+  const singleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ─── Lifecycle ─────────────────────────────────────────────
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (loadTimeoutRef.current) {
+        clearTimeout(loadTimeoutRef.current);
+        loadTimeoutRef.current = null;
+      }
+      if (singleTapTimerRef.current) {
+        clearTimeout(singleTapTimerRef.current);
+        singleTapTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  // Start/restart load timeout when source changes or user retries
+  useEffect(() => {
+    setIsLoading(true);
+    setHasError(false);
+    setTimedOut(false);
+    setProgress(0);
+
+    const timer = setTimeout(() => {
+      if (mountedRef.current) {
+        setTimedOut(true);
+        setIsLoading(false);
+      }
+    }, VIDEO_LOAD_TIMEOUT_MS);
+
+    loadTimeoutRef.current = timer;
+
+    return () => {
+      clearTimeout(timer);
+      loadTimeoutRef.current = null;
+    };
+  }, [retryKey]);
+
+  // Shimmer animation while loading
   useEffect(() => {
     if (!isLoading) return;
     const anim = Animated.loop(
       Animated.sequence([
-        Animated.timing(shimmerAnim, {
-          toValue: 1,
-          duration: 1200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(shimmerAnim, {
-          toValue: 0,
-          duration: 1200,
-          useNativeDriver: true,
-        }),
+        Animated.timing(shimmerAnim, { toValue: 1, duration: 1200, useNativeDriver: true }),
+        Animated.timing(shimmerAnim, { toValue: 0, duration: 1200, useNativeDriver: true }),
       ]),
     );
     anim.start();
     return () => anim.stop();
   }, [isLoading, shimmerAnim]);
 
-  // Auto-play / pause based on visibility
+  // Auto-play / pause based on visibility — skip if in fallback state
   useEffect(() => {
-    if (!videoRef.current) return;
+    if (!videoRef.current || hasError || timedOut) return;
     if (isVisible) {
       videoRef.current.playAsync().catch(() => {});
     } else {
       videoRef.current.pauseAsync().catch(() => {});
       setIsPlaying(false);
     }
-  }, [isVisible]);
+  }, [isVisible, hasError, timedOut]);
+
+  // ─── Playback status ───────────────────────────────────────
 
   const handlePlaybackStatusUpdate = useCallback(
     (status: AVPlaybackStatus) => {
+      if (!mountedRef.current) return;
+
       if (!status.isLoaded) {
         if (status.error) {
+          if (loadTimeoutRef.current) {
+            clearTimeout(loadTimeoutRef.current);
+            loadTimeoutRef.current = null;
+          }
           setHasError(true);
           setIsLoading(false);
         }
         return;
       }
 
+      // Video loaded — cancel the timeout
+      if (loadTimeoutRef.current) {
+        clearTimeout(loadTimeoutRef.current);
+        loadTimeoutRef.current = null;
+      }
       setIsLoading(false);
+      setTimedOut(false);
       setIsPlaying(status.isPlaying);
 
       if (status.durationMillis && status.durationMillis > 0) {
@@ -120,21 +179,36 @@ export const VideoProfile: React.FC<VideoProfileProps> = ({
     [onPlay],
   );
 
+  // ─── Retry ─────────────────────────────────────────────────
+
+  const handleRetry = useCallback(() => {
+    if (!mountedRef.current) return;
+    setRetryKey((k) => k + 1); // Forces <Video> remount and restarts timeout
+  }, []);
+
+  // ─── Interaction ───────────────────────────────────────────
+
   const handleTap = useCallback(() => {
     const now = Date.now();
     const DOUBLE_TAP_DELAY = 300;
 
     if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
-      // Double tap — toggle fullscreen (present fullscreen player)
+      // Double-tap → fullscreen
       videoRef.current?.presentFullscreenPlayer().catch(() => {});
       lastTapRef.current = 0;
+      // Cancel the pending single-tap action
+      if (singleTapTimerRef.current) {
+        clearTimeout(singleTapTimerRef.current);
+        singleTapTimerRef.current = null;
+      }
       return;
     }
 
     lastTapRef.current = now;
 
-    // Single tap — toggle play/pause (with delay to differentiate from double-tap)
-    setTimeout(() => {
+    // Single-tap → toggle play/pause (deferred to rule out double-tap)
+    singleTapTimerRef.current = setTimeout(() => {
+      if (!mountedRef.current) return;
       if (Date.now() - now >= DOUBLE_TAP_DELAY) {
         if (isPlaying) {
           videoRef.current?.pauseAsync().catch(() => {});
@@ -149,26 +223,38 @@ export const VideoProfile: React.FC<VideoProfileProps> = ({
     setIsMuted((prev) => !prev);
   }, []);
 
-  // Error fallback: show first photo instead
-  if (hasError) {
-    const fallback = fallbackPhotoUrl ?? thumbnailUrl;
-    if (fallback) {
-      return (
-        <View style={[styles.container, { height }]}>
-          <CachedImage
-            uri={fallback}
-            style={styles.fallbackImage}
-            contentFit="cover"
-          />
-          <View style={styles.errorOverlay}>
-            <Ionicons name="videocam-off-outline" size={24} color={palette.white} />
-            <Text style={styles.errorText}>Video yuklenemedi</Text>
-          </View>
+  // ─── Fallback UI ───────────────────────────────────────────
+
+  const showFallback = hasError || timedOut;
+
+  if (showFallback) {
+    const fallbackUri = fallbackPhotoUrl ?? thumbnailUrl ?? null;
+    return (
+      <View style={[styles.container, { height }]}>
+        {fallbackUri ? (
+          <CachedImage uri={fallbackUri} style={styles.fallbackImage} contentFit="cover" />
+        ) : (
+          <View style={[styles.fallbackImage, styles.fallbackBlank]} />
+        )}
+        <View style={styles.errorOverlay}>
+          <Ionicons name="videocam-off-outline" size={28} color={palette.white} />
+          <Text style={styles.errorText}>{'Video yüklenemedi'}</Text>
+          <Pressable
+            style={styles.retryButton}
+            onPress={handleRetry}
+            hitSlop={{ top: 8, bottom: 8, left: 16, right: 16 }}
+            accessibilityRole="button"
+            accessibilityLabel="Tekrar dene"
+          >
+            <Ionicons name="refresh" size={13} color={palette.white} />
+            <Text style={styles.retryButtonText}>{'Tekrar dene'}</Text>
+          </Pressable>
         </View>
-      );
-    }
-    return null;
+      </View>
+    );
   }
+
+  // ─── Player UI ─────────────────────────────────────────────
 
   const shimmerOpacity = shimmerAnim.interpolate({
     inputRange: [0, 1],
@@ -180,8 +266,12 @@ export const VideoProfile: React.FC<VideoProfileProps> = ({
 
   return (
     <View style={[styles.container, { height }]}>
-      {/* Video player */}
+      {/*
+        key={retryKey} — forces a clean remount on retry so expo-av discards
+        any stale buffering state and starts a fresh network request.
+      */}
       <Video
+        key={retryKey}
         ref={videoRef}
         source={{ uri: videoUrl }}
         style={styles.video}
@@ -193,12 +283,19 @@ export const VideoProfile: React.FC<VideoProfileProps> = ({
         usePoster={!!thumbnailUrl}
         posterStyle={styles.poster}
         onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
-        onError={() => setHasError(true)}
+        onError={() => {
+          if (!mountedRef.current) return;
+          if (loadTimeoutRef.current) {
+            clearTimeout(loadTimeoutRef.current);
+            loadTimeoutRef.current = null;
+          }
+          setHasError(true);
+          setIsLoading(false);
+        }}
       />
 
       {/* Tap area for play/pause + double-tap fullscreen */}
       <Pressable style={styles.tapOverlay} onPress={handleTap}>
-        {/* Play/pause indicator (shows briefly on tap) */}
         {!isPlaying && !isLoading && (
           <View style={styles.playIndicator}>
             <Ionicons name="play" size={compact ? 32 : 48} color={palette.white} />
@@ -209,7 +306,11 @@ export const VideoProfile: React.FC<VideoProfileProps> = ({
       {/* Loading shimmer */}
       {isLoading && (
         <Animated.View style={[styles.shimmerOverlay, { opacity: shimmerOpacity }]}>
-          <ActivityIndicator size="large" color={palette.gold[400]} />
+          {/* Shimmer uses the poster thumbnail as background — avoids a blank black screen */}
+          {thumbnailUrl ? (
+            <CachedImage uri={thumbnailUrl} style={StyleSheet.absoluteFillObject} contentFit="cover" />
+          ) : null}
+          <View style={styles.shimmerTint} />
         </Animated.View>
       )}
 
@@ -225,7 +326,7 @@ export const VideoProfile: React.FC<VideoProfileProps> = ({
         style={[styles.muteButton, compact && styles.muteButtonCompact]}
         onPress={handleMuteToggle}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        accessibilityLabel={isMuted ? 'Sesi ac' : 'Sesi kapat'}
+        accessibilityLabel={isMuted ? 'Sesi aç' : 'Sesi kapat'}
         accessibilityRole="button"
       >
         <Ionicons
@@ -236,13 +337,13 @@ export const VideoProfile: React.FC<VideoProfileProps> = ({
       </Pressable>
 
       {/* Duration badge — bottom-left */}
-      {duration && duration > 0 && (
+      {duration && duration > 0 ? (
         <View style={[styles.durationBadge, compact && styles.durationBadgeCompact]}>
           <Text style={[styles.durationText, compact && styles.durationTextCompact]}>
             {Math.round(duration)}s
           </Text>
         </View>
-      )}
+      ) : null}
 
       {/* "Video" badge — top-right */}
       {showBadge && (
@@ -292,12 +393,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingLeft: 4, // Optical centering for play icon
   },
+  // Loading shimmer — shows thumbnail underneath to avoid blank black flash
   shimmerOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 3,
+    overflow: 'hidden',
+  },
+  shimmerTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
   },
   bottomGradient: {
     position: 'absolute',
@@ -384,18 +490,40 @@ const styles = StyleSheet.create({
     backgroundColor: '#D4AF37',
     borderRadius: 1.5,
   },
+  // ── Fallback ──────────────────────────────────────────────
   fallbackImage: {
     ...StyleSheet.absoluteFillObject,
+  },
+  fallbackBlank: {
+    backgroundColor: colors.surface,
   },
   errorOverlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
     gap: spacing.sm,
   },
   errorText: {
     fontSize: 13,
+    fontWeight: fontWeights.medium,
+    color: palette.white,
+    includeFontPadding: false,
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+    marginTop: 4,
+  },
+  retryButtonText: {
+    fontSize: 12,
     fontWeight: fontWeights.medium,
     color: palette.white,
     includeFontPadding: false,
