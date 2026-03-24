@@ -421,7 +421,7 @@ export const useEngagementStore = create<EngagementState>((set, get) => ({
       challengeId: currentChallenge.id,
       progress: newProgress,
       completed,
-    }).catch(() => {});
+    }).catch((err) => { if (__DEV__) console.warn('[engagementStore] challenge sync failed:', err); });
   },
 
   claimChallengeReward: () => {
@@ -588,7 +588,7 @@ export const useEngagementStore = create<EngagementState>((set, get) => ({
       // Sync with backend
       api.post('/engagement/achievement/unlock', {
         achievementId: achievement.id,
-      }).catch(() => {});
+      }).catch((err) => { if (__DEV__) console.warn('[engagementStore] achievement sync failed:', err); });
 
       // Only show one at a time
       break;

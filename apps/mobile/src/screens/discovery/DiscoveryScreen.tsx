@@ -65,14 +65,13 @@ import { generateCompactReasons } from '../../utils/compatReasons';
 import { StoryRing } from '../../components/stories/StoryRing';
 import {
   DailyRewardModal,
-  DailyChallenge,
   LikesTeaser,
   AchievementToast,
 } from '../../components/engagement';
 import { useEngagementStore } from '../../stores/engagementStore';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, palette } from '../../theme/colors';
-import { typography, fontWeights } from '../../theme/typography';
+import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -93,6 +92,72 @@ type DiscoveryNavProp = CompositeNavigationProp<
 >;
 
 // ─── Action Button component — soft circular style (Tinder-inspired) ──
+
+// ─── Video Discover Compact Banner ──────────────────────────────────────────
+// Compact inline banner (~48px) — doesn't steal vertical space from swipe cards.
+
+const VideoDiscoverBanner: React.FC<{ onPress: () => void }> = React.memo(({ onPress }) => (
+  <Pressable
+    onPress={onPress}
+    style={vdStyles.banner}
+    accessibilityLabel="Video Kesfet"
+    accessibilityRole="button"
+    accessibilityHint="Video ile profilleri kesfetmek icin dokun"
+    testID="discovery-video-banner"
+  >
+    <LinearGradient
+      colors={[palette.purple[600], palette.pink[500]] as [string, string]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+      style={vdStyles.bannerGradient}
+    >
+      <Ionicons name="play-circle" size={18} color="#FFFFFF" />
+      <Text style={vdStyles.bannerTitle}>Video Kesfet</Text>
+      <Text style={vdStyles.bannerDot}>{'\u00B7'}</Text>
+      <Text style={vdStyles.bannerSubtitle}>Kisa videolarla kesfet</Text>
+      <View style={vdStyles.bannerArrow}>
+        <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.7)" />
+      </View>
+    </LinearGradient>
+  </Pressable>
+));
+VideoDiscoverBanner.displayName = 'VideoDiscoverBanner';
+
+const vdStyles = StyleSheet.create({
+  banner: {
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.xs,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+  },
+  bannerGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: spacing.md,
+    gap: 6,
+  },
+  bannerTitle: {
+    fontSize: 13,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  bannerDot: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.5)',
+  },
+  bannerSubtitle: {
+    fontSize: 11,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: 'rgba(255,255,255,0.75)',
+    flex: 1,
+  },
+  bannerArrow: {
+    marginLeft: 'auto',
+  },
+});
 
 // ─── Stories Row — Instagram-quality story rings using StoryRing + storyStore ──
 
@@ -1228,30 +1293,8 @@ export const DiscoveryScreen: React.FC = () => {
         <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} currentUserId={currentUserId} />
       </View>
 
-      {/* Video Discover entry card */}
-      <Pressable
-        onPress={() => navigation.navigate('VideoFeed')}
-        style={styles.videoDiscoverCard}
-        accessibilityLabel="Video Kesfet"
-        accessibilityRole="button"
-        accessibilityHint="Video ile profilleri kesfetmek icin dokun"
-        testID="discovery-video-card"
-      >
-        <LinearGradient
-          colors={[palette.purple[600], palette.pink[500]] as [string, string, ...string[]]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.videoDiscoverGradient}
-        >
-          <View style={styles.videoDiscoverContent}>
-            <Text style={styles.videoDiscoverTitle}>Video Kesfet</Text>
-            <Text style={styles.videoDiscoverSubtitle}>Kisa videolarla insanlari kesfet</Text>
-          </View>
-          <View style={styles.videoDiscoverIconCircle}>
-            <Ionicons name="play" size={20} color={palette.purple[600]} />
-          </View>
-        </LinearGradient>
-      </Pressable>
+      {/* Video Discover — compact inline banner inside header area */}
+      <VideoDiscoverBanner onPress={() => navigation.navigate('VideoFeed')} />
 
       {/* Card stack */}
       <View style={styles.cardStack}>
@@ -1539,9 +1582,6 @@ export const DiscoveryScreen: React.FC = () => {
         onDismiss={handleDailyRewardDismiss}
       />
 
-      {/* Daily challenge floating pill */}
-      <DailyChallenge variant="pill" />
-
       {/* Achievement toast */}
       <AchievementToast onPress={handleAchievementToastPress} />
     </View>
@@ -1694,11 +1734,12 @@ const styles = StyleSheet.create({
   },
   card: {
     width: layout.cardWidth,
-    height: layout.cardHeight,
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
     borderRadius: borderRadius.xl,
     backgroundColor: colors.background,
     overflow: 'hidden',
-    position: 'absolute',
   },
   cardFront: {
     zIndex: 1,
@@ -1885,48 +1926,7 @@ const styles = StyleSheet.create({
   fomoLikesEmoji: { fontSize: 12 },
   fomoLikesText: { fontSize: 12, fontFamily: 'Poppins_600SemiBold',
  fontWeight: '600', color: '#EF4444', letterSpacing: 0.2 },
-  // ── Video Discover card ──
-  videoDiscoverCard: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-    borderRadius: borderRadius.lg,
-    overflow: 'hidden',
-    ...shadows.medium,
-    shadowColor: palette.purple[500],
-    shadowOpacity: 0.25,
-  },
-  videoDiscoverGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: spacing.md,
-  },
-  videoDiscoverContent: {
-    flex: 1,
-  },
-  videoDiscoverTitle: {
-    fontSize: 16,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.bold,
-    color: '#FFFFFF',
-    letterSpacing: 0.2,
-    marginBottom: 2,
-  },
-  videoDiscoverSubtitle: {
-    fontSize: 12,
-    fontWeight: fontWeights.regular,
-    color: 'rgba(255, 255, 255, 0.8)',
-  },
-  videoDiscoverIconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: spacing.md,
-  },
+  // Video Discover card styles moved to vdStyles (inline component above)
   // ── Teaser card ──
   teaserCard: { backgroundColor: colors.surface, borderRadius: borderRadius.xl, borderWidth: 2, paddingVertical: spacing.lg, paddingHorizontal: spacing.xl, alignItems: 'center', marginBottom: spacing.lg, width: SCREEN_WIDTH - spacing.xxl * 2, shadowColor: palette.gold[500], shadowOffset: { width: 0, height: 4 }, shadowRadius: 12, elevation: 6 },
   teaserAvatarRow: { flexDirection: 'row', marginBottom: spacing.sm },

@@ -313,7 +313,7 @@ const MatchesStackNavigator: React.FC = React.memo(() => (
     <MatchesStack.Screen
       name="Chat"
       component={DeferredChatScreen}
-      options={{ gestureEnabled: true }}
+      options={{ gestureEnabled: true, freezeOnBlur: true }}
     />
     <MatchesStack.Screen
       name="Call"

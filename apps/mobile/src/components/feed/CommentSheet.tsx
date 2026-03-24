@@ -142,6 +142,8 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, onLike, onReply, onR
 
 // ─── Main Sheet ──────────────────────────────────────────────────────
 
+type CommentState = 'idle' | 'loading' | 'loaded' | 'error' | 'empty';
+
 export const CommentSheet: React.FC<CommentSheetProps> = ({
   visible,
   postId,
@@ -151,7 +153,7 @@ export const CommentSheet: React.FC<CommentSheetProps> = ({
   const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
   const [comments, setComments] = useState<FeedComment[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [state, setState] = useState<CommentState>('idle');
   const [newComment, setNewComment] = useState('');
   const [isSending, setIsSending] = useState(false);
 
@@ -168,19 +170,29 @@ export const CommentSheet: React.FC<CommentSheetProps> = ({
     return () => { showSub.remove(); hideSub.remove(); };
   }, []);
 
+  // ── Load comments ──
+  const loadComments = useCallback(async (targetPostId: string) => {
+    setState('loading');
+    try {
+      const data = await socialFeedService.getComments(targetPostId);
+      setComments(data);
+      setState(data.length === 0 ? 'empty' : 'loaded');
+    } catch {
+      setComments([]);
+      setState('error');
+    }
+  }, []);
+
   useEffect(() => {
     if (visible && postId) {
-      setIsLoading(true);
-      socialFeedService.getComments(postId).then((data) => {
-        setComments(data);
-        setIsLoading(false);
-      });
+      loadComments(postId);
     } else {
       setComments([]);
       setNewComment('');
       setReplyingTo(null);
+      setState('idle');
     }
-  }, [visible, postId]);
+  }, [visible, postId, loadComments]);
 
   // ── Like a comment ──
   const handleLikeComment = useCallback((commentId: string) => {
@@ -235,7 +247,6 @@ export const CommentSheet: React.FC<CommentSheetProps> = ({
     setIsSending(true);
     try {
       if (replyingTo) {
-        // Sending a reply
         const reply = await socialFeedService.replyToComment(
           postId,
           replyingTo.commentId,
@@ -250,12 +261,14 @@ export const CommentSheet: React.FC<CommentSheetProps> = ({
         );
         setReplyingTo(null);
       } else {
-        // Sending a new comment
         const comment = await socialFeedService.addComment(postId, newComment.trim());
         setComments((prev) => [...prev, comment]);
+        setState('loaded');
         onCommentAdded(postId);
       }
       setNewComment('');
+    } catch {
+      Alert.alert('Hata', 'Yorum gönderilemedi. Lütfen tekrar dene.');
     } finally {
       setIsSending(false);
     }
@@ -303,11 +316,21 @@ export const CommentSheet: React.FC<CommentSheetProps> = ({
           </View>
 
           {/* Comments list */}
-          {isLoading ? (
+          {state === 'loading' ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" color={colors.primary} />
             </View>
-          ) : comments.length === 0 ? (
+          ) : state === 'error' ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Yorumlar yüklenemedi.</Text>
+              <TouchableOpacity
+                style={styles.retryButton}
+                onPress={() => postId && loadComments(postId)}
+              >
+                <Text style={styles.retryButtonText}>Tekrar Dene</Text>
+              </TouchableOpacity>
+            </View>
+          ) : state === 'empty' ? (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>Henüz yorum yok. İlk yorumu sen yap!</Text>
             </View>
@@ -431,6 +454,19 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.textTertiary,
     textAlign: 'center',
+  },
+  retryButton: {
+    marginTop: spacing.md,
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+  },
+  retryButtonText: {
+    ...typography.buttonSmall,
+    color: '#FFFFFF',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   listContent: {
     paddingHorizontal: spacing.lg,

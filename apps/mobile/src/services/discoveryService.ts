@@ -1124,6 +1124,18 @@ export const discoveryService = {
   // ── Video Discovery Feed ───────────────────────────────────
   // Returns profiles that have a profile video — powers the TikTok-style Video Keşfet screen.
   // Endpoint: GET /discovery/video-feed
+  // ── Get profile by userId — fallback for video discovery & external sources ──
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getProfileById: async (userId: string): Promise<any | null> => {
+    try {
+      const response = await api.get(`/profiles/${userId}`);
+      return response.data;
+    } catch {
+      // Profile not found or API down
+      return null;
+    }
+  },
+
   getVideoFeed: async (): Promise<VideoFeedCard[]> => {
     try {
       const response = await api.get<VideoFeedCard[]>('/discovery/video-feed');

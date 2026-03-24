@@ -227,7 +227,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
         },
       }));
     } catch {
-      // Handle error silently
+      if (__DEV__) {
+        console.warn('[chatStore] loadMoreMessages failed for matchId:', matchId);
+      }
     }
   },
 
@@ -319,6 +321,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
       isSending: true,
     }));
 
+    // Capture previous state for rollback on failure
+    const prevMatchLastMessage = useMatchStore.getState().matches.find((m) => m.id === matchId)?.lastMessage ?? null;
+    const prevMatchLastActivity = useMatchStore.getState().matches.find((m) => m.id === matchId)?.lastActivity ?? '';
+    const isFirstMessage = !prevMatchLastMessage;
+    const prevConversation = get().conversations.find((c) => c.matchId === matchId);
+
     // Update match activity and conversations immediately (optimistic)
     get().updateLastMessage(matchId, content, now);
     useMatchStore.getState().updateMatchActivity(matchId, content, now);
@@ -368,6 +376,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
         },
         isSending: false,
       }));
+
+      // Rollback match and conversation state if this was the first message
+      if (isFirstMessage) {
+        useMatchStore.getState().updateMatchActivity(matchId, prevMatchLastMessage ?? '', prevMatchLastActivity);
+        // Remove the optimistic conversation entry if it didn't exist before
+        if (!prevConversation) {
+          set((state) => ({
+            conversations: state.conversations.filter((c) => c.matchId !== matchId),
+          }));
+        }
+      }
       return false;
     }
   },

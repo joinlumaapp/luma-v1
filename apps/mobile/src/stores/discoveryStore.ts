@@ -615,8 +615,8 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
     const limit = DISCOVERY_CONFIG.DAILY_LIKES[tier];
     set({ dailyRemaining: limit, undosUsedToday: 0 });
     // Persist reset
-    AsyncStorage.setItem(UNDO_DAILY_KEY, '0').catch(() => {});
-    AsyncStorage.setItem(UNDO_DAILY_DATE_KEY, new Date().toISOString().split('T')[0]).catch(() => {});
+    AsyncStorage.setItem(UNDO_DAILY_KEY, '0').catch((err) => { if (__DEV__) console.warn('[discoveryStore] undo reset failed:', err); });
+    AsyncStorage.setItem(UNDO_DAILY_DATE_KEY, new Date().toISOString().split('T')[0]).catch((err) => { if (__DEV__) console.warn('[discoveryStore] undo date reset failed:', err); });
   },
 
   dismissMatch: () =>

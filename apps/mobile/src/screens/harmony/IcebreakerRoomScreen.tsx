@@ -71,7 +71,7 @@ const FREE_DAILY_CHAT_TRANSITIONS = 2;
 
 // ─── Flirt Games (Premium-only) ─────────────────────────────────────────────
 // Premium room games — same game types but in exclusive rooms
-const PREMIUM_ROOM_GAMES: GameType[] = ['truth_dare', 'would_you_rather', 'icebreaker', 'emoji_guess'];
+const PREMIUM_ROOM_GAMES: GameType[] = ['truth_dare', 'would_you_rather', 'icebreaker', 'emoji_guess', 'guess_me', 'compatibility_challenge'];
 
 // ─── Reaction Categories ────────────────────────────────────────────────────
 const BASIC_REACTIONS = ['\uD83D\uDC4F', '\uD83D\uDE02', '\uD83D\uDD25', '\uD83D\uDE2E'];
@@ -85,6 +85,10 @@ const QUICK_FLIRT_MESSAGES = [
   'cok iyiyiz birlikte \u2728',
   'bir daha oynayalim \uD83D\uDD25',
   'seni yenecegim \uD83D\uDE24',
+  'itiraf et hoslandin \uD83D\uDE0F',
+  'cok tatlisin \uD83D\uDE0D',
+  'bu uyum tesaduf degil \uD83D\uDC9C',
+  'oyun bittikten sonra konusalim mi? \u2615',
 ];
 
 // UNO card colors with gradients
@@ -110,7 +114,7 @@ const DICE_DOTS: Record<number, Array<{ top: number; left: number }>> = {
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type GameType = 'uno' | 'board' | 'okey' | 'truth_dare' | 'would_you_rather' | 'quick_quiz' | 'emoji_guess' | 'word_battle' | 'icebreaker';
+type GameType = 'uno' | 'board' | 'okey' | 'truth_dare' | 'would_you_rather' | 'quick_quiz' | 'emoji_guess' | 'word_battle' | 'icebreaker' | 'guess_me' | 'compatibility_challenge' | 'two_truths_one_lie';
 
 interface Player {
   id: string;
@@ -201,6 +205,9 @@ const AMBIENT_COLORS: Record<GameType, string> = {
   emoji_guess: 'rgba(251, 191, 36, 0.04)',
   word_battle: 'rgba(139, 92, 246, 0.04)',
   icebreaker: 'rgba(20, 184, 166, 0.04)',
+  guess_me: 'rgba(244, 114, 182, 0.04)',
+  compatibility_challenge: 'rgba(168, 85, 247, 0.04)',
+  two_truths_one_lie: 'rgba(6, 182, 212, 0.04)',
 };
 
 const AmbientLight: React.FC<{ gameType: GameType }> = ({ gameType }) => {
@@ -1502,6 +1509,48 @@ const GAME_TYPE_INFO: Record<GameType, {
     bgIcon: 'swap-horizontal',
     gradientAngle: { start: { x: 0.5, y: 0 }, end: { x: 0.5, y: 1 } },
   },
+  guess_me: {
+    label: 'Beni Tahmin Et',
+    subtitle: 'Flort Oyunu',
+    icon: 'help-circle-outline',
+    color: '#F472B6',
+    gradient: ['#F472B6', '#EC4899'],
+    playerCount: '2 kisi',
+    description: 'Flort oyunu \u2022 birbirini tani',
+    tags: ['\u2764\uFE0F Flort', '\uD83D\uDD25 Populer'],
+    activeRooms: randomBetween(10, 28),
+    activePlayers: randomBetween(40, 96),
+    bgIcon: 'help-circle',
+    gradientAngle: { start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
+  },
+  compatibility_challenge: {
+    label: 'Uyum Testi',
+    subtitle: 'Uyumluluk Oyunu',
+    icon: 'heart-half-outline',
+    color: '#A855F7',
+    gradient: ['#A855F7', '#7C3AED'],
+    playerCount: '2 kisi',
+    description: 'Uyum oyunu \u2022 ne kadar benziyorsunuz?',
+    tags: ['\u2764\uFE0F Tanisma', '\u2728 Premium'],
+    activeRooms: randomBetween(6, 16),
+    activePlayers: randomBetween(24, 64),
+    bgIcon: 'heart-half',
+    gradientAngle: { start: { x: 0, y: 0.2 }, end: { x: 1, y: 0.8 } },
+  },
+  two_truths_one_lie: {
+    label: '2 Gercek 1 Yalan',
+    subtitle: 'Sosyal Oyun',
+    icon: 'eye-outline',
+    color: '#06B6D4',
+    gradient: ['#06B6D4', '#0891B2'],
+    playerCount: '2-6 kisi',
+    description: 'Tahmin oyunu \u2022 kimin yalan soyleyecegini bil',
+    tags: ['\uD83D\uDCAC Sosyal', '\uD83D\uDE04 Eglenceli'],
+    activeRooms: randomBetween(5, 14),
+    activePlayers: randomBetween(20, 56),
+    bgIcon: 'eye',
+    gradientAngle: { start: { x: 0.3, y: 0 }, end: { x: 0.7, y: 1 } },
+  },
 };
 
 // ─── Game Categories ────────────────────────────────────────────────────────
@@ -1514,11 +1563,13 @@ interface GameCategory {
 }
 
 const GAME_CATEGORIES: GameCategory[] = [
-  { id: 'trending', title: 'Trend Oyunlar', emoji: '\uD83D\uDD25', games: ['uno', 'truth_dare', 'okey'] },
-  { id: 'premium_rooms', title: 'Premium Odalar', emoji: '\uD83D\uDC8E', games: ['truth_dare', 'would_you_rather', 'icebreaker', 'emoji_guess'] },
+  { id: 'trending', title: 'Trend Oyunlar', emoji: '\uD83D\uDD25', games: ['uno', 'truth_dare', 'guess_me'] },
+  { id: 'flirty', title: 'Flort Oyunlari', emoji: '\uD83D\uDC95', games: ['guess_me', 'compatibility_challenge', 'would_you_rather', 'two_truths_one_lie'] },
+  { id: 'party', title: 'Parti Oyunlari', emoji: '\uD83C\uDF89', games: ['truth_dare', 'two_truths_one_lie', 'emoji_guess'] },
   { id: 'quick', title: 'Hizli Oyunlar', emoji: '\u26A1', games: ['quick_quiz', 'emoji_guess', 'would_you_rather'] },
-  { id: 'social', title: 'Sosyal Oyunlar', emoji: '\uD83D\uDCAC', games: ['truth_dare', 'icebreaker', 'would_you_rather'] },
+  { id: 'social', title: 'Tanisma Oyunlari', emoji: '\uD83D\uDCAC', games: ['icebreaker', 'guess_me', 'compatibility_challenge'] },
   { id: 'brain', title: 'Zeka Oyunlari', emoji: '\uD83E\uDDE0', games: ['word_battle', 'quick_quiz', 'okey'] },
+  { id: 'classic', title: 'Klasik Oyunlar', emoji: '\uD83C\uDFB2', games: ['uno', 'board', 'okey'] },
 ];
 
 const TRENDING_GAMES: GameType[] = ['uno', 'okey', 'truth_dare'];
@@ -2003,46 +2054,97 @@ const BoardMiniMap: React.FC<{ position: number; playerColors: string[] }> = ({ 
 // ─── Truth or Dare Data ─────────────────────────────────────────────────────
 
 const TRUTH_QUESTIONS = [
+  // Klasik
   'Hayatinda en cok utandigin an neydi?',
   'Hic bir arkadasina yalan soylerdin mi?',
   'En buyuk korku ne?',
-  'Ilk askini ne zaman yasadin?',
   'En garip ruyan ne hakkindaydi?',
-  'Hic biriyle cikmayi reddettim mi?',
   'Hayatindaki en buyuk pisman olma ne?',
   'En sevdigin insan kim ve neden?',
+  // Romantik / Tanisma
+  'Ilk askini ne zaman yasadin?',
+  'Hic biriyle cikmayi reddettim mi?',
+  'Ideal ilk bulusma nasil olmali?',
+  'Bir iliskide en onemli sey nedir sence?',
+  'Hoslandigin birinin en cekici ozelligi ne olur?',
+  'En romantik sey ne yaptin ya da yapildi sana?',
+  'Ilk gorusme mi yoksa yavas yavas mi asik olursun?',
+  'Birinden hoslandigin nasil belli edersin?',
+  'En uzun iliskin ne kadar surdu ve neden bitti?',
+  'Partnerinde asla kabul edemeyecegin sey ne?',
+  // Eglenceli
+  'Sosyal medyada en utanc verici harekatin ne?',
+  'Kimseye anlatmadigin gizli yetengin ne?',
+  'Bir gun baskanin hayatini yasayabilsen kimin?',
+  'Sana en cok benzeyen film karakteri kim?',
 ];
 
 const DARE_CHALLENGES = [
+  // Klasik
   'Odadaki birine iltifat et!',
   '30 saniye boyunca dans et!',
   'Bir sarki soyle!',
   'En komik yuz ifadeni yap!',
   'Telefonundaki son mesaji oku!',
   'Bir dakika boyunca sessiz kal!',
-  'Birine sarilmis gibi yap!',
   'Herkese el salla ve gulumse!',
+  // Sosyal / Flort
+  'Odadaki birine en guzel gozlu diyerek iltifat et!',
+  'Hoslandigin birinin basharfini soyle!',
+  'En son kime mesaj attin, ismini soyle!',
+  'Odadaki en sempatik kisiye emoji gonder!',
+  'Bir kisiye ozel mesaj gonder ve merhaba de!',
+  'En son dinledigin sarki sozunun bir cumlesi soyle!',
+  // Yaratici
+  'Kendini 3 emoji ile anlat!',
+  'Bir pick-up line soyle, komik olsun!',
+  'Odadaki herkese tek kelimeyle tarif et!',
+  'En sevdigin filmi jestlerle anlat!',
 ];
 
 // ─── Would You Rather Data ──────────────────────────────────────────────────
 
 const WOULD_YOU_RATHER_QUESTIONS = [
+  // Genel
   { optionA: 'Her zaman dogruyu soyle', optionB: 'Hic yalan soyleme', percentA: 62 },
   { optionA: 'Ucabilme gucu', optionB: 'Gorunmez olma gucu', percentA: 55 },
   { optionA: 'Zamanda geri git', optionB: 'Gelecegi gor', percentA: 48 },
   { optionA: 'Her dili konusmak', optionB: 'Her muzik aletini calmak', percentA: 71 },
   { optionA: 'Yaz olsun hep', optionB: 'Kis olsun hep', percentA: 65 },
   { optionA: 'Deniz kenarinda yasam', optionB: 'Dag basinda yasam', percentA: 58 },
+  // Romantik / Iliski
+  { optionA: 'Surpriz bulusma', optionB: 'Planlanan ozel aksam yemegi', percentA: 44 },
+  { optionA: 'Ayni hobiye sahip olmak', optionB: 'Birbirinden farkli hobiler', percentA: 38 },
+  { optionA: 'Hep birlikte seyahat', optionB: 'Arada ayricalikli solo tatil', percentA: 67 },
+  { optionA: 'Ilk mesaji sen at', optionB: 'Karsi taraf ilk yazsn', percentA: 42 },
+  { optionA: 'Ev yapimi aksam yemegi', optionB: 'Sik restoran', percentA: 56 },
+  { optionA: 'Kahve randevusu', optionB: 'Maceralik aktivite', percentA: 41 },
+  // Eglenceli
+  { optionA: 'Netflix & Chill', optionB: 'Konser & Dans', percentA: 52 },
+  { optionA: 'Sabah insani ol', optionB: 'Gece kusu kal', percentA: 35 },
+  { optionA: 'Sosyal medya olmadan yasa', optionB: 'Kahve olmadan yasa', percentA: 28 },
+  { optionA: 'Her gun farkli ulkede uyan', optionB: 'Hayalindeki evde hep kal', percentA: 61 },
 ];
 
 // ─── Quiz Data ──────────────────────────────────────────────────────────────
 
 const QUIZ_QUESTIONS = [
+  // Genel Kultur
   { question: 'Dunyanin en buyuk okyanusu hangisidir?', options: ['Atlantik', 'Pasifik', 'Hint', 'Arktik'], correct: 1 },
   { question: 'Turkiye\'nin baskenti neresidir?', options: ['Istanbul', 'Ankara', 'Izmir', 'Antalya'], correct: 1 },
   { question: 'Hangisi bir gezegen degildir?', options: ['Mars', 'Jupiter', 'Pluto', 'Venys'], correct: 2 },
   { question: 'DNA\'nin acilimi nedir?', options: ['Deoksiribonukleik Asit', 'Dinamik Nukleer Asit', 'Dijital Numerik Analog', 'Dis Nukleer Atom'], correct: 0 },
-  { question: 'Isacc Newton hangi meyveyle ilham aldi?', options: ['Armut', 'Elma', 'Portakal', 'Seftali'], correct: 1 },
+  { question: 'Isaac Newton hangi meyveyle ilham aldi?', options: ['Armut', 'Elma', 'Portakal', 'Seftali'], correct: 1 },
+  // Pop Kultur
+  { question: 'Instagram hangi yil kuruldu?', options: ['2008', '2010', '2012', '2014'], correct: 1 },
+  { question: 'Harry Potter serisinde kac kitap var?', options: ['5', '6', '7', '8'], correct: 2 },
+  { question: 'Mona Lisa\'yi kim yapti?', options: ['Picasso', 'Van Gogh', 'Da Vinci', 'Michelangelo'], correct: 2 },
+  { question: 'Dunyanin en cok konusulan dili hangisidir?', options: ['Ingilizce', 'Ispanyolca', 'Mandarin', 'Hintce'], correct: 2 },
+  { question: 'Bir yilda kac saniye var?', options: ['31M', '31.5M', '32M', '30M'], correct: 1 },
+  // Turkiye
+  { question: 'Turkiye\'nin en yuksek dagi hangisidir?', options: ['Erciyes', 'Ararat', 'Kackar', 'Uludag'], correct: 1 },
+  { question: 'Istanbul Bogazi hangi iki denizi birlestirir?', options: ['Akdeniz-Karadeniz', 'Ege-Karadeniz', 'Marmara-Karadeniz', 'Marmara-Ege'], correct: 2 },
+  { question: 'Hangisi bir Turk yemegi degildir?', options: ['Iskender', 'Paella', 'Lahmacun', 'Manti'], correct: 1 },
 ];
 
 // ─── Emoji Guess Data ───────────────────────────────────────────────────────
@@ -2054,21 +2156,84 @@ const EMOJI_PUZZLES = [
   { emojis: '\uD83C\uDFAC\uD83C\uDF7F\uD83C\uDFA5', answer: 'Sinema', hint: 'Film izle' },
   { emojis: '\u2615\uD83D\uDCD6\uD83C\uDF27\uFE0F', answer: 'Rahat gun', hint: 'Evde kalmak' },
   { emojis: '\uD83D\uDE80\uD83C\uDF19\u2B50', answer: 'Uzay', hint: 'Yildizlarin otesi' },
+  { emojis: '\uD83C\uDF39\uD83D\uDC95\uD83C\uDF1F', answer: 'Ask', hint: 'En guclu duygu' },
+  { emojis: '\uD83C\uDFB2\uD83C\uDFAE\uD83C\uDFC6', answer: 'Oyun', hint: 'Simdi yaptigimiz sey' },
+  { emojis: '\uD83C\uDF55\uD83C\uDF54\uD83C\uDF5F', answer: 'Fast food', hint: 'Hizli yemek' },
+  { emojis: '\uD83D\uDCF1\uD83D\uDCAC\u2764\uFE0F', answer: 'Online flort', hint: 'Dijital tanisma' },
+  { emojis: '\u2600\uFE0F\uD83C\uDFD6\uFE0F\uD83D\uDE0E', answer: 'Yaz tatili', hint: 'Sicak gunler' },
+  { emojis: '\uD83C\uDFE0\uD83D\uDC36\uD83D\uDECB\uFE0F', answer: 'Ev hayati', hint: 'Sicak yuva' },
 ];
 
 // ─── Word Battle Data ───────────────────────────────────────────────────────
 
 const WORD_BATTLE_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'U', 'Y'];
 
+// ─── Guess Me Data (Flort Oyunu) ────────────────────────────────────────────
+const GUESS_ME_QUESTIONS = [
+  { question: 'Ilk bulusmada nereye gider?', options: ['Kafe', 'Restoran', 'Park', 'Sinema'] },
+  { question: 'Hafta sonu ne yapar?', options: ['Evde kalir', 'Disari cikar', 'Spor yapar', 'Seyahat eder'] },
+  { question: 'En sevdigi muzik turu?', options: ['Pop', 'Rock', 'Hip-Hop', 'Jazz'] },
+  { question: 'Tatilde nereyi tercih eder?', options: ['Deniz', 'Dag', 'Sehir', 'Koy'] },
+  { question: 'Aksam yemegi icin ne secer?', options: ['Pizza', 'Sushi', 'Kebap', 'Salata'] },
+  { question: 'Sabah rutini nasil?', options: ['Erken kalkar', 'Gec kalkar', 'Spor yapar', 'Kahve icer'] },
+  { question: 'Iliski icin en onemli sey?', options: ['Guven', 'Eglence', 'Tutku', 'Iletisim'] },
+  { question: 'Hangi super guce sahip olmak ister?', options: ['Ucmak', 'Gorunmezlik', 'Zihin okuma', 'Zamanda yolculuk'] },
+  { question: 'Film gecesi icin ne secer?', options: ['Komedi', 'Romantik', 'Aksiyon', 'Korku'] },
+  { question: 'Hayalindeki ev nerede?', options: ['Sehir merkezi', 'Deniz kenari', 'Dag basi', 'Koy'] },
+];
+
+// ─── Compatibility Challenge Data ─────────────────────────────────────────────
+const COMPATIBILITY_QUESTIONS = [
+  { question: 'Ideal hafta sonu?', optionA: 'Evde film maratonu', optionB: 'Disarida macera' },
+  { question: 'Iliski temposu?', optionA: 'Yavas ve sakin', optionB: 'Hizli ve heyecanli' },
+  { question: 'Iletisim tercihi?', optionA: 'Mesajlasma', optionB: 'Yuz yuze konusma' },
+  { question: 'Tartismada?', optionA: 'Hemen konusur', optionB: 'Sogumaya vakit tanir' },
+  { question: 'Surpriz mi plan mi?', optionA: 'Surprizler guzel', optionB: 'Planlanan daha iyi' },
+  { question: 'Sosyal medya?', optionA: 'Cok kullanir', optionB: 'Az kullanir' },
+  { question: 'Kahvalti?', optionA: 'Zengin sofra', optionB: 'Kahve ve gidis' },
+  { question: 'Gelecek plani?', optionA: 'An yasarim', optionB: 'Ileriye bakarim' },
+  { question: 'Evcil hayvan?', optionA: 'Kedi insani', optionB: 'Kopek insani' },
+  { question: 'Muzik zevki?', optionA: 'Ayni turde bulusmak', optionB: 'Farkli turler kesfetmek' },
+];
+
+// ─── Two Truths One Lie — Starter Prompts ──────────────────────────────────
+const TWO_TRUTHS_PROMPTS = [
+  'Bungee jumping yaptim',
+  'Bir kez sahneye ciktim',
+  'Uc ulkede yasadim',
+  'Bir unluyle tanistim',
+  'Marathon kostum',
+  'Bir kitap yazdim',
+  'Skydiving yaptim',
+  'Bir hayvan kurtardim',
+  'Bir dilde sarkı soyledim',
+  'Bir adada mahsur kaldim',
+];
+
 // ─── Icebreaker Data ────────────────────────────────────────────────────────
 
 const ICEBREAKER_QUESTIONS = [
+  // Tanisma
   'Hayattaki en buyuk tutku nedir?',
   'Kendinizi 3 kelimeyle tanitin.',
   'Ideal bir hafta sonu nasil gecer?',
   'En son ne zaman cok guldun?',
   'Hayalindeki seyahat nereye?',
   'En iyi arkadasiniz sizi nasil tanitir?',
+  // Romantik / Flort
+  'Ideal ilk bulusma nasil olmali?',
+  'Iliski icin en onemli deger ne?',
+  'Birinde ilk farkettigin sey ne olur?',
+  'Romantik surpriz mi yoksa planlı bulusma mi?',
+  'Ask icin sehir degistirir misin?',
+  'En romantik sey ne yaptin?',
+  // Eglenceli / Yaratici
+  'Bir super gucun olsa ne olurdu?',
+  'Son yemegin olsa ne yerdin?',
+  'Seni en iyi anlatan sarki hangisi?',
+  'Hayatinda bir gun degistirebilsen hangi gunu?',
+  'Unlulere benzedigini duyuyor musun, kime?',
+  'Dunyada sadece bir yere gidebilsen neresi?',
 ];
 
 // ─── Main Screen ────────────────────────────────────────────────────────────

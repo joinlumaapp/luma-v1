@@ -69,51 +69,88 @@ export const PACKAGE_TIERS = [
   {
     id: 'FREE',
     name: 'Ücretsiz',
+    tagline: 'Keşfetmeye başla',
     price: 0,
+    badge: null,
     features: [
       '20 beğeni / gün',
       '1 Süper Beğeni / gün',
       'Temel uyumluluk skoru',
+      '10 video keşif / gün',
+      '3 oyun odası / gün',
       'Reklamlı deneyim',
+    ],
+    limitations: [
+      'Seni beğenenleri göremezsin',
+      'Gelişmiş filtreler kilitli',
+      'Okundu bilgisi yok',
+      'Boost kullanamaz',
     ],
   },
   {
     id: 'GOLD',
-    name: 'Gold',
-    price: 349.99,
+    name: 'Premium',
+    tagline: '\uD83D\uDD25 3x daha fazla eşleşme',
+    price: 14.99,
+    badge: 'En Popüler',
     features: [
-      '50 beğeni / gün',
-      '10 Süper Beğeni / gün',
-      'Kimin beğendiğini gör',
-      'Geri al',
-      'Reklamsız deneyim',
-      'Sosyal Akış erişimi',
+      '\u2728 Sınırsız beğeni',
+      '\uD83D\uDC40 Seni beğenenleri gör',
+      '\uD83D\uDD04 Geri al — hata yapma korkusu yok',
+      '\uD83C\uDFA5 Sınırsız video keşif',
+      '\uD83C\uDFAE Tüm oyun odalarına erişim',
+      '\uD83D\uDEAB Reklamsız deneyim',
+      '\uD83D\uDCE6 Ayda 250 jeton hediye',
+      '\u26A1 10 Süper Beğeni / gün',
+    ],
+    limitations: [],
+    emotionalHooks: [
+      'Seni beğenen kişileri hemen gör ve anında eşleş',
+      'Yakınındaki insanlar şu an yükseltiyor',
     ],
   },
   {
     id: 'PRO',
-    name: 'Pro',
-    price: 599.99,
+    name: 'Supreme',
+    tagline: '\u26A1 Anında fark edil',
+    price: 29.99,
+    badge: 'En İyi Değer',
     features: [
-      'Gold özelliklerin tümü',
-      'Sınırsız beğeni',
-      'Sınırsız Süper Beğeni',
-      'Ayda 4 Boost hediye',
-      'Tüm beğenilerin öncelikli',
-      'Gelişmiş filtreler',
+      '\uD83D\uDC8E Premium\'daki her şey',
+      '\uD83D\uDE80 Öncelikli gösterim — profilin üstte',
+      '\uD83D\uDC4D Ayda 4 Boost hediye',
+      '\uD83D\uDCAC Okundu bilgisi — mesajın okundu mu gör',
+      '\uD83D\uDD0D Gelişmiş filtreler — şehir, ilgi alanı, aktif kullanıcılar',
+      '\uD83C\uDFC6 Detaylı uyumluluk analizi',
+      '\uD83D\uDCE6 Ayda 500 jeton hediye',
+      '\u267E\uFE0F Sınırsız Süper Beğeni',
+    ],
+    limitations: [],
+    emotionalHooks: [
+      'Profilin diğerlerinden önce gösterilir — 5x daha fazla görünürlük',
+      'En iyi eşleşmeleri kaçırma',
     ],
   },
   {
     id: 'RESERVED',
-    name: 'Reserved',
-    price: 1299.99,
+    name: 'Sınırsız',
+    tagline: '\uD83D\uDC51 Elite deneyim',
+    price: 49.99,
+    badge: 'Elite',
     features: [
-      'Pro özelliklerin tümü',
-      'Sınırsız Boost',
-      'Özel eşleştirme algoritması',
-      'VIP müşteri desteği',
-      'Özel etkinlik davetleri',
-      'Özel rozet ve ödüller',
+      '\uD83D\uDC51 Supreme\'daki her şey',
+      '\u267E\uFE0F Sınırsız Boost — her zaman öne çık',
+      '\uD83C\uDF1F Özel rozet — profilinde fark yarat',
+      '\uD83C\uDFAE Özel premium oyunlar',
+      '\uD83C\uDF89 VIP etkinlik davetleri',
+      '\uD83D\uDCDE Öncelikli müşteri desteği',
+      '\uD83D\uDCE6 Ayda 1000 jeton hediye',
+      '\uD83C\uDFAF Özel eşleştirme algoritması',
+    ],
+    limitations: [],
+    emotionalHooks: [
+      'En prestijli üyelik — sadece %2 kullanıcı için',
+      'Tam kontrol, tam görünürlük, tam deneyim',
     ],
   },
 ] as const;
@@ -233,4 +270,51 @@ export const MESSAGE_CONFIG = {
     RESERVED: -1,
   },
   SINGLE_MESSAGE_PACK_PRICE: 150, // Gold — in-app currency
+} as const;
+
+// Video discovery daily limits per package tier (-1 = unlimited)
+export const VIDEO_DISCOVERY_CONFIG = {
+  DAILY_LIMITS: {
+    FREE: 10,
+    GOLD: -1,
+    PRO: -1,
+    RESERVED: -1,
+  },
+} as const;
+
+// Game room daily entry limits per package tier (-1 = unlimited)
+export const GAME_ROOM_CONFIG = {
+  DAILY_LIMITS: {
+    FREE: 3,
+    GOLD: -1,
+    PRO: -1,
+    RESERVED: -1,
+  },
+  /** Game types only available to premium users */
+  PREMIUM_GAME_TYPES: ['truth_dare', 'would_you_rather', 'icebreaker', 'emoji_guess'] as const,
+  /** Free messages per game session for free users */
+  FREE_MESSAGES_PER_GAME: 5,
+  /** Free quick flirt messages per game for free users */
+  FREE_QUICK_FLIRTS_PER_GAME: 3,
+} as const;
+
+// Monthly token bonus per tier (awarded on subscription renewal)
+export const MONTHLY_TOKEN_BONUS = {
+  FREE: 0,
+  GOLD: 250,
+  PRO: 500,
+  RESERVED: 1000,
+} as const;
+
+// Ad placement configuration
+export const AD_CONFIG = {
+  /** Feed: show ad after every N posts (free users only) */
+  FEED_AD_INTERVAL: 5,
+  /** Video discovery: show ad after every N videos (free users only) */
+  VIDEO_AD_INTERVAL: 4,
+  /** Reward ad: tokens earned per ad watch */
+  REWARD_MIN: 5,
+  REWARD_MAX: 10,
+  /** Cooldown between reward ads in minutes */
+  REWARD_COOLDOWN_MINUTES: 30,
 } as const;

@@ -224,7 +224,13 @@ export const useMatchStore = create<MatchState>((set, get) => ({
   updateMatchActivity: (matchId, lastMessage, lastActivity) =>
     set((state) => ({
       matches: state.matches.map((m) =>
-        m.id === matchId ? { ...m, lastMessage, lastActivity } : m
+        m.id === matchId
+          ? { ...m, lastMessage, lastActivity, isNew: false }
+          : m
+      ),
+      // Recalculate new match count since isNew may have changed
+      newMatchCount: state.matches.reduce((count, m) =>
+        count + (m.id === matchId ? 0 : m.isNew ? 1 : 0), 0
       ),
     })),
 

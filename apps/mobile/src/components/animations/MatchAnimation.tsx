@@ -62,9 +62,11 @@ const WOW_TITLES = [
 ];
 
 const SUGGESTIONS = [
-  'Selam! Bence iyi anlaşacağız',
-  'Merhaba! Profilin çok dikkat çekici',
-  'Hey! Bu uyum tesadüf olamaz',
+  'Selam! Bence iyi anlaşacağız 😊',
+  'Merhaba! Profilin çok dikkat çekici ✨',
+  'Hey! Bu uyum tesadüf olamaz 💜',
+  'İlk buluşmada kahve mi yemek mi? ☕',
+  'Sabahçı mısın gece kuşu mu? 🌙',
 ];
 
 // ─── Floating Hearts ─────────────────────────────────────────────────────────
@@ -280,7 +282,7 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
   compatibilityExplanation: _compatibilityExplanation,
   conversationStarters: _conversationStarters,
   onSendMessage,
-  onActivitySuggest,
+  onActivitySuggest: _onActivitySuggest,
   onClose,
 }) => {
   // ── Animation refs ──
@@ -317,10 +319,11 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
     () => WOW_TITLES[Math.floor(Math.random() * WOW_TITLES.length)],
     [],
   );
-  const suggestion = useMemo(
-    () => SUGGESTIONS[Math.floor(Math.random() * SUGGESTIONS.length)],
-    [],
-  );
+  // Pick 3 unique suggestions
+  const suggestions = useMemo(() => {
+    const shuffled = [...SUGGESTIONS].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 3);
+  }, []);
 
   const accentColor = isSupremeMember
     ? '#D4AF37'
@@ -688,34 +691,37 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
               </TouchableOpacity>
             </Animated.View>
 
-            {/* Suggestion chip */}
+            {/* Suggestion chips — 3 quick-start options */}
+            <Text style={styles.suggestionLabel}>{'💡 Ya da hızlı başla:'}</Text>
+            <View style={styles.suggestionRow}>
+              {suggestions.map((text, i) => (
+                <TouchableOpacity
+                  key={i}
+                  style={styles.suggestionChip}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    onSendMessage(text);
+                  }}
+                  activeOpacity={0.75}
+                >
+                  <Text style={styles.suggestionText} numberOfLines={1}>
+                    {`"${text}"`}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Game suggestion — subtle secondary CTA */}
             <TouchableOpacity
-              style={styles.suggestionChip}
+              style={styles.gameButton}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                onSendMessage(suggestion);
+                onSendMessage('Bir oyun oynayalim mi? \uD83C\uDFAE');
               }}
               activeOpacity={0.75}
             >
-              <Text style={styles.suggestionLabel}>{'💡 Ona şunu yaz:'}</Text>
-              <Text style={styles.suggestionText} numberOfLines={1}>
-                {`"${suggestion} 😊"`}
-              </Text>
+              <Text style={styles.gameButtonText}>{'\uD83C\uDFAE Oyun ile Tanıs'}</Text>
             </TouchableOpacity>
-
-            {/* Activity suggest button */}
-            {onActivitySuggest && (
-              <TouchableOpacity
-                style={styles.secondaryBtn}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                  onActivitySuggest();
-                }}
-                activeOpacity={0.75}
-              >
-                <Text style={styles.secondaryBtnText}>{'🎯 Aktivite Öner'}</Text>
-              </TouchableOpacity>
-            )}
           </Animated.View>
         </Animated.View>
       </Animated.View>
@@ -787,17 +793,17 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: spacing.md,
     right: spacing.md,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   closeBtnText: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.6)',
-    lineHeight: 18,
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.35)',
+    lineHeight: 16,
   },
 
   // Avatar row — align to circle center, not bottom of names
@@ -925,45 +931,47 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
 
-  // Suggestion chip
-  suggestionChip: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: 'rgba(139, 92, 246, 0.15)',
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.smd,
-    borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.3)',
-  },
+  // Suggestion area
   suggestionLabel: {
     ...typography.captionSmall,
-    color: 'rgba(255,255,255,0.55)',
-    flexShrink: 0,
+    color: 'rgba(255,255,255,0.4)',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  suggestionRow: {
+    width: '100%',
+    gap: spacing.xs + 2,
+  },
+  suggestionChip: {
+    width: '100%',
+    backgroundColor: 'rgba(139, 92, 246, 0.12)',
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.2)',
   },
   suggestionText: {
-    flex: 1,
     ...typography.bodySmall,
     color: palette.purple[300],
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
+    textAlign: 'center',
   },
-
-  // Secondary / outline button
-  secondaryBtn: {
+  gameButton: {
     width: '100%',
-    height: 46,
+    height: 42,
     borderRadius: borderRadius.lg,
-    borderWidth: 1.5,
-    borderColor: 'rgba(139, 92, 246, 0.4)',
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(139, 92, 246, 0.08)',
   },
-  secondaryBtnText: {
-    ...typography.buttonSmall,
+  gameButtonText: {
+    fontSize: 13,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
     color: palette.purple[300],
   },
 });

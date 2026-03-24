@@ -80,6 +80,21 @@ const CATEGORY_VISUALS: Record<ActivityType | 'other', CategoryVisual> = {
     color: '#06B6D4',
     gradientColors: ['#155E75', '#164E63'],
   },
+  flirt: {
+    icon: 'heart',
+    color: '#EC4899',
+    gradientColors: ['#9D174D', '#831843'],
+  },
+  gaming: {
+    icon: 'game-controller',
+    color: '#3B82F6',
+    gradientColors: ['#1D4ED8', '#1E3A8A'],
+  },
+  workshop: {
+    icon: 'construct',
+    color: '#F59E0B',
+    gradientColors: ['#B45309', '#92400E'],
+  },
   other: {
     icon: 'sparkles',
     color: '#8B5CF6',
@@ -109,11 +124,12 @@ const MOCK_CHAT_MESSAGES = [
 ];
 
 const SUGGESTED_ACTIVITIES = [
-  { id: 'sug1', icon: 'mic' as keyof typeof Ionicons.glyphMap, title: 'Sesli Sohbet Odasi', gradientColors: ['#7C3AED', '#EC4899'] as [string, string] },
-  { id: 'sug2', icon: 'game-controller' as keyof typeof Ionicons.glyphMap, title: 'Mini Oyun Bulusmasi', gradientColors: ['#3B82F6', '#06B6D4'] as [string, string] },
-  { id: 'sug3', icon: 'wine' as keyof typeof Ionicons.glyphMap, title: 'Aksam Sohbeti', gradientColors: ['#EC4899', '#F59E0B'] as [string, string] },
-  { id: 'sug4', icon: 'film' as keyof typeof Ionicons.glyphMap, title: 'Film Birlikte Izle', gradientColors: ['#EF4444', '#F59E0B'] as [string, string] },
-  { id: 'sug5', icon: 'chatbubbles' as keyof typeof Ionicons.glyphMap, title: 'Sadece Sohbet', gradientColors: ['#10B981', '#3B82F6'] as [string, string] },
+  { id: 'sug1', icon: 'heart' as keyof typeof Ionicons.glyphMap, title: 'Flort & Tanisma Gecesi', gradientColors: ['#EC4899', '#F472B6'] as [string, string] },
+  { id: 'sug2', icon: 'cafe' as keyof typeof Ionicons.glyphMap, title: 'Kahve & Sohbet', gradientColors: ['#D97706', '#92400E'] as [string, string] },
+  { id: 'sug3', icon: 'game-controller' as keyof typeof Ionicons.glyphMap, title: 'Oyun Bulusmasi', gradientColors: ['#3B82F6', '#06B6D4'] as [string, string] },
+  { id: 'sug4', icon: 'wine' as keyof typeof Ionicons.glyphMap, title: 'Gece & Eglence', gradientColors: ['#8B5CF6', '#EC4899'] as [string, string] },
+  { id: 'sug5', icon: 'football' as keyof typeof Ionicons.glyphMap, title: 'Spor Aktivitesi', gradientColors: ['#10B981', '#3B82F6'] as [string, string] },
+  { id: 'sug6', icon: 'construct' as keyof typeof Ionicons.glyphMap, title: 'Workshop & Hobi', gradientColors: ['#F59E0B', '#EF4444'] as [string, string] },
 ];
 
 type FilterKey = 'all' | 'nearby' | 'popular' | 'flirt' | 'games' | 'chill';
@@ -129,9 +145,9 @@ const FILTER_CHIPS: FilterChipDef[] = [
   { key: 'all', label: 'Tumu', emoji: '\u2728', icon: 'apps' },
   { key: 'nearby', label: 'Yakinimda', emoji: '\uD83C\uDFAF', icon: 'location' },
   { key: 'popular', label: 'Populer', emoji: '\uD83D\uDD25', icon: 'trending-up' },
-  { key: 'flirt', label: 'Flort Odakli', emoji: '\uD83D\uDC98', icon: 'heart' },
-  { key: 'games', label: 'Oyunlu', emoji: '\uD83C\uDFAE', icon: 'game-controller' },
-  { key: 'chill', label: 'Chill', emoji: '\u2615', icon: 'cafe' },
+  { key: 'flirt', label: 'Flort & Tanisma', emoji: '\uD83D\uDC95', icon: 'heart' },
+  { key: 'games', label: 'Oyun', emoji: '\uD83C\uDFAE', icon: 'game-controller' },
+  { key: 'chill', label: 'Kahve & Sohbet', emoji: '\u2615', icon: 'cafe' },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -155,6 +171,27 @@ const isStartingSoon = (dateString: string): boolean => {
   const diffMs = date.getTime() - now.getTime();
   const twoHoursMs = 2 * 60 * 60 * 1000;
   return diffMs > 0 && diffMs <= twoHoursMs;
+};
+
+/** Countdown text like "Başlamasına 2 saat" or "45 dk sonra" */
+const getCountdownText = (dateString: string): string | null => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = date.getTime() - now.getTime();
+  if (diffMs <= 0) return null;
+  const diffMin = Math.floor(diffMs / (1000 * 60));
+  const diffHour = Math.floor(diffMs / (1000 * 60 * 60));
+  if (diffMin < 60) return `${diffMin} dk sonra basliyor`;
+  if (diffHour < 24) return `Baslamasina ${diffHour} saat`;
+  return null;
+};
+
+/** Returns urgency text like "Son 2 yer kaldi" */
+const getSpotsLeftText = (maxParticipants: number, currentCount: number): string | null => {
+  const remaining = maxParticipants - currentCount;
+  if (remaining <= 0) return 'Dolu';
+  if (remaining <= 3) return `Son ${remaining} yer kaldi`;
+  return null;
 };
 
 /** Stable pseudo-random number from a string seed */

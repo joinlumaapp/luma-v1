@@ -542,7 +542,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
     api.post('/users/me/gold/earn', {
       amount: PROFILE_COMPLETION_REWARD,
       source: 'profile_completion',
-    }).catch(() => {});
+    }).catch((err) => { if (__DEV__) console.warn('[coinStore] API sync failed:', err); });
   },
 
   claimActivityCreation: () => {
@@ -569,7 +569,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
     api.post('/users/me/gold/earn', {
       amount: ACTIVITY_CREATION_REWARD,
       source: 'activity_creation',
-    }).catch(() => {});
+    }).catch((err) => { if (__DEV__) console.warn('[coinStore] API sync failed:', err); });
   },
 
   sendInstantMessage: async (recipientId: string): Promise<boolean> => {
@@ -781,7 +781,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
     api.post('/users/me/gold/earn', {
       amount: WELCOME_BONUS,
       source: 'welcome_bonus',
-    }).catch(() => {});
+    }).catch((err) => { if (__DEV__) console.warn('[coinStore] API sync failed:', err); });
 
     return true;
   },
@@ -816,7 +816,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
     api.post('/users/me/gold/earn', {
       amount: DAILY_QUESTION_REWARD,
       source: 'daily_question',
-    }).catch(() => {});
+    }).catch((err) => { if (__DEV__) console.warn('[coinStore] API sync failed:', err); });
 
     return true;
   },
@@ -845,7 +845,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
     api.post('/users/me/gold/earn', {
       amount: REFERRAL_REWARD,
       source: 'referral',
-    }).catch(() => {});
+    }).catch((err) => { if (__DEV__) console.warn('[coinStore] API sync failed:', err); });
   },
 
   claimStreakMilestone: (milestone: number): boolean => {
@@ -878,7 +878,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
     api.post('/users/me/gold/earn', {
       amount: STREAK_MILESTONE_REWARD,
       source: `streak_milestone_${milestone}`,
-    }).catch(() => {});
+    }).catch((err) => { if (__DEV__) console.warn('[coinStore] API sync failed:', err); });
 
     return true;
   },
@@ -919,7 +919,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
     api.post('/users/me/gold/spend', {
       amount: EXTRA_LIKES_COST,
       reason: 'extra_likes',
-    }).catch(() => {});
+    }).catch((err) => { if (__DEV__) console.warn('[coinStore] API sync failed:', err); });
 
     return true;
   },

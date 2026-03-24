@@ -255,6 +255,23 @@ export const ChatScreen: React.FC = () => {
   const [recordingDuration, setRecordingDuration] = useState(0);
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // ── Shared cleanup — single source of truth ────────────────────────────────
+  // Called by both blur cleanup and beforeRemove to ensure consistent teardown.
+  const cleanupChat = useCallback(() => {
+    textInputRef.current?.blur();
+    Keyboard.dismiss();
+    stopTyping();
+    setShowGifPicker(false);
+    setFullscreenImage(null);
+    setImagePreview(null);
+    setIsRecordingVoice(false);
+    setRecordingDuration(0);
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+  }, [stopTyping]);
+
   // ── Android back button priority chain ──────────────────────────────────────
   // Each back press handles ONE layer at a time (modal → keyboard → navigation).
   // Without this, Android fires navigation.goBack() while a Modal is still
@@ -295,23 +312,20 @@ export const ChatScreen: React.FC = () => {
       // dismiss keyboard, close all overlays, stop typing indicator, clear timers.
       return () => {
         sub.remove();
-        // Blur the input before dismissing — prevents the keyboard from
-        // animating in on the previous screen after navigation.
-        textInputRef.current?.blur();
-        Keyboard.dismiss();
-        stopTyping();
-        setShowGifPicker(false);
-        setFullscreenImage(null);
-        setImagePreview(null);
-        setIsRecordingVoice(false);
-        setRecordingDuration(0);
-        if (recordingTimerRef.current) {
-          clearInterval(recordingTimerRef.current);
-          recordingTimerRef.current = null;
-        }
+        cleanupChat();
       };
-    }, [fullscreenImage, showGifPicker, imagePreview, keyboardVisible, stopTyping])
+    }, [fullscreenImage, showGifPicker, imagePreview, keyboardVisible, stopTyping, cleanupChat])
   );
+
+  // ── beforeRemove — close modals BEFORE screen transitions ─────────────────
+  // iOS swipe-back gesture and programmatic goBack() both fire this event.
+  // Closing modals here prevents ghost UI during the transition animation.
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', () => {
+      cleanupChat();
+    });
+    return unsubscribe;
+  }, [navigation, cleanupChat]);
 
   const currentUserId = useAuthStore((state) => state.user?.id);
   const checkMessageLimit = useChatStore((state) => state.checkMessageLimit);
@@ -345,19 +359,27 @@ export const ChatScreen: React.FC = () => {
 
   // Hydrate persisted messages then fetch from API
   useEffect(() => {
+    let cancelled = false;
     const task = InteractionManager.runAfterInteractions(async () => {
+      if (cancelled) return;
       await hydrateFromStorage();
+      if (cancelled) return;
       await fetchMessages(matchId);
+      if (cancelled) return;
       markAsRead(matchId);
       // Fetch partner presence
       presenceService.getBatchPresence([matchId]).then((data) => {
+        if (cancelled) return;
         const presence = data[matchId];
         if (presence) setPartnerLastActive(presence.lastActiveAt);
       }).catch(() => {
         // Presence fetch is non-critical, silently ignore
       });
     });
-    return () => task.cancel();
+    return () => {
+      cancelled = true;
+      task.cancel();
+    };
   }, [matchId, fetchMessages, markAsRead, hydrateFromStorage]);
 
   // Scroll to bottom when messages are added.

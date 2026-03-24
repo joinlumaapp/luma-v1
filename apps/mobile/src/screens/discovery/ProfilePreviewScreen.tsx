@@ -351,11 +351,14 @@ export const ProfilePreviewScreen: React.FC = () => {
   }, [userId, cardProfile]);
 
   const [matchProfile, setMatchProfile] = useState<DiscoveryProfile | null>(null);
+  const [profileError, setProfileError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const matches = useMatchStore((state) => state.matches);
 
   useEffect(() => {
     if (cardProfile || likedProfile) return;
     let cancelled = false;
+    setProfileError(false);
 
     const existing = matches.find((m) => m.userId === userId);
     if (existing) {
@@ -386,10 +389,31 @@ export const ProfilePreviewScreen: React.FC = () => {
           isVerified: existing.isVerified,
         });
       });
+    } else {
+      // Fallback: direct profile fetch for video discovery or external sources
+      discoveryService.getProfileById(userId).then((data) => {
+        if (cancelled || !data) {
+          if (!cancelled) setProfileError(true);
+          return;
+        }
+        setMatchProfile({
+          id: data.userId ?? userId,
+          name: data.name ?? data.firstName ?? 'Kullanici',
+          age: data.age ?? 0,
+          city: data.city ?? '',
+          compatibilityPercent: data.compatibilityPercent ?? data.overallCompatibility ?? 0,
+          photoUrls: data.photoUrls ?? (data.photos ? data.photos.map((p: { url: string }) => p.url) : [data.photoUrl].filter(Boolean)),
+          bio: data.bio ?? '',
+          intentionTag: data.intentionTag ?? '',
+          isVerified: data.isVerified ?? false,
+        });
+      }).catch(() => {
+        if (!cancelled) setProfileError(true);
+      });
     }
 
     return () => { cancelled = true; };
-  }, [userId, cardProfile, likedProfile, matches]);
+  }, [userId, cardProfile, likedProfile, matches, retryCount]);
 
   const profile = cardProfile ?? likedProfile ?? matchProfile;
 
@@ -453,12 +477,12 @@ export const ProfilePreviewScreen: React.FC = () => {
     const success = await sendSuperLike(profile.id);
     if (success) {
       swipeAction('right', profile.id);
-      Alert.alert('Super Like! ⭐', `${profile.firstName} seni fark edecek!`);
+      Alert.alert('Super Like! ⭐', `${profile.name} seni fark edecek!`);
       navigation.goBack();
     }
   }, [profile, coinBalance, sendSuperLike, swipeAction, navigation]);
 
-  // ── Loading state ──
+  // ── Loading / Error state ──
   if (!profile) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -470,8 +494,28 @@ export const ProfilePreviewScreen: React.FC = () => {
           <View style={{ width: 40 }} />
         </View>
         <View style={styles.emptyContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.emptyText}>Profil yükleniyor...</Text>
+          {profileError ? (
+            <>
+              <Ionicons name="person-outline" size={48} color={colors.textTertiary} />
+              <Text style={styles.emptyText}>Profil yuklenemedi</Text>
+              <TouchableOpacity
+                style={styles.retryButton}
+                onPress={() => {
+                  setProfileError(false);
+                  setRetryCount((c) => c + 1);
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="refresh" size={16} color={colors.primary} />
+                <Text style={styles.retryText}>Tekrar dene</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={styles.emptyText}>Profil yukleniyor...</Text>
+            </>
+          )}
         </View>
       </View>
     );
@@ -789,74 +833,57 @@ export const ProfilePreviewScreen: React.FC = () => {
     </View>
   );
 
-  // ── Footer: Premium 4-button action bar with clear hierarchy ──
-  // Pulse animation for Super Like
-  const superLikePulse = useRef(new Animated.Value(1)).current;
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(superLikePulse, { toValue: 1.08, duration: 1200, useNativeDriver: true }),
-        Animated.timing(superLikePulse, { toValue: 1, duration: 1200, useNativeDriver: true }),
-      ]),
-    ).start();
-  }, [superLikePulse]);
+  // ── Footer: Premium 3-button action bar — Pass / Message (CTA) / Like ──
 
   const footer = (
     <LinearGradient
-      colors={['transparent', colors.background + 'CC', colors.background] as [string, string, ...string[]]}
-      locations={[0, 0.4, 0.7]}
+      colors={['transparent', colors.background + 'DD', colors.background] as [string, string, ...string[]]}
+      locations={[0, 0.35, 0.7]}
       style={[styles.actionsBar, { paddingBottom: insets.bottom + spacing.sm }]}
       pointerEvents="box-none"
     >
-      {/* Pass — secondary, low emphasis */}
+      {/* Pass — small, subdued */}
       <View style={styles.actionItem}>
         <GlassActionButton
           icon="close"
-          iconSize={24}
-          glowColor="#DC2626"
-          size={52}
-          onPress={() => handleSwipe('left')}
-          accessibilityLabel="Geç"
-        />
-      </View>
-
-      {/* Message — medium emphasis */}
-      <View style={styles.actionItem}>
-        <GlassActionButton
-          icon="chatbubble-outline"
-          iconSize={20}
-          glowColor="#3B82F6"
+          iconSize={22}
+          glowColor="#EF4444"
           size={48}
-          onPress={() => setShowPaidMessageModal(true)}
-          accessibilityLabel="Mesaj Gönder"
+          onPress={() => handleSwipe('left')}
+          accessibilityLabel="Gec"
         />
       </View>
 
-      {/* Like — PRIMARY, largest */}
+      {/* Message — CENTER, PRIMARY CTA, largest with gradient */}
+      <View style={styles.actionItem}>
+        <Pressable
+          onPress={() => setShowPaidMessageModal(true)}
+          accessibilityLabel="Mesaj Gonder"
+          accessibilityRole="button"
+          style={styles.messageCta}
+        >
+          <LinearGradient
+            colors={[palette.purple[500], palette.pink[500]] as [string, string]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.messageCtaGradient}
+          >
+            <Ionicons name="chatbubble" size={18} color="#FFFFFF" />
+            <Text style={styles.messageCtaText}>Mesaj Gonder</Text>
+          </LinearGradient>
+        </Pressable>
+      </View>
+
+      {/* Like — medium, strong heart */}
       <View style={styles.actionItem}>
         <GlassActionButton
           icon="heart"
-          iconSize={30}
+          iconSize={26}
           glowColor={palette.purple[500]}
-          size={64}
+          size={56}
           onPress={() => handleSwipe('right')}
-          accessibilityLabel="Beğen"
+          accessibilityLabel="Begen"
         />
-      </View>
-
-      {/* Super Like — PREMIUM, gold elevated with label + pulse */}
-      <View style={styles.actionItem}>
-        <Animated.View style={{ transform: [{ scale: superLikePulse }] }}>
-          <GlassActionButton
-            icon="star"
-            iconSize={24}
-            glowColor="#D4AF37"
-            size={52}
-            onPress={handleSuperLike}
-            accessibilityLabel="Super Like"
-          />
-        </Animated.View>
-        <Text style={styles.superLikeLabel}>Öne Çık</Text>
       </View>
     </LinearGradient>
   );
@@ -962,6 +989,23 @@ const styles = StyleSheet.create({
   emptyText: {
     ...typography.body,
     color: colors.textSecondary,
+    marginTop: spacing.sm,
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: colors.primary + '40',
+    backgroundColor: colors.primary + '10',
+  },
+  retryText: {
+    ...typography.buttonSmall,
+    color: colors.primary,
   },
 
   // ── Top section — matches own profile template ──
@@ -1218,22 +1262,38 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'flex-end',
-    gap: 16,
-    paddingTop: 40,
+    alignItems: 'center',
+    gap: 14,
+    paddingTop: 48,
     paddingBottom: spacing.md,
   },
   actionItem: {
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
   },
-  superLikeLabel: {
-    fontSize: 9,
+  // Message CTA — primary action, gradient pill
+  messageCta: {
+    borderRadius: borderRadius.full,
+    overflow: 'hidden',
+    shadowColor: palette.purple[500],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  messageCtaGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: borderRadius.full,
+  },
+  messageCtaText: {
+    fontSize: 15,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
-    color: '#D4AF37',
-    marginTop: 4,
-    letterSpacing: 0.3,
-    textAlign: 'center',
+    color: '#FFFFFF',
+    letterSpacing: 0.2,
   },
 });

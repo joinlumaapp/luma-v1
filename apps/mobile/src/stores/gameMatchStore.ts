@@ -60,23 +60,30 @@ function calculateConnectionScore(interaction: PlayerInteraction): number {
   return Math.min(MAX_SCORE, Math.round(raw));
 }
 
-function generateHighlights(interaction: PlayerInteraction): string[] {
+function generateHighlights(interaction: PlayerInteraction, hasPlayedBefore: boolean): string[] {
   const highlights: string[] = [];
 
+  if (hasPlayedBefore) {
+    highlights.push('Daha once birlikte oynadiniz!');
+  }
+  if (interaction.directReplies >= 5) {
+    highlights.push('Birbirinize cok yanit verdiniz');
+  } else if (interaction.directReplies >= 3) {
+    highlights.push('Birbirinize karsilikli yanit verdiniz');
+  }
   if (interaction.messageCount >= 10) {
     highlights.push(`${interaction.messageCount} mesaj paylastiniz`);
-  }
-  if (interaction.directReplies >= 3) {
-    highlights.push('Birbirinize cok yanit verdiniz');
+  } else if (interaction.messageCount >= 5) {
+    highlights.push('Sohbet ettiniz');
   }
   if (interaction.reactionCount >= 5) {
     highlights.push('Cok fazla reaksiyon gonderdiniz');
   }
   if (interaction.voiceMinutes >= 2) {
-    highlights.push(`${interaction.voiceMinutes} dakika sesli sohbet ettiniz`);
+    highlights.push(`${interaction.voiceMinutes} dk sesli sohbet ettiniz`);
   }
   if (interaction.timeInRoomSeconds >= 600) {
-    highlights.push(`${Math.round(interaction.timeInRoomSeconds / 60)} dakika birlikte vakit gecirdiniz`);
+    highlights.push(`${Math.round(interaction.timeInRoomSeconds / 60)} dk birlikte vakit gecirdiniz`);
   }
   if (interaction.emojisUsed >= 5) {
     highlights.push('Cok eglenmis gorunuyorsunuz!');
@@ -95,12 +102,23 @@ function getConnectionLevel(score: number): 'strong' | 'good' | 'mild' {
   return 'mild';
 }
 
+// ─── Game History Entry ─────────────────────────────────────────
+
+export interface GameHistoryEntry {
+  sessionId: string;
+  gameType: string;
+  playedAt: string;
+  topConnection: { userId: string; name: string; score: number } | null;
+}
+
 // ─── Store ───────────────────────────────────────────────────────
+
+type AnyGameType = 'uno' | 'board' | 'okey' | 'truth_dare' | 'would_you_rather' | 'quick_quiz' | 'emoji_guess' | 'word_battle' | 'icebreaker';
 
 interface GameMatchState {
   // Current session tracking
   sessionId: string | null;
-  gameType: 'uno' | 'board' | 'okey' | null;
+  gameType: AnyGameType | null;
   interactions: Map<string, PlayerInteraction>;
   sessionStartTime: number | null;
 
@@ -108,18 +126,25 @@ interface GameMatchState {
   results: GameConnectionResult[];
   showResults: boolean;
 
+  // Game history — tracks who you've played with before
+  gameHistory: GameHistoryEntry[];
+  playedWithUsers: Set<string>;
+
   // Actions
-  startSession: (sessionId: string, gameType: 'uno' | 'board' | 'okey') => void;
+  startSession: (sessionId: string, gameType: AnyGameType) => void;
   endSession: () => void;
   trackMessage: (userId: string, isDirectReply: boolean) => void;
   trackReaction: (userId: string) => void;
   trackEmoji: (userId: string) => void;
   trackVoice: (userId: string, minutes: number) => void;
   trackTurn: (userId: string) => void;
+  trackQuestionAnswer: (userId: string) => void;
+  trackPlayerSelection: (userId: string) => void;
   addPlayer: (player: { userId: string; name: string; avatarUrl: string; age: number; isVerified: boolean }) => void;
   removePlayer: (userId: string) => void;
   calculateResults: () => void;
   dismissResults: () => void;
+  hasPlayedWith: (userId: string) => boolean;
   reset: () => void;
 }
 
@@ -130,6 +155,8 @@ export const useGameMatchStore = create<GameMatchState>((set, get) => ({
   sessionStartTime: null,
   results: [],
   showResults: false,
+  gameHistory: [],
+  playedWithUsers: new Set(),
 
   startSession: (sessionId, gameType) => {
     set({
@@ -143,7 +170,34 @@ export const useGameMatchStore = create<GameMatchState>((set, get) => ({
   },
 
   endSession: () => {
+    const { sessionId, gameType, interactions } = get();
     get().calculateResults();
+
+    // Record game history
+    if (sessionId && gameType) {
+      const results = get().results;
+      const topConnection = results.length > 0
+        ? { userId: results[0].userId, name: results[0].name, score: results[0].connectionScore }
+        : null;
+
+      const entry: GameHistoryEntry = {
+        sessionId,
+        gameType,
+        playedAt: new Date().toISOString(),
+        topConnection,
+      };
+
+      // Track all players we've played with
+      const newPlayedWith = new Set(get().playedWithUsers);
+      for (const [userId] of interactions) {
+        newPlayedWith.add(userId);
+      }
+
+      set((state) => ({
+        gameHistory: [entry, ...state.gameHistory].slice(0, 50),
+        playedWithUsers: newPlayedWith,
+      }));
+    }
   },
 
   addPlayer: (player) => {
@@ -220,8 +274,32 @@ export const useGameMatchStore = create<GameMatchState>((set, get) => ({
     set({ interactions: updated });
   },
 
+  trackQuestionAnswer: (userId) => {
+    // Answering each other's prompts — strong signal
+    const { interactions } = get();
+    const player = interactions.get(userId);
+    if (!player) return;
+    const updated = new Map(interactions);
+    updated.set(userId, { ...player, directReplies: player.directReplies + 2 });
+    set({ interactions: updated });
+  },
+
+  trackPlayerSelection: (userId) => {
+    // Selecting a player in game choices — strongest signal
+    const { interactions } = get();
+    const player = interactions.get(userId);
+    if (!player) return;
+    const updated = new Map(interactions);
+    updated.set(userId, { ...player, directReplies: player.directReplies + 3, reactionCount: player.reactionCount + 1 });
+    set({ interactions: updated });
+  },
+
+  hasPlayedWith: (userId) => {
+    return get().playedWithUsers.has(userId);
+  },
+
   calculateResults: () => {
-    const { interactions, sessionStartTime } = get();
+    const { interactions, sessionStartTime, playedWithUsers } = get();
     const now = Date.now();
     const sessionDuration = sessionStartTime ? (now - sessionStartTime) / 1000 : 0;
 
@@ -233,8 +311,13 @@ export const useGameMatchStore = create<GameMatchState>((set, get) => ({
         timeInRoomSeconds: sessionDuration,
       };
 
-      const score = calculateConnectionScore(interaction);
-      const highlights = generateHighlights(interaction);
+      let score = calculateConnectionScore(interaction);
+      // Boost score if played together before — returning players have stronger connection
+      const hasPlayedBefore = playedWithUsers.has(player.userId);
+      if (hasPlayedBefore) {
+        score = Math.min(MAX_SCORE, score + 10);
+      }
+      const highlights = generateHighlights(interaction, hasPlayedBefore);
       const level = getConnectionLevel(score);
 
       // Only suggest connections with meaningful interaction
@@ -270,6 +353,7 @@ export const useGameMatchStore = create<GameMatchState>((set, get) => ({
       sessionStartTime: null,
       results: [],
       showResults: false,
+      // Note: gameHistory and playedWithUsers are NOT reset — they persist across sessions
     });
   },
 }));

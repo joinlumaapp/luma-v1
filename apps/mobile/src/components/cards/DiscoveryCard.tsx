@@ -190,10 +190,10 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
           </View>
         )}
 
-        {/* Bottom gradient overlay for text readability */}
+        {/* Bottom gradient overlay — strong enough for text on any image */}
         <LinearGradient
-          colors={['transparent', 'rgba(8, 8, 15, 0.4)', 'rgba(8, 8, 15, 0.85)'] as [string, string, ...string[]]}
-          locations={[0, 0.35, 1]}
+          colors={['transparent', 'rgba(0, 0, 0, 0.25)', 'rgba(0, 0, 0, 0.7)'] as [string, string, ...string[]]}
+          locations={[0, 0.4, 1]}
           style={styles.photoGradient}
           pointerEvents="none"
         />
@@ -230,18 +230,18 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
           )}
         </View>
 
-        {/* Overlay — bottom-right: Compatibility */}
+        {/* Overlay — bottom-right: Compatibility badge */}
         {profile.compatibility && (
           <Pressable
-            style={styles.overlayCompat}
+            style={[styles.overlayCompat, isSuper && styles.overlayCompatGlow]}
             onPress={() => onCompatTap?.(profile.userId)}
             accessibilityLabel={`Uyum yüzde ${compatScore}`}
             accessibilityRole="button"
           >
+            <Text style={styles.overlayCompatEmoji}>{isSuper ? '\uD83D\uDD25' : '\uD83D\uDC9C'}</Text>
             <Text style={[styles.overlayCompatText, isSuper && styles.overlayCompatSuper]}>
-              %{compatScore}
+              {compatScore}%
             </Text>
-            <Text style={styles.overlayCompatLabel}>Uyum</Text>
           </Pressable>
         )}
 
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: '40%',
+    height: '42%',
   },
 
   // ── Verified Badge — top-left ──
@@ -398,27 +398,26 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
 
-  // ── "Yakınında" badge — top-right below online dot ──
+  // ── "Yakınında" badge — pill with blur background ──
   nearbyBadge: {
     position: 'absolute',
     top: spacing.sm + 24,
     right: spacing.sm + 4,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    backgroundColor: 'rgba(212, 175, 55, 0.15)',
+    gap: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
     borderRadius: borderRadius.full,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.25)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     zIndex: 2,
   },
   nearbyText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: fontWeights.semibold,
     fontFamily: poppinsFonts.semibold,
-    color: '#D4AF37',
+    color: '#F5D980',
+    includeFontPadding: false,
   },
 
   // ── Overlay info — bottom-left on photo ──
@@ -452,46 +451,64 @@ const styles = StyleSheet.create({
   overlayCity: {
     fontSize: 13,
     fontWeight: fontWeights.regular,
-    color: 'rgba(255, 255, 255, 0.85)',
+    color: 'rgba(255, 255, 255, 0.9)',
     includeFontPadding: false,
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   overlayDot: {
     fontSize: 8,
-    color: 'rgba(255, 255, 255, 0.5)',
+    color: 'rgba(255, 255, 255, 0.6)',
   },
   overlayDistance: {
     fontSize: 12,
     fontWeight: fontWeights.medium,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: 'rgba(255, 255, 255, 0.9)',
     includeFontPadding: false,
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
 
-  // ── Overlay compatibility — bottom-right on photo ──
+  // ── Overlay compatibility — badge container, bottom-right ──
   overlayCompat: {
     position: 'absolute',
     bottom: spacing.md,
     right: spacing.md,
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     zIndex: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  overlayCompatGlow: {
+    backgroundColor: 'rgba(212, 175, 55, 0.2)',
+    borderColor: 'rgba(212, 175, 55, 0.35)',
+    shadowColor: '#D4AF37',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  overlayCompatEmoji: {
+    fontSize: 14,
+    includeFontPadding: false,
   },
   overlayCompatText: {
-    fontSize: 22,
+    fontSize: 16,
     fontWeight: fontWeights.bold,
     fontFamily: poppinsFonts.semibold,
     color: '#FFFFFF',
     includeFontPadding: false,
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
   },
   overlayCompatSuper: {
-    color: palette.gold[400],
-  },
-  overlayCompatLabel: {
-    fontSize: 10,
-    fontWeight: fontWeights.medium,
-    color: 'rgba(255, 255, 255, 0.7)',
-    marginTop: -2,
+    color: '#F5D980',
   },
 
   // ── Minimal info panel below photo ──

@@ -697,6 +697,8 @@ export const MatchesListScreen: React.FC = () => {
 
   // Restore lastMessage from chat persistence on every screen focus
   // (e.g. returning from Chat screen after sending a message)
+  // Also re-fetch conversations so chatStore.conversations is fresh
+  const fetchConversations = useChatStore((state) => state.fetchConversations);
   useFocusEffect(
     useCallback(() => {
       const meta = getAllConversationMeta();
@@ -705,7 +707,8 @@ export const MatchesListScreen: React.FC = () => {
           updateMatchActivity(matchId, entry.lastMessage, entry.lastMessageAt);
         }
       }
-    }, [updateMatchActivity]),
+      fetchConversations();
+    }, [updateMatchActivity, fetchConversations]),
   );
 
   // Pull-to-refresh handler

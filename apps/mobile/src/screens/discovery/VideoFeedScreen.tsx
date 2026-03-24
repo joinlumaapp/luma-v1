@@ -99,8 +99,14 @@ export const VideoFeedScreen: React.FC = () => {
     }
   }, [activeIndex, profiles.length]);
 
+  // Debounce to prevent multiple profile opens from rapid taps
+  const isNavigatingRef = useRef(false);
   const handleProfile = useCallback((userId: string) => {
+    if (isNavigatingRef.current) return;
+    isNavigatingRef.current = true;
     (navigation.navigate as (screen: string, params: object) => void)('ProfilePreview', { userId });
+    // Reset after navigation animation completes
+    setTimeout(() => { isNavigatingRef.current = false; }, 600);
   }, [navigation]);
 
   const handleInstantConnect = useCallback((_userId: string) => {
@@ -122,6 +128,7 @@ export const VideoFeedScreen: React.FC = () => {
     <VideoCard
       profile={item}
       isActive={index === activeIndex}
+      isNearby={Math.abs(index - activeIndex) <= 1}
       onLike={handleLike}
       onSkip={handleSkip}
       onProfile={handleProfile}
@@ -139,13 +146,12 @@ export const VideoFeedScreen: React.FC = () => {
 
   // ─── Render helpers ────────────────────────────────────────
 
+  // Minimal top bar — back button only, no title for immersion
   const topBar = (
-    <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
+    <View style={[styles.topBar, { paddingTop: insets.top + 4 }]}>
       <TouchableOpacity onPress={handleBack} style={styles.backButton} activeOpacity={0.7}>
-        <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+        <Ionicons name="chevron-back" size={22} color="rgba(255,255,255,0.85)" />
       </TouchableOpacity>
-      <Text style={styles.topTitle}>Video Keşfet</Text>
-      <View style={{ width: 36 }} />
     </View>
   );
 
@@ -156,7 +162,7 @@ export const VideoFeedScreen: React.FC = () => {
         <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
         {topBar}
         <ActivityIndicator size="large" color={palette.purple[400]} />
-        <Text style={styles.statusText}>Videolar yükleniyor...</Text>
+        <Text style={styles.statusText}>Keşfedilecek profiller hazırlanıyor...</Text>
       </View>
     );
   }
@@ -236,29 +242,17 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingBottom: 8,
+    paddingBottom: 4,
     zIndex: 10,
   },
   backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: 'rgba(0,0,0,0.25)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  topTitle: {
-    fontSize: 17,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
   },
   statusText: {
     fontSize: 15,

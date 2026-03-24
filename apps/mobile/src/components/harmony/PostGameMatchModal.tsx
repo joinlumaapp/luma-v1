@@ -57,9 +57,10 @@ interface ConnectionCardProps {
   onMatch: (userId: string) => void;
   onChat: (userId: string) => void;
   onSkip: (userId: string) => void;
+  onProfile: (userId: string) => void;
 }
 
-const ConnectionCard: React.FC<ConnectionCardProps> = ({ result, index, onMatch, onChat, onSkip }) => {
+const ConnectionCard: React.FC<ConnectionCardProps> = ({ result, index, onMatch, onChat, onSkip, onProfile }) => {
   const slideAnim = useRef(new Animated.Value(50)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
@@ -92,14 +93,14 @@ const ConnectionCard: React.FC<ConnectionCardProps> = ({ result, index, onMatch,
     >
       {/* Avatar + Score */}
       <View style={cardStyles.topRow}>
-        <View style={cardStyles.avatarSection}>
-          <CachedAvatar uri={result.avatarUrl} size={56} borderRadius={28} />
+        <TouchableOpacity onPress={() => onProfile(result.userId)} activeOpacity={0.8} style={cardStyles.avatarSection}>
+          <CachedAvatar uri={result.avatarUrl} size={56} />
           {result.isVerified && (
             <View style={cardStyles.verifiedBadge}>
               <Ionicons name="checkmark-circle" size={18} color="#3B82F6" />
             </View>
           )}
-        </View>
+        </TouchableOpacity>
 
         <View style={cardStyles.infoSection}>
           <Text style={cardStyles.name}>{result.name}, {result.age}</Text>
@@ -190,17 +191,23 @@ export const PostGameMatchModal: React.FC = () => {
     }
   }, [showResults, confettiAnim]);
 
-  const handleMatch = useCallback((userId: string) => {
+  const handleMatch = useCallback((_userId: string) => {
     // TODO: Send match request via matchService
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }, []);
 
-  const handleChat = useCallback((userId: string) => {
-    // TODO: Open chat or send paid message
+  const handleChat = useCallback((_userId: string) => {
+    // TODO: Navigate to chat with this user
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   }, []);
 
-  const handleSkip = useCallback((userId: string) => {
+  const handleSkip = useCallback((_userId: string) => {
     // Just dismiss this card (could animate out)
+  }, []);
+
+  const handleProfile = useCallback((_userId: string) => {
+    // TODO: Navigate to profile preview
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   }, []);
 
   const renderItem = useCallback(({ item, index }: { item: GameConnectionResult; index: number }) => (
@@ -210,8 +217,9 @@ export const PostGameMatchModal: React.FC = () => {
       onMatch={handleMatch}
       onChat={handleChat}
       onSkip={handleSkip}
+      onProfile={handleProfile}
     />
-  ), [handleMatch, handleChat, handleSkip]);
+  ), [handleMatch, handleChat, handleSkip, handleProfile]);
 
   return (
     <Modal
@@ -246,6 +254,15 @@ export const PostGameMatchModal: React.FC = () => {
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
           />
+
+          {/* Warm window hint */}
+          {results.some((r) => r.level === 'strong') && (
+            <View style={styles.warmWindowBanner}>
+              <Text style={styles.warmWindowText}>
+                {'💬 Simdi mesaj gonderirsen daha etkili — duygular hala sicak!'}
+              </Text>
+            </View>
+          )}
 
           {/* Play Again */}
           <TouchableOpacity style={styles.playAgainButton} onPress={dismissResults} activeOpacity={0.8}>
@@ -306,6 +323,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     gap: 12,
     paddingBottom: spacing.md,
+  },
+  warmWindowBanner: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: borderRadius.lg,
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.2)',
+  },
+  warmWindowText: {
+    fontSize: 12,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: '#10B981',
+    textAlign: 'center',
+    lineHeight: 18,
   },
   playAgainButton: {
     marginHorizontal: spacing.lg,

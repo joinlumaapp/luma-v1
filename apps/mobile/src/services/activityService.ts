@@ -14,6 +14,9 @@ export type ActivityType =
   | 'sport'
   | 'culture'
   | 'travel'
+  | 'flirt'
+  | 'gaming'
+  | 'workshop'
   | 'other';
 
 export interface ActivityParticipant {
@@ -58,25 +61,31 @@ interface ActivitiesResponse {
 // ─── Activity Type Labels (Turkish) ───────────────────────────────
 
 export const ACTIVITY_TYPE_LABELS: Record<ActivityType, string> = {
-  coffee: 'Kahve',
+  coffee: 'Kahve & Sohbet',
   dinner: 'Yemek',
-  drinks: 'İçecek',
-  outdoor: 'Açık Hava',
-  sport: 'Spor',
-  culture: 'Kültür/Sanat',
+  drinks: 'Gece & Eglence',
+  outdoor: 'Acik Hava',
+  sport: 'Spor & Aktivite',
+  culture: 'Kultur / Sanat',
   travel: 'Gezi',
-  other: 'Diğer',
+  flirt: 'Flort & Tanisma',
+  gaming: 'Oyun Bulusmasi',
+  workshop: 'Workshop & Hobi',
+  other: 'Diger',
 };
 
 export const ACTIVITY_TYPE_ICONS: Record<ActivityType, string> = {
-  coffee: '☕',
-  dinner: '🍽️',
-  drinks: '🍷',
-  outdoor: '🌿',
-  sport: '⚽',
-  culture: '🎭',
-  travel: '✈️',
-  other: '🎯',
+  coffee: '\u2615',
+  dinner: '\uD83C\uDF7D\uFE0F',
+  drinks: '\uD83C\uDF7B',
+  outdoor: '\uD83C\uDF3F',
+  sport: '\uD83C\uDFC3',
+  culture: '\uD83C\uDFA8',
+  travel: '\u2708\uFE0F',
+  flirt: '\uD83D\uDC95',
+  gaming: '\uD83C\uDFAE',
+  workshop: '\uD83D\uDEE0\uFE0F',
+  other: '\uD83C\uDFAF',
 };
 
 // ─── Mock Data ────────────────────────────────────────────────────

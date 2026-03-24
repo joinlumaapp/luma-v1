@@ -58,7 +58,12 @@ export type FeatureKey =
   | 'events'
   | 'messages'
   | 'waves'
-  | 'paid_message';
+  | 'paid_message'
+  | 'video_discovery'
+  | 'game_rooms'
+  | 'read_receipts'
+  | 'ad_free'
+  | 'monthly_token_bonus';
 
 // ─── Feature Access Rules ────────────────────────────────────────
 
@@ -176,6 +181,36 @@ export const FEATURE_RULES: Record<FeatureKey, FeatureRule> = {
     labelTr: 'Ücretli Mesaj',
     descriptionTr: 'Eşleşmeden önce mesaj gönder — 150 Jeton.',
   },
+  video_discovery: {
+    minTier: 'FREE',
+    limits: { FREE: 10, GOLD: -1, PRO: -1, RESERVED: -1 },
+    labelTr: 'Video Keşfet',
+    descriptionTr: 'Kısa videolarla insanları keşfet. Sınırsız video için yükselt.',
+  },
+  game_rooms: {
+    minTier: 'FREE',
+    limits: { FREE: 3, GOLD: -1, PRO: -1, RESERVED: -1 },
+    labelTr: 'Oyun Odaları',
+    descriptionTr: 'Oyunlarla sosyal bağlantılar kur. Sınırsız erişim için yükselt.',
+  },
+  read_receipts: {
+    minTier: 'PRO',
+    limits: { FREE: 0, GOLD: 0, PRO: -1, RESERVED: -1 },
+    labelTr: 'Okundu Bilgisi',
+    descriptionTr: 'Mesajlarının okunup okunmadığını gör.',
+  },
+  ad_free: {
+    minTier: 'GOLD',
+    limits: { FREE: 0, GOLD: -1, PRO: -1, RESERVED: -1 },
+    labelTr: 'Reklamsız Deneyim',
+    descriptionTr: 'Reklamlar olmadan kesintisiz deneyim.',
+  },
+  monthly_token_bonus: {
+    minTier: 'GOLD',
+    limits: { FREE: 0, GOLD: 250, PRO: 500, RESERVED: 1000 },
+    labelTr: 'Aylık Jeton Bonusu',
+    descriptionTr: 'Her ay üyelik düzeyine göre jeton hediyesi al.',
+  },
 };
 
 // ─── Convenience Helpers ─────────────────────────────────────────
@@ -225,6 +260,11 @@ export const mapLegacyFeature = (
     insights: 'compatibility_insights',
     waves: 'waves',
     paid_message: 'paid_message',
+    video_discovery: 'video_discovery',
+    game_rooms: 'game_rooms',
+    read_receipts: 'read_receipts',
+    ad_free: 'ad_free',
+    monthly_token_bonus: 'monthly_token_bonus',
   };
   return mapping[legacy] ?? 'daily_likes';
 };
