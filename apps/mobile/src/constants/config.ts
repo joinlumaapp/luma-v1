@@ -272,6 +272,41 @@ export const MESSAGE_CONFIG = {
   SINGLE_MESSAGE_PACK_PRICE: 150, // Gold — in-app currency
 } as const;
 
+// Private message from comments — daily limits per package tier (-1 = unlimited)
+export const PRIVATE_MESSAGE_CONFIG = {
+  DAILY_LIMITS: {
+    FREE: 0,
+    GOLD: 10,
+    PRO: 10,
+    RESERVED: -1,
+  },
+} as const;
+
+// ── Monetization master switch ──
+// Set to true to enforce limits and show paywalls
+export const MONETIZATION_ENABLED = true;
+
+// Flirt request daily limits per package tier (-1 = unlimited)
+export const FLIRT_CONFIG = {
+  DAILY_LIMITS: {
+    FREE: 3,
+    GOLD: 15,
+    PRO: 50,
+    RESERVED: -1,
+  },
+} as const;
+
+// Instant Connect daily session limits per package tier (-1 = unlimited)
+export const INSTANT_CONNECT_CONFIG = {
+  DAILY_LIMITS: {
+    FREE: 1,
+    GOLD: 5,
+    PRO: 10,
+    RESERVED: -1,
+  },
+  TOKEN_COST_PER_SESSION: 50,
+} as const;
+
 // Video discovery daily limits per package tier (-1 = unlimited)
 export const VIDEO_DISCOVERY_CONFIG = {
   DAILY_LIMITS: {

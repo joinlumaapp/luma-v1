@@ -175,7 +175,7 @@ export function navigateToScreen(
   switch (parsed.screen) {
     case 'MatchDetail':
       navigationRef.navigate('MainTabs', {
-        screen: 'ProfileTab',
+        screen: 'MatchesTab',
         params: {
           screen: 'MatchDetail',
           params: parsed.params,
@@ -185,7 +185,7 @@ export function navigateToScreen(
 
     case 'Chat':
       navigationRef.navigate('MainTabs', {
-        screen: 'ProfileTab',
+        screen: 'MatchesTab',
         params: {
           screen: 'Chat',
           params: parsed.params,
@@ -265,7 +265,7 @@ export function navigateToScreen(
 
     case 'CompatibilityInsight':
       navigationRef.navigate('MainTabs', {
-        screen: 'ProfileTab',
+        screen: 'MatchesTab',
         params: {
           screen: 'CompatibilityInsight',
           params: parsed.params,
@@ -309,15 +309,20 @@ export const linkingConfig = {
               LikesYou: 'likes',
             },
           },
+          MatchesTab: {
+            screens: {
+              MatchesList: 'matches',
+              MatchDetail: 'match/:matchId',
+              Chat: 'chat/:matchId',
+              CompatibilityInsight: 'compatibility/:matchId',
+            },
+          },
           ProfileTab: {
             screens: {
               Profile: 'profile',
               Badges: 'badges',
               Settings: 'settings',
               MembershipPlans: 'membership-plans',
-              MatchDetail: 'match/:matchId',
-              Chat: 'chat/:matchId',
-              CompatibilityInsight: 'compatibility/:matchId',
             },
           },
         },

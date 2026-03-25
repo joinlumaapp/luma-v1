@@ -75,7 +75,7 @@ export type DiscoveryStackParamList = {
   Waves: undefined;
   Report: { userId: string; userName: string };
   MembershipPlans: undefined;
-  StoryCreator: undefined;
+  StoryCreator: { mediaUri?: string; mediaType?: 'image' | 'video' } | undefined;
 };
 
 // -- Matches Stack --
@@ -110,6 +110,7 @@ export type FeedStackParamList = {
   SocialFeed: undefined;
   FeedProfile: { userId: string };
   ProfilePreview: { userId: string };
+  StoryCreator: { mediaUri?: string; mediaType?: 'image' | 'video' } | undefined;
 };
 
 // -- Profile Stack --

@@ -5,7 +5,6 @@ import {
   socialFeedService,
   type FeedPost,
   type FeedFilter,
-  type FeedTopic,
   type CreatePostRequest,
 } from '../services/socialFeedService';
 
@@ -13,7 +12,6 @@ interface SocialFeedState {
   // State
   posts: FeedPost[];
   filter: FeedFilter;
-  selectedTopic: FeedTopic | null;
   isLoading: boolean;
   isRefreshing: boolean;
   isCreating: boolean;
@@ -26,7 +24,6 @@ interface SocialFeedState {
   refreshFeed: () => Promise<void>;
   loadMore: () => Promise<void>;
   setFilter: (filter: FeedFilter) => void;
-  setTopic: (topic: FeedTopic | null) => void;
   toggleLike: (postId: string) => Promise<void>;
   toggleSave: (postId: string) => void;
   toggleFollow: (userId: string) => Promise<void>;
@@ -39,7 +36,6 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
   // Initial state
   posts: [],
   filter: 'ONERILEN',
-  selectedTopic: null,
   isLoading: false,
   isRefreshing: false,
   isCreating: false,
@@ -49,10 +45,10 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
 
   // Actions
   fetchFeed: async () => {
-    const { filter, selectedTopic } = get();
+    const { filter } = get();
     set({ isLoading: true });
     try {
-      const response = await socialFeedService.getFeed(filter, selectedTopic, null);
+      const response = await socialFeedService.getFeed(filter, null, null);
       set({
         posts: response.posts,
         cursor: response.nextCursor,
@@ -65,10 +61,10 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
   },
 
   refreshFeed: async () => {
-    const { filter, selectedTopic } = get();
+    const { filter } = get();
     set({ isRefreshing: true });
     try {
-      const response = await socialFeedService.getFeed(filter, selectedTopic, null);
+      const response = await socialFeedService.getFeed(filter, null, null);
       set({
         posts: response.posts,
         cursor: response.nextCursor,
@@ -81,11 +77,11 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
   },
 
   loadMore: async () => {
-    const { filter, selectedTopic, cursor, hasMore, isLoading } = get();
+    const { filter, cursor, hasMore, isLoading } = get();
     if (!hasMore || isLoading) return;
     set({ isLoading: true });
     try {
-      const response = await socialFeedService.getFeed(filter, selectedTopic, cursor);
+      const response = await socialFeedService.getFeed(filter, null, cursor);
       set((state) => ({
         posts: [...state.posts, ...response.posts],
         cursor: response.nextCursor,
@@ -99,11 +95,6 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
 
   setFilter: (filter: FeedFilter) => {
     set({ filter, posts: [], cursor: null, hasMore: false });
-    get().fetchFeed();
-  },
-
-  setTopic: (topic: FeedTopic | null) => {
-    set({ selectedTopic: topic, posts: [], cursor: null, hasMore: false });
     get().fetchFeed();
   },
 

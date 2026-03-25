@@ -96,66 +96,93 @@ type DiscoveryNavProp = CompositeNavigationProp<
 // ─── Video Discover Compact Banner ──────────────────────────────────────────
 // Compact inline banner (~48px) — doesn't steal vertical space from swipe cards.
 
-const VideoDiscoverBanner: React.FC<{ onPress: () => void }> = React.memo(({ onPress }) => (
-  <Pressable
-    onPress={onPress}
-    style={vdStyles.banner}
-    accessibilityLabel="Video Kesfet"
-    accessibilityRole="button"
-    accessibilityHint="Video ile profilleri kesfetmek icin dokun"
-    testID="discovery-video-banner"
-  >
-    <LinearGradient
-      colors={[palette.purple[600], palette.pink[500]] as [string, string]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
-      style={vdStyles.bannerGradient}
-    >
-      <Ionicons name="play-circle" size={18} color="#FFFFFF" />
-      <Text style={vdStyles.bannerTitle}>Video Kesfet</Text>
-      <Text style={vdStyles.bannerDot}>{'\u00B7'}</Text>
-      <Text style={vdStyles.bannerSubtitle}>Kisa videolarla kesfet</Text>
-      <View style={vdStyles.bannerArrow}>
-        <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.7)" />
-      </View>
-    </LinearGradient>
-  </Pressable>
-));
-VideoDiscoverBanner.displayName = 'VideoDiscoverBanner';
+// ── Discovery Feature Blocks ─────────────────────────────────
 
-const vdStyles = StyleSheet.create({
-  banner: {
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.xs,
-    borderRadius: borderRadius.lg,
-    overflow: 'hidden',
-  },
-  bannerGradient: {
+const DiscoveryFeatureBlocks: React.FC<{
+  onVideoPress: () => void;
+  onInstantPress: () => void;
+}> = React.memo(({ onVideoPress, onInstantPress }) => (
+  <View style={featureStyles.container}>
+    {/* Video Kesfet — prominent */}
+    <Pressable onPress={onVideoPress} style={featureStyles.block}>
+      <LinearGradient
+        colors={[palette.purple[600], palette.pink[500]] as [string, string]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={featureStyles.gradient}
+      >
+        <View style={featureStyles.iconCircle}>
+          <Ionicons name="play-circle" size={28} color="#FFFFFF" />
+        </View>
+        <Text style={featureStyles.title}>Video Keşfet</Text>
+        <Text style={featureStyles.subtitle}>Kısa videolarla keşfet</Text>
+      </LinearGradient>
+    </Pressable>
+
+    {/* Aninda Baglan — energetic */}
+    <Pressable onPress={onInstantPress} style={featureStyles.block}>
+      <LinearGradient
+        colors={['#F59E0B', '#EF4444'] as [string, string]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={featureStyles.gradient}
+      >
+        <View style={featureStyles.iconCircle}>
+          <Ionicons name="flash" size={28} color="#FFFFFF" />
+        </View>
+        <Text style={featureStyles.title}>Anında Bağlan</Text>
+        <Text style={featureStyles.subtitle}>Canlı etkileşim başlat</Text>
+      </LinearGradient>
+    </Pressable>
+  </View>
+));
+DiscoveryFeatureBlocks.displayName = 'DiscoveryFeatureBlocks';
+
+const featureStyles = StyleSheet.create({
+  container: {
     flexDirection: 'row',
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  block: {
+    flex: 1,
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  gradient: {
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: spacing.md,
-    gap: 6,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.sm,
+    gap: spacing.xs,
   },
-  bannerTitle: {
-    fontSize: 13,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+  iconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+  },
+  title: {
+    fontSize: 14,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: '#FFFFFF',
+    textAlign: 'center',
   },
-  bannerDot: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.5)',
-  },
-  bannerSubtitle: {
+  subtitle: {
     fontSize: 11,
     fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
-    color: 'rgba(255,255,255,0.75)',
-    flex: 1,
-  },
-  bannerArrow: {
-    marginLeft: 'auto',
+    color: 'rgba(255,255,255,0.8)',
+    textAlign: 'center',
   },
 });
 
@@ -170,12 +197,25 @@ interface StoriesRowProps {
 
 const StoriesRow: React.FC<StoriesRowProps> = ({ navigation, userFirstName, userPhotoUrl, currentUserId }) => {
   const storyUsers = useStoryStore((s) => s.storyUsers);
-  const getOrderedStoryUsers = useStoryStore((s) => s.getOrderedStoryUsers);
   const fetchStories = useStoryStore((s) => s.fetchStories);
   const myStories = useStoryStore((s) => s.myStories);
 
-  // Derive ordered list from stable storyUsers reference
-  const orderedStoryUsers = useMemo(() => getOrderedStoryUsers(), [storyUsers, getOrderedStoryUsers]);
+  // Derive ordered list directly from reactive state (no get() indirection)
+  const orderedStoryUsers = useMemo(() => {
+    const own = storyUsers.filter((u) => u.userId === currentUserId);
+    const followed = storyUsers.filter((u) => u.userId !== currentUserId && u.isFollowing);
+    const suggested = storyUsers
+      .filter((u) => u.userId !== currentUserId && u.isSuggested && !u.isFollowing)
+      .slice(0, 3);
+
+    followed.sort((a, b) => {
+      if (a.hasUnseenStories && !b.hasUnseenStories) return -1;
+      if (!a.hasUnseenStories && b.hasUnseenStories) return 1;
+      return new Date(b.latestStoryAt).getTime() - new Date(a.latestStoryAt).getTime();
+    });
+
+    return [...own, ...followed, ...suggested];
+  }, [storyUsers, currentUserId]);
 
   // Fetch stories on mount
   useEffect(() => {
@@ -1260,15 +1300,6 @@ export const DiscoveryScreen: React.FC = () => {
               </View>
             </Pressable>
             <Pressable
-              onPress={() => navigation.navigate('InstantConnect')}
-              accessibilityLabel="Aninda Baglan"
-              accessibilityRole="button"
-            >
-              <View style={[styles.filterButton, styles.instantConnectButton]}>
-                <Ionicons name="pulse" size={18} color="#FFFFFF" />
-              </View>
-            </Pressable>
-            <Pressable
               onPress={() => navigation.navigate('Filter')}
               accessibilityLabel="Filtreleri aç"
               accessibilityRole="button"
@@ -1289,12 +1320,13 @@ export const DiscoveryScreen: React.FC = () => {
           <LikesTeaser onPressPremium={handleLikesTeaserPressPremium} onPressFree={handleLikesTeaserPressFree} />
         )}
 
-        {/* Stories row — Instagram-style horizontal bubbles */}
-        <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} currentUserId={currentUserId} />
       </View>
 
-      {/* Video Discover — compact inline banner inside header area */}
-      <VideoDiscoverBanner onPress={() => navigation.navigate('VideoFeed')} />
+      {/* Feature blocks — Video Kesfet + Aninda Baglan */}
+      <DiscoveryFeatureBlocks
+        onVideoPress={() => navigation.navigate('VideoFeed')}
+        onInstantPress={() => navigation.navigate('InstantConnect')}
+      />
 
       {/* Card stack */}
       <View style={styles.cardStack}>

@@ -3,7 +3,7 @@
 // drawing tool, color palette, preview, and "Paylas" (share) button
 // 24-hour auto-expiry notice shown before posting
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -20,12 +20,15 @@ import {
   KeyboardAvoidingView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
+import { Video, ResizeMode } from 'expo-av';
 import { useStoryStore } from '../../stores/storyStore';
+import { photoService } from '../../services/photoService';
 import type { StoryOverlay } from '../../services/storyService';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -87,11 +90,18 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const route = useRoute<RouteProp<{ StoryCreator: { mediaUri?: string; mediaType?: 'image' | 'video' } }, 'StoryCreator'>>();
   const createStory = useStoryStore((s) => s.createStory);
   const isCreating = useStoryStore((s) => s.isCreating);
 
-  // ── Image state ──
-  const [imageUri] = useState<string | null>(initialImageUri ?? null);
+  // Read media from route params (passed by SocialFeedScreen after camera capture)
+  const routeMediaUri = route.params?.mediaUri;
+  const routeMediaType = route.params?.mediaType;
+
+  // ── Media state ──
+  const [imageUri, setImageUri] = useState<string | null>(initialImageUri ?? routeMediaUri ?? null);
+  const [mediaType, setMediaType] = useState<'image' | 'video'>(routeMediaType ?? 'image');
+  const [isCapturing, setIsCapturing] = useState(false);
 
   // ── Tool state ──
   const [activeMode, setActiveMode] = useState<ToolMode>('none');
@@ -158,19 +168,25 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
     }),
   ).current;
 
-  // ─── Handlers ──────────────────────────────────────────────
+  // ─── Capture Handlers ──
 
-  const handleSelectImage = useCallback(() => {
-    // In production, use expo-image-picker
-    // For now, use a placeholder
-    Alert.alert(
-      'Fotoğraf Seç',
-      'Galeriden fotoğraf seçmek için expo-image-picker entegrasyonu gereklidir.',
-      [
-        { text: 'Tamam', style: 'default' },
-      ],
-    );
-  }, []);
+  const handlePickFromGallery = useCallback(async () => {
+    if (isCapturing) return;
+    setIsCapturing(true);
+    if (__DEV__) console.log('[Story] Picking from gallery...');
+    try {
+      const result = await photoService.pickMediaForStory();
+      if (result) {
+        if (__DEV__) console.log('[Story] Gallery picked:', result.type, result.uri);
+        setImageUri(result.uri);
+        setMediaType(result.type);
+      }
+    } catch {
+      Alert.alert('Hata', 'Medya seçilemedi.', [{ text: 'Tamam' }]);
+    } finally {
+      setIsCapturing(false);
+    }
+  }, [isCapturing]);
 
   const handleAddText = useCallback(() => {
     setActiveMode('text');
@@ -255,10 +271,17 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
       })),
     ];
 
-    await createStory(imageUri, 'image', overlays);
-    onStoryCreated?.();
-    navigation.goBack();
-  }, [imageUri, textOverlays, stickerOverlays, drawingPaths, createStory, onStoryCreated, navigation]);
+    if (__DEV__) console.log('[Story] Publishing:', { mediaType, uri: imageUri?.slice(-30), overlayCount: overlays.length });
+    try {
+      await createStory(imageUri, mediaType, overlays);
+      if (__DEV__) console.log('[Story] Published successfully as', mediaType);
+      onStoryCreated?.();
+      // Önce geri dön, sonra bildirim göster (Alert store güncellemesini bloke etmesin)
+      navigation.goBack();
+    } catch {
+      Alert.alert('Hata', 'Hikaye paylaşılamadı. Lütfen tekrar dene.', [{ text: 'Tamam' }]);
+    }
+  }, [imageUri, mediaType, textOverlays, stickerOverlays, drawingPaths, createStory, onStoryCreated, navigation]);
 
   const handleClose = useCallback(() => {
     if (imageUri || textOverlays.length > 0 || stickerOverlays.length > 0) {
@@ -266,7 +289,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
         'Vazgeç',
         'Hikayeni kaydetmeden çıkmak istediğin kesin mi?',
         [
-          { text: 'Kaldır', style: 'cancel' },
+          { text: 'İptal', style: 'cancel' },
           { text: 'Çık', style: 'destructive', onPress: () => navigation.goBack() },
         ],
       );
@@ -275,27 +298,16 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
     }
   }, [imageUri, textOverlays, stickerOverlays, navigation]);
 
-  // ─── No Image Selected State ───────────────────────────────
+  // ─── No media — should not happen (camera opens before navigation) ──
+  // If somehow reached without media, go back immediately
+  useEffect(() => {
+    if (!imageUri) {
+      navigation.goBack();
+    }
+  }, [imageUri, navigation]);
 
   if (!imageUri) {
-    return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        <StatusBar barStyle="light-content" />
-        <View style={styles.emptyState}>
-          <TouchableOpacity style={styles.selectImageButton} onPress={handleSelectImage}>
-            <Ionicons name="camera-outline" size={48} color={palette.gold[500]} />
-            <Text style={styles.selectImageText}>Fotoğraf Seç veya Çek</Text>
-            <Text style={styles.selectImageHint}>
-              Galerinden seç veya kamerayla çek
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.closeButtonEmpty} onPress={handleClose}>
-            <Ionicons name="close" size={28} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
+    return <View style={styles.container}><StatusBar barStyle="light-content" /></View>;
   }
 
   // ─── Preview Mode ──────────────────────────────────────────
@@ -304,7 +316,18 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
     return (
       <View style={styles.container}>
         <StatusBar barStyle="light-content" />
-        <Image source={{ uri: imageUri }} style={styles.fullImage} resizeMode="cover" />
+        {mediaType === 'video' ? (
+          <Video
+            source={{ uri: imageUri! }}
+            style={styles.fullImage}
+            resizeMode={ResizeMode.COVER}
+            shouldPlay
+            isLooping
+            isMuted={false}
+          />
+        ) : (
+          <Image source={{ uri: imageUri }} style={styles.fullImage} resizeMode="cover" />
+        )}
 
         {/* Render text overlays */}
         {textOverlays.map((overlay) => (
@@ -344,7 +367,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
           >
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.previewTitle}>Onizleme</Text>
+          <Text style={styles.previewTitle}>Önizleme</Text>
         </View>
 
         {/* 24h notice + Publish */}
@@ -359,7 +382,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
             disabled={isCreating}
           >
             <Text style={styles.publishButtonText}>
-              {isCreating ? 'Paylasiliyor...' : 'Paylas'}
+              {isCreating ? 'Paylaşılıyor...' : 'Paylaş'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -609,7 +632,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
 
       {/* Bottom action bar */}
       <View style={[styles.bottomBar, { bottom: insets.bottom + 16 }]}>
-        <TouchableOpacity style={styles.changeImageButton} onPress={handleSelectImage}>
+        <TouchableOpacity style={styles.changeImageButton} onPress={handlePickFromGallery}>
           <Ionicons name="images-outline" size={20} color="#FFFFFF" />
           <Text style={styles.changeImageText}>Degistir</Text>
         </TouchableOpacity>
@@ -666,6 +689,34 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: 'rgba(255,255,255,0.5)',
     textAlign: 'center',
+  },
+  mediaBadges: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginTop: spacing.md,
+  },
+  mediaBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 4,
+  },
+  mediaBadgeText: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.6)',
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+  },
+  expiryNote: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.4)',
+    textAlign: 'center',
+    marginTop: spacing.md,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
   },
   closeButtonEmpty: {
     position: 'absolute',
@@ -958,3 +1009,6 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.6)',
   },
 });
+
+// ─── Capture Screen Styles ───────────────────────────────────
+

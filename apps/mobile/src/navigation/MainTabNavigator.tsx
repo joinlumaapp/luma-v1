@@ -352,6 +352,11 @@ const FeedStackNavigator: React.FC = React.memo(() => (
     <FeedStack.Screen name="SocialFeed" component={SocialFeedScreen} />
     <FeedStack.Screen name="FeedProfile" component={FeedProfileScreen} />
     <FeedStack.Screen name="ProfilePreview" component={ProfilePreviewScreen} />
+    <FeedStack.Screen
+      name="StoryCreator"
+      component={StoryCreator}
+      options={{ animation: 'slide_from_bottom', gestureEnabled: true, gestureDirection: 'vertical' }}
+    />
   </FeedStack.Navigator>
 ));
 FeedStackNavigator.displayName = 'FeedStackNavigator';

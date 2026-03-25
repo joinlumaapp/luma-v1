@@ -394,7 +394,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // Previously missing stores — now included
     try {
       const { useSocialFeedStore } = require('./socialFeedStore') as typeof import('./socialFeedStore');
-      useSocialFeedStore.setState({ posts: [], isLoading: false, error: null, hasMore: false, cursor: null });
+      useSocialFeedStore.setState({ posts: [], isLoading: false, hasMore: false, cursor: null });
     } catch { /* store may not be initialized */ }
 
     try {

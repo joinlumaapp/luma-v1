@@ -34,6 +34,41 @@ const IMAGE_PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
   quality: 1, // We compress manually for control
 };
 
+const VIDEO_PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
+  mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+  allowsEditing: true,
+  videoMaxDuration: 30, // 30 seconds max for stories
+  quality: 1,
+};
+
+const ALL_MEDIA_PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
+  mediaTypes: ImagePicker.MediaTypeOptions.All,
+  allowsEditing: true,
+  videoMaxDuration: 30,
+  quality: 1,
+};
+
+// Story-specific: NO editing/cropping for fastest flow
+const STORY_PHOTO_OPTIONS: ImagePicker.ImagePickerOptions = {
+  mediaTypes: ImagePicker.MediaTypeOptions.Images,
+  allowsEditing: false,
+  quality: 0.9,
+};
+
+const STORY_VIDEO_OPTIONS: ImagePicker.ImagePickerOptions = {
+  mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+  allowsEditing: false,
+  videoMaxDuration: 30,
+  quality: 1,
+};
+
+const STORY_GALLERY_OPTIONS: ImagePicker.ImagePickerOptions = {
+  mediaTypes: ImagePicker.MediaTypeOptions.All,
+  allowsEditing: false,
+  videoMaxDuration: 30,
+  quality: 0.9,
+};
+
 /**
  * Request camera permission. Shows Turkish alert on denial.
  */
@@ -128,6 +163,130 @@ export const photoService = {
         'Fotoğraf çekilirken bir sorun oluştu. Lütfen tekrar deneyin.',
         [{ text: 'Tamam' }],
       );
+      return null;
+    }
+  },
+
+  /**
+   * Launch gallery picker for video, return URI or null.
+   * Max duration: 30 seconds.
+   */
+  pickVideoFromGallery: async (): Promise<string | null> => {
+    const hasPermission = await requestGalleryPermission();
+    if (!hasPermission) return null;
+
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync(VIDEO_PICKER_OPTIONS);
+      if (result.canceled || result.assets.length === 0) return null;
+      return result.assets[0].uri;
+    } catch {
+      Alert.alert('Hata', 'Video secilirken bir sorun olustu.', [{ text: 'Tamam' }]);
+      return null;
+    }
+  },
+
+  /**
+   * Launch camera for video recording, return URI or null.
+   * Max duration: 30 seconds.
+   */
+  recordVideo: async (): Promise<string | null> => {
+    const hasPermission = await requestCameraPermission();
+    if (!hasPermission) return null;
+
+    try {
+      const result = await ImagePicker.launchCameraAsync(VIDEO_PICKER_OPTIONS);
+      if (result.canceled || result.assets.length === 0) return null;
+      return result.assets[0].uri;
+    } catch {
+      Alert.alert('Hata', 'Video cekilirken bir sorun olustu.', [{ text: 'Tamam' }]);
+      return null;
+    }
+  },
+
+  /**
+   * Launch gallery for photo or video (story creation).
+   * Returns { uri, type } or null.
+   */
+  pickMediaForStory: async (): Promise<{ uri: string; type: 'image' | 'video' } | null> => {
+    const hasPermission = await requestGalleryPermission();
+    if (!hasPermission) return null;
+
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync(ALL_MEDIA_PICKER_OPTIONS);
+      if (result.canceled || result.assets.length === 0) return null;
+      const asset = result.assets[0];
+      const mediaType = asset.type === 'video' ? 'video' : 'image';
+      return { uri: asset.uri, type: mediaType };
+    } catch {
+      Alert.alert('Hata', 'Medya secilirken bir sorun olustu.', [{ text: 'Tamam' }]);
+      return null;
+    }
+  },
+
+  /**
+   * Launch camera for story creation.
+   * Opens camera in photo mode (most reliable across all devices).
+   * For video stories, use pickMediaForStory (gallery) or recordVideo.
+   * Returns { uri, type } or null.
+   */
+  captureMediaForStory: async (): Promise<{ uri: string; type: 'image' | 'video' } | null> => {
+    const hasPermission = await requestCameraPermission();
+    if (!hasPermission) return null;
+
+    try {
+      // Use Images mode for camera — "All" mode causes "continuous capture not supported" on some devices
+      const result = await ImagePicker.launchCameraAsync({
+        ...IMAGE_PICKER_OPTIONS,
+        allowsEditing: true,
+      });
+      if (result.canceled || result.assets.length === 0) return null;
+      const asset = result.assets[0];
+      const mediaType = asset.type === 'video' ? 'video' : 'image';
+      return { uri: asset.uri, type: mediaType };
+    } catch {
+      Alert.alert('Hata', 'Fotograf cekilirken bir sorun olustu.', [{ text: 'Tamam' }]);
+      return null;
+    }
+  },
+
+  // ── Fast story methods (no cropping, no editing screen) ──
+
+  /** Take photo for story — no crop, instant */
+  storyTakePhoto: async (): Promise<string | null> => {
+    const hasPermission = await requestCameraPermission();
+    if (!hasPermission) return null;
+    try {
+      const result = await ImagePicker.launchCameraAsync(STORY_PHOTO_OPTIONS);
+      if (result.canceled || result.assets.length === 0) return null;
+      return result.assets[0].uri;
+    } catch {
+      return null;
+    }
+  },
+
+  /** Record video for story — no crop, instant, max 30s */
+  storyRecordVideo: async (): Promise<string | null> => {
+    const hasPermission = await requestCameraPermission();
+    if (!hasPermission) return null;
+    try {
+      const result = await ImagePicker.launchCameraAsync(STORY_VIDEO_OPTIONS);
+      if (result.canceled || result.assets.length === 0) return null;
+      return result.assets[0].uri;
+    } catch {
+      return null;
+    }
+  },
+
+  /** Pick from gallery for story — no crop, instant */
+  storyPickFromGallery: async (): Promise<{ uri: string; type: 'image' | 'video' } | null> => {
+    const hasPermission = await requestGalleryPermission();
+    if (!hasPermission) return null;
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync(STORY_GALLERY_OPTIONS);
+      if (result.canceled || result.assets.length === 0) return null;
+      const asset = result.assets[0];
+      return { uri: asset.uri, type: asset.type === 'video' ? 'video' : 'image' };
+    } catch {
       return null;
     }
   },

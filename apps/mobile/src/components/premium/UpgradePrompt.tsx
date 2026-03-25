@@ -37,7 +37,9 @@ export type PaywallFeature =
   | 'messages'
   | 'insights'
   | 'waves'
-  | 'paid_message';
+  | 'paid_message'
+  | 'private_message'
+  | 'flirt';
 
 interface UpgradePromptProps {
   visible: boolean;
@@ -181,6 +183,22 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
       'Eşleşmeden önce ilk mesajını gönder ve sohbeti başlat.',
     minimumTier: 'FREE',
     tierLabel: '',
+  },
+  flirt: {
+    icon: '\uD83D\uDD25',
+    title: 'Daha Fazla Flort Istegi',
+    description:
+      'Gunluk flort limitine ulastin. Premium ile gunluk 15, Supreme ile 50, Sinirsiz ile limitsiz flort gonder.',
+    minimumTier: 'GOLD',
+    tierLabel: 'Premium+',
+  },
+  private_message: {
+    icon: '\uD83D\uDCAC',
+    title: 'Ozel Mesaj Gonder',
+    description:
+      'Yorumlardan ozel mesaja gec. Premium ile gunluk 10, Sinir\u0073\u0131z ile sinirsiz ozel mesaj hakki.',
+    minimumTier: 'GOLD',
+    tierLabel: 'Premium+',
   },
 };
 

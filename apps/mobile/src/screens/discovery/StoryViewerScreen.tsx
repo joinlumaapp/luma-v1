@@ -14,11 +14,13 @@ import {
   Dimensions,
   StatusBar,
   Animated as RNAnimated,
+  PanResponder,
   Platform,
   KeyboardAvoidingView,
   Share,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Video, ResizeMode } from 'expo-av';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -125,10 +127,21 @@ const HeartAnimation: React.FC<{ visible: boolean; onFinish: () => void }> = ({
 
 // ─── Story Content Renderer ──────────────────────────────────────────
 
-const StoryContent: React.FC<{ story: Story }> = ({ story }) => {
+const StoryContent: React.FC<{ story: Story; isPaused?: boolean }> = ({ story, isPaused = false }) => {
   return (
     <View style={styles.contentContainer}>
-      <Image source={{ uri: story.mediaUrl }} style={styles.fullImage} resizeMode="cover" />
+      {story.mediaType === 'video' ? (
+        <Video
+          source={{ uri: story.mediaUrl }}
+          style={styles.fullImage}
+          resizeMode={ResizeMode.COVER}
+          shouldPlay={!isPaused}
+          isLooping={false}
+          isMuted={false}
+        />
+      ) : (
+        <Image source={{ uri: story.mediaUrl }} style={styles.fullImage} resizeMode="cover" />
+      )}
 
       {/* Render text overlays */}
       {story.overlays
@@ -244,6 +257,53 @@ export const StoryViewerScreen: React.FC = () => {
 
   // Paused state for reply/long-press
   const isPaused = useRef(false);
+  const [isStoryPaused, setIsStoryPaused] = useState(false);
+
+  // ── Swipe-down-to-close gesture ──
+  const swipeY = useRef(new RNAnimated.Value(0)).current;
+  const swipeOpacity = useRef(new RNAnimated.Value(1)).current;
+  const SWIPE_DISMISS_THRESHOLD = 120;
+
+  const swipePanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gs) => {
+        // Only capture vertical downward drags (dy > dx, dy > 10)
+        return gs.dy > 10 && Math.abs(gs.dy) > Math.abs(gs.dx) * 1.5;
+      },
+      onPanResponderGrant: () => {
+        isPaused.current = true; setIsStoryPaused(true);
+      },
+      onPanResponderMove: (_, gs) => {
+        const dy = Math.max(0, gs.dy); // Only allow downward
+        swipeY.setValue(dy);
+        swipeOpacity.setValue(1 - dy / (SCREEN_HEIGHT * 0.5));
+      },
+      onPanResponderRelease: (_, gs) => {
+        isPaused.current = false; setIsStoryPaused(false);
+        if (gs.dy > SWIPE_DISMISS_THRESHOLD || gs.vy > 0.5) {
+          // Dismiss
+          RNAnimated.parallel([
+            RNAnimated.timing(swipeY, { toValue: SCREEN_HEIGHT, duration: 200, useNativeDriver: true }),
+            RNAnimated.timing(swipeOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+          ]).start(() => {
+            navigation.goBack();
+          });
+        } else {
+          // Snap back
+          RNAnimated.parallel([
+            RNAnimated.spring(swipeY, { toValue: 0, friction: 8, tension: 100, useNativeDriver: true }),
+            RNAnimated.timing(swipeOpacity, { toValue: 1, duration: 150, useNativeDriver: true }),
+          ]).start();
+        }
+      },
+      onPanResponderTerminate: () => {
+        isPaused.current = false; setIsStoryPaused(false);
+        swipeY.setValue(0);
+        swipeOpacity.setValue(1);
+      },
+    }),
+  ).current;
 
   // ── Get current story ──
   const currentStory = currentStories[activeIndex];
@@ -353,7 +413,7 @@ export const StoryViewerScreen: React.FC = () => {
 
       longPressTimer.current = setTimeout(() => {
         isLongPressing.current = true;
-        isPaused.current = true;
+        isPaused.current = true; setIsStoryPaused(true);
         clearTimer();
         progressAnim.stopAnimation();
       }, LONG_PRESS_THRESHOLD);
@@ -370,7 +430,7 @@ export const StoryViewerScreen: React.FC = () => {
     // Resume from long press
     if (isLongPressing.current) {
       isLongPressing.current = false;
-      isPaused.current = false;
+      isPaused.current = false; setIsStoryPaused(false);
       startTimer();
       return;
     }
@@ -407,13 +467,13 @@ export const StoryViewerScreen: React.FC = () => {
     await storyStore.replyToStory(currentStory.id, replyText.trim());
     setReplyText('');
     setIsReplyFocused(false);
-    isPaused.current = false;
+    isPaused.current = false; setIsStoryPaused(false);
     startTimer();
   }, [replyText, currentStory, startTimer]);
 
   const handleReplyFocus = useCallback(() => {
     setIsReplyFocused(true);
-    isPaused.current = true;
+    isPaused.current = true; setIsStoryPaused(true);
     clearTimer();
     progressAnim.stopAnimation();
   }, [clearTimer, progressAnim]);
@@ -421,7 +481,7 @@ export const StoryViewerScreen: React.FC = () => {
   const handleReplyBlur = useCallback(() => {
     setIsReplyFocused(false);
     if (!replyText.trim()) {
-      isPaused.current = false;
+      isPaused.current = false; setIsStoryPaused(false);
       startTimer();
     }
   }, [replyText, startTimer]);
@@ -471,14 +531,20 @@ export const StoryViewerScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
+      {/* Backdrop fade */}
+      <RNAnimated.View style={[StyleSheet.absoluteFill, { backgroundColor: '#000', opacity: swipeOpacity }]} />
 
+      <RNAnimated.View
+        style={[styles.swipeWrapper, { transform: [{ translateY: swipeY }], opacity: swipeOpacity }]}
+        {...swipePanResponder.panHandlers}
+      >
       {/* Tap zones */}
       <Pressable
         style={styles.tapZone}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
       >
-        <StoryContent story={currentStory} />
+        <StoryContent story={currentStory} isPaused={isStoryPaused} />
       </Pressable>
 
       {/* Heart animation */}
@@ -592,6 +658,7 @@ export const StoryViewerScreen: React.FC = () => {
           </View>
         )}
       </KeyboardAvoidingView>
+      </RNAnimated.View>
     </View>
   );
 };
@@ -614,7 +681,13 @@ function getTimeAgo(dateStr: string): string {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'transparent',
+  },
+  swipeWrapper: {
+    flex: 1,
     backgroundColor: '#000',
+    borderRadius: 0,
+    overflow: 'hidden',
   },
   tapZone: {
     flex: 1,

@@ -4,6 +4,7 @@
 
 import api from './api';
 import { devMockOrThrow, assertDevOnly } from '../utils/mockGuard';
+import { getCompatibilityScore } from './compatibilityCalculator';
 
 // ─── Types ─────────────────────────────────────────────────────
 
@@ -25,7 +26,7 @@ export const FEED_TOPICS: FeedTopicOption[] = [
   { type: 'SEYAHAT', emoji: '✈️', label: 'Seyahat', color: '#06B6D4' },
 ];
 
-export type FeedFilter = 'ONERILEN' | 'GUNCEL' | 'TAKIP';
+export type FeedFilter = 'ONERILEN' | 'TAKIP';
 
 export type FeedPostType = 'photo' | 'video' | 'text' | 'question' | 'music';
 
@@ -37,11 +38,25 @@ export interface FeedPostTypeOption {
 }
 
 export const FEED_POST_TYPES: FeedPostTypeOption[] = [
-  { type: 'photo', emoji: '\uD83D\uDCF7', label: 'Fotoğraf', color: '#8B5CF6' },
+  { type: 'photo', emoji: '\uD83D\uDCF8', label: 'Fotograf', color: '#8B5CF6' },
   { type: 'video', emoji: '\uD83C\uDFA5', label: 'Video', color: '#EC4899' },
-  { type: 'text', emoji: '✍️', label: 'Yazı', color: '#10B981' },
-  { type: 'question', emoji: '❓', label: 'Soru', color: '#3B82F6' },
-  { type: 'music', emoji: '\uD83C\uDFB5', label: 'Müzik', color: '#F59E0B' },
+  { type: 'text', emoji: '\u270D\uFE0F', label: 'Yazi', color: '#10B981' },
+  { type: 'music', emoji: '\uD83C\uDFB5', label: 'Muzik', color: '#F59E0B' },
+];
+
+export type IntentionTag = 'SERIOUS_RELATIONSHIP' | 'EXPLORING' | 'NOT_SURE';
+
+export interface IntentionTagOption {
+  id: IntentionTag;
+  label: string;
+  emoji: string;
+  color: string;
+}
+
+export const INTENTION_TAG_OPTIONS: IntentionTagOption[] = [
+  { id: 'SERIOUS_RELATIONSHIP', label: 'Ciddi İlişki', emoji: '\uD83D\uDC8D', color: '#A78BFA' },
+  { id: 'EXPLORING', label: 'Keşfediyorum', emoji: '\uD83D\uDC9C', color: '#8B5CF6' },
+  { id: 'NOT_SURE', label: 'Arkadaş Arıyorum', emoji: '\uD83D\uDC65', color: '#6366F1' },
 ];
 
 export interface FeedPost {
@@ -51,6 +66,7 @@ export interface FeedPost {
   userAvatarUrl: string;
   isVerified: boolean;
   isFollowing: boolean;
+  intentionTag: IntentionTag;
   topic: FeedTopic;
   postType: FeedPostType;
   content: string;
@@ -62,6 +78,11 @@ export interface FeedPost {
   compatibilityScore: number;
   likeCount: number;
   commentCount: number;
+  flirtCount: number;
+  profileClickCount: number;
+  watchTimeMs: number;
+  followerCount: number;
+  isNewCreator: boolean;
   isLiked: boolean;
   isSaved: boolean;
   createdAt: string;
@@ -159,6 +180,7 @@ const MOCK_POSTS: FeedPost[] = [
     userAvatarUrl: 'https://i.pravatar.cc/150?img=1',
     isVerified: true,
     isFollowing: true,
+    intentionTag: 'SERIOUS_RELATIONSHIP',
     topic: 'GUNLUK',
     postType: 'text',
     content: 'Bugün sahilde yürüyüş yaptım ve kendi kendime düşündüm: hayatta en çok neye değer veriyorum? Cevap hep aynı: samimi insanlar.',
@@ -170,6 +192,11 @@ const MOCK_POSTS: FeedPost[] = [
     compatibilityScore: 82,
     likeCount: 42,
     commentCount: 8,
+    flirtCount: 5,
+    profileClickCount: 18,
+    watchTimeMs: 4200,
+    followerCount: 120,
+    isNewCreator: false,
     isLiked: false,
     isSaved: false,
     createdAt: minutesAgo(12),
@@ -181,6 +208,7 @@ const MOCK_POSTS: FeedPost[] = [
     userAvatarUrl: 'https://i.pravatar.cc/150?img=5',
     isVerified: true,
     isFollowing: false,
+    intentionTag: 'EXPLORING',
     topic: 'SORU_CEVAP',
     postType: 'question',
     content: 'İlk buluşmada karşı tarafta en çok neye dikkat edersiniz? Ben göz teması ve dinleme becerisine bakıyorum.',
@@ -192,6 +220,11 @@ const MOCK_POSTS: FeedPost[] = [
     compatibilityScore: 91,
     likeCount: 67,
     commentCount: 23,
+    flirtCount: 14,
+    profileClickCount: 45,
+    watchTimeMs: 8500,
+    followerCount: 340,
+    isNewCreator: false,
     isLiked: true,
     isSaved: false,
     createdAt: minutesAgo(35),
@@ -203,6 +236,7 @@ const MOCK_POSTS: FeedPost[] = [
     userAvatarUrl: 'https://i.pravatar.cc/150?img=23',
     isVerified: true,
     isFollowing: true,
+    intentionTag: 'SERIOUS_RELATIONSHIP',
     topic: 'SEYAHAT',
     postType: 'photo',
     content: 'Kapadokya\'da gün doğumu... Balon turu hayatımın en güzel deneyimiydi. Yanınızda doğru insanla her yer cennet.',
@@ -214,6 +248,11 @@ const MOCK_POSTS: FeedPost[] = [
     compatibilityScore: 78,
     likeCount: 128,
     commentCount: 31,
+    flirtCount: 22,
+    profileClickCount: 67,
+    watchTimeMs: 12000,
+    followerCount: 890,
+    isNewCreator: false,
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(1),
@@ -225,6 +264,7 @@ const MOCK_POSTS: FeedPost[] = [
     userAvatarUrl: 'https://i.pravatar.cc/150?img=16',
     isVerified: true,
     isFollowing: false,
+    intentionTag: 'NOT_SURE',
     topic: 'MUZIK',
     postType: 'music',
     content: 'Yağmurlu bir akşamda Fazıl Say dinlemek... Ruhumu iyileştiren tek şey bu. Müzik seven biri varsa yazışalım!',
@@ -236,6 +276,11 @@ const MOCK_POSTS: FeedPost[] = [
     compatibilityScore: 65,
     likeCount: 53,
     commentCount: 12,
+    flirtCount: 2,
+    profileClickCount: 8,
+    watchTimeMs: 3100,
+    followerCount: 45,
+    isNewCreator: true,
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(2),
@@ -247,6 +292,7 @@ const MOCK_POSTS: FeedPost[] = [
     userAvatarUrl: 'https://i.pravatar.cc/150?img=20',
     isVerified: false,
     isFollowing: true,
+    intentionTag: 'EXPLORING',
     topic: 'BURC',
     postType: 'text',
     content: 'Yay burçları bu hafta aşk konusunda çok şanslı! Venüs geçişi duygusal bağları güçlendiriyor. Kim Yay burcu burada?',
@@ -258,6 +304,11 @@ const MOCK_POSTS: FeedPost[] = [
     compatibilityScore: 73,
     likeCount: 89,
     commentCount: 45,
+    flirtCount: 8,
+    profileClickCount: 32,
+    watchTimeMs: 6200,
+    followerCount: 210,
+    isNewCreator: false,
     isLiked: true,
     isSaved: false,
     createdAt: hoursAgo(3),
@@ -269,6 +320,7 @@ const MOCK_POSTS: FeedPost[] = [
     userAvatarUrl: 'https://i.pravatar.cc/150?img=9',
     isVerified: false,
     isFollowing: false,
+    intentionTag: 'SERIOUS_RELATIONSHIP',
     topic: 'ASK_IPUCU',
     postType: 'question',
     content: 'Bir ilişkide en önemli şey güven değil, güvenin sürdürülebilir olması. Küçük tutarlı davranışlar büyük sözlerden daha değerli.',
@@ -280,6 +332,11 @@ const MOCK_POSTS: FeedPost[] = [
     compatibilityScore: 88,
     likeCount: 156,
     commentCount: 28,
+    flirtCount: 18,
+    profileClickCount: 52,
+    watchTimeMs: 9800,
+    followerCount: 560,
+    isNewCreator: false,
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(4),
@@ -291,6 +348,7 @@ const MOCK_POSTS: FeedPost[] = [
     userAvatarUrl: 'https://i.pravatar.cc/150?img=29',
     isVerified: false,
     isFollowing: false,
+    intentionTag: 'EXPLORING',
     topic: 'GUNLUK',
     postType: 'photo',
     content: 'Bugün pilates sonrası kendimi o kadar iyi hissettim ki, pozitif enerji her yere yayıldı. Kendinize iyi bakmayı unutmayın!',
@@ -302,6 +360,11 @@ const MOCK_POSTS: FeedPost[] = [
     compatibilityScore: 56,
     likeCount: 34,
     commentCount: 6,
+    flirtCount: 1,
+    profileClickCount: 5,
+    watchTimeMs: 2000,
+    followerCount: 22,
+    isNewCreator: true,
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(5),
@@ -313,6 +376,7 @@ const MOCK_POSTS: FeedPost[] = [
     userAvatarUrl: 'https://i.pravatar.cc/150?img=38',
     isVerified: false,
     isFollowing: true,
+    intentionTag: 'NOT_SURE',
     topic: 'MUZIK',
     postType: 'music',
     content: 'Yeni bir şarkı prodüksiyonu bitirdim! Lo-fi beats + Türk enstrümanları karışımı. Müzikle terapi yapıyorum resmen.',
@@ -324,6 +388,11 @@ const MOCK_POSTS: FeedPost[] = [
     compatibilityScore: 71,
     likeCount: 71,
     commentCount: 15,
+    flirtCount: 6,
+    profileClickCount: 20,
+    watchTimeMs: 5500,
+    followerCount: 150,
+    isNewCreator: false,
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(6),
@@ -335,6 +404,7 @@ const MOCK_POSTS: FeedPost[] = [
     userAvatarUrl: 'https://i.pravatar.cc/150?img=32',
     isVerified: true,
     isFollowing: false,
+    intentionTag: 'SERIOUS_RELATIONSHIP',
     topic: 'SORU_CEVAP',
     postType: 'question',
     content: 'Uzun süreli ilişkilerde sıkılmamak için ne yapıyorsunuz? Biz partner ile her ay yeni bir hobi denemeye başladık.',
@@ -346,6 +416,11 @@ const MOCK_POSTS: FeedPost[] = [
     compatibilityScore: 84,
     likeCount: 93,
     commentCount: 37,
+    flirtCount: 11,
+    profileClickCount: 38,
+    watchTimeMs: 7200,
+    followerCount: 420,
+    isNewCreator: false,
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(8),
@@ -357,6 +432,7 @@ const MOCK_POSTS: FeedPost[] = [
     userAvatarUrl: 'https://i.pravatar.cc/150?img=36',
     isVerified: false,
     isFollowing: true,
+    intentionTag: 'EXPLORING',
     topic: 'SEYAHAT',
     postType: 'photo',
     content: 'Bu hafta sonu Bolu\'da dağ yürüyüşü yaptık. Doğada vakit geçirmek ilişkiyi güçlendiriyor, tavsiye ederim!',
@@ -368,6 +444,11 @@ const MOCK_POSTS: FeedPost[] = [
     compatibilityScore: 62,
     likeCount: 45,
     commentCount: 9,
+    flirtCount: 3,
+    profileClickCount: 11,
+    watchTimeMs: 3800,
+    followerCount: 75,
+    isNewCreator: true,
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(10),
@@ -379,6 +460,7 @@ const MOCK_POSTS: FeedPost[] = [
     userAvatarUrl: 'https://i.pravatar.cc/150?img=41',
     isVerified: true,
     isFollowing: false,
+    intentionTag: 'SERIOUS_RELATIONSHIP',
     topic: 'ASK_IPUCU',
     postType: 'text',
     content: 'Sevgi dili testini yaptınız mı? Partnerinizin sevgi dilini bilmek ilişkide çığır açıyor. Benim dilim kaliteli vakit.',
@@ -390,6 +472,11 @@ const MOCK_POSTS: FeedPost[] = [
     compatibilityScore: 95,
     likeCount: 112,
     commentCount: 42,
+    flirtCount: 25,
+    profileClickCount: 72,
+    watchTimeMs: 14000,
+    followerCount: 1200,
+    isNewCreator: false,
     isLiked: true,
     isSaved: false,
     createdAt: hoursAgo(12),
@@ -401,6 +488,7 @@ const MOCK_POSTS: FeedPost[] = [
     userAvatarUrl: 'https://i.pravatar.cc/150?img=25',
     isVerified: true,
     isFollowing: true,
+    intentionTag: 'NOT_SURE',
     topic: 'BURC',
     postType: 'text',
     content: 'Terazi-Aslan uyumu hakkında ne düşünüyorsunuz? Arkadaşım bu ikili çok uyumlu diyor ama ben emin değilim.',
@@ -412,6 +500,11 @@ const MOCK_POSTS: FeedPost[] = [
     compatibilityScore: 79,
     likeCount: 58,
     commentCount: 19,
+    flirtCount: 4,
+    profileClickCount: 14,
+    watchTimeMs: 4100,
+    followerCount: 95,
+    isNewCreator: false,
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(14),
@@ -438,36 +531,81 @@ export const socialFeedService = {
       });
       return response.data;
     } catch (error) {
-      // Fallback to mock data in dev mode
+      // Fallback to mock data in dev mode — calculate real compatibility scores
+      const currentUserId = 'dev-user-001';
       let filtered = MOCK_POSTS.map((p) => ({
         ...p,
         isFollowing: followedUserIds.has(p.userId),
+        compatibilityScore: getCompatibilityScore(currentUserId, p.userId),
       }));
       if (topic) {
         filtered = filtered.filter((p) => p.topic === topic);
       }
+
       if (filter === 'TAKIP') {
-        filtered = filtered.filter((p) => p.isFollowing);
-      } else if (filter === 'GUNCEL') {
-        filtered = [...filtered].sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-        );
-      } else if (filter === 'ONERILEN') {
-        // Algorithm-based ranking: compatibility, proximity, popularity, recency
-        filtered = [...filtered].sort((a, b) => {
-          const scoreA =
-            a.compatibilityScore * 3 +                          // high compatibility
-            Math.max(0, 100 - a.distance * 2) * 2 +            // nearby users
-            Math.min(a.likeCount, 200) * 0.5 +                 // popular posts
-            (1 - (now.getTime() - new Date(a.createdAt).getTime()) / 86_400_000) * 50; // recency bonus
-          const scoreB =
-            b.compatibilityScore * 3 +
-            Math.max(0, 100 - b.distance * 2) * 2 +
-            Math.min(b.likeCount, 200) * 0.5 +
-            (1 - (now.getTime() - new Date(b.createdAt).getTime()) / 86_400_000) * 50;
-          return scoreB - scoreA;
+        // ── Takip: only followed users, chronological ──
+        filtered = filtered
+          .filter((p) => p.isFollowing)
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      } else {
+        // ── Populer: interaction-weighted ranking with discovery boost ──
+        // Score each post based on engagement quality
+        const scored = filtered.map((p) => {
+          const ageHours = (now.getTime() - new Date(p.createdAt).getTime()) / 3_600_000;
+          const recencyDecay = Math.max(0, 1 - ageHours / 48); // decays over 48h
+
+          // Engagement score — flirts weighted 5x, comments 2x, likes 1x
+          const engagementScore =
+            p.flirtCount * 5 +          // flirts are the primary signal
+            p.commentCount * 2 +         // comments = active interaction
+            p.likeCount * 1 +            // likes = passive but still engagement
+            p.profileClickCount * 1.5 +  // profile clicks = genuine interest
+            Math.min(p.watchTimeMs / 1000, 30) * 0.5; // watch time capped at 30s
+
+          // Compatibility + proximity boost
+          const relevanceScore =
+            p.compatibilityScore * 2 +
+            Math.max(0, 100 - p.distance * 2);
+
+          // New creator boost — level the playing field
+          const discoveryBoost = p.isNewCreator ? 80 : 0;
+
+          return {
+            post: p,
+            score: engagementScore * 2 + relevanceScore + recencyDecay * 60 + discoveryBoost,
+            isNewCreator: p.isNewCreator,
+          };
         });
+
+        // Sort by score descending
+        scored.sort((a, b) => b.score - a.score);
+
+        // ── 70/30 mix: high engagement + new creators ──
+        const established = scored.filter((s) => !s.isNewCreator);
+        const newCreators = scored.filter((s) => s.isNewCreator);
+        const mixed: FeedPost[] = [];
+        let estIdx = 0;
+        let newIdx = 0;
+        const total = scored.length;
+
+        for (let i = 0; i < total; i++) {
+          // Every ~3rd slot reserved for new creators (30% target)
+          if ((i + 1) % 3 === 0 && newIdx < newCreators.length) {
+            mixed.push(newCreators[newIdx].post);
+            newIdx++;
+          } else if (estIdx < established.length) {
+            mixed.push(established[estIdx].post);
+            estIdx++;
+          } else if (newIdx < newCreators.length) {
+            mixed.push(newCreators[newIdx].post);
+            newIdx++;
+          }
+        }
+
+        filtered = mixed;
       }
+
       return devMockOrThrow(error, {
         posts: filtered,
         nextCursor: null,
@@ -489,6 +627,7 @@ export const socialFeedService = {
         userAvatarUrl: 'https://i.pravatar.cc/150?img=68',
         isVerified: true,
         isFollowing: false,
+        intentionTag: 'EXPLORING',
         topic: data.topic,
         postType: data.postType,
         content: data.content,
@@ -500,6 +639,11 @@ export const socialFeedService = {
         compatibilityScore: 100,
         likeCount: 0,
         commentCount: 0,
+        flirtCount: 0,
+        profileClickCount: 0,
+        watchTimeMs: 0,
+        followerCount: 0,
+        isNewCreator: false,
         isLiked: false,
         isSaved: false,
         createdAt: new Date().toISOString(),
@@ -647,6 +791,10 @@ export const socialFeedService = {
   // Get mock posts (used by devSeedData)
   getMockPosts: (): FeedPost[] => {
     assertDevOnly('socialFeedService.getMockPosts');
-    return [...MOCK_POSTS];
+    const currentUserId = 'dev-user-001';
+    return MOCK_POSTS.map((p) => ({
+      ...p,
+      compatibilityScore: getCompatibilityScore(currentUserId, p.userId),
+    }));
   },
 };

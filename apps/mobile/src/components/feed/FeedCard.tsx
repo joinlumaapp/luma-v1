@@ -1,13 +1,13 @@
-// FeedCard — individual post card for Social Feed
-// Clean, premium card with clear hierarchy: identity → content → actions
-// Simplified from v1: removed view count, standalone profile button, compat badge,
-// moved topic inline, tightened spacing
+// FeedCard — dating-first, action-driven post card
+// Layout: header → intention → content → horizontal actions (Like, Comment, Flirt) → comment input
+// Flirt is the primary CTA — largest, most vibrant, icon+text
 
 import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
+  Pressable,
   Image,
   StyleSheet,
   Animated,
@@ -17,7 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
-import { FEED_TOPICS, type FeedPost } from '../../services/socialFeedService';
+import { INTENTION_TAG_OPTIONS, type FeedPost } from '../../services/socialFeedService';
 
 // ─── Time Ago Helper ──────────────────────────────────────────
 
@@ -29,10 +29,10 @@ const formatTimeAgo = (dateString: string): string => {
   const diffHour = Math.floor(diffMs / 3_600_000);
   const diffDay = Math.floor(diffMs / 86_400_000);
 
-  if (diffMin < 1) return 'az önce';
+  if (diffMin < 1) return 'az once';
   if (diffMin < 60) return `${diffMin} dk`;
   if (diffHour < 24) return `${diffHour} sa`;
-  if (diffDay < 7) return `${diffDay} gün`;
+  if (diffDay < 7) return `${diffDay} gun`;
   return new Date(dateString).toLocaleDateString('tr-TR', {
     day: 'numeric',
     month: 'short',
@@ -58,11 +58,8 @@ const MediaSection: React.FC<MediaSectionProps> = ({ photos, videoUrl }) => {
         />
         <View style={mediaStyles.playOverlay}>
           <View style={mediaStyles.playButton}>
-            <Text style={mediaStyles.playIcon}>{'▶'}</Text>
+            <Text style={mediaStyles.playIcon}>{'\u25B6'}</Text>
           </View>
-        </View>
-        <View style={mediaStyles.videoBadge}>
-          <Text style={mediaStyles.videoBadgeText}>Video</Text>
         </View>
       </View>
     );
@@ -122,9 +119,6 @@ const MusicCard: React.FC<MusicCardProps> = ({ title, artist }) => (
       <Text style={musicStyles.title} numberOfLines={1}>{title}</Text>
       <Text style={musicStyles.artist} numberOfLines={1}>{artist}</Text>
     </View>
-    <View style={musicStyles.playBtn}>
-      <Text style={musicStyles.playIcon}>{'▶'}</Text>
-    </View>
   </View>
 );
 
@@ -136,7 +130,7 @@ interface QuestionCardProps {
 
 const QuestionCard: React.FC<QuestionCardProps> = ({ content }) => (
   <View style={questionStyles.container}>
-    <Text style={questionStyles.icon}>{'❓'}</Text>
+    <Text style={questionStyles.icon}>{'\u2753'}</Text>
     <Text style={questionStyles.text}>{content}</Text>
   </View>
 );
@@ -147,16 +141,22 @@ interface FeedCardProps {
   post: FeedPost;
   onLike: (postId: string) => void;
   onComment: (postId: string) => void;
-  onSave: (postId: string) => void;
   onFollow: (userId: string) => void;
   onProfilePress: (userId: string) => void;
+  onFlirt: (userId: string) => void;
+  onPostTap?: (post: FeedPost) => void;
 }
 
-export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onSave, onFollow, onProfilePress }) => {
+export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onFollow, onProfilePress, onFlirt, onPostTap }) => {
   const [expanded, setExpanded] = useState(false);
+  const [showDoubleTapMenu, setShowDoubleTapMenu] = useState(false);
   const likeScale = useRef(new Animated.Value(1)).current;
+  const flirtScale = useRef(new Animated.Value(1)).current;
+  const doubleTapScale = useRef(new Animated.Value(0)).current;
+  const lastTapRef = useRef<number>(0);
+  const doubleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const topicOption = FEED_TOPICS.find((t) => t.type === post.topic);
+  const intentionOption = INTENTION_TAG_OPTIONS.find((t) => t.id === post.intentionTag);
 
   const handleFollowPress = useCallback(() => {
     onFollow(post.userId);
@@ -164,47 +164,68 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onS
 
   const handleLikePress = useCallback(() => {
     Animated.sequence([
-      Animated.timing(likeScale, {
-        toValue: 1.4,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.spring(likeScale, {
-        toValue: 1,
-        friction: 3,
-        tension: 200,
-        useNativeDriver: true,
-      }),
+      Animated.timing(likeScale, { toValue: 1.4, duration: 100, useNativeDriver: true }),
+      Animated.spring(likeScale, { toValue: 1, friction: 3, tension: 200, useNativeDriver: true }),
     ]).start();
     onLike(post.id);
   }, [onLike, post.id, likeScale]);
+
+  const handleFlirtPress = useCallback(() => {
+    Animated.sequence([
+      Animated.timing(flirtScale, { toValue: 1.15, duration: 80, useNativeDriver: true }),
+      Animated.spring(flirtScale, { toValue: 1, friction: 3, tension: 200, useNativeDriver: true }),
+    ]).start();
+    onFlirt(post.userId);
+  }, [onFlirt, post.userId, flirtScale]);
 
   const handleCommentPress = useCallback(() => {
     onComment(post.id);
   }, [onComment, post.id]);
 
-  const handleSavePress = useCallback(() => {
-    onSave(post.id);
-  }, [onSave, post.id]);
-
   const handleProfilePress = useCallback(() => {
     onProfilePress(post.userId);
   }, [onProfilePress, post.userId]);
 
-  const toggleExpand = useCallback(() => {
-    setExpanded((prev) => !prev);
-  }, []);
+  // Double-tap: single → quick preview, double → action menu
+  const handleContentPress = useCallback(() => {
+    if (post.userId === 'dev-user-001') return;
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300;
+
+    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+      lastTapRef.current = 0;
+      if (doubleTapTimerRef.current) { clearTimeout(doubleTapTimerRef.current); doubleTapTimerRef.current = null; }
+      setShowDoubleTapMenu(true);
+      Animated.spring(doubleTapScale, { toValue: 1, friction: 5, tension: 150, useNativeDriver: true }).start();
+      doubleTapTimerRef.current = setTimeout(() => dismissDoubleTapMenu(), 3000);
+    } else {
+      lastTapRef.current = now;
+      doubleTapTimerRef.current = setTimeout(() => {
+        if (onPostTap) onPostTap(post);
+        lastTapRef.current = 0;
+      }, DOUBLE_TAP_DELAY);
+    }
+  }, [post, onPostTap, doubleTapScale]);
+
+  const dismissDoubleTapMenu = useCallback(() => {
+    Animated.timing(doubleTapScale, { toValue: 0, duration: 150, useNativeDriver: true }).start(() => setShowDoubleTapMenu(false));
+    if (doubleTapTimerRef.current) { clearTimeout(doubleTapTimerRef.current); doubleTapTimerRef.current = null; }
+  }, [doubleTapScale]);
+
+  const handleDoubleTapLike = useCallback(() => { dismissDoubleTapMenu(); handleLikePress(); }, [dismissDoubleTapMenu, handleLikePress]);
+  const handleDoubleTapFlirt = useCallback(() => { dismissDoubleTapMenu(); handleFlirtPress(); }, [dismissDoubleTapMenu, handleFlirtPress]);
+
+  const toggleExpand = useCallback(() => { setExpanded((prev) => !prev); }, []);
 
   const isLongContent = post.content.length > 120;
   const isOwnPost = post.userId === 'dev-user-001';
   const isQuestion = post.postType === 'question';
   const isMusic = post.postType === 'music' && post.musicTitle && post.musicArtist;
-
   const timeAgo = formatTimeAgo(post.createdAt);
 
   return (
     <View style={styles.card}>
-      {/* ── Header: Avatar + Name + Topic + Time + Follow ── */}
+      {/* ── Header: Avatar + Name + Time + Follow ── */}
       <View style={styles.headerRow}>
         <TouchableOpacity onPress={handleProfilePress} activeOpacity={0.7}>
           <Image source={{ uri: post.userAvatarUrl }} style={styles.avatar} />
@@ -217,17 +238,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onS
               <Ionicons name="checkmark-circle" size={14} color={palette.purple[400]} />
             )}
           </View>
-          <View style={styles.metaRow}>
-            <Text style={styles.timeText}>{timeAgo}</Text>
-            {topicOption && (
-              <>
-                <Text style={styles.metaDot}>{'\u00B7'}</Text>
-                <Text style={[styles.topicInline, { color: topicOption.color }]}>
-                  {topicOption.emoji} {topicOption.label}
-                </Text>
-              </>
-            )}
-          </View>
+          <Text style={styles.timeText}>{timeAgo}</Text>
         </TouchableOpacity>
 
         {!isOwnPost && (
@@ -246,82 +257,101 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onS
         )}
       </View>
 
-      {/* ── Content ── */}
-      {isQuestion ? (
-        <QuestionCard content={post.content} />
-      ) : (
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={isLongContent ? toggleExpand : undefined}
-          disabled={!isLongContent}
-        >
-          <Text
-            style={styles.contentText}
-            numberOfLines={expanded ? undefined : 3}
+      {/* ── Intention Badge ── */}
+      {intentionOption && (
+        <View style={[styles.intentionBadge, { backgroundColor: intentionOption.color + '15', borderColor: intentionOption.color + '30' }]}>
+          <Text style={styles.intentionEmoji}>{intentionOption.emoji}</Text>
+          <Text style={[styles.intentionLabel, { color: intentionOption.color }]}>{intentionOption.label}</Text>
+        </View>
+      )}
+
+      {/* ── Content (tappable) ── */}
+      <Pressable onPress={handleContentPress}>
+        {isQuestion ? (
+          <QuestionCard content={post.content} />
+        ) : (
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={isLongContent ? toggleExpand : undefined}
+            disabled={!isLongContent}
           >
-            {post.content}
-          </Text>
-          {isLongContent && !expanded && (
-            <Text style={styles.readMore}>devamı</Text>
-          )}
-        </TouchableOpacity>
-      )}
+            <Text style={styles.contentText} numberOfLines={expanded ? undefined : 3}>
+              {post.content}
+            </Text>
+            {isLongContent && !expanded && (
+              <Text style={styles.readMore}>devami</Text>
+            )}
+          </TouchableOpacity>
+        )}
 
-      {/* ── Media ── */}
-      <MediaSection photos={post.photoUrls} videoUrl={post.videoUrl} />
+        <MediaSection photos={post.photoUrls} videoUrl={post.videoUrl} />
 
-      {/* ── Music ── */}
-      {isMusic && (
-        <MusicCard title={post.musicTitle!} artist={post.musicArtist!} />
-      )}
+        {isMusic && (
+          <MusicCard title={post.musicTitle!} artist={post.musicArtist!} />
+        )}
 
-      {/* ── Actions: Like + Comment + Save ── */}
+        {/* Double-tap overlay */}
+        {showDoubleTapMenu && (
+          <Animated.View style={[styles.doubleTapOverlay, { opacity: doubleTapScale, transform: [{ scale: doubleTapScale }] }]}>
+            <TouchableOpacity style={styles.doubleTapLikeBtn} onPress={handleDoubleTapLike} activeOpacity={0.8}>
+              <Ionicons name={post.isLiked ? 'heart' : 'heart-outline'} size={26} color="#FFFFFF" />
+              <Text style={styles.doubleTapBtnText}>Beğen</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.doubleTapFlirtBtn} onPress={handleDoubleTapFlirt} activeOpacity={0.8}>
+              <Ionicons name="flame" size={28} color="#FFFFFF" />
+              <Text style={styles.doubleTapBtnText}>Flört</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
+      </Pressable>
+
+      {/* ── Horizontal Action Bar: Like · Comment · FLIRT ── */}
       <View style={styles.actionRow}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={handleLikePress}
-          activeOpacity={0.7}
-          hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
-        >
+        {/* Like */}
+        <TouchableOpacity style={styles.actionBtn} onPress={handleLikePress} activeOpacity={0.7}>
           <Animated.View style={{ transform: [{ scale: likeScale }] }}>
             <Ionicons
               name={post.isLiked ? 'heart' : 'heart-outline'}
-              size={20}
-              color={post.isLiked ? palette.purple[400] : colors.textSecondary}
+              size={22}
+              color={post.isLiked ? '#EF4444' : colors.textSecondary}
             />
           </Animated.View>
           {post.likeCount > 0 && (
-            <Text style={[styles.actionCount, post.isLiked && styles.actionCountActive]}>
-              {post.likeCount}
-            </Text>
+            <Text style={[styles.actionCount, post.isLiked && { color: '#EF4444' }]}>{post.likeCount}</Text>
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={handleCommentPress}
-          activeOpacity={0.7}
-          hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
-        >
-          <Ionicons name="chatbubble-outline" size={18} color={colors.textSecondary} />
+        {/* Comment */}
+        <TouchableOpacity style={styles.actionBtn} onPress={handleCommentPress} activeOpacity={0.7}>
+          <Ionicons name="chatbubble-outline" size={20} color={colors.textSecondary} />
           {post.commentCount > 0 && (
             <Text style={styles.actionCount}>{post.commentCount}</Text>
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={handleSavePress}
-          activeOpacity={0.7}
-          hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
-        >
-          <Ionicons
-            name={post.isSaved ? 'bookmark' : 'bookmark-outline'}
-            size={18}
-            color={post.isSaved ? palette.gold[600] : colors.textSecondary}
-          />
-        </TouchableOpacity>
+        {/* FLIRT — primary CTA, largest + gradient */}
+        {!isOwnPost && (
+          <TouchableOpacity style={styles.flirtCta} onPress={handleFlirtPress} activeOpacity={0.8}>
+            <Animated.View style={[styles.flirtCtaInner, { transform: [{ scale: flirtScale }] }]}>
+              <LinearGradient
+                colors={['#FF8C33', '#FF6B00', '#E85D00']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.flirtCtaGradient}
+              >
+                <Ionicons name="flame" size={18} color="#FFFFFF" />
+                <Text style={styles.flirtCtaText}>Flört Başlat</Text>
+              </LinearGradient>
+            </Animated.View>
+          </TouchableOpacity>
+        )}
       </View>
+
+      {/* ── Mini comment input — feels like a chat ── */}
+      <TouchableOpacity style={styles.commentInput} onPress={handleCommentPress} activeOpacity={0.8}>
+        <Ionicons name="chatbubble-ellipses-outline" size={16} color={colors.textTertiary} />
+        <Text style={styles.commentPlaceholder}>Bir şeyler yaz, sohbet başlat...</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -334,7 +364,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md + 2,
-    paddingBottom: spacing.sm,
+    paddingBottom: spacing.md,
     marginHorizontal: spacing.md,
     marginBottom: spacing.sm + 2,
     borderWidth: 1,
@@ -369,28 +399,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     flexShrink: 1,
   },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 1,
-  },
   timeText: {
     fontSize: 12,
     color: colors.textTertiary,
     fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
+    marginTop: 1,
   },
-  metaDot: {
-    fontSize: 12,
-    color: colors.textTertiary,
-  },
-  topicInline: {
-    fontSize: 11,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-  },
-  // Follow — icon-only pill, minimal footprint
   followButton: {
     width: 30,
     height: 30,
@@ -403,6 +418,24 @@ const styles = StyleSheet.create({
   },
   followButtonActive: {
     borderColor: colors.surfaceBorder,
+  },
+  // Intention badge
+  intentionBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 4,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 4,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    marginBottom: spacing.sm,
+  },
+  intentionEmoji: { fontSize: 12 },
+  intentionLabel: {
+    fontSize: 11,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
   // Content
   contentText: {
@@ -417,30 +450,108 @@ const styles = StyleSheet.create({
     marginTop: -4,
     marginBottom: spacing.sm,
   },
-  // Actions — clean, evenly spaced, no divider line
+  // Double-tap overlay
+  doubleTapOverlay: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    borderRadius: borderRadius.md,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: spacing.lg,
+    zIndex: 10,
+  },
+  doubleTapLikeBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    width: 72, height: 72, borderRadius: 36,
+    backgroundColor: '#EF444490',
+    borderWidth: 2,
+    borderColor: '#EF4444',
+  },
+  doubleTapFlirtBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    width: 84, height: 84, borderRadius: 42,
+    backgroundColor: '#FF6B00',
+    borderWidth: 2,
+    borderColor: '#FF8C33',
+    shadowColor: '#FF6B00',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 14,
+    elevation: 10,
+  },
+  doubleTapBtnText: {
+    fontSize: 10,
+    color: '#FFFFFF',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+  },
+  // ── Horizontal action bar ──
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.lg + 4,
-    paddingTop: spacing.xs + 2,
+    paddingTop: spacing.sm,
+    marginTop: spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: colors.surfaceBorder,
   },
-  actionButton: {
+  actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     paddingVertical: spacing.xs,
+    paddingRight: spacing.lg,
   },
   actionCount: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.textSecondary,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+  },
+  // Flirt CTA — primary, pushed to right
+  flirtCta: {
+    marginLeft: 'auto',
+  },
+  flirtCtaInner: {
+    borderRadius: borderRadius.full,
+    overflow: 'hidden',
+  },
+  flirtCtaGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: spacing.md + 2,
+    paddingVertical: 8,
+    borderRadius: borderRadius.full,
+  },
+  flirtCtaText: {
+    fontSize: 13,
+    color: '#FFFFFF',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+  },
+  // ── Mini comment input ──
+  commentInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.surfaceLight,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  commentPlaceholder: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.textTertiary,
     fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
-    lineHeight: 16,
-  },
-  actionCountActive: {
-    color: palette.purple[400],
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 });
 
@@ -455,10 +566,7 @@ const mediaStyles = StyleSheet.create({
     backgroundColor: colors.surfaceLight,
     position: 'relative' as const,
   },
-  videoThumb: {
-    width: '100%',
-    height: '100%',
-  },
+  videoThumb: { width: '100%', height: '100%' },
   playOverlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
@@ -466,39 +574,15 @@ const mediaStyles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.15)',
   },
   playButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 48, height: 48, borderRadius: 24,
     backgroundColor: 'rgba(255,255,255,0.9)',
     justifyContent: 'center',
     alignItems: 'center',
-    overflow: 'hidden',
   },
-  playIcon: {
-    fontSize: 20,
-    color: colors.primary,
-    marginLeft: 3,
-  },
-  videoBadge: {
-    position: 'absolute',
-    top: spacing.sm,
-    right: spacing.sm,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: borderRadius.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-  },
-  videoBadgeText: {
-    fontSize: 10,
-    color: '#FFFFFF',
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-  },
+  playIcon: { fontSize: 20, color: colors.primary, marginLeft: 3 },
   imageGradientOverlay: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
+    left: 0, right: 0, bottom: 0,
     height: '40%',
   },
   singleContainer: {
@@ -519,11 +603,7 @@ const mediaStyles = StyleSheet.create({
     gap: 2,
     marginBottom: spacing.sm,
   },
-  doublePhoto: {
-    flex: 1,
-    height: 180,
-    backgroundColor: colors.surfaceLight,
-  },
+  doublePhoto: { flex: 1, height: 180, backgroundColor: colors.surfaceLight },
   tripleContainer: {
     flexDirection: 'row',
     borderRadius: borderRadius.md,
@@ -532,18 +612,9 @@ const mediaStyles = StyleSheet.create({
     marginBottom: spacing.sm,
     height: 220,
   },
-  tripleMain: {
-    flex: 2,
-    backgroundColor: colors.surfaceLight,
-  },
-  tripleRight: {
-    flex: 1,
-    gap: 2,
-  },
-  tripleSub: {
-    flex: 1,
-    backgroundColor: colors.surfaceLight,
-  },
+  tripleMain: { flex: 2, backgroundColor: colors.surfaceLight },
+  tripleRight: { flex: 1, gap: 2 },
+  tripleSub: { flex: 1, backgroundColor: colors.surfaceLight },
 });
 
 // ─── Music Card Styles ────────────────────────────────────────
@@ -560,44 +631,20 @@ const musicStyles = StyleSheet.create({
     borderColor: `${palette.purple[500]}15`,
   },
   iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 40, height: 40, borderRadius: 20,
     backgroundColor: `${palette.purple[500]}12`,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  icon: {
-    fontSize: 18,
-  },
-  info: {
-    flex: 1,
-    marginLeft: spacing.sm,
-  },
+  icon: { fontSize: 18 },
+  info: { flex: 1, marginLeft: spacing.sm },
   title: {
     fontSize: 14,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
-  artist: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: 1,
-  },
-  playBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  playIcon: {
-    fontSize: 12,
-    color: '#FFFFFF',
-    marginLeft: 2,
-  },
+  artist: { fontSize: 12, color: colors.textSecondary, marginTop: 1 },
 });
 
 // ─── Question Card Styles ─────────────────────────────────────
@@ -611,10 +658,7 @@ const questionStyles = StyleSheet.create({
     borderLeftWidth: 3,
     borderLeftColor: palette.info,
   },
-  icon: {
-    fontSize: 18,
-    marginBottom: spacing.xs,
-  },
+  icon: { fontSize: 18, marginBottom: spacing.xs },
   text: {
     ...typography.body,
     color: colors.text,

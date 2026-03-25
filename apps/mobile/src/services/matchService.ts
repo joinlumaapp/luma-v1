@@ -4,6 +4,7 @@
 import { API_ROUTES } from '@luma/shared';
 import api, { buildUrl } from './api';
 import { devMockOrThrow } from '../utils/mockGuard';
+import { getCompatibilityScore } from './compatibilityCalculator';
 
 // ─── Mobile-Facing Interfaces ────────────────────────────────────────
 
@@ -179,7 +180,7 @@ const MOCK_MATCH_DETAILS: Record<string, MatchDetailResponse> = {
     bio: 'Kitap kurdu, kahve bağımlısı. Hafta sonları Prens Adaları\'nda bisiklet sürmek benim için terapi.',
     intentionTag: 'Ciddi İlişki',
     isVerified: true,
-    overallCompatibility: 94,
+    overallCompatibility: getCompatibilityScore('dev-user-001', 'bot-001'),
     compatibilityBreakdown: [
       { category: 'Değerler & İnançlar', score: 97, maxScore: 100 },
       { category: 'Yaşam Tarzı', score: 95, maxScore: 100 },
@@ -204,7 +205,7 @@ const MOCK_MATCH_DETAILS: Record<string, MatchDetailResponse> = {
     bio: 'Yazılım mühendisi, yoga tutkunu. İyi bir sohbet, iyi bir kahve ve iyi bir kitap — hayatın anlamı bu.',
     intentionTag: 'Ciddi İlişki',
     isVerified: true,
-    overallCompatibility: 91,
+    overallCompatibility: getCompatibilityScore('dev-user-001', 'bot-002'),
     compatibilityBreakdown: [
       { category: 'Değerler & İnançlar', score: 94, maxScore: 100 },
       { category: 'Yaşam Tarzı', score: 92, maxScore: 100 },
@@ -229,7 +230,7 @@ const MOCK_MATCH_DETAILS: Record<string, MatchDetailResponse> = {
     bio: 'Doktor adayı, müzik dinlemeden çalışamam. Konser planlarım her zaman vardır.',
     intentionTag: 'Ciddi İlişki',
     isVerified: true,
-    overallCompatibility: 86,
+    overallCompatibility: getCompatibilityScore('dev-user-001', 'bot-006'),
     compatibilityBreakdown: [
       { category: 'Değerler & İnançlar', score: 90, maxScore: 100 },
       { category: 'Yaşam Tarzı', score: 87, maxScore: 100 },
@@ -254,7 +255,7 @@ const MOCK_MATCH_DETAILS: Record<string, MatchDetailResponse> = {
     bio: 'Dijital pazarlama uzmanı, seyahat blogcusu. 30 ülke gezdim, hedefim 50!',
     intentionTag: 'Keşfediyorum',
     isVerified: true,
-    overallCompatibility: 82,
+    overallCompatibility: getCompatibilityScore('dev-user-001', 'bot-004'),
     compatibilityBreakdown: [
       { category: 'Değerler & İnançlar', score: 85, maxScore: 100 },
       { category: 'Yaşam Tarzı', score: 83, maxScore: 100 },
@@ -279,7 +280,7 @@ const MOCK_MATCH_DETAILS: Record<string, MatchDetailResponse> = {
     bio: 'Mimarlık ofisinde çalışıyorum. Kedi annesi x3. Pazar kahvaltılarını çok ciddiye alıyorum.',
     intentionTag: 'Ciddi İlişki',
     isVerified: true,
-    overallCompatibility: 79,
+    overallCompatibility: getCompatibilityScore('dev-user-001', 'bot-005'),
     compatibilityBreakdown: [
       { category: 'Değerler & İnançlar', score: 82, maxScore: 100 },
       { category: 'Yaşam Tarzı', score: 80, maxScore: 100 },
@@ -304,7 +305,7 @@ const MOCK_MATCH_DETAILS: Record<string, MatchDetailResponse> = {
     bio: 'Avukat, kitap kulüpleri beni hayata bağlayan şey. Caz müziği olmadan bir gün bile geçirmem.',
     intentionTag: 'Ciddi İlişki',
     isVerified: true,
-    overallCompatibility: 73,
+    overallCompatibility: getCompatibilityScore('dev-user-001', 'bot-003'),
     compatibilityBreakdown: [
       { category: 'Değerler & İnançlar', score: 77, maxScore: 100 },
       { category: 'Yaşam Tarzı', score: 74, maxScore: 100 },

@@ -10,6 +10,10 @@ import {
   type StoryViewer,
 } from '../services/storyService';
 
+const CURRENT_USER_ID = 'dev-user-001';
+const CURRENT_USER_NAME = 'Sen';
+const CURRENT_USER_AVATAR = 'https://i.pravatar.cc/150?img=68';
+
 interface StoryState {
   // State
   storyUsers: StoryUser[];
@@ -44,13 +48,36 @@ export const useStoryStore = create<StoryState>((set, get) => ({
     set({ isLoading: true });
     try {
       const users = await storyService.getStories();
-      const { seenStoryIds } = get();
+      const { seenStoryIds, myStories } = get();
 
       // Update hasUnseenStories based on local seen state
       const updatedUsers = users.map((user) => ({
         ...user,
         hasUnseenStories: user.stories.some((s) => !seenStoryIds.has(s.id)),
       }));
+
+      // Ensure own stories are included in storyUsers
+      const ownEntry = updatedUsers.find((u) => u.userId === CURRENT_USER_ID);
+      if (myStories.length > 0 && !ownEntry) {
+        // Own user not in fetched list — add them
+        updatedUsers.unshift({
+          userId: CURRENT_USER_ID,
+          userName: CURRENT_USER_NAME,
+          userAvatarUrl: CURRENT_USER_AVATAR,
+          isFollowing: false,
+          stories: myStories,
+          hasUnseenStories: false,
+          latestStoryAt: myStories[0].createdAt,
+        });
+      } else if (myStories.length > 0 && ownEntry) {
+        // Merge local stories that might not be in the fetched data yet
+        const fetchedIds = new Set(ownEntry.stories.map((s) => s.id));
+        const missing = myStories.filter((s) => !fetchedIds.has(s.id));
+        if (missing.length > 0) {
+          ownEntry.stories = [...missing, ...ownEntry.stories];
+          ownEntry.latestStoryAt = ownEntry.stories[0].createdAt;
+        }
+      }
 
       set({
         storyUsers: updatedUsers,
@@ -69,12 +96,67 @@ export const useStoryStore = create<StoryState>((set, get) => ({
         mediaType,
         overlays,
       });
-      set((state) => ({
-        myStories: [newStory, ...state.myStories],
-        isCreating: false,
-      }));
-    } catch {
+
+      if (__DEV__) {
+        console.log('[StoryStore] New story created:', newStory.id, newStory.mediaType);
+        console.log('[StoryStore] Current storyUsers count:', get().storyUsers.length);
+        console.log('[StoryStore] Current user IDs:', get().storyUsers.map(u => u.userId));
+      }
+
+      set((state) => {
+        const updatedMyStories = [newStory, ...state.myStories];
+
+        // Update storyUsers — insert into own bubble
+        const existingIdx = state.storyUsers.findIndex((u) => u.userId === CURRENT_USER_ID);
+
+        if (__DEV__) {
+          console.log('[StoryStore] Own user index in storyUsers:', existingIdx);
+        }
+
+        let updatedStoryUsers: StoryUser[];
+
+        if (existingIdx >= 0) {
+          // Own entry exists — prepend new story
+          updatedStoryUsers = state.storyUsers.map((user, idx) =>
+            idx === existingIdx
+              ? {
+                  ...user,
+                  stories: [newStory, ...user.stories],
+                  hasUnseenStories: false,
+                  latestStoryAt: newStory.createdAt,
+                }
+              : user,
+          );
+        } else {
+          // No own entry yet — create one at the beginning
+          const ownUser: StoryUser = {
+            userId: CURRENT_USER_ID,
+            userName: CURRENT_USER_NAME,
+            userAvatarUrl: CURRENT_USER_AVATAR,
+            isFollowing: false,
+            stories: [newStory],
+            hasUnseenStories: false,
+            latestStoryAt: newStory.createdAt,
+          };
+          updatedStoryUsers = [ownUser, ...state.storyUsers];
+        }
+
+        if (__DEV__) {
+          console.log('[StoryStore] Updated storyUsers count:', updatedStoryUsers.length);
+          const ownEntry = updatedStoryUsers.find(u => u.userId === CURRENT_USER_ID);
+          console.log('[StoryStore] Own entry stories count:', ownEntry?.stories.length ?? 0);
+        }
+
+        return {
+          myStories: updatedMyStories,
+          storyUsers: updatedStoryUsers,
+          isCreating: false,
+        };
+      });
+    } catch (err) {
+      if (__DEV__) console.error('[StoryStore] createStory failed:', err);
       set({ isCreating: false });
+      throw new Error('Story creation failed');
     }
   },
 
@@ -83,10 +165,12 @@ export const useStoryStore = create<StoryState>((set, get) => ({
       await storyService.deleteStory(storyId);
       set((state) => ({
         myStories: state.myStories.filter((s) => s.id !== storyId),
-        storyUsers: state.storyUsers.map((user) => ({
-          ...user,
-          stories: user.stories.filter((s) => s.id !== storyId),
-        })),
+        storyUsers: state.storyUsers
+          .map((user) => ({
+            ...user,
+            stories: user.stories.filter((s) => s.id !== storyId),
+          }))
+          .filter((user) => user.stories.length > 0), // Remove empty entries
       }));
     } catch {
       // Silent fail — story may already be deleted
@@ -100,7 +184,6 @@ export const useStoryStore = create<StoryState>((set, get) => ({
     const next = new Set(seenStoryIds);
     next.add(storyId);
 
-    // Update storyUsers hasUnseenStories flag
     set((state) => ({
       seenStoryIds: next,
       storyUsers: state.storyUsers.map((user) => ({
@@ -109,10 +192,7 @@ export const useStoryStore = create<StoryState>((set, get) => ({
       })),
     }));
 
-    // Fire-and-forget API call
-    storyService.markAsViewed(storyId).catch(() => {
-      // Non-critical
-    });
+    storyService.markAsViewed(storyId).catch(() => {});
   },
 
   replyToStory: async (storyId, message) => {
@@ -120,7 +200,6 @@ export const useStoryStore = create<StoryState>((set, get) => ({
   },
 
   toggleLike: (storyId) => {
-    // Optimistic update
     set((state) => ({
       storyUsers: state.storyUsers.map((user) => ({
         ...user,
@@ -136,9 +215,7 @@ export const useStoryStore = create<StoryState>((set, get) => ({
       })),
     }));
 
-    // Fire-and-forget API call
     storyService.toggleLike(storyId).catch(() => {
-      // Revert on error
       set((state) => ({
         storyUsers: state.storyUsers.map((user) => ({
           ...user,
@@ -171,11 +248,19 @@ export const useStoryStore = create<StoryState>((set, get) => ({
 
   getOrderedStoryUsers: () => {
     const { storyUsers } = get();
-    // Unseen stories first, then sorted by latest story time
-    return [...storyUsers].sort((a, b) => {
+
+    // Own stories first, then followed, then suggested (max 3)
+    const own = storyUsers.filter((u) => u.userId === CURRENT_USER_ID);
+    const followed = storyUsers.filter((u) => u.userId !== CURRENT_USER_ID && u.isFollowing);
+    const suggested = storyUsers.filter((u) => u.userId !== CURRENT_USER_ID && u.isSuggested && !u.isFollowing).slice(0, 3);
+
+    // Sort followed: unseen first, then by recency
+    followed.sort((a, b) => {
       if (a.hasUnseenStories && !b.hasUnseenStories) return -1;
       if (!a.hasUnseenStories && b.hasUnseenStories) return 1;
       return new Date(b.latestStoryAt).getTime() - new Date(a.latestStoryAt).getTime();
     });
+
+    return [...own, ...followed, ...suggested];
   },
 }));

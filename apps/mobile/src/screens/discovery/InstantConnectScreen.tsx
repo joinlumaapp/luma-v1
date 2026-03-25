@@ -2,7 +2,7 @@
 // Flow: Searching → Preview (blur→reveal) → Connected (video chat) → Ended
 // Safety: daily limits, report/block, timer-based auto-decline
 
-import React, { useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,8 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useInstantConnectStore } from '../../stores/instantConnectStore';
 import { useAuthStore } from '../../stores/authStore';
+import { useCoinStore } from '../../stores/coinStore';
+import { INSTANT_CONNECT_CONFIG } from '../../constants/config';
 import { CachedAvatar } from '../../components/common/CachedAvatar';
 import { LumaLogo } from '../../components/common/LumaLogo';
 import { palette } from '../../theme/colors';
@@ -28,6 +30,8 @@ import { spacing, borderRadius } from '../../theme/spacing';
 import { getFeatureLimit } from '../../constants/packageAccess';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const IC_DAILY_LIMITS = INSTANT_CONNECT_CONFIG.DAILY_LIMITS;
+const TOKEN_COST_PER_SESSION = INSTANT_CONNECT_CONFIG.TOKEN_COST_PER_SESSION;
 
 // ─── Searching Phase ─────────────────────────────────────────────
 
@@ -83,7 +87,7 @@ const SearchingPhase: React.FC<{ duration: number; onCancel: () => void }> = ({ 
       </Text>
 
       <TouchableOpacity style={searchStyles.cancelButton} onPress={onCancel} activeOpacity={0.8}>
-        <Text style={searchStyles.cancelText}>Vazgec</Text>
+        <Text style={searchStyles.cancelText}>Vazgeç</Text>
       </TouchableOpacity>
     </View>
   );
@@ -231,38 +235,51 @@ export const InstantConnectScreen: React.FC = () => {
   const reset = useInstantConnectStore((s) => s.reset);
   const getDailyUsage = useInstantConnectStore((s) => s.getDailyUsage);
 
-  // Daily limits per tier: FREE=1, GOLD=3, PRO=5, RESERVED=unlimited
-  const DAILY_LIMITS: Record<string, number> = { FREE: 1, GOLD: 3, PRO: 5, RESERVED: -1 };
-  const dailyLimit = DAILY_LIMITS[packageTier] ?? 1;
+  // Coin store for token-based access
+  const coinBalance = useCoinStore((s) => s.balance);
+  const spendCoins = useCoinStore((s) => s.spendCoins);
+
+  // Daily limits from config
+  const dailyLimit = IC_DAILY_LIMITS[packageTier as keyof typeof IC_DAILY_LIMITS] ?? 1;
   const dailyUsage = getDailyUsage();
-  const canUse = dailyLimit === -1 || dailyUsage < dailyLimit;
+  const canUseFree = dailyLimit === -1 || dailyUsage < dailyLimit;
+  const remainingFree = dailyLimit === -1 ? 999 : Math.max(0, dailyLimit - dailyUsage);
+  const canPayWithTokens = coinBalance >= TOKEN_COST_PER_SESSION;
+  const [showPaywall, setShowPaywall] = useState(false);
 
   useEffect(() => {
     return () => reset();
   }, [reset]);
 
   const handleStart = useCallback(() => {
-    if (!canUse) {
-      Alert.alert(
-        'Gunluk Limit',
-        `Bugun ${dailyLimit} hakkini kullandin. Daha fazlasi icin paketini yukselt.`,
-        [
-          { text: 'Tamam', style: 'cancel' },
-          { text: 'Paketi Yukselt', onPress: () => navigation.navigate('MembershipPlans' as never) },
-        ],
-      );
+    if (canUseFree) {
+      startSearching();
       return;
     }
-    startSearching();
-  }, [canUse, dailyLimit, startSearching, navigation]);
+    // Daily limit reached — show paywall
+    setShowPaywall(true);
+  }, [canUseFree, startSearching]);
+
+  const handlePayWithTokens = useCallback(async () => {
+    const spent = await spendCoins(TOKEN_COST_PER_SESSION, 'Anında Bağlan - jeton ile oturum');
+    if (spent) {
+      setShowPaywall(false);
+      startSearching();
+    } else {
+      Alert.alert('Yetersiz Jeton', 'Jeton bakiyen yetersiz. Jeton satın almak ister misin?', [
+        { text: 'Vazgeç', style: 'cancel' },
+        { text: 'Jeton Al', onPress: () => navigation.navigate('JetonMarket' as never) },
+      ]);
+    }
+  }, [spendCoins, startSearching, navigation]);
 
   const handleReport = useCallback(() => {
     Alert.alert(
-      'Kullaniciyi Raporla',
+      'Kullanıcıyı Raporla',
       'Bu kullaniciyi neden raporlamak istiyorsun?',
       [
-        { text: 'Vazgec', style: 'cancel' },
-        { text: 'Uygunsuz Davranis', onPress: () => reportUser('inappropriate') },
+        { text: 'Vazgeç', style: 'cancel' },
+        { text: 'Uygunsuz Davranış', onPress: () => reportUser('inappropriate') },
         { text: 'Spam', onPress: () => reportUser('spam') },
       ],
     );
@@ -295,10 +312,10 @@ export const InstantConnectScreen: React.FC = () => {
       {state === 'idle' && (
         <View style={styles.idleContainer}>
           <LumaLogo size="hero" />
-          <Text style={styles.idleTitle}>Aninda Baglan</Text>
+          <Text style={styles.idleTitle}>Anında Bağlan</Text>
           <Text style={styles.idleSubtitle}>
-            Uyumlu biriyle aninda video gorusmesi baslat.{'\n'}
-            Hizli, guvenli ve heyecan verici!
+            Uyumlu biriyle anında video görüşmesi başlat.{'\n'}
+            Hızlı, güvenli ve heyecan verici!
           </Text>
 
           {/* Daily usage indicator */}
@@ -306,8 +323,10 @@ export const InstantConnectScreen: React.FC = () => {
             <Ionicons name="flash" size={16} color={palette.gold[400]} />
             <Text style={styles.usageText}>
               {dailyLimit === -1
-                ? 'Sinirsiz hak'
-                : `Bugun ${Math.max(0, dailyLimit - dailyUsage)} hak kaldi`}
+                ? 'Sınırsız hak'
+                : remainingFree > 0
+                  ? `Bugün ${remainingFree} hak kaldı`
+                  : `${TOKEN_COST_PER_SESSION} jeton ile devam edebilirsin`}
             </Text>
           </View>
 
@@ -319,13 +338,13 @@ export const InstantConnectScreen: React.FC = () => {
               style={styles.startButton}
             >
               <Ionicons name="videocam" size={24} color="#FFFFFF" />
-              <Text style={styles.startButtonText}>Basla</Text>
+              <Text style={styles.startButtonText}>Başla</Text>
             </LinearGradient>
           </TouchableOpacity>
 
           {/* Safety note */}
           <Text style={styles.safetyNote}>
-            Gorusmeler izlenmez. Uygunsuz davranislari raporlayabilirsin.
+            Görüşmeler izlenmez. Uygunsuz davranışları raporlayabilirsin.
           </Text>
         </View>
       )}
@@ -373,9 +392,150 @@ export const InstantConnectScreen: React.FC = () => {
           </View>
         </View>
       )}
+      {/* Paywall modal */}
+      {showPaywall && (
+        <View style={paywallStyles.overlay}>
+          <View style={paywallStyles.card}>
+            <Text style={paywallStyles.emoji}>{'\u26A1'}</Text>
+            <Text style={paywallStyles.title}>Günlük Hakkın Doldu</Text>
+            <Text style={paywallStyles.subtitle}>
+              Bugün {dailyLimit} oturum hakkını kullandın.{'\n'}
+              Jeton kullanarak tekrar baglayabilirsin.
+            </Text>
+
+            {/* Token CTA */}
+            <TouchableOpacity
+              style={[paywallStyles.tokenBtn, !canPayWithTokens && paywallStyles.tokenBtnDisabled]}
+              onPress={handlePayWithTokens}
+              activeOpacity={0.8}
+              disabled={!canPayWithTokens}
+            >
+              <Text style={paywallStyles.tokenBtnText}>
+                {TOKEN_COST_PER_SESSION} jeton ile devam et
+              </Text>
+              <Text style={paywallStyles.tokenBalance}>
+                Bakiye: {coinBalance} jeton
+              </Text>
+            </TouchableOpacity>
+
+            {/* Upgrade CTA */}
+            <TouchableOpacity
+              style={paywallStyles.upgradeBtn}
+              onPress={() => {
+                setShowPaywall(false);
+                navigation.navigate('MembershipPlans' as never);
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={paywallStyles.upgradeBtnText}>Paketi Yükselt</Text>
+            </TouchableOpacity>
+
+            {/* Dismiss */}
+            <TouchableOpacity
+              style={paywallStyles.dismissBtn}
+              onPress={() => setShowPaywall(false)}
+              activeOpacity={0.7}
+            >
+              <Text style={paywallStyles.dismissText}>Vazgeç</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </LinearGradient>
   );
 };
+
+// ─── Paywall Styles ──────────────────────────────────────────────
+
+const paywallStyles = StyleSheet.create({
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    zIndex: 100,
+  },
+  card: {
+    backgroundColor: '#1E1040',
+    borderRadius: 20,
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    paddingBottom: 20,
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 320,
+    borderWidth: 1,
+    borderColor: 'rgba(168,85,247,0.2)',
+  },
+  emoji: {
+    fontSize: 36,
+    marginBottom: 12,
+  },
+  title: {
+    fontSize: 18,
+    color: '#FFFFFF',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.6)',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  tokenBtn: {
+    width: '100%',
+    backgroundColor: '#F59E0B',
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginBottom: 10,
+    shadowColor: '#F59E0B',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  tokenBtnDisabled: {
+    opacity: 0.4,
+  },
+  tokenBtnText: {
+    fontSize: 15,
+    color: '#FFFFFF',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+  },
+  tokenBalance: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 2,
+  },
+  upgradeBtn: {
+    width: '100%',
+    borderRadius: 14,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(168,85,247,0.4)',
+    marginBottom: 8,
+  },
+  upgradeBtnText: {
+    fontSize: 14,
+    color: '#A855F7',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+  },
+  dismissBtn: {
+    paddingVertical: 8,
+  },
+  dismissText: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.4)',
+  },
+});
 
 // ─── Styles ──────────────────────────────────────────────────────
 

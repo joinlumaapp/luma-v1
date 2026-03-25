@@ -1,6 +1,6 @@
 // SocialFeedScreen — Clean social feed with post creation, filters, topics, and feed cards
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import {
   ScrollView,
   Alert,
   Image,
+  Animated,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -25,11 +26,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
-import { spacing, borderRadius, shadows } from '../../theme/spacing';
+import { spacing, borderRadius } from '../../theme/spacing';
 import { useAuthStore } from '../../stores/authStore';
 import { useSocialFeedStore } from '../../stores/socialFeedStore';
 import {
-  FEED_TOPICS,
   FEED_POST_TYPES,
   containsProfanity,
   PROFANITY_WARNING,
@@ -39,17 +39,31 @@ import {
   type FeedPostType,
 } from '../../services/socialFeedService';
 import { photoService } from '../../services/photoService';
-import { TopicChipRow } from '../../components/feed/TopicChip';
 import { FeedCard } from '../../components/feed/FeedCard';
 import { CommentSheet } from '../../components/feed/CommentSheet';
+import { MatchPromptModal } from '../../components/feed/MatchPromptModal';
+import { discoveryService } from '../../services/discoveryService';
+import { EngagementNudge } from '../../components/feed/EngagementNudge';
+import { QuickProfilePreview } from '../../components/feed/QuickProfilePreview';
+import { useFeedInteractionStore } from '../../stores/feedInteractionStore';
+import { useStoryStore } from '../../stores/storyStore';
+import { StoryRing } from '../../components/stories/StoryRing';
+import { useFlirtStore } from '../../stores/flirtStore';
+import { UpgradePrompt } from '../../components/premium/UpgradePrompt';
 import { FEED_POST_CONFIG } from '../../constants/config';
+
+// ── Feed item union type for FlatList (posts + nudge cards) ──────
+const NUDGE_INTERVAL = 5; // show nudge every N posts without interaction
+
+type FeedListItem =
+  | { type: 'post'; data: FeedPost }
+  | { type: 'nudge'; variant: number; key: string };
 
 // ─── Filter Tabs ──────────────────────────────────────────────
 
-const FILTER_TABS: { key: FeedFilter; label: string; icon: string }[] = [
-  { key: 'ONERILEN', label: 'Populer', icon: 'flame-outline' },
-  { key: 'GUNCEL', label: 'Yeni', icon: 'time-outline' },
-  { key: 'TAKIP', label: 'Takip', icon: 'people-outline' },
+const FILTER_TABS: { key: FeedFilter; label: string; iconActive: keyof typeof Ionicons.glyphMap; iconInactive: keyof typeof Ionicons.glyphMap }[] = [
+  { key: 'ONERILEN', label: 'Popüler', iconActive: 'flame', iconInactive: 'flame-outline' },
+  { key: 'TAKIP', label: 'Takip', iconActive: 'people', iconInactive: 'people-outline' },
 ];
 
 interface FilterTabProps {
@@ -58,93 +72,47 @@ interface FilterTabProps {
   onPress: (filter: FeedFilter) => void;
 }
 
-const FilterTab: React.FC<FilterTabProps> = ({ filter, isActive, onPress }) => {
-  const handlePress = useCallback(() => {
-    onPress(filter);
-  }, [onPress, filter]);
-
+const FilterTab: React.FC<FilterTabProps> = React.memo(({ filter, isActive, onPress }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
   const tab = FILTER_TABS.find((t) => t.key === filter);
+
+  const handlePress = useCallback(() => {
+    Animated.sequence([
+      Animated.timing(scaleAnim, { toValue: 1.05, duration: 80, useNativeDriver: true }),
+      Animated.spring(scaleAnim, { toValue: 1, friction: 4, tension: 200, useNativeDriver: true }),
+    ]).start();
+    onPress(filter);
+  }, [onPress, filter, scaleAnim]);
+
+  if (!tab) return null;
 
   if (isActive) {
     return (
-      <TouchableOpacity
-        onPress={handlePress}
-        activeOpacity={0.7}
-        style={tabStyles.tabOuter}
-      >
-        <LinearGradient
-          colors={[palette.purple[500], palette.pink[500]]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={tabStyles.tabGradient}
-        >
-          <Ionicons
-            name={tab?.icon as keyof typeof Ionicons.glyphMap}
-            size={14}
-            color="#FFFFFF"
-            style={tabStyles.tabIcon}
-          />
-          <Text style={tabStyles.tabTextActive} numberOfLines={1}>
-            {tab?.label}
-          </Text>
-        </LinearGradient>
-      </TouchableOpacity>
+      <Animated.View style={[tabStyles.tabOuter, { transform: [{ scale: scaleAnim }] }]}>
+        <TouchableOpacity onPress={handlePress} activeOpacity={0.85} style={{ flex: 1 }}>
+          <LinearGradient
+            colors={[palette.purple[400], palette.pink[500]]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={tabStyles.tabGradient}
+          >
+            <Ionicons name={tab.iconActive} size={16} color="#FFFFFF" />
+            <Text style={tabStyles.tabTextActive}>{tab.label}</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </Animated.View>
     );
   }
 
   return (
-    <TouchableOpacity
-      onPress={handlePress}
-      activeOpacity={0.7}
-      style={tabStyles.tab}
-    >
-      <Ionicons
-        name={tab?.icon as keyof typeof Ionicons.glyphMap}
-        size={15}
-        color={colors.textSecondary}
-        style={tabStyles.tabIcon}
-      />
-      <Text style={tabStyles.tabText} numberOfLines={1}>
-        {tab?.label}
-      </Text>
-    </TouchableOpacity>
-  );
-};
-
-// ─── Post Type Selector ───────────────────────────────────────
-
-interface PostTypeSelectorProps {
-  visible: boolean;
-  onSelect: (type: FeedPostType) => void;
-  onClose: () => void;
-}
-
-const PostTypeSelector: React.FC<PostTypeSelectorProps> = ({ visible, onSelect, onClose }) => {
-  if (!visible) return null;
-
-  return (
-    <View style={selectorStyles.container}>
-      <View style={selectorStyles.row}>
-        {FEED_POST_TYPES.map((pt) => (
-          <TouchableOpacity
-            key={pt.type}
-            style={selectorStyles.option}
-            onPress={() => onSelect(pt.type)}
-            activeOpacity={0.7}
-          >
-            <View style={[selectorStyles.iconCircle, { backgroundColor: `${pt.color}15` }]}>
-              <Text style={selectorStyles.icon}>{pt.emoji}</Text>
-            </View>
-            <Text style={selectorStyles.label}>{pt.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-      <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={selectorStyles.closeBtn}>
-        <Text style={selectorStyles.closeText}>Kapat</Text>
+    <Animated.View style={[tabStyles.tabInactiveOuter, { transform: [{ scale: scaleAnim }] }]}>
+      <TouchableOpacity onPress={handlePress} activeOpacity={0.7} style={tabStyles.tabInactive}>
+        <Ionicons name={tab.iconInactive} size={16} color={colors.textSecondary} />
+        <Text style={tabStyles.tabText}>{tab.label}</Text>
       </TouchableOpacity>
-    </View>
+    </Animated.View>
   );
-};
+});
 
 // ─── Create Post Modal ────────────────────────────────────────
 
@@ -166,7 +134,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
   isCreating,
 }) => {
   const [content, setContent] = useState('');
-  const [selectedTopic, setSelectedTopic] = useState<FeedTopic>('GUNLUK');
+  const selectedTopic: FeedTopic = 'GUNLUK';
   const [attachedPhotos, setAttachedPhotos] = useState<string[]>([]);
   const [attachedVideo, setAttachedVideo] = useState<string | null>(null);
   const [musicTitle, setMusicTitle] = useState('');
@@ -179,7 +147,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
     const trimmed = content.trim();
     if (trimmed.length === 0 && attachedPhotos.length === 0 && !attachedVideo && postType !== 'music') return;
     if (postType === 'music' && (!musicTitle.trim() || !musicArtist.trim())) {
-      Alert.alert('Uyari', 'Sarki adi ve sanatci bilgisini gir.');
+      Alert.alert('Uyari', 'Şarkı adı ve sanatci bilgisini gir.');
       return;
     }
     if (containsProfanity(trimmed)) {
@@ -233,12 +201,11 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
 
   const getPlaceholder = (): string => {
     switch (postType) {
-      case 'photo': return 'Fotografin hakkinda bir seyler yaz...';
-      case 'video': return 'Video hakkinda bir seyler yaz...';
-      case 'text': return 'Ne dusunuyorsun?';
-      case 'question': return 'Sorunuzu yazin...';
-      case 'music': return 'Sarki hakkinda bir not ekle...';
-      default: return 'Ne dusunuyorsun?';
+      case 'photo': return 'Bir anını paylaş...';
+      case 'video': return 'Ne göstermek istiyorsun?';
+      case 'text': return 'Aklında ne var?';
+      case 'music': return 'Bu şarkı sana ne hissettiriyor?';
+      default: return 'Aklında ne var?';
     }
   };
 
@@ -252,10 +219,10 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
           {/* Header */}
           <View style={modalStyles.header}>
             <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
-              <Text style={modalStyles.cancelText}>Vazgec</Text>
+              <Text style={modalStyles.cancelText}>Vazgeç</Text>
             </TouchableOpacity>
             <View style={modalStyles.headerCenter}>
-              <Text style={modalStyles.headerTitle}>Yeni Paylasim</Text>
+              <Text style={modalStyles.headerTitle}>Yeni Paylaşım</Text>
               {postTypeOption && (
                 <View style={[modalStyles.headerBadge, { backgroundColor: `${postTypeOption.color}15` }]}>
                   <Text style={modalStyles.headerBadgeEmoji}>{postTypeOption.emoji}</Text>
@@ -274,50 +241,17 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
                   !canSubmit && modalStyles.submitTextDisabled,
                 ]}
               >
-                {isCreating ? 'Paylasiliyor...' : 'Paylas'}
+                {isCreating ? 'Paylaşılıyor...' : 'Paylaş'}
               </Text>
             </TouchableOpacity>
           </View>
-
-          {/* Topic Selector */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={modalStyles.topicRow}
-            style={modalStyles.topicScroll}
-          >
-            {FEED_TOPICS.map((topic) => (
-              <TouchableOpacity
-                key={topic.type}
-                onPress={() => setSelectedTopic(topic.type)}
-                activeOpacity={0.7}
-                style={[
-                  modalStyles.topicChip,
-                  selectedTopic === topic.type && {
-                    backgroundColor: `${topic.color}25`,
-                    borderColor: topic.color,
-                  },
-                ]}
-              >
-                <Text style={modalStyles.topicChipEmoji}>{topic.emoji}</Text>
-                <Text
-                  style={[
-                    modalStyles.topicChipLabel,
-                    selectedTopic === topic.type && { color: topic.color },
-                  ]}
-                >
-                  {topic.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
 
           {/* Music fields */}
           {postType === 'music' && (
             <View style={modalStyles.musicFields}>
               <TextInput
                 style={modalStyles.musicInput}
-                placeholder="Sarki adi"
+                placeholder="Şarkı adı"
                 placeholderTextColor={colors.textTertiary}
                 value={musicTitle}
                 onChangeText={setMusicTitle}
@@ -325,7 +259,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
               />
               <TextInput
                 style={modalStyles.musicInput}
-                placeholder="Sanatci"
+                placeholder="Sanatçı"
                 placeholderTextColor={colors.textTertiary}
                 value={musicArtist}
                 onChangeText={setMusicArtist}
@@ -392,7 +326,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
                   activeOpacity={0.7}
                 >
                   <Text style={modalStyles.mediaButtonIcon}>{'\uD83D\uDDBC'}</Text>
-                  <Text style={modalStyles.mediaButtonLabel}>Fotograf</Text>
+                  <Text style={modalStyles.mediaButtonLabel}>Fotoğraf</Text>
                 </TouchableOpacity>
               )}
               {postType === 'video' && (
@@ -421,9 +355,9 @@ const EmptyState: React.FC = () => (
     <View style={emptyStyles.iconCircle}>
       <Text style={emptyStyles.icon}>{'\uD83D\uDCDD'}</Text>
     </View>
-    <Text style={emptyStyles.title}>Henuz paylasim yok</Text>
+    <Text style={emptyStyles.title}>Henüz paylaşım yok</Text>
     <Text style={emptyStyles.subtitle}>
-      Ilk paylasimi sen yap! Dusuncelerini, deneyimlerini ve sorularini toplulukla paylas.
+      İlk paylaşımı sen yap! Düşüncelerini, deneyimlerini ve sorularını toplulukla paylaş.
     </Text>
   </View>
 );
@@ -454,29 +388,51 @@ export const SocialFeedScreen: React.FC = () => {
   // Store selectors
   const posts = useSocialFeedStore((s) => s.posts);
   const filter = useSocialFeedStore((s) => s.filter);
-  const selectedTopic = useSocialFeedStore((s) => s.selectedTopic);
   const isLoading = useSocialFeedStore((s) => s.isLoading);
   const isRefreshing = useSocialFeedStore((s) => s.isRefreshing);
   const isCreating = useSocialFeedStore((s) => s.isCreating);
   const fetchFeed = useSocialFeedStore((s) => s.fetchFeed);
   const refreshFeed = useSocialFeedStore((s) => s.refreshFeed);
   const setFilter = useSocialFeedStore((s) => s.setFilter);
-  const setTopic = useSocialFeedStore((s) => s.setTopic);
   const toggleLike = useSocialFeedStore((s) => s.toggleLike);
-  const toggleSave = useSocialFeedStore((s) => s.toggleSave);
   const toggleFollow = useSocialFeedStore((s) => s.toggleFollow);
   const incrementCommentCount = useSocialFeedStore((s) => s.incrementCommentCount);
   const createPost = useSocialFeedStore((s) => s.createPost);
 
+
+  // Interaction tracking — triggers match prompt after repeated interactions
+  const recordInteraction = useFeedInteractionStore((s) => s.recordInteraction);
+  const promptUserId = useFeedInteractionStore((s) => s.promptUserId);
+  const dismissPrompt = useFeedInteractionStore((s) => s.dismissPrompt);
+  const clearPrompt = useFeedInteractionStore((s) => s.clearPrompt);
+  // Resolve prompted user's info from posts
+  const promptedPost = promptUserId ? posts.find((p) => p.userId === promptUserId) : null;
+
+  // Passive scroll tracking — counts posts seen since last interaction
+  const [interactionCount, setInteractionCount] = useState(0);
+  const [dismissedNudges, setDismissedNudges] = useState<Set<string>>(new Set());
+  const flatListRef = useRef<FlatList<FeedListItem>>(null);
+
+  const markInteraction = useCallback(() => {
+    setInteractionCount((c) => c + 1);
+  }, []);
+
+  // Flirt limits
+  const canFlirt = useFlirtStore((s) => s.canFlirt);
+  const recordFlirt = useFlirtStore((s) => s.recordFlirt);
+  const isFlirtPending = useFlirtStore((s) => s.isFlirtPending);
+
   // State
-  const [showTypeSelector, setShowTypeSelector] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedPostType, setSelectedPostType] = useState<FeedPostType>('text');
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
+  const [quickPreviewPost, setQuickPreviewPost] = useState<FeedPost | null>(null);
+  const [showFlirtPaywall, setShowFlirtPaywall] = useState(false);
 
   useEffect(() => {
     fetchFeed();
-  }, [fetchFeed]);
+    fetchStories();
+  }, [fetchFeed, fetchStories]);
 
   const handleRefresh = useCallback(() => {
     refreshFeed();
@@ -489,28 +445,61 @@ export const SocialFeedScreen: React.FC = () => {
     [setFilter],
   );
 
-  const handleTopicChange = useCallback(
-    (topic: FeedTopic | null) => {
-      setTopic(topic);
-    },
-    [setTopic],
-  );
+  // Story state
+  const myStoryCount = useStoryStore((s) => s.myStories.length);
+  const storyUsers = useStoryStore((s) => s.storyUsers);
+  const seenStoryIds = useStoryStore((s) => s.seenStoryIds);
+  const fetchStories = useStoryStore((s) => s.fetchStories);
+
+  // Story handlers
+  const [showStorySheet, setShowStorySheet] = useState(false);
+
+  const handleCreateStory = useCallback(() => {
+    setShowStorySheet(true);
+  }, []);
+
+  const handleStoryPick = useCallback(async (type: 'photo' | 'video' | 'gallery') => {
+    setShowStorySheet(false);
+    let uri: string | null = null;
+    let mType: 'image' | 'video' = 'image';
+
+    if (type === 'photo') {
+      uri = await photoService.storyTakePhoto();
+    } else if (type === 'video') {
+      uri = await photoService.storyRecordVideo();
+      mType = 'video';
+    } else {
+      const r = await photoService.storyPickFromGallery();
+      if (r) { uri = r.uri; mType = r.type; }
+    }
+
+    if (uri) {
+      navigation.navigate('StoryCreator', { mediaUri: uri, mediaType: mType });
+    }
+  }, [navigation]);
+
+  const handleStoryView = useCallback((userId: string, userName: string, avatarUrl: string) => {
+    navigation.getParent()?.navigate('DiscoveryTab', {
+      screen: 'StoryViewer',
+      params: { userId, userName, userAvatarUrl: avatarUrl },
+    });
+  }, [navigation]);
 
   const handleLike = useCallback(
     (postId: string) => {
       toggleLike(postId);
+      markInteraction();
+      // Track interaction: find post owner and record
+      const post = posts.find((p) => p.id === postId);
+      if (post && post.userId !== 'dev-user-001') {
+        recordInteraction(post.userId);
+      }
     },
-    [toggleLike],
-  );
-
-  const handleSave = useCallback(
-    (postId: string) => {
-      toggleSave(postId);
-    },
-    [toggleSave],
+    [toggleLike, posts, recordInteraction, markInteraction],
   );
 
   const handleComment = useCallback((postId: string) => {
+    markInteraction();
     setCommentPostId(postId);
   }, []);
 
@@ -525,13 +514,86 @@ export const SocialFeedScreen: React.FC = () => {
   const handleFollow = useCallback(
     (userId: string) => {
       toggleFollow(userId);
+      markInteraction();
+      if (userId !== 'dev-user-001') {
+        recordInteraction(userId);
+      }
     },
-    [toggleFollow],
+    [toggleFollow, recordInteraction, markInteraction],
   );
 
   const handleProfilePress = useCallback(
     (userId: string) => {
       navigation.navigate('ProfilePreview', { userId });
+    },
+    [navigation],
+  );
+
+  const handlePostTap = useCallback((post: FeedPost) => {
+    setQuickPreviewPost(post);
+  }, []);
+
+  const handleCloseQuickPreview = useCallback(() => {
+    setQuickPreviewPost(null);
+  }, []);
+
+  const handleFlirt = useCallback(
+    async (userId: string) => {
+      // Check if already pending
+      if (isFlirtPending(userId)) {
+        Alert.alert('Beklemede \u23F3', 'Bu kişiye zaten flört isteği gönderdin. Yanıt bekleniyor.');
+        return;
+      }
+
+      // Check daily limit (only enforced when MONETIZATION_ENABLED = true)
+      const tier = packageTier as 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
+      if (!canFlirt(tier)) {
+        setShowFlirtPaywall(true);
+        return;
+      }
+
+      markInteraction();
+      if (userId !== 'dev-user-001') {
+        recordInteraction(userId);
+      }
+
+      const post = posts.find((p) => p.userId === userId);
+      const userName = post?.userName ?? '';
+
+      try {
+        await discoveryService.swipe({ targetUserId: userId, direction: 'LIKE' });
+      } catch {
+        // Mock mode — continue with tracking
+      }
+
+      // Always track internally (even when limits not enforced)
+      recordFlirt(userId, userName);
+
+      Alert.alert(
+        'Flört İsteği Gönderildi \uD83D\uDC9C',
+        `${userName} flört isteğin iletildi. Kabul ederse sohbet başlayacak!`,
+        [{ text: 'Tamam' }],
+      );
+    },
+    [posts, recordInteraction, markInteraction, canFlirt, recordFlirt, isFlirtPending, packageTier],
+  );
+
+  // Flirt prompt — start flirt from feed interaction popup
+  const handleStartFlirtFromPrompt = useCallback(async () => {
+    if (!promptedPost) return;
+    clearPrompt();
+    // Delegate to handleFlirt which checks limits
+    handleFlirt(promptedPost.userId);
+  }, [promptedPost, clearPrompt, handleFlirt]);
+
+
+  // Comment → private message (premium gated, handled in CommentSheet)
+  const handleCommentPrivateMessage = useCallback(
+    (userId: string, _userName: string) => {
+      setCommentPostId(null);
+      setTimeout(() => {
+        navigation.navigate('ProfilePreview', { userId });
+      }, 300);
     },
     [navigation],
   );
@@ -544,22 +606,20 @@ export const SocialFeedScreen: React.FC = () => {
       const todayCount = lastPostDate === today ? dailyPostCount : 0;
       if (todayCount >= tierPostLimit) {
         Alert.alert(
-          'Gunluk Limit',
-          `Mevcut paketinde gunde ${tierPostLimit} paylasim yapabilirsin. Daha fazlasi icin paketi yukselt.`,
+          'Günlük Limit',
+          `Mevcut paketinde günde ${tierPostLimit} paylaşım yapabilirsin. Daha fazlası için paketi yükselt.`,
           [
             { text: 'Tamam', style: 'cancel' },
             {
-              text: 'Paketi Yukselt',
+              text: 'Paketi Yükselt',
               onPress: () => navigation.getParent()?.navigate('ProfileTab', { screen: 'Packages' }),
             },
           ],
         );
-        setShowTypeSelector(false);
         return;
       }
     }
     setSelectedPostType(type);
-    setShowTypeSelector(false);
     setShowCreateModal(true);
   }, [packageTier, dailyPostCount, lastPostDate, navigation]);
 
@@ -574,49 +634,115 @@ export const SocialFeedScreen: React.FC = () => {
     [createPost, lastPostDate],
   );
 
-  // Render item — FeedCard only, no extra engagement overlay
-  const renderPost = useCallback(
-    ({ item }: { item: FeedPost }) => {
+  // ── Nudge handlers ──
+  const handleNudgeDiscovery = useCallback(() => {
+    navigation.getParent()?.navigate('DiscoveryTab', { screen: 'Discovery' });
+  }, [navigation]);
+
+  const handleNudgeMatches = useCallback(() => {
+    navigation.getParent()?.navigate('MatchesTab', { screen: 'MatchesList' });
+  }, [navigation]);
+
+  const handleNudgeScrollToTop = useCallback(() => {
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+  }, []);
+
+  const handleNudgeDismiss = useCallback((key: string) => {
+    setDismissedNudges((prev) => {
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
+  }, []);
+
+  // ── Build feed list with engagement nudges ──
+  const feedListItems: FeedListItem[] = useMemo(() => {
+    const items: FeedListItem[] = [];
+    let nudgeVariant = 0;
+
+    for (let i = 0; i < posts.length; i++) {
+      items.push({ type: 'post', data: posts[i] });
+
+      // Insert nudge after every NUDGE_INTERVAL posts if user hasn't interacted
+      if (
+        (i + 1) % NUDGE_INTERVAL === 0 &&
+        interactionCount === 0
+      ) {
+        const nudgeKey = `nudge-${i}`;
+        if (!dismissedNudges.has(nudgeKey)) {
+          items.push({ type: 'nudge', variant: nudgeVariant, key: nudgeKey });
+          nudgeVariant++;
+        }
+      }
+    }
+    return items;
+  }, [posts, interactionCount, dismissedNudges]);
+
+  // Render item — FeedCard or EngagementNudge
+  const renderFeedItem = useCallback(
+    ({ item }: { item: FeedListItem }) => {
+      if (item.type === 'nudge') {
+        return (
+          <EngagementNudge
+            variant={item.variant}
+            onDiscovery={handleNudgeDiscovery}
+            onMatches={handleNudgeMatches}
+            onScrollToTop={handleNudgeScrollToTop}
+            onDismiss={() => handleNudgeDismiss(item.key)}
+          />
+        );
+      }
       return (
         <View style={feedItemStyles.wrapper}>
           <FeedCard
-            post={item}
+            post={item.data}
             onLike={handleLike}
             onComment={handleComment}
-            onSave={handleSave}
             onFollow={handleFollow}
             onProfilePress={handleProfilePress}
+            onFlirt={handleFlirt}
+            onPostTap={handlePostTap}
           />
         </View>
       );
     },
-    [handleLike, handleComment, handleSave, handleFollow, handleProfilePress],
+    [handleLike, handleComment, handleFollow, handleProfilePress, handleFlirt, handlePostTap, handleNudgeDiscovery, handleNudgeMatches, handleNudgeScrollToTop, handleNudgeDismiss],
   );
 
-  const keyExtractor = useCallback((item: FeedPost) => item.id, []);
+  const keyExtractor = useCallback((item: FeedListItem) =>
+    item.type === 'nudge' ? item.key : item.data.id,
+  []);
 
-  // Header component — post creation, type selector, filters, topics
-  const ListHeader = useCallback(
-    () => (
+  // Header — rendered as a JSX element (not a component reference) so FlatList
+  const listHeader = (
       <View>
-        {/* Post Creation Area */}
-        <TouchableOpacity
-          style={createStyles.container}
-          onPress={() => setShowTypeSelector((prev) => !prev)}
-          activeOpacity={0.8}
-        >
-          <View style={createStyles.avatarPlaceholder}>
-            <Text style={createStyles.avatarIcon}>{'\uD83D\uDC64'}</Text>
+        {/* ── Create Post Card ── */}
+        <View style={createStyles.card}>
+          <TouchableOpacity
+            onPress={() => handlePostTypeSelect('text')}
+            activeOpacity={0.85}
+          >
+            <Text style={createStyles.placeholder}>Bir şey paylaş...</Text>
+          </TouchableOpacity>
+          <View style={createStyles.iconRow}>
+            <TouchableOpacity style={createStyles.iconChip} onPress={() => handlePostTypeSelect('photo')} activeOpacity={0.7}>
+              <Ionicons name="camera" size={18} color={palette.purple[400]} />
+              <Text style={[createStyles.iconLabel, { color: palette.purple[400] }]}>Fotoğraf</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={createStyles.iconChip} onPress={() => handlePostTypeSelect('video')} activeOpacity={0.7}>
+              <Ionicons name="videocam" size={18} color="#EC4899" />
+              <Text style={[createStyles.iconLabel, { color: '#EC4899' }]}>Video</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={createStyles.iconChip} onPress={() => handlePostTypeSelect('text')} activeOpacity={0.7}>
+              <Ionicons name="create" size={18} color="#10B981" />
+              <Text style={[createStyles.iconLabel, { color: '#10B981' }]}>Yazı</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={createStyles.iconChip} onPress={() => handlePostTypeSelect('music')} activeOpacity={0.7}>
+              <Ionicons name="musical-notes" size={18} color="#F59E0B" />
+              <Text style={[createStyles.iconLabel, { color: '#F59E0B' }]}>Müzik</Text>
+            </TouchableOpacity>
           </View>
-          <Text style={createStyles.promptText}>Bugun ne paylasim yapmak istersin?</Text>
-        </TouchableOpacity>
-
-        {/* Post Type Selector */}
-        <PostTypeSelector
-          visible={showTypeSelector}
-          onSelect={handlePostTypeSelect}
-          onClose={() => setShowTypeSelector(false)}
-        />
+        </View>
 
         {/* Filter Tabs */}
         <View style={tabStyles.tabRow}>
@@ -630,32 +756,25 @@ export const SocialFeedScreen: React.FC = () => {
           ))}
         </View>
 
-        {/* Topic Chips */}
-        <TopicChipRow
-          selectedTopic={selectedTopic}
-          onSelectTopic={handleTopicChange}
-        />
       </View>
-    ),
-    [filter, selectedTopic, showTypeSelector, handleFilterChange, handleTopicChange, handlePostTypeSelect],
   );
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Enhanced Header */}
       <View style={styles.headerArea}>
-        <Text style={styles.headerTitle}>Akis</Text>
+        <Text style={styles.headerTitle}>Akış</Text>
         <View style={styles.headerRight}>
           <TouchableOpacity
             style={styles.headerIconBtn}
-            onPress={() => Alert.alert('Arama', 'Arama ozelligi yakinda!')}
+            onPress={() => Alert.alert('Arama', 'Arama özelliği yakında!')}
             activeOpacity={0.7}
           >
             <Ionicons name="search-outline" size={22} color={colors.text} />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.headerIconBtn}
-            onPress={() => Alert.alert('Bildirimler', 'Bildirim ozelligi yakinda!')}
+            onPress={() => Alert.alert('Bildirimler', 'Bildirim özelliği yakında!')}
             activeOpacity={0.7}
           >
             <Ionicons name="notifications-outline" size={22} color={colors.text} />
@@ -671,6 +790,49 @@ export const SocialFeedScreen: React.FC = () => {
         </View>
       </View>
 
+      {/* ── Hikayeler (orijinal StoryRing component) ── */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={sbStyles.scroll} contentContainerStyle={sbStyles.content}>
+        {/* Kendi story */}
+        <StoryRing
+          userName="Hikaye"
+          avatarUrl="https://i.pravatar.cc/150?img=68"
+          isOwnStory
+          hasStories={myStoryCount > 0}
+          isSeen={false}
+          onPress={myStoryCount > 0
+            ? () => handleStoryView('dev-user-001', 'Sen', 'https://i.pravatar.cc/150?img=68')
+            : handleCreateStory
+          }
+        />
+
+        {/* Takip edilenler */}
+        {storyUsers.filter((u) => u.userId !== 'dev-user-001' && u.stories.length > 0 && u.isFollowing).map((u) => {
+          const seen = u.stories.every((s) => seenStoryIds.has(s.id));
+          return (
+            <StoryRing
+              key={u.userId}
+              userName={u.userName}
+              avatarUrl={u.userAvatarUrl}
+              hasStories
+              isSeen={seen}
+              onPress={() => handleStoryView(u.userId, u.userName, u.userAvatarUrl)}
+            />
+          );
+        })}
+
+        {/* Önerilen (max 3) */}
+        {storyUsers.filter((u) => u.userId !== 'dev-user-001' && u.stories.length > 0 && !u.isFollowing).slice(0, 3).map((u) => (
+          <StoryRing
+            key={u.userId}
+            userName={u.userName}
+            avatarUrl={u.userAvatarUrl}
+            hasStories
+            isSeen={false}
+            onPress={() => handleStoryView(u.userId, u.userName, u.userAvatarUrl)}
+          />
+        ))}
+      </ScrollView>
+
       {/* Feed List */}
       {isLoading && posts.length === 0 ? (
         <View style={styles.loadingContainer}>
@@ -678,11 +840,12 @@ export const SocialFeedScreen: React.FC = () => {
         </View>
       ) : (
         <FlatList
-          data={posts}
-          extraData={posts}
+          ref={flatListRef}
+          data={feedListItems}
+          extraData={feedListItems}
           keyExtractor={keyExtractor}
-          renderItem={renderPost}
-          ListHeaderComponent={ListHeader}
+          renderItem={renderFeedItem}
+          ListHeaderComponent={listHeader}
           ListEmptyComponent={EmptyState}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
@@ -714,12 +877,160 @@ export const SocialFeedScreen: React.FC = () => {
       <CommentSheet
         visible={commentPostId !== null}
         postId={commentPostId}
+        userTier={packageTier as 'FREE' | 'GOLD' | 'PRO' | 'RESERVED'}
         onClose={handleCloseComments}
         onCommentAdded={handleCommentAdded}
+        onPrivateMessage={handleCommentPrivateMessage}
+        onUpgrade={() => navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' })}
       />
+
+      {/* Quick Profile Preview — tap on post content */}
+      <QuickProfilePreview
+        visible={quickPreviewPost !== null}
+        post={quickPreviewPost}
+        onClose={handleCloseQuickPreview}
+        onFlirt={handleFlirt}
+        onFullProfile={handleProfilePress}
+      />
+
+      {/* Flirt Prompt — triggered after 3 interactions with same user */}
+      <MatchPromptModal
+        visible={promptedPost !== null && promptedPost !== undefined}
+        userName={promptedPost?.userName ?? ''}
+        userAvatarUrl={promptedPost?.userAvatarUrl ?? ''}
+        compatibilityScore={promptedPost?.compatibilityScore ?? 0}
+        onStartFlirt={handleStartFlirtFromPrompt}
+        onDismiss={dismissPrompt}
+      />
+
+      {/* Flirt limit paywall */}
+      <UpgradePrompt
+        visible={showFlirtPaywall}
+        feature="flirt"
+        onUpgrade={() => {
+          setShowFlirtPaywall(false);
+          navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' });
+        }}
+        onDismiss={() => setShowFlirtPaywall(false)}
+      />
+
+      {/* Hikaye oluştur — bottom sheet */}
+      <Modal visible={showStorySheet} transparent animationType="slide" onRequestClose={() => setShowStorySheet(false)}>
+        <TouchableOpacity style={storySheetStyles.backdrop} activeOpacity={1} onPress={() => setShowStorySheet(false)} />
+        <View style={[storySheetStyles.sheet, { paddingBottom: insets.bottom + spacing.md }]}>
+          <View style={storySheetStyles.handle} />
+          <Text style={storySheetStyles.title}>Hikaye Oluştur</Text>
+
+          <TouchableOpacity style={storySheetStyles.row} onPress={() => handleStoryPick('photo')} activeOpacity={0.7}>
+            <View style={[storySheetStyles.icon, { backgroundColor: 'rgba(147,51,234,0.12)' }]}>
+              <Ionicons name="camera" size={22} color="#9333EA" />
+            </View>
+            <View style={storySheetStyles.rowText}>
+              <Text style={storySheetStyles.rowTitle}>Fotoğraf Çek</Text>
+              <Text style={storySheetStyles.rowSub}>Hızlı bir an paylaş</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={storySheetStyles.row} onPress={() => handleStoryPick('video')} activeOpacity={0.7}>
+            <View style={[storySheetStyles.icon, { backgroundColor: 'rgba(239,68,68,0.12)' }]}>
+              <Ionicons name="videocam" size={22} color="#EF4444" />
+            </View>
+            <View style={storySheetStyles.rowText}>
+              <Text style={storySheetStyles.rowTitle}>Video Çek</Text>
+              <Text style={storySheetStyles.rowSub}>Kısa bir hikaye kaydet</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={storySheetStyles.row} onPress={() => handleStoryPick('gallery')} activeOpacity={0.7}>
+            <View style={[storySheetStyles.icon, { backgroundColor: 'rgba(16,185,129,0.12)' }]}>
+              <Ionicons name="images" size={22} color="#10B981" />
+            </View>
+            <View style={storySheetStyles.rowText}>
+              <Text style={storySheetStyles.rowTitle}>Galeriden Seç</Text>
+              <Text style={storySheetStyles.rowSub}>Mevcut medya yükle</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </View>
   );
 };
+
+
+// ─── Story Styles ─────────────────────────────────────────────
+
+// ── Story Bar (orijinal yapı, StoryRing component kullanır) ──
+const sbStyles = StyleSheet.create({
+  scroll: {
+    flexGrow: 0,
+    backgroundColor: colors.background,
+  },
+  content: {
+    paddingHorizontal: spacing.lg,
+    gap: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+});
+
+// ─── Story Sheet Styles ───────────────────────────────────────
+
+const storySheetStyles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  sheet: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+  },
+  handle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.surfaceBorder,
+    alignSelf: 'center',
+    marginBottom: spacing.md,
+  },
+  title: {
+    fontSize: 17,
+    color: colors.text,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    marginBottom: spacing.sm,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    gap: spacing.md,
+  },
+  icon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  rowText: {
+    flex: 1,
+  },
+  rowTitle: {
+    fontSize: 15,
+    color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+  },
+  rowSub: {
+    fontSize: 12,
+    color: colors.textTertiary,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    marginTop: 1,
+  },
+});
 
 // ─── Feed Item Styles ─────────────────────────────────────────
 
@@ -729,83 +1040,47 @@ const feedItemStyles = StyleSheet.create({
   },
 });
 
-// ─── Creation Area Styles ─────────────────────────────────────
+
+// ─── Content Creation Styles ─────────────────────────────────
 
 const createStyles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
+  card: {
     marginHorizontal: spacing.md,
     marginTop: spacing.md,
     marginBottom: spacing.sm,
-    padding: spacing.md,
-    borderRadius: borderRadius.lg,
-    ...shadows.small,
-  },
-  avatarPlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: `${palette.purple[500]}12`,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarIcon: {
-    fontSize: 18,
-  },
-  promptText: {
-    ...typography.body,
-    color: colors.textTertiary,
-    flex: 1,
-    marginLeft: spacing.sm + 2,
-  },
-});
-
-// ─── Post Type Selector Styles ────────────────────────────────
-
-const selectorStyles = StyleSheet.create({
-  container: {
     backgroundColor: colors.surface,
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.sm,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    ...shadows.small,
+    borderRadius: borderRadius.xl,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg + 2,
+    paddingBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
   },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  option: {
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  icon: {
-    fontSize: 22,
-  },
-  label: {
-    ...typography.captionSmall,
-    color: colors.textSecondary,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-  },
-  closeBtn: {
-    alignSelf: 'center',
-    marginTop: spacing.sm,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.md,
-  },
-  closeText: {
-    ...typography.caption,
+  placeholder: {
+    fontSize: 16,
     color: colors.textTertiary,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    marginBottom: spacing.lg,
+  },
+  iconRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  iconChip: {
+    alignItems: 'center',
+    gap: 4,
+    flex: 1,
+  },
+  iconLabel: {
+    fontSize: 11,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
   },
 });
 
@@ -882,58 +1157,60 @@ const styles = StyleSheet.create({
 const tabStyles = StyleSheet.create({
   tabRow: {
     flexDirection: 'row',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
-    gap: 8,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xs,
+    gap: spacing.sm + 2,
   },
-  tab: {
-    flex: 1,
-    flexDirection: 'row',
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-    gap: 6,
-    paddingHorizontal: 8,
-  },
+  // Active tab — gradient + glow
   tabOuter: {
     flex: 1,
-    height: 42,
-    borderRadius: 21,
+    height: 46,
+    borderRadius: 23,
     overflow: 'hidden',
-    shadowColor: palette.purple[500],
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowColor: palette.purple[400],
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 6,
   },
   tabGradient: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingHorizontal: 8,
+    gap: 7,
+    paddingHorizontal: spacing.md,
   },
-  tabIcon: {
-    // Icon spacing handled by gap on parent
+  tabTextActive: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+  },
+  // Inactive tab — soft surface
+  tabInactiveOuter: {
+    flex: 1,
+    height: 46,
+    borderRadius: 23,
+  },
+  tabInactive: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    borderRadius: 23,
+    backgroundColor: colors.surfaceLight,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    paddingHorizontal: spacing.md,
   },
   tabText: {
-    fontSize: 13,
+    fontSize: 14,
     color: colors.textSecondary,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
-    lineHeight: 18,
-  },
-  tabTextActive: {
-    fontSize: 13,
-    color: '#FFFFFF',
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    lineHeight: 18,
   },
 });
 
@@ -999,33 +1276,6 @@ const modalStyles = StyleSheet.create({
   },
   submitTextDisabled: {
     opacity: 0.4,
-  },
-  topicScroll: {
-    maxHeight: 44,
-  },
-  topicRow: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    gap: spacing.sm,
-    alignItems: 'center',
-  },
-  topicChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.sm + 4,
-    paddingVertical: spacing.xs + 2,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.surfaceLight,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-    gap: spacing.xs,
-  },
-  topicChipEmoji: {
-    fontSize: 14,
-  },
-  topicChipLabel: {
-    fontSize: 12,
-    color: colors.textSecondary,
   },
   musicFields: {
     paddingHorizontal: spacing.lg,

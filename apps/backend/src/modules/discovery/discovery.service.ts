@@ -37,11 +37,12 @@ const DIMENSION_LABELS_TR: Record<string, string> = {
 // Threshold for a dimension to be considered "strong"
 const STRONG_DIMENSION_THRESHOLD = 70;
 
-// Daily swipe limits per package tier (LOCKED: 4 packages)
+// Daily swipe/flirt limits per package tier (LOCKED: 4 packages)
+// Free users get limited flirt requests, premium users get more
 const DAILY_SWIPE_LIMITS: Record<string, number> = {
-  FREE: 999999,
-  GOLD: 999999,
-  PRO: 200,
+  FREE: 3,
+  GOLD: 15,
+  PRO: 50,
   RESERVED: 999999, // Unlimited
 };
 

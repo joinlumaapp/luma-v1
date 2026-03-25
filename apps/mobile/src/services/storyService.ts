@@ -47,6 +47,9 @@ export interface StoryUser {
   stories: Story[];
   hasUnseenStories: boolean;
   latestStoryAt: string;
+  isFollowing: boolean;
+  /** Suggested/recommended story user (not followed) */
+  isSuggested?: boolean;
 }
 
 export interface StoryViewer {
@@ -80,6 +83,7 @@ const MOCK_STORY_USERS: StoryUser[] = [
     userId: 'bot-001',
     userName: 'Elif',
     userAvatarUrl: 'https://i.pravatar.cc/150?img=1',
+    isFollowing: true,
     hasUnseenStories: true,
     latestStoryAt: hoursAgo(1),
     stories: [
@@ -115,12 +119,28 @@ const MOCK_STORY_USERS: StoryUser[] = [
         isLiked: false,
         likeCount: 8,
       },
+      {
+        id: 'story-002v',
+        userId: 'bot-001',
+        userName: 'Elif',
+        userAvatarUrl: 'https://i.pravatar.cc/150?img=1',
+        mediaUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+        mediaType: 'video',
+        overlays: [],
+        viewCount: 18,
+        viewers: [],
+        createdAt: hoursAgo(0.5),
+        expiresAt: hoursFromNow(23.5),
+        isLiked: false,
+        likeCount: 5,
+      },
     ],
   },
   {
     userId: 'bot-006',
     userName: 'Merve',
     userAvatarUrl: 'https://i.pravatar.cc/150?img=23',
+    isFollowing: true,
     hasUnseenStories: true,
     latestStoryAt: hoursAgo(3),
     stories: [
@@ -147,6 +167,7 @@ const MOCK_STORY_USERS: StoryUser[] = [
     userId: 'bot-005',
     userName: 'Defne',
     userAvatarUrl: 'https://i.pravatar.cc/150?img=20',
+    isFollowing: true,
     hasUnseenStories: false,
     latestStoryAt: hoursAgo(8),
     stories: [
@@ -171,6 +192,7 @@ const MOCK_STORY_USERS: StoryUser[] = [
     userId: 'bot-007',
     userName: 'Buse',
     userAvatarUrl: 'https://i.pravatar.cc/150?img=25',
+    isFollowing: true,
     hasUnseenStories: true,
     latestStoryAt: hoursAgo(5),
     stories: [
@@ -197,6 +219,7 @@ const MOCK_STORY_USERS: StoryUser[] = [
     userId: 'bot-010',
     userName: 'Ebru',
     userAvatarUrl: 'https://i.pravatar.cc/150?img=36',
+    isFollowing: true,
     hasUnseenStories: true,
     latestStoryAt: hoursAgo(4),
     stories: [
@@ -231,6 +254,78 @@ const MOCK_STORY_USERS: StoryUser[] = [
         expiresAt: hoursFromNow(22),
         isLiked: false,
         likeCount: 9,
+      },
+      {
+        id: 'story-007v',
+        userId: 'bot-010',
+        userName: 'Ebru',
+        userAvatarUrl: 'https://i.pravatar.cc/150?img=36',
+        mediaUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+        mediaType: 'video',
+        overlays: [
+          { type: 'text', x: 0.5, y: 0.8, content: 'Harika bir an', fontSize: 20, color: '#FFFFFF' },
+        ],
+        viewCount: 12,
+        viewers: [],
+        createdAt: hoursAgo(1.5),
+        expiresAt: hoursFromNow(22.5),
+        isLiked: false,
+        likeCount: 3,
+      },
+    ],
+  },
+  // ── Suggested stories (not followed, nearby/recommended) ──
+  {
+    userId: 'bot-011',
+    userName: 'Naz',
+    userAvatarUrl: 'https://i.pravatar.cc/150?img=38',
+    isFollowing: false,
+    isSuggested: true,
+    hasUnseenStories: true,
+    latestStoryAt: hoursAgo(2),
+    stories: [
+      {
+        id: 'story-suggested-001',
+        userId: 'bot-011',
+        userName: 'Naz',
+        userAvatarUrl: 'https://i.pravatar.cc/150?img=38',
+        mediaUrl: 'https://picsum.photos/seed/naz1/1080/1920',
+        mediaType: 'image',
+        overlays: [
+          { type: 'text', x: 0.5, y: 0.5, content: 'Yeni muzik kesfettim', fontSize: 20, color: '#FFFFFF' },
+        ],
+        viewCount: 14,
+        viewers: [],
+        createdAt: hoursAgo(2),
+        expiresAt: hoursFromNow(22),
+        isLiked: false,
+        likeCount: 4,
+      },
+    ],
+  },
+  {
+    userId: 'bot-009',
+    userName: 'Ipek',
+    userAvatarUrl: 'https://i.pravatar.cc/150?img=32',
+    isFollowing: false,
+    isSuggested: true,
+    hasUnseenStories: true,
+    latestStoryAt: hoursAgo(3),
+    stories: [
+      {
+        id: 'story-suggested-002',
+        userId: 'bot-009',
+        userName: 'Ipek',
+        userAvatarUrl: 'https://i.pravatar.cc/150?img=32',
+        mediaUrl: 'https://picsum.photos/seed/ipek1/1080/1920',
+        mediaType: 'image',
+        overlays: [],
+        viewCount: 8,
+        viewers: [],
+        createdAt: hoursAgo(3),
+        expiresAt: hoursFromNow(21),
+        isLiked: false,
+        likeCount: 2,
       },
     ],
   },

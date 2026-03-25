@@ -1389,28 +1389,27 @@ export function seedDevData(): void {
   useSocialFeedStore.setState({
     posts: mockFeedPosts,
     filter: 'ONERILEN',
-    selectedTopic: null,
     isLoading: false,
     isRefreshing: false,
     cursor: null,
     hasMore: false,
   });
 
-  // Override fetchFeed to return seeded data
+  // Override fetchFeed to return seeded data with filter support
   useSocialFeedStore.setState({
     fetchFeed: async () => {
-      const { selectedTopic } = useSocialFeedStore.getState();
+      const { filter } = useSocialFeedStore.getState();
       let posts = [...mockFeedPosts];
-      if (selectedTopic) {
-        posts = posts.filter((p) => p.topic === selectedTopic);
+      if (filter === 'TAKIP') {
+        posts = posts.filter((p) => p.isFollowing);
       }
       useSocialFeedStore.setState({ posts, isLoading: false });
     },
     refreshFeed: async () => {
-      const { selectedTopic } = useSocialFeedStore.getState();
+      const { filter } = useSocialFeedStore.getState();
       let posts = [...mockFeedPosts];
-      if (selectedTopic) {
-        posts = posts.filter((p) => p.topic === selectedTopic);
+      if (filter === 'TAKIP') {
+        posts = posts.filter((p) => p.isFollowing);
       }
       useSocialFeedStore.setState({ posts, isRefreshing: false });
     },
