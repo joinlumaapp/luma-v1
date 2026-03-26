@@ -100,12 +100,13 @@ type DiscoveryNavProp = CompositeNavigationProp<
 
 const DiscoveryFeatureBlocks: React.FC<{
   onVideoWatch: () => void;
-  onVideoCreate: () => void;
-  onSurprisePress: () => void;
-}> = React.memo(({ onVideoWatch, onVideoCreate, onSurprisePress }) => (
+  onSurpriseConnect: () => void;
+  onSurpriseReady: () => void;
+  readyCount?: number;
+}> = React.memo(({ onVideoWatch, onSurpriseConnect, onSurpriseReady, readyCount = 12 }) => (
   <View style={featureStyles.container}>
-    {/* Video Keşfet — short-form video platform */}
-    <View style={featureStyles.block}>
+    {/* Video Keşfet — watch short-form videos */}
+    <Pressable onPress={onVideoWatch} style={featureStyles.block}>
       <LinearGradient
         colors={[palette.purple[600], palette.pink[500]] as [string, string]}
         start={{ x: 0, y: 0 }}
@@ -116,24 +117,12 @@ const DiscoveryFeatureBlocks: React.FC<{
           <Ionicons name="play-circle" size={28} color="#FFFFFF" />
         </View>
         <Text style={featureStyles.title}>Video Keşfet</Text>
-        <Text style={featureStyles.subtitle}>Kısa videoları izle ve paylaş</Text>
-
-        {/* Dual action buttons */}
-        <View style={featureStyles.actionRow}>
-          <Pressable onPress={onVideoWatch} style={featureStyles.actionBtn}>
-            <Ionicons name="play" size={14} color="#FFFFFF" />
-            <Text style={featureStyles.actionText}>İzle</Text>
-          </Pressable>
-          <Pressable onPress={onVideoCreate} style={[featureStyles.actionBtn, featureStyles.actionBtnOutline]}>
-            <Ionicons name="videocam" size={14} color="#FFFFFF" />
-            <Text style={featureStyles.actionText}>Yükle</Text>
-          </Pressable>
-        </View>
+        <Text style={featureStyles.subtitle}>Kısa videoları izle</Text>
       </LinearGradient>
-    </View>
+    </Pressable>
 
-    {/* Sürpriz Bağlan — live video chat */}
-    <Pressable onPress={onSurprisePress} style={featureStyles.block}>
+    {/* Sürpriz Bağlan — 1:1 random video chat */}
+    <View style={featureStyles.block}>
       <LinearGradient
         colors={['#F59E0B', '#EF4444'] as [string, string]}
         start={{ x: 0, y: 0 }}
@@ -144,20 +133,28 @@ const DiscoveryFeatureBlocks: React.FC<{
           <Ionicons name="videocam" size={26} color="#FFFFFF" />
         </View>
         <Text style={featureStyles.title}>Sürpriz Bağlan</Text>
-        <Text style={featureStyles.subtitle}>Rastgele biriyle görüntülü konuş</Text>
+        <Text style={featureStyles.subtitle}>1:1 rastgele görüntülü sohbet</Text>
 
-        {/* Single action */}
-        <View style={featureStyles.actionRow}>
-          <Pressable onPress={onSurprisePress} style={featureStyles.actionBtn}>
-            <Ionicons name="flash" size={14} color="#FFFFFF" />
-            <Text style={featureStyles.actionText}>Hemen Bağlan</Text>
-          </Pressable>
+        {/* Ready count */}
+        <View style={featureStyles.readyPill}>
+          <View style={featureStyles.readyDot} />
+          <Text style={featureStyles.readyText}>{readyCount} kişi hazır</Text>
         </View>
 
-        {/* Coin cost */}
-        <Text style={featureStyles.coinHint}>25 jeton</Text>
+        {/* Two actions: Connect + Ready */}
+        <View style={featureStyles.actionRow}>
+          <Pressable onPress={onSurpriseConnect} style={featureStyles.actionBtn}>
+            <Ionicons name="flash" size={13} color="#FFFFFF" />
+            <Text style={featureStyles.actionText}>Bağlan</Text>
+            <Text style={featureStyles.coinBadge}>25</Text>
+          </Pressable>
+          <Pressable onPress={onSurpriseReady} style={[featureStyles.actionBtn, featureStyles.actionBtnOutline]}>
+            <Ionicons name="hand-right" size={13} color="#FFFFFF" />
+            <Text style={featureStyles.actionText}>Hazırım</Text>
+          </Pressable>
+        </View>
       </LinearGradient>
-    </Pressable>
+    </View>
   </View>
 ));
 DiscoveryFeatureBlocks.displayName = 'DiscoveryFeatureBlocks';
@@ -235,12 +232,39 @@ const featureStyles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
-  coinHint: {
-    fontSize: 10,
+  coinBadge: {
+    fontSize: 9,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FDE68A',
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 6,
+    overflow: 'hidden',
+    marginLeft: 2,
+  },
+  readyPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(0,0,0,0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    marginTop: 2,
+  },
+  readyDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#4ADE80',
+  },
+  readyText: {
+    fontSize: 9,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
-    color: 'rgba(255,255,255,0.6)',
-    marginTop: 2,
+    color: 'rgba(255,255,255,0.8)',
   },
 });
 
@@ -1383,13 +1407,19 @@ export const DiscoveryScreen: React.FC = () => {
       {/* Feature blocks — Video Kesfet + Aninda Baglan */}
       <DiscoveryFeatureBlocks
         onVideoWatch={() => navigation.navigate('VideoFeed')}
-        onVideoCreate={() => {
-          Alert.alert('Video Yükle', 'Kısa bir video çekerek kendini tanıt!', [
-            { text: 'Vazgeç', style: 'cancel' },
-            { text: 'Kamerayı Aç', onPress: () => navigation.navigate('VideoFeed') },
-          ]);
+        onSurpriseConnect={() => navigation.navigate('InstantConnect')}
+        onSurpriseReady={() => {
+          Alert.alert(
+            'Hazır Ol',
+            'Havuza katılarak diğer kullanıcıların seni bulmasını sağla. Biri seni seçtiğinde bildirim alacaksın.',
+            [
+              { text: 'Vazgeç', style: 'cancel' },
+              { text: 'Hazırım', onPress: () => {
+                Alert.alert('Hazırsın!', 'Havuza katıldın. Biri seninle bağlanmak istediğinde bildirim alacaksın.');
+              }},
+            ],
+          );
         }}
-        onSurprisePress={() => navigation.navigate('InstantConnect')}
       />
 
       {/* Card stack */}
