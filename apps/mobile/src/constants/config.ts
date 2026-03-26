@@ -304,7 +304,8 @@ export const INSTANT_CONNECT_CONFIG = {
     PRO: 10,
     RESERVED: -1,
   },
-  TOKEN_COST_PER_SESSION: 50,
+  MATCH_COST: 25,     // coins for first match
+  SWITCH_COST: 15,    // coins to switch to another match
 } as const;
 
 // Video discovery daily limits per package tier (-1 = unlimited)

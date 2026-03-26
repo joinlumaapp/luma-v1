@@ -1,226 +1,91 @@
-// InstantConnect Store — real-time matchmaking queue for instant video connections
-// States: idle → searching → preview → connected → ended
+// SurpriseConnect Store — coin-based random match roulette
+// States: idle → spinning → revealed
 
 import { create } from 'zustand';
-import { socketService } from '../services/socketService';
 import { storage } from '../utils/storage';
 
-export type InstantConnectState = 'idle' | 'searching' | 'preview' | 'connected' | 'ended';
+export type SurpriseConnectState = 'idle' | 'spinning' | 'revealed';
 
-export interface InstantMatchUser {
+export interface SurpriseMatchUser {
   id: string;
   name: string;
   age: number;
   city: string;
   avatarUrl: string;
   compatibilityPercent: number;
-  distance: string;
   isVerified: boolean;
 }
 
-const DAILY_LIMIT_KEY = 'instant_connect.dailyCount';
-const DAILY_LIMIT_DATE_KEY = 'instant_connect.date';
+const DAILY_LIMIT_KEY = 'surprise_connect.dailyCount';
+const DAILY_LIMIT_DATE_KEY = 'surprise_connect.date';
 
-interface InstantConnectStore {
-  // State
-  state: InstantConnectState;
-  matchedUser: InstantMatchUser | null;
-  previewCountdown: number;
-  searchDuration: number;
-  dailyUsageCount: number;
-  isBlurred: boolean;
+const MOCK_USERS: SurpriseMatchUser[] = [
+  { id: 'surprise-1', name: 'Elif', age: 26, city: 'İstanbul', avatarUrl: 'https://i.pravatar.cc/150?img=1', compatibilityPercent: 82, isVerified: true },
+  { id: 'surprise-2', name: 'Zeynep', age: 24, city: 'Ankara', avatarUrl: 'https://i.pravatar.cc/150?img=5', compatibilityPercent: 91, isVerified: true },
+  { id: 'surprise-3', name: 'Merve', age: 28, city: 'İzmir', avatarUrl: 'https://i.pravatar.cc/150?img=23', compatibilityPercent: 78, isVerified: false },
+  { id: 'surprise-4', name: 'Selin', age: 25, city: 'İstanbul', avatarUrl: 'https://i.pravatar.cc/150?img=9', compatibilityPercent: 88, isVerified: true },
+  { id: 'surprise-5', name: 'Cansu', age: 22, city: 'Eskişehir', avatarUrl: 'https://i.pravatar.cc/150?img=29', compatibilityPercent: 73, isVerified: false },
+  { id: 'surprise-6', name: 'Defne', age: 27, city: 'Antalya', avatarUrl: 'https://i.pravatar.cc/150?img=20', compatibilityPercent: 85, isVerified: false },
+];
+
+interface SurpriseConnectStore {
+  state: SurpriseConnectState;
+  matchedUser: SurpriseMatchUser | null;
+  previousUserIds: string[];
   error: string | null;
 
-  // Actions
-  startSearching: () => void;
-  cancelSearch: () => void;
-  onMatchFound: (user: InstantMatchUser) => void;
-  acceptConnection: () => void;
-  declineConnection: () => void;
-  endConnection: () => void;
-  reportUser: (reason: string) => void;
-  blockUser: () => void;
+  startSpin: () => void;
+  switchUser: () => void;
+  likeUser: () => void;
   reset: () => void;
-  setPreviewCountdown: (value: number) => void;
-  setSearchDuration: (value: number) => void;
-  setIsBlurred: (value: boolean) => void;
   getDailyUsage: () => number;
   incrementDailyUsage: () => void;
-
-  // Internal
-  _searchTimerId: ReturnType<typeof setInterval> | null;
-  _previewTimerId: ReturnType<typeof setInterval> | null;
 }
 
-export const useInstantConnectStore = create<InstantConnectStore>((set, get) => ({
+export const useInstantConnectStore = create<SurpriseConnectStore>((set, get) => ({
   state: 'idle',
   matchedUser: null,
-  previewCountdown: 10,
-  searchDuration: 0,
-  dailyUsageCount: 0,
-  isBlurred: true,
+  previousUserIds: [],
   error: null,
-  _searchTimerId: null,
-  _previewTimerId: null,
 
-  startSearching: () => {
-    const { _searchTimerId } = get();
-    if (_searchTimerId) clearInterval(_searchTimerId);
+  startSpin: () => {
+    set({ state: 'spinning', matchedUser: null, error: null });
 
-    // Start search timer
-    const timerId = setInterval(() => {
-      set((s) => ({ searchDuration: s.searchDuration + 1 }));
-    }, 1000);
+    // Simulate match after 2.5-4 seconds
+    const delay = 2500 + Math.random() * 1500;
+    setTimeout(() => {
+      const { state, previousUserIds } = get();
+      if (state !== 'spinning') return;
 
-    set({
-      state: 'searching',
-      searchDuration: 0,
-      error: null,
-      matchedUser: null,
-      _searchTimerId: timerId,
-    });
+      // Pick a random user not previously shown
+      const available = MOCK_USERS.filter((u) => !previousUserIds.includes(u.id));
+      const pool = available.length > 0 ? available : MOCK_USERS;
+      const user = pool[Math.floor(Math.random() * pool.length)];
 
-    // Emit socket event to join the real-time matchmaking queue.
-    // The server fires 'instant_connect:match_found' when a compatible user is found,
-    // which the socket listener calls get().onMatchFound(user) with.
-    // socketService.emit('instant_connect:join_queue', { ... });
-
-    // Dev-only: simulate a match after 3-6 seconds so the UI can be tested
-    // without a live backend. Strictly gated — never runs in production.
-    if (__DEV__) {
-      const mockDelay = 3000 + Math.random() * 3000;
-      setTimeout(() => {
-        const { state } = get();
-        if (state === 'searching') {
-          get().onMatchFound({
-            id: 'instant-' + Date.now(),
-            name: ['Elif', 'Zeynep', 'Ayse', 'Merve', 'Selin'][Math.floor(Math.random() * 5)],
-            age: 22 + Math.floor(Math.random() * 8),
-            city: ['Istanbul', 'Ankara', 'Izmir', 'Bursa'][Math.floor(Math.random() * 4)],
-            avatarUrl: `https://i.pravatar.cc/150?u=${Date.now()}`,
-            compatibilityPercent: 60 + Math.floor(Math.random() * 35),
-            distance: `${(1 + Math.random() * 9).toFixed(1)} km`,
-            isVerified: Math.random() > 0.3,
-          });
-        }
-      }, mockDelay);
-    }
+      set({
+        state: 'revealed',
+        matchedUser: user,
+        previousUserIds: [...previousUserIds, user.id],
+      });
+    }, delay);
   },
 
-  cancelSearch: () => {
-    const { _searchTimerId, _previewTimerId } = get();
-    if (_searchTimerId) clearInterval(_searchTimerId);
-    if (_previewTimerId) clearInterval(_previewTimerId);
-    set({
-      state: 'idle',
-      searchDuration: 0,
-      matchedUser: null,
-      _searchTimerId: null,
-      _previewTimerId: null,
-    });
+  switchUser: () => {
+    // Go back to spinning to find another user
+    get().startSpin();
   },
 
-  onMatchFound: (user: InstantMatchUser) => {
-    const { _searchTimerId, _previewTimerId } = get();
-    if (_searchTimerId) clearInterval(_searchTimerId);
-    if (_previewTimerId) clearInterval(_previewTimerId);
-
-    // Start preview countdown (10 seconds)
-    const timerId = setInterval(() => {
-      const { previewCountdown } = get();
-      if (previewCountdown <= 1) {
-        // Time's up — auto-decline
-        get().declineConnection();
-      } else {
-        set({ previewCountdown: previewCountdown - 1 });
-        // Gradually unblur: start unblurring at 5 seconds
-        if (previewCountdown <= 6) {
-          set({ isBlurred: false });
-        }
-      }
-    }, 1000);
-
-    set({
-      state: 'preview',
-      matchedUser: user,
-      previewCountdown: 10,
-      isBlurred: true,
-      _searchTimerId: null,
-      _previewTimerId: timerId,
-    });
-  },
-
-  acceptConnection: () => {
-    const { _previewTimerId } = get();
-    if (_previewTimerId) clearInterval(_previewTimerId);
-
+  likeUser: () => {
+    const { matchedUser } = get();
+    if (!matchedUser) return;
     get().incrementDailyUsage();
-
-    set({
-      state: 'connected',
-      isBlurred: false,
-      _previewTimerId: null,
-    });
-
-    // TODO: Emit socket event to confirm connection
-    // socketService.emit('instant_connect:accept', { targetUserId: get().matchedUser?.id });
-  },
-
-  declineConnection: () => {
-    const { _previewTimerId } = get();
-    if (_previewTimerId) clearInterval(_previewTimerId);
-    set({
-      state: 'idle',
-      matchedUser: null,
-      isBlurred: true,
-      _previewTimerId: null,
-    });
-  },
-
-  endConnection: () => {
-    const { _searchTimerId, _previewTimerId } = get();
-    if (_searchTimerId) clearInterval(_searchTimerId);
-    if (_previewTimerId) clearInterval(_previewTimerId);
-    set({
-      state: 'ended',
-      _searchTimerId: null,
-      _previewTimerId: null,
-    });
-  },
-
-  reportUser: (reason: string) => {
-    const { matchedUser } = get();
-    if (!matchedUser) return;
-    // TODO: Call report API
-    get().endConnection();
-  },
-
-  blockUser: () => {
-    const { matchedUser } = get();
-    if (!matchedUser) return;
-    // TODO: Call block API
-    get().endConnection();
+    // TODO: Call match/like API
+    set({ state: 'idle', matchedUser: null });
   },
 
   reset: () => {
-    const { _searchTimerId, _previewTimerId } = get();
-    if (_searchTimerId) clearInterval(_searchTimerId);
-    if (_previewTimerId) clearInterval(_previewTimerId);
-    set({
-      state: 'idle',
-      matchedUser: null,
-      previewCountdown: 10,
-      searchDuration: 0,
-      isBlurred: true,
-      error: null,
-      _searchTimerId: null,
-      _previewTimerId: null,
-    });
+    set({ state: 'idle', matchedUser: null, previousUserIds: [], error: null });
   },
-
-  setPreviewCountdown: (value: number) => set({ previewCountdown: value }),
-  setSearchDuration: (value: number) => set({ searchDuration: value }),
-  setIsBlurred: (value: boolean) => set({ isBlurred: value }),
 
   getDailyUsage: () => {
     const today = new Date().toISOString().slice(0, 10);
@@ -238,6 +103,5 @@ export const useInstantConnectStore = create<InstantConnectStore>((set, get) => 
     }
     storage.setString(DAILY_LIMIT_DATE_KEY, today);
     storage.setNumber(DAILY_LIMIT_KEY, count + 1);
-    set({ dailyUsageCount: count + 1 });
   },
 }));

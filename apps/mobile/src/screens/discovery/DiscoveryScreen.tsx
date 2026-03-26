@@ -119,7 +119,7 @@ const DiscoveryFeatureBlocks: React.FC<{
       </LinearGradient>
     </Pressable>
 
-    {/* Aninda Baglan — energetic */}
+    {/* Surpriz Baglan — coin-based random match */}
     <Pressable onPress={onInstantPress} style={featureStyles.block}>
       <LinearGradient
         colors={['#F59E0B', '#EF4444'] as [string, string]}
@@ -128,10 +128,10 @@ const DiscoveryFeatureBlocks: React.FC<{
         style={featureStyles.gradient}
       >
         <View style={featureStyles.iconCircle}>
-          <Ionicons name="flash" size={28} color="#FFFFFF" />
+          <Ionicons name="shuffle" size={28} color="#FFFFFF" />
         </View>
-        <Text style={featureStyles.title}>Anında Bağlan</Text>
-        <Text style={featureStyles.subtitle}>Canlı etkileşim başlat</Text>
+        <Text style={featureStyles.title}>Sürpriz Bağlan</Text>
+        <Text style={featureStyles.subtitle}>25 jetonla rastgele eşleş</Text>
       </LinearGradient>
     </Pressable>
   </View>
