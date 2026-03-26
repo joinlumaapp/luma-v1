@@ -41,36 +41,6 @@ const formatTimeAgo = (dateString: string): string => {
   });
 };
 
-// ─── Identity Line Helper ─────────────────────────────────────
-
-const buildAgeCityLine = (age: number, city: string): string => {
-  const parts: string[] = [];
-  if (age > 0) parts.push(String(age));
-  if (city) parts.push(city);
-  return parts.join(' \u2022 ');
-};
-
-// ─── Vibe Chips ───────────────────────────────────────────────
-
-interface VibeChipsProps {
-  vibes: string[];
-  maxCount?: number;
-}
-
-const VibeChips: React.FC<VibeChipsProps> = ({ vibes, maxCount = 3 }) => {
-  if (!vibes || vibes.length === 0) return null;
-  const visibleVibes = vibes.slice(0, maxCount);
-
-  return (
-    <View style={vibeStyles.container}>
-      {visibleVibes.map((vibe, index) => (
-        <View key={index} style={vibeStyles.chip}>
-          <Text style={vibeStyles.chipText}>{vibe}</Text>
-        </View>
-      ))}
-    </View>
-  );
-};
 
 // ─── Media Section (photos + video) ──────────────────────────
 
@@ -289,7 +259,6 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
   const doubleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const intentionOption = INTENTION_TAG_OPTIONS.find((t) => t.id === post.intentionTag);
-  const ageCityLine = buildAgeCityLine(post.userAge, post.userCity);
 
   const handleFollowPress = useCallback(() => {
     onFollow(post.userId);
@@ -433,7 +402,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.headerInfo} onPress={handleProfilePress} activeOpacity={0.7}>
-          {/* Name row: name + verification badge */}
+          {/* Name + badge */}
           <View style={styles.nameRow}>
             <Text style={styles.userName} numberOfLines={1}>{post.userName}</Text>
             {post.verificationLevel === 'VERIFIED' && (
@@ -444,15 +413,16 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
             )}
           </View>
 
-          {/* Subtitle: age + city, then profession */}
-          {ageCityLine.length > 0 && (
-            <Text style={styles.identityLine} numberOfLines={1}>{ageCityLine}</Text>
-          )}
-          {post.userProfession && (
-            <Text style={styles.professionLine} numberOfLines={1}>{post.userProfession}</Text>
-          )}
+          {/* Subtitle: city + time */}
+          <View style={styles.subtitleRow}>
+            {post.userCity ? (
+              <Text style={styles.subtitleText}>{post.userCity}</Text>
+            ) : null}
+            {post.userCity ? <Text style={styles.subtitleDot}>{'\u00B7'}</Text> : null}
+            <Text style={styles.subtitleText}>{timeAgo}</Text>
+          </View>
 
-          {/* Currently listening indicator */}
+          {/* Currently listening — compact inline */}
           {post.currentlyListening && (
             <NowListening
               songTitle={post.currentlyListening.songTitle}
@@ -461,23 +431,6 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
               variant="compact"
             />
           )}
-
-          {/* Inline micro-badges: distance + compatibility */}
-          <View style={styles.metaRow}>
-            <Text style={styles.timeText}>{timeAgo}</Text>
-            {post.distance > 0 && (
-              <View style={styles.metaBadge}>
-                <Ionicons name="location" size={10} color={palette.coral[400]} />
-                <Text style={styles.metaBadgeText}>{post.distance} km</Text>
-              </View>
-            )}
-            {post.compatibilityScore > 0 && (
-              <View style={[styles.metaBadge, styles.compatBadge]}>
-                <Text style={styles.compatBadgeIcon}>{'\uD83D\uDC9C'}</Text>
-                <Text style={styles.compatBadgeText}>%{post.compatibilityScore} uyum</Text>
-              </View>
-            )}
-          </View>
         </TouchableOpacity>
 
         {!isOwnPost && (
@@ -498,24 +451,16 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
         )}
       </View>
 
-      {/* ── Tags row: intention badge + vibe chips (tertiary level) ── */}
-      {(intentionOption || (post.userVibes && post.userVibes.length > 0)) && (
-        <View style={styles.tagsRow}>
-          {intentionOption && (
-            <View style={[
-              styles.intentionBadge,
-              {
-                backgroundColor: intentionOption.color + '12',
-                borderColor: intentionOption.color + '25',
-              },
-            ]}>
-              <Text style={styles.intentionEmoji}>{intentionOption.emoji}</Text>
-              <Text style={[styles.intentionLabel, { color: intentionOption.color }]}>
-                {intentionOption.label}
-              </Text>
-            </View>
-          )}
-          <VibeChips vibes={post.userVibes} maxCount={2} />
+      {/* ── Intention chip — small, subtle ── */}
+      {intentionOption && (
+        <View style={[
+          styles.intentionChip,
+          { backgroundColor: intentionOption.color + '10', borderColor: intentionOption.color + '20' },
+        ]}>
+          <Text style={styles.intentionEmoji}>{intentionOption.emoji}</Text>
+          <Text style={[styles.intentionLabel, { color: intentionOption.color }]}>
+            {intentionOption.label}
+          </Text>
         </View>
       )}
 
@@ -655,31 +600,6 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
   );
 };
 
-// ─── Vibe Chip Styles ─────────────────────────────────────────
-
-const vibeStyles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 5,
-  },
-  chip: {
-    backgroundColor: palette.purple[50] + 'CC',
-    borderRadius: borderRadius.full,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderWidth: 0.5,
-    borderColor: palette.purple[200] + '60',
-  },
-  chipText: {
-    fontSize: 10,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-    color: palette.purple[600],
-    letterSpacing: 0.2,
-  },
-});
-
 // ─── Main Styles ──────────────────────────────────────────────
 
 const styles = StyleSheet.create({
@@ -743,59 +663,21 @@ const styles = StyleSheet.create({
   verifiedIcon: {
     marginLeft: 3,
   },
-  identityLine: {
+  subtitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 2,
+  },
+  subtitleText: {
     fontSize: 12,
     color: colors.textTertiary,
     fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
-    marginTop: 1,
-    letterSpacing: 0.15,
   },
-  professionLine: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-    marginTop: 1,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 4,
-  },
-  timeText: {
-    fontSize: 11,
+  subtitleDot: {
+    fontSize: 10,
     color: colors.textTertiary,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
-  },
-  metaBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-    backgroundColor: palette.gray[100] + '80',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: borderRadius.full,
-  },
-  metaBadgeText: {
-    fontSize: 10,
-    color: colors.textSecondary,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-  },
-  compatBadge: {
-    backgroundColor: palette.purple[50] + '90',
-  },
-  compatBadgeIcon: {
-    fontSize: 9,
-  },
-  compatBadgeText: {
-    fontSize: 10,
-    color: palette.purple[500],
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
   followButton: {
     flexDirection: 'row',
@@ -827,22 +709,17 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
   },
 
-  // ── Tags Row (tertiary: intention + vibes inline) ──
-  tagsRow: {
+  // ── Intention Chip (small, subtle) ──
+  intentionChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: spacing.smd,
-  },
-  intentionBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    alignSelf: 'flex-start',
     gap: 4,
-    paddingHorizontal: spacing.sm + 2,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
     borderRadius: borderRadius.full,
     borderWidth: 1,
+    marginBottom: spacing.sm,
   },
   intentionEmoji: {
     fontSize: 13,
