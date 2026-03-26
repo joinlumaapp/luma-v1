@@ -131,7 +131,7 @@ const DiscoveryFeatureBlocks: React.FC<{
           <Ionicons name="shuffle" size={28} color="#FFFFFF" />
         </View>
         <Text style={featureStyles.title}>Sürpriz Bağlan</Text>
-        <Text style={featureStyles.subtitle}>25 jetonla rastgele eşleş</Text>
+        <Text style={featureStyles.subtitle}>25 jetonla rastgele biriyle görüntülü konuş</Text>
       </LinearGradient>
     </Pressable>
   </View>

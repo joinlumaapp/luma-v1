@@ -1,4 +1,4 @@
-// InstantConnectScreen — "Sürpriz Bağlan" coin-based surprise match roulette
+// InstantConnectScreen — "Sürpriz Bağlan" coin-based random video chat
 // Flow: Idle → Spinning (roulette animation) → Revealed (user card)
 // User spends 25 coins to spin, 15 coins to switch for a different match
 
@@ -101,7 +101,7 @@ const IdlePhase: React.FC<{
       {/* Title */}
       <Text style={idleStyles.title}>Sürpriz Bağlan</Text>
       <Text style={idleStyles.subtitle}>
-        {'25 jeton ile rastgele biriyle eşleş.\nBeğenmezsen değiştir!'}
+        {'25 jeton ile rastgele biriyle görüntülü konuş.\nBeğenmezsen geç, yenisiyle tanış!'}
       </Text>
 
       {/* Coin indicator pill */}
@@ -137,7 +137,7 @@ const IdlePhase: React.FC<{
 
       {/* Small note */}
       <Text style={idleStyles.noteText}>
-        Her degistirme {SURPRISE_SWITCH_COST} jeton
+        Beğenmezsen {SURPRISE_SWITCH_COST} jetonla bir sonrakine geç
       </Text>
     </View>
   );
@@ -407,7 +407,7 @@ const RevealedPhase: React.FC<{
               color={canSwitch ? '#FFFFFF' : 'rgba(255,255,255,0.4)'}
             />
           </TouchableOpacity>
-          <Text style={revealStyles.switchLabel}>Değiştir</Text>
+          <Text style={revealStyles.switchLabel}>Geç</Text>
           <Text style={revealStyles.switchCost}>
             {SURPRISE_SWITCH_COST} {'\uD83E\uDE99'}
           </Text>
@@ -454,7 +454,7 @@ export const InstantConnectScreen: React.FC = () => {
 
   // Handle initial spin — spend 25 coins then trigger store spin
   const handleSpin = useCallback(async () => {
-    const spent = await spendCoins(SURPRISE_MATCH_COST, 'Sürpriz Bağlan - rulet cevirmesi');
+    const spent = await spendCoins(SURPRISE_MATCH_COST, 'Sürpriz Bağlan - görüntülü sohbet');
     if (spent) {
       startSpin();
     } else {
@@ -467,12 +467,12 @@ export const InstantConnectScreen: React.FC = () => {
 
   // Handle switch — spend 15 coins then re-spin
   const handleSwitch = useCallback(async () => {
-    const spent = await spendCoins(SURPRISE_SWITCH_COST, 'Sürpriz Bağlan - degistirme');
+    const spent = await spendCoins(SURPRISE_SWITCH_COST, 'Sürpriz Bağlan - sonrakine geç');
     if (spent) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
       switchUser();
     } else {
-      Alert.alert('Yetersiz Jeton', 'Değiştirmek için yeterli jetonun yok.', [
+      Alert.alert('Yetersiz Jeton', 'Sonrakine geçmek için yeterli jetonun yok.', [
         { text: 'Tamam', style: 'cancel' },
         { text: 'Jeton Al', onPress: () => navigation.navigate('JetonMarket' as never) },
       ]);
@@ -485,7 +485,7 @@ export const InstantConnectScreen: React.FC = () => {
     likeUser();
     Alert.alert(
       'Beğenildi!',
-      'Beğenin gönderildi. Eğer o da seni beğenirse eşleşeceksiniz!',
+      'Beğenin gönderildi! Karşı taraf da seni beğenirse sohbet başlayacak.',
       [
         {
           text: 'Tamam',
