@@ -78,6 +78,8 @@ export interface FeedPost {
   videoUrl: string | null;
   musicTitle: string | null;
   musicArtist: string | null;
+  musicCoverUrl: string | null;
+  musicMoodTag: string | null;
   distance: number;
   compatibilityScore: number;
   likeCount: number;
@@ -122,6 +124,8 @@ export interface CreatePostRequest {
   videoUrl?: string | null;
   musicTitle?: string | null;
   musicArtist?: string | null;
+  musicCoverUrl?: string;
+  musicMoodTag?: string;
 }
 
 export interface FeedResponse {
@@ -196,6 +200,8 @@ const MOCK_POSTS: FeedPost[] = [
     videoUrl: null,
     musicTitle: null,
     musicArtist: null,
+    musicCoverUrl: null,
+    musicMoodTag: null,
     distance: 3,
     compatibilityScore: 82,
     likeCount: 42,
@@ -228,6 +234,8 @@ const MOCK_POSTS: FeedPost[] = [
     videoUrl: null,
     musicTitle: null,
     musicArtist: null,
+    musicCoverUrl: null,
+    musicMoodTag: null,
     distance: 8,
     compatibilityScore: 91,
     likeCount: 67,
@@ -260,6 +268,8 @@ const MOCK_POSTS: FeedPost[] = [
     videoUrl: null,
     musicTitle: null,
     musicArtist: null,
+    musicCoverUrl: null,
+    musicMoodTag: null,
     distance: 12,
     compatibilityScore: 78,
     likeCount: 128,
@@ -292,6 +302,8 @@ const MOCK_POSTS: FeedPost[] = [
     videoUrl: null,
     musicTitle: 'Black Earth',
     musicArtist: 'Fazıl Say',
+    musicCoverUrl: 'https://picsum.photos/seed/fazilsay/200',
+    musicMoodTag: '\uD83C\uDF19 Gece',
     distance: 5,
     compatibilityScore: 65,
     likeCount: 53,
@@ -324,6 +336,8 @@ const MOCK_POSTS: FeedPost[] = [
     videoUrl: null,
     musicTitle: null,
     musicArtist: null,
+    musicCoverUrl: null,
+    musicMoodTag: null,
     distance: 15,
     compatibilityScore: 73,
     likeCount: 89,
@@ -356,6 +370,8 @@ const MOCK_POSTS: FeedPost[] = [
     videoUrl: null,
     musicTitle: null,
     musicArtist: null,
+    musicCoverUrl: null,
+    musicMoodTag: null,
     distance: 22,
     compatibilityScore: 88,
     likeCount: 156,
@@ -388,6 +404,8 @@ const MOCK_POSTS: FeedPost[] = [
     videoUrl: null,
     musicTitle: null,
     musicArtist: null,
+    musicCoverUrl: null,
+    musicMoodTag: null,
     distance: 7,
     compatibilityScore: 56,
     likeCount: 34,
@@ -420,6 +438,8 @@ const MOCK_POSTS: FeedPost[] = [
     videoUrl: null,
     musicTitle: 'Lo-fi Anatolian',
     musicArtist: 'Naz',
+    musicCoverUrl: 'https://picsum.photos/seed/lofi/200',
+    musicMoodTag: '\u2728 Mutlu',
     distance: 18,
     compatibilityScore: 71,
     likeCount: 71,
@@ -452,6 +472,8 @@ const MOCK_POSTS: FeedPost[] = [
     videoUrl: null,
     musicTitle: null,
     musicArtist: null,
+    musicCoverUrl: null,
+    musicMoodTag: null,
     distance: 11,
     compatibilityScore: 84,
     likeCount: 93,
@@ -484,6 +506,8 @@ const MOCK_POSTS: FeedPost[] = [
     videoUrl: null,
     musicTitle: null,
     musicArtist: null,
+    musicCoverUrl: null,
+    musicMoodTag: null,
     distance: 30,
     compatibilityScore: 62,
     likeCount: 45,
@@ -516,6 +540,8 @@ const MOCK_POSTS: FeedPost[] = [
     videoUrl: null,
     musicTitle: null,
     musicArtist: null,
+    musicCoverUrl: null,
+    musicMoodTag: null,
     distance: 9,
     compatibilityScore: 95,
     likeCount: 112,
@@ -548,6 +574,8 @@ const MOCK_POSTS: FeedPost[] = [
     videoUrl: null,
     musicTitle: null,
     musicArtist: null,
+    musicCoverUrl: null,
+    musicMoodTag: null,
     distance: 4,
     compatibilityScore: 79,
     likeCount: 58,
@@ -691,6 +719,8 @@ export const socialFeedService = {
         videoUrl: data.videoUrl ?? null,
         musicTitle: data.musicTitle ?? null,
         musicArtist: data.musicArtist ?? null,
+        musicCoverUrl: data.musicCoverUrl ?? null,
+        musicMoodTag: data.musicMoodTag ?? null,
         distance: 0,
         compatibilityScore: 100,
         likeCount: 0,

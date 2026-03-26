@@ -52,6 +52,7 @@ import type { StoryUser } from '../../services/storyService';
 import { useFlirtStore } from '../../stores/flirtStore';
 import { FEED_POST_CONFIG } from '../../constants/config';
 import { useCoinStore, SUGGESTED_STORY_VIEW_COST, FLIRT_START_COST } from '../../stores/coinStore';
+import { MusicPicker, type MusicTrack } from '../../components/feed/MusicPicker';
 import { FEATURE_RULES, isUnlimited as isFeatureUnlimited } from '../../constants/packageAccess';
 import type { PackageTier } from '../../stores/authStore';
 
@@ -117,13 +118,23 @@ const FilterTab: React.FC<FilterTabProps> = React.memo(({ filter, isActive, onPr
   );
 });
 
+// ─── Music Mood Tags ──────────────────────────────────────────
+
+const MUSIC_MOOD_TAGS = [
+  { id: 'passionate', emoji: '\uD83D\uDD25', label: 'Tutkulu', color: '#EF4444' },
+  { id: 'night', emoji: '\uD83C\uDF19', label: 'Gece', color: '#6366F1' },
+  { id: 'sad', emoji: '\uD83D\uDC94', label: 'H\u00FCz\u00FCnl\u00FC', color: '#8B5CF6' },
+  { id: 'happy', emoji: '\u2728', label: 'Mutlu', color: '#F59E0B' },
+  { id: 'energetic', emoji: '\uD83D\uDD7A', label: 'Enerjik', color: '#EC4899' },
+] as const;
+
 // ─── Create Post Modal ────────────────────────────────────────
 
 interface CreatePostModalProps {
   visible: boolean;
   postType: FeedPostType;
   onClose: () => void;
-  onSubmit: (content: string, topic: FeedTopic, postType: FeedPostType, photoUrls: string[], videoUrl: string | null, musicTitle: string | null, musicArtist: string | null) => void;
+  onSubmit: (content: string, topic: FeedTopic, postType: FeedPostType, photoUrls: string[], videoUrl: string | null, musicTitle: string | null, musicArtist: string | null, musicCoverUrl: string | null, musicMoodTag: string | null) => void;
   isCreating: boolean;
 }
 
@@ -142,6 +153,9 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
   const [attachedVideo, setAttachedVideo] = useState<string | null>(null);
   const [musicTitle, setMusicTitle] = useState('');
   const [musicArtist, setMusicArtist] = useState('');
+  const [selectedMoodTag, setSelectedMoodTag] = useState<string | null>(null);
+  const [showMusicPicker, setShowMusicPicker] = useState(false);
+  const [selectedTrack, setSelectedTrack] = useState<{ title: string; artist: string; coverUrl: string } | null>(null);
   const insets = useSafeAreaInsets();
 
   const postTypeOption = FEED_POST_TYPES.find((pt) => pt.type === postType);
@@ -149,29 +163,37 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
   const handleSubmit = useCallback(() => {
     const trimmed = content.trim();
     if (trimmed.length === 0 && attachedPhotos.length === 0 && !attachedVideo && postType !== 'music') return;
-    if (postType === 'music' && (!musicTitle.trim() || !musicArtist.trim())) {
-      Alert.alert('Uyari', 'Şarkı adı ve sanatci bilgisini gir.');
+    if (postType === 'music' && !selectedTrack) {
+      Alert.alert('Uyarı', 'Paylaşmak için bir şarkı seç.');
       return;
     }
     if (containsProfanity(trimmed)) {
       Alert.alert('Uyari', PROFANITY_WARNING);
       return;
     }
+    const finalMusicTitle = selectedTrack?.title ?? (musicTitle.trim() || null);
+    const finalMusicArtist = selectedTrack?.artist ?? (musicArtist.trim() || null);
+    const finalMusicCoverUrl = selectedTrack?.coverUrl ?? null;
+    const finalMusicMoodTag = selectedMoodTag ?? null;
     onSubmit(
       trimmed,
       selectedTopic,
       postType,
       attachedPhotos,
       attachedVideo,
-      postType === 'music' ? musicTitle.trim() : null,
-      postType === 'music' ? musicArtist.trim() : null,
+      postType === 'music' ? finalMusicTitle : null,
+      postType === 'music' ? finalMusicArtist : null,
+      postType === 'music' ? finalMusicCoverUrl : null,
+      postType === 'music' ? finalMusicMoodTag : null,
     );
     setContent('');
     setAttachedPhotos([]);
     setAttachedVideo(null);
     setMusicTitle('');
     setMusicArtist('');
-  }, [content, selectedTopic, postType, attachedPhotos, attachedVideo, musicTitle, musicArtist, onSubmit]);
+    setSelectedTrack(null);
+    setSelectedMoodTag(null);
+  }, [content, selectedTopic, postType, attachedPhotos, attachedVideo, musicTitle, musicArtist, selectedTrack, selectedMoodTag, onSubmit]);
 
   const handleAddPhoto = useCallback(async () => {
     if (attachedPhotos.length >= MAX_POST_PHOTOS) {
@@ -199,7 +221,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
     setAttachedVideo(null);
   }, []);
 
-  const hasContent = content.trim().length > 0 || attachedPhotos.length > 0 || attachedVideo !== null || (postType === 'music' && musicTitle.trim().length > 0);
+  const hasContent = content.trim().length > 0 || attachedPhotos.length > 0 || attachedVideo !== null || (postType === 'music' && selectedTrack !== null);
   const canSubmit = hasContent && !isCreating;
 
   const getPlaceholder = (): string => {
@@ -207,12 +229,13 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
       case 'photo': return 'Bir anını paylaş...';
       case 'video': return 'Ne göstermek istiyorsun?';
       case 'text': return 'Aklında ne var?';
-      case 'music': return 'Bu şarkı sana ne hissettiriyor?';
+      case 'music': return selectedTrack ? 'Bu şarkıyla vibe\'ını paylaş…' : 'Bir şarkı seç ve vibe\'ını paylaş…';
       default: return 'Aklında ne var?';
     }
   };
 
   return (
+    <>
     <Modal visible={visible} animationType="slide" transparent>
       <KeyboardAvoidingView
         style={modalStyles.overlay}
@@ -249,25 +272,45 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
             </TouchableOpacity>
           </View>
 
-          {/* Music fields */}
+          {/* Music section — Spotify-style track picker + mood tags */}
           {postType === 'music' && (
-            <View style={modalStyles.musicFields}>
-              <TextInput
-                style={modalStyles.musicInput}
-                placeholder="Şarkı adı"
-                placeholderTextColor={colors.textTertiary}
-                value={musicTitle}
-                onChangeText={setMusicTitle}
-                maxLength={100}
-              />
-              <TextInput
-                style={modalStyles.musicInput}
-                placeholder="Sanatçı"
-                placeholderTextColor={colors.textTertiary}
-                value={musicArtist}
-                onChangeText={setMusicArtist}
-                maxLength={100}
-              />
+            <View style={modalStyles.musicSection}>
+              {/* Selected track preview OR "Add Music" button */}
+              {selectedTrack ? (
+                <View style={modalStyles.selectedTrackCard}>
+                  <Image source={{ uri: selectedTrack.coverUrl }} style={modalStyles.trackCover} />
+                  <View style={modalStyles.trackInfo}>
+                    <Text style={modalStyles.trackTitle} numberOfLines={1}>{selectedTrack.title}</Text>
+                    <Text style={modalStyles.trackArtist} numberOfLines={1}>{selectedTrack.artist}</Text>
+                  </View>
+                  <TouchableOpacity onPress={() => { setSelectedTrack(null); setMusicTitle(''); setMusicArtist(''); }}>
+                    <Ionicons name="close-circle" size={22} color={colors.textTertiary} />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity style={modalStyles.addMusicButton} onPress={() => setShowMusicPicker(true)} activeOpacity={0.7}>
+                  <Ionicons name="musical-notes" size={22} color={palette.purple[400]} />
+                  <Text style={modalStyles.addMusicText}>M\u00FCzik Ekle</Text>
+                  <Ionicons name="chevron-forward" size={18} color={palette.purple[300]} />
+                </TouchableOpacity>
+              )}
+
+              {/* Mood Tags */}
+              <View style={modalStyles.moodTagsRow}>
+                {MUSIC_MOOD_TAGS.map((tag) => (
+                  <TouchableOpacity
+                    key={tag.id}
+                    style={[
+                      modalStyles.moodTagChip,
+                      selectedMoodTag === tag.id && { backgroundColor: tag.color + '25', borderColor: tag.color + '50' },
+                    ]}
+                    onPress={() => setSelectedMoodTag(selectedMoodTag === tag.id ? null : tag.id)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={modalStyles.moodTagText}>{tag.emoji} {tag.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
           )}
 
@@ -348,6 +391,17 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
         </View>
       </KeyboardAvoidingView>
     </Modal>
+    <MusicPicker
+      visible={showMusicPicker}
+      onClose={() => setShowMusicPicker(false)}
+      onSelect={(track: MusicTrack) => {
+        setSelectedTrack({ title: track.title, artist: track.artist, coverUrl: track.coverUrl });
+        setMusicTitle(track.title);
+        setMusicArtist(track.artist);
+        setShowMusicPicker(false);
+      }}
+    />
+    </>
   );
 };
 
@@ -866,8 +920,18 @@ export const SocialFeedScreen: React.FC = () => {
   }, [packageTier, dailyPostCount, lastPostDate, navigation]);
 
   const handleCreatePost = useCallback(
-    (content: string, topic: FeedTopic, postType: FeedPostType, photoUrls: string[], videoUrl: string | null, musicTitle: string | null, musicArtist: string | null) => {
-      createPost({ content, topic, postType, photoUrls, videoUrl, musicTitle, musicArtist });
+    (content: string, topic: FeedTopic, postType: FeedPostType, photoUrls: string[], videoUrl: string | null, musicTitle: string | null, musicArtist: string | null, musicCoverUrl: string | null, musicMoodTag: string | null) => {
+      createPost({
+        content,
+        topic,
+        postType,
+        photoUrls,
+        videoUrl,
+        musicTitle,
+        musicArtist,
+        musicCoverUrl: musicCoverUrl ?? undefined,
+        musicMoodTag: musicMoodTag ?? undefined,
+      });
       const today = getToday();
       setDailyPostCount((prev) => (lastPostDate === today ? prev + 1 : 1));
       setLastPostDate(today);
@@ -1499,20 +1563,80 @@ const modalStyles = StyleSheet.create({
   submitTextDisabled: {
     opacity: 0.4,
   },
-  musicFields: {
+  musicSection: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    gap: spacing.sm,
+    paddingTop: spacing.smd,
+    gap: spacing.smd,
   },
-  musicInput: {
-    ...typography.body,
-    color: colors.text,
-    backgroundColor: colors.surfaceLight,
+  selectedTrackCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: palette.purple[50] + '60',
+    borderRadius: borderRadius.lg,
+    padding: spacing.sm + 2,
+    gap: spacing.smd,
+    borderWidth: 1,
+    borderColor: palette.purple[200] + '30',
+  },
+  trackCover: {
+    width: 48,
+    height: 48,
     borderRadius: borderRadius.md,
+    backgroundColor: colors.surfaceLight,
+  },
+  trackInfo: {
+    flex: 1,
+  },
+  trackTitle: {
+    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: colors.text,
+  },
+  trackArtist: {
+    fontSize: 12,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: colors.textSecondary,
+    marginTop: 1,
+  },
+  addMusicButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: palette.purple[50] + '80',
+    borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
+    paddingVertical: spacing.smd,
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: palette.purple[200] + '25',
+    borderStyle: 'dashed',
+  },
+  addMusicText: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: palette.purple[500],
+  },
+  moodTagsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  moodTagChip: {
+    paddingHorizontal: spacing.smd,
+    paddingVertical: 6,
+    borderRadius: borderRadius.full,
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
+    backgroundColor: colors.surfaceLight,
+  },
+  moodTagText: {
+    fontSize: 12,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: colors.textSecondary,
   },
   textInput: {
     ...typography.body,

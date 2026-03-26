@@ -135,24 +135,59 @@ const MediaSection: React.FC<MediaSectionProps> = ({ photos, videoUrl }) => {
   );
 };
 
-// ─── Music Card ──────────────────────────────────────────────
+// ─── Music Card (redesigned: cover art, gradient overlay, mood tag) ──
 
 interface MusicCardProps {
   title: string;
   artist: string;
+  coverUrl?: string | null;
+  moodTag?: string | null;
 }
 
-const MusicCard: React.FC<MusicCardProps> = ({ title, artist }) => (
-  <View style={musicStyles.container}>
-    <View style={musicStyles.iconCircle}>
-      <Text style={musicStyles.icon}>{'\uD83C\uDFB5'}</Text>
+const MusicCard: React.FC<MusicCardProps> = ({ title, artist, coverUrl, moodTag }) => {
+  if (coverUrl) {
+    return (
+      <View style={musicStyles.coverContainer}>
+        <Image
+          source={{ uri: coverUrl }}
+          style={musicStyles.coverImage}
+          resizeMode="cover"
+        />
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.35)', 'rgba(0,0,0,0.82)']}
+          locations={[0, 0.4, 1]}
+          style={musicStyles.coverGradient}
+        />
+        {moodTag && (
+          <View style={musicStyles.moodPill}>
+            <Text style={musicStyles.moodText}>{moodTag}</Text>
+          </View>
+        )}
+        <View style={musicStyles.coverContent}>
+          <View style={musicStyles.playCircle}>
+            <Ionicons name="play" size={16} color="#FFFFFF" style={{ marginLeft: 2 }} />
+          </View>
+          <View style={musicStyles.coverInfo}>
+            <Text style={musicStyles.coverTitle} numberOfLines={1}>{title}</Text>
+            <Text style={musicStyles.coverArtist} numberOfLines={1}>{artist}</Text>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={musicStyles.container}>
+      <View style={musicStyles.iconCircle}>
+        <Ionicons name="musical-notes" size={18} color={palette.purple[400]} />
+      </View>
+      <View style={musicStyles.info}>
+        <Text style={musicStyles.title} numberOfLines={1}>{title}</Text>
+        <Text style={musicStyles.artist} numberOfLines={1}>{artist}</Text>
+      </View>
     </View>
-    <View style={musicStyles.info}>
-      <Text style={musicStyles.title} numberOfLines={1}>{title}</Text>
-      <Text style={musicStyles.artist} numberOfLines={1}>{artist}</Text>
-    </View>
-  </View>
-);
+  );
+};
 
 // ─── Question Card (redesigned: soft gradient, inviting) ─────
 
@@ -410,7 +445,12 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
         <MediaSection photos={post.photoUrls} videoUrl={post.videoUrl} />
 
         {isMusic && (
-          <MusicCard title={post.musicTitle!} artist={post.musicArtist!} />
+          <MusicCard
+            title={post.musicTitle!}
+            artist={post.musicArtist!}
+            coverUrl={post.musicCoverUrl}
+            moodTag={post.musicMoodTag}
+          />
         )}
 
         {/* Double-tap overlay */}
@@ -908,6 +948,86 @@ const mediaStyles = StyleSheet.create({
 // ─── Music Card Styles ────────────────────────────────────────
 
 const musicStyles = StyleSheet.create({
+  // ── Cover-based design (when coverUrl exists) ──
+  coverContainer: {
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+    marginBottom: spacing.sm + 2,
+    height: 140,
+    position: 'relative' as const,
+  },
+  coverImage: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: palette.purple[900],
+  },
+  coverGradient: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  moodPill: {
+    position: 'absolute',
+    top: spacing.smd,
+    right: spacing.smd,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.smd,
+    paddingVertical: 4,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255,255,255,0.25)',
+  },
+  moodText: {
+    fontSize: 11,
+    color: '#FFFFFF',
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    letterSpacing: 0.3,
+  },
+  coverContent: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
+    paddingTop: spacing.sm,
+  },
+  playCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(139, 92, 246, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  coverInfo: {
+    flex: 1,
+    marginLeft: spacing.smd,
+  },
+  coverTitle: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '700',
+    letterSpacing: 0.2,
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  coverArtist: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.75)',
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    marginTop: 1,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  // ── Fallback design (no cover, purple-tinted) ──
   container: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -926,7 +1046,6 @@ const musicStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  icon: { fontSize: 18 },
   info: { flex: 1, marginLeft: spacing.smd },
   title: {
     fontSize: 14,
