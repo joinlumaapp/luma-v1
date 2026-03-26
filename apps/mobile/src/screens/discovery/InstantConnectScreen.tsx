@@ -1,6 +1,6 @@
-// InstantConnectScreen — "Sürpriz Bağlan" coin-based random video chat
-// Flow: Idle → Spinning (roulette animation) → Revealed (user card)
-// User spends 25 coins to spin, 15 coins to switch for a different match
+// InstantConnectScreen — "Sürpriz Bağlan" 1:1 random video chat flow
+// Flow: Confirm → Searching (camera placeholder) → Connected (matched user overlay)
+// User spends 25 coins to start, 15 coins to skip to next match
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
@@ -11,7 +11,6 @@ import {
   Alert,
   Animated,
   Easing,
-  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,25 +20,17 @@ import { useInstantConnectStore } from '../../stores/instantConnectStore';
 import { useCoinStore, SURPRISE_MATCH_COST, SURPRISE_SWITCH_COST } from '../../stores/coinStore';
 import { CachedAvatar } from '../../components/common/CachedAvatar';
 import { palette } from '../../theme/colors';
-import { spacing } from '../../theme/spacing';
+import { spacing, borderRadius } from '../../theme/spacing';
 import * as Haptics from 'expo-haptics';
 
-// Mock avatar URLs for the spinning roulette animation
-const SPIN_AVATARS = [
-  'https://i.pravatar.cc/150?img=1',
-  'https://i.pravatar.cc/150?img=5',
-  'https://i.pravatar.cc/150?img=9',
-  'https://i.pravatar.cc/150?img=16',
-  'https://i.pravatar.cc/150?img=20',
-  'https://i.pravatar.cc/150?img=23',
-];
+type Phase = 'confirm' | 'searching' | 'connected';
 
-// ─── Idle Phase ─────────────────────────────────────────────────
+// ─── Confirm Phase ──────────────────────────────────────────────────────────
 
-const IdlePhase: React.FC<{
+const ConfirmPhase: React.FC<{
   coinBalance: number;
-  onSpin: () => void;
-}> = ({ coinBalance, onSpin }) => {
+  onStart: () => void;
+}> = ({ coinBalance, onStart }) => {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0.3)).current;
 
@@ -47,7 +38,7 @@ const IdlePhase: React.FC<{
     const pulseLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
-          toValue: 1.08,
+          toValue: 1.06,
           duration: 1200,
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
@@ -65,7 +56,7 @@ const IdlePhase: React.FC<{
     const glowLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(glowAnim, {
-          toValue: 0.7,
+          toValue: 0.6,
           duration: 1500,
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
@@ -89,256 +80,281 @@ const IdlePhase: React.FC<{
   const hasEnoughCoins = coinBalance >= SURPRISE_MATCH_COST;
 
   return (
-    <View style={idleStyles.container}>
-      {/* Dice icon with pulse */}
-      <Animated.View style={[idleStyles.iconContainer, { transform: [{ scale: pulseAnim }] }]}>
-        <Animated.View style={[idleStyles.iconGlow, { opacity: glowAnim }]} />
-        <View style={idleStyles.iconInner}>
-          <Ionicons name="dice" size={56} color="#FFFFFF" />
+    <View style={confirmStyles.container}>
+      {/* Camera icon with pulse */}
+      <Animated.View style={[confirmStyles.iconContainer, { transform: [{ scale: pulseAnim }] }]}>
+        <Animated.View style={[confirmStyles.iconGlow, { opacity: glowAnim }]} />
+        <View style={confirmStyles.iconInner}>
+          <Ionicons name="videocam" size={48} color="#FFFFFF" />
         </View>
       </Animated.View>
 
       {/* Title */}
-      <Text style={idleStyles.title}>Sürpriz Bağlan</Text>
-      <Text style={idleStyles.subtitle}>
-        {'25 jeton ile rastgele biriyle görüntülü konuş.\nBeğenmezsen geç, yenisiyle tanış!'}
+      <Text style={confirmStyles.title}>Sürpriz Bağlan</Text>
+      <Text style={confirmStyles.subtitle}>
+        {'Kameran açılacak ve rastgele biriyle\ngörüntülü sohbet başlayacak.'}
       </Text>
 
-      {/* Coin indicator pill */}
-      <View style={idleStyles.coinPill}>
-        <Text style={idleStyles.coinEmoji}>{'\uD83E\uDE99'}</Text>
-        <Text style={idleStyles.coinPillText}>{SURPRISE_MATCH_COST} Jeton</Text>
+      {/* Camera warning pill */}
+      <View style={confirmStyles.warningPill}>
+        <Text style={confirmStyles.warningEmoji}>{'\uD83D\uDCF9'}</Text>
+        <Text style={confirmStyles.warningText}>Kamera kullanılacak</Text>
       </View>
 
       {/* CTA Button */}
       <TouchableOpacity
-        onPress={onSpin}
+        onPress={onStart}
         activeOpacity={0.85}
-        style={idleStyles.ctaWrapper}
+        style={confirmStyles.ctaWrapper}
         disabled={!hasEnoughCoins}
       >
         <LinearGradient
           colors={hasEnoughCoins ? [palette.purple[500], palette.pink[500]] : ['#6B7280', '#4B5563']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          style={idleStyles.ctaButton}
+          style={confirmStyles.ctaButton}
         >
-          <Ionicons name="sparkles" size={22} color="#FFFFFF" />
-          <Text style={idleStyles.ctaText}>Şansını Dene</Text>
+          <Text style={confirmStyles.ctaText}>
+            Başla {'\u00B7'} {SURPRISE_MATCH_COST} Jeton
+          </Text>
         </LinearGradient>
       </TouchableOpacity>
 
-      {/* Balance indicator when insufficient */}
+      {/* Insufficient balance indicator */}
       {!hasEnoughCoins && (
-        <Text style={idleStyles.insufficientText}>
+        <Text style={confirmStyles.insufficientText}>
           Yetersiz jeton (Bakiye: {coinBalance})
         </Text>
       )}
 
       {/* Small note */}
-      <Text style={idleStyles.noteText}>
-        Beğenmezsen {SURPRISE_SWITCH_COST} jetonla bir sonrakine geç
+      <Text style={confirmStyles.noteText}>
+        Beğenmezsen geçebilirsin
       </Text>
     </View>
   );
 };
 
-// ─── Spinning Phase ─────────────────────────────────────────────
+// ─── Searching Phase ────────────────────────────────────────────────────────
 
-const SpinningPhase: React.FC = () => {
-  const [currentAvatarIndex, setCurrentAvatarIndex] = useState(0);
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const glowPulse = useRef(new Animated.Value(0.4)).current;
+const SearchingPhase: React.FC<{
+  onCancel: () => void;
+}> = ({ onCancel }) => {
+  const ringScale = useRef(new Animated.Value(1)).current;
+  const ringOpacity = useRef(new Animated.Value(0.6)).current;
+  const outerRingScale = useRef(new Animated.Value(1)).current;
+  const outerRingOpacity = useRef(new Animated.Value(0.3)).current;
+  const [dots, setDots] = useState('');
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   useEffect(() => {
-    // Haptic feedback on spin start
+    // Haptic on search start
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
 
-    // Glow pulse animation
-    const glowLoop = Animated.loop(
+    // Inner pulsing ring animation
+    const innerPulse = Animated.loop(
       Animated.sequence([
-        Animated.timing(glowPulse, {
-          toValue: 0.8,
-          duration: 400,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(glowPulse, {
-          toValue: 0.4,
-          duration: 400,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
+        Animated.parallel([
+          Animated.timing(ringScale, {
+            toValue: 1.3,
+            duration: 800,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(ringOpacity, {
+            toValue: 0.15,
+            duration: 800,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.parallel([
+          Animated.timing(ringScale, {
+            toValue: 1,
+            duration: 800,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(ringOpacity, {
+            toValue: 0.6,
+            duration: 800,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ]),
       ]),
     );
-    glowLoop.start();
+    innerPulse.start();
 
-    // Rotating ring animation
-    const rotateLoop = Animated.loop(
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: 1200,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }),
-    );
-    rotateLoop.start();
-
-    // Avatar cycling — starts fast (200ms), slows down over time
-    let speed = 200;
-    let elapsed = 0;
-    let active = true;
-    let timerId: ReturnType<typeof setTimeout> | null = null;
-
-    const cycle = () => {
-      if (!active) return;
-      timerId = setTimeout(() => {
-        if (!active) return;
-        elapsed += speed;
-
-        setCurrentAvatarIndex((prev) => (prev + 1) % SPIN_AVATARS.length);
-
-        // Scale bounce on each avatar switch
-        Animated.sequence([
-          Animated.timing(scaleAnim, {
-            toValue: 0.85,
-            duration: speed * 0.3,
+    // Outer pulsing ring (delayed, larger)
+    const outerPulse = Animated.loop(
+      Animated.sequence([
+        Animated.delay(400),
+        Animated.parallel([
+          Animated.timing(outerRingScale, {
+            toValue: 1.5,
+            duration: 1000,
+            easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
-          Animated.timing(scaleAnim, {
+          Animated.timing(outerRingOpacity, {
+            toValue: 0,
+            duration: 1000,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.parallel([
+          Animated.timing(outerRingScale, {
             toValue: 1,
-            duration: speed * 0.4,
+            duration: 0,
             useNativeDriver: true,
           }),
-        ]).start();
+          Animated.timing(outerRingOpacity, {
+            toValue: 0.3,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]),
+    );
+    outerPulse.start();
 
-        // Haptic on each tick
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    // Animated dots cycling: "" → "." → ".." → "..."
+    const dotsInterval = setInterval(() => {
+      setDots((prev) => {
+        if (prev.length >= 3) return '';
+        return prev + '.';
+      });
+    }, 500);
 
-        // Slow down after 1.5s
-        if (elapsed > 1500 && speed < 400) {
-          speed = 400;
-        }
-        // Slow down more after 2s
-        if (elapsed > 2000 && speed < 600) {
-          speed = 600;
-        }
-
-        cycle();
-      }, speed);
-    };
-
-    cycle();
+    // Elapsed timer
+    const timerInterval = setInterval(() => {
+      setElapsedSeconds((prev) => prev + 1);
+    }, 1000);
 
     return () => {
-      active = false;
-      if (timerId) clearTimeout(timerId);
-      glowLoop.stop();
-      rotateLoop.stop();
+      innerPulse.stop();
+      outerPulse.stop();
+      clearInterval(dotsInterval);
+      clearInterval(timerInterval);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const rotate = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  };
 
   return (
-    <View style={spinStyles.container}>
-      {/* Glow background */}
-      <Animated.View style={[spinStyles.glowBg, { opacity: glowPulse }]} />
+    <View style={searchStyles.container}>
+      {/* Dark camera placeholder background */}
+      <LinearGradient
+        colors={['#111111', '#1A1028', '#111111']}
+        style={StyleSheet.absoluteFillObject}
+      />
 
-      {/* Spinning ring */}
-      <View style={spinStyles.ringArea}>
-        <Animated.View style={[spinStyles.outerRing, { transform: [{ rotate }] }]}>
-          <LinearGradient
-            colors={[palette.purple[500], palette.pink[500], palette.purple[400]]}
-            style={spinStyles.ringGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          />
-        </Animated.View>
-
-        {/* Cycling avatar */}
-        <Animated.View style={[spinStyles.avatarSlot, { transform: [{ scale: scaleAnim }] }]}>
-          <Image
-            source={{ uri: SPIN_AVATARS[currentAvatarIndex] }}
-            style={spinStyles.spinAvatar}
-            blurRadius={3}
-          />
-        </Animated.View>
+      {/* Pulsing rings in center */}
+      <View style={searchStyles.ringArea}>
+        {/* Outer ring */}
+        <Animated.View
+          style={[
+            searchStyles.ring,
+            searchStyles.outerRing,
+            {
+              transform: [{ scale: outerRingScale }],
+              opacity: outerRingOpacity,
+            },
+          ]}
+        />
+        {/* Inner ring */}
+        <Animated.View
+          style={[
+            searchStyles.ring,
+            searchStyles.innerRing,
+            {
+              transform: [{ scale: ringScale }],
+              opacity: ringOpacity,
+            },
+          ]}
+        />
+        {/* Center camera icon */}
+        <View style={searchStyles.centerIcon}>
+          <Ionicons name="videocam" size={36} color="rgba(255,255,255,0.5)" />
+        </View>
       </View>
 
-      <Text style={spinStyles.title}>Eslesmen bulunuyor...</Text>
+      {/* Searching text with animated dots */}
+      <Text style={searchStyles.searchingText}>
+        Uyumlu biri aranıyor{dots}
+      </Text>
 
-      {/* Animated dots */}
-      <View style={spinStyles.dotsRow}>
-        {[0, 1, 2].map((i) => (
-          <SpinningDot key={i} delay={i * 300} />
-        ))}
-      </View>
+      {/* Elapsed timer */}
+      <Text style={searchStyles.timer}>{formatTime(elapsedSeconds)}</Text>
+
+      {/* Cancel button */}
+      <TouchableOpacity
+        style={searchStyles.cancelButton}
+        onPress={onCancel}
+        activeOpacity={0.8}
+      >
+        <Text style={searchStyles.cancelText}>Vazgeç</Text>
+      </TouchableOpacity>
     </View>
   );
 };
 
-// Animated dot for loading indicator
-const SpinningDot: React.FC<{ delay: number }> = ({ delay }) => {
-  const opacity = useRef(new Animated.Value(0.3)).current;
+// ─── Connected Phase ────────────────────────────────────────────────────────
 
-  useEffect(() => {
-    const anim = Animated.loop(
-      Animated.sequence([
-        Animated.delay(delay),
-        Animated.timing(opacity, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacity, {
-          toValue: 0.3,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-    anim.start();
-    return () => anim.stop();
-  }, [opacity, delay]);
-
-  return <Animated.View style={[spinStyles.dot, { opacity }]} />;
-};
-
-// ─── Revealed Phase ─────────────────────────────────────────────
-
-const RevealedPhase: React.FC<{
-  onSwitch: () => void;
+const ConnectedPhase: React.FC<{
+  onSkip: () => void;
   onLike: () => void;
   coinBalance: number;
-}> = ({ onSwitch, onLike, coinBalance }) => {
+}> = ({ onSkip, onLike, coinBalance }) => {
   const user = useInstantConnectStore((s) => s.matchedUser);
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const overlayTranslateY = useRef(new Animated.Value(-60)).current;
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
+  const buttonsTranslateY = useRef(new Animated.Value(80)).current;
+  const buttonsOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Haptic on reveal
+    // Haptic on match reveal
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
 
+    // Animate top overlay in with spring
     Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 60,
-        friction: 7,
+      Animated.spring(overlayTranslateY, {
+        toValue: 0,
+        tension: 50,
+        friction: 8,
         useNativeDriver: true,
       }),
-      Animated.timing(opacityAnim, {
+      Animated.timing(overlayOpacity, {
         toValue: 1,
         duration: 400,
         useNativeDriver: true,
       }),
     ]).start();
-  }, [scaleAnim, opacityAnim]);
+
+    // Animate bottom controls in
+    Animated.parallel([
+      Animated.spring(buttonsTranslateY, {
+        toValue: 0,
+        tension: 50,
+        friction: 8,
+        delay: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(buttonsOpacity, {
+        toValue: 1,
+        duration: 400,
+        delay: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [overlayTranslateY, overlayOpacity, buttonsTranslateY, buttonsOpacity]);
 
   if (!user) return null;
 
@@ -349,95 +365,123 @@ const RevealedPhase: React.FC<{
         ? '#F59E0B'
         : palette.purple[500];
 
-  const canSwitch = coinBalance >= SURPRISE_SWITCH_COST;
+  const canSkip = coinBalance >= SURPRISE_SWITCH_COST;
 
   return (
-    <Animated.View
-      style={[
-        revealStyles.container,
-        { transform: [{ scale: scaleAnim }], opacity: opacityAnim },
-      ]}
-    >
-      {/* Avatar with purple ring border */}
-      <View style={revealStyles.avatarWrapper}>
-        <View style={revealStyles.avatarRing}>
-          <CachedAvatar
-            uri={user.avatarUrl}
-            size={140}
-            name={user.name}
-            verified={user.isVerified}
-          />
-        </View>
-      </View>
+    <View style={connectedStyles.container}>
+      {/* Dark video placeholder background */}
+      <LinearGradient
+        colors={['#111111', '#1A1028', '#111111']}
+        style={StyleSheet.absoluteFillObject}
+      />
 
-      {/* User info */}
-      <Text style={revealStyles.userName}>
-        {user.name}, {user.age}
-      </Text>
-      <Text style={revealStyles.userCity}>{user.city}</Text>
-
-      {/* Compatibility badge */}
-      <View
+      {/* Top overlay — matched user info */}
+      <Animated.View
         style={[
-          revealStyles.compatBadge,
-          { backgroundColor: compatColor + '20', borderColor: compatColor + '40' },
+          connectedStyles.topOverlay,
+          {
+            transform: [{ translateY: overlayTranslateY }],
+            opacity: overlayOpacity,
+          },
         ]}
       >
-        <Text style={[revealStyles.compatText, { color: compatColor }]}>
-          %{user.compatibilityPercent} Uyum
-        </Text>
-      </View>
+        <View style={connectedStyles.userInfoRow}>
+          <View style={connectedStyles.avatarBorder}>
+            <CachedAvatar
+              uri={user.avatarUrl}
+              size={56}
+              name={user.name}
+              verified={user.isVerified}
+            />
+          </View>
+          <View style={connectedStyles.userTextCol}>
+            <Text style={connectedStyles.userName}>
+              {user.name}, {user.age}
+            </Text>
+            <Text style={connectedStyles.userCity}>{user.city}</Text>
+          </View>
+          {/* Compatibility badge */}
+          <View
+            style={[
+              connectedStyles.compatBadge,
+              { backgroundColor: compatColor + '25', borderColor: compatColor + '50' },
+            ]}
+          >
+            <Text style={[connectedStyles.compatText, { color: compatColor }]}>
+              %{user.compatibilityPercent}
+            </Text>
+          </View>
+        </View>
+      </Animated.View>
 
-      {/* Action buttons */}
-      <View style={revealStyles.actionRow}>
-        {/* Switch button */}
-        <View style={revealStyles.switchCol}>
+      {/* Bottom controls */}
+      <Animated.View
+        style={[
+          connectedStyles.bottomControls,
+          {
+            transform: [{ translateY: buttonsTranslateY }],
+            opacity: buttonsOpacity,
+          },
+        ]}
+      >
+        {/* Skip button */}
+        <View style={connectedStyles.actionCol}>
           <TouchableOpacity
             style={[
-              revealStyles.switchButton,
-              !canSwitch && revealStyles.switchButtonDisabled,
+              connectedStyles.skipButton,
+              !canSkip && connectedStyles.buttonDisabled,
             ]}
-            onPress={onSwitch}
+            onPress={onSkip}
             activeOpacity={0.8}
-            disabled={!canSwitch}
+            disabled={!canSkip}
           >
             <Ionicons
-              name="shuffle"
-              size={26}
-              color={canSwitch ? '#FFFFFF' : 'rgba(255,255,255,0.4)'}
+              name="close"
+              size={30}
+              color={canSkip ? '#FF6B6B' : 'rgba(255,107,107,0.4)'}
             />
           </TouchableOpacity>
-          <Text style={revealStyles.switchLabel}>Geç</Text>
-          <Text style={revealStyles.switchCost}>
+          <Text style={connectedStyles.actionLabel}>Geç</Text>
+          <Text style={connectedStyles.costLabel}>
             {SURPRISE_SWITCH_COST} {'\uD83E\uDE99'}
           </Text>
         </View>
 
         {/* Like button */}
-        <TouchableOpacity onPress={onLike} activeOpacity={0.85} style={revealStyles.likeWrapper}>
-          <LinearGradient
-            colors={[palette.purple[500], palette.pink[500]]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={revealStyles.likeButton}
+        <View style={connectedStyles.actionCol}>
+          <TouchableOpacity
+            onPress={onLike}
+            activeOpacity={0.85}
+            style={connectedStyles.likeButtonWrapper}
           >
-            <Ionicons name="heart" size={24} color="#FFFFFF" />
-            <Text style={revealStyles.likeText}>Beğen</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
-    </Animated.View>
+            <LinearGradient
+              colors={['#10B981', '#059669']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={connectedStyles.likeButton}
+            >
+              <Ionicons name="heart" size={30} color="#FFFFFF" />
+            </LinearGradient>
+          </TouchableOpacity>
+          <Text style={connectedStyles.actionLabel}>Beğen</Text>
+        </View>
+      </Animated.View>
+    </View>
   );
 };
 
-// ─── Main Screen ─────────────────────────────────────────────────
+// ─── Main Screen ────────────────────────────────────────────────────────────
 
 export const InstantConnectScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
 
-  // Store state
-  const state = useInstantConnectStore((s) => s.state);
+  // Local phase state derived from store state
+  const [phase, setPhase] = useState<Phase>('confirm');
+
+  // Store selectors
+  const storeState = useInstantConnectStore((s) => s.state);
+  const matchedUser = useInstantConnectStore((s) => s.matchedUser);
   const startSpin = useInstantConnectStore((s) => s.startSpin);
   const switchUser = useInstantConnectStore((s) => s.switchUser);
   const likeUser = useInstantConnectStore((s) => s.likeUser);
@@ -452,50 +496,63 @@ export const InstantConnectScreen: React.FC = () => {
     return () => reset();
   }, [reset]);
 
-  // Handle initial spin — spend 25 coins then trigger store spin
-  const handleSpin = useCallback(async () => {
+  // Sync store state → local phase
+  useEffect(() => {
+    if (storeState === 'revealed' && matchedUser) {
+      setPhase('connected');
+    }
+  }, [storeState, matchedUser]);
+
+  // Handle start — spend coins then enter searching
+  const handleStart = useCallback(async () => {
     const spent = await spendCoins(SURPRISE_MATCH_COST, 'Sürpriz Bağlan - görüntülü sohbet');
     if (spent) {
+      setPhase('searching');
       startSpin();
     } else {
       Alert.alert('Yetersiz Jeton', 'Jeton bakiyen yetersiz. Jeton satin almak ister misin?', [
-        { text: 'Vazgec', style: 'cancel' },
+        { text: 'Vazgeç', style: 'cancel' },
         { text: 'Jeton Al', onPress: () => navigation.navigate('JetonMarket' as never) },
       ]);
     }
   }, [spendCoins, startSpin, navigation]);
 
-  // Handle switch — spend 15 coins then re-spin
-  const handleSwitch = useCallback(async () => {
-    const spent = await spendCoins(SURPRISE_SWITCH_COST, 'Sürpriz Bağlan - sonrakine geç');
+  // Handle skip — spend coins, go back to searching
+  const handleSkip = useCallback(async () => {
+    const spent = await spendCoins(SURPRISE_SWITCH_COST, 'Sürpriz Bağlan - geç');
     if (spent) {
+      setPhase('searching');
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
       switchUser();
     } else {
-      Alert.alert('Yetersiz Jeton', 'Sonrakine geçmek için yeterli jetonun yok.', [
+      Alert.alert('Yetersiz Jeton', 'Sonrakine gecmek icin yeterli jetonun yok.', [
         { text: 'Tamam', style: 'cancel' },
         { text: 'Jeton Al', onPress: () => navigation.navigate('JetonMarket' as never) },
       ]);
     }
   }, [spendCoins, switchUser, navigation]);
 
-  // Handle like — accept the matched user
+  // Handle like — accept matched user
   const handleLike = useCallback(() => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     likeUser();
     Alert.alert(
       'Beğenildi!',
-      'Beğenin gönderildi! Karşı taraf da seni beğenirse sohbet başlayacak.',
+      'Karşı taraf da seni beğenirse sohbet başlayacak.',
       [
         {
           text: 'Tamam',
-          onPress: () => {
-            navigation.goBack();
-          },
+          onPress: () => navigation.goBack(),
         },
       ],
     );
   }, [likeUser, navigation]);
+
+  // Handle cancel from searching
+  const handleCancel = useCallback(() => {
+    reset();
+    setPhase('confirm');
+  }, [reset]);
 
   // Handle back navigation
   const handleBack = useCallback(() => {
@@ -503,13 +560,23 @@ export const InstantConnectScreen: React.FC = () => {
     navigation.goBack();
   }, [reset, navigation]);
 
+  // Determine if we show the top bar (back + balance)
+  const showTopBar = phase === 'confirm' || phase === 'connected';
+
   return (
-    <LinearGradient
-      colors={['#1A0A2E', '#2D1B4E', '#1A0A2E']}
-      style={styles.container}
-    >
-      {/* Back button — visible in idle and revealed states */}
-      {state !== 'spinning' && (
+    <View style={styles.container}>
+      {/* Background gradient for confirm phase, solid dark for others */}
+      {phase === 'confirm' ? (
+        <LinearGradient
+          colors={['#1A0A2E', '#2D1B4E', '#1A0A2E']}
+          style={StyleSheet.absoluteFillObject}
+        />
+      ) : (
+        <View style={[StyleSheet.absoluteFillObject, { backgroundColor: '#111111' }]} />
+      )}
+
+      {/* Back button */}
+      {showTopBar && (
         <TouchableOpacity
           style={[styles.backButton, { top: insets.top + 8 }]}
           onPress={handleBack}
@@ -521,39 +588,40 @@ export const InstantConnectScreen: React.FC = () => {
         </TouchableOpacity>
       )}
 
-      {/* Coin balance indicator — top right */}
-      {state !== 'spinning' && (
+      {/* Coin balance — top right */}
+      {showTopBar && (
         <View style={[styles.balancePill, { top: insets.top + 12 }]}>
           <Text style={styles.balanceEmoji}>{'\uD83E\uDE99'}</Text>
           <Text style={styles.balanceText}>{coinBalance}</Text>
         </View>
       )}
 
-      {/* Idle state */}
-      {state === 'idle' && (
-        <IdlePhase coinBalance={coinBalance} onSpin={handleSpin} />
+      {/* Phase content */}
+      {phase === 'confirm' && (
+        <ConfirmPhase coinBalance={coinBalance} onStart={handleStart} />
       )}
 
-      {/* Spinning state */}
-      {state === 'spinning' && <SpinningPhase />}
+      {phase === 'searching' && (
+        <SearchingPhase onCancel={handleCancel} />
+      )}
 
-      {/* Revealed state */}
-      {state === 'revealed' && (
-        <RevealedPhase
-          onSwitch={handleSwitch}
+      {phase === 'connected' && (
+        <ConnectedPhase
+          onSkip={handleSkip}
           onLike={handleLike}
           coinBalance={coinBalance}
         />
       )}
-    </LinearGradient>
+    </View>
   );
 };
 
-// ─── Main Styles ─────────────────────────────────────────────────
+// ─── Main Styles ────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#111111',
   },
   backButton: {
     position: 'absolute',
@@ -589,9 +657,9 @@ const styles = StyleSheet.create({
   },
 });
 
-// ─── Idle Phase Styles ───────────────────────────────────────────
+// ─── Confirm Phase Styles ───────────────────────────────────────────────────
 
-const idleStyles = StyleSheet.create({
+const confirmStyles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
@@ -623,41 +691,41 @@ const idleStyles = StyleSheet.create({
     borderColor: 'rgba(139, 92, 246, 0.4)',
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: '#FFFFFF',
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
-    color: 'rgba(255,255,255,0.6)',
+    color: 'rgba(255,255,255,0.55)',
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 21,
     marginTop: spacing.sm,
   },
-  coinPill: {
+  warningPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(251, 191, 36, 0.2)',
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
     borderWidth: 1,
-    borderColor: 'rgba(251, 191, 36, 0.35)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: borderRadius.full,
     marginTop: spacing.lg,
     gap: 6,
   },
-  coinEmoji: {
-    fontSize: 16,
+  warningEmoji: {
+    fontSize: 14,
   },
-  coinPillText: {
-    fontSize: 15,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    color: palette.gold[400],
+  warningText: {
+    fontSize: 13,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: 'rgba(245, 158, 11, 0.9)',
   },
   ctaWrapper: {
     width: '100%',
@@ -667,12 +735,12 @@ const idleStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 56,
-    borderRadius: 28,
-    gap: 10,
+    height: 54,
+    borderRadius: 27,
+    gap: 8,
   },
   ctaText: {
-    fontSize: 18,
+    fontSize: 17,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#FFFFFF',
@@ -688,177 +756,196 @@ const idleStyles = StyleSheet.create({
     fontSize: 11,
     fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
-    color: 'rgba(255,255,255,0.35)',
+    color: 'rgba(255,255,255,0.3)',
     textAlign: 'center',
     marginTop: spacing.lg,
   },
 });
 
-// ─── Spinning Phase Styles ───────────────────────────────────────
+// ─── Searching Phase Styles ─────────────────────────────────────────────────
 
-const spinStyles = StyleSheet.create({
+const RING_SIZE = 140;
+
+const searchStyles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  glowBg: {
-    position: 'absolute',
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    backgroundColor: palette.purple[600],
-  },
   ringArea: {
-    width: 180,
-    height: 180,
+    width: RING_SIZE,
+    height: RING_SIZE,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: spacing.xl,
+  },
+  ring: {
+    position: 'absolute',
+    borderRadius: RING_SIZE / 2,
+    borderWidth: 2,
+  },
+  innerRing: {
+    width: RING_SIZE,
+    height: RING_SIZE,
+    borderColor: palette.purple[400],
   },
   outerRing: {
-    position: 'absolute',
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    overflow: 'hidden',
+    width: RING_SIZE + 40,
+    height: RING_SIZE + 40,
+    borderColor: palette.purple[600],
   },
-  ringGradient: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 90,
-    opacity: 0.5,
+  centerIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.25)',
   },
-  avatarSlot: {
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-    overflow: 'hidden',
-    borderWidth: 3,
-    borderColor: 'rgba(139, 92, 246, 0.6)',
-  },
-  spinAvatar: {
-    width: '100%',
-    height: '100%',
-  },
-  title: {
-    fontSize: 20,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+  searchingText: {
+    fontSize: 18,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
     color: '#FFFFFF',
-    marginTop: 32,
+    textAlign: 'center',
+    minWidth: 220,
   },
-  dotsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 16,
+  timer: {
+    fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: 'rgba(255,255,255,0.3)',
+    marginTop: spacing.sm,
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: palette.purple[400],
+  cancelButton: {
+    position: 'absolute',
+    bottom: 80,
+    alignSelf: 'center',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  cancelText: {
+    fontSize: 15,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.7)',
   },
 });
 
-// ─── Revealed Phase Styles ───────────────────────────────────────
+// ─── Connected Phase Styles ─────────────────────────────────────────────────
 
-const revealStyles = StyleSheet.create({
+const connectedStyles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+  },
+  topOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingTop: 60,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    zIndex: 5,
+  },
+  userInfoRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.xl,
+    gap: spacing.smd,
   },
-  avatarWrapper: {
-    position: 'relative',
-    marginBottom: spacing.md,
-  },
-  avatarRing: {
-    borderWidth: 3,
+  avatarBorder: {
+    borderWidth: 2,
     borderColor: palette.purple[500],
-    borderRadius: 76,
-    padding: 3,
+    borderRadius: 32,
+    padding: 2,
+  },
+  userTextCol: {
+    flex: 1,
   },
   userName: {
-    fontSize: 24,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontSize: 18,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: '#FFFFFF',
-    marginTop: spacing.sm,
   },
   userCity: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
     color: 'rgba(255,255,255,0.6)',
-    marginTop: 4,
+    marginTop: 1,
   },
   compatBadge: {
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
     borderWidth: 1,
-    marginTop: spacing.smd,
   },
   compatText: {
     fontSize: 14,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
   },
-  actionRow: {
+  bottomControls: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingBottom: 60,
+    paddingTop: spacing.lg,
     flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: spacing.xl,
-    gap: 20,
-    width: '100%',
     justifyContent: 'center',
+    alignItems: 'flex-start',
+    gap: 48,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    zIndex: 5,
   },
-  switchCol: {
+  actionCol: {
     alignItems: 'center',
   },
-  switchButton: {
+  skipButton: {
     width: 64,
     height: 64,
     borderRadius: 32,
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255, 107, 107, 0.5)',
+    backgroundColor: 'rgba(255, 107, 107, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  switchButtonDisabled: {
+  buttonDisabled: {
     opacity: 0.4,
   },
-  switchLabel: {
+  likeButtonWrapper: {
+    borderRadius: 32,
+    overflow: 'hidden',
+  },
+  likeButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionLabel: {
     fontSize: 12,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: 'rgba(255,255,255,0.7)',
     marginTop: 6,
   },
-  switchCost: {
+  costLabel: {
     fontSize: 11,
     fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
     color: palette.gold[400],
     marginTop: 2,
-  },
-  likeWrapper: {
-    flex: 1,
-    maxWidth: 200,
-  },
-  likeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 56,
-    borderRadius: 28,
-    gap: 8,
-  },
-  likeText: {
-    fontSize: 17,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    color: '#FFFFFF',
   },
 });

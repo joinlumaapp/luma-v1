@@ -154,16 +154,17 @@ const featureStyles = StyleSheet.create({
   },
   block: {
     flex: 1,
+    height: 110,
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
   },
   gradient: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
-    gap: 4,
-    minHeight: 120,
+    gap: 3,
   },
   topRow: {
     flexDirection: 'row',
