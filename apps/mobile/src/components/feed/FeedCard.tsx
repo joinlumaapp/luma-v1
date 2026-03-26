@@ -13,11 +13,12 @@ import {
   StyleSheet,
   Animated,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
-import { INTENTION_TAG_OPTIONS, type FeedPost, type VerificationLevel } from '../../services/socialFeedService';
+import { INTENTION_TAG_OPTIONS, type FeedPost } from '../../services/socialFeedService';
 import { NowListening } from './NowListening';
 
 // ─── Time Ago Helper ──────────────────────────────────────────
@@ -272,6 +273,16 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
   const [expanded, setExpanded] = useState(false);
   const [showDoubleTapMenu, setShowDoubleTapMenu] = useState(false);
   const likeScale = useRef(new Animated.Value(1)).current;
+  const likeGlow = useRef(new Animated.Value(0)).current;
+  const likeCountAnim = useRef(new Animated.Value(0)).current;
+  const floatingHearts = useRef(
+    Array.from({ length: 3 }, () => ({
+      opacity: new Animated.Value(0),
+      translateY: new Animated.Value(0),
+      translateX: new Animated.Value(0),
+      scale: new Animated.Value(0),
+    }))
+  ).current;
   const flirtScale = useRef(new Animated.Value(1)).current;
   const doubleTapScale = useRef(new Animated.Value(0)).current;
   const lastTapRef = useRef<number>(0);
@@ -285,12 +296,77 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
   }, [onFollow, post.userId]);
 
   const handleLikePress = useCallback(() => {
+    const willLike = !post.isLiked;
+
+    // Haptic feedback — light tap
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    // Scale bounce: quick pop up then spring back
     Animated.sequence([
-      Animated.timing(likeScale, { toValue: 1.4, duration: 100, useNativeDriver: true }),
-      Animated.spring(likeScale, { toValue: 1, friction: 3, tension: 200, useNativeDriver: true }),
+      Animated.timing(likeScale, { toValue: 1.35, duration: 120, useNativeDriver: true }),
+      Animated.spring(likeScale, { toValue: 1, friction: 4, tension: 300, useNativeDriver: true }),
     ]).start();
+
+    // Glow pulse on like
+    if (willLike) {
+      likeGlow.setValue(0);
+      Animated.sequence([
+        Animated.timing(likeGlow, { toValue: 1, duration: 150, useNativeDriver: true }),
+        Animated.timing(likeGlow, { toValue: 0, duration: 300, useNativeDriver: true }),
+      ]).start();
+
+      // Floating heart particles
+      floatingHearts.forEach((heart, i) => {
+        heart.opacity.setValue(0);
+        heart.translateY.setValue(0);
+        heart.translateX.setValue(0);
+        heart.scale.setValue(0);
+        Animated.parallel([
+          Animated.timing(heart.opacity, {
+            toValue: 0.8,
+            duration: 150,
+            delay: i * 60,
+            useNativeDriver: true,
+          }),
+          Animated.timing(heart.scale, {
+            toValue: 0.6 + i * 0.15,
+            duration: 200,
+            delay: i * 60,
+            useNativeDriver: true,
+          }),
+          Animated.timing(heart.translateY, {
+            toValue: -(20 + i * 12),
+            duration: 500,
+            delay: i * 60,
+            useNativeDriver: true,
+          }),
+          Animated.timing(heart.translateX, {
+            toValue: (i - 1) * 14,
+            duration: 500,
+            delay: i * 60,
+            useNativeDriver: true,
+          }),
+        ]).start(() => {
+          Animated.timing(heart.opacity, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+          }).start();
+        });
+      });
+    }
+
+    // Count animation: slide up on like, slide down on unlike
+    likeCountAnim.setValue(willLike ? 8 : -8);
+    Animated.spring(likeCountAnim, {
+      toValue: 0,
+      friction: 6,
+      tension: 200,
+      useNativeDriver: true,
+    }).start();
+
     onLike(post.id);
-  }, [onLike, post.id, likeScale]);
+  }, [onLike, post.id, post.isLiked, likeScale, likeGlow, likeCountAnim, floatingHearts]);
 
   const handleFlirtPress = useCallback(() => {
     Animated.sequence([
@@ -487,18 +563,59 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
 
       {/* ── Horizontal Action Bar: Like + Comment + FLIRT ── */}
       <View style={styles.actionRow}>
-        {/* Like */}
+        {/* Like — premium interaction with glow + floating hearts */}
         <TouchableOpacity style={styles.actionBtn} onPress={handleLikePress} activeOpacity={0.7}>
-          <Animated.View style={[styles.actionBtnInner, post.isLiked && styles.actionBtnActive, { transform: [{ scale: likeScale }] }]}>
-            <Ionicons
-              name={post.isLiked ? 'heart' : 'heart-outline'}
-              size={20}
-              color={post.isLiked ? palette.rose[500] : colors.textSecondary}
+          <View style={styles.likeWrapper}>
+            {/* Glow pulse behind heart */}
+            <Animated.View
+              style={[
+                styles.likeGlow,
+                {
+                  opacity: likeGlow,
+                  transform: [{ scale: Animated.add(likeGlow, new Animated.Value(0.8)) }],
+                },
+              ]}
             />
-            {post.likeCount > 0 && (
-              <Text style={[styles.actionCount, post.isLiked && { color: palette.rose[500] }]}>{post.likeCount}</Text>
-            )}
-          </Animated.View>
+
+            {/* Floating heart particles */}
+            {floatingHearts.map((heart, i) => (
+              <Animated.Text
+                key={i}
+                style={[
+                  styles.floatingHeart,
+                  {
+                    opacity: heart.opacity,
+                    transform: [
+                      { translateY: heart.translateY },
+                      { translateX: heart.translateX },
+                      { scale: heart.scale },
+                    ],
+                  },
+                ]}
+              >
+                {'\u2764'}
+              </Animated.Text>
+            ))}
+
+            <Animated.View style={[styles.actionBtnInner, post.isLiked && styles.actionBtnActive, { transform: [{ scale: likeScale }] }]}>
+              <Ionicons
+                name={post.isLiked ? 'heart' : 'heart-outline'}
+                size={20}
+                color={post.isLiked ? palette.rose[500] : colors.textSecondary}
+              />
+              {post.likeCount > 0 && (
+                <Animated.Text
+                  style={[
+                    styles.actionCount,
+                    post.isLiked && { color: palette.rose[500] },
+                    { transform: [{ translateY: likeCountAnim }] },
+                  ]}
+                >
+                  {post.likeCount}
+                </Animated.Text>
+              )}
+            </Animated.View>
+          </View>
         </TouchableOpacity>
 
         {/* Comment */}
@@ -830,6 +947,26 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     marginRight: spacing.sm,
+  },
+  likeWrapper: {
+    position: 'relative',
+  },
+  likeGlow: {
+    position: 'absolute',
+    top: -4,
+    left: -4,
+    right: -4,
+    bottom: -4,
+    borderRadius: borderRadius.full,
+    backgroundColor: palette.rose[400] + '20',
+  },
+  floatingHeart: {
+    position: 'absolute',
+    top: 0,
+    left: 8,
+    fontSize: 10,
+    color: palette.rose[400],
+    zIndex: 10,
   },
   actionBtnInner: {
     flexDirection: 'row',
