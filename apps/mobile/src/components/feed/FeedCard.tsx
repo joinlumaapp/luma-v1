@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { INTENTION_TAG_OPTIONS, type FeedPost } from '../../services/socialFeedService';
+import { NowListening } from './NowListening';
 
 // ─── Time Ago Helper ──────────────────────────────────────────
 
@@ -373,6 +374,16 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
           {/* Subtitle: city + profession */}
           {identityLine.length > 0 && (
             <Text style={styles.identityLine} numberOfLines={1}>{identityLine}</Text>
+          )}
+
+          {/* Currently listening indicator */}
+          {post.currentlyListening && (
+            <NowListening
+              songTitle={post.currentlyListening.songTitle}
+              artist={post.currentlyListening.artist}
+              coverUrl={post.currentlyListening.coverUrl}
+              variant="compact"
+            />
           )}
 
           {/* Inline micro-badges: distance + compatibility */}

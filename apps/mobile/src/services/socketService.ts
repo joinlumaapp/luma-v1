@@ -89,6 +89,14 @@ export interface BadgeEarnedPayload {
   timestamp: string;
 }
 
+/** User listening status update */
+export interface ListeningPayload {
+  songTitle: string;
+  artist: string;
+  coverUrl: string | null;
+  startedAt: string;
+}
+
 /** Server error payload */
 export interface ServerErrorPayload {
   message: string;
@@ -152,6 +160,7 @@ export interface ServerEventMap {
   [WS_EVENTS.NOTIFICATION_BADGE_EARNED]: BadgeEarnedPayload;
   'user:online': PresencePayload;
   'user:offline': PresencePayload;
+  'user:listening': { userId: string; listening: ListeningPayload | null };
   'match:expired': MatchExpiredPayload;
   'chat:error': ServerErrorPayload;
   [WS_EVENTS.CALL_INITIATE]: CallInitiatePayload;
@@ -486,6 +495,7 @@ class SocketService {
       // Also remove custom presence events
       this.chatSocket.removeAllListeners('user:online');
       this.chatSocket.removeAllListeners('user:offline');
+      this.chatSocket.removeAllListeners('user:listening');
       this.chatSocket.removeAllListeners('match:expired');
       this.chatSocket.removeAllListeners('chat:error');
     }

@@ -92,6 +92,7 @@ export interface FeedPost {
   isLiked: boolean;
   isSaved: boolean;
   createdAt: string;
+  currentlyListening: { songTitle: string; artist: string; coverUrl: string | null } | null;
 }
 
 export interface CommentReply {
@@ -214,6 +215,7 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: false,
     isSaved: false,
     createdAt: minutesAgo(12),
+    currentlyListening: { songTitle: 'Dünyadan Uzak', artist: 'Sezen Aksu', coverUrl: 'https://picsum.photos/seed/sezen/200' },
   },
   {
     id: 'post-002',
@@ -248,6 +250,7 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: true,
     isSaved: false,
     createdAt: minutesAgo(35),
+    currentlyListening: { songTitle: 'Blinding Lights', artist: 'The Weeknd', coverUrl: 'https://picsum.photos/seed/weeknd/200' },
   },
   {
     id: 'post-003',
@@ -282,6 +285,7 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(1),
+    currentlyListening: null,
   },
   {
     id: 'post-004',
@@ -316,6 +320,7 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(2),
+    currentlyListening: null,
   },
   {
     id: 'post-005',
@@ -350,6 +355,7 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: true,
     isSaved: false,
     createdAt: hoursAgo(3),
+    currentlyListening: { songTitle: 'Firuze', artist: 'Sezen Aksu', coverUrl: 'https://picsum.photos/seed/firuze/200' },
   },
   {
     id: 'post-006',
@@ -384,6 +390,7 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(4),
+    currentlyListening: null,
   },
   {
     id: 'post-007',
@@ -418,6 +425,7 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(5),
+    currentlyListening: null,
   },
   {
     id: 'post-008',
@@ -452,6 +460,7 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(6),
+    currentlyListening: null,
   },
   {
     id: 'post-009',
@@ -486,6 +495,7 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(8),
+    currentlyListening: null,
   },
   {
     id: 'post-010',
@@ -520,6 +530,7 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(10),
+    currentlyListening: null,
   },
   {
     id: 'post-011',
@@ -554,6 +565,7 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: true,
     isSaved: false,
     createdAt: hoursAgo(12),
+    currentlyListening: { songTitle: 'Die With A Smile', artist: 'Lady Gaga & Bruno Mars', coverUrl: 'https://picsum.photos/seed/gaga/200' },
   },
   {
     id: 'post-012',
@@ -588,6 +600,7 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(14),
+    currentlyListening: null,
   },
 ];
 
@@ -733,6 +746,7 @@ export const socialFeedService = {
         isLiked: false,
         isSaved: false,
         createdAt: new Date().toISOString(),
+        currentlyListening: null,
       }, 'socialFeedService.createPost');
     }
   },

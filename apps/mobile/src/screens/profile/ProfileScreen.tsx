@@ -41,6 +41,8 @@ import { InterleavedProfileLayout } from '../../components/profile/InterleavedPr
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { CoinBalance } from '../../components/common/CoinBalance';
 import { DailyChallenge, WeeklyLeaderboard } from '../../components/engagement';
+import { NowListening } from '../../components/feed/NowListening';
+import { useListeningStore } from '../../stores/listeningStore';
 
 type ProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'Profile'>;
 
@@ -224,6 +226,12 @@ export const ProfileScreen: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const fetchMatches = useMatchStore((state) => state.fetchMatches);
   const [badges, setBadges] = useState<Array<{ id: string; name: string; earned: boolean }>>([]);
+
+  // Listening status
+  const currentListening = useListeningStore((s) => s.currentListening);
+  const visibility = useListeningStore((s) => s.visibility);
+  const clearListening = useListeningStore((s) => s.clearListening);
+  const setVisibility = useListeningStore((s) => s.setVisibility);
 
   // Profile Strength Meter state
   const [strengthData, setStrengthData] = useState<ProfileStrengthResponse | null>(null);
@@ -571,6 +579,47 @@ export const ProfileScreen: React.FC = () => {
           </View>
         </View>
       )}
+    </View>,
+  );
+
+  // 1b. Dinleme Durumu — listening status with privacy controls
+  infoSections.push(
+    <View key="listening" style={styles.listeningSection}>
+      <Text style={styles.listeningSectionTitle}>Dinleme Durumu</Text>
+
+      {currentListening ? (
+        <View style={styles.listeningActive}>
+          <NowListening
+            songTitle={currentListening.songTitle}
+            artist={currentListening.artist}
+            coverUrl={currentListening.coverUrl}
+            variant="full"
+          />
+          <TouchableOpacity onPress={clearListening} style={styles.clearListeningBtn}>
+            <Text style={styles.clearListeningText}>Durumu Temizle</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <Text style={styles.listeningInactive}>Şu an bir şey dinlemiyorsun</Text>
+      )}
+
+      {/* Privacy control */}
+      <View style={styles.visibilityRow}>
+        <Text style={styles.visibilityLabel}>Kimler görsün?</Text>
+        <View style={styles.visibilityOptions}>
+          {(['PUBLIC', 'MATCHES_ONLY', 'HIDDEN'] as const).map((option) => (
+            <TouchableOpacity
+              key={option}
+              style={[styles.visibilityChip, visibility === option && styles.visibilityChipActive]}
+              onPress={() => setVisibility(option)}
+            >
+              <Text style={[styles.visibilityChipText, visibility === option && styles.visibilityChipTextActive]}>
+                {option === 'PUBLIC' ? 'Herkes' : option === 'MATCHES_ONLY' ? 'Eşleşmeler' : 'Gizli'}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
     </View>,
   );
 
@@ -1094,6 +1143,74 @@ const styles = StyleSheet.create({
   weeklyViewsBold: {
     fontWeight: fontWeights.bold,
     color: colors.text,
+  },
+
+  // ── Listening status section ──
+  listeningSection: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    marginTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.surfaceBorder,
+  },
+  listeningSectionTitle: {
+    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: fontWeights.semibold,
+    color: colors.text,
+    marginBottom: spacing.md,
+  },
+  listeningActive: {
+    gap: spacing.sm,
+  },
+  clearListeningBtn: {
+    alignSelf: 'flex-start',
+  },
+  clearListeningText: {
+    fontSize: 12,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: fontWeights.medium,
+    color: palette.rose[500],
+  },
+  listeningInactive: {
+    fontSize: 13,
+    fontWeight: fontWeights.regular,
+    color: colors.textTertiary,
+    fontStyle: 'italic',
+  },
+  visibilityRow: {
+    marginTop: spacing.md,
+  },
+  visibilityLabel: {
+    fontSize: 12,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: fontWeights.medium,
+    color: colors.textSecondary,
+  },
+  visibilityOptions: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: spacing.xs,
+  },
+  visibilityChip: {
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: borderRadius.full,
+  },
+  visibilityChipActive: {
+    backgroundColor: palette.purple[500],
+    borderColor: palette.purple[500],
+  },
+  visibilityChipText: {
+    fontSize: 12,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: fontWeights.medium,
+    color: colors.textSecondary,
+  },
+  visibilityChipTextActive: {
+    color: '#FFFFFF',
   },
 
   // ── Sections — seamless, no card background ──
