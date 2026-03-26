@@ -17,7 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
-import { INTENTION_TAG_OPTIONS, type FeedPost } from '../../services/socialFeedService';
+import { INTENTION_TAG_OPTIONS, type FeedPost, type VerificationLevel } from '../../services/socialFeedService';
 import { NowListening } from './NowListening';
 
 // ─── Time Ago Helper ──────────────────────────────────────────
@@ -358,16 +358,14 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.headerInfo} onPress={handleProfilePress} activeOpacity={0.7}>
-          {/* Name row: name, age, verified */}
+          {/* Name row: name + verification badge */}
           <View style={styles.nameRow}>
-            <Text style={styles.userName} numberOfLines={1}>
-              {post.userName}
-              {post.userAge > 0 && (
-                <Text style={styles.userAge}>, {post.userAge}</Text>
-              )}
-            </Text>
-            {post.isVerified && (
+            <Text style={styles.userName} numberOfLines={1}>{post.userName}</Text>
+            {post.verificationLevel === 'VERIFIED' && (
               <Ionicons name="checkmark-circle" size={15} color={palette.purple[400]} style={styles.verifiedIcon} />
+            )}
+            {post.verificationLevel === 'PREMIUM' && (
+              <Ionicons name="shield-checkmark" size={15} color={palette.gold[500]} style={styles.verifiedIcon} />
             )}
           </View>
 
@@ -409,34 +407,37 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
             style={[styles.followButton, post.isFollowing && styles.followButtonActive]}
             onPress={handleFollowPress}
             activeOpacity={0.7}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             {post.isFollowing ? (
-              <Ionicons name="checkmark" size={14} color={colors.textTertiary} />
+              <>
+                <Ionicons name="checkmark" size={13} color={palette.purple[400]} />
+                <Text style={styles.followButtonTextActive}>Takip</Text>
+              </>
             ) : (
-              <Ionicons name="add" size={15} color={palette.purple[500]} />
+              <Text style={styles.followButtonText}>Takip Et</Text>
             )}
           </TouchableOpacity>
         )}
       </View>
 
-      {/* ── Vibe Chips ── */}
-      <VibeChips vibes={post.userVibes} maxCount={3} />
-
-      {/* ── Intention Badge (premium, soft glow) ── */}
-      {intentionOption && (
-        <View style={[
-          styles.intentionBadge,
-          {
-            backgroundColor: intentionOption.color + '12',
-            borderColor: intentionOption.color + '25',
-            shadowColor: intentionOption.color,
-          },
-        ]}>
-          <Text style={styles.intentionEmoji}>{intentionOption.emoji}</Text>
-          <Text style={[styles.intentionLabel, { color: intentionOption.color }]}>
-            {intentionOption.label}
-          </Text>
+      {/* ── Tags row: intention badge + vibe chips (tertiary level) ── */}
+      {(intentionOption || (post.userVibes && post.userVibes.length > 0)) && (
+        <View style={styles.tagsRow}>
+          {intentionOption && (
+            <View style={[
+              styles.intentionBadge,
+              {
+                backgroundColor: intentionOption.color + '12',
+                borderColor: intentionOption.color + '25',
+              },
+            ]}>
+              <Text style={styles.intentionEmoji}>{intentionOption.emoji}</Text>
+              <Text style={[styles.intentionLabel, { color: intentionOption.color }]}>
+                {intentionOption.label}
+              </Text>
+            </View>
+          )}
+          <VibeChips vibes={post.userVibes} maxCount={2} />
         </View>
       )}
 
@@ -541,8 +542,7 @@ const vibeStyles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: spacing.sm + 2,
+    gap: 5,
   },
   chip: {
     backgroundColor: palette.purple[50] + 'CC',
@@ -621,12 +621,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     flexShrink: 1,
   },
-  userAge: {
-    fontSize: 15,
-    color: colors.textSecondary,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
-  },
   verifiedIcon: {
     marginLeft: 3,
   },
@@ -678,37 +672,51 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   followButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 4,
     marginLeft: spacing.sm,
     marginTop: 4,
-    borderWidth: 1.5,
-    borderColor: palette.purple[300] + '40',
-    backgroundColor: palette.purple[50] + '50',
+    paddingHorizontal: spacing.smd,
+    paddingVertical: 6,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: palette.purple[300] + '50',
+    backgroundColor: palette.purple[50] + '60',
+  },
+  followButtonText: {
+    fontSize: 12,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: palette.purple[500],
   },
   followButtonActive: {
     borderColor: colors.surfaceBorder,
     backgroundColor: 'transparent',
   },
+  followButtonTextActive: {
+    fontSize: 11,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: colors.textTertiary,
+  },
 
-  // ── Intention Badge (premium, soft glow) ──
+  // ── Tags Row (tertiary: intention + vibes inline) ──
+  tagsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: spacing.smd,
+  },
   intentionBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: 5,
-    paddingHorizontal: spacing.smd,
-    paddingVertical: 5,
+    gap: 4,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 4,
     borderRadius: borderRadius.full,
     borderWidth: 1,
-    marginBottom: spacing.smd,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 2,
   },
   intentionEmoji: {
     fontSize: 13,

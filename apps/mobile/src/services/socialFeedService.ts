@@ -59,6 +59,9 @@ export const INTENTION_TAG_OPTIONS: IntentionTagOption[] = [
   { id: 'NOT_SURE', label: 'Arkadaş Arıyorum', emoji: '\uD83D\uDC65', color: '#6366F1' },
 ];
 
+/** Verification level — controls badge visibility and style */
+export type VerificationLevel = 'NONE' | 'VERIFIED' | 'PREMIUM';
+
 export interface FeedPost {
   id: string;
   userId: string;
@@ -69,6 +72,7 @@ export interface FeedPost {
   userVibes: string[];
   userAvatarUrl: string;
   isVerified: boolean;
+  verificationLevel: VerificationLevel;
   isFollowing: boolean;
   intentionTag: IntentionTag;
   topic: FeedTopic;
@@ -192,6 +196,7 @@ const MOCK_POSTS: FeedPost[] = [
     userVibes: ['🌊 Sahil', '📖 Kitap', '🌿 Sakin'],
     userAvatarUrl: 'https://i.pravatar.cc/150?img=1',
     isVerified: true,
+    verificationLevel: 'VERIFIED',
     isFollowing: true,
     intentionTag: 'SERIOUS_RELATIONSHIP',
     topic: 'GUNLUK',
@@ -227,6 +232,7 @@ const MOCK_POSTS: FeedPost[] = [
     userVibes: ['☕ Kahve', '🎭 Tiyatro', '✨ Romantik'],
     userAvatarUrl: 'https://i.pravatar.cc/150?img=5',
     isVerified: true,
+    verificationLevel: 'PREMIUM',
     isFollowing: false,
     intentionTag: 'EXPLORING',
     topic: 'SORU_CEVAP',
@@ -262,6 +268,7 @@ const MOCK_POSTS: FeedPost[] = [
     userVibes: ['✈️ Gezgin', '📸 Fotoğraf', '🌅 Doğa'],
     userAvatarUrl: 'https://i.pravatar.cc/150?img=23',
     isVerified: true,
+    verificationLevel: 'VERIFIED',
     isFollowing: true,
     intentionTag: 'SERIOUS_RELATIONSHIP',
     topic: 'SEYAHAT',
@@ -296,7 +303,8 @@ const MOCK_POSTS: FeedPost[] = [
     userProfession: 'Öğrenci',
     userVibes: ['🎧 Indie', '🎨 Sanat', '🌿 Sakin'],
     userAvatarUrl: 'https://i.pravatar.cc/150?img=16',
-    isVerified: true,
+    isVerified: false,
+    verificationLevel: 'NONE',
     isFollowing: false,
     intentionTag: 'NOT_SURE',
     topic: 'MUZIK',
@@ -332,6 +340,7 @@ const MOCK_POSTS: FeedPost[] = [
     userVibes: ['🔮 Astroloji', '🧘 Yoga', '🔥 Enerjik'],
     userAvatarUrl: 'https://i.pravatar.cc/150?img=20',
     isVerified: false,
+    verificationLevel: 'NONE',
     isFollowing: true,
     intentionTag: 'EXPLORING',
     topic: 'BURC',
@@ -366,7 +375,8 @@ const MOCK_POSTS: FeedPost[] = [
     userProfession: 'Avukat',
     userVibes: ['📚 Entelektüel', '🍷 Şarap', '✨ Romantik'],
     userAvatarUrl: 'https://i.pravatar.cc/150?img=9',
-    isVerified: false,
+    isVerified: true,
+    verificationLevel: 'VERIFIED',
     isFollowing: false,
     intentionTag: 'SERIOUS_RELATIONSHIP',
     topic: 'ASK_IPUCU',
@@ -402,6 +412,7 @@ const MOCK_POSTS: FeedPost[] = [
     userVibes: ['💪 Spor', '🥗 Sağlık', '🌸 Pozitif'],
     userAvatarUrl: 'https://i.pravatar.cc/150?img=29',
     isVerified: false,
+    verificationLevel: 'NONE',
     isFollowing: false,
     intentionTag: 'EXPLORING',
     topic: 'GUNLUK',
@@ -437,6 +448,7 @@ const MOCK_POSTS: FeedPost[] = [
     userVibes: ['🎵 Müzik', '🌙 Gece', '🔥 Enerjik'],
     userAvatarUrl: 'https://i.pravatar.cc/150?img=38',
     isVerified: false,
+    verificationLevel: 'NONE',
     isFollowing: true,
     intentionTag: 'NOT_SURE',
     topic: 'MUZIK',
@@ -472,6 +484,7 @@ const MOCK_POSTS: FeedPost[] = [
     userVibes: ['🏡 Ev', '🍳 Yemek', '💕 Sadık'],
     userAvatarUrl: 'https://i.pravatar.cc/150?img=32',
     isVerified: true,
+    verificationLevel: 'PREMIUM',
     isFollowing: false,
     intentionTag: 'SERIOUS_RELATIONSHIP',
     topic: 'SORU_CEVAP',
@@ -507,6 +520,7 @@ const MOCK_POSTS: FeedPost[] = [
     userVibes: ['🌿 Doğa', '🐕 Hayvan', '☀️ Pozitif'],
     userAvatarUrl: 'https://i.pravatar.cc/150?img=36',
     isVerified: false,
+    verificationLevel: 'NONE',
     isFollowing: true,
     intentionTag: 'EXPLORING',
     topic: 'SEYAHAT',
@@ -542,6 +556,7 @@ const MOCK_POSTS: FeedPost[] = [
     userVibes: ['💎 Şık', '🌹 Romantik', '✨ Zarif'],
     userAvatarUrl: 'https://i.pravatar.cc/150?img=41',
     isVerified: true,
+    verificationLevel: 'PREMIUM',
     isFollowing: false,
     intentionTag: 'SERIOUS_RELATIONSHIP',
     topic: 'ASK_IPUCU',
@@ -577,6 +592,7 @@ const MOCK_POSTS: FeedPost[] = [
     userVibes: ['🎨 Yaratıcı', '☕ Kahve', '🌙 Huzurlu'],
     userAvatarUrl: 'https://i.pravatar.cc/150?img=25',
     isVerified: true,
+    verificationLevel: 'VERIFIED',
     isFollowing: true,
     intentionTag: 'NOT_SURE',
     topic: 'BURC',
@@ -723,6 +739,7 @@ export const socialFeedService = {
         userVibes: [],
         userAvatarUrl: 'https://i.pravatar.cc/150?img=68',
         isVerified: true,
+        verificationLevel: 'VERIFIED' as const,
         isFollowing: false,
         intentionTag: 'EXPLORING',
         topic: data.topic,
