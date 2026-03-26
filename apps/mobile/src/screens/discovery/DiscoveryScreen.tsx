@@ -98,51 +98,67 @@ type DiscoveryNavProp = CompositeNavigationProp<
 
 // ── Discovery Feature Blocks ─────────────────────────────────
 
-const DiscoveryFeatureBlocks: React.FC<{
+interface DiscoveryFeatureBlocksProps {
   onVideoWatch: () => void;
-  onSurpriseConnect: () => void;
-  onSurpriseReady: () => void;
-  readyCount?: number;
-}> = React.memo(({ onVideoWatch, onSurpriseConnect, onSurpriseReady, readyCount = 12 }) => (
-  <View style={featureStyles.container}>
-    {/* Video Keşfet */}
-    <Pressable onPress={onVideoWatch} style={featureStyles.block}>
-      <LinearGradient
-        colors={[palette.purple[600], palette.pink[500]] as [string, string]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={featureStyles.gradient}
-      >
-        <Ionicons name="play-circle" size={24} color="#FFFFFF" />
-        <Text style={featureStyles.title}>Video Keşfet</Text>
-        <Text style={featureStyles.subtitle}>Kısa videoları izle</Text>
-      </LinearGradient>
-    </Pressable>
+  onVideoRecord: () => void;
+  onSurpriseStart: () => void;
+  onlineCount?: number;
+}
 
-    {/* Sürpriz Bağlan */}
-    <Pressable onPress={onSurpriseConnect} style={featureStyles.block}>
-      <LinearGradient
-        colors={['#F59E0B', '#EF4444'] as [string, string]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={featureStyles.gradient}
-      >
-        <View style={featureStyles.topRow}>
-          <Ionicons name="videocam" size={22} color="#FFFFFF" />
-          <View style={featureStyles.readyPill}>
-            <View style={featureStyles.readyDot} />
-            <Text style={featureStyles.readyText}>{readyCount}</Text>
+const DiscoveryFeatureBlocks: React.FC<DiscoveryFeatureBlocksProps> = React.memo(
+  ({ onVideoWatch, onVideoRecord, onSurpriseStart, onlineCount = 14 }) => (
+    <View style={featureStyles.container}>
+      {/* Video Kesfet — watch or record */}
+      <View style={featureStyles.block}>
+        <LinearGradient
+          colors={[palette.purple[600], palette.pink[500]] as [string, string]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={featureStyles.gradient}
+        >
+          <View style={featureStyles.headerRow}>
+            <Ionicons name="play-circle" size={20} color="#FFFFFF" />
+            <Text style={featureStyles.title}>Video Keşfet</Text>
           </View>
-        </View>
-        <Text style={featureStyles.title}>Sürpriz Bağlan</Text>
-        <Text style={featureStyles.subtitle}>Görüntülü sohbet · 25 jeton</Text>
-        <Pressable onPress={onSurpriseReady} style={featureStyles.readyBtn} hitSlop={6}>
-          <Text style={featureStyles.readyBtnText}>Hazırım</Text>
-        </Pressable>
-      </LinearGradient>
-    </Pressable>
-  </View>
-));
+          <Text style={featureStyles.subtitle}>İzle veya paylaş</Text>
+          <View style={featureStyles.actionRow}>
+            <Pressable onPress={onVideoWatch} style={featureStyles.actionBtn} hitSlop={4}>
+              <Ionicons name="play" size={12} color="#FFFFFF" />
+              <Text style={featureStyles.actionBtnText}>İzle</Text>
+            </Pressable>
+            <Pressable onPress={onVideoRecord} style={featureStyles.actionBtnOutline} hitSlop={4}>
+              <Ionicons name="videocam" size={12} color="#FFFFFF" />
+              <Text style={featureStyles.actionBtnText}>Çek</Text>
+            </Pressable>
+          </View>
+        </LinearGradient>
+      </View>
+
+      {/* Surpriz Baglan — one-tap start */}
+      <View style={featureStyles.block}>
+        <LinearGradient
+          colors={['#F59E0B', '#EF4444'] as [string, string]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={featureStyles.gradient}
+        >
+          <View style={featureStyles.headerRow}>
+            <Ionicons name="videocam" size={20} color="#FFFFFF" />
+            <Text style={featureStyles.title}>Sürpriz Bağlan</Text>
+          </View>
+          <Text style={featureStyles.subtitle}>Görüntülü sohbet</Text>
+          <View style={featureStyles.onlinePill}>
+            <View style={featureStyles.onlineDot} />
+            <Text style={featureStyles.onlineText}>{onlineCount} kişi çevrimiçi</Text>
+          </View>
+          <Pressable onPress={onSurpriseStart} style={featureStyles.ctaBtn} hitSlop={4}>
+            <Text style={featureStyles.ctaBtnText}>Başla · 25 🪙</Text>
+          </Pressable>
+        </LinearGradient>
+      </View>
+    </View>
+  ),
+);
 DiscoveryFeatureBlocks.displayName = 'DiscoveryFeatureBlocks';
 
 const featureStyles = StyleSheet.create({
@@ -154,67 +170,99 @@ const featureStyles = StyleSheet.create({
   },
   block: {
     flex: 1,
-    height: 110,
+    height: 120,
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
   },
   gradient: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.smd,
+    paddingHorizontal: spacing.smd,
     gap: 3,
   },
-  topRow: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
   },
   title: {
     fontSize: 13,
     fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: '#FFFFFF',
-    textAlign: 'center',
   },
   subtitle: {
     fontSize: 10,
     fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
     color: 'rgba(255,255,255,0.8)',
-    textAlign: 'center',
+    marginTop: 1,
   },
-  readyPill: {
+  actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
+    gap: 6,
+    marginTop: 6,
   },
-  readyDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: '#4ADE80',
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: borderRadius.full,
   },
-  readyText: {
-    fontSize: 9,
+  actionBtnOutline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.35)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: borderRadius.full,
+  },
+  actionBtnText: {
+    fontSize: 10,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#FFFFFF',
   },
-  readyBtn: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 10,
-    marginTop: 2,
+  onlinePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: borderRadius.full,
+    marginTop: 3,
   },
-  readyBtnText: {
-    fontSize: 10,
+  onlineDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#4ADE80',
+  },
+  onlineText: {
+    fontSize: 9,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.9)',
+  },
+  ctaBtn: {
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: borderRadius.full,
+    marginTop: 4,
+  },
+  ctaBtnText: {
+    fontSize: 11,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#FFFFFF',
@@ -1360,19 +1408,8 @@ export const DiscoveryScreen: React.FC = () => {
       {/* Feature blocks — Video Kesfet + Aninda Baglan */}
       <DiscoveryFeatureBlocks
         onVideoWatch={() => navigation.navigate('VideoFeed')}
-        onSurpriseConnect={() => navigation.navigate('InstantConnect')}
-        onSurpriseReady={() => {
-          Alert.alert(
-            'Hazır Ol',
-            'Havuza katılarak diğer kullanıcıların seni bulmasını sağla. Biri seni seçtiğinde bildirim alacaksın.',
-            [
-              { text: 'Vazgeç', style: 'cancel' },
-              { text: 'Hazırım', onPress: () => {
-                Alert.alert('Hazırsın!', 'Havuza katıldın. Biri seninle bağlanmak istediğinde bildirim alacaksın.');
-              }},
-            ],
-          );
-        }}
+        onVideoRecord={() => navigation.navigate('VideoFeed')}
+        onSurpriseStart={() => navigation.navigate('InstantConnect')}
       />
 
       {/* Card stack */}

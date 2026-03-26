@@ -15,6 +15,8 @@ import {
   ViewToken,
   Platform,
   ActivityIndicator,
+  Animated as RNAnimated,
+  Easing,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -43,6 +45,90 @@ const toVideoProfile = (card: VideoFeedCard): VideoProfile => ({
   intentionTag: card.intentionTag,
   bio: card.bio,
 });
+
+// ─── Upload FAB ─────────────────────────────────────────────
+// Prominent floating action button with pulse animation on mount
+// and a small text label underneath to guide users.
+
+const UploadFAB: React.FC<{ bottom: number }> = ({ bottom }) => {
+  const pulseAnim = useRef(new RNAnimated.Value(1)).current;
+  const pulseOpacity = useRef(new RNAnimated.Value(0)).current;
+
+  useEffect(() => {
+    // Attention-drawing pulse on first load (runs 3 times then stops)
+    const pulse = RNAnimated.loop(
+      RNAnimated.sequence([
+        RNAnimated.parallel([
+          RNAnimated.timing(pulseAnim, {
+            toValue: 1.5,
+            duration: 800,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+          }),
+          RNAnimated.timing(pulseOpacity, {
+            toValue: 0,
+            duration: 800,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ]),
+        RNAnimated.parallel([
+          RNAnimated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+          RNAnimated.timing(pulseOpacity, {
+            toValue: 0.4,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]),
+      { iterations: 3 },
+    );
+    pulse.start();
+
+    return () => pulse.stop();
+  }, [pulseAnim, pulseOpacity]);
+
+  const handlePress = useCallback(() => {
+    Alert.alert(
+      'Video Ekle',
+      'Kısa bir video ile kendini tanıt!',
+      [
+        { text: 'Vazgeç', style: 'cancel' },
+        { text: 'Kameradan Çek', onPress: () => {} },
+        { text: 'Galeriden Seç', onPress: () => {} },
+      ],
+    );
+  }, []);
+
+  return (
+    <View style={[styles.fabContainer, { bottom }]}>
+      {/* Pulse ring behind the button */}
+      <RNAnimated.View
+        style={[
+          styles.fabPulse,
+          {
+            transform: [{ scale: pulseAnim }],
+            opacity: pulseOpacity,
+          },
+        ]}
+      />
+      <TouchableOpacity
+        style={styles.fab}
+        activeOpacity={0.85}
+        onPress={handlePress}
+        accessibilityLabel="Video ekle"
+        accessibilityRole="button"
+      >
+        <Ionicons name="add" size={28} color="#FFFFFF" />
+      </TouchableOpacity>
+      <Text style={styles.fabLabel}>Video Çek</Text>
+    </View>
+  );
+};
 
 // ─── Screen ──────────────────────────────────────────────────
 
@@ -222,19 +308,8 @@ export const VideoFeedScreen: React.FC = () => {
 
       {topBar}
 
-      {/* Floating camera button — "Video Yükle" */}
-      <TouchableOpacity
-        style={[styles.fab, { bottom: insets.bottom + 24 }]}
-        activeOpacity={0.85}
-        onPress={() => {
-          Alert.alert('Video Oluştur', 'Kısa bir video çekerek kendini tanıt!', [
-            { text: 'Vazgeç', style: 'cancel' },
-            { text: 'Kamerayı Aç' },
-          ]);
-        }}
-      >
-        <Ionicons name="videocam" size={24} color="#FFFFFF" />
-      </TouchableOpacity>
+      {/* Floating upload button with pulse animation and label */}
+      <UploadFAB bottom={insets.bottom + 28} />
     </View>
   );
 };
@@ -300,20 +375,38 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#FFFFFF',
   },
-  fab: {
+  fabContainer: {
     position: 'absolute',
     right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    alignItems: 'center',
+    zIndex: 20,
+  },
+  fabPulse: {
+    position: 'absolute',
+    top: 0,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: palette.purple[500],
+  },
+  fab: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: palette.purple[500],
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: palette.purple[700],
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 6,
-    zIndex: 20,
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  fabLabel: {
+    fontSize: 9,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 3,
   },
 });
