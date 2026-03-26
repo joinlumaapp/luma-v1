@@ -1408,7 +1408,17 @@ export const DiscoveryScreen: React.FC = () => {
       {/* Feature blocks — Video Kesfet + Aninda Baglan */}
       <DiscoveryFeatureBlocks
         onVideoWatch={() => navigation.navigate('VideoFeed')}
-        onVideoRecord={() => navigation.navigate('VideoFeed')}
+        onVideoRecord={() => {
+          Alert.alert(
+            'Video Ekle',
+            'Kısa bir video ile kendini tanıt!',
+            [
+              { text: 'Vazgeç', style: 'cancel' },
+              { text: 'Kameradan Çek' },
+              { text: 'Galeriden Seç' },
+            ],
+          );
+        }}
         onSurpriseStart={() => navigation.navigate('InstantConnect')}
       />
 

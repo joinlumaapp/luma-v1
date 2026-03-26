@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
   },
   fabContainer: {
     position: 'absolute',
-    right: 20,
+    left: 16,
     alignItems: 'center',
     zIndex: 20,
   },
