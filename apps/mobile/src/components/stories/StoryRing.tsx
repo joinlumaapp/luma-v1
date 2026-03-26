@@ -17,7 +17,7 @@ import { typography } from '../../theme/typography';
 // ─── Size Variants ────────────────────────────────────────────
 
 const SIZES = {
-  small: { ring: 68, border: 2.5, plus: 20, plusIcon: 12 },
+  small: { ring: 82, border: 3, plus: 22, plusIcon: 13 },
   medium: { ring: 84, border: 3, plus: 24, plusIcon: 14 },
 } as const;
 
@@ -36,10 +36,14 @@ interface StoryRingProps {
   isSeen?: boolean;
   /** Whether user has any stories */
   hasStories?: boolean;
+  /** Whether this is a suggested/recommended user (non-followed) */
+  isSuggested?: boolean;
   /** Size variant */
   size?: SizeVariant;
-  /** Press handler */
+  /** Press handler — tapping the avatar ring */
   onPress: () => void;
+  /** "+" button press handler — opens story creation */
+  onPlusPress?: () => void;
   /** Long press handler (for own story — delete option) */
   onLongPress?: () => void;
   /** Show label below avatar */
@@ -54,8 +58,10 @@ export const StoryRing: React.FC<StoryRingProps> = ({
   isOwnStory = false,
   isSeen = false,
   hasStories = true,
+  isSuggested = false,
   size = 'small',
   onPress,
+  onPlusPress,
   onLongPress,
   showLabel = true,
   testID,
@@ -98,6 +104,10 @@ export const StoryRing: React.FC<StoryRingProps> = ({
     if (!hasStories) {
       return { borderColor: colors.textTertiary, borderWidth: 1.5 };
     }
+    if (isSuggested) {
+      // Suggested/recommended — premium gold ring
+      return { borderColor: palette.gold[400], borderWidth: dims.border };
+    }
     if (isSeen) {
       return { borderColor: palette.gray[400], borderWidth: 1.5 };
     }
@@ -108,6 +118,9 @@ export const StoryRing: React.FC<StoryRingProps> = ({
   const ringStyle = getRingStyle();
   const initial = userName ? userName[0].toUpperCase() : '?';
 
+  // Outer glow ring dimensions for suggested stories
+  const glowRingSize = dims.ring + 6;
+
   return (
     <Pressable
       onPress={onPress}
@@ -115,12 +128,28 @@ export const StoryRing: React.FC<StoryRingProps> = ({
       accessibilityLabel={
         isOwnStory
           ? 'Hikayeni paylas'
-          : `${userName} hikayeleri`
+          : isSuggested
+            ? `${userName} onerilen hikaye`
+            : `${userName} hikayeleri`
       }
       accessibilityRole="button"
       testID={testID}
       style={styles.container}
     >
+      {/* Outer glow ring for suggested stories — creates a double-border effect */}
+      {isSuggested && (
+        <View
+          style={[
+            styles.suggestedGlowRing,
+            {
+              width: glowRingSize,
+              height: glowRingSize,
+              borderRadius: glowRingSize / 2,
+            },
+          ]}
+        />
+      )}
+
       <Animated.View
         style={[
           styles.ringOuter,
@@ -164,35 +193,49 @@ export const StoryRing: React.FC<StoryRingProps> = ({
         )}
       </Animated.View>
 
-      {/* "+" button for own story creation */}
+      {/* Sparkle badge for suggested stories — positioned top-right of the ring */}
+      {isSuggested && (
+        <View style={styles.suggestedSparkleBadge}>
+          <Text style={styles.suggestedSparkleIcon}>{'\u2728'}</Text>
+        </View>
+      )}
+
+      {/* "+" button for own story creation — separate touch target */}
       {isOwnStory && (
-        <View
+        <Pressable
+          onPress={onPlusPress ?? onPress}
+          hitSlop={4}
           style={[
             styles.plusBadge,
             {
               width: dims.plus,
               height: dims.plus,
               borderRadius: dims.plus / 2,
-              bottom: showLabel ? 14 : 0,
             },
           ]}
         >
           <Text style={[styles.plusIcon, { fontSize: dims.plusIcon }]}>+</Text>
-        </View>
+        </Pressable>
       )}
 
-      {/* Label */}
+      {/* Label — shows "Oneri" micro-label for suggested, otherwise username */}
       {showLabel && (
         <Text
           style={[
             styles.label,
-            { width: dims.ring },
+            { width: dims.ring + (isSuggested ? 8 : 0) },
             isSeen && styles.labelSeen,
+            isSuggested && styles.suggestedLabel,
           ]}
           numberOfLines={1}
         >
           {isOwnStory ? 'Hikaye' : userName}
         </Text>
+      )}
+
+      {/* "Oneri" micro-label below the username for suggested stories */}
+      {isSuggested && showLabel && (
+        <Text style={styles.suggestedMicroLabel}>{'\u00D6neri'}</Text>
       )}
     </Pressable>
   );
@@ -232,12 +275,14 @@ const styles = StyleSheet.create({
   },
   plusBadge: {
     position: 'absolute',
-    right: 0,
+    bottom: 0,
+    right: 2,
     backgroundColor: palette.purple[500],
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
     borderColor: colors.background,
+    zIndex: 10,
   },
   plusIcon: {
     color: '#FFFFFF',
@@ -254,5 +299,53 @@ const styles = StyleSheet.create({
   },
   labelSeen: {
     opacity: 0.5,
+  },
+
+  // ── Suggested / Recommended Story Styles ──
+
+  /** Outer glow ring — creates a subtle double-border premium effect */
+  suggestedGlowRing: {
+    position: 'absolute',
+    top: -3,
+    alignSelf: 'center',
+    borderWidth: 1,
+    borderColor: palette.gold[300],
+    opacity: 0.5,
+  },
+
+  /** Sparkle badge — small indicator at top-right of the ring */
+  suggestedSparkleBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+
+  /** Sparkle emoji icon */
+  suggestedSparkleIcon: {
+    fontSize: 11,
+  },
+
+  /** Gold-tinted label for suggested stories */
+  suggestedLabel: {
+    color: palette.gold[400],
+  },
+
+  /** "Oneri" micro-label below the username */
+  suggestedMicroLabel: {
+    fontSize: 8,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: palette.gold[500],
+    textAlign: 'center',
+    marginTop: 1,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
 });

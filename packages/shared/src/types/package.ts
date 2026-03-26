@@ -184,6 +184,8 @@ export const GOLD_COSTS = {
   SPOTLIGHT: 75, // Show to everyone in area for 30 min
   TRAVEL_MODE: 200, // Show profile in different city for 24h
   PRIORITY_MESSAGE: 40, // Pin message to top
+  SUGGESTED_STORY_VIEW: 20, // View a suggested story beyond daily limit
+  FLIRT_START: 25, // Send a flirt request beyond daily limit
 } as const;
 
 // Package tier hierarchy for upgrade validation

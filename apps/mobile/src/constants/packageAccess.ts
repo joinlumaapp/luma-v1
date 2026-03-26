@@ -63,7 +63,9 @@ export type FeatureKey =
   | 'game_rooms'
   | 'read_receipts'
   | 'ad_free'
-  | 'monthly_token_bonus';
+  | 'monthly_token_bonus'
+  | 'suggested_story_views'
+  | 'flirt_start';
 
 // ─── Feature Access Rules ────────────────────────────────────────
 
@@ -210,6 +212,18 @@ export const FEATURE_RULES: Record<FeatureKey, FeatureRule> = {
     limits: { FREE: 0, GOLD: 250, PRO: 500, RESERVED: 1000 },
     labelTr: 'Aylık Jeton Bonusu',
     descriptionTr: 'Her ay üyelik düzeyine göre jeton hediyesi al.',
+  },
+  suggested_story_views: {
+    minTier: 'FREE',
+    limits: { FREE: 1, GOLD: 5, PRO: 15, RESERVED: -1 },
+    labelTr: 'Önerilen Hikayeler',
+    descriptionTr: 'Önerilen kişilerin hikayelerini gör. Limit dolunca 20 Jeton ile izle.',
+  },
+  flirt_start: {
+    minTier: 'FREE',
+    limits: { FREE: 1, GOLD: 5, PRO: 15, RESERVED: -1 },
+    labelTr: 'Flört Başlat',
+    descriptionTr: 'Flört isteği gönder. Limit dolunca 25 Jeton ile gönder.',
   },
 };
 

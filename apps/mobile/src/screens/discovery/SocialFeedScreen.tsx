@@ -48,9 +48,12 @@ import { QuickProfilePreview } from '../../components/feed/QuickProfilePreview';
 import { useFeedInteractionStore } from '../../stores/feedInteractionStore';
 import { useStoryStore } from '../../stores/storyStore';
 import { StoryRing } from '../../components/stories/StoryRing';
+import type { StoryUser } from '../../services/storyService';
 import { useFlirtStore } from '../../stores/flirtStore';
-import { UpgradePrompt } from '../../components/premium/UpgradePrompt';
 import { FEED_POST_CONFIG } from '../../constants/config';
+import { useCoinStore, SUGGESTED_STORY_VIEW_COST, FLIRT_START_COST } from '../../stores/coinStore';
+import { FEATURE_RULES, isUnlimited as isFeatureUnlimited } from '../../constants/packageAccess';
+import type { PackageTier } from '../../stores/authStore';
 
 // ── Feed item union type for FlatList (posts + nudge cards) ──────
 const NUDGE_INTERVAL = 5; // show nudge every N posts without interaction
@@ -372,6 +375,104 @@ const getViewCount = (postId: string): number => {
   return (hash % 200) + 10;
 };
 
+// ─── Story Bar Section ────────────────────────────────────────
+// Fixed story bar between header and feed — does NOT scroll with FlatList
+
+interface StoryBarSectionProps {
+  storyUsers: StoryUser[];
+  myStoryCount: number;
+  seenStoryIds: Set<string>;
+  onCreateStory: () => void;
+  onViewStory: (userId: string, userName: string, avatarUrl: string) => void;
+  onSuggestedStoryPress: (userId: string, userName: string, avatarUrl: string) => void;
+}
+
+const StoryBarSection: React.FC<StoryBarSectionProps> = ({
+  storyUsers,
+  myStoryCount,
+  seenStoryIds,
+  onCreateStory,
+  onViewStory,
+  onSuggestedStoryPress,
+}) => {
+  // Separate followed users from suggested users — exclude own user from the list
+  const followedUsers = storyUsers.filter((u) => !u.isSuggested && u.userId !== 'dev-user-001');
+  const suggestedUsers = storyUsers.filter((u) => u.isSuggested && u.userId !== 'dev-user-001').slice(0, 3);
+
+  // Sort followed: unseen stories first, then by latest story time
+  const sortedFollowed = [...followedUsers].sort((a, b) => {
+    const aUnseen = a.stories.some((s) => !seenStoryIds.has(s.id));
+    const bUnseen = b.stories.some((s) => !seenStoryIds.has(s.id));
+    if (aUnseen && !bUnseen) return -1;
+    if (!aUnseen && bUnseen) return 1;
+    return new Date(b.latestStoryAt).getTime() - new Date(a.latestStoryAt).getTime();
+  });
+
+  return (
+    <View style={sbStyles.wrapper}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={sbStyles.scroll}
+        contentContainerStyle={sbStyles.content}
+      >
+        {/* Own story — always first */}
+        <StoryRing
+          userName="Hikaye"
+          avatarUrl="https://i.pravatar.cc/150?img=68"
+          isOwnStory
+          hasStories={myStoryCount > 0}
+          isSeen={false}
+          showLabel={false}
+          onPress={() => {
+            if (myStoryCount > 0) {
+              onViewStory('dev-user-001', 'Sen', 'https://i.pravatar.cc/150?img=68');
+            } else {
+              onCreateStory();
+            }
+          }}
+          onPlusPress={onCreateStory}
+        />
+
+        {/* Followed users' stories */}
+        {sortedFollowed.map((user) => {
+          const hasUnseen = user.stories.some((s) => !seenStoryIds.has(s.id));
+          return (
+            <StoryRing
+              key={user.userId}
+              userName={user.userName}
+              avatarUrl={user.userAvatarUrl}
+              hasStories={user.stories.length > 0}
+              isSeen={!hasUnseen}
+              showLabel={false}
+              onPress={() => onViewStory(user.userId, user.userName, user.userAvatarUrl)}
+            />
+          );
+        })}
+
+        {/* Divider between followed and suggested */}
+        {suggestedUsers.length > 0 && sortedFollowed.length > 0 && (
+          <View style={sbStyles.divider} />
+        )}
+
+        {/* Suggested stories (max 3) — taps go through daily limit check */}
+        {suggestedUsers.map((user) => (
+          <StoryRing
+            key={user.userId}
+            userName={user.userName}
+            avatarUrl={user.userAvatarUrl}
+            hasStories={user.stories.length > 0}
+            isSeen={false}
+            isSuggested
+            showLabel={false}
+            onPress={() => onSuggestedStoryPress(user.userId, user.userName, user.userAvatarUrl)}
+          />
+        ))}
+      </ScrollView>
+    </View>
+  );
+};
+
 // ─── Main Screen ──────────────────────────────────────────────
 
 type FeedNavProp = NativeStackNavigationProp<FeedStackParamList, 'SocialFeed'>;
@@ -427,7 +528,12 @@ export const SocialFeedScreen: React.FC = () => {
   const [selectedPostType, setSelectedPostType] = useState<FeedPostType>('text');
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
   const [quickPreviewPost, setQuickPreviewPost] = useState<FeedPost | null>(null);
-  const [showFlirtPaywall, setShowFlirtPaywall] = useState(false);
+
+  // Suggested story daily view tracking
+  const [suggestedStoryViewsToday, setSuggestedStoryViewsToday] = useState(0);
+  const [suggestedStoryViewDate, setSuggestedStoryViewDate] = useState<string>(getToday());
+  const coinBalance = useCoinStore((s) => s.balance);
+  const spendCoins = useCoinStore((s) => s.spendCoins);
 
   useEffect(() => {
     fetchFeed();
@@ -479,11 +585,84 @@ export const SocialFeedScreen: React.FC = () => {
   }, [navigation]);
 
   const handleStoryView = useCallback((userId: string, userName: string, avatarUrl: string) => {
-    navigation.getParent()?.navigate('DiscoveryTab', {
-      screen: 'StoryViewer',
-      params: { userId, userName, userAvatarUrl: avatarUrl },
+    // Open StoryViewer within FeedStack so user stays in Akış tab on close
+    const orderedUsers = useStoryStore.getState().getOrderedStoryUsers();
+    navigation.navigate('StoryViewer', {
+      userId,
+      userName,
+      userAvatarUrl: avatarUrl,
+      storyUsers: orderedUsers,
     });
   }, [navigation]);
+
+  // Suggested story press — check daily view limit before opening
+  const handleSuggestedStoryPress = useCallback(
+    (userId: string, userName: string, avatarUrl: string) => {
+      const tier = packageTier as PackageTier;
+      const unlimited = isFeatureUnlimited(tier, 'suggested_story_views');
+      const dailyLimit = FEATURE_RULES['suggested_story_views'].limits[tier];
+
+      // Reset counter if day changed
+      const today = getToday();
+      const viewsUsed = suggestedStoryViewDate === today ? suggestedStoryViewsToday : 0;
+
+      // Unlimited or under limit — open normally
+      if (unlimited || viewsUsed < dailyLimit) {
+        setSuggestedStoryViewDate(today);
+        setSuggestedStoryViewsToday(viewsUsed + 1);
+        handleStoryView(userId, userName, avatarUrl);
+        return;
+      }
+
+      // Limit reached — show Alert with coin spend or upgrade options
+      const costLabel = `Jeton Kullan (${SUGGESTED_STORY_VIEW_COST})`;
+      const hasEnoughCoins = coinBalance >= SUGGESTED_STORY_VIEW_COST;
+
+      Alert.alert(
+        'Günlük Limit Doldu',
+        `Bugünkü ${dailyLimit} önerilen hikaye hakkın bitti. Jeton harcayarak izleyebilir veya paketini yükselterek limitini artırabilirsin.`,
+        [
+          {
+            text: 'Kapat',
+            style: 'cancel',
+          },
+          {
+            text: 'Paketi Yükselt',
+            onPress: () =>
+              navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' }),
+          },
+          {
+            text: hasEnoughCoins ? costLabel : `${costLabel} (yetersiz)`,
+            style: 'default',
+            onPress: async () => {
+              if (!hasEnoughCoins) {
+                Alert.alert('Yetersiz Jeton', 'Jeton bakiyen yeterli değil. Jeton satın alabilirsin.', [
+                  { text: 'Tamam', style: 'cancel' },
+                ]);
+                return;
+              }
+              const success = await spendCoins(
+                SUGGESTED_STORY_VIEW_COST,
+                `suggested_story_view:${userId}`,
+              );
+              if (success) {
+                handleStoryView(userId, userName, avatarUrl);
+              }
+            },
+          },
+        ],
+      );
+    },
+    [
+      packageTier,
+      suggestedStoryViewsToday,
+      suggestedStoryViewDate,
+      coinBalance,
+      spendCoins,
+      handleStoryView,
+      navigation,
+    ],
+  );
 
   const handleLike = useCallback(
     (postId: string) => {
@@ -537,21 +716,9 @@ export const SocialFeedScreen: React.FC = () => {
     setQuickPreviewPost(null);
   }, []);
 
-  const handleFlirt = useCallback(
+  // Internal helper — executes the flirt request after all checks pass
+  const executeFlirt = useCallback(
     async (userId: string) => {
-      // Check if already pending
-      if (isFlirtPending(userId)) {
-        Alert.alert('Beklemede \u23F3', 'Bu kişiye zaten flört isteği gönderdin. Yanıt bekleniyor.');
-        return;
-      }
-
-      // Check daily limit (only enforced when MONETIZATION_ENABLED = true)
-      const tier = packageTier as 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
-      if (!canFlirt(tier)) {
-        setShowFlirtPaywall(true);
-        return;
-      }
-
       markInteraction();
       if (userId !== 'dev-user-001') {
         recordInteraction(userId);
@@ -575,7 +742,82 @@ export const SocialFeedScreen: React.FC = () => {
         [{ text: 'Tamam' }],
       );
     },
-    [posts, recordInteraction, markInteraction, canFlirt, recordFlirt, isFlirtPending, packageTier],
+    [posts, recordInteraction, markInteraction, recordFlirt],
+  );
+
+  const handleFlirt = useCallback(
+    async (userId: string) => {
+      // Check if already pending
+      if (isFlirtPending(userId)) {
+        Alert.alert('Beklemede', 'Bu kişiye zaten flört isteği gönderdin. Yanıt bekleniyor.');
+        return;
+      }
+
+      // Check daily limit (only enforced when MONETIZATION_ENABLED = true)
+      const tier = packageTier as 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
+      if (canFlirt(tier)) {
+        // Under daily limit — proceed normally
+        executeFlirt(userId);
+        return;
+      }
+
+      // Daily limit exceeded — show options: spend gold or upgrade
+      const dailyLimit = FEATURE_RULES['flirt_start'].limits[tier];
+      const limitLabel = dailyLimit === -1 ? 'Sinirsiz' : String(dailyLimit);
+
+      const alertButtons: Array<{
+        text: string;
+        style?: 'cancel' | 'default' | 'destructive';
+        onPress?: () => void;
+      }> = [
+        {
+          text: `Jeton Kullan (${FLIRT_START_COST})`,
+          onPress: async () => {
+            if (coinBalance < FLIRT_START_COST) {
+              Alert.alert(
+                'Yetersiz Jeton',
+                `Flört göndermek için ${FLIRT_START_COST} jeton gerekli. Mevcut bakiye: ${coinBalance}`,
+                [
+                  {
+                    text: 'Jeton Al',
+                    onPress: () =>
+                      navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' }),
+                  },
+                  { text: 'Kapat', style: 'cancel' },
+                ],
+              );
+              return;
+            }
+
+            const spent = await spendCoins(FLIRT_START_COST, `flirt_start:${userId}`);
+            if (spent) {
+              executeFlirt(userId);
+            }
+          },
+        },
+        {
+          text: 'Paketi Yükselt',
+          onPress: () =>
+            navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' }),
+        },
+        { text: 'Kapat', style: 'cancel' },
+      ];
+
+      Alert.alert(
+        'Günlük Flört Limitin Doldu',
+        `Bugün için ${limitLabel} flört hakkının tamamını kullandın. Jeton harcayarak devam edebilir veya paketini yükselterek limitini artırabilirsin.`,
+        alertButtons,
+      );
+    },
+    [
+      canFlirt,
+      coinBalance,
+      executeFlirt,
+      isFlirtPending,
+      navigation,
+      packageTier,
+      spendCoins,
+    ],
   );
 
   // Flirt prompt — start flirt from feed interaction popup
@@ -759,9 +1001,24 @@ export const SocialFeedScreen: React.FC = () => {
       </View>
   );
 
+  // Feed list header: story bar + create post card + filter tabs
+  const feedListHeader = (
+    <View>
+      <StoryBarSection
+        storyUsers={storyUsers}
+        myStoryCount={myStoryCount}
+        seenStoryIds={seenStoryIds}
+        onCreateStory={handleCreateStory}
+        onViewStory={handleStoryView}
+        onSuggestedStoryPress={handleSuggestedStoryPress}
+      />
+      {listHeader}
+    </View>
+  );
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Enhanced Header */}
+      {/* Header — always visible at top */}
       <View style={styles.headerArea}>
         <Text style={styles.headerTitle}>Akış</Text>
         <View style={styles.headerRight}>
@@ -790,50 +1047,7 @@ export const SocialFeedScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* ── Hikayeler (orijinal StoryRing component) ── */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={sbStyles.scroll} contentContainerStyle={sbStyles.content}>
-        {/* Kendi story */}
-        <StoryRing
-          userName="Hikaye"
-          avatarUrl="https://i.pravatar.cc/150?img=68"
-          isOwnStory
-          hasStories={myStoryCount > 0}
-          isSeen={false}
-          onPress={myStoryCount > 0
-            ? () => handleStoryView('dev-user-001', 'Sen', 'https://i.pravatar.cc/150?img=68')
-            : handleCreateStory
-          }
-        />
-
-        {/* Takip edilenler */}
-        {storyUsers.filter((u) => u.userId !== 'dev-user-001' && u.stories.length > 0 && u.isFollowing).map((u) => {
-          const seen = u.stories.every((s) => seenStoryIds.has(s.id));
-          return (
-            <StoryRing
-              key={u.userId}
-              userName={u.userName}
-              avatarUrl={u.userAvatarUrl}
-              hasStories
-              isSeen={seen}
-              onPress={() => handleStoryView(u.userId, u.userName, u.userAvatarUrl)}
-            />
-          );
-        })}
-
-        {/* Önerilen (max 3) */}
-        {storyUsers.filter((u) => u.userId !== 'dev-user-001' && u.stories.length > 0 && !u.isFollowing).slice(0, 3).map((u) => (
-          <StoryRing
-            key={u.userId}
-            userName={u.userName}
-            avatarUrl={u.userAvatarUrl}
-            hasStories
-            isSeen={false}
-            onPress={() => handleStoryView(u.userId, u.userName, u.userAvatarUrl)}
-          />
-        ))}
-      </ScrollView>
-
-      {/* Feed List */}
+      {/* Feed — story bar is part of the list header, scrolls with content like Instagram */}
       {isLoading && posts.length === 0 ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -841,11 +1055,12 @@ export const SocialFeedScreen: React.FC = () => {
       ) : (
         <FlatList
           ref={flatListRef}
+          style={{ flex: 1 }}
           data={feedListItems}
           extraData={feedListItems}
           keyExtractor={keyExtractor}
           renderItem={renderFeedItem}
-          ListHeaderComponent={listHeader}
+          ListHeaderComponent={feedListHeader}
           ListEmptyComponent={EmptyState}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
@@ -903,17 +1118,6 @@ export const SocialFeedScreen: React.FC = () => {
         onDismiss={dismissPrompt}
       />
 
-      {/* Flirt limit paywall */}
-      <UpgradePrompt
-        visible={showFlirtPaywall}
-        feature="flirt"
-        onUpgrade={() => {
-          setShowFlirtPaywall(false);
-          navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' });
-        }}
-        onDismiss={() => setShowFlirtPaywall(false)}
-      />
-
       {/* Hikaye oluştur — bottom sheet */}
       <Modal visible={showStorySheet} transparent animationType="slide" onRequestClose={() => setShowStorySheet(false)}>
         <TouchableOpacity style={storySheetStyles.backdrop} activeOpacity={1} onPress={() => setShowStorySheet(false)} />
@@ -961,14 +1165,32 @@ export const SocialFeedScreen: React.FC = () => {
 
 // ── Story Bar (orijinal yapı, StoryRing component kullanır) ──
 const sbStyles = StyleSheet.create({
+  wrapper: {
+    flexShrink: 0,
+    backgroundColor: colors.background,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.divider ?? 'rgba(0,0,0,0.1)',
+  },
   scroll: {
     flexGrow: 0,
-    backgroundColor: colors.background,
+    flexShrink: 0,
   },
   content: {
     paddingHorizontal: spacing.lg,
     gap: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md + 4,
+    alignItems: 'center',
+  },
+  /** Subtle vertical divider between followed and suggested stories */
+  divider: {
+    width: 1,
+    height: 48,
+    backgroundColor: palette.gold[600],
+    opacity: 0.3,
+    alignSelf: 'center',
+    borderRadius: 1,
+    marginHorizontal: spacing.xs,
   },
 });
 
@@ -1098,8 +1320,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.divider ?? 'rgba(0,0,0,0.1)',
   },
   headerTitle: {
     ...typography.h3,

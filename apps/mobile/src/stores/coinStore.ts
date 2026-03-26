@@ -37,6 +37,8 @@ export const EXTRA_LIKES_COST = 15;        // Buy 5 extra likes
 export const PROFILE_HIGHLIGHT_COST = 10;  // Highlight profile for 1 hour
 export const PRIORITY_MESSAGE_COST = 30;   // Priority message (shown first)
 export const UNDO_SWIPE_COST = 5;          // Extra undo beyond daily free limit
+export const SUGGESTED_STORY_VIEW_COST = 20; // View suggested story beyond limit (GOLD_COSTS.SUGGESTED_STORY_VIEW)
+export const FLIRT_START_COST = 25;           // Flirt beyond daily limit — aligned with GOLD_COSTS.FLIRT_START
 
 // ── Earn rewards ──
 export const WELCOME_BONUS = 100;              // New user gift

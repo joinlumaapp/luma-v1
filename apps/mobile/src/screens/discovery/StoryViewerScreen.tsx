@@ -36,7 +36,7 @@ import { spacing, borderRadius } from '../../theme/spacing';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const IMAGE_STORY_DURATION = 5000; // 5 seconds per image
-const VIDEO_STORY_DURATION = 15000; // 15 seconds for video (future)
+const DEFAULT_VIDEO_DURATION = 15000; // Fallback for video if metadata unavailable
 
 type StoryViewerRouteProp = RouteProp<DiscoveryStackParamList, 'StoryViewer'>;
 type StoryViewerNavProp = CompositeNavigationProp<
@@ -127,7 +127,13 @@ const HeartAnimation: React.FC<{ visible: boolean; onFinish: () => void }> = ({
 
 // ─── Story Content Renderer ──────────────────────────────────────────
 
-const StoryContent: React.FC<{ story: Story; isPaused?: boolean }> = ({ story, isPaused = false }) => {
+interface StoryContentProps {
+  story: Story;
+  isPaused?: boolean;
+  onVideoDuration?: (durationMs: number) => void;
+}
+
+const StoryContent: React.FC<StoryContentProps> = ({ story, isPaused = false, onVideoDuration }) => {
   return (
     <View style={styles.contentContainer}>
       {story.mediaType === 'video' ? (
@@ -138,12 +144,17 @@ const StoryContent: React.FC<{ story: Story; isPaused?: boolean }> = ({ story, i
           shouldPlay={!isPaused}
           isLooping={false}
           isMuted={false}
+          onLoad={(status) => {
+            if ('durationMillis' in status && status.durationMillis && onVideoDuration) {
+              onVideoDuration(status.durationMillis);
+            }
+          }}
         />
       ) : (
         <Image source={{ uri: story.mediaUrl }} style={styles.fullImage} resizeMode="cover" />
       )}
 
-      {/* Render text overlays */}
+      {/* Render text overlays — centered on normalized position */}
       {story.overlays
         .filter((o): o is StoryOverlay & { content: string } => o.type === 'text' && !!o.content)
         .map((overlay, idx) => (
@@ -152,8 +163,9 @@ const StoryContent: React.FC<{ story: Story; isPaused?: boolean }> = ({ story, i
             style={[
               styles.textOverlay,
               {
-                left: overlay.x * SCREEN_WIDTH - 80,
+                left: overlay.x * SCREEN_WIDTH,
                 top: overlay.y * SCREEN_HEIGHT,
+                transform: [{ translateX: -SCREEN_WIDTH * 0.35 }],
               },
             ]}
           >
@@ -171,7 +183,7 @@ const StoryContent: React.FC<{ story: Story; isPaused?: boolean }> = ({ story, i
           </View>
         ))}
 
-      {/* Render sticker overlays */}
+      {/* Render sticker overlays — centered on position */}
       {story.overlays
         .filter((o): o is StoryOverlay & { emoji: string } => o.type === 'sticker' && !!o.emoji)
         .map((overlay, idx) => (
@@ -181,13 +193,41 @@ const StoryContent: React.FC<{ story: Story; isPaused?: boolean }> = ({ story, i
               styles.stickerEmoji,
               {
                 left: overlay.x * SCREEN_WIDTH - 20,
-                top: overlay.y * SCREEN_HEIGHT,
+                top: overlay.y * SCREEN_HEIGHT - 20,
               },
             ]}
           >
             {overlay.emoji}
           </Text>
         ))}
+
+      {/* Render drawing overlays — replay path points as dots */}
+      {story.overlays
+        .filter((o): o is StoryOverlay & { pathData: string } => o.type === 'drawing' && !!o.pathData)
+        .map((overlay, idx) => {
+          let points: Array<{ x: number; y: number }> = [];
+          try {
+            points = JSON.parse(overlay.pathData);
+          } catch {
+            // Invalid path data — skip
+          }
+          const brushSize = overlay.brushSize ?? 6;
+          const brushColor = overlay.brushColor ?? '#FFFFFF';
+          return points.map((point, pIdx) => (
+            <View
+              key={`draw-${idx}-${pIdx}`}
+              style={{
+                position: 'absolute',
+                left: point.x - brushSize / 2,
+                top: point.y - brushSize / 2,
+                width: brushSize,
+                height: brushSize,
+                borderRadius: brushSize / 2,
+                backgroundColor: brushColor,
+              }}
+            />
+          ));
+        })}
     </View>
   );
 };
@@ -258,6 +298,9 @@ export const StoryViewerScreen: React.FC = () => {
   // Paused state for reply/long-press
   const isPaused = useRef(false);
   const [isStoryPaused, setIsStoryPaused] = useState(false);
+
+  // Video duration from metadata (overrides default)
+  const videoDurationRef = useRef<number | null>(null);
 
   // ── Swipe-down-to-close gesture ──
   const swipeY = useRef(new RNAnimated.Value(0)).current;
@@ -339,7 +382,10 @@ export const StoryViewerScreen: React.FC = () => {
 
   const getDuration = useCallback((story?: Story) => {
     if (!story) return IMAGE_STORY_DURATION;
-    return story.mediaType === 'video' ? VIDEO_STORY_DURATION : IMAGE_STORY_DURATION;
+    if (story.mediaType === 'video') {
+      return videoDurationRef.current ?? DEFAULT_VIDEO_DURATION;
+    }
+    return IMAGE_STORY_DURATION;
   }, []);
 
   const startTimer = useCallback(() => {
@@ -364,6 +410,11 @@ export const StoryViewerScreen: React.FC = () => {
       }
     }, duration);
   }, [clearTimer, progressAnim, activeIndex, currentStories, getDuration, advanceToNextUser]);
+
+  // ── Reset video duration ref when story changes ──
+  useEffect(() => {
+    videoDurationRef.current = null;
+  }, [activeIndex, currentUserIndex]);
 
   // ── Mark story as seen when it becomes active ──
   useEffect(() => {
@@ -544,7 +595,19 @@ export const StoryViewerScreen: React.FC = () => {
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
       >
-        <StoryContent story={currentStory} isPaused={isStoryPaused} />
+        <StoryContent
+          story={currentStory}
+          isPaused={isStoryPaused}
+          onVideoDuration={(durationMs) => {
+            // Update duration from video metadata and restart timer
+            if (videoDurationRef.current !== durationMs) {
+              videoDurationRef.current = durationMs;
+              if (!isPaused.current) {
+                startTimer();
+              }
+            }
+          }}
+        />
       </Pressable>
 
       {/* Heart animation */}

@@ -240,6 +240,7 @@ export class ChatService {
         status: "SENT",
         mediaUrl: dto.mediaUrl ?? null,
         mediaDuration: dto.mediaDuration ?? null,
+        metadata: dto.metadata ? (dto.metadata as Prisma.InputJsonValue) : undefined,
       },
       select: {
         id: true,
@@ -254,10 +255,8 @@ export class ChatService {
     });
 
     // Detect URLs in text messages and store link preview metadata.
-    // TODO: Server-side link preview fetching (title, image, description) could be
-    // added here as an async job — for now we only extract the first URL so the
-    // client can fetch preview data itself.
-    if (messageType === "TEXT") {
+    // Skip if metadata was already provided (e.g. story reply context).
+    if (messageType === "TEXT" && !dto.metadata) {
       const urlMatch = dto.content.match(/https?:\/\/[^\s]+/);
       if (urlMatch) {
         await this.prisma.chatMessage.update({

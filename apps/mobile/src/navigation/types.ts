@@ -111,6 +111,12 @@ export type FeedStackParamList = {
   FeedProfile: { userId: string };
   ProfilePreview: { userId: string };
   StoryCreator: { mediaUri?: string; mediaType?: 'image' | 'video' } | undefined;
+  StoryViewer: {
+    userId: string;
+    userName: string;
+    userAvatarUrl: string;
+    storyUsers?: Array<{ userId: string; userName: string; userAvatarUrl: string }>;
+  };
 };
 
 // -- Profile Stack --

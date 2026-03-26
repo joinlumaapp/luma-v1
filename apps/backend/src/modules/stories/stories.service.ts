@@ -11,6 +11,7 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 import { StorageService } from "../storage/storage.service";
+import { ChatService } from "../chat/chat.service";
 import { CreateStoryDto } from "./dto/create-story.dto";
 
 /** Minimal file interface compatible with multer uploads */
@@ -31,6 +32,7 @@ export class StoriesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
+    private readonly chatService: ChatService,
   ) {}
 
   /** Get all active stories from matched/followed users */
@@ -229,8 +231,33 @@ export class StoriesService {
       throw new NotFoundException("Hikaye bulunamadi");
     }
 
-    // Find or create a chat between sender and story owner
-    // The chat message includes story context (media preview)
+    // Find active match between sender and story owner
+    const match = await this.prisma.match.findFirst({
+      where: {
+        OR: [
+          { userAId: senderId, userBId: story.userId },
+          { userAId: story.userId, userBId: senderId },
+        ],
+        isActive: true,
+      },
+    });
+
+    if (!match) {
+      throw new ForbiddenException("Bu kullaniciya yanit gonderebilmek icin eslesmeniz gerekli");
+    }
+
+    // Send chat message with story context in metadata
+    await this.chatService.sendMessage(senderId, match.id, {
+      content: message,
+      type: "TEXT",
+      metadata: {
+        storyReply: true,
+        storyId: story.id,
+        storyMediaUrl: story.mediaUrl,
+        storyMediaType: story.mediaType,
+      },
+    });
+
     this.logger.log(
       `User ${senderId} replied to story ${storyId} of user ${story.userId}: "${message}"`,
     );

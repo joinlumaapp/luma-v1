@@ -46,4 +46,11 @@ export class SendMessageDto {
   })
   @IsOptional()
   mediaDuration?: number;
+
+  @ApiPropertyOptional({
+    description: "Additional metadata (e.g. story reply context)",
+    example: { storyReply: true, storyId: "abc-123" },
+  })
+  @IsOptional()
+  metadata?: Record<string, unknown>;
 }

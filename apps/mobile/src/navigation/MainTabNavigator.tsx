@@ -357,6 +357,11 @@ const FeedStackNavigator: React.FC = React.memo(() => (
       component={StoryCreator}
       options={{ animation: 'slide_from_bottom', gestureEnabled: true, gestureDirection: 'vertical' }}
     />
+    <FeedStack.Screen
+      name="StoryViewer"
+      component={StoryViewerScreen}
+      options={{ animation: 'fade', presentation: 'fullScreenModal' }}
+    />
   </FeedStack.Navigator>
 ));
 FeedStackNavigator.displayName = 'FeedStackNavigator';
@@ -457,7 +462,7 @@ export const MainTabNavigator: React.FC = () => {
   return (
     <>
     <Tab.Navigator
-      initialRouteName="DiscoveryTab"
+      initialRouteName="FeedTab"
       backBehavior="history"
       detachInactiveScreens
       screenOptions={{
