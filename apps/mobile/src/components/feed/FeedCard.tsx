@@ -182,48 +182,18 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ content }) => (
 
 // ─── Text Content (hook line + body) ─────────────────────────
 
-interface TextContentProps {
-  content: string;
-  expanded: boolean;
-  isLong: boolean;
-  onToggle: () => void;
-}
-
-const TextContent: React.FC<TextContentProps> = ({ content, expanded, isLong, onToggle }) => {
+const TextContent: React.FC<{ content: string }> = ({ content }) => {
   const lines = content.split('\n');
   const hookLine = lines[0] || '';
   const restContent = lines.length > 1 ? lines.slice(1).join('\n') : '';
-  const hasMultipleLines = lines.length > 1;
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.9}
-      onPress={isLong ? onToggle : undefined}
-      disabled={!isLong}
-    >
-      {/* Hook line: first line is slightly larger and bolder */}
-      <Text style={styles.hookLine} numberOfLines={expanded ? undefined : 1}>
-        {hookLine}
-      </Text>
-
-      {/* Remaining text: normal body style */}
-      {hasMultipleLines && (
-        <Text style={styles.bodyText} numberOfLines={expanded ? undefined : 2}>
-          {restContent}
-        </Text>
+    <View>
+      <Text style={styles.hookLine}>{hookLine}</Text>
+      {restContent.length > 0 && (
+        <Text style={styles.bodyText}>{restContent}</Text>
       )}
-
-      {/* If content is short but was a single block, show as body when no hook split */}
-      {!hasMultipleLines && content.length > 60 && (
-        <Text style={styles.bodyText} numberOfLines={expanded ? undefined : 2}>
-          {/* Hook line already rendered above, this handles overflow for single-line long posts */}
-        </Text>
-      )}
-
-      {isLong && !expanded && (
-        <Text style={styles.readMore}>devamını oku</Text>
-      )}
-    </TouchableOpacity>
+    </View>
   );
 };
 
@@ -240,7 +210,6 @@ interface FeedCardProps {
 }
 
 export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onFollow, onProfilePress, onFlirt, onPostTap }) => {
-  const [expanded, setExpanded] = useState(false);
   const [showDoubleTapMenu, setShowDoubleTapMenu] = useState(false);
   const likeScale = useRef(new Animated.Value(1)).current;
   const likeGlow = useRef(new Animated.Value(0)).current;
@@ -382,9 +351,6 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
   const handleDoubleTapLike = useCallback(() => { dismissDoubleTapMenu(); handleLikePress(); }, [dismissDoubleTapMenu, handleLikePress]);
   const handleDoubleTapFlirt = useCallback(() => { dismissDoubleTapMenu(); handleFlirtPress(); }, [dismissDoubleTapMenu, handleFlirtPress]);
 
-  const toggleExpand = useCallback(() => { setExpanded((prev) => !prev); }, []);
-
-  const isLongContent = post.content.length > 120;
   const isOwnPost = post.userId === 'dev-user-001';
   const isQuestion = post.postType === 'question';
   const isMusic = post.postType === 'music' && post.musicTitle && post.musicArtist;
@@ -469,12 +435,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
         {isQuestion ? (
           <QuestionCard content={post.content} />
         ) : (
-          <TextContent
-            content={post.content}
-            expanded={expanded}
-            isLong={isLongContent}
-            onToggle={toggleExpand}
-          />
+          <TextContent content={post.content} />
         )}
 
         <MediaSection photos={post.photoUrls} videoUrl={post.videoUrl} />
@@ -747,15 +708,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
     marginBottom: spacing.sm,
-  },
-  readMore: {
-    fontSize: 13,
-    color: palette.purple[400],
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-    marginTop: 2,
-    marginBottom: spacing.sm,
-    letterSpacing: 0.2,
   },
 
   // ── Double-tap overlay ──
