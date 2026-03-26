@@ -42,11 +42,10 @@ const formatTimeAgo = (dateString: string): string => {
 
 // ─── Identity Line Helper ─────────────────────────────────────
 
-const buildIdentityLine = (age: number, city: string, profession: string | null): string => {
+const buildAgeCityLine = (age: number, city: string): string => {
   const parts: string[] = [];
   if (age > 0) parts.push(String(age));
   if (city) parts.push(city);
-  if (profession) parts.push(profession);
   return parts.join(' \u2022 ');
 };
 
@@ -279,7 +278,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
   const doubleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const intentionOption = INTENTION_TAG_OPTIONS.find((t) => t.id === post.intentionTag);
-  const identityLine = buildIdentityLine(post.userAge, post.userCity, post.userProfession);
+  const ageCityLine = buildAgeCityLine(post.userAge, post.userCity);
 
   const handleFollowPress = useCallback(() => {
     onFollow(post.userId);
@@ -369,9 +368,12 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
             )}
           </View>
 
-          {/* Subtitle: city + profession */}
-          {identityLine.length > 0 && (
-            <Text style={styles.identityLine} numberOfLines={1}>{identityLine}</Text>
+          {/* Subtitle: age + city, then profession */}
+          {ageCityLine.length > 0 && (
+            <Text style={styles.identityLine} numberOfLines={1}>{ageCityLine}</Text>
+          )}
+          {post.userProfession && (
+            <Text style={styles.professionLine} numberOfLines={1}>{post.userProfession}</Text>
           )}
 
           {/* Currently listening indicator */}
@@ -631,6 +633,13 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     marginTop: 1,
     letterSpacing: 0.15,
+  },
+  professionLine: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    marginTop: 1,
   },
   metaRow: {
     flexDirection: 'row',
