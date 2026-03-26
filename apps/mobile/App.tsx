@@ -8,9 +8,11 @@ import {
   StyleSheet,
   View,
   Text,
+  Image,
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 // expo-updates is only available in EAS builds, not in Expo Go dev client.
 // We lazy-import it in the error boundary restart handler to avoid crashes.
 // import * as Updates from 'expo-updates';
@@ -288,27 +290,30 @@ function TrialExpiryChecker(): null {
 }
 
 // ─── Font Loading Splash ──────────────────────────────────────────────
+const splashLogo = require('./assets/splash-logo.png');
+
 function FontLoadingSplash(): React.JSX.Element {
   return (
-    <View style={splashStyles.container}>
-      <Text style={splashStyles.logo}>LUMA</Text>
+    <LinearGradient
+      colors={['#E8959E', '#EDACB4', '#F2C0C6', '#F7D5D9', '#FFFFFF']}
+      locations={[0, 0.3, 0.55, 0.8, 1]}
+      style={splashStyles.container}
+    >
+      <Image source={splashLogo} style={splashStyles.logo} resizeMode="contain" />
       <ActivityIndicator size="small" color="#D4AF37" style={splashStyles.spinner} />
-    </View>
+    </LinearGradient>
   );
 }
 
 const splashStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#3D1B5B',
     justifyContent: 'center',
     alignItems: 'center',
   },
   logo: {
-    fontSize: 40,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    letterSpacing: 6,
+    width: 180,
+    height: 180,
   },
   spinner: {
     marginTop: 24,
