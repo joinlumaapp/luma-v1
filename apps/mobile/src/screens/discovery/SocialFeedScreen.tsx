@@ -964,7 +964,7 @@ export const SocialFeedScreen: React.FC = () => {
             onPress={() => handlePostTypeSelect('text')}
             activeOpacity={0.85}
           >
-            <Text style={createStyles.placeholder}>Bir şey paylaş...</Text>
+            <Text style={createStyles.placeholder}>Hikayeni paylaş...</Text>
           </TouchableOpacity>
           <View style={createStyles.iconRow}>
             <TouchableOpacity style={createStyles.iconChip} onPress={() => handlePostTypeSelect('photo')} activeOpacity={0.7}>

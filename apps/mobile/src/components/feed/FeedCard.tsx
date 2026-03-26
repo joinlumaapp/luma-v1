@@ -1,6 +1,7 @@
-// FeedCard — dating-first, action-driven post card
-// Layout: header → intention → content → horizontal actions (Like, Comment, Flirt) → comment input
+// FeedCard — premium, warm, dating-first post card
+// Layout: header (avatar + identity + badges) -> intention -> content -> actions -> comment input
 // Flirt is the primary CTA — largest, most vibrant, icon+text
+// Design: soft shadows, warm tones, generous spacing, Poppins typography hierarchy
 
 import React, { useState, useCallback, useRef } from 'react';
 import {
@@ -15,8 +16,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, palette } from '../../theme/colors';
-import { typography } from '../../theme/typography';
-import { spacing, borderRadius, shadows } from '../../theme/spacing';
+import { spacing, borderRadius } from '../../theme/spacing';
 import { INTENTION_TAG_OPTIONS, type FeedPost } from '../../services/socialFeedService';
 
 // ─── Time Ago Helper ──────────────────────────────────────────
@@ -37,6 +37,38 @@ const formatTimeAgo = (dateString: string): string => {
     day: 'numeric',
     month: 'short',
   });
+};
+
+// ─── Identity Line Helper ─────────────────────────────────────
+
+const buildIdentityLine = (age: number, city: string, profession: string | null): string => {
+  const parts: string[] = [];
+  if (age > 0) parts.push(String(age));
+  if (city) parts.push(city);
+  if (profession) parts.push(profession);
+  return parts.join(' \u2022 ');
+};
+
+// ─── Vibe Chips ───────────────────────────────────────────────
+
+interface VibeChipsProps {
+  vibes: string[];
+  maxCount?: number;
+}
+
+const VibeChips: React.FC<VibeChipsProps> = ({ vibes, maxCount = 3 }) => {
+  if (!vibes || vibes.length === 0) return null;
+  const visibleVibes = vibes.slice(0, maxCount);
+
+  return (
+    <View style={vibeStyles.container}>
+      {visibleVibes.map((vibe, index) => (
+        <View key={index} style={vibeStyles.chip}>
+          <Text style={vibeStyles.chipText}>{vibe}</Text>
+        </View>
+      ))}
+    </View>
+  );
 };
 
 // ─── Media Section (photos + video) ──────────────────────────
@@ -122,18 +154,72 @@ const MusicCard: React.FC<MusicCardProps> = ({ title, artist }) => (
   </View>
 );
 
-// ─── Question Card ───────────────────────────────────────────
+// ─── Question Card (redesigned: soft gradient, inviting) ─────
 
 interface QuestionCardProps {
   content: string;
 }
 
 const QuestionCard: React.FC<QuestionCardProps> = ({ content }) => (
-  <View style={questionStyles.container}>
-    <Text style={questionStyles.icon}>{'\u2753'}</Text>
+  <LinearGradient
+    colors={[`${palette.purple[100]}60`, `${palette.pink[50]}50`, `${palette.purple[50]}30`]}
+    start={{ x: 0, y: 0 }}
+    end={{ x: 1, y: 1 }}
+    style={questionStyles.container}
+  >
+    <View style={questionStyles.iconWrapper}>
+      <Text style={questionStyles.icon}>?</Text>
+    </View>
     <Text style={questionStyles.text}>{content}</Text>
-  </View>
+  </LinearGradient>
 );
+
+// ─── Text Content (hook line + body) ─────────────────────────
+
+interface TextContentProps {
+  content: string;
+  expanded: boolean;
+  isLong: boolean;
+  onToggle: () => void;
+}
+
+const TextContent: React.FC<TextContentProps> = ({ content, expanded, isLong, onToggle }) => {
+  const lines = content.split('\n');
+  const hookLine = lines[0] || '';
+  const restContent = lines.length > 1 ? lines.slice(1).join('\n') : '';
+  const hasMultipleLines = lines.length > 1;
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={isLong ? onToggle : undefined}
+      disabled={!isLong}
+    >
+      {/* Hook line: first line is slightly larger and bolder */}
+      <Text style={styles.hookLine} numberOfLines={expanded ? undefined : 1}>
+        {hookLine}
+      </Text>
+
+      {/* Remaining text: normal body style */}
+      {hasMultipleLines && (
+        <Text style={styles.bodyText} numberOfLines={expanded ? undefined : 2}>
+          {restContent}
+        </Text>
+      )}
+
+      {/* If content is short but was a single block, show as body when no hook split */}
+      {!hasMultipleLines && content.length > 60 && (
+        <Text style={styles.bodyText} numberOfLines={expanded ? undefined : 2}>
+          {/* Hook line already rendered above, this handles overflow for single-line long posts */}
+        </Text>
+      )}
+
+      {isLong && !expanded && (
+        <Text style={styles.readMore}>devamını oku</Text>
+      )}
+    </TouchableOpacity>
+  );
+};
 
 // ─── FeedCard Component ───────────────────────────────────────
 
@@ -157,6 +243,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
   const doubleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const intentionOption = INTENTION_TAG_OPTIONS.find((t) => t.id === post.intentionTag);
+  const identityLine = buildIdentityLine(post.userAge, post.userCity, post.userProfession);
 
   const handleFollowPress = useCallback(() => {
     onFollow(post.userId);
@@ -186,7 +273,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
     onProfilePress(post.userId);
   }, [onProfilePress, post.userId]);
 
-  // Double-tap: single → quick preview, double → action menu
+  // Double-tap: single -> quick preview, double -> action menu
   const handleContentPress = useCallback(() => {
     if (post.userId === 'dev-user-001') return;
     const now = Date.now();
@@ -225,20 +312,50 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
 
   return (
     <View style={styles.card}>
-      {/* ── Header: Avatar + Name + Time + Follow ── */}
+
+      {/* ── Header: Avatar + Identity + Follow ── */}
       <View style={styles.headerRow}>
         <TouchableOpacity onPress={handleProfilePress} activeOpacity={0.7}>
-          <Image source={{ uri: post.userAvatarUrl }} style={styles.avatar} />
+          <View style={styles.avatarRing}>
+            <Image source={{ uri: post.userAvatarUrl }} style={styles.avatar} />
+          </View>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.headerInfo} onPress={handleProfilePress} activeOpacity={0.7}>
+          {/* Name row: name, age, verified */}
           <View style={styles.nameRow}>
-            <Text style={styles.userName} numberOfLines={1}>{post.userName}</Text>
+            <Text style={styles.userName} numberOfLines={1}>
+              {post.userName}
+              {post.userAge > 0 && (
+                <Text style={styles.userAge}>, {post.userAge}</Text>
+              )}
+            </Text>
             {post.isVerified && (
-              <Ionicons name="checkmark-circle" size={14} color={palette.purple[400]} />
+              <Ionicons name="checkmark-circle" size={15} color={palette.purple[400]} style={styles.verifiedIcon} />
             )}
           </View>
-          <Text style={styles.timeText}>{timeAgo}</Text>
+
+          {/* Subtitle: city + profession */}
+          {identityLine.length > 0 && (
+            <Text style={styles.identityLine} numberOfLines={1}>{identityLine}</Text>
+          )}
+
+          {/* Inline micro-badges: distance + compatibility */}
+          <View style={styles.metaRow}>
+            <Text style={styles.timeText}>{timeAgo}</Text>
+            {post.distance > 0 && (
+              <View style={styles.metaBadge}>
+                <Ionicons name="location" size={10} color={palette.coral[400]} />
+                <Text style={styles.metaBadgeText}>{post.distance} km</Text>
+              </View>
+            )}
+            {post.compatibilityScore > 0 && (
+              <View style={[styles.metaBadge, styles.compatBadge]}>
+                <Text style={styles.compatBadgeIcon}>{'\uD83D\uDC9C'}</Text>
+                <Text style={styles.compatBadgeText}>%{post.compatibilityScore} uyum</Text>
+              </View>
+            )}
+          </View>
         </TouchableOpacity>
 
         {!isOwnPost && (
@@ -251,17 +368,29 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
             {post.isFollowing ? (
               <Ionicons name="checkmark" size={14} color={colors.textTertiary} />
             ) : (
-              <Ionicons name="add" size={14} color={palette.purple[400]} />
+              <Ionicons name="add" size={15} color={palette.purple[500]} />
             )}
           </TouchableOpacity>
         )}
       </View>
 
-      {/* ── Intention Badge ── */}
+      {/* ── Vibe Chips ── */}
+      <VibeChips vibes={post.userVibes} maxCount={3} />
+
+      {/* ── Intention Badge (premium, soft glow) ── */}
       {intentionOption && (
-        <View style={[styles.intentionBadge, { backgroundColor: intentionOption.color + '15', borderColor: intentionOption.color + '30' }]}>
+        <View style={[
+          styles.intentionBadge,
+          {
+            backgroundColor: intentionOption.color + '12',
+            borderColor: intentionOption.color + '25',
+            shadowColor: intentionOption.color,
+          },
+        ]}>
           <Text style={styles.intentionEmoji}>{intentionOption.emoji}</Text>
-          <Text style={[styles.intentionLabel, { color: intentionOption.color }]}>{intentionOption.label}</Text>
+          <Text style={[styles.intentionLabel, { color: intentionOption.color }]}>
+            {intentionOption.label}
+          </Text>
         </View>
       )}
 
@@ -270,18 +399,12 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
         {isQuestion ? (
           <QuestionCard content={post.content} />
         ) : (
-          <TouchableOpacity
-            activeOpacity={0.9}
-            onPress={isLongContent ? toggleExpand : undefined}
-            disabled={!isLongContent}
-          >
-            <Text style={styles.contentText} numberOfLines={expanded ? undefined : 3}>
-              {post.content}
-            </Text>
-            {isLongContent && !expanded && (
-              <Text style={styles.readMore}>devami</Text>
-            )}
-          </TouchableOpacity>
+          <TextContent
+            content={post.content}
+            expanded={expanded}
+            isLong={isLongContent}
+            onToggle={toggleExpand}
+          />
         )}
 
         <MediaSection photos={post.photoUrls} videoUrl={post.videoUrl} />
@@ -305,41 +428,46 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
         )}
       </Pressable>
 
-      {/* ── Horizontal Action Bar: Like · Comment · FLIRT ── */}
+      {/* ── Action Separator ── */}
+      <View style={styles.actionSeparator} />
+
+      {/* ── Horizontal Action Bar: Like + Comment + FLIRT ── */}
       <View style={styles.actionRow}>
         {/* Like */}
         <TouchableOpacity style={styles.actionBtn} onPress={handleLikePress} activeOpacity={0.7}>
-          <Animated.View style={{ transform: [{ scale: likeScale }] }}>
+          <Animated.View style={[styles.actionBtnInner, post.isLiked && styles.actionBtnActive, { transform: [{ scale: likeScale }] }]}>
             <Ionicons
               name={post.isLiked ? 'heart' : 'heart-outline'}
-              size={22}
-              color={post.isLiked ? '#EF4444' : colors.textSecondary}
+              size={20}
+              color={post.isLiked ? palette.rose[500] : colors.textSecondary}
             />
+            {post.likeCount > 0 && (
+              <Text style={[styles.actionCount, post.isLiked && { color: palette.rose[500] }]}>{post.likeCount}</Text>
+            )}
           </Animated.View>
-          {post.likeCount > 0 && (
-            <Text style={[styles.actionCount, post.isLiked && { color: '#EF4444' }]}>{post.likeCount}</Text>
-          )}
         </TouchableOpacity>
 
         {/* Comment */}
         <TouchableOpacity style={styles.actionBtn} onPress={handleCommentPress} activeOpacity={0.7}>
-          <Ionicons name="chatbubble-outline" size={20} color={colors.textSecondary} />
-          {post.commentCount > 0 && (
-            <Text style={styles.actionCount}>{post.commentCount}</Text>
-          )}
+          <View style={styles.actionBtnInner}>
+            <Ionicons name="chatbubble-outline" size={19} color={colors.textSecondary} />
+            {post.commentCount > 0 && (
+              <Text style={styles.actionCount}>{post.commentCount}</Text>
+            )}
+          </View>
         </TouchableOpacity>
 
-        {/* FLIRT — primary CTA, largest + gradient */}
+        {/* FLIRT — primary CTA, pushed to right */}
         {!isOwnPost && (
           <TouchableOpacity style={styles.flirtCta} onPress={handleFlirtPress} activeOpacity={0.8}>
             <Animated.View style={[styles.flirtCtaInner, { transform: [{ scale: flirtScale }] }]}>
               <LinearGradient
-                colors={['#FF8C33', '#FF6B00', '#E85D00']}
+                colors={[palette.coral[400], palette.coral[500], palette.coral[600]]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.flirtCtaGradient}
               >
-                <Ionicons name="flame" size={18} color="#FFFFFF" />
+                <Ionicons name="flame" size={17} color="#FFFFFF" />
                 <Text style={styles.flirtCtaText}>Flört Başlat</Text>
               </LinearGradient>
             </Animated.View>
@@ -347,115 +475,236 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
         )}
       </View>
 
-      {/* ── Mini comment input — feels like a chat ── */}
+      {/* ── Mini comment input — warm and personal ── */}
       <TouchableOpacity style={styles.commentInput} onPress={handleCommentPress} activeOpacity={0.8}>
-        <Ionicons name="chatbubble-ellipses-outline" size={16} color={colors.textTertiary} />
-        <Text style={styles.commentPlaceholder}>Bir şeyler yaz, sohbet başlat...</Text>
+        <Ionicons name="chatbubble-ellipses-outline" size={15} color={palette.purple[300]} />
+        <Text style={styles.commentPlaceholder}>Ona ne söylemek istersin?</Text>
       </TouchableOpacity>
     </View>
   );
 };
 
-// ─── Styles ────────────────────────────────────────────────────
+// ─── Vibe Chip Styles ─────────────────────────────────────────
+
+const vibeStyles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: spacing.sm + 2,
+  },
+  chip: {
+    backgroundColor: palette.purple[50] + 'CC',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderWidth: 0.5,
+    borderColor: palette.purple[200] + '60',
+  },
+  chipText: {
+    fontSize: 10,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: palette.purple[600],
+    letterSpacing: 0.2,
+  },
+});
+
+// ─── Main Styles ──────────────────────────────────────────────
 
 const styles = StyleSheet.create({
+  // ── Card Container ──
   card: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.xl,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md + 2,
+    paddingTop: spacing.md + 4,
     paddingBottom: spacing.md,
     marginHorizontal: spacing.md,
-    marginBottom: spacing.sm + 2,
+    marginBottom: spacing.smd,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-    ...shadows.small,
+    borderColor: `${palette.pink[200]}30`,
+    shadowColor: palette.purple[900],
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  // Header
+
+  // ── Header ──
   headerRow: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: spacing.sm + 4,
+  },
+  avatarRing: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.sm + 2,
+    borderWidth: 2,
+    borderColor: palette.purple[200] + '50',
+    backgroundColor: colors.surfaceLight,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: colors.surfaceLight,
   },
   headerInfo: {
     flex: 1,
-    marginLeft: spacing.sm,
+    marginLeft: spacing.smd,
+    justifyContent: 'center',
   },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 2,
   },
   userName: {
-    fontSize: 14,
+    fontSize: 15,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     flexShrink: 1,
   },
-  timeText: {
+  userAge: {
+    fontSize: 15,
+    color: colors.textSecondary,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+  },
+  verifiedIcon: {
+    marginLeft: 3,
+  },
+  identityLine: {
     fontSize: 12,
     color: colors.textTertiary,
     fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
     marginTop: 1,
+    letterSpacing: 0.15,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  timeText: {
+    fontSize: 11,
+    color: colors.textTertiary,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+  },
+  metaBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    backgroundColor: palette.gray[100] + '80',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: borderRadius.full,
+  },
+  metaBadgeText: {
+    fontSize: 10,
+    color: colors.textSecondary,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+  },
+  compatBadge: {
+    backgroundColor: palette.purple[50] + '90',
+  },
+  compatBadgeIcon: {
+    fontSize: 9,
+  },
+  compatBadgeText: {
+    fontSize: 10,
+    color: palette.purple[500],
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
   },
   followButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: spacing.sm,
-    borderWidth: 1,
-    borderColor: palette.purple[400] + '40',
+    marginTop: 4,
+    borderWidth: 1.5,
+    borderColor: palette.purple[300] + '40',
+    backgroundColor: palette.purple[50] + '50',
   },
   followButtonActive: {
     borderColor: colors.surfaceBorder,
+    backgroundColor: 'transparent',
   },
-  // Intention badge
+
+  // ── Intention Badge (premium, soft glow) ──
   intentionBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    gap: 4,
-    paddingHorizontal: spacing.sm + 2,
-    paddingVertical: 4,
+    gap: 5,
+    paddingHorizontal: spacing.smd,
+    paddingVertical: 5,
     borderRadius: borderRadius.full,
     borderWidth: 1,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.smd,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  intentionEmoji: { fontSize: 12 },
+  intentionEmoji: {
+    fontSize: 13,
+  },
   intentionLabel: {
-    fontSize: 11,
+    fontSize: 11.5,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    letterSpacing: 0.3,
+  },
+
+  // ── Text Content ──
+  hookLine: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
+    marginBottom: 2,
   },
-  // Content
-  contentText: {
-    ...typography.body,
-    color: colors.text,
+  bodyText: {
+    fontSize: 14,
     lineHeight: 22,
+    color: colors.text,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
     marginBottom: spacing.sm,
   },
   readMore: {
     fontSize: 13,
-    color: colors.textTertiary,
-    marginTop: -4,
+    color: palette.purple[400],
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    marginTop: 2,
     marginBottom: spacing.sm,
+    letterSpacing: 0.2,
   },
-  // Double-tap overlay
+
+  // ── Double-tap overlay ──
   doubleTapOverlay: {
     position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.55)',
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
@@ -466,20 +715,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    width: 72, height: 72, borderRadius: 36,
-    backgroundColor: '#EF444490',
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: `${palette.rose[500]}90`,
     borderWidth: 2,
-    borderColor: '#EF4444',
+    borderColor: palette.rose[400],
   },
   doubleTapFlirtBtn: {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    width: 84, height: 84, borderRadius: 42,
-    backgroundColor: '#FF6B00',
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    backgroundColor: palette.coral[500],
     borderWidth: 2,
-    borderColor: '#FF8C33',
-    shadowColor: '#FF6B00',
+    borderColor: palette.coral[300],
+    shadowColor: palette.coral[500],
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.6,
     shadowRadius: 14,
@@ -491,21 +744,36 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
-  // ── Horizontal action bar ──
+
+  // ── Action Separator ──
+  actionSeparator: {
+    height: 1,
+    backgroundColor: colors.surfaceBorder,
+    marginTop: spacing.sm,
+    marginHorizontal: -spacing.xs,
+    opacity: 0.6,
+  },
+
+  // ── Horizontal Action Bar ──
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: spacing.sm,
-    marginTop: spacing.xs,
-    borderTopWidth: 1,
-    borderTopColor: colors.surfaceBorder,
+    paddingTop: spacing.sm + 2,
   },
   actionBtn: {
+    marginRight: spacing.sm,
+  },
+  actionBtnInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingVertical: spacing.xs,
-    paddingRight: spacing.lg,
+    gap: 5,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: borderRadius.full,
+    backgroundColor: 'transparent',
+  },
+  actionBtnActive: {
+    backgroundColor: palette.rose[50] + '80',
   },
   actionCount: {
     fontSize: 13,
@@ -513,38 +781,48 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
   },
-  // Flirt CTA — primary, pushed to right
+
+  // ── Flirt CTA (primary, pushed to right) ──
   flirtCta: {
     marginLeft: 'auto',
   },
   flirtCtaInner: {
     borderRadius: borderRadius.full,
     overflow: 'hidden',
+    shadowColor: palette.coral[500],
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
   flirtCtaGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    paddingHorizontal: spacing.md + 2,
-    paddingVertical: 8,
+    paddingHorizontal: spacing.md + 4,
+    paddingVertical: 9,
     borderRadius: borderRadius.full,
   },
   flirtCtaText: {
     fontSize: 13,
     color: '#FFFFFF',
-    fontFamily: 'Poppins_700Bold',
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '700',
+    letterSpacing: 0.3,
   },
-  // ── Mini comment input ──
+
+  // ── Mini Comment Input ──
   commentInput: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.sm + 2,
     backgroundColor: colors.surfaceLight,
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    marginTop: spacing.sm,
+    borderRadius: borderRadius.xl,
+    paddingHorizontal: spacing.md + 2,
+    paddingVertical: spacing.sm + 3,
+    marginTop: spacing.smd,
+    borderWidth: 0.5,
+    borderColor: palette.purple[100] + '50',
   },
   commentPlaceholder: {
     flex: 1,
@@ -552,6 +830,7 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
     fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
+    letterSpacing: 0.1,
   },
 });
 
@@ -559,9 +838,9 @@ const styles = StyleSheet.create({
 
 const mediaStyles = StyleSheet.create({
   videoContainer: {
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     overflow: 'hidden',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.sm + 2,
     height: 240,
     backgroundColor: colors.surfaceLight,
     position: 'relative' as const,
@@ -574,21 +853,30 @@ const mediaStyles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.15)',
   },
   playButton: {
-    width: 48, height: 48, borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255,255,255,0.92)',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  playIcon: { fontSize: 20, color: colors.primary, marginLeft: 3 },
+  playIcon: { fontSize: 20, color: palette.purple[500], marginLeft: 3 },
   imageGradientOverlay: {
     position: 'absolute',
-    left: 0, right: 0, bottom: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     height: '40%',
   },
   singleContainer: {
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     overflow: 'hidden',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.sm + 2,
     position: 'relative' as const,
   },
   singlePhoto: {
@@ -598,18 +886,18 @@ const mediaStyles = StyleSheet.create({
   },
   doubleContainer: {
     flexDirection: 'row',
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     overflow: 'hidden',
     gap: 2,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.sm + 2,
   },
   doublePhoto: { flex: 1, height: 180, backgroundColor: colors.surfaceLight },
   tripleContainer: {
     flexDirection: 'row',
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     overflow: 'hidden',
     gap: 2,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.sm + 2,
     height: 220,
   },
   tripleMain: { flex: 2, backgroundColor: colors.surfaceLight },
@@ -623,46 +911,72 @@ const musicStyles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: `${palette.purple[500]}08`,
-    borderRadius: borderRadius.md,
+    backgroundColor: `${palette.purple[50]}80`,
+    borderRadius: borderRadius.lg,
     padding: spacing.md,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.sm + 2,
     borderWidth: 1,
-    borderColor: `${palette.purple[500]}15`,
+    borderColor: `${palette.purple[200]}30`,
   },
   iconCircle: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: `${palette.purple[500]}12`,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: `${palette.purple[100]}70`,
     justifyContent: 'center',
     alignItems: 'center',
   },
   icon: { fontSize: 18 },
-  info: { flex: 1, marginLeft: spacing.sm },
+  info: { flex: 1, marginLeft: spacing.smd },
   title: {
     fontSize: 14,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
-  artist: { fontSize: 12, color: colors.textSecondary, marginTop: 1 },
+  artist: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    marginTop: 2,
+  },
 });
 
 // ─── Question Card Styles ─────────────────────────────────────
 
 const questionStyles = StyleSheet.create({
   container: {
-    backgroundColor: `${palette.info}08`,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderLeftWidth: 3,
-    borderLeftColor: palette.info,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md + 4,
+    marginBottom: spacing.smd,
+    alignItems: 'center',
+    overflow: 'hidden',
   },
-  icon: { fontSize: 18, marginBottom: spacing.xs },
+  iconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.sm + 2,
+    borderWidth: 1,
+    borderColor: palette.purple[200] + '40',
+  },
+  icon: {
+    fontSize: 20,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '700',
+    color: palette.purple[500],
+  },
   text: {
-    ...typography.body,
+    fontSize: 15,
+    lineHeight: 24,
     color: colors.text,
-    lineHeight: 22,
-    fontStyle: 'italic',
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    textAlign: 'center',
+    letterSpacing: 0.15,
   },
 });
