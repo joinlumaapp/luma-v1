@@ -105,7 +105,7 @@ const DiscoveryFeatureBlocks: React.FC<{
   readyCount?: number;
 }> = React.memo(({ onVideoWatch, onSurpriseConnect, onSurpriseReady, readyCount = 12 }) => (
   <View style={featureStyles.container}>
-    {/* Video Keşfet — watch short-form videos */}
+    {/* Video Keşfet */}
     <Pressable onPress={onVideoWatch} style={featureStyles.block}>
       <LinearGradient
         colors={[palette.purple[600], palette.pink[500]] as [string, string]}
@@ -113,48 +113,34 @@ const DiscoveryFeatureBlocks: React.FC<{
         end={{ x: 1, y: 1 }}
         style={featureStyles.gradient}
       >
-        <View style={featureStyles.iconCircle}>
-          <Ionicons name="play-circle" size={28} color="#FFFFFF" />
-        </View>
+        <Ionicons name="play-circle" size={24} color="#FFFFFF" />
         <Text style={featureStyles.title}>Video Keşfet</Text>
         <Text style={featureStyles.subtitle}>Kısa videoları izle</Text>
       </LinearGradient>
     </Pressable>
 
-    {/* Sürpriz Bağlan — 1:1 random video chat */}
-    <View style={featureStyles.block}>
+    {/* Sürpriz Bağlan */}
+    <Pressable onPress={onSurpriseConnect} style={featureStyles.block}>
       <LinearGradient
         colors={['#F59E0B', '#EF4444'] as [string, string]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={featureStyles.gradient}
       >
-        <View style={featureStyles.iconCircle}>
-          <Ionicons name="videocam" size={26} color="#FFFFFF" />
+        <View style={featureStyles.topRow}>
+          <Ionicons name="videocam" size={22} color="#FFFFFF" />
+          <View style={featureStyles.readyPill}>
+            <View style={featureStyles.readyDot} />
+            <Text style={featureStyles.readyText}>{readyCount}</Text>
+          </View>
         </View>
         <Text style={featureStyles.title}>Sürpriz Bağlan</Text>
-        <Text style={featureStyles.subtitle}>1:1 rastgele görüntülü sohbet</Text>
-
-        {/* Ready count */}
-        <View style={featureStyles.readyPill}>
-          <View style={featureStyles.readyDot} />
-          <Text style={featureStyles.readyText}>{readyCount} kişi hazır</Text>
-        </View>
-
-        {/* Two actions: Connect + Ready */}
-        <View style={featureStyles.actionRow}>
-          <Pressable onPress={onSurpriseConnect} style={featureStyles.actionBtn}>
-            <Ionicons name="flash" size={13} color="#FFFFFF" />
-            <Text style={featureStyles.actionText}>Bağlan</Text>
-            <Text style={featureStyles.coinBadge}>25</Text>
-          </Pressable>
-          <Pressable onPress={onSurpriseReady} style={[featureStyles.actionBtn, featureStyles.actionBtnOutline]}>
-            <Ionicons name="hand-right" size={13} color="#FFFFFF" />
-            <Text style={featureStyles.actionText}>Hazırım</Text>
-          </Pressable>
-        </View>
+        <Text style={featureStyles.subtitle}>Görüntülü sohbet · 25 jeton</Text>
+        <Pressable onPress={onSurpriseReady} style={featureStyles.readyBtn} hitSlop={6}>
+          <Text style={featureStyles.readyBtnText}>Hazırım</Text>
+        </Pressable>
       </LinearGradient>
-    </View>
+    </Pressable>
   </View>
 ));
 DiscoveryFeatureBlocks.displayName = 'DiscoveryFeatureBlocks';
@@ -168,32 +154,24 @@ const featureStyles = StyleSheet.create({
   },
   block: {
     flex: 1,
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.lg,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 4,
   },
   gradient: {
     alignItems: 'center',
-    paddingTop: spacing.md + 2,
-    paddingBottom: spacing.md,
-    paddingHorizontal: spacing.sm,
-    gap: spacing.xs,
-  },
-  iconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+    gap: 4,
+    minHeight: 120,
+  },
+  topRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 2,
+    gap: 6,
   },
   title: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: '#FFFFFF',
@@ -203,68 +181,42 @@ const featureStyles = StyleSheet.create({
     fontSize: 10,
     fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
-    color: 'rgba(255,255,255,0.75)',
+    color: 'rgba(255,255,255,0.8)',
     textAlign: 'center',
-    lineHeight: 14,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    gap: 6,
-    marginTop: spacing.xs + 2,
-  },
-  actionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 14,
-  },
-  actionBtnOutline: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
-  },
-  actionText: {
-    fontSize: 11,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  coinBadge: {
-    fontSize: 9,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
-    color: '#FDE68A',
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    borderRadius: 6,
-    overflow: 'hidden',
-    marginLeft: 2,
   },
   readyPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(0,0,0,0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
-    marginTop: 2,
+    gap: 3,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
   },
   readyDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
     backgroundColor: '#4ADE80',
   },
   readyText: {
     fontSize: 9,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-    color: 'rgba(255,255,255,0.8)',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  readyBtn: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 10,
+    marginTop: 2,
+  },
+  readyBtnText: {
+    fontSize: 10,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
 
