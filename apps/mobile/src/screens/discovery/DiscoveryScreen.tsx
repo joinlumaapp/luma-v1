@@ -99,12 +99,13 @@ type DiscoveryNavProp = CompositeNavigationProp<
 // ── Discovery Feature Blocks ─────────────────────────────────
 
 const DiscoveryFeatureBlocks: React.FC<{
-  onVideoPress: () => void;
-  onInstantPress: () => void;
-}> = React.memo(({ onVideoPress, onInstantPress }) => (
+  onVideoWatch: () => void;
+  onVideoCreate: () => void;
+  onSurprisePress: () => void;
+}> = React.memo(({ onVideoWatch, onVideoCreate, onSurprisePress }) => (
   <View style={featureStyles.container}>
-    {/* Video Kesfet — prominent */}
-    <Pressable onPress={onVideoPress} style={featureStyles.block}>
+    {/* Video Keşfet — short-form video platform */}
+    <View style={featureStyles.block}>
       <LinearGradient
         colors={[palette.purple[600], palette.pink[500]] as [string, string]}
         start={{ x: 0, y: 0 }}
@@ -115,12 +116,24 @@ const DiscoveryFeatureBlocks: React.FC<{
           <Ionicons name="play-circle" size={28} color="#FFFFFF" />
         </View>
         <Text style={featureStyles.title}>Video Keşfet</Text>
-        <Text style={featureStyles.subtitle}>Kısa videolarla keşfet</Text>
-      </LinearGradient>
-    </Pressable>
+        <Text style={featureStyles.subtitle}>Kısa videoları izle ve paylaş</Text>
 
-    {/* Surpriz Baglan — coin-based random match */}
-    <Pressable onPress={onInstantPress} style={featureStyles.block}>
+        {/* Dual action buttons */}
+        <View style={featureStyles.actionRow}>
+          <Pressable onPress={onVideoWatch} style={featureStyles.actionBtn}>
+            <Ionicons name="play" size={14} color="#FFFFFF" />
+            <Text style={featureStyles.actionText}>İzle</Text>
+          </Pressable>
+          <Pressable onPress={onVideoCreate} style={[featureStyles.actionBtn, featureStyles.actionBtnOutline]}>
+            <Ionicons name="videocam" size={14} color="#FFFFFF" />
+            <Text style={featureStyles.actionText}>Yükle</Text>
+          </Pressable>
+        </View>
+      </LinearGradient>
+    </View>
+
+    {/* Sürpriz Bağlan — live video chat */}
+    <Pressable onPress={onSurprisePress} style={featureStyles.block}>
       <LinearGradient
         colors={['#F59E0B', '#EF4444'] as [string, string]}
         start={{ x: 0, y: 0 }}
@@ -128,10 +141,21 @@ const DiscoveryFeatureBlocks: React.FC<{
         style={featureStyles.gradient}
       >
         <View style={featureStyles.iconCircle}>
-          <Ionicons name="shuffle" size={28} color="#FFFFFF" />
+          <Ionicons name="videocam" size={26} color="#FFFFFF" />
         </View>
         <Text style={featureStyles.title}>Sürpriz Bağlan</Text>
-        <Text style={featureStyles.subtitle}>25 jetonla rastgele biriyle görüntülü konuş</Text>
+        <Text style={featureStyles.subtitle}>Rastgele biriyle görüntülü konuş</Text>
+
+        {/* Single action */}
+        <View style={featureStyles.actionRow}>
+          <Pressable onPress={onSurprisePress} style={featureStyles.actionBtn}>
+            <Ionicons name="flash" size={14} color="#FFFFFF" />
+            <Text style={featureStyles.actionText}>Hemen Bağlan</Text>
+          </Pressable>
+        </View>
+
+        {/* Coin cost */}
+        <Text style={featureStyles.coinHint}>25 jeton</Text>
       </LinearGradient>
     </Pressable>
   </View>
@@ -157,18 +181,19 @@ const featureStyles = StyleSheet.create({
   },
   gradient: {
     alignItems: 'center',
-    paddingVertical: spacing.lg,
+    paddingTop: spacing.md + 2,
+    paddingBottom: spacing.md,
     paddingHorizontal: spacing.sm,
     gap: spacing.xs,
   },
   iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: 2,
   },
   title: {
     fontSize: 14,
@@ -178,11 +203,44 @@ const featureStyles = StyleSheet.create({
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.75)',
     textAlign: 'center',
+    lineHeight: 14,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: spacing.xs + 2,
+  },
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
+  },
+  actionBtnOutline: {
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  actionText: {
+    fontSize: 11,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  coinHint: {
+    fontSize: 10,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 2,
   },
 });
 
@@ -1324,8 +1382,14 @@ export const DiscoveryScreen: React.FC = () => {
 
       {/* Feature blocks — Video Kesfet + Aninda Baglan */}
       <DiscoveryFeatureBlocks
-        onVideoPress={() => navigation.navigate('VideoFeed')}
-        onInstantPress={() => navigation.navigate('InstantConnect')}
+        onVideoWatch={() => navigation.navigate('VideoFeed')}
+        onVideoCreate={() => {
+          Alert.alert('Video Yükle', 'Kısa bir video çekerek kendini tanıt!', [
+            { text: 'Vazgeç', style: 'cancel' },
+            { text: 'Kamerayı Aç', onPress: () => navigation.navigate('VideoFeed') },
+          ]);
+        }}
+        onSurprisePress={() => navigation.navigate('InstantConnect')}
       />
 
       {/* Card stack */}

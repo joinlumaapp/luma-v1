@@ -221,6 +221,20 @@ export const VideoFeedScreen: React.FC = () => {
       />
 
       {topBar}
+
+      {/* Floating camera button — "Video Yükle" */}
+      <TouchableOpacity
+        style={[styles.fab, { bottom: insets.bottom + 24 }]}
+        activeOpacity={0.85}
+        onPress={() => {
+          Alert.alert('Video Oluştur', 'Kısa bir video çekerek kendini tanıt!', [
+            { text: 'Vazgeç', style: 'cancel' },
+            { text: 'Kamerayı Aç' },
+          ]);
+        }}
+      >
+        <Ionicons name="videocam" size={24} color="#FFFFFF" />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -285,5 +299,21 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: '#FFFFFF',
+  },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: palette.purple[500],
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: palette.purple[700],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 6,
+    zIndex: 20,
   },
 });
