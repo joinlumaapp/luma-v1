@@ -87,6 +87,9 @@ import { ActivityDetailScreen } from '../screens/activities/ActivityDetailScreen
 import { ActivityGroupChatScreen } from '../screens/activities/ActivityGroupChatScreen';
 import { EventMapScreen } from '../screens/activities/EventMapScreen';
 import { IcebreakerRoomScreen } from '../screens/harmony/IcebreakerRoomScreen';
+import { GameLobbyScreen } from '../screens/activities/gameRoom/GameLobbyScreen';
+import { GamePlayScreen } from '../screens/activities/gameRoom/GamePlayScreen';
+import { GameResultScreen } from '../screens/activities/gameRoom/GameResultScreen';
 
 // Waves screen
 import { WavesScreen } from '../screens/waves/WavesScreen';
@@ -381,6 +384,21 @@ const ActivitiesStackNavigator: React.FC = React.memo(() => (
       name="IcebreakerRoom"
       component={IcebreakerRoomScreen}
       options={{ animation: 'slide_from_bottom' }}
+    />
+    <ActivitiesStack.Screen
+      name="GameLobby"
+      component={GameLobbyScreen}
+      options={{ headerShown: false }}
+    />
+    <ActivitiesStack.Screen
+      name="GamePlay"
+      component={GamePlayScreen}
+      options={{ headerShown: false, gestureEnabled: false }}
+    />
+    <ActivitiesStack.Screen
+      name="GameResult"
+      component={GameResultScreen}
+      options={{ headerShown: false }}
     />
   </ActivitiesStack.Navigator>
 ));
