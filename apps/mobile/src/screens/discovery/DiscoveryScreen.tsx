@@ -1248,11 +1248,11 @@ export const DiscoveryScreen: React.FC = () => {
             <Pressable
               style={styles.emptyNavButton}
               onPress={() => navigation.navigate('ActivitiesTab', { screen: 'Activities' })}
-              accessibilityLabel="Aktivitelere git"
+              accessibilityLabel="Etkinliklere git"
               accessibilityRole="button"
             >
               <Ionicons name="flash-outline" size={18} color={colors.textSecondary} />
-              <Text style={styles.emptyNavText}>Aktiviteler</Text>
+              <Text style={styles.emptyNavText}>Etkinlikler</Text>
             </Pressable>
             <Pressable
               style={styles.emptyNavButton}

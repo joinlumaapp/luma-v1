@@ -282,7 +282,7 @@ export const CreateActivityScreen: React.FC = () => {
         <View style={styles.safetyNote}>
           <Text style={styles.safetyIcon}>🛡️</Text>
           <Text style={styles.safetyText}>
-            Güvenliğin bizim için önemli. Aktiviteler halka açık yerlerde yapılmalıdır.
+            Güvenliğin bizim için önemli. Etkinlikler halka açık yerlerde yapılmalıdır.
           </Text>
         </View>
 

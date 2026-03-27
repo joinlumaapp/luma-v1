@@ -1,15 +1,13 @@
 // ActivitiesScreen — Map-first Etkinlik screen with Google Maps and event carousel
 // Full-screen map with custom EventPin markers + bottom horizontal card carousel
 
-import React, { useEffect, useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   FlatList,
-  Dimensions,
-  Platform,
   ActivityIndicator,
 } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
@@ -23,8 +21,6 @@ import { useActivityStore } from '../../stores/activityStore';
 import {
   Activity,
   ActivityType,
-  ACTIVITY_TYPE_LABELS,
-  ACTIVITY_TYPE_ICONS,
   ACTIVITY_TYPE_COLORS,
 } from '../../services/activityService';
 import { ActivitiesStackParamList } from '../../navigation/types';
@@ -32,8 +28,6 @@ import { EventPin } from './components/EventPin';
 import { EventCard, CARD_WIDTH, CARD_MARGIN } from './components/EventCard';
 
 type NavProp = NativeStackNavigationProp<ActivitiesStackParamList, 'Activities'>;
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const ISTANBUL_CENTER: Region = {
   latitude: 41.0452,
