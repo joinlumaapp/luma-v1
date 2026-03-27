@@ -19,6 +19,11 @@ export interface PlayerInteraction {
   turnsPlayed: number;
   emojisUsed: number;
   voiceMinutes: number;
+  // Enhanced game signals
+  sameAnswerCount: number;
+  laughReactionCount: number;
+  rematchRequestCount: number;
+  profileViewCount: number;
 }
 
 export interface GameConnectionResult {
@@ -42,6 +47,10 @@ const WEIGHTS = {
   turnsPlayed: 1,
   emojisUsed: 1.5,
   voiceMinutes: 8,
+  sameAnswer: 4,
+  laughReaction: 3,
+  rematchRequest: 10,
+  profileView: 6,
 };
 
 const MAX_SCORE = 100;
@@ -54,7 +63,11 @@ function calculateConnectionScore(interaction: PlayerInteraction): number {
     interaction.timeInRoomSeconds * WEIGHTS.timeInRoomSeconds +
     interaction.turnsPlayed * WEIGHTS.turnsPlayed +
     interaction.emojisUsed * WEIGHTS.emojisUsed +
-    interaction.voiceMinutes * WEIGHTS.voiceMinutes;
+    interaction.voiceMinutes * WEIGHTS.voiceMinutes +
+    interaction.sameAnswerCount * WEIGHTS.sameAnswer +
+    interaction.laughReactionCount * WEIGHTS.laughReaction +
+    interaction.rematchRequestCount * WEIGHTS.rematchRequest +
+    interaction.profileViewCount * WEIGHTS.profileView;
 
   // Normalize to 0-100
   return Math.min(MAX_SCORE, Math.round(raw));
@@ -87,6 +100,18 @@ function generateHighlights(interaction: PlayerInteraction, hasPlayedBefore: boo
   }
   if (interaction.emojisUsed >= 5) {
     highlights.push('Cok eglenmis gorunuyorsunuz!');
+  }
+  if (interaction.sameAnswerCount >= 3) {
+    highlights.push('Cok benzer cevaplar verdiniz!');
+  }
+  if (interaction.laughReactionCount >= 3) {
+    highlights.push('Birbirinizi cok guldurdunuz!');
+  }
+  if (interaction.rematchRequestCount >= 1) {
+    highlights.push('Tekrar oynamak istediniz!');
+  }
+  if (interaction.profileViewCount >= 1) {
+    highlights.push('Oyun sirasinda profilini incelediniz');
   }
 
   if (highlights.length === 0) {
@@ -140,6 +165,10 @@ interface GameMatchState {
   trackTurn: (userId: string) => void;
   trackQuestionAnswer: (userId: string) => void;
   trackPlayerSelection: (userId: string) => void;
+  trackSameAnswer: (userId: string) => void;
+  trackLaughReaction: (userId: string) => void;
+  trackRematchRequest: (userId: string) => void;
+  trackProfileView: (userId: string) => void;
   addPlayer: (player: { userId: string; name: string; avatarUrl: string; age: number; isVerified: boolean }) => void;
   removePlayer: (userId: string) => void;
   calculateResults: () => void;
@@ -213,6 +242,10 @@ export const useGameMatchStore = create<GameMatchState>((set, get) => ({
         turnsPlayed: 0,
         emojisUsed: 0,
         voiceMinutes: 0,
+        sameAnswerCount: 0,
+        laughReactionCount: 0,
+        rematchRequestCount: 0,
+        profileViewCount: 0,
       });
     }
     set({ interactions: updated });
@@ -291,6 +324,46 @@ export const useGameMatchStore = create<GameMatchState>((set, get) => ({
     if (!player) return;
     const updated = new Map(interactions);
     updated.set(userId, { ...player, directReplies: player.directReplies + 3, reactionCount: player.reactionCount + 1 });
+    set({ interactions: updated });
+  },
+
+  trackSameAnswer: (userId) => {
+    // Same answer in compatibility games — strong compatibility signal
+    const { interactions } = get();
+    const player = interactions.get(userId);
+    if (!player) return;
+    const updated = new Map(interactions);
+    updated.set(userId, { ...player, sameAnswerCount: player.sameAnswerCount + 1 });
+    set({ interactions: updated });
+  },
+
+  trackLaughReaction: (userId) => {
+    // Laughed at each other — humor compatibility signal
+    const { interactions } = get();
+    const player = interactions.get(userId);
+    if (!player) return;
+    const updated = new Map(interactions);
+    updated.set(userId, { ...player, laughReactionCount: player.laughReactionCount + 1 });
+    set({ interactions: updated });
+  },
+
+  trackRematchRequest: (userId) => {
+    // Requested rematch — very strong interest signal
+    const { interactions } = get();
+    const player = interactions.get(userId);
+    if (!player) return;
+    const updated = new Map(interactions);
+    updated.set(userId, { ...player, rematchRequestCount: player.rematchRequestCount + 1 });
+    set({ interactions: updated });
+  },
+
+  trackProfileView: (userId) => {
+    // Viewed profile during game — curiosity signal
+    const { interactions } = get();
+    const player = interactions.get(userId);
+    if (!player) return;
+    const updated = new Map(interactions);
+    updated.set(userId, { ...player, profileViewCount: player.profileViewCount + 1 });
     set({ interactions: updated });
   },
 
