@@ -59,7 +59,6 @@ export type FeatureKey =
   | 'messages'
   | 'waves'
   | 'paid_message'
-  | 'game_rooms'
   | 'read_receipts'
   | 'ad_free'
   | 'monthly_token_bonus'
@@ -182,12 +181,6 @@ export const FEATURE_RULES: Record<FeatureKey, FeatureRule> = {
     labelTr: 'Ücretli Mesaj',
     descriptionTr: 'Eşleşmeden önce mesaj gönder — 150 Jeton.',
   },
-  game_rooms: {
-    minTier: 'FREE',
-    limits: { FREE: 3, GOLD: -1, PRO: -1, RESERVED: -1 },
-    labelTr: 'Oyun Odaları',
-    descriptionTr: 'Oyunlarla sosyal bağlantılar kur. Sınırsız erişim için yükselt.',
-  },
   read_receipts: {
     minTier: 'PRO',
     limits: { FREE: 0, GOLD: 0, PRO: -1, RESERVED: -1 },
@@ -267,7 +260,6 @@ export const mapLegacyFeature = (
     insights: 'compatibility_insights',
     waves: 'waves',
     paid_message: 'paid_message',
-    game_rooms: 'game_rooms',
     read_receipts: 'read_receipts',
     ad_free: 'ad_free',
     monthly_token_bonus: 'monthly_token_bonus',

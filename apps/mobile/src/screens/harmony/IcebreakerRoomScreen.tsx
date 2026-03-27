@@ -38,7 +38,15 @@ import Animated, {
 import { palette } from '../../theme/colors';
 import { fontWeights } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
-import { gameRoomService, type GameTable } from '../../services/gameRoomService';
+// Game room service removed — inline stub for backward compatibility
+interface GameTablePlayer { name: string; initial: string; }
+interface GameTable {
+  id: string; gameType: string; name: string; players: GameTablePlayer[];
+  maxPlayers: number; spectators: number; timeLeft: number; isStarted: boolean;
+}
+const gameRoomService = {
+  getGameTables: async (): Promise<{ tables: GameTable[]; total: number }> => ({ tables: [], total: 0 }),
+};
 import { useAuthStore } from '../../stores/authStore';
 import { useCoinStore, INSTANT_MESSAGE_COST, PROFILE_BOOST_COST } from '../../stores/coinStore';
 

@@ -252,28 +252,20 @@ const PulsingDot: React.FC<{ size?: number; color?: string }> = ({ size = 8, col
 interface FilterBarProps {
   selectedFilter: FilterKey;
   onSelectFilter: (key: FilterKey) => void;
-  onGameRoom: () => void;
   onEventMap: () => void;
 }
 
-const FilterBar: React.FC<FilterBarProps> = ({ selectedFilter, onSelectFilter, onGameRoom, onEventMap }) => {
-  const glowAnim = useRef(new Animated.Value(0)).current;
+const FilterBar: React.FC<FilterBarProps> = ({ selectedFilter, onSelectFilter, onEventMap }) => {
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, { toValue: 1, duration: 1500, useNativeDriver: false }),
-        Animated.timing(glowAnim, { toValue: 0, duration: 1500, useNativeDriver: false }),
-      ])
-    ).start();
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, { toValue: 1.05, duration: 1200, useNativeDriver: true }),
         Animated.timing(pulseAnim, { toValue: 1, duration: 1200, useNativeDriver: true }),
       ])
     ).start();
-  }, [glowAnim, pulseAnim]);
+  }, [pulseAnim]);
 
   return (
     <ScrollView
@@ -282,22 +274,6 @@ const FilterBar: React.FC<FilterBarProps> = ({ selectedFilter, onSelectFilter, o
       contentContainerStyle={filterStyles.scrollContent}
       style={filterStyles.scrollContainer}
     >
-      {/* Game Room special chip */}
-      <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-        <TouchableOpacity onPress={onGameRoom} activeOpacity={0.8}>
-          <LinearGradient
-            colors={[palette.purple[500], palette.pink[500]]}
-            style={filterStyles.specialChip}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <Ionicons name="game-controller" size={16} color="#FFFFFF" />
-            <Text style={filterStyles.specialChipText}>Oyun Odasi</Text>
-            <PulsingDot size={6} />
-          </LinearGradient>
-        </TouchableOpacity>
-      </Animated.View>
-
       {/* Event Map special chip */}
       <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
         <TouchableOpacity onPress={onEventMap} activeOpacity={0.8}>
@@ -1395,7 +1371,7 @@ const EMPTY_MESSAGES: Record<FilterKey, { title: string; subtitle: string }> = {
   nearby: { title: 'Yakininda aktivite yok', subtitle: 'Baska filtreler deneyebilir veya\nyeni bir aktivite olusturabilirsin.' },
   popular: { title: 'Populer aktivite bulunamadi', subtitle: 'Henuz yeterli katilim yok.\nIlk aktiviteyi sen baslat!' },
   flirt: { title: 'Flort odakli aktivite yok', subtitle: 'Yeni bir bulusma aktivitesi\nolusturmaya ne dersin?' },
-  games: { title: 'Oyunlu aktivite yok', subtitle: 'Oyun Odasindan hemen\nbir oyun baslat!' },
+  games: { title: 'Oyunlu aktivite yok', subtitle: 'Yeni bir oyun aktivitesi\nolusturabilirsin.' },
   chill: { title: 'Chill aktivite yok', subtitle: 'Rahat bir kahve bulusmasi\nolusturabilirsin.' },
 };
 
@@ -1449,10 +1425,9 @@ interface FABModalProps {
   visible: boolean;
   onClose: () => void;
   onQuickCreate: () => void;
-  onOpenGameRoom: () => void;
 }
 
-const FABModal: React.FC<FABModalProps> = ({ visible, onClose, onQuickCreate, onOpenGameRoom }) => {
+const FABModal: React.FC<FABModalProps> = ({ visible, onClose, onQuickCreate }) => {
   const slideAnim = useRef(new Animated.Value(300)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
 
@@ -1512,25 +1487,6 @@ const FABModal: React.FC<FABModalProps> = ({ visible, onClose, onQuickCreate, on
                 <View style={modalStyles.optionTextContainer}>
                   <Text style={modalStyles.optionTitle}>Hızlı Etkinlik Oluştur</Text>
                   <Text style={modalStyles.optionSubtitle}>Hemen yeni bir etkinlik başlat</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.6)" />
-              </LinearGradient>
-            </TouchableOpacity>
-
-            {/* Option 2: Game room */}
-            <TouchableOpacity onPress={onOpenGameRoom} activeOpacity={0.8}>
-              <LinearGradient
-                colors={['#F59E0B', '#EF4444']}
-                style={modalStyles.optionBtn}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <View style={modalStyles.optionIconCircle}>
-                  <Ionicons name="game-controller" size={22} color="#FFFFFF" />
-                </View>
-                <View style={modalStyles.optionTextContainer}>
-                  <Text style={modalStyles.optionTitle}>Oyun Odası Aç</Text>
-                  <Text style={modalStyles.optionSubtitle}>Oyun oynayarak tanışma</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.6)" />
               </LinearGradient>
@@ -1895,7 +1851,6 @@ export const ActivitiesScreen: React.FC = () => {
       <FilterBar
         selectedFilter={filter}
         onSelectFilter={setFilter}
-        onGameRoom={() => navigation.navigate('IcebreakerRoom', { roomId: `room_${Date.now()}` })}
         onEventMap={() => navigation.navigate('EventMap')}
       />
 
@@ -1942,10 +1897,6 @@ export const ActivitiesScreen: React.FC = () => {
         onQuickCreate={() => {
           setShowFABModal(false);
           navigation.navigate('CreateActivity');
-        }}
-        onOpenGameRoom={() => {
-          setShowFABModal(false);
-          navigation.navigate('IcebreakerRoom', { roomId: `room_${Date.now()}` });
         }}
       />
 

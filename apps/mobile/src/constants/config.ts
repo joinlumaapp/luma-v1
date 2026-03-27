@@ -318,21 +318,6 @@ export const VIDEO_DISCOVERY_CONFIG = {
   },
 } as const;
 
-// Game room daily entry limits per package tier (-1 = unlimited)
-export const GAME_ROOM_CONFIG = {
-  DAILY_LIMITS: {
-    FREE: 3,
-    GOLD: -1,
-    PRO: -1,
-    RESERVED: -1,
-  },
-  /** Game types only available to premium users */
-  PREMIUM_GAME_TYPES: ['truth_dare', 'would_you_rather', 'icebreaker', 'emoji_guess'] as const,
-  /** Free messages per game session for free users */
-  FREE_MESSAGES_PER_GAME: 5,
-  /** Free quick flirt messages per game for free users */
-  FREE_QUICK_FLIRTS_PER_GAME: 3,
-} as const;
 
 // Monthly token bonus per tier (awarded on subscription renewal)
 export const MONTHLY_TOKEN_BONUS = {

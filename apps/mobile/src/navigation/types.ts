@@ -102,9 +102,6 @@ export type ActivitiesStackParamList = {
   ActivityGroupChat: { activityId: string; activityTitle: string };
   EventMap: undefined;
   IcebreakerRoom: { roomId: string };
-  GameLobby: { roomId: string; gameType: string };
-  GamePlay: { roomId: string; gameType: string };
-  GameResult: { roomId: string; playerScores: Record<string, number> };
 };
 
 // -- Feed Stack --
