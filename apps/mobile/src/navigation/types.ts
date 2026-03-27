@@ -100,8 +100,6 @@ export type ActivitiesStackParamList = {
   CreateActivity: undefined;
   ActivityDetail: { activityId: string };
   ActivityGroupChat: { activityId: string; activityTitle: string };
-  EventMap: undefined;
-  IcebreakerRoom: { roomId: string };
 };
 
 // -- Feed Stack --

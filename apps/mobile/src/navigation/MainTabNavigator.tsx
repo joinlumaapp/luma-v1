@@ -85,8 +85,6 @@ import { ActivitiesScreen } from '../screens/activities/ActivitiesScreen';
 import { CreateActivityScreen } from '../screens/activities/CreateActivityScreen';
 import { ActivityDetailScreen } from '../screens/activities/ActivityDetailScreen';
 import { ActivityGroupChatScreen } from '../screens/activities/ActivityGroupChatScreen';
-import { EventMapScreen } from '../screens/activities/EventMapScreen';
-import { IcebreakerRoomScreen } from '../screens/harmony/IcebreakerRoomScreen';
 
 // Waves screen
 import { WavesScreen } from '../screens/waves/WavesScreen';
@@ -157,7 +155,7 @@ const TAB_ICONS: Record<string, { active: keyof typeof Ionicons.glyphMap; inacti
   compass: { active: 'compass', inactive: 'compass-outline' },
   heart: { active: 'heart', inactive: 'heart-outline' },
   feed: { active: 'newspaper', inactive: 'newspaper-outline' },
-  activities: { active: 'flash', inactive: 'flash-outline' },
+  activities: { active: 'map', inactive: 'map-outline' },
   user: { active: 'person', inactive: 'person-outline' },
 };
 
@@ -376,12 +374,6 @@ const ActivitiesStackNavigator: React.FC = React.memo(() => (
     />
     <ActivitiesStack.Screen name="ActivityDetail" component={ActivityDetailScreen} />
     <ActivitiesStack.Screen name="ActivityGroupChat" component={ActivityGroupChatScreen} />
-    <ActivitiesStack.Screen name="EventMap" component={EventMapScreen} />
-    <ActivitiesStack.Screen
-      name="IcebreakerRoom"
-      component={IcebreakerRoomScreen}
-      options={{ animation: 'slide_from_bottom' }}
-    />
   </ActivitiesStack.Navigator>
 ));
 ActivitiesStackNavigator.displayName = 'ActivitiesStackNavigator';
@@ -507,11 +499,11 @@ export const MainTabNavigator: React.FC = () => {
         name="ActivitiesTab"
         component={ActivitiesStackNavigator}
         options={{
-          tabBarLabel: 'Aktiviteler',
+          tabBarLabel: 'Etkinlik',
           tabBarIcon: ({ focused }) => (
             <TabIcon name="activities" focused={focused} />
           ),
-          tabBarAccessibilityLabel: 'Aktiviteler',
+          tabBarAccessibilityLabel: 'Etkinlik',
           tabBarButtonTestID: 'tab-activities',
         }}
         listeners={({ navigation, route }) => createTabResetListener(navigation, route)}

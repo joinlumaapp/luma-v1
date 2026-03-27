@@ -2,13 +2,15 @@
 
 import { create } from 'zustand';
 import { activityService } from '../services/activityService';
-import type { Activity, CreateActivityRequest } from '../services/activityService';
+import type { Activity, ActivityType, CreateActivityRequest } from '../services/activityService';
 
 interface ActivityState {
   // State
   activities: Activity[];
   isLoading: boolean;
   totalCount: number;
+  selectedCategory: ActivityType | null;
+  mapRegion: { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number };
 
   // Actions
   fetchActivities: () => Promise<void>;
@@ -16,6 +18,8 @@ interface ActivityState {
   joinActivity: (activityId: string) => Promise<boolean>;
   leaveActivity: (activityId: string) => Promise<void>;
   cancelActivity: (activityId: string) => Promise<void>;
+  setSelectedCategory: (category: ActivityType | null) => void;
+  setMapRegion: (region: ActivityState['mapRegion']) => void;
 }
 
 export const useActivityStore = create<ActivityState>((set, _get) => ({
@@ -23,6 +27,8 @@ export const useActivityStore = create<ActivityState>((set, _get) => ({
   activities: [],
   isLoading: false,
   totalCount: 0,
+  selectedCategory: null,
+  mapRegion: { latitude: 41.0452, longitude: 29.0343, latitudeDelta: 0.15, longitudeDelta: 0.15 },
 
   // Actions
   fetchActivities: async () => {
@@ -108,4 +114,7 @@ export const useActivityStore = create<ActivityState>((set, _get) => ({
       // Silent fail
     }
   },
+
+  setSelectedCategory: (category) => set({ selectedCategory: category }),
+  setMapRegion: (region) => set({ mapRegion: region }),
 }));
