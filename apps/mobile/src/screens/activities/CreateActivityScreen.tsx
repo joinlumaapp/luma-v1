@@ -28,18 +28,18 @@ import { spacing, borderRadius, shadows } from '../../theme/spacing';
 type NavProp = NativeStackNavigationProp<ActivitiesStackParamList, 'CreateActivity'>;
 
 const ACTIVITY_TYPES: ActivityType[] = [
-  'coffee', 'dinner', 'drinks', 'outdoor', 'sport', 'culture', 'travel', 'other',
+  'coffee', 'food', 'sport', 'culture', 'nightlife', 'other',
 ];
 
 const MAX_PARTICIPANTS_OPTIONS = [2, 3, 4, 5, 6];
 
 // Quick suggestion chips for common activity titles
 const QUICK_SUGGESTIONS = [
-  { emoji: '☕', label: 'Kahve', title: 'Kahve içelim' },
-  { emoji: '🍽', label: 'Akşam yemeği', title: 'Akşam yemeğine çıkalım' },
-  { emoji: '🚶', label: 'Yürüyüş', title: 'Yürüyüş yapalım' },
-  { emoji: '🎬', label: 'Sinema', title: 'Sinemaya gidelim' },
-  { emoji: '🍻', label: 'Bar', title: 'Bir şeyler içelim' },
+  { emoji: '☕', label: 'Kahve icelim', type: 'coffee' as ActivityType, title: 'Kahve içelim' },
+  { emoji: '🍽️', label: 'Yemege cikalim', type: 'food' as ActivityType, title: 'Yemeğe çıkalım' },
+  { emoji: '🏃', label: 'Yuruyuse cikalim', type: 'sport' as ActivityType, title: 'Yürüyüşe çıkalım' },
+  { emoji: '🎨', label: 'Sergiye gidelim', type: 'culture' as ActivityType, title: 'Sergiye gidelim' },
+  { emoji: '🎉', label: 'Eglenceye varalim', type: 'nightlife' as ActivityType, title: 'Eğlenceye varalım' },
 ];
 
 // ─── Date Picker (simplified — text input for now) ────────────────
@@ -180,12 +180,7 @@ export const CreateActivityScreen: React.FC = () => {
               onPress={() => {
                 setTitle(s.title);
                 // Auto-select matching activity type
-                const typeMap: Record<string, ActivityType> = {
-                  'Kahve': 'coffee', 'Akşam yemeği': 'dinner',
-                  'Yürüyüş': 'outdoor', 'Sinema': 'culture', 'Bar': 'drinks',
-                };
-                const matchedType = typeMap[s.label];
-                if (matchedType) setActivityType(matchedType);
+                if (s.type) setActivityType(s.type);
               }}
               activeOpacity={0.7}
             >
