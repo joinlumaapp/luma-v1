@@ -671,21 +671,27 @@ const SPECTATOR_NAMES = ['Kaan', 'Deniz', 'Ari', 'Merve', 'Can'];
 
 const SpectatorsBar: React.FC<{ count: number }> = ({ count }) => (
   <View style={st.specBar}>
-    <View style={st.specAvatars}>
-      {SPECTATOR_NAMES.slice(0, Math.min(4, count)).map((name, i) => (
-        <View key={name} style={[st.specAvatar, { marginLeft: i > 0 ? -8 : 0, zIndex: 5 - i }]}>
-          <Ionicons name="person" size={10} color={TEXT_SECONDARY} />
+    <View style={st.specHeader}>
+      <Ionicons name="eye" size={14} color={GOLD} />
+      <Text style={st.specTitle}>{count} Izleyici</Text>
+    </View>
+    <View style={st.specAvatarRow}>
+      {SPECTATOR_NAMES.slice(0, Math.min(5, count)).map((name, i) => (
+        <View key={name} style={st.specAvatarItem}>
+          <View style={[st.specAvatar, { borderColor: i === 0 ? GOLD : SURFACE_BORDER }]}>
+            <Text style={st.specInitial}>{name[0]}</Text>
+          </View>
+          <Text style={st.specName}>{name}</Text>
         </View>
       ))}
-      {count > 4 && (
-        <View style={[st.specAvatar, st.specOverflow, { marginLeft: -8, zIndex: 0 }]}>
-          <Text style={st.specOverflowText}>+{count - 4}</Text>
+      {count > 5 && (
+        <View style={st.specAvatarItem}>
+          <View style={[st.specAvatar, st.specOverflow]}>
+            <Text style={st.specOverflowText}>+{count - 5}</Text>
+          </View>
+          <Text style={st.specName}>Diger</Text>
         </View>
       )}
-    </View>
-    <View style={st.specInfo}>
-      <Ionicons name="eye-outline" size={12} color={TEXT_MUTED} />
-      <Text style={st.specCount}>{count} izleyici</Text>
     </View>
   </View>
 );
@@ -2897,7 +2903,7 @@ export const IcebreakerRoomScreen: React.FC = () => {
             <Ionicons name="chevron-back" size={20} color={TEXT_PRIMARY} />
           </TouchableOpacity>
           <View style={st.headerCenter}>
-            <Text style={st.headerTitle}>OYUN SALONU</Text>
+            <Text style={st.headerTitle}>Oyun Odasi</Text>
             <View style={st.liveCountRow}>
               <PulsingDot color="#4ADE80" size={10} />
               <Text style={st.liveCountText}>128 kisi aktif</Text>
@@ -3215,7 +3221,7 @@ export const IcebreakerRoomScreen: React.FC = () => {
             onPress={() => {
               haptic('light');
               Alert.alert('Oyun Menusu', undefined, [
-                { text: 'Salona Don', onPress: handleLeaveGame },
+                { text: 'Lobiye Don', onPress: handleLeaveGame },
                 { text: 'Oyun Odasindan Cik', style: 'destructive', onPress: () => { handleRealLeaveGame(); navigation.goBack(); } },
                 { text: 'Iptal', style: 'cancel' },
               ]);
@@ -3225,20 +3231,26 @@ export const IcebreakerRoomScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* ── Players with glow avatars ── */}
-      <View style={st.playerRow}>
-        {players.map((p) => (
-          <PlayerGlowAvatar key={p.id} player={p} isMuted={isMuted} />
-        ))}
+      {/* ── Players Section ── */}
+      <View style={st.playersSection}>
+        <View style={st.playersSectionHeader}>
+          <Ionicons name="people" size={14} color={TEXT_PRIMARY} />
+          <Text style={st.playersSectionTitle}>Oyuncular ({players.length})</Text>
+        </View>
+        <View style={st.playerRow}>
+          {players.map((p) => (
+            <PlayerGlowAvatar key={p.id} player={p} isMuted={isMuted} />
+          ))}
+        </View>
+        {/* Turn indicator */}
+        <View style={[st.turnIndicator, isMyTurn && st.turnIndicatorActive]}>
+          <Text style={[st.turnText, isMyTurn && { color: GOLD }]}>
+            {isMyTurn ? '\uD83C\uDFAF Senin siran!' : `\u23F3 ${players.find((p) => p.isActive)?.name || ''} oynuyor...`}
+          </Text>
+        </View>
       </View>
 
-      {/* Turn indicator */}
-      <View style={[st.turnIndicator, isMyTurn && st.turnIndicatorActive]}>
-        <Text style={[st.turnText, isMyTurn && { color: GOLD }]}>
-          {isMyTurn ? '\uD83C\uDFAF Senin siran!' : `\u23F3 ${players.find((p) => p.isActive)?.name || ''} oynuyor...`}
-        </Text>
-      </View>
-
+      {/* ── Spectators Section ── */}
       <SpectatorsBar count={spectatorCount} />
 
       {/* Activity feed */}
@@ -4248,10 +4260,24 @@ const st = StyleSheet.create({
   },
   voiceBtnActive: { backgroundColor: GOLD_SUBTLE, borderColor: GOLD_BORDER },
 
-  // Players
+  // Players Section
+  playersSection: {
+    marginHorizontal: spacing.md, marginTop: spacing.xs,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 14, borderWidth: 1, borderColor: SURFACE_BORDER,
+    paddingVertical: spacing.sm, paddingHorizontal: spacing.sm,
+  },
+  playersSectionHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingBottom: spacing.xs, paddingHorizontal: 4,
+  },
+  playersSectionTitle: {
+    fontSize: 12, fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600', color: TEXT_SECONDARY, letterSpacing: 0.3,
+  },
   playerRow: {
     flexDirection: 'row', justifyContent: 'center', gap: spacing.lg,
-    paddingHorizontal: spacing.md, paddingVertical: spacing.xs,
+    paddingHorizontal: 4, paddingVertical: spacing.xs,
   },
   playerSlot: { alignItems: 'center', width: 68 },
   playerAvatar: {
@@ -4294,22 +4320,39 @@ const st = StyleSheet.create({
 
   // Spectators
   specBar: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,
+    marginHorizontal: spacing.md, marginTop: spacing.xs, marginBottom: spacing.xs,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 14, borderWidth: 1, borderColor: SURFACE_BORDER,
+    paddingVertical: spacing.sm, paddingHorizontal: spacing.md,
+  },
+  specHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingBottom: spacing.xs,
   },
-  specAvatars: { flexDirection: 'row', alignItems: 'center' },
+  specTitle: {
+    fontSize: 12, fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600', color: GOLD, letterSpacing: 0.3,
+  },
+  specAvatarRow: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+    flexWrap: 'wrap',
+  },
+  specAvatarItem: { alignItems: 'center', width: 48 },
   specAvatar: {
-    width: 22, height: 22, borderRadius: 11,
-    backgroundColor: SURFACE, borderWidth: 1.5, borderColor: BG_DARK,
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: SURFACE, borderWidth: 1.5, borderColor: SURFACE_BORDER,
     justifyContent: 'center', alignItems: 'center',
   },
-  specInitial: { fontSize: 8, fontFamily: 'Poppins_600SemiBold',
+  specInitial: { fontSize: 11, fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600', color: TEXT_SECONDARY },
+  specName: {
+    fontSize: 9, fontFamily: 'Poppins_500Medium',
+    fontWeight: '500', color: TEXT_MUTED,
+    marginTop: 2, textAlign: 'center',
+  },
   specOverflow: { backgroundColor: GOLD_SUBTLE, borderColor: GOLD_BORDER },
-  specOverflowText: { fontSize: 7, fontFamily: 'Poppins_600SemiBold',
+  specOverflowText: { fontSize: 9, fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600', color: GOLD },
-  specInfo: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  specCount: { fontSize: 10, color: TEXT_MUTED, letterSpacing: 0.3, lineHeight: 14 },
 
   // Game content
   gameScroll: { flex: 1 },
