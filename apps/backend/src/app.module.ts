@@ -25,6 +25,7 @@ import { CompatibilityModule } from "./modules/compatibility/compatibility.modul
 import { DiscoveryModule } from "./modules/discovery/discovery.module";
 import { MatchesModule } from "./modules/matches/matches.module";
 import { HarmonyModule } from "./modules/harmony/harmony.module";
+import { GameRoomModule } from "./modules/game-room/game-room.module";
 import { RelationshipsModule } from "./modules/relationships/relationships.module";
 import { BadgesModule } from "./modules/badges/badges.module";
 import { PaymentsModule } from "./modules/payments/payments.module";
@@ -102,6 +103,7 @@ import { WsConnectionModule } from "./common/providers/ws-connection.module";
     DiscoveryModule, // Subsystem 8: Card Flow & Swiping
     MatchesModule, // Subsystem 9: Match System
     HarmonyModule, // Subsystem 10: Harmony Room
+    GameRoomModule, // Game Center: multiplayer game rooms
     RelationshipsModule, // Subsystem 11-12: Relationship Mode & Couples Club
     BadgesModule, // Subsystem 14: Badge & Reputation
     PaymentsModule, // Subsystem 16-18: Packages, Gold, Monetization
