@@ -98,44 +98,15 @@ type DiscoveryNavProp = CompositeNavigationProp<
 
 // ── Discovery Feature Blocks ─────────────────────────────────
 
-interface DiscoveryFeatureBlocksProps {
-  onVideoWatch: () => void;
-  onVideoRecord: () => void;
-  onSurpriseStart: () => void;
+interface LiveDiscoverBannerProps {
+  onStart: () => void;
   onlineCount?: number;
 }
 
-const DiscoveryFeatureBlocks: React.FC<DiscoveryFeatureBlocksProps> = React.memo(
-  ({ onVideoWatch, onVideoRecord, onSurpriseStart, onlineCount = 14 }) => (
+const LiveDiscoverBanner: React.FC<LiveDiscoverBannerProps> = React.memo(
+  ({ onStart, onlineCount = 14 }) => (
     <View style={featureStyles.container}>
-      {/* Video Kesfet — watch or record */}
-      <View style={featureStyles.block}>
-        <LinearGradient
-          colors={[palette.purple[600], palette.pink[500]] as [string, string]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={featureStyles.gradient}
-        >
-          <View style={featureStyles.headerRow}>
-            <Ionicons name="play-circle" size={20} color="#FFFFFF" />
-            <Text style={featureStyles.title}>Video Keşfet</Text>
-          </View>
-          <Text style={featureStyles.subtitle}>İzle veya paylaş</Text>
-          <View style={featureStyles.actionRow}>
-            <Pressable onPress={onVideoWatch} style={featureStyles.actionBtn} hitSlop={4}>
-              <Ionicons name="play" size={12} color="#FFFFFF" />
-              <Text style={featureStyles.actionBtnText}>İzle</Text>
-            </Pressable>
-            <Pressable onPress={onVideoRecord} style={featureStyles.actionBtnOutline} hitSlop={4}>
-              <Ionicons name="videocam" size={12} color="#FFFFFF" />
-              <Text style={featureStyles.actionBtnText}>Çek</Text>
-            </Pressable>
-          </View>
-        </LinearGradient>
-      </View>
-
-      {/* Surpriz Baglan — one-tap start */}
-      <View style={featureStyles.block}>
+      <Pressable onPress={onStart} style={featureStyles.block}>
         <LinearGradient
           colors={['#F59E0B', '#EF4444'] as [string, string]}
           start={{ x: 0, y: 0 }}
@@ -144,33 +115,30 @@ const DiscoveryFeatureBlocks: React.FC<DiscoveryFeatureBlocksProps> = React.memo
         >
           <View style={featureStyles.headerRow}>
             <Ionicons name="videocam" size={20} color="#FFFFFF" />
-            <Text style={featureStyles.title}>Sürpriz Bağlan</Text>
+            <Text style={featureStyles.title}>Canlı Keşfet</Text>
+            <View style={featureStyles.onlinePill}>
+              <View style={featureStyles.onlineDot} />
+              <Text style={featureStyles.onlineText}>{onlineCount} çevrimiçi</Text>
+            </View>
           </View>
-          <Text style={featureStyles.subtitle}>Görüntülü sohbet</Text>
-          <View style={featureStyles.onlinePill}>
-            <View style={featureStyles.onlineDot} />
-            <Text style={featureStyles.onlineText}>{onlineCount} kişi çevrimiçi</Text>
-          </View>
-          <Pressable onPress={onSurpriseStart} style={featureStyles.ctaBtn} hitSlop={4}>
+          <Text style={featureStyles.subtitle}>Rastgele biriyle görüntülü sohbet başlat</Text>
+          <Pressable onPress={onStart} style={featureStyles.ctaBtn} hitSlop={4}>
             <Text style={featureStyles.ctaBtnText}>Başla · 25 🪙</Text>
           </Pressable>
         </LinearGradient>
-      </View>
+      </Pressable>
     </View>
   ),
 );
-DiscoveryFeatureBlocks.displayName = 'DiscoveryFeatureBlocks';
+LiveDiscoverBanner.displayName = 'LiveDiscoverBanner';
 
 const featureStyles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
     marginHorizontal: spacing.md,
     marginBottom: spacing.sm,
-    gap: spacing.sm,
   },
   block: {
-    flex: 1,
-    height: 120,
+    height: 80,
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
   },
@@ -178,59 +146,26 @@ const featureStyles = StyleSheet.create({
     flex: 1,
     alignItems: 'flex-start',
     justifyContent: 'center',
-    paddingVertical: spacing.smd,
-    paddingHorizontal: spacing.smd,
-    gap: 3,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    gap: 4,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 6,
   },
   title: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: '#FFFFFF',
   },
   subtitle: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
     color: 'rgba(255,255,255,0.8)',
-    marginTop: 1,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 6,
-  },
-  actionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: borderRadius.full,
-  },
-  actionBtnOutline: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.35)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: borderRadius.full,
-  },
-  actionBtnText: {
-    fontSize: 10,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    color: '#FFFFFF',
   },
   onlinePill: {
     flexDirection: 'row',
@@ -240,7 +175,7 @@ const featureStyles = StyleSheet.create({
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: borderRadius.full,
-    marginTop: 3,
+    marginLeft: 'auto',
   },
   onlineDot: {
     width: 6,
@@ -257,9 +192,8 @@ const featureStyles = StyleSheet.create({
   ctaBtn: {
     backgroundColor: 'rgba(255,255,255,0.3)',
     paddingHorizontal: 14,
-    paddingVertical: 6,
+    paddingVertical: 5,
     borderRadius: borderRadius.full,
-    marginTop: 4,
   },
   ctaBtnText: {
     fontSize: 11,
@@ -1405,21 +1339,9 @@ export const DiscoveryScreen: React.FC = () => {
 
       </View>
 
-      {/* Feature blocks — Video Kesfet + Aninda Baglan */}
-      <DiscoveryFeatureBlocks
-        onVideoWatch={() => navigation.navigate('VideoFeed')}
-        onVideoRecord={() => {
-          Alert.alert(
-            'Video Ekle',
-            'Kısa bir video ile kendini tanıt!',
-            [
-              { text: 'Vazgeç', style: 'cancel' },
-              { text: 'Kameradan Çek' },
-              { text: 'Galeriden Seç' },
-            ],
-          );
-        }}
-        onSurpriseStart={() => navigation.navigate('InstantConnect')}
+      {/* Canlı Keşfet banner */}
+      <LiveDiscoverBanner
+        onStart={() => navigation.navigate('InstantConnect')}
       />
 
       {/* Card stack */}

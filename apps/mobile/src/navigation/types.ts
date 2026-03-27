@@ -55,7 +55,6 @@ export type MainTabParamList = {
 // -- Discovery Stack --
 export type DiscoveryStackParamList = {
   Discovery: undefined;
-  VideoFeed: undefined;
   InstantConnect: undefined;
   Notifications: undefined;
   ProfilePreview: { userId: string };

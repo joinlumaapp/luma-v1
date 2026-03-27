@@ -12,11 +12,13 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ActivitiesStackParamList } from '../../navigation/types';
 import { useActivityStore } from '../../stores/activityStore';
+import { useCoinStore } from '../../stores/coinStore';
 import { ACTIVITY_TYPE_LABELS, ACTIVITY_TYPE_ICONS } from '../../services/activityService';
 import type { ActivityType, CreateActivityRequest } from '../../services/activityService';
 import { colors } from '../../theme/colors';
@@ -56,6 +58,7 @@ export const CreateActivityScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
   const insets = useSafeAreaInsets();
   const { createActivity } = useActivityStore();
+  const { claimActivityCreation } = useCoinStore();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -68,7 +71,29 @@ export const CreateActivityScreen: React.FC = () => {
   const defaultDate = new Date();
   defaultDate.setDate(defaultDate.getDate() + 2);
   defaultDate.setHours(15, 0, 0, 0);
-  const [dateTime] = useState(defaultDate);
+  const [dateTime, setDateTime] = useState(defaultDate);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
+  const onDateChange = useCallback((_event: DateTimePickerEvent, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      const merged = new Date(dateTime);
+      merged.setFullYear(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+      setDateTime(merged);
+      // After picking date, show time picker
+      setTimeout(() => setShowTimePicker(true), 300);
+    }
+  }, [dateTime]);
+
+  const onTimeChange = useCallback((_event: DateTimePickerEvent, selectedTime?: Date) => {
+    setShowTimePicker(false);
+    if (selectedTime) {
+      const merged = new Date(dateTime);
+      merged.setHours(selectedTime.getHours(), selectedTime.getMinutes(), 0, 0);
+      setDateTime(merged);
+    }
+  }, [dateTime]);
 
   const isValid = title.trim().length >= 3 && location.trim().length >= 2;
 
@@ -92,7 +117,8 @@ export const CreateActivityScreen: React.FC = () => {
     setIsSubmitting(false);
 
     if (result) {
-      Alert.alert('Aktivite Oluşturuldu!', 'Aktiviten yayınlandı. Katılımcıları bekliyorsun!', [
+      claimActivityCreation();
+      Alert.alert('Aktivite Oluşturuldu! +10 Jeton', 'Aktiviten yayınlandı. Katılımcıları bekliyorsun!', [
         { text: 'Tamam', onPress: () => navigation.goBack() },
       ]);
     } else {
@@ -205,11 +231,37 @@ export const CreateActivityScreen: React.FC = () => {
           maxLength={100}
         />
 
-        {/* Date/Time display */}
+        {/* Date/Time picker */}
         <Text style={styles.label}>Tarih ve Saat</Text>
-        <View style={styles.dateDisplay}>
+        <TouchableOpacity
+          style={styles.dateDisplay}
+          onPress={() => setShowDatePicker(true)}
+          activeOpacity={0.7}
+        >
           <Text style={styles.dateText}>{formatDateForDisplay(dateTime)}</Text>
-        </View>
+          <Text style={styles.dateHint}>Değiştirmek için dokun</Text>
+        </TouchableOpacity>
+
+        {showDatePicker && (
+          <DateTimePicker
+            value={dateTime}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            minimumDate={new Date()}
+            onChange={onDateChange}
+            locale="tr-TR"
+          />
+        )}
+        {showTimePicker && (
+          <DateTimePicker
+            value={dateTime}
+            mode="time"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={onTimeChange}
+            locale="tr-TR"
+            is24Hour
+          />
+        )}
 
         {/* Max Participants */}
         <Text style={styles.label}>Maksimum Katılımcı</Text>
@@ -390,10 +442,17 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   dateText: {
     ...typography.body,
     color: colors.text,
+  },
+  dateHint: {
+    ...typography.caption,
+    color: colors.textTertiary,
   },
   participantsRow: {
     flexDirection: 'row',

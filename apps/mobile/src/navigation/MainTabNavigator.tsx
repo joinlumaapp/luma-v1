@@ -77,7 +77,6 @@ import { WeeklyReportScreen } from '../screens/discovery/WeeklyReportScreen';
 import { CrossedPathsScreen } from '../screens/discovery/CrossedPathsScreen';
 import { SocialFeedScreen } from '../screens/discovery/SocialFeedScreen';
 import { StoryViewerScreen } from '../screens/discovery/StoryViewerScreen';
-import { VideoFeedScreen } from '../screens/discovery/VideoFeedScreen';
 import { InstantConnectScreen } from '../screens/discovery/InstantConnectScreen';
 import { StoryCreator } from '../components/stories/StoryCreator';
 
@@ -209,11 +208,6 @@ const DiscoveryStackNavigator: React.FC = React.memo(() => (
     }}
   >
     <DiscoveryStack.Screen name="Discovery" component={DiscoveryScreen} />
-    <DiscoveryStack.Screen
-      name="VideoFeed"
-      component={VideoFeedScreen}
-      options={{ animation: 'fade', presentation: 'fullScreenModal' }}
-    />
     <DiscoveryStack.Screen
       name="InstantConnect"
       component={InstantConnectScreen}

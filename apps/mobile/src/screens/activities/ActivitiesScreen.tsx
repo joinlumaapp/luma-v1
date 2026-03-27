@@ -106,11 +106,7 @@ const CATEGORY_VISUALS: Record<ActivityType | 'other', CategoryVisual> = {
 
 const FREE_DAILY_JOIN_LIMIT = 3;
 
-const LIVE_INDICATORS = [
-  { emoji: '\uD83D\uDD25', template: (n: number) => `${n} kisi su anda bakiyor` },
-  { emoji: '\u26A1', template: (n: number) => `${n} kisi katildi son 2 dk` },
-  { emoji: '\uD83D\uDC40', template: (n: number) => `${n} kisi inceliyor` },
-];
+// Live indicators removed — will be powered by real data from backend
 
 const MOCK_CHAT_MESSAGES = [
   { name: 'Elif', text: 'kimler geliyor? \uD83D\uDE0A' },
@@ -124,10 +120,10 @@ const MOCK_CHAT_MESSAGES = [
 ];
 
 const SUGGESTED_ACTIVITIES = [
-  { id: 'sug1', icon: 'heart' as keyof typeof Ionicons.glyphMap, title: 'Flort & Tanisma Gecesi', gradientColors: ['#EC4899', '#F472B6'] as [string, string] },
+  { id: 'sug1', icon: 'heart' as keyof typeof Ionicons.glyphMap, title: 'Flört & Tanışma Gecesi', gradientColors: ['#EC4899', '#F472B6'] as [string, string] },
   { id: 'sug2', icon: 'cafe' as keyof typeof Ionicons.glyphMap, title: 'Kahve & Sohbet', gradientColors: ['#D97706', '#92400E'] as [string, string] },
-  { id: 'sug3', icon: 'game-controller' as keyof typeof Ionicons.glyphMap, title: 'Oyun Bulusmasi', gradientColors: ['#3B82F6', '#06B6D4'] as [string, string] },
-  { id: 'sug4', icon: 'wine' as keyof typeof Ionicons.glyphMap, title: 'Gece & Eglence', gradientColors: ['#8B5CF6', '#EC4899'] as [string, string] },
+  { id: 'sug3', icon: 'game-controller' as keyof typeof Ionicons.glyphMap, title: 'Oyun Buluşması', gradientColors: ['#3B82F6', '#06B6D4'] as [string, string] },
+  { id: 'sug4', icon: 'wine' as keyof typeof Ionicons.glyphMap, title: 'Gece & Eğlence', gradientColors: ['#8B5CF6', '#EC4899'] as [string, string] },
   { id: 'sug5', icon: 'football' as keyof typeof Ionicons.glyphMap, title: 'Spor Aktivitesi', gradientColors: ['#10B981', '#3B82F6'] as [string, string] },
   { id: 'sug6', icon: 'construct' as keyof typeof Ionicons.glyphMap, title: 'Workshop & Hobi', gradientColors: ['#F59E0B', '#EF4444'] as [string, string] },
 ];
@@ -142,10 +138,10 @@ interface FilterChipDef {
 }
 
 const FILTER_CHIPS: FilterChipDef[] = [
-  { key: 'all', label: 'Tumu', emoji: '\u2728', icon: 'apps' },
-  { key: 'nearby', label: 'Yakinimda', emoji: '\uD83C\uDFAF', icon: 'location' },
-  { key: 'popular', label: 'Populer', emoji: '\uD83D\uDD25', icon: 'trending-up' },
-  { key: 'flirt', label: 'Flort & Tanisma', emoji: '\uD83D\uDC95', icon: 'heart' },
+  { key: 'all', label: 'Tümü', emoji: '\u2728', icon: 'apps' },
+  { key: 'nearby', label: 'Yakınımda', emoji: '\uD83C\uDFAF', icon: 'location' },
+  { key: 'popular', label: 'Popüler', emoji: '\uD83D\uDD25', icon: 'trending-up' },
+  { key: 'flirt', label: 'Flört & Tanışma', emoji: '\uD83D\uDC95', icon: 'heart' },
   { key: 'games', label: 'Oyun', emoji: '\uD83C\uDFAE', icon: 'game-controller' },
   { key: 'chill', label: 'Kahve & Sohbet', emoji: '\u2615', icon: 'cafe' },
 ];
@@ -159,8 +155,8 @@ const formatActivityDate = (dateString: string): string => {
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   const timeStr = date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
 
-  if (diffDays === 0) return `Bugun ${timeStr}`;
-  if (diffDays === 1) return `Yarin ${timeStr}`;
+  if (diffDays === 0) return `Bugün ${timeStr}`;
+  if (diffDays === 1) return `Yarın ${timeStr}`;
   const dayStr = date.toLocaleDateString('tr-TR', { weekday: 'short', day: 'numeric', month: 'short' });
   return `${dayStr} ${timeStr}`;
 };
@@ -181,8 +177,8 @@ const getCountdownText = (dateString: string): string | null => {
   if (diffMs <= 0) return null;
   const diffMin = Math.floor(diffMs / (1000 * 60));
   const diffHour = Math.floor(diffMs / (1000 * 60 * 60));
-  if (diffMin < 60) return `${diffMin} dk sonra basliyor`;
-  if (diffHour < 24) return `Baslamasina ${diffHour} saat`;
+  if (diffMin < 60) return `${diffMin} dk sonra başlıyor`;
+  if (diffHour < 24) return `Başlamasına ${diffHour} saat`;
   return null;
 };
 
@@ -190,7 +186,7 @@ const getCountdownText = (dateString: string): string | null => {
 const getSpotsLeftText = (maxParticipants: number, currentCount: number): string | null => {
   const remaining = maxParticipants - currentCount;
   if (remaining <= 0) return 'Dolu';
-  if (remaining <= 3) return `Son ${remaining} yer kaldi`;
+  if (remaining <= 3) return `Son ${remaining} yer kaldı`;
   return null;
 };
 
@@ -205,21 +201,16 @@ const seededRandom = (seed: string, min: number, max: number): number => {
   return min + Math.abs(hash % (max - min + 1));
 };
 
-/** Get a stable live indicator for a given activity id */
-const getLiveIndicator = (activityId: string): { emoji: string; text: string } => {
-  const idx = seededRandom(activityId + '_type', 0, LIVE_INDICATORS.length - 1);
-  const num = seededRandom(activityId + '_num', 3, 18);
-  const ind = LIVE_INDICATORS[idx];
-  return { emoji: ind.emoji, text: ind.template(num) };
+/** Live indicator — returns null until backed by real data */
+const getLiveIndicator = (_activityId: string): { emoji: string; text: string } | null => {
+  return null;
 };
 
 /**
- * Returns a dev-only fake chat preview for an activity card.
- * In production this returns null — activity cards show no fake chat snippets.
- * Real chat previews will come from the activity participants API.
+ * Returns a chat preview for an activity card.
+ * TODO: Replace with real data from activity participants API.
  */
 const getChatPreview = (activityId: string): { name: string; text: string } | null => {
-  if (!__DEV__) return null;
   const idx = seededRandom(activityId + '_chat', 0, MOCK_CHAT_MESSAGES.length - 1);
   return MOCK_CHAT_MESSAGES[idx];
 };
@@ -868,12 +859,13 @@ const facepileStyles = StyleSheet.create({
 // ─── Live Indicator Row ─────────────────────────────────────────────────────
 
 const LiveIndicator: React.FC<{ activityId: string }> = ({ activityId }) => {
-  const { emoji, text } = useMemo(() => getLiveIndicator(activityId), [activityId]);
+  const indicator = useMemo(() => getLiveIndicator(activityId), [activityId]);
+  if (!indicator) return null;
 
   return (
     <View style={liveStyles.container}>
       <PulsingDot size={6} color="#4ADE80" />
-      <Text style={liveStyles.text}>{emoji} {text}</Text>
+      <Text style={liveStyles.text}>{indicator.emoji} {indicator.text}</Text>
     </View>
   );
 };
@@ -1457,11 +1449,10 @@ interface FABModalProps {
   visible: boolean;
   onClose: () => void;
   onQuickCreate: () => void;
-  onStartChat: () => void;
   onOpenGameRoom: () => void;
 }
 
-const FABModal: React.FC<FABModalProps> = ({ visible, onClose, onQuickCreate, onStartChat, onOpenGameRoom }) => {
+const FABModal: React.FC<FABModalProps> = ({ visible, onClose, onQuickCreate, onOpenGameRoom }) => {
   const slideAnim = useRef(new Animated.Value(300)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
 
@@ -1519,33 +1510,14 @@ const FABModal: React.FC<FABModalProps> = ({ visible, onClose, onQuickCreate, on
                   <Ionicons name="rocket" size={22} color="#FFFFFF" />
                 </View>
                 <View style={modalStyles.optionTextContainer}>
-                  <Text style={modalStyles.optionTitle}>Hizli Etkinlik Olustur</Text>
-                  <Text style={modalStyles.optionSubtitle}>Hemen yeni bir etkinlik baslat</Text>
+                  <Text style={modalStyles.optionTitle}>Hızlı Etkinlik Oluştur</Text>
+                  <Text style={modalStyles.optionSubtitle}>Hemen yeni bir etkinlik başlat</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.6)" />
               </LinearGradient>
             </TouchableOpacity>
 
-            {/* Option 2: Start chat */}
-            <TouchableOpacity onPress={onStartChat} activeOpacity={0.8}>
-              <LinearGradient
-                colors={['#3B82F6', '#06B6D4']}
-                style={modalStyles.optionBtn}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <View style={modalStyles.optionIconCircle}>
-                  <Ionicons name="chatbubbles" size={22} color="#FFFFFF" />
-                </View>
-                <View style={modalStyles.optionTextContainer}>
-                  <Text style={modalStyles.optionTitle}>Sohbet Baslat</Text>
-                  <Text style={modalStyles.optionSubtitle}>Sohbet odakli bir etkinlik olustur</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.6)" />
-              </LinearGradient>
-            </TouchableOpacity>
-
-            {/* Option 3: Game room */}
+            {/* Option 2: Game room */}
             <TouchableOpacity onPress={onOpenGameRoom} activeOpacity={0.8}>
               <LinearGradient
                 colors={['#F59E0B', '#EF4444']}
@@ -1557,8 +1529,8 @@ const FABModal: React.FC<FABModalProps> = ({ visible, onClose, onQuickCreate, on
                   <Ionicons name="game-controller" size={22} color="#FFFFFF" />
                 </View>
                 <View style={modalStyles.optionTextContainer}>
-                  <Text style={modalStyles.optionTitle}>Oyun Odasi Ac</Text>
-                  <Text style={modalStyles.optionSubtitle}>Oyun oynayarak tanisma</Text>
+                  <Text style={modalStyles.optionTitle}>Oyun Odası Aç</Text>
+                  <Text style={modalStyles.optionSubtitle}>Oyun oynayarak tanışma</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.6)" />
               </LinearGradient>
@@ -1566,7 +1538,7 @@ const FABModal: React.FC<FABModalProps> = ({ visible, onClose, onQuickCreate, on
 
             {/* Cancel */}
             <TouchableOpacity style={modalStyles.cancelBtn} onPress={onClose} activeOpacity={0.7}>
-              <Text style={modalStyles.cancelText}>Vazgec</Text>
+              <Text style={modalStyles.cancelText}>Vazgeç</Text>
             </TouchableOpacity>
           </LinearGradient>
         </Animated.View>
@@ -1966,10 +1938,6 @@ export const ActivitiesScreen: React.FC = () => {
         visible={showFABModal}
         onClose={() => setShowFABModal(false)}
         onQuickCreate={() => {
-          setShowFABModal(false);
-          navigation.navigate('CreateActivity');
-        }}
-        onStartChat={() => {
           setShowFABModal(false);
           navigation.navigate('CreateActivity');
         }}

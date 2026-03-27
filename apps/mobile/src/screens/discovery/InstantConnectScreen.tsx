@@ -1,4 +1,4 @@
-// InstantConnectScreen — "Sürpriz Bağlan" 1:1 random video chat flow
+// InstantConnectScreen — "Canlı Keşfet" 1:1 random video chat flow
 // Flow: Confirm → Searching (camera placeholder) → Connected (matched user overlay)
 // User spends 25 coins to start, 15 coins to skip to next match
 
@@ -90,7 +90,7 @@ const ConfirmPhase: React.FC<{
       </Animated.View>
 
       {/* Title */}
-      <Text style={confirmStyles.title}>Sürpriz Bağlan</Text>
+      <Text style={confirmStyles.title}>Canlı Keşfet</Text>
       <Text style={confirmStyles.subtitle}>
         {'Kameran açılacak ve rastgele biriyle\ngörüntülü sohbet başlayacak.'}
       </Text>
@@ -505,7 +505,7 @@ export const InstantConnectScreen: React.FC = () => {
 
   // Handle start — spend coins then enter searching
   const handleStart = useCallback(async () => {
-    const spent = await spendCoins(SURPRISE_MATCH_COST, 'Sürpriz Bağlan - görüntülü sohbet');
+    const spent = await spendCoins(SURPRISE_MATCH_COST, 'Canlı Keşfet - görüntülü sohbet');
     if (spent) {
       setPhase('searching');
       startSpin();
@@ -519,7 +519,7 @@ export const InstantConnectScreen: React.FC = () => {
 
   // Handle skip — spend coins, go back to searching
   const handleSkip = useCallback(async () => {
-    const spent = await spendCoins(SURPRISE_SWITCH_COST, 'Sürpriz Bağlan - geç');
+    const spent = await spendCoins(SURPRISE_SWITCH_COST, 'Canlı Keşfet - geç');
     if (spent) {
       setPhase('searching');
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
