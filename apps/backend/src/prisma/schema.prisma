@@ -82,6 +82,12 @@ model User {
   followersGiven         UserFollow[]      @relation("FollowsGiven")
   followersReceived      UserFollow[]      @relation("FollowsReceived")
 
+  // Game Room relations
+  createdGameRooms   GameRoom[]        @relation("GameRoomCreator")
+  gameRoomPlayers    GameRoomPlayer[]  @relation("GameRoomPlayerUser")
+  gameRoomMessages   GameRoomMessage[] @relation("GameRoomMessageSender")
+  gameHistoryWins    GameHistory[]     @relation("GameHistoryWinner")
+
   @@index([deletedAt])                // Soft-delete: filter active/deleted users
   @@index([packageTier])              // Tier filtering: find users by package
   @@map("users")
@@ -1342,4 +1348,110 @@ model UserFollow {
   @@index([followerId])
   @@index([followingId])
   @@map("user_follows")
+}
+
+// ==========================================
+// Game Room Models
+// ==========================================
+
+model GameRoom {
+  id             String         @id @default(uuid()) @db.Uuid
+  creatorId      String         @map("creator_id") @db.Uuid
+  gameType       GameType
+  status         GameRoomStatus @default(WAITING)
+  maxPlayers     Int            @map("max_players")
+  currentPlayers Int            @default(0) @map("current_players")
+  isPrivate      Boolean        @default(false) @map("is_private")
+  roomCode       String?        @map("room_code") @db.VarChar(6)
+  createdAt      DateTime       @default(now()) @map("created_at")
+  startedAt      DateTime?      @map("started_at")
+  endedAt        DateTime?      @map("ended_at")
+
+  creator  User              @relation("GameRoomCreator", fields: [creatorId], references: [id])
+  players  GameRoomPlayer[]
+  messages GameRoomMessage[]
+  history  GameHistory?
+
+  @@index([status, createdAt])
+  @@index([creatorId])
+  @@index([gameType, status])
+  @@map("game_rooms")
+}
+
+enum GameType {
+  UNO
+  OKEY
+  TRUTH_DARE
+  TWO_TRUTHS_ONE_LIE
+  TRIVIA
+  WORD_BATTLE
+  EMOJI_GUESS
+  COMPATIBILITY
+}
+
+enum GameRoomStatus {
+  WAITING
+  READY_CHECK
+  COUNTDOWN
+  PLAYING
+  FINISHED
+  CANCELLED
+  ABANDONED
+}
+
+model GameRoomPlayer {
+  id       String    @id @default(uuid()) @db.Uuid
+  roomId   String    @map("room_id") @db.Uuid
+  userId   String    @map("user_id") @db.Uuid
+  isReady  Boolean   @default(false) @map("is_ready")
+  isHost   Boolean   @default(false) @map("is_host")
+  score    Int       @default(0)
+  joinedAt DateTime  @default(now()) @map("joined_at")
+  leftAt   DateTime? @map("left_at")
+
+  room GameRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User     @relation("GameRoomPlayerUser", fields: [userId], references: [id])
+
+  @@unique([roomId, userId])
+  @@index([userId])
+  @@map("game_room_players")
+}
+
+model GameRoomMessage {
+  id        String              @id @default(uuid()) @db.Uuid
+  roomId    String              @map("room_id") @db.Uuid
+  senderId  String              @map("sender_id") @db.Uuid
+  content   String
+  type      GameRoomMessageType @default(TEXT)
+  createdAt DateTime            @default(now()) @map("created_at")
+
+  room   GameRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender User     @relation("GameRoomMessageSender", fields: [senderId], references: [id])
+
+  @@index([roomId, createdAt])
+  @@map("game_room_messages")
+}
+
+enum GameRoomMessageType {
+  TEXT
+  REACTION
+  SYSTEM
+}
+
+model GameHistory {
+  id               String   @id @default(uuid()) @db.Uuid
+  roomId           String   @unique @map("room_id") @db.Uuid
+  gameType         GameType @map("game_type")
+  winnerId         String?  @map("winner_id") @db.Uuid
+  durationSeconds  Int      @map("duration_seconds")
+  playerScores     Json     @map("player_scores")
+  connectionScores Json     @map("connection_scores")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  room   GameRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  winner User?    @relation("GameHistoryWinner", fields: [winnerId], references: [id])
+
+  @@index([gameType, createdAt])
+  @@index([winnerId])
+  @@map("game_histories")
 }
