@@ -29,14 +29,6 @@ import type { ActivitiesStackParamList } from '../../navigation/types';
 import { useActivityStore } from '../../stores/activityStore';
 import { useAuthStore } from '../../stores/authStore';
 import { useCoinStore } from '../../stores/coinStore';
-import { useGameRoomStore } from '../../stores/gameRoomStore';
-import { RoomCard } from './gameRoom/components/RoomCard';
-import {
-  GameType,
-  GameCategory,
-  GAME_CONFIG,
-  CATEGORY_GRADIENTS,
-} from '@luma/shared/src/types/game-room';
 import type { Activity, ActivityType } from '../../services/activityService';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
@@ -153,31 +145,6 @@ const FILTER_CHIPS: FilterChipDef[] = [
   { key: 'games', label: 'Oyun', emoji: '\uD83C\uDFAE', icon: 'game-controller' },
   { key: 'chill', label: 'Kahve & Sohbet', emoji: '\u2615', icon: 'cafe' },
 ];
-
-// ─── Game Room Category Filters ──────────────────────────────────────────────
-
-type GameCategoryFilterKey = 'ALL' | 'CLASSICS' | 'ICEBREAKERS' | 'COMPETITIONS' | 'COMPATIBILITY';
-
-interface GameCategoryFilter {
-  key: GameCategoryFilterKey;
-  label: string;
-  color?: string;
-  colors?: [string, string];
-}
-
-const GAME_CATEGORY_FILTERS: GameCategoryFilter[] = [
-  { key: 'ALL', label: 'Tumumu', color: '#6B7280' },
-  { key: 'CLASSICS', label: 'Klasikler', colors: ['#FF6B35', '#FF8C42'] },
-  { key: 'ICEBREAKERS', label: 'Buz Kirici', colors: ['#00C9FF', '#92FE9D'] },
-  { key: 'COMPETITIONS', label: 'Yarisma', colors: ['#FC466B', '#3F5EFB'] },
-  { key: 'COMPATIBILITY', label: 'Uyumluluk', colors: ['#F857A6', '#FF5858'] },
-];
-
-/** All 8 game types grouped by category for the creation modal */
-const GAME_TYPE_LIST = Object.entries(GAME_CONFIG).map(([key, cfg]) => ({
-  type: key as GameType,
-  ...cfg,
-}));
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -1759,18 +1726,6 @@ export const ActivitiesScreen: React.FC = () => {
   const [showBoostBanner, setShowBoostBanner] = useState(true);
   const [dailyJoins, setDailyJoins] = useState(0);
 
-  // Game Room state
-  const [selectedGameCategory, setSelectedGameCategory] = useState<GameCategoryFilterKey>('ALL');
-  const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
-  const {
-    rooms: gameRooms,
-    isLoadingRooms: isLoadingGameRooms,
-    fetchRooms: fetchGameRooms,
-    createRoom: createGameRoom,
-    connectSocket: connectGameSocket,
-  } = useGameRoomStore();
-  const accessToken = useAuthStore((s) => s.accessToken);
-
   const premium = isPremiumUser(packageTier);
   const joinLimitReached = !premium && dailyJoins >= FREE_DAILY_JOIN_LIMIT;
 
@@ -1778,58 +1733,11 @@ export const ActivitiesScreen: React.FC = () => {
     fetchActivities();
   }, [fetchActivities]);
 
-  // Fetch game rooms on mount and connect socket
-  useEffect(() => {
-    fetchGameRooms();
-    if (userId && accessToken) {
-      connectGameSocket(userId, accessToken);
-    }
-  }, [fetchGameRooms, userId, accessToken, connectGameSocket]);
-
-  // Filter game rooms by selected category
-  const filteredGameRooms = useMemo(() => {
-    if (selectedGameCategory === 'ALL') return gameRooms;
-    return gameRooms.filter((room) => {
-      const cfg = GAME_CONFIG[room.gameType as GameType];
-      return cfg?.category === selectedGameCategory;
-    });
-  }, [gameRooms, selectedGameCategory]);
-
-  const handleRoomCardPress = useCallback(
-    (roomId: string) => {
-      const room = gameRooms.find((r) => r.id === roomId);
-      navigation.navigate('GameLobby', {
-        roomId,
-        gameType: room?.gameType ?? 'UNO',
-      });
-    },
-    [navigation, gameRooms],
-  );
-
-  const handleCreateRoom = useCallback(
-    async (gameType: GameType) => {
-      try {
-        await createGameRoom(gameType);
-        setShowCreateRoomModal(false);
-        const currentRoom = useGameRoomStore.getState().currentRoom;
-        if (currentRoom) {
-          navigation.navigate('GameLobby', {
-            roomId: currentRoom.id,
-            gameType,
-          });
-        }
-      } catch {
-        Alert.alert('Hata', 'Oda olusturulamadi. Lutfen tekrar deneyin.');
-      }
-    },
-    [createGameRoom, navigation],
-  );
-
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([fetchActivities(), fetchGameRooms()]);
+    await fetchActivities();
     setRefreshing(false);
-  }, [fetchActivities, fetchGameRooms]);
+  }, [fetchActivities]);
 
   const filteredActivities = useMemo(() => {
     let result = activities.filter((a) => !hiddenIds.has(a.id));
@@ -1942,111 +1850,6 @@ export const ActivitiesScreen: React.FC = () => {
 
   const ListHeaderComponent = useMemo(() => (
     <View>
-      {/* ── Game Rooms Section ─────────────────────────────────────── */}
-      <View style={gameRoomSectionStyles.container}>
-        {/* Section header */}
-        <View style={gameRoomSectionStyles.header}>
-          <Text style={gameRoomSectionStyles.title}>{'\uD83C\uDFAE'} Oyun Odalari</Text>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('IcebreakerRoom', { roomId: `room_${Date.now()}` })}
-            activeOpacity={0.7}
-          >
-            <Text style={gameRoomSectionStyles.seeAll}>Tumu {'>'}</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Category filter chips */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={gameRoomSectionStyles.chipScroll}
-        >
-          {GAME_CATEGORY_FILTERS.map((cat) => {
-            const isActive = selectedGameCategory === cat.key;
-            return (
-              <TouchableOpacity
-                key={cat.key}
-                onPress={() => setSelectedGameCategory(cat.key)}
-                activeOpacity={0.7}
-              >
-                {isActive && cat.colors ? (
-                  <LinearGradient
-                    colors={cat.colors}
-                    style={gameRoomSectionStyles.chipActive}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  >
-                    <Text style={gameRoomSectionStyles.chipTextActive}>{cat.label}</Text>
-                  </LinearGradient>
-                ) : isActive && cat.color ? (
-                  <View style={[gameRoomSectionStyles.chipActive, { backgroundColor: cat.color }]}>
-                    <Text style={gameRoomSectionStyles.chipTextActive}>{cat.label}</Text>
-                  </View>
-                ) : (
-                  <View style={gameRoomSectionStyles.chip}>
-                    <Text style={gameRoomSectionStyles.chipText}>{cat.label}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-
-        {/* Horizontal room cards list */}
-        {isLoadingGameRooms ? (
-          <View style={gameRoomSectionStyles.loadingContainer}>
-            <ActivityIndicator size="small" color={colors.primary} />
-          </View>
-        ) : filteredGameRooms.length > 0 ? (
-          <FlatList
-            data={filteredGameRooms}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={gameRoomSectionStyles.roomListContent}
-            renderItem={({ item }) => (
-              <RoomCard
-                id={item.id}
-                gameType={item.gameType}
-                currentPlayers={item.currentPlayers}
-                maxPlayers={item.maxPlayers}
-                status={item.status}
-                creatorName={
-                  item.players.find((p) => p.isHost)?.user?.firstName ?? 'Anonim'
-                }
-                onPress={handleRoomCardPress}
-              />
-            )}
-          />
-        ) : (
-          <View style={gameRoomSectionStyles.emptyContainer}>
-            <Text style={gameRoomSectionStyles.emptyIcon}>{'\uD83C\uDFAE'}</Text>
-            <Text style={gameRoomSectionStyles.emptyText}>
-              Henuz aktif oda yok. Ilk sen olustur!
-            </Text>
-          </View>
-        )}
-
-        {/* Create room button */}
-        <TouchableOpacity
-          onPress={() => setShowCreateRoomModal(true)}
-          activeOpacity={0.8}
-          style={gameRoomSectionStyles.createBtnWrapper}
-        >
-          <LinearGradient
-            colors={[palette.purple[500], palette.pink[500]]}
-            style={gameRoomSectionStyles.createBtn}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <Ionicons name="add-circle-outline" size={18} color="#FFFFFF" />
-            <Text style={gameRoomSectionStyles.createBtnText}>Oda Olustur</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
-
-      {/* ── Existing content ───────────────────────────────────────── */}
-
       {/* Boost banner */}
       {showBoostBanner && (
         <MatchBoostBanner
@@ -2068,7 +1871,6 @@ export const ActivitiesScreen: React.FC = () => {
     </View>
   ), [
     showBoostBanner, premium, joinLimitReached, dailyJoins, navigateToPackages, setFilter,
-    selectedGameCategory, isLoadingGameRooms, filteredGameRooms, handleRoomCardPress, navigation,
   ]);
 
   return (
@@ -2147,74 +1949,6 @@ export const ActivitiesScreen: React.FC = () => {
         }}
       />
 
-      {/* Create Game Room Modal */}
-      <Modal
-        visible={showCreateRoomModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowCreateRoomModal(false)}
-      >
-        <TouchableOpacity
-          style={createRoomModalStyles.overlay}
-          activeOpacity={1}
-          onPress={() => setShowCreateRoomModal(false)}
-        >
-          <TouchableOpacity activeOpacity={1} style={createRoomModalStyles.sheet}>
-            {/* Handle */}
-            <View style={createRoomModalStyles.handle} />
-
-            <Text style={createRoomModalStyles.title}>Oyun Secin</Text>
-            <Text style={createRoomModalStyles.subtitle}>
-              Bir oyun secerek oda olusturun
-            </Text>
-
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Group by category */}
-              {([GameCategory.CLASSICS, GameCategory.ICEBREAKERS, GameCategory.COMPETITIONS, GameCategory.COMPATIBILITY] as GameCategory[]).map((cat) => {
-                const gamesInCat = GAME_TYPE_LIST.filter((g) => g.category === cat);
-                if (gamesInCat.length === 0) return null;
-                const catGradient = CATEGORY_GRADIENTS[cat];
-                const catLabel =
-                  cat === GameCategory.CLASSICS ? 'Klasikler'
-                  : cat === GameCategory.ICEBREAKERS ? 'Buz Kiricilar'
-                  : cat === GameCategory.COMPETITIONS ? 'Yarisma'
-                  : 'Uyumluluk';
-
-                return (
-                  <View key={cat} style={createRoomModalStyles.categoryGroup}>
-                    <View style={createRoomModalStyles.categoryHeader}>
-                      <View
-                        style={[
-                          createRoomModalStyles.categoryDot,
-                          { backgroundColor: catGradient[0] },
-                        ]}
-                      />
-                      <Text style={createRoomModalStyles.categoryLabel}>{catLabel}</Text>
-                    </View>
-                    {gamesInCat.map((game) => (
-                      <TouchableOpacity
-                        key={game.type}
-                        style={createRoomModalStyles.gameRow}
-                        activeOpacity={0.7}
-                        onPress={() => handleCreateRoom(game.type)}
-                      >
-                        <Text style={createRoomModalStyles.gameIcon}>{game.icon}</Text>
-                        <View style={createRoomModalStyles.gameInfo}>
-                          <Text style={createRoomModalStyles.gameName}>{game.nameTr}</Text>
-                          <Text style={createRoomModalStyles.gameMeta}>
-                            {game.minPlayers}-{game.maxPlayers} oyuncu {'  \u00B7  '}~{game.durationMinutes} dk
-                          </Text>
-                        </View>
-                        <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                );
-              })}
-            </ScrollView>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
     </View>
   );
 };
@@ -2282,200 +2016,5 @@ const styles = StyleSheet.create({
   listContent: {
     paddingVertical: spacing.sm,
     paddingBottom: spacing.xxl + 80,
-  },
-});
-
-// ─── Game Room Section Styles ────────────────────────────────────────────────
-
-const gameRoomSectionStyles = StyleSheet.create({
-  container: {
-    marginBottom: spacing.md,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.smd,
-  },
-  title: {
-    ...typography.bodyLarge,
-    color: colors.text,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-  },
-  seeAll: {
-    fontSize: 13,
-    color: palette.purple[400],
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-  },
-  chipScroll: {
-    paddingHorizontal: spacing.lg,
-    gap: spacing.sm,
-    marginBottom: spacing.smd,
-  },
-  chip: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.full,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-  },
-  chipActive: {
-    borderRadius: borderRadius.full,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-  },
-  chipText: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-  },
-  chipTextActive: {
-    fontSize: 12,
-    color: '#FFFFFF',
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-  },
-  roomListContent: {
-    paddingHorizontal: spacing.lg,
-  },
-  loadingContainer: {
-    height: 180,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyContainer: {
-    height: 140,
-    marginHorizontal: spacing.lg,
-    borderRadius: borderRadius.xl,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-    borderStyle: 'dashed',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  emptyIcon: {
-    fontSize: 32,
-  },
-  emptyText: {
-    fontSize: 13,
-    color: colors.textTertiary,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    textAlign: 'center',
-    paddingHorizontal: spacing.xl,
-  },
-  createBtnWrapper: {
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.smd,
-  },
-  createBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    borderRadius: borderRadius.lg,
-    paddingVertical: 12,
-  },
-  createBtnText: {
-    fontSize: 14,
-    color: '#FFFFFF',
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-  },
-});
-
-// ─── Create Room Modal Styles ────────────────────────────────────────────────
-
-const createRoomModalStyles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.xxl + 20,
-    maxHeight: '80%',
-  },
-  handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.surfaceBorder,
-    alignSelf: 'center',
-    marginBottom: spacing.md,
-  },
-  title: {
-    ...typography.bodyLarge,
-    color: colors.text,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginBottom: spacing.md,
-  },
-  categoryGroup: {
-    marginBottom: spacing.md,
-  },
-  categoryHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: spacing.sm,
-  },
-  categoryDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  categoryLabel: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  gameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-    borderRadius: borderRadius.lg,
-    padding: spacing.smd,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-  },
-  gameIcon: {
-    fontSize: 28,
-    marginRight: spacing.smd,
-  },
-  gameInfo: {
-    flex: 1,
-  },
-  gameName: {
-    fontSize: 14,
-    color: colors.text,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-  },
-  gameMeta: {
-    fontSize: 12,
-    color: colors.textTertiary,
-    marginTop: 2,
   },
 });
