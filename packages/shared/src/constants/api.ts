@@ -210,6 +210,13 @@ export const API_ROUTES = {
     ME: '/users/me',           // GET
     UPDATE: '/users/me',       // PATCH
   },
+  // Game Rooms
+  GAME_ROOM: {
+    LIST: '/game-rooms',
+    CREATE: '/game-rooms',
+    GET: '/game-rooms/:id',
+    MY_HISTORY: '/game-rooms/history',
+  },
 } as const;
 
 /**
@@ -286,6 +293,29 @@ export const WS_EVENTS = {
   NOTIFICATION_SUBSCRIPTION_EXPIRING: 'notification:subscription_expiring',
   NOTIFICATION_RELATIONSHIP_REQUEST: 'notification:relationship_request',
   NOTIFICATION_SYSTEM: 'notification:system',
+  // Game Room — Client-to-Server events
+  GAME_JOIN_ROOM: 'game:join_room',
+  GAME_LEAVE_ROOM: 'game:leave_room',
+  GAME_READY: 'game:ready',
+  GAME_UNREADY: 'game:unready',
+  GAME_ACTION: 'game:action',
+  GAME_SEND_MESSAGE: 'game:send_message',
+  GAME_REACT: 'game:react',
+  GAME_REMATCH: 'game:rematch',
+  // Game Room — Server-to-Client events
+  GAME_ROOM_UPDATED: 'game:room_updated',
+  GAME_PLAYER_READY: 'game:player_ready',
+  GAME_COUNTDOWN_START: 'game:countdown_start',
+  GAME_STARTED: 'game:started',
+  GAME_TURN: 'game:turn',
+  GAME_ACTION_RESULT: 'game:action_result',
+  GAME_SCORE_UPDATE: 'game:score_update',
+  GAME_MESSAGE: 'game:message',
+  GAME_REACTION: 'game:reaction',
+  GAME_FINISHED: 'game:finished',
+  GAME_CONNECTION_SCORE: 'game:connection_score',
+  GAME_ERROR: 'game:error',
+  GAME_AFK_WARNING: 'game:afk_warning',
 } as const;
 
 // Rate limiting
