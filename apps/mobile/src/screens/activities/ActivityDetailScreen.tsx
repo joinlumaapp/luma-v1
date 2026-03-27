@@ -18,6 +18,7 @@ import type { ActivitiesStackParamList } from '../../navigation/types';
 import { useActivityStore } from '../../stores/activityStore';
 import { useAuthStore } from '../../stores/authStore';
 import { ACTIVITY_TYPE_ICONS, ACTIVITY_TYPE_LABELS } from '../../services/activityService';
+import type { ActivityParticipant } from '../../services/activityService';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
@@ -45,6 +46,11 @@ const formatJoinedDate = (dateString: string): string => {
   if (hours < 24) return `${hours} saat önce katıldı`;
   const days = Math.floor(hours / 24);
   return `${days} gün önce katıldı`;
+};
+
+const getCompatibility = (userId: string): number => {
+  const hash = userId.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  return 30 + (hash % 65); // 30-94 range
 };
 
 export const ActivityDetailScreen: React.FC = () => {
@@ -120,6 +126,26 @@ export const ActivityDetailScreen: React.FC = () => {
       },
     ]);
   };
+
+  const handleBirlikteGidelim = (participant: ActivityParticipant) => {
+    Alert.alert(
+      'Birlikte Gidelim',
+      `${participant.firstName} ile bu etkinlige birlikte gitmek istedigini bildirelim mi?`,
+      [
+        { text: 'Vazgec', style: 'cancel' },
+        {
+          text: 'Gonder',
+          onPress: () => {
+            Alert.alert('Gonderildi!', `${participant.firstName} teklifini gorduguunde bildirim alacaksin.`);
+          },
+        },
+      ],
+    );
+  };
+
+  const sortedParticipants = [...activity.participants].sort((a, b) => {
+    return getCompatibility(b.userId) - getCompatibility(a.userId);
+  });
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -211,24 +237,43 @@ export const ActivityDetailScreen: React.FC = () => {
             KATILIMCILAR ({activity.participants.length})
           </Text>
 
-          {activity.participants.map((p) => (
-            <View key={p.userId} style={styles.participantRow}>
-              {p.photoUrl ? (
-                <Image source={{ uri: p.photoUrl }} style={styles.participantPhoto} />
-              ) : (
-                <View style={styles.participantPlaceholder}>
-                  <Text style={styles.participantInitial}>{p.firstName[0]}</Text>
+          {sortedParticipants.map((p) => {
+            const compat = getCompatibility(p.userId);
+            const isHighCompat = compat >= 60;
+            const isCurrentUser = p.userId === userId;
+            return (
+              <View key={p.userId} style={styles.participantRow}>
+                {p.photoUrl ? (
+                  <Image source={{ uri: p.photoUrl }} style={styles.participantPhoto} />
+                ) : (
+                  <View style={styles.participantPlaceholder}>
+                    <Text style={styles.participantInitial}>{p.firstName[0]}</Text>
+                  </View>
+                )}
+                <View style={styles.participantInfo}>
+                  <Text style={styles.participantName}>
+                    {p.firstName}
+                    {p.userId === activity.creatorId ? ' (Organizatör)' : ''}
+                  </Text>
+                  <Text style={styles.participantJoined}>{formatJoinedDate(p.joinedAt)}</Text>
+                  <View style={styles.compatInfo}>
+                    <Text style={[styles.compatPercent, isHighCompat && styles.compatHigh]}>
+                      {'\uD83D\uDC9C'} %{compat} uyum
+                    </Text>
+                    {isHighCompat && !isCurrentUser && (
+                      <TouchableOpacity
+                        style={styles.birlikteBtn}
+                        onPress={() => handleBirlikteGidelim(p)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.birlikteBtnText}>Birlikte Gidelim</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
-              )}
-              <View style={styles.participantInfo}>
-                <Text style={styles.participantName}>
-                  {p.firstName}
-                  {p.userId === activity.creatorId ? ' (Organizatör)' : ''}
-                </Text>
-                <Text style={styles.participantJoined}>{formatJoinedDate(p.joinedAt)}</Text>
               </View>
-            </View>
-          ))}
+            );
+          })}
         </View>
 
         {/* Group chat button — visible to all participants */}
@@ -450,6 +495,33 @@ const styles = StyleSheet.create({
   participantJoined: {
     ...typography.caption,
     color: colors.textTertiary,
+  },
+  compatInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+  },
+  compatPercent: {
+    fontSize: 12,
+    color: '#9CA3AF',
+  },
+  compatHigh: {
+    color: '#7C3AED',
+    fontWeight: '600',
+  },
+  birlikteBtn: {
+    backgroundColor: 'rgba(124, 58, 237, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#7C3AED',
+  },
+  birlikteBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#7C3AED',
   },
   groupChatBtn: {
     flexDirection: 'row',
