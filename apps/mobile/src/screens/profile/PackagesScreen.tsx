@@ -51,15 +51,6 @@ const FEATURE_COMPARISON: FeatureRow[] = [
     },
   },
   {
-    label: 'Süper Beğeni',
-    values: {
-      FREE: '1/gün',
-      GOLD: '10/gün',
-      PRO: 'Sınırsız',
-      RESERVED: 'Sınırsız',
-    },
-  },
-  {
     label: 'Geri Al',
     values: {
       FREE: '-',

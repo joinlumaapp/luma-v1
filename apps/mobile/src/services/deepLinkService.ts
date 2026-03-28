@@ -1,6 +1,6 @@
 // Deep link servisi — URL ayrıştırma ve ekran yönlendirme
 // Desteklenen scheme: luma://
-// Desteklenen rotalar: match, chat, profile, discovery, daily-picks, badges, settings, membership
+// Desteklenen rotalar: match, chat, profile, discovery, daily-picks, settings, membership
 
 import type { NavigationContainerRef } from '@react-navigation/native';
 import type { RootStackParamList } from '../navigation/types';
@@ -14,7 +14,6 @@ export type ParsedDeepLink =
   | { screen: 'ProfilePreview'; params: { userId: string } }
   | { screen: 'Discovery'; params: undefined }
   | { screen: 'DailyPicks'; params: undefined }
-  | { screen: 'Badges'; params: undefined }
   | { screen: 'Settings'; params: undefined }
   | { screen: 'MembershipPlans'; params: undefined }
   | { screen: 'LikesYou'; params: undefined }
@@ -33,7 +32,6 @@ export type ParsedDeepLink =
  * - luma://profile/:userId          -> ProfilePreviewScreen
  * - luma://discovery                -> DiscoveryScreen (tab)
  * - luma://daily-picks              -> DailyPicksScreen
- * - luma://badges                   -> BadgesScreen
  * - luma://settings                 -> SettingsScreen
  * - luma://membership               -> MembershipPlansScreen
  * - luma://likes                    -> LikesYouScreen
@@ -91,9 +89,6 @@ export function parseDeepLink(url: string): ParsedDeepLink {
 
       case 'daily-picks':
         return { screen: 'DailyPicks', params: undefined };
-
-      case 'badges':
-        return { screen: 'Badges', params: undefined };
 
       case 'settings':
         return { screen: 'Settings', params: undefined };
@@ -223,16 +218,6 @@ export function navigateToScreen(
       });
       break;
 
-    case 'Badges':
-      navigationRef.navigate('MainTabs', {
-        screen: 'ProfileTab',
-        params: {
-          screen: 'Badges',
-          params: undefined,
-        },
-      });
-      break;
-
     case 'Settings':
       navigationRef.navigate('MainTabs', {
         screen: 'ProfileTab',
@@ -320,7 +305,6 @@ export const linkingConfig = {
           ProfileTab: {
             screens: {
               Profile: 'profile',
-              Badges: 'badges',
               Settings: 'settings',
               MembershipPlans: 'membership-plans',
             },

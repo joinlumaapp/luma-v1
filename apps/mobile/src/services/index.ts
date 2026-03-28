@@ -25,7 +25,6 @@ export type {
   BoostStatusResponse,
   ActivateBoostResponse,
   ProfilePrompt,
-  WeeklyReportResponse,
   ProfileCoachTip,
   ProfileCoachResponse,
   PersonalityResponse,

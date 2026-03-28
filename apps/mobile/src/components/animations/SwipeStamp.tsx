@@ -10,7 +10,6 @@
  * @example
  * <SwipeStamp type="like" progress={swipeProgress} />
  * <SwipeStamp type="nope" progress={swipeProgress} />
- * <SwipeStamp type="superlike" progress={swipeProgress} />
  */
 
 import React, { memo } from 'react';
@@ -19,7 +18,7 @@ import { typography } from '../../theme/typography';
 import { borderRadius } from '../../theme/spacing';
 
 // ── Types ────────────────────────────────────────────────────
-type StampType = 'like' | 'nope' | 'superlike';
+type StampType = 'like' | 'nope';
 
 interface SwipeStampProps {
   /** Stamp variant */
@@ -55,13 +54,6 @@ const STAMP_CONFIGS: Record<StampType, StampConfig> = {
     borderColor: '#EF4444',
     rotation: '15deg',
     position: 'right',
-  },
-  superlike: {
-    label: 'SUPER',
-    color: '#3B82F6',
-    borderColor: '#3B82F6',
-    rotation: '-20deg',
-    position: 'center',
   },
 };
 
@@ -112,9 +104,7 @@ export const SwipeStamp: React.FC<SwipeStampProps> = memo(({
       accessibilityLabel={
         type === 'like'
           ? 'Begeni damgasi'
-          : type === 'nope'
-            ? 'Gecme damgasi'
-            : 'Super begeni damgasi'
+          : 'Gecme damgasi'
       }
     >
       <Animated.Text

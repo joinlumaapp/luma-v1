@@ -56,7 +56,7 @@ LUMA'ya özel sesli tanışma odaları! Eşleştiğiniz kişiyle güvenli bir or
 • Hesabınızı ve verilerinizi istediğiniz zaman silebilirsiniz
 
 🏅 JETON SİSTEMİ
-Özel etkileşimler için jeton kullanın: Süper Beğeni gönderin, profilinizi öne çıkarın veya ek uyumluluk detaylarını açın. Jetonlarınızı akıllıca kullanarak doğru kişiyle bağlantı kurun.
+Özel etkileşimler için jeton kullanın: profilinizi öne çıkarın veya ek uyumluluk detaylarını açın. Jetonlarınızı akıllıca kullanarak doğru kişiyle bağlantı kurun.
 
 📍 KONUM BAZLI KEŞİF
 Yakınındaki veya belirlediğin mesafe aralığındaki uyumlu kişileri keşfet. Seyahat ederken bile yeni bağlantılar kur.

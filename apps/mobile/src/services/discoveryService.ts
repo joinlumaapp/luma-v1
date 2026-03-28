@@ -1,4 +1,4 @@
-// Discovery API service — feed, swipe, undo, and super like operations
+// Discovery API service — feed, swipe, and undo operations
 
 import { API_ROUTES } from '@luma/shared';
 import api from './api';
@@ -57,7 +57,7 @@ export interface FeedResponse {
 
 export interface SwipeRequest {
   targetUserId: string;
-  direction: 'LIKE' | 'PASS' | 'SUPER_LIKE';
+  direction: 'LIKE' | 'PASS';
   comment?: string; // optional comment attached to LIKE
   /** Icebreaker context — sent when user comments on a photo or prompt */
   icebreaker?: {
@@ -172,20 +172,7 @@ export interface ProfilePrompt {
   order: number;
 }
 
-// ─── Weekly Report ────────────────────────────────────────────
 
-export interface WeeklyReportResponse {
-  weekStart: string;
-  totalSwipes: number;
-  totalLikes: number;
-  totalMatches: number;
-  avgCompatibility: number;
-  topCategory: string | null;
-  messagesExchanged: number;
-  mostActiveDay: string | null;
-  likeRate: number;
-  insights: string[];
-}
 
 // ─── Profile Coach ────────────────────────────────────────────
 
@@ -318,7 +305,7 @@ const MOCK_CARDS: FeedCard[] = [
     prompts: [
       { id: 'p3-1', question: 'Hafta sonu planim genelde...', answer: 'Sabah erkenden daga cikip gun batiminda sehre donmek', order: 0 },
       { id: 'p3-2', question: 'Hayatimda vazgecemedegim...', answer: 'Her gun taze sebzelerle yemek yapmak, mutfak benim terapim', order: 1 },
-      { id: 'p3-3', question: 'Ilk bulusmada...', answer: 'Acik havada yuruyu\u015f ve samimi bir sohbet tercih ederim', order: 2 },
+      { id: 'p3-3', question: 'Ilk bulusmada...', answer: 'Acik havada yürüyüş ve samimi bir sohbet tercih ederim', order: 2 },
     ],
     favoriteSpots: [
       { name: 'Kiz Kulesi', category: 'tarihi' },
@@ -626,7 +613,7 @@ const MOCK_BADGE_POOL = [
 
 // Mock prompts pool for generated cards
 const MOCK_PROMPT_POOL: Array<{ question: string; answers: string[] }> = [
-  { question: 'En iyi seyahat anim...', answers: ['Japonya\'da kiraz cicekleri altinda yuruyu\u015f', 'Yunanistan\'da gece yuzme', 'Kapadokya\'da balon turu'] },
+  { question: 'En iyi seyahat anim...', answers: ['Japonya\'da kiraz cicekleri altinda yürüyüş', 'Yunanistan\'da gece yuzme', 'Kapadokya\'da balon turu'] },
   { question: 'Beni gulduren sey...', answers: ['Kara mizah ve spontane anlar', 'Kedilerin sacma hareketleri', 'Arkadaslarimla eski anilari anlatmak'] },
   { question: 'Ilk bulusmada...', answers: ['Guzel bir kafede uzun sohbet', 'Yuruyus yapmayi tercih ederim', 'Canli muzik olan bir mekan'] },
   { question: 'Hayatimda vazgecemedegim...', answers: ['Sabah kahvesi rituelim', 'Haftada bir yeni tarif denemek', 'Aksam yuruyusleri'] },
@@ -905,14 +892,14 @@ export const discoveryService = {
     }
   },
 
-  // Swipe on a profile (like, pass, or super_like)
+  // Swipe on a profile (like or pass)
   swipe: async (data: SwipeRequest): Promise<SwipeResponse> => {
     try {
       const response = await api.post<SwipeResponse>(API_ROUTES.DISCOVERY.SWIPE, data);
       return response.data;
     } catch (error) {
       // Mock swipe response — simulate occasional matches on likes
-      const isLike = data.direction === 'LIKE' || data.direction === 'SUPER_LIKE';
+      const isLike = data.direction === 'LIKE';
       const isMatch = isLike && Math.random() < 0.25;
       return devMockOrThrow<SwipeResponse>(error, {
         direction: data.direction,
@@ -1008,12 +995,6 @@ export const discoveryService = {
   // ── Incognito Mode ──────────────────────────────────────────
   toggleIncognito: async (enabled: boolean): Promise<{ isIncognito: boolean }> => {
     const response = await api.patch<{ isIncognito: boolean }>('/profiles/incognito', { enabled });
-    return response.data;
-  },
-
-  // ── Weekly Report ─────────────────────────────────────────
-  getWeeklyReport: async (): Promise<WeeklyReportResponse> => {
-    const response = await api.get<WeeklyReportResponse>('/discovery/weekly-report');
     return response.data;
   },
 

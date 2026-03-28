@@ -70,13 +70,6 @@ const FEATURES: ComparisonFeature[] = [
     RESERVED: 'Sınırsız',
   },
   {
-    label: 'Süper Beğeni',
-    FREE: '1/gün',
-    GOLD: '10/gün',
-    PRO: 'Sınırsız',
-    RESERVED: 'Sınırsız',
-  },
-  {
     label: 'Geri al',
     FREE: '\u2717',
     GOLD: 'Sınırsız',

@@ -5,4 +5,3 @@ export { LikesTeaser } from './LikesTeaser';
 export { FlashBoost } from './FlashBoost';
 export { MatchCountdown } from './MatchCountdown';
 export { WeeklyLeaderboard } from './WeeklyLeaderboard';
-export { AchievementToast } from './AchievementToast';

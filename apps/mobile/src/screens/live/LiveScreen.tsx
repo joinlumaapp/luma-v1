@@ -97,7 +97,7 @@ export const LiveScreen: React.FC = () => {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Canl\u0131</Text>
+        <Text style={styles.headerTitle}>Canlı</Text>
         <View style={styles.balancePill}>
           <Ionicons name="diamond" size={14} color={palette.gold[400]} />
           <Text style={styles.balanceText}>{coinBalance}</Text>
@@ -111,7 +111,7 @@ export const LiveScreen: React.FC = () => {
           <Animated.View style={[styles.liveDot, { opacity: glowAnim }]} />
           <View style={styles.liveDotInner} />
           <Text style={styles.onlineText}>
-            <Text style={styles.onlineCount}>{onlineCount}</Text> ki\u015fi \u00e7evrimi\u00e7i
+            <Text style={styles.onlineCount}>{onlineCount}</Text> kişi çevrimiçi
           </Text>
         </View>
 
@@ -126,10 +126,10 @@ export const LiveScreen: React.FC = () => {
 
         {/* Description */}
         <Text style={styles.description}>
-          Uyumuna g\u00f6re biriyle{'\n'}an\u0131nda konu\u015f
+          Uyumuna göre biriyle{'\n'}anında konuş
         </Text>
         <Text style={styles.subDescription}>
-          \u0130lgi alanlar\u0131na ve ki\u015filik uyumuna g\u00f6re{'\n'}seni en iyi anlayacak biriyle e\u015fle\u015f
+          İlgi alanlarına ve kişilik uyumuna göre{'\n'}seni en iyi anlayacak biriyle eşleş
         </Text>
 
         {/* Main CTA */}
@@ -142,7 +142,7 @@ export const LiveScreen: React.FC = () => {
               style={styles.ctaButton}
             >
               <Ionicons name="videocam" size={22} color="#FFFFFF" />
-              <Text style={styles.ctaText}>Ba\u011flan</Text>
+              <Text style={styles.ctaText}>Bağlan</Text>
               <View style={styles.ctaCostPill}>
                 <Ionicons name="diamond" size={12} color={palette.gold[400]} />
                 <Text style={styles.ctaCostText}>{LIVE_COST}</Text>
@@ -157,19 +157,19 @@ export const LiveScreen: React.FC = () => {
             <View style={styles.stepIcon}>
               <Ionicons name="shuffle" size={18} color={palette.purple[400]} />
             </View>
-            <Text style={styles.stepText}>Uyumlu biriyle rastgele e\u015fle\u015f</Text>
+            <Text style={styles.stepText}>Uyumlu biriyle rastgele eşleş</Text>
           </View>
           <View style={styles.stepRow}>
             <View style={styles.stepIcon}>
               <Ionicons name="chatbubbles" size={18} color={palette.purple[400]} />
             </View>
-            <Text style={styles.stepText}>Y\u00fcz y\u00fcze konu\u015f, tan\u0131\u015f</Text>
+            <Text style={styles.stepText}>Yüz yüze konuş, tanış</Text>
           </View>
           <View style={styles.stepRow}>
             <View style={styles.stepIcon}>
               <Ionicons name="play-skip-forward" size={18} color={palette.purple[400]} />
             </View>
-            <Text style={styles.stepText}>\u0130stedi\u011fin zaman ge\u00e7</Text>
+            <Text style={styles.stepText}>İstediğin zaman geç</Text>
           </View>
         </View>
       </View>

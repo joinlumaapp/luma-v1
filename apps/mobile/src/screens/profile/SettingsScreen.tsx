@@ -418,13 +418,6 @@ export const SettingsScreen: React.FC = () => {
           active: true,
         },
         {
-          key: 'supreme_super_likes',
-          icon: 'star' as keyof typeof Ionicons.glyphMap,
-          title: 'Sınırsız Süper Beğeni',
-          type: 'supreme_feature' as const,
-          active: true,
-        },
-        {
           key: 'supreme_visibility',
           icon: 'eye' as keyof typeof Ionicons.glyphMap,
           title: 'Öncelikli Görünürlük',

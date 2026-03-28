@@ -618,15 +618,6 @@ const notifications = [
     createdAt: minutesAgo(5),
   },
   {
-    id: 'notif-004',
-    type: 'BADGE_EARNED',
-    title: 'Yeni Rozet!',
-    body: '"Sohbet Yıldızı" rozetini kazandın! 10 farklı kişiyle sohbet ettin.',
-    data: { badgeId: 'chat_star' },
-    isRead: false,
-    createdAt: hoursAgo(1),
-  },
-  {
     id: 'notif-006',
     type: 'SYSTEM',
     title: 'Hoşgeldin!',
@@ -1261,8 +1252,8 @@ export function seedDevData(): void {
         }));
       }
 
-      // 20% chance of match on right swipe, 40% on super like
-      const matchChance = direction === 'up' ? 0.4 : direction === 'right' ? 0.2 : 0;
+      // 20% chance of match on right swipe
+      const matchChance = direction === 'right' ? 0.2 : 0;
       const isMatch = Math.random() < matchChance;
 
       if (isMatch) {
@@ -1319,13 +1310,6 @@ export function seedDevData(): void {
         const timerId = setTimeout(() => {
           useDiscoveryStore.setState({ canUndo: false, undoTimerId: null, lastSwipedProfile: null });
         }, 5000);
-
-        if (direction === 'up') {
-          useDiscoveryStore.setState({ showSuperLikeGlow: true });
-          setTimeout(() => {
-            useDiscoveryStore.setState({ showSuperLikeGlow: false });
-          }, 1500);
-        }
 
         useDiscoveryStore.setState((prev) => ({
           currentIndex: prev.currentIndex + 1,

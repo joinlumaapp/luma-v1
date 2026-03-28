@@ -261,29 +261,7 @@ export const MatchDetailScreen: React.FC = () => {
     }
   }
 
-  // 4. Rozetler — badge showcase
-  {
-    const matchBadges = (selectedMatch as unknown as Record<string, unknown>).earnedBadges as Array<{ id: string; name: string }> | undefined ?? [];
-    if (matchBadges.length > 0) {
-      infoSections.push(
-        <View key="badges" style={styles.section}>
-          <Text style={styles.sectionTitle}>Rozetleri</Text>
-          <View style={{ flexDirection: 'row', gap: spacing.md }}>
-            {matchBadges.slice(0, 3).map((badge) => (
-              <View key={badge.id} style={{ alignItems: 'center', gap: 6 }}>
-                <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(139, 92, 246, 0.10)', justifyContent: 'center', alignItems: 'center' }}>
-                  <Text style={{ fontSize: 18 }}>{'*'}</Text>
-                </View>
-                <Text style={{ fontSize: 11, fontWeight: fontWeights.medium, color: colors.textSecondary }} numberOfLines={1}>{badge.name}</Text>
-              </View>
-            ))}
-          </View>
-        </View>,
-      );
-    }
-  }
-
-  // 5. Compatibility breakdown
+  // 4. Compatibility breakdown
   if (selectedMatch.compatibilityBreakdown.length > 0) {
     infoSections.push(
       <View key="breakdown" style={styles.section}>

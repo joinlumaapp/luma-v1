@@ -336,18 +336,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     resetStore(() => require('./profileStore').useProfileStore);
     resetStore(() => require('./callStore').useCallStore);
-    resetStore(() => require('./gameMatchStore').useGameMatchStore);
     resetStore(() => require('./instantConnectStore').useInstantConnectStore);
 
     try {
       const { useCoinStore } = require('./coinStore') as typeof import('./coinStore');
       useCoinStore.setState({ balance: 0, transactions: [], isLoading: false, error: null,
         adCooldownUntil: null, lastDailyCheckin: null, boostActiveUntil: null });
-    } catch { /* store may not be initialized */ }
-
-    try {
-      const { useBadgeStore } = require('./badgeStore') as typeof import('./badgeStore');
-      useBadgeStore.setState({ badges: [], isLoading: false, error: null, earnedCount: 0, totalCount: 0 });
     } catch { /* store may not be initialized */ }
 
     try {
@@ -361,7 +355,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         cards: [], currentIndex: 0, dailyRemaining: 0, isLoading: false,
         showMatchAnimation: false, currentMatchId: null, matchAnimationType: null,
         error: null, canUndo: false, lastSwipedProfile: null, lastSwipeDirection: null,
-        undosUsedToday: 0, showSuperLikeGlow: false, batchCooldownEnd: null,
+        undosUsedToday: 0, batchCooldownEnd: null,
         totalCandidates: 0, premiumImpressions: 0,
         // Reset filters so next user does not inherit previous user's age/distance/gender prefs
         filters: { minAge: 18, maxAge: 40, maxDistance: 50, intentionTags: [], genderPreference: 'all', height: null, education: [], smoking: [], drinking: [], exercise: [], zodiac: [] },
@@ -377,7 +371,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         challengeDate: null, likesTeaserCount: 0, likesTeaserProfiles: [],
         showFlashBoost: false, flashBoostShownToday: false, flashBoostExpiresAt: null,
         matchCountdowns: {}, leaderboard: [], userRank: null,
-        unlockedAchievements: [], pendingAchievementToast: null, isLoading: false,
+        isLoading: false,
       });
     } catch { /* store may not be initialized */ }
 

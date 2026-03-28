@@ -52,7 +52,6 @@ import { ChatScreen } from '../screens/chat/ChatScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { EditProfileScreen } from '../screens/profile/EditProfileScreen';
 import { SettingsScreen } from '../screens/profile/SettingsScreen';
-import { BadgesScreen } from '../screens/badges/BadgesScreen';
 import { PackagesScreen } from '../screens/profile/PackagesScreen';
 import { PlacesScreen } from '../screens/places/PlacesScreen';
 import { RelationshipScreen } from '../screens/relationship/RelationshipScreen';
@@ -72,14 +71,13 @@ import { JetonMarketScreen } from '../screens/store/JetonMarketScreen';
 // Feed extra screens
 import { FeedProfileScreen } from '../screens/feed/FeedProfileScreen';
 import { PostDetailScreen } from '../screens/feed/PostDetailScreen';
+import { StoryViewerScreen } from '../screens/discovery/StoryViewerScreen';
+import { StoryCreator } from '../components/stories/StoryCreator';
 
 // Discovery extra screens
-import { WeeklyReportScreen } from '../screens/discovery/WeeklyReportScreen';
 import { CrossedPathsScreen } from '../screens/discovery/CrossedPathsScreen';
 import { SocialFeedScreen } from '../screens/discovery/SocialFeedScreen';
-import { StoryViewerScreen } from '../screens/discovery/StoryViewerScreen';
 import { InstantConnectScreen } from '../screens/discovery/InstantConnectScreen';
-import { StoryCreator } from '../components/stories/StoryCreator';
 
 // Live screen (replaces Activities)
 import { LiveScreen } from '../screens/live/LiveScreen';
@@ -118,8 +116,8 @@ function getNestedStateIndex(
 }
 
 /**
- * Creates a tabPress listener that resets the stack to root when
- * the user taps a tab that is already focused and has a deep stack.
+ * Creates a tabPress listener that always resets the stack to root
+ * when the user taps a tab — whether switching to it or re-pressing it.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function createTabResetListener(
@@ -131,9 +129,8 @@ function createTabResetListener(
       const tabState = navigation.getState?.();
       if (!tabState?.routes) return;
       const thisRoute = tabState.routes.find((r: { name: string }) => r.name === route.name);
-      const nestedIndex = getNestedStateIndex(thisRoute);
-      const isDeep = nestedIndex !== undefined && nestedIndex > 0;
-      if (isDeep) {
+      // Reset if the tab has any nested navigation state (deep stack)
+      if (thisRoute?.state) {
         e.preventDefault();
         navigation.dispatch(
           CommonActions.reset({
@@ -216,11 +213,6 @@ const DiscoveryStackNavigator: React.FC = React.memo(() => (
       options={{ animation: 'fade_from_bottom', gestureEnabled: true, gestureDirection: 'vertical' }}
     />
     <DiscoveryStack.Screen
-      name="StoryViewer"
-      component={StoryViewerScreen}
-      options={{ animation: 'fade', presentation: 'fullScreenModal' }}
-    />
-    <DiscoveryStack.Screen
       name="Filter"
       component={FilterScreen}
       options={{ animation: 'slide_from_bottom' }}
@@ -238,11 +230,6 @@ const DiscoveryStackNavigator: React.FC = React.memo(() => (
     <DiscoveryStack.Screen
       name="DailyQuestion"
       component={DeferredDailyQuestion}
-      options={{ animation: 'slide_from_bottom' }}
-    />
-    <DiscoveryStack.Screen
-      name="WeeklyReport"
-      component={WeeklyReportScreen}
       options={{ animation: 'slide_from_bottom' }}
     />
     <DiscoveryStack.Screen
@@ -264,11 +251,6 @@ const DiscoveryStackNavigator: React.FC = React.memo(() => (
       name="MembershipPlans"
       component={MembershipPlansScreen}
       options={{ animation: 'slide_from_bottom' }}
-    />
-    <DiscoveryStack.Screen
-      name="StoryCreator"
-      component={StoryCreator}
-      options={{ animation: 'slide_from_bottom', presentation: 'fullScreenModal' }}
     />
   </DiscoveryStack.Navigator>
 ));
@@ -348,14 +330,14 @@ const FeedStackNavigator: React.FC = React.memo(() => (
       options={{ animation: 'slide_from_bottom', gestureEnabled: true, gestureDirection: 'vertical' }}
     />
     <FeedStack.Screen
+      name="StoryViewer"
+      component={StoryViewerScreen}
+      options={{ animation: 'fade', gestureEnabled: true, gestureDirection: 'vertical' }}
+    />
+    <FeedStack.Screen
       name="StoryCreator"
       component={StoryCreator}
       options={{ animation: 'slide_from_bottom', gestureEnabled: true, gestureDirection: 'vertical' }}
-    />
-    <FeedStack.Screen
-      name="StoryViewer"
-      component={StoryViewerScreen}
-      options={{ animation: 'fade', presentation: 'fullScreenModal' }}
     />
   </FeedStack.Navigator>
 ));
@@ -384,7 +366,6 @@ const ProfileStackNavigator: React.FC = React.memo(() => (
     <ProfileStack.Screen name="Profile" component={ProfileScreen} />
     <ProfileStack.Screen name="EditProfile" component={DeferredEditProfile} />
     <ProfileStack.Screen name="Settings" component={SettingsScreen} />
-    <ProfileStack.Screen name="Badges" component={BadgesScreen} />
     <ProfileStack.Screen name="Packages" component={PackagesScreen} />
     <ProfileStack.Screen name="JetonMarket" component={JetonMarketScreen} />
     <ProfileStack.Screen name="Places" component={PlacesScreen} />
@@ -494,11 +475,11 @@ export const MainTabNavigator: React.FC = () => {
         name="LiveTab"
         component={LiveStackNavigator}
         options={{
-          tabBarLabel: 'Canl\u0131',
+          tabBarLabel: 'Canlı',
           tabBarIcon: ({ focused }) => (
             <TabIcon name="live" focused={focused} />
           ),
-          tabBarAccessibilityLabel: 'Canl\u0131 Ba\u011flant\u0131',
+          tabBarAccessibilityLabel: 'Canlı Bağlantı',
           tabBarButtonTestID: 'tab-live',
         }}
         listeners={({ navigation, route }) => createTabResetListener(navigation, route)}

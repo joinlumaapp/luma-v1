@@ -43,7 +43,6 @@ export const getMinTierLabel = (tier: PackageTier): string => {
 
 export type FeatureKey =
   | 'daily_likes'
-  | 'super_like'
   | 'undo'
   | 'who_likes'
   | 'visitors'
@@ -84,12 +83,6 @@ export const FEATURE_RULES: Record<FeatureKey, FeatureRule> = {
     limits: { FREE: -1, GOLD: -1, PRO: -1, RESERVED: -1 },
     labelTr: 'Günlük Beğeni',
     descriptionTr: 'Sınırsız beğeni hakkı.',
-  },
-  super_like: {
-    minTier: 'FREE',
-    limits: { FREE: 1, GOLD: 10, PRO: 10, RESERVED: -1 },
-    labelTr: 'Süper Beğeni',
-    descriptionTr: 'Süper Beğeni ile öne çık! Eşleşme şansın 3 kat artar.',
   },
   undo: {
     minTier: 'GOLD',
@@ -246,7 +239,6 @@ export const mapLegacyFeature = (
 ): FeatureKey => {
   const mapping: Record<string, FeatureKey> = {
     undo: 'undo',
-    super_like: 'super_like',
     visitors: 'visitors',
     filters: 'advanced_filters',
     priority: 'priority_visibility',

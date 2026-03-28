@@ -32,7 +32,6 @@ export const AD_REWARD_MAX = 10;
 // ── Spend costs ──
 export const INSTANT_MESSAGE_COST = 20;
 export const PROFILE_BOOST_COST = 100;
-export const SUPER_LIKE_COST = 25; // aligned with GOLD_COSTS.SUPER_LIKE in @luma/shared
 export const EXTRA_LIKES_COST = 15;        // Buy 5 extra likes
 export const PROFILE_HIGHLIGHT_COST = 10;  // Highlight profile for 1 hour
 export const PRIORITY_MESSAGE_COST = 30;   // Priority message (shown first)
@@ -108,7 +107,6 @@ interface CoinState {
   // Spend actions
   sendInstantMessage: (recipientId: string) => Promise<boolean>;
   activateProfileBoost: () => Promise<boolean>;
-  sendSuperLike: (targetId: string) => Promise<boolean>;
   purchaseExtraLikes: () => boolean;
 
   // Utility
@@ -688,57 +686,6 @@ export const useCoinStore = create<CoinState>((set, get) => ({
           isLoading: false,
           error: parseApiError(error as AxiosError).userMessage,
         });
-        return false;
-      }
-    }
-  },
-
-  sendSuperLike: async (targetId: string): Promise<boolean> => {
-    const { balance } = get();
-    if (balance < SUPER_LIKE_COST) {
-      set({ error: 'Süper Beğeni için yetersiz jeton.' });
-      return false;
-    }
-
-    set({ isLoading: true, error: null });
-
-    // Optimistic deduction
-    const newBalance = balance - SUPER_LIKE_COST;
-    const transaction: CoinTransaction = {
-      id: generateId(),
-      amount: -SUPER_LIKE_COST,
-      type: 'spend',
-      reason: `Super Begeni: ${targetId}`,
-      timestamp: Date.now(),
-    };
-    const newTransactions = [transaction, ...get().transactions];
-
-    set({ balance: newBalance, transactions: newTransactions });
-    persistBalance(newBalance);
-    persistTransactions(newTransactions);
-
-    try {
-      const response = await api.post<{ newBalance: number }>('/users/me/gold/spend', {
-        amount: SUPER_LIKE_COST,
-        reason: `super_like:${targetId}`,
-      });
-      set({ balance: response.data.newBalance, isLoading: false });
-      persistBalance(response.data.newBalance);
-      return true;
-    } catch (error: unknown) {
-      try {
-        devMockOrThrow(error, true, 'coinStore.sendSuperLike');
-        set({ isLoading: false });
-        return true;
-      } catch {
-        // Revert
-        set({
-          balance,
-          transactions: get().transactions.filter((t) => t.id !== transaction.id),
-          isLoading: false,
-          error: parseApiError(error as AxiosError).userMessage,
-        });
-        persistBalance(balance);
         return false;
       }
     }

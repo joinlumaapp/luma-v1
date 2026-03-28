@@ -8,7 +8,6 @@ export { SlideIn } from './SlideIn';
 export { LikeSentToast } from './LikeSentToast';
 export { BadgeEarnedOverlay } from './BadgeEarnedOverlay';
 // New — world-class dating app animations
-export { SuperLikeAnimation } from './SuperLikeAnimation';
 export { CardSkeleton } from './CardSkeleton';
 export { SwipeStamp } from './SwipeStamp';
 export { TypingIndicator } from './TypingIndicator';

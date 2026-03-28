@@ -20,7 +20,6 @@ import {
   RefreshControl,
   Image,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
@@ -46,30 +45,23 @@ import { useDiscoveryStore } from '../../stores/discoveryStore';
 import { useLocation } from '../../hooks/useLocation';
 import { useProfileStore } from '../../stores/profileStore';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
-import { useStoryStore } from '../../stores/storyStore';
 import { useNotificationStore } from '../../stores/notificationStore';
-import { useCoinStore, EXTRA_LIKES_COST, EXTRA_LIKES_COUNT, SUPER_LIKE_COST } from '../../stores/coinStore';
+import { useCoinStore } from '../../stores/coinStore';
 import { matchService } from '../../services/matchService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { MatchAnimation } from '../../components/animations/MatchAnimation';
 // LikeSentToast removed — was too repetitive for users
 import { DiscoveryCard } from '../../components/cards/DiscoveryCard';
 import { CompatibilityBottomSheet } from '../../components/discovery/CompatibilityBottomSheet';
-import { UpgradePrompt } from '../../components/premium/UpgradePrompt';
 import { TrialBanner } from '../../components/premium/TrialBanner';
 import { discoveryService } from '../../services/discoveryService';
 import type { LoginStreakResponse } from '../../services/discoveryService';
 import { StreakBanner } from '../../components/streak/StreakBanner';
-import { SUPER_LIKE_CONFIG, DISCOVERY_CONFIG } from '../../constants/config';
 import { generateCompactReasons } from '../../utils/compatReasons';
-import { StoryRing } from '../../components/stories/StoryRing';
 import {
   DailyRewardModal,
-  LikesTeaser,
-  AchievementToast,
 } from '../../components/engagement';
 import { useEngagementStore } from '../../stores/engagementStore';
-import { LinearGradient } from 'expo-linear-gradient';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
@@ -78,9 +70,7 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // ─── Swipe thresholds ────────────────────────────────────────
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
-const SWIPE_UP_THRESHOLD = SCREEN_HEIGHT * 0.15;
 const VELOCITY_THRESHOLD = 700;
-const VELOCITY_UP_THRESHOLD = 500;
 
 // Spring configs — organic feel (lower stiffness = more bounce, less mechanical)
 const SPRING_BACK = { damping: 14, stiffness: 120, mass: 0.9, overshootClamping: false };
@@ -93,224 +83,6 @@ type DiscoveryNavProp = CompositeNavigationProp<
 
 // ─── Action Button component — soft circular style (Tinder-inspired) ──
 
-// ─── Video Discover Compact Banner ──────────────────────────────────────────
-// Compact inline banner (~48px) — doesn't steal vertical space from swipe cards.
-
-// ── Discovery Feature Blocks ─────────────────────────────────
-
-interface LiveDiscoverBannerProps {
-  onStart: () => void;
-  onlineCount?: number;
-}
-
-const LiveDiscoverBanner: React.FC<LiveDiscoverBannerProps> = React.memo(
-  ({ onStart, onlineCount = 14 }) => (
-    <View style={featureStyles.container}>
-      <Pressable onPress={onStart} style={featureStyles.block}>
-        <LinearGradient
-          colors={['#F59E0B', '#EF4444'] as [string, string]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={featureStyles.gradient}
-        >
-          <View style={featureStyles.headerRow}>
-            <Ionicons name="videocam" size={20} color="#FFFFFF" />
-            <Text style={featureStyles.title}>Canlı Keşfet</Text>
-            <View style={featureStyles.onlinePill}>
-              <View style={featureStyles.onlineDot} />
-              <Text style={featureStyles.onlineText}>{onlineCount} çevrimiçi</Text>
-            </View>
-          </View>
-          <Text style={featureStyles.subtitle}>Rastgele biriyle görüntülü sohbet başlat</Text>
-          <Pressable onPress={onStart} style={featureStyles.ctaBtn} hitSlop={4}>
-            <Text style={featureStyles.ctaBtnText}>Başla · 25 🪙</Text>
-          </Pressable>
-        </LinearGradient>
-      </Pressable>
-    </View>
-  ),
-);
-LiveDiscoverBanner.displayName = 'LiveDiscoverBanner';
-
-const featureStyles = StyleSheet.create({
-  container: {
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  block: {
-    height: 80,
-    borderRadius: borderRadius.lg,
-    overflow: 'hidden',
-  },
-  gradient: {
-    flex: 1,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    gap: 4,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  title: {
-    fontSize: 14,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  subtitle: {
-    fontSize: 11,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
-    color: 'rgba(255,255,255,0.8)',
-  },
-  onlinePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(0,0,0,0.25)',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: borderRadius.full,
-    marginLeft: 'auto',
-  },
-  onlineDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#4ADE80',
-  },
-  onlineText: {
-    fontSize: 9,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-    color: 'rgba(255,255,255,0.9)',
-  },
-  ctaBtn: {
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    paddingHorizontal: 14,
-    paddingVertical: 5,
-    borderRadius: borderRadius.full,
-  },
-  ctaBtnText: {
-    fontSize: 11,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-});
-
-// ─── Stories Row — Instagram-quality story rings using StoryRing + storyStore ──
-
-interface StoriesRowProps {
-  navigation: DiscoveryNavProp;
-  userFirstName: string;
-  userPhotoUrl?: string;
-  currentUserId: string | undefined;
-}
-
-const StoriesRow: React.FC<StoriesRowProps> = ({ navigation, userFirstName, userPhotoUrl, currentUserId }) => {
-  const storyUsers = useStoryStore((s) => s.storyUsers);
-  const fetchStories = useStoryStore((s) => s.fetchStories);
-  const myStories = useStoryStore((s) => s.myStories);
-
-  // Derive ordered list directly from reactive state (no get() indirection)
-  const orderedStoryUsers = useMemo(() => {
-    const own = storyUsers.filter((u) => u.userId === currentUserId);
-    const followed = storyUsers.filter((u) => u.userId !== currentUserId && u.isFollowing);
-    const suggested = storyUsers
-      .filter((u) => u.userId !== currentUserId && u.isSuggested && !u.isFollowing)
-      .slice(0, 3);
-
-    followed.sort((a, b) => {
-      if (a.hasUnseenStories && !b.hasUnseenStories) return -1;
-      if (!a.hasUnseenStories && b.hasUnseenStories) return 1;
-      return new Date(b.latestStoryAt).getTime() - new Date(a.latestStoryAt).getTime();
-    });
-
-    return [...own, ...followed, ...suggested];
-  }, [storyUsers, currentUserId]);
-
-  // Fetch stories on mount
-  useEffect(() => {
-    fetchStories();
-  }, [fetchStories]);
-
-  // Build the ordered list for cross-user auto-advance in viewer
-  const storyUserList = useMemo(() =>
-    orderedStoryUsers.map((u) => ({
-      userId: u.userId,
-      userName: u.userName,
-      userAvatarUrl: u.userAvatarUrl,
-    })),
-    [orderedStoryUsers],
-  );
-
-  const handleUserStoryPress = useCallback((user: typeof orderedStoryUsers[number]) => {
-    navigation.navigate('StoryViewer', {
-      userId: user.userId,
-      userName: user.userName,
-      userAvatarUrl: user.userAvatarUrl,
-      storyUsers: storyUserList,
-    });
-  }, [navigation, storyUserList]);
-
-  const handleOwnStoryPress = useCallback(() => {
-    if (myStories.length > 0) {
-      // View own stories
-      navigation.navigate('StoryViewer', {
-        userId: currentUserId ?? '',
-        userName: userFirstName,
-        userAvatarUrl: userPhotoUrl ?? '',
-      });
-    } else {
-      // Open story creator
-      navigation.navigate('StoryCreator');
-    }
-  }, [myStories, navigation, userFirstName, userPhotoUrl, currentUserId]);
-
-  return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={storyStyles.scrollContent}
-      style={storyStyles.scrollView}
-    >
-      <StoryRing
-        userName={userFirstName || 'Sen'}
-        avatarUrl={userPhotoUrl}
-        isOwnStory
-        hasStories={myStories.length > 0}
-        onPress={handleOwnStoryPress}
-        testID="story-self"
-      />
-      {orderedStoryUsers.map((user) => (
-        <StoryRing
-          key={user.userId}
-          userName={user.userName}
-          avatarUrl={user.userAvatarUrl}
-          isSeen={!user.hasUnseenStories}
-          hasStories={user.stories.length > 0}
-          onPress={() => handleUserStoryPress(user)}
-          testID={`story-user-${user.userId}`}
-        />
-      ))}
-    </ScrollView>
-  );
-};
-
-// ─── FOMO helpers ────────────────────────────────────────────
-
-/** Milliseconds until midnight for countdown display */
-const getMsUntilMidnight = (): number => {
-  const now = new Date();
-  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
-  return midnight.getTime() - now.getTime();
-};
-
 // ─── Main Screen ─────────────────────────────────────────────
 
 export const DiscoveryScreen: React.FC = () => {
@@ -321,7 +93,6 @@ export const DiscoveryScreen: React.FC = () => {
   // Store selectors
   const cards = useDiscoveryStore((s) => s.cards);
   const currentIndex = useDiscoveryStore((s) => s.currentIndex);
-  const dailyRemaining = useDiscoveryStore((s) => s.dailyRemaining);
   const isLoading = useDiscoveryStore((s) => s.isLoading);
   const checkAndLoadBatch = useDiscoveryStore((s) => s.checkAndLoadBatch);
   const swipeAction = useDiscoveryStore((s) => s.swipe);
@@ -339,7 +110,6 @@ export const DiscoveryScreen: React.FC = () => {
   const undosUsedToday = useDiscoveryStore((s) => s.undosUsedToday);
   const updateLocation = useDiscoveryStore((s) => s.updateLocation);
   const coinBalance = useCoinStore((s) => s.balance);
-  const purchaseExtraLikes = useCoinStore((s) => s.purchaseExtraLikes);
   const swipeError = useDiscoveryStore((s) => s.error);
   const clearError = useDiscoveryStore((s) => s.clearError);
 
@@ -367,53 +137,8 @@ export const DiscoveryScreen: React.FC = () => {
   // ─── Auth user info ────────────────────────────────────
   const currentUserId = useAuthStore((s) => s.user?.id);
 
-  // ─── Super Like premium gate ────────────────────────────
+  // ─── Package tier ──────────────────────────────────────
   const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE') as PackageTier;
-  const dailyLimit = SUPER_LIKE_CONFIG.DAILY_LIMITS[packageTier];
-  const isUnlimitedSuperLike = dailyLimit === -1;
-  const [superLikesUsed, setSuperLikesUsed] = useState(0);
-  const superLikesRemaining = isUnlimitedSuperLike ? -1 : dailyLimit - superLikesUsed;
-
-  // Persist superLikesUsed to AsyncStorage with date key — survives app restart
-  const getSuperLikeStorageKey = useCallback(() => {
-    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-    return `discovery.superLikes.${today}`;
-  }, []);
-
-  // Load persisted super like count on mount
-  useEffect(() => {
-    const loadSuperLikes = async () => {
-      try {
-        const key = getSuperLikeStorageKey();
-        const stored = await AsyncStorage.getItem(key);
-        if (stored !== null) {
-          setSuperLikesUsed(parseInt(stored, 10));
-        } else {
-          // New day — reset count
-          setSuperLikesUsed(0);
-        }
-      } catch {
-        // AsyncStorage error — keep default 0
-      }
-    };
-    loadSuperLikes();
-  }, [getSuperLikeStorageKey]);
-
-  // Save super like count whenever it changes
-  const updateSuperLikesUsed = useCallback(
-    async (newCount: number) => {
-      setSuperLikesUsed(newCount);
-      try {
-        const key = getSuperLikeStorageKey();
-        await AsyncStorage.setItem(key, String(newCount));
-      } catch {
-        // Ignore AsyncStorage write errors
-      }
-    },
-    [getSuperLikeStorageKey],
-  );
-  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
-  const [upgradeFeature, setUpgradeFeature] = useState<'super_like' | 'daily_likes'>('super_like');
 
   // ─── Engagement system ──────────────────────────────────
   const showDailyRewardModal = useEngagementStore((s) => s.showDailyRewardModal);
@@ -421,9 +146,6 @@ export const DiscoveryScreen: React.FC = () => {
   const initDailyChallenge = useEngagementStore((s) => s.initDailyChallenge);
   const hydrateEngagement = useEngagementStore((s) => s.hydrate);
   const incrementChallenge = useEngagementStore((s) => s.incrementChallengeProgress);
-  const checkAchievement = useEngagementStore((s) => s.checkAchievement);
-  const likesTeaserCount = useEngagementStore((s) => s.likesTeaserCount);
-
   // Initialize engagement systems on mount
   useEffect(() => {
     hydrateEngagement();
@@ -439,20 +161,6 @@ export const DiscoveryScreen: React.FC = () => {
     // Nothing extra needed — store handles dismiss
   }, []);
 
-
-  const handleLikesTeaserPressPremium = useCallback(() => {
-    // Gold+ users can see who liked them — navigate to LikesYou screen
-    navigation.navigate('LikesYou' as never);
-  }, [navigation]);
-
-  const handleLikesTeaserPressFree = useCallback(() => {
-    // Free users get upsell to MembershipPlans
-    navigation.navigate('MembershipPlans' as never);
-  }, [navigation]);
-
-  const handleAchievementToastPress = useCallback(() => {
-    navigation.navigate('ProfileTab', { screen: 'Badges' } as never);
-  }, [navigation]);
 
   // ─── Undo access gate — tier-based daily limits ─────────
   const canUseUndo = packageTier !== 'FREE';
@@ -514,25 +222,6 @@ export const DiscoveryScreen: React.FC = () => {
     setStreakData(null);
   }, []);
 
-  // ─── FOMO engagement state ──────────────────────────────
-  const isFreeTier = packageTier === 'FREE';
-
-  // FOMO: midnight countdown + teaser pulse (declared here, effects after hasMoreCards)
-  const [midnightMs, setMidnightMs] = useState(getMsUntilMidnight());
-  const teaserPulse = useSharedValue(0);
-  const midnightHours = Math.floor(midnightMs / 3600000);
-  const midnightMinutes = Math.floor((midnightMs % 3600000) / 60000);
-  const midnightDisplay = `${midnightHours} saat ${midnightMinutes} dk`;
-
-  const teaserBorderStyle = useAnimatedStyle(() => ({
-    borderColor: `rgba(245, 158, 11, ${interpolate(teaserPulse.value, [0, 1], [0.3, 0.9])})`,
-    shadowOpacity: interpolate(teaserPulse.value, [0, 1], [0.1, 0.4]),
-  }));
-
-  const handleLikesYouTap = useCallback(() => {
-    navigation.navigate('LikesYou' as never);
-  }, [navigation]);
-
   // ─── Like sent toast removed (was too repetitive) ─────────
 
   // Match detail state
@@ -561,31 +250,6 @@ export const DiscoveryScreen: React.FC = () => {
   const currentCardRef = useRef(currentCard);
   currentCardRef.current = currentCard;
 
-  // ─── FOMO effects (need hasMoreCards) ──────────────────────
-
-  // Midnight countdown — ticks only in empty state
-  useEffect(() => {
-    if (hasMoreCards) return;
-    const interval = setInterval(() => {
-      setMidnightMs(getMsUntilMidnight());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [hasMoreCards]);
-
-  // Teaser card pulsing gold border — free users in empty state
-  useEffect(() => {
-    if (!hasMoreCards && isFreeTier) {
-      const pulse = (): void => {
-        teaserPulse.value = withTiming(1, { duration: 1200 }, () => {
-          teaserPulse.value = withTiming(0, { duration: 1200 }, () => {
-            runOnJS(pulse)();
-          });
-        });
-      };
-      pulse();
-    }
-  }, [hasMoreCards, isFreeTier, teaserPulse]);
-
   // ─── Effects ───────────────────────────────────────────────
 
   // Feed fetch with batch cooldown check — no InteractionManager deferral
@@ -595,21 +259,18 @@ export const DiscoveryScreen: React.FC = () => {
     fetchNotifications();
   }, [checkAndLoadBatch, fetchNotifications]);
 
-  // Countdown timer for batch cooldown
-  const [cooldownRemaining, setCooldownRemaining] = useState(0);
+  // Auto-reload when batch cooldown expires
   useEffect(() => {
-    if (!batchCooldownEnd) { setCooldownRemaining(0); return; }
-    const tick = () => {
-      const remaining = Math.max(0, batchCooldownEnd - Date.now());
-      setCooldownRemaining(remaining);
-      if (remaining <= 0) {
-        // Cooldown finished — auto-load new batch
-        checkAndLoadBatch();
-      }
-    };
-    tick();
-    const interval = setInterval(tick, 1000);
-    return () => clearInterval(interval);
+    if (!batchCooldownEnd) return;
+    const remaining = Math.max(0, batchCooldownEnd - Date.now());
+    if (remaining <= 0) {
+      checkAndLoadBatch();
+      return;
+    }
+    const timeout = setTimeout(() => {
+      checkAndLoadBatch();
+    }, remaining);
+    return () => clearTimeout(timeout);
   }, [batchCooldownEnd, checkAndLoadBatch]);
 
   // Reset card position when index changes
@@ -656,69 +317,16 @@ export const DiscoveryScreen: React.FC = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   }, []);
 
-  // Tier-aware daily like limit
-  const tierDailyLimit = DISCOVERY_CONFIG.DAILY_LIKES[packageTier];
-  const isUnlimitedLikes = (tierDailyLimit as number) === -1;
-
-  const handleSwipeComplete = useCallback((direction: 'left' | 'right' | 'up') => {
+  const handleSwipeComplete = useCallback((direction: 'left' | 'right') => {
     const card = currentCardRef.current;
     if (card) {
-      // Gate: daily like limit for right swipes and super likes
-      if ((direction === 'right' || direction === 'up') && !isUnlimitedLikes && dailyRemaining <= 0) {
-        setUpgradeFeature('daily_likes');
-        setShowUpgradePrompt(true);
-        return;
-      }
-      if (direction === 'up') {
-        // Gate: check super like allowance
-        if (!isUnlimitedSuperLike && superLikesRemaining <= 0) {
-          const coinBalance = useCoinStore.getState().balance;
-          Alert.alert(
-            'Super Like Limitin Doldu',
-            `Günlük Super Like hakkın bitti. Jeton ile gönderebilir veya paketini yükseltebilirsin.`,
-            [
-              { text: 'Vazgeç', style: 'cancel' },
-              {
-                text: `Jeton ile Gönder (${SUPER_LIKE_COST} jeton)`,
-                onPress: async () => {
-                  if (coinBalance < SUPER_LIKE_COST) {
-                    Alert.alert('Yetersiz Jeton', `Süper Like için ${SUPER_LIKE_COST} jeton gerekli. Mevcut bakiyen: ${coinBalance} jeton.`);
-                    return;
-                  }
-                  const success = await useCoinStore.getState().sendSuperLike(card.id);
-                  if (success) {
-                    translateY.value = withSpring(-SCREEN_HEIGHT - 200, SPRING_EXIT);
-                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                    swipeAction('up', card.id);
-                  }
-                },
-              },
-              {
-                text: 'Paketi Yukselt',
-                onPress: () => {
-                  setUpgradeFeature('super_like');
-                  setShowUpgradePrompt(true);
-                },
-              },
-            ],
-          );
-          return; // Card already springs back in gesture
-        }
-        // Animate card out upwards from JS side
-        translateY.value = withSpring(-SCREEN_HEIGHT - 200, SPRING_EXIT);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        if (!isUnlimitedSuperLike) {
-          updateSuperLikesUsed(superLikesUsed + 1);
-        }
-      }
       swipeAction(direction, card.id);
 
-      // Track for daily challenge + achievements
+      // Track for daily challenge
       profilesExplored.current += 1;
       incrementChallenge('explore_profiles');
-      checkAchievement('profiles_explored', profilesExplored.current);
     }
-  }, [swipeAction, isUnlimitedSuperLike, superLikesRemaining, superLikesUsed, updateSuperLikesUsed, translateY, isUnlimitedLikes, dailyRemaining, incrementChallenge, checkAchievement]);
+  }, [swipeAction, incrementChallenge]);
 
 
   const handleCardTap = useCallback(() => {
@@ -814,15 +422,6 @@ export const DiscoveryScreen: React.FC = () => {
       }
     })
     .onEnd((e) => {
-      // Up swipe (super like) — card springs back first, JS handler decides:
-      // if allowed → animates card up + fires swipe; if blocked → shows paywall
-      if (e.translationY < -SWIPE_UP_THRESHOLD || e.velocityY < -VELOCITY_UP_THRESHOLD) {
-        translateX.value = withSpring(0, SPRING_BACK);
-        translateY.value = withSpring(0, SPRING_BACK);
-        runOnJS(handleSwipeComplete)('up');
-        return;
-      }
-
       // Right swipe (like) — momentum-preserving spring exit
       if (e.translationX > SWIPE_THRESHOLD || e.velocityX > VELOCITY_THRESHOLD) {
         translateX.value = withSpring(SCREEN_WIDTH + 200, {
@@ -959,35 +558,6 @@ export const DiscoveryScreen: React.FC = () => {
     };
   });
 
-  // Super like overlay (upward swipe — blue/purple wash)
-  const superLikeWashStyle = useAnimatedStyle(() => ({
-    backgroundColor: `rgba(139, 92, 246, ${interpolate(
-      translateY.value,
-      [-SWIPE_UP_THRESHOLD, 0],
-      [0.4, 0],
-      Extrapolation.CLAMP,
-    )})`,
-  }));
-
-  const superLikeIconStyle = useAnimatedStyle(() => {
-    const iconOpacity = interpolate(
-      translateY.value,
-      [-SWIPE_UP_THRESHOLD, -SWIPE_UP_THRESHOLD * 0.5],
-      [1, 0],
-      Extrapolation.CLAMP,
-    );
-    const iconScale = interpolate(
-      translateY.value,
-      [-SWIPE_UP_THRESHOLD, -SWIPE_UP_THRESHOLD * 0.5],
-      [1.2, 0.5],
-      Extrapolation.CLAMP,
-    );
-    return {
-      opacity: iconOpacity,
-      transform: [{ scale: iconScale }],
-    };
-  });
-
   // Undo button
   const undoAnimatedStyle = useAnimatedStyle(() => ({
     opacity: undoOpacity.value,
@@ -1013,34 +583,6 @@ export const DiscoveryScreen: React.FC = () => {
     setLikeComment('');
   }, [currentCard, swipeAction, translateX]);
 
-  const handleUpgradeDismiss = useCallback(() => {
-    setShowUpgradePrompt(false);
-  }, []);
-
-  const handleUpgradeNavigate = useCallback((_tier: PackageTier) => {
-    setShowUpgradePrompt(false);
-    navigation.navigate('MembershipPlans');
-  }, [navigation]);
-
-  const handleBuyExtraLikes = useCallback(() => {
-    const success = purchaseExtraLikes();
-    if (success) {
-      setShowUpgradePrompt(false);
-    } else {
-      Alert.alert('Yetersiz Jeton', 'Ek beğeni almak için yeterli jetonun yok.');
-    }
-  }, [purchaseExtraLikes]);
-
-  // Build secondary action for daily_likes upgrade prompt
-  const extraLikesSecondaryAction = useMemo(() => {
-    if (upgradeFeature !== 'daily_likes') return undefined;
-    return {
-      label: `${EXTRA_LIKES_COUNT} ek begeni al — ${EXTRA_LIKES_COST} Jeton`,
-      onPress: handleBuyExtraLikes,
-      disabled: coinBalance < EXTRA_LIKES_COST,
-    };
-  }, [upgradeFeature, coinBalance, handleBuyExtraLikes]);
-
   // ─── Loading state ─────────────────────────────────────────
 
   if (isLoading && cards.length === 0) {
@@ -1050,9 +592,6 @@ export const DiscoveryScreen: React.FC = () => {
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <Image source={require('../../../assets/splash-logo.png')} style={styles.headerLogo} resizeMode="contain" />
-              <Text style={styles.headerSubtitle}>
-                {isUnlimitedLikes ? 'Sınırsız beğeni' : `Bugün ${dailyRemaining} profil kaldı`}
-              </Text>
             </View>
             <View style={styles.headerRight}>
               <Pressable
@@ -1081,29 +620,17 @@ export const DiscoveryScreen: React.FC = () => {
             </View>
           </View>
           <TrialBanner />
-          <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} currentUserId={currentUserId} />
         </View>
         <View style={styles.emptyContainer}>
-          <View style={styles.emptyIconCircle}>
-            <Text style={styles.emptyIconLetter}>L</Text>
-          </View>
-          <Text style={styles.emptyTitle}>Luma ruh eşini arıyor...</Text>
-          <Text style={styles.emptySubtitle}>
-            Senin için en uyumlu profiller bulunuyor.
-          </Text>
           <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: spacing.md }} />
         </View>
       </View>
     );
   }
 
-  // ─── Empty state with batch cooldown ────────────────────────
+  // ─── Empty state ───────────────────────────────────────────
 
   if (!hasMoreCards) {
-    const isCoolingDown = cooldownRemaining > 0;
-    const cooldownMinutes = Math.floor(cooldownRemaining / 60000);
-    const cooldownSeconds = Math.floor((cooldownRemaining % 60000) / 1000);
-    const cooldownDisplay = `${cooldownMinutes}:${cooldownSeconds.toString().padStart(2, '0')}`;
 
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -1111,9 +638,6 @@ export const DiscoveryScreen: React.FC = () => {
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <Image source={require('../../../assets/splash-logo.png')} style={styles.headerLogo} resizeMode="contain" />
-              <Text style={styles.headerSubtitle}>
-                {isUnlimitedLikes ? 'Sınırsız beğeni' : `Bugün ${dailyRemaining} profil kaldı`}
-              </Text>
             </View>
             <View style={styles.headerRight}>
               <Pressable
@@ -1142,128 +666,31 @@ export const DiscoveryScreen: React.FC = () => {
             </View>
           </View>
           <TrialBanner />
-          <StoriesRow navigation={navigation} userFirstName={userFirstName} userPhotoUrl={userPhotoUrl} currentUserId={currentUserId} />
         </View>
         <View style={styles.emptyContainer}>
-          {/* "Seni Begeneler" teaser card — free users only */}
-          {isFreeTier && (
-            <Pressable
-              onPress={handleLikesYouTap}
-              accessibilityLabel="Seni begenen profilleri gor"
-              accessibilityRole="button"
-              testID="discovery-teaser-card"
-            >
-              <Animated.View style={[styles.teaserCard, teaserBorderStyle]}>
-                {/* Blurred mock profile circles */}
-                <View style={styles.teaserAvatarRow}>
-                  <View style={[styles.teaserAvatar, { backgroundColor: palette.purple[400] + '60' }]}>
-                    <Text style={styles.teaserAvatarText}>?</Text>
-                  </View>
-                  <View style={[styles.teaserAvatar, { backgroundColor: palette.pink[400] + '60', marginLeft: -12 }]}>
-                    <Text style={styles.teaserAvatarText}>?</Text>
-                  </View>
-                  <View style={[styles.teaserAvatar, { backgroundColor: palette.gold[400] + '60', marginLeft: -12 }]}>
-                    <Text style={styles.teaserAvatarText}>?</Text>
-                  </View>
-                </View>
-                <Text style={styles.teaserTitle}>Seni beğenen 3+ kişi var</Text>
-                <Text style={styles.teaserSubtitle}>Kim olduğunu görmek için dokun</Text>
-                <View style={styles.teaserArrow}>
-                  <Ionicons name="chevron-forward" size={16} color={palette.gold[400]} />
-                </View>
-              </Animated.View>
-            </Pressable>
-          )}
-
           {/* Pulsating Luma icon */}
           <Animated.View style={[styles.emptyIconCircle, styles.emptyPulse]}>
             <Text style={styles.emptyIconLetter}>L</Text>
           </Animated.View>
 
-          {isCoolingDown ? (
-            <>
-              <Text style={styles.emptyTitle}>Luma ruh eşini arıyor...</Text>
-              <Text style={styles.emptySubtitle}>
-                Senin için en uyumlu profiller hazırlanıyor. Biraz sabret.
-              </Text>
-              <View style={styles.countdownContainer}>
-                <Text style={styles.countdownText}>{cooldownDisplay}</Text>
-              </View>
-            </>
-          ) : (
-            <>
-              <Text style={styles.emptyTitle}>Yeni profiller hazır!</Text>
-              <Text style={styles.emptySubtitle}>
-                Senin için özenle seçilmiş profiller seni bekliyor.
-              </Text>
-            </>
-          )}
-
-          {/* Daily reset countdown — free users */}
-          {isFreeTier && dailyRemaining <= 0 && (
-            <View style={styles.dailyResetContainer}>
-              <Ionicons name="time-outline" size={14} color={colors.textSecondary} />
-              <Text style={styles.dailyResetText}>
-                Begeni hakkin {midnightDisplay} sonra yenileniyor
-              </Text>
-            </View>
-          )}
+          <Text style={styles.emptyTitle}>Yeni profiller hazır!</Text>
+          <Text style={styles.emptySubtitle}>
+            Senin için özenle seçilmiş profiller seni bekliyor.
+          </Text>
 
           <Pressable
             onPress={() => refreshFeed()}
-            disabled={cooldownRemaining > 0}
             accessibilityLabel="Yenile"
             accessibilityRole="button"
             accessibilityHint="Yeni profilleri yüklemek için dokunun"
           >
             <View
-              style={[
-                styles.refreshButton,
-                cooldownRemaining > 0 && { opacity: 0.5 },
-              ]}
+              style={styles.refreshButton}
               testID="discovery-refresh-btn"
             >
               <Text style={styles.refreshButtonText}>Yenile</Text>
             </View>
           </Pressable>
-
-          {/* Missed connection hint — free users only */}
-          {isFreeTier && dailyRemaining <= 0 && (
-            <Text style={styles.missedConnectionText}>
-              Bugun begeni hakkin doldugunda seni begenen 2 kisi vardi
-            </Text>
-          )}
-
-          {/* Navigation shortcuts */}
-          <View style={styles.emptyNavRow}>
-            <Pressable
-              style={styles.emptyNavButton}
-              onPress={() => navigation.navigate('FeedTab', { screen: 'SocialFeed' })}
-              accessibilityLabel="Akisa git"
-              accessibilityRole="button"
-            >
-              <Ionicons name="newspaper-outline" size={18} color={colors.textSecondary} />
-              <Text style={styles.emptyNavText}>Akisa Git</Text>
-            </Pressable>
-            <Pressable
-              style={styles.emptyNavButton}
-              onPress={() => navigation.navigate('ActivitiesTab', { screen: 'Activities' })}
-              accessibilityLabel="Etkinliklere git"
-              accessibilityRole="button"
-            >
-              <Ionicons name="flash-outline" size={18} color={colors.textSecondary} />
-              <Text style={styles.emptyNavText}>Etkinlikler</Text>
-            </Pressable>
-            <Pressable
-              style={styles.emptyNavButton}
-              onPress={() => navigation.navigate('MatchesTab', { screen: 'MatchesList' })}
-              accessibilityLabel="Eslesmelere git"
-              accessibilityRole="button"
-            >
-              <Ionicons name="heart-outline" size={18} color={colors.textSecondary} />
-              <Text style={styles.emptyNavText}>Eslesmeler</Text>
-            </Pressable>
-          </View>
         </View>
       </View>
     );
@@ -1296,12 +723,8 @@ export const DiscoveryScreen: React.FC = () => {
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <Image source={require('../../../assets/splash-logo.png')} style={styles.headerLogo} resizeMode="contain" />
-            <Text style={styles.headerSubtitle}>
-              {isUnlimitedLikes ? 'Sınırsız beğeni' : `Bugün ${dailyRemaining} profil kaldı`}
-            </Text>
           </View>
           <View style={styles.headerRight}>
-            {/* FOMO + Streak badges removed — clean header */}
             <Pressable
               onPress={() => navigation.navigate('Notifications')}
               accessibilityLabel={`Bildirimler${notifUnreadCount > 0 ? `, ${notifUnreadCount} okunmamis` : ''}`}
@@ -1332,17 +755,7 @@ export const DiscoveryScreen: React.FC = () => {
         {/* Trial banner — shows remaining Gold trial time */}
         <TrialBanner />
 
-        {/* Likes teaser — blurred grid of who liked you */}
-        {likesTeaserCount > 0 && (
-          <LikesTeaser onPressPremium={handleLikesTeaserPressPremium} onPressFree={handleLikesTeaserPressFree} />
-        )}
-
       </View>
-
-      {/* Canlı Keşfet banner */}
-      <LiveDiscoverBanner
-        onStart={() => navigation.navigate('InstantConnect')}
-      />
 
       {/* Card stack */}
       <View style={styles.cardStack}>
@@ -1426,12 +839,6 @@ export const DiscoveryScreen: React.FC = () => {
               <Animated.View style={passIconStyle}>
                 <Text style={styles.washIconText}>{'\u2715'}</Text>
                 <Text style={styles.washLabelText}>PAS</Text>
-              </Animated.View>
-            </Animated.View>
-            <Animated.View style={[styles.colorWashOverlay, superLikeWashStyle]} pointerEvents="none">
-              <Animated.View style={superLikeIconStyle}>
-                <Text style={styles.washIconText}>{'\u2B50'}</Text>
-                <Text style={styles.washLabelText}>SÜPER</Text>
               </Animated.View>
             </Animated.View>
           </Animated.View>
@@ -1602,15 +1009,6 @@ export const DiscoveryScreen: React.FC = () => {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* Upgrade prompt — dynamic feature */}
-      <UpgradePrompt
-        visible={showUpgradePrompt}
-        feature={upgradeFeature}
-        onUpgrade={handleUpgradeNavigate}
-        onDismiss={handleUpgradeDismiss}
-        secondaryAction={extraLikesSecondaryAction}
-      />
-
       {/* Login streak banner */}
       {streakData && (
         <StreakBanner
@@ -1630,8 +1028,6 @@ export const DiscoveryScreen: React.FC = () => {
         onDismiss={handleDailyRewardDismiss}
       />
 
-      {/* Achievement toast */}
-      <AchievementToast onPress={handleAchievementToastPress} />
     </View>
   );
 };
@@ -1940,56 +1336,6 @@ const styles = StyleSheet.create({
     ...typography.button,
     color: '#FFFFFF',
   },
-  countdownContainer: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  countdownText: {
-    ...typography.h2,
-    color: colors.primary,
-    fontVariant: ['tabular-nums'],
-  },
-  emptyNavRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginTop: spacing.lg,
-  },
-  emptyNavButton: {
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-  },
-  emptyNavText: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
-  // ── FOMO header badge ──
-  fomoLikesBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(239,68,68,0.12)', borderRadius: 14, paddingHorizontal: 8, paddingVertical: 4, gap: 3, borderWidth: 1, borderColor: 'rgba(239,68,68,0.25)' },
-  fomoLikesEmoji: { fontSize: 12 },
-  fomoLikesText: { fontSize: 12, fontFamily: 'Poppins_600SemiBold',
- fontWeight: '600', color: '#EF4444', letterSpacing: 0.2 },
-  // Video Discover card styles moved to vdStyles (inline component above)
-  // ── Teaser card ──
-  teaserCard: { backgroundColor: colors.surface, borderRadius: borderRadius.xl, borderWidth: 2, paddingVertical: spacing.lg, paddingHorizontal: spacing.xl, alignItems: 'center', marginBottom: spacing.lg, width: SCREEN_WIDTH - spacing.xxl * 2, shadowColor: palette.gold[500], shadowOffset: { width: 0, height: 4 }, shadowRadius: 12, elevation: 6 },
-  teaserAvatarRow: { flexDirection: 'row', marginBottom: spacing.sm },
-  teaserAvatar: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: colors.surface },
-  teaserAvatarText: { fontSize: 18, fontFamily: 'Poppins_600SemiBold',
- fontWeight: '600', color: colors.textTertiary },
-  teaserTitle: { ...typography.bodyLarge, color: colors.text, fontFamily: 'Poppins_600SemiBold',
- fontWeight: '600', marginBottom: 4 },
-  teaserSubtitle: { ...typography.caption, color: colors.textSecondary },
-  teaserArrow: { position: 'absolute', right: spacing.md, top: '50%' },
-  // ── Daily reset countdown ──
-  dailyResetContainer: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.xs, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: borderRadius.md },
-  dailyResetText: { ...typography.caption, color: colors.textSecondary },
-  // ── Missed connection hint ──
-  missedConnectionText: { ...typography.caption, color: colors.textTertiary, textAlign: 'center', marginTop: spacing.md, fontStyle: 'italic', paddingHorizontal: spacing.lg },
   // ── Like-with-comment modal ──
   commentModalOverlay: {
     flex: 1,
@@ -2077,16 +1423,4 @@ const styles = StyleSheet.create({
   },
 });
 
-// ─── Story Styles ──────────────────────────────────────────────
 
-const storyStyles = StyleSheet.create({
-  scrollView: {
-    flexGrow: 0,
-    backgroundColor: colors.background,
-  },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-    gap: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-});

@@ -58,23 +58,14 @@ export type DiscoveryStackParamList = {
   InstantConnect: undefined;
   Notifications: undefined;
   ProfilePreview: { userId: string };
-  StoryViewer: {
-    userId: string;
-    userName: string;
-    userAvatarUrl: string;
-    /** Ordered list of all story users for cross-user auto-advance */
-    storyUsers?: Array<{ userId: string; userName: string; userAvatarUrl: string }>;
-  };
   Filter: undefined;
   DailyQuestion: undefined;
   LikesYou: undefined;
   DailyPicks: undefined;
-  WeeklyReport: undefined;
   CrossedPaths: undefined;
   Waves: undefined;
   Report: { userId: string; userName: string };
   MembershipPlans: undefined;
-  StoryCreator: { mediaUri?: string; mediaType?: 'image' | 'video' } | undefined;
 };
 
 // -- Matches Stack --
@@ -113,13 +104,8 @@ export type FeedStackParamList = {
   FeedProfile: { userId: string };
   ProfilePreview: { userId: string };
   PostDetail: { postId: string };
-  StoryCreator: { mediaUri?: string; mediaType?: 'image' | 'video' } | undefined;
-  StoryViewer: {
-    userId: string;
-    userName: string;
-    userAvatarUrl: string;
-    storyUsers?: Array<{ userId: string; userName: string; userAvatarUrl: string }>;
-  };
+  StoryViewer: { userId: string; storyIndex?: number };
+  StoryCreator: undefined;
 };
 
 // -- Profile Stack --
@@ -127,7 +113,6 @@ export type ProfileStackParamList = {
   Profile: undefined;
   EditProfile: undefined;
   Settings: undefined;
-  Badges: undefined;
   Packages: undefined;
   JetonMarket: undefined;
   Places: undefined;

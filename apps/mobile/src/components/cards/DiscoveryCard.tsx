@@ -208,7 +208,7 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
               <View style={styles.supremeCrownRow}>
                 <Ionicons name="diamond" size={13} color={GOLD_24K.light} />
                 <Animated.Text style={[styles.eliteLabel, { opacity: eliteLabelOpacity }]}>
-                  Elite {'\u00DC'}ye
+                  Elite Üye
                 </Animated.Text>
               </View>
             )}

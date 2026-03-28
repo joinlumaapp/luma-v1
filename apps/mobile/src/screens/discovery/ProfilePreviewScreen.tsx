@@ -22,7 +22,6 @@ import type { DiscoveryStackParamList } from '../../navigation/types';
 import { compatibilityService, type CompatibilityScore } from '../../services/compatibilityService';
 import { discoveryService } from '../../services/discoveryService';
 import { VoiceIntroPlayer } from '../../components/profile/VoiceIntro';
-import { BadgeShowcase } from '../../components/badges/BadgeShowcase';
 import { CompatibilityPreviewCard } from './CompatibilityPreviewCard';
 import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
 import { colors, palette } from '../../theme/colors';
@@ -37,7 +36,6 @@ import { generateExpandedReasons } from '../../utils/compatReasons';
 import { FavoriteSpotsCard } from '../../components/profile/FavoriteSpotsCard';
 import { CommonGroundCard } from '../../components/discovery/CommonGroundCard';
 import { useProfileStore } from '../../stores/profileStore';
-import { useCoinStore, SUPER_LIKE_COST } from '../../stores/coinStore';
 import { PaidMessageModal } from '../../components/messaging/PaidMessageModal';
 import { translateSmoking, translateSports, translateChildren, translateIntentionTag } from '../../utils/formatters';
 import { waveService } from '../../services/waveService';
@@ -456,32 +454,6 @@ export const ProfilePreviewScreen: React.FC = () => {
     navigation.goBack();
   };
 
-  const { sendSuperLike, balance: coinBalance } = useCoinStore();
-
-  const handleSuperLike = useCallback(async () => {
-    if (!profile) return;
-    if (coinBalance < SUPER_LIKE_COST) {
-      Alert.alert(
-        'Yetersiz Jeton',
-        `Super Like göndermek için ${SUPER_LIKE_COST} jeton gerekli. Mevcut: ${coinBalance}`,
-        [
-          { text: 'Tamam', style: 'cancel' },
-          {
-            text: 'Jeton Al',
-            onPress: () => (navigation as { getParent?: () => { navigate: (s: string, p?: object) => void } | undefined }).getParent?.()?.navigate('ProfileTab', { screen: 'Packages' }),
-          },
-        ],
-      );
-      return;
-    }
-    const success = await sendSuperLike(profile.id);
-    if (success) {
-      swipeAction('right', profile.id);
-      Alert.alert('Super Like! ⭐', `${profile.name} seni fark edecek!`);
-      navigation.goBack();
-    }
-  }, [profile, coinBalance, sendSuperLike, swipeAction, navigation]);
-
   // ── Loading / Error state ──
   if (!profile) {
     return (
@@ -722,16 +694,6 @@ export const ProfilePreviewScreen: React.FC = () => {
     infoSections.push(
       <View key="compat-module" style={styles.seamlessSection}>
         <CompatibilityPreviewCard data={compatPreviewData} />
-      </View>,
-    );
-  }
-
-  // Badges
-  if (profile.earnedBadges && profile.earnedBadges.length > 0) {
-    infoSections.push(
-      <View key="badges" style={styles.seamlessSection}>
-        <Text style={styles.sectionLabel}>Rozetleri</Text>
-        <BadgeShowcase badgeKeys={profile.earnedBadges} size={32} />
       </View>,
     );
   }

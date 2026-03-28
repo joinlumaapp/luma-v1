@@ -74,7 +74,6 @@ export const PACKAGE_TIERS = [
     badge: null,
     features: [
       '20 beğeni / gün',
-      '1 Süper Beğeni / gün',
       'Temel uyumluluk skoru',
       '10 video keşif / gün',
       '3 oyun odası / gün',
@@ -101,7 +100,6 @@ export const PACKAGE_TIERS = [
       '\uD83C\uDFAE Tüm oyun odalarına erişim',
       '\uD83D\uDEAB Reklamsız deneyim',
       '\uD83D\uDCE6 Ayda 250 jeton hediye',
-      '\u26A1 10 Süper Beğeni / gün',
     ],
     limitations: [],
     emotionalHooks: [
@@ -123,7 +121,6 @@ export const PACKAGE_TIERS = [
       '\uD83D\uDD0D Gelişmiş filtreler — şehir, ilgi alanı, aktif kullanıcılar',
       '\uD83C\uDFC6 Detaylı uyumluluk analizi',
       '\uD83D\uDCE6 Ayda 500 jeton hediye',
-      '\u267E\uFE0F Sınırsız Süper Beğeni',
     ],
     limitations: [],
     emotionalHooks: [
@@ -202,16 +199,6 @@ export const DISCOVERY_CONFIG = {
   BATCH_SIZE: 50,
   /** Batch cooldown in milliseconds (30 minutes) */
   BATCH_COOLDOWN_MS: 30 * 60 * 1000,
-} as const;
-
-// Super Like daily limits per package tier (-1 = unlimited)
-export const SUPER_LIKE_CONFIG = {
-  DAILY_LIMITS: {
-    FREE: 1,
-    GOLD: 10,
-    PRO: -1,       // Unlimited (matches backend)
-    RESERVED: -1,  // Unlimited
-  },
 } as const;
 
 // Feed post daily limits per package tier (-1 = unlimited)

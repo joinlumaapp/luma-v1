@@ -81,14 +81,6 @@ export interface HarmonyInvitePayload {
   timestamp: string;
 }
 
-/** Badge earned notification */
-export interface BadgeEarnedPayload {
-  badgeId: string;
-  name: string;
-  icon: string;
-  timestamp: string;
-}
-
 /** User listening status update */
 export interface ListeningPayload {
   songTitle: string;
@@ -157,7 +149,6 @@ export interface ServerEventMap {
   [WS_EVENTS.NOTIFICATION_NEW_MATCH]: NewMatchPayload;
   [WS_EVENTS.NOTIFICATION_NEW_MESSAGE]: ChatMessagePayload;
   [WS_EVENTS.NOTIFICATION_HARMONY_INVITE]: HarmonyInvitePayload;
-  [WS_EVENTS.NOTIFICATION_BADGE_EARNED]: BadgeEarnedPayload;
   'user:online': PresencePayload;
   'user:offline': PresencePayload;
   'user:listening': { userId: string; listening: ListeningPayload | null };

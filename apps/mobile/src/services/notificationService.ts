@@ -440,7 +440,7 @@ export async function scheduleReEngagementNotifications(): Promise<void> {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: 'LUMA',
-        body: 'Seni bekleyen yeni profiller var! \uD83D\uDC40',
+        body: 'Seni bekleyen yeni profiller var! 👀',
         data: { type: 'RE_ENGAGEMENT', tier: 'day_1' },
         sound: true,
       },
@@ -455,7 +455,7 @@ export async function scheduleReEngagementNotifications(): Promise<void> {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: 'LUMA',
-        body: '3 g\u00FCnd\u00FCr g\u00F6r\u00FC\u015Femedik! Seni be\u011Fenen ki\u015Filer var.',
+        body: '3 gündür görüşemedik! Seni beğenen kişiler var.',
         data: { type: 'RE_ENGAGEMENT', tier: 'day_3' },
         sound: true,
       },
@@ -470,7 +470,7 @@ export async function scheduleReEngagementNotifications(): Promise<void> {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: 'LUMA',
-        body: 'Seni \u00F6zledik! Yeni e\u015Fle\u015Fme f\u0131rsatlar\u0131n\u0131 ka\u00E7\u0131rma.',
+        body: 'Seni özledik! Yeni eşleşme fırsatlarını kaçırma.',
         data: { type: 'RE_ENGAGEMENT', tier: 'day_7' },
         sound: true,
       },
@@ -553,7 +553,7 @@ export async function scheduleDatePlanReminder(
       await Notifications.scheduleNotificationAsync({
         content: {
           title: 'LUMA',
-          body: `${partnerName} ile bulu\u015Fmana 1 saat kald\u0131!`,
+          body: `${partnerName} ile buluşmana 1 saat kaldı!`,
           data: { type: 'DATE_PLAN_REMINDER', planId, timing: '1h_before' },
           sound: true,
         },
@@ -570,7 +570,7 @@ export async function scheduleDatePlanReminder(
       await Notifications.scheduleNotificationAsync({
         content: {
           title: 'LUMA',
-          body: `Bulu\u015Fma zaman\u0131! ${partnerName} seni bekliyor \uD83D\uDC9C`,
+          body: `Buluşma zamanı! ${partnerName} seni bekliyor 💜`,
           data: { type: 'DATE_PLAN_REMINDER', planId, timing: 'at_time' },
           sound: true,
         },
@@ -670,7 +670,6 @@ async function scheduleLocalNotification(
  * - Every day at 20:00: curated profiles reminder
  * - 12h after last open: someone liked you teaser
  * - Saturday 09:00: weekend bonus
- * - Sunday 20:00: weekly report ready
  *
  * Call on every app foreground + after login (same as re-engagement).
  */
@@ -727,22 +726,8 @@ export async function scheduleFomoNotifications(): Promise<void> {
       },
     });
 
-    // Sunday 20:00 — weekly report
-    await scheduleLocalNotification({
-      identifier: `${FOMO_PREFIX}weekly_report`,
-      title: 'LUMA',
-      body: 'Haftalık raporun hazır! Bu hafta nasıl geçti bir bak 📊',
-      data: { type: 'FOMO', subtype: 'weekly_report' },
-      trigger: {
-        type: TriggerTypes.WEEKLY,
-        weekday: 1, // Sunday (1=Sun)
-        hour: 20,
-        minute: 0,
-      },
-    });
-
     if (__DEV__) {
-      console.log('[FOMO] 4 bildirim planlandı (daily 20:00, 12h inactivity, sat bonus, sun report)');
+      console.log('[FOMO] 3 bildirim planlandı (daily 20:00, 12h inactivity, sat bonus)');
     }
   } catch (error) {
     if (__DEV__) {
@@ -752,27 +737,6 @@ export async function scheduleFomoNotifications(): Promise<void> {
 }
 
 // ─── 2. Match Urgency Notifications ──────────────────────────────────
-
-/**
- * Send an immediate notification when someone super-likes the user.
- */
-export async function notifySuperLike(): Promise<void> {
-  if (!getNotifications()) return;
-
-  try {
-    await scheduleLocalNotification({
-      identifier: `${MATCH_URGENCY_PREFIX}superlike_${Date.now()}`,
-      title: 'LUMA',
-      body: 'Birisi seni süper beğendi! 🔥 Kim olduğunu gör',
-      data: { type: 'MATCH_URGENCY', subtype: 'super_like' },
-      trigger: null as unknown as import('expo-notifications').NotificationTriggerInput, // immediate
-    });
-  } catch (error) {
-    if (__DEV__) {
-      console.error('[MatchUrgency] Super like bildirim hatası:', error);
-    }
-  }
-}
 
 /**
  * Schedule a reminder when a match hasn't been messaged after 24 hours.
@@ -851,7 +815,6 @@ export async function cancelMatchNudge(matchId: string): Promise<void> {
  * - Wednesday 19:00 — most compatible profile
  * - Friday 18:00 — weekend plans
  * - Saturday 09:00 — 2x like bonus
- * - Sunday 20:00 — weekly report
  *
  * Call on app foreground + after login. Cancels previous schedules first.
  */
@@ -909,14 +872,6 @@ export async function scheduleWeeklyContentNotifications(): Promise<void> {
         body: '2x beğeni bonusu aktif! Bugün şansını dene',
         subtype: 'saturday_bonus',
       },
-      {
-        id: 'sun_report',
-        weekday: 1, // Sunday
-        hour: 20,
-        minute: 0,
-        body: 'Haftalık raporun hazır 📊',
-        subtype: 'sunday_report',
-      },
     ];
 
     for (const item of weeklySchedule) {
@@ -935,7 +890,7 @@ export async function scheduleWeeklyContentNotifications(): Promise<void> {
     }
 
     if (__DEV__) {
-      console.log('[WeeklyContent] 5 haftalık bildirim planlandı (Mon-Sun)');
+      console.log('[WeeklyContent] 4 haftalık bildirim planlandı (Mon-Sat)');
     }
   } catch (error) {
     if (__DEV__) {

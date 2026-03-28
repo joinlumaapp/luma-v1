@@ -1,1 +1,0 @@
-export { BadgesScreen } from './BadgesScreen';

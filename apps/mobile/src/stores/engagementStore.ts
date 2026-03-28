@@ -1,4 +1,4 @@
-// Engagement store — Zustand store for daily rewards, challenges, achievements, and retention mechanics
+// Engagement store — Zustand store for daily rewards, challenges, and retention mechanics
 // Persists state to AsyncStorage via storage utility
 
 import { create } from 'zustand';
@@ -87,24 +87,6 @@ export const CHALLENGE_POOL: DailyChallengeDefinition[] = [
   },
 ];
 
-// ── Achievement Definitions ──
-export interface AchievementDefinition {
-  id: string;
-  title: string;
-  description: string;
-  threshold: number;
-  type: 'first_match' | 'likes_received' | 'first_message_sent' | 'login_streak' | 'profiles_explored';
-}
-
-export const ACHIEVEMENTS: AchievementDefinition[] = [
-  { id: 'first_match', title: 'İlk Eşleşme!', description: 'İlk eşleşmeni yaptın', threshold: 1, type: 'first_match' },
-  { id: 'likes_10', title: '10 Beğeni Aldın!', description: '10 kişi seni beğendi', threshold: 10, type: 'likes_received' },
-  { id: 'likes_50', title: '50 Beğeni Aldın!', description: '50 kişi seni beğendi', threshold: 50, type: 'likes_received' },
-  { id: 'first_msg', title: 'İlk Mesajını Gönderdin!', description: 'Bir mesaj gönderdin', threshold: 1, type: 'first_message_sent' },
-  { id: 'streak_7', title: '7 Gün Seri!', description: '7 gün üst üste giriş yaptın', threshold: 7, type: 'login_streak' },
-  { id: 'streak_30', title: '30 Gün Seri!', description: '30 gün üst üste giriş yaptın', threshold: 30, type: 'login_streak' },
-  { id: 'explored_100', title: '100 Profil Keşfettin!', description: '100 profil inceledin', threshold: 100, type: 'profiles_explored' },
-];
 
 // ── Leaderboard Entry ──
 export interface LeaderboardEntry {
@@ -126,7 +108,6 @@ const STORAGE_KEYS = {
   CHALLENGE_PROGRESS: 'engagement.challengeProgress',
   CHALLENGE_COMPLETED: 'engagement.challengeCompleted',
   CHALLENGE_REWARD_CLAIMED: 'engagement.challengeRewardClaimed',
-  ACHIEVEMENTS_UNLOCKED: 'engagement.achievementsUnlocked',
   FLASH_BOOST_SHOWN_DATE: 'engagement.flashBoostShownDate',
   MATCH_COUNTDOWNS: 'engagement.matchCountdowns',
   LIKES_TEASER_COUNT: 'engagement.likesTeaserCount',
@@ -168,10 +149,6 @@ interface EngagementState {
   userRank: number | null;
   leaderboardCategory: 'most_liked' | 'most_messaged' | 'best_compatibility';
 
-  // Achievements
-  unlockedAchievements: string[];
-  pendingAchievementToast: AchievementDefinition | null;
-
   // Loading
   isLoading: boolean;
 
@@ -205,10 +182,6 @@ interface EngagementState {
   // Leaderboard
   fetchLeaderboard: (category?: 'most_liked' | 'most_messaged' | 'best_compatibility') => Promise<void>;
 
-  // Achievements
-  checkAchievement: (type: AchievementDefinition['type'], currentValue: number) => void;
-  dismissAchievementToast: () => void;
-
   // Hydrate from storage
   hydrate: () => void;
 }
@@ -240,9 +213,6 @@ export const useEngagementStore = create<EngagementState>((set, get) => ({
   userRank: null,
   leaderboardCategory: 'most_liked',
 
-  unlockedAchievements: [],
-  pendingAchievementToast: null,
-
   isLoading: false,
 
   // ── Hydrate ──
@@ -258,9 +228,6 @@ export const useEngagementStore = create<EngagementState>((set, get) => ({
     const challengeProgress = storage.getNumber(STORAGE_KEYS.CHALLENGE_PROGRESS) ?? 0;
     const challengeCompleted = storage.getString(STORAGE_KEYS.CHALLENGE_COMPLETED) === 'true';
     const challengeRewardClaimed = storage.getString(STORAGE_KEYS.CHALLENGE_REWARD_CLAIMED) === 'true';
-
-    const achievementsRaw = storage.getString(STORAGE_KEYS.ACHIEVEMENTS_UNLOCKED);
-    const achievements: string[] = achievementsRaw ? JSON.parse(achievementsRaw) : [];
 
     const flashDate = storage.getString(STORAGE_KEYS.FLASH_BOOST_SHOWN_DATE);
 
@@ -282,7 +249,6 @@ export const useEngagementStore = create<EngagementState>((set, get) => ({
       challengeCompleted: challengeDate === todayStr() ? challengeCompleted : false,
       challengeRewardClaimed: challengeDate === todayStr() ? challengeRewardClaimed : false,
       challengeDate,
-      unlockedAchievements: achievements,
       flashBoostShownToday: flashDate === todayStr(),
       matchCountdowns: countdowns,
     });
@@ -567,33 +533,4 @@ export const useEngagementStore = create<EngagementState>((set, get) => ({
     }
   },
 
-  // ── Achievements ──
-  checkAchievement: (type, currentValue) => {
-    const { unlockedAchievements } = get();
-
-    for (const achievement of ACHIEVEMENTS) {
-      if (achievement.type !== type) continue;
-      if (unlockedAchievements.includes(achievement.id)) continue;
-      if (currentValue < achievement.threshold) continue;
-
-      // Unlock!
-      const newUnlocked = [...unlockedAchievements, achievement.id];
-      set({
-        unlockedAchievements: newUnlocked,
-        pendingAchievementToast: achievement,
-      });
-
-      storage.setString(STORAGE_KEYS.ACHIEVEMENTS_UNLOCKED, JSON.stringify(newUnlocked));
-
-      // Sync with backend
-      api.post('/engagement/achievement/unlock', {
-        achievementId: achievement.id,
-      }).catch((err) => { if (__DEV__) console.warn('[engagementStore] achievement sync failed:', err); });
-
-      // Only show one at a time
-      break;
-    }
-  },
-
-  dismissAchievementToast: () => set({ pendingAchievementToast: null }),
 }));

@@ -1,4 +1,4 @@
-// Discovery store — Zustand store for discovery/swipe state with undo and super like support
+// Discovery store — Zustand store for discovery/swipe state with undo support
 
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -42,8 +42,6 @@ export interface DiscoveryProfile {
   voiceIntroUrl?: string;
   /** Distance to this user in km (null if unavailable) */
   distanceKm?: number | null;
-  /** Badge keys earned by this user */
-  earnedBadges?: string[];
   /** User-selected interest tags */
   interestTags?: string[];
   /** 1-line Turkish compatibility explanation */
@@ -108,11 +106,8 @@ interface DiscoveryState {
   canUndo: boolean;
   undoTimerId: ReturnType<typeof setTimeout> | null;
   lastSwipedProfile: DiscoveryProfile | null;
-  lastSwipeDirection: 'left' | 'right' | 'up' | null;
+  lastSwipeDirection: 'left' | 'right' | null;
   undosUsedToday: number;
-
-  // Super like state
-  showSuperLikeGlow: boolean;
 
   // Batch cooldown state
   batchCooldownEnd: number | null;
@@ -129,7 +124,7 @@ interface DiscoveryState {
   // Actions
   fetchFeed: () => Promise<void>;
   checkAndLoadBatch: () => Promise<void>;
-  swipe: (direction: 'left' | 'right' | 'up', profileId: string, comment?: string) => Promise<void>;
+  swipe: (direction: 'left' | 'right', profileId: string, comment?: string) => Promise<void>;
   undoLastSwipe: () => Promise<void>;
   refreshFeed: () => Promise<void>;
   setFilters: (filters: Partial<DiscoveryState['filters']>) => void;
@@ -138,7 +133,6 @@ interface DiscoveryState {
   resetDaily: () => void;
   dismissMatch: () => void;
   clearUndo: () => void;
-  dismissSuperLikeGlow: () => void;
   trackSupremeImpression: () => void;
   clearError: () => void;
 }
@@ -156,7 +150,6 @@ const mapFeedCardToProfile = (card: FeedCard): DiscoveryProfile => ({
   isVerified: card.isVerified ?? card.isSelfieVerified ?? card.isFullyVerified ?? false,
   voiceIntroUrl: card.voiceIntroUrl,
   distanceKm: card.distanceKm ?? null,
-  earnedBadges: card.earnedBadges,
   interestTags: card.interestTags ?? [],
   compatExplanation: card.compatExplanation ?? null,
   strongCategories: card.strongCategories ?? [],
@@ -296,9 +289,6 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
   lastSwipeDirection: null,
   undosUsedToday: 0,
 
-  // Super like initial state
-  showSuperLikeGlow: false,
-
   // Batch cooldown initial state
   batchCooldownEnd: null,
 
@@ -364,19 +354,15 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
 
   swipe: async (direction, profileId, comment) => {
     try {
-      // Map direction to API direction: left=pass, right=like, up=super_like
-      const apiDirection = direction === 'up'
-        ? 'SUPER_LIKE'
-        : direction === 'right'
-          ? 'LIKE'
-          : 'PASS';
+      // Map direction to API direction: left=pass, right=like
+      const apiDirection = direction === 'right'
+        ? 'LIKE'
+        : 'PASS';
 
       // Track swipe event
       const swipeEvent = direction === 'right'
         ? ANALYTICS_EVENTS.CARD_LIKED
-        : direction === 'up'
-          ? ANALYTICS_EVENTS.CARD_SUPERLIKED
-          : ANALYTICS_EVENTS.CARD_PASSED;
+        : ANALYTICS_EVENTS.CARD_PASSED;
       const currentState = get();
       analyticsService.track(swipeEvent, {
         cardId: currentState.cards[currentState.currentIndex]?.id ?? profileId,
@@ -388,7 +374,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
         ...(comment ? { comment } : {}),
       });
 
-      if (direction === 'right' || direction === 'up') {
+      if (direction === 'right') {
         get().decrementRemaining();
       }
 
@@ -405,14 +391,6 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
       const timerId = setTimeout(() => {
         set({ canUndo: false, undoTimerId: null, lastSwipedProfile: null, lastSwipeDirection: null });
       }, UNDO_WINDOW_MS);
-
-      // Show super like glow effect
-      if (direction === 'up') {
-        set({ showSuperLikeGlow: true });
-        setTimeout(() => {
-          set({ showSuperLikeGlow: false });
-        }, 1500);
-      }
 
       // Check if a match occurred
       if (response.isMatch && response.matchId) {
@@ -633,9 +611,6 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
     }
     set({ canUndo: false, undoTimerId: null, lastSwipedProfile: null, lastSwipeDirection: null });
   },
-
-  dismissSuperLikeGlow: () =>
-    set({ showSuperLikeGlow: false }),
 
   trackSupremeImpression: () =>
     set((state) => ({ premiumImpressions: state.premiumImpressions + 1 })),

@@ -26,8 +26,6 @@ import { useProfileStore } from '../../stores/profileStore';
 import { useAuthStore } from '../../stores/authStore';
 import { useMatchStore } from '../../stores/matchStore';
 import { useCoinStore } from '../../stores/coinStore';
-import { badgeService } from '../../services/badgeService';
-import type { UserBadge } from '../../services/badgeService';
 import {
   profileService,
   type ProfileStrengthResponse,
@@ -224,8 +222,6 @@ export const ProfileScreen: React.FC = () => {
   const fetchProfile = useProfileStore((state) => state.fetchProfile);
   const user = useAuthStore((state) => state.user);
   const fetchMatches = useMatchStore((state) => state.fetchMatches);
-  const [badges, setBadges] = useState<Array<{ id: string; name: string; earned: boolean }>>([]);
-
   // Listening status removed — music feature removed
 
   // Profile Strength Meter state
@@ -318,12 +314,6 @@ export const ProfileScreen: React.FC = () => {
     fetchWeeklyViews();
     fetchBoostStatus();
     fetchMatches();
-    badgeService
-      .getMyBadges()
-      .then((earned: UserBadge[]) => {
-        setBadges(earned.map((ub) => ({ id: ub.badge.id, name: ub.badge.name, earned: true })));
-      })
-      .catch(() => {});
   }, [fetchProfile, fetchStrength, fetchWeeklyViews, fetchBoostStatus, fetchMatches]);
 
   // Shimmer for loading
@@ -355,10 +345,6 @@ export const ProfileScreen: React.FC = () => {
 
   const handleSettings = () => {
     navigation.navigate('Settings');
-  };
-
-  const handleBadges = () => {
-    navigation.navigate('Badges');
   };
 
   const handleProfileCoach = () => {
@@ -631,48 +617,7 @@ export const ProfileScreen: React.FC = () => {
     </View>,
   );
 
-  // 4. Rozetler
-  infoSections.push(
-    <TouchableOpacity
-      key="badges"
-      style={styles.section}
-      onPress={handleBadges}
-      activeOpacity={0.7}
-      accessibilityLabel="Rozetler"
-      accessibilityRole="button"
-      accessibilityHint="Tüm rozetleri görmek için dokunun"
-      testID="profile-badges-btn"
-    >
-      <View style={styles.badgesHeader}>
-        <Text style={styles.sectionTitle}>Rozetler</Text>
-        <Text style={styles.seeAllText}>Tümünü Gör</Text>
-      </View>
-      <View style={styles.badgesRow}>
-        {badges.length > 0 ? (
-          badges.slice(0, 3).map((badge) => (
-            <View
-              key={badge.id}
-              style={[styles.badgeItem, !badge.earned && styles.badgeItemUnearned]}
-            >
-              <View style={[styles.badgeCircle, !badge.earned && styles.badgeCircleUnearned]}>
-                <Text style={styles.badgeIcon}>{'*'}</Text>
-              </View>
-              <Text
-                style={[styles.badgeLabel, !badge.earned && styles.badgeLabelUnearned]}
-                numberOfLines={1}
-              >
-                {badge.name}
-              </Text>
-            </View>
-          ))
-        ) : (
-          <Text style={styles.badgeLabel}>Henüz rozet kazanılmadı</Text>
-        )}
-      </View>
-    </TouchableOpacity>,
-  );
-
-  // 5. Profil Kocu + Kişilik Tipi
+  // 4. Profil Kocu + Kişilik Tipi
   infoSections.push(
     <View key="quick-actions" style={styles.quickActionsRow}>
       <TouchableOpacity
@@ -1273,55 +1218,6 @@ const styles = StyleSheet.create({
   aboutRowValueEmpty: {
     color: colors.textTertiary,
     fontStyle: 'italic',
-  },
-
-  // ── Badges ──
-  badgesHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  seeAllText: {
-    fontSize: 13,
-    fontWeight: fontWeights.semibold,
-    color: palette.purple[500],
-  },
-  badgesRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  badgeItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  badgeItemUnearned: {
-    opacity: 0.4,
-  },
-  badgeCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: palette.gold[500] + '18',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.xs,
-  },
-  badgeCircleUnearned: {
-    backgroundColor: colors.surfaceBorder,
-  },
-  badgeIcon: {
-    fontSize: 24,
-    color: palette.gold[600],
-  },
-  badgeLabel: {
-    fontSize: 11,
-    fontWeight: fontWeights.medium,
-    color: colors.text,
-    textAlign: 'center',
-  },
-  badgeLabelUnearned: {
-    color: colors.textTertiary,
   },
 
   // ── Quick Actions ──

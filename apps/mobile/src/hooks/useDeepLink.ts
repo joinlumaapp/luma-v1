@@ -1,5 +1,5 @@
 // Deep link yonetimi — uygulama ici yonlendirme
-// Genisletilmis rotalar: match, chat, profile, discovery, daily-picks, badges, settings, membership
+// Genisletilmis rotalar: match, chat, profile, discovery, daily-picks, settings, membership
 
 import { useEffect, useCallback } from 'react';
 import { Linking } from 'react-native';
@@ -24,7 +24,6 @@ interface UseDeepLinkReturn {
  * - luma://profile/:userId          -> ProfilePreviewScreen
  * - luma://discovery                -> DiscoveryScreen
  * - luma://daily-picks              -> DailyPicksScreen
- * - luma://badges                   -> BadgesScreen
  * - luma://settings                 -> SettingsScreen
  * - luma://membership               -> MembershipPlansScreen
  * - luma://likes                    -> LikesYouScreen
@@ -83,16 +82,6 @@ export const useDeepLink = (): UseDeepLinkReturn => {
             screen: 'DiscoveryTab',
             params: {
               screen: 'DailyPicks',
-              params: undefined,
-            },
-          });
-          break;
-
-        case 'Badges':
-          navigation.navigate('MainTabs', {
-            screen: 'ProfileTab',
-            params: {
-              screen: 'Badges',
               params: undefined,
             },
           });

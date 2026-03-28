@@ -97,10 +97,6 @@ const getTypeIcon = (
     case 'POST_COMMENT':
     case 'COMMENT_REPLY':
       return { name: 'chatbubble-ellipses', color: '#10B981' };
-    case 'BADGE_EARNED':
-      return { name: 'ribbon', color: '#F59E0B' };
-    case 'SUPER_LIKE':
-      return { name: 'star', color: '#8B5CF6' };
     default:
       return { name: 'notifications', color: colors.textSecondary };
   }
@@ -247,7 +243,6 @@ export const NotificationsScreen: React.FC = () => {
       switch (notif.type) {
         case 'PROFILE_LIKE':
         case 'NEW_FOLLOWER':
-        case 'SUPER_LIKE':
           if (data.userId) {
             navigation.navigate('ProfilePreview', { userId: data.userId as string });
           }

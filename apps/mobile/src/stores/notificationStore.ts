@@ -1,5 +1,5 @@
 // Notification store — Zustand store for notification state
-// Enhanced: grouped notifications by type (Yeni Eşleşme, Mesaj, Rozet, etc.)
+// Enhanced: grouped notifications by type (Yeni Eşleşme, Mesaj, etc.)
 
 import { Platform } from 'react-native';
 import { create } from 'zustand';
@@ -20,7 +20,6 @@ export type NotificationGroupKey =
   | 'LIKE'
   | 'SOCIAL'
   | 'MESSAGE'
-  | 'BADGE'
   | 'SYSTEM'
   | 'OTHER';
 
@@ -39,7 +38,6 @@ const getGroupKey = (type: string): NotificationGroupKey => {
   if (typeUpper === 'PROFILE_LIKE') return 'LIKE';
   if (typeUpper === 'NEW_FOLLOWER' || typeUpper === 'POST_LIKE' || typeUpper === 'POST_COMMENT' || typeUpper === 'COMMENT_REPLY') return 'SOCIAL';
   if (typeUpper === 'MESSAGE' || typeUpper === 'PUSH' || typeUpper.includes('MESAJ')) return 'MESSAGE';
-  if (typeUpper === 'BADGE_EARNED' || typeUpper.includes('BADGE') || typeUpper.includes('ROZET')) return 'BADGE';
   if (typeUpper === 'SYSTEM' || typeUpper.includes('SUBSCRIPTION')) return 'SYSTEM';
   return 'OTHER';
 };
@@ -50,7 +48,6 @@ const GROUP_TITLES: Record<NotificationGroupKey, string> = {
   LIKE: 'Beğeniler',
   SOCIAL: 'Sosyal',
   MESSAGE: 'Mesajlar',
-  BADGE: 'Rozetler',
   SYSTEM: 'Sistem',
   OTHER: 'Diğer',
 };
@@ -61,7 +58,6 @@ const GROUP_ORDER: NotificationGroupKey[] = [
   'LIKE',
   'SOCIAL',
   'MESSAGE',
-  'BADGE',
   'SYSTEM',
   'OTHER',
 ];

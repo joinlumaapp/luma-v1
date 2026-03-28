@@ -99,15 +99,6 @@ const FEATURES: TierFeature[] = [
     supremeDetail: 'Sınırsız',
   },
   {
-    label: 'Süper Beğeni',
-    free: 'included',
-    premium: 'included',
-    supreme: 'included',
-    freeDetail: '1/gün',
-    premiumDetail: '10/gün',
-    supremeDetail: 'Sınırsız',
-  },
-  {
     label: 'Direkt Mesaj',
     free: 'included',
     premium: 'included',

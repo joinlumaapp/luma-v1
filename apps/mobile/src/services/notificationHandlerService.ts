@@ -19,12 +19,8 @@ export type NotificationRouteType =
   | 'NEW_MESSAGE'
   | 'new_like'
   | 'PROFILE_LIKE'
-  | 'super_like'
-  | 'SUPER_LIKE'
   | 'daily_picks'
   | 'DAILY_PICKS'
-  | 'badge_earned'
-  | 'BADGE_EARNED'
   | 'compatibility_update'
   | 'COMPATIBILITY_UPDATE'
   | 'boost_active'
@@ -165,17 +161,9 @@ export function mapNotificationToScreen(
     case 'PROFILE_LIKE':
       return { screen: 'LikesYou', params: undefined };
 
-    // Super begeni — LikesYouScreen
-    case 'SUPER_LIKE':
-      return { screen: 'LikesYou', params: undefined };
-
     // Gunluk secmeler — DailyPicksScreen
     case 'DAILY_PICKS':
       return { screen: 'DailyPicks', params: undefined };
-
-    // Rozet kazanildi — BadgesScreen
-    case 'BADGE_EARNED':
-      return { screen: 'Badges', params: undefined };
 
     // Uyumluluk guncellemesi — CompatibilityInsightScreen
     case 'COMPATIBILITY_UPDATE': {
@@ -245,13 +233,8 @@ export function mapNotificationToScreen(
     case 'MISSED_LIKES':
       return { screen: 'MembershipPlans', params: undefined };
 
-    case 'WEEKLY_CONTENT': {
-      const subtype = data.subtype as string | undefined;
-      if (subtype === 'sunday_report' || subtype === 'weekly_report') {
-        return { screen: 'Discovery', params: undefined };
-      }
+    case 'WEEKLY_CONTENT':
       return { screen: 'Discovery', params: undefined };
-    }
 
     case 'DATE_PLAN_REMINDER': {
       const matchId = data.matchId as string | undefined;

@@ -30,20 +30,20 @@ const MBTI_TYPES = [
 
 const MBTI_LABELS: Record<string, string> = {
   INTJ: 'Stratejist',
-  INTP: 'Mantık\u00e7ı',
+  INTP: 'Mantıkçı',
   ENTJ: 'Komutan',
   ENTP: 'Tartışmacı',
   INFJ: 'Savunucu',
   INFP: 'Arabulucu',
   ENFJ: 'Kahraman',
   ENFP: 'Aktivist',
-  ISTJ: 'Lojistik\u00e7i',
+  ISTJ: 'Lojistikçi',
   ISFJ: 'Savunucu',
-  ESTJ: 'Y\u00f6netici',
+  ESTJ: 'Yönetici',
   ESFJ: 'Diplomat',
   ISTP: 'Usta',
   ISFP: 'Maceracı',
-  ESTP: 'Giri\u015fimci',
+  ESTP: 'Girişimci',
   ESFP: 'Eğlenceli',
 };
 
@@ -53,13 +53,13 @@ const ENNEAGRAM_TYPES = ['1', '2', '3', '4', '5', '6', '7', '8', '9'] as const;
 const ENNEAGRAM_LABELS: Record<string, string> = {
   '1': 'Reformcu',
   '2': 'Yardımcı',
-  '3': 'Ba\u015farıcı',
+  '3': 'Başarıcı',
   '4': 'Bireyci',
-  '5': 'Ara\u015ftırmacı',
+  '5': 'Araştırmacı',
   '6': 'Sadık',
-  '7': 'Co\u015fkulu',
+  '7': 'Coşkulu',
   '8': 'Meydan Okuyucu',
-  '9': 'Barı\u015f\u00e7ıl',
+  '9': 'Barışçıl',
 };
 
 export const PersonalitySelectionScreen: React.FC = () => {

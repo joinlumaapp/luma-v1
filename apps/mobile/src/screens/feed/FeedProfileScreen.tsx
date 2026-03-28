@@ -471,18 +471,7 @@ export const FeedProfileScreen: React.FC = () => {
     </View>,
   );
 
-  // 6. Rozetleri — badge showcase (placeholder, shown when badges available)
-  // Badges will come from API; for now show placeholder for premium users
-  if (isPremium) {
-    infoSections.push(
-      <View key="badges" style={styles.section}>
-        <Text style={styles.sectionTitle}>Rozetleri</Text>
-        <Text style={{ fontSize: 13, fontWeight: fontWeights.regular, color: colors.textTertiary }}>Henuz rozet kazanilmadi</Text>
-      </View>,
-    );
-  }
-
-  // 7. Premium CTA banner (only for non-premium)
+  // 6. Premium CTA banner (only for non-premium)
   if (!isPremium) {
     infoSections.push(
       <TouchableOpacity key="premium-cta" style={styles.premiumBanner} onPress={handlePremiumUpgrade} activeOpacity={0.85}>

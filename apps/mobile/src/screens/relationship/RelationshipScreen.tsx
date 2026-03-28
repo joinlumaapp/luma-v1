@@ -18,8 +18,6 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 import { useRelationshipStore } from '../../stores/relationshipStore';
-import { badgeService, UserBadge } from '../../services/badgeService';
-
 export const RelationshipScreen: React.FC = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
@@ -30,38 +28,15 @@ export const RelationshipScreen: React.FC = () => {
   const deactivate = useRelationshipStore((state) => state.deactivate);
   const toggleVisibility = useRelationshipStore((state) => state.toggleVisibility);
 
-  const [badges, setBadges] = useState<UserBadge[]>([]);
-  const [badgesLoading, setBadgesLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchStatus();
   }, [fetchStatus]);
 
-  const loadBadges = useCallback(async () => {
-    setBadgesLoading(true);
-    try {
-      const data = await badgeService.getMyBadges();
-      setBadges(data);
-    } catch {
-      // Silently handle
-    } finally {
-      setBadgesLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (relationship) {
-      loadBadges();
-    }
-  }, [relationship, loadBadges]);
-
   const handleRefresh = async () => {
     setRefreshing(true);
     await fetchStatus();
-    if (relationship) {
-      await loadBadges();
-    }
     setRefreshing(false);
   };
 
@@ -154,10 +129,6 @@ export const RelationshipScreen: React.FC = () => {
             <Text style={styles.statLabel}>Gün</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{badges.length}</Text>
-            <Text style={styles.statLabel}>Rozet</Text>
-          </View>
-          <View style={styles.statCard}>
             <Text style={styles.statValue}>0</Text>
             <Text style={styles.statLabel}>Ortak Mekan</Text>
           </View>
@@ -165,41 +136,6 @@ export const RelationshipScreen: React.FC = () => {
             <Text style={styles.statValue}>0</Text>
             <Text style={styles.statLabel}>Anı</Text>
           </View>
-        </View>
-
-        {/* Badges grid */}
-        <View style={styles.badgesSection}>
-          <Text style={styles.sectionTitle}>Rozetler</Text>
-          {badgesLoading ? (
-            <ActivityIndicator size="small" color={colors.primary} />
-          ) : badges.length > 0 ? (
-            <View style={styles.badgesGrid}>
-              {badges.map((userBadge) => (
-                <View key={userBadge.id} style={styles.badgeCard}>
-                  <View style={styles.badgeIconCircle}>
-                    <Text style={styles.badgeIconText}>
-                      {userBadge.badge.name.charAt(0)}
-                    </Text>
-                  </View>
-                  <Text style={styles.badgeName} numberOfLines={1}>
-                    {userBadge.badge.name}
-                  </Text>
-                  <Text style={styles.badgeDate}>
-                    {new Date(userBadge.earnedAt).toLocaleDateString('tr-TR', {
-                      day: 'numeric',
-                      month: 'short',
-                    })}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          ) : (
-            <View style={styles.noBadges}>
-              <Text style={styles.noBadgesText}>
-                Henüz rozet kazanılmadı. Birlikte vakit geçirdikçe rozetler kazanacaksınız!
-              </Text>
-            </View>
-          )}
         </View>
 
         {/* Settings section */}
@@ -388,66 +324,10 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textTertiary,
   },
-  // Badges
-  badgesSection: {
-    paddingHorizontal: spacing.lg,
-    marginTop: spacing.xl,
-  },
   sectionTitle: {
     ...typography.h4,
     color: colors.text,
     marginBottom: spacing.md,
-  },
-  badgesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  badgeCard: {
-    width: '30%',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-  },
-  badgeIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.accent + '20',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.xs,
-  },
-  badgeIconText: {
-    ...typography.h4,
-    color: colors.accent,
-  },
-  badgeName: {
-    ...typography.captionSmall,
-    color: colors.text,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  badgeDate: {
-    ...typography.captionSmall,
-    color: colors.textTertiary,
-    marginTop: 2,
-  },
-  noBadges: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-  },
-  noBadgesText: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
   },
   // Settings
   settingsSection: {

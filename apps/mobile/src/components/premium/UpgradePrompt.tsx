@@ -24,7 +24,6 @@ import type { PackageTier } from '../../stores/authStore';
 /** Paywall-triggering feature identifiers */
 export type PaywallFeature =
   | 'undo'
-  | 'super_like'
   | 'visitors'
   | 'filters'
   | 'priority'
@@ -69,14 +68,6 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
     title: 'Geri Al Özelliği',
     description:
       'Yanlış yönde kaydırdın mı? Geri Al ile son beğeni kararını geri alabilirsin.',
-    minimumTier: 'GOLD',
-    tierLabel: 'Premium+',
-  },
-  super_like: {
-    icon: '★',
-    title: 'Süper Beğeni',
-    description:
-      'Süper Beğeni ile özel birinden öne çık! Eşleşme şansın 3 kat artar.',
     minimumTier: 'GOLD',
     tierLabel: 'Premium+',
   },
@@ -196,7 +187,7 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
     icon: '\uD83D\uDCAC',
     title: 'Ozel Mesaj Gonder',
     description:
-      'Yorumlardan ozel mesaja gec. Premium ile gunluk 10, Sinir\u0073\u0131z ile sinirsiz ozel mesaj hakki.',
+      'Yorumlardan ozel mesaja gec. Premium ile gunluk 10, Sınırsız ile sinirsiz ozel mesaj hakki.',
     minimumTier: 'GOLD',
     tierLabel: 'Premium+',
   },

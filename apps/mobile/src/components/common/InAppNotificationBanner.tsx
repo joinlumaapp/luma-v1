@@ -32,8 +32,6 @@ const NOTIFICATION_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   MESSAGE: 'chatbubble',
   PROFILE_LIKE: 'thumbs-up',
   NEW_LIKE: 'thumbs-up',
-  SUPER_LIKE: 'star',
-  BADGE_EARNED: 'ribbon',
   DAILY_PICKS: 'sparkles',
   BOOST_ACTIVE: 'rocket',
   HARMONY_INVITE: 'musical-notes',
@@ -239,12 +237,6 @@ export const InAppNotificationBanner: React.FC = () => {
           nav.navigate('MainTabs', {
             screen: 'DiscoveryTab',
             params: { screen: 'DailyPicks', params: undefined },
-          });
-          break;
-        case 'Badges':
-          nav.navigate('MainTabs', {
-            screen: 'ProfileTab',
-            params: { screen: 'Badges', params: undefined },
           });
           break;
         case 'Settings':
