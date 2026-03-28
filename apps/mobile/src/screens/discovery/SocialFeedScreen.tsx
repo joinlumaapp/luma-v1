@@ -40,11 +40,11 @@ import {
 } from '../../services/socialFeedService';
 import { photoService } from '../../services/photoService';
 import { FeedCard } from '../../components/feed/FeedCard';
-import { CommentSheet } from '../../components/feed/CommentSheet';
-import { MatchPromptModal } from '../../components/feed/MatchPromptModal';
+// CommentSheet removed — comment system removed from feed
+// MatchPromptModal removed — actions moved to profile screen
 import { discoveryService } from '../../services/discoveryService';
 import { EngagementNudge } from '../../components/feed/EngagementNudge';
-import { QuickProfilePreview } from '../../components/feed/QuickProfilePreview';
+// QuickProfilePreview removed — tapping post goes directly to full profile
 import { useFeedInteractionStore } from '../../stores/feedInteractionStore';
 import { useStoryStore } from '../../stores/storyStore';
 import { StoryRing } from '../../components/stories/StoryRing';
@@ -52,7 +52,7 @@ import type { StoryUser } from '../../services/storyService';
 import { useFlirtStore } from '../../stores/flirtStore';
 import { FEED_POST_CONFIG } from '../../constants/config';
 import { useCoinStore, SUGGESTED_STORY_VIEW_COST, FLIRT_START_COST } from '../../stores/coinStore';
-import { MusicPicker, type MusicTrack } from '../../components/feed/MusicPicker';
+// MusicPicker removed — music feature removed
 import { FEATURE_RULES, isUnlimited as isFeatureUnlimited } from '../../constants/packageAccess';
 import type { PackageTier } from '../../stores/authStore';
 
@@ -118,23 +118,13 @@ const FilterTab: React.FC<FilterTabProps> = React.memo(({ filter, isActive, onPr
   );
 });
 
-// ─── Music Mood Tags ──────────────────────────────────────────
-
-const MUSIC_MOOD_TAGS = [
-  { id: 'passionate', emoji: '\uD83D\uDD25', label: 'Tutkulu', color: '#EF4444' },
-  { id: 'night', emoji: '\uD83C\uDF19', label: 'Gece', color: '#6366F1' },
-  { id: 'sad', emoji: '\uD83D\uDC94', label: 'H\u00FCz\u00FCnl\u00FC', color: '#8B5CF6' },
-  { id: 'happy', emoji: '\u2728', label: 'Mutlu', color: '#F59E0B' },
-  { id: 'energetic', emoji: '\uD83D\uDD7A', label: 'Enerjik', color: '#EC4899' },
-] as const;
-
 // ─── Create Post Modal ────────────────────────────────────────
 
 interface CreatePostModalProps {
   visible: boolean;
   postType: FeedPostType;
   onClose: () => void;
-  onSubmit: (content: string, topic: FeedTopic, postType: FeedPostType, photoUrls: string[], videoUrl: string | null, musicTitle: string | null, musicArtist: string | null, musicCoverUrl: string | null, musicMoodTag: string | null) => void;
+  onSubmit: (content: string, topic: FeedTopic, postType: FeedPostType, photoUrls: string[], videoUrl: string | null) => void;
   isCreating: boolean;
 }
 
@@ -151,49 +141,32 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
   const selectedTopic: FeedTopic = 'GUNLUK';
   const [attachedPhotos, setAttachedPhotos] = useState<string[]>([]);
   const [attachedVideo, setAttachedVideo] = useState<string | null>(null);
-  const [musicTitle, setMusicTitle] = useState('');
-  const [musicArtist, setMusicArtist] = useState('');
-  const [selectedMoodTag, setSelectedMoodTag] = useState<string | null>(null);
-  const [showMusicPicker, setShowMusicPicker] = useState(false);
-  const [selectedTrack, setSelectedTrack] = useState<{ title: string; artist: string; coverUrl: string } | null>(null);
   const insets = useSafeAreaInsets();
 
   const postTypeOption = FEED_POST_TYPES.find((pt) => pt.type === postType);
 
   const handleSubmit = useCallback(() => {
     const trimmed = content.trim();
-    if (trimmed.length === 0 && attachedPhotos.length === 0 && !attachedVideo && postType !== 'music') return;
-    if (postType === 'music' && !selectedTrack) {
-      Alert.alert('Uyarı', 'Paylaşmak için bir şarkı seç.');
+    if (trimmed.length === 0 && attachedPhotos.length === 0 && !attachedVideo) return;
+    if (false) {
+      // placeholder — removed music validation
       return;
     }
     if (containsProfanity(trimmed)) {
       Alert.alert('Uyari', PROFANITY_WARNING);
       return;
     }
-    const finalMusicTitle = selectedTrack?.title ?? (musicTitle.trim() || null);
-    const finalMusicArtist = selectedTrack?.artist ?? (musicArtist.trim() || null);
-    const finalMusicCoverUrl = selectedTrack?.coverUrl ?? null;
-    const finalMusicMoodTag = selectedMoodTag ?? null;
     onSubmit(
       trimmed,
       selectedTopic,
       postType,
       attachedPhotos,
       attachedVideo,
-      postType === 'music' ? finalMusicTitle : null,
-      postType === 'music' ? finalMusicArtist : null,
-      postType === 'music' ? finalMusicCoverUrl : null,
-      postType === 'music' ? finalMusicMoodTag : null,
     );
     setContent('');
     setAttachedPhotos([]);
     setAttachedVideo(null);
-    setMusicTitle('');
-    setMusicArtist('');
-    setSelectedTrack(null);
-    setSelectedMoodTag(null);
-  }, [content, selectedTopic, postType, attachedPhotos, attachedVideo, musicTitle, musicArtist, selectedTrack, selectedMoodTag, onSubmit]);
+  }, [content, selectedTopic, postType, attachedPhotos, attachedVideo, onSubmit]);
 
   const handleAddPhoto = useCallback(async () => {
     if (attachedPhotos.length >= MAX_POST_PHOTOS) {
@@ -221,7 +194,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
     setAttachedVideo(null);
   }, []);
 
-  const hasContent = content.trim().length > 0 || attachedPhotos.length > 0 || attachedVideo !== null || (postType === 'music' && selectedTrack !== null);
+  const hasContent = content.trim().length > 0 || attachedPhotos.length > 0 || attachedVideo !== null;
   const canSubmit = hasContent && !isCreating;
 
   const getPlaceholder = (): string => {
@@ -229,7 +202,6 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
       case 'photo': return 'Bir anını paylaş...';
       case 'video': return 'Ne göstermek istiyorsun?';
       case 'text': return 'Aklında ne var?';
-      case 'music': return selectedTrack ? 'Bu şarkıyla vibe\'ını paylaş…' : 'Bir şarkı seç ve vibe\'ını paylaş…';
       default: return 'Aklında ne var?';
     }
   };
@@ -272,47 +244,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
             </TouchableOpacity>
           </View>
 
-          {/* Music section — Spotify-style track picker + mood tags */}
-          {postType === 'music' && (
-            <View style={modalStyles.musicSection}>
-              {/* Selected track preview OR "Add Music" button */}
-              {selectedTrack ? (
-                <View style={modalStyles.selectedTrackCard}>
-                  <Image source={{ uri: selectedTrack.coverUrl }} style={modalStyles.trackCover} />
-                  <View style={modalStyles.trackInfo}>
-                    <Text style={modalStyles.trackTitle} numberOfLines={1}>{selectedTrack.title}</Text>
-                    <Text style={modalStyles.trackArtist} numberOfLines={1}>{selectedTrack.artist}</Text>
-                  </View>
-                  <TouchableOpacity onPress={() => { setSelectedTrack(null); setMusicTitle(''); setMusicArtist(''); }}>
-                    <Ionicons name="close-circle" size={22} color={colors.textTertiary} />
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <TouchableOpacity style={modalStyles.addMusicButton} onPress={() => setShowMusicPicker(true)} activeOpacity={0.7}>
-                  <Ionicons name="musical-notes" size={22} color={palette.purple[400]} />
-                  <Text style={modalStyles.addMusicText}>M\u00FCzik Ekle</Text>
-                  <Ionicons name="chevron-forward" size={18} color={palette.purple[300]} />
-                </TouchableOpacity>
-              )}
-
-              {/* Mood Tags */}
-              <View style={modalStyles.moodTagsRow}>
-                {MUSIC_MOOD_TAGS.map((tag) => (
-                  <TouchableOpacity
-                    key={tag.id}
-                    style={[
-                      modalStyles.moodTagChip,
-                      selectedMoodTag === tag.id && { backgroundColor: tag.color + '25', borderColor: tag.color + '50' },
-                    ]}
-                    onPress={() => setSelectedMoodTag(selectedMoodTag === tag.id ? null : tag.id)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={modalStyles.moodTagText}>{tag.emoji} {tag.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          )}
+          {/* Music section removed — music feature removed */}
 
           {/* Text Input */}
           <TextInput
@@ -391,16 +323,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
         </View>
       </KeyboardAvoidingView>
     </Modal>
-    <MusicPicker
-      visible={showMusicPicker}
-      onClose={() => setShowMusicPicker(false)}
-      onSelect={(track: MusicTrack) => {
-        setSelectedTrack({ title: track.title, artist: track.artist, coverUrl: track.coverUrl });
-        setMusicTitle(track.title);
-        setMusicArtist(track.artist);
-        setShowMusicPicker(false);
-      }}
-    />
+    {/* MusicPicker removed — music feature removed */}
     </>
   );
 };
@@ -551,7 +474,6 @@ export const SocialFeedScreen: React.FC = () => {
   const setFilter = useSocialFeedStore((s) => s.setFilter);
   const toggleLike = useSocialFeedStore((s) => s.toggleLike);
   const toggleFollow = useSocialFeedStore((s) => s.toggleFollow);
-  const incrementCommentCount = useSocialFeedStore((s) => s.incrementCommentCount);
   const createPost = useSocialFeedStore((s) => s.createPost);
 
 
@@ -580,8 +502,7 @@ export const SocialFeedScreen: React.FC = () => {
   // State
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedPostType, setSelectedPostType] = useState<FeedPostType>('text');
-  const [commentPostId, setCommentPostId] = useState<string | null>(null);
-  const [quickPreviewPost, setQuickPreviewPost] = useState<FeedPost | null>(null);
+  // quickPreviewPost state removed — no intermediate modals
 
   // Suggested story daily view tracking
   const [suggestedStoryViewsToday, setSuggestedStoryViewsToday] = useState(0);
@@ -731,18 +652,7 @@ export const SocialFeedScreen: React.FC = () => {
     [toggleLike, posts, recordInteraction, markInteraction],
   );
 
-  const handleComment = useCallback((postId: string) => {
-    markInteraction();
-    setCommentPostId(postId);
-  }, []);
-
-  const handleCloseComments = useCallback(() => {
-    setCommentPostId(null);
-  }, []);
-
-  const handleCommentAdded = useCallback((postId: string) => {
-    incrementCommentCount(postId);
-  }, [incrementCommentCount]);
+  // Comment handlers removed — comment system removed from feed
 
   const handleFollow = useCallback(
     (userId: string) => {
@@ -763,12 +673,9 @@ export const SocialFeedScreen: React.FC = () => {
   );
 
   const handlePostTap = useCallback((post: FeedPost) => {
-    setQuickPreviewPost(post);
-  }, []);
-
-  const handleCloseQuickPreview = useCallback(() => {
-    setQuickPreviewPost(null);
-  }, []);
+    // Tapping post opens full-screen post detail view
+    navigation.navigate('PostDetail', { postId: post.id });
+  }, [navigation]);
 
   // Internal helper — executes the flirt request after all checks pass
   const executeFlirt = useCallback(
@@ -799,100 +706,8 @@ export const SocialFeedScreen: React.FC = () => {
     [posts, recordInteraction, markInteraction, recordFlirt],
   );
 
-  const handleFlirt = useCallback(
-    async (userId: string) => {
-      // Check if already pending
-      if (isFlirtPending(userId)) {
-        Alert.alert('Beklemede', 'Bu kişiye zaten flört isteği gönderdin. Yanıt bekleniyor.');
-        return;
-      }
+  // Flirt and prompt logic removed — actions moved to profile screen
 
-      // Check daily limit (only enforced when MONETIZATION_ENABLED = true)
-      const tier = packageTier as 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
-      if (canFlirt(tier)) {
-        // Under daily limit — proceed normally
-        executeFlirt(userId);
-        return;
-      }
-
-      // Daily limit exceeded — show options: spend gold or upgrade
-      const dailyLimit = FEATURE_RULES['flirt_start'].limits[tier];
-      const limitLabel = dailyLimit === -1 ? 'Sinirsiz' : String(dailyLimit);
-
-      const alertButtons: Array<{
-        text: string;
-        style?: 'cancel' | 'default' | 'destructive';
-        onPress?: () => void;
-      }> = [
-        {
-          text: `Jeton Kullan (${FLIRT_START_COST})`,
-          onPress: async () => {
-            if (coinBalance < FLIRT_START_COST) {
-              Alert.alert(
-                'Yetersiz Jeton',
-                `Flört göndermek için ${FLIRT_START_COST} jeton gerekli. Mevcut bakiye: ${coinBalance}`,
-                [
-                  {
-                    text: 'Jeton Al',
-                    onPress: () =>
-                      navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' }),
-                  },
-                  { text: 'Kapat', style: 'cancel' },
-                ],
-              );
-              return;
-            }
-
-            const spent = await spendCoins(FLIRT_START_COST, `flirt_start:${userId}`);
-            if (spent) {
-              executeFlirt(userId);
-            }
-          },
-        },
-        {
-          text: 'Paketi Yükselt',
-          onPress: () =>
-            navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' }),
-        },
-        { text: 'Kapat', style: 'cancel' },
-      ];
-
-      Alert.alert(
-        'Günlük Flört Limitin Doldu',
-        `Bugün için ${limitLabel} flört hakkının tamamını kullandın. Jeton harcayarak devam edebilir veya paketini yükselterek limitini artırabilirsin.`,
-        alertButtons,
-      );
-    },
-    [
-      canFlirt,
-      coinBalance,
-      executeFlirt,
-      isFlirtPending,
-      navigation,
-      packageTier,
-      spendCoins,
-    ],
-  );
-
-  // Flirt prompt — start flirt from feed interaction popup
-  const handleStartFlirtFromPrompt = useCallback(async () => {
-    if (!promptedPost) return;
-    clearPrompt();
-    // Delegate to handleFlirt which checks limits
-    handleFlirt(promptedPost.userId);
-  }, [promptedPost, clearPrompt, handleFlirt]);
-
-
-  // Comment → private message (premium gated, handled in CommentSheet)
-  const handleCommentPrivateMessage = useCallback(
-    (userId: string, _userName: string) => {
-      setCommentPostId(null);
-      setTimeout(() => {
-        navigation.navigate('ProfilePreview', { userId });
-      }, 300);
-    },
-    [navigation],
-  );
 
   const handlePostTypeSelect = useCallback((type: FeedPostType) => {
     const tierPostLimit = FEED_POST_CONFIG.DAILY_LIMITS[packageTier as keyof typeof FEED_POST_CONFIG.DAILY_LIMITS];
@@ -920,17 +735,13 @@ export const SocialFeedScreen: React.FC = () => {
   }, [packageTier, dailyPostCount, lastPostDate, navigation]);
 
   const handleCreatePost = useCallback(
-    (content: string, topic: FeedTopic, postType: FeedPostType, photoUrls: string[], videoUrl: string | null, musicTitle: string | null, musicArtist: string | null, musicCoverUrl: string | null, musicMoodTag: string | null) => {
+    (content: string, topic: FeedTopic, postType: FeedPostType, photoUrls: string[], videoUrl: string | null) => {
       createPost({
         content,
         topic,
         postType,
         photoUrls,
         videoUrl,
-        musicTitle,
-        musicArtist,
-        musicCoverUrl: musicCoverUrl ?? undefined,
-        musicMoodTag: musicMoodTag ?? undefined,
       });
       const today = getToday();
       setDailyPostCount((prev) => (lastPostDate === today ? prev + 1 : 1));
@@ -1003,16 +814,14 @@ export const SocialFeedScreen: React.FC = () => {
           <FeedCard
             post={item.data}
             onLike={handleLike}
-            onComment={handleComment}
             onFollow={handleFollow}
             onProfilePress={handleProfilePress}
-            onFlirt={handleFlirt}
             onPostTap={handlePostTap}
           />
         </View>
       );
     },
-    [handleLike, handleComment, handleFollow, handleProfilePress, handleFlirt, handlePostTap, handleNudgeDiscovery, handleNudgeMatches, handleNudgeScrollToTop, handleNudgeDismiss],
+    [handleLike, handleFollow, handleProfilePress, handlePostTap, handleNudgeDiscovery, handleNudgeMatches, handleNudgeScrollToTop, handleNudgeDismiss],
   );
 
   const keyExtractor = useCallback((item: FeedListItem) =>
@@ -1028,7 +837,7 @@ export const SocialFeedScreen: React.FC = () => {
             onPress={() => handlePostTypeSelect('text')}
             activeOpacity={0.85}
           >
-            <Text style={createStyles.placeholder}>Hikayeni paylaş...</Text>
+            <Text style={createStyles.placeholder}>Gönderini paylaş...</Text>
           </TouchableOpacity>
           <View style={createStyles.iconRow}>
             <TouchableOpacity style={createStyles.iconChip} onPress={() => handlePostTypeSelect('photo')} activeOpacity={0.7}>
@@ -1043,10 +852,7 @@ export const SocialFeedScreen: React.FC = () => {
               <Ionicons name="create" size={18} color="#10B981" />
               <Text style={[createStyles.iconLabel, { color: '#10B981' }]}>Yazı</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={createStyles.iconChip} onPress={() => handlePostTypeSelect('music')} activeOpacity={0.7}>
-              <Ionicons name="musical-notes" size={18} color="#F59E0B" />
-              <Text style={[createStyles.iconLabel, { color: '#F59E0B' }]}>Müzik</Text>
-            </TouchableOpacity>
+            {/* Müzik butonu kaldırıldı — music feature removed */}
           </View>
         </View>
 
@@ -1152,35 +958,9 @@ export const SocialFeedScreen: React.FC = () => {
         isCreating={isCreating}
       />
 
-      {/* Comment Sheet */}
-      <CommentSheet
-        visible={commentPostId !== null}
-        postId={commentPostId}
-        userTier={packageTier as 'FREE' | 'GOLD' | 'PRO' | 'RESERVED'}
-        onClose={handleCloseComments}
-        onCommentAdded={handleCommentAdded}
-        onPrivateMessage={handleCommentPrivateMessage}
-        onUpgrade={() => navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' })}
-      />
+      {/* CommentSheet removed — comment system removed */}
 
-      {/* Quick Profile Preview — tap on post content */}
-      <QuickProfilePreview
-        visible={quickPreviewPost !== null}
-        post={quickPreviewPost}
-        onClose={handleCloseQuickPreview}
-        onFlirt={handleFlirt}
-        onFullProfile={handleProfilePress}
-      />
-
-      {/* Flirt Prompt — triggered after 3 interactions with same user */}
-      <MatchPromptModal
-        visible={promptedPost !== null && promptedPost !== undefined}
-        userName={promptedPost?.userName ?? ''}
-        userAvatarUrl={promptedPost?.userAvatarUrl ?? ''}
-        compatibilityScore={promptedPost?.compatibilityScore ?? 0}
-        onStartFlirt={handleStartFlirtFromPrompt}
-        onDismiss={dismissPrompt}
-      />
+      {/* QuickProfilePreview and MatchPromptModal removed — actions in profile screen only */}
 
       {/* Hikaye oluştur — bottom sheet */}
       <Modal visible={showStorySheet} transparent animationType="slide" onRequestClose={() => setShowStorySheet(false)}>
@@ -1563,7 +1343,7 @@ const modalStyles = StyleSheet.create({
   submitTextDisabled: {
     opacity: 0.4,
   },
-  musicSection: {
+  _musicSection_removed: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.smd,
     gap: spacing.smd,
@@ -1600,7 +1380,7 @@ const modalStyles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: 1,
   },
-  addMusicButton: {
+  _addMusicButton_removed: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: palette.purple[50] + '80',
@@ -1612,7 +1392,7 @@ const modalStyles = StyleSheet.create({
     borderColor: palette.purple[200] + '25',
     borderStyle: 'dashed',
   },
-  addMusicText: {
+  _addMusicText_removed: {
     flex: 1,
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',

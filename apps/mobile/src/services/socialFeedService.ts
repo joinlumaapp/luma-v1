@@ -28,7 +28,7 @@ export const FEED_TOPICS: FeedTopicOption[] = [
 
 export type FeedFilter = 'ONERILEN' | 'TAKIP';
 
-export type FeedPostType = 'photo' | 'video' | 'text' | 'question' | 'music';
+export type FeedPostType = 'photo' | 'video' | 'text';
 
 export interface FeedPostTypeOption {
   type: FeedPostType;
@@ -41,7 +41,6 @@ export const FEED_POST_TYPES: FeedPostTypeOption[] = [
   { type: 'photo', emoji: '\uD83D\uDCF8', label: 'Fotograf', color: '#8B5CF6' },
   { type: 'video', emoji: '\uD83C\uDFA5', label: 'Video', color: '#EC4899' },
   { type: 'text', emoji: '\u270D\uFE0F', label: 'Yazi', color: '#10B981' },
-  { type: 'music', emoji: '\uD83C\uDFB5', label: 'Muzik', color: '#F59E0B' },
 ];
 
 export type IntentionTag = 'SERIOUS_RELATIONSHIP' | 'EXPLORING' | 'NOT_SURE';
@@ -80,10 +79,6 @@ export interface FeedPost {
   content: string;
   photoUrls: string[];
   videoUrl: string | null;
-  musicTitle: string | null;
-  musicArtist: string | null;
-  musicCoverUrl: string | null;
-  musicMoodTag: string | null;
   distance: number;
   compatibilityScore: number;
   likeCount: number;
@@ -96,7 +91,6 @@ export interface FeedPost {
   isLiked: boolean;
   isSaved: boolean;
   createdAt: string;
-  currentlyListening: { songTitle: string; artist: string; coverUrl: string | null } | null;
 }
 
 export interface CommentReply {
@@ -127,10 +121,6 @@ export interface CreatePostRequest {
   postType: FeedPostType;
   photoUrls: string[];
   videoUrl?: string | null;
-  musicTitle?: string | null;
-  musicArtist?: string | null;
-  musicCoverUrl?: string;
-  musicMoodTag?: string;
 }
 
 export interface FeedResponse {
@@ -204,10 +194,6 @@ const MOCK_POSTS: FeedPost[] = [
     content: 'Bugün sahilde yürüyüş yaptım ve kendi kendime düşündüm: hayatta en çok neye değer veriyorum? Cevap hep aynı: samimi insanlar.',
     photoUrls: [],
     videoUrl: null,
-    musicTitle: null,
-    musicArtist: null,
-    musicCoverUrl: null,
-    musicMoodTag: null,
     distance: 3,
     compatibilityScore: 82,
     likeCount: 42,
@@ -220,7 +206,6 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: false,
     isSaved: false,
     createdAt: minutesAgo(12),
-    currentlyListening: { songTitle: 'Dünyadan Uzak', artist: 'Sezen Aksu', coverUrl: 'https://picsum.photos/seed/sezen/200' },
   },
   {
     id: 'post-002',
@@ -236,14 +221,10 @@ const MOCK_POSTS: FeedPost[] = [
     isFollowing: false,
     intentionTag: 'EXPLORING',
     topic: 'SORU_CEVAP',
-    postType: 'question',
+    postType: 'text',
     content: 'İlk buluşmada karşı tarafta en çok neye dikkat edersiniz? Ben göz teması ve dinleme becerisine bakıyorum.',
     photoUrls: [],
     videoUrl: null,
-    musicTitle: null,
-    musicArtist: null,
-    musicCoverUrl: null,
-    musicMoodTag: null,
     distance: 8,
     compatibilityScore: 91,
     likeCount: 67,
@@ -256,7 +237,6 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: true,
     isSaved: false,
     createdAt: minutesAgo(35),
-    currentlyListening: { songTitle: 'Blinding Lights', artist: 'The Weeknd', coverUrl: 'https://picsum.photos/seed/weeknd/200' },
   },
   {
     id: 'post-003',
@@ -276,10 +256,6 @@ const MOCK_POSTS: FeedPost[] = [
     content: 'Kapadokya\'da gün doğumu... Balon turu hayatımın en güzel deneyimiydi. Yanınızda doğru insanla her yer cennet.',
     photoUrls: ['https://picsum.photos/seed/cappadocia/600/400'],
     videoUrl: null,
-    musicTitle: null,
-    musicArtist: null,
-    musicCoverUrl: null,
-    musicMoodTag: null,
     distance: 12,
     compatibilityScore: 78,
     likeCount: 128,
@@ -292,7 +268,6 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(1),
-    currentlyListening: null,
   },
   {
     id: 'post-004',
@@ -308,14 +283,10 @@ const MOCK_POSTS: FeedPost[] = [
     isFollowing: false,
     intentionTag: 'NOT_SURE',
     topic: 'MUZIK',
-    postType: 'music',
+    postType: 'text',
     content: 'Yağmurlu bir akşamda Fazıl Say dinlemek... Ruhumu iyileştiren tek şey bu. Müzik seven biri varsa yazışalım!',
     photoUrls: [],
     videoUrl: null,
-    musicTitle: 'Black Earth',
-    musicArtist: 'Fazıl Say',
-    musicCoverUrl: 'https://picsum.photos/seed/fazilsay/200',
-    musicMoodTag: '\uD83C\uDF19 Gece',
     distance: 5,
     compatibilityScore: 65,
     likeCount: 53,
@@ -328,7 +299,6 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(2),
-    currentlyListening: null,
   },
   {
     id: 'post-005',
@@ -348,10 +318,6 @@ const MOCK_POSTS: FeedPost[] = [
     content: 'Yay burçları bu hafta aşk konusunda çok şanslı! Venüs geçişi duygusal bağları güçlendiriyor. Kim Yay burcu burada?',
     photoUrls: [],
     videoUrl: null,
-    musicTitle: null,
-    musicArtist: null,
-    musicCoverUrl: null,
-    musicMoodTag: null,
     distance: 15,
     compatibilityScore: 73,
     likeCount: 89,
@@ -364,7 +330,6 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: true,
     isSaved: false,
     createdAt: hoursAgo(3),
-    currentlyListening: { songTitle: 'Firuze', artist: 'Sezen Aksu', coverUrl: 'https://picsum.photos/seed/firuze/200' },
   },
   {
     id: 'post-006',
@@ -380,14 +345,10 @@ const MOCK_POSTS: FeedPost[] = [
     isFollowing: false,
     intentionTag: 'SERIOUS_RELATIONSHIP',
     topic: 'ASK_IPUCU',
-    postType: 'question',
+    postType: 'text',
     content: 'Bir ilişkide en önemli şey güven değil, güvenin sürdürülebilir olması. Küçük tutarlı davranışlar büyük sözlerden daha değerli.',
     photoUrls: [],
     videoUrl: null,
-    musicTitle: null,
-    musicArtist: null,
-    musicCoverUrl: null,
-    musicMoodTag: null,
     distance: 22,
     compatibilityScore: 88,
     likeCount: 156,
@@ -400,7 +361,6 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(4),
-    currentlyListening: null,
   },
   {
     id: 'post-007',
@@ -420,10 +380,6 @@ const MOCK_POSTS: FeedPost[] = [
     content: 'Bugün pilates sonrası kendimi o kadar iyi hissettim ki, pozitif enerji her yere yayıldı. Kendinize iyi bakmayı unutmayın!',
     photoUrls: ['https://picsum.photos/seed/yoga/600/400'],
     videoUrl: null,
-    musicTitle: null,
-    musicArtist: null,
-    musicCoverUrl: null,
-    musicMoodTag: null,
     distance: 7,
     compatibilityScore: 56,
     likeCount: 34,
@@ -436,7 +392,6 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(5),
-    currentlyListening: null,
   },
   {
     id: 'post-008',
@@ -452,14 +407,10 @@ const MOCK_POSTS: FeedPost[] = [
     isFollowing: true,
     intentionTag: 'NOT_SURE',
     topic: 'MUZIK',
-    postType: 'music',
+    postType: 'text',
     content: 'Yeni bir şarkı prodüksiyonu bitirdim! Lo-fi beats + Türk enstrümanları karışımı. Müzikle terapi yapıyorum resmen.',
     photoUrls: [],
     videoUrl: null,
-    musicTitle: 'Lo-fi Anatolian',
-    musicArtist: 'Naz',
-    musicCoverUrl: 'https://picsum.photos/seed/lofi/200',
-    musicMoodTag: '\u2728 Mutlu',
     distance: 18,
     compatibilityScore: 71,
     likeCount: 71,
@@ -472,7 +423,6 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(6),
-    currentlyListening: null,
   },
   {
     id: 'post-009',
@@ -488,14 +438,10 @@ const MOCK_POSTS: FeedPost[] = [
     isFollowing: false,
     intentionTag: 'SERIOUS_RELATIONSHIP',
     topic: 'SORU_CEVAP',
-    postType: 'question',
+    postType: 'text',
     content: 'Uzun süreli ilişkilerde sıkılmamak için ne yapıyorsunuz? Biz partner ile her ay yeni bir hobi denemeye başladık.',
     photoUrls: [],
     videoUrl: null,
-    musicTitle: null,
-    musicArtist: null,
-    musicCoverUrl: null,
-    musicMoodTag: null,
     distance: 11,
     compatibilityScore: 84,
     likeCount: 93,
@@ -508,7 +454,6 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(8),
-    currentlyListening: null,
   },
   {
     id: 'post-010',
@@ -528,10 +473,6 @@ const MOCK_POSTS: FeedPost[] = [
     content: 'Bu hafta sonu Bolu\'da dağ yürüyüşü yaptık. Doğada vakit geçirmek ilişkiyi güçlendiriyor, tavsiye ederim!',
     photoUrls: ['https://picsum.photos/seed/mountain/600/400'],
     videoUrl: null,
-    musicTitle: null,
-    musicArtist: null,
-    musicCoverUrl: null,
-    musicMoodTag: null,
     distance: 30,
     compatibilityScore: 62,
     likeCount: 45,
@@ -544,7 +485,6 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(10),
-    currentlyListening: null,
   },
   {
     id: 'post-011',
@@ -564,10 +504,6 @@ const MOCK_POSTS: FeedPost[] = [
     content: 'Sevgi dili testini yaptınız mı? Partnerinizin sevgi dilini bilmek ilişkide çığır açıyor. Benim dilim kaliteli vakit.',
     photoUrls: [],
     videoUrl: null,
-    musicTitle: null,
-    musicArtist: null,
-    musicCoverUrl: null,
-    musicMoodTag: null,
     distance: 9,
     compatibilityScore: 95,
     likeCount: 112,
@@ -580,7 +516,6 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: true,
     isSaved: false,
     createdAt: hoursAgo(12),
-    currentlyListening: { songTitle: 'Die With A Smile', artist: 'Lady Gaga & Bruno Mars', coverUrl: 'https://picsum.photos/seed/gaga/200' },
   },
   {
     id: 'post-012',
@@ -600,10 +535,6 @@ const MOCK_POSTS: FeedPost[] = [
     content: 'Terazi-Aslan uyumu hakkında ne düşünüyorsunuz? Arkadaşım bu ikili çok uyumlu diyor ama ben emin değilim.',
     photoUrls: [],
     videoUrl: null,
-    musicTitle: null,
-    musicArtist: null,
-    musicCoverUrl: null,
-    musicMoodTag: null,
     distance: 4,
     compatibilityScore: 79,
     likeCount: 58,
@@ -616,7 +547,6 @@ const MOCK_POSTS: FeedPost[] = [
     isLiked: false,
     isSaved: false,
     createdAt: hoursAgo(14),
-    currentlyListening: null,
   },
 ];
 
@@ -747,10 +677,6 @@ export const socialFeedService = {
         content: data.content,
         photoUrls: data.photoUrls,
         videoUrl: data.videoUrl ?? null,
-        musicTitle: data.musicTitle ?? null,
-        musicArtist: data.musicArtist ?? null,
-        musicCoverUrl: data.musicCoverUrl ?? null,
-        musicMoodTag: data.musicMoodTag ?? null,
         distance: 0,
         compatibilityScore: 100,
         likeCount: 0,
@@ -763,8 +689,7 @@ export const socialFeedService = {
         isLiked: false,
         isSaved: false,
         createdAt: new Date().toISOString(),
-        currentlyListening: null,
-      }, 'socialFeedService.createPost');
+          }, 'socialFeedService.createPost');
     }
   },
 

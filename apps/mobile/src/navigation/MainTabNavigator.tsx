@@ -16,7 +16,7 @@ import type {
   DiscoveryStackParamList,
   MatchesStackParamList,
   FeedStackParamList,
-  ActivitiesStackParamList,
+  LiveStackParamList,
   ProfileStackParamList,
 } from './types';
 import { darkTheme } from '../theme/colors';
@@ -71,6 +71,7 @@ import { JetonMarketScreen } from '../screens/store/JetonMarketScreen';
 
 // Feed extra screens
 import { FeedProfileScreen } from '../screens/feed/FeedProfileScreen';
+import { PostDetailScreen } from '../screens/feed/PostDetailScreen';
 
 // Discovery extra screens
 import { WeeklyReportScreen } from '../screens/discovery/WeeklyReportScreen';
@@ -80,11 +81,8 @@ import { StoryViewerScreen } from '../screens/discovery/StoryViewerScreen';
 import { InstantConnectScreen } from '../screens/discovery/InstantConnectScreen';
 import { StoryCreator } from '../components/stories/StoryCreator';
 
-// Activities screens
-import { ActivitiesScreen } from '../screens/activities/ActivitiesScreen';
-import { CreateActivityScreen } from '../screens/activities/CreateActivityScreen';
-import { ActivityDetailScreen } from '../screens/activities/ActivityDetailScreen';
-import { ActivityGroupChatScreen } from '../screens/activities/ActivityGroupChatScreen';
+// Live screen (replaces Activities)
+import { LiveScreen } from '../screens/live/LiveScreen';
 
 // Waves screen
 import { WavesScreen } from '../screens/waves/WavesScreen';
@@ -107,7 +105,7 @@ const DeferredEditProfile = withDeferredMount(EditProfileScreen);
 const DiscoveryStack = createNativeStackNavigator<DiscoveryStackParamList>();
 const MatchesStack = createNativeStackNavigator<MatchesStackParamList>();
 const FeedStack = createNativeStackNavigator<FeedStackParamList>();
-const ActivitiesStack = createNativeStackNavigator<ActivitiesStackParamList>();
+const LiveStack = createNativeStackNavigator<LiveStackParamList>();
 const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -155,7 +153,7 @@ const TAB_ICONS: Record<string, { active: keyof typeof Ionicons.glyphMap; inacti
   compass: { active: 'compass', inactive: 'compass-outline' },
   heart: { active: 'heart', inactive: 'heart-outline' },
   feed: { active: 'newspaper', inactive: 'newspaper-outline' },
-  activities: { active: 'map', inactive: 'map-outline' },
+  live: { active: 'videocam', inactive: 'videocam-outline' },
   user: { active: 'person', inactive: 'person-outline' },
 };
 
@@ -345,6 +343,11 @@ const FeedStackNavigator: React.FC = React.memo(() => (
     <FeedStack.Screen name="FeedProfile" component={FeedProfileScreen} />
     <FeedStack.Screen name="ProfilePreview" component={ProfilePreviewScreen} />
     <FeedStack.Screen
+      name="PostDetail"
+      component={PostDetailScreen}
+      options={{ animation: 'slide_from_bottom', gestureEnabled: true, gestureDirection: 'vertical' }}
+    />
+    <FeedStack.Screen
       name="StoryCreator"
       component={StoryCreator}
       options={{ animation: 'slide_from_bottom', gestureEnabled: true, gestureDirection: 'vertical' }}
@@ -358,25 +361,17 @@ const FeedStackNavigator: React.FC = React.memo(() => (
 ));
 FeedStackNavigator.displayName = 'FeedStackNavigator';
 
-// Activities tab stack — activities as tab root
-const ActivitiesStackNavigator: React.FC = React.memo(() => (
-  <ActivitiesStack.Navigator
+// Live tab stack — instant video connection
+const LiveStackNavigator: React.FC = React.memo(() => (
+  <LiveStack.Navigator
     screenOptions={{
       headerShown: false,
-      animation: 'slide_from_right',
     }}
   >
-    <ActivitiesStack.Screen name="Activities" component={ActivitiesScreen} />
-    <ActivitiesStack.Screen
-      name="CreateActivity"
-      component={CreateActivityScreen}
-      options={{ animation: 'slide_from_bottom' }}
-    />
-    <ActivitiesStack.Screen name="ActivityDetail" component={ActivityDetailScreen} />
-    <ActivitiesStack.Screen name="ActivityGroupChat" component={ActivityGroupChatScreen} />
-  </ActivitiesStack.Navigator>
+    <LiveStack.Screen name="Live" component={LiveScreen} />
+  </LiveStack.Navigator>
 ));
-ActivitiesStackNavigator.displayName = 'ActivitiesStackNavigator';
+LiveStackNavigator.displayName = 'LiveStackNavigator';
 
 // Profile tab stack — default slide_from_right for push screens
 const ProfileStackNavigator: React.FC = React.memo(() => (
@@ -496,15 +491,15 @@ export const MainTabNavigator: React.FC = () => {
         listeners={({ navigation, route }) => createTabResetListener(navigation, route)}
       />
       <Tab.Screen
-        name="ActivitiesTab"
-        component={ActivitiesStackNavigator}
+        name="LiveTab"
+        component={LiveStackNavigator}
         options={{
-          tabBarLabel: 'Etkinlik',
+          tabBarLabel: 'Canl\u0131',
           tabBarIcon: ({ focused }) => (
-            <TabIcon name="activities" focused={focused} />
+            <TabIcon name="live" focused={focused} />
           ),
-          tabBarAccessibilityLabel: 'Etkinlik',
-          tabBarButtonTestID: 'tab-activities',
+          tabBarAccessibilityLabel: 'Canl\u0131 Ba\u011flant\u0131',
+          tabBarButtonTestID: 'tab-live',
         }}
         listeners={({ navigation, route }) => createTabResetListener(navigation, route)}
       />

@@ -32,8 +32,6 @@ export interface UserProfile {
   moodSetAt: Date | null;
   voiceIntroUrl: string | null;
   voiceIntroDuration: number | null;
-  currentlyListening: ListeningStatus | null;
-  listeningVisibility: ListeningVisibility;
 }
 
 export interface UserPhoto {
@@ -67,18 +65,6 @@ export enum PackageTier {
   PRO = 'PRO',
   RESERVED = 'RESERVED',
 }
-
-/** Currently listening data attached to a user profile */
-export interface ListeningStatus {
-  songTitle: string;
-  artist: string;
-  coverUrl: string | null;
-  externalUrl: string | null;
-  startedAt: string;
-}
-
-/** Privacy setting for listening visibility */
-export type ListeningVisibility = 'PUBLIC' | 'MATCHES_ONLY' | 'HIDDEN';
 
 export enum VerificationStatus {
   PENDING = 'PENDING',

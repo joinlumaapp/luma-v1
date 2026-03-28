@@ -29,7 +29,7 @@ import { getCompatibilityPersonality, type CompatibilityPersonality, translateIn
 import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
 import { VerifiedBadge } from '../../components/common/VerifiedBadge';
 import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
-import { NowListening } from '../../components/feed/NowListening';
+// NowListening removed — music feature removed
 
 type FeedProfileRouteProp = RouteProp<FeedStackParamList, 'FeedProfile'>;
 type FeedProfileNavProp = NativeStackNavigationProp<FeedStackParamList, 'FeedProfile'>;
@@ -56,7 +56,7 @@ interface FeedUserProfile {
   intentionTag: string;
   zodiacSign: string;
   packageTier?: 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
-  currentlyListening: { songTitle: string; artist: string; coverUrl: string | null } | null;
+  // currentlyListening removed — music feature removed
 }
 
 // ─── Dev-only mock profiles ────────────────────────────────────────────────
@@ -72,7 +72,7 @@ const DEV_MOCK_PROFILES: Record<string, FeedUserProfile> | null = __DEV__ ? {
     hobbies: ['Yoga', 'Kitap', 'Seyahat', 'Fotoğrafçılık'],
     height: '168 cm', job: 'Grafik Tasarımcı', education: 'İstanbul Üniversitesi', intentionTag: 'Ciddi İlişki', zodiacSign: 'Başak',
     packageTier: 'GOLD',
-    currentlyListening: { songTitle: 'Dünyadan Uzak', artist: 'Sezen Aksu', coverUrl: 'https://picsum.photos/seed/sezen/200' },
+    // currentlyListening removed
   },
   'bot-002': {
     userId: 'bot-002', name: 'Zeynep', age: 24, city: 'Ankara',
@@ -83,7 +83,6 @@ const DEV_MOCK_PROFILES: Record<string, FeedUserProfile> | null = __DEV__ ? {
     hobbies: ['Dans', 'Müzik', 'Yüzme', 'Pilates', 'Sinema'],
     height: '172 cm', job: 'Pazarlama Uzmanı', education: 'Bilkent Üniversitesi', intentionTag: 'Keşfediyorum', zodiacSign: 'İkizler',
     packageTier: 'RESERVED',
-    currentlyListening: null,
   },
 } : null;
 
@@ -108,7 +107,6 @@ const getDevFallbackProfile = (userId: string): FeedUserProfile => ({
   education: '',
   intentionTag: '',
   zodiacSign: '',
-  currentlyListening: null,
 });
 
 const getScoreColor = (score: number): string => {
@@ -392,16 +390,10 @@ export const FeedProfileScreen: React.FC = () => {
     );
   }
 
-  // 1b. Currently Listening — shown if available
-  if (profile.currentlyListening) {
+  // Currently Listening section removed — music feature removed
+  if (false) {
     infoSections.push(
       <View key="listening" style={styles.listeningSection}>
-        <NowListening
-          songTitle={profile.currentlyListening.songTitle}
-          artist={profile.currentlyListening.artist}
-          coverUrl={profile.currentlyListening.coverUrl}
-          variant="full"
-        />
       </View>,
     );
   }

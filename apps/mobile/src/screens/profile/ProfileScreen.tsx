@@ -41,8 +41,7 @@ import { InterleavedProfileLayout } from '../../components/profile/InterleavedPr
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { CoinBalance } from '../../components/common/CoinBalance';
 import { DailyChallenge, WeeklyLeaderboard } from '../../components/engagement';
-import { NowListening } from '../../components/feed/NowListening';
-import { useListeningStore } from '../../stores/listeningStore';
+// NowListening and listeningStore removed — music feature removed
 
 type ProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'Profile'>;
 
@@ -227,11 +226,7 @@ export const ProfileScreen: React.FC = () => {
   const fetchMatches = useMatchStore((state) => state.fetchMatches);
   const [badges, setBadges] = useState<Array<{ id: string; name: string; earned: boolean }>>([]);
 
-  // Listening status
-  const currentListening = useListeningStore((s) => s.currentListening);
-  const visibility = useListeningStore((s) => s.visibility);
-  const clearListening = useListeningStore((s) => s.clearListening);
-  const setVisibility = useListeningStore((s) => s.setVisibility);
+  // Listening status removed — music feature removed
 
   // Profile Strength Meter state
   const [strengthData, setStrengthData] = useState<ProfileStrengthResponse | null>(null);
@@ -582,46 +577,7 @@ export const ProfileScreen: React.FC = () => {
     </View>,
   );
 
-  // 1b. Dinleme Durumu — listening status with privacy controls
-  infoSections.push(
-    <View key="listening" style={styles.listeningSection}>
-      <Text style={styles.listeningSectionTitle}>Dinleme Durumu</Text>
-
-      {currentListening ? (
-        <View style={styles.listeningActive}>
-          <NowListening
-            songTitle={currentListening.songTitle}
-            artist={currentListening.artist}
-            coverUrl={currentListening.coverUrl}
-            variant="full"
-          />
-          <TouchableOpacity onPress={clearListening} style={styles.clearListeningBtn}>
-            <Text style={styles.clearListeningText}>Durumu Temizle</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <Text style={styles.listeningInactive}>Şu an bir şey dinlemiyorsun</Text>
-      )}
-
-      {/* Privacy control */}
-      <View style={styles.visibilityRow}>
-        <Text style={styles.visibilityLabel}>Kimler görsün?</Text>
-        <View style={styles.visibilityOptions}>
-          {(['PUBLIC', 'MATCHES_ONLY', 'HIDDEN'] as const).map((option) => (
-            <TouchableOpacity
-              key={option}
-              style={[styles.visibilityChip, visibility === option && styles.visibilityChipActive]}
-              onPress={() => setVisibility(option)}
-            >
-              <Text style={[styles.visibilityChipText, visibility === option && styles.visibilityChipTextActive]}>
-                {option === 'PUBLIC' ? 'Herkes' : option === 'MATCHES_ONLY' ? 'Eşleşmeler' : 'Gizli'}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-    </View>,
-  );
+  // Listening status section removed — music feature removed
 
   // 2. İlgi Alanları
   if (profile.interestTags.length > 0) {

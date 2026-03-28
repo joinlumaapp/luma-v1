@@ -47,7 +47,7 @@ export type OnboardingStackParamList = {
 export type MainTabParamList = {
   FeedTab: NavigatorScreenParams<FeedStackParamList>;
   DiscoveryTab: NavigatorScreenParams<DiscoveryStackParamList>;
-  ActivitiesTab: NavigatorScreenParams<ActivitiesStackParamList>;
+  LiveTab: NavigatorScreenParams<LiveStackParamList>;
   MatchesTab: NavigatorScreenParams<MatchesStackParamList>;
   ProfileTab: NavigatorScreenParams<ProfileStackParamList>;
 };
@@ -94,7 +94,7 @@ export type MatchesStackParamList = {
   Report: { userId: string; userName: string };
 };
 
-// -- Activities Stack --
+// -- Activities Stack (deprecated — replaced by Live) --
 export type ActivitiesStackParamList = {
   Activities: undefined;
   CreateActivity: undefined;
@@ -102,11 +102,17 @@ export type ActivitiesStackParamList = {
   ActivityGroupChat: { activityId: string; activityTitle: string };
 };
 
+// -- Live Stack --
+export type LiveStackParamList = {
+  Live: undefined;
+};
+
 // -- Feed Stack --
 export type FeedStackParamList = {
   SocialFeed: undefined;
   FeedProfile: { userId: string };
   ProfilePreview: { userId: string };
+  PostDetail: { postId: string };
   StoryCreator: { mediaUri?: string; mediaType?: 'image' | 'video' } | undefined;
   StoryViewer: {
     userId: string;

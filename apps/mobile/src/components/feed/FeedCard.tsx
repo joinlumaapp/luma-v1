@@ -1,6 +1,5 @@
-// FeedCard — premium, warm, dating-first post card
-// Layout: header (avatar + identity + badges) -> intention -> content -> actions -> comment input
-// Flirt is the primary CTA — largest, most vibrant, icon+text
+// FeedCard — minimal, clean post card focused on discovery
+// Layout: header (avatar + identity) -> intention -> content -> like action
 // Design: soft shadows, warm tones, generous spacing, Poppins typography hierarchy
 
 import React, { useState, useCallback, useRef } from 'react';
@@ -19,7 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { INTENTION_TAG_OPTIONS, type FeedPost } from '../../services/socialFeedService';
-import { NowListening } from './NowListening';
+// NowListening removed — music feature removed from feed
 
 // ─── Time Ago Helper ──────────────────────────────────────────
 
@@ -106,59 +105,7 @@ const MediaSection: React.FC<MediaSectionProps> = ({ photos, videoUrl }) => {
   );
 };
 
-// ─── Music Card (redesigned: cover art, gradient overlay, mood tag) ──
-
-interface MusicCardProps {
-  title: string;
-  artist: string;
-  coverUrl?: string | null;
-  moodTag?: string | null;
-}
-
-const MusicCard: React.FC<MusicCardProps> = ({ title, artist, coverUrl, moodTag }) => {
-  if (coverUrl) {
-    return (
-      <View style={musicStyles.coverContainer}>
-        <Image
-          source={{ uri: coverUrl }}
-          style={musicStyles.coverImage}
-          resizeMode="cover"
-        />
-        <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.35)', 'rgba(0,0,0,0.82)']}
-          locations={[0, 0.4, 1]}
-          style={musicStyles.coverGradient}
-        />
-        {moodTag && (
-          <View style={musicStyles.moodPill}>
-            <Text style={musicStyles.moodText}>{moodTag}</Text>
-          </View>
-        )}
-        <View style={musicStyles.coverContent}>
-          <View style={musicStyles.playCircle}>
-            <Ionicons name="play" size={16} color="#FFFFFF" style={{ marginLeft: 2 }} />
-          </View>
-          <View style={musicStyles.coverInfo}>
-            <Text style={musicStyles.coverTitle} numberOfLines={1}>{title}</Text>
-            <Text style={musicStyles.coverArtist} numberOfLines={1}>{artist}</Text>
-          </View>
-        </View>
-      </View>
-    );
-  }
-
-  return (
-    <View style={musicStyles.container}>
-      <View style={musicStyles.iconCircle}>
-        <Ionicons name="musical-notes" size={18} color={palette.purple[400]} />
-      </View>
-      <View style={musicStyles.info}>
-        <Text style={musicStyles.title} numberOfLines={1}>{title}</Text>
-        <Text style={musicStyles.artist} numberOfLines={1}>{artist}</Text>
-      </View>
-    </View>
-  );
-};
+// MusicCard removed — music feature removed from feed
 
 // ─── Question Card (redesigned: soft gradient, inviting) ─────
 
@@ -202,14 +149,12 @@ const TextContent: React.FC<{ content: string }> = ({ content }) => {
 interface FeedCardProps {
   post: FeedPost;
   onLike: (postId: string) => void;
-  onComment: (postId: string) => void;
   onFollow: (userId: string) => void;
   onProfilePress: (userId: string) => void;
-  onFlirt: (userId: string) => void;
   onPostTap?: (post: FeedPost) => void;
 }
 
-export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onFollow, onProfilePress, onFlirt, onPostTap }) => {
+export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onProfilePress, onPostTap }) => {
   const [showDoubleTapMenu, setShowDoubleTapMenu] = useState(false);
   const likeScale = useRef(new Animated.Value(1)).current;
   const likeGlow = useRef(new Animated.Value(0)).current;
@@ -222,7 +167,6 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
       scale: new Animated.Value(0),
     }))
   ).current;
-  const flirtScale = useRef(new Animated.Value(1)).current;
   const doubleTapScale = useRef(new Animated.Value(0)).current;
   const lastTapRef = useRef<number>(0);
   const doubleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -306,42 +250,29 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
     onLike(post.id);
   }, [onLike, post.id, post.isLiked, likeScale, likeGlow, likeCountAnim, floatingHearts]);
 
-  const handleFlirtPress = useCallback(() => {
-    Animated.sequence([
-      Animated.timing(flirtScale, { toValue: 1.15, duration: 80, useNativeDriver: true }),
-      Animated.spring(flirtScale, { toValue: 1, friction: 3, tension: 200, useNativeDriver: true }),
-    ]).start();
-    onFlirt(post.userId);
-  }, [onFlirt, post.userId, flirtScale]);
-
-  const handleCommentPress = useCallback(() => {
-    onComment(post.id);
-  }, [onComment, post.id]);
-
   const handleProfilePress = useCallback(() => {
     onProfilePress(post.userId);
   }, [onProfilePress, post.userId]);
 
-  // Double-tap: single -> quick preview, double -> action menu
+  // Single tap on content = open full-screen post detail, double tap = like
   const handleContentPress = useCallback(() => {
-    if (post.userId === 'dev-user-001') return;
     const now = Date.now();
     const DOUBLE_TAP_DELAY = 300;
 
     if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+      // Double tap = like
       lastTapRef.current = 0;
       if (doubleTapTimerRef.current) { clearTimeout(doubleTapTimerRef.current); doubleTapTimerRef.current = null; }
-      setShowDoubleTapMenu(true);
-      Animated.spring(doubleTapScale, { toValue: 1, friction: 5, tension: 150, useNativeDriver: true }).start();
-      doubleTapTimerRef.current = setTimeout(() => dismissDoubleTapMenu(), 3000);
+      handleLikePress();
     } else {
+      // Single tap = open post detail
       lastTapRef.current = now;
       doubleTapTimerRef.current = setTimeout(() => {
         if (onPostTap) onPostTap(post);
         lastTapRef.current = 0;
       }, DOUBLE_TAP_DELAY);
     }
-  }, [post, onPostTap, doubleTapScale]);
+  }, [post, onPostTap, handleLikePress]);
 
   const dismissDoubleTapMenu = useCallback(() => {
     Animated.timing(doubleTapScale, { toValue: 0, duration: 150, useNativeDriver: true }).start(() => setShowDoubleTapMenu(false));
@@ -349,11 +280,9 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
   }, [doubleTapScale]);
 
   const handleDoubleTapLike = useCallback(() => { dismissDoubleTapMenu(); handleLikePress(); }, [dismissDoubleTapMenu, handleLikePress]);
-  const handleDoubleTapFlirt = useCallback(() => { dismissDoubleTapMenu(); handleFlirtPress(); }, [dismissDoubleTapMenu, handleFlirtPress]);
 
   const isOwnPost = post.userId === 'dev-user-001';
   const isQuestion = post.postType === 'question';
-  const isMusic = post.postType === 'music' && post.musicTitle && post.musicArtist;
   const timeAgo = formatTimeAgo(post.createdAt);
 
   return (
@@ -388,14 +317,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
             <Text style={styles.subtitleText}>{timeAgo}</Text>
           </View>
 
-          {/* Currently listening — compact inline */}
-          {post.currentlyListening && (
-            <NowListening
-              songTitle={post.currentlyListening.songTitle}
-              artist={post.currentlyListening.artist}
-              coverUrl={post.currentlyListening.coverUrl}
-              variant="compact"
-            />
+          {/* Currently listening removed — music feature removed */}
           )}
         </TouchableOpacity>
 
@@ -440,34 +362,15 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
 
         <MediaSection photos={post.photoUrls} videoUrl={post.videoUrl} />
 
-        {isMusic && (
-          <MusicCard
-            title={post.musicTitle!}
-            artist={post.musicArtist!}
-            coverUrl={post.musicCoverUrl}
-            moodTag={post.musicMoodTag}
-          />
-        )}
+        {/* MusicCard removed — music feature removed */}
 
-        {/* Double-tap overlay */}
-        {showDoubleTapMenu && (
-          <Animated.View style={[styles.doubleTapOverlay, { opacity: doubleTapScale, transform: [{ scale: doubleTapScale }] }]}>
-            <TouchableOpacity style={styles.doubleTapLikeBtn} onPress={handleDoubleTapLike} activeOpacity={0.8}>
-              <Ionicons name={post.isLiked ? 'heart' : 'heart-outline'} size={26} color="#FFFFFF" />
-              <Text style={styles.doubleTapBtnText}>Beğen</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.doubleTapFlirtBtn} onPress={handleDoubleTapFlirt} activeOpacity={0.8}>
-              <Ionicons name="flame" size={28} color="#FFFFFF" />
-              <Text style={styles.doubleTapBtnText}>Flört</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        )}
+        {/* Double-tap overlay removed — double tap triggers like directly */}
       </Pressable>
 
       {/* ── Action Separator ── */}
       <View style={styles.actionSeparator} />
 
-      {/* ── Horizontal Action Bar: Like + Comment + FLIRT ── */}
+      {/* ── Horizontal Action Bar: Like only ── */}
       <View style={styles.actionRow}>
         {/* Like — premium interaction with glow + floating hearts */}
         <TouchableOpacity style={styles.actionBtn} onPress={handleLikePress} activeOpacity={0.7}>
@@ -524,39 +427,9 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
           </View>
         </TouchableOpacity>
 
-        {/* Comment */}
-        <TouchableOpacity style={styles.actionBtn} onPress={handleCommentPress} activeOpacity={0.7}>
-          <View style={styles.actionBtnInner}>
-            <Ionicons name="chatbubble-outline" size={19} color={colors.textSecondary} />
-            {post.commentCount > 0 && (
-              <Text style={styles.actionCount}>{post.commentCount}</Text>
-            )}
-          </View>
-        </TouchableOpacity>
 
-        {/* FLIRT — primary CTA, pushed to right */}
-        {!isOwnPost && (
-          <TouchableOpacity style={styles.flirtCta} onPress={handleFlirtPress} activeOpacity={0.8}>
-            <Animated.View style={[styles.flirtCtaInner, { transform: [{ scale: flirtScale }] }]}>
-              <LinearGradient
-                colors={[palette.coral[400], palette.coral[500], palette.coral[600]]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.flirtCtaGradient}
-              >
-                <Ionicons name="flame" size={17} color="#FFFFFF" />
-                <Text style={styles.flirtCtaText}>Flört Başlat</Text>
-              </LinearGradient>
-            </Animated.View>
-          </TouchableOpacity>
-        )}
       </View>
 
-      {/* ── Mini comment input — warm and personal ── */}
-      <TouchableOpacity style={styles.commentInput} onPress={handleCommentPress} activeOpacity={0.8}>
-        <Ionicons name="chatbubble-ellipses-outline" size={15} color={palette.purple[300]} />
-        <Text style={styles.commentPlaceholder}>Ona ne söylemek istersin?</Text>
-      </TouchableOpacity>
     </View>
   );
 };
@@ -736,10 +609,9 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: palette.rose[400],
   },
-  doubleTapFlirtBtn: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
+  _doubleTapFlirtBtn_removed: {
+    // Removed: flirt button no longer in feed
+    display: 'none',
     width: 84,
     height: 84,
     borderRadius: 42,
@@ -816,11 +688,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 
-  // ── Flirt CTA (primary, pushed to right) ──
-  flirtCta: {
-    marginLeft: 'auto',
+  // ── Flirt CTA removed — actions moved to profile screen ──
+  _flirtCta_removed: {
+    display: 'none',
   },
-  flirtCtaInner: {
+  _flirtCtaInner_removed: {
     borderRadius: borderRadius.full,
     overflow: 'hidden',
     shadowColor: palette.coral[500],
@@ -829,7 +701,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  flirtCtaGradient: {
+  _flirtCtaGradient_removed: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
@@ -837,7 +709,7 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     borderRadius: borderRadius.full,
   },
-  flirtCtaText: {
+  _flirtCtaText_removed: {
     fontSize: 13,
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
@@ -845,8 +717,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
 
-  // ── Mini Comment Input ──
-  commentInput: {
+  // ── Mini Comment Input — removed, comments disabled ──
+  _commentInput_removed: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm + 2,
@@ -858,7 +730,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: palette.purple[100] + '50',
   },
-  commentPlaceholder: {
+  _commentPlaceholder_removed: {
     flex: 1,
     fontSize: 13,
     color: colors.textTertiary,
@@ -939,122 +811,7 @@ const mediaStyles = StyleSheet.create({
   tripleSub: { flex: 1, backgroundColor: colors.surfaceLight },
 });
 
-// ─── Music Card Styles ────────────────────────────────────────
-
-const musicStyles = StyleSheet.create({
-  // ── Cover-based design (when coverUrl exists) ──
-  coverContainer: {
-    borderRadius: borderRadius.lg,
-    overflow: 'hidden',
-    marginBottom: spacing.sm + 2,
-    height: 140,
-    position: 'relative' as const,
-  },
-  coverImage: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: palette.purple[900],
-  },
-  coverGradient: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  moodPill: {
-    position: 'absolute',
-    top: spacing.smd,
-    right: spacing.smd,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.smd,
-    paddingVertical: 4,
-    borderWidth: 0.5,
-    borderColor: 'rgba(255,255,255,0.25)',
-  },
-  moodText: {
-    fontSize: 11,
-    color: '#FFFFFF',
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-    letterSpacing: 0.3,
-  },
-  coverContent: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.md,
-    paddingTop: spacing.sm,
-  },
-  playCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(139, 92, 246, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.3)',
-  },
-  coverInfo: {
-    flex: 1,
-    marginLeft: spacing.smd,
-  },
-  coverTitle: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
-    letterSpacing: 0.2,
-    textShadowColor: 'rgba(0,0,0,0.4)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
-  },
-  coverArtist: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.75)',
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
-    marginTop: 1,
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  // ── Fallback design (no cover, purple-tinted) ──
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: `${palette.purple[50]}80`,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm + 2,
-    borderWidth: 1,
-    borderColor: `${palette.purple[200]}30`,
-  },
-  iconCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: `${palette.purple[100]}70`,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  info: { flex: 1, marginLeft: spacing.smd },
-  title: {
-    fontSize: 14,
-    color: colors.text,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-  },
-  artist: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
-    marginTop: 2,
-  },
-});
+// Music styles removed — music feature removed
 
 // ─── Question Card Styles ─────────────────────────────────────
 
