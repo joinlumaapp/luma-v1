@@ -30,6 +30,7 @@ import {
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 type NavProp = NativeStackNavigationProp<ActivitiesStackParamList, 'ActivityGroupChat'>;
 type RoutePropType = RouteProp<ActivitiesStackParamList, 'ActivityGroupChat'>;
@@ -166,6 +167,7 @@ export const ActivityGroupChatScreen: React.FC = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={insets.top}
     >
+      <BrandedBackground />
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -472,7 +474,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.divider,
     gap: spacing.sm,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
   },
   textInput: {
     flex: 1,

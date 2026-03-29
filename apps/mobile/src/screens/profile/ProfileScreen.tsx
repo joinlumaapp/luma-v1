@@ -39,6 +39,7 @@ import { InterleavedProfileLayout } from '../../components/profile/InterleavedPr
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { CoinBalance } from '../../components/common/CoinBalance';
 import { DailyChallenge, WeeklyLeaderboard } from '../../components/engagement';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 // NowListening and listeningStore removed — music feature removed
 
 type ProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'Profile'>;
@@ -708,6 +709,7 @@ export const ProfileScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <BrandedBackground />
       <InterleavedProfileLayout
         photos={profile.photos}
         topContent={topContent}
@@ -756,7 +758,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
   },
   headerLeft: {
     flexDirection: 'row',

@@ -28,6 +28,7 @@ import type { Notification } from '../../services/notificationService';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 type NotificationsNavProp = CompositeNavigationProp<
   NativeStackNavigationProp<DiscoveryStackParamList, 'Notifications'>,
@@ -343,6 +344,7 @@ export const NotificationsScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/* Header */}
       <View style={styles.header}>
         <Pressable

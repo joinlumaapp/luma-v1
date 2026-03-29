@@ -26,6 +26,7 @@ import {
   CouplesEvent,
   LeaderboardEntry,
 } from '../../services/couplesClubService';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 type TabKey = 'events' | 'leaderboard';
 
@@ -562,6 +563,7 @@ export const CouplesClubScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -1052,7 +1054,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   textInput: {
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
     borderRadius: borderRadius.md,
     borderWidth: 1,
     borderColor: colors.surfaceBorder,

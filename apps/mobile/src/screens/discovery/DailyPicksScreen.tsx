@@ -33,6 +33,7 @@ import { PulseGlow } from '../../components/animations/PulseGlow';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const NUM_COLUMNS = 2;
@@ -465,6 +466,7 @@ export const DailyPicksScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>

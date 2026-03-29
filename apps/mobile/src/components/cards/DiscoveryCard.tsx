@@ -1,5 +1,6 @@
-// DiscoveryCard — Photo-dominant card with overlay info and minimal bottom section
-// No gesture handling — parent manages swipe + tap
+// DiscoveryCard — Unified premium discovery card
+// Single seamless surface: photo blends into info via a tall gradient overlay.
+// No separate info panel — everything lives on one continuous card.
 
 import React, { useEffect, useRef } from 'react';
 import {
@@ -11,7 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, palette, glassmorphism } from '../../theme/colors';
+import { palette } from '../../theme/colors';
 import { fontWeights, poppinsFonts } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { INTEREST_OPTIONS } from '../../constants/config';
@@ -63,21 +64,90 @@ interface DiscoveryCardProps {
   isActiveCard?: boolean;
 }
 
-// ─── Interest tag emoji lookup ────────────────────────────────
-
-const INTEREST_EMOJI_MAP: Record<string, string> = {};
-for (const opt of INTEREST_OPTIONS) {
-  INTEREST_EMOJI_MAP[opt.id] = opt.emoji;
-}
+// ─── Interest tag label lookup ───────────────────────────────
 
 const INTEREST_LABEL_MAP: Record<string, string> = {};
 for (const opt of INTEREST_OPTIONS) {
   INTEREST_LABEL_MAP[opt.id] = opt.label;
 }
 
+// ─── Interest emoji mapping — subtle prefix for each chip ────
+
+const INTEREST_EMOJI: Record<string, string> = {
+  'Kitap': '📚',
+  'Kahve': '☕',
+  'Seyahat': '✈️',
+  'Müzik': '🎵',
+  'Spor': '⚽',
+  'Yoga': '🧘',
+  'Fotoğraf': '📷',
+  'Sinema': '🎬',
+  'Doğa': '🌿',
+  'Yemek': '🍽️',
+  'Dans': '💃',
+  'Sanat': '🎨',
+  'Oyun': '🎮',
+  'Teknoloji': '💻',
+  'Hayvanlar': '🐾',
+  'Yüzme': '🏊',
+  'Koşu': '🏃',
+  'Bisiklet': '🚴',
+  'Tiyatro': '🎭',
+  'Yazı': '✍️',
+  'Podcast': '🎙️',
+  'Dizi': '📺',
+  'Tasarım': '🎨',
+  'Meditasyon': '🧘',
+  'Kamp': '⛺',
+  'Dağcılık': '🏔️',
+  'Dalış': '🤿',
+  'Resim': '🖼️',
+  'Müzik Aleti': '🎸',
+  'Gönüllülük': '🤝',
+  'Sürüş': '🚗',
+  'Astroloji': '⭐',
+  'Bahçe': '🌱',
+  'Hikaye': '📖',
+};
+
+// ─── Intention tag display config ────────────────────────────
+
+const INTENTION_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+  SERIOUS_RELATIONSHIP: {
+    label: 'Ciddi ilişki',
+    color: palette.purple[300],
+    bg: 'rgba(139, 92, 246, 0.14)',
+  },
+  serious: {
+    label: 'Ciddi ilişki',
+    color: palette.purple[300],
+    bg: 'rgba(139, 92, 246, 0.14)',
+  },
+  EXPLORING: {
+    label: 'Keşfetmek',
+    color: palette.pink[300],
+    bg: 'rgba(244, 114, 182, 0.14)',
+  },
+  exploring: {
+    label: 'Keşfetmek',
+    color: palette.pink[300],
+    bg: 'rgba(244, 114, 182, 0.14)',
+  },
+  NOT_SURE: {
+    label: 'Flört',
+    color: palette.coral[300],
+    bg: 'rgba(255, 140, 128, 0.14)',
+  },
+  not_sure: {
+    label: 'Flört',
+    color: palette.coral[300],
+    bg: 'rgba(255, 140, 128, 0.14)',
+  },
+};
+
 // ─── Component ────────────────────────────────────────────────
 
-const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap, onInstantMessage, isActiveCard = false }) => {
+const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap, isActiveCard = false }) => {
   const hasVideo = !!profile.profileVideo?.url;
   const compatScore = profile.compatibility?.score ?? 0;
   const isSuper = profile.compatibility?.level === 'super';
@@ -125,177 +195,178 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
     };
   }, [isSupreme, profile.userId, auraOpacity, eliteLabelOpacity]);
 
-  // Turkish distance label
+  // Derived display data
   const distanceLabel = formatDistanceTurkish(profile.distanceKm);
-  const isNearby = profile.distanceKm != null && profile.distanceKm < 5;
-  const cityText = profile.city ?? '';
+  const activityStatus = formatActivityStatus(profile.lastActiveAt);
 
-  // Bio truncated to 60 chars
+  // Bio: truncated to ~80 chars for 2-line readability
   const bio = profile.bio ?? '';
-  const truncatedBio = bio.length > 60 ? bio.substring(0, 60).trimEnd() + '...' : bio;
+  const truncatedBio = bio.length > 80 ? bio.substring(0, 80).trimEnd() + '...' : bio;
 
-  // Interest tags: show up to 2
+  // Interest tags: show up to 3, with subtle emoji prefix
   const allTags = profile.interestTags ?? [];
-  const visibleTags = allTags.slice(0, 2);
+  const visibleTags = allTags.slice(0, 3);
+
+  // Intention tag config
+  const intentionConfig = profile.intentionTag
+    ? INTENTION_CONFIG[profile.intentionTag] ?? null
+    : null;
+
+  // Build meta line: "2.3 km · Su an aktif"
+  const hasDistance = !!distanceLabel;
+  const hasActivity = !!activityStatus;
 
   const cardContent = (
     <View style={styles.cardRoot}>
-      {/* ── Photo section — ~70% of card ── */}
-      <View style={styles.photoSection}>
-        {hasVideo ? (
-          <VideoProfile
-            videoUrl={profile.profileVideo!.url}
-            thumbnailUrl={profile.profileVideo!.thumbnailUrl}
-            fallbackPhotoUrl={profile.photoUrl}
-            duration={profile.profileVideo!.duration}
-            isVisible={isActiveCard}
-            height={undefined}
-            showBadge
-            compact
-          />
-        ) : profile.photoUrl ? (
-          <CachedImage
-            uri={profile.photoUrl}
-            style={styles.photo}
-            contentFit="cover"
-            priority="high"
-            transition={300}
-            accessibilityLabel={`${profile.firstName} profil fotografi`}
-          />
-        ) : (
-          <View style={styles.photoPlaceholder}>
-            <Text style={styles.photoInitial}>
-              {profile.firstName.charAt(0).toUpperCase()}
-            </Text>
-          </View>
-        )}
-
-        {/* Verified badge — top-left */}
-        {profile.isVerified && (
-          <View style={styles.verifiedBadge}>
-            <Ionicons name="checkmark" size={13} color="#FFFFFF" />
-          </View>
-        )}
-
-        {/* Online dot — top-right */}
-        {formatActivityStatus(profile.lastActiveAt)?.isOnline && (
-          <View style={styles.onlineDot} />
-        )}
-
-        {/* "Yakınında" badge — top-right area below online dot */}
-        {isNearby && (
-          <View style={styles.nearbyBadge}>
-            <Ionicons name="location" size={10} color="#D4AF37" />
-            <Text style={styles.nearbyText}>Yakınında</Text>
-          </View>
-        )}
-
-        {/* Bottom gradient overlay — strong enough for text on any image */}
-        <LinearGradient
-          colors={['transparent', 'rgba(0, 0, 0, 0.25)', 'rgba(0, 0, 0, 0.7)'] as [string, string, ...string[]]}
-          locations={[0, 0.4, 1]}
-          style={styles.photoGradient}
-          pointerEvents="none"
+      {/* ── Photo — fills the ENTIRE card ── */}
+      {hasVideo ? (
+        <VideoProfile
+          videoUrl={profile.profileVideo!.url}
+          thumbnailUrl={profile.profileVideo!.thumbnailUrl}
+          fallbackPhotoUrl={profile.photoUrl}
+          duration={profile.profileVideo!.duration}
+          isVisible={isActiveCard}
+          height={undefined}
+          showBadge
+          compact
         />
+      ) : profile.photoUrl ? (
+        <CachedImage
+          uri={profile.photoUrl}
+          style={styles.photo}
+          contentFit="cover"
+          priority="high"
+          transition={300}
+          accessibilityLabel={`${profile.firstName} profil fotografi`}
+        />
+      ) : (
+        <View style={styles.photoPlaceholder}>
+          <Text style={styles.photoInitial}>
+            {profile.firstName.charAt(0).toUpperCase()}
+          </Text>
+        </View>
+      )}
 
-        {/* Overlay info — bottom-left: Name, City+Distance (box-none to not block swipe) */}
-        <View style={styles.overlayInfo} pointerEvents="box-none">
-          <View style={styles.overlayNameRow}>
-            <Text style={styles.overlayName} numberOfLines={1}>
+      {/* Verified badge — top-left */}
+      {profile.isVerified && (
+        <View style={styles.verifiedBadge}>
+          <Ionicons name="checkmark" size={12} color="#FFFFFF" />
+        </View>
+      )}
+
+      {/* ── Gradient overlay — covers bottom ~55%, all info sits on it ── */}
+      <LinearGradient
+        colors={[
+          'transparent',
+          'rgba(0, 0, 0, 0.03)',
+          'rgba(0, 0, 0, 0.18)',
+          'rgba(0, 0, 0, 0.50)',
+          'rgba(0, 0, 0, 0.75)',
+        ] as [string, string, ...string[]]}
+        locations={[0, 0.2, 0.45, 0.7, 1]}
+        style={styles.gradientOverlay}
+        pointerEvents="none"
+      />
+
+      {/* ── All info — positioned at the bottom, on gradient ── */}
+      <View style={styles.bottomInfo} pointerEvents="box-none">
+        {/* Name + Age + Compat score */}
+        <View style={styles.nameCompatRow}>
+          <View style={styles.nameSection}>
+            <Text style={styles.nameText} numberOfLines={1}>
               {profile.firstName}, {profile.age}
             </Text>
             {isSupreme && (
               <View style={styles.supremeCrownRow}>
-                <Ionicons name="diamond" size={13} color={GOLD_24K.light} />
+                <Ionicons name="diamond" size={12} color={GOLD_24K.light} />
                 <Animated.Text style={[styles.eliteLabel, { opacity: eliteLabelOpacity }]}>
-                  Elite Üye
+                  Elite
                 </Animated.Text>
               </View>
             )}
             {profile.packageTier && !isSupreme && <TierIndicator tier={profile.packageTier} />}
           </View>
-          {(cityText.length > 0 || distanceLabel) && (
-            <View style={styles.overlayLocationRow}>
-              {cityText.length > 0 && (
-                <Text style={styles.overlayCity} numberOfLines={1}>{cityText}</Text>
-              )}
-              {distanceLabel && (
-                <>
-                  <Text style={styles.overlayDot}>{'\u2022'}</Text>
-                  <Ionicons name="location" size={11} color="rgba(255,255,255,0.7)" />
-                  <Text style={styles.overlayDistance}>{distanceLabel}</Text>
-                </>
-              )}
-            </View>
+
+          {profile.compatibility && (
+            <Pressable
+              style={[styles.compatBadge, isSuper && styles.compatBadgeSuper]}
+              onPress={() => onCompatTap?.(profile.userId)}
+              accessibilityLabel={`Uyum yuzde ${compatScore}`}
+              accessibilityRole="button"
+            >
+              <Text style={[styles.compatScore, isSuper && styles.compatScoreSuper]}>
+                %{compatScore}
+              </Text>
+              <Text style={[styles.compatLabel, isSuper && styles.compatLabelSuper]}>
+                uyum
+              </Text>
+            </Pressable>
           )}
         </View>
 
-        {/* Overlay — bottom-right: Compatibility badge */}
-        {profile.compatibility && (
-          <Pressable
-            style={[styles.overlayCompat, isSuper && styles.overlayCompatGlow]}
-            onPress={() => onCompatTap?.(profile.userId)}
-            accessibilityLabel={`Uyum yüzde ${compatScore}`}
-            accessibilityRole="button"
-          >
-            <Text style={styles.overlayCompatEmoji}>{isSuper ? '\uD83D\uDD25' : '\uD83D\uDC9C'}</Text>
-            <Text style={[styles.overlayCompatText, isSuper && styles.overlayCompatSuper]}>
-              {compatScore}%
-            </Text>
-          </Pressable>
+        {/* Distance + Activity status */}
+        {(hasDistance || hasActivity) && (
+          <View style={styles.metaRow}>
+            {hasDistance && (
+              <View style={styles.metaItem}>
+                <Ionicons name="location-outline" size={13} color="rgba(255,255,255,0.85)" />
+                <Text style={styles.metaText}>{distanceLabel}</Text>
+              </View>
+            )}
+            {hasDistance && hasActivity && (
+              <Text style={styles.metaDot}>·</Text>
+            )}
+            {hasActivity && (
+              <View style={styles.metaItem}>
+                <View style={[
+                  styles.activityDot,
+                  activityStatus.isOnline ? styles.activityDotOnline : styles.activityDotRecent,
+                ]} />
+                <Text style={[
+                  styles.metaText,
+                  activityStatus.isOnline && styles.metaTextOnline,
+                ]}>
+                  {activityStatus.text}
+                </Text>
+              </View>
+            )}
+          </View>
         )}
 
-        {/* Hızlı Mesaj button */}
-        {onInstantMessage && (
-          <Pressable
-            style={styles.instantMessageButton}
-            onPress={() => onInstantMessage(profile.userId)}
-            accessibilityLabel="Hızlı mesaj gönder (20 Jeton)"
-            accessibilityRole="button"
-          >
-            <LinearGradient
-              colors={['#D4AF37', '#B8860B'] as [string, string]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.instantMessageGradient}
-            >
-              <Ionicons name="chatbubble" size={14} color="#FFFFFF" />
-              <Text style={styles.instantMessageText}>Hızlı Mesaj</Text>
-              <View style={styles.instantMessageCost}>
-                <Text style={styles.instantMessageCostText}>20</Text>
-              </View>
-            </LinearGradient>
-          </Pressable>
+        {/* Intention tag — soft pill */}
+        {intentionConfig && (
+          <View style={[styles.intentionPill, { backgroundColor: intentionConfig.bg }]}>
+            <Text style={[styles.intentionText, { color: intentionConfig.color }]}>
+              {intentionConfig.label}
+            </Text>
+          </View>
+        )}
+
+        {/* Interest chips */}
+        {visibleTags.length > 0 && (
+          <View style={styles.tagsRow}>
+            {visibleTags.map((tagId) => {
+              const label = INTEREST_LABEL_MAP[tagId] ?? tagId;
+              const emoji = INTEREST_EMOJI[label];
+              return (
+                <View key={tagId} style={styles.tagChip}>
+                  {emoji && (
+                    <Text style={styles.tagEmoji}>{emoji}</Text>
+                  )}
+                  <Text style={styles.tagLabel}>{label}</Text>
+                </View>
+              );
+            })}
+          </View>
+        )}
+
+        {/* Bio — 1-2 lines */}
+        {truncatedBio.length > 0 && (
+          <Text style={styles.bioText} numberOfLines={2}>
+            {truncatedBio}
+          </Text>
         )}
       </View>
-
-      {/* ── Minimal info section below photo ── */}
-      {(truncatedBio.length > 0 || visibleTags.length > 0) && (
-        <View style={styles.infoPanel}>
-          {/* 1-line bio */}
-          {truncatedBio.length > 0 && (
-            <Text style={styles.bioText} numberOfLines={1}>
-              {truncatedBio}
-            </Text>
-          )}
-
-          {/* Max 2 interest tags */}
-          {visibleTags.length > 0 && (
-            <View style={styles.tagsRow}>
-              {visibleTags.map((tagId) => (
-                <View key={tagId} style={styles.tagChip}>
-                  <Text style={styles.tagEmoji}>
-                    {INTEREST_EMOJI_MAP[tagId] ?? '\u2022'}
-                  </Text>
-                  <Text style={styles.tagLabel}>
-                    {INTEREST_LABEL_MAP[tagId] ?? tagId}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
-      )}
     </View>
   );
 
@@ -322,272 +393,247 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
 
 export const DiscoveryCard = React.memo(DiscoveryCardInner, (prevProps, nextProps) => {
   return prevProps.profile.userId === nextProps.profile.userId
-    && prevProps.onInstantMessage === nextProps.onInstantMessage
     && prevProps.isActiveCard === nextProps.isActiveCard;
 });
 
 // ─── Styles ───────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
+  // ── Card — photo fills everything ──
   cardRoot: {
     flex: 1,
     borderRadius: 20,
     overflow: 'hidden',
-    backgroundColor: colors.background,
+    backgroundColor: '#000',
   },
 
-  // ── Photo section — ~70% of card ──
-  photoSection: {
-    flex: 1,
-    position: 'relative',
-    overflow: 'hidden',
-    backgroundColor: colors.background,
-  },
+  // ── Photo — absolute fill, covers entire card ──
   photo: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    ...StyleSheet.absoluteFillObject,
   },
   photoPlaceholder: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.surfaceLight,
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
   photoInitial: {
-    fontSize: 72,
+    fontSize: 64,
     fontWeight: fontWeights.bold,
-    color: palette.purple[400],
-    opacity: 0.6,
+    fontFamily: poppinsFonts.bold,
+    color: palette.purple[300],
+    opacity: 0.4,
   },
-  photoGradient: {
+
+  // ── Gradient — tall overlay for text readability ──
+  gradientOverlay: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    height: '42%',
+    height: '60%',
   },
 
-  // ── Verified Badge — top-left ──
+  // ── Verified badge — top-left ──
   verifiedBadge: {
     position: 'absolute',
-    top: spacing.sm + 4,
-    left: spacing.sm + 4,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    top: spacing.smd,
+    left: spacing.smd,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: 'rgba(16, 185, 129, 0.85)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 2,
   },
 
-  // ── Online dot — top-right ──
-  onlineDot: {
+  // ── Bottom info — all content sits on the gradient ──
+  bottomInfo: {
     position: 'absolute',
-    top: spacing.sm + 4,
-    right: spacing.sm + 4,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: colors.success,
-    borderWidth: 2,
-    borderColor: 'rgba(0,0,0,0.3)',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    gap: 6,
     zIndex: 2,
   },
 
-  // ── "Yakınında" badge — pill with blur background ──
-  nearbyBadge: {
-    position: 'absolute',
-    top: spacing.sm + 24,
-    right: spacing.sm + 4,
+  // ── Name + Compat row ──
+  nameCompatRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
-    borderRadius: borderRadius.full,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    zIndex: 2,
+    justifyContent: 'space-between',
   },
-  nearbyText: {
-    fontSize: 11,
-    fontWeight: fontWeights.semibold,
-    fontFamily: poppinsFonts.semibold,
-    color: '#F5D980',
-    includeFontPadding: false,
-  },
-
-  // ── Overlay info — bottom-left on photo ──
-  overlayInfo: {
-    position: 'absolute',
-    bottom: spacing.md,
-    left: spacing.md,
-    right: 80,
-    zIndex: 2,
-  },
-  overlayNameRow: {
+  nameSection: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+    marginRight: 8,
   },
-  overlayName: {
+  nameText: {
     fontSize: 24,
     fontWeight: fontWeights.bold,
     fontFamily: poppinsFonts.semibold,
     color: '#FFFFFF',
     includeFontPadding: false,
-    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
   },
-  overlayLocationRow: {
+
+  // ── Supreme labels ──
+  supremeCrownRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginTop: 3,
+    marginLeft: 6,
+    gap: 3,
   },
-  overlayCity: {
-    fontSize: 13,
-    fontWeight: fontWeights.regular,
-    color: 'rgba(255, 255, 255, 0.9)',
+  eliteLabel: {
+    fontSize: 11,
+    fontWeight: fontWeights.semibold,
+    fontFamily: poppinsFonts.semibold,
+    color: '#D4AF37',
     includeFontPadding: false,
-    textShadowColor: 'rgba(0,0,0,0.4)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
-  },
-  overlayDot: {
-    fontSize: 8,
-    color: 'rgba(255, 255, 255, 0.6)',
-  },
-  overlayDistance: {
-    fontSize: 12,
-    fontWeight: fontWeights.medium,
-    color: 'rgba(255, 255, 255, 0.9)',
-    includeFontPadding: false,
-    textShadowColor: 'rgba(0,0,0,0.4)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
   },
 
-  // ── Overlay compatibility — badge container, bottom-right ──
-  overlayCompat: {
-    position: 'absolute',
-    bottom: spacing.md,
-    right: spacing.md,
+  // ── Compatibility badge — pink only ──
+  compatBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    gap: 3,
+    backgroundColor: 'rgba(236, 72, 153, 0.25)',
     borderRadius: borderRadius.full,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    zIndex: 2,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: 'rgba(236, 72, 153, 0.35)',
   },
-  overlayCompatGlow: {
-    backgroundColor: 'rgba(212, 175, 55, 0.2)',
-    borderColor: 'rgba(212, 175, 55, 0.35)',
-    shadowColor: '#D4AF37',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 4,
+  compatBadgeSuper: {
+    backgroundColor: 'rgba(236, 72, 153, 0.30)',
+    borderColor: 'rgba(236, 72, 153, 0.45)',
   },
-  overlayCompatEmoji: {
-    fontSize: 14,
-    includeFontPadding: false,
-  },
-  overlayCompatText: {
-    fontSize: 16,
+  compatScore: {
+    fontSize: 13,
     fontWeight: fontWeights.bold,
     fontFamily: poppinsFonts.semibold,
-    color: '#FFFFFF',
+    color: '#F9A8D4',
     includeFontPadding: false,
   },
-  overlayCompatSuper: {
-    color: '#F5D980',
+  compatScoreSuper: {
+    color: '#F472B6',
+  },
+  compatLabel: {
+    fontSize: 10,
+    fontWeight: fontWeights.regular,
+    fontFamily: poppinsFonts.regular,
+    color: '#F9A8D4',
+    includeFontPadding: false,
+  },
+  compatLabelSuper: {
+    color: '#F472B6',
   },
 
-  // ── Minimal info panel below photo ──
-  infoPanel: {
-    backgroundColor: colors.background,
-    paddingHorizontal: spacing.md + 2,
-    paddingTop: spacing.sm + 2,
-    paddingBottom: spacing.sm + 4,
-    gap: 6,
+  // ── Meta row: distance + activity ──
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
   },
-  bioText: {
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  metaDot: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.5)',
+    marginHorizontal: 6,
+    includeFontPadding: false,
+  },
+  metaText: {
     fontSize: 13,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
-    lineHeight: 18,
+    fontWeight: fontWeights.medium,
+    fontFamily: poppinsFonts.medium,
+    color: 'rgba(255,255,255,0.85)',
+    includeFontPadding: false,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
+  metaTextOnline: {
+    color: '#4ADE80',
+    fontWeight: fontWeights.semibold,
+    fontFamily: poppinsFonts.semibold,
+  },
+
+  // ── Activity dot ──
+  activityDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+  },
+  activityDotOnline: {
+    backgroundColor: '#4ADE80',
+  },
+  activityDotRecent: {
+    backgroundColor: 'rgba(255,255,255,0.35)',
+  },
+
+  // ── Intention pill ──
+  intentionPill: {
+    alignSelf: 'flex-start',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  intentionText: {
+    fontSize: 11,
+    fontWeight: fontWeights.medium,
+    fontFamily: poppinsFonts.medium,
+    includeFontPadding: false,
+    letterSpacing: 0.2,
+  },
+
+  // ── Interest chips ──
   tagsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 6,
+    flexWrap: 'wrap',
   },
   tagChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: glassmorphism.bg,
+    backgroundColor: 'rgba(255,255,255,0.12)',
     borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    gap: 3,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderWidth: 1,
-    borderColor: glassmorphism.border,
+    borderColor: 'rgba(255,255,255,0.15)',
+    gap: 4,
   },
   tagEmoji: {
     fontSize: 11,
+    includeFontPadding: false,
   },
   tagLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: fontWeights.medium,
-    color: colors.textSecondary,
+    fontFamily: poppinsFonts.medium,
+    color: 'rgba(255,255,255,0.8)',
+    includeFontPadding: false,
   },
 
-  // ── Hızlı Mesaj button ──
-  instantMessageButton: {
-    position: 'absolute',
-    bottom: spacing.sm + 44,
-    right: spacing.sm + 4,
-    zIndex: 3,
-    borderRadius: 50,
-    overflow: 'hidden',
-    shadowColor: '#D4AF37',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  instantMessageGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    gap: 4,
-    borderRadius: 50,
-  },
-  instantMessageText: {
-    fontSize: 11,
-    fontWeight: fontWeights.bold,
-    color: '#FFFFFF',
-  },
-  instantMessageCost: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    borderRadius: 50,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    overflow: 'hidden',
-  },
-  instantMessageCostText: {
-    fontSize: 9,
-    fontWeight: fontWeights.bold,
-    color: '#FFFFFF',
+  // ── Bio ──
+  bioText: {
+    fontSize: 13,
+    fontWeight: fontWeights.regular,
+    fontFamily: poppinsFonts.regular,
+    color: 'rgba(255,255,255,0.65)',
+    lineHeight: 18,
+    includeFontPadding: false,
   },
 
   // ── Supreme Aura ──
@@ -607,16 +653,5 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#D4AF37',
     zIndex: 10,
-  },
-  supremeCrownRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 6,
-    gap: 3,
-  },
-  eliteLabel: {
-    fontSize: 11,
-    fontWeight: fontWeights.semibold,
-    color: '#D4AF37',
   },
 });

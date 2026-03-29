@@ -18,6 +18,7 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 import { useRelationshipStore } from '../../stores/relationshipStore';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 export const RelationshipScreen: React.FC = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
@@ -195,6 +196,7 @@ export const RelationshipScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>

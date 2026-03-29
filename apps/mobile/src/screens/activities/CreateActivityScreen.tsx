@@ -24,6 +24,7 @@ import type { ActivityType, CreateActivityRequest } from '../../services/activit
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 type NavProp = NativeStackNavigationProp<ActivitiesStackParamList, 'CreateActivity'>;
 
@@ -131,6 +132,7 @@ export const CreateActivityScreen: React.FC = () => {
       style={[styles.container, { paddingTop: insets.top }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      <BrandedBackground />
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity

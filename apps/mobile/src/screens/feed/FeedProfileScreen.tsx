@@ -29,6 +29,7 @@ import { getCompatibilityPersonality, type CompatibilityPersonality, translateIn
 import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
 import { VerifiedBadge } from '../../components/common/VerifiedBadge';
 import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 // NowListening removed — music feature removed
 
 type FeedProfileRouteProp = RouteProp<FeedStackParamList, 'FeedProfile'>;

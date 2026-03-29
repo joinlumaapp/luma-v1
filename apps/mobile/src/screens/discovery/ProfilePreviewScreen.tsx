@@ -46,6 +46,7 @@ import type { ChatMessage } from '../../services/chatService';
 import { VerifiedBadge } from '../../components/common/VerifiedBadge';
 import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
 import { VideoProfile } from '../../components/profile/VideoProfile';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 // Interest tag lookup maps
 const INTEREST_EMOJI_MAP: Record<string, string> = {};
@@ -851,7 +852,8 @@ export const ProfilePreviewScreen: React.FC = () => {
   );
 
   return (
-    <>
+    <View style={{ flex: 1 }}>
+      <BrandedBackground />
       <InterleavedProfileLayout
         photos={profile.photoUrls}
         topContent={topContent}
@@ -908,7 +910,7 @@ export const ProfilePreviewScreen: React.FC = () => {
           }
         }}
       />
-    </>
+    </View>
   );
 };
 
@@ -925,7 +927,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
   },
   backButton: {
     width: 40,

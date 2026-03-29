@@ -21,6 +21,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 type SelfieNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'SelfieVerification'>;
 
@@ -128,6 +129,7 @@ export const SelfieVerificationScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <BrandedBackground />
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <TouchableOpacity onPress={handleBack} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Geri dön">

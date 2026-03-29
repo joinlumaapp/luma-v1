@@ -55,6 +55,7 @@ import { useCoinStore, SUGGESTED_STORY_VIEW_COST, FLIRT_START_COST } from '../..
 // MusicPicker removed — music feature removed
 import { FEATURE_RULES, isUnlimited as isFeatureUnlimited } from '../../constants/packageAccess';
 import type { PackageTier } from '../../stores/authStore';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 // ── Feed item union type for FlatList (posts + nudge cards) ──────
 const NUDGE_INTERVAL = 5; // show nudge every N posts without interaction
@@ -888,6 +889,7 @@ export const SocialFeedScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/* Header — always visible at top */}
       <View style={styles.headerArea}>
         <Text style={styles.headerTitle}>Akış</Text>
@@ -1011,7 +1013,7 @@ export const SocialFeedScreen: React.FC = () => {
 const sbStyles = StyleSheet.create({
   wrapper: {
     flexShrink: 0,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.divider ?? 'rgba(0,0,0,0.1)',
   },
@@ -1158,7 +1160,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   headerArea: {
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm + 2,
     flexDirection: 'row',

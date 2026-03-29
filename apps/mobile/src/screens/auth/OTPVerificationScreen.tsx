@@ -21,6 +21,7 @@ import { useTestModeStore } from '../../stores/testModeStore';
 import { useCoinStore } from '../../stores/coinStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { onboardingColors } from '../../components/onboarding/OnboardingLayout';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { surfaces, semanticColors } from '../../theme/colors';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { fontWeights } from '../../theme/typography';
@@ -234,6 +235,7 @@ export const OTPVerificationScreen: React.FC = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <StatusBar barStyle="dark-content" backgroundColor={onboardingColors.background} translucent />
+      <BrandedBackground />
 
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>

@@ -24,6 +24,7 @@ import { UpgradePrompt } from '../../components/premium/UpgradePrompt';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 type NavProp = NativeStackNavigationProp<MatchesStackParamList, 'ViewersPreview'>;
 
@@ -274,6 +275,7 @@ export const ViewersPreviewScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/* Header */}
       <View style={styles.header}>
         <Pressable

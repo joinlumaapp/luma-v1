@@ -1,6 +1,6 @@
 // MatchAnimation — Premium match celebration popup
 // Fast (max 800ms), exciting, and clean.
-// Gradient background, animated avatars, heart pulse, score ring, CTA with suggestion chip.
+// Gradient background, animated avatars, heart pulse, floating glow score, CTA with suggestion chips.
 
 import React, { useEffect, useRef, useMemo, useState } from 'react';
 import {
@@ -62,11 +62,16 @@ const WOW_TITLES = [
 ];
 
 const SUGGESTIONS = [
-  'Selam! Bence iyi anlaşacağız 😊',
-  'Merhaba! Profilin çok dikkat çekici ✨',
-  'Hey! Bu uyum tesadüf olamaz 💜',
-  'İlk buluşmada kahve mi yemek mi? ☕',
-  'Sabahçı mısın gece kuşu mu? 🌙',
+  'Selam, nasıl gidiyor?',
+  'Merhaba, tanışalım mı?',
+  'Bir kahve içer miyiz? ☕',
+  'Hangi müzikleri seversin?',
+  'Son izlediğin güzel dizi ne?',
+  'Hafta sonu planın var mı?',
+  'Profildeki fotoğraf harika',
+  'Seni merak ettim, anlat bakalım',
+  'En sevdiğin mekan neresi?',
+  'Birlikte bir şeyler yapalım mı? 🙂',
 ];
 
 // ─── Floating Hearts ─────────────────────────────────────────────────────────
@@ -153,67 +158,91 @@ const getInitials = (name: string): string => {
   return name.slice(0, 2).toUpperCase();
 };
 
-const getScoreLabel = (score: number): string => {
-  if (score >= 90) return 'Mükemmel Uyum 🔥';
-  if (score >= 75) return 'Çok Yüksek Uyum 🔥';
-  if (score >= 60) return 'Yüksek Uyum ✨';
-  return 'İyi Uyum ✨';
-};
+// Score label removed — ScoreDisplay now shows the number directly
 
-// ─── Score Ring ───────────────────────────────────────────────────────────────
-// Clean two-layer ring: dim track + colored fill that fades in over 400ms.
-// Glow via wrapper shadow — no overflow clipping issues.
+// ─── Score Display ───────────────────────────────────────────────────────────
+// Floating glow number — large bold score with a soft radial purple/pink glow
+// behind it. No borders, no pills, no containers. The number IS the display.
 
-const RING_SIZE = 96;
-const RING_STROKE = 4;
-
-interface ScoreRingProps {
+interface ScoreDisplayProps {
   score: number;
   accentColor: string;
   progressAnim: Animated.Value;
 }
 
-const ScoreRing: React.FC<ScoreRingProps> = ({ score, accentColor, progressAnim }) => {
-  const ringOpacity = progressAnim.interpolate({
+const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ score, progressAnim }) => {
+  const glowPulse = useRef(new Animated.Value(0)).current;
+
+  const fadeIn = progressAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 1],
     extrapolate: 'clamp',
   });
+  const scaleUp = progressAnim.interpolate({
+    inputRange: [0, 0.5, 0.85, 1],
+    outputRange: [0.6, 1.12, 1.04, 1],
+    extrapolate: 'clamp',
+  });
+
+  // Gentle pulsing glow behind the number
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowPulse, {
+          toValue: 1,
+          duration: 2200,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(glowPulse, {
+          toValue: 0,
+          duration: 2200,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [glowPulse]);
+
+  const glowOpacity = glowPulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.15, 0.30],
+  });
+
+  const glowScale = glowPulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.12],
+  });
 
   return (
-    <View style={ringStyles.wrapper}>
-      {/* Track ring */}
-      <View style={[ringStyles.track, { borderColor: accentColor + '25' }]} />
-
-      {/* Colored fill ring — fades in cleanly */}
+    <Animated.View style={[scoreStyles.wrapper, { opacity: fadeIn, transform: [{ scale: scaleUp }] }]}>
+      {/* Soft pink glow behind the number */}
       <Animated.View
         style={[
-          ringStyles.fill,
+          scoreStyles.glowOrb,
           {
-            borderColor: accentColor,
-            opacity: ringOpacity,
-            shadowColor: accentColor,
+            opacity: glowOpacity,
+            transform: [{ scale: glowScale }],
           },
         ]}
+        pointerEvents="none"
       />
 
-      {/* Centered score number */}
-      <View style={ringStyles.center} pointerEvents="none">
-        <AnimatedCounter
-          rawAnim={progressAnim}
-          targetScore={score}
-          accentColor={accentColor}
-        />
-      </View>
-    </View>
+      {/* Score number */}
+      <ScoreCounter rawAnim={progressAnim} targetScore={score} />
+
+      {/* Label below */}
+      <Text style={scoreStyles.uyumLabel}>% uyum</Text>
+    </Animated.View>
   );
 };
 
-const AnimatedCounter: React.FC<{
+const ScoreCounter: React.FC<{
   rawAnim: Animated.Value;
   targetScore: number;
-  accentColor: string;
-}> = ({ rawAnim, targetScore, accentColor }) => {
+}> = ({ rawAnim, targetScore }) => {
   const [displayed, setDisplayed] = useState(0);
 
   useEffect(() => {
@@ -225,46 +254,51 @@ const AnimatedCounter: React.FC<{
   }, [rawAnim, targetScore]);
 
   return (
-    <Text style={[ringStyles.scoreText, { color: accentColor }]}>
-      {`${displayed}%`}
+    <Text style={scoreStyles.scoreNumber}>
+      {displayed}
     </Text>
   );
 };
 
-const ringStyles = StyleSheet.create({
+const GLOW_SIZE = 140;
+
+const scoreStyles = StyleSheet.create({
   wrapper: {
-    width: RING_SIZE,
-    height: RING_SIZE,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  track: {
-    position: 'absolute',
-    width: RING_SIZE,
-    height: RING_SIZE,
-    borderRadius: RING_SIZE / 2,
-    borderWidth: RING_STROKE,
-  },
-  fill: {
-    position: 'absolute',
-    width: RING_SIZE,
-    height: RING_SIZE,
-    borderRadius: RING_SIZE / 2,
-    borderWidth: RING_STROKE,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.55,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  center: {
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    minWidth: 200,
+    overflow: 'visible',
   },
-  scoreText: {
-    fontSize: 22,
+  glowOrb: {
+    position: 'absolute',
+    width: GLOW_SIZE,
+    height: GLOW_SIZE,
+    borderRadius: GLOW_SIZE / 2,
+    backgroundColor: palette.pink[500],
+  },
+  scoreNumber: {
+    fontSize: 62,
     fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     includeFontPadding: false,
+    letterSpacing: -1,
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(236, 72, 153, 0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 16,
+    paddingHorizontal: 8,
+  },
+  uyumLabel: {
+    fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    includeFontPadding: false,
+    letterSpacing: 3,
+    color: 'rgba(244, 114, 182, 0.7)',
+    marginTop: -2,
+    textTransform: 'uppercase',
   },
 });
 
@@ -277,8 +311,8 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
   matchPhotoUrl,
   userPhotoUrl,
   compatibilityScore,
-  isSuperCompatible,
-  isSupremeMember,
+  isSuperCompatible: _isSuperCompatible,
+  isSupremeMember: _isSupremeMember,
   compatibilityExplanation: _compatibilityExplanation,
   conversationStarters: _conversationStarters,
   onSendMessage,
@@ -303,7 +337,7 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
   const titleScale = useRef(new Animated.Value(0.75)).current;
   const titleOpacity = useRef(new Animated.Value(0)).current;
 
-  // Score ring
+  // Score
   const scoreProgress = useRef(new Animated.Value(0)).current;
 
   // Buttons
@@ -325,11 +359,8 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
     return shuffled.slice(0, 3);
   }, []);
 
-  const accentColor = isSupremeMember
-    ? '#D4AF37'
-    : isSuperCompatible
-      ? palette.gold[400]
-      : palette.purple[400];
+  // Purple-pink accent matching the app's signature palette — vibrant and celebratory
+  const accentColor = palette.purple[400];
 
   const userInitials = getInitials(userName);
   const matchInitials = getInitials(matchName);
@@ -411,7 +442,7 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
         useNativeDriver: true,
       }),
 
-      // Step 4: Title + score ring + buttons all together (400ms)
+      // Step 4: Title + score + buttons all together (400ms)
       Animated.parallel([
         Animated.timing(titleOpacity, {
           toValue: 1,
@@ -649,16 +680,13 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
             {title}
           </Animated.Text>
 
-          {/* ── Score ring ── */}
+          {/* ── Score display ── */}
           <View style={styles.scoreSection}>
-            <ScoreRing
+            <ScoreDisplay
               score={compatibilityScore}
               accentColor={accentColor}
               progressAnim={scoreProgress}
             />
-            <Text style={[styles.scoreLabel, { color: accentColor + 'CC' }]}>
-              {getScoreLabel(compatibilityScore)}
-            </Text>
           </View>
 
           {/* ── Buttons ── */}
@@ -692,7 +720,7 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
             </Animated.View>
 
             {/* Suggestion chips — 3 quick-start options */}
-            <Text style={styles.suggestionLabel}>{'💡 Ya da hızlı başla:'}</Text>
+            <Text style={styles.suggestionLabel}>{'Ya da hemen bir mesaj g\u00F6nder'}</Text>
             <View style={styles.suggestionRow}>
               {suggestions.map((text, i) => (
                 <TouchableOpacity
@@ -705,23 +733,12 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
                   activeOpacity={0.75}
                 >
                   <Text style={styles.suggestionText} numberOfLines={1}>
-                    {`"${text}"`}
+                    {text}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            {/* Game suggestion — subtle secondary CTA */}
-            <TouchableOpacity
-              style={styles.gameButton}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                onSendMessage('Bir oyun oynayalim mi? \uD83C\uDFAE');
-              }}
-              activeOpacity={0.75}
-            >
-              <Text style={styles.gameButtonText}>{'\uD83C\uDFAE Oyun ile Tanıs'}</Text>
-            </TouchableOpacity>
           </Animated.View>
         </Animated.View>
       </Animated.View>
@@ -732,7 +749,7 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const CARD_MAX_WIDTH = Math.min(SCREEN_WIDTH - 32, 420);
-// Avatar ring math: PHOTO inside a LinearGradient border.
+// Avatar border math: PHOTO inside a LinearGradient border.
 // Container = PHOTO + (STROKE * 2). Inner View = PHOTO exactly. Zero asymmetry.
 const AVATAR_PHOTO = 82;
 const AVATAR_STROKE = 3;
@@ -747,7 +764,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
 
-  // Glow edges
+  // Glow edges — purple/pink to match the app palette
   glowTopLeft: {
     position: 'absolute',
     top: -60,
@@ -755,8 +772,8 @@ const styles = StyleSheet.create({
     width: 220,
     height: 220,
     borderRadius: 110,
-    backgroundColor: palette.purple[600],
-    opacity: 0.35,
+    backgroundColor: palette.purple[500],
+    opacity: 0.18,
   },
   glowBottomRight: {
     position: 'absolute',
@@ -765,11 +782,11 @@ const styles = StyleSheet.create({
     width: 220,
     height: 220,
     borderRadius: 110,
-    backgroundColor: palette.pink[600],
-    opacity: 0.3,
+    backgroundColor: palette.pink[500],
+    opacity: 0.12,
   },
 
-  // Card
+  // Card — subtle, premium shadow with purple/pink glow
   card: {
     width: CARD_MAX_WIDTH,
     backgroundColor: 'rgba(18, 8, 40, 0.97)',
@@ -779,13 +796,13 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === 'ios' ? spacing.xl : spacing.lg,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.35)',
+    borderColor: 'rgba(139, 92, 246, 0.2)',
     ...(shadows.large ?? {}),
-    shadowColor: palette.purple[600],
+    shadowColor: palette.purple[500],
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 30,
-    elevation: 16,
+    shadowOpacity: 0.25,
+    shadowRadius: 24,
+    elevation: 10,
   },
 
   // Close button
@@ -825,9 +842,9 @@ const styles = StyleSheet.create({
     padding: AVATAR_STROKE,
     shadowColor: palette.purple[400],
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.45,
-    shadowRadius: 10,
-    elevation: 8,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   avatarInner: {
     width: AVATAR_PHOTO,
@@ -868,11 +885,11 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: palette.pink[500],
+    shadowColor: palette.pink[400],
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.65,
-    shadowRadius: 12,
-    elevation: 10,
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 4,
   },
   heartEmoji: {
     fontSize: 24,
@@ -890,18 +907,11 @@ const styles = StyleSheet.create({
     textShadowRadius: 10,
   },
 
-  // Score section — ring + label stacked, no overlap
+  // Score section — floating glow number, no containers
   scoreSection: {
     alignItems: 'center',
     gap: 10,
     marginBottom: spacing.lg,
-  },
-  scoreLabel: {
-    fontSize: 13,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    textAlign: 'center',
-    includeFontPadding: false,
   },
 
   // Buttons section
@@ -920,10 +930,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: palette.purple[500],
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.55,
-    shadowRadius: 14,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
   },
   primaryBtnText: {
     ...typography.button,
@@ -931,47 +941,31 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
 
-  // Suggestion area
+  // Suggestion area — soft, readable, tappable chips
   suggestionLabel: {
-    ...typography.captionSmall,
-    color: 'rgba(255,255,255,0.4)',
+    ...typography.bodySmall,
+    color: 'rgba(255, 255, 255, 0.40)',
     textAlign: 'center',
-    marginBottom: 4,
+    marginBottom: 8,
+    letterSpacing: 0.2,
   },
   suggestionRow: {
     width: '100%',
-    gap: spacing.xs + 2,
+    gap: 10,
   },
   suggestionChip: {
     width: '100%',
-    backgroundColor: 'rgba(139, 92, 246, 0.12)',
+    backgroundColor: 'rgba(139, 92, 246, 0.06)',
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
-    borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.2)',
+    paddingVertical: 14,
   },
   suggestionText: {
     ...typography.bodySmall,
-    color: palette.purple[300],
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    color: 'rgba(196, 181, 253, 0.75)',
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
     textAlign: 'center',
-  },
-  gameButton: {
-    width: '100%',
-    height: 42,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(139, 92, 246, 0.08)',
-  },
-  gameButtonText: {
-    fontSize: 13,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-    color: palette.purple[300],
+    letterSpacing: 0.1,
   },
 });

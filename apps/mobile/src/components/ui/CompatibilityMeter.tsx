@@ -3,12 +3,9 @@
  *
  * Features:
  * - Animated circular progress ring using clipped half-circles
- * - Dynamic color gradient based on score range:
- *   - 0-50: red to yellow
- *   - 50-80: yellow to green
- *   - 80-100: green to blue (LUMA brand purple)
- * - Large centered percentage number
- * - "Super Uyumlu" label for scores >= 90
+ * - Single warm gold (#D4A574) ring color for all scores
+ * - Clean percentage display centered inside the ring
+ * - Subtle shadow glow — premium, minimal aesthetic
  * - Smooth mount animation with configurable duration
  *
  * @example
@@ -32,7 +29,7 @@ import Animated, {
   Easing,
   type SharedValue,
 } from 'react-native-reanimated';
-import { palette } from '../../theme/colors';
+// palette import removed — single RING_GOLD constant used for all scores
 import { poppinsFonts, fontWeights } from '../../theme/typography';
 
 // ─── Types ────────────────────────────────────────────────────
@@ -56,18 +53,16 @@ interface CompatibilityMeterProps {
   style?: ViewStyle;
 }
 
-// ─── Score-based color calculation ────────────────────────────
+// ─── Ring color — single warm gold for all scores ────────────
 
-function getScoreColor(score: number): string {
-  if (score >= 90) return '#10B981';            // Green for super compatibility
-  if (score >= 70) return '#F59E0B';            // Amber/orange for good
-  return palette.purple[500];                    // LUMA brand purple for standard
+const RING_GOLD = '#D4A574';
+
+function getScoreColor(_score: number): string {
+  return RING_GOLD;
 }
 
-function getGlowColor(score: number): string {
-  if (score >= 90) return '#10B981';
-  if (score >= 70) return '#F59E0B';
-  return palette.purple[400];
+function getGlowColor(_score: number): string {
+  return RING_GOLD;
 }
 
 // ─── Half-ring segment ────────────────────────────────────────
@@ -127,15 +122,15 @@ const CompatibilityMeterInner: React.FC<CompatibilityMeterProps> = ({
   animated = true,
   animationDuration = 1000,
   animationDelay = 300,
-  showLabel = true,
+  showLabel: _showLabel = true,
   style,
 }) => {
   const clampedScore = Math.max(0, Math.min(100, Math.round(score)));
   const effectiveStrokeWidth = strokeWidth ?? Math.max(3, size * 0.04);
   const ringColor = getScoreColor(clampedScore);
   const glowColor = getGlowColor(clampedScore);
-  const isSuper = clampedScore >= 90;
-  const trackColor = 'rgba(255, 255, 255, 0.1)';
+  const _isSuper = clampedScore >= 90;
+  const trackColor = 'rgba(212, 165, 116, 0.18)';
 
   // Animation shared values
   const rightRotation = useSharedValue(0);
@@ -180,21 +175,17 @@ const CompatibilityMeterInner: React.FC<CompatibilityMeterProps> = ({
   // Sizing
   const innerSize = size - effectiveStrokeWidth * 2 - 6;
   const scoreFontSize = size * 0.28;
-  const labelFontSize = size * 0.1;
-  const superLabelFontSize = size * 0.08;
 
-  // Glow shadow for high scores
-  const glowShadow = isSuper
-    ? Platform.select({
-        ios: {
-          shadowColor: glowColor,
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.5,
-          shadowRadius: size * 0.12,
-        },
-        android: { elevation: 8 },
-      })
-    : undefined;
+  // Subtle shadow — minimal glow for all scores
+  const glowShadow = Platform.select({
+    ios: {
+      shadowColor: glowColor,
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.15,
+      shadowRadius: size * 0.05,
+    },
+    android: { elevation: 2 },
+  });
 
   return (
     <View
@@ -204,7 +195,7 @@ const CompatibilityMeterInner: React.FC<CompatibilityMeterProps> = ({
         glowShadow,
         style,
       ]}
-      accessibilityLabel={`Uyum skoru yuzde ${clampedScore}${isSuper ? ', Super Uyumlu' : ''}`}
+      accessibilityLabel={`Uyum skoru yuzde ${clampedScore}`}
       accessibilityRole="text"
     >
       {/* Background track */}
@@ -251,22 +242,10 @@ const CompatibilityMeterInner: React.FC<CompatibilityMeterProps> = ({
           },
         ]}
       >
-        {/* Score number */}
-        <Text style={[localStyles.scoreText, { fontSize: scoreFontSize, color: ringColor }]}>
-          {clampedScore}
+        {/* Score number with percentage */}
+        <Text style={[localStyles.scoreText, { fontSize: scoreFontSize, color: RING_GOLD }]}>
+          {clampedScore}%
         </Text>
-
-        {/* Uyum label */}
-        <Text style={[localStyles.uyumLabel, { fontSize: labelFontSize }]}>
-          uyum
-        </Text>
-
-        {/* Super Uyumlu label */}
-        {showLabel && isSuper && (
-          <Text style={[localStyles.superLabel, { fontSize: superLabelFontSize }]}>
-            Super Uyumlu
-          </Text>
-        )}
       </Animated.View>
     </View>
   );
@@ -295,21 +274,6 @@ const localStyles = StyleSheet.create({
   scoreText: {
     fontFamily: poppinsFonts.bold,
     fontWeight: fontWeights.bold,
-    includeFontPadding: false,
-  },
-  uyumLabel: {
-    fontFamily: poppinsFonts.regular,
-    fontWeight: fontWeights.regular,
-    color: 'rgba(255, 255, 255, 0.5)',
-    marginTop: -2,
-    includeFontPadding: false,
-  },
-  superLabel: {
-    fontFamily: poppinsFonts.semibold,
-    fontWeight: fontWeights.semibold,
-    color: palette.purple[400],
-    marginTop: 2,
-    letterSpacing: 0.5,
     includeFontPadding: false,
   },
 });

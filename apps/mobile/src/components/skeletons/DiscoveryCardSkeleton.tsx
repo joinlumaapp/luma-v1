@@ -1,5 +1,4 @@
-// Discovery card skeleton — placeholder matching DiscoveryCard layout
-// Full card shape with photo area, name line, badge placeholders
+// Discovery card skeleton — matches full-bleed photo card with overlay info
 
 import React from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
@@ -12,44 +11,53 @@ const CARD_HEIGHT = SCREEN_HEIGHT * 0.62;
 
 export const DiscoveryCardSkeleton: React.FC = () => (
   <View style={styles.container}>
-    {/* Photo area */}
+    {/* Full photo placeholder */}
     <SkeletonLoader
       width={CARD_WIDTH}
       height={CARD_HEIGHT}
-      borderRadius={borderRadius.xl}
+      borderRadius={0}
     />
 
-    {/* Overlay content at bottom of card */}
-    <View style={styles.overlayContent}>
-      {/* Name + age row */}
+    {/* Overlay info at bottom — mimics the real card layout */}
+    <View style={styles.bottomInfo}>
+      {/* Name + compat badge */}
       <View style={styles.nameRow}>
-        <SkeletonText width={140} height={24} />
-        <SkeletonText width={36} height={24} style={styles.ageChip} />
+        <SkeletonText width={150} height={24} />
+        <SkeletonLoader
+          width={68}
+          height={26}
+          borderRadius={borderRadius.full}
+        />
       </View>
 
-      {/* Location line */}
-      <SkeletonText width={100} height={14} style={styles.locationLine} />
+      {/* Meta row: distance + activity */}
+      <View style={styles.metaRow}>
+        <SkeletonText width={60} height={13} />
+        <View style={styles.metaDotPlaceholder} />
+        <SkeletonText width={80} height={13} />
+      </View>
 
-      {/* Badge row */}
-      <View style={styles.badgeRow}>
+      {/* Interest chips */}
+      <View style={styles.chipsRow}>
         <SkeletonLoader
-          width={80}
-          height={28}
+          width={62}
+          height={24}
           borderRadius={borderRadius.full}
         />
         <SkeletonLoader
-          width={60}
-          height={28}
+          width={54}
+          height={24}
           borderRadius={borderRadius.full}
-          style={styles.badgeGap}
         />
         <SkeletonLoader
-          width={70}
-          height={28}
+          width={68}
+          height={24}
           borderRadius={borderRadius.full}
-          style={styles.badgeGap}
         />
       </View>
+
+      {/* Bio line */}
+      <SkeletonText width={CARD_WIDTH - 64} height={13} />
     </View>
   </View>
 );
@@ -57,29 +65,39 @@ export const DiscoveryCardSkeleton: React.FC = () => (
 const styles = StyleSheet.create({
   container: {
     width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    borderRadius: 20,
+    overflow: 'hidden',
     alignSelf: 'center',
+    backgroundColor: '#000',
   },
-  overlayContent: {
+  bottomInfo: {
     position: 'absolute',
-    bottom: spacing.lg,
-    left: spacing.md,
-    right: spacing.md,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    gap: 6,
   },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  ageChip: {
-    marginLeft: spacing.sm,
-  },
-  locationLine: {
-    marginTop: spacing.sm,
-  },
-  badgeRow: {
+  metaRow: {
     flexDirection: 'row',
-    marginTop: spacing.md,
+    alignItems: 'center',
   },
-  badgeGap: {
-    marginLeft: spacing.sm,
+  metaDotPlaceholder: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    marginHorizontal: 6,
+  },
+  chipsRow: {
+    flexDirection: 'row',
+    gap: 6,
   },
 });

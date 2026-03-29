@@ -128,7 +128,27 @@ export const formatActivityStatus = (
     return { text: 'Bugün aktifti', isOnline: false };
   }
 
-  return null;
+  // Yesterday
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (
+    date.getDate() === yesterday.getDate() &&
+    date.getMonth() === yesterday.getMonth() &&
+    date.getFullYear() === yesterday.getFullYear()
+  ) {
+    return { text: 'Dün aktifti', isOnline: false };
+  }
+
+  // Days ago
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays < 7) return { text: `${diffDays} gün önce aktifti`, isOnline: false };
+
+  // Weeks ago
+  const weeks = Math.floor(diffDays / 7);
+  if (weeks < 4) return { text: `${weeks} hafta önce aktifti`, isOnline: false };
+
+  // Older — still show something
+  return { text: '1 ay+ önce aktifti', isOnline: false };
 };
 
 /**

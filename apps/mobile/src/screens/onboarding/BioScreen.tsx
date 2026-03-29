@@ -20,6 +20,7 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { PROFILE_CONFIG } from '../../constants/config';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 type NavProp = NativeStackNavigationProp<OnboardingStackParamList, 'Bio'>;
 
@@ -58,6 +59,7 @@ export const BioScreen: React.FC = () => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      <BrandedBackground />
       {/* Progress indicator */}
       <OnboardingProgress currentStep={CURRENT_STEP} />
 

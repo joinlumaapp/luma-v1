@@ -19,6 +19,7 @@ import { useScreenTracking } from '../../hooks/useAnalytics';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 // 16 MBTI types organized in 4x4 grid
 const MBTI_TYPES = [
@@ -125,6 +126,7 @@ export const PersonalitySelectionScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} hitSlop={8}>

@@ -65,6 +65,9 @@ import { useEngagementStore } from '../../stores/engagementStore';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { useSwipeRateLimiterStore, SKIP_COOLDOWN_COST } from '../../stores/swipeRateLimiterStore';
+import { CooldownOverlay } from '../../components/discovery/CooldownOverlay';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -113,6 +116,20 @@ export const DiscoveryScreen: React.FC = () => {
   const swipeError = useDiscoveryStore((s) => s.error);
   const clearError = useDiscoveryStore((s) => s.clearError);
 
+  // ─── Swipe rate limiter ────────────────────────────────────
+  const rateLimiterInit = useSwipeRateLimiterStore((s) => s.initialize);
+  const recordSwipe = useSwipeRateLimiterStore((s) => s.recordSwipe);
+  const isOnCooldown = useSwipeRateLimiterStore((s) => s.isOnCooldown);
+  const shouldTriggerCooldown = useSwipeRateLimiterStore((s) => s.shouldTriggerCooldown);
+  const startCooldown = useSwipeRateLimiterStore((s) => s.startCooldown);
+  const skipCooldownAction = useSwipeRateLimiterStore((s) => s.skipCooldown);
+  const resetBatch = useSwipeRateLimiterStore((s) => s.resetBatch);
+  const getCooldownRemaining = useSwipeRateLimiterStore((s) => s.getCooldownRemaining);
+  const getRemainingCards = useSwipeRateLimiterStore((s) => s.getRemainingCards);
+  const getSwipeBehavior = useSwipeRateLimiterStore((s) => s.getSwipeBehavior);
+  const rateLimiterCooldownEnd = useSwipeRateLimiterStore((s) => s.cooldownEndTime);
+  const spendCoins = useCoinStore((s) => s.spendCoins);
+
   // GPS location — 10-minute cache, foreground auto-refresh
   const { latitude, longitude } = useLocation();
 
@@ -151,6 +168,7 @@ export const DiscoveryScreen: React.FC = () => {
     hydrateEngagement();
     initDailyReward();
     initDailyChallenge();
+    rateLimiterInit();
     return undefined;
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -169,6 +187,31 @@ export const DiscoveryScreen: React.FC = () => {
   const hasFreeUndoRemaining = undosUsedToday < undoDailyLimit;
   const undoNeedsGold = canUseUndo && !hasFreeUndoRemaining;
   const UNDO_GOLD_COST_UI = 5;
+
+  // ─── Rate limiter cooldown state ─────────────────────────
+  const [showCooldown, setShowCooldown] = useState(false);
+
+  // Check cooldown on mount and when cooldownEndTime changes
+  useEffect(() => {
+    if (isOnCooldown()) {
+      setShowCooldown(true);
+    }
+  }, [rateLimiterCooldownEnd, isOnCooldown]);
+
+  const handleCooldownExpired = useCallback(() => {
+    setShowCooldown(false);
+    resetBatch();
+    refreshFeed();
+  }, [resetBatch, refreshFeed]);
+
+  const handleSkipCooldown = useCallback(async () => {
+    const spent = await spendCoins(SKIP_COOLDOWN_COST, 'Keşif bekleme atlama');
+    if (spent) {
+      skipCooldownAction();
+      setShowCooldown(false);
+      refreshFeed();
+    }
+  }, [spendCoins, skipCooldownAction, refreshFeed]);
 
   // ─── Pull-to-refresh state ──────────────────────────────
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -325,8 +368,27 @@ export const DiscoveryScreen: React.FC = () => {
       // Track for daily challenge
       profilesExplored.current += 1;
       incrementChallenge('explore_profiles');
+
+      // Record swipe for adaptive rate limiting
+      recordSwipe(direction);
+
+      // Check batch status after a short delay to let state settle
+      setTimeout(() => {
+        const remaining = getRemainingCards();
+        if (remaining <= 0) {
+          const behavior = getSwipeBehavior();
+          if (shouldTriggerCooldown()) {
+            // Speed swiper — activate cooldown
+            startCooldown();
+            setShowCooldown(true);
+          } else if (behavior === 'thoughtful' || behavior === 'normal') {
+            // Thoughtful swiper — silently reset batch and keep going
+            resetBatch();
+          }
+        }
+      }, 100);
     }
-  }, [swipeAction, incrementChallenge]);
+  }, [swipeAction, incrementChallenge, recordSwipe, getRemainingCards, getSwipeBehavior, shouldTriggerCooldown, startCooldown, resetBatch]);
 
 
   const handleCardTap = useCallback(() => {
@@ -571,23 +633,26 @@ export const DiscoveryScreen: React.FC = () => {
     const comment = likeComment.trim() || undefined;
     translateX.value = withSpring(SCREEN_WIDTH + 200, SPRING_EXIT);
     swipeAction('right', currentCard.id, comment);
+    recordSwipe('right');
     setShowCommentModal(false);
     setLikeComment('');
-  }, [currentCard, likeComment, swipeAction, translateX]);
+  }, [currentCard, likeComment, swipeAction, translateX, recordSwipe]);
 
   const handleLikeSkipComment = useCallback(() => {
     if (!currentCard) return;
     translateX.value = withSpring(SCREEN_WIDTH + 200, SPRING_EXIT);
     swipeAction('right', currentCard.id);
+    recordSwipe('right');
     setShowCommentModal(false);
     setLikeComment('');
-  }, [currentCard, swipeAction, translateX]);
+  }, [currentCard, swipeAction, translateX, recordSwipe]);
 
   // ─── Loading state ─────────────────────────────────────────
 
   if (isLoading && cards.length === 0) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
+        <BrandedBackground />
         <View style={styles.darkHeaderArea}>
           <View style={styles.header}>
             <View style={styles.headerLeft}>
@@ -634,6 +699,7 @@ export const DiscoveryScreen: React.FC = () => {
 
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
+        <BrandedBackground />
         <View style={styles.darkHeaderArea}>
           <View style={styles.header}>
             <View style={styles.headerLeft}>
@@ -703,6 +769,7 @@ export const DiscoveryScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       <ScrollView
         contentContainerStyle={styles.refreshScrollContent}
         scrollEnabled={false}
@@ -785,6 +852,7 @@ export const DiscoveryScreen: React.FC = () => {
                 lastActiveAt: nextCard.lastActiveAt ?? null,
                 matchReasons: nextCard.matchReasons ?? [],
                 compatReasons: generateCompactReasons(nextCard, userProfile),
+                packageTier: nextCard.packageTier,
               }}
               onCompatTap={handleCompatTap}
             />
@@ -824,6 +892,7 @@ export const DiscoveryScreen: React.FC = () => {
                 lastActiveAt: currentCard.lastActiveAt ?? null,
                 matchReasons: currentCard.matchReasons ?? [],
                 compatReasons: generateCompactReasons(currentCard, userProfile),
+                packageTier: currentCard.packageTier,
               }}
               onCompatTap={handleCompatTap}
             />
@@ -914,6 +983,16 @@ export const DiscoveryScreen: React.FC = () => {
         {/* Action buttons removed — users swipe directly */}
       </View>
       </ScrollView>
+
+      {/* Swipe rate limiter cooldown overlay */}
+      {showCooldown && isOnCooldown() && (
+        <CooldownOverlay
+          remainingMs={getCooldownRemaining()}
+          onSkipCooldown={handleSkipCooldown}
+          coinBalance={coinBalance}
+          onCooldownExpired={handleCooldownExpired}
+        />
+      )}
 
       {/* Match celebration overlay — only render when matchedCard exists */}
       {(!showMatchAnimation || matchedCard) && (
@@ -1045,7 +1124,7 @@ const styles = StyleSheet.create({
 
   // ── Header area (header + stories) ──
   darkHeaderArea: {
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
     paddingBottom: spacing.sm,
   },
 

@@ -24,6 +24,7 @@ import { locationService } from '../../services/locationService';
 import { colors, glassmorphism } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows, layout } from '../../theme/spacing';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 type NavProp = NativeStackNavigationProp<DiscoveryStackParamList, 'CrossedPaths'>;
 
@@ -661,6 +662,7 @@ export const CrossedPathsScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity

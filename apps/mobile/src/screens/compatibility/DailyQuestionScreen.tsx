@@ -27,6 +27,7 @@ import {
   type DailyQuestionOption,
   type AnswerStatsResponse,
 } from '../../services/dailyQuestionService';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 const { width: _SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -741,6 +742,7 @@ export const DailyQuestionScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity

@@ -47,6 +47,7 @@ import { useKeyboard } from '../../hooks/useKeyboard';
 import { presenceService } from '../../services/presenceService';
 import { formatActivityStatus } from '../../utils/formatters';
 import { GiphyPicker } from '../../components/chat/GiphyPicker';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 type ChatNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'Chat'>;
 type ChatRouteProp = RouteProp<MatchesStackParamList, 'Chat'>;
@@ -636,6 +637,7 @@ export const ChatScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/*
         KeyboardAvoidingView wraps header + messages + input together.
         This is the correct placement: by including the header inside KAV,
@@ -1103,7 +1105,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.divider,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
   },
   backButton: {
     width: 40,
@@ -1259,7 +1261,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
     borderTopWidth: 1,
     borderTopColor: colors.divider,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
     gap: spacing.sm,
   },
   inputContainer: {

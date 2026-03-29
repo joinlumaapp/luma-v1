@@ -15,6 +15,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import type { AuthStackParamList } from '../../navigation/types';
 import { onboardingColors } from '../../components/onboarding/OnboardingLayout';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { spacing } from '../../theme/spacing';
 
 type NavProp = NativeStackNavigationProp<AuthStackParamList, 'SignUpChoice'>;
@@ -33,6 +34,7 @@ export const SignUpChoiceScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={onboardingColors.background} translucent />
+      <BrandedBackground />
 
       {/* Header with back button */}
       <View style={styles.header}>

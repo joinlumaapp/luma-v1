@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, palette, surfaces } from '../../theme/colors';
+import { BrandedBackground } from '../common/BrandedBackground';
 
 // Onboarding-specific cream theme colors — mapped to design system tokens
 export const onboardingColors = {
@@ -65,6 +66,7 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
+      <BrandedBackground />
       {/* Header: back + progress + skip */}
       <View style={styles.header}>
         {showBack ? (

@@ -36,6 +36,7 @@ import { UpgradePrompt } from '../../components/premium/UpgradePrompt';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const NUM_COLUMNS = 3;
@@ -919,6 +920,7 @@ export const LikesYouScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>

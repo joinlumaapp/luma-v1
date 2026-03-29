@@ -19,6 +19,7 @@ import { useScreenTracking } from '../../hooks/useAnalytics';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 const PRIORITY_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
   high: { label: 'Yüksek', color: colors.error, icon: '!' },
@@ -109,6 +110,7 @@ export const ProfileCoachScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} hitSlop={8}>

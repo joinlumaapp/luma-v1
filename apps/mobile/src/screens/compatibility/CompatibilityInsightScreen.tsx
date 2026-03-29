@@ -23,6 +23,7 @@ import { spacing, borderRadius, shadows } from '../../theme/spacing';
 import { compatibilityService } from '../../services/compatibilityService';
 import { useAuthStore } from '../../stores/authStore';
 import { useScreenTracking } from '../../hooks/useAnalytics';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -481,6 +482,7 @@ export const CompatibilityInsightScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>

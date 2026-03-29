@@ -25,6 +25,7 @@ import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { useChatStore } from '../../stores/chatStore';
 import type { ConversationSummary } from '../../services/chatService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 type ChatListNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'ChatList'>;
 
@@ -228,6 +229,7 @@ export const ChatListScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>

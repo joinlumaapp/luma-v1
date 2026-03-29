@@ -17,6 +17,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../stores/authStore';
 import { onboardingColors } from '../../components/onboarding/OnboardingLayout';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { fontWeights } from '../../theme/typography';
@@ -66,6 +67,7 @@ export const PasswordCreationScreen: React.FC = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <StatusBar barStyle="dark-content" backgroundColor={onboardingColors.background} translucent />
+      <BrandedBackground />
 
       {/* Header */}
       <View style={styles.header}>

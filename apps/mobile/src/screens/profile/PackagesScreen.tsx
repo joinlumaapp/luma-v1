@@ -22,6 +22,7 @@ import { useAuthStore, type PackageTier } from '../../stores/authStore';
 import { paymentService } from '../../services/paymentService';
 import { iapService } from '../../services/iapService';
 import { useScreenTracking, analyticsService, ANALYTICS_EVENTS } from '../../hooks/useAnalytics';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 // Package accent colors
 const PACKAGE_COLORS: Record<string, string> = {
@@ -321,6 +322,7 @@ export const PackagesScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -821,7 +823,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.surfaceBorder,
   },
   comparisonRowEven: {
-    backgroundColor: colors.background + '40',
+    backgroundColor: 'transparent',
   },
   comparisonLabel: {
     ...typography.caption,

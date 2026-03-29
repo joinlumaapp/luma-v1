@@ -35,6 +35,7 @@ import { FavoriteSpotsEditor } from '../../components/profile/FavoriteSpotsEdito
 import { PromptPickerSheet } from '../../components/prompts/PromptPickerSheet';
 import type { PromptOption } from '../../constants/promptBank';
 import type { VideoMetadata } from '../../services/videoService';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 type EditProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'EditProfile'>;
 
@@ -417,6 +418,7 @@ export const EditProfileScreen: React.FC = () => {
       keyboardVerticalOffset={0}
     >
       <View style={[styles.container, { paddingTop: insets.top }]}>
+        <BrandedBackground />
         {/* ── Header ──────────────────────────────────────────────────── */}
         <View style={styles.header}>
           <TouchableOpacity

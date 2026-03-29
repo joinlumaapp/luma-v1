@@ -17,6 +17,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../stores/authStore';
 import { onboardingColors } from '../../components/onboarding/OnboardingLayout';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { spacing, borderRadius } from '../../theme/spacing';
 
 type NavProp = NativeStackNavigationProp<AuthStackParamList, 'EmailEntry'>;
@@ -47,6 +48,7 @@ export const EmailEntryScreen: React.FC = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <StatusBar barStyle="dark-content" backgroundColor={onboardingColors.background} translucent />
+      <BrandedBackground />
 
       {/* Header */}
       <View style={styles.header}>

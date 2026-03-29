@@ -22,6 +22,7 @@ import type { ActivityParticipant } from '../../services/activityService';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 type NavProp = NativeStackNavigationProp<ActivitiesStackParamList, 'ActivityDetail'>;
 type RoutePropType = RouteProp<ActivitiesStackParamList, 'ActivityDetail'>;
@@ -149,6 +150,7 @@ export const ActivityDetailScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>

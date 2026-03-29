@@ -18,6 +18,7 @@ import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { useCoinStore } from '../../stores/coinStore';
 import { useAuthStore } from '../../stores/authStore';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const LIVE_COST = 25;
@@ -95,6 +96,7 @@ export const LiveScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Canlı</Text>

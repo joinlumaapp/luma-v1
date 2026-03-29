@@ -317,8 +317,6 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onPr
             <Text style={styles.subtitleText}>{timeAgo}</Text>
           </View>
 
-          {/* Currently listening removed — music feature removed */}
-          )}
         </TouchableOpacity>
 
         {!isOwnPost && (

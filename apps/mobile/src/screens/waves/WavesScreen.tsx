@@ -24,6 +24,7 @@ import type { Wave } from '../../services/waveService';
 import { colors, glassmorphism } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows, layout } from '../../theme/spacing';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 type NavProp = NativeStackNavigationProp<DiscoveryStackParamList, 'Waves'>;
 
@@ -384,6 +385,7 @@ export const WavesScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity

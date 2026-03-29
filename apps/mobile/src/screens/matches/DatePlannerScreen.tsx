@@ -30,6 +30,7 @@ import { useScreenTracking } from '../../hooks/useAnalytics';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 type DatePlannerRouteProp = RouteProp<MatchesStackParamList, 'DatePlanner'>;
 
@@ -773,6 +774,7 @@ export const DatePlannerScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/* Golden glow for Super Match */}
       {isSuperMatch && <GoldenGlowBackground />}
 

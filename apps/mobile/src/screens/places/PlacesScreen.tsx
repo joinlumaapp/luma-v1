@@ -26,6 +26,7 @@ import { placesService, SharedPlace, CheckInRequest, PlaceStatus } from '../../s
 import { locationService } from '../../services/locationService';
 import { useRelationshipStore } from '../../stores/relationshipStore';
 import { PlaceMemoriesTimeline } from '../../components/places/PlaceMemoriesTimeline';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 type ViewMode = 'list' | 'map' | 'timeline';
 
@@ -420,7 +421,7 @@ const mapStyles = StyleSheet.create({
     left: spacing.sm,
     flexDirection: 'row',
     gap: spacing.md,
-    backgroundColor: colors.background + 'CC',
+    backgroundColor: 'transparent',
     borderRadius: borderRadius.sm,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
@@ -782,6 +783,7 @@ export const PlacesScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -945,7 +947,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   statChip: {
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
     borderRadius: borderRadius.xs,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
@@ -1089,7 +1091,7 @@ const styles = StyleSheet.create({
   modalStatCard: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
     borderRadius: borderRadius.lg,
     paddingVertical: spacing.md,
   },
@@ -1113,7 +1115,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   memoryItem: {
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
     borderRadius: borderRadius.md,
     padding: spacing.md,
     marginBottom: spacing.sm,
@@ -1136,7 +1138,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   textInput: {
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
     borderRadius: borderRadius.md,
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
@@ -1179,7 +1181,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     alignItems: 'center',
     borderRadius: borderRadius.md,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
   },
   viewModeTabActive: {
     backgroundColor: colors.primary,

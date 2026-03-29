@@ -31,12 +31,8 @@ export const MatchCard: React.FC<MatchCardProps> = ({
   isNew,
   onPress,
 }) => {
-  const compatColor =
-    compatibilityPercent >= 90
-      ? colors.success
-      : compatibilityPercent >= 70
-        ? colors.accent
-        : colors.textSecondary;
+  // Single warm gold for all compatibility scores — clean premium look
+  const compatColor = '#D4A574';
 
   return (
     <TouchableOpacity

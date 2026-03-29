@@ -41,6 +41,7 @@ import { MatchCountdown } from '../../components/engagement/MatchCountdown';
 import { useEngagementStore } from '../../stores/engagementStore';
 import { useAuthStore } from '../../stores/authStore';
 import { palette } from '../../theme/colors';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 type MatchesNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'MatchesList'>;
 
@@ -158,10 +159,9 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
     }).start();
   }, [avatarScaleAnim]);
 
-  const getCompatibilityColor = (percent: number): string => {
-    if (percent >= 90) return colors.success;
-    if (percent >= 70) return colors.accent;
-    return colors.textSecondary;
+  // Single warm gold for all compatibility scores — clean premium look
+  const getCompatibilityColor = (_percent: number): string => {
+    return '#D4A574';
   };
 
   const isSuperCompatible = item.compatibilityPercent >= 90;
@@ -1035,6 +1035,7 @@ export const MatchesListScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/* Header */}
       <View style={styles.darkHeaderArea}>
         <View style={styles.header}>
@@ -1201,7 +1202,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   darkHeaderArea: {
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
     paddingBottom: spacing.xs,
   },
   header: {

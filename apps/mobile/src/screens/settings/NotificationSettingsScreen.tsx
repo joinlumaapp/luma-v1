@@ -19,6 +19,7 @@ import { notificationService } from '../../services/notificationService';
 import type { NotificationPreferences } from '../../services/notificationService';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { storage } from '../../utils/storage';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 // ─── Settings Configuration ──────────────────────────────────────────
 
@@ -205,6 +206,7 @@ export const NotificationSettingsScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity

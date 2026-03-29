@@ -29,14 +29,16 @@ import { VerifiedBadge } from '../../components/common/VerifiedBadge';
 import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
 import { CoinBalance } from '../../components/common/CoinBalance';
 import { translateSmoking, translateSports, translateChildren, translateIntentionTag } from '../../utils/formatters';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 type MatchDetailNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'MatchDetail'>;
 type MatchDetailRouteProp = RouteProp<MatchesStackParamList, 'MatchDetail'>;
 
-const getScoreColor = (score: number): string => {
-  if (score >= 90) return colors.success;
-  if (score >= 70) return colors.accent;
-  return colors.primary;
+// Single warm gold for all compatibility scores — clean premium look
+const COMPAT_GOLD = '#D4A574';
+
+const getScoreColor = (_score: number): string => {
+  return COMPAT_GOLD;
 };
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
@@ -355,14 +357,17 @@ export const MatchDetailScreen: React.FC = () => {
   );
 
   return (
-    <InterleavedProfileLayout
-      photos={selectedMatch.photos}
-      topContent={topContent}
-      infoSections={infoSections}
-      headerBar={headerBar}
-      footer={footer}
-      scrollBottomPadding={180}
-    />
+    <View style={{ flex: 1 }}>
+      <BrandedBackground />
+      <InterleavedProfileLayout
+        photos={selectedMatch.photos}
+        topContent={topContent}
+        infoSections={infoSections}
+        headerBar={headerBar}
+        footer={footer}
+        scrollBottomPadding={180}
+      />
+    </View>
   );
 };
 
@@ -385,7 +390,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
   },
   backButton: {
     width: 40,
@@ -577,7 +582,7 @@ const styles = StyleSheet.create({
 
   // ── Footer — action buttons ──
   footerContainer: {
-    backgroundColor: colors.background + 'F0',
+    backgroundColor: 'transparent',
     paddingTop: spacing.md,
     paddingHorizontal: spacing.lg,
     gap: spacing.sm,

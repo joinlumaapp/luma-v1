@@ -11,19 +11,14 @@ import Animated, {
   Easing,
   type SharedValue,
 } from 'react-native-reanimated';
-import { colors } from '../../theme/colors';
-import { typography } from '../../theme/typography';
+// colors and typography imports removed — only RING_GOLD constant used
 
-// ─── Score-based ring color ────────────────────────────────────
+// ─── Ring color — single warm gold for all scores ─────────────
 
-const RING_GREEN = '#10B981';
-const RING_AMBER = '#F59E0B';
-const RING_PURPLE = '#8B5CF6';
+const RING_GOLD = '#D4A574';
 
-function getRingColor(score: number): string {
-  if (score >= 90) return RING_GREEN;
-  if (score >= 70) return RING_AMBER;
-  return RING_PURPLE;
+function getRingColor(_score: number): string {
+  return RING_GOLD;
 }
 
 // ─── Props ─────────────────────────────────────────────────────
@@ -112,9 +107,10 @@ export const CompatibilityBadge: React.FC<CompatibilityBadgeProps> = ({
 }) => {
   const clampedScore = Math.max(0, Math.min(100, score));
   const ringColor = getRingColor(clampedScore);
-  const isSuper = level === 'super';
+  // level prop kept for API compatibility but no longer changes visuals
+  const _isSuper = level === 'super';
   const borderWidth = size >= 48 ? 3 : 2;
-  const trackColor = 'rgba(255,255,255,0.15)';
+  const trackColor = 'rgba(212, 165, 116, 0.18)';
 
   // Shared values for each half's rotation (in degrees)
   const rightRotation = useSharedValue(0);
@@ -152,18 +148,16 @@ export const CompatibilityBadge: React.FC<CompatibilityBadgeProps> = ({
   const innerSize = size - borderWidth * 2 - 4; // gap between track and center
   const fontSize = size * 0.32;
 
-  // Shadow for high scores
-  const scoreShadow = isSuper || clampedScore >= 90
-    ? Platform.select({
-        ios: {
-          shadowColor: RING_GREEN,
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.45,
-          shadowRadius: size * 0.15,
-        },
-        android: { elevation: 6 },
-      })
-    : undefined;
+  // Subtle shadow — minimal glow for all scores
+  const scoreShadow = Platform.select({
+    ios: {
+      shadowColor: RING_GOLD,
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.15,
+      shadowRadius: size * 0.06,
+    },
+    android: { elevation: 2 },
+  });
 
   return (
     <View
@@ -219,28 +213,13 @@ export const CompatibilityBadge: React.FC<CompatibilityBadgeProps> = ({
           },
         ]}
       >
-        {isSuper && (
-          <Text style={[localStyles.starIcon, { fontSize: size * 0.14, color: RING_GREEN }]}>
-            {'\u2605'}
-          </Text>
-        )}
-
         <Text
           style={[
             localStyles.scoreText,
-            { fontSize, color: '#FFFFFF' },
+            { fontSize, color: RING_GOLD },
           ]}
         >
-          {clampedScore}
-        </Text>
-
-        <Text
-          style={[
-            localStyles.label,
-            { fontSize: size * 0.16, color: colors.textSecondary },
-          ]}
-        >
-          uyum
+          {clampedScore}%
         </Text>
       </Animated.View>
     </View>
@@ -265,17 +244,10 @@ const localStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  starIcon: {
-    position: 'absolute',
-    top: 2,
-  },
   scoreText: {
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     paddingHorizontal: 2,
-  },
-  label: {
-    ...typography.captionSmall,
-    marginTop: -1,
+    includeFontPadding: false,
   },
 });

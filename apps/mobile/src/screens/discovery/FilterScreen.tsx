@@ -21,6 +21,7 @@ import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 import type { RootStackParamList } from '../../navigation/types';
 import { useScreenTracking } from '../../hooks/useAnalytics';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -338,6 +339,7 @@ export const FilterScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -996,7 +998,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.divider,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
   },
   resetButton: {
     flex: 1,
