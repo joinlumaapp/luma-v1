@@ -167,8 +167,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const mockUser: AuthUser = {
         id: 'dev-user-001',
         phone,
-        isVerified: false,
-        packageTier: 'FREE',
+        isVerified: true,
+        packageTier: 'RESERVED',
       };
       try {
         devMockOrThrow(error, mockUser, 'authStore.verifyOTP');
