@@ -189,6 +189,15 @@ export const API_ROUTES = {
     VIEWERS: '/stories/:storyId/viewers',
     REPLY: '/stories/:storyId/reply',
   },
+  // Posts (Gonderi — permanent feed posts)
+  POSTS: {
+    LIST: '/posts',                  // GET — feed posts (paginated)
+    CREATE: '/posts',                // POST — create post
+    MY: '/posts/my',                 // GET — own posts for profile
+    DELETE: '/posts/:postId',        // DELETE — soft delete own post
+    LIKE: '/posts/:postId/like',     // POST — toggle like
+    LIKERS: '/posts/:postId/likers', // GET — liker list (premium only)
+  },
   // Engagement
   ENGAGEMENT: {
     DAILY_REWARD: '/engagement/daily-reward/claim',     // POST
