@@ -504,10 +504,14 @@ export const ProfileScreen: React.FC = () => {
 
       {/* Premium stats row — tappable */}
       <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
-        <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
-          <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { postCount?: number })?.postCount ?? 0}</Text>
+        <TouchableOpacity
+          style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}
+          onPress={() => navigation.getParent()?.navigate('FeedTab', { screen: 'SocialFeed' })}
+          activeOpacity={0.7}
+        >
+          <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{myPosts.length}</Text>
           <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Gönderi</Text>
-        </View>
+        </TouchableOpacity>
         <TouchableOpacity
           style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}
           onPress={() => navigation.navigate('FollowList' as never, { mode: 'followers' } as never)}
@@ -592,28 +596,6 @@ export const ProfileScreen: React.FC = () => {
 
   // ── Info Sections (interleaved with photos) ─────────────────────────────────
   const infoSections: React.ReactNode[] = [];
-
-  // 0. Gönderilerim — user's own posts with like counts
-  if (myPosts.length > 0) {
-    infoSections.push(
-      <View key="my-posts" style={styles.section}>
-        <Text style={styles.sectionTitle}>Gönderilerim</Text>
-        {myPosts.map((post) => (
-          <View key={post.id} style={{ backgroundColor: colors.surface, borderRadius: 12, padding: spacing.md, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.surfaceBorder }}>
-            <Text style={{ fontSize: 14, color: colors.text, fontFamily: 'Poppins_400Regular', lineHeight: 20 }} numberOfLines={3}>
-              {post.content}
-            </Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm, gap: 4 }}>
-              <Ionicons name="heart" size={14} color={palette.rose[500]} />
-              <Text style={{ fontSize: 12, color: colors.textSecondary, fontFamily: 'Poppins_500Medium' }}>
-                {post.likeCount}
-              </Text>
-            </View>
-          </View>
-        ))}
-      </View>,
-    );
-  }
 
   // 1. Hakkında — bio + lookingFor chips
   infoSections.push(
