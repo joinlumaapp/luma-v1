@@ -2,6 +2,7 @@
 
 export interface User {
   id: string;
+  displayId: string;
   phone: string;
   createdAt: Date;
   updatedAt: Date;
@@ -17,6 +18,7 @@ export interface User {
 export interface UserProfile {
   userId: string;
   firstName: string;
+  lastName: string | null;
   birthDate: Date;
   gender: Gender;
   bio: string | null;
