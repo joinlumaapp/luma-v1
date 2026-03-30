@@ -38,7 +38,8 @@ export const MyPostsScreen: React.FC = () => {
     try {
       // Try dedicated API endpoint first
       const response = await api.get('/posts/my');
-      setPosts(Array.isArray(response.data) ? response.data : []);
+      const data = response.data;
+      setPosts(Array.isArray(data) ? data : Array.isArray(data.posts) ? data.posts : []);
     } catch {
       // Dev fallback: collect posts from all local sources
       const allPosts: FeedPost[] = [];

@@ -26,7 +26,7 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import type { DiscoveryStackParamList, MainTabParamList } from '../../navigation/types';
+import type { FeedStackParamList, MainTabParamList } from '../../navigation/types';
 import { useAuthStore } from '../../stores/authStore';
 import { useStoryStore } from '../../stores/storyStore';
 import type { Story, StoryOverlay } from '../../services/storyService';
@@ -38,9 +38,9 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const IMAGE_STORY_DURATION = 5000; // 5 seconds per image
 const DEFAULT_VIDEO_DURATION = 15000; // Fallback for video if metadata unavailable
 
-type StoryViewerRouteProp = RouteProp<DiscoveryStackParamList, 'StoryViewer'>;
+type StoryViewerRouteProp = RouteProp<FeedStackParamList, 'StoryViewer'>;
 type StoryViewerNavProp = CompositeNavigationProp<
-  NativeStackNavigationProp<DiscoveryStackParamList, 'StoryViewer'>,
+  NativeStackNavigationProp<FeedStackParamList, 'StoryViewer'>,
   BottomTabNavigationProp<MainTabParamList>
 >;
 

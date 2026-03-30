@@ -283,7 +283,8 @@ export const ProfileScreen: React.FC = () => {
   const fetchMyPosts = useCallback(async () => {
     try {
       const response = await api.get('/posts/my');
-      setMyPosts(response.data);
+      const data = response.data;
+      setMyPosts(Array.isArray(data) ? data : Array.isArray(data.posts) ? data.posts : []);
     } catch {
       // Fallback: check feed mock data AND current store state for own posts
       const userId = user?.id ?? 'dev-user-001';

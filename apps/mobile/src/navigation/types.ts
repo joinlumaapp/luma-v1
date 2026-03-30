@@ -104,8 +104,8 @@ export type FeedStackParamList = {
   FeedProfile: { userId: string };
   ProfilePreview: { userId: string };
   PostDetail: { postId: string };
-  StoryViewer: { userId: string; storyIndex?: number };
-  StoryCreator: undefined;
+  StoryViewer: { userId: string; userName: string; userAvatarUrl: string; storyUsers?: any[] };
+  StoryCreator: { mediaUri: string; mediaType: 'image' | 'video' };
 };
 
 // -- Profile Stack --
