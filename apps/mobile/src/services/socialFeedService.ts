@@ -456,6 +456,28 @@ export const socialFeedService = {
     return MOCK_POSTS.filter((p) => p.userId === 'dev-user-001');
   },
 
+  /** Get users who liked the current user's posts */
+  getPostLikers: async (): Promise<{
+    likers: Array<{
+      userId: string;
+      userName: string;
+      userAge: number;
+      userAvatarUrl: string;
+      postId: string;
+      postContent: string;
+      likedAt: string;
+    }>;
+    total: number;
+  }> => {
+    try {
+      const res = await api.get('/posts/likers');
+      return res.data;
+    } catch {
+      // TODO: Backend endpoint not implemented yet, return empty
+      return { likers: [], total: 0 };
+    }
+  },
+
   // Get mock posts (used by devSeedData)
   getMockPosts: (): FeedPost[] => {
     assertDevOnly('socialFeedService.getMockPosts');

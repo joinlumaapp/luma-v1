@@ -28,6 +28,7 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { DiscoveryStackParamList, MatchesStackParamList, MainTabParamList } from '../../navigation/types';
 import { discoveryService } from '../../services/discoveryService';
+import { socialFeedService } from '../../services/socialFeedService';
 import type { LikeYouCard } from '../../services/discoveryService';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
 import { LIKES_VIEW_CONFIG, SUPER_COMPATIBLE_THRESHOLD } from '../../constants/config';
@@ -633,6 +634,18 @@ export const LikesYouScreen: React.FC = () => {
   // Keeps the user in context; they navigate to plans only if they explicitly tap "Yükselt".
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
 
+  // Feed post likers — people who liked the current user's posts
+  const [feedLikers, setFeedLikers] = useState<Array<{
+    userId: string;
+    userName: string;
+    userAge: number;
+    userAvatarUrl: string;
+    postId: string;
+    postContent: string;
+    likedAt: string;
+  }>>([]);
+  const [feedLikersTotal, setFeedLikersTotal] = useState(0);
+
   // ─── Data fetching ──────────────────────────────────────────
 
   const fetchLikes = useCallback(async () => {
@@ -652,6 +665,19 @@ export const LikesYouScreen: React.FC = () => {
     const task = InteractionManager.runAfterInteractions(() => {
       fetchLikes();
     });
+
+    // Fetch feed post likers alongside discovery likes
+    const fetchFeedLikers = async () => {
+      try {
+        const data = await socialFeedService.getPostLikers();
+        setFeedLikers(data.likers);
+        setFeedLikersTotal(data.total);
+      } catch {
+        // Silent fail
+      }
+    };
+    fetchFeedLikers();
+
     return () => task.cancel();
   }, [fetchLikes]);
 
@@ -949,11 +975,74 @@ export const LikesYouScreen: React.FC = () => {
       );
     }
 
+    // ── Feed post likers section ──
+    if (feedLikers.length > 0) {
+      elements.push(
+        <View key="feed-likers-section" style={{
+          marginHorizontal: 16,
+          marginBottom: 16,
+        }}>
+          <Text style={{
+            color: colors.text,
+            fontSize: 16,
+            fontWeight: '600',
+            marginBottom: 12,
+          }}>
+            Gönderini Beğenenler
+          </Text>
+          {feedLikers.slice(0, 3).map((liker) => (
+            <Pressable
+              key={`${liker.userId}-${liker.postId}`}
+              onPress={() => navigation.navigate('ProfilePreview', { userId: liker.userId })}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                padding: 12,
+                marginBottom: 8,
+                backgroundColor: colors.surface,
+                borderWidth: 1,
+                borderColor: colors.surfaceBorder,
+                borderRadius: 14,
+                gap: 12,
+              }}
+            >
+              <View style={{
+                width: 48, height: 48, borderRadius: 24,
+                backgroundColor: colors.surfaceLight,
+                justifyContent: 'center', alignItems: 'center',
+                overflow: 'hidden',
+              }}>
+                {liker.userAvatarUrl ? (
+                  <Image source={{ uri: liker.userAvatarUrl }} style={{ width: 48, height: 48, borderRadius: 24 }} />
+                ) : (
+                  <Ionicons name="person" size={24} color={colors.textTertiary} />
+                )}
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>
+                  {liker.userName}, {liker.userAge}
+                </Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 2 }} numberOfLines={1}>
+                  {`\u2764\uFE0F "${liker.postContent}" gönderini beğendi`}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+            </Pressable>
+          ))}
+          {feedLikersTotal > 3 && (
+            <Text style={{ color: colors.primary, fontSize: 12, fontWeight: '600', textAlign: 'center', marginTop: 4 }}>
+              +{feedLikersTotal - 3} kişi daha beğendi
+            </Text>
+          )}
+        </View>,
+      );
+    }
+
     // ── Section label before grid ──
     if (likes.length > 0) {
       elements.push(
         <Text key="grid-label" style={styles.gridSectionLabel}>
-          Tüm Beğenenler
+          Profil Beğenileri
         </Text>,
       );
     }
@@ -964,6 +1053,7 @@ export const LikesYouScreen: React.FC = () => {
     isBlurred, isUnlimitedViews, viewsRemaining,
     handleUpgradePress, handleCardPress, unlockedUserIds,
     dailyRevealsUsed, getDailyLimit, navigation,
+    feedLikers, feedLikersTotal,
   ]);
 
   // ─── Skeleton loading state ─────────────────────────────────
