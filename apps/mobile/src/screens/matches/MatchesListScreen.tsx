@@ -24,7 +24,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MatchesStackParamList } from '../../navigation/types';
 import { colors } from '../../theme/colors';
-import { typography } from '../../theme/typography';
+import { typography, fontWeights } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { useMatchStore } from '../../stores/matchStore';
 import type { Match } from '../../stores/matchStore';
@@ -161,11 +161,6 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
     }).start();
   }, [avatarScaleAnim]);
 
-  // Single warm gold for all compatibility scores — clean premium look
-  const getCompatibilityColor = (_percent: number): string => {
-    return '#D4A574';
-  };
-
   const isSuperCompatible = item.compatibilityPercent >= 90;
 
   const avatarContent = (
@@ -221,11 +216,7 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
         style={[
           styles.matchCard,
           item.isNew && styles.matchCardNew,
-          item.compatibilityPercent >= SUPER_COMPATIBLE_THRESHOLD && {
-            borderColor: 'rgba(251,191,36,0.2)',
-            borderWidth: 1,
-            backgroundColor: 'rgba(251,191,36,0.04)',
-          },
+          item.compatibilityPercent >= SUPER_COMPATIBLE_THRESHOLD && styles.matchCardSuperCompat,
           { transform: [{ scale: scaleAnim }] },
         ]}
         testID={`matches-card-${item.id}`}
@@ -277,26 +268,18 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
               </LinearGradient>
             )}
             </View>
-            {/* Smart labels — compatibility + verified */}
-            <View style={{ flexDirection: 'row', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-              {/* Compatibility badge */}
-              <View style={{
-                backgroundColor: item.compatibilityPercent >= SUPER_COMPATIBLE_THRESHOLD
-                  ? 'rgba(251,191,36,0.15)' : 'rgba(139,92,246,0.15)',
-                paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
-              }}>
-                <Text style={{
-                  color: item.compatibilityPercent >= SUPER_COMPATIBLE_THRESHOLD ? '#FBBF24' : '#A78BFA',
-                  fontSize: 10, fontWeight: '600',
-                }}>
-                  {item.compatibilityPercent >= SUPER_COMPATIBLE_THRESHOLD ? '✨ ' : ''}
-                  %{item.compatibilityPercent} Uyumlu
-                </Text>
-              </View>
-              {/* Verified badge */}
+            {/* Compatibility indicator */}
+            <View style={styles.compatRow}>
+              <Text style={[
+                styles.compatText,
+                item.compatibilityPercent >= SUPER_COMPATIBLE_THRESHOLD && styles.compatTextGold,
+              ]}>
+                {item.compatibilityPercent >= SUPER_COMPATIBLE_THRESHOLD ? '✨ ' : ''}
+                %{item.compatibilityPercent} uyumlu
+              </Text>
               {item.isVerified && (
-                <View style={{ backgroundColor: 'rgba(16,185,129,0.15)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
-                  <Text style={{ color: '#10B981', fontSize: 10 }}>✅ Doğrulanmış</Text>
+                <View style={styles.verifiedDot}>
+                  <Ionicons name="checkmark-circle" size={14} color={colors.success} />
                 </View>
               )}
             </View>
@@ -342,18 +325,6 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
             )}
           </View>
 
-          {/* Compatibility */}
-          <View style={styles.compatibilityContainer}>
-            <Text
-              style={[
-                styles.compatibilityPercent,
-                { color: getCompatibilityColor(item.compatibilityPercent) },
-              ]}
-            >
-              %{item.compatibilityPercent}
-            </Text>
-            <Text style={styles.compatibilityLabel}>Uyum</Text>
-          </View>
         </Animated.View>
       </TouchableWithoutFeedback>
   );
@@ -1669,17 +1640,27 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.background,
   },
-  compatibilityContainer: {
+  matchCardSuperCompat: {
+    borderColor: palette.gold[400] + '25',
+    borderWidth: 1,
+    backgroundColor: palette.gold[400] + '06',
+  },
+  compatRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
+    marginTop: 2,
   },
-  compatibilityPercent: {
-    ...typography.bodyLarge,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+  compatText: {
+    ...typography.caption,
+    color: colors.primary,
+    fontWeight: fontWeights.medium,
   },
-  compatibilityLabel: {
-    ...typography.captionSmall,
-    color: colors.textTertiary,
+  compatTextGold: {
+    color: palette.gold[500],
+  },
+  verifiedDot: {
+    marginLeft: 2,
   },
   // ── Mesajlar tab: chat icon ──
   chatIconContainer: {
