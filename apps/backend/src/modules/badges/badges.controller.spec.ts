@@ -47,21 +47,15 @@ describe("BadgesController", () => {
             nameTr: "İlk Eşleşme",
             iconUrl: "https://cdn.luma.app/badges/first_match.png",
           },
-          {
-            id: "badge-2",
-            key: "harmony_master",
-            nameTr: "Harmony Ustası",
-            iconUrl: "https://cdn.luma.app/badges/harmony_master.png",
-          },
         ],
-        total: 2,
+        total: 1,
       };
       mockBadgesService.getAllBadges.mockResolvedValue(expected);
 
       const result = await controller.getAllBadges();
 
-      expect(result.badges).toHaveLength(2);
-      expect(result.total).toBe(2);
+      expect(result.badges).toHaveLength(1);
+      expect(result.total).toBe(1);
     });
 
     it("should return empty list when no badges exist", async () => {
@@ -107,14 +101,7 @@ describe("BadgesController", () => {
         ],
         totalEarned: 1,
         totalAvailable: 10,
-        progress: [
-          {
-            badgeKey: "harmony_master",
-            name: "Harmony Ustası",
-            progress: 60,
-            requirement: "5 Harmony Room oturumu tamamlayın",
-          },
-        ],
+        progress: [],
       };
       mockBadgesService.getMyBadges.mockResolvedValue(expected);
 
@@ -123,7 +110,7 @@ describe("BadgesController", () => {
       expect(result.earnedBadges).toHaveLength(1);
       expect(result.totalEarned).toBe(1);
       expect(result.totalAvailable).toBe(10);
-      expect(result.progress).toHaveLength(1);
+      expect(result.progress).toHaveLength(0);
     });
 
     it("should return empty earned badges for new user", async () => {

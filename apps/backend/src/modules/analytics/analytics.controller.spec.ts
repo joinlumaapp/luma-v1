@@ -140,7 +140,6 @@ describe("AnalyticsController", () => {
           day30Retention: 10,
           avgSessionDurationMs: 180000,
           swipesPerSession: 12.5,
-          harmonySessionsPerUser: 0.5,
         },
         packageDistribution: { free: 700, gold: 200, pro: 80, reserved: 20 },
       };

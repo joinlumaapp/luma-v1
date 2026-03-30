@@ -6,6 +6,7 @@ import {
   Logger,
 } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
+import { NotificationsService } from "../notifications/notifications.service";
 import { calculateAge } from "../../common/utils/date.utils";
 import { BadgesService } from "../badges/badges.service";
 import {
@@ -28,6 +29,7 @@ export class RelationshipsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly badgesService: BadgesService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   /**
@@ -89,16 +91,15 @@ export class RelationshipsService {
             },
           });
 
-          // Notify partner
-          await this.prisma.notification.create({
-            data: {
-              userId: partnerId,
-              type: "SYSTEM",
-              title: "İlişki Modu Aktif!",
-              body: "Tebrikler! İlişki modunuz aktif edildi. Artık Çiftler Kulübü özelliklerine erişebilirsiniz.",
-              data: { relationshipId: relationship.id },
-            },
-          });
+          // Notify partner (through NotificationsService for push delivery,
+          // preferences, quiet hours, and rate limiting)
+          await this.notificationsService.sendPushNotification(
+            partnerId,
+            "İlişki Modu Aktif!",
+            "Tebrikler! İlişki modunuz aktif edildi. Artık Çiftler Kulübü özelliklerine erişebilirsiniz.",
+            { relationshipId: relationship.id },
+            "SYSTEM",
+          );
 
           // Award couple_goal badge to both users (non-blocking)
           this.badgesService
@@ -134,16 +135,15 @@ export class RelationshipsService {
       },
     });
 
-    // Notify partner
-    await this.prisma.notification.create({
-      data: {
-        userId: partnerId,
-        type: "SYSTEM",
-        title: "İlişki Modu Teklifi!",
-        body: "Eşleşmeniz size İlişki Modu teklif ediyor. Kabul ederseniz birlikte Çiftler Kulübüne katılabilirsiniz.",
-        data: { relationshipId: relationship.id, matchId: dto.matchId },
-      },
-    });
+    // Notify partner (through NotificationsService for push delivery,
+    // preferences, quiet hours, and rate limiting)
+    await this.notificationsService.sendPushNotification(
+      partnerId,
+      "İlişki Modu Teklifi!",
+      "Eşleşmeniz size İlişki Modu teklif ediyor. Kabul ederseniz birlikte Çiftler Kulübüne katılabilirsiniz.",
+      { relationshipId: relationship.id, matchId: dto.matchId },
+      "SYSTEM",
+    );
 
     return {
       relationshipId: relationship.id,
@@ -182,16 +182,15 @@ export class RelationshipsService {
       },
     });
 
-    // Notify partner about the deactivation request
-    await this.prisma.notification.create({
-      data: {
-        userId: partnerId,
-        type: "SYSTEM",
-        title: "İlişki Sonlandırma Talebi",
-        body: "Partneriniz ilişkiyi sonlandırmak istiyor. 48 saat içinde onaylayabilir veya bekleyebilirsiniz.",
-        data: { relationshipId: relationship.id },
-      },
-    });
+    // Notify partner about the deactivation request (through NotificationsService
+    // for push delivery, preferences, quiet hours, and rate limiting)
+    await this.notificationsService.sendPushNotification(
+      partnerId,
+      "İlişki Sonlandırma Talebi",
+      "Partneriniz ilişkiyi sonlandırmak istiyor. 48 saat içinde onaylayabilir veya bekleyebilirsiniz.",
+      { relationshipId: relationship.id },
+      "SYSTEM",
+    );
 
     return {
       deactivated: false,
@@ -231,17 +230,16 @@ export class RelationshipsService {
       },
     });
 
-    // Notify the initiator that the partner confirmed
+    // Notify the initiator that the partner confirmed (through NotificationsService
+    // for push delivery, preferences, quiet hours, and rate limiting)
     if (initiatorId) {
-      await this.prisma.notification.create({
-        data: {
-          userId: initiatorId,
-          type: "SYSTEM",
-          title: "İlişki Modu Sonlandırıldı",
-          body: "Partneriniz ilişki sonlandırma talebinizi onayladı. İlişki modu sonlandırıldı.",
-          data: { relationshipId: relationship.id },
-        },
-      });
+      await this.notificationsService.sendPushNotification(
+        initiatorId,
+        "İlişki Modu Sonlandırıldı",
+        "Partneriniz ilişki sonlandırma talebinizi onayladı. İlişki modu sonlandırıldı.",
+        { relationshipId: relationship.id },
+        "SYSTEM",
+      );
     }
 
     return {
@@ -284,16 +282,15 @@ export class RelationshipsService {
       },
     });
 
-    // Notify partner that deactivation was cancelled
-    await this.prisma.notification.create({
-      data: {
-        userId: partnerId,
-        type: "SYSTEM",
-        title: "İlişki Sonlandırma İptal Edildi",
-        body: "Partneriniz ilişki sonlandırma talebini geri çekti. İlişki modu aktif olmaya devam ediyor.",
-        data: { relationshipId: relationship.id },
-      },
-    });
+    // Notify partner that deactivation was cancelled (through NotificationsService
+    // for push delivery, preferences, quiet hours, and rate limiting)
+    await this.notificationsService.sendPushNotification(
+      partnerId,
+      "İlişki Sonlandırma İptal Edildi",
+      "Partneriniz ilişki sonlandırma talebini geri çekti. İlişki modu aktif olmaya devam ediyor.",
+      { relationshipId: relationship.id },
+      "SYSTEM",
+    );
 
     return {
       cancelled: true,
@@ -331,25 +328,26 @@ export class RelationshipsService {
       },
     });
 
-    // Notify both users for each expired relationship
-    const notifications = expiredRelationships.flatMap((rel) => [
-      {
-        userId: rel.userAId,
-        type: "SYSTEM" as const,
-        title: "İlişki Modu Sonlandırıldı",
-        body: "48 saatlik bekleme süresi doldu. İlişki modu otomatik olarak sonlandırıldı.",
-        data: { relationshipId: rel.id },
-      },
-      {
-        userId: rel.userBId,
-        type: "SYSTEM" as const,
-        title: "İlişki Modu Sonlandırıldı",
-        body: "48 saatlik bekleme süresi doldu. İlişki modu otomatik olarak sonlandırıldı.",
-        data: { relationshipId: rel.id },
-      },
+    // Notify both users for each expired relationship (through NotificationsService
+    // for push delivery, preferences, quiet hours, and rate limiting)
+    const notificationPromises = expiredRelationships.flatMap((rel) => [
+      this.notificationsService.sendPushNotification(
+        rel.userAId,
+        "İlişki Modu Sonlandırıldı",
+        "48 saatlik bekleme süresi doldu. İlişki modu otomatik olarak sonlandırıldı.",
+        { relationshipId: rel.id },
+        "SYSTEM",
+      ),
+      this.notificationsService.sendPushNotification(
+        rel.userBId,
+        "İlişki Modu Sonlandırıldı",
+        "48 saatlik bekleme süresi doldu. İlişki modu otomatik olarak sonlandırıldı.",
+        { relationshipId: rel.id },
+        "SYSTEM",
+      ),
     ]);
 
-    await this.prisma.notification.createMany({ data: notifications });
+    await Promise.allSettled(notificationPromises);
 
     return expiredRelationships.length;
   }
@@ -463,7 +461,7 @@ export class RelationshipsService {
   /**
    * Get relationship milestones (achieved and upcoming).
    * Time-based: 1 week, 1 month, 3 months, 6 months, 1 year
-   * Count-based: 10 messages, 100 messages, first harmony session, 5 shared places
+   * Count-based: 10 messages, 100 messages, 5 shared places
    */
   async getMilestones(userId: string) {
     const relationship = await this.findActiveRelationship(userId);
@@ -504,17 +502,6 @@ export class RelationshipsService {
         where: { matchId: matchBetween.id },
       });
     }
-
-    // Count harmony sessions
-    const harmonyCount = await this.prisma.harmonySession.count({
-      where: {
-        OR: [
-          { userAId: userId, userBId: partnerId },
-          { userAId: partnerId, userBId: userId },
-        ],
-        status: { not: "PENDING" },
-      },
-    });
 
     // Count shared places
     const myPlaces = await this.prisma.placeCheckIn.findMany({
@@ -632,16 +619,6 @@ export class RelationshipsService {
         currentValue: messageCount,
         targetValue: 100,
         achievedAt: messageCount >= 100 ? new Date() : null,
-      },
-      {
-        id: "cm_harmony",
-        key: "first_harmony",
-        title: "İlk Harmony Oturumu!",
-        description: "İlk Harmony oturumunuzu gerçekleştirdiniz.",
-        icon: "harmony",
-        currentValue: harmonyCount,
-        targetValue: 1,
-        achievedAt: harmonyCount >= 1 ? new Date() : null,
       },
       {
         id: "cm_5places",

@@ -2,11 +2,11 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { NotFoundException, ForbiddenException } from "@nestjs/common";
 import { MatchesService } from "./matches.service";
 import { PrismaService } from "../../prisma/prisma.service";
+import { NotificationsService } from "../notifications/notifications.service";
 
 const mockTx = {
   match: { update: jest.fn() },
-  harmonySession: { updateMany: jest.fn() },
-  notification: { create: jest.fn() },
+  chatMessage: { updateMany: jest.fn() },
 };
 
 const mockPrisma = {
@@ -18,12 +18,13 @@ const mockPrisma = {
   compatibilityScore: {
     findUnique: jest.fn(),
   },
-  harmonySession: {
-    updateMany: jest.fn(),
-  },
   $transaction: jest.fn((cb: (tx: typeof mockTx) => Promise<unknown>) =>
     cb(mockTx),
   ),
+};
+
+const mockNotificationsService = {
+  sendPushNotification: jest.fn().mockResolvedValue({ sent: true, stored: true }),
 };
 
 describe("MatchesService", () => {
@@ -35,6 +36,7 @@ describe("MatchesService", () => {
       providers: [
         MatchesService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: NotificationsService, useValue: mockNotificationsService },
       ],
     }).compile();
     service = module.get<MatchesService>(MatchesService);
@@ -84,7 +86,6 @@ describe("MatchesService", () => {
               },
             ],
           },
-          harmonySessions: [],
         },
       ]);
 
@@ -93,7 +94,6 @@ describe("MatchesService", () => {
       expect(result.total).toBe(1);
       expect(result.matches[0].partner.firstName).toBe("Ayse");
       expect(result.matches[0].partner.userId).toBe("u2");
-      expect(result.matches[0].hasActiveHarmony).toBe(false);
     });
 
     it("should return empty list when no matches", async () => {
@@ -138,7 +138,6 @@ describe("MatchesService", () => {
             },
             photos: [],
           },
-          harmonySessions: [],
         },
       ]);
 
@@ -165,7 +164,7 @@ describe("MatchesService", () => {
         userBId: "u3",
         userA: { id: "u2", profile: null, photos: [], badges: [] },
         userB: { id: "u3", profile: null, photos: [], badges: [] },
-        harmonySessions: [],
+
       });
 
       await expect(service.getMatch("u1", "m1")).rejects.toThrow(
@@ -229,7 +228,7 @@ describe("MatchesService", () => {
             },
           ],
         },
-        harmonySessions: [],
+
       });
       mockPrisma.compatibilityScore.findUnique.mockResolvedValue({
         baseScore: 82,
@@ -273,7 +272,7 @@ describe("MatchesService", () => {
       );
     });
 
-    it("should deactivate match, cancel harmony sessions, and notify partner", async () => {
+    it("should deactivate match and notify partner", async () => {
       mockPrisma.match.findUnique.mockResolvedValue({
         id: "m1",
         userAId: "u1",
@@ -282,8 +281,7 @@ describe("MatchesService", () => {
         userB: { id: "u2", profile: { firstName: "Ayse" } },
       });
       mockTx.match.update.mockResolvedValue({});
-      mockTx.harmonySession.updateMany.mockResolvedValue({ count: 1 });
-      mockTx.notification.create.mockResolvedValue({});
+      mockTx.chatMessage.updateMany.mockResolvedValue({ count: 0 });
 
       const result = await service.unmatch("u1", "m1");
 
@@ -292,19 +290,13 @@ describe("MatchesService", () => {
         where: { id: "m1" },
         data: expect.objectContaining({ isActive: false }),
       });
-      expect(mockTx.harmonySession.updateMany).toHaveBeenCalledWith({
-        where: {
-          matchId: "m1",
-          status: { in: ["PENDING", "ACTIVE", "EXTENDED"] },
-        },
-        data: expect.objectContaining({ status: "CANCELLED" }),
-      });
-      expect(mockTx.notification.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          userId: "u2",
-          type: "MATCH_REMOVED",
-        }),
-      });
+      expect(mockNotificationsService.sendPushNotification).toHaveBeenCalledWith(
+        "u2",
+        "Eşleşme Kaldırıldı",
+        "Bir eşleşmeniz kaldırıldı.",
+        { matchId: "m1" },
+        "MATCH_REMOVED",
+      );
     });
 
     it("should notify userA when userB initiates unmatch", async () => {
@@ -316,17 +308,17 @@ describe("MatchesService", () => {
         userB: { id: "u2", profile: { firstName: "Ayse" } },
       });
       mockTx.match.update.mockResolvedValue({});
-      mockTx.harmonySession.updateMany.mockResolvedValue({ count: 0 });
-      mockTx.notification.create.mockResolvedValue({});
+      mockTx.chatMessage.updateMany.mockResolvedValue({ count: 0 });
 
       await service.unmatch("u2", "m1");
 
-      expect(mockTx.notification.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          userId: "u1",
-          type: "MATCH_REMOVED",
-        }),
-      });
+      expect(mockNotificationsService.sendPushNotification).toHaveBeenCalledWith(
+        "u1",
+        "Eşleşme Kaldırıldı",
+        "Bir eşleşmeniz kaldırıldı.",
+        { matchId: "m1" },
+        "MATCH_REMOVED",
+      );
     });
 
     it("should set unmatchedAt timestamp", async () => {
@@ -338,8 +330,7 @@ describe("MatchesService", () => {
         userB: { id: "u2", profile: { firstName: "Ayse" } },
       });
       mockTx.match.update.mockResolvedValue({});
-      mockTx.harmonySession.updateMany.mockResolvedValue({ count: 0 });
-      mockTx.notification.create.mockResolvedValue({});
+      mockTx.chatMessage.updateMany.mockResolvedValue({ count: 0 });
 
       await service.unmatch("u1", "m1");
 
@@ -530,49 +521,6 @@ describe("MatchesService", () => {
   // ═══════════════════════════════════════════════════════════════
 
   describe("getAllMatches() — edge cases", () => {
-    it("should detect active harmony session", async () => {
-      mockPrisma.match.findMany.mockResolvedValue([
-        {
-          id: "m1",
-          userAId: "u1",
-          userBId: "u2",
-          compatibilityScore: 85,
-          compatibilityLevel: "SUPER",
-          animationType: "SUPER_COMPATIBILITY",
-          isActive: true,
-          createdAt: new Date(),
-          userA: {
-            id: "u1",
-            isSelfieVerified: true,
-            profile: {
-              firstName: "Ali",
-              birthDate: new Date("1995-01-01"),
-              city: "Istanbul",
-              intentionTag: "EXPLORING",
-            },
-            photos: [],
-          },
-          userB: {
-            id: "u2",
-            isSelfieVerified: false,
-            profile: {
-              firstName: "Ayse",
-              birthDate: new Date("1998-06-15"),
-              city: "Ankara",
-              intentionTag: "SERIOUS_RELATIONSHIP",
-            },
-            photos: [{ url: "url", thumbnailUrl: "thumb" }],
-          },
-          harmonySessions: [{ id: "hs-1", status: "ACTIVE" }],
-        },
-      ]);
-
-      const result = await service.getAllMatches("u1");
-
-      expect(result.matches[0].hasActiveHarmony).toBe(true);
-      expect(result.matches[0].harmonySessionId).toBe("hs-1");
-    });
-
     it("should calculate partner age correctly", async () => {
       const birthDate = new Date();
       birthDate.setFullYear(birthDate.getFullYear() - 25);
@@ -610,7 +558,6 @@ describe("MatchesService", () => {
             },
             photos: [],
           },
-          harmonySessions: [],
         },
       ]);
 
@@ -647,7 +594,6 @@ describe("MatchesService", () => {
             profile: null,
             photos: [],
           },
-          harmonySessions: [],
         },
       ]);
 
@@ -694,7 +640,6 @@ describe("MatchesService", () => {
             },
             photos: [photo],
           },
-          harmonySessions: [],
         },
       ]);
 
@@ -736,7 +681,6 @@ describe("MatchesService", () => {
             },
             photos: [],
           },
-          harmonySessions: [],
         },
       ]);
 
@@ -780,7 +724,6 @@ describe("MatchesService", () => {
             },
             photos: [],
           },
-          harmonySessions: [],
         },
         {
           id: "m1",
@@ -813,7 +756,6 @@ describe("MatchesService", () => {
             },
             photos: [],
           },
-          harmonySessions: [],
         },
       ]);
 
@@ -870,7 +812,7 @@ describe("MatchesService", () => {
           photos: [],
           badges: [],
         },
-        harmonySessions: [],
+
       });
       mockPrisma.compatibilityScore.findUnique.mockResolvedValue(null);
 
@@ -879,74 +821,6 @@ describe("MatchesService", () => {
       expect(result.compatibility.breakdown).toEqual({});
       expect(result.compatibility.baseScore).toBeUndefined();
       expect(result.compatibility.deepScore).toBeUndefined();
-    });
-
-    it("should include harmony session history in match detail", async () => {
-      const sessions = [
-        {
-          id: "hs-1",
-          status: "COMPLETED",
-          startedAt: new Date(),
-          actualEndedAt: new Date(),
-          hasVoiceChat: true,
-          hasVideoChat: false,
-        },
-        {
-          id: "hs-2",
-          status: "ACTIVE",
-          startedAt: new Date(),
-          actualEndedAt: null,
-          hasVoiceChat: false,
-          hasVideoChat: true,
-        },
-      ];
-      mockPrisma.match.findUnique.mockResolvedValue({
-        id: "m1",
-        userAId: "u1",
-        userBId: "u2",
-        compatibilityScore: 85,
-        compatibilityLevel: "SUPER",
-        animationType: "SUPER_COMPATIBILITY",
-        isActive: true,
-        createdAt: new Date(),
-        userA: {
-          id: "u1",
-          isSelfieVerified: true,
-          isFullyVerified: true,
-          profile: {
-            firstName: "Ali",
-            birthDate: new Date("1995-01-01"),
-            bio: "Hey",
-            city: "Istanbul",
-            country: "TR",
-            intentionTag: "EXPLORING",
-          },
-          photos: [],
-          badges: [],
-        },
-        userB: {
-          id: "u2",
-          isSelfieVerified: true,
-          isFullyVerified: true,
-          profile: {
-            firstName: "Ayse",
-            birthDate: new Date("1998-06-15"),
-            bio: "Hi",
-            city: "Ankara",
-            country: "TR",
-            intentionTag: "EXPLORING",
-          },
-          photos: [],
-          badges: [],
-        },
-        harmonySessions: sessions,
-      });
-      mockPrisma.compatibilityScore.findUnique.mockResolvedValue(null);
-
-      const result = await service.getMatch("u1", "m1");
-
-      expect(result.harmonySessions).toHaveLength(2);
-      expect(result.harmonySessions[0].hasVoiceChat).toBe(true);
     });
 
     it("should return partner as userA when current user is userB", async () => {
@@ -989,7 +863,7 @@ describe("MatchesService", () => {
           photos: [],
           badges: [],
         },
-        harmonySessions: [],
+
       });
       mockPrisma.compatibilityScore.findUnique.mockResolvedValue(null);
 

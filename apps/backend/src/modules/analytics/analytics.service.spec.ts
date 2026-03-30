@@ -14,7 +14,6 @@ const mockPrisma = {
     findMany: jest.fn(),
   },
   match: { count: jest.fn() },
-  harmonySession: { count: jest.fn() },
   userProfile: { count: jest.fn() },
 };
 
@@ -185,7 +184,6 @@ describe("AnalyticsService", () => {
       mockPrisma.user.count.mockResolvedValue(0);
       mockPrisma.user.findMany.mockResolvedValue([]);
       mockPrisma.match.count.mockResolvedValue(0);
-      mockPrisma.harmonySession.count.mockResolvedValue(0);
     });
 
     it("should return dashboard metrics with day period", async () => {

@@ -4,11 +4,15 @@ import {
   ForbiddenException,
 } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
+import { NotificationsService } from "../notifications/notifications.service";
 import { calculateAge } from "../../common/utils/date.utils";
 
 @Injectable()
 export class MatchesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   /**
    * Get all active matches for the current user.
@@ -59,12 +63,6 @@ export class MatchesService {
             },
           },
         },
-        harmonySessions: {
-          where: { status: { in: ["ACTIVE", "EXTENDED"] } },
-          take: 1,
-          orderBy: { createdAt: "desc" },
-          select: { id: true, status: true },
-        },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -84,8 +82,6 @@ export class MatchesService {
         compatibilityScore: match.compatibilityScore,
         compatibilityLevel: match.compatibilityLevel,
         animationType: match.animationType,
-        hasActiveHarmony: match.harmonySessions.length > 0,
-        harmonySessionId: match.harmonySessions[0]?.id ?? null,
         partner: {
           userId: partner.id,
           firstName: partner.profile?.firstName ?? "Kullanıcı",
@@ -167,18 +163,6 @@ export class MatchesService {
             },
           },
         },
-        harmonySessions: {
-          orderBy: { createdAt: "desc" },
-          take: 5,
-          select: {
-            id: true,
-            status: true,
-            startedAt: true,
-            actualEndedAt: true,
-            hasVoiceChat: true,
-            hasVideoChat: true,
-          },
-        },
       },
     });
 
@@ -255,14 +239,12 @@ export class MatchesService {
           earnedAt: ub.earnedAt,
         })),
       },
-      harmonySessions: match.harmonySessions,
     };
   }
 
   /**
    * Unmatch — deactivate a match.
-   * Records who initiated the unmatch, cancels harmony sessions,
-   * and notifies the other user.
+   * Records who initiated the unmatch and notifies the other user.
    */
   async unmatch(userId: string, matchId: string) {
     const match = await this.prisma.match.findUnique({
@@ -303,30 +285,17 @@ export class MatchesService {
         where: { matchId, status: { in: ["SENT", "DELIVERED"] } },
         data: { status: "READ" },
       });
-
-      // End any active harmony sessions
-      await tx.harmonySession.updateMany({
-        where: {
-          matchId,
-          status: { in: ["PENDING", "ACTIVE", "EXTENDED"] },
-        },
-        data: {
-          status: "CANCELLED",
-          actualEndedAt: new Date(),
-        },
-      });
-
-      // Notify the partner that the match was removed
-      await tx.notification.create({
-        data: {
-          userId: partnerId,
-          type: "MATCH_REMOVED",
-          title: "Eşleşme Kaldırıldı",
-          body: "Bir eşleşmeniz kaldırıldı.",
-          data: { matchId },
-        },
-      });
     });
+
+    // Notify the partner that the match was removed (through NotificationsService
+    // which handles push delivery, preferences, quiet hours, and rate limiting)
+    await this.notificationsService.sendPushNotification(
+      partnerId,
+      "Eşleşme Kaldırıldı",
+      "Bir eşleşmeniz kaldırıldı.",
+      { matchId },
+      "MATCH_REMOVED",
+    );
 
     return { unmatched: true };
   }

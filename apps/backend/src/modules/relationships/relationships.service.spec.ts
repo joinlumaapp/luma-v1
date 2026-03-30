@@ -7,6 +7,7 @@ import {
 import { RelationshipsService } from "./relationships.service";
 import { PrismaService } from "../../prisma/prisma.service";
 import { BadgesService } from "../badges/badges.service";
+import { NotificationsService } from "../notifications/notifications.service";
 
 const mockPrisma = {
   match: { findUnique: jest.fn(), findFirst: jest.fn() },
@@ -18,12 +19,10 @@ const mockPrisma = {
     findMany: jest.fn(),
     updateMany: jest.fn(),
   },
-  notification: { create: jest.fn(), createMany: jest.fn() },
   user: { findUnique: jest.fn() },
   userProfile: { findUnique: jest.fn() },
   coupleBadge: { findUnique: jest.fn() },
   chatMessage: { count: jest.fn() },
-  harmonySession: { count: jest.fn() },
   placeCheckIn: { findMany: jest.fn() },
   compatibilityScore: { findMany: jest.fn() },
   couplesClubEvent: {
@@ -32,6 +31,10 @@ const mockPrisma = {
     findUnique: jest.fn(),
   },
   couplesClubParticipant: { upsert: jest.fn() },
+};
+
+const mockNotificationsService = {
+  sendPushNotification: jest.fn().mockResolvedValue({ sent: true, stored: true }),
 };
 
 describe("RelationshipsService", () => {
@@ -47,6 +50,7 @@ describe("RelationshipsService", () => {
           provide: BadgesService,
           useValue: { checkAndAwardBadges: jest.fn().mockResolvedValue([]) },
         },
+        { provide: NotificationsService, useValue: mockNotificationsService },
       ],
     }).compile();
     service = module.get<RelationshipsService>(RelationshipsService);
@@ -105,15 +109,16 @@ describe("RelationshipsService", () => {
         id: "r1",
         status: "PROPOSED",
       });
-      mockPrisma.notification.create.mockResolvedValue({});
 
       const result = await service.activate("u1", { matchId: "m1" });
 
       expect(result.status).toBe("PROPOSED");
-      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({ userId: "u2" }),
-        }),
+      expect(mockNotificationsService.sendPushNotification).toHaveBeenCalledWith(
+        "u2",
+        expect.any(String),
+        expect.any(String),
+        expect.objectContaining({ relationshipId: "r1" }),
+        "SYSTEM",
       );
     });
 
@@ -134,7 +139,6 @@ describe("RelationshipsService", () => {
         id: "r1",
         status: "ACTIVE",
       });
-      mockPrisma.notification.create.mockResolvedValue({});
 
       const result = await service.activate("u1", { matchId: "m1" });
 
@@ -157,7 +161,6 @@ describe("RelationshipsService", () => {
         status: "ACTIVE",
       });
       mockPrisma.relationship.update.mockResolvedValue({});
-      mockPrisma.notification.create.mockResolvedValue({});
 
       const result = await service.deactivate("u1");
 
@@ -172,13 +175,12 @@ describe("RelationshipsService", () => {
           }),
         }),
       );
-      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            userId: "u2",
-            title: "İlişki Sonlandırma Talebi",
-          }),
-        }),
+      expect(mockNotificationsService.sendPushNotification).toHaveBeenCalledWith(
+        "u2",
+        "İlişki Sonlandırma Talebi",
+        expect.any(String),
+        expect.objectContaining({ relationshipId: "r1" }),
+        "SYSTEM",
       );
     });
   });
@@ -201,7 +203,6 @@ describe("RelationshipsService", () => {
         deactivationInitiatedBy: "u1",
       });
       mockPrisma.relationship.update.mockResolvedValue({});
-      mockPrisma.notification.create.mockResolvedValue({});
 
       const result = await service.confirmDeactivation("u2");
 
@@ -211,10 +212,12 @@ describe("RelationshipsService", () => {
           data: expect.objectContaining({ status: "ENDED" }),
         }),
       );
-      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({ userId: "u1" }),
-        }),
+      expect(mockNotificationsService.sendPushNotification).toHaveBeenCalledWith(
+        "u1",
+        expect.any(String),
+        expect.any(String),
+        expect.objectContaining({ relationshipId: "r1" }),
+        "SYSTEM",
       );
     });
   });
@@ -237,7 +240,6 @@ describe("RelationshipsService", () => {
         deactivationInitiatedBy: "u1",
       });
       mockPrisma.relationship.update.mockResolvedValue({});
-      mockPrisma.notification.create.mockResolvedValue({});
 
       const result = await service.cancelDeactivation("u1");
 
@@ -252,10 +254,12 @@ describe("RelationshipsService", () => {
           }),
         }),
       );
-      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({ userId: "u2" }),
-        }),
+      expect(mockNotificationsService.sendPushNotification).toHaveBeenCalledWith(
+        "u2",
+        expect.any(String),
+        expect.any(String),
+        expect.objectContaining({ relationshipId: "r1" }),
+        "SYSTEM",
       );
     });
   });
@@ -281,7 +285,6 @@ describe("RelationshipsService", () => {
         },
       ]);
       mockPrisma.relationship.updateMany.mockResolvedValue({ count: 1 });
-      mockPrisma.notification.createMany.mockResolvedValue({ count: 2 });
 
       const count = await service.autoEndExpiredRelationships();
 
@@ -292,12 +295,21 @@ describe("RelationshipsService", () => {
           data: expect.objectContaining({ status: "ENDED" }),
         }),
       );
-      expect(mockPrisma.notification.createMany).toHaveBeenCalledWith({
-        data: expect.arrayContaining([
-          expect.objectContaining({ userId: "u1" }),
-          expect.objectContaining({ userId: "u2" }),
-        ]),
-      });
+      expect(mockNotificationsService.sendPushNotification).toHaveBeenCalledTimes(2);
+      expect(mockNotificationsService.sendPushNotification).toHaveBeenCalledWith(
+        "u1",
+        expect.any(String),
+        expect.any(String),
+        expect.objectContaining({ relationshipId: "r1" }),
+        "SYSTEM",
+      );
+      expect(mockNotificationsService.sendPushNotification).toHaveBeenCalledWith(
+        "u2",
+        expect.any(String),
+        expect.any(String),
+        expect.objectContaining({ relationshipId: "r1" }),
+        "SYSTEM",
+      );
     });
   });
 
@@ -391,7 +403,6 @@ describe("RelationshipsService", () => {
       });
       mockPrisma.match.findFirst.mockResolvedValue({ id: "m1" });
       mockPrisma.chatMessage.count.mockResolvedValue(15);
-      mockPrisma.harmonySession.count.mockResolvedValue(0);
       mockPrisma.placeCheckIn.findMany
         .mockResolvedValueOnce([{ placeId: "p1" }]) // user places
         .mockResolvedValueOnce([{ placeId: "p2" }]); // partner places
@@ -399,7 +410,7 @@ describe("RelationshipsService", () => {
       const result = await service.getMilestones("u1");
 
       // first_week (7 days) should be achieved since 10 days passed
-      expect(result.totalMilestones).toBe(9);
+      expect(result.totalMilestones).toBe(8);
       expect(result.achieved.length).toBeGreaterThan(0);
       const weekMilestone = result.achieved.find((m) => m.key === "first_week");
       expect(weekMilestone).toBeDefined();
