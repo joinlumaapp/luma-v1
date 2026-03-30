@@ -1209,7 +1209,18 @@ export const MatchesListScreen: React.FC = () => {
           ListHeaderComponent={
             activeTab === 'matches' ? (
               <>
-                <WarmBanner banner={warmBanner} />
+                <WarmBanner
+                  banner={warmBanner}
+                  onPress={() => {
+                    if (warmBanner?.type === 'super_compatible' || warmBanner?.type === 'new_like') {
+                      navigation.navigate('LikesYou');
+                    } else if (warmBanner?.type === 'nearby') {
+                      navigation.navigate('LikesYou');
+                    } else {
+                      navigation.navigate('ViewersPreview');
+                    }
+                  }}
+                />
                 {renderNudgeSection()}
               </>
             ) : renderNudgeSection()
