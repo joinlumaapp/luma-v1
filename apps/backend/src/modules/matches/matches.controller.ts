@@ -10,7 +10,10 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
 import { MatchesService } from "./matches.service";
 import { DatePlanService } from "./date-plan.service";
-import { CurrentUser } from "../../common/decorators/current-user.decorator";
+import {
+  CurrentUser,
+  JwtPayload,
+} from "../../common/decorators/current-user.decorator";
 import { CreateDatePlanDto, RespondDatePlanDto } from "./dto/date-plan.dto";
 
 @ApiTags("Matches")
@@ -21,6 +24,34 @@ export class MatchesController {
     private readonly matchesService: MatchesService,
     private readonly datePlanService: DatePlanService,
   ) {}
+
+  // ─── Viewers, Activity Strip, Warm Banner ─────────────────────
+
+  @Get("viewers")
+  @ApiOperation({ summary: "Get profile viewers (Kim Gördü)" })
+  async getViewers(@CurrentUser() user: JwtPayload) {
+    return this.matchesService.getViewers(
+      user.sub,
+      user.packageTier?.toUpperCase() || "FREE",
+    );
+  }
+
+  @Get("activity-strip")
+  @ApiOperation({ summary: "Get activity strip profiles" })
+  async getActivityStrip(@CurrentUser() user: JwtPayload) {
+    return this.matchesService.getActivityStrip(
+      user.sub,
+      user.packageTier?.toUpperCase() || "FREE",
+    );
+  }
+
+  @Get("warm-banner")
+  @ApiOperation({ summary: "Get warm notification banner" })
+  async getWarmBanner(@CurrentUser("sub") userId: string) {
+    return this.matchesService.getWarmBanner(userId);
+  }
+
+  // ─── Core Match Endpoints ───────────────────────────────────
 
   @Get()
   @ApiOperation({ summary: "Get all matches for current user" })
