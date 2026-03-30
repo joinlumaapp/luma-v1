@@ -30,8 +30,9 @@ export class PostsController {
   async getFeedPosts(
     @CurrentUser("sub") userId: string,
     @Query("cursor") cursor?: string,
+    @Query("filter") filter?: string,
   ) {
-    return this.postsService.getFeedPosts(userId, cursor);
+    return this.postsService.getFeedPosts(userId, cursor, filter);
   }
 
   /** GET /posts/my — Get current user's own posts */

@@ -278,7 +278,7 @@ export const socialFeedService = {
       const response = await api.post<FeedPost>('/posts', data);
       return response.data;
     } catch (error) {
-      return devMockOrThrow(error, {
+      const mockPost: FeedPost = {
         id: `post-dev-${Date.now()}`,
         userId: 'dev-user-001',
         userName: 'Sen',
@@ -296,7 +296,10 @@ export const socialFeedService = {
         likeCount: 0,
         isLiked: false,
         createdAt: new Date().toISOString(),
-          }, 'socialFeedService.createPost');
+      };
+      // Add to mock array so it persists across re-fetches
+      MOCK_POSTS.unshift(mockPost);
+      return devMockOrThrow(error, mockPost, 'socialFeedService.createPost');
     }
   },
 

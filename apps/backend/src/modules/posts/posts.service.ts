@@ -50,11 +50,12 @@ interface PostResponse {
   userName: string;
   userAge: number;
   userCity: string;
-  userIntentionTag: string;
   userAvatarUrl: string;
+  isVerified: boolean;
   verificationLevel: "PREMIUM" | "VERIFIED" | "NONE";
-  isLikedByMe: boolean;
-  isFollowedByMe: boolean;
+  isFollowing: boolean;
+  intentionTag: string;
+  isLiked: boolean;
 }
 
 @Injectable()
@@ -67,9 +68,24 @@ export class PostsService {
   ) {}
 
   /** Get paginated feed posts (newest first, cursor-based) */
-  async getFeedPosts(userId: string, cursor?: string) {
-    const whereClause: Record<string, unknown> = { deletedAt: null };
+  async getFeedPosts(userId: string, cursor?: string, filter?: string) {
+    // If TAKIP filter, only show posts from followed users
+    let userIdFilter: string[] | undefined;
+    if (filter === 'TAKIP') {
+      const follows = await this.prisma.userFollow.findMany({
+        where: { followerId: userId },
+        select: { followingId: true },
+      });
+      userIdFilter = follows.map((f) => f.followingId);
+      if (userIdFilter.length === 0) {
+        return { posts: [], nextCursor: null, hasMore: false };
+      }
+    }
 
+    const whereClause: Record<string, unknown> = { deletedAt: null };
+    if (userIdFilter) {
+      whereClause.userId = { in: userIdFilter };
+    }
     if (cursor) {
       whereClause.createdAt = { lt: new Date(cursor) };
     }
@@ -352,11 +368,12 @@ export class PostsService {
       userName: profile?.firstName ?? "Kullanici",
       userAge: age,
       userCity: profile?.city ?? "",
-      userIntentionTag: profile?.intentionTag ?? "",
       userAvatarUrl: post.user.photos?.[0]?.url ?? "",
+      isVerified: post.user.isSelfieVerified,
       verificationLevel,
-      isLikedByMe,
-      isFollowedByMe,
+      isFollowing: isFollowedByMe,
+      intentionTag: profile?.intentionTag ?? "EXPLORING",
+      isLiked: isLikedByMe,
     };
   }
 

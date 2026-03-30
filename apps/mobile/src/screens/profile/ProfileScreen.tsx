@@ -275,20 +275,36 @@ export const ProfileScreen: React.FC = () => {
     }
   }, []);
 
-  // Fetch user's own posts — try dedicated endpoint first, fallback to feed filtering
+  // Fetch user's own posts — try dedicated endpoint first, fallback to feed + store
   const fetchMyPosts = useCallback(async () => {
     try {
       const response = await api.get('/posts/my');
       setMyPosts(response.data);
     } catch {
+      // Fallback: check feed mock data AND current store state for own posts
+      const userId = user?.id ?? 'dev-user-001';
+      const allPosts: FeedPost[] = [];
+
+      // Get posts from feed service (includes mock data)
       try {
         const feedResponse = await socialFeedService.getFeed('ONERILEN', null);
-        const userId = user?.id;
-        if (userId) {
-          setMyPosts(feedResponse.posts.filter((p: FeedPost) => p.userId === userId).slice(0, 5));
-        }
+        allPosts.push(...feedResponse.posts);
       } catch {
-        // Silently fail
+        // ignore
+      }
+
+      // Also check store for recently created posts
+      const { useSocialFeedStore } = await import('../../stores/socialFeedStore');
+      const storePosts = useSocialFeedStore.getState().posts;
+      for (const sp of storePosts) {
+        if (!allPosts.find((p) => p.id === sp.id)) {
+          allPosts.push(sp);
+        }
+      }
+
+      const myOwnPosts = allPosts.filter((p: FeedPost) => p.userId === userId);
+      if (myOwnPosts.length > 0) {
+        setMyPosts(myOwnPosts.slice(0, 10));
       }
     }
   }, [user?.id]);
