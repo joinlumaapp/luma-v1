@@ -917,16 +917,6 @@ export const SocialFeedScreen: React.FC = () => {
           >
             <Ionicons name="search-outline" size={22} color={colors.text} />
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.headerIconBtn}
-            onPress={() => Alert.alert('Bildirimler', 'Bildirim özelliği yakında!')}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="notifications-outline" size={22} color={colors.text} />
-            <View style={styles.notifBadge}>
-              <Text style={styles.notifBadgeText}>3</Text>
-            </View>
-          </TouchableOpacity>
           <Image
             source={require('../../../assets/splash-logo.png')}
             style={styles.headerLogo}
@@ -1202,25 +1192,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
-  },
-  notifBadge: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: palette.coral[500],
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: colors.background,
-  },
-  notifBadgeText: {
-    fontSize: 9,
-    color: palette.white,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   headerLogo: {
     width: 36,

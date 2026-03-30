@@ -86,9 +86,6 @@ import { LiveScreen } from '../screens/live/LiveScreen';
 // Waves screen
 import { WavesScreen } from '../screens/waves/WavesScreen';
 
-// Notifications screen
-import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';
-
 // Matches extra screens
 import { DatePlannerScreen } from '../screens/matches/DatePlannerScreen';
 import { CallScreen } from '../screens/chat/CallScreen';
@@ -207,7 +204,6 @@ const DiscoveryStackNavigator: React.FC = React.memo(() => (
       component={InstantConnectScreen}
       options={{ animation: 'fade', presentation: 'fullScreenModal' }}
     />
-    <DiscoveryStack.Screen name="Notifications" component={NotificationsScreen} />
     <DiscoveryStack.Screen
       name="ProfilePreview"
       component={ProfilePreviewScreen}
@@ -412,7 +408,6 @@ export const MainTabNavigator: React.FC = () => {
   const matchesTabBadge = newMatchCount + totalUnread;
 
   // Notification store integration
-  const notifUnreadCount = useNotificationStore((s) => s.unreadCount);
   const showPermissionModal = useNotificationStore((s) => s.showPermissionModal);
   const checkAndPromptPermission = useNotificationStore((s) => s.checkAndPromptPermission);
   const allowPermission = useNotificationStore((s) => s.allowPermission);
@@ -462,13 +457,9 @@ export const MainTabNavigator: React.FC = () => {
         options={{
           tabBarLabel: 'Keşfet',
           tabBarIcon: ({ focused }) => (
-            <TabIconWithBadge
-              name="compass"
-              focused={focused}
-              badgeCount={notifUnreadCount}
-            />
+            <TabIcon name="compass" focused={focused} />
           ),
-          tabBarAccessibilityLabel: `Keşfet${notifUnreadCount > 0 ? `, ${notifUnreadCount} bildirim` : ''}`,
+          tabBarAccessibilityLabel: 'Keşfet',
           tabBarButtonTestID: 'tab-discovery',
         }}
         listeners={({ navigation, route }) => createTabResetListener(navigation, route)}

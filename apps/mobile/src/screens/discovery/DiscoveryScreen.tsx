@@ -45,7 +45,6 @@ import { useDiscoveryStore } from '../../stores/discoveryStore';
 import { useLocation } from '../../hooks/useLocation';
 import { useProfileStore } from '../../stores/profileStore';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
-import { useNotificationStore } from '../../stores/notificationStore';
 import { useCoinStore } from '../../stores/coinStore';
 import { matchService } from '../../services/matchService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
@@ -146,10 +145,6 @@ export const DiscoveryScreen: React.FC = () => {
       Alert.alert('Hata', swipeError, [{ text: 'Tamam', onPress: clearError }]);
     }
   }, [swipeError, clearError]);
-
-  // Notification badge
-  const notifUnreadCount = useNotificationStore((s) => s.unreadCount);
-  const fetchNotifications = useNotificationStore((s) => s.fetchNotifications);
 
   // ─── Auth user info ────────────────────────────────────
   const currentUserId = useAuthStore((s) => s.user?.id);
@@ -299,8 +294,7 @@ export const DiscoveryScreen: React.FC = () => {
   // since lazy:false pre-mounts all tabs, data should load immediately
   useEffect(() => {
     checkAndLoadBatch();
-    fetchNotifications();
-  }, [checkAndLoadBatch, fetchNotifications]);
+  }, [checkAndLoadBatch]);
 
   // Auto-reload when batch cooldown expires
   useEffect(() => {
@@ -660,20 +654,6 @@ export const DiscoveryScreen: React.FC = () => {
             </View>
             <View style={styles.headerRight}>
               <Pressable
-                onPress={() => navigation.navigate('Notifications')}
-                accessibilityLabel={`Bildirimler${notifUnreadCount > 0 ? `, ${notifUnreadCount} okunmamis` : ''}`}
-                accessibilityRole="button"
-              >
-                <View style={styles.filterButton}>
-                  <Ionicons name={notifUnreadCount > 0 ? 'notifications' : 'notifications-outline'} size={18} color={colors.text} />
-                  {notifUnreadCount > 0 && (
-                    <View style={styles.notifBadge} pointerEvents="none">
-                      <Text style={styles.notifBadgeText}>{notifUnreadCount > 9 ? '9+' : notifUnreadCount}</Text>
-                    </View>
-                  )}
-                </View>
-              </Pressable>
-              <Pressable
                 onPress={() => navigation.navigate('Filter')}
                 accessibilityLabel="Filtreleri aç"
                 accessibilityRole="button"
@@ -706,20 +686,6 @@ export const DiscoveryScreen: React.FC = () => {
               <Image source={require('../../../assets/splash-logo.png')} style={styles.headerLogo} resizeMode="contain" />
             </View>
             <View style={styles.headerRight}>
-              <Pressable
-                onPress={() => navigation.navigate('Notifications')}
-                accessibilityLabel={`Bildirimler${notifUnreadCount > 0 ? `, ${notifUnreadCount} okunmamis` : ''}`}
-                accessibilityRole="button"
-              >
-                <View style={styles.filterButton}>
-                  <Ionicons name={notifUnreadCount > 0 ? 'notifications' : 'notifications-outline'} size={18} color={colors.text} />
-                  {notifUnreadCount > 0 && (
-                    <View style={styles.notifBadge} pointerEvents="none">
-                      <Text style={styles.notifBadgeText}>{notifUnreadCount > 9 ? '9+' : notifUnreadCount}</Text>
-                    </View>
-                  )}
-                </View>
-              </Pressable>
               <Pressable
                 onPress={() => navigation.navigate('Filter')}
                 accessibilityLabel="Filtreleri aç"
@@ -792,20 +758,6 @@ export const DiscoveryScreen: React.FC = () => {
             <Image source={require('../../../assets/splash-logo.png')} style={styles.headerLogo} resizeMode="contain" />
           </View>
           <View style={styles.headerRight}>
-            <Pressable
-              onPress={() => navigation.navigate('Notifications')}
-              accessibilityLabel={`Bildirimler${notifUnreadCount > 0 ? `, ${notifUnreadCount} okunmamis` : ''}`}
-              accessibilityRole="button"
-            >
-              <View style={styles.filterButton}>
-                <Ionicons name={notifUnreadCount > 0 ? 'notifications' : 'notifications-outline'} size={18} color={colors.text} />
-                {notifUnreadCount > 0 && (
-                  <View style={styles.notifBadge}>
-                    <Text style={styles.notifBadgeText}>{notifUnreadCount > 9 ? '9+' : notifUnreadCount}</Text>
-                  </View>
-                )}
-              </View>
-            </Pressable>
             <Pressable
               onPress={() => navigation.navigate('Filter')}
               accessibilityLabel="Filtreleri aç"
@@ -1224,28 +1176,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
     textAlign: 'center',
-  },
-  notifBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -2,
-    backgroundColor: '#EF4444',
-    borderRadius: 8,
-    minWidth: 16,
-    height: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 3,
-    borderWidth: 1.5,
-    borderColor: colors.background,
-  },
-  notifBadgeText: {
-    ...typography.captionSmall,
-    color: '#FFFFFF',
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    fontSize: 9,
-    lineHeight: 12,
   },
   // ── Card Stack ──
   cardStack: {
