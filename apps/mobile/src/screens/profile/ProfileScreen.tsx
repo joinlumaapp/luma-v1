@@ -313,15 +313,15 @@ export const ProfileScreen: React.FC = () => {
     }
   }, [user?.id]);
 
-  // Fetch follow counts — try API first, fallback to local followedUserIds via service
+  // Fetch follow counts — use real list endpoints, count from array length
   const fetchFollowCounts = useCallback(async () => {
     try {
       const [followersRes, followingRes] = await Promise.all([
-        api.get<{ count: number }>('/users/me/followers/count'),
-        api.get<{ count: number }>('/users/me/following/count'),
+        api.get<Array<{ userId: string }>>('/users/me/followers'),
+        api.get<Array<{ userId: string }>>('/users/me/following'),
       ]);
-      setFollowerCount(followersRes.data.count);
-      setFollowingCount(followingRes.data.count);
+      setFollowerCount(Array.isArray(followersRes.data) ? followersRes.data.length : 0);
+      setFollowingCount(Array.isArray(followingRes.data) ? followingRes.data.length : 0);
     } catch {
       // Dev fallback: use local follow state from socialFeedService
       const counts = socialFeedService.getFollowCounts();

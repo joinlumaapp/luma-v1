@@ -447,7 +447,7 @@ export const socialFeedService = {
   getFollowCounts: (): { followingCount: number; followerCount: number } => {
     return {
       followingCount: followedUserIds.size,
-      followerCount: Math.max(followedUserIds.size, 3), // Mock: at least 3 followers
+      followerCount: 0, // Real count comes from API
     };
   },
 
