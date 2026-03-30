@@ -60,18 +60,6 @@ const formatDistance = (km: number): string => {
   return `${Math.round(km)} km`;
 };
 
-// Format relative time for "liked X ago"
-const formatLikedAgo = (dateStr: string): string => {
-  const diffMs = Date.now() - new Date(dateStr).getTime();
-  const diffMin = Math.floor(diffMs / 60_000);
-  if (diffMin < 60) return `${diffMin}dk önce`;
-  const diffHour = Math.floor(diffMin / 60);
-  if (diffHour < 24) return `${diffHour}sa önce`;
-  const diffDay = Math.floor(diffHour / 24);
-  if (diffDay === 1) return 'Dün';
-  return `${diffDay}g önce`;
-};
-
 const getCompatColor = (percent: number): string => {
   if (percent >= 90) return colors.success;
   if (percent >= 70) return colors.primary;
@@ -497,101 +485,6 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, smartLabel, onCa
 
 LikeCard.displayName = 'LikeCard';
 
-// ─── Highlight Card ──────────────────────────────────────────
-
-interface HighlightCardProps {
-  type: 'most_compatible' | 'nearby';
-  card: LikeYouCard;
-  isBlurred: boolean;
-  onPress: (userId: string) => void;
-}
-
-const HighlightCard = memo<HighlightCardProps>(({ type, card, isBlurred, onPress }) => {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-
-  const title = type === 'most_compatible'
-    ? 'En uyumlu beğeni'
-    : 'Yakınında seni beğenen biri var';
-
-  const subtitle = type === 'most_compatible'
-    ? `%${card.compatibilityPercent} uyum${card.sharedInterests ? ` \u2022 ${card.sharedInterests} uyum noktası` : ''}`
-    : `${card.distanceKm != null ? formatDistance(card.distanceKm) + ' uzaklıkta' : ''}${card.sharedInterests ? ` \u2022 ${card.sharedInterests} uyum noktası` : ''}`;
-
-  const isCompat = type === 'most_compatible';
-  const accentColor = isCompat ? colors.success : palette.gold[400];
-  const iconName = isCompat ? 'sparkles' : 'location';
-  const gradientColors = isCompat
-    ? [colors.success + '12', colors.success + '06'] as [string, string]
-    : [palette.gold[400] + '12', palette.gold[400] + '06'] as [string, string];
-
-  const handlePressIn = useCallback(() => {
-    Animated.spring(scaleAnim, {
-      toValue: 0.97, tension: 200, friction: 10, useNativeDriver: true,
-    }).start();
-  }, [scaleAnim]);
-
-  const handlePressOut = useCallback(() => {
-    Animated.spring(scaleAnim, {
-      toValue: 1, tension: 200, friction: 10, useNativeDriver: true,
-    }).start();
-  }, [scaleAnim]);
-
-  return (
-    <Pressable
-      onPress={() => onPress(card.userId)}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      accessibilityLabel={title}
-      accessibilityRole="button"
-    >
-      <Animated.View style={[{ transform: [{ scale: scaleAnim }] }]}>
-        <LinearGradient
-          colors={gradientColors}
-          style={styles.highlightCard}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        >
-          {/* Photo */}
-          <View style={[styles.highlightPhotoWrap, { borderColor: accentColor + '50' }]}>
-            <Image
-              source={{ uri: card.photoUrl }}
-              style={styles.highlightPhoto}
-              blurRadius={isBlurred ? 20 : 0}
-            />
-            {isBlurred && (
-              <View style={styles.highlightBlurOverlay}>
-                <Ionicons name="lock-closed" size={16} color="rgba(255,255,255,0.8)" />
-              </View>
-            )}
-          </View>
-
-          {/* Info */}
-          <View style={styles.highlightInfo}>
-            <View style={[styles.highlightBadge, { backgroundColor: accentColor + '18' }]}>
-              <Ionicons name={iconName} size={10} color={accentColor} />
-              <Text style={[styles.highlightBadgeText, { color: accentColor }]}>
-                {title}
-              </Text>
-            </View>
-            <Text style={styles.highlightName} numberOfLines={1}>
-              {isBlurred ? '... yaşında biri' : `${card.firstName}, ${card.age}`}
-            </Text>
-            <Text style={styles.highlightSubtitle}>{subtitle}</Text>
-            <Text style={styles.highlightTime}>{formatLikedAgo(card.likedAt)}</Text>
-          </View>
-
-          {/* Arrow button */}
-          <View style={[styles.highlightArrow, { borderColor: accentColor + '30' }]}>
-            <Ionicons name="chevron-forward" size={18} color={accentColor} />
-          </View>
-        </LinearGradient>
-      </Animated.View>
-    </Pressable>
-  );
-});
-
-HighlightCard.displayName = 'HighlightCard';
-
 // ─── Main Screen ──────────────────────────────────────────────
 
 const getLikesTodayString = (): string => new Date().toISOString().split('T')[0];
@@ -827,211 +720,161 @@ export const LikesYouScreen: React.FC = () => {
   const renderHeader = useCallback(() => {
     const elements: React.ReactNode[] = [];
 
-    // ── Summary card — "Seni X kişi beğendi" ──
-    if (total > 0) {
+    // ── Compact likes summary card — replaces old summary + highlights + upgrade cards ──
+    if (total > 0 && likes.length > 0) {
       elements.push(
-        <View key="summary-card" style={styles.summaryCard}>
-          <LinearGradient
-            colors={[palette.purple[500] + '15', palette.pink[500] + '08', 'transparent']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.summaryCardGradient}
-          >
-            <View style={styles.summaryIconCircle}>
-              <Ionicons name="heart" size={22} color={palette.purple[400]} />
+        <View key="compact-summary" style={styles.compactCard}>
+          {/* Row 1: Total likes */}
+          <View style={styles.compactRow}>
+            <View style={styles.compactRowLeft}>
+              <View style={styles.compactHeartCircle}>
+                <Ionicons name="heart" size={20} color={colors.primary} />
+              </View>
+              <View>
+                <Text style={styles.compactMainText}>
+                  Seni <Text style={{ color: colors.primary }}>{total} kisi</Text> begendi
+                </Text>
+                <Text style={styles.compactSubText}>
+                  {isBlurred
+                    ? viewsRemaining > 0
+                      ? 'Ilk profili ucretsiz goruntule'
+                      : 'Premium ile hepsini kesfet'
+                    : 'Profillere dokunarak kesfet'}
+                </Text>
+              </View>
             </View>
-            <View style={styles.summaryTextContainer}>
-              <Text style={styles.summaryMainText}>
-                Seni <Text style={styles.summaryCountHighlight}>{total} kişi</Text> beğendi
-              </Text>
-              <Text style={styles.summarySubText}>
-                {isBlurred
-                  ? viewsRemaining > 0
-                    ? 'İlk profili ücretsiz görüntüle'
-                    : 'Premium ile hepsini keşfet'
-                  : 'Profillere dokunarak keşfet'}
-              </Text>
-            </View>
-          </LinearGradient>
-        </View>,
-      );
-    }
-
-    // ── Daily reveal counter ──
-    if (isBlurred && likes.length > 0) {
-      elements.push(
-        <View key="daily-reveal-counter" style={{ marginBottom: spacing.md }}>
-          <DailyRevealCounter
-            used={dailyRevealsUsed}
-            limit={getDailyLimit()}
-            onBuyExtra={() => navigation.navigate('JetonMarket' as never)}
-          />
-        </View>,
-      );
-    }
-
-    // ── Highlight cards ──
-    if (mostCompatible && likes.length >= 3) {
-      const isUnlocked = unlockedUserIds.has(mostCompatible.userId);
-      elements.push(
-        <HighlightCard
-          key="highlight-compat"
-          type="most_compatible"
-          card={mostCompatible}
-          isBlurred={isBlurred && !isUnlocked}
-          onPress={handleCardPress}
-        />,
-      );
-    }
-
-    if (nearestLike && likes.length >= 3) {
-      const isUnlocked = unlockedUserIds.has(nearestLike.userId);
-      elements.push(
-        <HighlightCard
-          key="highlight-nearby"
-          type="nearby"
-          card={nearestLike}
-          isBlurred={isBlurred && !isUnlocked}
-          onPress={handleCardPress}
-        />,
-      );
-    }
-
-    // ── Free preview status card ──
-    if (!isUnlimitedViews && likes.length > 0 && isBlurred) {
-      elements.push(
-        <View key="limit-card" style={styles.viewLimitCard}>
-          <View style={styles.viewLimitIconContainer}>
-            <Ionicons
-              name={viewsRemaining > 0 ? 'eye-outline' : 'eye-off-outline'}
-              size={18}
-              color={viewsRemaining > 0 ? palette.gold[400] : colors.textTertiary}
-            />
-          </View>
-          <View style={styles.viewLimitTextContainer}>
-            <Text style={styles.viewLimitTitle}>
-              {viewsRemaining > 0
-                ? `Bugün ${viewsRemaining} ücretsiz profil görüntüleme hakkın var`
-                : 'Günlük ücretsiz hakkın bitti'}
-            </Text>
-            {viewsRemaining > 0 ? (
-              <Text style={styles.viewLimitHelper}>İstersen şimdi kullan</Text>
-            ) : (
-              <Pressable onPress={handleUpgradePress}>
-                <Text style={styles.viewLimitUpgradeLink}>Premium ile sınırsız gör</Text>
+            {isBlurred && (
+              <Pressable onPress={handleUpgradePress} style={styles.compactUpgradeChip}>
+                <Ionicons name="diamond" size={12} color={palette.gold[400]} />
+                <Text style={styles.compactUpgradeText}>Ac</Text>
               </Pressable>
             )}
           </View>
+
+          {/* Divider */}
+          <View style={styles.compactDivider} />
+
+          {/* Row 2: Quick stats chips — most compatible + nearby */}
+          <View style={styles.compactChipsRow}>
+            {mostCompatible && (
+              <Pressable
+                onPress={() => handleCardPress(mostCompatible.userId)}
+                style={[styles.compactChip, {
+                  backgroundColor: palette.gold[400] + '10',
+                  borderColor: palette.gold[400] + '20',
+                }]}
+              >
+                <Ionicons name="sparkles" size={14} color={palette.gold[500]} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.compactChipTitle}>En uyumlu</Text>
+                  <Text style={[styles.compactChipValue, { color: palette.gold[500] }]}>
+                    %{mostCompatible.compatibilityPercent} uyum
+                  </Text>
+                </View>
+              </Pressable>
+            )}
+            {nearestLike && (
+              <Pressable
+                onPress={() => handleCardPress(nearestLike.userId)}
+                style={[styles.compactChip, {
+                  backgroundColor: palette.coral[500] + '10',
+                  borderColor: palette.coral[500] + '20',
+                }]}
+              >
+                <Ionicons name="location" size={14} color={palette.coral[500]} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.compactChipTitle}>Yakininda</Text>
+                  <Text style={[styles.compactChipValue, { color: palette.coral[500] }]}>
+                    {nearestLike.distanceKm != null ? formatDistance(nearestLike.distanceKm) : ''}
+                  </Text>
+                </View>
+              </Pressable>
+            )}
+            {!mostCompatible && !nearestLike && (
+              <View style={[styles.compactChip, {
+                backgroundColor: colors.primary + '10',
+                borderColor: colors.primary + '20',
+              }]}>
+                <Ionicons name="people" size={14} color={colors.primary} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.compactChipTitle}>Begeni</Text>
+                  <Text style={[styles.compactChipValue, { color: colors.primary }]}>
+                    {total} kisi
+                  </Text>
+                </View>
+              </View>
+            )}
+          </View>
+
+          {/* Row 3: Daily reveal counter (free users only) */}
+          {isBlurred && (
+            <>
+              <View style={styles.compactDivider} />
+              <DailyRevealCounter
+                used={dailyRevealsUsed}
+                limit={getDailyLimit()}
+                onBuyExtra={() => navigation.navigate('JetonMarket' as never)}
+              />
+            </>
+          )}
         </View>,
       );
     }
 
-    // ── Premium upgrade card — for free users ──
-    if (isBlurred && likes.length > 0) {
-      elements.push(
-        <Pressable key="upgrade-card" onPress={handleUpgradePress}>
-          <LinearGradient
-            colors={[palette.purple[600], palette.purple[800]]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.upgradeCard}
-          >
-            <View style={styles.upgradeCardHeader}>
-              <Ionicons name="diamond" size={24} color={palette.gold[400]} />
-              <Text style={styles.upgradeCardTitle}>Hepsini Gör</Text>
-            </View>
-            <Text style={styles.upgradeCardSubtitle}>
-              {total} kişi seni beğendi — kilidi kaldır ve hemen eşleş
-            </Text>
-
-            {/* Benefits */}
-            <View style={styles.upgradeBenefits}>
-              {[
-                { icon: 'heart' as const, text: 'Seni beğenenleri gör' },
-                { icon: 'flash' as const, text: 'Anında eşleş' },
-                { icon: 'people' as const, text: 'Daha fazla profile eriş' },
-              ].map((benefit) => (
-                <View key={benefit.text} style={styles.upgradeBenefitRow}>
-                  <Ionicons name={benefit.icon} size={14} color={palette.purple[300]} />
-                  <Text style={styles.upgradeBenefitText}>{benefit.text}</Text>
-                </View>
-              ))}
-            </View>
-
-            {/* CTA */}
-            <View style={styles.upgradeCtaContainer}>
-              <LinearGradient
-                colors={[palette.gold[400], palette.gold[500]]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.upgradeCta}
-              >
-                <Ionicons name="lock-open" size={16} color={palette.purple[900]} />
-                <Text style={styles.upgradeCtaText}>Kilidi Aç</Text>
-              </LinearGradient>
-            </View>
-          </LinearGradient>
-        </Pressable>,
-      );
-    }
-
-    // ── Feed post likers section ──
+    // ── Feed post likers section (compact) ──
     if (feedLikers.length > 0) {
       elements.push(
-        <View key="feed-likers-section" style={{
-          marginHorizontal: 16,
-          marginBottom: 16,
-        }}>
+        <View key="feed-likers-section" style={{ marginBottom: 12 }}>
           <Text style={{
             color: colors.text,
-            fontSize: 16,
+            fontSize: 13,
             fontWeight: '600',
-            marginBottom: 12,
+            marginBottom: 8,
           }}>
-            Gönderini Beğenenler
+            Gonderini Begehenler
           </Text>
-          {feedLikers.slice(0, 3).map((liker) => (
+          {feedLikers.slice(0, 2).map((liker) => (
             <Pressable
               key={`${liker.userId}-${liker.postId}`}
               onPress={() => navigation.navigate('ProfilePreview', { userId: liker.userId })}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                padding: 12,
-                marginBottom: 8,
+                padding: 10,
+                marginBottom: 6,
                 backgroundColor: colors.surface,
                 borderWidth: 1,
                 borderColor: colors.surfaceBorder,
-                borderRadius: 14,
-                gap: 12,
+                borderRadius: 12,
+                gap: 10,
               }}
             >
               <View style={{
-                width: 48, height: 48, borderRadius: 24,
+                width: 36, height: 36, borderRadius: 18,
                 backgroundColor: colors.surfaceLight,
                 justifyContent: 'center', alignItems: 'center',
                 overflow: 'hidden',
               }}>
                 {liker.userAvatarUrl ? (
-                  <Image source={{ uri: liker.userAvatarUrl }} style={{ width: 48, height: 48, borderRadius: 24 }} />
+                  <Image source={{ uri: liker.userAvatarUrl }} style={{ width: 36, height: 36, borderRadius: 18 }} />
                 ) : (
-                  <Ionicons name="person" size={24} color={colors.textTertiary} />
+                  <Ionicons name="person" size={18} color={colors.textTertiary} />
                 )}
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>
+                <Text style={{ color: colors.text, fontSize: 12, fontWeight: '600' }}>
                   {liker.userName}, {liker.userAge}
                 </Text>
-                <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 2 }} numberOfLines={1}>
-                  {`\u2764\uFE0F "${liker.postContent}" gönderini beğendi`}
+                <Text style={{ color: colors.textSecondary, fontSize: 10, marginTop: 1 }} numberOfLines={1}>
+                  {`"${liker.postContent}" gonderini begendi`}
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+              <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />
             </Pressable>
           ))}
-          {feedLikersTotal > 3 && (
-            <Text style={{ color: colors.primary, fontSize: 12, fontWeight: '600', textAlign: 'center', marginTop: 4 }}>
-              +{feedLikersTotal - 3} kişi daha beğendi
+          {feedLikersTotal > 2 && (
+            <Text style={{ color: colors.primary, fontSize: 11, fontWeight: '600', textAlign: 'center', marginTop: 2 }}>
+              +{feedLikersTotal - 2} kisi daha begendi
             </Text>
           )}
         </View>,
@@ -1042,7 +885,7 @@ export const LikesYouScreen: React.FC = () => {
     if (likes.length > 0) {
       elements.push(
         <Text key="grid-label" style={styles.gridSectionLabel}>
-          Profil Beğenileri
+          Profil Begenileri
         </Text>,
       );
     }
@@ -1050,8 +893,8 @@ export const LikesYouScreen: React.FC = () => {
     return elements.length > 0 ? <>{elements}</> : null;
   }, [
     total, likes.length, mostCompatible, nearestLike,
-    isBlurred, isUnlimitedViews, viewsRemaining,
-    handleUpgradePress, handleCardPress, unlockedUserIds,
+    isBlurred, viewsRemaining,
+    handleUpgradePress, handleCardPress,
     dailyRevealsUsed, getDailyLimit, navigation,
     feedLikers, feedLikersTotal,
   ]);
@@ -1271,241 +1114,90 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // ── Summary card ──
-  summaryCard: {
-    marginBottom: spacing.md,
-    borderRadius: borderRadius.xl,
-    overflow: 'hidden',
+  // ── Compact likes summary card ──
+  compactCard: {
+    marginBottom: spacing.smd,
+    padding: 14,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: palette.purple[500] + '20',
+    borderColor: colors.surfaceBorder,
+    borderRadius: 16,
   },
-  summaryCardGradient: {
+  compactRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md + 2,
-    gap: spacing.md,
+    justifyContent: 'space-between',
   },
-  summaryIconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: palette.purple[500] + '15',
-    justifyContent: 'center',
+  compactRowLeft: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: palette.purple[500] + '25',
-  },
-  summaryTextContainer: {
+    gap: 10,
     flex: 1,
   },
-  summaryMainText: {
-    ...typography.body,
+  compactHeartCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  compactMainText: {
     color: colors.text,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-  },
-  summaryCountHighlight: {
-    color: palette.purple[400],
+    fontSize: 15,
+    fontWeight: '700',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    fontSize: 18,
   },
-  summarySubText: {
-    fontSize: 12,
+  compactSubText: {
     color: colors.textSecondary,
-    marginTop: 3,
+    fontSize: 11,
+    marginTop: 1,
     fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
   },
-
-  // ── Highlight cards ──
-  highlightCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.smd,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-    gap: spacing.md,
-  },
-  highlightPhotoWrap: {
-    position: 'relative',
-    width: 62,
-    height: 62,
-    borderRadius: 31,
-    overflow: 'hidden',
-    borderWidth: 2.5,
-  },
-  highlightPhoto: {
-    width: 57,
-    height: 57,
-  },
-  highlightBlurOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(30, 16, 53, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  highlightInfo: {
-    flex: 1,
-    gap: 3,
-  },
-  highlightBadge: {
-    alignSelf: 'flex-start',
+  compactUpgradeChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    backgroundColor: palette.purple[600],
     borderRadius: borderRadius.full,
     paddingHorizontal: 10,
-    paddingVertical: 3,
-    marginBottom: 2,
+    paddingVertical: 5,
   },
-  highlightBadgeText: {
-    fontSize: 10,
-    fontFamily: 'Poppins_600SemiBold',
+  compactUpgradeText: {
+    color: palette.gold[400],
+    fontSize: 11,
     fontWeight: '600',
-    letterSpacing: 0.2,
-  },
-  highlightName: {
-    ...typography.bodyLarge,
-    color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
-  highlightSubtitle: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    letterSpacing: 0.15,
+  compactDivider: {
+    height: 1,
+    backgroundColor: colors.divider,
+    marginVertical: 10,
   },
-  highlightTime: {
-    ...typography.captionSmall,
-    color: colors.textTertiary,
+  compactChipsRow: {
+    flexDirection: 'row',
+    gap: 8,
   },
-  highlightArrow: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-  },
-
-  // ── View limit card ──
-  viewLimitCard: {
+  compactChip: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.smd,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    gap: 6,
+    padding: 10,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-    gap: spacing.smd,
   },
-  viewLimitIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: palette.gold[400] + '12',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  viewLimitTextContainer: {
-    flex: 1,
-  },
-  viewLimitTitle: {
-    ...typography.caption,
+  compactChipTitle: {
     color: colors.text,
+    fontSize: 11,
+    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
+  },
+  compactChipValue: {
+    fontSize: 10,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
-  },
-  viewLimitHelper: {
-    fontSize: 11,
-    color: palette.gold[400],
-    marginTop: 2,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
-  },
-  viewLimitUpgradeLink: {
-    fontSize: 11,
-    color: palette.purple[400],
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    marginTop: 2,
-  },
-
-  // ── Premium upgrade card ──
-  upgradeCard: {
-    marginBottom: spacing.lg,
-    borderRadius: borderRadius.xl,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    ...Platform.select({
-      ios: {
-        shadowColor: palette.purple[500],
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.3,
-        shadowRadius: 16,
-      },
-      android: { elevation: 8 },
-    }),
-  },
-  upgradeCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.xs,
-  },
-  upgradeCardTitle: {
-    ...typography.h4,
-    color: '#FFFFFF',
-    letterSpacing: 0.3,
-  },
-  upgradeCardSubtitle: {
-    ...typography.caption,
-    color: palette.purple[200],
-    marginBottom: spacing.md,
-    lineHeight: 20,
-  },
-  upgradeBenefits: {
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  upgradeBenefitRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  upgradeBenefitText: {
-    ...typography.caption,
-    color: 'rgba(255, 255, 255, 0.85)',
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
-  },
-  upgradeCtaContainer: {
-    alignItems: 'center',
-  },
-  upgradeCta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.xl + 8,
-    paddingVertical: spacing.smd,
-    width: '100%',
-  },
-  upgradeCtaText: {
-    ...typography.button,
-    color: palette.purple[900],
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    letterSpacing: 0.5,
   },
 
   // ── Grid section label ──
