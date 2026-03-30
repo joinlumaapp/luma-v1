@@ -176,7 +176,7 @@ export const FilterScreen: React.FC = () => {
               // Navigate to Packages screen in ProfileTab
               navigation.navigate('MainTabs', {
                 screen: 'ProfileTab',
-                params: { screen: 'Packages' },
+                params: { screen: 'MembershipPlans' },
               });
             },
           },

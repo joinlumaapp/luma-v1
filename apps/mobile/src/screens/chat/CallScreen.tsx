@@ -179,7 +179,7 @@ export const CallScreen: React.FC = () => {
   }, [setMinimized, navigation]);
 
   const handleUpgrade = useCallback(() => {
-    navigation.getParent()?.navigate('ProfileTab', { screen: 'Packages' });
+    navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' });
   }, [navigation]);
 
   // ── Premium gate ───────────────────────────────────────────

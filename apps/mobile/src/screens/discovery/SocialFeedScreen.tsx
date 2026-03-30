@@ -717,7 +717,7 @@ export const SocialFeedScreen: React.FC = () => {
             { text: 'Tamam', style: 'cancel' },
             {
               text: 'Paketi Yükselt',
-              onPress: () => navigation.getParent()?.navigate('ProfileTab', { screen: 'Packages' }),
+              onPress: () => navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' }),
             },
           ],
         );

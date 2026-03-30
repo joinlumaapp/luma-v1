@@ -941,7 +941,7 @@ export const ChatScreen: React.FC = () => {
             <TouchableOpacity
               style={styles.upgradeMessageButton}
               onPress={() => {
-                navigation.getParent()?.navigate('ProfileTab', { screen: 'Packages' });
+                navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' });
               }}
               activeOpacity={0.85}
               accessibilityLabel="Paketi yükselt"

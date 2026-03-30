@@ -52,7 +52,6 @@ import { ChatScreen } from '../screens/chat/ChatScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { EditProfileScreen } from '../screens/profile/EditProfileScreen';
 import { SettingsScreen } from '../screens/profile/SettingsScreen';
-import { PackagesScreen } from '../screens/profile/PackagesScreen';
 import { PlacesScreen } from '../screens/places/PlacesScreen';
 import { RelationshipScreen } from '../screens/relationship/RelationshipScreen';
 import { CouplesClubScreen } from '../screens/couples-club/CouplesClubScreen';
@@ -367,7 +366,6 @@ const ProfileStackNavigator: React.FC = React.memo(() => (
     <ProfileStack.Screen name="Profile" component={ProfileScreen} />
     <ProfileStack.Screen name="EditProfile" component={DeferredEditProfile} />
     <ProfileStack.Screen name="Settings" component={SettingsScreen} />
-    <ProfileStack.Screen name="Packages" component={PackagesScreen} />
     <ProfileStack.Screen name="JetonMarket" component={JetonMarketScreen} />
     <ProfileStack.Screen name="Places" component={PlacesScreen} />
     <ProfileStack.Screen name="Relationship" component={RelationshipScreen} />

@@ -113,7 +113,6 @@ export type ProfileStackParamList = {
   Profile: undefined;
   EditProfile: undefined;
   Settings: undefined;
-  Packages: undefined;
   JetonMarket: undefined;
   Places: undefined;
   Relationship: undefined;

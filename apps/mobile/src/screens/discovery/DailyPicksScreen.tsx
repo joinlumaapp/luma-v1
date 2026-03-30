@@ -353,7 +353,7 @@ export const DailyPicksScreen: React.FC = () => {
   }, [navigation]);
 
   const handleUpgradePress = useCallback(() => {
-    navigation.navigate('ProfileTab', { screen: 'Packages' });
+    navigation.navigate('ProfileTab', { screen: 'MembershipPlans' });
   }, [navigation]);
 
   // ─── Determine which cards are blurred ──────────────────────
