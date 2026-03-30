@@ -42,6 +42,10 @@ import { useEngagementStore } from '../../stores/engagementStore';
 import { useAuthStore } from '../../stores/authStore';
 import { palette } from '../../theme/colors';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { ActivityStrip } from '../../components/matches/ActivityStrip';
+import { WarmBanner } from '../../components/matches/WarmBanner';
+import { DailyRevealCounter } from '../../components/matches/DailyRevealCounter';
+import { SUPER_COMPATIBLE_THRESHOLD } from '../../constants/config';
 
 type MatchesNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'MatchesList'>;
 
@@ -219,6 +223,11 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
         style={[
           styles.matchCard,
           item.isNew && styles.matchCardNew,
+          item.compatibilityPercent >= SUPER_COMPATIBLE_THRESHOLD && {
+            borderColor: 'rgba(251,191,36,0.2)',
+            borderWidth: 1,
+            backgroundColor: 'rgba(251,191,36,0.04)',
+          },
           { transform: [{ scale: scaleAnim }] },
         ]}
         testID={`matches-card-${item.id}`}
@@ -269,6 +278,29 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
                 <Text style={styles.newInlineBadgeText}>Yeni Eşleşme</Text>
               </LinearGradient>
             )}
+            </View>
+            {/* Smart labels — compatibility + verified */}
+            <View style={{ flexDirection: 'row', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+              {/* Compatibility badge */}
+              <View style={{
+                backgroundColor: item.compatibilityPercent >= SUPER_COMPATIBLE_THRESHOLD
+                  ? 'rgba(251,191,36,0.15)' : 'rgba(139,92,246,0.15)',
+                paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
+              }}>
+                <Text style={{
+                  color: item.compatibilityPercent >= SUPER_COMPATIBLE_THRESHOLD ? '#FBBF24' : '#A78BFA',
+                  fontSize: 10, fontWeight: '600',
+                }}>
+                  {item.compatibilityPercent >= SUPER_COMPATIBLE_THRESHOLD ? '✨ ' : ''}
+                  %{item.compatibilityPercent} Uyumlu
+                </Text>
+              </View>
+              {/* Verified badge */}
+              {item.isVerified && (
+                <View style={{ backgroundColor: 'rgba(16,185,129,0.15)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
+                  <Text style={{ color: '#10B981', fontSize: 10 }}>✅ Doğrulanmış</Text>
+                </View>
+              )}
             </View>
             {item.lastMessage ? (
               <Text style={styles.messagePreview} numberOfLines={1}>
@@ -336,6 +368,7 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
 }, (prev, next) => (
   prev.item.id === next.item.id &&
   prev.item.isNew === next.item.isNew &&
+  prev.item.isVerified === next.item.isVerified &&
   prev.item.compatibilityPercent === next.item.compatibilityPercent &&
   prev.item.lastActivity === next.item.lastActivity &&
   prev.item.lastMessage === next.item.lastMessage &&
@@ -633,6 +666,10 @@ export const MatchesListScreen: React.FC = () => {
   const fetchMatches = useMatchStore((state) => state.fetchMatches);
   const markAsRead = useMatchStore((state) => state.markAsRead);
   const updateMatchActivity = useMatchStore((state) => state.updateMatchActivity);
+  const activityStrip = useMatchStore((state) => state.activityStrip);
+  const warmBanner = useMatchStore((state) => state.warmBanner);
+  const fetchActivityStrip = useMatchStore((state) => state.fetchActivityStrip);
+  const fetchWarmBanner = useMatchStore((state) => state.fetchWarmBanner);
   const hydrateFromStorage = useChatStore((state) => state.hydrateFromStorage);
 
   const [activeTab, setActiveTab] = useState<TabKey>('matches');
@@ -681,7 +718,9 @@ export const MatchesListScreen: React.FC = () => {
       }
     };
     hydrate();
-  }, [fetchMatches, hydrateFromStorage, updateMatchActivity]);
+    fetchActivityStrip();
+    fetchWarmBanner();
+  }, [fetchMatches, hydrateFromStorage, updateMatchActivity, fetchActivityStrip, fetchWarmBanner]);
 
   // Set match countdowns for new matches that don't have messages
   const setMatchCountdown = useEngagementStore((s) => s.setMatchCountdown);
@@ -1171,7 +1210,22 @@ export const MatchesListScreen: React.FC = () => {
           keyExtractor={keyExtractor}
           renderItem={activeTab === 'messages' ? renderMessageItem : renderMatchItem}
           contentContainerStyle={styles.listContent}
-          ListHeaderComponent={renderNudgeSection}
+          ListHeaderComponent={
+            activeTab === 'matches' ? (
+              <>
+                <ActivityStrip
+                  profiles={activityStrip}
+                  onPress={(userId, isRevealed) => {
+                    if (isRevealed) {
+                      navigation.navigate('ProfilePreview', { userId });
+                    }
+                  }}
+                />
+                <WarmBanner banner={warmBanner} />
+                {renderNudgeSection()}
+              </>
+            ) : renderNudgeSection
+          }
           ListEmptyComponent={renderEmptyList}
           showsVerticalScrollIndicator={false}
           ItemSeparatorComponent={ItemSeparator}
