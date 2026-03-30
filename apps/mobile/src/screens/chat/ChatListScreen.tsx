@@ -26,6 +26,9 @@ import { useChatStore } from '../../stores/chatStore';
 import type { ConversationSummary } from '../../services/chatService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { MESSAGE_BUNDLE_CONFIG, AI_CHAT_SUGGESTION_CONFIG, SUPER_COMPATIBLE_THRESHOLD } from '../../constants/config';
+import { LinearGradient } from 'expo-linear-gradient';
+import { palette } from '../../theme/colors';
 
 type ChatListNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'ChatList'>;
 
@@ -134,6 +137,11 @@ const MemoizedConversationCard = memo<ConversationCardProps>(({ item, onPress, o
             </View>
           )}
         </View>
+        {!item.lastMessage && (
+          <Text style={{ color: '#A78BFA', fontSize: 10, fontStyle: 'italic', marginTop: 2 }}>
+            Hen\u00FCz mesaj yok \u2014 selam ver! {'\uD83D\uDC4B'}
+          </Text>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -209,6 +217,36 @@ export const ChatListScreen: React.FC = () => {
   // Stable key extractor reference
   const keyExtractor = useCallback((item: ConversationSummary) => item.matchId, []);
 
+  const renderListHeader = useCallback(() => (
+    <View style={{
+      marginHorizontal: 16, marginTop: 12, marginBottom: 8,
+      padding: 12,
+      backgroundColor: 'rgba(251,191,36,0.08)',
+      borderWidth: 1, borderColor: 'rgba(251,191,36,0.2)',
+      borderRadius: 14,
+      flexDirection: 'row', alignItems: 'center', gap: 8,
+    }}>
+      <Text style={{ fontSize: 18 }}>{'\uD83D\uDCAC'}</Text>
+      <View style={{ flex: 1 }}>
+        <Text style={{ color: '#fff', fontSize: 11, fontWeight: '500' }}>E\u015Fle\u015Fmeden mesaj at!</Text>
+        <Text style={{ color: 'rgba(255,255,255,0.35)', fontSize: 9, marginTop: 1 }}>
+          Tekli: 150{'\uD83D\uDCB0'} {'\u00B7'} 3{'\u2019'}l\u00FC paket: 350{'\uD83D\uDCB0'}
+        </Text>
+      </View>
+      <TouchableOpacity
+        onPress={() => navigation.navigate('JetonMarket')}
+        activeOpacity={0.7}
+      >
+        <LinearGradient
+          colors={[palette.gold[400], palette.gold[600]] as [string, string]}
+          style={{ borderRadius: 8, paddingVertical: 4, paddingHorizontal: 8 }}
+        >
+          <Text style={{ color: '#000', fontSize: 9, fontWeight: '700' }}>Al</Text>
+        </LinearGradient>
+      </TouchableOpacity>
+    </View>
+  ), [navigation]);
+
   const renderEmptyList = useCallback(() => (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyIcon}>{'...'}</Text>
@@ -216,6 +254,23 @@ export const ChatListScreen: React.FC = () => {
       <Text style={styles.emptySubtitle}>
         Eşleşmelerine mesaj göndererek sohbet başlatabilirsin.
       </Text>
+    </View>
+  ), []);
+
+  const renderListFooter = useCallback(() => (
+    <View style={{
+      marginHorizontal: 16, marginTop: 8, marginBottom: 12,
+      padding: 8, paddingHorizontal: 12,
+      backgroundColor: 'rgba(139,92,246,0.08)',
+      borderWidth: 1, borderColor: 'rgba(139,92,246,0.15)',
+      borderRadius: 10,
+      flexDirection: 'row', alignItems: 'center', gap: 8,
+    }}>
+      <Text style={{ fontSize: 14 }}>{'\uD83E\uDD16'}</Text>
+      <Text style={{ flex: 1, color: 'rgba(255,255,255,0.5)', fontSize: 9 }}>
+        AI \u00D6neri: Ortak hobiniz hakk\u0131nda konu\u015Fmay\u0131 dene
+      </Text>
+      <Text style={{ color: '#A78BFA', fontSize: 9, fontWeight: '600' }}>Dene {'\u2192'}</Text>
     </View>
   ), []);
 
@@ -245,6 +300,8 @@ export const ChatListScreen: React.FC = () => {
         keyExtractor={keyExtractor}
         renderItem={renderConversationItem}
         contentContainerStyle={styles.listContent}
+        ListHeaderComponent={sortedConversations.length > 0 ? renderListHeader : undefined}
+        ListFooterComponent={sortedConversations.length > 0 ? renderListFooter : undefined}
         ListEmptyComponent={renderEmptyList}
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={ChatListSeparator}
