@@ -47,10 +47,6 @@ model User {
   swipesReceived   Swipe[]           @relation("SwipesReceived")
   matchesAsA       Match[]           @relation("MatchUserA")
   matchesAsB       Match[]           @relation("MatchUserB")
-  harmonySentAs    HarmonySession[]  @relation("HarmonyUserA")
-  harmonyRecvAs    HarmonySession[]  @relation("HarmonyUserB")
-  harmonyMessages  HarmonyMessage[]
-  harmonyExtensions HarmonyExtension[]
   badges           UserBadge[]
   subscriptions    Subscription[]
   goldTransactions GoldTransaction[]
@@ -81,6 +77,10 @@ model User {
   storyLikes             StoryLike[]
   followersGiven         UserFollow[]      @relation("FollowsGiven")
   followersReceived      UserFollow[]      @relation("FollowsReceived")
+  callsMade              CallHistory[]     @relation("CallsMade")
+  callsReceived          CallHistory[]     @relation("CallsReceived")
+  posts                  Post[]
+  postLikes              PostLike[]
 
   @@index([deletedAt])                // Soft-delete: filter active/deleted users
   @@index([packageTier])              // Tier filtering: find users by package
@@ -407,10 +407,10 @@ model Match {
 
   userA              User             @relation("MatchUserA", fields: [userAId], references: [id], onDelete: Cascade)
   userB              User             @relation("MatchUserB", fields: [userBId], references: [id], onDelete: Cascade)
-  harmonySessions    HarmonySession[]
   chatMessages       ChatMessage[]
   icebreakerSessions IcebreakerSession[]
   datePlans          DatePlan[]
+  callHistory        CallHistory[]
 
   @@unique([userAId, userBId])
   @@index([userAId, isActive, createdAt]) // Matches: user's active matches sorted by date
@@ -421,139 +421,6 @@ model Match {
 enum MatchAnimationType {
   NORMAL
   SUPER_COMPATIBILITY
-}
-
-// ============================================================
-// SUBSYSTEM 10: Harmony Room (Core Feature)
-// 30 minutes free, Gold extension, Question cards, Game cards,
-// Voice chat, Optional video chat
-// ============================================================
-
-model HarmonySession {
-  id                    String               @id @default(uuid()) @db.Uuid
-  matchId               String               @map("match_id") @db.Uuid
-  userAId               String               @map("user_a_id") @db.Uuid
-  userBId               String               @map("user_b_id") @db.Uuid
-  status                HarmonySessionStatus @default(PENDING)
-  startedAt             DateTime?            @map("started_at")
-  endsAt                DateTime?            @map("ends_at")
-  actualEndedAt         DateTime?            @map("actual_ended_at")
-  totalExtensionMinutes Int                  @default(0) @map("total_extension_minutes")
-  hasVoiceChat          Boolean              @default(false) @map("has_voice_chat")
-  hasVideoChat          Boolean              @default(false) @map("has_video_chat")
-  createdAt             DateTime             @default(now()) @map("created_at")
-
-  match      Match              @relation(fields: [matchId], references: [id], onDelete: Cascade)
-  userA      User               @relation("HarmonyUserA", fields: [userAId], references: [id])
-  userB      User               @relation("HarmonyUserB", fields: [userBId], references: [id])
-  messages   HarmonyMessage[]
-  extensions HarmonyExtension[]
-  usedCards  HarmonyUsedCard[]
-
-  @@index([matchId])
-  @@index([userAId, status])
-  @@index([userBId, status])
-  @@index([status, endsAt]) // Cleanup: find expired active sessions
-  @@map("harmony_sessions")
-}
-
-enum HarmonySessionStatus {
-  PENDING
-  ACTIVE
-  EXTENDED
-  ENDED
-  CANCELLED
-}
-
-model HarmonyMessage {
-  id        String             @id @default(uuid()) @db.Uuid
-  sessionId String             @map("session_id") @db.Uuid
-  senderId  String             @map("sender_id") @db.Uuid
-  content   String
-  type      HarmonyMessageType @default(TEXT)
-  readAt    DateTime?          @map("read_at")
-  createdAt DateTime           @default(now()) @map("created_at")
-
-  session HarmonySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  sender  User           @relation(fields: [senderId], references: [id], onDelete: Cascade)
-
-  @@index([sessionId, createdAt])
-  @@index([senderId]) // Query: messages by sender
-  @@map("harmony_messages")
-}
-
-enum HarmonyMessageType {
-  TEXT
-  QUESTION_CARD
-  GAME_CARD
-  SYSTEM
-}
-
-// Question cards for Harmony Room (30 cards)
-model HarmonyQuestionCard {
-  id       String               @id @default(uuid()) @db.Uuid
-  category QuestionCardCategory
-  textEn   String               @map("text_en")
-  textTr   String               @map("text_tr")
-  order    Int
-  isActive Boolean              @default(true) @map("is_active")
-
-  usedInSessions HarmonyUsedCard[]
-
-  @@map("harmony_question_cards")
-}
-
-enum QuestionCardCategory {
-  ICEBREAKER
-  DEEP_CONNECTION
-  FUN_PLAYFUL
-}
-
-// Game cards for Harmony Room (5 games)
-model HarmonyGameCard {
-  id            String @id @default(uuid()) @db.Uuid
-  nameEn        String @map("name_en")
-  nameTr        String @map("name_tr")
-  descriptionEn String @map("description_en")
-  descriptionTr String @map("description_tr")
-  gameType      String @map("game_type") @db.VarChar(50)
-  isActive      Boolean @default(true) @map("is_active")
-
-  usedInSessions HarmonyUsedCard[]
-
-  @@map("harmony_game_cards")
-}
-
-// Track which cards were used in which session
-model HarmonyUsedCard {
-  id              String  @id @default(uuid()) @db.Uuid
-  sessionId       String  @map("session_id") @db.Uuid
-  questionCardId  String? @map("question_card_id") @db.Uuid
-  gameCardId      String? @map("game_card_id") @db.Uuid
-  usedAt          DateTime @default(now()) @map("used_at")
-
-  session      HarmonySession       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  questionCard HarmonyQuestionCard? @relation(fields: [questionCardId], references: [id])
-  gameCard     HarmonyGameCard?     @relation(fields: [gameCardId], references: [id])
-
-  @@index([sessionId])
-  @@map("harmony_used_cards")
-}
-
-// Gold-based time extension
-model HarmonyExtension {
-  id           String   @id @default(uuid()) @db.Uuid
-  sessionId    String   @map("session_id") @db.Uuid
-  userId       String?  @map("user_id") @db.Uuid
-  goldSpent    Int      @map("gold_spent")
-  minutesAdded Int      @map("minutes_added")
-  createdAt    DateTime @default(now()) @map("created_at")
-
-  session HarmonySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  user    User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  @@index([sessionId])
-  @@map("harmony_extensions")
 }
 
 // ============================================================
@@ -799,7 +666,7 @@ model IapReceipt {
 
 // ============================================================
 // SUBSYSTEM 17: Virtual Currency System
-// Gold balance, Gold spending logic, Harmony extension purchase
+// Gold balance, Gold spending logic
 // ============================================================
 
 model GoldTransaction {
@@ -824,7 +691,6 @@ enum GoldTransactionType {
   SUBSCRIPTION_ALLOCATION
   REFERRAL_BONUS
   BADGE_REWARD
-  HARMONY_EXTENSION
   PROFILE_BOOST
   SUPER_LIKE
   STREAK_REWARD
@@ -834,6 +700,8 @@ enum GoldTransactionType {
   SPOTLIGHT
   TRAVEL_MODE
   PRIORITY_MESSAGE
+  VOICE_CALL
+  VIDEO_CALL
 }
 
 // ============================================================
@@ -861,12 +729,13 @@ enum NotificationType {
   NEW_MESSAGE
   SUPER_LIKE
   MATCH_REMOVED
-  HARMONY_INVITE
-  HARMONY_REMINDER
   BADGE_EARNED
   SUBSCRIPTION_EXPIRING
   RELATIONSHIP_REQUEST
   SYSTEM
+  POST_LIKE
+  STORY_LIKE
+  NEW_FOLLOWER
 }
 
 model DeviceToken {
@@ -1006,7 +875,6 @@ model NotificationPreference {
   userId          String   @unique @map("user_id") @db.Uuid
   newMatches      Boolean  @default(true) @map("new_matches")
   messages        Boolean  @default(true)
-  harmonyInvites  Boolean  @default(true) @map("harmony_invites")
   badges          Boolean  @default(true)
   system          Boolean  @default(true)
   allDisabled     Boolean  @default(false) @map("all_disabled")
@@ -1342,5 +1210,92 @@ model UserFollow {
   @@index([followerId])
   @@index([followingId])
   @@map("user_follows")
+}
+
+// ============================================================
+// SUBSYSTEM: Posts (Permanent user posts — Gonderi)
+// Persistent posts displayed in feed and on user profile
+// ============================================================
+
+model Post {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  postType  String    @map("post_type") @db.VarChar(10) // photo, video, text
+  content   String    @db.Text
+  photoUrls String[]  @map("photo_urls")
+  videoUrl  String?   @map("video_url")
+  likeCount Int       @default(0) @map("like_count")
+  deletedAt DateTime? @map("deleted_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes PostLike[]
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@map("posts")
+}
+
+model PostLike {
+  id        String   @id @default(uuid()) @db.Uuid
+  postId    String   @map("post_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+  @@map("post_likes")
+}
+
+// ============================================================
+// SUBSYSTEM: Call History (Voice & Video Calls)
+// Persistent call records for tracking call sessions
+// ============================================================
+
+enum CallStatus {
+  RINGING
+  ANSWERED
+  REJECTED
+  MISSED
+  CANCELLED
+}
+
+enum CallType {
+  VOICE
+  VIDEO
+}
+
+model CallHistory {
+  id                String     @id @default(uuid()) @db.Uuid
+  matchId           String     @map("match_id") @db.Uuid
+  callerId          String     @map("caller_id") @db.Uuid
+  receiverId        String     @map("receiver_id") @db.Uuid
+  callType          CallType   @map("call_type")
+  status            CallStatus @default(RINGING)
+  startedAt         DateTime   @default(now()) @map("started_at")
+  answeredAt        DateTime?  @map("answered_at")
+  endedAt           DateTime?  @map("ended_at")
+  durationSeconds   Int?       @map("duration_seconds")
+  goldCost          Int        @map("gold_cost")
+  endedBy           String?    @map("ended_by") @db.Uuid
+  goldTransactionId String?    @map("gold_transaction_id") @db.Uuid
+  deletedByCaller   Boolean    @default(false) @map("deleted_by_caller")
+  deletedByReceiver Boolean    @default(false) @map("deleted_by_receiver")
+  createdAt         DateTime   @default(now()) @map("created_at")
+  updatedAt         DateTime   @updatedAt @map("updated_at")
+
+  match    Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  caller   User  @relation("CallsMade", fields: [callerId], references: [id], onDelete: Cascade)
+  receiver User  @relation("CallsReceived", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([callerId, createdAt])
+  @@index([receiverId, createdAt])
+  @@index([matchId, createdAt])
+  @@map("call_history")
 }
 

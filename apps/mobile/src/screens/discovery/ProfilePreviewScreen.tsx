@@ -767,21 +767,39 @@ export const ProfilePreviewScreen: React.FC = () => {
         <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: spacing.sm }} />
       )}
 
-      {/* Premium stats row */}
-      <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
-        <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
-          <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { postCount?: number }).postCount ?? 0}</Text>
-          <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Gönderi</Text>
-        </View>
-        <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
-          <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { followerCount?: number }).followerCount ?? 0}</Text>
-          <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takipçi</Text>
-        </View>
-        <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
-          <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { followingCount?: number }).followingCount ?? 0}</Text>
-          <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takip</Text>
-        </View>
-      </View>
+      {/* Premium stats row — locked for free/unverified users */}
+      {(() => {
+        const currentUser = useAuthStore.getState().user;
+        const canViewStats = currentUser && currentUser.packageTier !== 'FREE' && currentUser.isVerified;
+        return canViewStats ? (
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+            <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
+              <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { postCount?: number }).postCount ?? 0}</Text>
+              <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Gönderi</Text>
+            </View>
+            <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
+              <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { followerCount?: number }).followerCount ?? 0}</Text>
+              <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takipçi</Text>
+            </View>
+            <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
+              <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { followingCount?: number }).followingCount ?? 0}</Text>
+              <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takip</Text>
+            </View>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={{ backgroundColor: colors.surface, borderRadius: 16, padding: spacing.md, marginTop: 12, borderWidth: 1, borderColor: palette.purple[200], flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('MembershipPlans' as never)}
+          >
+            <Ionicons name="lock-closed" size={16} color={palette.purple[500]} />
+            <Text style={{ fontSize: 13, color: colors.textSecondary, fontFamily: 'Poppins_400Regular', flex: 1 }}>
+              Gönderileri ve takipçi bilgilerini görebilmek için premium üyelik gerekiyor. Hemen keşfetmeye başla!
+            </Text>
+            <Ionicons name="chevron-forward" size={16} color={palette.purple[400]} />
+          </TouchableOpacity>
+        );
+      })()}
     </View>
   );
 
@@ -852,7 +870,7 @@ export const ProfilePreviewScreen: React.FC = () => {
   );
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <BrandedBackground />
       <InterleavedProfileLayout
         photos={profile.photoUrls}

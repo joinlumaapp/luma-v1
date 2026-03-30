@@ -12,6 +12,7 @@ import {
 import { PrismaService } from "../../prisma/prisma.service";
 import { StorageService } from "../storage/storage.service";
 import { ChatService } from "../chat/chat.service";
+import { NotificationsService } from "../notifications/notifications.service";
 import { CreateStoryDto } from "./dto/create-story.dto";
 
 /** Minimal file interface compatible with multer uploads */
@@ -33,6 +34,7 @@ export class StoriesService {
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
     private readonly chatService: ChatService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   /** Get all active stories from matched/followed users */
@@ -286,6 +288,21 @@ export class StoriesService {
     await this.prisma.storyLike.create({
       data: { storyId, userId },
     });
+
+    // Notify story owner (fire-and-forget, don't self-notify)
+    const story = await this.prisma.story.findUnique({
+      where: { id: storyId },
+      select: { userId: true },
+    });
+    if (story && story.userId !== userId) {
+      const likerProfile = await this.prisma.userProfile.findUnique({
+        where: { userId },
+        select: { firstName: true },
+      });
+      this.notificationsService
+        .notifyStoryLike(story.userId, likerProfile?.firstName ?? "Birisi", storyId)
+        .catch(() => {});
+    }
 
     return { liked: true, likeCount: await this.getLikeCount(storyId) };
   }

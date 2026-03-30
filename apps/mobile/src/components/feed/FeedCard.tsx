@@ -183,9 +183,10 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onPr
     // Haptic feedback — light tap
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    // Scale bounce: quick pop up then spring back
+    // Scale bounce: pop up then bouncy spring back
     Animated.sequence([
-      Animated.timing(likeScale, { toValue: 1.35, duration: 120, useNativeDriver: true }),
+      Animated.timing(likeScale, { toValue: 0.85, duration: 80, useNativeDriver: true }),
+      Animated.spring(likeScale, { toValue: 1.2, friction: 3, tension: 400, useNativeDriver: true }),
       Animated.spring(likeScale, { toValue: 1, friction: 4, tension: 300, useNativeDriver: true }),
     ]).start();
 
@@ -368,9 +369,8 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onPr
       {/* ── Action Separator ── */}
       <View style={styles.actionSeparator} />
 
-      {/* ── Horizontal Action Bar: Like only ── */}
+      {/* ── Centered Like Button ── */}
       <View style={styles.actionRow}>
-        {/* Like — premium interaction with glow + floating hearts */}
         <TouchableOpacity style={styles.actionBtn} onPress={handleLikePress} activeOpacity={0.7}>
           <View style={styles.likeWrapper}>
             {/* Glow pulse behind heart */}
@@ -407,7 +407,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onPr
             <Animated.View style={[styles.actionBtnInner, post.isLiked && styles.actionBtnActive, { transform: [{ scale: likeScale }] }]}>
               <Ionicons
                 name={post.isLiked ? 'heart' : 'heart-outline'}
-                size={20}
+                size={22}
                 color={post.isLiked ? palette.rose[500] : colors.textSecondary}
               />
               {post.likeCount > 0 && (
@@ -424,8 +424,6 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onPr
             </Animated.View>
           </View>
         </TouchableOpacity>
-
-
       </View>
 
     </View>
@@ -641,12 +639,11 @@ const styles = StyleSheet.create({
   // ── Horizontal Action Bar ──
   actionRow: {
     flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
     paddingTop: spacing.sm + 2,
   },
-  actionBtn: {
-    marginRight: spacing.sm,
-  },
+  actionBtn: {},
   likeWrapper: {
     position: 'relative',
   },
@@ -670,20 +667,23 @@ const styles = StyleSheet.create({
   actionBtnInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 20,
     borderRadius: borderRadius.full,
-    backgroundColor: 'transparent',
+    backgroundColor: colors.surfaceLight,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
   },
   actionBtnActive: {
-    backgroundColor: palette.rose[50] + '80',
+    backgroundColor: palette.rose[50],
+    borderColor: palette.rose[200],
   },
   actionCount: {
     fontSize: 13,
     color: colors.textSecondary,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
 
   // ── Flirt CTA removed — actions moved to profile screen ──

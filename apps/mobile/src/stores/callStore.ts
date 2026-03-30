@@ -4,6 +4,7 @@
 import { create } from 'zustand';
 import { webrtcService, type CallState } from '../services/webrtcService';
 import type { CallType } from '../services/socketService';
+import { useCallHistoryStore } from './callHistoryStore';
 
 /** Remote user info displayed during a call */
 export interface RemoteCallUser {
@@ -222,11 +223,15 @@ export function setupCallStoreListeners(): () => void {
       const store = useCallStore.getState();
       store._stopDurationTimer();
       useCallStore.setState({ ...initialState });
+      // Refresh call history after rejection
+      useCallHistoryStore.getState().fetchCallHistory();
     },
     onCallEnded: () => {
       const store = useCallStore.getState();
       store._stopDurationTimer();
       useCallStore.setState({ ...initialState });
+      // Refresh call history after call ends
+      useCallHistoryStore.getState().fetchCallHistory();
     },
   });
 

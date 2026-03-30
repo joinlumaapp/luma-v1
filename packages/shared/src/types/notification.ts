@@ -5,8 +5,6 @@ export enum NotificationType {
   // Prisma-backed types
   NEW_MATCH = 'NEW_MATCH',
   SUPER_LIKE = 'SUPER_LIKE',
-  HARMONY_INVITE = 'HARMONY_INVITE',
-  HARMONY_REMINDER = 'HARMONY_REMINDER',
   BADGE_EARNED = 'BADGE_EARNED',
   SUBSCRIPTION_EXPIRING = 'SUBSCRIPTION_EXPIRING',
   SYSTEM = 'SYSTEM',
@@ -14,6 +12,10 @@ export enum NotificationType {
   // App-level push notification types (not persisted in DB)
   NEW_MESSAGE = 'NEW_MESSAGE',
   RELATIONSHIP_REQUEST = 'RELATIONSHIP_REQUEST',
+  // Social engagement notifications
+  POST_LIKE = 'POST_LIKE',
+  STORY_LIKE = 'STORY_LIKE',
+  NEW_FOLLOWER = 'NEW_FOLLOWER',
 }
 
 /**
@@ -43,7 +45,6 @@ export interface Notification {
 export interface NotificationPreferences {
   newMatches: boolean;
   messages: boolean;
-  harmonyInvites: boolean;
   badges: boolean;
   system: boolean;
   allDisabled: boolean;

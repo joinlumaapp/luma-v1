@@ -14,10 +14,12 @@ import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import { Server, Socket } from "socket.io";
 import { ChatService } from "./chat.service";
+import { CallHistoryService } from "./call-history.service";
 import { PrismaService } from "../../prisma/prisma.service";
 import { WsConnectionService } from "../../common/providers/ws-connection.service";
 import { PresenceService } from "../presence/presence.service";
 import { SendMessageDto } from "./dto/send-message.dto";
+import { GOLD_COSTS } from "@luma/shared";
 
 /**
  * Authenticated socket interface — userId attached after JWT handshake.
@@ -62,8 +64,15 @@ export class ChatGateway
   /** Tracks last event timestamps per socket for rate limiting */
   private eventTimestamps = new Map<string, Map<string, number[]>>();
 
+  /** Maps matchId -> active CallHistory ID for ongoing calls */
+  private activeCalls = new Map<string, string>();
+
+  /** Timeout handles for unanswered calls (30s auto-miss) */
+  private callTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
+
   constructor(
     private readonly chatService: ChatService,
+    private readonly callHistoryService: CallHistoryService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
@@ -135,6 +144,9 @@ export class ChatGateway
           // Only broadcast offline when no remaining connections for this user
           void this.presenceService.setOffline(userId);
           void this.broadcastPresence(userId, false);
+
+          // Cleanup active calls for disconnected user
+          void this.cleanupCallsForUser(userId);
         }
       }
       this.eventTimestamps.delete(client.id);
@@ -143,6 +155,46 @@ export class ChatGateway
       void this.wsConnectionService.removeConnection(client.id, userId);
 
       this.logger.log(`Client disconnected: ${client.id} (user: ${userId})`);
+    }
+  }
+
+  private async cleanupCallsForUser(userId: string): Promise<void> {
+    for (const [matchId, callHistoryId] of this.activeCalls.entries()) {
+      try {
+        const call = await this.prisma.callHistory.findUnique({
+          where: { id: callHistoryId },
+          select: { callerId: true, receiverId: true, status: true },
+        });
+
+        if (!call || (call.callerId !== userId && call.receiverId !== userId)) {
+          continue;
+        }
+
+        const partnerId = call.callerId === userId ? call.receiverId : call.callerId;
+
+        if (call.status === "RINGING") {
+          await this.callHistoryService.markMissed(callHistoryId);
+        } else if (call.status === "ANSWERED") {
+          await this.callHistoryService.markEnded(callHistoryId, userId);
+        }
+
+        this.activeCalls.delete(matchId);
+        const timeout = this.callTimeouts.get(matchId);
+        if (timeout) {
+          clearTimeout(timeout);
+          this.callTimeouts.delete(matchId);
+        }
+
+        // Notify partner that the call ended due to disconnect
+        this.notifyUser(partnerId, "call:end", {
+          matchId,
+          enderId: userId,
+          reason: "disconnected",
+          timestamp: new Date().toISOString(),
+        });
+      } catch (err) {
+        this.logger.error(`Failed to cleanup call ${callHistoryId}: ${err}`);
+      }
     }
   }
 
@@ -456,6 +508,429 @@ export class ChatGateway
         err instanceof Error ? err.message : "Okundu bilgisi gonderilemedi";
       client.emit("chat:error", { message: errorMessage });
     }
+  }
+
+  // ─── Voice / Video Calls ───────────────────────────────────
+
+  /**
+   * Initiate a paid voice or video call.
+   * Validates: active match, caller has paid package, sufficient Gold balance.
+   * Deducts Gold atomically and signals the partner.
+   */
+  @SubscribeMessage("call:initiate")
+  async handleCallInitiate(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { matchId: string; callType: "voice" | "video" },
+  ): Promise<void> {
+    const userId = this.getUserId(client);
+
+    if (!data.matchId || !data.callType) {
+      client.emit("chat:error", { message: "Match ID ve arama tipi gerekli" });
+      return;
+    }
+
+    if (data.callType !== "voice" && data.callType !== "video") {
+      client.emit("chat:error", { message: "Gecersiz arama tipi" });
+      return;
+    }
+
+    // Validate match participation
+    if (!(await this.validateMatchParticipant(client, userId, data.matchId))) {
+      return;
+    }
+
+    // Get caller's package tier and gold balance
+    const caller = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        packageTier: true,
+        goldBalance: true,
+        profile: { select: { firstName: true } },
+      },
+    });
+
+    if (!caller) {
+      client.emit("chat:error", { message: "Kullanici bulunamadi" });
+      return;
+    }
+
+    // Must be a paid package (GOLD, PRO, or RESERVED)
+    if (caller.packageTier === "FREE") {
+      client.emit("chat:error", {
+        message: "Arama yapabilmek icin paket sahibi olmaniz gerekiyor",
+      });
+      return;
+    }
+
+    // Prevent duplicate calls on the same match
+    if (this.activeCalls.has(data.matchId)) {
+      client.emit("chat:error", {
+        message: "Zaten devam eden bir arama var",
+      });
+      return;
+    }
+
+    // Check gold balance
+    const cost =
+      data.callType === "voice" ? GOLD_COSTS.VOICE_CALL : GOLD_COSTS.VIDEO_CALL;
+
+    if (caller.goldBalance < cost) {
+      client.emit("chat:error", {
+        message: `Yetersiz Gold bakiyesi. ${data.callType === "voice" ? "Sesli" : "Goruntulu"} arama icin ${cost} Gold gerekli`,
+      });
+      return;
+    }
+
+    // Get partner ID
+    const match = await this.prisma.match.findUnique({
+      where: { id: data.matchId },
+      select: { userAId: true, userBId: true },
+    });
+
+    if (!match) return;
+
+    const partnerId =
+      match.userAId === userId ? match.userBId : match.userAId;
+
+    // Check if partner is online
+    if (!this.isUserOnline(partnerId)) {
+      client.emit("chat:error", {
+        message: "Karsi taraf su an cevimdisi",
+      });
+      return;
+    }
+
+    // Atomically deduct gold and create call session
+    try {
+      const transactionType =
+        data.callType === "voice" ? "VOICE_CALL" : "VIDEO_CALL";
+
+      let goldTransactionId: string | undefined;
+
+      await this.prisma.$transaction(async (tx) => {
+        // Atomic balance deduction
+        const updated = await tx.$executeRawUnsafe(
+          `UPDATE "users" SET "gold_balance" = "gold_balance" - $1 WHERE "id" = $2::uuid AND "gold_balance" >= $1`,
+          cost,
+          userId,
+        );
+
+        if (updated === 0) {
+          throw new Error("Yetersiz Gold bakiyesi");
+        }
+
+        // Get new balance
+        const user = await tx.user.findUnique({
+          where: { id: userId },
+          select: { goldBalance: true },
+        });
+
+        // Log gold transaction
+        const goldTx = await tx.goldTransaction.create({
+          data: {
+            userId,
+            type: transactionType,
+            amount: -cost,
+            balance: user!.goldBalance,
+            description:
+              data.callType === "voice"
+                ? "Sesli arama"
+                : "Goruntulu arama",
+            referenceId: data.matchId,
+          },
+          select: { id: true },
+        });
+        goldTransactionId = goldTx.id;
+      });
+
+      // Create call history record
+      const callHistoryId = await this.callHistoryService.createCallRecord({
+        matchId: data.matchId,
+        callerId: userId,
+        receiverId: partnerId,
+        callType: data.callType === "voice" ? "VOICE" : "VIDEO",
+        goldCost: cost,
+        goldTransactionId,
+      });
+
+      // Track the active call
+      this.activeCalls.set(data.matchId, callHistoryId);
+
+      // Set 30-second timeout for missed call detection
+      const timeout = setTimeout(async () => {
+        try {
+          const activeId = this.activeCalls.get(data.matchId);
+          if (activeId === callHistoryId) {
+            await this.callHistoryService.markMissed(callHistoryId);
+            this.activeCalls.delete(data.matchId);
+            this.callTimeouts.delete(data.matchId);
+            this.notifyUser(userId, "call:end", {
+              matchId: data.matchId,
+              reason: "no_answer",
+              timestamp: new Date().toISOString(),
+            });
+          }
+        } catch (err) {
+          this.logger.error(`Failed to mark call as missed: ${err}`);
+        }
+      }, 30_000);
+      this.callTimeouts.set(data.matchId, timeout);
+
+      // Signal the partner
+      this.notifyUser(partnerId, "call:initiate", {
+        matchId: data.matchId,
+        callerId: userId,
+        callerName: caller.profile?.firstName ?? "Kullanici",
+        callType: data.callType,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Confirm to caller that the call was initiated
+      client.emit("call:initiate", {
+        matchId: data.matchId,
+        callType: data.callType,
+        goldSpent: cost,
+        status: "ringing",
+      });
+
+      this.logger.log(
+        `Call initiated: ${userId} -> ${partnerId} (${data.callType}, ${cost} Gold)`,
+      );
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Arama baslatilamadi";
+      client.emit("chat:error", { message: errorMessage });
+    }
+  }
+
+  /**
+   * Accept an incoming call.
+   */
+  @SubscribeMessage("call:accept")
+  async handleCallAccept(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { matchId: string },
+  ): Promise<void> {
+    const userId = this.getUserId(client);
+
+    if (!(await this.validateMatchParticipant(client, userId, data.matchId))) {
+      return;
+    }
+
+    // Clear the missed-call timeout
+    const timeout = this.callTimeouts.get(data.matchId);
+    if (timeout) {
+      clearTimeout(timeout);
+      this.callTimeouts.delete(data.matchId);
+    }
+
+    // Update call history to ANSWERED
+    const callHistoryId = this.activeCalls.get(data.matchId);
+    if (callHistoryId) {
+      await this.callHistoryService.markAnswered(callHistoryId);
+    }
+
+    const match = await this.prisma.match.findUnique({
+      where: { id: data.matchId },
+      select: { userAId: true, userBId: true },
+    });
+
+    if (!match) return;
+
+    const partnerId =
+      match.userAId === userId ? match.userBId : match.userAId;
+
+    this.notifyUser(partnerId, "call:accept", {
+      matchId: data.matchId,
+      accepterId: userId,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  /**
+   * Reject an incoming call.
+   */
+  @SubscribeMessage("call:reject")
+  async handleCallReject(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { matchId: string; reason?: string },
+  ): Promise<void> {
+    const userId = this.getUserId(client);
+
+    if (!(await this.validateMatchParticipant(client, userId, data.matchId))) {
+      return;
+    }
+
+    // Clear the missed-call timeout
+    const timeout = this.callTimeouts.get(data.matchId);
+    if (timeout) {
+      clearTimeout(timeout);
+      this.callTimeouts.delete(data.matchId);
+    }
+
+    // Update call history to REJECTED
+    const callHistoryId = this.activeCalls.get(data.matchId);
+    if (callHistoryId) {
+      await this.callHistoryService.markRejected(callHistoryId, userId);
+      this.activeCalls.delete(data.matchId);
+    }
+
+    const match = await this.prisma.match.findUnique({
+      where: { id: data.matchId },
+      select: { userAId: true, userBId: true },
+    });
+
+    if (!match) return;
+
+    const partnerId =
+      match.userAId === userId ? match.userBId : match.userAId;
+
+    this.notifyUser(partnerId, "call:reject", {
+      matchId: data.matchId,
+      rejecterId: userId,
+      reason: data.reason || "declined",
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  /**
+   * End an active call.
+   */
+  @SubscribeMessage("call:end")
+  async handleCallEnd(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { matchId: string },
+  ): Promise<void> {
+    const userId = this.getUserId(client);
+
+    if (!(await this.validateMatchParticipant(client, userId, data.matchId))) {
+      return;
+    }
+
+    // Clear the missed-call timeout
+    const timeout = this.callTimeouts.get(data.matchId);
+    if (timeout) {
+      clearTimeout(timeout);
+      this.callTimeouts.delete(data.matchId);
+    }
+
+    // Update call history
+    const callHistoryId = this.activeCalls.get(data.matchId);
+    if (callHistoryId) {
+      const call = await this.prisma.callHistory.findUnique({
+        where: { id: callHistoryId },
+        select: { status: true },
+      });
+
+      if (call?.status === "ANSWERED") {
+        await this.callHistoryService.markEnded(callHistoryId, userId);
+      } else if (call?.status === "RINGING") {
+        await this.callHistoryService.markCancelled(callHistoryId);
+      }
+      this.activeCalls.delete(data.matchId);
+    }
+
+    const match = await this.prisma.match.findUnique({
+      where: { id: data.matchId },
+      select: { userAId: true, userBId: true },
+    });
+
+    if (!match) return;
+
+    const partnerId =
+      match.userAId === userId ? match.userBId : match.userAId;
+
+    this.notifyUser(partnerId, "call:end", {
+      matchId: data.matchId,
+      enderId: userId,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  // ─── WebRTC Signaling ────────────────────────────────────
+
+  @SubscribeMessage("webrtc:offer")
+  async handleWebRTCOffer(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { matchId: string; sdp: string },
+  ): Promise<void> {
+    const userId = this.getUserId(client);
+
+    if (!(await this.validateMatchParticipant(client, userId, data.matchId))) {
+      return;
+    }
+
+    const match = await this.prisma.match.findUnique({
+      where: { id: data.matchId },
+      select: { userAId: true, userBId: true },
+    });
+
+    if (!match) return;
+
+    const partnerId =
+      match.userAId === userId ? match.userBId : match.userAId;
+
+    this.notifyUser(partnerId, "webrtc:offer", {
+      matchId: data.matchId,
+      callerId: userId,
+      sdp: data.sdp,
+    });
+  }
+
+  @SubscribeMessage("webrtc:answer")
+  async handleWebRTCAnswer(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { matchId: string; sdp: string },
+  ): Promise<void> {
+    const userId = this.getUserId(client);
+
+    if (!(await this.validateMatchParticipant(client, userId, data.matchId))) {
+      return;
+    }
+
+    const match = await this.prisma.match.findUnique({
+      where: { id: data.matchId },
+      select: { userAId: true, userBId: true },
+    });
+
+    if (!match) return;
+
+    const partnerId =
+      match.userAId === userId ? match.userBId : match.userAId;
+
+    this.notifyUser(partnerId, "webrtc:answer", {
+      matchId: data.matchId,
+      answererId: userId,
+      sdp: data.sdp,
+    });
+  }
+
+  @SubscribeMessage("webrtc:ice_candidate")
+  async handleICECandidate(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { matchId: string; candidate: string },
+  ): Promise<void> {
+    const userId = this.getUserId(client);
+
+    if (!(await this.validateMatchParticipant(client, userId, data.matchId))) {
+      return;
+    }
+
+    const match = await this.prisma.match.findUnique({
+      where: { id: data.matchId },
+      select: { userAId: true, userBId: true },
+    });
+
+    if (!match) return;
+
+    const partnerId =
+      match.userAId === userId ? match.userBId : match.userAId;
+
+    this.notifyUser(partnerId, "webrtc:ice_candidate", {
+      matchId: data.matchId,
+      senderId: userId,
+      candidate: data.candidate,
+    });
   }
 
   // ─── Helpers ──────────────────────────────────────────────

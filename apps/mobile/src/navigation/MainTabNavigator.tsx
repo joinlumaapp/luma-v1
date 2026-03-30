@@ -60,6 +60,7 @@ import { NotificationSettingsScreen } from '../screens/settings/NotificationSett
 import { MembershipPlansScreen } from '../screens/settings/MembershipPlansScreen';
 import { PersonalitySelectionScreen } from '../screens/profile/PersonalitySelectionScreen';
 import { ProfileCoachScreen } from '../screens/profile/ProfileCoachScreen';
+import { FollowListScreen } from '../screens/profile/FollowListScreen';
 import { BlockedUsersScreen } from '../screens/settings/BlockedUsersScreen';
 import { SafetyCenterScreen } from '../screens/settings/SafetyCenterScreen';
 import { AccountDeletionScreen } from '../screens/settings/AccountDeletionScreen';
@@ -380,6 +381,7 @@ const ProfileStackNavigator: React.FC = React.memo(() => (
     <ProfileStack.Screen name="AccountDeletion" component={AccountDeletionScreen} />
     <ProfileStack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
     <ProfileStack.Screen name="Questions" component={QuestionsScreen} />
+    <ProfileStack.Screen name="FollowList" component={FollowListScreen} />
   </ProfileStack.Navigator>
 ));
 ProfileStackNavigator.displayName = 'ProfileStackNavigator';

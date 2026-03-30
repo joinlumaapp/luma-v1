@@ -40,6 +40,7 @@ import { useScreenTracking } from '../../hooks/useAnalytics';
 import { CoinBalance } from '../../components/common/CoinBalance';
 import { DailyChallenge, WeeklyLeaderboard } from '../../components/engagement';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { socialFeedService, type FeedPost } from '../../services/socialFeedService';
 // NowListening and listeningStore removed — music feature removed
 
 type ProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'Profile'>;
@@ -225,6 +226,9 @@ export const ProfileScreen: React.FC = () => {
   const fetchMatches = useMatchStore((state) => state.fetchMatches);
   // Listening status removed — music feature removed
 
+  // My posts state
+  const [myPosts, setMyPosts] = useState<FeedPost[]>([]);
+
   // Profile Strength Meter state
   const [strengthData, setStrengthData] = useState<ProfileStrengthResponse | null>(null);
   const strengthAnim = useRef(new Animated.Value(0)).current;
@@ -270,6 +274,19 @@ export const ProfileScreen: React.FC = () => {
     }
   }, []);
 
+  // Fetch user's own posts
+  const fetchMyPosts = useCallback(async () => {
+    try {
+      const response = await socialFeedService.getFeed('ONERILEN', null);
+      const userId = user?.id;
+      if (userId) {
+        setMyPosts(response.posts.filter((p) => p.userId === userId).slice(0, 5));
+      }
+    } catch {
+      // Silently fail
+    }
+  }, [user?.id]);
+
   // Fetch boost status
   const fetchBoostStatus = useCallback(async () => {
     try {
@@ -303,11 +320,12 @@ export const ProfileScreen: React.FC = () => {
         fetchStrength(),
         fetchWeeklyViews(),
         fetchBoostStatus(),
+        fetchMyPosts(),
       ]);
     } finally {
       setIsRefreshing(false);
     }
-  }, [fetchProfile, fetchStrength, fetchWeeklyViews, fetchBoostStatus]);
+  }, [fetchProfile, fetchStrength, fetchWeeklyViews, fetchBoostStatus, fetchMyPosts]);
 
   useEffect(() => {
     fetchProfile();
@@ -315,7 +333,8 @@ export const ProfileScreen: React.FC = () => {
     fetchWeeklyViews();
     fetchBoostStatus();
     fetchMatches();
-  }, [fetchProfile, fetchStrength, fetchWeeklyViews, fetchBoostStatus, fetchMatches]);
+    fetchMyPosts();
+  }, [fetchProfile, fetchStrength, fetchWeeklyViews, fetchBoostStatus, fetchMatches, fetchMyPosts]);
 
   // Shimmer for loading
   useEffect(() => {
@@ -461,20 +480,28 @@ export const ProfileScreen: React.FC = () => {
         )}
       </View>
 
-      {/* Premium stats row */}
+      {/* Premium stats row — tappable */}
       <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
         <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
           <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { postCount?: number })?.postCount ?? 0}</Text>
           <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Gönderi</Text>
         </View>
-        <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
+        <TouchableOpacity
+          style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}
+          onPress={() => navigation.navigate('FollowList' as never, { mode: 'followers' } as never)}
+          activeOpacity={0.7}
+        >
           <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { followerCount?: number })?.followerCount ?? 0}</Text>
           <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takipçi</Text>
-        </View>
-        <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}
+          onPress={() => navigation.navigate('FollowList' as never, { mode: 'following' } as never)}
+          activeOpacity={0.7}
+        >
           <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { followingCount?: number })?.followingCount ?? 0}</Text>
           <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takip</Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
       {/* Action buttons row */}
@@ -543,6 +570,28 @@ export const ProfileScreen: React.FC = () => {
 
   // ── Info Sections (interleaved with photos) ─────────────────────────────────
   const infoSections: React.ReactNode[] = [];
+
+  // 0. Gönderilerim — user's own posts with like counts
+  if (myPosts.length > 0) {
+    infoSections.push(
+      <View key="my-posts" style={styles.section}>
+        <Text style={styles.sectionTitle}>Gönderilerim</Text>
+        {myPosts.map((post) => (
+          <View key={post.id} style={{ backgroundColor: colors.surface, borderRadius: 12, padding: spacing.md, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.surfaceBorder }}>
+            <Text style={{ fontSize: 14, color: colors.text, fontFamily: 'Poppins_400Regular', lineHeight: 20 }} numberOfLines={3}>
+              {post.content}
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm, gap: 4 }}>
+              <Ionicons name="heart" size={14} color={palette.rose[500]} />
+              <Text style={{ fontSize: 12, color: colors.textSecondary, fontFamily: 'Poppins_500Medium' }}>
+                {post.likeCount}
+              </Text>
+            </View>
+          </View>
+        ))}
+      </View>,
+    );
+  }
 
   // 1. Hakkında — bio + lookingFor chips
   infoSections.push(

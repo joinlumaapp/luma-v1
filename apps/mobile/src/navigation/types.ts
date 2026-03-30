@@ -127,6 +127,7 @@ export type ProfileStackParamList = {
   AccountDeletion: undefined;
   PrivacyPolicy: { type?: 'privacy' | 'kvkk' };
   Questions: { editMode?: boolean };
+  FollowList: { mode: 'followers' | 'following' };
 };
 
 // Utility types for screen props

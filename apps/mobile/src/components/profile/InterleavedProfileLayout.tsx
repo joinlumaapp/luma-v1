@@ -16,7 +16,7 @@ import { colors } from '../../theme/colors';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const HERO_HEIGHT = SCREEN_WIDTH * 1.2;
+const HERO_HEIGHT = SCREEN_WIDTH * 1.5; // 2:3 portrait ratio — shows face + upper body naturally
 
 // Parallax config
 const PARALLAX_FACTOR = 0.15; // 15% slower than scroll for depth effect
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
   },
   interleavedImage: {
     width: '100%',
-    height: SCREEN_WIDTH - spacing.lg * 2,
+    height: (SCREEN_WIDTH - spacing.lg * 2) * 1.25, // 4:5 portrait ratio for natural look
     // No borderRadius on image — parent overflow:hidden handles clipping cleanly
   },
 

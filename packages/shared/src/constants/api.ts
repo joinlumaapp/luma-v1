@@ -69,13 +69,6 @@ export const API_ROUTES = {
     RESPOND_DATE_PLAN: '/matches/date-plans/:planId/respond',
     DELETE_DATE_PLAN: '/matches/date-plans/:planId',
   },
-  // Subsystem 10: Harmony
-  HARMONY: {
-    CREATE_SESSION: '/harmony/sessions',
-    GET_SESSION: '/harmony/sessions/:id',
-    EXTEND_SESSION: '/harmony/sessions/extend',
-    GET_CARDS: '/harmony/sessions/:sessionId/cards',
-  },
   // Subsystem 11: Relationships
   RELATIONSHIPS: {
     ACTIVATE: '/relationships/activate',
@@ -209,6 +202,15 @@ export const API_ROUTES = {
   USERS: {
     ME: '/users/me',           // GET
     UPDATE: '/users/me',       // PATCH
+    FOLLOW: '/users/:userId/follow',  // POST (toggle)
+    FOLLOWERS: '/users/me/followers',  // GET
+    FOLLOWING: '/users/me/following',  // GET
+  },
+  // Call History
+  CALL_HISTORY: {
+    GET_ALL: '/call-history',           // GET (paginated)
+    GET_ONE: '/call-history/:callId',   // GET
+    DELETE: '/call-history/:callId',    // DELETE (soft)
   },
 } as const;
 
@@ -227,49 +229,6 @@ export const WS_EVENTS = {
   // Connection
   CONNECT: 'connect',
   DISCONNECT: 'disconnect',
-  // Harmony Room
-  HARMONY_JOIN: 'harmony:join',
-  HARMONY_LEAVE: 'harmony:leave',
-  HARMONY_MESSAGE: 'harmony:message',
-  HARMONY_TYPING: 'harmony:typing',
-  HARMONY_MESSAGE_READ: 'harmony:message_read',
-  HARMONY_READ_RECEIPT: 'harmony:read_receipt',
-  HARMONY_QUESTION_CARD: 'harmony:question_card',
-  HARMONY_GAME_CARD: 'harmony:game_card',
-  HARMONY_CARD_REVEALED: 'harmony:card_revealed',
-  HARMONY_REACTION: 'harmony:reaction',
-  HARMONY_SESSION_STATE: 'harmony:session_state',
-  HARMONY_EXTENDED: 'harmony:extended',
-  // Harmony Room — Client-to-Server events
-  HARMONY_SEND_MESSAGE: 'harmony:send_message',
-  HARMONY_REVEAL_CARD: 'harmony:reveal_card',
-  HARMONY_REACT: 'harmony:react',
-  HARMONY_REQUEST_TIMER: 'harmony:request_timer',
-  // Harmony Room — Server-to-Client events
-  HARMONY_USER_JOINED: 'harmony:user_joined',
-  HARMONY_USER_LEFT: 'harmony:user_left',
-  HARMONY_ERROR: 'harmony:error',
-  HARMONY_SESSION_ENDED: 'harmony:session_ended',
-  HARMONY_TIMER_SYNC: 'harmony:timer_sync',
-  // Video Consent
-  HARMONY_VIDEO_CONSENT_REQUEST: 'harmony:video_consent_request',
-  HARMONY_VIDEO_CONSENT_RESPONSE: 'harmony:video_consent_response',
-  HARMONY_VIDEO_CONSENT_ACCEPTED: 'harmony:video_consent_accepted',
-  HARMONY_VIDEO_CONSENT_REJECTED: 'harmony:video_consent_rejected',
-  // Voice/Video — WebRTC Signaling
-  HARMONY_VOICE_START: 'harmony:voice_start',
-  HARMONY_VOICE_END: 'harmony:voice_end',
-  HARMONY_VIDEO_START: 'harmony:video_start',
-  HARMONY_VIDEO_END: 'harmony:video_end',
-  HARMONY_WEBRTC_SIGNAL: 'harmony:webrtc_signal',
-  // WebRTC Call Signaling (P4)
-  WEBRTC_OFFER: 'harmony:webrtc_offer',
-  WEBRTC_ANSWER: 'harmony:webrtc_answer',
-  WEBRTC_ICE_CANDIDATE: 'harmony:webrtc_ice_candidate',
-  CALL_INITIATE: 'harmony:call_initiate',
-  CALL_ACCEPT: 'harmony:call_accept',
-  CALL_REJECT: 'harmony:call_reject',
-  CALL_END: 'harmony:call_end',
   // Chat / Messaging
   CHAT_JOIN: 'chat:join',
   CHAT_LEAVE: 'chat:leave',
@@ -277,11 +236,18 @@ export const WS_EVENTS = {
   CHAT_TYPING: 'chat:typing',
   CHAT_STOP_TYPING: 'chat:stop_typing',
   CHAT_READ: 'chat:read',
+  // Calls (voice/video)
+  CALL_INITIATE: 'call:initiate',
+  CALL_ACCEPT: 'call:accept',
+  CALL_REJECT: 'call:reject',
+  CALL_END: 'call:end',
+  CALL_BUSY: 'call:busy',
+  WEBRTC_OFFER: 'webrtc:offer',
+  WEBRTC_ANSWER: 'webrtc:answer',
+  WEBRTC_ICE_CANDIDATE: 'webrtc:ice_candidate',
   // Notifications
   NOTIFICATION_NEW_MATCH: 'notification:new_match',
   NOTIFICATION_NEW_MESSAGE: 'notification:new_message',
-  NOTIFICATION_HARMONY_INVITE: 'notification:harmony_invite',
-  NOTIFICATION_HARMONY_REMINDER: 'notification:harmony_reminder',
   NOTIFICATION_BADGE_EARNED: 'notification:badge_earned',
   NOTIFICATION_SUBSCRIPTION_EXPIRING: 'notification:subscription_expiring',
   NOTIFICATION_RELATIONSHIP_REQUEST: 'notification:relationship_request',
@@ -293,7 +259,6 @@ export const RATE_LIMITS = {
   auth: { max: 5, windowMs: 60_000 },
   profile: { max: 20, windowMs: 60_000 },
   swipe: { max: 30, windowMs: 60_000 },
-  harmonyMessage: { max: 60, windowMs: 60_000 },
   chatMessage: { max: 60, windowMs: 60_000 },
   photoUpload: { max: 10, windowMs: 300_000 },
   goldTransaction: { max: 5, windowMs: 60_000 },

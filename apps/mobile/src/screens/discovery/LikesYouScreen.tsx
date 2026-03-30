@@ -894,6 +894,7 @@ export const LikesYouScreen: React.FC = () => {
   if (isLoading) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
+        <BrandedBackground />
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <Pressable

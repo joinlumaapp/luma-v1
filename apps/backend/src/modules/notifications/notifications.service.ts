@@ -1,7 +1,6 @@
-import { Injectable, Logger, Inject, forwardRef } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 import { FirebaseProvider } from "./firebase.provider";
-import { HarmonyGateway } from "../harmony/harmony.gateway";
 import {
   RegisterDeviceDto,
   MarkReadDto,
@@ -45,14 +44,6 @@ const NOTIFICATION_TEMPLATES: Record<NotificationType, NotificationTemplate> = {
     title: "Eşleşme Kaldırıldı",
     body: "Bir eşleşmen sona erdi",
   },
-  HARMONY_INVITE: {
-    title: "Harmony Daveti",
-    body: "{name} seni Harmony'ye davet etti",
-  },
-  HARMONY_REMINDER: {
-    title: "Harmony Hatırlatma",
-    body: "{name} ile Harmony oturumunuz {minutesLeft} dakika içinde sona erecek",
-  },
   BADGE_EARNED: {
     title: "Yeni Rozet!",
     body: "Yeni rozet kazandın: {badge_name}",
@@ -69,6 +60,18 @@ const NOTIFICATION_TEMPLATES: Record<NotificationType, NotificationTemplate> = {
     title: "LUMA",
     body: "{message}",
   },
+  POST_LIKE: {
+    title: "Yeni Begeni!",
+    body: "{name} gonderini begendi",
+  },
+  STORY_LIKE: {
+    title: "Hikaye Begenisi!",
+    body: "{name} hikayeni begendi",
+  },
+  NEW_FOLLOWER: {
+    title: "Yeni Takipci!",
+    body: "{name} seni takip etmeye basladi",
+  },
 };
 
 /** Maps notification types to preference keys. */
@@ -80,12 +83,13 @@ const TYPE_TO_PREF_KEY: Record<
   NEW_MESSAGE: "messages",
   SUPER_LIKE: "newMatches",
   MATCH_REMOVED: "newMatches",
-  HARMONY_INVITE: "harmonyInvites",
-  HARMONY_REMINDER: "harmonyInvites",
   BADGE_EARNED: "badges",
   SUBSCRIPTION_EXPIRING: "system",
   RELATIONSHIP_REQUEST: "newMatches",
   SYSTEM: "system",
+  POST_LIKE: "system",
+  STORY_LIKE: "system",
+  NEW_FOLLOWER: "system",
 };
 
 // ────────────────────────────────────────────────────────────────────
@@ -107,8 +111,6 @@ export class NotificationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly firebase: FirebaseProvider,
-    @Inject(forwardRef(() => HarmonyGateway))
-    private readonly harmonyGateway: HarmonyGateway,
   ) {}
 
   // ─── Template Helpers ───────────────────────────────────────────────
@@ -232,40 +234,29 @@ export class NotificationsService {
   > = {
     NEW_MATCH: "notification:new_match",
     BADGE_EARNED: "notification:badge_earned",
-    HARMONY_INVITE: "notification:harmony_invite",
   };
 
   /**
    * Emit a real-time WebSocket event for a notification.
    * Only emits for notification types that have a mapped WS event.
+   * TODO: Re-integrate with a WebSocket gateway when available.
    */
   private emitNotificationEvent(
-    userId: string,
+    _userId: string,
     type: NotificationType,
-    notificationId: string,
-    title: string,
-    body: string,
-    data?: Record<string, unknown>,
+    _notificationId: string,
+    _title: string,
+    _body: string,
+    _data?: Record<string, unknown>,
   ): void {
     const wsEvent = NotificationsService.TYPE_TO_WS_EVENT[type];
     if (!wsEvent) {
       return;
     }
 
-    try {
-      this.harmonyGateway.notifyUser(userId, wsEvent, {
-        notificationId,
-        type,
-        title,
-        body,
-        data: data ?? {},
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      this.logger.warn(
-        `WS event emit basarisiz — kullanici: ${userId}, event: ${wsEvent}`,
-      );
-    }
+    this.logger.debug(
+      `WS event hazir — kullanici: ${_userId}, event: ${wsEvent}`,
+    );
   }
 
   // ─── Notification Queries ──────────────────────────────────────────
@@ -412,7 +403,6 @@ export class NotificationsService {
     return {
       newMatches: pref.newMatches,
       messages: pref.messages,
-      harmonyInvites: pref.harmonyInvites,
       badges: pref.badges,
       system: pref.system,
       allDisabled: pref.allDisabled,
@@ -450,7 +440,6 @@ export class NotificationsService {
     return {
       newMatches: pref.newMatches,
       messages: pref.messages,
-      harmonyInvites: pref.harmonyInvites,
       badges: pref.badges,
       system: pref.system,
       allDisabled: pref.allDisabled,
@@ -844,29 +833,6 @@ export class NotificationsService {
   }
 
   /**
-   * Notify user of a Harmony Room invite.
-   */
-  async notifyHarmonyInvite(userId: string, inviterName: string) {
-    return this.sendTemplatedNotification(userId, "HARMONY_INVITE", {
-      name: inviterName,
-    });
-  }
-
-  /**
-   * Notify user of a Harmony session reminder (about to expire).
-   */
-  async notifyHarmonyReminder(
-    userId: string,
-    partnerName: string,
-    minutesLeft: number,
-  ) {
-    return this.sendTemplatedNotification(userId, "HARMONY_REMINDER", {
-      name: partnerName,
-      minutesLeft: String(minutesLeft),
-    });
-  }
-
-  /**
    * Notify user of a newly earned badge.
    */
   async notifyBadgeEarned(userId: string, badgeName: string) {
@@ -992,5 +958,49 @@ export class NotificationsService {
       type: "SYSTEM",
       action: "announcement",
     });
+  }
+
+  // ─── Social Engagement Notifications ──────────────────────
+
+  async notifyPostLike(
+    postOwnerId: string,
+    likerName: string,
+    postId: string,
+  ) {
+    return this.sendPushNotification(
+      postOwnerId,
+      "Yeni Begeni!",
+      `${likerName} gonderini begendi`,
+      { type: "POST_LIKE", name: likerName, postId },
+      "POST_LIKE",
+    );
+  }
+
+  async notifyStoryLike(
+    storyOwnerId: string,
+    likerName: string,
+    storyId: string,
+  ) {
+    return this.sendPushNotification(
+      storyOwnerId,
+      "Hikaye Begenisi!",
+      `${likerName} hikayeni begendi`,
+      { type: "STORY_LIKE", name: likerName, storyId },
+      "STORY_LIKE",
+    );
+  }
+
+  async notifyNewFollower(
+    userId: string,
+    followerName: string,
+    followerId: string,
+  ) {
+    return this.sendPushNotification(
+      userId,
+      "Yeni Takipci!",
+      `${followerName} seni takip etmeye basladi`,
+      { type: "NEW_FOLLOWER", name: followerName, followerId },
+      "NEW_FOLLOWER",
+    );
   }
 }

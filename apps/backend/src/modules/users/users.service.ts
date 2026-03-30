@@ -1,11 +1,15 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 import { UpdateUserDto } from "./dto";
 import { calculateAge } from "../../common/utils/date.utils";
+import { NotificationsService } from "../notifications/notifications.service";
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   /**
    * Get the current authenticated user's full profile data.
@@ -91,6 +95,97 @@ export class UsersService {
     return this.prisma.user.findUnique({
       where: { phone },
     });
+  }
+
+  /**
+   * Toggle follow/unfollow a user. Returns the new follow state.
+   */
+  async toggleFollow(followerId: string, followingId: string) {
+    if (followerId === followingId) {
+      throw new BadRequestException("Kendinizi takip edemezsiniz");
+    }
+
+    const existing = await this.prisma.userFollow.findUnique({
+      where: { followerId_followingId: { followerId, followingId } },
+    });
+
+    if (existing) {
+      await this.prisma.userFollow.delete({ where: { id: existing.id } });
+      return { isFollowing: false };
+    }
+
+    await this.prisma.userFollow.create({
+      data: { followerId, followingId },
+    });
+
+    // Notify the followed user (fire-and-forget)
+    const followerProfile = await this.prisma.userProfile.findUnique({
+      where: { userId: followerId },
+      select: { firstName: true },
+    });
+    this.notificationsService
+      .notifyNewFollower(followingId, followerProfile?.firstName ?? "Birisi", followerId)
+      .catch(() => {});
+
+    return { isFollowing: true };
+  }
+
+  /**
+   * Get a user's followers list.
+   */
+  async getFollowers(userId: string) {
+    const follows = await this.prisma.userFollow.findMany({
+      where: { followingId: userId },
+      select: {
+        follower: {
+          select: {
+            id: true,
+            profile: { select: { firstName: true } },
+            photos: {
+              where: { order: 0 },
+              select: { url: true },
+              take: 1,
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return follows.map((f) => ({
+      userId: f.follower.id,
+      name: f.follower.profile?.firstName ?? "Kullanici",
+      avatarUrl: f.follower.photos[0]?.url ?? null,
+    }));
+  }
+
+  /**
+   * Get the list of users a user is following.
+   */
+  async getFollowing(userId: string) {
+    const follows = await this.prisma.userFollow.findMany({
+      where: { followerId: userId },
+      select: {
+        following: {
+          select: {
+            id: true,
+            profile: { select: { firstName: true } },
+            photos: {
+              where: { order: 0 },
+              select: { url: true },
+              take: 1,
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return follows.map((f) => ({
+      userId: f.following.id,
+      name: f.following.profile?.firstName ?? "Kullanici",
+      avatarUrl: f.following.photos[0]?.url ?? null,
+    }));
   }
 
   // ─── Private Helpers ───────────────────────────────────────────
