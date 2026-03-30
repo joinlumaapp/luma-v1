@@ -24,7 +24,6 @@ import { ProfilesModule } from "./modules/profiles/profiles.module";
 import { CompatibilityModule } from "./modules/compatibility/compatibility.module";
 import { DiscoveryModule } from "./modules/discovery/discovery.module";
 import { MatchesModule } from "./modules/matches/matches.module";
-import { HarmonyModule } from "./modules/harmony/harmony.module";
 import { RelationshipsModule } from "./modules/relationships/relationships.module";
 import { BadgesModule } from "./modules/badges/badges.module";
 import { PaymentsModule } from "./modules/payments/payments.module";
@@ -42,6 +41,7 @@ import { AnalyticsModule } from "./modules/analytics/analytics.module";
 import { PresenceModule } from "./modules/presence/presence.module";
 import { EngagementModule } from "./modules/engagement/engagement.module";
 import { StoriesModule } from "./modules/stories/stories.module";
+import { PostsModule } from "./modules/posts/posts.module";
 import { WsConnectionModule } from "./common/providers/ws-connection.module";
 
 @Module({
@@ -101,8 +101,7 @@ import { WsConnectionModule } from "./common/providers/ws-connection.module";
     CompatibilityModule, // Subsystem 5-7: Questions, Scoring, Levels
     DiscoveryModule, // Subsystem 8: Card Flow & Swiping
     MatchesModule, // Subsystem 9: Match System
-    HarmonyModule, // Subsystem 10: Harmony Room
-RelationshipsModule, // Subsystem 11-12: Relationship Mode & Couples Club
+    RelationshipsModule, // Subsystem 11-12: Relationship Mode & Couples Club
     BadgesModule, // Subsystem 14: Badge & Reputation
     PaymentsModule, // Subsystem 16-18: Packages, Gold, Monetization
     NotificationsModule, // Push notifications
@@ -119,6 +118,7 @@ RelationshipsModule, // Subsystem 11-12: Relationship Mode & Couples Club
     PresenceModule, // User online/offline presence tracking
     EngagementModule, // Subsystem 15: Daily rewards, challenges, leaderboard
     StoriesModule, // Stories: create, view, like, reply (24h expiry)
+    PostsModule, // Posts: feed CRUD, likes, liker list
     WsConnectionModule, // Redis-backed WebSocket connection registry (horizontal scaling)
   ],
   providers: [
