@@ -88,8 +88,8 @@ import { WavesScreen } from '../screens/waves/WavesScreen';
 
 // Matches extra screens
 import { DatePlannerScreen } from '../screens/matches/DatePlannerScreen';
-import { SecretAdmirerScreen } from '../screens/matches/SecretAdmirerScreen';
-import { WeeklyTopScreen } from '../screens/matches/WeeklyTopScreen';
+import SecretAdmirerScreen from '../screens/matches/SecretAdmirerScreen';
+import WeeklyTopScreen from '../screens/matches/WeeklyTopScreen';
 import { CallScreen } from '../screens/chat/CallScreen';
 import { IncomingCallOverlay } from '../components/chat/IncomingCallOverlay';
 import { MinimizedCallBar } from '../components/chat/MinimizedCallBar';
