@@ -101,8 +101,8 @@ const hasAccess = (userTier: PackageTier, requiredTier: RequiredTier): boolean =
 };
 
 const tierDisplayName = (tier: RequiredTier): string => {
-  if (tier === 'GOLD') return 'Premium';
-  return 'Supreme';
+  if (tier === 'GOLD') return 'Gold';
+  return 'Pro';
 };
 
 // ── Component ──────────────────────────────────────────────────────
@@ -166,7 +166,7 @@ export const FilterScreen: React.FC = () => {
     (requiredTier: RequiredTier) => {
       const tierName = tierDisplayName(requiredTier);
       Alert.alert(
-        'Premium Filtre',
+        `${tierName} Filtresi`,
         `Bu filtre ${tierName} paketi ile kullanılabilir. Yükseltmek ister misin?`,
         [
           { text: 'Kapat', style: 'cancel' },
@@ -203,8 +203,8 @@ export const FilterScreen: React.FC = () => {
       ? DISCOVERY_CONFIG.MAX_DISTANCE_KM
       : clamp(maxDistance, 1, DISCOVERY_CONFIG.MAX_DISTANCE_KM);
 
-    // If Free user, force genderPreference to 'female'
-    const effectiveGender = hasAccess(packageTier, 'GOLD') ? genderPreference : 'female';
+    // Free users cannot filter gender — default to 'all' (see everyone)
+    const effectiveGender = hasAccess(packageTier, 'GOLD') ? genderPreference : 'all';
 
     // Parse height values only if height filter is enabled and user has Pro access
     let heightFilter: { min: number; max: number } | null = null;
@@ -252,7 +252,7 @@ export const FilterScreen: React.FC = () => {
   ]);
 
   const handleReset = useCallback(() => {
-    setGenderPreference(hasAccess(packageTier, 'GOLD') ? 'all' : 'female');
+    setGenderPreference('all');
     setMinAge(String(PROFILE_CONFIG.MIN_AGE));
     setMaxAge('40');
     setMaxDistance(DISCOVERY_CONFIG.DEFAULT_DISTANCE_KM);
@@ -360,14 +360,10 @@ export const FilterScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Gender preference ── */}
-        <View style={styles.section}>
-          <View style={styles.sectionTitleRow}>
-            <Text style={styles.sectionTitle}>{'\uD83D\uDC64'} Cinsiyet</Text>
-          </View>
+        {/* ── Gender preference (Gold+ only) ── */}
+        {renderLockedSection('👤 Cinsiyet', 'GOLD', (
           <View style={styles.radioGroup}>
             {GENDER_OPTIONS.map((option) => {
-              const isLocked = option.value !== 'female' && !hasAccess(packageTier, 'GOLD');
               const isSelected = genderPreference === option.value;
               return (
                 <TouchableOpacity
@@ -375,41 +371,28 @@ export const FilterScreen: React.FC = () => {
                   style={[
                     styles.radioOption,
                     isSelected && styles.radioOptionActive,
-                    isLocked && styles.radioOptionLocked,
                   ]}
-                  onPress={() => {
-                    if (isLocked) {
-                      showUpgradeAlert('GOLD');
-                    } else {
-                      setGenderPreference(option.value);
-                    }
-                  }}
+                  onPress={() => setGenderPreference(option.value)}
                   activeOpacity={0.8}
                 >
-                  <View style={[styles.radioCircle, isLocked && { borderColor: colors.textTertiary, opacity: 0.5 }]}>
-                    {isSelected && !isLocked && (
+                  <View style={styles.radioCircle}>
+                    {isSelected && (
                       <View style={styles.radioCircleInner} />
                     )}
                   </View>
                   <Text
                     style={[
                       styles.radioLabel,
-                      isSelected && !isLocked && styles.radioLabelActive,
-                      isLocked && { opacity: 0.5 },
+                      isSelected && styles.radioLabelActive,
                     ]}
                   >
                     {option.label}
                   </Text>
-                  {isLocked && (
-                    <View style={styles.genderLockBadge}>
-                      <Text style={styles.genderLockText}>{'\uD83D\uDD12'} Gold</Text>
-                    </View>
-                  )}
                 </TouchableOpacity>
               );
             })}
           </View>
-        </View>
+        ))}
 
         {/* ── Age range ── */}
         <View style={styles.section}>
@@ -820,24 +803,6 @@ const styles = StyleSheet.create({
   radioLabelActive: {
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-  },
-  radioOptionLocked: {
-    opacity: 0.6,
-    borderStyle: 'dashed',
-  },
-  genderLockBadge: {
-    marginLeft: 'auto',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-    backgroundColor: 'rgba(251,191,36,0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(251,191,36,0.3)',
-  },
-  genderLockText: {
-    fontSize: 10,
-    color: '#FBBF24',
     fontWeight: '600',
   },
   // Age range
