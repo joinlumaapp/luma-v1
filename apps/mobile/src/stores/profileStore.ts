@@ -17,6 +17,7 @@ export interface ProfileVideoData {
 
 export interface ProfileData {
   firstName: string;
+  lastName: string;
   birthDate: string;
   gender: string;
   genderPreference: string[];
@@ -83,6 +84,7 @@ interface ProfileState {
 
 const initialProfile: ProfileData = {
   firstName: '',
+  lastName: '',
   birthDate: '',
   gender: '',
   genderPreference: [],
@@ -115,6 +117,7 @@ const mapResponseToProfile = (data: ProfileResponse): ProfileData => {
   const videoData = (data as { profileVideo?: { url: string; thumbnailUrl: string; duration: number } | null }).profileVideo ?? null;
   return {
     firstName: data.firstName,
+    lastName: (data as { lastName?: string }).lastName ?? '',
     birthDate: data.birthDate,
     gender: data.gender,
     genderPreference: Array.isArray((data as { genderPreference?: string[] }).genderPreference) ? (data as { genderPreference?: string[] }).genderPreference! : [],

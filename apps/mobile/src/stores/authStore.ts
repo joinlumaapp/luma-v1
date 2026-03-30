@@ -25,6 +25,7 @@ const TOKEN_REFRESH_INTERVAL_MS = 14 * 60 * 1000;
 
 export interface AuthUser {
   id: string;
+  displayId: string;
   phone: string;
   email?: string;
   isVerified: boolean;
@@ -132,6 +133,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       const user: AuthUser = {
         id: response.user.id,
+        displayId: response.user.displayId ?? '',
         phone: response.user.phone,
         isVerified: response.user.isVerified,
         packageTier: (response.user.packageTier as PackageTier) || 'FREE',
@@ -166,6 +168,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error: unknown) {
       const mockUser: AuthUser = {
         id: 'dev-user-001',
+        displayId: 'LM-00001',
         phone,
         isVerified: true,
         packageTier: 'RESERVED',
@@ -474,6 +477,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const me: MeResponse = await authService.getMe();
         const user: AuthUser = {
           id: me.id,
+          displayId: me.displayId ?? '',
           phone: me.phone,
           isVerified: me.isFullyVerified,
           packageTier: (me.packageTier as PackageTier) || 'FREE',
@@ -519,6 +523,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             const me: MeResponse = await authService.getMe();
             const user: AuthUser = {
               id: me.id,
+              displayId: me.displayId ?? '',
               phone: me.phone,
               isVerified: me.isFullyVerified,
               packageTier: (me.packageTier as PackageTier) || 'FREE',
@@ -554,6 +559,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const me: MeResponse = await authService.getMe();
       const user: AuthUser = {
         id: me.id,
+        displayId: me.displayId ?? '',
         phone: me.phone,
         isVerified: me.isFullyVerified,
         packageTier: (me.packageTier as PackageTier) || 'FREE',
