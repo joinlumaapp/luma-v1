@@ -19,6 +19,7 @@ import { useCoinStore, COIN_PACKS, type CoinPack } from '../../stores/coinStore'
 import { typography, fontWeights } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 import { glassmorphism, palette } from '../../theme/colors';
+import { LumaLogo } from '../../components/common/LumaLogo';
 
 /** Maps coin pack IDs to App Store / Play Store product IDs */
 const PACK_ID_TO_PRODUCT: Record<string, string> = {
@@ -59,7 +60,7 @@ const CoinStack: React.FC<{ count: number }> = ({ count }) => {
           start={{ x: 0.3, y: 0 }}
           end={{ x: 0.7, y: 1 }}
         >
-          <Text style={coinStackStyles.coinText}>J</Text>
+          <LumaLogo size={30} />
         </LinearGradient>
       ))}
     </View>
@@ -87,14 +88,6 @@ const coinStackStyles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 6,
     elevation: 4,
-  },
-  coinText: {
-    fontSize: 22,
-    fontWeight: fontWeights.bold,
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
   },
 });
 

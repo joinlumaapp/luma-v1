@@ -28,6 +28,7 @@ import { useAuthStore, type PackageTier } from '../../stores/authStore';
 import { usePremiumStore } from '../../stores/premiumStore';
 import { useCoinStore, COIN_PACKS, type CoinPack } from '../../stores/coinStore';
 import { CoinBalance } from '../../components/common/CoinBalance';
+import { LumaLogo } from '../../components/common/LumaLogo';
 import { iapService } from '../../services/iapService';
 import { paymentService } from '../../services/paymentService';
 
@@ -513,7 +514,7 @@ const CoinStack: React.FC<{ count: number }> = ({ count }) => {
           start={{ x: 0.3, y: 0 }}
           end={{ x: 0.7, y: 1 }}
         >
-          <Text style={coinStackStyles.coinText}>J</Text>
+          <LumaLogo size={30} />
         </LinearGradient>
       ))}
     </View>
@@ -541,14 +542,6 @@ const coinStackStyles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 6,
     elevation: 4,
-  },
-  coinText: {
-    fontSize: 22,
-    fontWeight: fontWeights.bold,
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
   },
 });
 
