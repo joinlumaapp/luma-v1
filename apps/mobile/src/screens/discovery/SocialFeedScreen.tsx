@@ -34,7 +34,6 @@ import {
   containsProfanity,
   PROFANITY_WARNING,
   type FeedFilter,
-  type FeedTopic,
   type FeedPost,
   type FeedPostType,
 } from '../../services/socialFeedService';
@@ -125,7 +124,7 @@ interface CreatePostModalProps {
   visible: boolean;
   postType: FeedPostType;
   onClose: () => void;
-  onSubmit: (content: string, topic: FeedTopic, postType: FeedPostType, photoUrls: string[], videoUrl: string | null) => void;
+  onSubmit: (content: string, postType: FeedPostType, photoUrls: string[], videoUrl: string | null) => void;
   isCreating: boolean;
 }
 
@@ -139,7 +138,6 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
   isCreating,
 }) => {
   const [content, setContent] = useState('');
-  const selectedTopic: FeedTopic = 'GUNLUK';
   const [attachedPhotos, setAttachedPhotos] = useState<string[]>([]);
   const [attachedVideo, setAttachedVideo] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
@@ -149,17 +147,12 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
   const handleSubmit = useCallback(() => {
     const trimmed = content.trim();
     if (trimmed.length === 0 && attachedPhotos.length === 0 && !attachedVideo) return;
-    if (false) {
-      // placeholder — removed music validation
-      return;
-    }
     if (containsProfanity(trimmed)) {
       Alert.alert('Uyari', PROFANITY_WARNING);
       return;
     }
     onSubmit(
       trimmed,
-      selectedTopic,
       postType,
       attachedPhotos,
       attachedVideo,
@@ -167,7 +160,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
     setContent('');
     setAttachedPhotos([]);
     setAttachedVideo(null);
-  }, [content, selectedTopic, postType, attachedPhotos, attachedVideo, onSubmit]);
+  }, [content, postType, attachedPhotos, attachedVideo, onSubmit]);
 
   const handleAddPhoto = useCallback(async () => {
     if (attachedPhotos.length >= MAX_POST_PHOTOS) {
@@ -736,10 +729,9 @@ export const SocialFeedScreen: React.FC = () => {
   }, [packageTier, dailyPostCount, lastPostDate, navigation]);
 
   const handleCreatePost = useCallback(
-    (content: string, topic: FeedTopic, postType: FeedPostType, photoUrls: string[], videoUrl: string | null) => {
+    (content: string, postType: FeedPostType, photoUrls: string[], videoUrl: string | null) => {
       createPost({
         content,
-        topic,
         postType,
         photoUrls,
         videoUrl,

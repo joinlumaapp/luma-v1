@@ -76,7 +76,7 @@ export const QuickProfilePreview: React.FC<QuickProfilePreviewProps> = ({
   if (!visible || !post) return null;
 
   const intentionOption = INTENTION_TAG_OPTIONS.find((t) => t.id === post.intentionTag);
-  const distanceText = post.distance < 1 ? 'Yakininda' : `${post.distance} km`;
+  const distanceText = post.userCity || 'Yakininda';
 
   return (
     <Modal transparent visible={visible} animationType="none" statusBarTranslucent onRequestClose={handleClose}>
@@ -127,22 +127,7 @@ export const QuickProfilePreview: React.FC<QuickProfilePreviewProps> = ({
           </View>
         </View>
 
-        {/* Compatibility score */}
-        <View style={styles.compatSection}>
-          <View style={styles.compatCircle}>
-            <Text style={styles.compatPercent}>%{post.compatibilityScore}</Text>
-          </View>
-          <View style={styles.compatInfo}>
-            <Text style={styles.compatTitle}>Uyum Puani</Text>
-            <Text style={styles.compatSubtitle}>
-              {post.compatibilityScore >= 80
-                ? 'Cok yuksek uyum!'
-                : post.compatibilityScore >= 60
-                ? 'Iyi bir uyum var'
-                : 'Kesfetmeye deger'}
-            </Text>
-          </View>
-        </View>
+        {/* Compatibility score removed — no longer in feed post data */}
 
         {/* Quick action — Flirt only */}
         <TouchableOpacity

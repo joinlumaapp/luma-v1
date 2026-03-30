@@ -25,10 +25,8 @@ interface SocialFeedState {
   loadMore: () => Promise<void>;
   setFilter: (filter: FeedFilter) => void;
   toggleLike: (postId: string) => Promise<void>;
-  toggleSave: (postId: string) => void;
   toggleFollow: (userId: string) => Promise<void>;
   createPost: (data: CreatePostRequest) => Promise<void>;
-  incrementCommentCount: (postId: string) => void;
   markStoryViewed: (userId: string) => void;
 }
 
@@ -48,7 +46,7 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
     const { filter } = get();
     set({ isLoading: true });
     try {
-      const response = await socialFeedService.getFeed(filter, null, null);
+      const response = await socialFeedService.getFeed(filter, null);
       set({
         posts: response.posts,
         cursor: response.nextCursor,
@@ -64,7 +62,7 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
     const { filter } = get();
     set({ isRefreshing: true });
     try {
-      const response = await socialFeedService.getFeed(filter, null, null);
+      const response = await socialFeedService.getFeed(filter, null);
       set({
         posts: response.posts,
         cursor: response.nextCursor,
@@ -81,7 +79,7 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
     if (!hasMore || isLoading) return;
     set({ isLoading: true });
     try {
-      const response = await socialFeedService.getFeed(filter, null, cursor);
+      const response = await socialFeedService.getFeed(filter, cursor);
       set((state) => ({
         posts: [...state.posts, ...response.posts],
         cursor: response.nextCursor,
@@ -129,16 +127,6 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
     }
   },
 
-  toggleSave: (postId: string) => {
-    set((state) => ({
-      posts: state.posts.map((post) =>
-        post.id === postId
-          ? { ...post, isSaved: !post.isSaved }
-          : post
-      ),
-    }));
-  },
-
   toggleFollow: async (userId: string) => {
     const { filter } = get();
     // Find current follow state from first matching post
@@ -165,16 +153,6 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
       // Revert on error — re-fetch to get correct state
       get().fetchFeed();
     }
-  },
-
-  incrementCommentCount: (postId: string) => {
-    set((state) => ({
-      posts: state.posts.map((post) =>
-        post.id === postId
-          ? { ...post, commentCount: post.commentCount + 1 }
-          : post
-      ),
-    }));
   },
 
   createPost: async (data: CreatePostRequest) => {

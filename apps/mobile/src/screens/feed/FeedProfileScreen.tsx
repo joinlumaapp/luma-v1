@@ -222,7 +222,7 @@ export const FeedProfileScreen: React.FC = () => {
     profileService.trackProfileView(userId);
 
     // Load this user's recent feed posts (best-effort, non-blocking)
-    socialFeedService.getFeed('ONERILEN', null, null)
+    socialFeedService.getFeed('ONERILEN', null)
       .then((res) => {
         if (!cancelled) {
           setUserPosts(res.posts.filter((p) => p.userId === userId).slice(0, 6));
@@ -437,7 +437,6 @@ export const FeedProfileScreen: React.FC = () => {
             <Text style={styles.miniPostContent} numberOfLines={2}>{post.content}</Text>
             <View style={styles.miniPostStats}>
               <Text style={styles.miniPostStat}>{'\u2661'} {post.likeCount}</Text>
-              <Text style={styles.miniPostStat}>{'\uD83D\uDCAC'} {post.commentCount}</Text>
             </View>
           </View>
         ))}

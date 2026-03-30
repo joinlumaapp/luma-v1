@@ -40,6 +40,7 @@ import { useScreenTracking } from '../../hooks/useAnalytics';
 import { CoinBalance } from '../../components/common/CoinBalance';
 import { DailyChallenge, WeeklyLeaderboard } from '../../components/engagement';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import api from '../../services/api';
 import { socialFeedService, type FeedPost } from '../../services/socialFeedService';
 // NowListening and listeningStore removed — music feature removed
 
@@ -274,16 +275,21 @@ export const ProfileScreen: React.FC = () => {
     }
   }, []);
 
-  // Fetch user's own posts
+  // Fetch user's own posts — try dedicated endpoint first, fallback to feed filtering
   const fetchMyPosts = useCallback(async () => {
     try {
-      const response = await socialFeedService.getFeed('ONERILEN', null);
-      const userId = user?.id;
-      if (userId) {
-        setMyPosts(response.posts.filter((p) => p.userId === userId).slice(0, 5));
-      }
+      const response = await api.get('/posts/my');
+      setMyPosts(response.data);
     } catch {
-      // Silently fail
+      try {
+        const feedResponse = await socialFeedService.getFeed('ONERILEN', null);
+        const userId = user?.id;
+        if (userId) {
+          setMyPosts(feedResponse.posts.filter((p: FeedPost) => p.userId === userId).slice(0, 5));
+        }
+      } catch {
+        // Silently fail
+      }
     }
   }, [user?.id]);
 

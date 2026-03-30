@@ -106,26 +106,7 @@ const MediaSection: React.FC<MediaSectionProps> = ({ photos, videoUrl }) => {
 };
 
 // MusicCard removed — music feature removed from feed
-
-// ─── Question Card (redesigned: soft gradient, inviting) ─────
-
-interface QuestionCardProps {
-  content: string;
-}
-
-const QuestionCard: React.FC<QuestionCardProps> = ({ content }) => (
-  <LinearGradient
-    colors={[`${palette.purple[100]}60`, `${palette.pink[50]}50`, `${palette.purple[50]}30`]}
-    start={{ x: 0, y: 0 }}
-    end={{ x: 1, y: 1 }}
-    style={questionStyles.container}
-  >
-    <View style={questionStyles.iconWrapper}>
-      <Text style={questionStyles.icon}>?</Text>
-    </View>
-    <Text style={questionStyles.text}>{content}</Text>
-  </LinearGradient>
-);
+// QuestionCard removed — topic categories removed, content uses TextContent only
 
 // ─── Text Content (hook line + body) ─────────────────────────
 
@@ -283,7 +264,6 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onPr
   const handleDoubleTapLike = useCallback(() => { dismissDoubleTapMenu(); handleLikePress(); }, [dismissDoubleTapMenu, handleLikePress]);
 
   const isOwnPost = post.userId === 'dev-user-001';
-  const isQuestion = post.postType === 'question';
   const timeAgo = formatTimeAgo(post.createdAt);
 
   return (
@@ -353,11 +333,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onPr
 
       {/* ── Content (tappable) ── */}
       <Pressable onPress={handleContentPress}>
-        {isQuestion ? (
-          <QuestionCard content={post.content} />
-        ) : (
-          <TextContent content={post.content} />
-        )}
+        <TextContent content={post.content} />
 
         <MediaSection photos={post.photoUrls} videoUrl={post.videoUrl} />
 
@@ -810,41 +786,4 @@ const mediaStyles = StyleSheet.create({
 });
 
 // Music styles removed — music feature removed
-
-// ─── Question Card Styles ─────────────────────────────────────
-
-const questionStyles = StyleSheet.create({
-  container: {
-    borderRadius: borderRadius.lg,
-    padding: spacing.md + 4,
-    marginBottom: spacing.smd,
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  iconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.sm + 2,
-    borderWidth: 1,
-    borderColor: palette.purple[200] + '40',
-  },
-  icon: {
-    fontSize: 20,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
-    color: palette.purple[500],
-  },
-  text: {
-    fontSize: 15,
-    lineHeight: 24,
-    color: colors.text,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-    textAlign: 'center',
-    letterSpacing: 0.15,
-  },
-});
+// Question card styles removed — topic categories removed
