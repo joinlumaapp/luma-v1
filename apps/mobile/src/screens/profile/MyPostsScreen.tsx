@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, palette } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import api from '../../services/api';
 import { socialFeedService, type FeedPost } from '../../services/socialFeedService';
 import { useSocialFeedStore } from '../../stores/socialFeedStore';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
@@ -35,24 +36,23 @@ export const MyPostsScreen: React.FC = () => {
   const fetchPosts = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Collect posts from all sources
+      // Try dedicated API endpoint first
+      const response = await api.get('/posts/my');
+      setPosts(Array.isArray(response.data) ? response.data : []);
+    } catch {
+      // Dev fallback: collect posts from all local sources
       const allPosts: FeedPost[] = [];
 
-      // 1. Store'daki mevcut postlardan kendi postlarımızı al
-      const storePosts = useSocialFeedStore.getState().posts;
-      const myStorePosts = storePosts.filter((p) => p.userId === 'dev-user-001');
-      allPosts.push(...myStorePosts);
+      // 1. Direct access to mock posts via service (source of truth for dev)
+      const myMockPosts = socialFeedService.getMyPosts();
+      allPosts.push(...myMockPosts);
 
-      // 2. Mock feed'den de kontrol et
-      try {
-        const feedResponse = await socialFeedService.getFeed('ONERILEN', null);
-        for (const p of feedResponse.posts) {
-          if (p.userId === 'dev-user-001' && !allPosts.find((ap) => ap.id === p.id)) {
-            allPosts.push(p);
-          }
+      // 2. Also check store for recently created posts not yet in MOCK_POSTS
+      const storePosts = useSocialFeedStore.getState().posts;
+      for (const sp of storePosts) {
+        if (sp.userId === 'dev-user-001' && !allPosts.find((ap) => ap.id === sp.id)) {
+          allPosts.push(sp);
         }
-      } catch {
-        // ignore
       }
 
       // Newest first

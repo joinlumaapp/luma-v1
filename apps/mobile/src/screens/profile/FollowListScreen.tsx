@@ -18,6 +18,7 @@ import type { ProfileStackParamList } from '../../navigation/types';
 import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import api from '../../services/api';
+import { socialFeedService } from '../../services/socialFeedService';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 interface FollowUser {
@@ -51,7 +52,35 @@ export const FollowListScreen: React.FC = () => {
       const response = await api.get<FollowUser[]>(endpoint);
       setUsers(response.data);
     } catch {
-      setUsers([]);
+      // Dev fallback: build mock user list from feed mock data
+      try {
+        const feedResponse = await socialFeedService.getFeed('ONERILEN', null);
+        if (mode === 'following') {
+          // Show users we follow
+          const followedUsers = feedResponse.posts
+            .filter((p) => p.isFollowing)
+            .reduce<FollowUser[]>((acc, p) => {
+              if (!acc.find((u) => u.userId === p.userId)) {
+                acc.push({ userId: p.userId, name: p.userName, avatarUrl: p.userAvatarUrl });
+              }
+              return acc;
+            }, []);
+          setUsers(followedUsers);
+        } else {
+          // Mock followers: show a few mock users as followers
+          const mockFollowers: FollowUser[] = feedResponse.posts
+            .slice(0, 3)
+            .reduce<FollowUser[]>((acc, p) => {
+              if (!acc.find((u) => u.userId === p.userId)) {
+                acc.push({ userId: p.userId, name: p.userName, avatarUrl: p.userAvatarUrl });
+              }
+              return acc;
+            }, []);
+          setUsers(mockFollowers);
+        }
+      } catch {
+        setUsers([]);
+      }
     } finally {
       setIsLoading(false);
     }

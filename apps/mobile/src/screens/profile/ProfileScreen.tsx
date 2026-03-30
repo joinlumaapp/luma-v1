@@ -230,6 +230,10 @@ export const ProfileScreen: React.FC = () => {
   // My posts state
   const [myPosts, setMyPosts] = useState<FeedPost[]>([]);
 
+  // Follow counts state — sourced from socialFeedService (tracks followedUserIds in dev)
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+
   // Profile Strength Meter state
   const [strengthData, setStrengthData] = useState<ProfileStrengthResponse | null>(null);
   const strengthAnim = useRef(new Animated.Value(0)).current;
@@ -309,6 +313,23 @@ export const ProfileScreen: React.FC = () => {
     }
   }, [user?.id]);
 
+  // Fetch follow counts — try API first, fallback to local followedUserIds via service
+  const fetchFollowCounts = useCallback(async () => {
+    try {
+      const [followersRes, followingRes] = await Promise.all([
+        api.get<{ count: number }>('/users/me/followers/count'),
+        api.get<{ count: number }>('/users/me/following/count'),
+      ]);
+      setFollowerCount(followersRes.data.count);
+      setFollowingCount(followingRes.data.count);
+    } catch {
+      // Dev fallback: use local follow state from socialFeedService
+      const counts = socialFeedService.getFollowCounts();
+      setFollowerCount(counts.followerCount);
+      setFollowingCount(counts.followingCount);
+    }
+  }, []);
+
   // Fetch boost status
   const fetchBoostStatus = useCallback(async () => {
     try {
@@ -343,11 +364,12 @@ export const ProfileScreen: React.FC = () => {
         fetchWeeklyViews(),
         fetchBoostStatus(),
         fetchMyPosts(),
+        fetchFollowCounts(),
       ]);
     } finally {
       setIsRefreshing(false);
     }
-  }, [fetchProfile, fetchStrength, fetchWeeklyViews, fetchBoostStatus, fetchMyPosts]);
+  }, [fetchProfile, fetchStrength, fetchWeeklyViews, fetchBoostStatus, fetchMyPosts, fetchFollowCounts]);
 
   useEffect(() => {
     fetchProfile();
@@ -356,7 +378,8 @@ export const ProfileScreen: React.FC = () => {
     fetchBoostStatus();
     fetchMatches();
     fetchMyPosts();
-  }, [fetchProfile, fetchStrength, fetchWeeklyViews, fetchBoostStatus, fetchMatches, fetchMyPosts]);
+    fetchFollowCounts();
+  }, [fetchProfile, fetchStrength, fetchWeeklyViews, fetchBoostStatus, fetchMatches, fetchMyPosts, fetchFollowCounts]);
 
   // Shimmer for loading
   useEffect(() => {
@@ -517,7 +540,7 @@ export const ProfileScreen: React.FC = () => {
           onPress={() => navigation.navigate('FollowList' as never, { mode: 'followers' } as never)}
           activeOpacity={0.7}
         >
-          <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { followerCount?: number })?.followerCount ?? 0}</Text>
+          <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{followerCount}</Text>
           <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takipçi</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -525,7 +548,7 @@ export const ProfileScreen: React.FC = () => {
           onPress={() => navigation.navigate('FollowList' as never, { mode: 'following' } as never)}
           activeOpacity={0.7}
         >
-          <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { followingCount?: number })?.followingCount ?? 0}</Text>
+          <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{followingCount}</Text>
           <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takip</Text>
         </TouchableOpacity>
       </View>

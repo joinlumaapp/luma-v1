@@ -46,17 +46,10 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
     const { filter } = get();
     set({ isLoading: true });
     try {
+      // Service handles TAKIP fallback internally — no double-fetch needed
       const response = await socialFeedService.getFeed(filter, null);
-      let posts = response.posts;
-
-      // For TAKIP: if API returned empty but we have follow state, use Popüler data filtered
-      if (filter === 'TAKIP' && posts.length === 0) {
-        const allResponse = await socialFeedService.getFeed('ONERILEN', null);
-        posts = allResponse.posts.filter((p) => p.isFollowing);
-      }
-
       set({
-        posts,
+        posts: response.posts,
         cursor: response.nextCursor,
         hasMore: response.hasMore,
         isLoading: false,

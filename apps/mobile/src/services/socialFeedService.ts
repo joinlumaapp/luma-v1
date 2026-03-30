@@ -239,6 +239,10 @@ export const socialFeedService = {
       const response = await api.get<FeedResponse>('/posts', {
         params: { filter, cursor },
       });
+      // If API returned empty for TAKIP but we have local follows, use mock instead
+      if (filter === 'TAKIP' && response.data.posts.length === 0 && followedUserIds.size > 0) {
+        throw new Error('Use mock data for TAKIP with local follows');
+      }
       return response.data;
     } catch (error) {
       // Fallback to mock data in dev mode
@@ -437,6 +441,19 @@ export const socialFeedService = {
         createdAt: new Date().toISOString(),
       }, 'socialFeedService.replyToComment');
     }
+  },
+
+  // Get follow counts from local state (dev mode uses followedUserIds as source of truth)
+  getFollowCounts: (): { followingCount: number; followerCount: number } => {
+    return {
+      followingCount: followedUserIds.size,
+      followerCount: Math.max(followedUserIds.size, 3), // Mock: at least 3 followers
+    };
+  },
+
+  // Get current user's own posts from MOCK_POSTS
+  getMyPosts: (): FeedPost[] => {
+    return MOCK_POSTS.filter((p) => p.userId === 'dev-user-001');
   },
 
   // Get mock posts (used by devSeedData)
