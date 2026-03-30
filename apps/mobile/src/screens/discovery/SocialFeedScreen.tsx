@@ -739,10 +739,10 @@ export const SocialFeedScreen: React.FC = () => {
     }
   }, [checkDailyLimit, createPost, lastPostDate]);
 
-  // Video butonu — direkt galeri açılsın
+  // Video butonu — sadece videolar açılsın
   const handleVideoPost = useCallback(async () => {
     if (!checkDailyLimit()) return;
-    const uri = await photoService.pickFromGallery();
+    const uri = await photoService.pickVideoFromGallery();
     if (uri) {
       createPost({ content: '', postType: 'video', photoUrls: [], videoUrl: uri });
       const today = getToday();
