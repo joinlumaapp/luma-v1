@@ -109,13 +109,28 @@ export class PostsService {
       this.getFollowedUserIds(userId, postOwnerIds),
     ]);
 
-    const mappedPosts = resultPosts.map((post) =>
+    let mappedPosts = resultPosts.map((post) =>
       this.mapPostToResponse(
         post as unknown as PostWithUser,
         likedPostIds.has(post.id),
         followedUserIds.has(post.userId),
       ),
     );
+
+    // ONERILEN (popular) filter: re-sort page by popularity score
+    if (filter !== 'TAKIP') {
+      const now = Date.now();
+      mappedPosts = mappedPosts
+        .map((post) => {
+          const hoursOld =
+            (now - new Date(post.createdAt).getTime()) / (1000 * 60 * 60);
+          const recencyBoost = Math.max(0, 1 - hoursOld / 48) * 50;
+          const score = post.likeCount * 2 + recencyBoost;
+          return { post, score };
+        })
+        .sort((a, b) => b.score - a.score)
+        .map((entry) => entry.post);
+    }
 
     const nextCursor =
       hasMore && resultPosts.length > 0
