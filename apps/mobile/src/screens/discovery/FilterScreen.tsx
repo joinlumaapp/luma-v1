@@ -203,6 +203,9 @@ export const FilterScreen: React.FC = () => {
       ? DISCOVERY_CONFIG.MAX_DISTANCE_KM
       : clamp(maxDistance, 1, DISCOVERY_CONFIG.MAX_DISTANCE_KM);
 
+    // If Free user, force genderPreference to 'female'
+    const effectiveGender = hasAccess(packageTier, 'GOLD') ? genderPreference : 'female';
+
     // Parse height values only if height filter is enabled and user has Pro access
     let heightFilter: { min: number; max: number } | null = null;
     if (heightEnabled && hasAccess(packageTier, 'PRO')) {
@@ -212,7 +215,7 @@ export const FilterScreen: React.FC = () => {
     }
 
     setFilters({
-      genderPreference,
+      genderPreference: effectiveGender,
       minAge: parsedMinAge,
       maxAge: parsedMaxAge,
       maxDistance: parsedDistance,
@@ -249,7 +252,7 @@ export const FilterScreen: React.FC = () => {
   ]);
 
   const handleReset = useCallback(() => {
-    setGenderPreference('all');
+    setGenderPreference(hasAccess(packageTier, 'GOLD') ? 'all' : 'female');
     setMinAge(String(PROFILE_CONFIG.MIN_AGE));
     setMaxAge('40');
     setMaxDistance(DISCOVERY_CONFIG.DEFAULT_DISTANCE_KM);
@@ -263,7 +266,7 @@ export const FilterScreen: React.FC = () => {
     setSelectedDrinking([]);
     setSelectedExercise([]);
     setSelectedZodiac([]);
-  }, []);
+  }, [packageTier]);
 
   // ── Render helpers ──
 
@@ -345,7 +348,10 @@ export const FilterScreen: React.FC = () => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Text style={styles.backText}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Filtreler</Text>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>Filtreler</Text>
+          <Text style={styles.headerSubtitle}>Arama tercihlerini ayarla</Text>
+        </View>
         <View style={{ width: 40 }} />
       </View>
 
@@ -356,39 +362,58 @@ export const FilterScreen: React.FC = () => {
       >
         {/* ── Gender preference ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Cinsiyet</Text>
+          <View style={styles.sectionTitleRow}>
+            <Text style={styles.sectionTitle}>{'\uD83D\uDC64'} Cinsiyet</Text>
+          </View>
           <View style={styles.radioGroup}>
-            {GENDER_OPTIONS.map((option) => (
-              <TouchableOpacity
-                key={option.value}
-                style={[
-                  styles.radioOption,
-                  genderPreference === option.value && styles.radioOptionActive,
-                ]}
-                onPress={() => setGenderPreference(option.value)}
-                activeOpacity={0.8}
-              >
-                <View style={styles.radioCircle}>
-                  {genderPreference === option.value && (
-                    <View style={styles.radioCircleInner} />
-                  )}
-                </View>
-                <Text
+            {GENDER_OPTIONS.map((option) => {
+              const isLocked = option.value !== 'female' && !hasAccess(packageTier, 'GOLD');
+              const isSelected = genderPreference === option.value;
+              return (
+                <TouchableOpacity
+                  key={option.value}
                   style={[
-                    styles.radioLabel,
-                    genderPreference === option.value && styles.radioLabelActive,
+                    styles.radioOption,
+                    isSelected && styles.radioOptionActive,
+                    isLocked && styles.radioOptionLocked,
                   ]}
+                  onPress={() => {
+                    if (isLocked) {
+                      showUpgradeAlert('GOLD');
+                    } else {
+                      setGenderPreference(option.value);
+                    }
+                  }}
+                  activeOpacity={0.8}
                 >
-                  {option.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <View style={[styles.radioCircle, isLocked && { borderColor: colors.textTertiary, opacity: 0.5 }]}>
+                    {isSelected && !isLocked && (
+                      <View style={styles.radioCircleInner} />
+                    )}
+                  </View>
+                  <Text
+                    style={[
+                      styles.radioLabel,
+                      isSelected && !isLocked && styles.radioLabelActive,
+                      isLocked && { opacity: 0.5 },
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                  {isLocked && (
+                    <View style={styles.genderLockBadge}>
+                      <Text style={styles.genderLockText}>{'\uD83D\uDD12'} Gold</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 
         {/* ── Age range ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Yaş Aralığı (18-65)</Text>
+          <Text style={styles.sectionTitle}>{'\uD83C\uDF82'} Yaş Aralığı (18-65)</Text>
           <View style={styles.rangeRow}>
             <View style={styles.rangeInputWrapper}>
               <Text style={styles.rangeLabel}>Min</Text>
@@ -421,7 +446,7 @@ export const FilterScreen: React.FC = () => {
         {/* ── Distance ── */}
         <View style={styles.section}>
           <View style={styles.distanceTitleRow}>
-            <Text style={styles.sectionTitle}>Maksimum Mesafe</Text>
+            <Text style={styles.sectionTitle}>{'\uD83D\uDCCD'} Maksimum Mesafe</Text>
             <Text style={styles.distanceValueLabel}>
               {cityWideMode ? 'Şehir geneli' : `${maxDistance} km içinde`}
             </Text>
@@ -477,7 +502,7 @@ export const FilterScreen: React.FC = () => {
 
         {/* ── Intention tags ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Niyet Etiketi</Text>
+          <Text style={styles.sectionTitle}>{'\uD83D\uDC9C'} Niyet Etiketi</Text>
           <View style={styles.chipGroup}>
             {INTENTION_TAGS.map((tag) => {
               const isSelected = selectedTags.includes(tag.id);
@@ -501,7 +526,7 @@ export const FilterScreen: React.FC = () => {
         <View style={styles.divider} />
 
         {/* ── Height (Pro+) ── */}
-        {renderLockedSection('Boy', 'PRO', (
+        {renderLockedSection('\uD83D\uDCCF Boy', 'PRO', (
           <View style={styles.heightSection}>
             <View style={styles.heightToggleRow}>
               <Text style={styles.heightRangeLabel}>
@@ -613,12 +638,12 @@ export const FilterScreen: React.FC = () => {
         ))}
 
         {/* ── Education (Gold+) ── */}
-        {renderLockedSection('Eğitim', 'GOLD',
+        {renderLockedSection('\uD83C\uDF93 Eğitim', 'GOLD',
           renderChipGroup(EDUCATION_OPTIONS, selectedEducation, toggleChip(setSelectedEducation))
         )}
 
         {/* ── Lifestyle (Gold+) ── */}
-        {renderLockedSection('Yaşam Tarzı', 'GOLD', (
+        {renderLockedSection('\uD83C\uDF3F Yaşam Tarzı', 'GOLD', (
           <View style={styles.lifestyleContainer}>
             <View style={styles.lifestyleSubSection}>
               <Text style={styles.subSectionTitle}>Sigara</Text>
@@ -636,7 +661,7 @@ export const FilterScreen: React.FC = () => {
         ))}
 
         {/* ── Zodiac (Pro+) ── */}
-        {renderLockedSection('Burç', 'PRO',
+        {renderLockedSection('\u2B50 Burç', 'PRO',
           renderChipGroup(ZODIAC_OPTIONS, selectedZodiac, toggleChip(setSelectedZodiac))
         )}
 
@@ -693,9 +718,17 @@ const styles = StyleSheet.create({
     ...typography.h4,
     color: colors.text,
   },
+  headerCenter: {
+    alignItems: 'center',
+  },
   headerTitle: {
     ...typography.h3,
     color: colors.text,
+  },
+  headerSubtitle: {
+    fontSize: 11,
+    color: colors.textTertiary,
+    marginTop: 2,
   },
   scrollView: {
     flex: 1,
@@ -721,15 +754,15 @@ const styles = StyleSheet.create({
   },
   proLabel: {
     marginLeft: 'auto',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.primary + '20',
-    borderWidth: 1,
-    borderColor: colors.primary + '40',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 16,
+    backgroundColor: colors.primary + '25',
+    borderWidth: 1.5,
+    borderColor: colors.primary + '50',
   },
   proLabelText: {
-    ...typography.captionSmall,
+    fontSize: 11,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
@@ -787,6 +820,24 @@ const styles = StyleSheet.create({
   radioLabelActive: {
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+  },
+  radioOptionLocked: {
+    opacity: 0.6,
+    borderStyle: 'dashed',
+  },
+  genderLockBadge: {
+    marginLeft: 'auto',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    backgroundColor: 'rgba(251,191,36,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(251,191,36,0.3)',
+  },
+  genderLockText: {
+    fontSize: 10,
+    color: '#FBBF24',
     fontWeight: '600',
   },
   // Age range
@@ -1014,7 +1065,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   applyButton: {
-    flex: 1,
+    flex: 2,
     height: layout.buttonHeight,
     borderRadius: borderRadius.lg,
     justifyContent: 'center',
