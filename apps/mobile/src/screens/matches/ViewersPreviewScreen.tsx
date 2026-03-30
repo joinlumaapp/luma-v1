@@ -20,7 +20,7 @@ import { useViewersStore } from '../../stores/viewersStore';
 import { DailyRevealCounter } from '../../components/matches/DailyRevealCounter';
 import { WarmBanner } from '../../components/matches/WarmBanner';
 import { SUPER_COMPATIBLE_THRESHOLD } from '../../constants/config';
-import { colors } from '../../theme/colors';
+import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing } from '../../theme/spacing';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
@@ -231,7 +231,7 @@ export const ViewersPreviewScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#08080F',
+    backgroundColor: colors.background,
   },
 
   // ── Header ──
@@ -246,23 +246,23 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#141422',
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#252540',
+    borderColor: colors.surfaceBorder,
   },
   headerTextContainer: {
     flex: 1,
   },
   headerTitle: {
     ...typography.h3,
-    color: '#FFFFFF',
+    color: colors.text,
     letterSpacing: -0.3,
   },
   headerSubtitle: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.4)',
+    color: colors.textTertiary,
     marginTop: 2,
   },
 
@@ -276,9 +276,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
     marginVertical: 4,
     padding: 10,
-    backgroundColor: '#141422',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#252540',
+    borderColor: colors.surfaceBorder,
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#1C1C32',
+    backgroundColor: colors.surfaceLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -300,12 +300,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   viewerName: {
-    color: '#FFFFFF',
+    color: colors.text,
     fontSize: 12,
     fontWeight: '600',
   },
   viewerTime: {
-    color: 'rgba(255,255,255,0.3)',
+    color: colors.textTertiary,
     fontSize: 9,
   },
   labelsRow: {
@@ -314,17 +314,17 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   labelDistance: {
-    backgroundColor: 'rgba(240,77,58,0.15)',
+    backgroundColor: palette.coral[600] + '26',
     paddingHorizontal: 5,
     paddingVertical: 2,
     borderRadius: 5,
   },
   labelDistanceText: {
-    color: '#F04D3A',
+    color: palette.coral[600],
     fontSize: 8,
   },
   viewCountText: {
-    color: 'rgba(236,72,153,0.6)',
+    color: palette.pink[500] + '99',
     fontSize: 9,
     marginTop: 3,
     fontStyle: 'italic',
@@ -335,9 +335,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
     marginVertical: 4,
     padding: 10,
-    backgroundColor: '#141422',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#252540',
+    borderColor: colors.surfaceBorder,
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(139,92,246,0.3)',
+    backgroundColor: colors.primary + '4D',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -357,14 +357,14 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   lockedText: {
-    color: 'rgba(255,255,255,0.3)',
+    color: colors.textTertiary,
     fontSize: 12,
   },
 
   // ── Footer ──
   footerText: {
     textAlign: 'center',
-    color: 'rgba(255,255,255,0.25)',
+    color: colors.textTertiary,
     fontSize: 9,
     marginVertical: 12,
   },

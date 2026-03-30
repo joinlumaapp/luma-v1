@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { palette } from '../../theme/colors';
+import { colors, palette } from '../../theme/colors';
 import { fontWeights } from '../../theme/typography';
 
 // ─── Types ──────────────────────────────────────────────────────
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   label: {
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textSecondary,
     fontSize: 11,
   },
   dots: {
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   dotUsed: {
-    backgroundColor: 'rgba(139,92,246,0.2)',
+    backgroundColor: colors.primary + '33',
   },
   dotAvailable: {
     backgroundColor: palette.purple[500],
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   buyText: {
-    color: '#000000',
+    color: colors.textInverse,
     fontSize: 10,
     fontWeight: fontWeights.bold,
   },

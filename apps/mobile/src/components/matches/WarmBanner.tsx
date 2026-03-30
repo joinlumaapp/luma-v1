@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { colors } from '../../theme/colors';
 import { fontWeights } from '../../theme/typography';
 
 // ─── Types ──────────────────────────────────────────────────────
@@ -42,9 +43,9 @@ const styles = StyleSheet.create({
     marginTop: 12,
     padding: 12,
     borderRadius: 14,
-    backgroundColor: 'rgba(139,92,246,0.1)',
+    backgroundColor: colors.primary + '1A',
     borderWidth: 1,
-    borderColor: 'rgba(139,92,246,0.2)',
+    borderColor: colors.primary + '33',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
@@ -56,12 +57,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   message: {
-    color: '#FFFFFF',
+    color: colors.text,
     fontSize: 13,
     fontWeight: fontWeights.medium,
   },
   detail: {
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textSecondary,
     fontSize: 11,
     marginTop: 2,
   },

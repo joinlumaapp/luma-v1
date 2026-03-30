@@ -11,7 +11,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { palette } from '../../theme/colors';
+import { colors, palette } from '../../theme/colors';
 import { fontWeights } from '../../theme/typography';
 
 // ─── Types ──────────────────────────────────────────────────────
@@ -51,7 +51,7 @@ const ActivityRing: React.FC<{
   profile: ActivityRingProfile;
   onPress: () => void;
 }> = ({ profile, onPress }) => {
-  const colors = RING_COLORS[profile.ringType];
+  const ringColors = RING_COLORS[profile.ringType];
 
   const getLabel = (): string => {
     if (profile.ringType === 'locked') return '\uD83D\uDD12';
@@ -65,7 +65,7 @@ const ActivityRing: React.FC<{
   const getLabelColor = (): string => {
     if (profile.ringType === 'super_compatible') return palette.gold[400];
     if (profile.ringType === 'nearby') return '#FF6B5A';
-    if (profile.ringType === 'locked') return 'rgba(255,255,255,0.3)';
+    if (profile.ringType === 'locked') return colors.textTertiary;
     return palette.purple[400];
   };
 
@@ -76,7 +76,7 @@ const ActivityRing: React.FC<{
       activeOpacity={0.7}
     >
       <LinearGradient
-        colors={colors as [string, string]}
+        colors={ringColors as [string, string]}
         style={styles.ringGradient}
         start={{ x: 0.3, y: 0 }}
         end={{ x: 0.7, y: 1 }}
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semibold,
   },
   headerMore: {
-    color: 'rgba(255,255,255,0.4)',
+    color: colors.textTertiary,
     fontSize: 11,
   },
   scrollContent: {
@@ -190,9 +190,9 @@ const styles = StyleSheet.create({
     width: PHOTO_SIZE,
     height: PHOTO_SIZE,
     borderRadius: PHOTO_SIZE / 2,
-    backgroundColor: '#141422',
+    backgroundColor: colors.surface,
     borderWidth: 2,
-    borderColor: '#08080F',
+    borderColor: colors.background,
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   photoPlaceholder: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#1C1C32',
+    backgroundColor: colors.surfaceLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -221,9 +221,9 @@ const styles = StyleSheet.create({
   },
   ringName: {
     fontSize: 9,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
   },
   lockedName: {
-    color: 'rgba(255,255,255,0.3)',
+    color: colors.textTertiary,
   },
 });

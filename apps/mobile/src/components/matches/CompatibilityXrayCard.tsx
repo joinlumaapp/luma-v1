@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { palette } from '../../theme/colors';
+import { colors, palette } from '../../theme/colors';
 import { fontWeights } from '../../theme/typography';
 
 interface XrayCategory {
@@ -20,7 +20,7 @@ export const CompatibilityXrayCard: React.FC<CompatibilityXrayCardProps> = ({ ov
   const getBarColor = (score: number) => {
     if (score >= 80) return palette.gold[400];
     if (score >= 60) return palette.purple[500];
-    return '#4B5563';
+    return palette.gray[600];
   };
 
   return (
@@ -59,25 +59,25 @@ export const CompatibilityXrayCard: React.FC<CompatibilityXrayCardProps> = ({ ov
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#141422', borderWidth: 1, borderColor: '#252540',
+    backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.surfaceBorder,
     borderRadius: 16, padding: 16,
   },
   header: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   headerIcon: { fontSize: 18 },
-  headerTitle: { flex: 1, color: '#fff', fontSize: 14, fontWeight: fontWeights.semibold },
+  headerTitle: { flex: 1, color: colors.text, fontSize: 14, fontWeight: fontWeights.semibold },
   overallBadge: {
-    backgroundColor: 'rgba(251,191,36,0.15)', borderRadius: 8,
+    backgroundColor: palette.gold[400] + '26', borderRadius: 8,
     paddingHorizontal: 10, paddingVertical: 4,
   },
   overallText: { color: palette.gold[400], fontSize: 14, fontWeight: fontWeights.bold },
   categoryRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 8 },
-  categoryName: { color: 'rgba(255,255,255,0.6)', fontSize: 11, width: 90 },
+  categoryName: { color: colors.textSecondary, fontSize: 11, width: 90 },
   barContainer: {
-    flex: 1, height: 6, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 3,
+    flex: 1, height: 6, backgroundColor: colors.surfaceBorder, borderRadius: 3,
   },
   barFill: { height: 6, borderRadius: 3 },
   categoryScore: { fontSize: 11, fontWeight: fontWeights.semibold, width: 30, textAlign: 'right' },
-  highlightsSection: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#252540' },
-  highlightsTitle: { color: 'rgba(255,255,255,0.5)', fontSize: 10, marginBottom: 6 },
-  highlightItem: { color: 'rgba(255,255,255,0.4)', fontSize: 10, marginBottom: 2 },
+  highlightsSection: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.surfaceBorder },
+  highlightsTitle: { color: colors.textSecondary, fontSize: 10, marginBottom: 6 },
+  highlightItem: { color: colors.textTertiary, fontSize: 10, marginBottom: 2 },
 });
