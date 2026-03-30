@@ -8,9 +8,10 @@ export class CreatePostDto {
   @MaxLength(2000)
   content!: string;
 
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  photoUrls!: string[];
+  photoUrls?: string[];
 
   @IsOptional()
   @IsString()

@@ -74,7 +74,7 @@ export class PostsController {
     @CurrentUser() user: JwtPayload,
     @Param("postId") postId: string,
   ) {
-    if (user.packageTier === "FREE") {
+    if (user.packageTier === "free") {
       throw new ForbiddenException("Bu ozellik premium uyelere ozeldir");
     }
     return this.postsService.getLikers(postId);

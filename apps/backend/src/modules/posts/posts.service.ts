@@ -146,7 +146,7 @@ export class PostsService {
         userId,
         postType: dto.postType,
         content: dto.content,
-        photoUrls: dto.photoUrls,
+        photoUrls: dto.photoUrls ?? [],
         videoUrl: dto.videoUrl ?? null,
       },
       include: this.postInclude(),
