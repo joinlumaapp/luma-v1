@@ -31,8 +31,7 @@ export const CoinBalance: React.FC<CoinBalanceProps> = ({
     if (onPress) {
       onPress();
     } else {
-      (navigation as { navigate: (screen: string, params?: Record<string, unknown>) => void })
-        .navigate('MembershipPlans');
+      navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' });
     }
   };
 

@@ -110,7 +110,7 @@ export const FlashBoost: React.FC<FlashBoostProps> = ({
             text: 'Jeton Al',
             onPress: () => {
               dismissFlash();
-              (navigation as NativeStackNavigationProp<Record<string, undefined>>).navigate('JetonMarket' as never);
+              navigation.getParent()?.navigate('ProfileTab', { screen: 'JetonMarket' });
             },
           },
         ],

@@ -512,7 +512,7 @@ export const InstantConnectScreen: React.FC = () => {
     } else {
       Alert.alert('Yetersiz Jeton', 'Jeton bakiyen yetersiz. Jeton satin almak ister misin?', [
         { text: 'Vazgeç', style: 'cancel' },
-        { text: 'Jeton Al', onPress: () => navigation.navigate('JetonMarket' as never) },
+        { text: 'Jeton Al', onPress: () => navigation.getParent()?.navigate('ProfileTab', { screen: 'JetonMarket' }) },
       ]);
     }
   }, [spendCoins, startSpin, navigation]);
@@ -527,7 +527,7 @@ export const InstantConnectScreen: React.FC = () => {
     } else {
       Alert.alert('Yetersiz Jeton', 'Sonrakine gecmek icin yeterli jetonun yok.', [
         { text: 'Tamam', style: 'cancel' },
-        { text: 'Jeton Al', onPress: () => navigation.navigate('JetonMarket' as never) },
+        { text: 'Jeton Al', onPress: () => navigation.getParent()?.navigate('ProfileTab', { screen: 'JetonMarket' }) },
       ]);
     }
   }, [spendCoins, switchUser, navigation]);

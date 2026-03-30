@@ -243,7 +243,7 @@ export const FeedProfileScreen: React.FC = () => {
   }, [navigation]);
 
   const handlePremiumUpgrade = useCallback(() => {
-    navigation.navigate('MembershipPlans' as never);
+    navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' });
   }, [navigation]);
 
   if (isLoading) {
@@ -347,7 +347,7 @@ export const FeedProfileScreen: React.FC = () => {
           <TouchableOpacity
             style={{ backgroundColor: colors.surface, borderRadius: 16, padding: spacing.md, marginTop: 12, borderWidth: 1, borderColor: palette.purple[200], flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}
             activeOpacity={0.7}
-            onPress={() => navigation.navigate('MembershipPlans' as never)}
+            onPress={() => navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' })}
           >
             <Ionicons name="lock-closed" size={16} color={palette.purple[500]} />
             <Text style={{ fontSize: 13, color: colors.textSecondary, fontFamily: 'Poppins_400Regular', flex: 1 }}>

@@ -85,14 +85,6 @@ export type MatchesStackParamList = {
   Report: { userId: string; userName: string };
 };
 
-// -- Activities Stack (deprecated — replaced by Live) --
-export type ActivitiesStackParamList = {
-  Activities: undefined;
-  CreateActivity: undefined;
-  ActivityDetail: { activityId: string };
-  ActivityGroupChat: { activityId: string; activityTitle: string };
-};
-
 // -- Live Stack --
 export type LiveStackParamList = {
   Live: undefined;

@@ -120,7 +120,7 @@ export const PromotionModal: React.FC = () => {
   const handleUpgrade = useCallback(() => {
     setVisible(false);
     storage.setString(PROMO_LAST_SHOWN_KEY, Date.now().toString());
-    navigation.navigate('MembershipPlans' as never);
+    navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' });
   }, [navigation]);
 
   if (!config) return null;
