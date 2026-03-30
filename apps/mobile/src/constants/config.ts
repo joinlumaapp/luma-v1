@@ -314,6 +314,78 @@ export const MONTHLY_TOKEN_BONUS = {
   RESERVED: 1000,
 } as const;
 
+// ─── Kim Gördü — Viewer Reveal Config ─────────────────────────────
+export const VIEWERS_REVEAL_CONFIG = {
+  FREE: { dailyReveals: 1, delayHours: 24 },
+  GOLD: { dailyReveals: 5, delayHours: 6 },
+  PRO: { dailyReveals: 15, delayHours: 0 },
+  RESERVED: { dailyReveals: 999999, delayHours: 0 },
+} as const;
+
+// ─── Beğenenler — Likes Reveal Config (yeni zamanlı erişim) ───────
+export const LIKES_REVEAL_CONFIG = {
+  FREE: 2,
+  GOLD: 10,
+  PRO: 30,
+  RESERVED: 999999,
+} as const;
+
+// ─── Mesaj Paketleri ──────────────────────────────────────────────
+export const MESSAGE_BUNDLE_CONFIG = [
+  { id: 'msg_bundle_1', count: 1, costGold: 150, discountPercent: 0 },
+  { id: 'msg_bundle_3', count: 3, costGold: 350, discountPercent: 22 },
+  { id: 'msg_bundle_5', count: 5, costGold: 500, discountPercent: 33 },
+  { id: 'msg_bundle_10', count: 10, costGold: 800, discountPercent: 47 },
+] as const;
+
+// ─── Tier Ücretsiz Mesaj Hakları (aylık) ──────────────────────────
+export const FREE_MESSAGE_ALLOWANCE = {
+  FREE: 0,
+  GOLD: 1,
+  PRO: 3,
+  RESERVED: 5,
+} as const;
+
+// ─── Gizli Hayran — Secret Admirer Config ─────────────────────────
+export const SECRET_ADMIRER_CONFIG = {
+  COST_GOLD: 75,
+  EXTRA_GUESS_COST: 25,
+  FREE_GUESSES: 3,
+  EXPIRY_HOURS: 48,
+  FREE_SENDS_PER_MONTH: { FREE: 0, GOLD: 1, PRO: 3, RESERVED: 5 },
+} as const;
+
+// ─── Uyum Röntgeni — Compatibility X-Ray Config ──────────────────
+export const COMPATIBILITY_XRAY_CONFIG = {
+  COST_GOLD: 30,
+  FREE_PER_DAY: { FREE: 0, GOLD: 0, PRO: 10, RESERVED: 999999 },
+} as const;
+
+// ─── Haftalık Top 3 ───────────────────────────────────────────────
+export const WEEKLY_TOP_CONFIG = {
+  VISIBLE_COUNT: { FREE: 1, GOLD: 2, PRO: 3, RESERVED: 3 },
+  REVEAL_COST_GOLD: 40,
+  REFRESH_DAY: 1, // Monday
+} as const;
+
+// ─── AI Sohbet Önerileri ──────────────────────────────────────────
+export const AI_CHAT_SUGGESTION_CONFIG = {
+  FREE_PER_DAY: { FREE: 0, GOLD: 2, PRO: 5, RESERVED: 999999 },
+  PACK_SIZE: 10,
+  PACK_COST_GOLD: 30,
+} as const;
+
+// ─── Yakınında Etiketi Görünürlüğü ───────────────────────────────
+export const NEARBY_VISIBILITY_CONFIG = {
+  FREE: 'hidden' as const,
+  GOLD: 'label' as const,
+  PRO: 'distance' as const,
+  RESERVED: 'distance_push' as const,
+} as const;
+
+// ─── Süper Uyumlu Eşik ───────────────────────────────────────────
+export const SUPER_COMPATIBLE_THRESHOLD = 80;
+
 // Ad placement configuration
 export const AD_CONFIG = {
   /** Feed: show ad after every N posts (free users only) */
