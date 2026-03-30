@@ -42,9 +42,7 @@ import { useEngagementStore } from '../../stores/engagementStore';
 import { useAuthStore } from '../../stores/authStore';
 import { palette } from '../../theme/colors';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
-import { ActivityStrip } from '../../components/matches/ActivityStrip';
 import { WarmBanner } from '../../components/matches/WarmBanner';
-import { DailyRevealCounter } from '../../components/matches/DailyRevealCounter';
 import { SUPER_COMPATIBLE_THRESHOLD } from '../../constants/config';
 
 type MatchesNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'MatchesList'>;
@@ -666,9 +664,7 @@ export const MatchesListScreen: React.FC = () => {
   const fetchMatches = useMatchStore((state) => state.fetchMatches);
   const markAsRead = useMatchStore((state) => state.markAsRead);
   const updateMatchActivity = useMatchStore((state) => state.updateMatchActivity);
-  const activityStrip = useMatchStore((state) => state.activityStrip);
   const warmBanner = useMatchStore((state) => state.warmBanner);
-  const fetchActivityStrip = useMatchStore((state) => state.fetchActivityStrip);
   const fetchWarmBanner = useMatchStore((state) => state.fetchWarmBanner);
   const hydrateFromStorage = useChatStore((state) => state.hydrateFromStorage);
 
@@ -718,10 +714,9 @@ export const MatchesListScreen: React.FC = () => {
       }
     };
     hydrate().then(() => {
-      fetchActivityStrip();
       fetchWarmBanner();
     });
-  }, [fetchMatches, hydrateFromStorage, updateMatchActivity, fetchActivityStrip, fetchWarmBanner]);
+  }, [fetchMatches, hydrateFromStorage, updateMatchActivity, fetchWarmBanner]);
 
   // Set match countdowns for new matches that don't have messages
   const setMatchCountdown = useEngagementStore((s) => s.setMatchCountdown);
@@ -1214,14 +1209,6 @@ export const MatchesListScreen: React.FC = () => {
           ListHeaderComponent={
             activeTab === 'matches' ? (
               <>
-                <ActivityStrip
-                  profiles={activityStrip}
-                  onPress={(userId, isRevealed) => {
-                    if (isRevealed) {
-                      navigation.navigate('ProfilePreview', { userId });
-                    }
-                  }}
-                />
                 <WarmBanner banner={warmBanner} />
                 {renderNudgeSection()}
               </>
