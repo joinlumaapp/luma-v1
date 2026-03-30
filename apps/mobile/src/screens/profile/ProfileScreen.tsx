@@ -506,7 +506,7 @@ export const ProfileScreen: React.FC = () => {
       <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
         <TouchableOpacity
           style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}
-          onPress={() => navigation.getParent()?.navigate('FeedTab', { screen: 'SocialFeed' })}
+          onPress={() => navigation.navigate('MyPosts' as never)}
           activeOpacity={0.7}
         >
           <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{myPosts.length}</Text>

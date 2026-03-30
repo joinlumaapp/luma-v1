@@ -52,6 +52,7 @@ import { ChatScreen } from '../screens/chat/ChatScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { EditProfileScreen } from '../screens/profile/EditProfileScreen';
 import { SettingsScreen } from '../screens/profile/SettingsScreen';
+import { MyPostsScreen } from '../screens/profile/MyPostsScreen';
 import { PlacesScreen } from '../screens/places/PlacesScreen';
 import { RelationshipScreen } from '../screens/relationship/RelationshipScreen';
 import { CouplesClubScreen } from '../screens/couples-club/CouplesClubScreen';
@@ -380,6 +381,7 @@ const ProfileStackNavigator: React.FC = React.memo(() => (
     <ProfileStack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
     <ProfileStack.Screen name="Questions" component={QuestionsScreen} />
     <ProfileStack.Screen name="FollowList" component={FollowListScreen} />
+    <ProfileStack.Screen name="MyPosts" component={MyPostsScreen} />
   </ProfileStack.Navigator>
 ));
 ProfileStackNavigator.displayName = 'ProfileStackNavigator';
