@@ -82,6 +82,8 @@ export type MatchesStackParamList = {
   JetonMarket: undefined;
   MembershipPlans: undefined;
   Report: { userId: string; userName: string };
+  SecretAdmirer: undefined;
+  WeeklyTop: undefined;
 };
 
 // -- Live Stack --

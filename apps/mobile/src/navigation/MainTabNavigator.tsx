@@ -88,6 +88,8 @@ import { WavesScreen } from '../screens/waves/WavesScreen';
 
 // Matches extra screens
 import { DatePlannerScreen } from '../screens/matches/DatePlannerScreen';
+import { SecretAdmirerScreen } from '../screens/matches/SecretAdmirerScreen';
+import { WeeklyTopScreen } from '../screens/matches/WeeklyTopScreen';
 import { CallScreen } from '../screens/chat/CallScreen';
 import { IncomingCallOverlay } from '../components/chat/IncomingCallOverlay';
 import { MinimizedCallBar } from '../components/chat/MinimizedCallBar';
@@ -305,6 +307,23 @@ const MatchesStackNavigator: React.FC = React.memo(() => (
       name="MembershipPlans"
       component={MembershipPlansScreen}
       options={{ animation: 'slide_from_bottom' }}
+    />
+    <MatchesStack.Screen
+      name="SecretAdmirer"
+      component={SecretAdmirerScreen}
+      options={{
+        headerShown: false,
+        animation: 'slide_from_bottom',
+        presentation: 'modal',
+      }}
+    />
+    <MatchesStack.Screen
+      name="WeeklyTop"
+      component={WeeklyTopScreen}
+      options={{
+        headerShown: false,
+        animation: 'slide_from_bottom',
+      }}
     />
   </MatchesStack.Navigator>
 ));
