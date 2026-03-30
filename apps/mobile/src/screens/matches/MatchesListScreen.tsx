@@ -1224,7 +1224,7 @@ export const MatchesListScreen: React.FC = () => {
                 <WarmBanner banner={warmBanner} />
                 {renderNudgeSection()}
               </>
-            ) : renderNudgeSection
+            ) : renderNudgeSection()
           }
           ListEmptyComponent={renderEmptyList}
           showsVerticalScrollIndicator={false}
