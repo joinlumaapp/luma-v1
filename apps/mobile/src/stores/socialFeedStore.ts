@@ -47,8 +47,16 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
     set({ isLoading: true });
     try {
       const response = await socialFeedService.getFeed(filter, null);
+      let posts = response.posts;
+
+      // For TAKIP: if API returned empty but we have follow state, use Popüler data filtered
+      if (filter === 'TAKIP' && posts.length === 0) {
+        const allResponse = await socialFeedService.getFeed('ONERILEN', null);
+        posts = allResponse.posts.filter((p) => p.isFollowing);
+      }
+
       set({
-        posts: response.posts,
+        posts,
         cursor: response.nextCursor,
         hasMore: response.hasMore,
         isLoading: false,
@@ -92,7 +100,14 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
   },
 
   setFilter: (filter: FeedFilter) => {
-    set({ filter, posts: [], cursor: null, hasMore: false });
+    const currentPosts = get().posts;
+    if (filter === 'TAKIP') {
+      // Show followed users' posts immediately from current state
+      const followedPosts = currentPosts.filter((p) => p.isFollowing);
+      set({ filter, posts: followedPosts, cursor: null, hasMore: false });
+    } else {
+      set({ filter, posts: [], cursor: null, hasMore: false });
+    }
     get().fetchFeed();
   },
 

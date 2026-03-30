@@ -15,9 +15,9 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, palette } from '../../theme/colors';
-import { spacing, borderRadius } from '../../theme/spacing';
-import api from '../../services/api';
+import { spacing } from '../../theme/spacing';
 import { socialFeedService, type FeedPost } from '../../services/socialFeedService';
+import { useSocialFeedStore } from '../../stores/socialFeedStore';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -35,17 +35,29 @@ export const MyPostsScreen: React.FC = () => {
   const fetchPosts = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await api.get('/posts/my');
-      setPosts(response.data);
-    } catch {
-      // Fallback: filter from feed
+      // Collect posts from all sources
+      const allPosts: FeedPost[] = [];
+
+      // 1. Store'daki mevcut postlardan kendi postlarımızı al
+      const storePosts = useSocialFeedStore.getState().posts;
+      const myStorePosts = storePosts.filter((p) => p.userId === 'dev-user-001');
+      allPosts.push(...myStorePosts);
+
+      // 2. Mock feed'den de kontrol et
       try {
         const feedResponse = await socialFeedService.getFeed('ONERILEN', null);
-        const myPosts = feedResponse.posts.filter((p) => p.userId === 'dev-user-001');
-        setPosts(myPosts);
+        for (const p of feedResponse.posts) {
+          if (p.userId === 'dev-user-001' && !allPosts.find((ap) => ap.id === p.id)) {
+            allPosts.push(p);
+          }
+        }
       } catch {
-        // Silently fail
+        // ignore
       }
+
+      // Newest first
+      allPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setPosts(allPosts);
     } finally {
       setIsLoading(false);
     }
@@ -91,26 +103,26 @@ export const MyPostsScreen: React.FC = () => {
 
   return (
     <BrandedBackground>
-      <View style={[headerStyles.container, { paddingTop: insets.top }]}>
+      <View style={[screenStyles.container, { paddingTop: insets.top }]}>
         {/* Header */}
-        <View style={headerStyles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={headerStyles.backBtn}>
+        <View style={screenStyles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={screenStyles.backBtn}>
             <Ionicons name="chevron-back" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={headerStyles.title}>Gönderilerim</Text>
-          <View style={headerStyles.backBtn} />
+          <Text style={screenStyles.title}>Gönderilerim</Text>
+          <View style={screenStyles.backBtn} />
         </View>
 
         {/* Content */}
         {isLoading ? (
-          <View style={headerStyles.loadingContainer}>
+          <View style={screenStyles.centerContainer}>
             <ActivityIndicator size="large" color={palette.purple[500]} />
           </View>
         ) : posts.length === 0 ? (
-          <View style={headerStyles.emptyContainer}>
+          <View style={screenStyles.centerContainer}>
             <Ionicons name="image-outline" size={48} color={colors.textTertiary} />
-            <Text style={headerStyles.emptyTitle}>Henüz gönderin yok</Text>
-            <Text style={headerStyles.emptySubtitle}>Akış'tan ilk gönderini paylaş!</Text>
+            <Text style={screenStyles.emptyTitle}>Henüz gönderin yok</Text>
+            <Text style={screenStyles.emptySubtitle}>Akış'tan ilk gönderini paylaş!</Text>
           </View>
         ) : (
           <FlatList
@@ -118,8 +130,8 @@ export const MyPostsScreen: React.FC = () => {
             renderItem={renderPost}
             keyExtractor={(item) => item.id}
             numColumns={NUM_COLUMNS}
-            contentContainerStyle={{ paddingBottom: insets.bottom + 20, gap: GRID_GAP }}
-            columnWrapperStyle={{ gap: GRID_GAP, paddingHorizontal: GRID_GAP }}
+            contentContainerStyle={{ paddingBottom: insets.bottom + 20, paddingTop: GRID_GAP }}
+            columnWrapperStyle={{ gap: GRID_GAP, paddingHorizontal: GRID_GAP, marginBottom: GRID_GAP }}
           />
         )}
       </View>
@@ -127,7 +139,7 @@ export const MyPostsScreen: React.FC = () => {
   );
 };
 
-const headerStyles = StyleSheet.create({
+const screenStyles = StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -150,12 +162,7 @@ const headerStyles = StyleSheet.create({
     color: colors.text,
     fontFamily: 'Poppins_700Bold',
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyContainer: {
+  centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
