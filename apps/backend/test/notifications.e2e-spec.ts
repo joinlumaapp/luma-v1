@@ -359,7 +359,6 @@ describe('Notifications E2E — /api/v1/notifications', () => {
       mockNotificationsService.getPreferences.mockResolvedValue({
         newMatches: true,
         messages: true,
-        harmonyInvites: true,
         badges: true,
         system: true,
         allDisabled: false,

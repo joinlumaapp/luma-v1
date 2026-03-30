@@ -9,7 +9,6 @@ import {
 } from "class-validator";
 
 const VALID_GOLD_ACTIONS = [
-  "harmony_extension",
   "profile_boost",
   "super_like",
   "read_receipts",
@@ -17,13 +16,15 @@ const VALID_GOLD_ACTIONS = [
   "spotlight",
   "travel_mode",
   "priority_message",
+  "voice_call",
+  "video_call",
 ] as const;
 
 export class SpendGoldDto {
   @ApiProperty({
     description:
-      "Action to spend gold on: harmony_extension, profile_boost, super_like, read_receipts, undo_pass, spotlight, travel_mode, priority_message",
-    example: "harmony_extension",
+      "Action to spend gold on: profile_boost, super_like, read_receipts, undo_pass, spotlight, travel_mode, priority_message",
+    example: "profile_boost",
     enum: VALID_GOLD_ACTIONS,
   })
   @IsNotEmpty()
@@ -43,7 +44,7 @@ export class SpendGoldDto {
 
   @ApiProperty({
     description:
-      "Optional reference ID (e.g. session ID for harmony extension, target user ID for super like)",
+      "Optional reference ID (e.g. target user ID for super like)",
     required: false,
   })
   @IsOptional()

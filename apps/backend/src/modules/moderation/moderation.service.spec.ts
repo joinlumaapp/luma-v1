@@ -29,7 +29,6 @@ describe("ModerationService", () => {
       delete: jest.fn(),
     },
     match: { updateMany: jest.fn() },
-    harmonySession: { updateMany: jest.fn() },
     userPhoto: {
       findUnique: jest.fn(),
       findMany: jest.fn(),
@@ -219,10 +218,8 @@ describe("ModerationService", () => {
                 createdAt,
               }),
             },
-            match: { updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
-            harmonySession: {
-              updateMany: jest.fn().mockResolvedValue({ count: 0 }),
-            },
+            match: { updateMany: jest.fn().mockResolvedValue({ count: 0 }), findMany: jest.fn().mockResolvedValue([]) },
+            chatMessage: { updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
           };
           return fn(tx);
         },
@@ -260,12 +257,11 @@ describe("ModerationService", () => {
       );
     });
 
-    it("should deactivate matches and cancel harmony sessions in transaction", async () => {
+    it("should deactivate matches in transaction", async () => {
       mockPrisma.user.findUnique.mockResolvedValue({ id: dto.blockedUserId });
       mockPrisma.block.findUnique.mockResolvedValue(null);
 
       const txMatchUpdateMany = jest.fn().mockResolvedValue({ count: 1 });
-      const txHarmonyUpdateMany = jest.fn().mockResolvedValue({ count: 1 });
 
       mockPrisma.$transaction.mockImplementation(
         async (fn: (tx: unknown) => Promise<unknown>) => {
@@ -277,8 +273,8 @@ describe("ModerationService", () => {
                 createdAt: new Date(),
               }),
             },
-            match: { updateMany: txMatchUpdateMany },
-            harmonySession: { updateMany: txHarmonyUpdateMany },
+            match: { updateMany: txMatchUpdateMany, findMany: jest.fn().mockResolvedValue([]) },
+            chatMessage: { updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
           };
           return fn(tx);
         },
@@ -293,13 +289,6 @@ describe("ModerationService", () => {
           }),
           data: expect.objectContaining({
             isActive: false,
-          }),
-        }),
-      );
-      expect(txHarmonyUpdateMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            status: "CANCELLED",
           }),
         }),
       );

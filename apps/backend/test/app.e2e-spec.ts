@@ -201,17 +201,6 @@ function resetStores(): void {
       isActive: true,
     },
     {
-      key: 'harmony_master',
-      nameEn: 'Harmony Master',
-      nameTr: 'Harmoni Ustasi',
-      descriptionEn: 'Completed 5 Harmony sessions',
-      descriptionTr: '5 Harmony oturumu tamamladin',
-      iconUrl: null,
-      criteria: { type: 'harmony_session_count', count: 5 },
-      goldReward: 20,
-      isActive: true,
-    },
-    {
       key: 'question_guru',
       nameEn: 'Question Guru',
       nameTr: 'Soru Gurusu',
@@ -231,17 +220,6 @@ function resetStores(): void {
       iconUrl: null,
       criteria: { type: 'answer_count', count: 45 },
       goldReward: 50,
-      isActive: true,
-    },
-    {
-      key: 'harmony_explorer',
-      nameEn: 'Harmony Explorer',
-      nameTr: 'Harmoni Kaşifi',
-      descriptionEn: 'Completed 1 Harmony session',
-      descriptionTr: '1 Harmony oturumu tamamladin',
-      iconUrl: null,
-      criteria: { type: 'harmony_session_count', count: 1 },
-      goldReward: 10,
       isActive: true,
     },
     {
@@ -734,11 +712,6 @@ function createMockPrismaService(): Record<string, any> {
       updateMany: jest.fn().mockResolvedValue({ count: 0 }),
     },
 
-    // ── HarmonySession model ────────────────────────────────────
-    harmonySession: {
-      count: jest.fn().mockResolvedValue(0),
-    },
-
     // ── UserAnswer model ────────────────────────────────────────
     userAnswer: {
       count: jest.fn().mockResolvedValue(0),
@@ -1051,7 +1024,6 @@ describe('LUMA V1 API (E2E)', () => {
         expect(features).toHaveProperty('dailySwipes');
         expect(features).toHaveProperty('coreQuestions');
         expect(features).toHaveProperty('premiumQuestions');
-        expect(features).toHaveProperty('harmonyMinutes');
         expect(features).toHaveProperty('monthlyGold');
         expect(features).toHaveProperty('seeWhoLikesYou');
         expect(features).toHaveProperty('profileBoost');

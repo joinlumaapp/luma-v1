@@ -1,6 +1,6 @@
 // LUMA V1 — Database Seed Script (Comprehensive)
-// Seeds: 45 Compatibility Questions, 30 Harmony Question Cards,
-// 5 Game Cards, Badge Definitions, 11 Demo Users with Profiles,
+// Seeds: 45 Compatibility Questions, Badge Definitions,
+// 11 Demo Users with Profiles,
 // Photos, Answers, Matches, Chat Messages, and Badge Awards
 //
 // ADMIN NOTE: Admin access is env-based (ADMIN_USER_IDS).
@@ -394,7 +394,7 @@ const USER_BADGE_AWARDS: Record<number, string[]> = {
   0: ["first_spark", "verified_star", "question_explorer"], // Elif
   1: ["first_spark", "verified_star", "explorer"], // Ahmet
   2: ["first_spark", "explorer"], // Zeynep
-  3: ["first_spark", "chat_master"], // Can — NOTE: chat_master manually awarded in seed (requires 5 Harmony sessions, not met by seed data)
+  3: ["first_spark", "chat_master"], // Can — NOTE: chat_master manually awarded in seed
   4: ["first_spark", "soul_mate"], // Selin
   5: ["first_spark"], // Burak
   6: ["first_spark", "verified_star", "gold_member"], // Defne
@@ -605,10 +605,8 @@ const USER_PROFILE_PROMPTS: Array<Array<{ question: string; answer: string }>> =
 async function main(): Promise<void> {
   console.log("LUMA V1 — Seeding database...\n");
 
-  // Phase 1: Static data (questions, cards, badges)
+  // Phase 1: Static data (questions, badges)
   await seedCompatibilityQuestions();
-  await seedHarmonyQuestionCards();
-  await seedHarmonyGameCards();
   await seedBadgeDefinitions();
 
   // Phase 2: Demo users and relationships
@@ -631,10 +629,6 @@ async function seedDemoData(): Promise<void> {
     prisma.icebreakerAnswer.deleteMany(),
     prisma.icebreakerSession.deleteMany(),
     prisma.chatMessage.deleteMany(),
-    prisma.harmonyExtension.deleteMany(),
-    prisma.harmonyMessage.deleteMany(),
-    prisma.harmonyUsedCard.deleteMany(),
-    prisma.harmonySession.deleteMany(),
     prisma.dailyQuestionAnswer.deleteMany(),
     prisma.datePlan.deleteMany(),
     prisma.weeklyReport.deleteMany(),
@@ -1118,7 +1112,6 @@ async function seedDemoNotificationPrefs(userIds: string[]): Promise<void> {
         userId,
         newMatches: true,
         messages: true,
-        harmonyInvites: true,
         badges: true,
         system: true,
         allDisabled: false,
@@ -2539,248 +2532,6 @@ async function seedCompatibilityQuestions(): Promise<void> {
 }
 
 // ============================================================
-// 30 HARMONY QUESTION CARDS
-// ============================================================
-async function seedHarmonyQuestionCards(): Promise<void> {
-  console.log("Seeding 30 Harmony question cards...");
-
-  const cards = [
-    // Icebreaker (10)
-    {
-      category: "ICEBREAKER",
-      textEn: "What was the moment you laughed the most in your life?",
-      textTr: "Hayatında en çok güldüğün an hangisiydi?",
-    },
-    {
-      category: "ICEBREAKER",
-      textEn: "If you had a superpower, what would it be?",
-      textTr: "Bir süper gücün olsa ne olurdu?",
-    },
-    {
-      category: "ICEBREAKER",
-      textEn: "What was the last show/movie you watched? Why did you like it?",
-      textTr: "Son izlediğin dizi/film ne? Neden sevdin?",
-    },
-    {
-      category: "ICEBREAKER",
-      textEn: "What did you want to be when you grew up?",
-      textTr: "Çocukken büyüyünce ne olmak istiyordun?",
-    },
-    {
-      category: "ICEBREAKER",
-      textEn:
-        "If you could teleport anywhere in the world, where would you go?",
-      textTr: "Dünyada herhangi bir yere ışınlanabilsen nereye giderdin?",
-    },
-    {
-      category: "ICEBREAKER",
-      textEn: "What song are you listening to the most right now?",
-      textTr: "Playlistinde şu an en çok dinlediğin şarkı?",
-    },
-    {
-      category: "ICEBREAKER",
-      textEn: "Are you a morning person or a night owl?",
-      textTr: "Sabah insanı mısın yoksa gece kuşu mu?",
-    },
-    {
-      category: "ICEBREAKER",
-      textEn: "When was the last time you tried something for the first time?",
-      textTr: "En son ne zaman ilk kez bir şey denedin?",
-    },
-    {
-      category: "ICEBREAKER",
-      textEn: "Which emoji describes you best?",
-      textTr: "Seni en iyi anlatan emoji hangisi?",
-    },
-    {
-      category: "ICEBREAKER",
-      textEn: "What does an ideal first date look like?",
-      textTr: "İdeal bir ilk buluşma nasıl olur?",
-    },
-    // Deep Connection (10)
-    {
-      category: "DEEP_CONNECTION",
-      textEn: "What would someone who truly knows you say about you?",
-      textTr: "Seni gerçekten tanıyan biri hakkında ne der?",
-    },
-    {
-      category: "DEEP_CONNECTION",
-      textEn: "What do you value most in life?",
-      textTr: "Hayatta en çok neye değer verirsin?",
-    },
-    {
-      category: "DEEP_CONNECTION",
-      textEn: "When was the last time you truly showed vulnerability?",
-      textTr: "En son ne zaman gerçekten kırılganlık gösterdin?",
-    },
-    {
-      category: "DEEP_CONNECTION",
-      textEn: "What has shaped you the most as a person?",
-      textTr: "Seni bir insan olarak en çok ne şekillendirdi?",
-    },
-    {
-      category: "DEEP_CONNECTION",
-      textEn: "What have you learned the most from relationships?",
-      textTr: "İlişkilerde en çok neyi öğrendin?",
-    },
-    {
-      category: "DEEP_CONNECTION",
-      textEn: "Describe your ideal day 10 years from now.",
-      textTr: "10 yıl sonra ideal bir gününü anlat.",
-    },
-    {
-      category: "DEEP_CONNECTION",
-      textEn: "Is there something in life you regret?",
-      textTr: "Hayatta pişman olduğun bir şey var mı?",
-    },
-    {
-      category: "DEEP_CONNECTION",
-      textEn: "How do you deal with your biggest fear?",
-      textTr: "En büyük korkunla nasıl başa çıkıyorsun?",
-    },
-    {
-      category: "DEEP_CONNECTION",
-      textEn: "How do you think love should be shown?",
-      textTr: "Sevgi sence nasıl gösterilir?",
-    },
-    {
-      category: "DEEP_CONNECTION",
-      textEn: "What motivates you the most?",
-      textTr: "Seni en çok ne motive ediyor?",
-    },
-    // Fun & Playful (10)
-    {
-      category: "FUN_PLAYFUL",
-      textEn: "This or that: Mountains or Sea?",
-      textTr: "Bu veya şu: Dağ mı, Deniz mi?",
-    },
-    {
-      category: "FUN_PLAYFUL",
-      textEn: "If you could be any celebrity for a day, who would it be?",
-      textTr: "Bir gün boyunca ünlü biri olabilsen kim olurdun?",
-    },
-    {
-      category: "FUN_PLAYFUL",
-      textEn: "What is your worst food experience?",
-      textTr: "En kötü yemek deneyimin ne?",
-    },
-    {
-      category: "FUN_PLAYFUL",
-      textEn: "What was the craziest thing you did during quarantine?",
-      textTr: "Karantinada en çılgınca ne yaptın?",
-    },
-    {
-      category: "FUN_PLAYFUL",
-      textEn:
-        "If you had a time machine, would you go to the past or the future?",
-      textTr: "Bir zaman makinen olsa geçmişe mi gidersin geleceğe mi?",
-    },
-    {
-      category: "FUN_PLAYFUL",
-      textEn: "When was the last time you laughed so hard your stomach hurt?",
-      textTr: "En son ne zaman kahkahadan karnın ağrıdı?",
-    },
-    {
-      category: "FUN_PLAYFUL",
-      textEn: "Are you competitive or a team player with your partner?",
-      textTr: "Partnerinle yarışmalı mı olursun yoksa takım mı?",
-    },
-    {
-      category: "FUN_PLAYFUL",
-      textEn: "If you had a podcast, what would the topic be?",
-      textTr: "Bir podcastin olsa konusu ne olurdu?",
-    },
-    {
-      category: "FUN_PLAYFUL",
-      textEn: "What is your most embarrassing moment? (If you can share)",
-      textTr: "En utanç verici anın ne? (Paylaşabilirsen)",
-    },
-    {
-      category: "FUN_PLAYFUL",
-      textEn:
-        "If you want to remember me after this chat, what would you remember?",
-      textTr: "Bu sohbetten sonra beni hatırlamak istersen, ne hatırlarsın?",
-    },
-  ];
-
-  // Clear existing cards and re-create (seed is idempotent)
-  await prisma.harmonyUsedCard.deleteMany({});
-  await prisma.harmonyQuestionCard.deleteMany({});
-
-  await prisma.harmonyQuestionCard.createMany({
-    data: cards.map((card, i) => ({
-      category: card.category as
-        | "ICEBREAKER"
-        | "DEEP_CONNECTION"
-        | "FUN_PLAYFUL",
-      textEn: card.textEn,
-      textTr: card.textTr,
-      order: i + 1,
-    })),
-  });
-
-  console.log(`  ${cards.length} question cards seeded`);
-}
-
-// ============================================================
-// 5 HARMONY GAME CARDS
-// ============================================================
-async function seedHarmonyGameCards(): Promise<void> {
-  console.log("Seeding 5 Harmony game cards...");
-
-  const games = [
-    {
-      gameType: "common_ground",
-      nameEn: "Our Common Ground",
-      nameTr: "İkimizin Ortak Noktası",
-      descriptionEn:
-        "Both guess what you have in common, reveal simultaneously.",
-      descriptionTr:
-        "İkiniz de ortak noktanızı tahmin edin, aynı anda açıklayın.",
-    },
-    {
-      gameType: "two_truths_one_lie",
-      nameEn: "Two Truths, One Lie",
-      nameTr: "Doğru mu Yanlış mı?",
-      descriptionEn: "Each shares 2 truths and 1 lie, the partner guesses.",
-      descriptionTr:
-        "Her biri 2 doğru 1 yanlış söylesin, partner tahmin etsin.",
-    },
-    {
-      gameType: "complete_sentence",
-      nameEn: "Complete the Sentence",
-      nameTr: "Tamamla Cümleyi",
-      descriptionEn: "One starts a sentence, the other finishes it.",
-      descriptionTr: "Biri cümleye başlasın, diğeri tamamlasın.",
-    },
-    {
-      gameType: "word_association",
-      nameEn: "Word Association",
-      nameTr: "Kelime İlişkilendirme",
-      descriptionEn:
-        "Quick word association game - say the first thing that comes to mind!",
-      descriptionTr: "Hızlı kelime çağrışımı - aklına gelen ilk şeyi söyle!",
-    },
-    {
-      gameType: "imagination",
-      nameEn: "Imagination",
-      nameTr: "Hayal Gücü",
-      descriptionEn: '"Together we would..." - Build a scenario together.',
-      descriptionTr: '"Birlikte biz..." - Birlikte bir senaryo kurun.',
-    },
-  ];
-
-  // Clear existing game cards and re-create (seed is idempotent)
-  await prisma.harmonyGameCard.deleteMany({});
-
-  await prisma.harmonyGameCard.createMany({
-    data: games,
-  });
-
-  console.log(`  ${games.length} game cards seeded`);
-}
-
-// ============================================================
 // BADGE DEFINITIONS
 // ============================================================
 async function seedBadgeDefinitions(): Promise<void> {
@@ -2800,9 +2551,9 @@ async function seedBadgeDefinitions(): Promise<void> {
       key: "chat_master",
       nameEn: "Chat Master",
       nameTr: "Sohbet Ustası",
-      descriptionEn: "Complete 5 Harmony Room sessions!",
-      descriptionTr: "5 Harmony odasını tamamladın!",
-      criteria: { type: "harmony_session_count", count: 5 },
+      descriptionEn: "Send 50 chat messages!",
+      descriptionTr: "50 sohbet mesajı gönderdin!",
+      criteria: { type: "chat_message_count", count: 50 },
       goldReward: 10,
     },
     {
@@ -2971,17 +2722,6 @@ async function seedDemoNotifications(
       createdAt: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000),
     });
   }
-
-  // Harmony invite notifications
-  notifications.push({
-    userId: userIds[1],
-    type: NotificationType.HARMONY_INVITE,
-    title: "Harmony Daveti",
-    body: `${DEMO_USERS[0].firstName} sizi Harmony oturumuna davet ediyor!`,
-    data: { matchId: matchIds[0] },
-    isRead: false,
-    createdAt: new Date(now.getTime() - 1 * 60 * 60 * 1000),
-  });
 
   // Subscription expiring
   notifications.push({

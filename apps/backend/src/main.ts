@@ -130,7 +130,6 @@ async function bootstrap() {
       .addTag("Discovery", "Feed & swipe mechanics")
       .addTag("Matches", "Match lifecycle management")
       .addTag("Chat", "Messaging & icebreaker games")
-      .addTag("Harmony", "Harmony Room sessions")
       .addTag("Compatibility", "Questions & scoring, daily questions")
       .addTag("Badges", "Achievement system")
       .addTag("Payments", "Subscriptions, gold currency & transactions")

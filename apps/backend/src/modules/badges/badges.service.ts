@@ -294,7 +294,6 @@ export class BadgesService {
     userId: string,
     hint?:
       | "match"
-      | "harmony"
       | "answer"
       | "compatibility"
       | "verification"
@@ -308,7 +307,6 @@ export class BadgesService {
     // Map hints to badge keys that should be checked
     const badgeChecks: Record<string, string[]> = {
       match: ["first_spark", "soul_mate"],
-      harmony: ["chat_master"],
       answer: ["question_explorer"],
       compatibility: ["soul_mate"],
       verification: ["verified_star"],
@@ -355,17 +353,6 @@ export class BadgesService {
           },
         });
         return matchCount >= 1;
-      }
-
-      case "chat_master": {
-        // 5 completed Harmony sessions
-        const sessionCount = await this.prisma.harmonySession.count({
-          where: {
-            OR: [{ userAId: userId }, { userBId: userId }],
-            status: { in: ["ENDED", "EXTENDED"] },
-          },
-        });
-        return sessionCount >= 5;
       }
 
       case "question_explorer": {
@@ -467,17 +454,6 @@ export class BadgesService {
           },
         });
         description = `${targetValue} eslesmeni tamamla`;
-        break;
-      }
-
-      case "harmony_session_count": {
-        currentValue = await this.prisma.harmonySession.count({
-          where: {
-            OR: [{ userAId: userId }, { userBId: userId }],
-            status: { in: ["ENDED", "EXTENDED"] },
-          },
-        });
-        description = `${targetValue} Harmony Room oturumu tamamla`;
         break;
       }
 

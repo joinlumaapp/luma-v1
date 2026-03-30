@@ -15,7 +15,6 @@ export const AnalyticsEventCategory = {
   ENGAGEMENT: 'engagement',
   RELATIONSHIP: 'relationship',
   MODERATION: 'moderation',
-  HARMONY: 'harmony',
   FUNNEL: 'funnel',
   EXPERIMENT: 'experiment',
   PERFORMANCE: 'performance',
@@ -93,14 +92,6 @@ export const AnalyticsEvent = {
   // Relationship
   RELATIONSHIP_MODE_ACTIVATED: 'relationship_mode_activated',
   COUPLES_CLUB_JOINED: 'couples_club_joined',
-
-  // Harmony
-  HARMONY_SESSION_STARTED: 'harmony_session_started',
-  HARMONY_SESSION_ENDED: 'harmony_session_ended',
-  HARMONY_SESSION_EXTENDED: 'harmony_session_extended',
-  HARMONY_CARD_REVEALED: 'harmony_card_revealed',
-  HARMONY_VOICE_STARTED: 'harmony_voice_started',
-  HARMONY_VIDEO_STARTED: 'harmony_video_started',
 
   // Moderation
   REPORT_SUBMITTED: 'report_submitted',
@@ -195,8 +186,6 @@ export const DashboardMetric = {
   DAY30_RETENTION: 'day30_retention',
   AVG_SESSION_DURATION: 'avg_session_duration',
   SWIPES_PER_SESSION: 'swipes_per_session',
-  HARMONY_SESSIONS_PER_USER: 'harmony_sessions_per_user',
-  MATCH_TO_HARMONY_RATE: 'match_to_harmony_rate',
   GOLD_PURCHASE_FREQUENCY: 'gold_purchase_frequency',
   PACKAGE_TIER_DISTRIBUTION: 'package_tier_distribution',
 } as const;
@@ -240,7 +229,6 @@ export interface DashboardStatsResponse {
     day30Retention: number;
     avgSessionDurationMs: number;
     swipesPerSession: number;
-    harmonySessionsPerUser: number;
   };
   packageDistribution: {
     free: number;

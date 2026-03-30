@@ -38,12 +38,10 @@ export interface PackageDefinition {
   name: string;
   nameTr: string;
   dailySwipeLimit: number; // All tiers: 999999 (unlimited)
-  hasHarmonyAccess: boolean;
   hasPremiumQuestions: boolean;
   hasSuperCompatibilityView: boolean;
   hasProfileBoost: boolean;
   monthlyGoldAllocation: number;
-  harmonyDefaultMinutes: number;
 }
 
 export interface Subscription {
@@ -90,7 +88,6 @@ export enum GoldTransactionType {
   STREAK_REWARD = 'STREAK_REWARD', // Streak bonus reward
   DAILY_LOGIN = 'DAILY_LOGIN', // Daily login bonus
   // Debits
-  HARMONY_EXTENSION = 'HARMONY_EXTENSION', // Extended Harmony Room
   PROFILE_BOOST = 'PROFILE_BOOST', // Boosted profile
   SUPER_LIKE = 'SUPER_LIKE', // Sent a super like
   READ_RECEIPTS = 'READ_RECEIPTS', // See if message was read
@@ -98,6 +95,8 @@ export enum GoldTransactionType {
   SPOTLIGHT = 'SPOTLIGHT', // 30 min area spotlight
   TRAVEL_MODE = 'TRAVEL_MODE', // 24h travel mode
   PRIORITY_MESSAGE = 'PRIORITY_MESSAGE', // Pin message to top
+  VOICE_CALL = 'VOICE_CALL', // Paid voice call
+  VIDEO_CALL = 'VIDEO_CALL', // Paid video call
 }
 
 export interface GoldPack {
@@ -116,7 +115,6 @@ export const PACKAGE_FEATURES = {
     dailySwipes: 999999,
     monthlyGold: 0,
     premiumQuestions: false,
-    harmonyMinutes: 30,
     seeWhoLikedYou: false,
     readReceipts: false,
     profileBoost: false,
@@ -127,7 +125,6 @@ export const PACKAGE_FEATURES = {
     dailySwipes: 999999,
     monthlyGold: 250,
     premiumQuestions: true,
-    harmonyMinutes: 30,
     seeWhoLikedYou: true,
     readReceipts: false,
     profileBoost: false,
@@ -138,7 +135,6 @@ export const PACKAGE_FEATURES = {
     dailySwipes: 999999,
     monthlyGold: 500,
     premiumQuestions: true,
-    harmonyMinutes: 45,
     seeWhoLikedYou: true,
     readReceipts: true,
     profileBoost: true,
@@ -149,7 +145,6 @@ export const PACKAGE_FEATURES = {
     dailySwipes: 999999,
     monthlyGold: 1000,
     premiumQuestions: true,
-    harmonyMinutes: 60,
     seeWhoLikedYou: true,
     readReceipts: true,
     profileBoost: true,
@@ -176,7 +171,6 @@ export const GOLD_PACKS_TRY = [
 
 // Gold spending costs
 export const GOLD_COSTS = {
-  HARMONY_EXTENSION: 50, // 15 min extension
   PROFILE_BOOST: 100, // 24h profile boost
   SUPER_LIKE: 25, // Send a super like
   READ_RECEIPTS: 15, // See if message was read (single use)
@@ -186,6 +180,8 @@ export const GOLD_COSTS = {
   PRIORITY_MESSAGE: 40, // Pin message to top
   SUGGESTED_STORY_VIEW: 20, // View a suggested story beyond daily limit
   FLIRT_START: 25, // Send a flirt request beyond daily limit
+  VOICE_CALL: 25, // Voice call with match
+  VIDEO_CALL: 50, // Video call with match
 } as const;
 
 // Package tier hierarchy for upgrade validation
@@ -198,14 +194,15 @@ export const PACKAGE_TIER_ORDER: Record<PackageTier, number> = {
 
 // Gold spend action types
 export type GoldSpendAction =
-  | 'HARMONY_EXTENSION'
   | 'PROFILE_BOOST'
   | 'SUPER_LIKE'
   | 'READ_RECEIPTS'
   | 'UNDO_PASS'
   | 'SPOTLIGHT'
   | 'TRAVEL_MODE'
-  | 'PRIORITY_MESSAGE';
+  | 'PRIORITY_MESSAGE'
+  | 'VOICE_CALL'
+  | 'VIDEO_CALL';
 
 // Transaction history item (for API responses)
 export interface TransactionHistoryItem {

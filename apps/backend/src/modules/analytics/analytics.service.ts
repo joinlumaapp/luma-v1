@@ -28,7 +28,6 @@ export interface DashboardMetrics {
     day30Retention: number;
     avgSessionDurationMs: number;
     swipesPerSession: number;
-    harmonySessionsPerUser: number;
   };
   packageDistribution: {
     free: number;
@@ -177,8 +176,6 @@ export class AnalyticsService {
       swipeCount,
       packageDist,
       paidUsers,
-      harmonySessionCount,
-      activeUsersForHarmony,
     ] = await Promise.all([
       // DAU — distinct users with any event in last 24h
       this.countDistinctUsers(dayAgo, now),
@@ -225,14 +222,6 @@ export class AnalyticsService {
           where: { packageTier: { not: "FREE" } },
         })
         .catch(() => 0),
-      // Harmony sessions in period
-      this.prisma.harmonySession
-        .count({
-          where: { createdAt: { gte: this.getPeriodStart(period) } },
-        })
-        .catch(() => 0),
-      // Active users for harmony calc
-      this.countDistinctUsers(this.getPeriodStart(period), now),
     ]);
 
     const verificationRate = totalUsers > 0 ? verifiedUsers / totalUsers : 0;
@@ -250,10 +239,6 @@ export class AnalyticsService {
     // Swipes per session
     const dau = dauResult || 1;
     const swipesPerSession = swipeCount / dau;
-    const harmonySessionsPerUser =
-      activeUsersForHarmony > 0
-        ? harmonySessionCount / activeUsersForHarmony
-        : 0;
 
     // Retention (simplified — use cohort-based for detailed view)
     const [day1Ret, day7Ret, day30Ret] = await Promise.all([
@@ -281,7 +266,6 @@ export class AnalyticsService {
         day30Retention: day30Ret,
         avgSessionDurationMs,
         swipesPerSession: Math.round(swipesPerSession * 100) / 100,
-        harmonySessionsPerUser: Math.round(harmonySessionsPerUser * 100) / 100,
       },
       packageDistribution: packageDist,
     };

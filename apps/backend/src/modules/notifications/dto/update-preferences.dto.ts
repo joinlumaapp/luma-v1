@@ -19,14 +19,6 @@ export class UpdatePreferencesDto {
   messages?: boolean;
 
   @ApiProperty({
-    description: "Harmony davetleri bildirimi",
-    required: false,
-  })
-  @IsOptional()
-  @IsBoolean()
-  harmonyInvites?: boolean;
-
-  @ApiProperty({
     description: "Rozet bildirimleri",
     required: false,
   })
@@ -84,7 +76,6 @@ export class UpdatePreferencesDto {
 export interface NotificationPreferences {
   newMatches: boolean;
   messages: boolean;
-  harmonyInvites: boolean;
   badges: boolean;
   system: boolean;
   allDisabled: boolean;
@@ -96,7 +87,6 @@ export interface NotificationPreferences {
 export const DEFAULT_PREFERENCES: NotificationPreferences = {
   newMatches: true,
   messages: true,
-  harmonyInvites: true,
   badges: true,
   system: true,
   allDisabled: false,

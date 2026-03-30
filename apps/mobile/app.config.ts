@@ -71,7 +71,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       NSLocationAlwaysAndWhenInUseUsageDescription:
         'LUMA, yakınındaki kişileri göstermek için arka planda konumunuzu kullanıyor.',
       NSMicrophoneUsageDescription:
-        'LUMA, Harmony Room sesli görüşmeleri için mikrofonunuza erişim istiyor.',
+        'LUMA, sesli mesajlar için mikrofonunuza erişim istiyor.',
       NSUserTrackingUsageDescription:
         'LUMA, size daha iyi bir deneyim sunmak için reklam takibi kullanmak istiyor.',
       ITSAppUsesNonExemptEncryption: false,
@@ -134,7 +134,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         cameraPermission:
           'LUMA, profil doğrulama ve fotoğraf çekmek için kameranıza erişim istiyor.',
         microphonePermission:
-          'LUMA, Harmony Room sesli görüşmeleri için mikrofonunuza erişim istiyor.',
+          'LUMA, sesli mesajlar için mikrofonunuza erişim istiyor.',
         recordAudioAndroid: true,
       },
     ],

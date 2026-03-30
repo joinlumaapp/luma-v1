@@ -173,7 +173,6 @@ describe("PaymentsService", () => {
       // Reserved: everything enabled, highest values
       expect(reserved?.features.dailySwipes).toBe(999999);
       expect(reserved?.features.monthlyGold).toBe(1000);
-      expect(reserved?.features.harmonyMinutes).toBe(60);
     });
   });
 
@@ -339,22 +338,6 @@ describe("PaymentsService", () => {
       expect(result.action).toBe("super_like");
       expect(result.goldSpent).toBe(25);
       expect(result.newBalance).toBe(75);
-    });
-
-    it("should correctly charge for harmony_extension (50 gold)", async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 200 });
-      mockPrisma.$transaction.mockImplementation(
-        async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
-          await fn(mockPrisma);
-        },
-      );
-
-      const result = await service.spendGold("u1", {
-        action: "harmony_extension",
-      });
-
-      expect(result.goldSpent).toBe(50);
-      expect(result.newBalance).toBe(150);
     });
 
     it("should correctly charge for profile_boost (100 gold)", async () => {

@@ -33,18 +33,6 @@ export interface ChatMessagePayload {
   messageType?: 'text' | 'image';
 }
 
-export interface HarmonySessionPayload {
-  sessionId: string;
-  matchId?: string;
-}
-
-export interface HarmonySessionEndedPayload {
-  sessionId: string;
-  durationMinutes: number;
-  cardsRevealed: number;
-  messagesExchanged: number;
-}
-
 export interface PaymentPayload {
   packageTier?: string;
   amount?: number;
@@ -113,7 +101,6 @@ export interface KpiSummary {
   matchRate: number;
   avgCompatibilityScore: number;
   avgSessionDuration: number;
-  harmonySessions: number;
   freeToPayConversion: number;
   arpu: number;
   churnRate: number;

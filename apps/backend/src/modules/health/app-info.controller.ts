@@ -62,10 +62,6 @@ export class AppInfoController {
   getAppConfig(): AppConfigResponse {
     return {
       featureFlags: {
-        harmonyRoom: {
-          enabled: true,
-          description: "Harmony Room sesli sohbet özelliği",
-        },
         couplesClub: {
           enabled: true,
           description: "Çiftler Kulübü sosyal alan",
@@ -99,9 +95,6 @@ export class AppInfoController {
         cardStackSize: 20,
         defaultDistanceKm: 50,
         maxDistanceKm: 200,
-        harmonyDefaultDurationMinutes: 30,
-        harmonyExtensionMinutes: 15,
-        harmonyMaxExtensions: 3,
         supportEmail: "destek@luma.dating",
         privacyUrl: "https://luma.dating/gizlilik",
         termsUrl: "https://luma.dating/kullanim-kosullari",

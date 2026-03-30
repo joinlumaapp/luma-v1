@@ -84,7 +84,6 @@ export interface SubscriptionStatusResponse {
     dailySwipes: number;
     coreQuestions: number;
     premiumQuestions: number;
-    harmonyMinutes: number;
     monthlyGold: number;
     dailyCompatibilityChecks: number;
     dailySuperCompatibility: number;

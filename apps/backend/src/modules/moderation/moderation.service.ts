@@ -233,8 +233,7 @@ export class ModerationService {
   // ─── Block ──────────────────────────────────────────────────
 
   /**
-   * Block a user. Also deactivates any existing match between the two users
-   * and cancels any active Harmony sessions.
+   * Block a user. Also deactivates any existing match between the two users.
    */
   async blockUser(blockerId: string, dto: CreateBlockDto) {
     // Cannot block yourself
@@ -266,7 +265,7 @@ export class ModerationService {
       throw new ConflictException("Bu kullanici zaten engellenmis");
     }
 
-    // Use a transaction: create block + deactivate matches + cancel harmony sessions
+    // Use a transaction: create block + deactivate matches
     const block = await this.prisma.$transaction(async (tx) => {
       // 1. Create the block record
       const newBlock = await tx.block.create({
@@ -296,22 +295,7 @@ export class ModerationService {
         },
       });
 
-      // 3. Cancel any active Harmony sessions between these users
-      await tx.harmonySession.updateMany({
-        where: {
-          OR: [
-            { userAId: blockerId, userBId: dto.blockedUserId },
-            { userAId: dto.blockedUserId, userBId: blockerId },
-          ],
-          status: { in: ["PENDING", "ACTIVE", "EXTENDED"] },
-        },
-        data: {
-          status: "CANCELLED",
-          actualEndedAt: new Date(),
-        },
-      });
-
-      // 4. Soft-delete chat messages between blocked users
+      // 3. Soft-delete chat messages between blocked users
       //    Find all matches (including just-deactivated ones) and mark messages as DELETED
       const affectedMatches = await tx.match.findMany({
         where: {

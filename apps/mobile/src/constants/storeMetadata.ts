@@ -26,7 +26,7 @@ LUMA'nın kalbi, 45 özenle hazırlanmış sorudan oluşan kapsamlı bir uyumlul
 2. 45 soruluk uyumluluk testini tamamlayın
 3. Niyetinizi belirtin: Ciddi İlişki, Keşfetmek İstiyorum veya Henüz Emin Değilim
 4. LUMA algoritması size en uyumlu kişileri sunsun
-5. Eşleşin, sohbet edin ve Harmony Room'da sesli tanışın
+5. Eşleşin ve sohbet edin
 
 🎯 KEŞFET
 Uyumluluk puanlarına göre sıralanmış profilleri keşfedin. Her profilde uyumluluk yüzdenizi ve ortak noktalarınızı görün. Beğendiğiniz kişilere ilgi gösterin ve karşılıklı beğeni ile eşleşin.
@@ -34,16 +34,12 @@ Uyumluluk puanlarına göre sıralanmış profilleri keşfedin. Her profilde uyu
 💬 EŞLEŞMELERİNİZ
 Eşleştiğiniz kişilerle anında sohbete başlayın. Metin mesajları gönderin, fotoğraf paylaşın ve birbirinizi daha yakından tanıyın. Her eşleşmenin uyumluluk detaylarını inceleyin.
 
-🎙️ HARMONY ROOM
-LUMA'ya özel sesli tanışma odaları! Eşleştiğiniz kişiyle güvenli bir ortamda sesli görüşme yapın. Yazışmadan önce sesinizi duyurun, kimyayı hissedin. Gerçek bağlantılar yüz yüze başlar.
-
 👑 SUPREME ÜYELİK AVANTAJLARI
 • Sınırsız beğeni hakkı
 • Sizi beğenenleri görme
 • Gelişmiş filtreler (mesafe, yaş, niyet, uyumluluk eşiği)
 • Öncelikli görünürlük — profiliniz daha fazla kişiye ulaşır
 • Özel Supreme rozeti
-• Harmony Room'da öncelik
 • Aylık bonus jeton paketi
 • Reklamsız deneyim
 
@@ -65,7 +61,6 @@ Yakınındaki veya belirlediğin mesafe aralığındaki uyumlu kişileri keşfet
 • Bilimsel temelli uyumluluk algoritması
 • 45 soru ile derinlemesine profil analizi
 • 3 farklı niyet etiketi ile net beklentiler
-• Sesli tanışma odaları (Harmony Room)
 • Premium ama erişilebilir fiyatlandırma
 • Türkiye'nin en yenilikçi tanışma deneyimi
 
@@ -136,10 +131,9 @@ export const DEVELOPER_NAME = 'LUMA Dating' as const;
 export const WHATS_NEW = `LUMA 1.0 — İlk sürüm!
 
 • 45 soruluk bilimsel uyumluluk sistemi
-• Keşfet, Eşleşmeler, Harmony Room ve Profil ekranları
+• Keşfet, Eşleşmeler ve Profil ekranları
 • Supreme üyelik ile premium deneyim
 • Selfie doğrulama ile güvenli tanışma
-• Sesli tanışma odaları (Harmony Room)
 • Jeton sistemi ile özel etkileşimler
 • Karanlık ve aydınlık tema desteği` as const;
 

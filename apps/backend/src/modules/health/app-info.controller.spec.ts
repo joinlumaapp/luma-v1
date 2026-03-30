@@ -68,8 +68,6 @@ describe("AppInfoController", () => {
       const result = controller.getAppConfig();
 
       expect(result.featureFlags).toBeDefined();
-      expect(result.featureFlags.harmonyRoom).toBeDefined();
-      expect(result.featureFlags.harmonyRoom.enabled).toBe(true);
       expect(result.featureFlags.couplesClub.enabled).toBe(true);
       expect(result.featureFlags.places.enabled).toBe(true);
     });
@@ -78,7 +76,6 @@ describe("AppInfoController", () => {
       const result = controller.getAppConfig();
 
       const expectedFlags = [
-        "harmonyRoom",
         "couplesClub",
         "places",
         "premiumQuestions",
@@ -110,14 +107,6 @@ describe("AppInfoController", () => {
 
       expect(result.remoteConfig.defaultDistanceKm).toBe(50);
       expect(result.remoteConfig.maxDistanceKm).toBe(200);
-    });
-
-    it("should return Harmony Room config", () => {
-      const result = controller.getAppConfig();
-
-      expect(result.remoteConfig.harmonyDefaultDurationMinutes).toBe(30);
-      expect(result.remoteConfig.harmonyExtensionMinutes).toBe(15);
-      expect(result.remoteConfig.harmonyMaxExtensions).toBe(3);
     });
 
     it("should return support URLs", () => {

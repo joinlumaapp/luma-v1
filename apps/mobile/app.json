@@ -26,7 +26,7 @@
         "NSPhotoLibraryAddUsageDescription": "LUMA, fotograflari galerinize kaydetmek icin izin istiyor.",
         "NSLocationWhenInUseUsageDescription": "LUMA, yakininzdaki kisileri gostermek icin konumunuzu kullaniyor.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "LUMA, yakininzdaki kisileri gostermek icin arka planda konumunuzu kullaniyor.",
-        "NSMicrophoneUsageDescription": "LUMA, Harmony Room sesli gorusmeleri icin mikrofonunuza erisim istiyor.",
+        "NSMicrophoneUsageDescription": "LUMA, sesli mesajlar icin mikrofonunuza erisim istiyor.",
         "NSUserTrackingUsageDescription": "LUMA, size daha iyi bir deneyim sunmak icin reklam takibi kullanmak istiyor."
       }
     },
@@ -64,7 +64,7 @@
         "expo-camera",
         {
           "cameraPermission": "LUMA, profil dogrulama ve fotograf cekmek icin kameraniza erisim istiyor.",
-          "microphonePermission": "LUMA, Harmony Room sesli gorusmeleri icin mikrofonunuza erisim istiyor."
+          "microphonePermission": "LUMA, sesli mesajlar icin mikrofonunuza erisim istiyor."
         }
       ],
       [

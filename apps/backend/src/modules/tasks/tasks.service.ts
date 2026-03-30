@@ -8,18 +8,17 @@ import { PaymentsService } from "../payments/payments.service";
 /**
  * Scheduled tasks (cron jobs) for LUMA V1.
  *
- * 1. Expire old Harmony sessions
- * 2. Clean up expired OTP codes
- * 3. Reset daily swipe counters (midnight)
- * 4. Expire stale subscriptions
- * 5. Clean up revoked sessions older than 30 days
- * 6. Clean old notifications
- * 7. Clean old expired verifications
- * 8. Clean old daily swipe counts
- * 9. Auto-end expired relationship deactivations (48-hour deadline)
- * 10. Clean up expired stories (24-hour TTL)
- * 11. Process expired subscriptions with grace period
- * 12. Clean up expired moods (24-hour TTL)
+ * 1. Clean up expired OTP codes
+ * 2. Reset daily swipe counters (midnight)
+ * 3. Expire stale subscriptions
+ * 4. Clean up revoked sessions older than 30 days
+ * 5. Clean old notifications
+ * 6. Clean old expired verifications
+ * 7. Clean old daily swipe counts
+ * 8. Auto-end expired relationship deactivations (48-hour deadline)
+ * 9. Clean up expired stories (24-hour TTL)
+ * 10. Process expired subscriptions with grace period
+ * 11. Clean up expired moods (24-hour TTL)
  */
 @Injectable()
 export class TasksService {
@@ -32,29 +31,7 @@ export class TasksService {
     private readonly paymentsService: PaymentsService,
   ) {}
 
-  // ─── 1. End Expired Harmony Sessions ─────────────────────────
-  // Runs every minute
-  @Cron(CronExpression.EVERY_MINUTE)
-  async endExpiredHarmonySessions(): Promise<void> {
-    const now = new Date();
-
-    const result = await this.prisma.harmonySession.updateMany({
-      where: {
-        status: { in: ["ACTIVE", "EXTENDED"] },
-        endsAt: { lt: now },
-      },
-      data: {
-        status: "ENDED",
-        actualEndedAt: now,
-      },
-    });
-
-    if (result.count > 0) {
-      this.logger.log(`Ended ${result.count} expired Harmony session(s)`);
-    }
-  }
-
-  // ─── 2. Clean Up Expired OTP Codes ───────────────────────────
+  // ─── 1. Clean Up Expired OTP Codes ───────────────────────────
   // Runs every 10 minutes
   @Cron(CronExpression.EVERY_10_MINUTES)
   async cleanExpiredOtpCodes(): Promise<void> {

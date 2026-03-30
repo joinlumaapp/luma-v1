@@ -13,7 +13,6 @@ LUMA, uyumluluk tabanli bir tanisma uygulamasidir. Hizmetlerimiz sunlari icerir:
 - Profil olusturma ve yonetimi
 - 45 uyumluluk sorusu ile bilimsel eslestirme
 - 15 boyutlu uyumluluk analizi
-- Harmony Room interaktif tanisma deneyimi
 - Mesajlasma
 - Selfie dogrulama
 - Premium abonelik paketleri

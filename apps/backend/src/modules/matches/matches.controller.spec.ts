@@ -60,7 +60,6 @@ describe("MatchesController", () => {
             compatibilityScore: 85,
             compatibilityLevel: "SUPER",
             animationType: "SUPER_COMPATIBILITY",
-            hasActiveHarmony: false,
             partner: {
               userId: "partner-1",
               firstName: "Ayse",
@@ -73,7 +72,6 @@ describe("MatchesController", () => {
             compatibilityScore: 65,
             compatibilityLevel: "NORMAL",
             animationType: "NORMAL",
-            hasActiveHarmony: true,
             partner: {
               userId: "partner-2",
               firstName: "Fatma",
@@ -118,25 +116,6 @@ describe("MatchesController", () => {
       expect(mockMatchesService.getAllMatches).toHaveBeenCalledTimes(1);
     });
 
-    it("should include harmony session info in match results", async () => {
-      const expected = {
-        matches: [
-          {
-            matchId: "match-3",
-            hasActiveHarmony: true,
-            harmonySessionId: "session-abc",
-            partner: { userId: "p3", firstName: "Zeynep" },
-          },
-        ],
-        total: 1,
-      };
-      mockMatchesService.getAllMatches.mockResolvedValue(expected);
-
-      const result = await controller.getAllMatches(userId);
-
-      expect(result.matches[0].hasActiveHarmony).toBe(true);
-      expect(result.matches[0].harmonySessionId).toBe("session-abc");
-    });
   });
 
   // ═══════════════════════════════════════════════════════════════
@@ -166,7 +145,6 @@ describe("MatchesController", () => {
           photos: [{ id: "photo-1", url: "https://cdn.luma.app/photo.jpg" }],
           badges: [{ key: "early_bird", name: "Erken Kuş", icon: "badge.png" }],
         },
-        harmonySessions: [],
       };
       mockMatchesService.getMatch.mockResolvedValue(expected);
 

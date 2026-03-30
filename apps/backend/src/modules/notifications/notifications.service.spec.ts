@@ -153,7 +153,6 @@ describe("NotificationsService", () => {
         userId,
         newMatches: true,
         messages: true,
-        harmonyInvites: true,
         badges: true,
         system: true,
         allDisabled: false,
@@ -187,7 +186,6 @@ describe("NotificationsService", () => {
         userId: "u1",
         newMatches: true,
         messages: true,
-        harmonyInvites: true,
         badges: true,
         system: true,
         allDisabled: true,
@@ -212,7 +210,6 @@ describe("NotificationsService", () => {
         userId: "u1",
         newMatches: false,
         messages: true,
-        harmonyInvites: true,
         badges: true,
         system: true,
         allDisabled: false,
@@ -240,7 +237,6 @@ describe("NotificationsService", () => {
       expect(result).toEqual({
         newMatches: true,
         messages: true,
-        harmonyInvites: true,
         badges: true,
         system: true,
         allDisabled: false,
@@ -256,7 +252,6 @@ describe("NotificationsService", () => {
         userId: "u1",
         newMatches: false,
         messages: true,
-        harmonyInvites: false,
         badges: true,
         system: true,
         allDisabled: false,
@@ -270,7 +265,6 @@ describe("NotificationsService", () => {
       const result = await service.getPreferences("u1");
 
       expect(result.newMatches).toBe(false);
-      expect(result.harmonyInvites).toBe(false);
       expect(result.messages).toBe(true);
     });
   });
@@ -282,7 +276,6 @@ describe("NotificationsService", () => {
         userId: "u1",
         newMatches: true,
         messages: false,
-        harmonyInvites: true,
         badges: true,
         system: true,
         allDisabled: false,
@@ -305,21 +298,6 @@ describe("NotificationsService", () => {
       const createCall = mockPrisma.notification.create.mock.calls[0][0];
       expect(createCall.data.body.length).toBeLessThanOrEqual(100);
       expect(createCall.data.body).toContain("...");
-    });
-  });
-
-  describe("notifyHarmonyReminder()", () => {
-    it("should send HARMONY_REMINDER notification with minutes remaining", async () => {
-      mockPrisma.notificationPreference.findUnique.mockResolvedValue(null);
-      mockPrisma.notification.create.mockResolvedValue({ id: "n1" });
-      mockPrisma.deviceToken.findMany.mockResolvedValue([]);
-
-      const result = await service.notifyHarmonyReminder("u1", "Elif", 5);
-
-      expect(result.stored).toBe(true);
-      const createCall = mockPrisma.notification.create.mock.calls[0][0];
-      expect(createCall.data.type).toBe("HARMONY_REMINDER");
-      expect(createCall.data.body).toContain("5 dakika");
     });
   });
 
@@ -360,7 +338,6 @@ describe("NotificationsService", () => {
       userId: "u1",
       newMatches: true,
       messages: true,
-      harmonyInvites: true,
       badges: true,
       system: true,
       allDisabled: false,
@@ -445,7 +422,6 @@ describe("NotificationsService", () => {
         userId: "u1",
         newMatches: false,
         messages: true,
-        harmonyInvites: true,
         badges: true,
         system: true,
         allDisabled: false,
@@ -482,7 +458,6 @@ describe("NotificationsService", () => {
         userId: "u1",
         newMatches: true,
         messages: true,
-        harmonyInvites: true,
         badges: false,
         system: true,
         allDisabled: false,

@@ -179,8 +179,8 @@ describe("FirebaseProvider", () => {
     it("should return messageId on success (mock mode)", async () => {
       const messageId = await provider.sendPush(
         "token-123",
-        "Harmony Daveti",
-        "Elif seni davet etti",
+        "Yeni Rozet!",
+        "Yeni rozet kazandin",
       );
 
       expect(messageId).toMatch(/^mock_\d+$/);

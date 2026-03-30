@@ -466,16 +466,6 @@ describe('Payments E2E — /api/v1/payments', () => {
       expect(mockPaymentsService.spendGold).toHaveBeenCalled();
     });
 
-    it('should accept harmony_extension action', async () => {
-      mockPaymentsService.spendGold.mockResolvedValue({ goldSpent: 10 });
-
-      await request(app.getHttpServer())
-        .post('/api/v1/payments/gold/spend')
-        .set('Authorization', `Bearer ${jwtToken}`)
-        .send({ action: 'harmony_extension', referenceId: 'session-uuid-1' })
-        .expect(201);
-    });
-
     it('should accept profile_boost action', async () => {
       mockPaymentsService.spendGold.mockResolvedValue({ goldSpent: 30 });
 

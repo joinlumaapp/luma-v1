@@ -25,10 +25,6 @@ export type NotificationRouteType =
   | 'COMPATIBILITY_UPDATE'
   | 'boost_active'
   | 'BOOST_ACTIVE'
-  | 'harmony_invite'
-  | 'HARMONY_INVITE'
-  | 'harmony_reminder'
-  | 'HARMONY_REMINDER'
   | 'relationship_request'
   | 'RELATIONSHIP_REQUEST'
   | 'subscription_expiring'
@@ -181,14 +177,6 @@ export function mapNotificationToScreen(
     // Boost aktif — DiscoveryScreen
     case 'BOOST_ACTIVE':
       return { screen: 'Discovery', params: undefined };
-
-    // Harmony daveti — MatchDetailScreen (Harmony orada başlatılır)
-    case 'HARMONY_INVITE':
-    case 'HARMONY_REMINDER': {
-      const matchId = data.matchId as string | undefined;
-      if (!matchId) return null;
-      return { screen: 'MatchDetail', params: { matchId } };
-    }
 
     // İlişki isteği — MatchDetailScreen
     case 'RELATIONSHIP_REQUEST': {

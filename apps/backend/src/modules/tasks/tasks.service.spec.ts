@@ -9,7 +9,6 @@ describe("TasksService", () => {
   let service: TasksService;
 
   const mockPrisma = {
-    harmonySession: { updateMany: jest.fn() },
     userVerification: { updateMany: jest.fn(), deleteMany: jest.fn() },
     dailySwipeCount: { deleteMany: jest.fn() },
     subscription: { updateMany: jest.fn(), findMany: jest.fn() },
@@ -49,37 +48,6 @@ describe("TasksService", () => {
 
   it("should be defined", () => {
     expect(service).toBeDefined();
-  });
-
-  // ═══════════════════════════════════════════════════════════════
-  // endExpiredHarmonySessions()
-  // ═══════════════════════════════════════════════════════════════
-
-  describe("endExpiredHarmonySessions()", () => {
-    it("should end expired active and extended harmony sessions", async () => {
-      mockPrisma.harmonySession.updateMany.mockResolvedValue({ count: 3 });
-
-      await service.endExpiredHarmonySessions();
-
-      expect(mockPrisma.harmonySession.updateMany).toHaveBeenCalledWith({
-        where: {
-          status: { in: ["ACTIVE", "EXTENDED"] },
-          endsAt: { lt: expect.any(Date) },
-        },
-        data: {
-          status: "ENDED",
-          actualEndedAt: expect.any(Date),
-        },
-      });
-    });
-
-    it("should not throw when no sessions to expire", async () => {
-      mockPrisma.harmonySession.updateMany.mockResolvedValue({ count: 0 });
-
-      await expect(
-        service.endExpiredHarmonySessions(),
-      ).resolves.toBeUndefined();
-    });
   });
 
   // ═══════════════════════════════════════════════════════════════

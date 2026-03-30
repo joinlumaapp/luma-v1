@@ -1,6 +1,5 @@
 // LUMA — Real-time WebSocket service
 // Singleton Socket.IO client with auto-reconnect, event queue, and connection state tracking.
-// Connects to both /chat and /harmony namespaces via a unified API.
 
 import { io, Socket } from 'socket.io-client';
 import { APP_CONFIG } from '../constants/config';
@@ -73,14 +72,6 @@ export interface PresencePayload {
   lastSeen: string;
 }
 
-/** Harmony invite notification */
-export interface HarmonyInvitePayload {
-  sessionId: string;
-  inviterId: string;
-  inviterName: string;
-  timestamp: string;
-}
-
 /** User listening status update */
 export interface ListeningPayload {
   songTitle: string;
@@ -148,7 +139,6 @@ export interface ServerEventMap {
   [WS_EVENTS.CHAT_STOP_TYPING]: ChatTypingPayload;
   [WS_EVENTS.NOTIFICATION_NEW_MATCH]: NewMatchPayload;
   [WS_EVENTS.NOTIFICATION_NEW_MESSAGE]: ChatMessagePayload;
-  [WS_EVENTS.NOTIFICATION_HARMONY_INVITE]: HarmonyInvitePayload;
   'user:online': PresencePayload;
   'user:offline': PresencePayload;
   'user:listening': { userId: string; listening: ListeningPayload | null };
@@ -179,7 +169,6 @@ type ConnectionStateListener = (state: ConnectionState) => void;
 
 class SocketService {
   private chatSocket: Socket | null = null;
-  private harmonySocket: Socket | null = null;
   private connectionState: ConnectionState = 'disconnected';
   private reconnectAttempts = 0;
   private readonly maxReconnectAttempts = 15;
@@ -189,7 +178,6 @@ class SocketService {
   private reconnectCallbacks: Array<() => void> = [];
   private connectionStateListeners: ConnectionStateListener[] = [];
   private pendingEmits: QueuedEmit[] = [];
-  private pendingHarmonyEmits: QueuedEmit[] = [];
   private readonly maxPendingEmits = 100;
   private currentToken: string | null = null;
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
@@ -240,7 +228,6 @@ class SocketService {
   disconnect(): void {
     this.stopHeartbeat();
     this.pendingEmits = [];
-    this.pendingHarmonyEmits = [];
     this.reconnectCallbacks = [];
 
     if (this.chatSocket) {
@@ -248,8 +235,6 @@ class SocketService {
       this.chatSocket.disconnect();
       this.chatSocket = null;
     }
-
-    this.disconnectHarmony();
 
     this.currentToken = null;
     this.reconnectAttempts = 0;
@@ -308,130 +293,34 @@ class SocketService {
     this.emit(WS_EVENTS.CHAT_READ, { matchId });
   }
 
-  // ─── Harmony Room Connection ─────────────────────────────────
-
-  /**
-   * Connect to the Harmony namespace for real-time room interactions.
-   */
-  connectHarmony(): void {
-    if (this.harmonySocket?.connected) return;
-
-    if (!this.currentToken) {
-      logger.warn('[SocketService] Harmony baglantisi icin token gerekli');
-      return;
-    }
-
-    if (this.harmonySocket) {
-      this.harmonySocket.removeAllListeners();
-      this.harmonySocket.disconnect();
-      this.harmonySocket = null;
-    }
-
-    this.harmonySocket = io(`${APP_CONFIG.WS_BASE_URL}/harmony`, {
-      auth: { token: this.currentToken },
-      transports: ['websocket'],
-      reconnection: true,
-      reconnectionAttempts: this.maxReconnectAttempts,
-      reconnectionDelay: this.baseReconnectDelay,
-      reconnectionDelayMax: this.maxReconnectDelay,
-      timeout: 15000,
-      autoConnect: true,
-    });
-
-    this.harmonySocket.on('connect', () => {
-      logger.log(`[SocketService] Harmony baglandi (id: ${this.harmonySocket?.id})`);
-      this.flushPendingHarmonyEmits();
-    });
-
-    this.harmonySocket.on('disconnect', (reason) => {
-      logger.log(`[SocketService] Harmony baglanti kesildi: ${reason}`);
-    });
-
-    this.harmonySocket.on('connect_error', (error) => {
-      logger.warn('[SocketService] Harmony baglanti hatasi:', (error as Error).message);
-    });
-  }
-
-  /**
-   * Disconnect from the Harmony namespace.
-   */
-  disconnectHarmony(): void {
-    this.pendingHarmonyEmits = [];
-    if (this.harmonySocket) {
-      this.harmonySocket.removeAllListeners();
-      this.harmonySocket.disconnect();
-      this.harmonySocket = null;
-    }
-  }
-
-  /**
-   * Register a listener on the Harmony socket.
-   */
-  onHarmony(event: string, callback: (data: unknown) => void): () => void {
-    if (!this.harmonySocket) {
-      logger.warn('[SocketService] Harmony dinleyici eklenemedi - soket bagli degil');
-      return () => {};
-    }
-    this.harmonySocket.on(event, callback);
-    return () => {
-      this.harmonySocket?.off(event, callback);
-    };
-  }
-
-  // ─── Harmony Room Emitters ─────────────────────────────────
-
-  joinHarmonySession(sessionId: string): void {
-    this.emitHarmony(WS_EVENTS.HARMONY_JOIN, { sessionId });
-  }
-
-  leaveHarmonySession(sessionId: string): void {
-    this.emitHarmony(WS_EVENTS.HARMONY_LEAVE, { sessionId });
-  }
-
-  sendHarmonyMessage(sessionId: string, content: string): void {
-    this.emitHarmony(WS_EVENTS.HARMONY_SEND_MESSAGE, { sessionId, content });
-  }
-
-  revealHarmonyCard(sessionId: string, cardId: string): void {
-    this.emitHarmony(WS_EVENTS.HARMONY_REVEAL_CARD, { sessionId, cardId });
-  }
-
-  sendHarmonyReaction(sessionId: string, cardId: string, reaction: string): void {
-    this.emitHarmony(WS_EVENTS.HARMONY_REACT, { sessionId, cardId, reaction });
-  }
-
-  requestHarmonyTimer(sessionId: string): void {
-    this.emitHarmony(WS_EVENTS.HARMONY_REQUEST_TIMER, { sessionId });
-  }
-
-  // ─── WebRTC Call Signaling (via Harmony namespace) ─────────
+  // ─── Call Signaling Emitters ────────────────────────────────
 
   initiateCall(sessionId: string, callType: CallType): void {
-    this.emitHarmony(WS_EVENTS.CALL_INITIATE, { sessionId, callType });
+    this.emit(WS_EVENTS.CALL_INITIATE, { sessionId, callType });
   }
 
   acceptCall(sessionId: string): void {
-    this.emitHarmony(WS_EVENTS.CALL_ACCEPT, { sessionId });
+    this.emit(WS_EVENTS.CALL_ACCEPT, { sessionId });
   }
 
   rejectCall(sessionId: string, reason?: string): void {
-    this.emitHarmony(WS_EVENTS.CALL_REJECT, { sessionId, reason });
+    this.emit(WS_EVENTS.CALL_REJECT, { sessionId, reason });
   }
 
   endCall(sessionId: string): void {
-    this.emitHarmony(WS_EVENTS.CALL_END, { sessionId });
+    this.emit(WS_EVENTS.CALL_END, { sessionId });
   }
 
   sendWebRTCOffer(sessionId: string, sdp: string): void {
-    this.emitHarmony(WS_EVENTS.WEBRTC_OFFER, { sessionId, sdp });
+    this.emit(WS_EVENTS.WEBRTC_OFFER, { sessionId, sdp });
   }
 
   sendWebRTCAnswer(sessionId: string, sdp: string): void {
-    this.emitHarmony(WS_EVENTS.WEBRTC_ANSWER, { sessionId, sdp });
+    this.emit(WS_EVENTS.WEBRTC_ANSWER, { sessionId, sdp });
   }
 
   sendICECandidate(sessionId: string, candidate: string): void {
-    this.emitHarmony(WS_EVENTS.WEBRTC_ICE_CANDIDATE, { sessionId, candidate });
+    this.emit(WS_EVENTS.WEBRTC_ICE_CANDIDATE, { sessionId, candidate });
   }
 
   // ─── Event Listener Management ─────────────────────────────
@@ -575,37 +464,6 @@ class SocketService {
       return;
     }
     this.chatSocket.emit(event, data);
-  }
-
-  /**
-   * Safely emit an event on the Harmony socket. Queues if disconnected.
-   */
-  private emitHarmony(event: string, data: Record<string, unknown>): void {
-    if (!this.harmonySocket?.connected) {
-      if (this.pendingHarmonyEmits.length < this.maxPendingEmits) {
-        this.pendingHarmonyEmits.push({ event, data, timestamp: Date.now() });
-      }
-      logger.warn(`[SocketService] Harmony "${event}" kuyruga eklendi`);
-      return;
-    }
-    this.harmonySocket.emit(event, data);
-  }
-
-  /**
-   * Flush queued Harmony events after reconnection.
-   * Events older than 5 minutes are discarded (stale data).
-   */
-  private flushPendingHarmonyEmits(): void {
-    if (!this.harmonySocket?.connected || this.pendingHarmonyEmits.length === 0) return;
-    const now = Date.now();
-    const pending = [...this.pendingHarmonyEmits];
-    this.pendingHarmonyEmits = [];
-    for (const item of pending) {
-      if (now - item.timestamp > this.pendingEmitTtlMs) {
-        continue;
-      }
-      this.harmonySocket.emit(item.event, item.data);
-    }
   }
 
   /**

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { BadgesService } from "./badges.service";
 import { PrismaService } from "../../prisma/prisma.service";
+import { NotificationsService } from "../notifications/notifications.service";
 
 const mockPrisma = {
   badgeDefinition: { findMany: jest.fn(), findUnique: jest.fn() },
@@ -9,7 +10,6 @@ const mockPrisma = {
   goldTransaction: { create: jest.fn() },
   notification: { create: jest.fn() },
   match: { count: jest.fn() },
-  harmonySession: { count: jest.fn() },
   userAnswer: { count: jest.fn() },
   $transaction: jest.fn(),
 };
@@ -23,6 +23,10 @@ describe("BadgesService", () => {
       providers: [
         BadgesService,
         { provide: PrismaService, useValue: mockPrisma },
+        {
+          provide: NotificationsService,
+          useValue: { notifyBadgeEarned: jest.fn().mockResolvedValue({}) },
+        },
       ],
     }).compile();
     service = module.get<BadgesService>(BadgesService);

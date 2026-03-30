@@ -325,7 +325,6 @@ describe("NotificationsController", () => {
       const expected = {
         newMatches: true,
         messages: true,
-        harmonyInvites: true,
         badges: true,
         system: true,
         allDisabled: false,
@@ -366,7 +365,6 @@ describe("NotificationsController", () => {
       const expected = {
         newMatches: false,
         messages: true,
-        harmonyInvites: true,
         badges: false,
         system: true,
         allDisabled: false,
@@ -390,7 +388,6 @@ describe("NotificationsController", () => {
         allDisabled: true,
         newMatches: true,
         messages: true,
-        harmonyInvites: true,
         badges: true,
         system: true,
       });

@@ -33,36 +33,29 @@
 - **Overlay Text (EN)**: "Find your soulmate!"
 - **Key Elements**: Two profile photos, match animation, confetti/hearts
 
-### 4. Harmony Room
-- **File**: `04-harmony-room.png`
-- **Content**: Inside a Harmony Room session with guided conversation
-- **Overlay Text (TR)**: "Interaktif tanisma deneyimi"
-- **Overlay Text (EN)**: "Interactive dating experience"
-- **Key Elements**: Chat interface, icebreaker questions, timer
-
-### 5. Chat / Messaging
-- **File**: `05-chat.png`
+### 4. Chat / Messaging
+- **File**: `04-chat.png`
 - **Content**: Active conversation between two matched users
 - **Overlay Text (TR)**: "Anlamli sohbetler"
 - **Overlay Text (EN)**: "Meaningful conversations"
 - **Key Elements**: Message bubbles, text input, profile header
 
-### 6. Profile Detail
-- **File**: `06-profile-detail.png`
+### 5. Profile Detail
+- **File**: `05-profile-detail.png`
 - **Content**: Full profile view showing photos, bio, compatibility info
 - **Overlay Text (TR)**: "Detayli profiller"
 - **Overlay Text (EN)**: "Detailed profiles"
 - **Key Elements**: Photo gallery, bio section, intention tag, badges
 
-### 7. Onboarding Questions
-- **File**: `07-onboarding-questions.png`
+### 6. Onboarding Questions
+- **File**: `06-onboarding-questions.png`
 - **Content**: One of the 45 compatibility questions during onboarding
 - **Overlay Text (TR)**: "45 bilimsel uyumluluk sorusu"
 - **Overlay Text (EN)**: "45 scientific compatibility questions"
 - **Key Elements**: Question card, answer options, progress indicator
 
-### 8. Packages / Premium
-- **File**: `08-packages.png`
+### 7. Packages / Premium
+- **File**: `07-packages.png`
 - **Content**: Package comparison showing Free, Gold, Pro, Reserved
 - **Overlay Text (TR)**: "Sana uygun paketi sec"
 - **Overlay Text (EN)**: "Choose your perfect plan"
@@ -109,20 +102,18 @@ apps/mobile/store/google-play/screenshots/
     01-discovery-feed.png
     02-compatibility-result.png
     03-match-animation.png
-    04-harmony-room.png
-    05-chat.png
-    06-profile-detail.png
-    07-onboarding-questions.png
-    08-packages.png
+    04-chat.png
+    05-profile-detail.png
+    06-onboarding-questions.png
+    07-packages.png
   en/
     01-discovery-feed.png
     02-compatibility-result.png
     03-match-animation.png
-    04-harmony-room.png
-    05-chat.png
-    06-profile-detail.png
-    07-onboarding-questions.png
-    08-packages.png
+    04-chat.png
+    05-profile-detail.png
+    06-onboarding-questions.png
+    07-packages.png
   feature-graphic.png
   app-icon.png
 ```

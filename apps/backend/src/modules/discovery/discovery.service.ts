@@ -10,7 +10,6 @@ import { NotificationsService } from "../notifications/notifications.service";
 import { SearchService } from "../search/search.service";
 import { LumaCacheService, CACHE_KEYS } from "../cache/cache.service";
 import { TTL_DISCOVERY_FEED } from "../cache/cache-keys";
-import { HarmonyGateway } from "../harmony/harmony.gateway";
 import { SwipeDto, SwipeDirection } from "./dto";
 import { FeedFilterDto, GenderPreferenceParam } from "./dto/feed-filter.dto";
 import { calculateAge } from "../../common/utils/date.utils";
@@ -159,7 +158,6 @@ export class DiscoveryService {
     private readonly notificationsService: NotificationsService,
     private readonly searchService: SearchService,
     private readonly cache: LumaCacheService,
-    private readonly harmonyGateway: HarmonyGateway,
   ) {}
 
   // ─── Public: Discovery Feed ─────────────────────────────────────
@@ -941,19 +939,6 @@ export class DiscoveryService {
         .notifyNewMatch(userId, result.targetName)
         .catch(() => {});
 
-      // Emit real-time WebSocket match event to both users
-      const matchEventData = {
-        matchId: result.matchId,
-        animationType: result.animationType,
-      };
-      this.harmonyGateway.notifyUser(userId, 'notification:new_match', {
-        ...matchEventData,
-        partnerName: result.targetName,
-      });
-      this.harmonyGateway.notifyUser(dto.targetUserId, 'notification:new_match', {
-        ...matchEventData,
-        partnerName: result.swiperName,
-      });
     }
 
     // Send push notification for super likes (outside transaction, fire-and-forget)

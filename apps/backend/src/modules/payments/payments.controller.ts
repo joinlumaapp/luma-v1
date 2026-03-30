@@ -169,7 +169,7 @@ export class PaymentsController {
   @ApiBearerAuth()
   @ApiOperation({
     summary:
-      "Spend gold on an action (harmony_extension, profile_boost, super_like)",
+      "Spend gold on an action (profile_boost, super_like, etc.)",
   })
   async spendGold(
     @CurrentUser("sub") userId: string,

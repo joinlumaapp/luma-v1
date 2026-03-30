@@ -30,7 +30,6 @@ const PACKAGE_DEFINITIONS = {
       dailySwipes: 999999,
       coreQuestions: 20,
       premiumQuestions: 0,
-      harmonyMinutes: 30,
       monthlyGold: 0,
       dailyCompatibilityChecks: 1,
       dailySuperCompatibility: 0,
@@ -51,7 +50,6 @@ const PACKAGE_DEFINITIONS = {
       dailySwipes: 999999,
       coreQuestions: 20,
       premiumQuestions: 25,
-      harmonyMinutes: 30,
       monthlyGold: 250,
       dailyCompatibilityChecks: 3,
       dailySuperCompatibility: 0,
@@ -72,7 +70,6 @@ const PACKAGE_DEFINITIONS = {
       dailySwipes: 999999,
       coreQuestions: 20,
       premiumQuestions: 25,
-      harmonyMinutes: 45,
       monthlyGold: 500,
       dailyCompatibilityChecks: 5,
       dailySuperCompatibility: 1,
@@ -93,7 +90,6 @@ const PACKAGE_DEFINITIONS = {
       dailySwipes: 999999,
       coreQuestions: 20,
       premiumQuestions: 25,
-      harmonyMinutes: 60,
       monthlyGold: 1000,
       dailyCompatibilityChecks: 999999,
       dailySuperCompatibility: 3,
@@ -119,10 +115,6 @@ const GOLD_PACKS: Record<
 
 // Gold spending costs per action
 const GOLD_COSTS: Record<string, { cost: number; descriptionTr: string }> = {
-  harmony_extension: {
-    cost: 50,
-    descriptionTr: "Harmony Room sure uzatma (15 dk)",
-  },
   profile_boost: { cost: 100, descriptionTr: "Profil one cikarma (24 saat)" },
   super_like: { cost: 25, descriptionTr: "Super begeni gonderme" },
   read_receipts: { cost: 15, descriptionTr: "Mesaj okundu bilgisi (tek kullanimlik)" },
@@ -822,7 +814,7 @@ export class PaymentsService {
   }
 
   /**
-   * Spend Gold on an action (harmony extension, profile boost, super like).
+   * Spend Gold on an action (profile boost, super like, etc.).
    *
    * Uses pessimistic locking via raw SQL to prevent race conditions:
    * UPDATE ... WHERE goldBalance >= cost atomically checks and decrements.
@@ -837,7 +829,6 @@ export class PaymentsService {
 
     // Map action to transaction type
     const transactionTypeMap: Record<string, string> = {
-      harmony_extension: "HARMONY_EXTENSION",
       profile_boost: "PROFILE_BOOST",
       super_like: "SUPER_LIKE",
       read_receipts: "READ_RECEIPTS",
@@ -886,7 +877,7 @@ export class PaymentsService {
         data: {
           userId,
           type: (transactionTypeMap[dto.action] ??
-            "HARMONY_EXTENSION") as import("@prisma/client").GoldTransactionType,
+            "PROFILE_BOOST") as import("@prisma/client").GoldTransactionType,
           amount: -actionConfig.cost,
           balance: newBalance,
           description: actionConfig.descriptionTr,

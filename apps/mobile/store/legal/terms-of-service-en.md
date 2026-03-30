@@ -13,7 +13,6 @@ LUMA is a compatibility-based dating application. Our services include:
 - Profile creation and management
 - Scientific matching with 45 compatibility questions
 - 15-dimension compatibility analysis
-- Harmony Room interactive dating experience
 - Messaging
 - Selfie verification
 - Premium subscription packages
