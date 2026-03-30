@@ -703,7 +703,7 @@ export const SocialFeedScreen: React.FC = () => {
   // Flirt and prompt logic removed — actions moved to profile screen
 
 
-  const handlePostTypeSelect = useCallback((type: FeedPostType) => {
+  const checkDailyLimit = useCallback((): boolean => {
     const tierPostLimit = FEED_POST_CONFIG.DAILY_LIMITS[packageTier as keyof typeof FEED_POST_CONFIG.DAILY_LIMITS];
     const isUnlimitedPosts = tierPostLimit === -1;
     if (!isUnlimitedPosts) {
@@ -721,12 +721,42 @@ export const SocialFeedScreen: React.FC = () => {
             },
           ],
         );
-        return;
+        return false;
       }
     }
-    setSelectedPostType(type);
-    setShowCreateModal(true);
+    return true;
   }, [packageTier, dailyPostCount, lastPostDate, navigation]);
+
+  // Fotoğraf butonu — direkt galeri açılsın
+  const handlePhotoPost = useCallback(async () => {
+    if (!checkDailyLimit()) return;
+    const uri = await photoService.pickFromGallery();
+    if (uri) {
+      createPost({ content: '', postType: 'photo', photoUrls: [uri] });
+      const today = getToday();
+      setDailyPostCount((prev) => (lastPostDate === today ? prev + 1 : 1));
+      setLastPostDate(today);
+    }
+  }, [checkDailyLimit, createPost, lastPostDate]);
+
+  // Video butonu — direkt galeri açılsın
+  const handleVideoPost = useCallback(async () => {
+    if (!checkDailyLimit()) return;
+    const uri = await photoService.pickFromGallery();
+    if (uri) {
+      createPost({ content: '', postType: 'video', photoUrls: [], videoUrl: uri });
+      const today = getToday();
+      setDailyPostCount((prev) => (lastPostDate === today ? prev + 1 : 1));
+      setLastPostDate(today);
+    }
+  }, [checkDailyLimit, createPost, lastPostDate]);
+
+  // Yazı butonu — modal açılsın
+  const handleTextPost = useCallback(() => {
+    if (!checkDailyLimit()) return;
+    setSelectedPostType('text');
+    setShowCreateModal(true);
+  }, [checkDailyLimit]);
 
   const handleCreatePost = useCallback(
     (content: string, postType: FeedPostType, photoUrls: string[], videoUrl: string | null) => {
@@ -826,26 +856,20 @@ export const SocialFeedScreen: React.FC = () => {
       <View>
         {/* ── Create Post Card ── */}
         <View style={createStyles.card}>
-          <TouchableOpacity
-            onPress={() => handlePostTypeSelect('text')}
-            activeOpacity={0.85}
-          >
-            <Text style={createStyles.placeholder}>Gönderini paylaş...</Text>
-          </TouchableOpacity>
+          <Text style={createStyles.placeholder}>Gönderini paylaş...</Text>
           <View style={createStyles.iconRow}>
-            <TouchableOpacity style={createStyles.iconChip} onPress={() => handlePostTypeSelect('photo')} activeOpacity={0.7}>
+            <TouchableOpacity style={createStyles.iconChip} onPress={handlePhotoPost} activeOpacity={0.7}>
               <Ionicons name="camera" size={18} color={palette.purple[400]} />
               <Text style={[createStyles.iconLabel, { color: palette.purple[400] }]}>Fotoğraf</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={createStyles.iconChip} onPress={() => handlePostTypeSelect('video')} activeOpacity={0.7}>
+            <TouchableOpacity style={createStyles.iconChip} onPress={handleVideoPost} activeOpacity={0.7}>
               <Ionicons name="videocam" size={18} color="#EC4899" />
               <Text style={[createStyles.iconLabel, { color: '#EC4899' }]}>Video</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={createStyles.iconChip} onPress={() => handlePostTypeSelect('text')} activeOpacity={0.7}>
+            <TouchableOpacity style={createStyles.iconChip} onPress={handleTextPost} activeOpacity={0.7}>
               <Ionicons name="create" size={18} color="#10B981" />
               <Text style={[createStyles.iconLabel, { color: '#10B981' }]}>Yazı</Text>
             </TouchableOpacity>
-            {/* Müzik butonu kaldırıldı — music feature removed */}
           </View>
         </View>
 
