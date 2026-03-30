@@ -717,9 +717,10 @@ export const MatchesListScreen: React.FC = () => {
         }
       }
     };
-    hydrate();
-    fetchActivityStrip();
-    fetchWarmBanner();
+    hydrate().then(() => {
+      fetchActivityStrip();
+      fetchWarmBanner();
+    });
   }, [fetchMatches, hydrateFromStorage, updateMatchActivity, fetchActivityStrip, fetchWarmBanner]);
 
   // Set match countdowns for new matches that don't have messages

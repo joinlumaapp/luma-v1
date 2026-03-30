@@ -251,7 +251,22 @@ export const useMatchStore = create<MatchState>((set, get) => ({
       const res = await api.get('/matches/activity-strip');
       set({ activityStrip: res.data, isLoadingStrip: false });
     } catch {
-      set({ isLoadingStrip: false });
+      // Fallback: build strip from existing matches
+      const { matches } = get();
+      const fallbackStrip = matches.slice(0, 6).map((m) => ({
+        userId: m.userId,
+        name: m.name,
+        photoUrl: m.photoUrl,
+        ringType: (m.compatibilityPercent >= 80
+          ? 'super_compatible'
+          : m.isNew
+            ? 'new_like'
+            : 'nearby') as 'super_compatible' | 'nearby' | 'new_like' | 'locked',
+        compatibilityPercent: m.compatibilityPercent,
+        distanceKm: null,
+        isRevealed: true,
+      }));
+      set({ activityStrip: fallbackStrip, isLoadingStrip: false });
     }
   },
 
@@ -260,7 +275,27 @@ export const useMatchStore = create<MatchState>((set, get) => ({
       const res = await api.get('/matches/warm-banner');
       set({ warmBanner: res.data });
     } catch {
-      // Banner is optional, don't show error
+      // Fallback banner from existing matches
+      const { matches } = get();
+      const newCount = matches.filter((m) => m.isNew).length;
+      if (matches.length > 0) {
+        const topMatch = [...matches].sort((a, b) => b.compatibilityPercent - a.compatibilityPercent)[0];
+        set({
+          warmBanner: topMatch && topMatch.compatibilityPercent >= 80
+            ? {
+                message: `Seninle %${topMatch.compatibilityPercent} uyumlu biri var!`,
+                detail: `${topMatch.name} ile tanismaya ne dersin?`,
+                emoji: '\u{1F49B}',
+                type: 'super_compatible' as const,
+              }
+            : {
+                message: `${matches.length} eslesmen seni bekliyor!`,
+                detail: newCount > 0 ? `${newCount} yeni eslesme var` : null,
+                emoji: '\u{1F49C}',
+                type: 'weekly_summary' as const,
+              },
+        });
+      }
     }
   },
 }));
