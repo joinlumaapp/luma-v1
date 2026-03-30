@@ -17,6 +17,7 @@ import {
   RefreshControl,
   Platform,
   Modal,
+  TouchableOpacity,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,8 +30,10 @@ import type { DiscoveryStackParamList, MatchesStackParamList, MainTabParamList }
 import { discoveryService } from '../../services/discoveryService';
 import type { LikeYouCard } from '../../services/discoveryService';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
-import { LIKES_VIEW_CONFIG } from '../../constants/config';
+import { LIKES_VIEW_CONFIG, SUPER_COMPATIBLE_THRESHOLD } from '../../constants/config';
 import { useScreenTracking } from '../../hooks/useAnalytics';
+import { useLikesRevealStore } from '../../stores/likesRevealStore';
+import { DailyRevealCounter } from '../../components/matches/DailyRevealCounter';
 import { SlideIn } from '../../components/animations/SlideIn';
 import { UpgradePrompt } from '../../components/premium/UpgradePrompt';
 import { colors, palette } from '../../theme/colors';
@@ -357,10 +360,57 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, smartLabel, onCa
 
           {/* Blur overlay with animated lock + progress ring */}
           {isBlurred && (
-            <View style={styles.blurOverlay}>
+            <View style={[
+              styles.blurOverlay,
+              // Super compatible dashed border hint
+              card.compatibilityPercent >= SUPER_COMPATIBLE_THRESHOLD && {
+                borderColor: 'rgba(251,191,36,0.3)',
+                borderWidth: 1,
+                borderStyle: 'dashed' as const,
+              },
+            ]}>
               <View style={styles.lockPositioner}>
                 <AnimatedLock index={index} />
               </View>
+              {/* Tap-to-reveal hint */}
+              <View style={{
+                ...StyleSheet.absoluteFillObject,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+                <View style={{
+                  width: 36, height: 36, borderRadius: 18,
+                  backgroundColor: 'rgba(139,92,246,0.2)',
+                  borderWidth: 1, borderColor: 'rgba(139,92,246,0.4)',
+                  justifyContent: 'center', alignItems: 'center',
+                  marginTop: 50,
+                }}>
+                  <Text style={{ fontSize: 16 }}>{'🔒'}</Text>
+                </View>
+                <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 9, marginTop: 4 }}>
+                  Açmak için dokun
+                </Text>
+                {/* Super compatible hint label */}
+                {card.compatibilityPercent >= SUPER_COMPATIBLE_THRESHOLD && (
+                  <Text style={{ color: 'rgba(251,191,36,0.6)', fontSize: 9, marginTop: 4 }}>
+                    Süper uyumlu!
+                  </Text>
+                )}
+              </View>
+            </View>
+          )}
+
+          {/* Nearby badge on revealed (non-blurred) cards */}
+          {!isBlurred && card.distanceKm != null && card.distanceKm <= 5 && (
+            <View style={{
+              position: 'absolute', top: 6, right: 6,
+              backgroundColor: 'rgba(240,77,58,0.85)',
+              borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2,
+              zIndex: 3,
+            }}>
+              <Text style={{ color: '#fff', fontSize: 8, fontWeight: '600' }}>
+                {'📍'} {card.distanceKm.toFixed(1)}km
+              </Text>
             </View>
           )}
 
@@ -553,6 +603,8 @@ export const LikesYouScreen: React.FC = () => {
   const packageTier = (useAuthStore((s) => s.user?.packageTier ?? 'FREE')) as PackageTier;
   const isBlurred = packageTier === 'FREE';
 
+  const { revealProfile, getDailyLimit, isRevealed, dailyRevealsUsed } = useLikesRevealStore();
+
   // Daily view limit
   const dailyLimit = LIKES_VIEW_CONFIG.DAILY_LIMITS[packageTier];
   const isUnlimitedViews = dailyLimit === -1;
@@ -637,17 +689,28 @@ export const LikesYouScreen: React.FC = () => {
   const [unlockedUserIds, setUnlockedUserIds] = useState<Set<string>>(new Set());
 
   const handleCardPress = useCallback((userId: string) => {
-    if (unlockedUserIds.has(userId)) {
+    // Already revealed via likesRevealStore or locally unlocked — go straight to profile
+    if (isRevealed(userId) || unlockedUserIds.has(userId)) {
       navigation.navigate('ProfilePreview', { userId });
       return;
     }
 
-    // If blurred and tapped — show unlock modal
+    // If blurred (free user) and tapped — try reveal via store first
     if (isBlurred) {
+      const success = revealProfile(userId);
+      if (success) {
+        setUnlockedUserIds((prev) => new Set(prev).add(userId));
+        navigation.navigate('ProfilePreview', { userId });
+        return;
+      }
+      // Reveal limit reached — show unlock modal as upsell
       const card = likes.find((l) => l.userId === userId);
       if (card) {
         setModalCard(card);
         setShowModal(true);
+      } else {
+        // Fallback: navigate to jeton market
+        navigation.navigate('JetonMarket' as never);
       }
       return;
     }
@@ -663,7 +726,7 @@ export const LikesYouScreen: React.FC = () => {
       setUnlockedUserIds((prev) => new Set(prev).add(userId));
     }
     navigation.navigate('ProfilePreview', { userId });
-  }, [navigation, isBlurred, isUnlimitedViews, viewedToday, dailyLimit, unlockedUserIds, likes]);
+  }, [navigation, isBlurred, isUnlimitedViews, viewedToday, dailyLimit, unlockedUserIds, likes, isRevealed, revealProfile]);
 
   const handleUpgradePress = useCallback(() => {
     // Close the UnlockModal first, then show the UpgradePrompt bottom sheet.
@@ -696,7 +759,7 @@ export const LikesYouScreen: React.FC = () => {
 
   const renderItem = useCallback(
     ({ item, index }: { item: LikeYouCard; index: number }) => {
-      const isUnlocked = unlockedUserIds.has(item.userId);
+      const isUnlocked = unlockedUserIds.has(item.userId) || isRevealed(item.userId);
       const cardBlurred = isBlurred && !isUnlocked;
       return (
         <LikeCard
@@ -708,7 +771,7 @@ export const LikesYouScreen: React.FC = () => {
         />
       );
     },
-    [isBlurred, unlockedUserIds, handleCardPress, smartLabelsMap],
+    [isBlurred, unlockedUserIds, handleCardPress, smartLabelsMap, isRevealed],
   );
 
   const keyExtractor = useCallback((item: LikeYouCard) => item.userId, []);
@@ -764,6 +827,19 @@ export const LikesYouScreen: React.FC = () => {
               </Text>
             </View>
           </LinearGradient>
+        </View>,
+      );
+    }
+
+    // ── Daily reveal counter ──
+    if (isBlurred && likes.length > 0) {
+      elements.push(
+        <View key="daily-reveal-counter" style={{ marginBottom: spacing.md }}>
+          <DailyRevealCounter
+            used={dailyRevealsUsed}
+            limit={getDailyLimit()}
+            onBuyExtra={() => navigation.navigate('JetonMarket' as never)}
+          />
         </View>,
       );
     }
@@ -887,6 +963,7 @@ export const LikesYouScreen: React.FC = () => {
     total, likes.length, mostCompatible, nearestLike,
     isBlurred, isUnlimitedViews, viewsRemaining,
     handleUpgradePress, handleCardPress, unlockedUserIds,
+    dailyRevealsUsed, getDailyLimit, navigation,
   ]);
 
   // ─── Skeleton loading state ─────────────────────────────────
@@ -962,6 +1039,30 @@ export const LikesYouScreen: React.FC = () => {
         contentContainerStyle={styles.gridContent}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmpty}
+        ListFooterComponent={likes.length > 0 ? (
+          <View style={{
+            margin: 16, padding: 14,
+            backgroundColor: 'rgba(139,92,246,0.1)',
+            borderWidth: 1, borderColor: 'rgba(139,92,246,0.2)',
+            borderRadius: 14, alignItems: 'center',
+          }}>
+            <Text style={{ color: '#fff', fontSize: 13, fontWeight: '500' }}>
+              Tüm beğenenlerini görmek ister misin?
+            </Text>
+            <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 4 }}>
+              Gold üyeler günde 10 profil açabiliyor
+            </Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('MembershipPlans' as never)}
+              style={{
+                marginTop: 10, backgroundColor: '#8B5CF6',
+                borderRadius: 10, paddingVertical: 10, paddingHorizontal: 40,
+              }}
+            >
+              <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>{'Gold\'a Yükselt 👑'}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
