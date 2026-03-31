@@ -68,17 +68,16 @@ const getCompatColor = (percent: number): string => {
 
 // Determine smart label for a card
 const getSmartLabel = (card: LikeYouCard, likes: LikeYouCard[]): string | null => {
-  // Highest compatibility
-  const maxCompat = Math.max(...likes.map((l) => l.compatibilityPercent));
-  if (card.compatibilityPercent === maxCompat && card.compatibilityPercent >= 80) return 'En yüksek uyum';
-  // Nearest
-  if (card.distanceKm != null && card.distanceKm < 2) return 'Sana yakın';
-  // Most shared interests
-  const maxShared = Math.max(...likes.map((l) => l.sharedInterests ?? 0));
-  if ((card.sharedInterests ?? 0) === maxShared && maxShared >= 3) return 'Yüksek uyum';
   // Recent
   const diffMs = Date.now() - new Date(card.likedAt).getTime();
-  if (diffMs < 3600_000) return 'Yeni beğeni';
+  if (diffMs < 3600_000) return 'Yeni';
+  // Highest compatibility
+  const maxCompat = Math.max(...likes.map((l) => l.compatibilityPercent));
+  if (card.compatibilityPercent === maxCompat && card.compatibilityPercent >= 80) return 'Yüksek uyum';
+  // Nearest
+  if (card.distanceKm != null && card.distanceKm < 2) return 'Sana yakın';
+  // Active hint
+  if (diffMs < 86400_000) return 'Şu an aktif';
   return null;
 };
 
@@ -345,7 +344,7 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, smartLabel, onCa
             <Image
               source={{ uri: card.photoUrl }}
               style={styles.cardPhoto}
-              blurRadius={isBlurred ? 20 : 0}
+              blurRadius={isBlurred ? (index === 0 ? 12 : index <= 2 ? 18 : 25) : 0}
             />
           ) : (
             <LinearGradient
@@ -370,29 +369,34 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, smartLabel, onCa
               <View style={styles.lockPositioner}>
                 <AnimatedLock index={index} />
               </View>
-              {/* Tap-to-reveal hint */}
+              {/* Gradient lock with glow */}
               <View style={{
                 ...StyleSheet.absoluteFillObject,
                 justifyContent: 'center',
                 alignItems: 'center',
               }}>
-                <View style={{
-                  width: 36, height: 36, borderRadius: 18,
-                  backgroundColor: 'rgba(139,92,246,0.2)',
-                  borderWidth: 1, borderColor: 'rgba(139,92,246,0.4)',
-                  justifyContent: 'center', alignItems: 'center',
-                  marginTop: 50,
-                }}>
-                  <Text style={{ fontSize: 16 }}>{'🔒'}</Text>
-                </View>
-                <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 9, marginTop: 4 }}>
-                  Açmak için dokun
-                </Text>
-                {/* Super compatible hint label */}
-                {card.compatibilityPercent >= SUPER_COMPATIBLE_THRESHOLD && (
-                  <Text style={{ color: 'rgba(251,191,36,0.6)', fontSize: 9, marginTop: 4 }}>
-                    Süper uyumlu!
-                  </Text>
+                <LinearGradient
+                  colors={[palette.purple[400], palette.pink[400]]}
+                  style={{
+                    width: 40, height: 40, borderRadius: 20,
+                    justifyContent: 'center', alignItems: 'center',
+                    shadowColor: palette.purple[500],
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.6,
+                    shadowRadius: 12,
+                    elevation: 8,
+                  }}
+                >
+                  <Ionicons name="lock-closed" size={18} color="#fff" />
+                </LinearGradient>
+                {index === 0 && (
+                  <View style={{
+                    backgroundColor: palette.purple[500] + 'DD',
+                    paddingHorizontal: 8, paddingVertical: 3,
+                    borderRadius: 8, marginTop: 8,
+                  }}>
+                    <Text style={{ color: '#fff', fontSize: 10, fontWeight: '600' }}>Seni beğendi</Text>
+                  </View>
                 )}
               </View>
             </View>
@@ -731,14 +735,29 @@ export const LikesYouScreen: React.FC<LikesYouScreenProps> = ({ embedded = false
   ), [handleDiscoverPress]);
 
   const renderHeader = useCallback(() => {
-    return null;
-  }, [
-    total, likes.length, mostCompatible, nearestLike,
-    isBlurred, viewsRemaining,
-    handleUpgradePress, handleCardPress,
-    dailyRevealsUsed, getDailyLimit, navigation,
-    feedLikers, feedLikersTotal,
-  ]);
+    if (!isBlurred || total === 0) return null;
+
+    return (
+      <View style={styles.likesTeaseHeader}>
+        <Text style={styles.likesTeaseTitle}>
+          {total} kişi seni beğendi
+        </Text>
+        <Text style={styles.likesTeaseSubtitle}>Kim olduklarını gör</Text>
+        <Pressable onPress={handleUpgradePress} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}>
+          <LinearGradient
+            colors={[palette.purple[500], palette.purple[700]]}
+            style={styles.likesTeaseButton}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <Ionicons name="lock-open-outline" size={16} color="#fff" />
+            <Text style={styles.likesTeaseButtonText}>Kilidi Aç</Text>
+          </LinearGradient>
+        </Pressable>
+        <Text style={styles.likesTeaseSub}>Son 24 saat aktif kişiler</Text>
+      </View>
+    );
+  }, [total, isBlurred, handleUpgradePress]);
 
   // ─── Skeleton loading state ─────────────────────────────────
 
@@ -894,6 +913,50 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+
+  // ── Likes Tease Header (CTA above grid) ──
+  likesTeaseHeader: {
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    gap: 6,
+  },
+  likesTeaseTitle: {
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: colors.text,
+    textAlign: 'center',
+  },
+  likesTeaseSubtitle: {
+    fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  likesTeaseButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 48,
+    borderRadius: 14,
+    paddingHorizontal: 36,
+  },
+  likesTeaseButtonText: {
+    fontSize: 15,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#fff',
+  },
+  likesTeaseSub: {
+    fontSize: 11,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: colors.textTertiary,
+    marginTop: 2,
   },
 
   // ── Header ──
