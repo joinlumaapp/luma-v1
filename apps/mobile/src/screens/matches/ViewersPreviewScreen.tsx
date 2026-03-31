@@ -270,23 +270,28 @@ const PremiumLockSection: React.FC<PremiumLockProps> = ({ viewers, onUpgrade }) 
   );
 };
 
-// ─── Floating Avatar (background animation) ────────────────────
+// ─── Floating Gradient Circle (background) ──────────────────────
 
-const FloatingAvatar: React.FC<{ delay: number; top: number; size: number }> = ({ delay, top, size }) => {
-  const translateX = useRef(new Animated.Value(400)).current;
+const FloatingCircle: React.FC<{ delay: number; top: number; size: number; color: string }> = ({ delay, top, size, color }) => {
+  const translateX = useRef(new Animated.Value(420)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const startAnimation = () => {
-      translateX.setValue(400);
-      Animated.timing(translateX, {
-        toValue: -100,
-        duration: 12000 + delay * 2000,
-        useNativeDriver: true,
-      }).start(() => startAnimation());
+    const animate = () => {
+      translateX.setValue(420);
+      opacity.setValue(0);
+      Animated.parallel([
+        Animated.timing(translateX, { toValue: -80, duration: 14000 + delay * 2500, useNativeDriver: true }),
+        Animated.sequence([
+          Animated.timing(opacity, { toValue: 1, duration: 2000, useNativeDriver: true }),
+          Animated.delay(8000 + delay * 1500),
+          Animated.timing(opacity, { toValue: 0, duration: 2000, useNativeDriver: true }),
+        ]),
+      ]).start(() => animate());
     };
-    const timer = setTimeout(startAnimation, delay * 1500);
+    const timer = setTimeout(animate, delay * 1800);
     return () => clearTimeout(timer);
-  }, [translateX, delay]);
+  }, [translateX, opacity, delay]);
 
   return (
     <Animated.View style={{
@@ -295,89 +300,154 @@ const FloatingAvatar: React.FC<{ delay: number; top: number; size: number }> = (
       width: size,
       height: size,
       borderRadius: size / 2,
-      backgroundColor: colors.primary + '08',
+      backgroundColor: color,
+      opacity,
       transform: [{ translateX }],
     }} />
   );
 };
 
-// ─── Empty State (alive + engaging) ─────────────────────────────
+// ─── Glowing Orb ────────────────────────────────────────────────
+
+const GlowingOrb: React.FC = () => {
+  const breathe = useRef(new Animated.Value(1)).current;
+  const glowOpacity = useRef(new Animated.Value(0.4)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(breathe, { toValue: 1.08, duration: 2500, useNativeDriver: true }),
+          Animated.timing(glowOpacity, { toValue: 0.7, duration: 2500, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(breathe, { toValue: 1, duration: 2500, useNativeDriver: true }),
+          Animated.timing(glowOpacity, { toValue: 0.4, duration: 2500, useNativeDriver: true }),
+        ]),
+      ]),
+    ).start();
+  }, [breathe, glowOpacity]);
+
+  return (
+    <Animated.View style={{ transform: [{ scale: breathe }], alignItems: 'center' }}>
+      {/* Outer glow ring */}
+      <Animated.View style={{
+        position: 'absolute',
+        width: 140, height: 140, borderRadius: 70,
+        backgroundColor: palette.purple[500] + '15',
+        opacity: glowOpacity,
+      }} />
+      {/* Inner orb */}
+      <LinearGradient
+        colors={[palette.purple[400] + '40', palette.pink[400] + '30', palette.purple[500] + '20'] as [string, string, string]}
+        style={{
+          width: 110, height: 110, borderRadius: 55,
+          justifyContent: 'center', alignItems: 'center',
+          shadowColor: palette.purple[500],
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.5,
+          shadowRadius: 20,
+          elevation: 10,
+        }}
+        start={{ x: 0.2, y: 0 }}
+        end={{ x: 0.8, y: 1 }}
+      >
+        <Ionicons name="eye-outline" size={42} color={colors.primary} style={{ opacity: 0.8 }} />
+      </LinearGradient>
+    </Animated.View>
+  );
+};
+
+// ─── Empty State (premium + alive) ──────────────────────────────
 
 const EmptyState: React.FC<{ onUpgrade: () => void }> = ({ onUpgrade }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const shimmerAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const shimmerPos = useRef(new Animated.Value(-1)).current;
 
   useEffect(() => {
-    // Fade in content
-    Animated.timing(fadeAnim, {
-      toValue: 1, duration: 800, useNativeDriver: true,
-    }).start();
+    // Fade + slide in
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 900, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 900, useNativeDriver: true }),
+    ]).start();
 
-    // Pulse eye icon
+    // CTA shimmer loop
     Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.1, duration: 1500, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
-      ]),
+      Animated.timing(shimmerPos, { toValue: 1, duration: 3000, useNativeDriver: true }),
     ).start();
-
-    // CTA shimmer
-    Animated.loop(
-      Animated.timing(shimmerAnim, { toValue: 1, duration: 2500, useNativeDriver: true }),
-    ).start();
-  }, [fadeAnim, pulseAnim, shimmerAnim]);
+  }, [fadeAnim, slideAnim, shimmerPos]);
 
   return (
     <View style={styles.empty}>
-      {/* Floating blurred avatars in background */}
-      <FloatingAvatar delay={0} top={20} size={50} />
-      <FloatingAvatar delay={1} top={80} size={36} />
-      <FloatingAvatar delay={2} top={140} size={44} />
-      <FloatingAvatar delay={3} top={50} size={30} />
-      <FloatingAvatar delay={4} top={120} size={40} />
+      {/* Floating gradient circles */}
+      <FloatingCircle delay={0} top={15} size={60} color={palette.purple[400] + '06'} />
+      <FloatingCircle delay={1} top={90} size={40} color={palette.pink[400] + '05'} />
+      <FloatingCircle delay={2} top={160} size={50} color={palette.purple[300] + '04'} />
+      <FloatingCircle delay={3} top={45} size={35} color={palette.pink[300] + '06'} />
+      <FloatingCircle delay={4} top={130} size={45} color={palette.purple[500] + '05'} />
+      <FloatingCircle delay={5} top={200} size={30} color={palette.pink[500] + '04'} />
 
-      <Animated.View style={{ alignItems: 'center', gap: 16, opacity: fadeAnim }}>
-        {/* Pulsing eye icon */}
-        <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-          <LinearGradient
-            colors={[palette.purple[500] + '30', palette.pink[500] + '20'] as [string, string]}
-            style={styles.emptyIcon}
-          >
-            <Ionicons name="eye-outline" size={48} color={colors.primary} />
-          </LinearGradient>
-        </Animated.View>
+      <Animated.View style={{
+        alignItems: 'center',
+        gap: 18,
+        opacity: fadeAnim,
+        transform: [{ translateY: slideAnim }],
+      }}>
+        {/* Glowing orb */}
+        <GlowingOrb />
 
         {/* Main message */}
-        <Text style={styles.emptyTitle}>Henüz görünmedin… ama yaklaşıyorsun</Text>
-        <Text style={styles.emptySubtitle}>Profilin keşfette gösteriliyor</Text>
+        <View style={{ alignItems: 'center', gap: 4, marginTop: 8 }}>
+          <Text style={styles.emptyTitle}>Henüz keşfedilmedin…</Text>
+          <Text style={styles.emptySubtitle}>Ama insanlar sana çok yakın</Text>
+          <Text style={styles.emptyDynamic}>Şu anda keşfette gösteriliyorsun</Text>
+        </View>
 
-        {/* Profile strength checklist */}
-        <View style={styles.emptyChecklist}>
-          <View style={styles.emptyCheckItem}>
-            <Ionicons name="checkmark-circle" size={18} color={colors.success} />
-            <Text style={styles.emptyCheckText}>Fotoğraf ekle</Text>
+        {/* Progress block */}
+        <View style={styles.emptyProgress}>
+          <View style={styles.emptyProgressHeader}>
+            <Text style={styles.emptyProgressTitle}>Profil gücü</Text>
+            <Text style={styles.emptyProgressPercent}>%65</Text>
           </View>
-          <View style={styles.emptyCheckItem}>
-            <Ionicons name="checkmark-circle" size={18} color={colors.success} />
-            <Text style={styles.emptyCheckText}>Bio yaz</Text>
+          <View style={styles.emptyProgressBar}>
+            <View style={[styles.emptyProgressFill, { width: '65%' }]} />
           </View>
-          <View style={styles.emptyCheckItem}>
-            <Ionicons name="square-outline" size={18} color={colors.textTertiary} />
-            <Text style={[styles.emptyCheckText, { color: colors.textTertiary }]}>İlgi alanı ekle</Text>
+          <View style={styles.emptyChecklist}>
+            <View style={styles.emptyCheckItem}>
+              <Ionicons name="checkmark-circle" size={16} color={colors.success} />
+              <Text style={styles.emptyCheckText}>Fotoğraf eklendi</Text>
+            </View>
+            <View style={styles.emptyCheckItem}>
+              <Ionicons name="checkmark-circle" size={16} color={colors.success} />
+              <Text style={styles.emptyCheckText}>Bio yazıldı</Text>
+            </View>
+            <View style={styles.emptyCheckItem}>
+              <Ionicons name="square-outline" size={16} color={colors.textTertiary} />
+              <Text style={[styles.emptyCheckText, { color: colors.textTertiary }]}>İlgi alanı ekle</Text>
+            </View>
           </View>
         </View>
 
-        {/* CTA button with shimmer */}
+        {/* CTA with shimmer */}
         <Pressable onPress={onUpgrade} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}>
           <LinearGradient
-            colors={[palette.purple[500], palette.purple[700]] as [string, string]}
+            colors={[palette.purple[500], palette.pink[500], palette.purple[600]] as [string, string, string]}
             style={styles.emptyCTA}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            <Ionicons name="rocket-outline" size={16} color="#fff" />
-            <Text style={styles.emptyCTAText}>Daha fazla görün</Text>
+            <Animated.View style={{
+              ...StyleSheet.absoluteFillObject,
+              borderRadius: 16,
+              backgroundColor: '#fff',
+              opacity: shimmerPos.interpolate({
+                inputRange: [-1, 0, 1],
+                outputRange: [0, 0.15, 0],
+              }),
+            }} />
+            <Ionicons name="rocket-outline" size={18} color="#fff" />
+            <Text style={styles.emptyCTAText}>Keşfette öne çık</Text>
           </LinearGradient>
         </Pressable>
         <Text style={styles.emptyCTASub}>10x daha fazla görünürlük</Text>
@@ -1038,65 +1108,103 @@ const styles = StyleSheet.create({
   // Empty state
   empty: {
     alignItems: 'center',
-    paddingHorizontal: 32,
-    paddingTop: 40,
-    minHeight: 400,
+    paddingHorizontal: 28,
+    paddingTop: 30,
+    minHeight: 500,
     overflow: 'hidden',
     position: 'relative',
   },
-  emptyIcon: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   emptyTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
   },
   emptySubtitle: {
-    fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontSize: 15,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
     color: colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 22,
   },
-  emptyChecklist: {
-    gap: 8,
+  emptyDynamic: {
+    fontSize: 12,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: colors.primary,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  emptyProgress: {
     alignSelf: 'stretch',
     backgroundColor: colors.surface,
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
     padding: 16,
+    gap: 10,
+  },
+  emptyProgressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  emptyProgressTitle: {
+    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: colors.text,
+  },
+  emptyProgressPercent: {
+    fontSize: 14,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  emptyProgressBar: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.surfaceBorder,
+    overflow: 'hidden',
+  },
+  emptyProgressFill: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.primary,
+  },
+  emptyChecklist: {
+    gap: 6,
+    marginTop: 4,
   },
   emptyCheckItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
   emptyCheckText: {
-    fontSize: 14,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
     color: colors.text,
   },
   emptyCTA: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
-    paddingHorizontal: 28,
-    paddingVertical: 15,
+    height: 52,
     borderRadius: 16,
-    marginTop: 4,
+    paddingHorizontal: 36,
+    overflow: 'hidden',
+    shadowColor: palette.purple[500],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
   emptyCTAText: {
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: '#fff',
