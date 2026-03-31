@@ -10,7 +10,7 @@ import {
   StyleSheet,
   StatusBar,
 } from 'react-native';
-import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -117,18 +117,6 @@ const ControlButton: React.FC<{
 
 export const CallScreen: React.FC = () => {
   useScreenTracking('Call');
-
-  // Restore status bar when leaving this dark fullscreen
-  useFocusEffect(
-    useCallback(() => {
-      StatusBar.setBarStyle('light-content');
-      StatusBar.setBackgroundColor('#000000');
-      return () => {
-        StatusBar.setBarStyle('dark-content');
-        StatusBar.setBackgroundColor('#F5F0E8');
-      };
-    }, [])
-  );
   const navigation = useNavigation<CallNavigationProp>();
   const route = useRoute<CallRouteProp>();
   const insets = useSafeAreaInsets();
@@ -198,6 +186,7 @@ export const CallScreen: React.FC = () => {
   if (!isPremium) {
     return (
       <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+        <StatusBar barStyle="light-content" />
         <View style={styles.premiumGate}>
           <View style={styles.premiumIcon}>
             <Text style={styles.premiumIconText}>
@@ -252,6 +241,8 @@ export const CallScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      <StatusBar barStyle="light-content" />
+
       {/* Top bar: minimize + quality */}
       <View style={styles.topBar}>
         <TouchableOpacity
