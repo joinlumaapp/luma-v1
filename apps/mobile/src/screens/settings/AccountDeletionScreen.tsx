@@ -230,7 +230,7 @@ export const AccountDeletionScreen: React.FC = () => {
         </View>
         <Text style={dynamicStyles.otpTitle}>Kimlik Dogrulama</Text>
         <Text style={dynamicStyles.otpSubtitle}>
-          Telefon numaraniza gonderilen 6 haneli dogrulama kodunu girin.
+          Telefon numaraniza gönderilen 6 haneli doğrulama kodunu girin.
         </Text>
 
         <TextInput

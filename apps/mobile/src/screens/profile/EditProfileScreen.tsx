@@ -910,7 +910,7 @@ export const EditProfileScreen: React.FC = () => {
           {/* ── Prompt'larim ──────────────────────────────────────────── */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Prompt'larim</Text>
-            <Text style={styles.sectionHint}>Profilinde gorunecek sorular (max 3)</Text>
+            <Text style={styles.sectionHint}>Profilinde görünecek sorular (max 3)</Text>
 
             {profile.prompts.map((prompt: { id: string; question: string; answer: string; order: number }, idx: number) => (
               <View key={prompt.id} style={styles.promptEditCard}>

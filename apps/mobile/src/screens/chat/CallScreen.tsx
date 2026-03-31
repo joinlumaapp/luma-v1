@@ -198,7 +198,7 @@ export const CallScreen: React.FC = () => {
           </Text>
           <Text style={styles.premiumSubtitle}>
             Arama ozelligi Gold ve ustu paketlere ozeldir.{'\n'}
-            Paketini yukselt ve hemen aramaya basla!
+            Paketini yükselt ve hemen aramaya başla!
           </Text>
           <TouchableOpacity
             style={styles.upgradeButton}

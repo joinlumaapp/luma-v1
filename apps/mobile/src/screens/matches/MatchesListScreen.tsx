@@ -947,27 +947,52 @@ export const MatchesListScreen: React.FC = () => {
   // Stable key extractor reference
   const keyExtractor = useCallback((item: Match) => item.id, []);
 
+  const handleEmptyCta = useCallback((tab: TabKey) => {
+    switch (tab) {
+      case 'matches':
+        // Navigate to Discovery tab
+        navigation.getParent()?.navigate('DiscoveryTab', { screen: 'Discovery' });
+        break;
+      case 'messages':
+        // Switch to matches tab within the same screen
+        setActiveTab('matches');
+        break;
+      case 'likes':
+        // Navigate to EditProfile in ProfileTab
+        navigation.getParent()?.navigate('ProfileTab', { screen: 'EditProfile' });
+        break;
+      case 'viewers':
+        // Navigate to MembershipPlans
+        navigation.navigate('MembershipPlans');
+        break;
+    }
+  }, [navigation]);
+
   const renderEmptyList = useCallback(() => {
     const emptyConfig = {
       matches: {
         icon: '\uD83D\uDC9E',
         title: 'Henüz Eşleşmen Yok',
         subtitle: 'Keşfet sekmesinde profilleri beğenerek eşleşme oluşturabilirsin.',
+        ctaLabel: "Keşfet'e Git",
       },
       messages: {
         icon: '\uD83D\uDCAC',
         title: 'Henüz Mesajın Yok',
         subtitle: 'Eşleşmelerine mesaj göndererek sohbet başlatabilirsin.',
+        ctaLabel: 'Eşleşmelerini Gör',
       },
       likes: {
         icon: '\uD83D\uDC9C',
         title: 'Henüz Beğenen Yok',
         subtitle: 'Profilini zenginleştirerek daha fazla beğeni alabilirsin.',
+        ctaLabel: 'Profilini Güçlendir',
       },
       viewers: {
         icon: '\uD83D\uDC40',
         title: 'Henüz Kimse Bakmamış',
         subtitle: 'Profilini zenginleştirerek daha fazla görüntülenme alabilirsin.',
+        ctaLabel: 'Premium ile Öne Çık',
       },
     };
     const cfg = emptyConfig[activeTab];
@@ -976,9 +1001,18 @@ export const MatchesListScreen: React.FC = () => {
         <Text style={styles.emptyIcon}>{cfg.icon}</Text>
         <Text style={styles.emptyTitle}>{cfg.title}</Text>
         <Text style={styles.emptySubtitle}>{cfg.subtitle}</Text>
+        <TouchableOpacity
+          style={styles.emptyCtaButton}
+          onPress={() => handleEmptyCta(activeTab)}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel={cfg.ctaLabel}
+        >
+          <Text style={styles.emptyCtaText}>{cfg.ctaLabel}</Text>
+        </TouchableOpacity>
       </View>
     );
-  }, [activeTab]);
+  }, [activeTab, handleEmptyCta]);
 
   // Memoized viewers header — avoids inline function in FlatList ListHeaderComponent
   const renderViewersHeader = useMemo(() => (
@@ -1647,6 +1681,18 @@ const styles = StyleSheet.create({
   emptySubtitle: {
     ...typography.body,
     color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  emptyCtaButton: {
+    marginTop: spacing.lg,
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+  },
+  emptyCtaText: {
+    ...typography.button,
+    color: '#FFFFFF',
     textAlign: 'center',
   },
   // ── Skeleton loader ──

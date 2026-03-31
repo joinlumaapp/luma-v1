@@ -741,7 +741,7 @@ export const LikesYouScreen: React.FC<LikesYouScreenProps> = ({ embedded = false
                 <Text style={styles.compactSubText}>
                   {isBlurred
                     ? viewsRemaining > 0
-                      ? 'Ilk profili ucretsiz goruntule'
+                      ? 'İlk profili ücretsiz görüntüle'
                       : 'Premium ile hepsini kesfet'
                     : 'Profillere dokunarak kesfet'}
                 </Text>

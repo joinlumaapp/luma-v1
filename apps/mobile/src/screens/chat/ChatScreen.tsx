@@ -712,7 +712,7 @@ export const ChatScreen: React.FC = () => {
             onPress={() => handleStartCall('voice')}
             disabled={isInCall}
             activeOpacity={0.7}
-            accessibilityLabel="Sesli arama baslat"
+            accessibilityLabel="Sesli arama başlat"
             accessibilityRole="button"
             testID="chat-voice-call-btn"
             style={[styles.callButton, isInCall && styles.callButtonDisabled]}
@@ -728,7 +728,7 @@ export const ChatScreen: React.FC = () => {
             onPress={() => handleStartCall('video')}
             disabled={isInCall}
             activeOpacity={0.7}
-            accessibilityLabel="Goruntulu arama baslat"
+            accessibilityLabel="Görüntülü arama başlat"
             accessibilityRole="button"
             testID="chat-video-call-btn"
             style={[styles.callButton, isInCall && styles.callButtonDisabled]}

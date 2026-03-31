@@ -511,7 +511,7 @@ const ProCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
         </View>
         <View style={cardStyles.tierInfo}>
           <Text style={[cardStyles.tierName, { color: PRO_TEAL.medium }]}>Pro</Text>
-          <Text style={cardStyles.tierSubtitle}>Gelismis ozellikler</Text>
+          <Text style={cardStyles.tierSubtitle}>Gelişmiş özellikler</Text>
         </View>
         <View style={cardStyles.priceContainer}>
           <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>{'499\u20BA'}</Text>

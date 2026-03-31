@@ -53,6 +53,7 @@ import { MatchAnimation } from '../../components/animations/MatchAnimation';
 import { DiscoveryCard } from '../../components/cards/DiscoveryCard';
 import { CompatibilityBottomSheet } from '../../components/discovery/CompatibilityBottomSheet';
 import { TrialBanner } from '../../components/premium/TrialBanner';
+import { LikedYouTeaser, MatchUpgradeNudge } from '../../components/premium/SmartUpgradePrompts';
 import { discoveryService, type BoostStatusResponse } from '../../services/discoveryService';
 import type { LoginStreakResponse } from '../../services/discoveryService';
 import { StreakBanner } from '../../components/streak/StreakBanner';
@@ -316,6 +317,23 @@ export const DiscoveryScreen: React.FC = () => {
 
   // ─── Like sent toast removed (was too repetitive) ─────────
 
+  // ─── Likes-you teaser state (FREE users only) ─────────────
+  const [likesYouCount, setLikesYouCount] = useState(0);
+  const [likesYouAvatars, setLikesYouAvatars] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (packageTier !== 'FREE') return;
+    discoveryService.getLikesYou().then((data) => {
+      setLikesYouCount(data.total);
+      setLikesYouAvatars(data.likes.slice(0, 3).map((l) => l.photoUrl));
+    }).catch(() => { /* non-blocking */ });
+  }, [packageTier]);
+
+  // ─── Match upgrade nudge state (FREE users post-match) ─────
+  const [showMatchUpgradeNudge, setShowMatchUpgradeNudge] = useState(false);
+  const [lastMatchName, setLastMatchName] = useState('');
+  const [lastMatchAvatar, setLastMatchAvatar] = useState('');
+
   // Match detail state
   const [matchConversationStarters, setMatchConversationStarters] = useState<string[]>([]);
   const [matchExplanation, setMatchExplanation] = useState<string | undefined>(undefined);
@@ -477,10 +495,16 @@ export const DiscoveryScreen: React.FC = () => {
   }, [dismissMatch, navigation, matchedCard, currentMatchId]);
 
   const handleMatchDismiss = useCallback(() => {
+    // Capture match info before dismissing for the upgrade nudge
+    if (packageTier === 'FREE' && matchedCard) {
+      setLastMatchName(matchedCard.name);
+      setLastMatchAvatar(matchedCard.photoUrls[0] ?? '');
+      setShowMatchUpgradeNudge(true);
+    }
     dismissMatch();
     setMatchConversationStarters([]);
     setMatchExplanation(undefined);
-  }, [dismissMatch]);
+  }, [dismissMatch, packageTier, matchedCard]);
 
   const handleActivitySuggest = useCallback(() => {
     const card = matchedCard;

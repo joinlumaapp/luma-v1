@@ -35,8 +35,8 @@ const WeeklyTopScreen: React.FC = () => {
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <View>
-          <Text style={styles.headerTitle}>Haftalik Top 3</Text>
-          <Text style={styles.headerSubtitle}>AI secimi: en uyumlu 3 kisin</Text>
+          <Text style={styles.headerTitle}>Haftalık Top 3</Text>
+          <Text style={styles.headerSubtitle}>AI seçimi: en uyumlu 3 kişin</Text>
         </View>
       </View>
 
@@ -76,7 +76,7 @@ const WeeklyTopScreen: React.FC = () => {
                 <View style={styles.lockIcon}>
                   <Ionicons name="lock-closed" size={24} color={palette.purple[400]} />
                 </View>
-                <Text style={styles.lockText}>40 jeton ile ac</Text>
+                <Text style={styles.lockText}>40 jeton ile aç</Text>
                 <View style={styles.compatBadgeBlurred}>
                   <Text style={styles.compatTextBlurred}>%??</Text>
                 </View>
@@ -94,7 +94,7 @@ const WeeklyTopScreen: React.FC = () => {
 
       {nextRefreshAt && (
         <Text style={styles.refreshText}>
-          Her Pazartesi guncellenir
+          Her Pazartesi güncellenir
         </Text>
       )}
     </SafeAreaView>

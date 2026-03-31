@@ -677,7 +677,7 @@ export const StoryViewerScreen: React.FC = () => {
             >
               <Ionicons name="eye-outline" size={18} color="#FFFFFF" />
               <Text style={styles.viewersButtonText}>
-                {currentStory.viewCount} goruntulenme
+                {currentStory.viewCount} görüntülenme
               </Text>
             </TouchableOpacity>
             {!canSeeViewerDetails && (

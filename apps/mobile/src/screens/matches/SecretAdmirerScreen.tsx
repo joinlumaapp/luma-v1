@@ -21,11 +21,11 @@ const SecretAdmirerScreen: React.FC = () => {
     try {
       const result = await guess(admirerId, guessedUserId);
       if (result.correct) {
-        Alert.alert('Dogru Tahmin!', 'Eslesme olusturuldu! Sohbet baslatabilirsin.', [
+        Alert.alert('Doğru Tahmin!', 'Eşleşme oluşturuldu! Sohbet başlatabilirsin.', [
           { text: 'Harika!', onPress: () => fetchReceived() },
         ]);
       } else if (result.guessesRemaining > 0) {
-        Alert.alert('Yanlis', `${result.guessesRemaining} tahmin hakkin kaldi.`);
+        Alert.alert('Yanlis', `${result.guessesRemaining} tahmin hakkın kaldı.`);
       } else {
         Alert.alert('Tahmin Hakkin Bitti', 'Bir dahaki sefere!', [
           { text: 'Tamam', onPress: () => fetchReceived() },
@@ -45,7 +45,7 @@ const SecretAdmirerScreen: React.FC = () => {
         <View style={{ flex: 1 }}>
           <Text style={styles.cardTitle}>Gizli Hayranin Var!</Text>
           <Text style={styles.cardSubtitle}>
-            Bu 3 kisiden biri seni gizlice begendi
+            Bu 3 kişiden biri seni gizlice beğendi
           </Text>
         </View>
         <View style={styles.guessBadge}>
@@ -72,7 +72,7 @@ const SecretAdmirerScreen: React.FC = () => {
       </View>
 
       <Text style={styles.expiryText}>
-        {new Date(item.expiresAt) > new Date() ? 'Suresi dolmadan tahmin et!' : 'Suresi dolmus'}
+        {new Date(item.expiresAt) > new Date() ? 'Süresi dolmadan tahmin et!' : 'Süresi dolmuş'}
       </Text>
     </View>
   );
@@ -90,9 +90,9 @@ const SecretAdmirerScreen: React.FC = () => {
       {receivedAdmirers.length === 0 && !isLoading ? (
         <View style={styles.emptyState}>
           <Ionicons name="eye-off-outline" size={48} color={palette.purple[400]} />
-          <Text style={styles.emptyTitle}>Henuz gizli hayranin yok</Text>
+          <Text style={styles.emptyTitle}>Henüz gizli hayranın yok</Text>
           <Text style={styles.emptySubtitle}>
-            Birisi seni gizlice begendiginde burada gorunecek
+            Birisi seni gizlice beğendiğinde burada görünecek
           </Text>
         </View>
       ) : (
