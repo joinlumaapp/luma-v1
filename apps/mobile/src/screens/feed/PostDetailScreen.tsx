@@ -18,7 +18,7 @@ import {
   PanResponder,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { FeedStackParamList } from '../../navigation/types';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,6 +32,19 @@ type PostDetailNavProp = NativeStackNavigationProp<FeedStackParamList, 'PostDeta
 
 export const PostDetailScreen: React.FC = () => {
   useScreenTracking('PostDetail');
+
+  // Restore status bar when leaving this dark fullscreen
+  useFocusEffect(
+    useCallback(() => {
+      StatusBar.setBarStyle('light-content');
+      StatusBar.setBackgroundColor('#000000');
+      return () => {
+        StatusBar.setBarStyle('dark-content');
+        StatusBar.setBackgroundColor('#F5F0E8');
+      };
+    }, [])
+  );
+
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<PostDetailNavProp>();
   const route = useRoute<PostDetailRouteProp>();
@@ -77,7 +90,6 @@ export const PostDetailScreen: React.FC = () => {
   if (!post) {
     return (
       <View style={styles.container}>
-        <StatusBar barStyle="light-content" />
         <Text style={styles.emptyText}>Gönderi bulunamadı</Text>
       </View>
     );
@@ -96,8 +108,6 @@ export const PostDetailScreen: React.FC = () => {
   if (hasPhotos) {
     return (
       <Animated.View style={[styles.container, animatedStyle]} {...panResponder.panHandlers}>
-        <StatusBar barStyle="light-content" />
-
         {/* Close button */}
         <TouchableOpacity
           style={[styles.closeBtn, { top: insets.top + 8 }]}
@@ -141,8 +151,6 @@ export const PostDetailScreen: React.FC = () => {
   if (hasVideo) {
     return (
       <Animated.View style={[styles.container, animatedStyle]} {...panResponder.panHandlers}>
-        <StatusBar barStyle="light-content" />
-
         {/* Close button */}
         <TouchableOpacity
           style={[styles.closeBtn, { top: insets.top + 8 }]}
@@ -164,8 +172,6 @@ export const PostDetailScreen: React.FC = () => {
   // Text viewer — clean full-screen reading view
   return (
     <Animated.View style={[styles.container, animatedStyle]} {...panResponder.panHandlers}>
-      <StatusBar barStyle="light-content" />
-
       {/* Close button */}
       <TouchableOpacity
         style={[styles.closeBtn, { top: insets.top + 8 }]}

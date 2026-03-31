@@ -22,7 +22,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Video, ResizeMode } from 'expo-av';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -238,6 +238,19 @@ const StoryContent: React.FC<StoryContentProps> = ({ story, isPaused = false, on
 
 export const StoryViewerScreen: React.FC = () => {
   useScreenTracking('StoryViewer');
+
+  // Restore status bar when leaving this dark fullscreen
+  useFocusEffect(
+    useCallback(() => {
+      StatusBar.setBarStyle('light-content');
+      StatusBar.setBackgroundColor('#000000');
+      return () => {
+        StatusBar.setBarStyle('dark-content');
+        StatusBar.setBackgroundColor('#F5F0E8');
+      };
+    }, [])
+  );
+
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<StoryViewerNavProp>();
   const route = useRoute<StoryViewerRouteProp>();
@@ -567,7 +580,6 @@ export const StoryViewerScreen: React.FC = () => {
   if (!currentStory) {
     return (
       <View style={styles.container}>
-        <StatusBar barStyle="light-content" />
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>Hikaye bulunamadi</Text>
           <TouchableOpacity style={styles.emptyCloseButton} onPress={handleClose}>
@@ -586,7 +598,6 @@ export const StoryViewerScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
       {/* Backdrop fade */}
       <RNAnimated.View style={[StyleSheet.absoluteFill, { backgroundColor: '#000', opacity: swipeOpacity }]} />
 

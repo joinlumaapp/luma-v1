@@ -298,6 +298,16 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
     }
   }, [imageUri, textOverlays, stickerOverlays, navigation]);
 
+  // Set status bar for dark fullscreen and restore on unmount
+  useEffect(() => {
+    StatusBar.setBarStyle('light-content');
+    StatusBar.setBackgroundColor('#000000');
+    return () => {
+      StatusBar.setBarStyle('dark-content');
+      StatusBar.setBackgroundColor('#F5F0E8');
+    };
+  }, []);
+
   // ─── No media — should not happen (camera opens before navigation) ──
   // If somehow reached without media, go back immediately
   useEffect(() => {
@@ -307,7 +317,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
   }, [imageUri, navigation]);
 
   if (!imageUri) {
-    return <View style={styles.container}><StatusBar barStyle="light-content" /></View>;
+    return <View style={styles.container} />;
   }
 
   // ─── Preview Mode ──────────────────────────────────────────
@@ -315,7 +325,6 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
   if (showPreview) {
     return (
       <View style={styles.container}>
-        <StatusBar barStyle="light-content" />
         {mediaType === 'video' ? (
           <Video
             source={{ uri: imageUri! }}
@@ -394,8 +403,6 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
-
       {/* Background image */}
       <View
         style={styles.canvasContainer}

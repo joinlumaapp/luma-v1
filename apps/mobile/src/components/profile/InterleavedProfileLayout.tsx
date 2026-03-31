@@ -60,6 +60,19 @@ function PhotoViewer({ visible, photos, initialIndex, onClose }: PhotoViewerProp
     }
   }, [visible, initialIndex]);
 
+  // Set status bar for dark fullscreen modal and restore on close
+  React.useEffect(() => {
+    if (visible) {
+      StatusBar.setBarStyle('light-content');
+      StatusBar.setBackgroundColor('#000000');
+      return () => {
+        StatusBar.setBarStyle('dark-content');
+        StatusBar.setBackgroundColor('#F5F0E8');
+      };
+    }
+    return undefined;
+  }, [visible]);
+
   const goToPrevious = useCallback(() => {
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : prev));
   }, []);
@@ -79,8 +92,6 @@ function PhotoViewer({ visible, photos, initialIndex, onClose }: PhotoViewerProp
       onRequestClose={onClose}
     >
       <View style={styles.viewerOverlay}>
-        <StatusBar barStyle="light-content" />
-
         {/* Close button */}
         <TouchableOpacity
           style={[styles.viewerCloseButton, { top: insets.top + spacing.sm }]}
