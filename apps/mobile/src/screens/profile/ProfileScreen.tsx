@@ -615,7 +615,7 @@ export const ProfileScreen: React.FC = () => {
             accessibilityLabel="Gold ile profil görüntüleyenleri gör"
             accessibilityRole="button"
           >
-            <Ionicons name="lock-closed" size={14} color={palette.amber[500]} />
+            <Ionicons name="lock-closed" size={14} color={palette.gold[500]} />
             <Text style={styles.weeklyViewsText}>
               <Text style={styles.weeklyViewsBold}>{weeklyViewCount} kişi</Text> profilini gördü —{' '}
               <Text style={styles.weeklyViewsGoldCta}>Gold ile öğren</Text>
@@ -1155,7 +1155,7 @@ const styles = StyleSheet.create({
   },
   weeklyViewsGoldCta: {
     fontWeight: fontWeights.semibold,
-    color: palette.amber[500],
+    color: palette.gold[500],
   },
 
   // ── Listening status section ──
