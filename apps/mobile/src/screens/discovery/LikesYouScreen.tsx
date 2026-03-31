@@ -341,11 +341,20 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, smartLabel, onCa
           testID={`likes-you-card-${card.userId}`}
         >
           {/* Photo */}
-          <Image
-            source={{ uri: card.photoUrl }}
-            style={styles.cardPhoto}
-            blurRadius={isBlurred ? 20 : 0}
-          />
+          {card.photoUrl ? (
+            <Image
+              source={{ uri: card.photoUrl }}
+              style={styles.cardPhoto}
+              blurRadius={isBlurred ? 20 : 0}
+            />
+          ) : (
+            <LinearGradient
+              colors={[palette.purple[200], palette.pink[200]]}
+              style={styles.cardPhoto}
+            >
+              <Ionicons name="person" size={40} color={palette.purple[400]} style={{ opacity: 0.5 }} />
+            </LinearGradient>
+          )}
 
           {/* Blur overlay with animated lock + progress ring */}
           {isBlurred && (
