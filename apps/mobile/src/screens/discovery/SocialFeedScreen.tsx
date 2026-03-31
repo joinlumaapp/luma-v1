@@ -501,8 +501,7 @@ export const SocialFeedScreen: React.FC = () => {
     resetDailyStoryIfNeeded();
     resetDailyFollowIfNeeded();
     fetchFeed();
-    fetchStories();
-  }, [fetchFeed, fetchStories, resetDailyPostIfNeeded, resetDailyStoryIfNeeded, resetDailyFollowIfNeeded]);
+  }, [fetchFeed, resetDailyPostIfNeeded, resetDailyStoryIfNeeded, resetDailyFollowIfNeeded]);
 
   const handleRefresh = useCallback(() => {
     refreshFeed();
@@ -520,6 +519,11 @@ export const SocialFeedScreen: React.FC = () => {
   const storyUsers = useStoryStore((s) => s.storyUsers);
   const seenStoryIds = useStoryStore((s) => s.seenStoryIds);
   const fetchStories = useStoryStore((s) => s.fetchStories);
+
+  // Fetch stories on mount (separate from feed fetch to avoid hoisting issues)
+  useEffect(() => {
+    fetchStories();
+  }, [fetchStories]);
 
   // Story handlers
   const [showStorySheet, setShowStorySheet] = useState(false);

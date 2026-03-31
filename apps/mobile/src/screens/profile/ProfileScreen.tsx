@@ -225,6 +225,7 @@ export const ProfileScreen: React.FC = () => {
   const isLoading = useProfileStore((state) => state.isLoading);
   const fetchProfile = useProfileStore((state) => state.fetchProfile);
   const user = useAuthStore((state) => state.user);
+  const packageTier = user?.packageTier ?? 'FREE';
   const fetchMatches = useMatchStore((state) => state.fetchMatches);
   // Listening status removed — music feature removed
 
@@ -475,7 +476,6 @@ export const ProfileScreen: React.FC = () => {
   ];
 
   // ── Header Bar ──────────────────────────────────────────────────────────────
-  const packageTier = user?.packageTier ?? 'FREE';
 
   const headerBar = (
     <View style={[styles.headerBar, { paddingTop: insets.top }]}>
