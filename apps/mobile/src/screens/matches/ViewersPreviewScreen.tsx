@@ -386,6 +386,292 @@ const EmptyState: React.FC<{ onUpgrade: () => void }> = ({ onUpgrade }) => {
   );
 };
 
+// ─── Viewer Grid (locked teaser system) ─────────────────────────
+
+import { Dimensions } from 'react-native';
+const GRID_GAP = 10;
+const GRID_COLS = 2;
+const CARD_WIDTH = (Dimensions.get('window').width - spacing.lg * 2 - GRID_GAP) / GRID_COLS;
+const CARD_HEIGHT = CARD_WIDTH * 1.3;
+
+const BADGES = ['Sana çok yakın', 'Yüksek uyum', 'Yeni', 'Tekrar baktı', 'Çok ilgili'];
+
+const getBadge = (viewerId: string, viewCount: number): string | null => {
+  if (viewCount >= 3) return 'Çok ilgili';
+  if (viewCount > 1) return 'Tekrar baktı';
+  const hash = viewerId.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  return BADGES[hash % 3]; // Sana çok yakın / Yüksek uyum / Yeni
+};
+
+interface ViewerGridProps {
+  viewers: ProfileViewer[];
+  isPremium: boolean;
+  onUpgrade: () => void;
+  onCardPress: (item: ProfileViewer) => void;
+}
+
+const ViewerGrid: React.FC<ViewerGridProps> = ({ viewers, isPremium, onUpgrade, onCardPress }) => {
+  const lockPulse = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(lockPulse, { toValue: 1.15, duration: 1800, useNativeDriver: true }),
+        Animated.timing(lockPulse, { toValue: 1, duration: 1800, useNativeDriver: true }),
+      ]),
+    ).start();
+  }, [lockPulse]);
+
+  const todayCount = viewers.filter((v) => isToday(v.lastViewedAt)).length;
+
+  return (
+    <View>
+      {/* Tease header text */}
+      <View style={gridStyles.teaseHeader}>
+        <Text style={gridStyles.teaseTitle}>Seni görenler burada</Text>
+        <Text style={gridStyles.teaseSubtitle}>
+          Ama kim olduklarını görmek için açman gerekiyor
+        </Text>
+      </View>
+
+      {/* Grid */}
+      <View style={gridStyles.grid}>
+        {viewers.map((item, index) => {
+          const isHero = index === 0;
+          const badge = getBadge(item.viewerId, item.viewCount);
+          const entryDelay = index * 80;
+
+          return (
+            <ViewerGridCard
+              key={item.id}
+              item={item}
+              index={index}
+              isHero={isHero}
+              isPremium={isPremium}
+              badge={badge}
+              lockPulse={lockPulse}
+              entryDelay={entryDelay}
+              onPress={() => isPremium ? onCardPress(item) : onUpgrade()}
+            />
+          );
+        })}
+      </View>
+
+      {/* Bottom CTA */}
+      {!isPremium && (
+        <View style={gridStyles.ctaSection}>
+          <Pressable onPress={onUpgrade} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}>
+            <LinearGradient
+              colors={[palette.purple[500], palette.purple[700]] as [string, string]}
+              style={gridStyles.ctaButton}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <Ionicons name="eye" size={18} color="#fff" />
+              <Text style={gridStyles.ctaText}>Kimlerin baktığını gör</Text>
+            </LinearGradient>
+          </Pressable>
+          <Text style={gridStyles.ctaSub}>Son 24 saat: {todayCount > 0 ? todayCount : viewers.length} kişi</Text>
+        </View>
+      )}
+    </View>
+  );
+};
+
+// ─── Viewer Grid Card ───────────────────────────────────────────
+
+interface ViewerGridCardProps {
+  item: ProfileViewer;
+  index: number;
+  isHero: boolean;
+  isPremium: boolean;
+  badge: string | null;
+  lockPulse: Animated.Value;
+  entryDelay: number;
+  onPress: () => void;
+}
+
+const ViewerGridCard: React.FC<ViewerGridCardProps> = ({
+  item, index, isHero, isPremium, badge, lockPulse, entryDelay, onPress,
+}) => {
+  const entryAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(entryAnim, {
+      toValue: 1,
+      duration: 500,
+      delay: entryDelay,
+      useNativeDriver: true,
+    }).start();
+  }, [entryAnim, entryDelay]);
+
+  const cardWidth = isHero ? CARD_WIDTH * 2 + GRID_GAP : CARD_WIDTH;
+  const cardHeight = isHero ? CARD_HEIGHT * 1.1 : CARD_HEIGHT;
+
+  return (
+    <Animated.View style={{
+      opacity: entryAnim,
+      transform: [{ translateY: entryAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }],
+    }}>
+      <Pressable onPress={onPress} style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}>
+        <View style={[gridStyles.card, { width: cardWidth, height: cardHeight }]}>
+          {/* Blurred background */}
+          <View style={[gridStyles.cardBg, { backgroundColor: palette.purple[100] }]}>
+            <Ionicons name="person" size={isHero ? 50 : 36} color={palette.purple[200]} />
+          </View>
+
+          {/* Dark overlay */}
+          <LinearGradient
+            colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.55)'] as [string, string]}
+            style={gridStyles.cardOverlay}
+          />
+
+          {/* Lock icon with pulse */}
+          {!isPremium && (
+            <Animated.View style={[gridStyles.lockCircle, { transform: [{ scale: lockPulse }] }]}>
+              <LinearGradient
+                colors={[palette.purple[400], palette.pink[400]] as [string, string]}
+                style={gridStyles.lockGradient}
+              >
+                <Ionicons name="lock-closed" size={isHero ? 22 : 16} color="#fff" />
+              </LinearGradient>
+            </Animated.View>
+          )}
+
+          {/* Badge */}
+          {badge && (
+            <View style={gridStyles.badge}>
+              <Text style={gridStyles.badgeText}>{badge}</Text>
+            </View>
+          )}
+
+          {/* Bottom hints */}
+          <View style={gridStyles.cardBottom}>
+            <Text style={gridStyles.hintText}>{formatRelativeTime(item.lastViewedAt)}</Text>
+            {item.distanceKm != null && (
+              <Text style={gridStyles.hintText}>
+                {item.distanceKm < 1 ? `${Math.round(item.distanceKm * 1000)}m` : `${item.distanceKm.toFixed(1)} km`}
+              </Text>
+            )}
+          </View>
+        </View>
+      </Pressable>
+    </Animated.View>
+  );
+};
+
+const gridStyles = StyleSheet.create({
+  teaseHeader: {
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+    gap: 4,
+  },
+  teaseTitle: {
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: colors.text,
+    textAlign: 'center',
+  },
+  teaseSubtitle: {
+    fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: GRID_GAP,
+  },
+  card: {
+    borderRadius: 18,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  cardBg: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardOverlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  lockCircle: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginTop: -22,
+    marginLeft: -22,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+  },
+  lockGradient: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: palette.purple[500] + 'DD',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  badgeText: {
+    fontSize: 10,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: '#fff',
+  },
+  cardBottom: {
+    position: 'absolute',
+    bottom: 8,
+    left: 8,
+    right: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  hintText: {
+    fontSize: 11,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.85)',
+  },
+  ctaSection: {
+    alignItems: 'center',
+    marginTop: spacing.lg,
+    gap: 6,
+  },
+  ctaButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 52,
+    borderRadius: 16,
+    paddingHorizontal: 40,
+  },
+  ctaText: {
+    fontSize: 16,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#fff',
+  },
+  ctaSub: {
+    fontSize: 12,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: colors.textTertiary,
+  },
+});
+
 // ─── Main Screen ────────────────────────────────────────────────
 
 export const ViewersPreviewScreen: React.FC = () => {
@@ -454,30 +740,7 @@ export const ViewersPreviewScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
       >
         {hasViewers ? (
-          <>
-            {/* Summary stats */}
-            <SummaryStats viewers={viewers} />
-
-            {/* Timeline section title */}
-            <Text style={styles.sectionTitle}>Son aktiviteler</Text>
-
-            {/* Timeline cards */}
-            {viewers.map((item, index) => (
-              <TimelineCard
-                key={item.id}
-                item={item}
-                index={index}
-                isTeaser={!isPremium && index === 0}
-                isLocked={!isPremium && index > 0}
-                isPremium={isPremium}
-                isLast={index === viewers.length - 1}
-                onPress={() => handleCardPress(item)}
-              />
-            ))}
-
-            {/* Premium lock section — only for FREE users */}
-            {!isPremium && <PremiumLockSection viewers={viewers} onUpgrade={navigateUpgrade} />}
-          </>
+          <ViewerGrid viewers={viewers} isPremium={isPremium} onUpgrade={navigateUpgrade} onCardPress={handleCardPress} />
         ) : (
           <EmptyState onUpgrade={navigateUpgrade} />
         )}
