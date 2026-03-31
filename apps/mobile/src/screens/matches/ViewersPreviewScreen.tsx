@@ -270,33 +270,121 @@ const PremiumLockSection: React.FC<PremiumLockProps> = ({ viewers, onUpgrade }) 
   );
 };
 
-// ─── Empty State ────────────────────────────────────────────────
+// ─── Floating Avatar (background animation) ────────────────────
 
-const EmptyState: React.FC<{ onUpgrade: () => void }> = ({ onUpgrade }) => (
-  <View style={styles.empty}>
-    <LinearGradient
-      colors={[palette.purple[500] + '30', palette.pink[500] + '20'] as [string, string]}
-      style={styles.emptyIcon}
-    >
-      <Ionicons name="eye-off-outline" size={48} color={colors.primary} />
-    </LinearGradient>
-    <Text style={styles.emptyTitle}>Henüz kimse bakmamış</Text>
-    <Text style={styles.emptySubtitle}>
-      Profilini zenginleştir, daha fazla kişi tarafından görün!
-    </Text>
-    <Pressable onPress={onUpgrade} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}>
-      <LinearGradient
-        colors={[palette.purple[500], palette.purple[700]] as [string, string]}
-        style={styles.emptyCTA}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
-        <Ionicons name="flash" size={16} color="#fff" />
-        <Text style={styles.emptyCTAText}>Premium ile Öne Çık</Text>
-      </LinearGradient>
-    </Pressable>
-  </View>
-);
+const FloatingAvatar: React.FC<{ delay: number; top: number; size: number }> = ({ delay, top, size }) => {
+  const translateX = useRef(new Animated.Value(400)).current;
+
+  useEffect(() => {
+    const startAnimation = () => {
+      translateX.setValue(400);
+      Animated.timing(translateX, {
+        toValue: -100,
+        duration: 12000 + delay * 2000,
+        useNativeDriver: true,
+      }).start(() => startAnimation());
+    };
+    const timer = setTimeout(startAnimation, delay * 1500);
+    return () => clearTimeout(timer);
+  }, [translateX, delay]);
+
+  return (
+    <Animated.View style={{
+      position: 'absolute',
+      top,
+      width: size,
+      height: size,
+      borderRadius: size / 2,
+      backgroundColor: colors.primary + '08',
+      transform: [{ translateX }],
+    }} />
+  );
+};
+
+// ─── Empty State (alive + engaging) ─────────────────────────────
+
+const EmptyState: React.FC<{ onUpgrade: () => void }> = ({ onUpgrade }) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const shimmerAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Fade in content
+    Animated.timing(fadeAnim, {
+      toValue: 1, duration: 800, useNativeDriver: true,
+    }).start();
+
+    // Pulse eye icon
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.1, duration: 1500, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
+      ]),
+    ).start();
+
+    // CTA shimmer
+    Animated.loop(
+      Animated.timing(shimmerAnim, { toValue: 1, duration: 2500, useNativeDriver: true }),
+    ).start();
+  }, [fadeAnim, pulseAnim, shimmerAnim]);
+
+  return (
+    <View style={styles.empty}>
+      {/* Floating blurred avatars in background */}
+      <FloatingAvatar delay={0} top={20} size={50} />
+      <FloatingAvatar delay={1} top={80} size={36} />
+      <FloatingAvatar delay={2} top={140} size={44} />
+      <FloatingAvatar delay={3} top={50} size={30} />
+      <FloatingAvatar delay={4} top={120} size={40} />
+
+      <Animated.View style={{ alignItems: 'center', gap: 16, opacity: fadeAnim }}>
+        {/* Pulsing eye icon */}
+        <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+          <LinearGradient
+            colors={[palette.purple[500] + '30', palette.pink[500] + '20'] as [string, string]}
+            style={styles.emptyIcon}
+          >
+            <Ionicons name="eye-outline" size={48} color={colors.primary} />
+          </LinearGradient>
+        </Animated.View>
+
+        {/* Main message */}
+        <Text style={styles.emptyTitle}>Henüz görünmedin… ama yaklaşıyorsun</Text>
+        <Text style={styles.emptySubtitle}>Profilin keşfette gösteriliyor</Text>
+
+        {/* Profile strength checklist */}
+        <View style={styles.emptyChecklist}>
+          <View style={styles.emptyCheckItem}>
+            <Ionicons name="checkmark-circle" size={18} color={colors.success} />
+            <Text style={styles.emptyCheckText}>Fotoğraf ekle</Text>
+          </View>
+          <View style={styles.emptyCheckItem}>
+            <Ionicons name="checkmark-circle" size={18} color={colors.success} />
+            <Text style={styles.emptyCheckText}>Bio yaz</Text>
+          </View>
+          <View style={styles.emptyCheckItem}>
+            <Ionicons name="square-outline" size={18} color={colors.textTertiary} />
+            <Text style={[styles.emptyCheckText, { color: colors.textTertiary }]}>İlgi alanı ekle</Text>
+          </View>
+        </View>
+
+        {/* CTA button with shimmer */}
+        <Pressable onPress={onUpgrade} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}>
+          <LinearGradient
+            colors={[palette.purple[500], palette.purple[700]] as [string, string]}
+            style={styles.emptyCTA}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <Ionicons name="rocket-outline" size={16} color="#fff" />
+            <Text style={styles.emptyCTAText}>Daha fazla görün</Text>
+          </LinearGradient>
+        </Pressable>
+        <Text style={styles.emptyCTASub}>10x daha fazla görünürlük</Text>
+      </Animated.View>
+    </View>
+  );
+};
 
 // ─── Main Screen ────────────────────────────────────────────────
 
@@ -687,9 +775,11 @@ const styles = StyleSheet.create({
   // Empty state
   empty: {
     alignItems: 'center',
-    paddingHorizontal: 40,
-    paddingTop: 60,
-    gap: 12,
+    paddingHorizontal: 32,
+    paddingTop: 40,
+    minHeight: 400,
+    overflow: 'hidden',
+    position: 'relative',
   },
   emptyIcon: {
     width: 100,
@@ -713,19 +803,46 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
+  emptyChecklist: {
+    gap: 8,
+    alignSelf: 'stretch',
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    padding: 16,
+  },
+  emptyCheckItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  emptyCheckText: {
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: colors.text,
+  },
   emptyCTA: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
+    paddingHorizontal: 28,
+    paddingVertical: 15,
     borderRadius: 16,
-    marginTop: 8,
+    marginTop: 4,
   },
   emptyCTAText: {
     fontSize: 15,
     fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: '#fff',
+  },
+  emptyCTASub: {
+    fontSize: 12,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: colors.textTertiary,
+    marginTop: 2,
   },
 });
