@@ -9,7 +9,6 @@ import {
   Image,
   StyleSheet,
   TouchableOpacity,
-  StatusBar,
   Platform,
   Modal,
   Pressable,
@@ -197,8 +196,6 @@ const EmotionalIntroScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#000000" />
-
       {/* Full-screen gradient background */}
       <LinearGradient
         colors={['#E8959E', '#EDACB4', '#F2C0C6', '#F7D5D9', '#FFFFFF']}

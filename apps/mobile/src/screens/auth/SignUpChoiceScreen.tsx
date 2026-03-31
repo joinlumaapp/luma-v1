@@ -7,7 +7,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  StatusBar,
   Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -33,7 +32,6 @@ export const SignUpChoiceScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#000000" />
       <BrandedBackground />
 
       {/* Header with back button */}

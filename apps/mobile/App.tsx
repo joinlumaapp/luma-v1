@@ -36,7 +36,7 @@ enableScreens(true);
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Navigation } from './src/navigation';
-import { ThemeProvider } from './src/theme/ThemeContext';
+import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { ToastProvider, useToast } from './src/components/common/Toast';
 import { useNetworkStore } from './src/stores/networkStore';
 import { useAuthStore } from './src/stores/authStore';
@@ -176,11 +176,13 @@ const errorStyles = StyleSheet.create({
 });
 
 // ─── Themed Status Bar ────────────────────────────────────────────────
+// Dynamic: dark icons on light backgrounds, light icons on dark backgrounds
 function ThemedStatusBar(): React.JSX.Element {
+  const { isDark, colors } = useTheme();
   return (
     <RNStatusBar
-      barStyle="light-content"
-      backgroundColor="#000000"
+      barStyle={isDark ? 'light-content' : 'dark-content'}
+      backgroundColor={colors.background}
       translucent={false}
     />
   );

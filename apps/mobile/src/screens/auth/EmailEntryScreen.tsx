@@ -10,7 +10,6 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  StatusBar,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -47,7 +46,6 @@ export const EmailEntryScreen: React.FC = () => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <StatusBar barStyle="light-content" backgroundColor="#000000" />
       <BrandedBackground />
 
       {/* Header */}
