@@ -261,10 +261,33 @@ export const DiscoveryScreen: React.FC = () => {
   // ─── Boost state ──────────────────────────────────────────
   const [boostStatus, setBoostStatus] = useState<BoostStatusResponse>({ isActive: false });
   const [showBoostModal, setShowBoostModal] = useState(false);
+  const [boostRemaining, setBoostRemaining] = useState('');
 
   useEffect(() => {
     discoveryService.getBoostStatus().then(setBoostStatus).catch(() => {});
   }, []);
+
+  // Boost countdown timer
+  useEffect(() => {
+    if (!boostStatus.isActive || !boostStatus.endsAt) {
+      setBoostRemaining('');
+      return;
+    }
+    const tick = () => {
+      const diff = new Date(boostStatus.endsAt!).getTime() - Date.now();
+      if (diff <= 0) {
+        setBoostStatus({ isActive: false });
+        setBoostRemaining('');
+        return;
+      }
+      const min = Math.floor(diff / 60000);
+      const sec = Math.floor((diff % 60000) / 1000);
+      setBoostRemaining(`${min}:${sec.toString().padStart(2, '0')}`);
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [boostStatus.isActive, boostStatus.endsAt]);
 
   const handleBoostActivate = useCallback(async (durationMinutes: number) => {
     const result = await discoveryService.activateBoost(durationMinutes);
@@ -751,12 +774,19 @@ export const DiscoveryScreen: React.FC = () => {
             <View style={styles.headerRight}>
               <Pressable
                 onPress={handleBoostPress}
-                accessibilityLabel="Profilini öne çıkar"
+                accessibilityLabel={boostStatus.isActive ? `Boost aktif: ${boostRemaining} kaldı` : 'Profilini öne çıkar'}
                 accessibilityRole="button"
               >
-                <View style={[styles.filterButton, boostStatus.isActive && styles.boostButtonActive]} testID="discovery-boost-btn">
-                  <Ionicons name="flash" size={18} color={boostStatus.isActive ? palette.gold[500] : colors.text} />
-                </View>
+                {boostStatus.isActive ? (
+                  <View style={styles.boostTimerPill} testID="discovery-boost-btn">
+                    <Ionicons name="flash" size={14} color={palette.gold[500]} />
+                    <Text style={styles.boostTimerText}>{boostRemaining}</Text>
+                  </View>
+                ) : (
+                  <View style={styles.filterButton} testID="discovery-boost-btn">
+                    <Ionicons name="flash" size={18} color={colors.text} />
+                  </View>
+                )}
               </Pressable>
               <Pressable
                 onPress={handleFilterPress}
@@ -793,12 +823,19 @@ export const DiscoveryScreen: React.FC = () => {
             <View style={styles.headerRight}>
               <Pressable
                 onPress={handleBoostPress}
-                accessibilityLabel="Profilini öne çıkar"
+                accessibilityLabel={boostStatus.isActive ? `Boost aktif: ${boostRemaining} kaldı` : 'Profilini öne çıkar'}
                 accessibilityRole="button"
               >
-                <View style={[styles.filterButton, boostStatus.isActive && styles.boostButtonActive]} testID="discovery-boost-btn">
-                  <Ionicons name="flash" size={18} color={boostStatus.isActive ? palette.gold[500] : colors.text} />
-                </View>
+                {boostStatus.isActive ? (
+                  <View style={styles.boostTimerPill} testID="discovery-boost-btn">
+                    <Ionicons name="flash" size={14} color={palette.gold[500]} />
+                    <Text style={styles.boostTimerText}>{boostRemaining}</Text>
+                  </View>
+                ) : (
+                  <View style={styles.filterButton} testID="discovery-boost-btn">
+                    <Ionicons name="flash" size={18} color={colors.text} />
+                  </View>
+                )}
               </Pressable>
               <Pressable
                 onPress={handleFilterPress}
@@ -1358,6 +1395,23 @@ const styles = StyleSheet.create({
   boostButtonActive: {
     backgroundColor: palette.gold[500] + '15',
     borderColor: palette.gold[500] + '40',
+  },
+  boostTimerPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: palette.gold[500] + '18',
+    borderWidth: 1,
+    borderColor: palette.gold[500] + '40',
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  boostTimerText: {
+    fontSize: 12,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: palette.gold[600],
   },
   instantConnectButton: {
     backgroundColor: palette.purple[600],
