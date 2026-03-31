@@ -33,6 +33,7 @@ import {
 import { discoveryService } from '../../services/discoveryService';
 import type { BoostStatusResponse } from '../../services/discoveryService';
 import { BoostModal } from '../../components/boost/BoostModal';
+import { TimedBoostOffer } from '../../components/premium/SmartUpgradePrompts';
 import { VerifiedBadge } from '../../components/common/VerifiedBadge';
 import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
 import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
@@ -778,6 +779,20 @@ export const ProfileScreen: React.FC = () => {
       </View>
     </TouchableOpacity>,
   );
+
+  // 6b. Timed Boost Offer — FREE/GOLD users
+  if (packageTier === 'FREE' || packageTier === 'GOLD') {
+    infoSections.push(
+      <View key="timed-boost-offer" style={{ marginTop: spacing.sm }}>
+        <TimedBoostOffer
+          discountPercent={30}
+          expiresInMinutes={45}
+          onAccept={() => setShowBoostModal(true)}
+          onDismiss={() => {}}
+        />
+      </View>,
+    );
+  }
 
   // 7. Daily Challenge card
   infoSections.push(

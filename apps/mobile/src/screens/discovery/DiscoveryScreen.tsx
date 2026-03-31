@@ -70,7 +70,6 @@ import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { useSwipeRateLimiterStore, SKIP_COOLDOWN_COST } from '../../stores/swipeRateLimiterStore';
 import { CooldownOverlay } from '../../components/discovery/CooldownOverlay';
 import { BoostModal } from '../../components/boost/BoostModal';
-import { LikedYouTeaser } from '../../components/premium/SmartUpgradePrompts';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -1192,6 +1191,20 @@ export const DiscoveryScreen: React.FC = () => {
         onActivate={handleBoostActivate}
         onBuyGold={() => { setShowBoostModal(false); navigation.navigate('JetonMarket' as never); }}
       />
+
+      {/* Match upgrade nudge — shown after match animation for FREE users */}
+      {showMatchUpgradeNudge && (
+        <MatchUpgradeNudge
+          matchName={lastMatchName}
+          matchAvatarUrl={lastMatchAvatar}
+          feature="unlimited_chat"
+          onUpgrade={() => {
+            setShowMatchUpgradeNudge(false);
+            navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' });
+          }}
+          onDismiss={() => setShowMatchUpgradeNudge(false)}
+        />
+      )}
 
       {/* Like-with-comment modal */}
       <Modal
