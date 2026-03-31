@@ -51,7 +51,7 @@ export const LikedYouTeaser: React.FC<LikedYouTeaserProps> = ({ count, blurredAv
         <View style={teaserStyles.avatarRow}>
           {blurredAvatars.slice(0, 3).map((uri, i) => (
             <View key={i} style={[teaserStyles.blurredAvatar, { marginLeft: i > 0 ? -10 : 0, zIndex: 3 - i }]}>
-              <CachedAvatar uri={uri} size={36} borderRadius={18} />
+              <CachedAvatar uri={uri} size={36} />
               <View style={teaserStyles.blurOverlay} />
             </View>
           ))}
@@ -286,7 +286,7 @@ export const MatchUpgradeNudge: React.FC<MatchUpgradeNudgeProps> = ({
   return (
     <Animated.View style={[nudgeStyles.container, { transform: [{ translateY: slideAnim }] }]}>
       <View style={nudgeStyles.row}>
-        <CachedAvatar uri={matchAvatarUrl} size={40} borderRadius={20} />
+        <CachedAvatar uri={matchAvatarUrl} size={40} />
         <View style={nudgeStyles.textCol}>
           <Text style={nudgeStyles.title}>{config.title}</Text>
           <Text style={nudgeStyles.subtitle}>

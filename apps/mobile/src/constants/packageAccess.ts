@@ -235,6 +235,7 @@ export const canAccess = (
   feature: FeatureKey,
 ): boolean => {
   const rule = FEATURE_RULES[feature];
+  if (!rule) return false;
   return hasTierAccess(userTier, rule.minTier);
 };
 
@@ -242,17 +243,28 @@ export const canAccess = (
 export const getFeatureLimit = (
   userTier: PackageTier,
   feature: FeatureKey,
-): number => FEATURE_RULES[feature].limits[userTier];
+): number => {
+  const rule = FEATURE_RULES[feature];
+  if (!rule?.limits) return 0;
+  return rule.limits[userTier] ?? 0;
+};
 
 /** Check if the limit is unlimited */
 export const isUnlimited = (
   userTier: PackageTier,
   feature: FeatureKey,
-): boolean => FEATURE_RULES[feature].limits[userTier] === -1;
+): boolean => {
+  const rule = FEATURE_RULES[feature];
+  if (!rule?.limits) return false;
+  return rule.limits[userTier] === -1;
+};
 
 /** Get the minimum tier required for a feature */
-export const getRequiredTier = (feature: FeatureKey): PackageTier =>
-  FEATURE_RULES[feature].minTier;
+export const getRequiredTier = (feature: FeatureKey): PackageTier => {
+  const rule = FEATURE_RULES[feature];
+  if (!rule) return 'RESERVED';
+  return rule.minTier;
+};
 
 /** Map from PaywallFeature legacy type to FeatureKey */
 export const mapLegacyFeature = (
