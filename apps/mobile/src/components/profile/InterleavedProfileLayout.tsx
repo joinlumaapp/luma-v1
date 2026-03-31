@@ -16,11 +16,11 @@ import { colors } from '../../theme/colors';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const HERO_HEIGHT = SCREEN_WIDTH * 1.5; // 2:3 portrait ratio — shows face + upper body naturally
+const HERO_HEIGHT = SCREEN_WIDTH * 0.65; // circular hero section height
+const CIRCLE_SIZE = SCREEN_WIDTH * 0.55; // large circular photo diameter
 
-// Parallax config
-const PARALLAX_FACTOR = 0.15; // 15% slower than scroll for depth effect
-const FADE_IN_DISTANCE = 120; // pixels before fully visible
+// Animation config
+const FADE_IN_DISTANCE = 120;
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
@@ -124,32 +124,93 @@ function PhotoViewer({ visible, photos, initialIndex, onClose }: PhotoViewerProp
   );
 }
 
-// ─── Hero Photo (clean, no indicators) ──────────────────────────────────────
+// ─── Circular Hero Photo with Swipe + Pull-Down ────────────────────────────
 
-interface HeroPhotoProps {
-  uri: string;
-  onPress: () => void;
+import { FlatList, type NativeSyntheticEvent, type NativeScrollEvent } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { palette } from '../../theme/colors';
+
+interface CircularHeroProps {
+  photos: string[];
+  onPress: (index: number) => void;
   scrollY: Animated.Value;
 }
 
-function HeroPhoto({ uri, onPress, scrollY }: HeroPhotoProps) {
-  // Parallax: image moves slower than scroll, creating depth
-  const imageTranslateY = scrollY.interpolate({
-    inputRange: [-HERO_HEIGHT, 0, HERO_HEIGHT],
-    outputRange: [-HERO_HEIGHT * PARALLAX_FACTOR, 0, HERO_HEIGHT * PARALLAX_FACTOR],
+function CircularHero({ photos, onPress, scrollY }: CircularHeroProps) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const flatListRef = useRef<FlatList>(null);
+
+  // Pull-down expansion: circle grows when scrollY < 0
+  const circleScale = scrollY.interpolate({
+    inputRange: [-100, 0],
+    outputRange: [1.15, 1],
     extrapolate: 'clamp',
   });
 
-  return (
-    <TouchableOpacity activeOpacity={0.95} onPress={onPress}>
-      <View style={styles.heroContainer}>
-        <Animated.Image
-          source={{ uri }}
-          style={[styles.heroImage, { transform: [{ translateY: imageTranslateY }] }]}
-          resizeMode="cover"
-        />
-      </View>
+  const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const index = Math.round(e.nativeEvent.contentOffset.x / CIRCLE_SIZE);
+    setActiveIndex(index);
+  }, []);
+
+  const renderPhoto = useCallback(({ item, index }: { item: string; index: number }) => (
+    <TouchableOpacity
+      activeOpacity={0.95}
+      onPress={() => onPress(index)}
+      style={styles.circlePhotoSlide}
+    >
+      {item ? (
+        <Image source={{ uri: item }} style={styles.circleImage} resizeMode="cover" />
+      ) : (
+        <View style={[styles.circleImage, { backgroundColor: colors.surfaceLight, justifyContent: 'center', alignItems: 'center' }]}>
+          <Ionicons name="person" size={60} color={colors.textTertiary} />
+        </View>
+      )}
     </TouchableOpacity>
+  ), [onPress]);
+
+  return (
+    <View style={styles.circularHeroContainer}>
+      {/* Circle frame with gradient ring */}
+      <Animated.View style={[styles.circleFrame, { transform: [{ scale: circleScale }] }]}>
+        <LinearGradient
+          colors={[palette.purple[400], palette.pink[400], palette.purple[500]]}
+          style={styles.circleGradientRing}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.circleInner}>
+            <FlatList
+              ref={flatListRef}
+              data={photos.length > 0 ? photos : ['']}
+              renderItem={renderPhoto}
+              keyExtractor={(_, i) => `hero-photo-${i}`}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={handleScroll}
+              style={styles.circlePhotoList}
+              snapToInterval={CIRCLE_SIZE - 8}
+              decelerationRate="fast"
+            />
+          </View>
+        </LinearGradient>
+      </Animated.View>
+
+      {/* Page dots — only if multiple photos */}
+      {photos.length > 1 && (
+        <View style={styles.pageDots}>
+          {photos.map((_, i) => (
+            <View
+              key={i}
+              style={[
+                styles.pageDot,
+                i === activeIndex && styles.pageDotActive,
+              ]}
+            />
+          ))}
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -250,14 +311,12 @@ export function InterleavedProfileLayout({
         )}
         scrollEventThrottle={16}
       >
-        {/* 1. Hero photo — clean, no indicators */}
-        {photos.length > 0 && (
-          <HeroPhoto
-            uri={photos[0]}
-            onPress={() => openViewer(0)}
-            scrollY={scrollY}
-          />
-        )}
+        {/* 1. Circular hero photo — large, swipeable, pull-down expandable */}
+        <CircularHero
+          photos={photos}
+          onPress={(index) => openViewer(index)}
+          scrollY={scrollY}
+        />
 
         {/* 2. Top content (identity, stats, views) */}
         {topContent}
@@ -349,15 +408,63 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // Hero photo — clean, no overlays
-  heroContainer: {
-    width: SCREEN_WIDTH,
-    height: HERO_HEIGHT,
-    overflow: 'hidden',
+  // Circular hero photo
+  circularHeroContainer: {
+    alignItems: 'center',
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
   },
-  heroImage: {
-    width: '100%',
-    height: '130%', // extra height for parallax movement
+  circleFrame: {
+    width: CIRCLE_SIZE + 8,
+    height: CIRCLE_SIZE + 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  circleGradientRing: {
+    width: CIRCLE_SIZE + 8,
+    height: CIRCLE_SIZE + 8,
+    borderRadius: (CIRCLE_SIZE + 8) / 2,
+    padding: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  circleInner: {
+    width: CIRCLE_SIZE,
+    height: CIRCLE_SIZE,
+    borderRadius: CIRCLE_SIZE / 2,
+    overflow: 'hidden',
+    backgroundColor: colors.surface,
+  },
+  circlePhotoList: {
+    width: CIRCLE_SIZE,
+    height: CIRCLE_SIZE,
+  },
+  circlePhotoSlide: {
+    width: CIRCLE_SIZE - 8,
+    height: CIRCLE_SIZE,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  circleImage: {
+    width: CIRCLE_SIZE - 8,
+    height: CIRCLE_SIZE,
+    borderRadius: CIRCLE_SIZE / 2,
+  },
+  pageDots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 10,
+  },
+  pageDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.surfaceBorder,
+  },
+  pageDotActive: {
+    backgroundColor: palette.purple[500],
+    width: 18,
   },
 
   // Interleaved photo — no background color to eliminate white edge artifacts
