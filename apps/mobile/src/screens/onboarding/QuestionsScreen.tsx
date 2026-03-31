@@ -85,12 +85,77 @@ const MOTIVATION_MESSAGES: Record<number, { emoji: string; title: string; subtit
 
 const MOTIVATION_DISPLAY_MS = 2200;
 
-// Result screen highlights
-const RESULT_SECTIONS = [
-  { emoji: '\uD83E\uDDE0', title: 'Kişilik Özelliklerin', items: ['Duygusal zekan yüksek', 'İletişime açık bir yapın var', 'Empati yeteneğin güçlü'] },
-  { emoji: '\uD83C\uDFE0', title: 'Yaşam Tercihlerin', items: ['Aktif bir sosyal hayat', 'Dengeyi seven bir yaklaşım', 'Yeni deneyimlere açıklık'] },
-  { emoji: '\uD83D\uDC9C', title: 'Sosyal Tarzın', items: ['Samimi ve içten', 'Küçük gruplarda rahat', 'Dinlemeyi seven bir karakter'] },
-];
+// Result screen — dynamic personality traits derived from answer distribution
+// Each question option maps to a dimension: 0=introverted/calm, 1=balanced,
+// 2=active/adventurous, 3=open/exploratory. We count which dimension dominates
+// and select matching trait sets.
+
+interface ResultSection {
+  emoji: string;
+  title: string;
+  items: string[];
+}
+
+// Trait pools per archetype (4 archetypes x 3 categories)
+const PERSONALITY_POOLS: Record<string, ResultSection[]> = {
+  calm: [
+    { emoji: '\uD83E\uDDE0', title: 'Kişilik Özelliklerin', items: ['Sakin ve düşünceli bir yapın var', 'Derin düşünme yeteneğin güçlü', 'İç dünyan zengin ve katmanlı'] },
+    { emoji: '\uD83C\uDFE0', title: 'Yaşam Tercihlerin', items: ['Huzurlu bir yaşam alanı önemsiyorsun', 'Planlı ve düzenli bir yaklaşımın var', 'Kaliteli zaman geçirmeye değer veriyorsun'] },
+    { emoji: '\uD83D\uDC9C', title: 'Sosyal Tarzın', items: ['Derin ve anlamlı sohbetleri tercih ediyorsun', 'Güvendiğin insanlarla vakit geçirmeyi seviyorsun', 'Dinlemeyi ve anlayışlı olmayı önemsiyorsun'] },
+  ],
+  balanced: [
+    { emoji: '\uD83E\uDDE0', title: 'Kişilik Özelliklerin', items: ['Duygusal zekan yüksek', 'İletişime açık bir yapın var', 'Empati yeteneğin güçlü'] },
+    { emoji: '\uD83C\uDFE0', title: 'Yaşam Tercihlerin', items: ['Dengeyi seven bir yaklaşımın var', 'Hem sosyal hem de bireysel zamanı önemsiyorsun', 'Uyum sağlama yeteneğin gelişmiş'] },
+    { emoji: '\uD83D\uDC9C', title: 'Sosyal Tarzın', items: ['Samimi ve içten bir iletişim tarzın var', 'Küçük gruplarda rahat hissediyorsun', 'Karşındakini dinlemeyi seviyorsun'] },
+  ],
+  active: [
+    { emoji: '\uD83E\uDDE0', title: 'Kişilik Özelliklerin', items: ['Enerjik ve kararlı bir yapın var', 'Harekete geçme motivasyonun yüksek', 'Zorluklar karşısında dayanıklısın'] },
+    { emoji: '\uD83C\uDFE0', title: 'Yaşam Tercihlerin', items: ['Aktif bir sosyal hayatın var', 'Spor ve fiziksel aktivitelere değer veriyorsun', 'Doğada vakit geçirmekten keyif alıyorsun'] },
+    { emoji: '\uD83D\uDC9C', title: 'Sosyal Tarzın', items: ['Girişken ve çevrende sevilen birisin', 'Grup aktivitelerinde liderlik yapabiliyorsun', 'Enerjinle çevrendekileri motive ediyorsun'] },
+  ],
+  explorer: [
+    { emoji: '\uD83E\uDDE0', title: 'Kişilik Özelliklerin', items: ['Meraklı ve keşfetmeye açık bir yapın var', 'Yaratıcı düşünce yeteneğin güçlü', 'Farklı bakış açılarına değer veriyorsun'] },
+    { emoji: '\uD83C\uDFE0', title: 'Yaşam Tercihlerin', items: ['Yeni deneyimlere açıksın', 'Seyahat ve kültür keşfi seni heyecanlandırıyor', 'Rutine karşı esnek bir yaklaşımın var'] },
+    { emoji: '\uD83D\uDC9C', title: 'Sosyal Tarzın', items: ['Farklı insanlarla kolayca bağ kurabiliyorsun', 'Açık fikirli ve kabul edici birisin', 'Yeni ortamlara hızla uyum sağlıyorsun'] },
+  ],
+};
+
+/**
+ * Derive personality result sections from the user's actual answers.
+ * Counts the option index distribution across all answered questions
+ * and selects the archetype whose dimension scored highest.
+ */
+function getResultSections(
+  answers: Record<string, string>,
+  questions: NormalizedQuestion[],
+): ResultSection[] {
+  // Count how many times each option index (0-3) was selected
+  const indexCounts = [0, 0, 0, 0];
+  for (const q of questions) {
+    const selectedOptionId = answers[q.id];
+    if (!selectedOptionId) continue;
+    const optIndex = q.options.findIndex((o) => o.id === selectedOptionId);
+    if (optIndex >= 0 && optIndex < 4) {
+      indexCounts[optIndex]++;
+    }
+  }
+
+  // Find the dominant dimension
+  let maxCount = 0;
+  let dominantIndex = 1; // default to balanced
+  for (let i = 0; i < indexCounts.length; i++) {
+    if (indexCounts[i] > maxCount) {
+      maxCount = indexCounts[i];
+      dominantIndex = i;
+    }
+  }
+
+  // Map dimension index to archetype
+  const archetypes: string[] = ['calm', 'balanced', 'active', 'explorer'];
+  const archetype = archetypes[dominantIndex];
+
+  return PERSONALITY_POOLS[archetype];
+}
 
 type ScreenPhase = 'questions' | 'motivation' | 'analysis' | 'result';
 type SlideDirection = 'forward' | 'backward';
@@ -383,7 +448,7 @@ export const QuestionsScreen: React.FC = () => {
             İşte seni tanımamıza yardımcı olan özellikler:
           </Animated.Text>
 
-          {RESULT_SECTIONS.map((section, sIdx) => (
+          {getResultSections(answers, questions).map((section, sIdx) => (
             <Animated.View
               key={section.title}
               entering={FadeIn.duration(400).delay(400 + sIdx * 150)}

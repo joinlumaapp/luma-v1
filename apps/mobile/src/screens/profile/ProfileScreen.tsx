@@ -287,7 +287,7 @@ export const ProfileScreen: React.FC = () => {
       setMyPosts(Array.isArray(data) ? data : Array.isArray(data.posts) ? data.posts : []);
     } catch {
       // Fallback: check feed mock data AND current store state for own posts
-      const userId = user?.id ?? 'dev-user-001';
+      const userId = user?.id ?? '';
       const allPosts: FeedPost[] = [];
 
       // Get posts from feed service (includes mock data)

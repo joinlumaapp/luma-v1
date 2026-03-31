@@ -910,7 +910,7 @@ export const ProfilePreviewScreen: React.FC = () => {
             const chatMessage: ChatMessage = {
               id: result.messageId || `paid-${Date.now()}`,
               matchId: result.matchId,
-              senderId: useAuthStore.getState().user?.id ?? 'dev-user-001',
+              senderId: useAuthStore.getState().user?.id ?? '',
               content: message,
               type: 'TEXT',
               status: 'SENT',

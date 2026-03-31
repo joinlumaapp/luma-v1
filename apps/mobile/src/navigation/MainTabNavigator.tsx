@@ -440,7 +440,7 @@ export const MainTabNavigator: React.FC = () => {
   return (
     <>
     <Tab.Navigator
-      initialRouteName="FeedTab"
+      initialRouteName="DiscoveryTab"
       backBehavior="history"
       detachInactiveScreens
       screenOptions={{

@@ -182,7 +182,7 @@ export const chatService = {
     } catch (error) {
       // Mock fallback — create a local message so chat works in dev
       const { useAuthStore } = require('../stores/authStore');
-      const userId = useAuthStore.getState().user?.id ?? 'dev-user-001';
+      const userId = useAuthStore.getState().user?.id ?? '';
       const now = new Date().toISOString();
       const message: ChatMessage = {
         id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -255,7 +255,7 @@ export const chatService = {
     } catch (error) {
       // Mock fallback for image messages
       const { useAuthStore } = require('../stores/authStore');
-      const userId = useAuthStore.getState().user?.id ?? 'dev-user-001';
+      const userId = useAuthStore.getState().user?.id ?? '';
       const now = new Date().toISOString();
       const message: ChatMessage = {
         id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -292,7 +292,7 @@ export const chatService = {
       return response.data;
     } catch (error) {
       const { useAuthStore } = require('../stores/authStore');
-      const userId = useAuthStore.getState().user?.id ?? 'dev-user-001';
+      const userId = useAuthStore.getState().user?.id ?? '';
       const now = new Date().toISOString();
       const message: ChatMessage = {
         id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -346,7 +346,7 @@ export const chatService = {
       return response.data;
     } catch (error) {
       const { useAuthStore } = require('../stores/authStore');
-      const userId = useAuthStore.getState().user?.id ?? 'dev-user-001';
+      const userId = useAuthStore.getState().user?.id ?? '';
       const now = new Date().toISOString();
       const message: ChatMessage = {
         id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,

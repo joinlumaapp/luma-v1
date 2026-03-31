@@ -17,7 +17,6 @@ import {
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -238,21 +237,9 @@ const EmotionalIntroScreen: React.FC = () => {
 
         {/* Bottom section — buttons */}
         <View style={styles.bottomSection}>
-          {/* Google button — disabled until Google Auth is implemented */}
-          <TouchableOpacity
-            style={[styles.googleButton, styles.googleButtonDisabled]}
-            disabled={true}
-            activeOpacity={1}
-            accessibilityRole="button"
-            accessibilityLabel="Google ile bağlan, çok yakında"
-            accessibilityState={{ disabled: true }}
-          >
-            <Ionicons name="logo-google" size={20} color={palette.gray[900]} />
-            <Text style={styles.googleButtonText}>Google ile bağlan</Text>
-            <Text style={styles.comingSoonBadge}>Çok yakında</Text>
-          </TouchableOpacity>
+          {/* Google button — hidden until Google Auth is implemented */}
 
-          {/* Diger secenekler button */}
+          {/* Telefon ile devam et button */}
           <TouchableOpacity
             style={styles.otherButton}
             onPress={handleOtherOptions}
@@ -367,37 +354,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  // Google button — white, rounded
-  googleButton: {
-    width: '100%',
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: palette.white,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(200, 160, 170, 0.3)',
-    ...Platform.select({
-      ios: {
-        shadowColor: 'rgba(200, 100, 120, 0.3)',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
-  },
-  googleButtonText: {
-    fontSize: 16,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.semibold,
-    color: palette.gray[900],
-  },
-  // Other options button — dark/elegant
+  // Telefon ile devam et button — dark/elegant
   otherButton: {
     width: '100%',
     height: 56,
@@ -424,16 +381,6 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.bold,
     color: '#C4405A',
     textDecorationLine: 'underline',
-  },
-  // Google button disabled state
-  googleButtonDisabled: {
-    opacity: 0.45,
-  },
-  comingSoonBadge: {
-    fontSize: 10,
-    color: palette.gray[500],
-    marginLeft: 4,
-    fontStyle: 'italic' as const,
   },
   // Privacy text
   privacyText: {

@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { INTENTION_TAG_OPTIONS, type FeedPost } from '../../services/socialFeedService';
+import { useAuthStore } from '../../stores/authStore';
 // NowListening removed — music feature removed from feed
 
 // ─── Time Ago Helper ──────────────────────────────────────────
@@ -263,7 +264,8 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onPr
 
   const handleDoubleTapLike = useCallback(() => { dismissDoubleTapMenu(); handleLikePress(); }, [dismissDoubleTapMenu, handleLikePress]);
 
-  const isOwnPost = post.userId === 'dev-user-001';
+  const currentUserId = useAuthStore((s) => s.user?.id);
+  const isOwnPost = Boolean(currentUserId && post.userId === currentUserId);
   const timeAgo = formatTimeAgo(post.createdAt);
 
   return (

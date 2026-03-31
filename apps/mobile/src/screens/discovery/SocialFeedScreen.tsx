@@ -28,6 +28,7 @@ import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { useAuthStore } from '../../stores/authStore';
+import { useProfileStore } from '../../stores/profileStore';
 import { useSocialFeedStore } from '../../stores/socialFeedStore';
 import {
   FEED_POST_TYPES,
@@ -363,7 +364,8 @@ const StoryBarSection: React.FC<StoryBarSectionProps> = ({
   onViewStory,
 }) => {
   // Exclude own user from the list
-  const followedUsers = storyUsers.filter((u) => !u.isSuggested && u.userId !== 'dev-user-001');
+  const currentUid = useAuthStore.getState().user?.id ?? '';
+  const followedUsers = storyUsers.filter((u) => !u.isSuggested && u.userId !== currentUid);
 
   // Sort: unseen stories first, then by latest story time
   const sortedFollowed = [...followedUsers].sort((a, b) => {
@@ -385,14 +387,17 @@ const StoryBarSection: React.FC<StoryBarSectionProps> = ({
         {/* Own story — always first */}
         <StoryRing
           userName="Hikaye"
-          avatarUrl="https://i.pravatar.cc/150?img=68"
+          avatarUrl={useProfileStore.getState().profile.photos[0] ?? ''}
           isOwnStory
           hasStories={myStoryCount > 0}
           isSeen={false}
           showLabel={false}
           onPress={() => {
             if (myStoryCount > 0) {
-              onViewStory('dev-user-001', 'Sen', 'https://i.pravatar.cc/150?img=68');
+              const uid = useAuthStore.getState().user?.id ?? '';
+              const uName = useProfileStore.getState().profile.firstName || 'Sen';
+              const uPhoto = useProfileStore.getState().profile.photos[0] ?? '';
+              onViewStory(uid, uName, uPhoto);
             } else {
               onCreateStory();
             }
@@ -429,6 +434,7 @@ export const SocialFeedScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<FeedNavProp>();
   const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE');
+  const currentUserId = useAuthStore((s) => s.user?.id ?? '');
 
   // Daily post tracking — persisted in Zustand store
   const dailyPostCount = useSocialFeedStore((s) => s.dailyPostCount);
@@ -582,11 +588,11 @@ export const SocialFeedScreen: React.FC = () => {
       markInteraction();
       // Track interaction: find post owner and record
       const post = posts.find((p) => p.id === postId);
-      if (post && post.userId !== 'dev-user-001') {
+      if (post && post.userId !== currentUserId) {
         recordInteraction(post.userId);
       }
     },
-    [toggleLike, posts, recordInteraction, markInteraction],
+    [toggleLike, posts, recordInteraction, markInteraction, currentUserId],
   );
 
   // Comment handlers removed — comment system removed from feed
@@ -625,11 +631,11 @@ export const SocialFeedScreen: React.FC = () => {
 
       toggleFollow(userId);
       markInteraction();
-      if (userId !== 'dev-user-001') {
+      if (userId !== currentUserId) {
         recordInteraction(userId);
       }
     },
-    [toggleFollow, recordInteraction, markInteraction, posts, packageTier, dailyFollowCount, lastFollowDate, incrementDailyFollow, navigation],
+    [toggleFollow, recordInteraction, markInteraction, posts, packageTier, dailyFollowCount, lastFollowDate, incrementDailyFollow, navigation, currentUserId],
   );
 
   const handleProfilePress = useCallback(
@@ -648,7 +654,7 @@ export const SocialFeedScreen: React.FC = () => {
   const executeFlirt = useCallback(
     async (userId: string) => {
       markInteraction();
-      if (userId !== 'dev-user-001') {
+      if (userId !== currentUserId) {
         recordInteraction(userId);
       }
 

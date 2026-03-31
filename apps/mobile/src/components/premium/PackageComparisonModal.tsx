@@ -52,9 +52,9 @@ const TIER_LABELS: Record<PackageTier, string> = {
 
 const TIER_PRICES: Record<PackageTier, string> = {
   FREE: '0₺',
-  GOLD: '349,99₺/ay',
-  PRO: '599,99₺/ay',
-  RESERVED: '1.299,99₺/ay',
+  GOLD: '349₺/ay',
+  PRO: '499₺/ay',
+  RESERVED: '599₺/ay',
 };
 
 // Tier order for hierarchy checks

@@ -10,7 +10,6 @@ import {
   StyleSheet,
   Animated,
   Alert,
-  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -161,8 +160,6 @@ const TimelineCard: React.FC<TimelineCardProps> = ({
     onPress();
   };
 
-  const blurAmount = isPremium ? 8 : (isTeaser && teaserTapped ? 12 : 20);
-
   const entryStyle = {
     opacity: entryAnim,
     transform: [{
@@ -192,11 +189,9 @@ const TimelineCard: React.FC<TimelineCardProps> = ({
                 style={styles.avatarRing}
               >
                 <View style={styles.avatarInner}>
-                  <Image
-                    source={{ uri: `https://i.pravatar.cc/100?u=${item.viewerId}` }}
-                    style={styles.avatarImage}
-                    blurRadius={blurAmount}
-                  />
+                  <View style={[styles.avatarImage, { backgroundColor: palette.purple[100], justifyContent: 'center', alignItems: 'center' }]}>
+                    <Ionicons name="person" size={24} color={palette.purple[300]} />
+                  </View>
                 </View>
               </LinearGradient>
               {/* Glow */}
@@ -243,11 +238,9 @@ const PremiumLockSection: React.FC<PremiumLockProps> = ({ viewers, onUpgrade }) 
       <View style={styles.premiumAvatars}>
         {avatarIds.map((id, i) => (
           <View key={id} style={[styles.premiumAvatarWrapper, i > 0 && { marginLeft: -10 }]}>
-            <Image
-              source={{ uri: `https://i.pravatar.cc/100?u=${id}` }}
-              style={styles.premiumAvatarImg}
-              blurRadius={25}
-            />
+            <View style={[styles.premiumAvatarImg, { backgroundColor: palette.purple[100], justifyContent: 'center', alignItems: 'center' }]}>
+              <Ionicons name="person" size={20} color={palette.purple[300]} />
+            </View>
           </View>
         ))}
         {/* Gradient overlay */}

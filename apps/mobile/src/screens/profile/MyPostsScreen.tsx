@@ -19,6 +19,7 @@ import { spacing } from '../../theme/spacing';
 import api from '../../services/api';
 import { socialFeedService, type FeedPost } from '../../services/socialFeedService';
 import { useSocialFeedStore } from '../../stores/socialFeedStore';
+import { useAuthStore } from '../../stores/authStore';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 
@@ -53,7 +54,8 @@ export const MyPostsScreen: React.FC = () => {
       // 2. Also check store for recently created posts not yet in MOCK_POSTS
       const storePosts = useSocialFeedStore.getState().posts;
       for (const sp of storePosts) {
-        if (sp.userId === 'dev-user-001' && !allPosts.find((ap) => ap.id === sp.id)) {
+        const myId = useAuthStore.getState().user?.id ?? '';
+        if (myId && sp.userId === myId && !allPosts.find((ap) => ap.id === sp.id)) {
           allPosts.push(sp);
         }
       }

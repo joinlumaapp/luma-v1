@@ -94,7 +94,7 @@ const getDevFallbackProfile = (userId: string): FeedUserProfile => ({
   name: 'Kullanıcı',
   age: 25,
   city: 'Türkiye',
-  avatarUrl: `https://i.pravatar.cc/150?u=${userId}`,
+  avatarUrl: __DEV__ ? `https://i.pravatar.cc/150?u=${userId}` : '',
   bio: 'Henüz bir şey yazmamış.',
   isVerified: false,
   isFollowing: false,

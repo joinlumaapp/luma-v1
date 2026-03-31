@@ -331,7 +331,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
     // Optimistic UI — show message immediately before API responds
     const now = new Date().toISOString();
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const userId = useAuthStore.getState().user?.id ?? 'dev-user-001';
+    const userId = useAuthStore.getState().user?.id ?? '';
+    if (!userId) { set({ isSending: false }); return false; }
     const optimisticMessage: ChatMessage = {
       id: tempId,
       matchId,
@@ -439,7 +440,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   sendImageMessage: async (matchId, imageUri) => {
     const now = new Date().toISOString();
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const userId = useAuthStore.getState().user?.id ?? 'dev-user-001';
+    const userId = useAuthStore.getState().user?.id ?? '';
+    if (!userId) { set({ isSending: false }); return; }
     const optimisticMessage: ChatMessage = {
       id: tempId, matchId, senderId: userId, content: 'Fotoğraf',
       type: 'IMAGE', status: 'SENDING', mediaUrl: imageUri,
@@ -495,7 +497,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   sendGifMessage: async (matchId, gifUrl) => {
     const now = new Date().toISOString();
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const userId = useAuthStore.getState().user?.id ?? 'dev-user-001';
+    const userId = useAuthStore.getState().user?.id ?? '';
+    if (!userId) { set({ isSending: false }); return; }
     const optimisticMessage: ChatMessage = {
       id: tempId, matchId, senderId: userId, content: 'GIF',
       type: 'GIF', status: 'SENDING', mediaUrl: gifUrl,
@@ -542,7 +545,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   sendVoiceMessage: async (matchId, audioUri, duration) => {
     const now = new Date().toISOString();
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const userId = useAuthStore.getState().user?.id ?? 'dev-user-001';
+    const userId = useAuthStore.getState().user?.id ?? '';
+    if (!userId) { set({ isSending: false }); return; }
     const optimisticMessage: ChatMessage = {
       id: tempId, matchId, senderId: userId, content: 'Sesli mesaj',
       type: 'VOICE', status: 'SENDING', mediaUrl: audioUri, mediaDuration: duration,
