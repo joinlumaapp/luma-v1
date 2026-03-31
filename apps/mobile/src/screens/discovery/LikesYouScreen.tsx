@@ -916,21 +916,23 @@ export const LikesYouScreen: React.FC<LikesYouScreenProps> = ({ embedded = false
 
   if (isLoading) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        <BrandedBackground />
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Pressable
-              onPress={() => navigation.goBack()}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <View style={styles.backButton}>
-                <Ionicons name="chevron-back" size={22} color={colors.text} />
-              </View>
-            </Pressable>
-            <Text style={styles.headerTitle}>Beğenenler</Text>
+      <View style={[styles.container, !embedded && { paddingTop: insets.top }]}>
+        {!embedded && <BrandedBackground />}
+        {!embedded && (
+          <View style={styles.header}>
+            <View style={styles.headerLeft}>
+              <Pressable
+                onPress={() => navigation.goBack()}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <View style={styles.backButton}>
+                  <Ionicons name="chevron-back" size={22} color={colors.text} />
+                </View>
+              </Pressable>
+              <Text style={styles.headerTitle}>Beğenenler</Text>
+            </View>
           </View>
-        </View>
+        )}
         <View style={styles.skeletonGrid}>
           {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
             <SkeletonCard key={`skeleton-${i}`} index={i} />
