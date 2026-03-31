@@ -20,6 +20,7 @@ import api from '../../services/api';
 import { socialFeedService, type FeedPost } from '../../services/socialFeedService';
 import { useSocialFeedStore } from '../../stores/socialFeedStore';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { useScreenTracking } from '../../hooks/useAnalytics';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const GRID_GAP = 2;
@@ -27,6 +28,7 @@ const NUM_COLUMNS = 3;
 const TILE_SIZE = (SCREEN_WIDTH - GRID_GAP * (NUM_COLUMNS + 1)) / NUM_COLUMNS;
 
 export const MyPostsScreen: React.FC = () => {
+  useScreenTracking('MyPosts');
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
 

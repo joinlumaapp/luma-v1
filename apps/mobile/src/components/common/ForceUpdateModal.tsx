@@ -47,7 +47,7 @@ export const ForceUpdateModal: React.FC<ForceUpdateModalProps> = ({
       statusBarTranslucent
       onRequestClose={isOptional ? onDismiss : undefined}
     >
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+      <StatusBar barStyle="light-content" backgroundColor="#000000" />
       <View style={styles.container}>
         <View style={styles.content}>
           {/* Logo */}

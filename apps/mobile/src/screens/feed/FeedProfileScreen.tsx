@@ -30,6 +30,7 @@ import { InterleavedProfileLayout } from '../../components/profile/InterleavedPr
 import { VerifiedBadge } from '../../components/common/VerifiedBadge';
 import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { useScreenTracking } from '../../hooks/useAnalytics';
 // NowListening removed — music feature removed
 
 type FeedProfileRouteProp = RouteProp<FeedStackParamList, 'FeedProfile'>;
@@ -174,6 +175,7 @@ const DetailRow: React.FC<{ icon: keyof typeof Ionicons.glyphMap; iconBg: string
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export const FeedProfileScreen: React.FC = () => {
+  useScreenTracking('FeedProfile');
   const route = useRoute<FeedProfileRouteProp>();
   const navigation = useNavigation<FeedProfileNavProp>();
   const insets = useSafeAreaInsets();

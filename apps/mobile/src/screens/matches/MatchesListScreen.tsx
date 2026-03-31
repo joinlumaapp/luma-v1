@@ -33,7 +33,6 @@ import { getAllConversationMeta } from '../../services/chatPersistence';
 import { profileService } from '../../services/profileService';
 import type { ProfileVisitor } from '../../services/profileService';
 import { SlideIn } from '../../components/animations/SlideIn';
-import { PulseGlow } from '../../components/animations/PulseGlow';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { formatMatchActivity, formatActivityStatus } from '../../utils/formatters';
 import { TierIndicator } from '../../components/common/SubscriptionBadge';
@@ -42,13 +41,12 @@ import { useEngagementStore } from '../../stores/engagementStore';
 import { useAuthStore } from '../../stores/authStore';
 import { palette } from '../../theme/colors';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
-import { WarmBanner } from '../../components/matches/WarmBanner';
-import { SUPER_COMPATIBLE_THRESHOLD } from '../../constants/config';
+import { LikesYouScreen } from '../discovery/LikesYouScreen';
 
 type MatchesNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'MatchesList'>;
 
 // ─── Tab type ────────────────────────────────────────────────
-type TabKey = 'matches' | 'messages' | 'viewers';
+type TabKey = 'matches' | 'messages' | 'likes' | 'viewers';
 
 // Conversation starter suggestions for matches with no messages
 const CONVERSATION_STARTERS = [
@@ -161,8 +159,6 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
     }).start();
   }, [avatarScaleAnim]);
 
-  const isSuperCompatible = item.compatibilityPercent >= 90;
-
   const avatarContent = (
     <CachedAvatar
       uri={item.photoUrl}
@@ -171,26 +167,12 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
     />
   );
 
-  // Simple avatar render: subtle ring for new, PulseGlow for super compat only
   const renderAvatar = () => {
     if (item.isNew) {
       return (
         <NewMatchRing>
           {avatarContent}
         </NewMatchRing>
-      );
-    }
-    if (isSuperCompatible) {
-      return (
-        <PulseGlow
-          color={colors.success}
-          size={layout.avatarMedium}
-          glowRadius={12}
-          duration={2000}
-          style={styles.pulseGlowAvatar}
-        >
-          {avatarContent}
-        </PulseGlow>
       );
     }
     return avatarContent;
@@ -216,7 +198,6 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
         style={[
           styles.matchCard,
           item.isNew && styles.matchCardNew,
-          item.compatibilityPercent >= SUPER_COMPATIBLE_THRESHOLD && styles.matchCardSuperCompat,
           { transform: [{ scale: scaleAnim }] },
         ]}
         testID={`matches-card-${item.id}`}
@@ -270,11 +251,7 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
             </View>
             {/* Compatibility indicator */}
             <View style={styles.compatRow}>
-              <Text style={[
-                styles.compatText,
-                item.compatibilityPercent >= SUPER_COMPATIBLE_THRESHOLD && styles.compatTextGold,
-              ]}>
-                {item.compatibilityPercent >= SUPER_COMPATIBLE_THRESHOLD ? '✨ ' : ''}
+              <Text style={styles.compatText}>
                 %{item.compatibilityPercent} uyumlu
               </Text>
               {item.isVerified && (
@@ -635,8 +612,6 @@ export const MatchesListScreen: React.FC = () => {
   const fetchMatches = useMatchStore((state) => state.fetchMatches);
   const markAsRead = useMatchStore((state) => state.markAsRead);
   const updateMatchActivity = useMatchStore((state) => state.updateMatchActivity);
-  const warmBanner = useMatchStore((state) => state.warmBanner);
-  const fetchWarmBanner = useMatchStore((state) => state.fetchWarmBanner);
   const hydrateFromStorage = useChatStore((state) => state.hydrateFromStorage);
 
   const [activeTab, setActiveTab] = useState<TabKey>('matches');
@@ -684,10 +659,8 @@ export const MatchesListScreen: React.FC = () => {
         }
       }
     };
-    hydrate().then(() => {
-      fetchWarmBanner();
-    });
-  }, [fetchMatches, hydrateFromStorage, updateMatchActivity, fetchWarmBanner]);
+    hydrate();
+  }, [fetchMatches, hydrateFromStorage, updateMatchActivity]);
 
   // Set match countdowns for new matches that don't have messages
   const setMatchCountdown = useEngagementStore((s) => s.setMatchCountdown);
@@ -986,6 +959,11 @@ export const MatchesListScreen: React.FC = () => {
         title: 'Henüz Mesajın Yok',
         subtitle: 'Eşleşmelerine mesaj göndererek sohbet başlatabilirsin.',
       },
+      likes: {
+        icon: '\uD83D\uDC9C',
+        title: 'Henüz Beğenen Yok',
+        subtitle: 'Profilini zenginleştirerek daha fazla beğeni alabilirsin.',
+      },
       viewers: {
         icon: '\uD83D\uDC40',
         title: 'Henüz Kimse Bakmamış',
@@ -1073,7 +1051,7 @@ export const MatchesListScreen: React.FC = () => {
         {([
           { key: 'matches' as const, label: 'Eşleşmeler', emoji: '💞', isNav: false, isPremiumOnly: false },
           { key: 'messages' as const, label: 'Mesajlar', emoji: '💬', isNav: false, isPremiumOnly: false },
-          { key: 'likes' as const, label: 'Beğenenler', emoji: '💜', isNav: true, isPremiumOnly: true },
+          { key: 'likes' as const, label: 'Beğenenler', emoji: '💜', isNav: false, isPremiumOnly: false },
           { key: 'viewers' as const, label: 'Kim Gördü', emoji: '👀', isNav: false, isPremiumOnly: true },
         ]).map((tab, tabIndex) => {
           const isActive = tab.isNav ? false : activeTab === tab.key;
@@ -1146,7 +1124,9 @@ export const MatchesListScreen: React.FC = () => {
       </View>
 
       {/* List — switches render function based on active tab */}
-      {activeTab === 'viewers' ? (
+      {activeTab === 'likes' ? (
+        <LikesYouScreen embedded />
+      ) : activeTab === 'viewers' ? (
         <FlatList
           data={viewers}
           keyExtractor={viewerKeyExtractor}
@@ -1177,25 +1157,7 @@ export const MatchesListScreen: React.FC = () => {
           keyExtractor={keyExtractor}
           renderItem={activeTab === 'messages' ? renderMessageItem : renderMatchItem}
           contentContainerStyle={styles.listContent}
-          ListHeaderComponent={
-            activeTab === 'matches' ? (
-              <>
-                <WarmBanner
-                  banner={warmBanner}
-                  onPress={() => {
-                    if (warmBanner?.type === 'super_compatible' || warmBanner?.type === 'new_like') {
-                      navigation.navigate('LikesYou');
-                    } else if (warmBanner?.type === 'nearby') {
-                      navigation.navigate('LikesYou');
-                    } else {
-                      navigation.navigate('ViewersPreview');
-                    }
-                  }}
-                />
-                {renderNudgeSection()}
-              </>
-            ) : renderNudgeSection()
-          }
+          ListHeaderComponent={renderNudgeSection()}
           ListEmptyComponent={renderEmptyList}
           showsVerticalScrollIndicator={false}
           ItemSeparatorComponent={ItemSeparator}
@@ -1438,9 +1400,6 @@ const styles = StyleSheet.create({
   avatarContainer: {
     position: 'relative',
   },
-  pulseGlowAvatar: {
-    borderRadius: layout.avatarMedium / 2,
-  },
   avatarImage: {
     width: layout.avatarMedium,
     height: layout.avatarMedium,
@@ -1640,11 +1599,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.background,
   },
-  matchCardSuperCompat: {
-    borderColor: palette.gold[400] + '25',
-    borderWidth: 1,
-    backgroundColor: palette.gold[400] + '06',
-  },
   compatRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1655,9 +1609,6 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.primary,
     fontWeight: fontWeights.medium,
-  },
-  compatTextGold: {
-    color: palette.gold[500],
   },
   verifiedDot: {
     marginLeft: 2,

@@ -12,39 +12,41 @@ import {
   Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { LiveStackParamList } from '../../navigation/types';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { useCoinStore } from '../../stores/coinStore';
 import { useAuthStore } from '../../stores/authStore';
+import { INSTANT_CONNECT_CONFIG } from '../../constants/config';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { useScreenTracking } from '../../hooks/useAnalytics';
 
 const { width: SCREEN_W } = Dimensions.get('window');
-const LIVE_COST = 25;
+const LIVE_COST = INSTANT_CONNECT_CONFIG.MATCH_COST;
+
+/** Get today's date string for daily tracking */
+const getToday = (): string => new Date().toISOString().slice(0, 10);
+
+type LiveNavProp = NativeStackNavigationProp<LiveStackParamList, 'Live'>;
 
 export const LiveScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation<LiveNavProp>();
 
-  // Simulated online count — replace with real-time data
-  const [onlineCount, setOnlineCount] = useState(0);
+  useScreenTracking('Live');
+
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0.3)).current;
   const coinBalance = useCoinStore((s) => s.balance);
-  const spendCoins = useCoinStore((s) => s.spendCoins);
-  const user = useAuthStore((s) => s.user);
+  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE');
 
-  // Simulate online user count
-  useEffect(() => {
-    setOnlineCount(Math.floor(Math.random() * 30) + 8);
-    const interval = setInterval(() => {
-      setOnlineCount((prev) => {
-        const delta = Math.floor(Math.random() * 5) - 2;
-        return Math.max(5, prev + delta);
-      });
-    }, 8000);
-    return () => clearInterval(interval);
-  }, []);
+  // Daily session tracking for tier gating
+  const [dailySessionCount, setDailySessionCount] = useState(0);
+  const [lastSessionDate, setLastSessionDate] = useState<string | null>(null);
 
   // Pulse animation for the CTA button
   useEffect(() => {
@@ -70,29 +72,52 @@ export const LiveScreen: React.FC = () => {
     return () => glow.stop();
   }, [glowAnim]);
 
-  const handleConnect = useCallback(async () => {
+  const handleConnect = useCallback(() => {
+    // Check daily session limit based on package tier
+    const tierLimit = INSTANT_CONNECT_CONFIG.DAILY_LIMITS[packageTier as keyof typeof INSTANT_CONNECT_CONFIG.DAILY_LIMITS];
+    const isUnlimitedSessions = tierLimit === -1;
+    if (!isUnlimitedSessions) {
+      const today = getToday();
+      const todayCount = lastSessionDate === today ? dailySessionCount : 0;
+      if (todayCount >= tierLimit) {
+        Alert.alert(
+          'Günlük Limit',
+          `Mevcut paketinde günde ${tierLimit} canlı oturum hakkın var. Daha fazlası için paketini yükselt.`,
+          [
+            { text: 'Tamam', style: 'cancel' },
+            {
+              text: 'Paketi Yükselt',
+              onPress: () => navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' }),
+            },
+          ],
+        );
+        return;
+      }
+    }
+
+    // Check coin balance
     if (coinBalance < LIVE_COST) {
       Alert.alert(
         'Yetersiz Jeton',
         `Canlı bağlantı için ${LIVE_COST} jeton gerekli. Mevcut bakiyen: ${coinBalance}`,
         [
-          { text: 'Jeton Al', onPress: () => {} },
+          { text: 'Jeton Al', onPress: () => navigation.getParent()?.navigate('ProfileTab', { screen: 'JetonMarket' }) },
           { text: 'Kapat', style: 'cancel' },
         ],
       );
       return;
     }
 
-    const spent = await spendCoins(LIVE_COST, 'live_connect');
-    if (spent) {
-      // TODO: Open camera and start matching
-      Alert.alert(
-        'Bağlanıyor...',
-        'Uyumlu bir kullanıcı aranıyor. Kamera açılacak.',
-        [{ text: 'Tamam' }],
-      );
-    }
-  }, [coinBalance, spendCoins]);
+    // Increment daily session count and navigate to InstantConnect
+    const today = getToday();
+    setDailySessionCount((prev) => (lastSessionDate === today ? prev + 1 : 1));
+    setLastSessionDate(today);
+    navigation.getParent()?.navigate('DiscoveryTab', { screen: 'InstantConnect' });
+  }, [packageTier, dailySessionCount, lastSessionDate, coinBalance, navigation]);
+
+  const handleBuyTokens = useCallback(() => {
+    navigation.getParent()?.navigate('ProfileTab', { screen: 'JetonMarket' });
+  }, [navigation]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -100,21 +125,21 @@ export const LiveScreen: React.FC = () => {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Canlı</Text>
-        <View style={styles.balancePill}>
-          <Ionicons name="diamond" size={14} color={palette.gold[400]} />
-          <Text style={styles.balanceText}>{coinBalance}</Text>
-        </View>
+        <TouchableOpacity onPress={handleBuyTokens} activeOpacity={0.7}>
+          <View style={styles.balancePill}>
+            <Ionicons name="diamond" size={14} color={palette.gold[400]} />
+            <Text style={styles.balanceText}>{coinBalance}</Text>
+          </View>
+        </TouchableOpacity>
       </View>
 
       {/* Main content */}
       <View style={styles.content}>
-        {/* Live indicator */}
+        {/* Motivational text replacing fake online count */}
         <View style={styles.liveIndicator}>
           <Animated.View style={[styles.liveDot, { opacity: glowAnim }]} />
           <View style={styles.liveDotInner} />
-          <Text style={styles.onlineText}>
-            <Text style={styles.onlineCount}>{onlineCount}</Text> kişi çevrimiçi
-          </Text>
+          <Text style={styles.onlineText}>Yeni insanlarla tanış</Text>
         </View>
 
         {/* Illustration area */}
@@ -244,10 +269,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_400Regular',
     color: colors.textSecondary,
     marginLeft: 4,
-  },
-  onlineCount: {
-    fontFamily: 'Poppins_600SemiBold',
-    color: '#22C55E',
   },
 
   // Illustration

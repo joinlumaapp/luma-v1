@@ -29,6 +29,7 @@ import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { useScreenTracking } from '../../hooks/useAnalytics';
 
 type NotificationsNavProp = CompositeNavigationProp<
   NativeStackNavigationProp<DiscoveryStackParamList, 'Notifications'>,
@@ -211,6 +212,7 @@ type FlatRow =
 
 // ---- Main Screen ----
 export const NotificationsScreen: React.FC = () => {
+  useScreenTracking('Notifications');
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NotificationsNavProp>();
   const {

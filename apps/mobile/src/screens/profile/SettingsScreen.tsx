@@ -167,8 +167,22 @@ export const SettingsScreen: React.FC = () => {
   const setMatchNotifications = useMemo(() => makeSetter(TOGGLE_KEYS.matchNotifications, setMatchNotificationsRaw), [makeSetter, TOGGLE_KEYS]);
   const setMessageNotifications = useMemo(() => makeSetter(TOGGLE_KEYS.messageNotifications, setMessageNotificationsRaw), [makeSetter, TOGGLE_KEYS]);
   const setAppAnnouncements = useMemo(() => makeSetter(TOGGLE_KEYS.appAnnouncements, setAppAnnouncementsRaw), [makeSetter, TOGGLE_KEYS]);
-  const setShowOnlineStatus = useMemo(() => makeSetter(TOGGLE_KEYS.showOnlineStatus, setShowOnlineStatusRaw), [makeSetter, TOGGLE_KEYS]);
-  const setShowDistance = useMemo(() => makeSetter(TOGGLE_KEYS.showDistance, setShowDistanceRaw), [makeSetter, TOGGLE_KEYS]);
+  const setShowOnlineStatus = useCallback((val: boolean) => {
+    setShowOnlineStatusRaw(val);
+    storage.setString(TOGGLE_KEYS.showOnlineStatus, val ? '1' : '0');
+    // Sync to backend (optimistic — don't revert on failure)
+    import('../../services/profileService').then(({ profileService }) =>
+      profileService.updateProfile({ showOnlineStatus: val })
+    ).catch(() => { /* optimistic: keep local value */ });
+  }, [TOGGLE_KEYS]);
+  const setShowDistance = useCallback((val: boolean) => {
+    setShowDistanceRaw(val);
+    storage.setString(TOGGLE_KEYS.showDistance, val ? '1' : '0');
+    // Sync to backend (optimistic — don't revert on failure)
+    import('../../services/profileService').then(({ profileService }) =>
+      profileService.updateProfile({ showDistance: val })
+    ).catch(() => { /* optimistic: keep local value */ });
+  }, [TOGGLE_KEYS]);
 
   // ── Freeze Account ──────────────────────────────────────────
   const [isAccountFrozen, setIsAccountFrozen] = useState(false);
@@ -188,17 +202,12 @@ export const SettingsScreen: React.FC = () => {
               setIsFreezing(true);
               try {
                 await import('../../services/profileService').then(({ profileService }) =>
-                  profileService.updateProfile({ isComplete: true })
+                  profileService.updateProfile({ isFrozen: false })
                 );
                 setIsAccountFrozen(false);
                 Alert.alert('Başarılı', 'Hesabınız tekrar aktif hale getirildi.');
               } catch {
-                if (__DEV__) {
-                  setIsAccountFrozen(false);
-                  Alert.alert('Başarılı', 'Hesabınız tekrar aktif hale getirildi.');
-                } else {
-                  Alert.alert('Hata', 'Hesap aktif edilirken bir sorun oluştu.');
-                }
+                Alert.alert('Hata', 'Hesap aktif edilirken bir sorun oluştu.');
               } finally {
                 setIsFreezing(false);
               }
@@ -222,17 +231,12 @@ export const SettingsScreen: React.FC = () => {
             setIsFreezing(true);
             try {
               await import('../../services/profileService').then(({ profileService }) =>
-                profileService.updateProfile({ isComplete: false })
+                profileService.updateProfile({ isFrozen: true })
               );
               setIsAccountFrozen(true);
               Alert.alert('Hesap Donduruldu', 'Profiliniz artık gizli. İstediğiniz zaman tekrar aktif edebilirsiniz.');
             } catch {
-              if (__DEV__) {
-                setIsAccountFrozen(true);
-                Alert.alert('Hesap Donduruldu', 'Profiliniz artık gizli. İstediğiniz zaman tekrar aktif edebilirsiniz.');
-              } else {
-                Alert.alert('Hata', 'Hesap dondurulurken bir sorun oluştu.');
-              }
+              Alert.alert('Hata', 'Hesap dondurulurken bir sorun oluştu.');
             } finally {
               setIsFreezing(false);
             }
@@ -376,6 +380,13 @@ export const SettingsScreen: React.FC = () => {
           title: 'E-posta',
           type: 'display',
           subtitle: emailDisplay,
+        },
+        {
+          key: 'display_id',
+          icon: 'finger-print-outline',
+          title: 'Luma ID',
+          type: 'display',
+          subtitle: user?.displayId || 'Henüz atanmadı',
         },
         {
           key: 'packages',
@@ -565,7 +576,21 @@ export const SettingsScreen: React.FC = () => {
       ],
     },
 
-    // 5. Destek
+    // 5. Gorunum
+    {
+      title: 'Gorunum',
+      icon: 'color-palette-outline',
+      data: [
+        {
+          key: 'theme',
+          icon: 'sunny-outline',
+          title: 'Tema',
+          type: 'theme',
+        },
+      ],
+    },
+
+    // 6. Destek
     {
       title: 'Destek',
       icon: 'help-circle-outline',
@@ -582,7 +607,7 @@ export const SettingsScreen: React.FC = () => {
           icon: 'help-outline',
           title: 'Gold ne işe yarar?',
           type: 'faq',
-          answer: 'Gold paketi ile sınırsız beğeni, detaylı uyumluluk analizi, 25 premium soru, günlük 5 süper beğeni ve kimin beğendiğini görme gibi özellikler kazanırsınız.',
+          answer: 'Gold paketi ile günlük 50 beğeni hakkı (FREE\'de 20), gelişmiş arama filtreleri, seni kim beğendi görme, profil öne çıkarma (boost), geri alma hakkı (günlük 1), reklamsız deneyim ve aylık bonus jeton kazanırsınız.',
         },
         {
           key: 'faq_delete',
@@ -642,7 +667,7 @@ export const SettingsScreen: React.FC = () => {
       }],
     }] : []),
 
-    // 7. Tehlike Bölgesi
+    // 8. Tehlike Bölgesi
     {
       title: 'Tehlike Bölgesi',
       icon: 'warning-outline',

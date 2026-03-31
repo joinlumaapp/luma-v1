@@ -7,6 +7,19 @@ import {
   type FeedFilter,
   type CreatePostRequest,
 } from '../services/socialFeedService';
+import { storage } from '../utils/storage';
+
+// ── Persistence keys ──────────────────────────────────────────────
+const STORAGE_KEYS = {
+  DAILY_POST_COUNT: 'feed.dailyPostCount',
+  LAST_POST_DATE: 'feed.lastPostDate',
+  DAILY_STORY_COUNT: 'feed.dailyStoryCount',
+  LAST_STORY_DATE: 'feed.lastStoryDate',
+  DAILY_FOLLOW_COUNT: 'feed.dailyFollowCount',
+  LAST_FOLLOW_DATE: 'feed.lastFollowDate',
+} as const;
+
+const getToday = (): string => new Date().toISOString().slice(0, 10);
 
 interface SocialFeedState {
   // State
@@ -19,6 +32,18 @@ interface SocialFeedState {
   hasMore: boolean;
   viewedStoryUserIds: Set<string>;
 
+  // Daily post limit (persisted)
+  dailyPostCount: number;
+  lastPostDate: string | null;
+
+  // Daily story limit (persisted)
+  dailyStoryCount: number;
+  lastStoryDate: string | null;
+
+  // Daily follow limit (persisted)
+  dailyFollowCount: number;
+  lastFollowDate: string | null;
+
   // Actions
   fetchFeed: () => Promise<void>;
   refreshFeed: () => Promise<void>;
@@ -28,6 +53,14 @@ interface SocialFeedState {
   toggleFollow: (userId: string) => Promise<void>;
   createPost: (data: CreatePostRequest) => Promise<void>;
   markStoryViewed: (userId: string) => void;
+
+  // Daily limit actions
+  incrementDailyPost: () => void;
+  resetDailyPostIfNeeded: () => void;
+  incrementDailyStory: () => void;
+  resetDailyStoryIfNeeded: () => void;
+  incrementDailyFollow: () => void;
+  resetDailyFollowIfNeeded: () => void;
 }
 
 export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
@@ -40,6 +73,15 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
   cursor: null,
   hasMore: false,
   viewedStoryUserIds: new Set<string>(),
+
+  // Hydrate daily limits from persisted storage (sync via cache)
+  dailyPostCount: storage.getNumber(STORAGE_KEYS.DAILY_POST_COUNT) ?? 0,
+  lastPostDate: storage.getString(STORAGE_KEYS.LAST_POST_DATE),
+  dailyStoryCount: storage.getNumber(STORAGE_KEYS.DAILY_STORY_COUNT) ?? 0,
+  lastStoryDate: storage.getString(STORAGE_KEYS.LAST_STORY_DATE),
+
+  dailyFollowCount: storage.getNumber(STORAGE_KEYS.DAILY_FOLLOW_COUNT) ?? 0,
+  lastFollowDate: storage.getString(STORAGE_KEYS.LAST_FOLLOW_DATE),
 
   // Actions
   fetchFeed: async () => {
@@ -182,5 +224,65 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
       next.add(userId);
       return { viewedStoryUserIds: next };
     });
+  },
+
+  // ── Daily post limit actions ────────────────────────────────────
+  incrementDailyPost: () => {
+    const today = getToday();
+    const { lastPostDate, dailyPostCount } = get();
+    const newCount = lastPostDate === today ? dailyPostCount + 1 : 1;
+    set({ dailyPostCount: newCount, lastPostDate: today });
+    storage.setNumber(STORAGE_KEYS.DAILY_POST_COUNT, newCount);
+    storage.setString(STORAGE_KEYS.LAST_POST_DATE, today);
+  },
+
+  resetDailyPostIfNeeded: () => {
+    const today = getToday();
+    const { lastPostDate } = get();
+    if (lastPostDate !== today) {
+      set({ dailyPostCount: 0, lastPostDate: today });
+      storage.setNumber(STORAGE_KEYS.DAILY_POST_COUNT, 0);
+      storage.setString(STORAGE_KEYS.LAST_POST_DATE, today);
+    }
+  },
+
+  // ── Daily story limit actions ───────────────────────────────────
+  incrementDailyStory: () => {
+    const today = getToday();
+    const { lastStoryDate, dailyStoryCount } = get();
+    const newCount = lastStoryDate === today ? dailyStoryCount + 1 : 1;
+    set({ dailyStoryCount: newCount, lastStoryDate: today });
+    storage.setNumber(STORAGE_KEYS.DAILY_STORY_COUNT, newCount);
+    storage.setString(STORAGE_KEYS.LAST_STORY_DATE, today);
+  },
+
+  resetDailyStoryIfNeeded: () => {
+    const today = getToday();
+    const { lastStoryDate } = get();
+    if (lastStoryDate !== today) {
+      set({ dailyStoryCount: 0, lastStoryDate: today });
+      storage.setNumber(STORAGE_KEYS.DAILY_STORY_COUNT, 0);
+      storage.setString(STORAGE_KEYS.LAST_STORY_DATE, today);
+    }
+  },
+
+  // ── Daily follow limit actions ─────────────────────────────────
+  incrementDailyFollow: () => {
+    const today = getToday();
+    const { lastFollowDate, dailyFollowCount } = get();
+    const newCount = lastFollowDate === today ? dailyFollowCount + 1 : 1;
+    set({ dailyFollowCount: newCount, lastFollowDate: today });
+    storage.setNumber(STORAGE_KEYS.DAILY_FOLLOW_COUNT, newCount);
+    storage.setString(STORAGE_KEYS.LAST_FOLLOW_DATE, today);
+  },
+
+  resetDailyFollowIfNeeded: () => {
+    const today = getToday();
+    const { lastFollowDate } = get();
+    if (lastFollowDate !== today) {
+      set({ dailyFollowCount: 0, lastFollowDate: today });
+      storage.setNumber(STORAGE_KEYS.DAILY_FOLLOW_COUNT, 0);
+      storage.setString(STORAGE_KEYS.LAST_FOLLOW_DATE, today);
+    }
   },
 }));

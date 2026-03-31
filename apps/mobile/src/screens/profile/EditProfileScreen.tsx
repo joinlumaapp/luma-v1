@@ -36,6 +36,7 @@ import { PromptPickerSheet } from '../../components/prompts/PromptPickerSheet';
 import type { PromptOption } from '../../constants/promptBank';
 import type { VideoMetadata } from '../../services/videoService';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { useScreenTracking } from '../../hooks/useAnalytics';
 
 type EditProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'EditProfile'>;
 
@@ -46,7 +47,7 @@ const PHOTO_CELL_WIDTH = (SCREEN_WIDTH - GRID_PADDING * 2 - GRID_GAP * 2) / 3;
 const PHOTO_CELL_HEIGHT = PHOTO_CELL_WIDTH * 1.3;
 const PHOTO_SLOTS = 6;
 
-const MAX_BIO_LENGTH = 300;
+const MAX_BIO_LENGTH = 500;
 const MAX_INTERESTS = 10;
 
 // ── Turkish city list ──────────────────────────────────────────────────────
@@ -114,6 +115,7 @@ for (let i = 140; i <= 220; i++) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 export const EditProfileScreen: React.FC = () => {
+  useScreenTracking('EditProfile');
   const navigation = useNavigation<EditProfileNavigationProp>();
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);

@@ -33,7 +33,7 @@ export const SignUpChoiceScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={onboardingColors.background} translucent />
+      <StatusBar barStyle="light-content" backgroundColor="#000000" />
       <BrandedBackground />
 
       {/* Header with back button */}

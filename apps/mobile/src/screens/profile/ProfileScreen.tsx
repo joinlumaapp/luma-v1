@@ -9,9 +9,9 @@ import {
   StyleSheet,
   Animated,
   Easing,
-  Share,
   RefreshControl,
   Platform,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -355,6 +355,24 @@ export const ProfileScreen: React.FC = () => {
     navigation.navigate('MembershipPlans');
   }, [navigation]);
 
+  const handleBoostPress = useCallback(() => {
+    if (packageTier === 'FREE') {
+      Alert.alert(
+        'Premium Özellik',
+        'Öne Çıkarma Gold ve üzeri paketlere özeldir.',
+        [
+          { text: 'Vazgeç', style: 'cancel' },
+          {
+            text: 'Paketi Yükselt',
+            onPress: () => navigation.navigate('MembershipPlans'),
+          },
+        ],
+      );
+      return;
+    }
+    setShowBoostModal(true);
+  }, [packageTier, navigation]);
+
   // Pull-to-refresh handler — re-fetches all profile data
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -576,26 +594,6 @@ export const ProfileScreen: React.FC = () => {
           </LinearGradient>
         </TouchableOpacity>
 
-        {/* Share — outlined */}
-        <TouchableOpacity
-          onPress={() => {
-            const userId = user?.id ?? '';
-            Share.share({
-              message: `LUMA'da profilime göz at! https://luma.dating/profile/${userId}`,
-              title: 'LUMA Profil',
-            }).catch(() => {});
-          }}
-          activeOpacity={0.85}
-          style={styles.actionButtonFlex}
-          accessibilityLabel="Profili paylaş"
-          accessibilityRole="button"
-        >
-          <View style={styles.outlinedButton}>
-            <Ionicons name="share-outline" size={15} color={palette.purple[600]} />
-            <Text style={styles.outlinedButtonText}>Paylaş</Text>
-          </View>
-        </TouchableOpacity>
-
         {/* Premium — gold shimmer */}
         <View style={styles.actionButtonFlex}>
           <GoldShimmerButton
@@ -606,14 +604,30 @@ export const ProfileScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* Weekly views — compact inline */}
+      {/* Weekly views — compact inline (GOLD+ sees count, FREE sees teaser) */}
       {weeklyViewCount !== null && weeklyViewCount > 0 && (
-        <View style={styles.weeklyViewsRow}>
-          <View style={styles.weeklyViewsDot} />
-          <Text style={styles.weeklyViewsText}>
-            Bu hafta <Text style={styles.weeklyViewsBold}>{weeklyViewCount} kişi</Text> profilini gördü
-          </Text>
-        </View>
+        packageTier === 'FREE' ? (
+          <TouchableOpacity
+            style={styles.weeklyViewsRow}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('MembershipPlans')}
+            accessibilityLabel="Gold ile profil görüntüleyenleri gör"
+            accessibilityRole="button"
+          >
+            <Ionicons name="lock-closed" size={14} color={palette.amber[500]} />
+            <Text style={styles.weeklyViewsText}>
+              <Text style={styles.weeklyViewsBold}>{weeklyViewCount} kişi</Text> profilini gördü —{' '}
+              <Text style={styles.weeklyViewsGoldCta}>Gold ile öğren</Text>
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.weeklyViewsRow}>
+            <View style={styles.weeklyViewsDot} />
+            <Text style={styles.weeklyViewsText}>
+              Bu hafta <Text style={styles.weeklyViewsBold}>{weeklyViewCount} kişi</Text> profilini gördü
+            </Text>
+          </View>
+        )
       )}
     </View>
   );
@@ -730,7 +744,7 @@ export const ProfileScreen: React.FC = () => {
     <TouchableOpacity
       key="boost"
       style={styles.boostCard}
-      onPress={() => setShowBoostModal(true)}
+      onPress={handleBoostPress}
       activeOpacity={0.8}
       accessibilityLabel="Profilini öne çıkar"
       accessibilityRole="button"
@@ -1123,6 +1137,10 @@ const styles = StyleSheet.create({
   weeklyViewsBold: {
     fontWeight: fontWeights.bold,
     color: colors.text,
+  },
+  weeklyViewsGoldCta: {
+    fontWeight: fontWeights.semibold,
+    color: palette.amber[500],
   },
 
   // ── Listening status section ──

@@ -257,11 +257,9 @@ export const useMatchStore = create<MatchState>((set, get) => ({
         userId: m.userId,
         name: m.name,
         photoUrl: m.photoUrl,
-        ringType: (m.compatibilityPercent >= 80
-          ? 'super_compatible'
-          : m.isNew
+        ringType: (m.isNew
             ? 'new_like'
-            : 'nearby') as 'super_compatible' | 'nearby' | 'new_like' | 'locked',
+            : 'nearby') as 'nearby' | 'new_like' | 'locked',
         compatibilityPercent: m.compatibilityPercent,
         distanceKm: null,
         isRevealed: true,
@@ -281,16 +279,16 @@ export const useMatchStore = create<MatchState>((set, get) => ({
       if (matches.length > 0) {
         const topMatch = [...matches].sort((a, b) => b.compatibilityPercent - a.compatibilityPercent)[0];
         set({
-          warmBanner: topMatch && topMatch.compatibilityPercent >= 80
+          warmBanner: newCount > 0
             ? {
-                message: `Seninle %${topMatch.compatibilityPercent} uyumlu biri var!`,
-                detail: `${topMatch.name} ile tanismaya ne dersin?`,
-                emoji: '\u{1F49B}',
-                type: 'super_compatible' as const,
+                message: `${newCount} yeni eşleşmen var!`,
+                detail: 'Hemen göz at, seni bekliyor',
+                emoji: '\u{1F49C}',
+                type: 'new_like' as const,
               }
             : {
-                message: `${matches.length} eslesmen seni bekliyor!`,
-                detail: newCount > 0 ? `${newCount} yeni eslesme var` : null,
+                message: `${matches.length} eşleşmen seni bekliyor!`,
+                detail: null,
                 emoji: '\u{1F49C}',
                 type: 'weekly_summary' as const,
               },

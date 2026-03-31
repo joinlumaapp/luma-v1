@@ -198,7 +198,7 @@ const EmotionalIntroScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      <StatusBar barStyle="light-content" backgroundColor="#000000" />
 
       {/* Full-screen gradient background */}
       <LinearGradient

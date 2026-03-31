@@ -43,6 +43,7 @@ export const getMinTierLabel = (tier: PackageTier): string => {
 
 export type FeatureKey =
   | 'daily_likes'
+  | 'daily_follows'
   | 'undo'
   | 'who_likes'
   | 'visitors'
@@ -62,7 +63,9 @@ export type FeatureKey =
   | 'ad_free'
   | 'monthly_token_bonus'
   | 'suggested_story_views'
-  | 'flirt_start';
+  | 'flirt_start'
+  | 'story_creation'
+  | 'incognito';
 
 // ─── Feature Access Rules ────────────────────────────────────────
 
@@ -80,9 +83,15 @@ interface FeatureRule {
 export const FEATURE_RULES: Record<FeatureKey, FeatureRule> = {
   daily_likes: {
     minTier: 'FREE',
-    limits: { FREE: -1, GOLD: -1, PRO: -1, RESERVED: -1 },
+    limits: { FREE: 20, GOLD: 50, PRO: -1, RESERVED: -1 },
     labelTr: 'Günlük Beğeni',
-    descriptionTr: 'Sınırsız beğeni hakkı.',
+    descriptionTr: 'Günlük beğeni hakkını yükseltmek için paketini değiştir.',
+  },
+  daily_follows: {
+    minTier: 'FREE',
+    limits: { FREE: 20, GOLD: 100, PRO: -1, RESERVED: -1 },
+    labelTr: 'Günlük Takip',
+    descriptionTr: 'Günlük takip limitini yükseltmek için paketini değiştir.',
   },
   undo: {
     minTier: 'GOLD',
@@ -204,6 +213,18 @@ export const FEATURE_RULES: Record<FeatureKey, FeatureRule> = {
     labelTr: 'Flört Başlat',
     descriptionTr: 'Flört isteği gönder. Limit dolunca 25 Jeton ile gönder.',
   },
+  story_creation: {
+    minTier: 'FREE',
+    limits: { FREE: 1, GOLD: 5, PRO: -1, RESERVED: -1 },
+    labelTr: 'Hikaye Oluştur',
+    descriptionTr: 'Daha fazla hikaye oluşturmak için paketini yükselt.',
+  },
+  incognito: {
+    minTier: 'PRO',
+    limits: { FREE: 0, GOLD: 0, PRO: -1, RESERVED: -1 },
+    labelTr: 'Gizli Mod',
+    descriptionTr: 'Keşfet akışında görünmeden profilleri incele.',
+  },
 };
 
 // ─── Convenience Helpers ─────────────────────────────────────────
@@ -248,6 +269,7 @@ export const mapLegacyFeature = (
     feed: 'feed_post',
     boost: 'boost',
     daily_likes: 'daily_likes',
+    daily_follows: 'daily_follows',
     messages: 'messages',
     insights: 'compatibility_insights',
     waves: 'waves',
@@ -255,6 +277,8 @@ export const mapLegacyFeature = (
     read_receipts: 'read_receipts',
     ad_free: 'ad_free',
     monthly_token_bonus: 'monthly_token_bonus',
+    story_creation: 'story_creation',
+    incognito: 'incognito',
   };
   return mapping[legacy] ?? 'daily_likes';
 };

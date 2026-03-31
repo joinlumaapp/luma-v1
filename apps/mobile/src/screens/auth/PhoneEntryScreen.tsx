@@ -133,7 +133,7 @@ export const PhoneEntryScreen: React.FC = () => {
       locations={[0, 0.3, 0.55, 0.8, 1]}
       style={styles.container}
     >
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle="light-content" backgroundColor="#000000" />
 
       <KeyboardAvoidingView
         style={styles.flex}

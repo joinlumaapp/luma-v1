@@ -333,6 +333,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         imageUploadProgress: null,
         dailyMessagesSent: 0,
         singleMessageCredits: 0,
+        matchDailyMessageCounts: {},
         _socketCleanups: [],
       });
     } catch { /* store may not be initialized */ }

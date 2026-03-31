@@ -20,6 +20,7 @@ import { useInstantConnectStore } from '../../stores/instantConnectStore';
 import { useCoinStore, SURPRISE_MATCH_COST, SURPRISE_SWITCH_COST } from '../../stores/coinStore';
 import { CachedAvatar } from '../../components/common/CachedAvatar';
 import { palette } from '../../theme/colors';
+import { useScreenTracking } from '../../hooks/useAnalytics';
 import { spacing, borderRadius } from '../../theme/spacing';
 import * as Haptics from 'expo-haptics';
 
@@ -473,6 +474,7 @@ const ConnectedPhase: React.FC<{
 // ─── Main Screen ────────────────────────────────────────────────────────────
 
 export const InstantConnectScreen: React.FC = () => {
+  useScreenTracking('InstantConnect');
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
 

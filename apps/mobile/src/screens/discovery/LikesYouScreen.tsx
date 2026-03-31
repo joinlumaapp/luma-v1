@@ -489,7 +489,11 @@ LikeCard.displayName = 'LikeCard';
 
 const getLikesTodayString = (): string => new Date().toISOString().split('T')[0];
 
-export const LikesYouScreen: React.FC = () => {
+interface LikesYouScreenProps {
+  embedded?: boolean;
+}
+
+export const LikesYouScreen: React.FC<LikesYouScreenProps> = ({ embedded = false }) => {
   useScreenTracking('LikesYou');
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<LikesYouNavProp>();
@@ -930,37 +934,39 @@ export const LikesYouScreen: React.FC = () => {
   // ─── Main render ────────────────────────────────────────────
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <BrandedBackground />
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Pressable
-            onPress={() => navigation.goBack()}
-            accessibilityLabel="Geri"
-            accessibilityRole="button"
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <View style={styles.backButton}>
-              <Ionicons name="chevron-back" size={22} color={colors.text} />
+    <View style={[styles.container, !embedded && { paddingTop: insets.top }]}>
+      {!embedded && <BrandedBackground />}
+      {/* Header — hidden when embedded in MatchesListScreen */}
+      {!embedded && (
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Pressable
+              onPress={() => navigation.goBack()}
+              accessibilityLabel="Geri"
+              accessibilityRole="button"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <View style={styles.backButton}>
+                <Ionicons name="chevron-back" size={22} color={colors.text} />
+              </View>
+            </Pressable>
+            <View>
+              <View style={styles.headerTitleRow}>
+                <Text style={styles.headerTitle}>Beğenenler</Text>
+                {total > 0 && (
+                  <LinearGradient
+                    colors={[palette.gold[400], palette.gold[500]]}
+                    style={styles.countBadge}
+                  >
+                    <Text style={styles.countBadgeText}>{total}</Text>
+                  </LinearGradient>
+                )}
+              </View>
+              <Text style={styles.headerSubtitle}>Sana ilgi duyan kişiler burada</Text>
             </View>
-          </Pressable>
-          <View>
-            <View style={styles.headerTitleRow}>
-              <Text style={styles.headerTitle}>Beğenenler</Text>
-              {total > 0 && (
-                <LinearGradient
-                  colors={[palette.gold[400], palette.gold[500]]}
-                  style={styles.countBadge}
-                >
-                  <Text style={styles.countBadgeText}>{total}</Text>
-                </LinearGradient>
-              )}
-            </View>
-            <Text style={styles.headerSubtitle}>Sana ilgi duyan kişiler burada</Text>
           </View>
         </View>
-      </View>
+      )}
 
       {/* Grid */}
       <FlatList

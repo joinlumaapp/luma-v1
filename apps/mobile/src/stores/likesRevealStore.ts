@@ -3,7 +3,7 @@
 import { create } from 'zustand';
 import { useAuthStore } from './authStore';
 import type { PackageTier } from './authStore';
-import { LIKES_REVEAL_CONFIG } from '../constants/config';
+import { LIKES_VIEW_CONFIG } from '../constants/config';
 
 interface LikesRevealState {
   revealedIds: Set<string>;
@@ -34,7 +34,8 @@ export const useLikesRevealStore = create<LikesRevealState>((set, get) => ({
 
   getDailyLimit: () => {
     const tier = (useAuthStore.getState().user?.packageTier || 'FREE') as PackageTier;
-    return LIKES_REVEAL_CONFIG[tier] ?? LIKES_REVEAL_CONFIG.FREE;
+    const limits = LIKES_VIEW_CONFIG.DAILY_LIMITS;
+    return limits[tier] ?? limits.FREE;
   },
 
   getDailyRemaining: () => {

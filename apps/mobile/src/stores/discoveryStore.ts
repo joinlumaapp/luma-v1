@@ -91,12 +91,24 @@ interface DiscoveryState {
     maxDistance: number;
     intentionTags: string[];
     genderPreference: 'male' | 'female' | 'all';
+    verifiedOnly: boolean;
     height: { min: number; max: number } | null;
+    weight: { min: number; max: number } | null;
     education: string[];
     smoking: string[];
     drinking: string[];
     exercise: string[];
     zodiac: string[];
+    religion: string[];
+    children: string[];
+    pets: string[];
+    maritalStatus: string[];
+    languages: string[];
+    ethnicity: string[];
+    nationality: string[];
+    interests: string[];
+    sexualOrientation: string[];
+    values: string[];
   };
 
   // Location state
@@ -271,12 +283,24 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
     maxDistance: DISCOVERY_CONFIG.DEFAULT_DISTANCE_KM,
     intentionTags: [],
     genderPreference: 'all',
+    verifiedOnly: false,
     height: null,
+    weight: null,
     education: [],
     smoking: [],
     drinking: [],
     exercise: [],
     zodiac: [],
+    religion: [],
+    children: [],
+    pets: [],
+    maritalStatus: [],
+    languages: [],
+    ethnicity: [],
+    nationality: [],
+    interests: [],
+    sexualOrientation: [],
+    values: [],
   },
 
   // Location initial state

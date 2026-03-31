@@ -26,6 +26,7 @@ import type { MatchesStackParamList } from '../../navigation/types';
 import { matchService } from '../../services/matchService';
 import type { DatePlan } from '../../services/matchService';
 import { useAuthStore } from '../../stores/authStore';
+import { useCoinStore } from '../../stores/coinStore';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
@@ -33,6 +34,8 @@ import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 type DatePlannerRouteProp = RouteProp<MatchesStackParamList, 'DatePlanner'>;
+
+const DATE_PLAN_COST = 5;
 
 // ─── Activity Presets ────────────────────────────────────────────────────────
 
@@ -679,11 +682,38 @@ export const DatePlannerScreen: React.FC = () => {
     setPlace('');
   }, []);
 
+  const spendCoins = useCoinStore((s) => s.spendCoins);
+  const coinBalance = useCoinStore((s) => s.balance);
+
   const handleCreate = useCallback(async () => {
     if (!title.trim()) {
       Alert.alert('Hata', 'Buluşma başlığı gerekli.');
       return;
     }
+
+    // Check coin balance before creating
+    if (coinBalance < DATE_PLAN_COST) {
+      Alert.alert(
+        'Yetersiz Jeton',
+        `Buluşma planı oluşturmak için ${DATE_PLAN_COST} Jeton gerekli.`,
+        [
+          { text: 'Vazgeç', style: 'cancel' },
+          {
+            text: 'Jeton Al',
+            onPress: () => navigation.getParent()?.navigate('ProfileTab', { screen: 'JetonMarket' }),
+          },
+        ],
+      );
+      return;
+    }
+
+    // Deduct coins first
+    const spent = await spendCoins(DATE_PLAN_COST, 'date_plan');
+    if (!spent) {
+      Alert.alert('Hata', 'Jeton düşülemedi. Lütfen tekrar deneyin.');
+      return;
+    }
+
     try {
       const newPlan = await matchService.createDatePlan(matchId, {
         title: title.trim(),
@@ -701,7 +731,7 @@ export const DatePlannerScreen: React.FC = () => {
     } catch {
       Alert.alert('Hata', 'Buluşma planı oluşturulamadı.');
     }
-  }, [matchId, title, place, note, selectedDate]);
+  }, [matchId, title, place, note, selectedDate, coinBalance, spendCoins, navigation]);
 
   const handleAccept = useCallback(async (planId: string) => {
     try {

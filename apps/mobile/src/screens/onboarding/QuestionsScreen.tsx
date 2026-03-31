@@ -255,8 +255,12 @@ export const QuestionsScreen: React.FC = () => {
         // Submit answers before showing analysis — failure should be visible to the user
         // so their answers are not silently lost. submitAnswers is fast; we show analysis
         // immediately and handle errors in the background.
-        compatibilityService.submitAnswers(newAnswers).catch(() => {
+        compatibilityService.submitAnswers(newAnswers).catch((err) => {
           if (!mountedRef.current) return;
+          if (__DEV__) {
+            console.warn('Uyum cevapları gönderilemedi (dev):', err);
+            return;
+          }
           Alert.alert(
             'Cevaplar kaydedilemedi',
             'Cevaplarınız sunucuya gönderilemedi. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.',

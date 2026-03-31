@@ -27,12 +27,14 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { FeedStackParamList, MainTabParamList } from '../../navigation/types';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore, type PackageTier } from '../../stores/authStore';
 import { useStoryStore } from '../../stores/storyStore';
+import { hasTierAccess } from '../../constants/packageAccess';
 import type { Story, StoryOverlay } from '../../services/storyService';
 import { palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
+import { useScreenTracking } from '../../hooks/useAnalytics';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const IMAGE_STORY_DURATION = 5000; // 5 seconds per image
@@ -235,6 +237,7 @@ const StoryContent: React.FC<StoryContentProps> = ({ story, isPaused = false, on
 // ─── Main Screen ─────────────────────────────────────────────────────
 
 export const StoryViewerScreen: React.FC = () => {
+  useScreenTracking('StoryViewer');
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<StoryViewerNavProp>();
   const route = useRoute<StoryViewerRouteProp>();
@@ -577,7 +580,9 @@ export const StoryViewerScreen: React.FC = () => {
 
   const timeAgo = getTimeAgo(currentStory.createdAt);
   const authUserId = useAuthStore((s) => s.user?.id);
+  const packageTier: PackageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE');
   const isOwnStory = currentUser.userId === authUserId;
+  const canSeeViewerDetails = hasTierAccess(packageTier, 'PRO');
 
   return (
     <View style={styles.container}>
@@ -663,14 +668,23 @@ export const StoryViewerScreen: React.FC = () => {
         style={[styles.footer, { bottom: insets.bottom + 12 }]}
       >
         {isOwnStory ? (
-          // Own story — show viewer count
+          // Own story — show viewer count (details gated behind PRO+)
           <View style={styles.ownStoryFooter}>
-            <TouchableOpacity style={styles.viewersButton}>
+            <TouchableOpacity
+              style={styles.viewersButton}
+              disabled={!canSeeViewerDetails}
+              activeOpacity={canSeeViewerDetails ? 0.7 : 1}
+            >
               <Ionicons name="eye-outline" size={18} color="#FFFFFF" />
               <Text style={styles.viewersButtonText}>
                 {currentStory.viewCount} goruntulenme
               </Text>
             </TouchableOpacity>
+            {!canSeeViewerDetails && (
+              <Text style={styles.viewerUpsellText}>
+                PRO ile kimlerin gorduğunu oğren
+              </Text>
+            )}
           </View>
         ) : (
           // Other user's story — reply input + like
@@ -961,6 +975,13 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
+  },
+  viewerUpsellText: {
+    ...typography.captionSmall,
+    color: 'rgba(255,255,255,0.5)',
+    marginTop: spacing.xs,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
   },
 
   // Empty state

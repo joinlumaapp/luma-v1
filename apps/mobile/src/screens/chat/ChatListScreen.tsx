@@ -26,7 +26,6 @@ import { useChatStore } from '../../stores/chatStore';
 import type { ConversationSummary } from '../../services/chatService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
-import { MESSAGE_BUNDLE_CONFIG, AI_CHAT_SUGGESTION_CONFIG, SUPER_COMPATIBLE_THRESHOLD } from '../../constants/config';
 import { LinearGradient } from 'expo-linear-gradient';
 import { palette } from '../../theme/colors';
 
@@ -257,23 +256,6 @@ export const ChatListScreen: React.FC = () => {
     </View>
   ), []);
 
-  const renderListFooter = useCallback(() => (
-    <View style={{
-      marginHorizontal: 16, marginTop: 8, marginBottom: 12,
-      padding: 8, paddingHorizontal: 12,
-      backgroundColor: 'rgba(139,92,246,0.08)',
-      borderWidth: 1, borderColor: 'rgba(139,92,246,0.15)',
-      borderRadius: 10,
-      flexDirection: 'row', alignItems: 'center', gap: 8,
-    }}>
-      <Text style={{ fontSize: 14 }}>{'\uD83E\uDD16'}</Text>
-      <Text style={{ flex: 1, color: 'rgba(255,255,255,0.5)', fontSize: 9 }}>
-        AI \u00D6neri: Ortak hobiniz hakk\u0131nda konu\u015Fmay\u0131 dene
-      </Text>
-      <Text style={{ color: '#A78BFA', fontSize: 9, fontWeight: '600' }}>Dene {'\u2192'}</Text>
-    </View>
-  ), []);
-
   if (isLoading && conversations.length === 0) {
     return (
       <View style={[styles.container, styles.loadingContainer, { paddingTop: insets.top }]}>
@@ -301,7 +283,6 @@ export const ChatListScreen: React.FC = () => {
         renderItem={renderConversationItem}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={sortedConversations.length > 0 ? renderListHeader : undefined}
-        ListFooterComponent={sortedConversations.length > 0 ? renderListFooter : undefined}
         ListEmptyComponent={renderEmptyList}
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={ChatListSeparator}

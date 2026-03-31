@@ -295,17 +295,6 @@ export const INSTANT_CONNECT_CONFIG = {
   SWITCH_COST: 15,    // coins to switch to another match
 } as const;
 
-// Video discovery daily limits per package tier (-1 = unlimited)
-export const VIDEO_DISCOVERY_CONFIG = {
-  DAILY_LIMITS: {
-    FREE: 10,
-    GOLD: -1,
-    PRO: -1,
-    RESERVED: -1,
-  },
-} as const;
-
-
 // Monthly token bonus per tier (awarded on subscription renewal)
 export const MONTHLY_TOKEN_BONUS = {
   FREE: 0,
@@ -322,13 +311,9 @@ export const VIEWERS_REVEAL_CONFIG = {
   RESERVED: { dailyReveals: 999999, delayHours: 0 },
 } as const;
 
-// ─── Beğenenler — Likes Reveal Config (yeni zamanlı erişim) ───────
-export const LIKES_REVEAL_CONFIG = {
-  FREE: 2,
-  GOLD: 10,
-  PRO: 30,
-  RESERVED: 999999,
-} as const;
+// ─── Beğenenler — Likes Reveal Config ────────────────────────────
+// @deprecated Use LIKES_VIEW_CONFIG.DAILY_LIMITS instead. Kept for backward compatibility.
+export const LIKES_REVEAL_CONFIG = LIKES_VIEW_CONFIG.DAILY_LIMITS;
 
 // ─── Mesaj Paketleri ──────────────────────────────────────────────
 export const MESSAGE_BUNDLE_CONFIG = [

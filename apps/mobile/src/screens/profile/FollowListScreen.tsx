@@ -20,6 +20,7 @@ import { spacing, borderRadius } from '../../theme/spacing';
 import api from '../../services/api';
 import { socialFeedService } from '../../services/socialFeedService';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { useScreenTracking } from '../../hooks/useAnalytics';
 
 interface FollowUser {
   userId: string;
@@ -30,6 +31,7 @@ interface FollowUser {
 type FollowListRouteProp = RouteProp<ProfileStackParamList, 'FollowList'>;
 
 export const FollowListScreen: React.FC = () => {
+  useScreenTracking('FollowList');
   const navigation = useNavigation();
   const route = useRoute<FollowListRouteProp>();
   const insets = useSafeAreaInsets();

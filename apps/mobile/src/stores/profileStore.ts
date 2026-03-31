@@ -45,6 +45,12 @@ export interface ProfileData {
   isIncognito: boolean;
   /** Timestamp (ms) when incognito expires, null = indefinite while active */
   incognitoExpiresAt: number | null;
+  /** Whether the account is frozen (profile hidden, not discoverable) */
+  isFrozen: boolean;
+  /** Whether to show online status to other users */
+  showOnlineStatus: boolean;
+  /** Whether to show distance to other users */
+  showDistance: boolean;
   /** Social stats — post, follower, following counts */
   postCount: number;
   followerCount: number;
@@ -107,6 +113,9 @@ const initialProfile: ProfileData = {
   favoriteSpots: [],
   isIncognito: false,
   incognitoExpiresAt: null,
+  isFrozen: false,
+  showOnlineStatus: true,
+  showDistance: true,
   postCount: 0,
   followerCount: 0,
   followingCount: 0,
@@ -144,6 +153,9 @@ const mapResponseToProfile = (data: ProfileResponse): ProfileData => {
     favoriteSpots: Array.isArray((data as { favoriteSpots?: ProfileData['favoriteSpots'] }).favoriteSpots) ? (data as { favoriteSpots?: ProfileData['favoriteSpots'] }).favoriteSpots! : [],
     isIncognito: (data as { isIncognito?: boolean }).isIncognito ?? false,
     incognitoExpiresAt: (data as { incognitoExpiresAt?: number | null }).incognitoExpiresAt ?? null,
+    isFrozen: (data as { isFrozen?: boolean }).isFrozen ?? false,
+    showOnlineStatus: (data as { showOnlineStatus?: boolean }).showOnlineStatus ?? true,
+    showDistance: (data as { showDistance?: boolean }).showDistance ?? true,
     postCount: (data as { postCount?: number }).postCount ?? 0,
     followerCount: (data as { followerCount?: number }).followerCount ?? 0,
     followingCount: (data as { followingCount?: number }).followingCount ?? 0,

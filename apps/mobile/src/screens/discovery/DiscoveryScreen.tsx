@@ -53,7 +53,7 @@ import { MatchAnimation } from '../../components/animations/MatchAnimation';
 import { DiscoveryCard } from '../../components/cards/DiscoveryCard';
 import { CompatibilityBottomSheet } from '../../components/discovery/CompatibilityBottomSheet';
 import { TrialBanner } from '../../components/premium/TrialBanner';
-import { discoveryService } from '../../services/discoveryService';
+import { discoveryService, type BoostStatusResponse } from '../../services/discoveryService';
 import type { LoginStreakResponse } from '../../services/discoveryService';
 import { StreakBanner } from '../../components/streak/StreakBanner';
 import { generateCompactReasons } from '../../utils/compatReasons';
@@ -64,9 +64,11 @@ import { useEngagementStore } from '../../stores/engagementStore';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
+import { DISCOVERY_CONFIG } from '../../constants/config';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { useSwipeRateLimiterStore, SKIP_COOLDOWN_COST } from '../../stores/swipeRateLimiterStore';
 import { CooldownOverlay } from '../../components/discovery/CooldownOverlay';
+import { BoostModal } from '../../components/boost/BoostModal';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -112,6 +114,7 @@ export const DiscoveryScreen: React.FC = () => {
   const undosUsedToday = useDiscoveryStore((s) => s.undosUsedToday);
   const updateLocation = useDiscoveryStore((s) => s.updateLocation);
   const coinBalance = useCoinStore((s) => s.balance);
+  const dailyRemaining = useDiscoveryStore((s) => s.dailyRemaining);
   const swipeError = useDiscoveryStore((s) => s.error);
   const clearError = useDiscoveryStore((s) => s.clearError);
 
@@ -175,6 +178,18 @@ export const DiscoveryScreen: React.FC = () => {
   }, []);
 
 
+  // ─── Daily swipe limit gate ─────────────────────────────
+  const hasUnlimitedSwipes = packageTier === 'PRO' || packageTier === 'RESERVED';
+  const isDailyLimitReached = !hasUnlimitedSwipes && dailyRemaining <= 0;
+  const [showLimitOverlay, setShowLimitOverlay] = useState(false);
+
+  // Show limit overlay when daily likes are exhausted (non-unlimited tiers)
+  useEffect(() => {
+    if (isDailyLimitReached) {
+      setShowLimitOverlay(true);
+    }
+  }, [isDailyLimitReached]);
+
   // ─── Undo access gate — tier-based daily limits ─────────
   const canUseUndo = packageTier !== 'FREE';
   const undoDailyLimits: Record<PackageTier, number> = { FREE: 0, GOLD: 1, PRO: 3, RESERVED: 999999 };
@@ -236,6 +251,45 @@ export const DiscoveryScreen: React.FC = () => {
     setShowCompatSheet(false);
     setCompatSheetUserId(null);
   }, []);
+
+  // ─── Filter navigation ─────────────────
+  const handleFilterPress = useCallback(() => {
+    navigation.navigate('Filter');
+  }, [navigation]);
+
+  // ─── Boost state ──────────────────────────────────────────
+  const [boostStatus, setBoostStatus] = useState<BoostStatusResponse>({ isActive: false });
+  const [showBoostModal, setShowBoostModal] = useState(false);
+
+  useEffect(() => {
+    discoveryService.getBoostStatus().then(setBoostStatus).catch(() => {});
+  }, []);
+
+  const handleBoostActivate = useCallback(async (durationMinutes: number) => {
+    const result = await discoveryService.activateBoost(durationMinutes);
+    if (result.success) {
+      setBoostStatus({ isActive: true, endsAt: result.endsAt, remainingSeconds: durationMinutes * 60 });
+      useCoinStore.getState().fetchBalance();
+    }
+  }, []);
+
+  const handleBoostPress = useCallback(() => {
+    if (packageTier === 'FREE') {
+      Alert.alert(
+        'Premium Özellik',
+        'Öne Çıkarma Gold ve üzeri paketlere özeldir.',
+        [
+          { text: 'Vazgeç', style: 'cancel' },
+          {
+            text: 'Paketi Yükselt',
+            onPress: () => navigation.navigate('JetonMarket' as never),
+          },
+        ],
+      );
+      return;
+    }
+    setShowBoostModal(true);
+  }, [packageTier, navigation]);
 
   // ─── Login streak state ─────────────────────────────────
   const [streakData, setStreakData] = useState<LoginStreakResponse | null>(null);
@@ -355,6 +409,12 @@ export const DiscoveryScreen: React.FC = () => {
   }, []);
 
   const handleSwipeComplete = useCallback((direction: 'left' | 'right') => {
+    // Block right swipes (likes) when daily limit is reached for limited tiers
+    if (direction === 'right' && !hasUnlimitedSwipes && dailyRemaining <= 0) {
+      setShowLimitOverlay(true);
+      return;
+    }
+
     const card = currentCardRef.current;
     if (card) {
       swipeAction(direction, card.id);
@@ -382,7 +442,7 @@ export const DiscoveryScreen: React.FC = () => {
         }
       }, 100);
     }
-  }, [swipeAction, incrementChallenge, recordSwipe, getRemainingCards, getSwipeBehavior, shouldTriggerCooldown, startCooldown, resetBatch]);
+  }, [swipeAction, incrementChallenge, recordSwipe, getRemainingCards, getSwipeBehavior, shouldTriggerCooldown, startCooldown, resetBatch, hasUnlimitedSwipes, dailyRemaining]);
 
 
   const handleCardTap = useCallback(() => {
@@ -624,22 +684,34 @@ export const DiscoveryScreen: React.FC = () => {
 
   const handleLikeWithComment = useCallback(() => {
     if (!currentCard) return;
+    if (!hasUnlimitedSwipes && dailyRemaining <= 0) {
+      setShowLimitOverlay(true);
+      setShowCommentModal(false);
+      setLikeComment('');
+      return;
+    }
     const comment = likeComment.trim() || undefined;
     translateX.value = withSpring(SCREEN_WIDTH + 200, SPRING_EXIT);
     swipeAction('right', currentCard.id, comment);
     recordSwipe('right');
     setShowCommentModal(false);
     setLikeComment('');
-  }, [currentCard, likeComment, swipeAction, translateX, recordSwipe]);
+  }, [currentCard, likeComment, swipeAction, translateX, recordSwipe, hasUnlimitedSwipes, dailyRemaining]);
 
   const handleLikeSkipComment = useCallback(() => {
     if (!currentCard) return;
+    if (!hasUnlimitedSwipes && dailyRemaining <= 0) {
+      setShowLimitOverlay(true);
+      setShowCommentModal(false);
+      setLikeComment('');
+      return;
+    }
     translateX.value = withSpring(SCREEN_WIDTH + 200, SPRING_EXIT);
     swipeAction('right', currentCard.id);
     recordSwipe('right');
     setShowCommentModal(false);
     setLikeComment('');
-  }, [currentCard, swipeAction, translateX, recordSwipe]);
+  }, [currentCard, swipeAction, translateX, recordSwipe, hasUnlimitedSwipes, dailyRemaining]);
 
   // ─── Loading state ─────────────────────────────────────────
 
@@ -654,12 +726,21 @@ export const DiscoveryScreen: React.FC = () => {
             </View>
             <View style={styles.headerRight}>
               <Pressable
-                onPress={() => navigation.navigate('Filter')}
+                onPress={handleBoostPress}
+                accessibilityLabel="Profilini öne çıkar"
+                accessibilityRole="button"
+              >
+                <View style={[styles.filterButton, boostStatus.isActive && styles.boostButtonActive]} testID="discovery-boost-btn">
+                  <Ionicons name="flash" size={18} color={boostStatus.isActive ? palette.gold[500] : colors.text} />
+                </View>
+              </Pressable>
+              <Pressable
+                onPress={handleFilterPress}
                 accessibilityLabel="Filtreleri aç"
                 accessibilityRole="button"
               >
-                <View style={styles.filterButton} testID="discovery-filter-btn">
-                  <Text style={styles.filterIcon}>{'\u2699'}</Text>
+              <View style={styles.filterButton} testID="discovery-filter-btn">
+                  <Ionicons name="options-outline" size={20} color={colors.text} />
                 </View>
               </Pressable>
             </View>
@@ -687,12 +768,21 @@ export const DiscoveryScreen: React.FC = () => {
             </View>
             <View style={styles.headerRight}>
               <Pressable
-                onPress={() => navigation.navigate('Filter')}
+                onPress={handleBoostPress}
+                accessibilityLabel="Profilini öne çıkar"
+                accessibilityRole="button"
+              >
+                <View style={[styles.filterButton, boostStatus.isActive && styles.boostButtonActive]} testID="discovery-boost-btn">
+                  <Ionicons name="flash" size={18} color={boostStatus.isActive ? palette.gold[500] : colors.text} />
+                </View>
+              </Pressable>
+              <Pressable
+                onPress={handleFilterPress}
                 accessibilityLabel="Filtreleri aç"
                 accessibilityRole="button"
               >
-                <View style={styles.filterButton} testID="discovery-filter-btn">
-                  <Text style={styles.filterIcon}>{'\u2699'}</Text>
+              <View style={styles.filterButton} testID="discovery-filter-btn">
+                  <Ionicons name="options-outline" size={20} color={colors.text} />
                 </View>
               </Pressable>
             </View>
@@ -758,14 +848,41 @@ export const DiscoveryScreen: React.FC = () => {
             <Image source={require('../../../assets/splash-logo.png')} style={styles.headerLogo} resizeMode="contain" />
           </View>
           <View style={styles.headerRight}>
+            {/* Daily remaining swipe badge — hidden for unlimited tiers */}
+            {!hasUnlimitedSwipes && (
+              <View
+                style={[
+                  styles.dailyLimitBadge,
+                  dailyRemaining <= 5 && dailyRemaining > 0 && styles.dailyLimitBadgeWarning,
+                  dailyRemaining <= 0 && styles.dailyLimitBadgeExhausted,
+                ]}
+                accessibilityLabel={`${dailyRemaining} beğeni hakkın kaldı`}
+                testID="discovery-daily-limit-badge"
+              >
+                <Ionicons
+                  name="heart"
+                  size={12}
+                  color={dailyRemaining <= 0 ? palette.error : dailyRemaining <= 5 ? palette.gold[600] : colors.textSecondary}
+                />
+                <Text
+                  style={[
+                    styles.dailyLimitBadgeText,
+                    dailyRemaining <= 5 && dailyRemaining > 0 && styles.dailyLimitBadgeTextWarning,
+                    dailyRemaining <= 0 && styles.dailyLimitBadgeTextExhausted,
+                  ]}
+                >
+                  {dailyRemaining}
+                </Text>
+              </View>
+            )}
             <Pressable
-              onPress={() => navigation.navigate('Filter')}
+              onPress={handleFilterPress}
               accessibilityLabel="Filtreleri aç"
               accessibilityRole="button"
               accessibilityHint="Keşif filtrelerini düzenlemek için dokunun"
             >
               <View style={styles.filterButton} testID="discovery-filter-btn">
-                <Text style={styles.filterIcon}>{'\u2699'}</Text>
+                <Ionicons name="options-outline" size={20} color={colors.text} />
               </View>
             </Pressable>
           </View>
@@ -946,6 +1063,56 @@ export const DiscoveryScreen: React.FC = () => {
         />
       )}
 
+      {/* Daily swipe limit overlay — shown when FREE/GOLD tiers exhaust daily likes */}
+      {showLimitOverlay && isDailyLimitReached && (
+        <Modal
+          visible
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowLimitOverlay(false)}
+        >
+          <View style={styles.limitOverlay}>
+            <View style={styles.limitOverlayCard}>
+              <View style={styles.limitOverlayIconCircle}>
+                <Ionicons name="heart-dislike" size={32} color={palette.pink[500]} />
+              </View>
+              <Text style={styles.limitOverlayTitle}>
+                Günlük beğeni hakkın doldu
+              </Text>
+              <Text style={styles.limitOverlaySubtitle}>
+                {packageTier === 'FREE'
+                  ? `Ücretsiz pakette günde ${DISCOVERY_CONFIG.DAILY_LIKES.FREE} beğeni hakkın var. Daha fazlası için paketini yükselt.`
+                  : `Premium pakette günde ${DISCOVERY_CONFIG.DAILY_LIKES.GOLD} beğeni hakkın var. Sınırsız beğeni için paketini yükselt.`}
+              </Text>
+              <Pressable
+                onPress={() => {
+                  setShowLimitOverlay(false);
+                  navigation.navigate('ProfileTab', { screen: 'MembershipPlans' } as never);
+                }}
+                accessibilityLabel="Paketi yükselt"
+                accessibilityRole="button"
+                testID="discovery-limit-upgrade-btn"
+              >
+                <View style={styles.limitOverlayUpgradeBtn}>
+                  <Ionicons name="diamond" size={18} color="#FFFFFF" style={{ marginRight: spacing.sm }} />
+                  <Text style={styles.limitOverlayUpgradeBtnText}>Paketi Yükselt</Text>
+                </View>
+              </Pressable>
+              <Pressable
+                onPress={() => setShowLimitOverlay(false)}
+                accessibilityLabel="Tamam"
+                accessibilityRole="button"
+                testID="discovery-limit-dismiss-btn"
+              >
+                <View style={styles.limitOverlayDismissBtn}>
+                  <Text style={styles.limitOverlayDismissBtnText}>Tamam</Text>
+                </View>
+              </Pressable>
+            </View>
+          </View>
+        </Modal>
+      )}
+
       {/* Match celebration overlay — only render when matchedCard exists */}
       {(!showMatchAnimation || matchedCard) && (
         <MatchAnimation
@@ -972,6 +1139,16 @@ export const DiscoveryScreen: React.FC = () => {
         visible={showCompatSheet}
         targetUserId={compatSheetUserId}
         onClose={handleCompatClose}
+      />
+
+      {/* Boost modal */}
+      <BoostModal
+        visible={showBoostModal}
+        onClose={() => setShowBoostModal(false)}
+        goldBalance={coinBalance}
+        boostStatus={boostStatus}
+        onActivate={handleBoostActivate}
+        onBuyGold={() => { setShowBoostModal(false); navigation.navigate('JetonMarket' as never); }}
       />
 
       {/* Like-with-comment modal */}
@@ -1114,18 +1291,18 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   filterButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 12,
     backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.surfaceBorder,
   },
-  filterIcon: {
-    ...typography.bodyLarge,
-    color: colors.text,
+  boostButtonActive: {
+    backgroundColor: palette.gold[500] + '15',
+    borderColor: palette.gold[500] + '40',
   },
   instantConnectButton: {
     backgroundColor: palette.purple[600],
@@ -1429,6 +1606,104 @@ const styles = StyleSheet.create({
   commentModalSendText: {
     ...typography.button,
     color: '#FFFFFF',
+  },
+
+  // ── Daily Limit Badge (header) ──
+  dailyLimitBadge: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    gap: 3,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.surfaceBorder,
+  },
+  dailyLimitBadgeWarning: {
+    backgroundColor: palette.gold[50],
+    borderColor: palette.gold[300],
+  },
+  dailyLimitBadgeExhausted: {
+    backgroundColor: palette.pink[50],
+    borderColor: palette.pink[300],
+  },
+  dailyLimitBadgeText: {
+    ...typography.captionSmall,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600' as const,
+    color: colors.textSecondary,
+  },
+  dailyLimitBadgeTextWarning: {
+    color: palette.gold[600],
+  },
+  dailyLimitBadgeTextExhausted: {
+    color: palette.error,
+  },
+
+  // ── Daily Limit Overlay ──
+  limitOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: spacing.lg,
+  },
+  limitOverlayCard: {
+    backgroundColor: colors.background,
+    borderRadius: borderRadius.xxl,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.lg,
+    alignItems: 'center' as const,
+    width: '100%' as const,
+    maxWidth: 340,
+    ...shadows.large,
+  },
+  limitOverlayIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: palette.pink[50],
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    marginBottom: spacing.md,
+  },
+  limitOverlayTitle: {
+    ...typography.h4,
+    color: colors.text,
+    textAlign: 'center' as const,
+    marginBottom: spacing.sm,
+  },
+  limitOverlaySubtitle: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+    textAlign: 'center' as const,
+    marginBottom: spacing.lg,
+    lineHeight: 20,
+  },
+  limitOverlayUpgradeBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: palette.purple[600],
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    width: '100%' as const,
+    marginBottom: spacing.sm,
+  },
+  limitOverlayUpgradeBtnText: {
+    ...typography.button,
+    color: '#FFFFFF',
+  },
+  limitOverlayDismissBtn: {
+    paddingVertical: spacing.smd,
+    paddingHorizontal: spacing.lg,
+  },
+  limitOverlayDismissBtnText: {
+    ...typography.buttonSmall,
+    color: colors.textSecondary,
   },
 });
 

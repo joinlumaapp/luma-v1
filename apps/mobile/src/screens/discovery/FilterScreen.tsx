@@ -1,83 +1,102 @@
-// Filter screen — gender, age range, distance, intention tags, height, education, lifestyle, zodiac
+// FilterScreen — Bumpy-style filter UI with card sections, toggle switches, and tier-locked advanced filters
 
 import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
-  TextInput,
   StyleSheet,
   ScrollView,
+  Switch,
   Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useDiscoveryStore } from '../../stores/discoveryStore';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
 import { INTENTION_TAGS, DISCOVERY_CONFIG, PROFILE_CONFIG } from '../../constants/config';
-import { colors } from '../../theme/colors';
-import { typography } from '../../theme/typography';
-import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
+import { colors, palette } from '../../theme/colors';
+import { spacing } from '../../theme/spacing';
 import type { RootStackParamList } from '../../navigation/types';
 import { useScreenTracking } from '../../hooks/useAnalytics';
-import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 // ── Types ──────────────────────────────────────────────────────────
 
 type GenderPreference = 'male' | 'female' | 'all';
-
 type RequiredTier = 'GOLD' | 'PRO';
 
 // ── Constants ──────────────────────────────────────────────────────
 
 const GENDER_OPTIONS: Array<{ value: GenderPreference; label: string }> = [
-  { value: 'male', label: 'Erkek' },
-  { value: 'female', label: 'Kadın' },
-  { value: 'all', label: 'Hepsi' },
+  { value: 'male', label: 'Erkekler' },
+  { value: 'female', label: 'Kadınlar' },
+  { value: 'all', label: 'İkisi de' },
 ];
 
-const HEIGHT_MIN = 150;
-const HEIGHT_MAX = 200;
+const AGE_MIN = PROFILE_CONFIG.MIN_AGE;
+const AGE_MAX = 65;
+const HEIGHT_MIN = 140;
+const HEIGHT_MAX = 210;
+const WEIGHT_MIN = 40;
+const WEIGHT_MAX = 150;
 
-const EDUCATION_OPTIONS = [
-  'Lise',
-  'Üniversite',
-  'Yüksek Lisans',
-  'Doktora',
-];
+const DISTANCE_OPTIONS = [5, 10, 25, 50, 100];
 
-const SMOKING_OPTIONS = [
-  'İçiyor',
-  'İçmiyor',
-  'Bazen',
-];
+const INTENTION_OPTIONS = INTENTION_TAGS.filter((t) => !('hidden' in t && t.hidden)).map((t) => ({
+  id: t.id,
+  label: t.label,
+}));
 
-const DRINKING_OPTIONS = [
-  'İçiyor',
-  'İçmiyor',
-  'Sosyal',
-];
+const EDUCATION_OPTIONS = ['Lise', 'Üniversite', 'Yüksek Lisans', 'Doktora'];
 
-const EXERCISE_OPTIONS = [
-  'Aktif',
-  'Bazen',
-  'Nadiren',
-];
+const SMOKING_OPTIONS = ['İçiyor', 'İçmiyor', 'Bazen'];
+
+const DRINKING_OPTIONS = ['İçiyor', 'İçmiyor', 'Sosyal'];
+
+const EXERCISE_OPTIONS = ['Aktif', 'Bazen', 'Nadiren'];
 
 const ZODIAC_OPTIONS = [
-  'Koç',
-  'Boğa',
-  'İkizler',
-  'Yengeç',
-  'Aslan',
-  'Başak',
-  'Terazi',
-  'Akrep',
-  'Yay',
-  'Oğlak',
-  'Kova',
-  'Balık',
+  'Koç', 'Boğa', 'İkizler', 'Yengeç', 'Aslan', 'Başak',
+  'Terazi', 'Akrep', 'Yay', 'Oğlak', 'Kova', 'Balık',
+];
+
+const RELIGION_OPTIONS = [
+  'İslam', 'Hristiyanlık', 'Yahudilik', 'Budizm',
+  'Hinduizm', 'Agnostik', 'Ateist', 'Diğer',
+];
+
+const CHILDREN_OPTIONS = ['Var', 'Yok', 'İstiyor', 'İstemiyor', 'Belki'];
+
+const PETS_OPTIONS = ['Kedi', 'Köpek', 'Kuş', 'Balık', 'Yok'];
+
+const MARITAL_OPTIONS = ['Bekar', 'Boşanmış', 'Dul'];
+
+const LANGUAGE_OPTIONS = [
+  'Türkçe', 'İngilizce', 'Almanca', 'Fransızca',
+  'İspanyolca', 'Arapça', 'Rusça', 'Japonca', 'Korece',
+];
+
+const ETHNICITY_OPTIONS = [
+  'Türk', 'Kürt', 'Arap', 'Avrupalı', 'Asyalı',
+  'Afrikalı', 'Latin', 'Karışık', 'Diğer',
+];
+
+const SEXUAL_ORIENTATION_OPTIONS = [
+  'Heteroseksüel', 'Biseksüel', 'Homoseksüel', 'Panseksüel', 'Aseksüel',
+];
+
+const VALUES_OPTIONS = [
+  'Aile ve Çocuklar', 'Bilim ve Araştırma', 'Dünyayı İyileştirme',
+  'Eğlence ve Dinlence', 'Güzellik ve Sanat', 'Kariyer ve Para',
+  'Kendini Gerçekleştirme', 'Şöhret ve Etkileme',
+];
+
+const INTEREST_OPTIONS = [
+  'Seyahat', 'Müzik', 'Spor', 'Yemek', 'Sinema',
+  'Kitap', 'Fotoğrafçılık', 'Oyun', 'Doğa', 'Teknoloji',
+  'Sanat', 'Dans', 'Yoga', 'Koşu', 'Yüzme',
 ];
 
 // ── Helpers ────────────────────────────────────────────────────────
@@ -85,24 +104,10 @@ const ZODIAC_OPTIONS = [
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(Math.max(value, min), max);
 
-/** Returns true if the user's package tier meets or exceeds the required tier. */
 const hasAccess = (userTier: PackageTier, requiredTier: RequiredTier): boolean => {
-  const tierRank: Record<PackageTier, number> = {
-    FREE: 0,
-    GOLD: 1,
-    PRO: 2,
-    RESERVED: 3,
-  };
-  const requiredRank: Record<RequiredTier, number> = {
-    GOLD: 1,
-    PRO: 2,
-  };
+  const tierRank: Record<PackageTier, number> = { FREE: 0, GOLD: 1, PRO: 2, RESERVED: 3 };
+  const requiredRank: Record<RequiredTier, number> = { GOLD: 1, PRO: 2 };
   return tierRank[userTier] >= requiredRank[requiredTier];
-};
-
-const tierDisplayName = (tier: RequiredTier): string => {
-  if (tier === 'GOLD') return 'Gold';
-  return 'Pro';
 };
 
 // ── Component ──────────────────────────────────────────────────────
@@ -115,56 +120,78 @@ export const FilterScreen: React.FC = () => {
   const filters = useDiscoveryStore((state) => state.filters);
   const setFilters = useDiscoveryStore((state) => state.setFilters);
   const refreshFeed = useDiscoveryStore((state) => state.refreshFeed);
-  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE');
+  const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE') as PackageTier;
 
-  // ── Existing filter state ──
-  const [genderPreference, setGenderPreference] = useState<GenderPreference>(
-    filters.genderPreference
-  );
-  const [minAge, setMinAge] = useState<string>(String(filters.minAge));
-  const [maxAge, setMaxAge] = useState<string>(String(filters.maxAge));
-  const [maxDistance, setMaxDistance] = useState<number>(filters.maxDistance);
-  const [cityWideMode, setCityWideMode] = useState<boolean>(
-    filters.maxDistance >= DISCOVERY_CONFIG.MAX_DISTANCE_KM
-  );
-  const [selectedTags, setSelectedTags] = useState<string[]>([...filters.intentionTags]);
+  const isFree = packageTier === 'FREE';
 
-  // ── New filter state ──
-  const [heightMin, setHeightMin] = useState<string>(
-    filters.height ? String(filters.height.min) : String(HEIGHT_MIN)
-  );
-  const [heightMax, setHeightMax] = useState<string>(
-    filters.height ? String(filters.height.max) : String(HEIGHT_MAX)
-  );
-  const [heightEnabled, setHeightEnabled] = useState<boolean>(filters.height !== null);
-  const [selectedEducation, setSelectedEducation] = useState<string[]>([...filters.education]);
-  const [selectedSmoking, setSelectedSmoking] = useState<string[]>([...filters.smoking]);
-  const [selectedDrinking, setSelectedDrinking] = useState<string[]>([...filters.drinking]);
-  const [selectedExercise, setSelectedExercise] = useState<string[]>([...filters.exercise]);
-  const [selectedZodiac, setSelectedZodiac] = useState<string[]>([...filters.zodiac]);
+  // ── Basic filter state ──
+  const [genderPreference, setGenderPreference] = useState<GenderPreference>(filters.genderPreference ?? 'all');
+  const [minAge, setMinAge] = useState(filters.minAge ?? AGE_MIN);
+  const [maxAge, setMaxAge] = useState(filters.maxAge ?? 40);
+  const [maxDistance, setMaxDistance] = useState(filters.maxDistance ?? DISCOVERY_CONFIG.DEFAULT_DISTANCE_KM);
+  const [cityWideMode, setCityWideMode] = useState((filters.maxDistance ?? 0) >= DISCOVERY_CONFIG.MAX_DISTANCE_KM);
+  const [selectedTags, setSelectedTags] = useState<string[]>([...(filters.intentionTags ?? [])]);
+  const [verifiedOnly, setVerifiedOnly] = useState(filters.verifiedOnly ?? false);
+
+  // ── Advanced filter state (safe defaults for persisted stores missing new fields) ──
+  const [heightMin, setHeightMin] = useState(filters.height?.min ?? HEIGHT_MIN);
+  const [heightMax, setHeightMax] = useState(filters.height?.max ?? HEIGHT_MAX);
+  const [weightMin, setWeightMin] = useState(filters.weight?.min ?? WEIGHT_MIN);
+  const [weightMax, setWeightMax] = useState(filters.weight?.max ?? WEIGHT_MAX);
+  const [selectedEducation, setSelectedEducation] = useState<string[]>([...(filters.education ?? [])]);
+  const [selectedSmoking, setSelectedSmoking] = useState<string[]>([...(filters.smoking ?? [])]);
+  const [selectedDrinking, setSelectedDrinking] = useState<string[]>([...(filters.drinking ?? [])]);
+  const [selectedExercise, setSelectedExercise] = useState<string[]>([...(filters.exercise ?? [])]);
+  const [selectedZodiac, setSelectedZodiac] = useState<string[]>([...(filters.zodiac ?? [])]);
+  const [selectedReligion, setSelectedReligion] = useState<string[]>([...(filters.religion ?? [])]);
+  const [selectedChildren, setSelectedChildren] = useState<string[]>([...(filters.children ?? [])]);
+  const [selectedPets, setSelectedPets] = useState<string[]>([...(filters.pets ?? [])]);
+  const [selectedMarital, setSelectedMarital] = useState<string[]>([...(filters.maritalStatus ?? [])]);
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([...(filters.languages ?? [])]);
+  const [selectedEthnicity, setSelectedEthnicity] = useState<string[]>([...(filters.ethnicity ?? [])]);
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([...(filters.interests ?? [])]);
+  const [selectedOrientation, setSelectedOrientation] = useState<string[]>([...(filters.sexualOrientation ?? [])]);
+  const [selectedValues, setSelectedValues] = useState<string[]>([...(filters.values ?? [])]);
+
+  // ── "Bitersem diğer kişileri göster" fallback toggles ──
+  const [fallback, setFallback] = useState<Record<string, boolean>>({
+    intention: true,
+    education: true,
+    smoking: true,
+    drinking: true,
+    exercise: true,
+    zodiac: true,
+    religion: true,
+    children: true,
+    pets: true,
+    marital: true,
+    languages: true,
+    ethnicity: true,
+    interests: true,
+    orientation: true,
+    values: true,
+    height: true,
+    weight: true,
+  });
+
+  const toggleFallback = useCallback((key: string) => {
+    setFallback((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
 
   // ── Toggle helpers ──
 
-  const toggleTag = useCallback((tagId: string) => {
-    setSelectedTags((prev) =>
-      prev.includes(tagId) ? prev.filter((t) => t !== tagId) : [...prev, tagId]
-    );
-  }, []);
-
-  const toggleChip = useCallback(
+  const toggleInArray = useCallback(
     (setter: React.Dispatch<React.SetStateAction<string[]>>) => (value: string) => {
-      setter((prev) =>
-        prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
-      );
+      setter((prev) => prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]);
     },
-    []
+    [],
   );
 
   // ── Premium lock handler ──
 
   const showUpgradeAlert = useCallback(
     (requiredTier: RequiredTier) => {
-      const tierName = tierDisplayName(requiredTier);
+      const tierName = requiredTier === 'GOLD' ? 'Gold' : 'Pro';
       Alert.alert(
         `${tierName} Filtresi`,
         `Bu filtre ${tierName} paketi ile kullanılabilir. Yükseltmek ister misin?`,
@@ -173,46 +200,40 @@ export const FilterScreen: React.FC = () => {
           {
             text: 'Yükselt',
             onPress: () => {
-              // Navigate to Packages screen in ProfileTab
               navigation.navigate('MainTabs', {
                 screen: 'ProfileTab',
                 params: { screen: 'MembershipPlans' },
               });
             },
           },
-        ]
+        ],
       );
     },
-    [navigation]
+    [navigation],
   );
 
-  // ── Apply / Reset ──
+  // ── Apply ──
 
   const handleApply = useCallback(() => {
-    const parsedMinAge = clamp(
-      parseInt(minAge, 10) || PROFILE_CONFIG.MIN_AGE,
-      PROFILE_CONFIG.MIN_AGE,
-      65
-    );
-    const parsedMaxAge = clamp(
-      parseInt(maxAge, 10) || 65,
-      parsedMinAge,
-      65
-    );
-    const parsedDistance = cityWideMode
-      ? DISCOVERY_CONFIG.MAX_DISTANCE_KM
-      : clamp(maxDistance, 1, DISCOVERY_CONFIG.MAX_DISTANCE_KM);
+    const paidUser = hasAccess(packageTier, 'GOLD');
+    // FREE users: gender=all, age=default, distance=default
+    const parsedMinAge = paidUser ? clamp(minAge, AGE_MIN, AGE_MAX) : AGE_MIN;
+    const parsedMaxAge = paidUser ? clamp(maxAge, parsedMinAge, AGE_MAX) : 40;
+    const parsedDistance = paidUser
+      ? (cityWideMode ? DISCOVERY_CONFIG.MAX_DISTANCE_KM : clamp(maxDistance, 1, DISCOVERY_CONFIG.MAX_DISTANCE_KM))
+      : DISCOVERY_CONFIG.DEFAULT_DISTANCE_KM;
+    const effectiveGender = paidUser ? genderPreference : 'all';
 
-    // Free users cannot filter gender — default to 'all' (see everyone)
-    const effectiveGender = hasAccess(packageTier, 'GOLD') ? genderPreference : 'all';
+    const isGold = paidUser;
+    const isPro = hasAccess(packageTier, 'PRO');
 
-    // Parse height values only if height filter is enabled and user has Pro access
-    let heightFilter: { min: number; max: number } | null = null;
-    if (heightEnabled && hasAccess(packageTier, 'PRO')) {
-      const parsedHMin = clamp(parseInt(heightMin, 10) || HEIGHT_MIN, HEIGHT_MIN, HEIGHT_MAX);
-      const parsedHMax = clamp(parseInt(heightMax, 10) || HEIGHT_MAX, parsedHMin, HEIGHT_MAX);
-      heightFilter = { min: parsedHMin, max: parsedHMax };
-    }
+    const hMin = clamp(heightMin, HEIGHT_MIN, HEIGHT_MAX);
+    const hMax = clamp(heightMax, hMin, HEIGHT_MAX);
+    const heightChanged = hMin !== HEIGHT_MIN || hMax !== HEIGHT_MAX;
+
+    const wMin = clamp(weightMin, WEIGHT_MIN, WEIGHT_MAX);
+    const wMax = clamp(weightMax, wMin, WEIGHT_MAX);
+    const weightChanged = wMin !== WEIGHT_MIN || wMax !== WEIGHT_MAX;
 
     setFilters({
       genderPreference: effectiveGender,
@@ -220,120 +241,272 @@ export const FilterScreen: React.FC = () => {
       maxAge: parsedMaxAge,
       maxDistance: parsedDistance,
       intentionTags: selectedTags,
-      height: heightFilter,
-      education: hasAccess(packageTier, 'GOLD') ? selectedEducation : [],
-      smoking: hasAccess(packageTier, 'GOLD') ? selectedSmoking : [],
-      drinking: hasAccess(packageTier, 'GOLD') ? selectedDrinking : [],
-      exercise: hasAccess(packageTier, 'GOLD') ? selectedExercise : [],
-      zodiac: hasAccess(packageTier, 'PRO') ? selectedZodiac : [],
+      verifiedOnly,
+      height: isGold && heightChanged ? { min: hMin, max: hMax } : null,
+      weight: isGold && weightChanged ? { min: wMin, max: wMax } : null,
+      education: isGold ? selectedEducation : [],
+      smoking: isGold ? selectedSmoking : [],
+      drinking: isGold ? selectedDrinking : [],
+      exercise: isGold ? selectedExercise : [],
+      zodiac: isPro ? selectedZodiac : [],
+      religion: isGold ? selectedReligion : [],
+      children: isGold ? selectedChildren : [],
+      pets: isGold ? selectedPets : [],
+      maritalStatus: isGold ? selectedMarital : [],
+      languages: isGold ? selectedLanguages : [],
+      ethnicity: isGold ? selectedEthnicity : [],
+      interests: selectedInterests,
+      sexualOrientation: isGold ? selectedOrientation : [],
+      values: isGold ? selectedValues : [],
+      nationality: [],
     });
 
     refreshFeed();
     navigation.goBack();
   }, [
-    genderPreference,
-    minAge,
-    maxAge,
-    maxDistance,
-    cityWideMode,
-    selectedTags,
-    heightEnabled,
-    heightMin,
-    heightMax,
-    selectedEducation,
-    selectedSmoking,
-    selectedDrinking,
-    selectedExercise,
-    selectedZodiac,
-    packageTier,
-    setFilters,
-    refreshFeed,
-    navigation,
+    genderPreference, minAge, maxAge, maxDistance, cityWideMode,
+    selectedTags, verifiedOnly, heightMin, heightMax, weightMin, weightMax,
+    selectedEducation, selectedSmoking, selectedDrinking, selectedExercise,
+    selectedZodiac, selectedReligion, selectedChildren, selectedPets,
+    selectedMarital, selectedLanguages, selectedEthnicity, selectedInterests,
+    selectedOrientation, selectedValues, packageTier,
+    setFilters, refreshFeed, navigation,
   ]);
 
   const handleReset = useCallback(() => {
     setGenderPreference('all');
-    setMinAge(String(PROFILE_CONFIG.MIN_AGE));
-    setMaxAge('40');
+    setMinAge(AGE_MIN);
+    setMaxAge(40);
     setMaxDistance(DISCOVERY_CONFIG.DEFAULT_DISTANCE_KM);
     setCityWideMode(false);
     setSelectedTags([]);
-    setHeightMin(String(HEIGHT_MIN));
-    setHeightMax(String(HEIGHT_MAX));
-    setHeightEnabled(false);
+    setVerifiedOnly(false);
+    setHeightMin(HEIGHT_MIN);
+    setHeightMax(HEIGHT_MAX);
+    setWeightMin(WEIGHT_MIN);
+    setWeightMax(WEIGHT_MAX);
     setSelectedEducation([]);
     setSelectedSmoking([]);
     setSelectedDrinking([]);
     setSelectedExercise([]);
     setSelectedZodiac([]);
-  }, [packageTier]);
+    setSelectedReligion([]);
+    setSelectedChildren([]);
+    setSelectedPets([]);
+    setSelectedMarital([]);
+    setSelectedLanguages([]);
+    setSelectedEthnicity([]);
+    setSelectedInterests([]);
+    setSelectedOrientation([]);
+    setSelectedValues([]);
+  }, []);
 
   // ── Render helpers ──
 
-  /** Renders a multi-select chip group. */
-  const renderChipGroup = (
-    options: string[],
-    selected: string[],
-    onToggle: (value: string) => void
-  ): React.ReactElement => (
-    <View style={styles.chipGroup}>
-      {options.map((option) => {
-        const isSelected = selected.includes(option);
+  /** Bumpy-style gender segmented control */
+  const renderGenderSegment = () => (
+    <View style={s.segmentRow}>
+      {GENDER_OPTIONS.map((opt) => {
+        const active = genderPreference === opt.value;
         return (
           <TouchableOpacity
-            key={option}
-            style={[styles.chip, isSelected && styles.chipActive]}
-            onPress={() => onToggle(option)}
-            activeOpacity={0.8}
+            key={opt.value}
+            style={[s.segmentBtn, active && s.segmentBtnActive]}
+            onPress={() => setGenderPreference(opt.value)}
+            activeOpacity={0.7}
           >
-            <Text style={[styles.chipText, isSelected && styles.chipTextActive]}>
-              {option}
-            </Text>
+            <Text style={[s.segmentText, active && s.segmentTextActive]}>{opt.label}</Text>
           </TouchableOpacity>
         );
       })}
     </View>
   );
 
-  /** Wraps a section with a premium lock overlay when the user lacks access. */
-  const renderLockedSection = (
-    title: string,
-    requiredTier: RequiredTier,
-    children: React.ReactNode
-  ): React.ReactElement => {
-    const locked = !hasAccess(packageTier, requiredTier);
+  /** Age range display with +/- steppers */
+  const renderAgeRange = () => (
+    <View style={s.card}>
+      <Text style={s.cardValue}>Yaş {minAge} ile {maxAge} arasında</Text>
+      <View style={s.stepperRow}>
+        <View style={s.stepper}>
+          <TouchableOpacity style={s.stepBtn} onPress={() => setMinAge((v) => Math.max(AGE_MIN, v - 1))}>
+            <Ionicons name="remove" size={18} color={colors.primary} />
+          </TouchableOpacity>
+          <Text style={s.stepValue}>{minAge}</Text>
+          <TouchableOpacity style={s.stepBtn} onPress={() => setMinAge((v) => Math.min(maxAge, v + 1))}>
+            <Ionicons name="add" size={18} color={colors.primary} />
+          </TouchableOpacity>
+        </View>
+        <Text style={s.stepDash}>—</Text>
+        <View style={s.stepper}>
+          <TouchableOpacity style={s.stepBtn} onPress={() => setMaxAge((v) => Math.max(minAge, v - 1))}>
+            <Ionicons name="remove" size={18} color={colors.primary} />
+          </TouchableOpacity>
+          <Text style={s.stepValue}>{maxAge}</Text>
+          <TouchableOpacity style={s.stepBtn} onPress={() => setMaxAge((v) => Math.min(AGE_MAX, v + 1))}>
+            <Ionicons name="add" size={18} color={colors.primary} />
+          </TouchableOpacity>
+        </View>
+      </View>
+      <View style={s.cardDivider} />
+      <FallbackToggle value={true} disabled />
+    </View>
+  );
+
+  /** Distance selector */
+  const renderDistance = () => (
+    <View style={s.card}>
+      <Text style={s.cardValue}>
+        {cityWideMode ? 'Şehir geneli' : `${maxDistance} km içinde`}
+      </Text>
+      <View style={s.chipRow}>
+        {DISTANCE_OPTIONS.map((km) => {
+          const active = !cityWideMode && maxDistance === km;
+          return (
+            <TouchableOpacity
+              key={km}
+              style={[s.miniChip, active && s.miniChipActive]}
+              onPress={() => { setCityWideMode(false); setMaxDistance(km); }}
+              activeOpacity={0.7}
+            >
+              <Text style={[s.miniChipText, active && s.miniChipTextActive]}>{km} km</Text>
+            </TouchableOpacity>
+          );
+        })}
+        <TouchableOpacity
+          style={[s.miniChip, cityWideMode && s.miniChipActive]}
+          onPress={() => { setCityWideMode(true); setMaxDistance(DISCOVERY_CONFIG.MAX_DISTANCE_KM); }}
+          activeOpacity={0.7}
+        >
+          <Text style={[s.miniChipText, cityWideMode && s.miniChipTextActive]}>Tümü</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={s.cardDivider} />
+      <FallbackToggle value={true} disabled />
+    </View>
+  );
+
+  /** Multi-select chip card — Bumpy style with question header + card */
+  const renderChipCard = (
+    question: string,
+    icon: string,
+    options: string[],
+    selected: string[],
+    onToggle: (v: string) => void,
+    fallbackKey: string,
+    requiredTier?: RequiredTier,
+  ) => {
+    const locked = requiredTier ? !hasAccess(packageTier, requiredTier) : false;
+    const count = selected.length;
 
     return (
-      <View style={styles.section}>
-        <View style={styles.sectionTitleRow}>
-          <Text style={styles.sectionTitle}>{title}</Text>
-          {locked && <Text style={styles.lockIcon}>{'\uD83D\uDD12'}</Text>}
+      <View style={s.filterSection}>
+        <Text style={s.questionLabel}>{icon} {question}</Text>
+        <TouchableOpacity
+          style={[s.card, locked && s.cardLocked]}
+          onPress={locked ? () => showUpgradeAlert(requiredTier!) : undefined}
+          activeOpacity={locked ? 0.7 : 1}
+          disabled={!locked}
+        >
           {locked && (
-            <TouchableOpacity
-              style={styles.proLabel}
-              onPress={() => showUpgradeAlert(requiredTier)}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.proLabelText}>
-                {tierDisplayName(requiredTier)} ile aç
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {locked ? (
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => showUpgradeAlert(requiredTier)}
-            style={styles.lockedOverlay}
-          >
-            <View style={styles.lockedContent} pointerEvents="none">
-              {children}
+            <View style={s.lockedBadge}>
+              <Ionicons name="lock-closed" size={12} color={palette.gold[600]} />
+              <Text style={s.lockedBadgeText}>{requiredTier === 'GOLD' ? 'Gold' : 'Pro'}</Text>
             </View>
-          </TouchableOpacity>
-        ) : (
-          children
-        )}
+          )}
+          <View style={s.chipRow} pointerEvents={locked ? 'none' : 'auto'}>
+            {options.map((opt) => {
+              const active = selected.includes(opt);
+              return (
+                <TouchableOpacity
+                  key={opt}
+                  style={[s.chip, active && s.chipActive]}
+                  onPress={() => onToggle(opt)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[s.chipText, active && s.chipTextActive]}>{opt}</Text>
+                  {active && <Ionicons name="checkmark" size={14} color={colors.primary} style={{ marginLeft: 4 }} />}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          {count > 0 && !locked && (
+            <Text style={s.selectedCount}>{count} seçili</Text>
+          )}
+          <View style={s.cardDivider} />
+          <FallbackToggle
+            value={fallback[fallbackKey]}
+            onToggle={() => toggleFallback(fallbackKey)}
+            disabled={locked}
+          />
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  /** Range card for height/weight */
+  const renderRangeCard = (
+    question: string,
+    icon: string,
+    min: number,
+    max: number,
+    absMin: number,
+    absMax: number,
+    unit: string,
+    setMin: React.Dispatch<React.SetStateAction<number>>,
+    setMax: React.Dispatch<React.SetStateAction<number>>,
+    fallbackKey: string,
+    requiredTier?: RequiredTier,
+  ) => {
+    const locked = requiredTier ? !hasAccess(packageTier, requiredTier) : false;
+    const isDefault = min === absMin && max === absMax;
+    const label = isDefault
+      ? `Her ${unit === 'cm' ? 'boy' : 'kilo'} uygun`
+      : `${min} - ${max} ${unit}`;
+
+    return (
+      <View style={s.filterSection}>
+        <Text style={s.questionLabel}>{icon} {question}</Text>
+        <TouchableOpacity
+          style={[s.card, locked && s.cardLocked]}
+          onPress={locked ? () => showUpgradeAlert(requiredTier!) : undefined}
+          activeOpacity={locked ? 0.7 : 1}
+          disabled={!locked}
+        >
+          {locked && (
+            <View style={s.lockedBadge}>
+              <Ionicons name="lock-closed" size={12} color={palette.gold[600]} />
+              <Text style={s.lockedBadgeText}>{requiredTier === 'GOLD' ? 'Gold' : 'Pro'}</Text>
+            </View>
+          )}
+          <Text style={s.cardValue}>{label}</Text>
+          <View style={s.stepperRow} pointerEvents={locked ? 'none' : 'auto'}>
+            <View style={s.stepper}>
+              <TouchableOpacity style={s.stepBtn} onPress={() => setMin((v) => Math.max(absMin, v - 1))}>
+                <Ionicons name="remove" size={18} color={colors.primary} />
+              </TouchableOpacity>
+              <Text style={s.stepValue}>{min}</Text>
+              <TouchableOpacity style={s.stepBtn} onPress={() => setMin((v) => Math.min(max, v + 1))}>
+                <Ionicons name="add" size={18} color={colors.primary} />
+              </TouchableOpacity>
+            </View>
+            <Text style={s.stepDash}>—</Text>
+            <View style={s.stepper}>
+              <TouchableOpacity style={s.stepBtn} onPress={() => setMax((v) => Math.max(min, v - 1))}>
+                <Ionicons name="remove" size={18} color={colors.primary} />
+              </TouchableOpacity>
+              <Text style={s.stepValue}>{max}</Text>
+              <TouchableOpacity style={s.stepBtn} onPress={() => setMax((v) => Math.min(absMax, v + 1))}>
+                <Ionicons name="add" size={18} color={colors.primary} />
+              </TouchableOpacity>
+            </View>
+          </View>
+          <View style={s.cardDivider} />
+          <FallbackToggle
+            value={fallback[fallbackKey]}
+            onToggle={() => toggleFallback(fallbackKey)}
+            disabled={locked}
+          />
+        </TouchableOpacity>
       </View>
     );
   };
@@ -341,583 +514,479 @@ export const FilterScreen: React.FC = () => {
   // ── Render ──
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <BrandedBackground />
+    <View style={[s.container, { paddingTop: insets.top }]}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backText}>{'<'}</Text>
+      <View style={s.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12}>
+          <Ionicons name="close" size={28} color={colors.text} />
         </TouchableOpacity>
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Filtreler</Text>
-          <Text style={styles.headerSubtitle}>Arama tercihlerini ayarla</Text>
-        </View>
-        <View style={{ width: 40 }} />
+        <Text style={s.headerTitle}>Arama filtreleri</Text>
+        <TouchableOpacity onPress={handleReset} hitSlop={12}>
+          <Text style={s.resetText}>Sıfırla</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        style={s.scroll}
+        contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Gender preference (Gold+ only) ── */}
-        {renderLockedSection('👤 Cinsiyet', 'GOLD', (
-          <View style={styles.radioGroup}>
-            {GENDER_OPTIONS.map((option) => {
-              const isSelected = genderPreference === option.value;
-              return (
-                <TouchableOpacity
-                  key={option.value}
-                  style={[
-                    styles.radioOption,
-                    isSelected && styles.radioOptionActive,
-                  ]}
-                  onPress={() => setGenderPreference(option.value)}
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.radioCircle}>
-                    {isSelected && (
-                      <View style={styles.radioCircleInner} />
-                    )}
-                  </View>
-                  <Text
-                    style={[
-                      styles.radioLabel,
-                      isSelected && styles.radioLabelActive,
-                    ]}
-                  >
-                    {option.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        ))}
+        {/* ═══════════════ TEMEL FİLTRELER ═══════════════ */}
+        <Text style={s.sectionHeader}>Temel filtreler</Text>
 
-        {/* ── Age range ── */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{'\uD83C\uDF82'} Yaş Aralığı (18-65)</Text>
-          <View style={styles.rangeRow}>
-            <View style={styles.rangeInputWrapper}>
-              <Text style={styles.rangeLabel}>Min</Text>
-              <TextInput
-                style={styles.rangeInput}
-                value={minAge}
-                onChangeText={setMinAge}
-                keyboardType="number-pad"
-                maxLength={2}
-                placeholderTextColor={colors.textTertiary}
-                placeholder="18"
-              />
-            </View>
-            <Text style={styles.rangeDash}>-</Text>
-            <View style={styles.rangeInputWrapper}>
-              <Text style={styles.rangeLabel}>Max</Text>
-              <TextInput
-                style={styles.rangeInput}
-                value={maxAge}
-                onChangeText={setMaxAge}
-                keyboardType="number-pad"
-                maxLength={2}
-                placeholderTextColor={colors.textTertiary}
-                placeholder="65"
-              />
-            </View>
-          </View>
-        </View>
-
-        {/* ── Distance ── */}
-        <View style={styles.section}>
-          <View style={styles.distanceTitleRow}>
-            <Text style={styles.sectionTitle}>{'\uD83D\uDCCD'} Maksimum Mesafe</Text>
-            <Text style={styles.distanceValueLabel}>
-              {cityWideMode ? 'Şehir geneli' : `${maxDistance} km içinde`}
-            </Text>
-          </View>
-
-          {/* Quick-pick distance buttons */}
-          {!cityWideMode && (
-            <View style={styles.distanceQuickPicks}>
-              {[5, 10, 25, 50, 100].map((km) => {
-                const isActive = maxDistance === km;
-                return (
-                  <TouchableOpacity
-                    key={km}
-                    style={[styles.distancePickChip, isActive && styles.distancePickChipActive]}
-                    onPress={() => setMaxDistance(km)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.distancePickText, isActive && styles.distancePickTextActive]}>
-                      {km} km
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          )}
-
-          {/* City-wide toggle */}
+        {/* Gender — Gold+ */}
+        <View style={s.filterSection}>
+          <Text style={s.questionLabel}>Kimi arıyorsun?</Text>
           <TouchableOpacity
-            style={[
-              styles.cityWideToggle,
-              cityWideMode && styles.cityWideToggleActive,
-            ]}
-            onPress={() => {
-              setCityWideMode((prev) => !prev);
-              if (!cityWideMode) {
-                setMaxDistance(DISCOVERY_CONFIG.MAX_DISTANCE_KM);
-              } else {
-                setMaxDistance(DISCOVERY_CONFIG.DEFAULT_DISTANCE_KM);
-              }
-            }}
-            activeOpacity={0.8}
+            style={isFree ? s.cardLocked : undefined}
+            onPress={isFree ? () => showUpgradeAlert('GOLD') : undefined}
+            activeOpacity={isFree ? 0.7 : 1}
+            disabled={!isFree}
           >
-            <Text
-              style={[
-                styles.cityWideToggleText,
-                cityWideMode && styles.cityWideToggleTextActive,
-              ]}
-            >
-              Sehir geneli (mesafe limiti yok)
-            </Text>
+            {isFree && (
+              <View style={s.lockedBadge}>
+                <Ionicons name="lock-closed" size={12} color={palette.gold[600]} />
+                <Text style={s.lockedBadgeText}>Gold</Text>
+              </View>
+            )}
+            <View pointerEvents={isFree ? 'none' : 'auto'}>
+              {renderGenderSegment()}
+            </View>
           </TouchableOpacity>
         </View>
 
-        {/* ── Intention tags ── */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{'\uD83D\uDC9C'} Niyet Etiketi</Text>
-          <View style={styles.chipGroup}>
-            {INTENTION_TAGS.map((tag) => {
-              const isSelected = selectedTags.includes(tag.id);
-              return (
-                <TouchableOpacity
-                  key={tag.id}
-                  style={[styles.chip, isSelected && styles.chipActive]}
-                  onPress={() => toggleTag(tag.id)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[styles.chipText, isSelected && styles.chipTextActive]}>
-                    {tag.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-
-        {/* ── Divider ── */}
-        <View style={styles.divider} />
-
-        {/* ── Height (Pro+) ── */}
-        {renderLockedSection('\uD83D\uDCCF Boy', 'PRO', (
-          <View style={styles.heightSection}>
-            <View style={styles.heightToggleRow}>
-              <Text style={styles.heightRangeLabel}>
-                Boy filtresi {heightEnabled ? 'aktif' : 'kapalı'}
-              </Text>
-              <TouchableOpacity
-                style={[
-                  styles.toggleButton,
-                  heightEnabled && styles.toggleButtonActive,
-                ]}
-                onPress={() => {
-                  if (hasAccess(packageTier, 'PRO')) {
-                    setHeightEnabled((prev) => !prev);
-                  }
-                }}
-                activeOpacity={0.8}
-              >
-                <Text
-                  style={[
-                    styles.toggleButtonText,
-                    heightEnabled && styles.toggleButtonTextActive,
-                  ]}
-                >
-                  {heightEnabled ? 'Aktif' : 'Kapalı'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {heightEnabled && (
-              <View style={styles.rangeRow}>
-                <View style={styles.rangeInputWrapper}>
-                  <Text style={styles.rangeLabel}>Min</Text>
-                  <View style={styles.heightInputRow}>
-                    <TouchableOpacity
-                      style={styles.incrementButton}
-                      onPress={() =>
-                        setHeightMin((prev) =>
-                          String(Math.max(HEIGHT_MIN, (parseInt(prev, 10) || HEIGHT_MIN) - 1))
-                        )
-                      }
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.incrementButtonText}>-</Text>
-                    </TouchableOpacity>
-                    <TextInput
-                      style={styles.heightInput}
-                      value={heightMin}
-                      onChangeText={setHeightMin}
-                      keyboardType="number-pad"
-                      maxLength={3}
-                      placeholderTextColor={colors.textTertiary}
-                      placeholder={String(HEIGHT_MIN)}
-                    />
-                    <TouchableOpacity
-                      style={styles.incrementButton}
-                      onPress={() =>
-                        setHeightMin((prev) =>
-                          String(Math.min(HEIGHT_MAX, (parseInt(prev, 10) || HEIGHT_MIN) + 1))
-                        )
-                      }
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.incrementButtonText}>+</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.heightUnit}>cm</Text>
-                  </View>
-                </View>
-                <Text style={styles.rangeDash}>-</Text>
-                <View style={styles.rangeInputWrapper}>
-                  <Text style={styles.rangeLabel}>Max</Text>
-                  <View style={styles.heightInputRow}>
-                    <TouchableOpacity
-                      style={styles.incrementButton}
-                      onPress={() =>
-                        setHeightMax((prev) =>
-                          String(Math.max(HEIGHT_MIN, (parseInt(prev, 10) || HEIGHT_MAX) - 1))
-                        )
-                      }
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.incrementButtonText}>-</Text>
-                    </TouchableOpacity>
-                    <TextInput
-                      style={styles.heightInput}
-                      value={heightMax}
-                      onChangeText={setHeightMax}
-                      keyboardType="number-pad"
-                      maxLength={3}
-                      placeholderTextColor={colors.textTertiary}
-                      placeholder={String(HEIGHT_MAX)}
-                    />
-                    <TouchableOpacity
-                      style={styles.incrementButton}
-                      onPress={() =>
-                        setHeightMax((prev) =>
-                          String(Math.min(HEIGHT_MAX, (parseInt(prev, 10) || HEIGHT_MAX) + 1))
-                        )
-                      }
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.incrementButtonText}>+</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.heightUnit}>cm</Text>
-                  </View>
-                </View>
+        {/* Age — Gold+ */}
+        <View style={s.filterSection}>
+          <Text style={s.questionLabel}>Onlar kaç yaşında?</Text>
+          <TouchableOpacity
+            style={isFree ? s.cardLocked : undefined}
+            onPress={isFree ? () => showUpgradeAlert('GOLD') : undefined}
+            activeOpacity={isFree ? 0.7 : 1}
+            disabled={!isFree}
+          >
+            {isFree && (
+              <View style={s.lockedBadge}>
+                <Ionicons name="lock-closed" size={12} color={palette.gold[600]} />
+                <Text style={s.lockedBadgeText}>Gold</Text>
               </View>
             )}
-          </View>
-        ))}
+            <View pointerEvents={isFree ? 'none' : 'auto'}>
+              {renderAgeRange()}
+            </View>
+          </TouchableOpacity>
+        </View>
 
-        {/* ── Education (Gold+) ── */}
-        {renderLockedSection('\uD83C\uDF93 Eğitim', 'GOLD',
-          renderChipGroup(EDUCATION_OPTIONS, selectedEducation, toggleChip(setSelectedEducation))
+        {/* Distance — Gold+ */}
+        <View style={s.filterSection}>
+          <Text style={s.questionLabel}>Onlar nerede?</Text>
+          <TouchableOpacity
+            style={isFree ? s.cardLocked : undefined}
+            onPress={isFree ? () => showUpgradeAlert('GOLD') : undefined}
+            activeOpacity={isFree ? 0.7 : 1}
+            disabled={!isFree}
+          >
+            {isFree && (
+              <View style={s.lockedBadge}>
+                <Ionicons name="lock-closed" size={12} color={palette.gold[600]} />
+                <Text style={s.lockedBadgeText}>Gold</Text>
+              </View>
+            )}
+            <View pointerEvents={isFree ? 'none' : 'auto'}>
+              {renderDistance()}
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Verified — Gold+ */}
+        <View style={s.filterSection}>
+          <Text style={s.questionLabel}>Kendilerini doğruladılar mı?</Text>
+          <TouchableOpacity
+            style={[s.card, isFree && s.cardLocked]}
+            onPress={isFree ? () => showUpgradeAlert('GOLD') : undefined}
+            activeOpacity={isFree ? 0.7 : 1}
+            disabled={!isFree}
+          >
+            {isFree && (
+              <View style={s.lockedBadge}>
+                <Ionicons name="lock-closed" size={12} color={palette.gold[600]} />
+                <Text style={s.lockedBadgeText}>Gold</Text>
+              </View>
+            )}
+            <View style={s.verifiedRow} pointerEvents={isFree ? 'none' : 'auto'}>
+              <Ionicons name="checkmark-circle" size={22} color={colors.primary} />
+              <Text style={s.verifiedLabel}>Yalnızca doğrulanmış profiller</Text>
+              <Switch
+                value={verifiedOnly}
+                onValueChange={setVerifiedOnly}
+                trackColor={{ false: colors.surfaceBorder, true: colors.primary + '60' }}
+                thumbColor={verifiedOnly ? colors.primary : '#ccc'}
+              />
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Intentions — Gold+ */}
+        {renderChipCard(
+          'Onların hedefleri nelerdir?', '',
+          INTENTION_OPTIONS.map((t) => t.label),
+          selectedTags.map((id) => INTENTION_OPTIONS.find((t) => t.id === id)?.label ?? id),
+          (label) => {
+            const tag = INTENTION_OPTIONS.find((t) => t.label === label);
+            if (tag) {
+              setSelectedTags((prev) =>
+                prev.includes(tag.id) ? prev.filter((t) => t !== tag.id) : [...prev, tag.id],
+              );
+            }
+          },
+          'intention',
+          'GOLD',
         )}
 
-        {/* ── Lifestyle (Gold+) ── */}
-        {renderLockedSection('\uD83C\uDF3F Yaşam Tarzı', 'GOLD', (
-          <View style={styles.lifestyleContainer}>
-            <View style={styles.lifestyleSubSection}>
-              <Text style={styles.subSectionTitle}>Sigara</Text>
-              {renderChipGroup(SMOKING_OPTIONS, selectedSmoking, toggleChip(setSelectedSmoking))}
-            </View>
-            <View style={styles.lifestyleSubSection}>
-              <Text style={styles.subSectionTitle}>Alkol</Text>
-              {renderChipGroup(DRINKING_OPTIONS, selectedDrinking, toggleChip(setSelectedDrinking))}
-            </View>
-            <View style={styles.lifestyleSubSection}>
-              <Text style={styles.subSectionTitle}>Egzersiz</Text>
-              {renderChipGroup(EXERCISE_OPTIONS, selectedExercise, toggleChip(setSelectedExercise))}
-            </View>
-          </View>
-        ))}
-
-        {/* ── Zodiac (Pro+) ── */}
-        {renderLockedSection('\u2B50 Burç', 'PRO',
-          renderChipGroup(ZODIAC_OPTIONS, selectedZodiac, toggleChip(setSelectedZodiac))
+        {/* Interests — Gold+ */}
+        {renderChipCard(
+          'Bazı ilgi alanlarını paylaşıyorlar mı?', '',
+          INTEREST_OPTIONS, selectedInterests, toggleInArray(setSelectedInterests), 'interests', 'GOLD',
         )}
 
-        {/* Bottom spacing so content doesn't hide behind action bar */}
-        <View style={{ height: spacing.xl }} />
+        {/* ═══════════════ GELİŞMİŞ FİLTRELER ═══════════════ */}
+        <Text style={s.sectionHeader}>Gelişmiş filtreler</Text>
+
+        {!hasAccess(packageTier, 'GOLD') && (
+          <TouchableOpacity
+            style={s.upgradeBanner}
+            onPress={() => showUpgradeAlert('GOLD')}
+            activeOpacity={0.8}
+          >
+            <Text style={s.upgradeBannerText}>Filtrelerini Gold ile ince ayar yap</Text>
+            <View style={s.upgradeBannerBtn}>
+              <Text style={s.upgradeBannerBtnText}>Yükselt</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+
+        {/* Languages */}
+        {renderChipCard(
+          'Hangi dilleri biliyorlar?', '',
+          LANGUAGE_OPTIONS, selectedLanguages, toggleInArray(setSelectedLanguages), 'languages', 'GOLD',
+        )}
+
+        {/* Ethnicity */}
+        {renderChipCard(
+          'Onların etnik kökenleri neler?', '',
+          ETHNICITY_OPTIONS, selectedEthnicity, toggleInArray(setSelectedEthnicity), 'ethnicity', 'GOLD',
+        )}
+
+        {/* Height */}
+        {renderRangeCard(
+          'Ne kadar uzunlar?', '',
+          heightMin, heightMax, HEIGHT_MIN, HEIGHT_MAX, 'cm',
+          setHeightMin, setHeightMax, 'height', 'GOLD',
+        )}
+
+        {/* Weight */}
+        {renderRangeCard(
+          'Ne kadar kilolar?', '',
+          weightMin, weightMax, WEIGHT_MIN, WEIGHT_MAX, 'kg',
+          setWeightMin, setWeightMax, 'weight', 'GOLD',
+        )}
+
+        {/* Sexual orientation */}
+        {renderChipCard(
+          'Cinsel yönelimleri nedir?', '',
+          SEXUAL_ORIENTATION_OPTIONS, selectedOrientation, toggleInArray(setSelectedOrientation), 'orientation', 'GOLD',
+        )}
+
+        {/* Zodiac */}
+        {renderChipCard(
+          'Burçları nedir?', '',
+          ZODIAC_OPTIONS, selectedZodiac, toggleInArray(setSelectedZodiac), 'zodiac', 'PRO',
+        )}
+
+        {/* Exercise */}
+        {renderChipCard(
+          'Spor yapıyorlar mı?', '',
+          EXERCISE_OPTIONS, selectedExercise, toggleInArray(setSelectedExercise), 'exercise', 'GOLD',
+        )}
+
+        {/* Education */}
+        {renderChipCard(
+          'Eğitim seviyeleri nedir?', '',
+          EDUCATION_OPTIONS, selectedEducation, toggleInArray(setSelectedEducation), 'education', 'GOLD',
+        )}
+
+        {/* Marital Status */}
+        {renderChipCard(
+          'Medeni durumları nedir?', '',
+          MARITAL_OPTIONS, selectedMarital, toggleInArray(setSelectedMarital), 'marital', 'GOLD',
+        )}
+
+        {/* Children */}
+        {renderChipCard(
+          'Çocukları var mı?', '',
+          CHILDREN_OPTIONS, selectedChildren, toggleInArray(setSelectedChildren), 'children', 'GOLD',
+        )}
+
+        {/* Drinking */}
+        {renderChipCard(
+          'Ne sıklıkla içiyorlar?', '',
+          DRINKING_OPTIONS, selectedDrinking, toggleInArray(setSelectedDrinking), 'drinking', 'GOLD',
+        )}
+
+        {/* Smoking */}
+        {renderChipCard(
+          'Ne sıklıkla sigara içiyorlar?', '',
+          SMOKING_OPTIONS, selectedSmoking, toggleInArray(setSelectedSmoking), 'smoking', 'GOLD',
+        )}
+
+        {/* Pets */}
+        {renderChipCard(
+          'Evcil hayvanları var mı?', '',
+          PETS_OPTIONS, selectedPets, toggleInArray(setSelectedPets), 'pets', 'GOLD',
+        )}
+
+        {/* Religion */}
+        {renderChipCard(
+          'Hangi dine inanıyorlar?', '',
+          RELIGION_OPTIONS, selectedReligion, toggleInArray(setSelectedReligion), 'religion', 'GOLD',
+        )}
+
+        {/* Values */}
+        {renderChipCard(
+          'Hayatlarında en önemli şey nedir?', '',
+          VALUES_OPTIONS, selectedValues, toggleInArray(setSelectedValues), 'values', 'GOLD',
+        )}
+
+        {/* Bottom spacing */}
+        <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* ── Bottom actions ── */}
-      <View style={[styles.bottomActions, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
-        <TouchableOpacity
-          style={styles.resetButton}
-          onPress={handleReset}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.resetButtonText}>Sıfırla</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.applyButton}
-          onPress={handleApply}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.applyButtonText}>Uygula</Text>
+      {/* ── Bottom Apply Button ── */}
+      <View style={[s.bottomBar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
+        <TouchableOpacity style={s.applyBtn} onPress={handleApply} activeOpacity={0.8}>
+          <Text style={s.applyBtnText}>Filtreleri Uygula</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 };
 
+// ── Fallback Toggle Sub-component ──
+
+interface FallbackToggleProps {
+  value: boolean;
+  onToggle?: () => void;
+  disabled?: boolean;
+}
+
+const FallbackToggle: React.FC<FallbackToggleProps> = ({ value, onToggle, disabled }) => (
+  <View style={s.fallbackRow}>
+    <Text style={s.fallbackLabel}>Bitersem diğer kişileri göster</Text>
+    <Switch
+      value={value}
+      onValueChange={onToggle}
+      disabled={disabled}
+      trackColor={{ false: colors.surfaceBorder, true: colors.primary + '60' }}
+      thumbColor={value ? colors.primary : '#ccc'}
+    />
+  </View>
+);
+
 // ── Styles ─────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const s = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
   },
+
+  // ── Header ──
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backText: {
-    ...typography.h4,
-    color: colors.text,
-  },
-  headerCenter: {
-    alignItems: 'center',
   },
   headerTitle: {
-    ...typography.h3,
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: colors.text,
   },
-  headerSubtitle: {
-    fontSize: 11,
-    color: colors.textTertiary,
-    marginTop: 2,
+  resetText: {
+    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: colors.primary,
   },
-  scrollView: {
+
+  // ── Scroll ──
+  scroll: {
     flex: 1,
   },
   scrollContent: {
-    padding: spacing.lg,
-    gap: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
   },
-  section: {
-    gap: spacing.md,
-  },
-  sectionTitle: {
-    ...typography.h4,
+
+  // ── Section header ──
+  sectionHeader: {
+    fontSize: 20,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: colors.text,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
   },
-  sectionTitleRow: {
+
+  // ── Question label ──
+  questionLabel: {
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+  },
+
+  // ── Filter section ──
+  filterSection: {
+    marginBottom: spacing.lg,
+  },
+
+  // ── Card ──
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    padding: spacing.md,
+  },
+  cardLocked: {
+    opacity: 0.5,
+  },
+  cardValue: {
+    fontSize: 16,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: spacing.sm,
+  },
+  cardDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.surfaceBorder,
+    marginVertical: spacing.sm,
+  },
+
+  // ── Locked badge ──
+  lockedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    alignSelf: 'flex-end',
+    gap: 4,
+    backgroundColor: palette.gold[500] + '20',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 10,
+    marginBottom: spacing.sm,
   },
-  lockIcon: {
-    fontSize: 16,
-  },
-  proLabel: {
-    marginLeft: 'auto',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 16,
-    backgroundColor: colors.primary + '25',
-    borderWidth: 1.5,
-    borderColor: colors.primary + '50',
-  },
-  proLabelText: {
+  lockedBadgeText: {
     fontSize: 11,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: palette.gold[600],
+  },
+
+  // ── Segment control (gender) ──
+  segmentRow: {
+    flexDirection: 'row',
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    overflow: 'hidden',
+  },
+  segmentBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  segmentBtnActive: {
+    backgroundColor: colors.primary + '15',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.primary + '40',
+  },
+  segmentText: {
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: colors.textSecondary,
+  },
+  segmentTextActive: {
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
-  // Locked overlay
-  lockedOverlay: {
-    opacity: 0.4,
-  },
-  lockedContent: {
-    // Children are non-interactive when locked
-  },
-  // Divider
-  divider: {
-    height: 1,
-    backgroundColor: colors.divider,
-    marginVertical: spacing.xs,
-  },
-  // Gender radio
-  radioGroup: {
-    gap: spacing.sm,
-  },
-  radioOption: {
+
+  // ── Stepper row (age, height, weight) ──
+  stepperRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    borderWidth: 1.5,
-    borderColor: colors.surfaceBorder,
+    justifyContent: 'center',
     gap: spacing.md,
+    marginBottom: spacing.xs,
   },
-  radioOptionActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary + '10',
+  stepper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
-  radioCircle: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: colors.textTertiary,
+  stepBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.primary + '12',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  radioCircleInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.primary,
-  },
-  radioLabel: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-  radioLabelActive: {
+  stepValue: {
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: colors.text,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-  },
-  // Age range
-  rangeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  rangeInputWrapper: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  rangeLabel: {
-    ...typography.caption,
-    color: colors.textTertiary,
-  },
-  rangeInput: {
-    ...typography.bodyLarge,
-    color: colors.text,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    borderWidth: 1.5,
-    borderColor: colors.surfaceBorder,
-    paddingHorizontal: spacing.md,
-    height: layout.inputHeight,
+    minWidth: 36,
     textAlign: 'center',
   },
-  rangeDash: {
-    ...typography.h3,
+  stepDash: {
+    fontSize: 16,
     color: colors.textTertiary,
-    marginTop: spacing.lg,
   },
-  // Distance
-  distanceTitleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  distanceValueLabel: {
-    ...typography.bodySmall,
-    color: colors.primary,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    includeFontPadding: false,
-  },
-  distanceQuickPicks: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  distancePickChip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.surfaceBorder,
-  },
-  distancePickChipActive: {
-    backgroundColor: colors.primary + '20',
-    borderColor: colors.primary,
-  },
-  distancePickText: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-    includeFontPadding: false,
-  },
-  distancePickTextActive: {
-    color: colors.primary,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-  },
-  cityWideToggle: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.surfaceBorder,
-    alignSelf: 'flex-start',
-  },
-  cityWideToggleActive: {
-    backgroundColor: colors.primary + '20',
-    borderColor: colors.primary,
-  },
-  cityWideToggleText: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-    includeFontPadding: false,
-  },
-  cityWideToggleTextActive: {
-    color: colors.primary,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-  },
-  // Intention chips
-  chipGroup: {
+
+  // ── Chip row ──
+  chipRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
   },
   chip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: colors.background,
+    borderWidth: 1,
     borderColor: colors.surfaceBorder,
   },
   chipActive: {
-    backgroundColor: colors.primary + '20',
+    backgroundColor: colors.primary + '12',
     borderColor: colors.primary,
   },
   chipText: {
-    ...typography.bodySmall,
+    fontSize: 13,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
     color: colors.textSecondary,
   },
   chipTextActive: {
@@ -925,121 +994,117 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
-  // Height section
-  heightSection: {
-    gap: spacing.md,
+  selectedCount: {
+    fontSize: 12,
+    color: colors.primary,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    marginTop: spacing.sm,
   },
-  heightToggleRow: {
+
+  // ── Mini chips (distance) ──
+  miniChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  miniChipActive: {
+    backgroundColor: colors.primary + '12',
+    borderColor: colors.primary,
+  },
+  miniChipText: {
+    fontSize: 13,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: colors.textSecondary,
+  },
+  miniChipTextActive: {
+    color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+  },
+
+  // ── Verified row ──
+  verifiedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  verifiedLabel: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: colors.text,
+  },
+
+  // ── Fallback toggle ──
+  fallbackRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  heightRangeLabel: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
+  fallbackLabel: {
+    fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: colors.textTertiary,
   },
-  toggleButton: {
+
+  // ── Upgrade banner ──
+  upgradeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: palette.gold[500] + '20',
+    borderRadius: 14,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.surfaceBorder,
+    paddingVertical: 14,
+    marginBottom: spacing.lg,
   },
-  toggleButtonActive: {
-    backgroundColor: colors.primary + '20',
-    borderColor: colors.primary,
-  },
-  toggleButtonText: {
-    ...typography.caption,
-    color: colors.textSecondary,
+  upgradeBannerText: {
+    flex: 1,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
+    color: palette.gold[700],
   },
-  toggleButtonTextActive: {
-    color: colors.primary,
-  },
-  heightInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  heightInput: {
-    ...typography.bodyLarge,
-    color: colors.text,
+  upgradeBannerBtn: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    borderWidth: 1.5,
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderWidth: 1,
     borderColor: colors.surfaceBorder,
-    paddingHorizontal: spacing.sm,
-    height: layout.inputHeight,
-    width: 60,
-    textAlign: 'center',
   },
-  heightUnit: {
-    ...typography.caption,
-    color: colors.textTertiary,
-    marginLeft: 2,
-  },
-  incrementButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.surfaceBorder,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  incrementButtonText: {
-    ...typography.h4,
+  upgradeBannerBtnText: {
+    fontSize: 13,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: colors.text,
   },
-  // Lifestyle sub-sections
-  lifestyleContainer: {
-    gap: spacing.lg,
-  },
-  lifestyleSubSection: {
-    gap: spacing.sm,
-  },
-  subSectionTitle: {
-    ...typography.label,
-    color: colors.textSecondary,
-  },
-  // Bottom actions
-  bottomActions: {
-    flexDirection: 'row',
+
+  // ── Bottom bar ──
+  bottomBar: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
-    gap: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.divider,
-    backgroundColor: 'transparent',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.surfaceBorder,
+    backgroundColor: colors.background,
   },
-  resetButton: {
-    flex: 1,
-    height: layout.buttonHeight,
-    borderRadius: borderRadius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: colors.border,
-  },
-  resetButtonText: {
-    ...typography.button,
-    color: colors.textSecondary,
-  },
-  applyButton: {
-    flex: 2,
-    height: layout.buttonHeight,
-    borderRadius: borderRadius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
+  applyBtn: {
     backgroundColor: colors.primary,
-    ...shadows.glow,
+    borderRadius: 14,
+    paddingVertical: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  applyButtonText: {
-    ...typography.button,
-    color: colors.text,
+  applyBtnText: {
+    fontSize: 16,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });

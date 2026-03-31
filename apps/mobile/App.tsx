@@ -1,7 +1,6 @@
 // LUMA App entry point
 
 import React, { Component, useEffect, useRef } from 'react';
-import { StatusBar } from 'expo-status-bar';
 import {
   AppState,
   StatusBar as RNStatusBar,
@@ -37,7 +36,7 @@ enableScreens(true);
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Navigation } from './src/navigation';
-import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
+import { ThemeProvider } from './src/theme/ThemeContext';
 import { ToastProvider, useToast } from './src/components/common/Toast';
 import { useNetworkStore } from './src/stores/networkStore';
 import { useAuthStore } from './src/stores/authStore';
@@ -45,12 +44,18 @@ import { useNotificationStore } from './src/stores/notificationStore';
 import { requestQueue } from './src/services/requestQueue';
 import { api } from './src/services/api';
 import { analyticsService, ANALYTICS_EVENTS } from './src/services/analyticsService';
+import { initSentry } from './src/services/sentryService';
 import { storage } from './src/utils/storage';
 import { useAppVersion } from './src/hooks/useAppVersion';
 import { ForceUpdateModal } from './src/components/common/ForceUpdateModal';
 
 // Initialize storage eagerly (non-blocking)
 storage.initialize().catch(() => {});
+
+// Initialize Sentry error tracking in production
+if (!__DEV__) {
+  initSentry().catch(() => {});
+}
 
 // ─── Error Boundary ───────────────────────────────────────────────────
 
@@ -172,16 +177,12 @@ const errorStyles = StyleSheet.create({
 
 // ─── Themed Status Bar ────────────────────────────────────────────────
 function ThemedStatusBar(): React.JSX.Element {
-  const { isDark, colors } = useTheme();
   return (
-    <>
-      <StatusBar style={isDark ? 'light' : 'dark'} translucent />
-      <RNStatusBar
-        barStyle="light-content"
-        backgroundColor="#000000"
-        translucent={false}
-      />
-    </>
+    <RNStatusBar
+      barStyle="light-content"
+      backgroundColor="#000000"
+      translucent={false}
+    />
   );
 }
 

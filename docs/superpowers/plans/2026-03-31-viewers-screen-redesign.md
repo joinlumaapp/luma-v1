@@ -1,3 +1,27 @@
+# Seni Kim Gördü — Ekran Yeniden Tasarımı Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** ViewersPreviewScreen'i timeline-based, merak odaklı, premium'a yönlendiren tasarıma dönüştürmek.
+
+**Architecture:** Tek dosya rewrite — `ViewersPreviewScreen.tsx` tamamen yeniden yazılır. Store değişmez. Ekran: Header → Özet İstatistik → Timeline kartları → Premium Kilit → Boş durum. Teaser/kilit mantığı UI tarafında `packageTier` ile kontrol edilir.
+
+**Tech Stack:** React Native, Animated API, expo-linear-gradient, Ionicons, Luma theme system
+
+**Spec:** `docs/superpowers/specs/2026-03-31-viewers-screen-redesign.md`
+
+---
+
+## Task 1: ViewersPreviewScreen — Tam Rewrite
+
+**Files:**
+- Modify: `apps/mobile/src/screens/matches/ViewersPreviewScreen.tsx` (tam yeniden yazım)
+
+- [ ] **Step 1: Dosyayı tamamen yeniden yaz**
+
+`apps/mobile/src/screens/matches/ViewersPreviewScreen.tsx` dosyasını aşağıdaki içerikle değiştir:
+
+```tsx
 // ViewersPreviewScreen — "Seni Kim Gördü" timeline feed with teaser system
 // Premium design: blurred avatars, curiosity-driven timeline, upgrade CTA
 
@@ -25,7 +49,6 @@ import { colors, palette } from '../../theme/colors';
 import { fontWeights } from '../../theme/typography';
 import { spacing, shadows } from '../../theme/spacing';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
-import { useScreenTracking } from '../../hooks/useAnalytics';
 
 type NavProp = NativeStackNavigationProp<MatchesStackParamList, 'ViewersPreview'>;
 
@@ -100,26 +123,26 @@ const SummaryStats: React.FC<SummaryStatsProps> = ({ viewers }) => {
     { emoji: '👁', text: `${todayCount} kişi bugün profiline baktı`, count: todayCount },
     { emoji: '🔁', text: `${returnCount} kişi geri geldi`, count: returnCount },
     { emoji: '💜', text: `${strongInterest} kişi yoğun ilgi gösterdi`, count: strongInterest },
-  ].filter((st) => st.count > 0);
+  ].filter((s) => s.count > 0);
 
   return (
     <LinearGradient
       colors={[colors.primary + '12', palette.pink[500] + '06'] as [string, string]}
-      style={styles.summaryCard}
+      style={s.summaryCard}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
     >
       {stats.length > 0 ? (
         stats.map((stat, i) => (
-          <View key={i} style={styles.summaryRow}>
-            <Text style={styles.summaryEmoji}>{stat.emoji}</Text>
-            <Text style={styles.summaryText}>{stat.text}</Text>
+          <View key={i} style={s.summaryRow}>
+            <Text style={s.summaryEmoji}>{stat.emoji}</Text>
+            <Text style={s.summaryText}>{stat.text}</Text>
           </View>
         ))
       ) : (
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryEmoji}>👁</Text>
-          <Text style={styles.summaryText}>Profiline henüz bakılmadı</Text>
+        <View style={s.summaryRow}>
+          <Text style={s.summaryEmoji}>👁</Text>
+          <Text style={s.summaryText}>Profiline henüz bakılmadı</Text>
         </View>
       )}
     </LinearGradient>
@@ -142,6 +165,7 @@ const TimelineCard: React.FC<TimelineCardProps> = ({
   item, index, isTeaser, isLocked, isPremium, isLast, onPress,
 }) => {
   const [teaserTapped, setTeaserTapped] = useState(false);
+  const blurAnim = useRef(new Animated.Value(0)).current;
   const entryAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -156,12 +180,15 @@ const TimelineCard: React.FC<TimelineCardProps> = ({
   const handlePress = () => {
     if (isTeaser && !teaserTapped) {
       setTeaserTapped(true);
+      Animated.timing(blurAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: false,
+      }).start();
       return;
     }
     onPress();
   };
-
-  const blurAmount = isPremium ? 8 : (isTeaser && teaserTapped ? 12 : 20);
 
   const entryStyle = {
     opacity: entryAnim,
@@ -176,47 +203,51 @@ const TimelineCard: React.FC<TimelineCardProps> = ({
   return (
     <Animated.View style={entryStyle}>
       <Pressable onPress={handlePress} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}>
-        <View style={styles.timelineRow}>
+        <View style={s.timelineRow}>
           {/* Timeline line + dot */}
-          <View style={styles.timelineLine}>
-            <View style={[styles.timelineDot, isPremium && styles.timelineDotPremium]} />
-            {!isLast && <View style={styles.timelineConnector} />}
+          <View style={s.timelineLine}>
+            <View style={[s.timelineDot, isPremium && s.timelineDotPremium]} />
+            {!isLast && <View style={s.timelineConnector} />}
           </View>
 
           {/* Card */}
-          <View style={styles.timelineCard}>
+          <View style={s.timelineCard}>
             {/* Blurred avatar */}
-            <View style={styles.avatarWrapper}>
+            <View style={s.avatarWrapper}>
               <LinearGradient
                 colors={[palette.purple[400], palette.pink[500]] as [string, string]}
-                style={styles.avatarRing}
+                style={s.avatarRing}
               >
-                <View style={styles.avatarInner}>
-                  <Image
-                    source={{ uri: `https://i.pravatar.cc/100?u=${item.viewerId}` }}
-                    style={styles.avatarImage}
-                    blurRadius={blurAmount}
-                  />
+                <View style={s.avatarInner}>
+                  {item.viewerId ? (
+                    <Image
+                      source={{ uri: `https://i.pravatar.cc/100?u=${item.viewerId}` }}
+                      style={s.avatarImage}
+                      blurRadius={isPremium ? 8 : (isTeaser && teaserTapped ? 12 : 20)}
+                    />
+                  ) : (
+                    <Ionicons name="person" size={24} color={colors.textTertiary} />
+                  )}
                 </View>
               </LinearGradient>
               {/* Glow */}
-              <View style={styles.avatarGlow} />
+              <View style={s.avatarGlow} />
               {/* Lock overlay for locked cards */}
               {isLocked && (
-                <View style={styles.avatarLockOverlay}>
+                <View style={s.avatarLockOverlay}>
                   <Ionicons name="lock-closed" size={16} color="rgba(255,255,255,0.8)" />
                 </View>
               )}
             </View>
 
             {/* Info */}
-            <View style={styles.cardInfo}>
-              <Text style={styles.cardActivityText}>{getActivityText(item.viewerId)}</Text>
-              <Text style={styles.cardTime}>{formatRelativeTime(item.lastViewedAt)}</Text>
+            <View style={s.cardInfo}>
+              <Text style={s.cardActivityText}>{getActivityText(item.viewerId)}</Text>
+              <Text style={s.cardTime}>{formatRelativeTime(item.lastViewedAt)}</Text>
               {item.viewCount > 1 && (
-                <View style={styles.repeatRow}>
+                <View style={s.repeatRow}>
                   <Ionicons name="eye" size={11} color={palette.pink[400]} />
-                  <Text style={styles.repeatText}>Bu kişi profiline {item.viewCount} kez baktı</Text>
+                  <Text style={s.repeatText}>Bu kişi profiline {item.viewCount} kez baktı</Text>
                 </View>
               )}
             </View>
@@ -238,14 +269,14 @@ const PremiumLockSection: React.FC<PremiumLockProps> = ({ viewers, onUpgrade }) 
   const avatarIds = viewers.slice(0, 4).map((v) => v.viewerId);
 
   return (
-    <View style={styles.premiumCard}>
+    <View style={s.premiumCard}>
       {/* Overlapping blurred avatars */}
-      <View style={styles.premiumAvatars}>
+      <View style={s.premiumAvatars}>
         {avatarIds.map((id, i) => (
-          <View key={id} style={[styles.premiumAvatarWrapper, i > 0 && { marginLeft: -10 }]}>
+          <View key={id} style={[s.premiumAvatarWrapper, i > 0 && { marginLeft: -10 }]}>
             <Image
               source={{ uri: `https://i.pravatar.cc/100?u=${id}` }}
-              style={styles.premiumAvatarImg}
+              style={s.premiumAvatarImg}
               blurRadius={25}
             />
           </View>
@@ -253,24 +284,24 @@ const PremiumLockSection: React.FC<PremiumLockProps> = ({ viewers, onUpgrade }) 
         {/* Gradient overlay */}
         <LinearGradient
           colors={['transparent', colors.surface + 'CC'] as [string, string]}
-          style={styles.premiumAvatarOverlay}
+          style={s.premiumAvatarOverlay}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
         />
       </View>
 
-      <Text style={styles.premiumTitle}>Kimlerin baktığını gör</Text>
-      <Text style={styles.premiumSubtitle}>Aç ve sana ilgi duyanları anında keşfet</Text>
+      <Text style={s.premiumTitle}>Kimlerin baktığını gör</Text>
+      <Text style={s.premiumSubtitle}>Aç ve sana ilgi duyanları anında keşfet</Text>
 
       <Pressable onPress={onUpgrade} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}>
         <LinearGradient
           colors={[palette.purple[500], palette.purple[700]] as [string, string]}
-          style={styles.premiumCTA}
+          style={s.premiumCTA}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
           <Ionicons name="diamond" size={18} color="#fff" />
-          <Text style={styles.premiumCTAText}>Premium ile Aç</Text>
+          <Text style={s.premiumCTAText}>Premium ile Aç</Text>
         </LinearGradient>
       </Pressable>
     </View>
@@ -280,26 +311,26 @@ const PremiumLockSection: React.FC<PremiumLockProps> = ({ viewers, onUpgrade }) 
 // ─── Empty State ────────────────────────────────────────────────
 
 const EmptyState: React.FC<{ onUpgrade: () => void }> = ({ onUpgrade }) => (
-  <View style={styles.empty}>
+  <View style={s.empty}>
     <LinearGradient
       colors={[palette.purple[500] + '30', palette.pink[500] + '20'] as [string, string]}
-      style={styles.emptyIcon}
+      style={s.emptyIcon}
     >
       <Ionicons name="eye-off-outline" size={48} color={colors.primary} />
     </LinearGradient>
-    <Text style={styles.emptyTitle}>Henüz kimse bakmamış</Text>
-    <Text style={styles.emptySubtitle}>
+    <Text style={s.emptyTitle}>Henüz kimse bakmamış</Text>
+    <Text style={s.emptySubtitle}>
       Profilini zenginleştir, daha fazla kişi tarafından görün!
     </Text>
     <Pressable onPress={onUpgrade} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}>
       <LinearGradient
         colors={[palette.purple[500], palette.purple[700]] as [string, string]}
-        style={styles.emptyCTA}
+        style={s.emptyCTA}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
         <Ionicons name="flash" size={16} color="#fff" />
-        <Text style={styles.emptyCTAText}>Premium ile Öne Çık</Text>
+        <Text style={s.emptyCTAText}>Premium ile Öne Çık</Text>
       </LinearGradient>
     </Pressable>
   </View>
@@ -308,7 +339,6 @@ const EmptyState: React.FC<{ onUpgrade: () => void }> = ({ onUpgrade }) => (
 // ─── Main Screen ────────────────────────────────────────────────
 
 export const ViewersPreviewScreen: React.FC = () => {
-  useScreenTracking('ViewersPreview');
   const navigation = useNavigation<NavProp>();
   const insets = useSafeAreaInsets();
   const eyeScale = useEyeBlink();
@@ -326,11 +356,12 @@ export const ViewersPreviewScreen: React.FC = () => {
   }, [navigation]);
 
   const handleCardPress = useCallback(
-    (item: ProfileViewer) => {
+    (item: ProfileViewer, index: number) => {
       if (isPremium) {
         navigation.navigate('ProfilePreview', { userId: item.viewerId });
         return;
       }
+      // FREE: teaser second tap or locked card
       Alert.alert(
         'Kim olduğunu gör',
         'Profiline kimlerin baktığını görmek için paketini yükselt.',
@@ -346,31 +377,31 @@ export const ViewersPreviewScreen: React.FC = () => {
   const hasViewers = viewers.length > 0;
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[s.container, { paddingTop: insets.top }]}>
       <BrandedBackground />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={s.header}>
         <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
-          <View style={styles.backBtn}>
+          <View style={s.backBtn}>
             <Ionicons name="chevron-back" size={22} color={colors.text} />
           </View>
         </Pressable>
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Seni Kim Gördü</Text>
-          <Text style={styles.headerSub}>
+        <View style={s.headerCenter}>
+          <Text style={s.headerTitle}>Seni Kim Gördü</Text>
+          <Text style={s.headerSub}>
             {hasViewers ? `${viewers.length} ziyaretçi` : 'Henüz ziyaretçi yok'}
           </Text>
         </View>
-        <Animated.View style={[styles.headerBadge, { transform: [{ scale: eyeScale }] }]}>
+        <Animated.View style={[s.headerBadge, { transform: [{ scale: eyeScale }] }]}>
           <Ionicons name="eye" size={16} color={colors.primary} />
-          <Text style={styles.headerBadgeText}>{viewers.length}</Text>
+          <Text style={s.headerBadgeText}>{viewers.length}</Text>
         </Animated.View>
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={s.scrollContent}
       >
         {hasViewers ? (
           <>
@@ -378,7 +409,7 @@ export const ViewersPreviewScreen: React.FC = () => {
             <SummaryStats viewers={viewers} />
 
             {/* Timeline section title */}
-            <Text style={styles.sectionTitle}>Son aktiviteler</Text>
+            <Text style={s.sectionTitle}>Son aktiviteler</Text>
 
             {/* Timeline cards */}
             {viewers.map((item, index) => (
@@ -390,7 +421,7 @@ export const ViewersPreviewScreen: React.FC = () => {
                 isLocked={!isPremium && index > 0}
                 isPremium={isPremium}
                 isLast={index === viewers.length - 1}
-                onPress={() => handleCardPress(item)}
+                onPress={() => handleCardPress(item, index)}
               />
             ))}
 
@@ -409,7 +440,7 @@ export const ViewersPreviewScreen: React.FC = () => {
 
 // ─── Styles ─────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const s = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -736,3 +767,20 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 });
+```
+
+- [ ] **Step 2: TypeScript kontrolü yap**
+
+Run: `npx tsc --noEmit --project apps/mobile/tsconfig.json 2>&1 | grep ViewersPreview`
+Expected: Hata yok (boş çıktı)
+
+- [ ] **Step 3: Kullanılmayan eski import'ları temizle**
+
+Dosyada `SUPER_COMPATIBLE_THRESHOLD`, `FlatList`, `Dimensions` gibi eski import'lar varsa kaldır. Yeni dosyada bunlar zaten yok.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add apps/mobile/src/screens/matches/ViewersPreviewScreen.tsx
+git commit -m "feat(mobile): redesign ViewersPreview — timeline feed with teaser system, premium lock, blink animation"
+```

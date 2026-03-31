@@ -1,4 +1,5 @@
 // JetonMarketScreen — Coin purchase store with pack cards and ad reward
+// Uses theme system for dark/light mode support
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -15,10 +16,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { useCoinStore, COIN_PACKS, type CoinPack } from '../../stores/coinStore';
-// iapService and paymentService are used internally by coinStore.purchaseCoins
-import { typography, fontWeights } from '../../theme/typography';
+import { useTheme } from '../../theme/ThemeContext';
+import { fontWeights } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
-import { glassmorphism, palette } from '../../theme/colors';
+import { palette } from '../../theme/colors';
+import { useScreenTracking } from '../../hooks/useAnalytics';
 
 /** Maps coin pack IDs to App Store / Play Store product IDs */
 const PACK_ID_TO_PRODUCT: Record<string, string> = {
@@ -35,10 +37,7 @@ const GOLD_24K = {
   border: '#C5A028',
 };
 
-const SCREEN_BG = '#FDF9F0';
-
 // ── Coin Stack Visual ────────────────────────────────────────
-// Stacked golden circles with gradient + shadow for a 3D effect
 const CoinStack: React.FC<{ count: number }> = ({ count }) => {
   const stackCount = count >= 1000 ? 5 : count >= 500 ? 4 : 3;
 
@@ -103,8 +102,12 @@ const PackCard: React.FC<{
   pack: CoinPack;
   onPurchase: (packId: string) => void;
   isLoading: boolean;
-}> = ({ pack, onPurchase, isLoading }) => (
-  <View style={packCardStyles.card}>
+  cardBg: string;
+  cardBorder: string;
+  textColor: string;
+  textSecondary: string;
+}> = ({ pack, onPurchase, isLoading, cardBg, cardBorder, textColor, textSecondary }) => (
+  <View style={[packCardStyles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
     {pack.bestValue && (
       <View style={packCardStyles.badge}>
         <LinearGradient
@@ -122,11 +125,13 @@ const PackCard: React.FC<{
       <CoinStack count={pack.coins} />
 
       <View style={packCardStyles.info}>
-        <Text style={packCardStyles.amount}>
+        <Text style={[packCardStyles.amount, { color: textColor }]}>
           {pack.coins.toLocaleString('tr-TR')}
         </Text>
-        <Text style={packCardStyles.label}>Jeton</Text>
-        <Text style={packCardStyles.price}>{pack.price}</Text>
+        <Text style={[packCardStyles.label, { color: textSecondary }]}>Jeton</Text>
+        <Text style={[packCardStyles.price, { color: GOLD_24K.dark }]}>
+          {pack.price}
+        </Text>
       </View>
     </View>
 
@@ -145,7 +150,7 @@ const PackCard: React.FC<{
         {isLoading ? (
           <ActivityIndicator size="small" color="#FFFFFF" />
         ) : (
-          <Text style={packCardStyles.buyText}>Satin Al</Text>
+          <Text style={packCardStyles.buyText}>Satın Al</Text>
         )}
       </LinearGradient>
     </TouchableOpacity>
@@ -154,10 +159,8 @@ const PackCard: React.FC<{
 
 const packCardStyles = StyleSheet.create({
   card: {
-    backgroundColor: glassmorphism.bg,
     borderRadius: borderRadius.xl,
     borderWidth: 1,
-    borderColor: glassmorphism.borderGold,
     padding: spacing.lg,
     marginBottom: spacing.md,
     overflow: 'hidden',
@@ -175,7 +178,7 @@ const packCardStyles = StyleSheet.create({
     borderBottomLeftRadius: borderRadius.md,
   },
   badgeText: {
-    ...typography.captionSmall,
+    fontSize: 10,
     color: '#FFFFFF',
     fontWeight: fontWeights.bold,
     includeFontPadding: false,
@@ -192,16 +195,13 @@ const packCardStyles = StyleSheet.create({
   amount: {
     fontSize: 32,
     fontWeight: fontWeights.bold,
-    color: '#2C1810',
   },
   label: {
-    ...typography.bodySmall,
-    color: '#8B7355',
+    fontSize: 13,
     marginBottom: spacing.xs,
   },
   price: {
-    ...typography.h4,
-    color: GOLD_24K.dark,
+    fontSize: 17,
     fontWeight: fontWeights.bold,
   },
   buyButton: {
@@ -215,7 +215,7 @@ const packCardStyles = StyleSheet.create({
     borderRadius: borderRadius.md,
   },
   buyText: {
-    ...typography.button,
+    fontSize: 15,
     color: '#FFFFFF',
     fontWeight: fontWeights.bold,
     textShadowColor: 'rgba(0,0,0,0.15)',
@@ -226,9 +226,10 @@ const packCardStyles = StyleSheet.create({
 
 // ── Main Screen ──────────────────────────────────────────────
 export const JetonMarketScreen: React.FC = () => {
+  useScreenTracking('JetonMarket');
   const navigation = useNavigation();
-  const { balance, isLoading, watchAd, isAdAvailable } =
-    useCoinStore();
+  const { colors } = useTheme();
+  const { balance, isLoading, watchAd, isAdAvailable } = useCoinStore();
 
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [adCooldown, setAdCooldown] = useState(0);
@@ -272,8 +273,6 @@ export const JetonMarketScreen: React.FC = () => {
 
       setIsPurchasing(true);
       try {
-        // Use coinStore.purchaseCoins which handles IAP, receipt validation,
-        // and balance update in a single flow — avoids double-credit risk
         const success = await useCoinStore.getState().purchaseCoins(packId);
 
         if (!success) {
@@ -300,40 +299,40 @@ export const JetonMarketScreen: React.FC = () => {
   }, [watchAd, isAdAvailable]);
 
   return (
-    <SafeAreaView style={screenStyles.safe}>
-      <View style={screenStyles.container}>
+    <SafeAreaView style={[s.safe, { backgroundColor: colors.background }]}>
+      <View style={[s.container, { backgroundColor: colors.background }]}>
         {/* Header */}
-        <View style={screenStyles.header}>
+        <View style={[s.header, { borderBottomColor: colors.divider }]}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
-            style={screenStyles.backButton}
+            style={[s.backButton, { backgroundColor: colors.surface }]}
             activeOpacity={0.7}
           >
-            <Ionicons name="chevron-back" size={24} color="#2C1810" />
+            <Ionicons name="chevron-back" size={24} color={colors.text} />
           </TouchableOpacity>
 
-          <Text style={screenStyles.headerTitle}>Jeton Market</Text>
+          <Text style={[s.headerTitle, { color: colors.text }]}>Jeton Market</Text>
 
           {/* Balance chip */}
-          <View style={screenStyles.balanceChip}>
-            <View style={screenStyles.balanceCoin}>
-              <Text style={screenStyles.balanceCoinText}>J</Text>
+          <View style={[s.balanceChip, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
+            <View style={s.balanceCoin}>
+              <Text style={s.balanceCoinText}>J</Text>
             </View>
-            <Text style={screenStyles.balanceNumber}>
+            <Text style={[s.balanceNumber, { color: GOLD_24K.dark }]}>
               {balance.toLocaleString('tr-TR')}
             </Text>
           </View>
         </View>
 
         <ScrollView
-          style={screenStyles.scroll}
-          contentContainerStyle={screenStyles.scrollContent}
+          style={s.scroll}
+          contentContainerStyle={s.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           {/* Section title */}
-          <Text style={screenStyles.sectionTitle}>Jeton Paketleri</Text>
-          <Text style={screenStyles.sectionSubtitle}>
-            Jeton ile direkt mesaj gonder, ozel ozellikler ac
+          <Text style={[s.sectionTitle, { color: colors.text }]}>Jeton Paketleri</Text>
+          <Text style={[s.sectionSubtitle, { color: colors.textSecondary }]}>
+            Jeton ile direkt mesaj gönder, özel özellikleri aç
           </Text>
 
           {/* Pack cards */}
@@ -343,42 +342,42 @@ export const JetonMarketScreen: React.FC = () => {
               pack={pack}
               onPurchase={handlePurchase}
               isLoading={isPurchasing}
+              cardBg={colors.surface}
+              cardBorder={colors.surfaceBorder}
+              textColor={colors.text}
+              textSecondary={colors.textSecondary}
             />
           ))}
 
           {/* Ad reward section */}
-          <View style={screenStyles.adSection}>
-            <View style={screenStyles.adHeader}>
+          <View style={[s.adSection, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
+            <View style={s.adHeader}>
               <Ionicons name="play-circle" size={28} color={palette.purple[500]} />
-              <View style={screenStyles.adHeaderText}>
-                <Text style={screenStyles.adTitle}>Reklam Izle</Text>
-                <Text style={screenStyles.adSubtitle}>
+              <View style={s.adHeaderText}>
+                <Text style={[s.adTitle, { color: colors.text }]}>Reklam İzle</Text>
+                <Text style={[s.adSubtitle, { color: colors.textSecondary }]}>
                   5-10 Jeton kazan
                 </Text>
               </View>
             </View>
 
             {adCooldown > 0 ? (
-              <View style={screenStyles.cooldownContainer}>
-                <Ionicons
-                  name="time-outline"
-                  size={20}
-                  color="#8B7355"
-                />
-                <Text style={screenStyles.cooldownText}>
+              <View style={[s.cooldownContainer, { backgroundColor: colors.backgroundSecondary }]}>
+                <Ionicons name="time-outline" size={20} color={colors.textSecondary} />
+                <Text style={[s.cooldownText, { color: colors.textSecondary }]}>
                   Sonraki reklam: {formatCooldown(adCooldown)}
                 </Text>
               </View>
             ) : (
               <TouchableOpacity
-                style={screenStyles.adButton}
+                style={s.adButton}
                 onPress={handleWatchAd}
                 activeOpacity={0.85}
                 disabled={isLoading}
               >
                 <LinearGradient
                   colors={[palette.purple[500], palette.purple[700]]}
-                  style={screenStyles.adButtonGradient}
+                  style={s.adButtonGradient}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
@@ -387,9 +386,7 @@ export const JetonMarketScreen: React.FC = () => {
                   ) : (
                     <>
                       <Ionicons name="play" size={18} color="#FFFFFF" />
-                      <Text style={screenStyles.adButtonText}>
-                        Reklam Izle ve Kazan
-                      </Text>
+                      <Text style={s.adButtonText}>Reklam İzle ve Kazan</Text>
                     </>
                   )}
                 </LinearGradient>
@@ -402,14 +399,12 @@ export const JetonMarketScreen: React.FC = () => {
   );
 };
 
-const screenStyles = StyleSheet.create({
+const s = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: SCREEN_BG,
   },
   container: {
     flex: 1,
-    backgroundColor: SCREEN_BG,
   },
   // Header
   header: {
@@ -417,8 +412,7 @@ const screenStyles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E8E0D4',
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   backButton: {
     width: 40,
@@ -426,20 +420,18 @@ const screenStyles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: glassmorphism.bg,
   },
   headerTitle: {
-    ...typography.h3,
-    color: '#2C1810',
+    fontSize: 20,
+    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_700Bold',
     flex: 1,
     marginLeft: spacing.sm,
   },
   balanceChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: glassmorphism.bg,
     borderWidth: 1,
-    borderColor: glassmorphism.borderGold,
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
@@ -463,7 +455,6 @@ const screenStyles = StyleSheet.create({
   balanceNumber: {
     fontSize: 15,
     fontWeight: fontWeights.bold,
-    color: GOLD_24K.dark,
   },
   // Scroll
   scroll: {
@@ -471,25 +462,23 @@ const screenStyles = StyleSheet.create({
   },
   scrollContent: {
     padding: spacing.md,
-    paddingBottom: spacing.xxl,
+    paddingBottom: 40,
   },
   // Section
   sectionTitle: {
-    ...typography.h3,
-    color: '#2C1810',
+    fontSize: 20,
+    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_700Bold',
     marginBottom: spacing.xs,
   },
   sectionSubtitle: {
-    ...typography.bodySmall,
-    color: '#8B7355',
+    fontSize: 13,
     marginBottom: spacing.lg,
   },
   // Ad section
   adSection: {
-    backgroundColor: glassmorphism.bg,
     borderRadius: borderRadius.xl,
     borderWidth: 1,
-    borderColor: glassmorphism.border,
     padding: spacing.lg,
     marginTop: spacing.sm,
     ...shadows.small,
@@ -504,12 +493,12 @@ const screenStyles = StyleSheet.create({
     flex: 1,
   },
   adTitle: {
-    ...typography.h4,
-    color: '#2C1810',
+    fontSize: 17,
+    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_700Bold',
   },
   adSubtitle: {
-    ...typography.caption,
-    color: '#8B7355',
+    fontSize: 12,
   },
   adButton: {
     borderRadius: borderRadius.md,
@@ -524,7 +513,7 @@ const screenStyles = StyleSheet.create({
     borderRadius: borderRadius.md,
   },
   adButtonText: {
-    ...typography.button,
+    fontSize: 15,
     color: '#FFFFFF',
     fontWeight: fontWeights.bold,
   },
@@ -535,12 +524,10 @@ const screenStyles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing.sm,
     paddingVertical: spacing.md,
-    backgroundColor: 'rgba(245, 240, 232, 0.6)',
     borderRadius: borderRadius.md,
   },
   cooldownText: {
-    ...typography.body,
-    color: '#8B7355',
+    fontSize: 14,
     fontWeight: fontWeights.medium,
   },
 });
