@@ -42,6 +42,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { palette } from '../../theme/colors';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { LikesYouScreen } from '../discovery/LikesYouScreen';
+import { WeeklyInsightNudge } from '../../components/premium/SmartUpgradePrompts';
 
 type MatchesNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'MatchesList'>;
 
@@ -1191,7 +1192,20 @@ export const MatchesListScreen: React.FC = () => {
           keyExtractor={keyExtractor}
           renderItem={activeTab === 'messages' ? renderMessageItem : renderMatchItem}
           contentContainerStyle={styles.listContent}
-          ListHeaderComponent={renderNudgeSection()}
+          ListHeaderComponent={
+            <>
+              {!isPremium && activeTab === 'matches' && (
+                <WeeklyInsightNudge
+                  viewCount={12}
+                  likeCount={5}
+                  missedMatches={3}
+                  onUpgrade={() => navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' })}
+                  onDismiss={() => {}}
+                />
+              )}
+              {renderNudgeSection()}
+            </>
+          }
           ListEmptyComponent={renderEmptyList}
           showsVerticalScrollIndicator={false}
           ItemSeparatorComponent={ItemSeparator}

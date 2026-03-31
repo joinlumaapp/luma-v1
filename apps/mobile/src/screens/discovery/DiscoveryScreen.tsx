@@ -70,6 +70,7 @@ import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { useSwipeRateLimiterStore, SKIP_COOLDOWN_COST } from '../../stores/swipeRateLimiterStore';
 import { CooldownOverlay } from '../../components/discovery/CooldownOverlay';
 import { BoostModal } from '../../components/boost/BoostModal';
+import { LikedYouTeaser } from '../../components/premium/SmartUpgradePrompts';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -819,23 +820,31 @@ export const DiscoveryScreen: React.FC = () => {
             <Text style={styles.emptyIconLetter}>L</Text>
           </Animated.View>
 
-          <Text style={styles.emptyTitle}>Yeni profiller hazır!</Text>
+          <Text style={styles.emptyTitle}>Şu an yakınında yeni profil yok</Text>
           <Text style={styles.emptySubtitle}>
-            Senin için özenle seçilmiş profiller seni bekliyor.
+            Filtrelerini genişleterek daha fazla kişi görebilirsin.
           </Text>
 
           <Pressable
-            onPress={() => refreshFeed()}
-            accessibilityLabel="Yenile"
+            onPress={handleFilterPress}
+            accessibilityLabel="Filtreleri genişlet"
             accessibilityRole="button"
-            accessibilityHint="Yeni profilleri yüklemek için dokunun"
           >
             <View
               style={styles.refreshButton}
-              testID="discovery-refresh-btn"
+              testID="discovery-filter-expand-btn"
             >
-              <Text style={styles.refreshButtonText}>Yenile</Text>
+              <Text style={styles.refreshButtonText}>Filtreleri Genişlet</Text>
             </View>
+          </Pressable>
+
+          <Pressable
+            onPress={() => refreshFeed()}
+            accessibilityLabel="Tekrar ara"
+            accessibilityRole="button"
+            style={{ marginTop: 8 }}
+          >
+            <Text style={[styles.refreshButtonText, { color: colors.textTertiary }]}>Tekrar Ara</Text>
           </Pressable>
         </View>
       </View>
@@ -914,6 +923,15 @@ export const DiscoveryScreen: React.FC = () => {
 
         {/* Trial banner — shows remaining Gold trial time */}
         <TrialBanner />
+
+        {/* Liked you teaser — FREE users only */}
+        {packageTier === 'FREE' && (
+          <LikedYouTeaser
+            count={3}
+            blurredAvatars={[]}
+            onPress={() => navigation.getParent()?.navigate('MatchesTab', { screen: 'MatchesList' })}
+          />
+        )}
 
       </View>
 

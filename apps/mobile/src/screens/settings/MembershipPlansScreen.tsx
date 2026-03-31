@@ -21,6 +21,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { SocialProofBanner } from '../../components/premium/SmartUpgradePrompts';
 import { palette } from '../../theme/colors';
 import { typography, fontWeights, fontSizes } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
@@ -1230,6 +1231,14 @@ export const MembershipPlansScreen: React.FC = () => {
                   </View>
                 </LinearGradient>
               </View>
+            )}
+
+            {/* Social proof banner */}
+            {currentCategory === 'free' && (
+              <SocialProofBanner
+                recentUpgradeCount={47}
+                onPress={() => {}}
+              />
             )}
 
             {/* Subtitle */}
