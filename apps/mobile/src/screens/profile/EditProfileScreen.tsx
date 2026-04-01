@@ -26,7 +26,13 @@ import type { ProfileStackParamList } from '../../navigation/types';
 import { colors, palette } from '../../theme/colors';
 import { fontWeights, poppinsFonts } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
-import { INTEREST_OPTIONS } from '../../constants/config';
+import {
+  INTEREST_OPTIONS,
+  ZODIAC_SIGNS, EDUCATION_LEVELS, MARITAL_STATUS_OPTIONS,
+  ALCOHOL_OPTIONS, SEXUAL_ORIENTATION_OPTIONS, PETS_OPTIONS,
+  RELIGION_OPTIONS, EXERCISE_OPTIONS as CONFIG_EXERCISE_OPTIONS,
+  SMOKING_OPTIONS as CONFIG_SMOKING_OPTIONS, CHILDREN_OPTIONS as CONFIG_CHILDREN_OPTIONS,
+} from '../../constants/config';
 import { useProfileStore } from '../../stores/profileStore';
 import { photoService } from '../../services/photoService';
 import { VideoRecorder } from '../../components/profile/VideoRecorder';
@@ -45,7 +51,7 @@ const GRID_PADDING = 24;
 const GRID_GAP = 10;
 const PHOTO_CELL_WIDTH = (SCREEN_WIDTH - GRID_PADDING * 2 - GRID_GAP * 2) / 3;
 const PHOTO_CELL_HEIGHT = PHOTO_CELL_WIDTH * 1.3;
-const PHOTO_SLOTS = 6;
+const PHOTO_SLOTS = 9;
 
 const MAX_BIO_LENGTH = 500;
 const MAX_INTERESTS = 10;
@@ -58,31 +64,11 @@ const TURKISH_CITIES: string[] = [
   'Sakarya', 'Malatya', 'Kahramanmaras', 'Erzurum',
 ];
 
-// ── Smoking options ────────────────────────────────────────────────────────
+// ── Option type for intention tags ────────────────────────────────────────
 interface LifestyleOption {
   value: string;
   label: string;
 }
-
-const SMOKING_OPTIONS: LifestyleOption[] = [
-  { value: 'never', label: 'İçmiyor' },
-  { value: 'sometimes', label: 'Ara sıra' },
-  { value: 'regular', label: 'İçiyor' },
-  { value: 'tolerate', label: 'İçmez ama karışmaz' },
-];
-
-const EXERCISE_OPTIONS: LifestyleOption[] = [
-  { value: 'never', label: 'Pek yapmam' },
-  { value: 'sometimes', label: 'Ara sıra' },
-  { value: 'often', label: 'Düzenli' },
-];
-
-const CHILDREN_OPTIONS: LifestyleOption[] = [
-  { value: 'have', label: 'Var' },
-  { value: 'no_children', label: 'Yok' },
-  { value: 'want', label: 'İleride olabilir' },
-  { value: 'dont_want', label: 'İstemiyor' },
-];
 
 // ── Age calculator ─────────────────────────────────────────────────────────
 const calculateAge = (birthDate: string): number => {
@@ -109,6 +95,98 @@ const HEIGHT_VALUES: number[] = [];
 for (let i = 140; i <= 220; i++) {
   HEIGHT_VALUES.push(i);
 }
+
+// ─── Section Header (Bumpy-style) ──────────────────────────────
+
+interface SectionHeaderProps {
+  title: string;
+  description?: string;
+}
+
+const SectionHeader: React.FC<SectionHeaderProps> = ({ title, description }) => (
+  <View style={sectionStyles.header}>
+    <Text style={sectionStyles.headerTitle}>{title}</Text>
+    {description && <Text style={sectionStyles.headerDesc}>{description}</Text>}
+  </View>
+);
+
+// ─── Profile Field Row (Bumpy-style) ────────────────────────────
+
+interface FieldRowProps {
+  icon: string;
+  label: string;
+  value?: string;
+  placeholder?: string;
+  readOnly?: boolean;
+  onPress?: () => void;
+}
+
+const FieldRow: React.FC<FieldRowProps> = ({
+  icon, label, value, placeholder = 'Ekle', readOnly = false, onPress,
+}) => (
+  <TouchableOpacity
+    style={sectionStyles.fieldRow}
+    onPress={onPress}
+    disabled={readOnly || !onPress}
+    activeOpacity={readOnly ? 1 : 0.7}
+  >
+    <Text style={sectionStyles.fieldIcon}>{icon}</Text>
+    <Text style={sectionStyles.fieldLabel}>{label}</Text>
+    <View style={sectionStyles.fieldRight}>
+      {value ? (
+        <Text style={sectionStyles.fieldValue}>{value}</Text>
+      ) : (
+        <Text style={sectionStyles.fieldPlaceholder}>{placeholder}</Text>
+      )}
+      {readOnly ? (
+        <Ionicons name="lock-closed" size={14} color={colors.textTertiary} />
+      ) : (
+        <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />
+      )}
+    </View>
+  </TouchableOpacity>
+);
+
+// ─── Option Picker Bottom Sheet ─────────────────────────────────
+
+interface OptionPickerProps {
+  visible: boolean;
+  title: string;
+  options: readonly string[];
+  selected: string;
+  onSelect: (value: string) => void;
+  onDismiss: () => void;
+}
+
+const OptionPicker: React.FC<OptionPickerProps> = ({
+  visible, title, options, selected, onSelect, onDismiss,
+}) => {
+  if (!visible) return null;
+  return (
+    <View style={sectionStyles.pickerOverlay}>
+      <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onDismiss} />
+      <View style={sectionStyles.pickerSheet}>
+        <View style={sectionStyles.pickerHandle} />
+        <Text style={sectionStyles.pickerTitle}>{title}</Text>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {options.map((opt) => (
+            <TouchableOpacity
+              key={opt}
+              style={[sectionStyles.pickerOption, selected === opt && sectionStyles.pickerOptionSelected]}
+              onPress={() => { onSelect(opt); onDismiss(); }}
+            >
+              <Text style={[
+                sectionStyles.pickerOptionText,
+                selected === opt && sectionStyles.pickerOptionTextSelected,
+              ]}>{opt}</Text>
+              {selected === opt && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+    </View>
+  );
+};
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ── Main Component ─────────────────────────────────────────────────────────
@@ -151,6 +229,66 @@ export const EditProfileScreen: React.FC = () => {
   const [showVideoRecorder, setShowVideoRecorder] = useState(false);
   const [showVideoPreview, setShowVideoPreview] = useState(false);
   const [showPromptPicker, setShowPromptPicker] = useState(false);
+
+  // Extended profile fields (Section 3)
+  const [weight, setWeight] = useState<string>(profile.weight != null ? String(profile.weight) : '');
+  const [sexualOrientation, setSexualOrientation] = useState<string>(profile.sexualOrientation ?? '');
+  const [zodiacSign, setZodiacSign] = useState<string>(profile.zodiacSign ?? '');
+  const [educationLevel, setEducationLevel] = useState<string>(profile.educationLevel ?? '');
+  const [maritalStatus, setMaritalStatus] = useState<string>(profile.maritalStatus ?? '');
+  const [alcohol, setAlcohol] = useState<string>(profile.alcohol ?? '');
+  const [pets, setPets] = useState<string>(profile.pets ?? '');
+  const [religion, setReligion] = useState<string>(profile.religion ?? '');
+  const [lifeValues, setLifeValues] = useState<string>(profile.lifeValues ?? '');
+
+  // Option picker state
+  const [pickerConfig, setPickerConfig] = useState<{
+    visible: boolean;
+    title: string;
+    options: readonly string[];
+    field: string;
+  } | null>(null);
+
+  const extendedFieldSetters: Record<string, (value: string) => void> = {
+    sexualOrientation: setSexualOrientation,
+    zodiacSign: setZodiacSign,
+    exercise: setExercise,
+    educationLevel: setEducationLevel,
+    maritalStatus: setMaritalStatus,
+    children: setChildren,
+    alcohol: setAlcohol,
+    smoking: setSmoking,
+    pets: setPets,
+    religion: setReligion,
+    weight: setWeight,
+    lifeValues: setLifeValues,
+  };
+
+  const extendedFieldValues: Record<string, string> = {
+    sexualOrientation,
+    zodiacSign,
+    exercise,
+    educationLevel,
+    maritalStatus,
+    children,
+    alcohol,
+    smoking,
+    pets,
+    religion,
+    weight,
+    lifeValues,
+  };
+
+  const openPicker = useCallback((title: string, options: readonly string[], field: string) => {
+    setPickerConfig({ visible: true, title, options, field });
+  }, []);
+
+  const handlePickerSelect = useCallback((value: string) => {
+    if (!pickerConfig) return;
+    const setter = extendedFieldSetters[pickerConfig.field];
+    if (setter) setter(value);
+    setPickerConfig(null);
+  }, [pickerConfig]);
 
   // Sync from store on external changes
   useEffect(() => {
@@ -342,25 +480,6 @@ export const EditProfileScreen: React.FC = () => {
     [profile.prompts, setPrompts],
   );
 
-  // ── Lifestyle picker toggle ────────────────────────────────────────────
-  const cycleOption = useCallback(
-    (
-      options: LifestyleOption[],
-      currentValue: string,
-      setter: (value: string) => void,
-    ) => {
-      const currentIndex = options.findIndex((o) => o.value === currentValue);
-      const nextIndex = (currentIndex + 1) % options.length;
-      setter(options[nextIndex].value);
-    },
-    [],
-  );
-
-  const getOptionLabel = (options: LifestyleOption[], value: string): string => {
-    const found = options.find((o) => o.value === value);
-    return found ? found.label : 'Seç';
-  };
-
   // ── Save handler ───────────────────────────────────────────────────────
   const handleSave = useCallback(async () => {
     if (isSaving) return;
@@ -403,7 +522,7 @@ export const EditProfileScreen: React.FC = () => {
 
   const age = calculateAge(profile.birthDate);
 
-  // ── Build photo grid data (always 6 slots) ────────────────────────────
+  // ── Build photo grid data (always 9 slots) ────────────────────────────
   const photoSlots: Array<string | null> = [];
   for (let i = 0; i < PHOTO_SLOTS; i++) {
     photoSlots.push(i < profile.photos.length ? profile.photos[i] : null);
@@ -445,6 +564,9 @@ export const EditProfileScreen: React.FC = () => {
           ]}
           keyboardShouldPersistTaps="handled"
         >
+          {/* ─── Section 1: Medya ─── */}
+          <SectionHeader title="Medya" description="Fotograflarin ve videon" />
+
           {/* ── Profil Videosu ─────────────────────────────────────────── */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Profil Videosu</Text>
@@ -638,6 +760,9 @@ export const EditProfileScreen: React.FC = () => {
               maxLength={MAX_BIO_LENGTH}
             />
           </View>
+
+          {/* ─── Section 2: Temel Bilgilerim ─── */}
+          <SectionHeader title="Temel Bilgilerim" description="Kendiniz hakkinda genel bilgileri belirtin" />
 
           {/* ── Temel Bilgiler ────────────────────────────────────────── */}
           <View style={styles.section}>
@@ -835,6 +960,8 @@ export const EditProfileScreen: React.FC = () => {
             </View>
           </View>
 
+          <SectionHeader title="Hedefim" description="Baskalarina ne aradiginizi soyleyin" />
+
           {/* ── Niyet Etiketi ─────────────────────────────────────────── */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Ne Arıyorsun?</Text>
@@ -962,64 +1089,23 @@ export const EditProfileScreen: React.FC = () => {
             />
           </View>
 
-          {/* ── Yaşam Tarzi ───────────────────────────────────────────── */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Yaşam Tarzi</Text>
-
-            {/* Smoking */}
-            <TouchableOpacity
-              style={styles.lifestyleRow}
-              onPress={() => cycleOption(SMOKING_OPTIONS, smoking, setSmoking)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.infoIconCircle, { backgroundColor: 'rgba(239, 68, 68, 0.10)' }]}>
-                <Ionicons name="flame-outline" size={18} color={colors.text} />
-              </View>
-              <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Sigara</Text>
-                <Text style={[styles.infoValue, !smoking && styles.infoValuePlaceholder]}>
-                  {smoking ? getOptionLabel(SMOKING_OPTIONS, smoking) : 'Seç'}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
-            </TouchableOpacity>
-
-            {/* Exercise */}
-            <TouchableOpacity
-              style={styles.lifestyleRow}
-              onPress={() => cycleOption(EXERCISE_OPTIONS, exercise, setExercise)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.infoIconCircle, { backgroundColor: 'rgba(59, 130, 246, 0.10)' }]}>
-                <Ionicons name="fitness-outline" size={18} color={colors.text} />
-              </View>
-              <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Spor</Text>
-                <Text style={[styles.infoValue, !exercise && styles.infoValuePlaceholder]}>
-                  {exercise ? getOptionLabel(EXERCISE_OPTIONS, exercise) : 'Seç'}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
-            </TouchableOpacity>
-
-            {/* Children */}
-            <TouchableOpacity
-              style={[styles.lifestyleRow, styles.lifestyleRowLast]}
-              onPress={() => cycleOption(CHILDREN_OPTIONS, children, setChildren)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.infoIconCircle, { backgroundColor: 'rgba(16, 185, 129, 0.10)' }]}>
-                <Ionicons name="people-outline" size={18} color={colors.text} />
-              </View>
-              <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Çocuk</Text>
-                <Text style={[styles.infoValue, !children && styles.infoValuePlaceholder]}>
-                  {children ? getOptionLabel(CHILDREN_OPTIONS, children) : 'Seç'}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
-            </TouchableOpacity>
-          </View>
+          {/* ─── Section 3: Hakkimda Daha Fazlasi ─── */}
+          <SectionHeader
+            title="Hakkimda Daha Fazlasi"
+            description="Uygun kisileri bulmak icin kendiniz hakkinda daha fazla bilgi belirtin"
+          />
+          <FieldRow icon="⚖️" label="Kilo" value={weight ? `${weight} kg` : ''} onPress={() => {}} />
+          <FieldRow icon="⚥" label="Cinsel Yonelim" value={sexualOrientation || ''} onPress={() => openPicker('Cinsel Yonelim', SEXUAL_ORIENTATION_OPTIONS, 'sexualOrientation')} />
+          <FieldRow icon="♍" label="Burc" value={zodiacSign || ''} onPress={() => openPicker('Burc', ZODIAC_SIGNS, 'zodiacSign')} />
+          <FieldRow icon="🏋️" label="Egzersiz" value={exercise || ''} onPress={() => openPicker('Egzersiz', CONFIG_EXERCISE_OPTIONS, 'exercise')} />
+          <FieldRow icon="🎓" label="Egitim Seviyesi" value={educationLevel || ''} onPress={() => openPicker('Egitim Seviyesi', EDUCATION_LEVELS, 'educationLevel')} />
+          <FieldRow icon="💕" label="Medeni Durum" value={maritalStatus || ''} onPress={() => openPicker('Medeni Durum', MARITAL_STATUS_OPTIONS, 'maritalStatus')} />
+          <FieldRow icon="👶" label="Cocuklar" value={children || ''} onPress={() => openPicker('Cocuklar', CONFIG_CHILDREN_OPTIONS, 'children')} />
+          <FieldRow icon="🍷" label="Icki" value={alcohol || ''} onPress={() => openPicker('Icki', ALCOHOL_OPTIONS, 'alcohol')} />
+          <FieldRow icon="🚬" label="Sigara" value={smoking || ''} onPress={() => openPicker('Sigara', CONFIG_SMOKING_OPTIONS, 'smoking')} />
+          <FieldRow icon="🐾" label="Evcil Hayvanlar" value={pets || ''} onPress={() => openPicker('Evcil Hayvanlar', PETS_OPTIONS, 'pets')} />
+          <FieldRow icon="🕌" label="Din" value={religion || ''} onPress={() => openPicker('Din', RELIGION_OPTIONS, 'religion')} />
+          <FieldRow icon="🌐" label="Degerler" value={lifeValues || ''} onPress={() => {}} />
 
           {/* ── Ses Tanitimi ──────────────────────────────────────────── */}
           <View style={styles.section}>
@@ -1098,6 +1184,17 @@ export const EditProfileScreen: React.FC = () => {
         onClose={() => setShowPromptPicker(false)}
         usedPromptIds={profile.prompts.map((p: { id: string }) => p.id)}
       />
+      {/* Option Picker */}
+      {pickerConfig && (
+        <OptionPicker
+          visible={pickerConfig.visible}
+          title={pickerConfig.title}
+          options={pickerConfig.options}
+          selected={extendedFieldValues[pickerConfig.field] ?? ''}
+          onSelect={handlePickerSelect}
+          onDismiss={() => setPickerConfig(null)}
+        />
+      )}
     </KeyboardAvoidingView>
   );
 };
@@ -1750,5 +1847,120 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     letterSpacing: 0.3,
     includeFontPadding: false,
+  },
+});
+
+const sectionStyles = StyleSheet.create({
+  header: {
+    marginTop: 28,
+    marginBottom: 12,
+    paddingHorizontal: 24,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  headerDesc: {
+    fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: colors.textSecondary,
+  },
+  fieldRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginHorizontal: 24,
+    marginBottom: 8,
+  },
+  fieldIcon: {
+    fontSize: 18,
+    marginRight: 12,
+  },
+  fieldLabel: {
+    flex: 1,
+    fontSize: 15,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: colors.text,
+  },
+  fieldRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  fieldValue: {
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: colors.textSecondary,
+  },
+  fieldPlaceholder: {
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: colors.textTertiary,
+  },
+  pickerOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+    zIndex: 100,
+  },
+  pickerSheet: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+    maxHeight: '60%',
+  },
+  pickerHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.surfaceBorder,
+    alignSelf: 'center',
+    marginTop: 12,
+    marginBottom: 16,
+  },
+  pickerTitle: {
+    fontSize: 16,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  pickerOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.divider,
+  },
+  pickerOptionSelected: {
+    backgroundColor: colors.primary + '10',
+    borderRadius: 8,
+  },
+  pickerOptionText: {
+    fontSize: 15,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: colors.text,
+  },
+  pickerOptionTextSelected: {
+    color: colors.primary,
+    fontWeight: '600',
   },
 });
