@@ -353,21 +353,6 @@ export const SettingsScreen: React.FC = () => {
       icon: 'person-outline',
       data: [
         {
-          key: 'edit_profile',
-          icon: 'create-outline',
-          title: 'Profil Düzenle',
-          type: 'navigation',
-          onPress: () => navigation.navigate('EditProfile'),
-        },
-        {
-          key: 'edit_answers',
-          icon: 'chatbubbles-outline',
-          title: 'Cevaplarımı Düzenle',
-          subtitle: 'Uyumluluk sorularını tekrar yanıtla',
-          type: 'navigation',
-          onPress: () => navigation.navigate('Questions', { editMode: true }),
-        },
-        {
           key: 'phone',
           icon: 'call-outline',
           title: 'Telefon Numarası',
