@@ -10,6 +10,10 @@ import {
   StyleSheet,
   Animated,
   Alert,
+  Modal,
+  Image,
+  PanResponder,
+  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -458,11 +462,11 @@ const EmptyState: React.FC<{ onUpgrade: () => void }> = ({ onUpgrade }) => {
 
 // ─── Viewer Grid (locked teaser system) ─────────────────────────
 
-import { Dimensions } from 'react-native';
 const GRID_GAP = 10;
 const GRID_COLS = 2;
 const CARD_WIDTH = (Dimensions.get('window').width - spacing.lg * 2 - GRID_GAP) / GRID_COLS;
 const CARD_HEIGHT = CARD_WIDTH * 1.3;
+const SCREEN_HEIGHT = Dimensions.get('window').height;
 
 const BADGES = ['Sana çok yakın', 'Yüksek uyum', 'Yeni', 'Tekrar baktı', 'Çok ilgili'];
 
@@ -774,6 +778,464 @@ const gridStyles = StyleSheet.create({
     fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
     color: colors.textTertiary,
+  },
+});
+
+// ─── Viewer Detail Bottom Sheet ────────────────────────────────
+
+interface ViewerDetailSheetProps {
+  visible: boolean;
+  viewer: ProfileViewer | null;
+  onDismiss: () => void;
+  onViewProfile: (viewerId: string) => void;
+  onSendMessage: (viewerId: string) => void;
+}
+
+const ViewerDetailSheet: React.FC<ViewerDetailSheetProps> = ({
+  visible, viewer, onDismiss, onViewProfile, onSendMessage,
+}) => {
+  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const backdropOpacity = useRef(new Animated.Value(0)).current;
+  const photoScale = useRef(new Animated.Value(0.8)).current;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gs) => gs.dy > 5,
+      onPanResponderMove: (_, gs) => {
+        if (gs.dy > 0) slideAnim.setValue(gs.dy);
+      },
+      onPanResponderRelease: (_, gs) => {
+        if (gs.dy > 100 || gs.vy > 0.5) {
+          dismissSheet();
+        } else {
+          Animated.spring(slideAnim, {
+            toValue: 0, tension: 100, friction: 12, useNativeDriver: true,
+          }).start();
+        }
+      },
+    }),
+  ).current;
+
+  useEffect(() => {
+    if (visible) {
+      slideAnim.setValue(SCREEN_HEIGHT);
+      backdropOpacity.setValue(0);
+      photoScale.setValue(0.8);
+      Animated.parallel([
+        Animated.spring(slideAnim, {
+          toValue: 0, tension: 100, friction: 12, useNativeDriver: true,
+        }),
+        Animated.timing(backdropOpacity, {
+          toValue: 0.6, duration: 200, useNativeDriver: true,
+        }),
+      ]).start();
+      setTimeout(() => {
+        Animated.spring(photoScale, {
+          toValue: 1, tension: 120, friction: 10, useNativeDriver: true,
+        }).start();
+      }, 300);
+    }
+  }, [visible, slideAnim, backdropOpacity, photoScale]);
+
+  const dismissSheet = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: SCREEN_HEIGHT, duration: 200, useNativeDriver: true,
+      }),
+      Animated.timing(backdropOpacity, {
+        toValue: 0, duration: 200, useNativeDriver: true,
+      }),
+    ]).start(() => onDismiss());
+  }, [slideAnim, backdropOpacity, onDismiss]);
+
+  if (!viewer) return null;
+
+  const displayName = viewer.firstName
+    ? `${viewer.firstName}${viewer.age ? `, ${viewer.age}` : ''}`
+    : 'Birisi';
+
+  return (
+    <Modal visible={visible} transparent animationType="none" onRequestClose={dismissSheet}>
+      <Animated.View style={[sheetStyles.backdrop, { opacity: backdropOpacity }]}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={dismissSheet} />
+      </Animated.View>
+
+      <Animated.View
+        style={[sheetStyles.sheet, { transform: [{ translateY: slideAnim }] }]}
+        {...panResponder.panHandlers}
+      >
+        <View style={sheetStyles.dragHandle} />
+
+        <Animated.View style={[sheetStyles.photoContainer, { transform: [{ scale: photoScale }] }]}>
+          {viewer.photoUrl ? (
+            <Image source={{ uri: viewer.photoUrl }} style={sheetStyles.photo} />
+          ) : (
+            <LinearGradient
+              colors={[palette.purple[200], palette.pink[200]] as [string, string]}
+              style={sheetStyles.photo}
+            >
+              <Ionicons name="person" size={48} color={palette.purple[400]} style={{ opacity: 0.6 }} />
+            </LinearGradient>
+          )}
+        </Animated.View>
+
+        <Text style={sheetStyles.name}>{displayName}</Text>
+
+        <Text style={sheetStyles.activity}>
+          {getActivityText(viewer.viewerId)} {'\u2022'} {formatRelativeTime(viewer.lastViewedAt)}
+        </Text>
+
+        {viewer.viewCount > 1 && (
+          <View style={sheetStyles.repeatBadge}>
+            <Ionicons name="eye" size={12} color={palette.pink[400]} />
+            <Text style={sheetStyles.repeatText}>Profiline {viewer.viewCount} kez baktı</Text>
+          </View>
+        )}
+
+        {viewer.sharedInterests && viewer.sharedInterests.length > 0 && (
+          <View style={sheetStyles.interestsRow}>
+            {viewer.sharedInterests.map((interest, i) => (
+              <View key={i} style={sheetStyles.interestPill}>
+                <Text style={sheetStyles.interestText}>{interest}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        <View style={sheetStyles.ctaContainer}>
+          <Pressable
+            onPress={() => onViewProfile(viewer.viewerId)}
+            style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+          >
+            <LinearGradient
+              colors={[palette.purple[500], palette.pink[500]] as [string, string]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={sheetStyles.primaryCTA}
+            >
+              <Ionicons name="person-outline" size={18} color="#fff" />
+              <Text style={sheetStyles.primaryCTAText}>Profili Gör</Text>
+            </LinearGradient>
+          </Pressable>
+
+          <Pressable
+            onPress={() => onSendMessage(viewer.viewerId)}
+            style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+          >
+            <View style={sheetStyles.secondaryCTA}>
+              <Ionicons name="chatbubble-outline" size={16} color={colors.primary} />
+              <Text style={sheetStyles.secondaryCTAText}>Mesaj Gönder</Text>
+              <View style={sheetStyles.jetonBadge}>
+                <Text style={sheetStyles.jetonText}>{'💰'} 5</Text>
+              </View>
+            </View>
+          </Pressable>
+        </View>
+      </Animated.View>
+    </Modal>
+  );
+};
+
+// ─── Viewer Teaser Bottom Sheet (locked cards) ─────────────────
+
+interface ViewerTeaserSheetProps {
+  visible: boolean;
+  onDismiss: () => void;
+  onUpgrade: () => void;
+}
+
+const ViewerTeaserSheet: React.FC<ViewerTeaserSheetProps> = ({
+  visible, onDismiss, onUpgrade,
+}) => {
+  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const backdropOpacity = useRef(new Animated.Value(0)).current;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gs) => gs.dy > 5,
+      onPanResponderMove: (_, gs) => {
+        if (gs.dy > 0) slideAnim.setValue(gs.dy);
+      },
+      onPanResponderRelease: (_, gs) => {
+        if (gs.dy > 100 || gs.vy > 0.5) {
+          dismissSheet();
+        } else {
+          Animated.spring(slideAnim, {
+            toValue: 0, tension: 100, friction: 12, useNativeDriver: true,
+          }).start();
+        }
+      },
+    }),
+  ).current;
+
+  useEffect(() => {
+    if (visible) {
+      slideAnim.setValue(SCREEN_HEIGHT);
+      backdropOpacity.setValue(0);
+      Animated.parallel([
+        Animated.spring(slideAnim, {
+          toValue: 0, tension: 100, friction: 12, useNativeDriver: true,
+        }),
+        Animated.timing(backdropOpacity, {
+          toValue: 0.6, duration: 200, useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [visible, slideAnim, backdropOpacity]);
+
+  const dismissSheet = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: SCREEN_HEIGHT, duration: 200, useNativeDriver: true,
+      }),
+      Animated.timing(backdropOpacity, {
+        toValue: 0, duration: 200, useNativeDriver: true,
+      }),
+    ]).start(() => onDismiss());
+  }, [slideAnim, backdropOpacity, onDismiss]);
+
+  return (
+    <Modal visible={visible} transparent animationType="none" onRequestClose={dismissSheet}>
+      <Animated.View style={[sheetStyles.backdrop, { opacity: backdropOpacity }]}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={dismissSheet} />
+      </Animated.View>
+
+      <Animated.View
+        style={[sheetStyles.sheet, { transform: [{ translateY: slideAnim }] }]}
+        {...panResponder.panHandlers}
+      >
+        <View style={sheetStyles.dragHandle} />
+
+        <View style={sheetStyles.photoContainer}>
+          <LinearGradient
+            colors={[palette.purple[200], palette.pink[200]] as [string, string]}
+            style={sheetStyles.teaserPhoto}
+          >
+            <Ionicons name="person" size={48} color={palette.purple[300]} style={{ opacity: 0.4 }} />
+          </LinearGradient>
+          <View style={sheetStyles.teaserLockOverlay}>
+            <LinearGradient
+              colors={[palette.purple[400], palette.pink[400]] as [string, string]}
+              style={{ width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' }}
+            >
+              <Ionicons name="lock-closed" size={20} color="#fff" />
+            </LinearGradient>
+          </View>
+        </View>
+
+        <Text style={sheetStyles.teaserTitle}>Birisi sana ilgi duyuyor</Text>
+        <Text style={sheetStyles.teaserSubtitle}>
+          Kim olduğunu görmek için paketini yükselt
+        </Text>
+
+        <View style={sheetStyles.ctaContainer}>
+          <Pressable
+            onPress={onUpgrade}
+            style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+          >
+            <LinearGradient
+              colors={[palette.purple[500], palette.purple[700]] as [string, string]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={sheetStyles.primaryCTA}
+            >
+              <Ionicons name="diamond" size={18} color="#fff" />
+              <Text style={sheetStyles.primaryCTAText}>Gold ile Aç</Text>
+            </LinearGradient>
+          </Pressable>
+        </View>
+
+        <Pressable onPress={dismissSheet} style={sheetStyles.teaserDismiss}>
+          <Text style={sheetStyles.teaserDismissText}>Daha Sonra</Text>
+        </Pressable>
+      </Animated.View>
+    </Modal>
+  );
+};
+
+const sheetStyles = StyleSheet.create({
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#000',
+  },
+  sheet: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: 40,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    borderBottomWidth: 0,
+  },
+  dragHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.surfaceBorder,
+    marginTop: 12,
+    marginBottom: 20,
+  },
+  photoContainer: {
+    marginBottom: 16,
+  },
+  photo: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  name: {
+    fontSize: 22,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  activity: {
+    fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  repeatBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: palette.pink[500] + '12',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    marginBottom: 12,
+  },
+  repeatText: {
+    fontSize: 11,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: palette.pink[400],
+  },
+  interestsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 20,
+  },
+  interestPill: {
+    backgroundColor: colors.primary + '12',
+    borderWidth: 1,
+    borderColor: colors.primary + '25',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  interestText: {
+    fontSize: 12,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: colors.primary,
+  },
+  ctaContainer: {
+    width: '100%',
+    gap: 10,
+    marginTop: 4,
+  },
+  primaryCTA: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 52,
+    borderRadius: 16,
+  },
+  primaryCTAText: {
+    fontSize: 16,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#fff',
+  },
+  secondaryCTA: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 52,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: colors.primary + '40',
+    backgroundColor: colors.primary + '08',
+  },
+  secondaryCTAText: {
+    fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  jetonBadge: {
+    backgroundColor: palette.gold[400] + '20',
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  jetonText: {
+    fontSize: 11,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: palette.gold[500],
+  },
+  teaserPhoto: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  teaserLockOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(30, 16, 53, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 60,
+  },
+  teaserTitle: {
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  teaserSubtitle: {
+    fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  teaserDismiss: {
+    marginTop: 8,
+    paddingVertical: 8,
+  },
+  teaserDismissText: {
+    fontSize: 13,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: colors.textTertiary,
+    textAlign: 'center',
   },
 });
 
