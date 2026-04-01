@@ -11,7 +11,6 @@ import {
   Pressable,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   Platform,
   TouchableOpacity,
 } from 'react-native';
@@ -262,17 +261,9 @@ export const QuestionsScreen: React.FC = () => {
       setSlideDirection('forward');
 
       if (isLastQuestion) {
-        compatibilityService.submitAnswers(newAnswers).catch((err) => {
-          if (!mountedRef.current) return;
-          if (__DEV__) {
-            console.warn('Uyum cevapları gönderilemedi (dev):', err);
-            return;
-          }
-          Alert.alert(
-            'Cevaplar kaydedilemedi',
-            'Cevaplarınız sunucuya gönderilemedi. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.',
-            [{ text: 'Tamam' }],
-          );
+        // Save answers locally first, then try API (non-blocking)
+        compatibilityService.submitAnswers(newAnswers).catch(() => {
+          // Silent fail — answers are saved locally via setProfileField
         });
         showAnalysisAndResult(newAnswers);
       } else {
