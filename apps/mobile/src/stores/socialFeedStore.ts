@@ -24,6 +24,8 @@ const getToday = (): string => new Date().toISOString().slice(0, 10);
 interface SocialFeedState {
   // State
   posts: FeedPost[];
+  /** Locally created posts that must survive API/mock refreshes */
+  localPosts: FeedPost[];
   filter: FeedFilter;
   isLoading: boolean;
   isRefreshing: boolean;
@@ -63,9 +65,19 @@ interface SocialFeedState {
   resetDailyFollowIfNeeded: () => void;
 }
 
+/** Merge server/mock posts with locally created posts, deduplicating by id.
+ *  Local posts are prepended so the user's own posts always appear first. */
+function mergeWithLocalPosts(serverPosts: FeedPost[], localPosts: FeedPost[]): FeedPost[] {
+  if (localPosts.length === 0) return serverPosts;
+  const serverIds = new Set(serverPosts.map((p) => p.id));
+  const uniqueLocal = localPosts.filter((p) => !serverIds.has(p.id));
+  return [...uniqueLocal, ...serverPosts];
+}
+
 export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
   // Initial state
   posts: [],
+  localPosts: [],
   filter: 'ONERILEN',
   isLoading: false,
   isRefreshing: false,
@@ -85,34 +97,36 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
 
   // Actions
   fetchFeed: async () => {
-    const { filter } = get();
+    const { filter, localPosts } = get();
     set({ isLoading: true });
     try {
       // Service handles TAKIP fallback internally — no double-fetch needed
       const response = await socialFeedService.getFeed(filter, null);
       set({
-        posts: response.posts,
+        posts: mergeWithLocalPosts(response.posts, localPosts),
         cursor: response.nextCursor,
         hasMore: response.hasMore,
         isLoading: false,
       });
     } catch {
+      // On error, keep existing posts (including local) instead of clearing
       set({ isLoading: false });
     }
   },
 
   refreshFeed: async () => {
-    const { filter } = get();
+    const { filter, localPosts } = get();
     set({ isRefreshing: true });
     try {
       const response = await socialFeedService.getFeed(filter, null);
       set({
-        posts: response.posts,
+        posts: mergeWithLocalPosts(response.posts, localPosts),
         cursor: response.nextCursor,
         hasMore: response.hasMore,
         isRefreshing: false,
       });
     } catch {
+      // On error, keep existing posts instead of clearing
       set({ isRefreshing: false });
     }
   },
@@ -211,6 +225,7 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
       const newPost = await socialFeedService.createPost(data);
       set((state) => ({
         posts: [newPost, ...state.posts],
+        localPosts: [newPost, ...state.localPosts],
         isCreating: false,
       }));
     } catch {

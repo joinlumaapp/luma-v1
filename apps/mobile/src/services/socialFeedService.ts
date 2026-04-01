@@ -237,9 +237,10 @@ export const socialFeedService = {
 
       } else {
         // ── Populer: sort by likes + recency ──
+        const currentTime = Date.now();
         filtered = filtered.sort((a, b) => {
-          const ageA = (now.getTime() - new Date(a.createdAt).getTime()) / 3_600_000;
-          const ageB = (now.getTime() - new Date(b.createdAt).getTime()) / 3_600_000;
+          const ageA = (currentTime - new Date(a.createdAt).getTime()) / 3_600_000;
+          const ageB = (currentTime - new Date(b.createdAt).getTime()) / 3_600_000;
           const scoreA = a.likeCount + Math.max(0, 1 - ageA / 48) * 60;
           const scoreB = b.likeCount + Math.max(0, 1 - ageB / 48) * 60;
           return scoreB - scoreA;
