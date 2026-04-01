@@ -737,7 +737,7 @@ export const EditProfileScreen: React.FC = () => {
 
               {/* CTA Button */}
               <TouchableOpacity
-                onPress={() => navigation.navigate('CompatibilityQuestions' as never)}
+                onPress={() => navigation.navigate('Questions', { editMode: true })}
                 style={{
                   backgroundColor: colors.primary,
                   borderRadius: 12,
