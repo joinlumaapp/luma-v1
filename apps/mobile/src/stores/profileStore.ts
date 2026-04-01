@@ -141,6 +141,20 @@ const initialProfile: ProfileData = {
 };
 
 // Transform backend ProfileResponse to store ProfileData
+// Migrate legacy English interest IDs to Turkish labels
+const LEGACY_TAG_MIGRATION: Record<string, string> = {
+  travel: 'Seyahat', music: 'Muzik', sports: 'Spor', cooking: 'Yemek pisirme',
+  art: 'Sanat', technology: 'Teknoloji', nature: 'Doga', books: 'Okuma',
+  movies: 'Film', photography: 'Fotografcilik', dance: 'Dans', yoga: 'Yoga',
+  gaming: 'Video oyunlari', animals: 'Kediler', fashion: 'Moda', football: 'Futbol',
+  hiking: 'Yuruyus', coffee: 'Kahve', reading: 'Okuma', meditation: 'Meditasyon',
+  swimming: 'Yuzme', fitness: 'Vucut Gelistirme', beach: 'Denizler',
+  architecture: 'Muzeler', design: 'Tasarim', guitar: 'Muzik',
+  psychology: 'Akil oyunlari', food: 'Ev yemekleri', cats: 'Kediler',
+};
+const migrateInterestTags = (tags: string[]): string[] =>
+  tags.map((tag) => LEGACY_TAG_MIGRATION[tag] ?? tag);
+
 const mapResponseToProfile = (data: ProfileResponse): ProfileData => {
   const videoData = (data as { profileVideo?: { url: string; thumbnailUrl: string; duration: number } | null }).profileVideo ?? null;
   return {
@@ -155,7 +169,7 @@ const mapResponseToProfile = (data: ProfileResponse): ProfileData => {
     smoking: (data as { smoking?: string }).smoking ?? '',
     children: (data as { children?: string }).children ?? '',
     intentionTag: data.intentionTag,
-    interestTags: Array.isArray((data as { interestTags?: string[] }).interestTags) ? (data as { interestTags?: string[] }).interestTags! : [],
+    interestTags: migrateInterestTags(Array.isArray((data as { interestTags?: string[] }).interestTags) ? (data as { interestTags?: string[] }).interestTags! : []),
     photos: data.photos.map((p) => p.url),
     bio: data.bio,
     answers: {},
