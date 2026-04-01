@@ -30,7 +30,7 @@ import { spacing, borderRadius } from '../../theme/spacing';
 import { useDiscoveryStore, type DiscoveryProfile } from '../../stores/discoveryStore';
 import { useMatchStore } from '../../stores/matchStore';
 import { matchService } from '../../services/matchService';
-import { INTEREST_OPTIONS } from '../../constants/config';
+import { INTEREST_OPTIONS, INTEREST_CATEGORIES } from '../../constants/config';
 import { ActivityStatus } from '../../components/common/ActivityStatus';
 import { generateExpandedReasons } from '../../utils/compatReasons';
 import { FavoriteSpotsCard } from '../../components/profile/FavoriteSpotsCard';
@@ -48,15 +48,20 @@ import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
 import { VideoProfile } from '../../components/profile/VideoProfile';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 
-// Interest tag lookup maps
+// Interest tag lookup maps — covers both legacy IDs and new category labels
 const INTEREST_EMOJI_MAP: Record<string, string> = {};
-for (const opt of INTEREST_OPTIONS) {
-  INTEREST_EMOJI_MAP[opt.id] = opt.emoji;
-}
-
 const INTEREST_LABEL_MAP: Record<string, string> = {};
 for (const opt of INTEREST_OPTIONS) {
+  INTEREST_EMOJI_MAP[opt.id] = opt.emoji;
   INTEREST_LABEL_MAP[opt.id] = opt.label;
+}
+// From categorized INTEREST_CATEGORIES (new tags stored as labels)
+for (const cat of INTEREST_CATEGORIES) {
+  for (const item of cat.items) {
+    if (!INTEREST_EMOJI_MAP[item.label]) {
+      INTEREST_EMOJI_MAP[item.label] = item.emoji;
+    }
+  }
 }
 
 type ProfilePreviewRouteProp = RouteProp<DiscoveryStackParamList, 'ProfilePreview'>;

@@ -1368,6 +1368,58 @@ export const EditProfileScreen: React.FC = () => {
           <FieldRow icon="🕌" label="Din" value={religion || ''} onPress={() => openPicker('Din', RELIGION_OPTIONS, 'religion')} />
           <FieldRow icon="🌐" label="Degerler" value={lifeValues || ''} onPress={() => openPicker('Senin icin hayattaki en onemli sey nedir?', VALUES_OPTIONS, 'lifeValues')} />
 
+          {/* ── Kisilik Testi ──────────────────────────────────────────── */}
+          <SectionHeader title="Kisilik Tipin" description="Eglenceli bir quiz ile kisiligini kesfet" />
+          <TouchableOpacity
+            style={{
+              backgroundColor: colors.surface,
+              borderWidth: 1,
+              borderColor: colors.surfaceBorder,
+              borderRadius: 16,
+              marginHorizontal: 24,
+              padding: 16,
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}
+            onPress={() => navigation.navigate('PersonalitySelection' as never)}
+            activeOpacity={0.7}
+          >
+            <View style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: 'rgba(139, 92, 246, 0.12)',
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginRight: 12,
+            }}>
+              <Text style={{ fontSize: 22 }}>{(profile as Record<string, unknown>).personalityType ? '🧠' : '🎯'}</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{
+                fontSize: 15,
+                fontWeight: '600',
+                fontFamily: poppinsFonts.semibold,
+                color: colors.text,
+              }}>
+                {(profile as Record<string, unknown>).personalityType
+                  ? `${(profile as Record<string, unknown>).personalityType as string}`
+                  : 'Kisilik Testini Coz'}
+              </Text>
+              <Text style={{
+                fontSize: 12,
+                fontFamily: poppinsFonts.regular,
+                color: colors.textTertiary,
+                marginTop: 2,
+              }}>
+                {(profile as Record<string, unknown>).personalityType
+                  ? 'Tekrar coz veya sonucunu guncelle'
+                  : '5 eglenceli soru, 1 dakikada biter'}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+          </TouchableOpacity>
+
           {/* ── Ilgi Alanlari ─────────────────────────────────────────── */}
           <SectionHeader title="Ilgi Alanlari" description="Baskalarina neyle ilgilendigini soyle" />
           <TouchableOpacity
