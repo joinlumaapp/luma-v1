@@ -181,7 +181,7 @@ function ThemedStatusBar(): React.JSX.Element {
   const { isDark, colors } = useTheme();
   return (
     <RNStatusBar
-      barStyle={isDark ? 'light-content' : 'dark-content'}
+      barStyle="light-content"
       backgroundColor={colors.background}
       translucent={false}
     />
