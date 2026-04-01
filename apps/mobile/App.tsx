@@ -175,10 +175,16 @@ const errorStyles = StyleSheet.create({
   },
 });
 
-// ─── Themed Status Bar ────────────────────────────────────────────────
-// Dynamic: dark icons on light backgrounds, light icons on dark backgrounds
+// ─── Forced Dark Status Bar ───────────────────────────────────────────
+// Always dark background (#08080F) with white text — never changes
 function ThemedStatusBar(): React.JSX.Element {
-  const { isDark, colors } = useTheme();
+  // Force status bar on every render to prevent any screen from overriding
+  useEffect(() => {
+    RNStatusBar.setBarStyle('light-content', true);
+    RNStatusBar.setBackgroundColor('#08080F', true);
+    RNStatusBar.setTranslucent(false);
+  });
+
   return (
     <RNStatusBar
       barStyle="light-content"
