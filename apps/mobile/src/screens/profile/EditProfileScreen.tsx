@@ -96,6 +96,12 @@ for (let i = 140; i <= 220; i++) {
   HEIGHT_VALUES.push(i);
 }
 
+// ── Age options (18–99) ────────────────────────────────────────────────────
+const AGE_OPTIONS = Array.from({ length: 82 }, (_, i) => `${i + 18}`) as unknown as readonly string[];
+
+// ── Gender options ─────────────────────────────────────────────────────────
+const GENDER_OPTIONS = ['Erkek', 'Kadin', 'Diger'] as const;
+
 // ─── Section Header (Bumpy-style) ──────────────────────────────
 
 interface SectionHeaderProps {
@@ -332,6 +338,10 @@ export const EditProfileScreen: React.FC = () => {
   const [showVideoPreview, setShowVideoPreview] = useState(false);
   const [showPromptPicker, setShowPromptPicker] = useState(false);
 
+  // Gender & birthDate (editable)
+  const [localGender, setLocalGender] = useState<string>(profile.gender ?? '');
+  const [localBirthDate, setLocalBirthDate] = useState<string>(profile.birthDate ?? '');
+
   // Extended profile fields (Section 3)
   const [weight, setWeight] = useState<string>(profile.weight != null ? String(profile.weight) : '');
   const [sexualOrientation, setSexualOrientation] = useState<string>(profile.sexualOrientation ?? '');
@@ -364,6 +374,15 @@ export const EditProfileScreen: React.FC = () => {
     religion: setReligion,
     weight: setWeight,
     lifeValues: setLifeValues,
+    gender: (value: string) => {
+      const genderMap: Record<string, string> = { 'Erkek': 'MALE', 'Kadin': 'FEMALE', 'Diger': 'OTHER' };
+      setLocalGender(genderMap[value] ?? value);
+    },
+    age: (value: string) => {
+      const selectedAge = parseInt(value, 10);
+      const birthYear = new Date().getFullYear() - selectedAge;
+      setLocalBirthDate(`${birthYear}-01-01`);
+    },
   };
 
   const extendedFieldValues: Record<string, string> = {
@@ -406,11 +425,14 @@ export const EditProfileScreen: React.FC = () => {
     setExercise(profile.sports);
     setChildren(profile.children);
     setSelectedInterests(profile.interestTags);
+    setLocalGender(profile.gender ?? '');
+    setLocalBirthDate(profile.birthDate ?? '');
   }, [
     profile.firstName, profile.lastName,
     profile.bio, profile.city, profile.job, profile.education,
     profile.intentionTag, profile.height, profile.smoking,
     profile.sports, profile.children, profile.interestTags,
+    profile.gender, profile.birthDate,
   ]);
 
   // ── Photo handlers ─────────────────────────────────────────────────────
@@ -603,6 +625,8 @@ export const EditProfileScreen: React.FC = () => {
         sports: exercise,
         children,
         interestTags: selectedInterests,
+        gender: localGender || undefined,
+        birthDate: localBirthDate || undefined,
       });
       navigation.goBack();
     } catch {
@@ -613,7 +637,7 @@ export const EditProfileScreen: React.FC = () => {
   }, [
     firstName, lastName,
     bio, city, job, education, intentionTag, height, smoking, exercise,
-    children, selectedInterests, isSaving, updateProfile, navigation,
+    children, selectedInterests, localGender, localBirthDate, isSaving, updateProfile, navigation,
   ]);
 
   const hasChanges =
@@ -628,9 +652,11 @@ export const EditProfileScreen: React.FC = () => {
     smoking !== profile.smoking ||
     exercise !== profile.sports ||
     children !== profile.children ||
-    JSON.stringify(selectedInterests) !== JSON.stringify(profile.interestTags);
+    JSON.stringify(selectedInterests) !== JSON.stringify(profile.interestTags) ||
+    localGender !== (profile.gender ?? '') ||
+    localBirthDate !== (profile.birthDate ?? '');
 
-  const age = calculateAge(profile.birthDate);
+  const age = calculateAge(localBirthDate || profile.birthDate);
   const answeredCount = Object.keys(profile.answers ?? {}).length;
 
   // ── Build photo grid data (always 9 slots) ────────────────────────────
@@ -997,16 +1023,41 @@ export const EditProfileScreen: React.FC = () => {
               </View>
             </View>
 
-            {/* Age (read-only, from birthdate) */}
-            <View style={styles.infoRow}>
+            {/* Age (editable — opens age picker) */}
+            <TouchableOpacity
+              style={styles.infoRow}
+              onPress={() => openPicker('Yas', AGE_OPTIONS, 'age')}
+              activeOpacity={0.7}
+            >
               <View style={styles.infoIconCircle}>
                 <Ionicons name="calendar-outline" size={18} color={colors.text} />
               </View>
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Yas</Text>
-                <Text style={styles.infoValue}>{age > 0 ? `${age}` : '-'}</Text>
+                <Text style={[styles.infoValue, age <= 0 && styles.infoValuePlaceholder]}>
+                  {age > 0 ? `${age} yil` : 'Yas sec'}
+                </Text>
               </View>
-            </View>
+              <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+            </TouchableOpacity>
+
+            {/* Gender (editable) */}
+            <TouchableOpacity
+              style={styles.infoRow}
+              onPress={() => openPicker('Cinsiyet', GENDER_OPTIONS, 'gender')}
+              activeOpacity={0.7}
+            >
+              <View style={styles.infoIconCircle}>
+                <Ionicons name="people-outline" size={18} color={colors.text} />
+              </View>
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Cinsiyet</Text>
+                <Text style={[styles.infoValue, !localGender && styles.infoValuePlaceholder]}>
+                  {localGender === 'MALE' ? 'Erkek' : localGender === 'FEMALE' ? 'Kadin' : localGender === 'OTHER' ? 'Diger' : 'Cinsiyet sec'}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+            </TouchableOpacity>
 
             {/* City (editable picker) */}
             <TouchableOpacity
