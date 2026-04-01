@@ -351,8 +351,11 @@ const styles = StyleSheet.create({
 
   // Hero photo — clean, no overlays
   heroContainer: {
-    width: SCREEN_WIDTH,
+    width: SCREEN_WIDTH - 32,
     height: HERO_HEIGHT,
+    marginHorizontal: 16,
+    marginTop: spacing.sm,
+    borderRadius: 20,
     overflow: 'hidden',
   },
   heroImage: {
