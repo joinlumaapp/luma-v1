@@ -2,7 +2,7 @@
 // Accessible from profile edit screen after registration
 // Mode-aware: 'SERIOUS_RELATIONSHIP' -> 45 questions, 'EXPLORING' -> 20 core only
 // Features: slide left/right transitions, haptic feedback, smooth animated progress bar,
-// motivation interstitials, analysis + result screens
+// analysis + result screens
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
@@ -74,16 +74,6 @@ interface NormalizedQuestion {
 
 const ANALYSIS_DURATION = 2500;
 
-// Motivational messages shown every 4 questions
-const MOTIVATION_MESSAGES: Record<number, { emoji: string; title: string; subtitle: string }> = {
-  4: { emoji: '\u2728', title: 'Harika gidiyorsun.', subtitle: 'Analizin %20 tamamlandı.' },
-  8: { emoji: '\uD83E\uDDE0', title: 'Gerçek uyumunu bulmaya yaklaşıyoruz.', subtitle: 'Cevapların çok değerli.' },
-  12: { emoji: '\uD83C\uDFAF', title: 'Biraz daha, çok az kaldı.', subtitle: 'Uyum profilin şekilleniyor.' },
-  16: { emoji: '\uD83D\uDE80', title: 'Son sorulara geldik.', subtitle: 'Neredeyse hazırız.' },
-  20: { emoji: '\uD83D\uDD2C', title: 'Tebrikler!', subtitle: 'Tüm soruları tamamladın.' },
-};
-
-const MOTIVATION_DISPLAY_MS = 2200;
 
 interface ResultSection {
   emoji: string;
@@ -143,7 +133,7 @@ function getResultSections(
   return PERSONALITY_POOLS[archetype];
 }
 
-type ScreenPhase = 'questions' | 'motivation' | 'analysis' | 'result';
+type ScreenPhase = 'questions' | 'analysis' | 'result';
 type SlideDirection = 'forward' | 'backward';
 
 export const QuestionsScreen: React.FC = () => {
@@ -259,28 +249,6 @@ export const QuestionsScreen: React.FC = () => {
     [phaseOpacity, phaseScale, setProfileField],
   );
 
-  const showMotivation = useCallback(
-    (questionIndex: number, afterAction: () => void) => {
-      const message = MOTIVATION_MESSAGES[questionIndex + 1];
-      if (message) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        setPhase('motivation');
-        phaseOpacity.value = withDelay(50, withTiming(1, { duration: 400 }));
-        phaseScale.value = withDelay(50, withSpring(1, { damping: 12, stiffness: 100 }));
-        setTimeout(() => {
-          if (!mountedRef.current) return;
-          phaseOpacity.value = 0;
-          phaseScale.value = 0.85;
-          setPhase('questions');
-          afterAction();
-        }, MOTIVATION_DISPLAY_MS);
-      } else {
-        afterAction();
-      }
-    },
-    [phaseOpacity, phaseScale],
-  );
-
   const handleSelectOption = useCallback((option: { id: string; label: string }) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedOption(option.id);
@@ -309,13 +277,11 @@ export const QuestionsScreen: React.FC = () => {
         showAnalysisAndResult(newAnswers);
       } else {
         const nextIndex = currentIndex + 1;
-        showMotivation(currentIndex, () => {
-          setCurrentIndex(nextIndex);
-          setCardKey((p) => p + 1);
-        });
+        setCurrentIndex(nextIndex);
+        setCardKey((p) => p + 1);
       }
     }, 400);
-  }, [answers, currentQuestion, isLastQuestion, currentIndex, showAnalysisAndResult, showMotivation]);
+  }, [answers, currentQuestion, isLastQuestion, currentIndex, showAnalysisAndResult]);
 
   const handleResultContinue = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -337,12 +303,10 @@ export const QuestionsScreen: React.FC = () => {
       showAnalysisAndResult(answers);
     } else {
       const nextIndex = currentIndex + 1;
-      showMotivation(currentIndex, () => {
-        setCurrentIndex(nextIndex);
-        setCardKey((p) => p + 1);
-      });
+      setCurrentIndex(nextIndex);
+      setCardKey((p) => p + 1);
     }
-  }, [answers, isLastQuestion, currentIndex, showAnalysisAndResult, showMotivation]);
+  }, [answers, isLastQuestion, currentIndex, showAnalysisAndResult]);
 
   const enteringAnim = slideDirection === 'forward'
     ? SlideInRight.duration(350).easing(Easing.out(Easing.cubic))
@@ -357,34 +321,6 @@ export const QuestionsScreen: React.FC = () => {
       <View style={[styles.container, styles.centeredContainer]}>
         <ActivityIndicator size="large" color={onboardingColors.text} />
         <Text style={styles.loadingText}>Sorular yükleniyor...</Text>
-      </View>
-    );
-  }
-
-  if (phase === 'motivation') {
-    const msg = MOTIVATION_MESSAGES[currentIndex + 1];
-    return (
-      <View style={[styles.container, styles.centeredContainer]}>
-        <Animated.View style={[styles.celebrationContent, phaseAnimStyle]}>
-          <Animated.Text
-            entering={FadeIn.duration(300).delay(100)}
-            style={styles.celebrationEmoji}
-          >
-            {msg?.emoji ?? '\u2728'}
-          </Animated.Text>
-          <Animated.Text
-            entering={FadeIn.duration(400).delay(200)}
-            style={styles.celebrationTitle}
-          >
-            {msg?.title ?? ''}
-          </Animated.Text>
-          <Animated.Text
-            entering={FadeIn.duration(400).delay(350)}
-            style={styles.celebrationSubtitle}
-          >
-            {msg?.subtitle ?? ''}
-          </Animated.Text>
-        </Animated.View>
       </View>
     );
   }
