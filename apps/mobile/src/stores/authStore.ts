@@ -406,11 +406,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch { /* store may not be initialized */ }
 
     try {
-      const { useMoodStore } = require('./moodStore') as typeof import('./moodStore');
-      useMoodStore.setState({ currentMood: null, isLoading: false });
-    } catch { /* store may not be initialized */ }
-
-    try {
       const { useRelationshipStore } = require('./relationshipStore') as typeof import('./relationshipStore');
       useRelationshipStore.setState({ relationship: null, isLoading: false, error: null });
     } catch { /* store may not be initialized */ }

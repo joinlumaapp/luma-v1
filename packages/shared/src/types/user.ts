@@ -30,8 +30,6 @@ export interface UserProfile {
   country: string | null;
   latitude: number | null;
   longitude: number | null;
-  currentMood: string | null;
-  moodSetAt: Date | null;
   voiceIntroUrl: string | null;
   voiceIntroDuration: number | null;
   // Extended profile fields (Bumpy-inspired)
