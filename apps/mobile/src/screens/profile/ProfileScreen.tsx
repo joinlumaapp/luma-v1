@@ -88,17 +88,43 @@ const translateLookingFor = (ids: string[]): string[] => {
   return ids.map((id) => map[id] || id);
 };
 
-const INTEREST_TAG_LABELS: Record<string, string> = {
-  travel: 'Seyahat', music: 'Müzik', sports: 'Spor', cooking: 'Yemek',
-  art: 'Sanat', technology: 'Teknoloji', nature: 'Doğa', books: 'Kitap',
-  movies: 'Film', photography: 'Fotoğrafçılık', dance: 'Dans', yoga: 'Yoga',
-  gaming: 'Oyun', animals: 'Hayvanlar', fashion: 'Moda', football: 'Futbol',
-  hiking: 'Doğa Yürüyüşü', coffee: 'Kahve & Şarap',
-  reading: 'Okuma', meditation: 'Meditasyon', swimming: 'Yüzme',
-  fitness: 'Fitness', beach: 'Plaj', architecture: 'Mimari', design: 'Tasarım',
-  guitar: 'Gitar', psychology: 'Psikoloji', food: 'Yemek', cats: 'Kediler',
+const INTEREST_TAG_DISPLAY: Record<string, { emoji: string; label: string }> = {
+  // Legacy English IDs
+  travel: { emoji: '✈️', label: 'Seyahat' },
+  music: { emoji: '🎵', label: 'Muzik' },
+  sports: { emoji: '🏃', label: 'Spor' },
+  cooking: { emoji: '🍳', label: 'Yemek' },
+  art: { emoji: '🎨', label: 'Sanat' },
+  technology: { emoji: '💻', label: 'Teknoloji' },
+  nature: { emoji: '🌿', label: 'Doga' },
+  books: { emoji: '📚', label: 'Kitap' },
+  movies: { emoji: '🎬', label: 'Film' },
+  photography: { emoji: '📷', label: 'Fotografcilik' },
+  dance: { emoji: '💃', label: 'Dans' },
+  yoga: { emoji: '🧘', label: 'Yoga' },
+  gaming: { emoji: '🎮', label: 'Oyun' },
+  animals: { emoji: '🐾', label: 'Hayvanlar' },
+  fashion: { emoji: '👗', label: 'Moda' },
+  football: { emoji: '⚽', label: 'Futbol' },
+  hiking: { emoji: '🏔️', label: 'Dagcilik' },
+  coffee: { emoji: '☕', label: 'Kahve' },
+  reading: { emoji: '📚', label: 'Okuma' },
+  meditation: { emoji: '🧘‍♂️', label: 'Meditasyon' },
+  swimming: { emoji: '🏊', label: 'Yuzme' },
+  fitness: { emoji: '💪', label: 'Fitness' },
+  beach: { emoji: '🏖️', label: 'Plaj' },
+  architecture: { emoji: '🏛', label: 'Mimari' },
+  design: { emoji: '🎬', label: 'Tasarim' },
+  guitar: { emoji: '🎸', label: 'Gitar' },
+  psychology: { emoji: '🧠', label: 'Psikoloji' },
+  food: { emoji: '🍽', label: 'Yemek' },
+  cats: { emoji: '🐈', label: 'Kediler' },
 };
-const translateInterestTag = (tag: string): string => INTEREST_TAG_LABELS[tag] || tag;
+const getInterestTagDisplay = (tag: string): string => {
+  const entry = INTEREST_TAG_DISPLAY[tag];
+  if (entry) return `${entry.emoji} ${entry.label}`;
+  return tag; // New Turkish labels are already display-ready
+};
 
 // Hakkımda row data type
 interface AboutRow {
@@ -675,12 +701,12 @@ export const ProfileScreen: React.FC = () => {
     infoSections.push(
       <View key="interests" style={styles.section}>
         <Text style={styles.sectionTitle}>
-          İlgi Alanları ({profile.interestTags.length}/10)
+          Ilgi Alanlari ({profile.interestTags.length}/15)
         </Text>
         <View style={styles.chipRow}>
           {profile.interestTags.map((tag) => (
             <View key={tag} style={styles.hobbyChip}>
-              <Text style={styles.hobbyChipText}>{translateInterestTag(tag)}</Text>
+              <Text style={styles.hobbyChipText}>{getInterestTagDisplay(tag)}</Text>
             </View>
           ))}
         </View>

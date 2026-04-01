@@ -93,14 +93,40 @@ const INTENTION_OPTIONS: Array<{ value: string; label: string; emoji: string; de
 ];
 
 // ── Life values options (inline to avoid import issues) ───────────────────
-// Emoji lookup for interest tags
-const interestEmojiMap = new Map<string, string>();
+// Emoji + display name lookup for interest tags (supports both old English IDs and new Turkish labels)
+const interestLookup = new Map<string, { emoji: string; display: string }>();
+// New categorized items (Turkish labels)
 for (const cat of INTEREST_CATEGORIES) {
   for (const item of cat.items) {
-    interestEmojiMap.set(item.label, item.emoji);
+    interestLookup.set(item.label, { emoji: item.emoji, display: item.label });
   }
 }
-const getInterestEmoji = (label: string): string => interestEmojiMap.get(label) ?? '';
+// Legacy English IDs → Turkish labels with emoji
+const LEGACY_INTEREST_MAP: Record<string, { emoji: string; display: string }> = {
+  travel: { emoji: '✈️', display: 'Seyahat' },
+  music: { emoji: '🎵', display: 'Muzik' },
+  sports: { emoji: '🏃', display: 'Spor' },
+  cooking: { emoji: '🍳', display: 'Yemek' },
+  art: { emoji: '🎨', display: 'Sanat' },
+  technology: { emoji: '💻', display: 'Teknoloji' },
+  nature: { emoji: '🌿', display: 'Doga' },
+  books: { emoji: '📚', display: 'Kitap' },
+  movies: { emoji: '🎬', display: 'Film' },
+  photography: { emoji: '📷', display: 'Fotografcilik' },
+  dance: { emoji: '💃', display: 'Dans' },
+  yoga: { emoji: '🧘', display: 'Yoga' },
+  gaming: { emoji: '🎮', display: 'Oyun' },
+  animals: { emoji: '🐾', display: 'Hayvanlar' },
+  fashion: { emoji: '👗', display: 'Moda' },
+  football: { emoji: '⚽', display: 'Futbol' },
+  hiking: { emoji: '🏔️', display: 'Dagcilik' },
+  coffee: { emoji: '☕', display: 'Kahve' },
+};
+for (const [id, val] of Object.entries(LEGACY_INTEREST_MAP)) {
+  interestLookup.set(id, val);
+}
+const getInterestDisplay = (tag: string): { emoji: string; display: string } =>
+  interestLookup.get(tag) ?? { emoji: '', display: tag };
 
 const VALUES_OPTIONS: string[] = [
   'Aile ve Cocuklar',
@@ -1367,7 +1393,7 @@ export const EditProfileScreen: React.FC = () => {
                     borderWidth: 1,
                     borderColor: '#93C5FD',
                   }}>
-                    <Text style={{ fontSize: 13, color: '#1E40AF', fontFamily: 'Poppins_500Medium', fontWeight: '500' }}>{getInterestEmoji(tag)} {tag}</Text>
+                    <Text style={{ fontSize: 13, color: '#1E40AF', fontFamily: 'Poppins_500Medium', fontWeight: '500' }}>{getInterestDisplay(tag).emoji} {getInterestDisplay(tag).display}</Text>
                   </View>
                 ))}
               </View>
