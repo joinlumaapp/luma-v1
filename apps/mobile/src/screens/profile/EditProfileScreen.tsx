@@ -1002,6 +1002,24 @@ export const EditProfileScreen: React.FC = () => {
             </View>
           </View>
 
+          {/* ─── Section 3: Hakkimda Daha Fazlasi ─── */}
+          <SectionHeader
+            title="Hakkimda Daha Fazlasi"
+            description="Uygun kisileri bulmak icin kendiniz hakkinda daha fazla bilgi belirtin"
+          />
+          <FieldRow icon="⚖️" label="Kilo" value={weight ? `${weight} kg` : ''} onPress={() => {}} />
+          <FieldRow icon="⚥" label="Cinsel Yonelim" value={sexualOrientation || ''} onPress={() => openPicker('Cinsel Yonelim', SEXUAL_ORIENTATION_OPTIONS, 'sexualOrientation')} />
+          <FieldRow icon="♍" label="Burc" value={zodiacSign || ''} onPress={() => openPicker('Burc', ZODIAC_SIGNS, 'zodiacSign')} />
+          <FieldRow icon="🏋️" label="Egzersiz" value={exercise || ''} onPress={() => openPicker('Egzersiz', CONFIG_EXERCISE_OPTIONS, 'exercise')} />
+          <FieldRow icon="🎓" label="Egitim Seviyesi" value={educationLevel || ''} onPress={() => openPicker('Egitim Seviyesi', EDUCATION_LEVELS, 'educationLevel')} />
+          <FieldRow icon="💕" label="Medeni Durum" value={maritalStatus || ''} onPress={() => openPicker('Medeni Durum', MARITAL_STATUS_OPTIONS, 'maritalStatus')} />
+          <FieldRow icon="👶" label="Cocuklar" value={children || ''} onPress={() => openPicker('Cocuklar', CONFIG_CHILDREN_OPTIONS, 'children')} />
+          <FieldRow icon="🍷" label="Icki" value={alcohol || ''} onPress={() => openPicker('Icki', ALCOHOL_OPTIONS, 'alcohol')} />
+          <FieldRow icon="🚬" label="Sigara" value={smoking || ''} onPress={() => openPicker('Sigara', CONFIG_SMOKING_OPTIONS, 'smoking')} />
+          <FieldRow icon="🐾" label="Evcil Hayvanlar" value={pets || ''} onPress={() => openPicker('Evcil Hayvanlar', PETS_OPTIONS, 'pets')} />
+          <FieldRow icon="🕌" label="Din" value={religion || ''} onPress={() => openPicker('Din', RELIGION_OPTIONS, 'religion')} />
+          <FieldRow icon="🌐" label="Degerler" value={lifeValues || ''} onPress={() => {}} />
+
           {/* ─── Section 4: Kisligimi Tanit ─── */}
           <SectionHeader title="Kisligimi Tanit" description="Kendini ifade et, insanlarin seni tanimasi icin" />
 
@@ -1145,24 +1163,6 @@ export const EditProfileScreen: React.FC = () => {
               </Text>
             </TouchableOpacity>
           </View>
-
-          {/* ─── Section 3: Hakkimda Daha Fazlasi ─── */}
-          <SectionHeader
-            title="Hakkimda Daha Fazlasi"
-            description="Uygun kisileri bulmak icin kendiniz hakkinda daha fazla bilgi belirtin"
-          />
-          <FieldRow icon="⚖️" label="Kilo" value={weight ? `${weight} kg` : ''} onPress={() => {}} />
-          <FieldRow icon="⚥" label="Cinsel Yonelim" value={sexualOrientation || ''} onPress={() => openPicker('Cinsel Yonelim', SEXUAL_ORIENTATION_OPTIONS, 'sexualOrientation')} />
-          <FieldRow icon="♍" label="Burc" value={zodiacSign || ''} onPress={() => openPicker('Burc', ZODIAC_SIGNS, 'zodiacSign')} />
-          <FieldRow icon="🏋️" label="Egzersiz" value={exercise || ''} onPress={() => openPicker('Egzersiz', CONFIG_EXERCISE_OPTIONS, 'exercise')} />
-          <FieldRow icon="🎓" label="Egitim Seviyesi" value={educationLevel || ''} onPress={() => openPicker('Egitim Seviyesi', EDUCATION_LEVELS, 'educationLevel')} />
-          <FieldRow icon="💕" label="Medeni Durum" value={maritalStatus || ''} onPress={() => openPicker('Medeni Durum', MARITAL_STATUS_OPTIONS, 'maritalStatus')} />
-          <FieldRow icon="👶" label="Cocuklar" value={children || ''} onPress={() => openPicker('Cocuklar', CONFIG_CHILDREN_OPTIONS, 'children')} />
-          <FieldRow icon="🍷" label="Icki" value={alcohol || ''} onPress={() => openPicker('Icki', ALCOHOL_OPTIONS, 'alcohol')} />
-          <FieldRow icon="🚬" label="Sigara" value={smoking || ''} onPress={() => openPicker('Sigara', CONFIG_SMOKING_OPTIONS, 'smoking')} />
-          <FieldRow icon="🐾" label="Evcil Hayvanlar" value={pets || ''} onPress={() => openPicker('Evcil Hayvanlar', PETS_OPTIONS, 'pets')} />
-          <FieldRow icon="🕌" label="Din" value={religion || ''} onPress={() => openPicker('Din', RELIGION_OPTIONS, 'religion')} />
-          <FieldRow icon="🌐" label="Degerler" value={lifeValues || ''} onPress={() => {}} />
 
           {/* ── Ses Tanitimi ──────────────────────────────────────────── */}
           <View style={styles.section}>
