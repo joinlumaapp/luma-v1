@@ -137,7 +137,7 @@ export const storage = {
   getTheme: (): 'dark' | 'light' | 'system' => {
     const value = cache.get(KEYS.THEME);
     if (value === 'dark' || value === 'light' || value === 'system') return value;
-    return 'dark';
+    return 'light';
   },
 
   // Push notification preference

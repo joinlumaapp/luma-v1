@@ -100,17 +100,23 @@ export const IncognitoToggle: React.FC<IncognitoToggleProps> = ({ onLockedPress 
   if (!canUseIncognito) {
     return (
       <TouchableOpacity
-        style={styles.container}
+        style={styles.lockedContainer}
         onPress={onLockedPress}
         activeOpacity={0.7}
       >
-        <View style={styles.row}>
-          <Ionicons name="lock-closed" size={16} color={palette.gray[400]} />
-          <Text style={styles.labelLocked}>Gizli Mod</Text>
+        <View style={styles.lockedHeader}>
+          <View style={styles.lockedTitleRow}>
+            <Ionicons name="eye-off" size={18} color={palette.gray[400]} />
+            <Text style={styles.lockedTitle}>Gizli Mod</Text>
+          </View>
           <View style={styles.upsellBadge}>
+            <Ionicons name="lock-closed" size={10} color={palette.white} style={{ marginRight: 4 }} />
             <Text style={styles.upsellText}>Pro ile aç</Text>
           </View>
         </View>
+        <Text style={styles.lockedDescription}>
+          Profilin sadece beğendiğin kişilere görünür
+        </Text>
       </TouchableOpacity>
     );
   }
@@ -183,6 +189,30 @@ const styles = StyleSheet.create({
     color: palette.gray[400],
     flex: 1,
   },
+  lockedContainer: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  lockedHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  lockedTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  lockedTitle: {
+    ...typography.bodySmall,
+    color: palette.gray[300],
+    fontWeight: fontWeights.medium,
+  },
+  lockedDescription: {
+    ...typography.caption,
+    color: palette.gray[500],
+    marginTop: spacing.xs,
+  },
 
   // Toggle track
   track: {
@@ -205,6 +235,8 @@ const styles = StyleSheet.create({
 
   // Upsell badge for locked state
   upsellBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: palette.purple[500],
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
