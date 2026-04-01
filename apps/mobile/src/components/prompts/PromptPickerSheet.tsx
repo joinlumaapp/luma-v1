@@ -197,7 +197,7 @@ export const PromptPickerSheet: React.FC<PromptPickerSheetProps> = ({
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 12, gap: 10, alignItems: 'center' }}
-            style={{ flexGrow: 0, marginBottom: 8 }}
+            style={{ flexGrow: 0, flexShrink: 0, marginBottom: 8 }}
           >
             <TouchableOpacity
               style={{
@@ -261,6 +261,7 @@ export const PromptPickerSheet: React.FC<PromptPickerSheetProps> = ({
               data={filteredPrompts}
               renderItem={renderPromptItem}
               keyExtractor={keyExtractor}
+              style={{ flex: 1 }}
               contentContainerStyle={styles.promptList}
               showsVerticalScrollIndicator={false}
               bounces={Platform.OS === 'ios'}
