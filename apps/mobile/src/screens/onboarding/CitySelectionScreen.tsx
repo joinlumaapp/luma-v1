@@ -67,8 +67,8 @@ export const CitySelectionScreen: React.FC = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <OnboardingLayout
-        step={10}
-        totalSteps={14}
+        step={9}
+        totalSteps={13}
         showBack
         showSkip
         onSkip={handleSkip}

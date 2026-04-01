@@ -1,4 +1,4 @@
-// Onboarding flow: Name -> BirthDate -> Gender -> WhoToMeet -> WhatLookingFor -> Height
+// Onboarding flow: Name -> BirthDate -> Gender -> WhoToMeet -> Height
 // -> Sports -> Smoking -> Children -> CitySelection
 // -> Bio -> PromptSelection -> Photos -> Selfie
 //
@@ -19,7 +19,6 @@ import { NameScreen } from '../screens/onboarding/NameScreen';
 import { BirthDateScreen } from '../screens/onboarding/BirthDateScreen';
 import { GenderScreen } from '../screens/onboarding/GenderScreen';
 import { WhoToMeetScreen } from '../screens/onboarding/WhoToMeetScreen';
-import { WhatLookingForScreen } from '../screens/onboarding/WhatLookingForScreen';
 import { HeightScreen } from '../screens/onboarding/HeightScreen';
 import { SportsScreen } from '../screens/onboarding/SportsScreen';
 import { SmokingScreen } from '../screens/onboarding/SmokingScreen';
@@ -36,8 +35,8 @@ const Stack = createNativeStackNavigator<OnboardingStackParamList>();
 const ONBOARDING_BG = '#F5F0E8';
 
 // Ordered screen names for reference (used by OnboardingLayout step/totalSteps)
-// Total: 14 screens. Each screen passes its own step number to OnboardingLayout.
-export const ONBOARDING_TOTAL_STEPS = 14;
+// Total: 13 screens. Each screen passes its own step number to OnboardingLayout.
+export const ONBOARDING_TOTAL_STEPS = 13;
 
 // Default screen options: smooth slide transitions, cream background
 const defaultScreenOptions: NativeStackNavigationOptions = {
@@ -55,7 +54,6 @@ export const OnboardingNavigator: React.FC = () => {
       <Stack.Screen name="BirthDate" component={BirthDateScreen} />
       <Stack.Screen name="Gender" component={GenderScreen} />
       <Stack.Screen name="WhoToMeet" component={WhoToMeetScreen} />
-      <Stack.Screen name="WhatLookingFor" component={WhatLookingForScreen} />
       <Stack.Screen name="Height" component={HeightScreen} />
       <Stack.Screen name="Sports" component={SportsScreen} />
       <Stack.Screen name="Smoking" component={SmokingScreen} />

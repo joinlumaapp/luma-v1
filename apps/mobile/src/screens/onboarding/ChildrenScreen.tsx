@@ -50,8 +50,8 @@ export const ChildrenScreen: React.FC = () => {
 
   return (
     <OnboardingLayout
-      step={9}
-      totalSteps={15}
+      step={8}
+      totalSteps={13}
       showBack
       showSkip
       onSkip={handleSkip}

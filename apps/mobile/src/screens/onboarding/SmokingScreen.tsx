@@ -50,8 +50,8 @@ export const SmokingScreen: React.FC = () => {
 
   return (
     <OnboardingLayout
-      step={8}
-      totalSteps={15}
+      step={7}
+      totalSteps={13}
       showBack
       showSkip
       onSkip={handleSkip}

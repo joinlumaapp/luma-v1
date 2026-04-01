@@ -25,7 +25,7 @@ import { ONBOARDING_TOTAL_STEPS } from '../../navigation/OnboardingNavigator';
 
 type NavProp = NativeStackNavigationProp<OnboardingStackParamList, 'Bio'>;
 
-const CURRENT_STEP = 11;
+const CURRENT_STEP = 10;
 
 const BIO_PROMPTS = [
   'Boş zamanlarında ne yapmayı seversin?',

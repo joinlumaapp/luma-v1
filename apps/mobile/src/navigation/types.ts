@@ -27,7 +27,6 @@ export type OnboardingStackParamList = {
   BirthDate: undefined;
   Gender: undefined;
   WhoToMeet: undefined;
-  WhatLookingFor: undefined;
   Height: undefined;
   Sports: undefined;
   Smoking: undefined;
