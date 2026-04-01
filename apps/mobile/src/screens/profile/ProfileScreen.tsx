@@ -793,35 +793,7 @@ export const ProfileScreen: React.FC = () => {
     </View>,
   );
 
-  // 4. Profil Kocu + Kişilik Tipi
-  infoSections.push(
-    <View key="quick-actions" style={styles.quickActionsRow}>
-      <TouchableOpacity
-        style={styles.quickActionCard}
-        onPress={handleProfileCoach}
-        activeOpacity={0.7}
-        accessibilityLabel="Profil Kocu"
-        accessibilityRole="button"
-      >
-        <View style={styles.quickActionIconCircle}>
-          <Text style={styles.quickActionEmoji}>{'\u2728'}</Text>
-        </View>
-        <Text style={styles.quickActionLabel}>Profil Kocu</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.quickActionCard}
-        onPress={handlePersonality}
-        activeOpacity={0.7}
-        accessibilityLabel="Kişilik Tipi"
-        accessibilityRole="button"
-      >
-        <View style={styles.quickActionIconCircle}>
-          <Text style={styles.quickActionEmoji}>{'\uD83E\uDDE0'}</Text>
-        </View>
-        <Text style={styles.quickActionLabel}>Kişilik Tipi</Text>
-      </TouchableOpacity>
-    </View>,
-  );
+  // 4. Profil Kocu + Kisilik Tipi — removed
 
   // 6. Boost card
   infoSections.push(
