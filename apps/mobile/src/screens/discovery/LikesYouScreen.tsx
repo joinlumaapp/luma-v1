@@ -601,7 +601,8 @@ export const LikesYouScreen: React.FC<LikesYouScreenProps> = ({ embedded = false
   const navigation = useNavigation<LikesYouNavProp>();
 
   const packageTier = (useAuthStore((s) => s.user?.packageTier ?? 'FREE')) as PackageTier;
-  const isBlurred = packageTier === 'FREE';
+  // Progressive reveal uses cardState per-card instead of binary isBlurred
+  const isFreeUser = packageTier === 'FREE';
 
   const { revealProfile, getDailyLimit, isRevealed, dailyRevealsUsed } = useLikesRevealStore();
 
@@ -713,45 +714,46 @@ export const LikesYouScreen: React.FC<LikesYouScreenProps> = ({ embedded = false
 
   const [unlockedUserIds, setUnlockedUserIds] = useState<Set<string>>(new Set());
 
-  const handleCardPress = useCallback((userId: string) => {
+  const handleCardPress = useCallback((userId: string, cardState: CardState) => {
     // Already revealed via likesRevealStore or locally unlocked — go straight to profile
     if (isRevealed(userId) || unlockedUserIds.has(userId)) {
       navigation.navigate('ProfilePreview', { userId });
       return;
     }
 
-    // If blurred (free user) and tapped — try reveal via store first
-    if (isBlurred) {
-      const success = revealProfile(userId);
-      if (success) {
-        setUnlockedUserIds((prev) => new Set(prev).add(userId));
-        navigation.navigate('ProfilePreview', { userId });
+    // CLEAR cards — direct navigation
+    if (cardState === 'clear') {
+      if (!isUnlimitedViews && viewedToday >= dailyLimit) {
+        setShowUpgradePrompt(true);
         return;
       }
-      // Reveal limit reached — show unlock modal as upsell
-      const card = likes.find((l) => l.userId === userId);
-      if (card) {
-        setModalCard(card);
-        setShowModal(true);
-      } else {
-        // Fallback: navigate to jeton market
-        navigation.navigate('JetonMarket' as never);
+      if (!isUnlimitedViews) {
+        setViewedToday((prev) => prev + 1);
+        setUnlockedUserIds((prev) => new Set(prev).add(userId));
       }
+      navigation.navigate('ProfilePreview', { userId });
       return;
     }
 
-    if (!isUnlimitedViews && viewedToday >= dailyLimit) {
-      // Show contextual upgrade sheet instead of blind paywall navigation.
-      // User stays on this screen and can dismiss without losing their place.
-      setShowUpgradePrompt(true);
+    // TEASER / LOCKED — try reveal via store, else show modal
+    // The tap reveal animation (blur reduction) is handled inside LikeCard.
+    // This callback fires after the 500ms delay.
+    const success = revealProfile(userId);
+    if (success) {
+      setUnlockedUserIds((prev) => new Set(prev).add(userId));
+      navigation.navigate('ProfilePreview', { userId });
       return;
     }
-    if (!isUnlimitedViews) {
-      setViewedToday((prev) => prev + 1);
-      setUnlockedUserIds((prev) => new Set(prev).add(userId));
+
+    // Reveal limit reached — show unlock modal
+    const card = likes.find((l) => l.userId === userId);
+    if (card) {
+      setModalCard(card);
+      setShowModal(true);
+    } else {
+      navigation.navigate('JetonMarket' as never);
     }
-    navigation.navigate('ProfilePreview', { userId });
-  }, [navigation, isBlurred, isUnlimitedViews, viewedToday, dailyLimit, unlockedUserIds, likes, isRevealed, revealProfile]);
+  }, [navigation, isUnlimitedViews, viewedToday, dailyLimit, unlockedUserIds, likes, isRevealed, revealProfile]);
 
   const handleUpgradePress = useCallback(() => {
     // Close the UnlockModal first, then show the UpgradePrompt bottom sheet.
@@ -785,18 +787,18 @@ export const LikesYouScreen: React.FC<LikesYouScreenProps> = ({ embedded = false
   const renderItem = useCallback(
     ({ item, index }: { item: LikeYouCard; index: number }) => {
       const isUnlocked = unlockedUserIds.has(item.userId) || isRevealed(item.userId);
-      const cardBlurred = isBlurred && !isUnlocked;
+      const cardState = getCardState(packageTier, index, likes.length, isUnlocked);
       return (
         <LikeCard
           card={item}
           index={index}
-          isBlurred={cardBlurred}
+          cardState={cardState}
           smartLabel={smartLabelsMap.get(item.userId) ?? null}
           onCardPress={handleCardPress}
         />
       );
     },
-    [isBlurred, unlockedUserIds, handleCardPress, smartLabelsMap, isRevealed],
+    [packageTier, likes.length, unlockedUserIds, handleCardPress, smartLabelsMap, isRevealed],
   );
 
   const keyExtractor = useCallback((item: LikeYouCard) => item.userId, []);
@@ -824,7 +826,7 @@ export const LikesYouScreen: React.FC<LikesYouScreenProps> = ({ embedded = false
   ), [handleDiscoverPress]);
 
   const renderHeader = useCallback(() => {
-    if (!isBlurred || total === 0) return null;
+    if (!isFreeUser || total === 0) return null;
 
     return (
       <View style={styles.likesTeaseHeader}>
@@ -846,7 +848,7 @@ export const LikesYouScreen: React.FC<LikesYouScreenProps> = ({ embedded = false
         <Text style={styles.likesTeaseSub}>Son 24 saat aktif kişiler</Text>
       </View>
     );
-  }, [total, isBlurred, handleUpgradePress]);
+  }, [total, isFreeUser, handleUpgradePress]);
 
   // ─── Skeleton loading state ─────────────────────────────────
 
@@ -1228,15 +1230,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: palette.purple[500] + '15',
+    borderColor: palette.purple[500] + '20',
     ...Platform.select({
       ios: {
-        shadowColor: palette.purple[500],
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.12,
-        shadowRadius: 8,
+        shadowColor: palette.purple[400],
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.18,
+        shadowRadius: 10,
       },
-      android: { elevation: 4 },
+      android: { elevation: 5 },
     }),
   },
   cardPhoto: {
