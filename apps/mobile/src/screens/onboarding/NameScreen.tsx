@@ -87,9 +87,6 @@ export const NameScreen: React.FC = () => {
           />
         </View>
 
-        <Text style={styles.hint}>
-          Adın ve soyadın profilinde görünür
-        </Text>
       </OnboardingLayout>
     </KeyboardAvoidingView>
   );
