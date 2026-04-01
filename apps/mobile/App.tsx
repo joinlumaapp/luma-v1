@@ -182,7 +182,7 @@ function ThemedStatusBar(): React.JSX.Element {
   return (
     <RNStatusBar
       barStyle="light-content"
-      backgroundColor="#1A1A2E"
+      backgroundColor="#2D1B4E"
       translucent={false}
     />
   );
