@@ -1,4 +1,4 @@
-// Onboarding step 10/15: City selection — text input with popular cities
+// Onboarding step 10/14: City selection — text input with popular cities
 
 import React, { useState, useCallback } from 'react';
 import {
@@ -49,12 +49,12 @@ export const CitySelectionScreen: React.FC = () => {
   const handleContinue = useCallback(() => {
     if (isValid) {
       setField('city', city.trim());
-      navigation.navigate('InterestSelection');
+      navigation.navigate('Bio');
     }
   }, [isValid, city, setField, navigation]);
 
   const handleSkip = useCallback(() => {
-    navigation.navigate('InterestSelection');
+    navigation.navigate('Bio');
   }, [navigation]);
 
   const handleSelectCity = useCallback((selectedCity: string) => {
@@ -68,7 +68,7 @@ export const CitySelectionScreen: React.FC = () => {
     >
       <OnboardingLayout
         step={10}
-        totalSteps={15}
+        totalSteps={14}
         showBack
         showSkip
         onSkip={handleSkip}

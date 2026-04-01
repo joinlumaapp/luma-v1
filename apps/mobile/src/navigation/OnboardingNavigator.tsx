@@ -1,5 +1,5 @@
 // Onboarding flow: Name -> BirthDate -> Gender -> WhoToMeet -> WhatLookingFor -> Height
-// -> Sports -> Smoking -> Children -> CitySelection -> Interests
+// -> Sports -> Smoking -> Children -> CitySelection
 // -> Bio -> PromptSelection -> Photos -> Selfie
 //
 // Features:
@@ -25,7 +25,6 @@ import { SportsScreen } from '../screens/onboarding/SportsScreen';
 import { SmokingScreen } from '../screens/onboarding/SmokingScreen';
 import { ChildrenScreen } from '../screens/onboarding/ChildrenScreen';
 import { CitySelectionScreen } from '../screens/onboarding/CitySelectionScreen';
-import { InterestSelectionScreen } from '../screens/onboarding/InterestSelectionScreen';
 import { BioScreen } from '../screens/onboarding/BioScreen';
 import { PromptSelectionScreen } from '../screens/onboarding/PromptSelectionScreen';
 import { PhotosScreen } from '../screens/onboarding/PhotosScreen';
@@ -37,8 +36,8 @@ const Stack = createNativeStackNavigator<OnboardingStackParamList>();
 const ONBOARDING_BG = '#F5F0E8';
 
 // Ordered screen names for reference (used by OnboardingLayout step/totalSteps)
-// Total: 15 screens. Each screen passes its own step number to OnboardingLayout.
-export const ONBOARDING_TOTAL_STEPS = 15;
+// Total: 14 screens. Each screen passes its own step number to OnboardingLayout.
+export const ONBOARDING_TOTAL_STEPS = 14;
 
 // Default screen options: smooth slide transitions, cream background
 const defaultScreenOptions: NativeStackNavigationOptions = {
@@ -62,7 +61,6 @@ export const OnboardingNavigator: React.FC = () => {
       <Stack.Screen name="Smoking" component={SmokingScreen} />
       <Stack.Screen name="Children" component={ChildrenScreen} />
       <Stack.Screen name="CitySelection" component={CitySelectionScreen} />
-      <Stack.Screen name="InterestSelection" component={InterestSelectionScreen} />
       <Stack.Screen name="Bio" component={BioScreen} />
       <Stack.Screen name="PromptSelection" component={PromptSelectionScreen} />
       <Stack.Screen name="Photos" component={PhotosScreen} />

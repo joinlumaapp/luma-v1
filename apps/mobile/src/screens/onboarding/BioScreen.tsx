@@ -1,5 +1,5 @@
 // Onboarding Bio step: Bio text input with character counter
-// Positioned after InterestSelection, before Photos in the onboarding flow.
+// Positioned after CitySelection, before PromptSelection in the onboarding flow.
 
 import React, { useState } from 'react';
 import {
@@ -25,7 +25,7 @@ import { ONBOARDING_TOTAL_STEPS } from '../../navigation/OnboardingNavigator';
 
 type NavProp = NativeStackNavigationProp<OnboardingStackParamList, 'Bio'>;
 
-const CURRENT_STEP = 12;
+const CURRENT_STEP = 11;
 
 const BIO_PROMPTS = [
   'Boş zamanlarında ne yapmayı seversin?',
