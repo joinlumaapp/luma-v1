@@ -920,19 +920,7 @@ export const EditProfileScreen: React.FC = () => {
               </View>
             </View>
 
-            {/* Age (read-only, from birthdate) */}
-            <View style={styles.infoRow}>
-              <View style={styles.infoIconCircle}>
-                <Ionicons name="calendar-outline" size={18} color={colors.text} />
-              </View>
-              <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Yas</Text>
-                <Text style={styles.infoValue}>{age > 0 ? `${age}` : '-'}</Text>
-              </View>
-              <View style={styles.readOnlyTag}>
-                <Text style={styles.readOnlyTagText}>Değiştirilemez</Text>
-              </View>
-            </View>
+            {/* Age (read-only, from birthdate — no label shown) */}
 
             {/* City (editable picker) */}
             <TouchableOpacity
