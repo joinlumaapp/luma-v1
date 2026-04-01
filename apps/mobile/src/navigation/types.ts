@@ -100,6 +100,7 @@ export type FeedStackParamList = {
 export type ProfileStackParamList = {
   Profile: undefined;
   EditProfile: undefined;
+  InterestPicker: undefined;
   Settings: undefined;
   JetonMarket: undefined;
   Places: undefined;

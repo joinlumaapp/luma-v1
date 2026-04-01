@@ -66,6 +66,7 @@ import { SafetyCenterScreen } from '../screens/settings/SafetyCenterScreen';
 import { AccountDeletionScreen } from '../screens/settings/AccountDeletionScreen';
 import { PrivacyPolicyScreen } from '../screens/settings/PrivacyPolicyScreen';
 import { QuestionsScreen } from '../screens/profile/QuestionsScreen';
+import { InterestPickerScreen } from '../screens/profile/InterestPickerScreen';
 import { ReportScreen } from '../screens/moderation/ReportScreen';
 import { JetonMarketScreen } from '../screens/store/JetonMarketScreen';
 
@@ -396,6 +397,7 @@ const ProfileStackNavigator: React.FC = React.memo(() => (
   >
     <ProfileStack.Screen name="Profile" component={ProfileScreen} />
     <ProfileStack.Screen name="EditProfile" component={DeferredEditProfile} />
+    <ProfileStack.Screen name="InterestPicker" component={InterestPickerScreen} />
     <ProfileStack.Screen name="Settings" component={SettingsScreen} />
     <ProfileStack.Screen name="JetonMarket" component={JetonMarketScreen} />
     <ProfileStack.Screen name="Places" component={PlacesScreen} />

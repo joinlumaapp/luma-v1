@@ -27,9 +27,6 @@ import { colors, palette } from '../../theme/colors';
 import { fontWeights, poppinsFonts } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 import {
-  INTEREST_CATEGORIES,
-  MAX_INTEREST_SELECTIONS,
-  INTEREST_CATEGORY_PREVIEW_COUNT,
   ZODIAC_SIGNS, EDUCATION_LEVELS, MARITAL_STATUS_OPTIONS,
   ALCOHOL_OPTIONS, SEXUAL_ORIENTATION_OPTIONS, PETS_OPTIONS,
   RELIGION_OPTIONS, EXERCISE_OPTIONS as CONFIG_EXERCISE_OPTIONS,
@@ -56,7 +53,7 @@ const PHOTO_CELL_HEIGHT = PHOTO_CELL_WIDTH * 1.45;
 const PHOTO_SLOTS = 9;
 
 const MAX_BIO_LENGTH = 500;
-const MAX_INTERESTS = MAX_INTEREST_SELECTIONS;
+// Interest picking moved to InterestPickerScreen
 
 // ── Turkish city list ──────────────────────────────────────────────────────
 const TURKISH_CITIES: string[] = [
@@ -345,8 +342,7 @@ export const EditProfileScreen: React.FC = () => {
   const [smoking, setSmoking] = useState(profile.smoking);
   const [exercise, setExercise] = useState(profile.sports);
   const [children, setChildren] = useState(profile.children);
-  const [selectedInterests, setSelectedInterests] = useState<string[]>(profile.interestTags);
-  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+  // interestTags are now managed by InterestPickerScreen via profileStore directly
   const [isSaving, setIsSaving] = useState(false);
   const [isPhotoUploading, setIsPhotoUploading] = useState(false);
   const [showCityPicker, setShowCityPicker] = useState(false);
@@ -447,7 +443,6 @@ export const EditProfileScreen: React.FC = () => {
     setSmoking(profile.smoking);
     setExercise(profile.sports);
     setChildren(profile.children);
-    setSelectedInterests(profile.interestTags);
     setLocalGender(profile.gender ?? '');
     setLocalBirthDate(profile.birthDate ?? '');
     // Extended fields
@@ -464,7 +459,7 @@ export const EditProfileScreen: React.FC = () => {
     profile.firstName, profile.lastName,
     profile.bio, profile.city, profile.job, profile.education,
     profile.intentionTag, profile.height, profile.smoking,
-    profile.sports, profile.children, profile.interestTags,
+    profile.sports, profile.children,
     profile.gender, profile.birthDate,
     profile.weight, profile.sexualOrientation, profile.zodiacSign,
     profile.educationLevel, profile.maritalStatus, profile.alcohol,
@@ -560,33 +555,7 @@ export const EditProfileScreen: React.FC = () => {
     [profile.photos.length, isPhotoUploading, uploadPhoto, deletePhoto, setMainPhoto],
   );
 
-  // ── Interest tag toggle ────────────────────────────────────────────────
-  const toggleInterest = useCallback(
-    (tagLabel: string) => {
-      setSelectedInterests((prev) => {
-        if (prev.includes(tagLabel)) {
-          return prev.filter((t) => t !== tagLabel);
-        }
-        if (prev.length >= MAX_INTERESTS) {
-          Alert.alert('Limit', `En fazla ${MAX_INTERESTS} ilgi alani secebilirsin.`);
-          return prev;
-        }
-        return [...prev, tagLabel];
-      });
-    },
-    [],
-  );
-
-  // ── Category expand/collapse toggle ──────────────────────────────────
-  const toggleCategoryExpand = useCallback(
-    (categoryTitle: string) => {
-      setExpandedCategories((prev) => ({
-        ...prev,
-        [categoryTitle]: !prev[categoryTitle],
-      }));
-    },
-    [],
-  );
+  // Interest selection is now handled by InterestPickerScreen
 
   // ── Video handlers ────────────────────────────────────────────────────
   const handleVideoReady = useCallback(
@@ -671,7 +640,7 @@ export const EditProfileScreen: React.FC = () => {
         smoking,
         sports: exercise,
         children,
-        interestTags: selectedInterests,
+        interestTags: profile.interestTags,
         gender: localGender || undefined,
         birthDate: localBirthDate || undefined,
         // Extended profile fields
@@ -694,7 +663,7 @@ export const EditProfileScreen: React.FC = () => {
   }, [
     firstName, lastName,
     bio, city, job, education, intentionTag, height, smoking, exercise,
-    children, selectedInterests, localGender, localBirthDate,
+    children, profile.interestTags, localGender, localBirthDate,
     weight, sexualOrientation, zodiacSign, educationLevel, maritalStatus,
     alcohol, pets, religion, lifeValues,
     isSaving, updateProfile, navigation,
@@ -712,7 +681,6 @@ export const EditProfileScreen: React.FC = () => {
     smoking !== profile.smoking ||
     exercise !== profile.sports ||
     children !== profile.children ||
-    JSON.stringify(selectedInterests) !== JSON.stringify(profile.interestTags) ||
     localGender !== (profile.gender ?? '') ||
     localBirthDate !== (profile.birthDate ?? '') ||
     weight !== (profile.weight != null ? String(profile.weight) : '') ||
@@ -1364,71 +1332,47 @@ export const EditProfileScreen: React.FC = () => {
           <FieldRow icon="🕌" label="Din" value={religion || ''} onPress={() => openPicker('Din', RELIGION_OPTIONS, 'religion')} />
           <FieldRow icon="🌐" label="Degerler" value={lifeValues || ''} onPress={() => openPicker('Senin icin hayattaki en onemli sey nedir?', VALUES_OPTIONS, 'lifeValues')} />
 
-          {/* ── İlgi Alanları — Categorized Picker ────────────────────── */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>İlgi Alanları</Text>
-              <Text style={styles.charCounter}>
-                Secilen: {selectedInterests.length}/{MAX_INTERESTS}
+          {/* ── Ilgi Alanlari ─────────────────────────────────────────── */}
+          <SectionHeader title="Ilgi Alanlari" description="Baskalarina neyle ilgilendigini soyle" />
+          <TouchableOpacity
+            style={{
+              backgroundColor: colors.surface,
+              borderWidth: 1,
+              borderColor: colors.surfaceBorder,
+              borderRadius: 16,
+              marginHorizontal: 24,
+              padding: 16,
+            }}
+            onPress={() => navigation.navigate('InterestPicker' as never)}
+            activeOpacity={0.7}
+          >
+            {profile.interestTags.length > 0 ? (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {profile.interestTags.map((tag) => (
+                  <View key={tag} style={{
+                    backgroundColor: '#E0F2FE',
+                    borderRadius: 20,
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderWidth: 1,
+                    borderColor: '#93C5FD',
+                  }}>
+                    <Text style={{ fontSize: 13, color: '#1E40AF', fontFamily: 'Poppins_500Medium', fontWeight: '500' }}>{tag}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Text style={{ fontSize: 14, color: colors.textTertiary, fontFamily: 'Poppins_400Regular' }}>
+                Ilgi alanlarini sec (en fazla 15)
+              </Text>
+            )}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 12 }}>
+              <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
+              <Text style={{ fontSize: 14, color: colors.primary, fontFamily: 'Poppins_600SemiBold', fontWeight: '600', marginLeft: 6 }}>
+                {profile.interestTags.length > 0 ? 'Duzenle' : 'Sec'}
               </Text>
             </View>
-
-            {INTEREST_CATEGORIES.map((category) => {
-              const isExpanded = expandedCategories[category.title] ?? false;
-              const visibleItems = isExpanded
-                ? category.items
-                : category.items.slice(0, INTEREST_CATEGORY_PREVIEW_COUNT);
-              const hasMore = category.items.length > INTEREST_CATEGORY_PREVIEW_COUNT;
-
-              return (
-                <View key={category.title} style={styles.interestCategoryCard}>
-                  <Text style={styles.interestCategoryTitle}>{category.title}</Text>
-                  <View style={styles.interestGrid}>
-                    {visibleItems.map((item) => {
-                      const isSelected = selectedInterests.includes(item.label);
-                      return (
-                        <TouchableOpacity
-                          key={item.label}
-                          style={[
-                            styles.interestChip,
-                            isSelected && styles.interestChipSelected,
-                          ]}
-                          onPress={() => toggleInterest(item.label)}
-                          activeOpacity={0.7}
-                        >
-                          <Text style={styles.interestEmoji}>{item.emoji}</Text>
-                          <Text
-                            style={[
-                              styles.interestLabel,
-                              isSelected && styles.interestLabelSelected,
-                            ]}
-                          >
-                            {item.label}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                  {hasMore && (
-                    <TouchableOpacity
-                      style={styles.interestShowMoreBtn}
-                      onPress={() => toggleCategoryExpand(category.title)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.interestShowMoreText}>
-                        {isExpanded ? 'Daha az goster' : 'Daha fazla goster'}
-                      </Text>
-                      <Ionicons
-                        name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                        size={16}
-                        color={palette.gold[600]}
-                      />
-                    </TouchableOpacity>
-                  )}
-                </View>
-              );
-            })}
-          </View>
+          </TouchableOpacity>
 
           {/* ── Prompt'larim ──────────────────────────────────────────── */}
           <View style={styles.section}>
@@ -1919,74 +1863,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semibold,
   },
 
-  // ── Interests — Categorized ──
-  interestCategoryCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-  },
-  interestCategoryTitle: {
-    fontSize: 15,
-    fontFamily: poppinsFonts.semibold,
-    fontWeight: fontWeights.semibold,
-    color: colors.text,
-    marginBottom: 10,
-    includeFontPadding: false,
-  },
-  interestGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  interestChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.full,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderWidth: 1.5,
-    borderColor: colors.surfaceBorder,
-  },
-  interestChipSelected: {
-    borderColor: '#93C5FD',
-    backgroundColor: '#E0F2FE',
-  },
-  interestEmoji: {
-    fontSize: 16,
-    includeFontPadding: false,
-  },
-  interestLabel: {
-    fontSize: 13,
-    fontFamily: poppinsFonts.medium,
-    fontWeight: fontWeights.medium,
-    color: colors.text,
-    includeFontPadding: false,
-  },
-  interestLabelSelected: {
-    fontFamily: poppinsFonts.semibold,
-    fontWeight: fontWeights.semibold,
-    color: '#1E40AF',
-  },
-  interestShowMoreBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    marginTop: 10,
-    paddingVertical: 6,
-  },
-  interestShowMoreText: {
-    fontSize: 13,
-    fontFamily: poppinsFonts.medium,
-    fontWeight: fontWeights.medium,
-    color: palette.gold[600],
-    includeFontPadding: false,
-  },
+  // Interest styles moved to InterestPickerScreen
 
   // ── Prompts ──
   promptEditCard: {
