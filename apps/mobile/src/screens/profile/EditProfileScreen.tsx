@@ -32,7 +32,6 @@ import {
   ALCOHOL_OPTIONS, SEXUAL_ORIENTATION_OPTIONS, PETS_OPTIONS,
   RELIGION_OPTIONS, EXERCISE_OPTIONS as CONFIG_EXERCISE_OPTIONS,
   SMOKING_OPTIONS as CONFIG_SMOKING_OPTIONS, CHILDREN_OPTIONS as CONFIG_CHILDREN_OPTIONS,
-  LIFE_VALUES_OPTIONS,
 } from '../../constants/config';
 import { useProfileStore } from '../../stores/profileStore';
 import { photoService } from '../../services/photoService';
@@ -91,6 +90,18 @@ const INTENTION_OPTIONS: Array<{ value: string; label: string; emoji: string; de
   { value: 'FRIENDSHIP', label: 'Sohbet etmek ve arkadaslarla tanismak', emoji: '💬', description: 'Farkli insanlarla baski altinda olmadan konusmak' },
   { value: 'LEARN_CULTURES', label: 'Diger kulturleri ogrenmek', emoji: '🎓', description: 'Yeni dil pratigi yapmak ve yeni bir seyler ogrenmek' },
   { value: 'TRAVEL', label: 'Dunyayi gezmek', emoji: '✈️', description: 'Seyahat arkadaslariyla tanismak ve deneyimlerini paylasmak' },
+];
+
+// ── Life values options (inline to avoid import issues) ───────────────────
+const VALUES_OPTIONS: string[] = [
+  'Aile ve Cocuklar',
+  'Bilim ve Arastirma',
+  'Dunyayi Iyilestirme',
+  'Eglence ve Dinlence',
+  'Guzellik ve Sanat',
+  'Kariyer ve Para',
+  'Kendini Gerceklestirme',
+  'Sohret ve Etkileme',
 ];
 
 // ── Height values ──────────────────────────────────────────────────────────
@@ -1337,7 +1348,7 @@ export const EditProfileScreen: React.FC = () => {
           <FieldRow icon="🚬" label="Sigara" value={smoking || ''} onPress={() => openPicker('Sigara', CONFIG_SMOKING_OPTIONS, 'smoking')} />
           <FieldRow icon="🐾" label="Evcil Hayvanlar" value={pets || ''} onPress={() => openPicker('Evcil Hayvanlar', PETS_OPTIONS, 'pets')} />
           <FieldRow icon="🕌" label="Din" value={religion || ''} onPress={() => openPicker('Din', RELIGION_OPTIONS, 'religion')} />
-          <FieldRow icon="🌐" label="Degerler" value={lifeValues || ''} onPress={() => openPicker('Senin icin hayattaki en onemli sey nedir?', LIFE_VALUES_OPTIONS, 'lifeValues')} />
+          <FieldRow icon="🌐" label="Degerler" value={lifeValues || ''} onPress={() => openPicker('Senin icin hayattaki en onemli sey nedir?', VALUES_OPTIONS, 'lifeValues')} />
 
           {/* ── İlgi Alanları ─────────────────────────────────────────── */}
           <View style={styles.section}>
