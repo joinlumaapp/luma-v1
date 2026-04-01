@@ -451,17 +451,41 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   calculateCompletion: () => {
     const { profile } = get();
     let filled = 0;
-    const totalFields = 7;
+    const total = 22; // all possible fields
 
+    // Core fields (required-ish)
     if (profile.firstName.length > 0) filled++;
     if (profile.birthDate.length > 0) filled++;
     if (profile.gender.length > 0) filled++;
     if (profile.intentionTag.length > 0) filled++;
     if (profile.photos.length >= PROFILE_CONFIG.MIN_PHOTOS) filled++;
     if (profile.bio.length >= PROFILE_CONFIG.MIN_BIO_LENGTH) filled++;
+
+    // Basic info
+    if (profile.job.length > 0) filled++;
+    if (profile.education.length > 0) filled++;
+    if (profile.city.length > 0) filled++;
+    if (profile.height != null && profile.height > 0) filled++;
+
+    // Extended info
+    if (profile.sexualOrientation.length > 0) filled++;
+    if (profile.zodiacSign.length > 0) filled++;
+    if (profile.educationLevel.length > 0) filled++;
+    if (profile.maritalStatus.length > 0) filled++;
+    if (profile.alcohol.length > 0) filled++;
+    if (profile.smoking.length > 0) filled++;
+    if (profile.children.length > 0) filled++;
+    if (profile.pets.length > 0) filled++;
+    if (profile.religion.length > 0) filled++;
+
+    // Personality
+    if (profile.interestTags.length > 0) filled++;
+    if (profile.prompts.length > 0) filled++;
+
+    // Compatibility
     if (Object.keys(profile.answers).length > 0) filled++;
 
-    return Math.round((filled / totalFields) * 100);
+    return Math.round((filled / total) * 100);
   },
 
   reset: () =>
