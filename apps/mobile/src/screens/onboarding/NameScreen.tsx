@@ -88,7 +88,7 @@ export const NameScreen: React.FC = () => {
         </View>
 
         <Text style={styles.hint}>
-          Soyadın sadece baş harfiyle gösterilir
+          Adın ve soyadın profilinde görünür
         </Text>
       </OnboardingLayout>
     </KeyboardAvoidingView>
