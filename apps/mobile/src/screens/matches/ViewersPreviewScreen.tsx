@@ -822,17 +822,20 @@ const ViewerDetailSheet: React.FC<ViewerDetailSheetProps> = ({
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
   const photoScale = useRef(new Animated.Value(0.8)).current;
+  const photoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const dismissSheetRef = useRef<() => void>(() => {});
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (_, gs) => gs.dy > 5,
       onPanResponderMove: (_, gs) => {
         if (gs.dy > 0) slideAnim.setValue(gs.dy);
       },
       onPanResponderRelease: (_, gs) => {
         if (gs.dy > 100 || gs.vy > 0.5) {
-          dismissSheet();
+          dismissSheetRef.current();
         } else {
           Animated.spring(slideAnim, {
             toValue: 0, tension: 100, friction: 12, useNativeDriver: true,
@@ -855,12 +858,15 @@ const ViewerDetailSheet: React.FC<ViewerDetailSheetProps> = ({
           toValue: 0.6, duration: 200, useNativeDriver: true,
         }),
       ]).start();
-      setTimeout(() => {
+      photoTimeoutRef.current = setTimeout(() => {
         Animated.spring(photoScale, {
           toValue: 1, tension: 120, friction: 10, useNativeDriver: true,
         }).start();
       }, 300);
     }
+    return () => {
+      if (photoTimeoutRef.current) clearTimeout(photoTimeoutRef.current);
+    };
   }, [visible, slideAnim, backdropOpacity, photoScale]);
 
   const dismissSheet = useCallback(() => {
@@ -873,6 +879,7 @@ const ViewerDetailSheet: React.FC<ViewerDetailSheetProps> = ({
       }),
     ]).start(() => onDismiss());
   }, [slideAnim, backdropOpacity, onDismiss]);
+  dismissSheetRef.current = dismissSheet;
 
   if (!viewer) return null;
 
@@ -976,16 +983,18 @@ const ViewerTeaserSheet: React.FC<ViewerTeaserSheetProps> = ({
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
 
+  const dismissSheetRef = useRef<() => void>(() => {});
+
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (_, gs) => gs.dy > 5,
       onPanResponderMove: (_, gs) => {
         if (gs.dy > 0) slideAnim.setValue(gs.dy);
       },
       onPanResponderRelease: (_, gs) => {
         if (gs.dy > 100 || gs.vy > 0.5) {
-          dismissSheet();
+          dismissSheetRef.current();
         } else {
           Animated.spring(slideAnim, {
             toValue: 0, tension: 100, friction: 12, useNativeDriver: true,
@@ -1020,6 +1029,7 @@ const ViewerTeaserSheet: React.FC<ViewerTeaserSheetProps> = ({
       }),
     ]).start(() => onDismiss());
   }, [slideAnim, backdropOpacity, onDismiss]);
+  dismissSheetRef.current = dismissSheet;
 
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={dismissSheet}>
@@ -1280,6 +1290,13 @@ export const ViewersPreviewScreen: React.FC = () => {
   const [selectedViewer, setSelectedViewer] = useState<ProfileViewer | null>(null);
   const [showDetailSheet, setShowDetailSheet] = useState(false);
   const [showTeaserSheet, setShowTeaserSheet] = useState(false);
+  const teaserTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (teaserTimeoutRef.current) clearTimeout(teaserTimeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     fetchViewers();
@@ -1307,7 +1324,7 @@ export const ViewersPreviewScreen: React.FC = () => {
         }
 
         // No reveals left — show teaser sheet after card animation delay
-        setTimeout(() => setShowTeaserSheet(true), 400);
+        teaserTimeoutRef.current = setTimeout(() => setShowTeaserSheet(true), 400);
       });
     },
     [isPremium, isViewerRevealed, revealViewer],

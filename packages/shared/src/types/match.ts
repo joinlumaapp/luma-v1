@@ -69,7 +69,7 @@ export interface ProfileViewer {
   firstName: string | null;
   age: number | null;
   photoUrl: string | null;
-  sharedInterests: string[];
+  sharedInterests?: string[];
 }
 
 // ─── Secret Admirer (Gizli Hayran) ──────────────────────────────────
