@@ -34,6 +34,16 @@ export interface UserProfile {
   moodSetAt: Date | null;
   voiceIntroUrl: string | null;
   voiceIntroDuration: number | null;
+  // Extended profile fields (Bumpy-inspired)
+  weight?: number | null;
+  sexualOrientation?: string | null;
+  zodiacSign?: string | null;
+  educationLevel?: string | null;
+  maritalStatus?: string | null;
+  alcohol?: string | null;
+  pets?: string | null;
+  religion?: string | null;
+  lifeValues?: string | null;
 }
 
 export interface UserPhoto {

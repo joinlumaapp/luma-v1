@@ -371,6 +371,49 @@ export const NEARBY_VISIBILITY_CONFIG = {
 // ─── Süper Uyumlu Eşik ───────────────────────────────────────────
 export const SUPER_COMPATIBLE_THRESHOLD = 80;
 
+// ── Extended Profile Field Options ────────────────────────────
+
+export const ZODIAC_SIGNS = [
+  'Koc', 'Boga', 'Ikizler', 'Yengec', 'Aslan', 'Basak',
+  'Terazi', 'Akrep', 'Yay', 'Oglak', 'Kova', 'Balik',
+] as const;
+
+export const EDUCATION_LEVELS = [
+  'Lise', 'On Lisans', 'Lisans', 'Yuksek Lisans', 'Doktora',
+] as const;
+
+export const MARITAL_STATUS_OPTIONS = [
+  'Bekar', 'Bosanmis', 'Dul',
+] as const;
+
+export const ALCOHOL_OPTIONS = [
+  'Icmem', 'Bazen', 'Sosyal', 'Duzenli',
+] as const;
+
+export const SEXUAL_ORIENTATION_OPTIONS = [
+  'Heteroseksuel', 'Gay', 'Lezbiyen', 'Biseksuel', 'Diger',
+] as const;
+
+export const PETS_OPTIONS = [
+  'Kedi', 'Kopek', 'Kedi ve Kopek', 'Diger', 'Yok',
+] as const;
+
+export const RELIGION_OPTIONS = [
+  'Islam', 'Hristiyan', 'Yahudi', 'Ateist', 'Agnostik', 'Diger',
+] as const;
+
+export const EXERCISE_OPTIONS = [
+  'Hic', 'Bazen', 'Sik',
+] as const;
+
+export const SMOKING_OPTIONS = [
+  'Icmem', 'Bazen', 'Duzenli', 'Tolere Ederim',
+] as const;
+
+export const CHILDREN_OPTIONS = [
+  'Var', 'Yok', 'Istiyorum', 'Istemiyorum',
+] as const;
+
 // Ad placement configuration
 export const AD_CONFIG = {
   /** Feed: show ad after every N posts (free users only) */

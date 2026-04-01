@@ -34,6 +34,16 @@ export interface ProfileData {
   city: string;
   job: string;
   education: string;
+  // Extended profile fields (Bumpy-inspired)
+  weight: number | null;
+  sexualOrientation: string;
+  zodiacSign: string;
+  educationLevel: string;
+  maritalStatus: string;
+  alcohol: string;
+  pets: string;
+  religion: string;
+  lifeValues: string;
   isComplete: boolean;
   /** Profile video (10-30 seconds) */
   profileVideo: ProfileVideoData | null;
@@ -107,6 +117,15 @@ const initialProfile: ProfileData = {
   city: '',
   job: '',
   education: '',
+  weight: null,
+  sexualOrientation: '',
+  zodiacSign: '',
+  educationLevel: '',
+  maritalStatus: '',
+  alcohol: '',
+  pets: '',
+  religion: '',
+  lifeValues: '',
   isComplete: false,
   profileVideo: null,
   prompts: [],
@@ -143,6 +162,15 @@ const mapResponseToProfile = (data: ProfileResponse): ProfileData => {
     city: data.city,
     job: (data as { job?: string }).job ?? '',
     education: (data as { education?: string }).education ?? '',
+    weight: (data as { weight?: number | null }).weight ?? null,
+    sexualOrientation: (data as { sexualOrientation?: string }).sexualOrientation ?? '',
+    zodiacSign: (data as { zodiacSign?: string }).zodiacSign ?? '',
+    educationLevel: (data as { educationLevel?: string }).educationLevel ?? '',
+    maritalStatus: (data as { maritalStatus?: string }).maritalStatus ?? '',
+    alcohol: (data as { alcohol?: string }).alcohol ?? '',
+    pets: (data as { pets?: string }).pets ?? '',
+    religion: (data as { religion?: string }).religion ?? '',
+    lifeValues: (data as { lifeValues?: string }).lifeValues ?? '',
     isComplete: data.isComplete,
     profileVideo: videoData ? {
       url: videoData.url,
