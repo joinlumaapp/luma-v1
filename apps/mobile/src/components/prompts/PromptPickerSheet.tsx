@@ -49,9 +49,25 @@ export const PromptPickerSheet: React.FC<PromptPickerSheetProps> = ({
 
   const usedSet = new Set(usedPromptIds);
 
-  const filteredPrompts: PromptOption[] = selectedCategory
-    ? getPromptsByCategory(selectedCategory).filter((p) => !usedSet.has(p.id))
-    : PROMPT_BANK.filter((p) => !usedSet.has(p.id));
+  const filteredPrompts: PromptOption[] = (() => {
+    if (selectedCategory) {
+      return getPromptsByCategory(selectedCategory).filter((p) => !usedSet.has(p.id));
+    }
+    // Interleave prompts from all categories so users see variety
+    const byCategory = PROMPT_CATEGORIES.map((cat) =>
+      PROMPT_BANK.filter((p) => p.category === cat.key && !usedSet.has(p.id)),
+    );
+    const interleaved: PromptOption[] = [];
+    const maxLen = Math.max(...byCategory.map((arr) => arr.length));
+    for (let i = 0; i < maxLen; i++) {
+      for (const catPrompts of byCategory) {
+        if (i < catPrompts.length) {
+          interleaved.push(catPrompts[i]);
+        }
+      }
+    }
+    return interleaved;
+  })();
 
   const animateIn = useCallback(() => {
     setIsAnimating(true);
@@ -290,7 +306,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   categoryScroll: {
-    maxHeight: 44,
+    maxHeight: 56,
   },
   categoryRow: {
     paddingHorizontal: spacing.lg,
