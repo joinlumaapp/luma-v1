@@ -33,13 +33,10 @@ export type OnboardingStackParamList = {
   Smoking: undefined;
   Children: undefined;
   CitySelection: undefined;
-  PersonalityIntro: undefined;
   InterestSelection: undefined;
   Bio: undefined;
   PromptSelection: undefined;
   Photos: undefined;
-  QuestionsIntro: undefined;
-  Questions: undefined;
   SelfieVerification: undefined;
 };
 

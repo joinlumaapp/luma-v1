@@ -175,7 +175,7 @@ export const PhotosScreen: React.FC = () => {
         .filter((s): s is PhotoSlot => s !== null)
         .map((s) => s.uri);
       setProfileField('photos', uris);
-      navigation.navigate('QuestionsIntro');
+      navigation.navigate('SelfieVerification');
     }
   }, [isValid, photoSlots, setProfileField, navigation, buttonScale]);
 
@@ -266,7 +266,7 @@ export const PhotosScreen: React.FC = () => {
   return (
     <OnboardingLayout
       step={15}
-      totalSteps={18}
+      totalSteps={15}
       footer={
         <Animated.View style={buttonAnimStyle}>
           <FullWidthButton

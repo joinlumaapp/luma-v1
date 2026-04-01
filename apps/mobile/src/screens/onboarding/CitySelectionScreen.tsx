@@ -49,12 +49,12 @@ export const CitySelectionScreen: React.FC = () => {
   const handleContinue = useCallback(() => {
     if (isValid) {
       setField('city', city.trim());
-      navigation.navigate('PersonalityIntro');
+      navigation.navigate('InterestSelection');
     }
   }, [isValid, city, setField, navigation]);
 
   const handleSkip = useCallback(() => {
-    navigation.navigate('PersonalityIntro');
+    navigation.navigate('InterestSelection');
   }, [navigation]);
 
   const handleSelectCity = useCallback((selectedCity: string) => {
@@ -68,7 +68,7 @@ export const CitySelectionScreen: React.FC = () => {
     >
       <OnboardingLayout
         step={10}
-        totalSteps={18}
+        totalSteps={15}
         showBack
         showSkip
         onSkip={handleSkip}

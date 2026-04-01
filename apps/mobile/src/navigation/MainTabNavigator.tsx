@@ -65,7 +65,7 @@ import { BlockedUsersScreen } from '../screens/settings/BlockedUsersScreen';
 import { SafetyCenterScreen } from '../screens/settings/SafetyCenterScreen';
 import { AccountDeletionScreen } from '../screens/settings/AccountDeletionScreen';
 import { PrivacyPolicyScreen } from '../screens/settings/PrivacyPolicyScreen';
-import { QuestionsScreen } from '../screens/onboarding/QuestionsScreen';
+import { QuestionsScreen } from '../screens/profile/QuestionsScreen';
 import { ReportScreen } from '../screens/moderation/ReportScreen';
 import { JetonMarketScreen } from '../screens/store/JetonMarketScreen';
 

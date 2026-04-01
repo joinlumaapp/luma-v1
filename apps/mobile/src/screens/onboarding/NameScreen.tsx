@@ -47,7 +47,7 @@ export const NameScreen: React.FC = () => {
     >
       <OnboardingLayout
         step={1}
-        totalSteps={18}
+        totalSteps={15}
         showBack={false}
         footer={<ArrowButton onPress={handleContinue} disabled={!isValid} />}
       >
