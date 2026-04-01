@@ -678,6 +678,83 @@ export const EditProfileScreen: React.FC = () => {
           {/* ─── Completion Card ─── */}
           <ProfileCompletionCard percent={completionPercent} profile={profile} />
 
+          {/* ─── Uyum Sorulari (top position for visibility) ─── */}
+          {answeredCount < 45 && (
+            <View style={{
+              backgroundColor: colors.primary + '08',
+              borderWidth: 1,
+              borderColor: colors.primary + '20',
+              borderRadius: 16,
+              marginHorizontal: 24,
+              marginTop: 12,
+              marginBottom: 8,
+              padding: 16,
+            }}>
+              {/* Motivational header */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                <Text style={{ fontSize: 20, marginRight: 8 }}>{'💜'}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={{
+                    fontSize: 16,
+                    fontFamily: 'Poppins_700Bold',
+                    fontWeight: '700',
+                    color: colors.text,
+                  }}>Uyum Sorularini Tamamla</Text>
+                  <Text style={{
+                    fontSize: 12,
+                    fontFamily: 'Poppins_400Regular',
+                    fontWeight: '400',
+                    color: colors.textSecondary,
+                    marginTop: 2,
+                  }}>Sorulari cevapla, %92 daha fazla eslesme sans yakala!</Text>
+                </View>
+              </View>
+
+              {/* Progress */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                <View style={{
+                  flex: 1,
+                  height: 6,
+                  backgroundColor: colors.surfaceLight,
+                  borderRadius: 3,
+                  overflow: 'hidden',
+                  marginRight: 8,
+                }}>
+                  <View style={{
+                    height: '100%',
+                    width: `${Math.min((answeredCount / 45) * 100, 100)}%`,
+                    backgroundColor: answeredCount >= 30 ? colors.success : answeredCount >= 15 ? '#F59E0B' : colors.primary,
+                    borderRadius: 3,
+                  }} />
+                </View>
+                <Text style={{
+                  fontSize: 13,
+                  fontFamily: 'Poppins_600SemiBold',
+                  fontWeight: '600',
+                  color: colors.primary,
+                }}>{answeredCount}/45</Text>
+              </View>
+
+              {/* CTA Button */}
+              <TouchableOpacity
+                onPress={() => navigation.navigate('CompatibilityQuestions' as never)}
+                style={{
+                  backgroundColor: colors.primary,
+                  borderRadius: 12,
+                  paddingVertical: 13,
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{
+                  fontSize: 15,
+                  fontFamily: 'Poppins_700Bold',
+                  fontWeight: '700',
+                  color: '#fff',
+                }}>Sorulara Devam Et</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           {/* ─── Section 1: Medya ─── */}
           <SectionHeader title="Medya" description="Fotograflarin ve videon" />
 
@@ -1236,52 +1313,6 @@ export const EditProfileScreen: React.FC = () => {
             />
           </View>
 
-          {/* ─── Section 5: Uyum Sorulari ─── */}
-          <SectionHeader title="Uyum Sorulari" description="45 soru ile uyum puanini yukselt" />
-          <View style={{
-            backgroundColor: colors.surface,
-            borderWidth: 1,
-            borderColor: colors.surfaceBorder,
-            borderRadius: 12,
-            marginHorizontal: 24,
-            padding: 16,
-            gap: 12,
-            marginBottom: 16,
-          }}>
-            {/* Progress display */}
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ fontSize: 14, fontFamily: 'Poppins_600SemiBold', fontWeight: '600', color: colors.text }}>
-                {answeredCount}/45 soru cevaplanmis
-              </Text>
-              <Text style={{ fontSize: 13, fontFamily: 'Poppins_500Medium', fontWeight: '500', color: colors.primary }}>
-                %{Math.round((answeredCount / 45) * 100)}
-              </Text>
-            </View>
-            {/* Progress bar */}
-            <View style={{ height: 6, backgroundColor: colors.surfaceLight, borderRadius: 3, overflow: 'hidden' }}>
-              <View style={{
-                height: '100%',
-                width: `${Math.min((answeredCount / 45) * 100, 100)}%`,
-                backgroundColor: answeredCount >= 30 ? colors.success : answeredCount >= 15 ? '#F59E0B' : colors.error,
-                borderRadius: 3,
-              }} />
-            </View>
-            {/* CTA */}
-            <TouchableOpacity
-              onPress={() => navigation.navigate('CompatibilityQuestions' as never)}
-              style={{
-                backgroundColor: colors.primary,
-                borderRadius: 12,
-                paddingVertical: 14,
-                alignItems: 'center',
-                marginTop: 4,
-              }}
-            >
-              <Text style={{ fontSize: 15, fontFamily: 'Poppins_700Bold', fontWeight: '700', color: '#fff' }}>
-                Sorulara Devam Et
-              </Text>
-            </TouchableOpacity>
-          </View>
 
           {/* ── Ses Tanitimi ──────────────────────────────────────────── */}
           <View style={styles.section}>
