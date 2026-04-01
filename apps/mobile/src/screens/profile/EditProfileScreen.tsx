@@ -188,6 +188,105 @@ const OptionPicker: React.FC<OptionPickerProps> = ({
   );
 };
 
+// ─── Profile Completion Card ────────────────────────────────────
+
+interface ProfileCompletionCardProps {
+  percent: number;
+  profile: {
+    photos: string[];
+    bio: string;
+    interestTags: string[];
+    prompts: unknown[];
+  };
+}
+
+const ProfileCompletionCard: React.FC<ProfileCompletionCardProps> = ({ percent, profile: p }) => {
+  const fillColor =
+    percent >= 85 ? colors.success
+      : percent >= 60 ? colors.primary
+        : percent >= 30 ? '#F59E0B'
+          : colors.error;
+
+  const getHint = (): string | null => {
+    if (percent >= 100) return null;
+    if (p.photos.length < 2) return 'Daha fazla fotograf ekle';
+    if (p.bio.length < 50) return 'Bio ekleyerek profilini guclendir';
+    if (p.interestTags.length === 0) return 'Ilgi alanlarini sec';
+    if (p.prompts.length === 0) return 'Promptlarini doldur';
+    return 'Detayli bilgilerini tamamla';
+  };
+
+  const hint = getHint();
+  const isComplete = percent >= 100;
+
+  return (
+    <View style={{
+      backgroundColor: isComplete ? colors.success + '08' : colors.surface,
+      borderWidth: 1,
+      borderColor: isComplete ? colors.success + '30' : colors.surfaceBorder,
+      borderRadius: 16,
+      marginHorizontal: 24,
+      marginTop: 8,
+      marginBottom: 4,
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+    }}>
+      {/* Progress row */}
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <Text style={{
+          fontSize: 15,
+          fontFamily: 'Poppins_600SemiBold',
+          fontWeight: '600',
+          color: colors.text,
+        }}>Profil Gucun</Text>
+        <View style={{
+          flex: 1,
+          height: 8,
+          backgroundColor: colors.surfaceLight,
+          borderRadius: 4,
+          marginLeft: 12,
+          marginRight: 8,
+          overflow: 'hidden',
+        }}>
+          <View style={{
+            height: '100%',
+            width: `${Math.min(percent, 100)}%`,
+            backgroundColor: fillColor,
+            borderRadius: 4,
+          }} />
+        </View>
+        <Text style={{
+          fontSize: 14,
+          fontFamily: 'Poppins_700Bold',
+          fontWeight: '700',
+          color: fillColor,
+          minWidth: 36,
+          textAlign: 'right',
+        }}>%{percent}</Text>
+      </View>
+
+      {/* Hint row */}
+      {isComplete ? (
+        <Text style={{
+          fontSize: 12,
+          fontFamily: 'Poppins_500Medium',
+          fontWeight: '500',
+          color: colors.success,
+          marginTop: 8,
+        }}>{'✨'} Profilin tamamlanmis!</Text>
+      ) : hint ? (
+        <Text style={{
+          fontSize: 12,
+          fontFamily: 'Poppins_400Regular',
+          fontWeight: '400',
+          color: colors.textSecondary,
+          marginTop: 8,
+        }}>{'💡'} {hint}</Text>
+      ) : null}
+    </View>
+  );
+};
+
 // ═══════════════════════════════════════════════════════════════════════════
 // ── Main Component ─────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════
@@ -564,12 +663,7 @@ export const EditProfileScreen: React.FC = () => {
             <Ionicons name="chevron-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Profili Duzenle</Text>
-          <Text style={{
-            fontSize: 13,
-            fontFamily: 'Poppins_600SemiBold',
-            fontWeight: '600',
-            color: colors.primary,
-          }}>%{completionPercent} doldurulmus</Text>
+          <View style={{ width: 40 }} />
         </View>
 
         <ScrollView
@@ -581,6 +675,9 @@ export const EditProfileScreen: React.FC = () => {
           ]}
           keyboardShouldPersistTaps="handled"
         >
+          {/* ─── Completion Card ─── */}
+          <ProfileCompletionCard percent={completionPercent} profile={profile} />
+
           {/* ─── Section 1: Medya ─── */}
           <SectionHeader title="Medya" description="Fotograflarin ve videon" />
 
