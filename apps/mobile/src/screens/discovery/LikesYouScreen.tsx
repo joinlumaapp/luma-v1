@@ -364,11 +364,23 @@ const LikeCard = memo<LikeCardProps>(({ card, index, cardState, smartLabel, onCa
   const badgeBounce = useRef(new Animated.Value(0)).current;
   const overlayOpacity = useRef(new Animated.Value(isLocked ? 0.35 : isTeaser ? 0.15 : 0)).current;
   const glowBorderOpacity = useRef(new Animated.Value(0.15)).current;
+  const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
+    };
+  }, []);
+
+  // Sync overlayOpacity when cardState changes
+  useEffect(() => {
+    overlayOpacity.setValue(isLocked ? 0.35 : isTeaser ? 0.15 : 0);
+  }, [cardState, isLocked, isTeaser, overlayOpacity]);
 
   // Smart label bounce on mount
   useEffect(() => {
     if (!smartLabel) return;
-    Animated.sequence([
+    const anim = Animated.sequence([
       Animated.delay(index * 80 + 300),
       Animated.spring(badgeBounce, {
         toValue: 1,
@@ -376,7 +388,9 @@ const LikeCard = memo<LikeCardProps>(({ card, index, cardState, smartLabel, onCa
         friction: 8,
         useNativeDriver: true,
       }),
-    ]).start();
+    ]);
+    anim.start();
+    return () => anim.stop();
   }, [badgeBounce, smartLabel, index]);
 
   // Pulsing glow border for LOCKED cards (iOS only)
@@ -402,7 +416,7 @@ const LikeCard = memo<LikeCardProps>(({ card, index, cardState, smartLabel, onCa
 
   const handlePressIn = useCallback(() => {
     Animated.spring(scaleAnim, {
-      toValue: 1.03, tension: 200, friction: 10, useNativeDriver: true,
+      toValue: 0.97, tension: 200, friction: 10, useNativeDriver: true,
     }).start();
   }, [scaleAnim]);
 
@@ -426,8 +440,12 @@ const LikeCard = memo<LikeCardProps>(({ card, index, cardState, smartLabel, onCa
       ]),
       Animated.timing(overlayOpacity, { toValue: 0.05, duration: 400, useNativeDriver: true }),
     ]).start();
-    setTimeout(() => onCardPress(card.userId, cardState), 500);
-  }, [card.userId, cardState, isClear, scaleAnim, overlayOpacity, onCardPress]);
+    tapTimeoutRef.current = setTimeout(() => {
+      onCardPress(card.userId, cardState);
+      // Reset overlay if card wasn't unlocked (will be clear on re-render if it was)
+      overlayOpacity.setValue(isLocked ? 0.35 : isTeaser ? 0.15 : 0);
+    }, 500);
+  }, [card.userId, cardState, isClear, isLocked, isTeaser, scaleAnim, overlayOpacity, onCardPress]);
 
   const compatColor = getCompatColor(card.compatibilityPercent);
 
@@ -495,6 +513,21 @@ const LikeCard = memo<LikeCardProps>(({ card, index, cardState, smartLabel, onCa
             />
           )}
 
+          {/* Static glow border for TEASER cards */}
+          {isTeaser && (
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  borderRadius: borderRadius.lg + 4,
+                  borderWidth: 1,
+                  borderColor: palette.purple[400] + '40',
+                },
+              ]}
+              pointerEvents="none"
+            />
+          )}
+
           {/* Pulsing glow border for LOCKED cards (iOS only) */}
           {isLocked && Platform.OS === 'ios' && (
             <Animated.View
@@ -511,8 +544,8 @@ const LikeCard = memo<LikeCardProps>(({ card, index, cardState, smartLabel, onCa
             />
           )}
 
-          {/* Super compatible dashed border hint (LOCKED only) */}
-          {isLocked && card.compatibilityPercent >= SUPER_COMPATIBLE_THRESHOLD && (
+          {/* Super compatible dashed border hint (LOCKED + TEASER) */}
+          {!isClear && card.compatibilityPercent >= SUPER_COMPATIBLE_THRESHOLD && (
             <View style={styles.superCompatBorder} pointerEvents="none" />
           )}
 
