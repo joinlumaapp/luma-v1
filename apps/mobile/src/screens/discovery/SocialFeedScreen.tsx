@@ -651,7 +651,8 @@ export const SocialFeedScreen: React.FC = () => {
 
   const handlePostTap = useCallback((post: FeedPost) => {
     // Tapping post opens full-screen post detail view
-    navigation.navigate('PostDetail', { postId: post.id });
+    // Pass the full post object so the detail screen has data even if the store refreshes
+    navigation.navigate('PostDetail', { postId: post.id, post });
   }, [navigation]);
 
   // Internal helper — executes the flirt request after all checks pass

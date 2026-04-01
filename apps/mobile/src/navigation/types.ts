@@ -91,7 +91,7 @@ export type FeedStackParamList = {
   SocialFeed: undefined;
   FeedProfile: { userId: string };
   ProfilePreview: { userId: string };
-  PostDetail: { postId: string };
+  PostDetail: { postId: string; post?: import('../services/socialFeedService').FeedPost };
   StoryViewer: { userId: string; userName: string; userAvatarUrl: string; storyUsers?: any[] };
   StoryCreator: { mediaUri: string; mediaType: 'image' | 'video' };
 };
