@@ -1299,9 +1299,6 @@ export const EditProfileScreen: React.FC = () => {
           <FieldRow icon="🕌" label="Din" value={religion || ''} onPress={() => openPicker('Din', RELIGION_OPTIONS, 'religion')} />
           <FieldRow icon="🌐" label="Degerler" value={lifeValues || ''} onPress={() => {}} />
 
-          {/* ─── Section 4: Kisligimi Tanit ─── */}
-          <SectionHeader title="Kisligimi Tanit" description="Kendini ifade et, insanlarin seni tanimasi icin" />
-
           {/* ── İlgi Alanları ─────────────────────────────────────────── */}
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
