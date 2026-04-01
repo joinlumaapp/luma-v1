@@ -66,6 +66,41 @@ const getCompatColor = (percent: number): string => {
   return colors.textSecondary;
 };
 
+// Card visibility state for progressive reveal
+type CardState = 'clear' | 'teaser' | 'locked';
+
+const getCardState = (
+  tier: PackageTier,
+  index: number,
+  totalCards: number,
+  isCardRevealed: boolean,
+): CardState => {
+  // Already revealed via store → always clear
+  if (isCardRevealed) return 'clear';
+
+  switch (tier) {
+    case 'FREE':
+      if (index < 2) return 'clear';
+      if (index < 5) return 'teaser';
+      return 'locked';
+
+    case 'GOLD': {
+      const clearCount = Math.ceil(totalCards * 0.75);
+      const teaserCount = Math.ceil(totalCards * 0.15);
+      if (index < clearCount) return 'clear';
+      if (index < clearCount + teaserCount) return 'teaser';
+      return 'locked';
+    }
+
+    case 'PRO':
+    case 'RESERVED':
+      return 'clear';
+
+    default:
+      return 'locked';
+  }
+};
+
 // Determine smart label for a card
 const getSmartLabel = (card: LikeYouCard, likes: LikeYouCard[]): string | null => {
   // Recent
@@ -270,6 +305,47 @@ const AnimatedLock: React.FC<{ index: number }> = ({ index }) => {
     </View>
   );
 };
+
+// ─── Shimmer Light Sweep (LOCKED cards) ──────────────────────
+
+const ShimmerSweep: React.FC = () => {
+  const translateX = useRef(new Animated.Value(-CARD_SIZE)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.timing(translateX, {
+        toValue: CARD_SIZE * 2,
+        duration: 3000,
+        useNativeDriver: true,
+      }),
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [translateX]);
+
+  return (
+    <Animated.View
+      style={[
+        styles.shimmerSweep,
+        { transform: [{ translateX }, { rotate: '20deg' }] },
+      ]}
+      pointerEvents="none"
+    />
+  );
+};
+
+// ─── Teaser Lock (smaller, semi-transparent) ─────────────────
+
+const TeaserLock: React.FC = () => (
+  <View style={styles.teaserLockContainer}>
+    <LinearGradient
+      colors={[palette.purple[400], palette.pink[400]]}
+      style={styles.teaserLockCircle}
+    >
+      <Ionicons name="lock-closed" size={12} color="rgba(255,255,255,0.9)" />
+    </LinearGradient>
+  </View>
+);
 
 // ─── Like card (blurred or clear) with hints ─────────────────
 
@@ -1228,6 +1304,39 @@ const styles = StyleSheet.create({
     borderRadius: 17,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+
+  // ── Shimmer sweep ──
+  shimmerSweep: {
+    position: 'absolute',
+    top: -20,
+    width: CARD_SIZE * 0.4,
+    height: CARD_SIZE * 2.5,
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+  },
+
+  // ── Teaser lock ──
+  teaserLockContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    opacity: 0.6,
+  },
+  teaserLockCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: palette.purple[500],
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+      },
+      android: { elevation: 4 },
+    }),
   },
 
   // ── Smart label ──
