@@ -406,8 +406,10 @@ export const EditProfileScreen: React.FC = () => {
   const pickerConfigRef = useRef(pickerConfig);
   pickerConfigRef.current = pickerConfig;
 
-  const openPicker = useCallback((title: string, options: readonly string[], field: string) => {
-    setPickerConfig({ visible: true, title, options: [...options], field });
+  const openPicker = useCallback((title: string, options: readonly string[] | undefined, field: string) => {
+    const safeOptions = options ? Array.from(options) : [];
+    if (safeOptions.length === 0) return;
+    setPickerConfig({ visible: true, title, options: safeOptions, field });
   }, []);
 
   const handlePickerSelect = useCallback((value: string) => {
