@@ -366,12 +366,11 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       _photoIds: newIds,
     });
 
-    // Sync with backend
+    // Sync with backend (non-blocking — keep local change even if API fails)
     try {
       await profileService.reorderPhotos(newIds);
     } catch {
-      // Revert on failure
-      set({ profile: { ...get().profile, photos: profile.photos }, _photoIds });
+      // Keep local reorder — will sync on next save
     }
   },
 
