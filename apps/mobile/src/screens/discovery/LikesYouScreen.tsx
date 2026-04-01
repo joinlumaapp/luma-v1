@@ -28,13 +28,11 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { DiscoveryStackParamList, MatchesStackParamList, MainTabParamList } from '../../navigation/types';
 import { discoveryService } from '../../services/discoveryService';
-import { socialFeedService } from '../../services/socialFeedService';
 import type { LikeYouCard } from '../../services/discoveryService';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
 import { LIKES_VIEW_CONFIG, SUPER_COMPATIBLE_THRESHOLD } from '../../constants/config';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { useLikesRevealStore } from '../../stores/likesRevealStore';
-import { DailyRevealCounter } from '../../components/matches/DailyRevealCounter';
 import { SlideIn } from '../../components/animations/SlideIn';
 import { UpgradePrompt } from '../../components/premium/UpgradePrompt';
 import { colors, palette } from '../../theme/colors';
@@ -604,7 +602,7 @@ export const LikesYouScreen: React.FC<LikesYouScreenProps> = ({ embedded = false
   // Progressive reveal uses cardState per-card instead of binary isBlurred
   const isFreeUser = packageTier === 'FREE';
 
-  const { revealProfile, getDailyLimit, isRevealed, dailyRevealsUsed } = useLikesRevealStore();
+  const { revealProfile, isRevealed } = useLikesRevealStore();
 
   // Daily view limit
   const dailyLimit = LIKES_VIEW_CONFIG.DAILY_LIMITS[packageTier];
@@ -634,18 +632,6 @@ export const LikesYouScreen: React.FC<LikesYouScreenProps> = ({ embedded = false
   // Keeps the user in context; they navigate to plans only if they explicitly tap "Yükselt".
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
 
-  // Feed post likers — people who liked the current user's posts
-  const [feedLikers, setFeedLikers] = useState<Array<{
-    userId: string;
-    userName: string;
-    userAge: number;
-    userAvatarUrl: string;
-    postId: string;
-    postContent: string;
-    likedAt: string;
-  }>>([]);
-  const [feedLikersTotal, setFeedLikersTotal] = useState(0);
-
   // ─── Data fetching ──────────────────────────────────────────
 
   const fetchLikes = useCallback(async () => {
@@ -666,18 +652,6 @@ export const LikesYouScreen: React.FC<LikesYouScreenProps> = ({ embedded = false
       fetchLikes();
     });
 
-    // Fetch feed post likers alongside discovery likes
-    const fetchFeedLikers = async () => {
-      try {
-        const data = await socialFeedService.getPostLikers();
-        setFeedLikers(data.likers);
-        setFeedLikersTotal(data.total);
-      } catch {
-        // Silent fail
-      }
-    };
-    fetchFeedLikers();
-
     return () => task.cancel();
   }, [fetchLikes]);
 
@@ -685,20 +659,6 @@ export const LikesYouScreen: React.FC<LikesYouScreenProps> = ({ embedded = false
     setIsRefreshing(true);
     fetchLikes();
   }, [fetchLikes]);
-
-  // ─── Computed highlights ───────────────────────────────────
-
-  const mostCompatible = useMemo(() => {
-    if (likes.length === 0) return null;
-    return [...likes].sort((a, b) => b.compatibilityPercent - a.compatibilityPercent)[0];
-  }, [likes]);
-
-  const nearestLike = useMemo(() => {
-    const withDistance = likes.filter((l) => l.distanceKm != null && l.distanceKm < 5);
-    if (withDistance.length === 0) return null;
-    const sorted = [...withDistance].sort((a, b) => (a.distanceKm ?? 999) - (b.distanceKm ?? 999));
-    return sorted.find((l) => l.userId !== mostCompatible?.userId) ?? sorted[0];
-  }, [likes, mostCompatible]);
 
   // Smart labels map
   const smartLabelsMap = useMemo(() => {
@@ -1374,38 +1334,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
 
-  // ── Compatibility badge ──
-  compatBadge: {
-    position: 'absolute',
-    top: spacing.xs + 2,
-    right: spacing.xs,
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    borderWidth: 1,
-  },
-  compatBadgeText: {
-    fontSize: 9,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    letterSpacing: 0.2,
-  },
-
-  // ── Comment badge ──
-  commentBadge: {
-    position: 'absolute',
-    top: spacing.xs + 2,
-    left: spacing.xs + 2,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: palette.purple[500],
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: palette.purple[400],
-  },
-
   // ── Card info overlay — glassmorphism feel ──
   cardInfoOverlay: {
     position: 'absolute',
@@ -1427,41 +1355,6 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },
-  hintsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 4,
-    marginTop: 5,
-  },
-  hintChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
-    borderRadius: borderRadius.full,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-  },
-  hintText: {
-    fontSize: 9,
-    lineHeight: 13,
-    color: 'rgba(255, 255, 255, 0.95)',
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-    letterSpacing: 0.1,
-  },
-  cardComment: {
-    fontSize: 9,
-    lineHeight: 13,
-    color: palette.purple[300],
-    fontStyle: 'italic',
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-    marginTop: 4,
-  },
-
   // ── Distance & compat (new card layout) ──
   distanceRow: {
     flexDirection: 'row',
