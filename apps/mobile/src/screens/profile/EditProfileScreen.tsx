@@ -1035,7 +1035,7 @@ export const EditProfileScreen: React.FC = () => {
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Yas</Text>
                 <Text style={[styles.infoValue, age <= 0 && styles.infoValuePlaceholder]}>
-                  {age > 0 ? `${age} yil` : 'Yas sec'}
+                  {age > 0 ? `${age}` : 'Yas sec'}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
