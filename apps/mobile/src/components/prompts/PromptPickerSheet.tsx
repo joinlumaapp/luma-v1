@@ -196,46 +196,57 @@ export const PromptPickerSheet: React.FC<PromptPickerSheetProps> = ({
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoryRow}
-            style={styles.categoryScroll}
+            contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 12, gap: 10, alignItems: 'center' }}
+            style={{ flexGrow: 0, marginBottom: 8 }}
           >
             <TouchableOpacity
-              style={[
-                styles.categoryChip,
-                selectedCategory === null && styles.categoryChipActive,
-              ]}
+              style={{
+                paddingHorizontal: 22,
+                paddingVertical: 12,
+                borderRadius: 100,
+                backgroundColor: selectedCategory === null ? colors.primary + '20' : colors.surface,
+                borderWidth: 1.5,
+                borderColor: selectedCategory === null ? colors.primary : colors.surfaceBorder,
+              }}
               onPress={() => setSelectedCategory(null)}
               activeOpacity={0.7}
             >
-              <Text
-                style={[
-                  styles.categoryChipText,
-                  selectedCategory === null && styles.categoryChipTextActive,
-                ]}
-              >
-                Tümünü Göster
+              <Text style={{
+                fontSize: 14,
+                fontFamily: 'Poppins_600SemiBold',
+                fontWeight: selectedCategory === null ? '600' : '500',
+                color: selectedCategory === null ? colors.primary : colors.textSecondary,
+              }}>
+                Tumunu Goster
               </Text>
             </TouchableOpacity>
-            {PROMPT_CATEGORIES.map((cat) => (
-              <TouchableOpacity
-                key={cat.key}
-                style={[
-                  styles.categoryChip,
-                  selectedCategory === cat.key && styles.categoryChipActive,
-                ]}
-                onPress={() => setSelectedCategory(cat.key)}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={[
-                    styles.categoryChipText,
-                    selectedCategory === cat.key && styles.categoryChipTextActive,
-                  ]}
+            {PROMPT_CATEGORIES.map((cat) => {
+              const isActive = selectedCategory === cat.key;
+              return (
+                <TouchableOpacity
+                  key={cat.key}
+                  style={{
+                    paddingHorizontal: 22,
+                    paddingVertical: 12,
+                    borderRadius: 100,
+                    backgroundColor: isActive ? colors.primary + '20' : colors.surface,
+                    borderWidth: 1.5,
+                    borderColor: isActive ? colors.primary : colors.surfaceBorder,
+                  }}
+                  onPress={() => setSelectedCategory(cat.key)}
+                  activeOpacity={0.7}
                 >
-                  {cat.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text style={{
+                    fontSize: 14,
+                    fontFamily: 'Poppins_600SemiBold',
+                    fontWeight: isActive ? '600' : '500',
+                    color: isActive ? colors.primary : colors.textSecondary,
+                  }}>
+                    {cat.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
 
           {/* Prompt List */}
