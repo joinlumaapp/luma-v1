@@ -40,7 +40,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 type SettingsNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'Settings'>;
 
 // ── Types ────────────────────────────────────────────────────────
-type SettingItemType = 'navigation' | 'toggle' | 'action' | 'display' | 'faq' | 'theme' | 'supreme_feature';
+type SettingItemType = 'navigation' | 'toggle' | 'action' | 'display' | 'faq' | 'supreme_feature';
 
 interface BaseSettingItem {
   key: string;
@@ -76,10 +76,6 @@ interface FAQSettingItem extends BaseSettingItem {
   answer: string;
 }
 
-interface ThemeSettingItem extends BaseSettingItem {
-  type: 'theme';
-}
-
 interface SupremeFeatureItem extends BaseSettingItem {
   type: 'supreme_feature';
   active: boolean;
@@ -91,7 +87,6 @@ type SettingItem =
   | ActionSettingItem
   | DisplaySettingItem
   | FAQSettingItem
-  | ThemeSettingItem
   | SupremeFeatureItem;
 
 interface SettingSection {
@@ -1045,50 +1040,6 @@ function createDynamicStyles(c: ThemeColors) {
       ...typography.bodySmall,
       color: c.textSecondary,
       lineHeight: 20,
-    },
-
-    // Theme selector
-    themeContainer: {
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.lg,
-      marginHorizontal: spacing.md,
-      backgroundColor: c.surface,
-      borderRadius: borderRadius.md,
-      borderWidth: 1,
-      borderColor: c.surfaceBorder,
-      marginVertical: 2,
-    },
-    themeOptions: {
-      flexDirection: 'row',
-      gap: spacing.sm,
-    },
-    themeOption: {
-      flex: 1,
-      flexDirection: 'column',
-      paddingVertical: spacing.sm + 2,
-      paddingHorizontal: spacing.sm,
-      borderRadius: borderRadius.md,
-      borderWidth: 1,
-      borderColor: c.surfaceBorder,
-      backgroundColor: c.surfaceLight,
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 2,
-    },
-    themeOptionSelected: {
-      borderColor: c.primary,
-      backgroundColor: c.primary + '15',
-    },
-    themeOptionText: {
-      ...typography.caption,
-      color: c.textSecondary,
-      fontFamily: 'Poppins_500Medium',
-      fontWeight: '500',
-    },
-    themeOptionTextSelected: {
-      color: c.primary,
-      fontFamily: 'Poppins_600SemiBold',
-      fontWeight: '600',
     },
 
     // Logout button

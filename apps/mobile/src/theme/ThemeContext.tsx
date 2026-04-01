@@ -1,9 +1,7 @@
-// LUMA Theme Context — dark/light/system mode support with persistent storage
+// LUMA Theme Context — always light theme
 
-import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
-import { useColorScheme } from 'react-native';
-import { creamTheme, darkTheme, type ThemeColors, type ThemeMode } from './colors';
-import { storage } from '../utils/storage';
+import React, { createContext, useContext, useMemo } from 'react';
+import { creamTheme, type ThemeColors, type ThemeMode } from './colors';
 
 interface ThemeContextType {
   /** Whether the current resolved theme is dark */
@@ -12,7 +10,7 @@ interface ThemeContextType {
   themeMode: ThemeMode;
   /** The resolved color tokens for the current theme */
   colors: ThemeColors;
-  /** Update the theme mode and persist the selection */
+  /** No-op: theme is always light */
   setThemeMode: (mode: ThemeMode) => void;
 }
 
@@ -24,37 +22,15 @@ const ThemeContext = createContext<ThemeContextType>({
 });
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const systemColorScheme = useColorScheme();
-  const [themeMode, setThemeModeState] = useState<ThemeMode>(() => {
-    // Load persisted preference synchronously from in-memory cache
-    return storage.getTheme();
-  });
-
-  const setThemeMode = useCallback((mode: ThemeMode) => {
-    setThemeModeState(mode);
-    storage.setTheme(mode);
-  }, []);
-
-  const isDark = useMemo(() => {
-    if (themeMode === 'system') {
-      return systemColorScheme === 'dark';
-    }
-    return themeMode === 'dark';
-  }, [themeMode, systemColorScheme]);
-
-  const currentColors = useMemo<ThemeColors>(
-    () => (isDark ? darkTheme : creamTheme),
-    [isDark],
-  );
-
+  // Always light — dark mode and system preference are not supported
   const value = useMemo<ThemeContextType>(
     () => ({
-      isDark,
-      themeMode,
-      colors: currentColors,
-      setThemeMode,
+      isDark: false,
+      themeMode: 'light',
+      colors: creamTheme,
+      setThemeMode: () => {},
     }),
-    [isDark, themeMode, currentColors, setThemeMode],
+    [],
   );
 
   return (
