@@ -784,7 +784,6 @@ export const EditProfileScreen: React.FC = () => {
           )}
 
           {/* ─── Section 1: Medya ─── */}
-          <SectionHeader title="Medya" description="Fotograflarin ve videon" />
 
           {/* ── Profil Videosu ─────────────────────────────────────────── */}
           <View style={styles.section}>
@@ -981,7 +980,6 @@ export const EditProfileScreen: React.FC = () => {
           </View>
 
           {/* ─── Section 2: Temel Bilgilerim ─── */}
-          <SectionHeader title="Temel Bilgilerim" description="Kendiniz hakkinda genel bilgileri belirtin" />
 
           {/* ── Temel Bilgiler ────────────────────────────────────────── */}
           <View style={styles.section}>
