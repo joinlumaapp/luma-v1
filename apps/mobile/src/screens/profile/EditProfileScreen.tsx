@@ -521,6 +521,7 @@ export const EditProfileScreen: React.FC = () => {
     JSON.stringify(selectedInterests) !== JSON.stringify(profile.interestTags);
 
   const age = calculateAge(profile.birthDate);
+  const answeredCount = Object.keys(profile.answers ?? {}).length;
 
   // ── Build photo grid data (always 9 slots) ────────────────────────────
   const photoSlots: Array<string | null> = [];
@@ -995,6 +996,9 @@ export const EditProfileScreen: React.FC = () => {
             </View>
           </View>
 
+          {/* ─── Section 4: Kisligimi Tanit ─── */}
+          <SectionHeader title="Kisligimi Tanit" description="Kendini ifade et, insanlarin seni tanimasi icin" />
+
           {/* ── İlgi Alanları ─────────────────────────────────────────── */}
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
@@ -1087,6 +1091,53 @@ export const EditProfileScreen: React.FC = () => {
               spots={profile.favoriteSpots}
               onSpotsChange={(spots) => setFavoriteSpots(spots)}
             />
+          </View>
+
+          {/* ─── Section 5: Uyum Sorulari ─── */}
+          <SectionHeader title="Uyum Sorulari" description="45 soru ile uyum puanini yukselt" />
+          <View style={{
+            backgroundColor: colors.surface,
+            borderWidth: 1,
+            borderColor: colors.surfaceBorder,
+            borderRadius: 12,
+            marginHorizontal: 24,
+            padding: 16,
+            gap: 12,
+            marginBottom: 16,
+          }}>
+            {/* Progress display */}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={{ fontSize: 14, fontFamily: 'Poppins_600SemiBold', fontWeight: '600', color: colors.text }}>
+                {answeredCount}/45 soru cevaplanmis
+              </Text>
+              <Text style={{ fontSize: 13, fontFamily: 'Poppins_500Medium', fontWeight: '500', color: colors.primary }}>
+                %{Math.round((answeredCount / 45) * 100)}
+              </Text>
+            </View>
+            {/* Progress bar */}
+            <View style={{ height: 6, backgroundColor: colors.surfaceLight, borderRadius: 3, overflow: 'hidden' }}>
+              <View style={{
+                height: '100%',
+                width: `${Math.min((answeredCount / 45) * 100, 100)}%`,
+                backgroundColor: answeredCount >= 30 ? colors.success : answeredCount >= 15 ? '#F59E0B' : colors.error,
+                borderRadius: 3,
+              }} />
+            </View>
+            {/* CTA */}
+            <TouchableOpacity
+              onPress={() => navigation.navigate('CompatibilityQuestions' as never)}
+              style={{
+                backgroundColor: colors.primary,
+                borderRadius: 12,
+                paddingVertical: 14,
+                alignItems: 'center',
+                marginTop: 4,
+              }}
+            >
+              <Text style={{ fontSize: 15, fontFamily: 'Poppins_700Bold', fontWeight: '700', color: '#fff' }}>
+                Sorulara Devam Et
+              </Text>
+            </TouchableOpacity>
           </View>
 
           {/* ─── Section 3: Hakkimda Daha Fazlasi ─── */}
