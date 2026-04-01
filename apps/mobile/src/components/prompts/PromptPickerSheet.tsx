@@ -306,16 +306,16 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   categoryScroll: {
-    maxHeight: 56,
+    maxHeight: 64,
   },
   categoryRow: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
-    gap: spacing.sm,
+    gap: 10,
   },
   categoryChip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: borderRadius.full,
     backgroundColor: colors.surface,
     borderWidth: 1,
@@ -326,7 +326,9 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   categoryChipText: {
-    ...typography.bodySmall,
+    fontSize: 13,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
     color: colors.textSecondary,
   },
   categoryChipTextActive: {
