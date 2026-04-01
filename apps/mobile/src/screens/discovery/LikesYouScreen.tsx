@@ -347,19 +347,25 @@ const TeaserLock: React.FC = () => (
   </View>
 );
 
-// ─── Like card (blurred or clear) with hints ─────────────────
+// ─── Like card with 3-state progressive reveal ─────────────
 
 interface LikeCardProps {
   card: LikeYouCard;
   index: number;
-  isBlurred: boolean;
+  cardState: CardState;
   smartLabel: string | null;
-  onCardPress: (userId: string) => void;
+  onCardPress: (userId: string, cardState: CardState) => void;
 }
 
-const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, smartLabel, onCardPress }) => {
+const LikeCard = memo<LikeCardProps>(({ card, index, cardState, smartLabel, onCardPress }) => {
+  const isClear = cardState === 'clear';
+  const isTeaser = cardState === 'teaser';
+  const isLocked = cardState === 'locked';
+
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const badgeBounce = useRef(new Animated.Value(0)).current;
+  const overlayOpacity = useRef(new Animated.Value(isLocked ? 0.35 : isTeaser ? 0.15 : 0)).current;
+  const glowBorderOpacity = useRef(new Animated.Value(0.15)).current;
 
   // Smart label bounce on mount
   useEffect(() => {
@@ -375,6 +381,27 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, smartLabel, onCa
     ]).start();
   }, [badgeBounce, smartLabel, index]);
 
+  // Pulsing glow border for LOCKED cards (iOS only)
+  useEffect(() => {
+    if (!isLocked || Platform.OS !== 'ios') return;
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowBorderOpacity, {
+          toValue: 0.35,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(glowBorderOpacity, {
+          toValue: 0.15,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [isLocked, glowBorderOpacity]);
+
   const handlePressIn = useCallback(() => {
     Animated.spring(scaleAnim, {
       toValue: 1.03, tension: 200, friction: 10, useNativeDriver: true,
@@ -388,8 +415,21 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, smartLabel, onCa
   }, [scaleAnim]);
 
   const handlePress = useCallback(() => {
-    onCardPress(card.userId);
-  }, [card.userId, onCardPress]);
+    if (isClear) {
+      onCardPress(card.userId, cardState);
+      return;
+    }
+    // Teaser & Locked: blur reveal animation + overlay fade, then callback after delay
+    Animated.parallel([
+      Animated.sequence([
+        Animated.timing(scaleAnim, { toValue: 0.97, duration: 120, useNativeDriver: true }),
+        Animated.timing(scaleAnim, { toValue: 1.02, duration: 180, useNativeDriver: true }),
+        Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+      ]),
+      Animated.timing(overlayOpacity, { toValue: 0.05, duration: 400, useNativeDriver: true }),
+    ]).start();
+    setTimeout(() => onCardPress(card.userId, cardState), 500);
+  }, [card.userId, cardState, isClear, scaleAnim, overlayOpacity, onCardPress]);
 
   const compatColor = getCompatColor(card.compatibilityPercent);
 
@@ -398,16 +438,19 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, smartLabel, onCa
     outputRange: [0.5, 1],
   });
 
+  const blurRadius = isClear ? 0 : isTeaser ? 15 : 28;
+  const displayName = isClear ? `${card.firstName}, ${card.age}` : '???, ??';
+
   return (
-    <SlideIn direction="up" delay={index * 60} distance={20}>
+    <SlideIn direction="up" delay={index * 60 + (isLocked ? 100 : 0)} distance={20}>
       <Pressable
         onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         accessibilityLabel={
-          isBlurred
-            ? 'Profili görmek için Premium pakete geçin'
-            : `${card.firstName}, ${card.age} yaşında, yüzde ${card.compatibilityPercent} uyum`
+          isClear
+            ? `${card.firstName}, ${card.age} ya\u015F\u0131nda, y\u00FCzde ${card.compatibilityPercent} uyum`
+            : 'Profili g\u00F6rmek i\u00E7in dokun'
         }
         accessibilityRole="button"
       >
@@ -420,7 +463,7 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, smartLabel, onCa
             <Image
               source={{ uri: card.photoUrl }}
               style={styles.cardPhoto}
-              blurRadius={isBlurred ? (index === 0 ? 12 : index <= 2 ? 18 : 25) : 0}
+              blurRadius={blurRadius}
             />
           ) : (
             <LinearGradient
@@ -431,65 +474,59 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, smartLabel, onCa
             </LinearGradient>
           )}
 
-          {/* Blur overlay with animated lock + progress ring */}
-          {isBlurred && (
-            <View style={[
-              styles.blurOverlay,
-              // Super compatible dashed border hint
-              card.compatibilityPercent >= SUPER_COMPATIBLE_THRESHOLD && {
-                borderColor: 'rgba(251,191,36,0.3)',
-                borderWidth: 1,
-                borderStyle: 'dashed' as const,
-              },
-            ]}>
+          {/* Dark overlay for teaser/locked — animated opacity on tap */}
+          {!isClear && (
+            <Animated.View
+              style={[styles.blurOverlay, { opacity: overlayOpacity }]}
+              pointerEvents="none"
+            />
+          )}
+
+          {/* Static purple glow border for CLEAR cards */}
+          {isClear && (
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  borderRadius: borderRadius.lg + 4,
+                  borderWidth: 1,
+                  borderColor: palette.purple[400] + '30',
+                },
+              ]}
+              pointerEvents="none"
+            />
+          )}
+
+          {/* Pulsing glow border for LOCKED cards (iOS only) */}
+          {isLocked && Platform.OS === 'ios' && (
+            <Animated.View
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  borderRadius: borderRadius.lg + 4,
+                  borderWidth: 1.5,
+                  borderColor: palette.purple[400],
+                  opacity: glowBorderOpacity,
+                },
+              ]}
+              pointerEvents="none"
+            />
+          )}
+
+          {/* Super compatible dashed border hint (LOCKED only) */}
+          {isLocked && card.compatibilityPercent >= SUPER_COMPATIBLE_THRESHOLD && (
+            <View style={styles.superCompatBorder} pointerEvents="none" />
+          )}
+
+          {/* Lock overlays per state */}
+          {isTeaser && <TeaserLock />}
+          {isLocked && (
+            <>
               <View style={styles.lockPositioner}>
                 <AnimatedLock index={index} />
               </View>
-              {/* Gradient lock with glow */}
-              <View style={{
-                ...StyleSheet.absoluteFillObject,
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}>
-                <LinearGradient
-                  colors={[palette.purple[400], palette.pink[400]]}
-                  style={{
-                    width: 40, height: 40, borderRadius: 20,
-                    justifyContent: 'center', alignItems: 'center',
-                    shadowColor: palette.purple[500],
-                    shadowOffset: { width: 0, height: 0 },
-                    shadowOpacity: 0.6,
-                    shadowRadius: 12,
-                    elevation: 8,
-                  }}
-                >
-                  <Ionicons name="lock-closed" size={18} color="#fff" />
-                </LinearGradient>
-                {index === 0 && (
-                  <View style={{
-                    backgroundColor: palette.purple[500] + 'DD',
-                    paddingHorizontal: 8, paddingVertical: 3,
-                    borderRadius: 8, marginTop: 8,
-                  }}>
-                    <Text style={{ color: '#fff', fontSize: 10, fontWeight: '600' }}>Seni beğendi</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-          )}
-
-          {/* Nearby badge on revealed (non-blurred) cards */}
-          {!isBlurred && card.distanceKm != null && card.distanceKm <= 5 && (
-            <View style={{
-              position: 'absolute', top: 6, right: 6,
-              backgroundColor: 'rgba(240,77,58,0.85)',
-              borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2,
-              zIndex: 3,
-            }}>
-              <Text style={{ color: '#fff', fontSize: 8, fontWeight: '600' }}>
-                {'📍'} {card.distanceKm.toFixed(1)}km
-              </Text>
-            </View>
+              <ShimmerSweep />
+            </>
           )}
 
           {/* Smart label with bounce */}
@@ -506,58 +543,35 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, smartLabel, onCa
             </Animated.View>
           )}
 
-          {/* Compatibility badge */}
-          <View style={[styles.compatBadge, { backgroundColor: compatColor + '25', borderColor: compatColor + '40' }]}>
-            <Text style={[styles.compatBadgeText, { color: compatColor }]}>
-              %{card.compatibilityPercent}
-            </Text>
-          </View>
-
-          {/* Comment indicator badge */}
-          {!isBlurred && card.comment && (
-            <View style={styles.commentBadge}>
-              <Ionicons name="chatbubble" size={10} color="#FFFFFF" />
-            </View>
-          )}
-
-          {/* Bottom info overlay — glassmorphism feel */}
+          {/* Bottom info overlay */}
           <LinearGradient
-            colors={['transparent', 'rgba(8, 8, 15, 0.50)', 'rgba(8, 8, 15, 0.90)']}
-            locations={[0, 0.25, 1]}
+            colors={['transparent', 'rgba(8, 8, 15, 0.50)', 'rgba(8, 8, 15, 0.92)']}
+            locations={[0, 0.2, 1]}
             style={styles.cardInfoOverlay}
           >
             <Text style={styles.cardName} numberOfLines={1}>
-              {isBlurred ? '...' : `${card.firstName}, ${card.age}`}
+              {displayName}
             </Text>
 
-            {/* Hint pills — glassmorphism style */}
-            {(card.distanceKm != null || (card.sharedInterests != null && card.sharedInterests > 0)) && (
-              <View style={styles.hintsRow}>
-                {card.distanceKm != null && (
-                  <View style={styles.hintChip}>
-                    <Ionicons name="location-outline" size={9} color="rgba(255,255,255,0.85)" />
-                    <Text style={styles.hintText}>
-                      {formatDistance(card.distanceKm)}
-                    </Text>
-                  </View>
-                )}
-                {card.sharedInterests != null && card.sharedInterests > 0 && (
-                  <View style={styles.hintChip}>
-                    <Ionicons name="sparkles-outline" size={9} color="rgba(255,255,255,0.85)" />
-                    <Text style={styles.hintText}>
-                      {card.sharedInterests} uyum noktası
-                    </Text>
-                  </View>
-                )}
+            {/* Distance row */}
+            {card.distanceKm != null && (
+              <View style={styles.distanceRow}>
+                <Text style={styles.distanceEmoji}>{'\uD83D\uDCCD'}</Text>
+                <Text style={styles.distanceText}>
+                  {formatDistance(card.distanceKm)}
+                </Text>
               </View>
             )}
 
-            {/* Comment for unlocked cards */}
-            {!isBlurred && card.comment && (
-              <Text style={styles.cardComment} numberOfLines={1}>
-                {`"${card.comment}"`}
+            {/* Compatibility pill */}
+            <View style={[
+              styles.compatPill,
+              { backgroundColor: compatColor + '20', borderColor: compatColor + '35' },
+            ]}>
+              <Text style={[styles.compatPillText, { color: compatColor }]}>
+                %{card.compatibilityPercent} uyum
               </Text>
-            )}
+            </View>
           </LinearGradient>
         </Animated.View>
       </Pressable>
@@ -565,11 +579,10 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, smartLabel, onCa
   );
 }, (prev, next) => (
   prev.card.userId === next.card.userId &&
-  prev.isBlurred === next.isBlurred &&
+  prev.cardState === next.cardState &&
   prev.index === next.index &&
   prev.smartLabel === next.smartLabel &&
-  prev.card.compatibilityPercent === next.card.compatibilityPercent &&
-  prev.card.comment === next.card.comment
+  prev.card.compatibilityPercent === next.card.compatibilityPercent
 ));
 
 LikeCard.displayName = 'LikeCard';
@@ -1445,6 +1458,47 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     marginTop: 4,
+  },
+
+  // ── Distance & compat (new card layout) ──
+  distanceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    marginTop: 3,
+  },
+  distanceEmoji: {
+    fontSize: 8,
+    lineHeight: 12,
+  },
+  distanceText: {
+    fontSize: 9,
+    lineHeight: 13,
+    color: 'rgba(255, 255, 255, 0.85)',
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    letterSpacing: 0.1,
+  },
+  compatPill: {
+    alignSelf: 'flex-start',
+    borderRadius: 9999,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderWidth: 1,
+    marginTop: 4,
+  },
+  compatPillText: {
+    fontSize: 8,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    letterSpacing: 0.2,
+  },
+  superCompatBorder: {
+    ...StyleSheet.absoluteFillObject,
+    borderColor: 'rgba(251, 191, 36, 0.3)',
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderRadius: borderRadius.lg + 4,
   },
 
   // ── Empty state ──
