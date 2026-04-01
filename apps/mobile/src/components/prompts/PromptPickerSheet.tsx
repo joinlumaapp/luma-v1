@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   categoryScroll: {
-    maxHeight: 80,
+    flexGrow: 0,
   },
   categoryRow: {
     paddingHorizontal: spacing.lg,
