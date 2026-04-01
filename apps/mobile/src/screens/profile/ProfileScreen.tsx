@@ -648,15 +648,20 @@ export const ProfileScreen: React.FC = () => {
     <View key="about" style={styles.section}>
       <Text style={styles.sectionTitle}>Hakkında</Text>
       <Text style={styles.bioText}>{profile.bio || '-'}</Text>
-      {profile.lookingFor.length > 0 && (
+      {profile.intentionTag.length > 0 && (
         <View style={styles.lookingForSection}>
-          <Text style={styles.subsectionTitle}>Burada olma sebebim</Text>
+          <Text style={styles.subsectionTitle}>Hedefim</Text>
           <View style={styles.chipRow}>
-            {translateLookingFor(profile.lookingFor).map((label) => (
-              <View key={label} style={styles.lookingForChip}>
-                <Text style={styles.lookingForChipText}>{label}</Text>
-              </View>
-            ))}
+            <View style={styles.lookingForChip}>
+              <Text style={styles.lookingForChipText}>
+                {profile.intentionTag === 'MARRIAGE' ? 'Evlenmek'
+                  : profile.intentionTag === 'SERIOUS_RELATIONSHIP' ? 'Bir iliski bulmak'
+                  : profile.intentionTag === 'FRIENDSHIP' ? 'Sohbet ve arkadaslik'
+                  : profile.intentionTag === 'LEARN_CULTURES' ? 'Kulturleri ogrenmek'
+                  : profile.intentionTag === 'TRAVEL' ? 'Dunyayi gezmek'
+                  : profile.intentionTag}
+              </Text>
+            </View>
           </View>
         </View>
       )}
