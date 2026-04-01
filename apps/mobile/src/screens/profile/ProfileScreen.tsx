@@ -22,6 +22,7 @@ import { colors, palette } from '../../theme/colors';
 import { fontWeights } from '../../theme/typography';
 import { Ionicons } from '@expo/vector-icons';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
+import { INTEREST_CATEGORIES } from '../../constants/config';
 import { useProfileStore } from '../../stores/profileStore';
 import { useAuthStore } from '../../stores/authStore';
 import { useMatchStore } from '../../stores/matchStore';
@@ -120,10 +121,22 @@ const INTEREST_TAG_DISPLAY: Record<string, { emoji: string; label: string }> = {
   food: { emoji: '🍽', label: 'Yemek' },
   cats: { emoji: '🐈', label: 'Kediler' },
 };
+// Build category emoji lookup from INTEREST_CATEGORIES
+const _categoryEmojiMap = new Map<string, string>();
+for (const cat of INTEREST_CATEGORIES) {
+  for (const item of cat.items) {
+    _categoryEmojiMap.set(item.label, item.emoji);
+  }
+}
 const getInterestTagDisplay = (tag: string): string => {
+  // 1. Check legacy English ID map
   const entry = INTEREST_TAG_DISPLAY[tag];
   if (entry) return `${entry.emoji} ${entry.label}`;
-  return tag; // New Turkish labels are already display-ready
+  // 2. Check category emoji map (Turkish labels)
+  const emoji = _categoryEmojiMap.get(tag);
+  if (emoji) return `${emoji} ${tag}`;
+  // 3. Fallback — show as-is
+  return tag;
 };
 
 // Hakkımda row data type
