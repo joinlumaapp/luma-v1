@@ -31,6 +31,7 @@ import {
   ALCOHOL_OPTIONS, SEXUAL_ORIENTATION_OPTIONS, PETS_OPTIONS,
   RELIGION_OPTIONS, EXERCISE_OPTIONS as CONFIG_EXERCISE_OPTIONS,
   SMOKING_OPTIONS as CONFIG_SMOKING_OPTIONS, CHILDREN_OPTIONS as CONFIG_CHILDREN_OPTIONS,
+  INTEREST_CATEGORIES,
 } from '../../constants/config';
 import { useProfileStore } from '../../stores/profileStore';
 import { photoService } from '../../services/photoService';
@@ -92,6 +93,15 @@ const INTENTION_OPTIONS: Array<{ value: string; label: string; emoji: string; de
 ];
 
 // ── Life values options (inline to avoid import issues) ───────────────────
+// Emoji lookup for interest tags
+const interestEmojiMap = new Map<string, string>();
+for (const cat of INTEREST_CATEGORIES) {
+  for (const item of cat.items) {
+    interestEmojiMap.set(item.label, item.emoji);
+  }
+}
+const getInterestEmoji = (label: string): string => interestEmojiMap.get(label) ?? '';
+
 const VALUES_OPTIONS: string[] = [
   'Aile ve Cocuklar',
   'Bilim ve Arastirma',
@@ -1357,7 +1367,7 @@ export const EditProfileScreen: React.FC = () => {
                     borderWidth: 1,
                     borderColor: '#93C5FD',
                   }}>
-                    <Text style={{ fontSize: 13, color: '#1E40AF', fontFamily: 'Poppins_500Medium', fontWeight: '500' }}>{tag}</Text>
+                    <Text style={{ fontSize: 13, color: '#1E40AF', fontFamily: 'Poppins_500Medium', fontWeight: '500' }}>{getInterestEmoji(tag)} {tag}</Text>
                   </View>
                 ))}
               </View>
