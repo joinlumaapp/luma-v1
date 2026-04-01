@@ -688,6 +688,51 @@ export const ProfileScreen: React.FC = () => {
     );
   }
 
+  // 2b. Prompts — Hinge-style Q&A cards
+  if (profile.prompts.length > 0) {
+    infoSections.push(
+      <View key="prompts" style={styles.section}>
+        <Text style={styles.sectionTitle}>Sorular & Cevaplar</Text>
+        <View style={{ gap: 12 }}>
+          {profile.prompts.map((prompt) => (
+            <View
+              key={prompt.id}
+              style={{
+                backgroundColor: colors.surface,
+                borderRadius: 16,
+                padding: 18,
+                borderWidth: 1,
+                borderColor: colors.surfaceBorder,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: fontWeights.medium,
+                  color: colors.textTertiary,
+                  marginBottom: 8,
+                  lineHeight: 19,
+                }}
+              >
+                {prompt.question}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: fontWeights.semibold,
+                  color: colors.text,
+                  lineHeight: 24,
+                }}
+              >
+                {prompt.answer}
+              </Text>
+            </View>
+          ))}
+        </View>
+      </View>,
+    );
+  }
+
   // 3. Hakkımda — premium grid card design
   infoSections.push(
     <View key="details" style={styles.section}>
