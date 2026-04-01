@@ -50,7 +50,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const GRID_PADDING = 24;
 const GRID_GAP = 10;
 const PHOTO_CELL_WIDTH = (SCREEN_WIDTH - GRID_PADDING * 2 - GRID_GAP * 2) / 3;
-const PHOTO_CELL_HEIGHT = PHOTO_CELL_WIDTH * 1.3;
+const PHOTO_CELL_HEIGHT = PHOTO_CELL_WIDTH * 1.45;
 const PHOTO_SLOTS = 9;
 
 const MAX_BIO_LENGTH = 500;
@@ -1553,7 +1553,7 @@ const styles = StyleSheet.create({
   photoCell: {
     width: PHOTO_CELL_WIDTH,
     height: PHOTO_CELL_HEIGHT,
-    borderRadius: borderRadius.lg,
+    borderRadius: 20,
     backgroundColor: colors.surface,
     borderWidth: 1.5,
     borderColor: colors.surfaceBorder,
@@ -1564,6 +1564,7 @@ const styles = StyleSheet.create({
     borderColor: palette.gold[500],
     borderWidth: 2.5,
     borderStyle: 'solid',
+    borderRadius: 20,
   },
   photoContent: {
     flex: 1,
