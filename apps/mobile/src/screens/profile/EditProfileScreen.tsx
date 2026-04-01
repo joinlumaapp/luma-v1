@@ -83,11 +83,13 @@ const calculateAge = (birthDate: string): number => {
   return age;
 };
 
-// ── Intention tag options ──────────────────────────────────────────────────
-const INTENTION_OPTIONS: LifestyleOption[] = [
-  { value: 'SERIOUS_RELATIONSHIP', label: 'Ciddi İlişki' },
-  { value: 'EXPLORING', label: 'Keşfediyorum' },
-  { value: 'NOT_SURE', label: 'Emin Değilim' },
+// ── Intention tag options (Bumpy-inspired) ────────────────────────────────
+const INTENTION_OPTIONS: Array<{ value: string; label: string; emoji: string; description: string }> = [
+  { value: 'MARRIAGE', label: 'Evlenmek', emoji: '💍', description: 'Evlenecek birini bulmak ve ortak bir gelecek insa etmek' },
+  { value: 'SERIOUS_RELATIONSHIP', label: 'Bir iliski bulmak', emoji: '💖', description: 'Uzun bir iliski yasamak icin ruh esini bulmak' },
+  { value: 'FRIENDSHIP', label: 'Sohbet etmek ve arkadaslarla tanismak', emoji: '💬', description: 'Farkli insanlarla baski altinda olmadan konusmak' },
+  { value: 'LEARN_CULTURES', label: 'Diger kulturleri ogrenmek', emoji: '🎓', description: 'Yeni dil pratigi yapmak ve yeni bir seyler ogrenmek' },
+  { value: 'TRAVEL', label: 'Dunyayi gezmek', emoji: '✈️', description: 'Seyahat arkadaslariyla tanismak ve deneyimlerini paylasmak' },
 ];
 
 // ── Height values ──────────────────────────────────────────────────────────
@@ -1225,37 +1227,58 @@ export const EditProfileScreen: React.FC = () => {
 
           <SectionHeader title="Hedefim" description="Baskalarina ne aradiginizi soyleyin" />
 
-          {/* ── Niyet Etiketi ─────────────────────────────────────────── */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Ne Arıyorsun?</Text>
-            <View style={styles.intentionGrid}>
-              {INTENTION_OPTIONS.map((option) => {
-                const isSelected = intentionTag === option.value;
-                return (
-                  <TouchableOpacity
-                    key={option.value}
-                    style={[
-                      styles.intentionChip,
-                      isSelected && styles.intentionChipSelected,
-                    ]}
-                    onPress={() => setIntentionTag(option.value)}
-                    activeOpacity={0.7}
-                  >
-                    <Text
-                      style={[
-                        styles.intentionLabel,
-                        isSelected && styles.intentionLabelSelected,
-                      ]}
-                    >
-                      {option.label}
-                    </Text>
-                    {isSelected && (
-                      <Ionicons name="checkmark-circle" size={16} color={palette.purple[500]} />
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+          {/* ── Hedefim Kartlari (Bumpy-style) ──────────────────────── */}
+          <View style={{ marginHorizontal: 24, gap: 8 }}>
+            {INTENTION_OPTIONS.map((option) => {
+              const isSelected = intentionTag === option.value;
+              return (
+                <TouchableOpacity
+                  key={option.value}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: colors.surface,
+                    borderWidth: isSelected ? 2 : 1,
+                    borderColor: isSelected ? colors.primary : colors.surfaceBorder,
+                    borderRadius: 14,
+                    paddingHorizontal: 16,
+                    paddingVertical: 14,
+                  }}
+                  onPress={() => setIntentionTag(option.value)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={{ fontSize: 22, marginRight: 12 }}>{option.emoji}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{
+                      fontSize: 15,
+                      fontFamily: 'Poppins_600SemiBold',
+                      fontWeight: '600',
+                      color: colors.text,
+                    }}>{option.label}</Text>
+                    <Text style={{
+                      fontSize: 12,
+                      fontFamily: 'Poppins_400Regular',
+                      fontWeight: '400',
+                      color: colors.textSecondary,
+                      marginTop: 2,
+                    }}>{option.description}</Text>
+                  </View>
+                  <View style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: 12,
+                    borderWidth: isSelected ? 0 : 1.5,
+                    borderColor: colors.surfaceBorder,
+                    backgroundColor: isSelected ? colors.primary : 'transparent',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginLeft: 8,
+                  }}>
+                    {isSelected && <Ionicons name="checkmark" size={16} color="#fff" />}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
           </View>
 
           {/* ─── Section 3: Hakkimda Daha Fazlasi ─── */}

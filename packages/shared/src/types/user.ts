@@ -55,11 +55,13 @@ export interface UserPhoto {
   createdAt: Date;
 }
 
-// Subsystem 4: Intention Tags — LOCKED: 3 Tags
+// Subsystem 4: Intention Tags — Extended to 5 Tags
 export enum IntentionTag {
+  MARRIAGE = 'MARRIAGE',
   SERIOUS_RELATIONSHIP = 'SERIOUS_RELATIONSHIP',
-  EXPLORING = 'EXPLORING',
-  NOT_SURE = 'NOT_SURE',
+  FRIENDSHIP = 'FRIENDSHIP',
+  LEARN_CULTURES = 'LEARN_CULTURES',
+  TRAVEL = 'TRAVEL',
 }
 
 export enum Gender {
