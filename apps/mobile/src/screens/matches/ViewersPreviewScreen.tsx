@@ -473,6 +473,38 @@ const getBadge = (viewerId: string, viewCount: number): string | null => {
   return BADGES[hash % 3]; // Sana çok yakın / Yüksek uyum / Yeni
 };
 
+// ─── Shimmer Light Sweep (locked grid cards) ─────────────────────────
+
+const ShimmerSweep: React.FC = () => {
+  const translateX = useRef(new Animated.Value(-CARD_WIDTH)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.timing(translateX, {
+        toValue: CARD_WIDTH * 2,
+        duration: 3000,
+        useNativeDriver: true,
+      }),
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [translateX]);
+
+  return (
+    <Animated.View
+      style={{
+        position: 'absolute',
+        top: -20,
+        width: CARD_WIDTH * 0.4,
+        height: CARD_HEIGHT * 2.5,
+        backgroundColor: 'rgba(255, 255, 255, 0.10)',
+        transform: [{ translateX }, { rotate: '20deg' }],
+      }}
+      pointerEvents="none"
+    />
+  );
+};
+
 interface ViewerGridProps {
   viewers: ProfileViewer[];
   isPremium: boolean;
@@ -595,6 +627,9 @@ const ViewerGridCard: React.FC<ViewerGridCardProps> = ({
             colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.55)'] as [string, string]}
             style={gridStyles.cardOverlay}
           />
+
+          {/* Shimmer sweep on locked cards */}
+          {!isPremium && <ShimmerSweep />}
 
           {/* Lock icon with pulse */}
           {!isPremium && (

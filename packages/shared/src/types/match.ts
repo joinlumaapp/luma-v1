@@ -65,6 +65,11 @@ export interface ProfileViewer {
   firstViewedAt: string;
   lastViewedAt: string;
   distanceKm: number | null;
+  // Display fields for viewer detail sheet
+  firstName: string | null;
+  age: number | null;
+  photoUrl: string | null;
+  sharedInterests: string[];
 }
 
 // ─── Secret Admirer (Gizli Hayran) ──────────────────────────────────
