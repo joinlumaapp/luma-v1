@@ -390,7 +390,7 @@ export const creamTheme = {
 
 export type ThemeColors = {
   [K in keyof typeof darkTheme]: K extends 'statusBar'
-    ? 'light-content' | 'dark-content'
+    ? 'light-content'
     : (typeof darkTheme)[K] extends readonly string[]
       ? readonly string[]
       : string;

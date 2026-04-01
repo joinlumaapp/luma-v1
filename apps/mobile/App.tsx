@@ -176,14 +176,25 @@ const errorStyles = StyleSheet.create({
 });
 
 // ─── Forced Dark Status Bar ───────────────────────────────────────────
-// Always dark background (#08080F) with white text — never changes
+// Always dark background (#08080F) with white text — never changes.
+// Uses an interval to forcefully re-apply every second, catching any
+// override caused by navigation transitions, modals, or third-party libs.
 function ThemedStatusBar(): React.JSX.Element {
-  // Force status bar on every render to prevent any screen from overriding
   useEffect(() => {
-    RNStatusBar.setBarStyle('light-content', true);
-    RNStatusBar.setBackgroundColor('#08080F', true);
-    RNStatusBar.setTranslucent(false);
-  });
+    const forceStatusBar = (): void => {
+      RNStatusBar.setBarStyle('light-content', true);
+      RNStatusBar.setBackgroundColor('#08080F', true);
+      RNStatusBar.setTranslucent(false);
+    };
+
+    // Force immediately
+    forceStatusBar();
+
+    // Force on interval to catch any overrides
+    const interval = setInterval(forceStatusBar, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <RNStatusBar

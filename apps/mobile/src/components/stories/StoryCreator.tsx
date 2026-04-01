@@ -307,7 +307,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
   }, [imageUri, navigation]);
 
   if (!imageUri) {
-    return <View style={styles.container}><StatusBar barStyle="light-content" /></View>;
+    return <View style={styles.container}><StatusBar barStyle="light-content" backgroundColor="#08080F" /></View>;
   }
 
   // ─── Preview Mode ──────────────────────────────────────────
@@ -315,7 +315,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
   if (showPreview) {
     return (
       <View style={styles.container}>
-        <StatusBar barStyle="light-content" />
+        <StatusBar barStyle="light-content" backgroundColor="#08080F" />
         {mediaType === 'video' ? (
           <Video
             source={{ uri: imageUri! }}
@@ -394,7 +394,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="light-content" backgroundColor="#08080F" />
 
       {/* Background image */}
       <View

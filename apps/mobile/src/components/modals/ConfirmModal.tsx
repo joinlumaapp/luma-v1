@@ -6,6 +6,7 @@ import {
   Text,
   TouchableOpacity,
   Modal,
+  StatusBar,
   StyleSheet,
   Pressable,
 } from 'react-native';
@@ -42,6 +43,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       statusBarTranslucent
       onRequestClose={onCancel}
     >
+      <StatusBar barStyle="light-content" backgroundColor="#08080F" />
       <Pressable style={styles.overlay} onPress={onCancel}>
         <Pressable style={styles.card} onPress={() => {}}>
           <Text style={styles.title}>{title}</Text>

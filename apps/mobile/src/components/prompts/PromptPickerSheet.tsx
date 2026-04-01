@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Modal,
+  StatusBar,
   Animated,
   Dimensions,
   ScrollView,
@@ -140,6 +141,7 @@ export const PromptPickerSheet: React.FC<PromptPickerSheetProps> = ({
       statusBarTranslucent
       onRequestClose={handleClose}
     >
+      <StatusBar barStyle="light-content" backgroundColor="#08080F" />
       <View style={styles.modalContainer}>
         {/* Backdrop */}
         <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>

@@ -6,6 +6,7 @@ import {
   View,
   Text,
   Modal,
+  StatusBar,
   StyleSheet,
   TouchableOpacity,
   Linking,
@@ -46,6 +47,7 @@ export const ForceUpdateModal: React.FC<ForceUpdateModalProps> = ({
       statusBarTranslucent
       onRequestClose={isOptional ? onDismiss : undefined}
     >
+      <StatusBar barStyle="light-content" backgroundColor="#08080F" />
       <View style={styles.container}>
         <View style={styles.content}>
           {/* Logo */}

@@ -77,7 +77,7 @@ export const PostDetailScreen: React.FC = () => {
   if (!post) {
     return (
       <View style={styles.container}>
-        <StatusBar barStyle="light-content" />
+        <StatusBar barStyle="light-content" backgroundColor="#08080F" />
         <Text style={styles.emptyText}>Gönderi bulunamadı</Text>
       </View>
     );
@@ -96,7 +96,7 @@ export const PostDetailScreen: React.FC = () => {
   if (hasPhotos) {
     return (
       <Animated.View style={[styles.container, animatedStyle]} {...panResponder.panHandlers}>
-        <StatusBar barStyle="light-content" />
+        <StatusBar barStyle="light-content" backgroundColor="#08080F" />
 
         {/* Close button */}
         <TouchableOpacity
@@ -141,7 +141,7 @@ export const PostDetailScreen: React.FC = () => {
   if (hasVideo) {
     return (
       <Animated.View style={[styles.container, animatedStyle]} {...panResponder.panHandlers}>
-        <StatusBar barStyle="light-content" />
+        <StatusBar barStyle="light-content" backgroundColor="#08080F" />
 
         {/* Close button */}
         <TouchableOpacity
@@ -164,7 +164,7 @@ export const PostDetailScreen: React.FC = () => {
   // Text viewer — clean full-screen reading view
   return (
     <Animated.View style={[styles.container, animatedStyle]} {...panResponder.panHandlers}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="light-content" backgroundColor="#08080F" />
 
       {/* Close button */}
       <TouchableOpacity

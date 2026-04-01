@@ -79,7 +79,7 @@ function PhotoViewer({ visible, photos, initialIndex, onClose }: PhotoViewerProp
       onRequestClose={onClose}
     >
       <View style={styles.viewerOverlay}>
-        <StatusBar barStyle="light-content" />
+        <StatusBar barStyle="light-content" backgroundColor="#08080F" />
 
         {/* Close button */}
         <TouchableOpacity

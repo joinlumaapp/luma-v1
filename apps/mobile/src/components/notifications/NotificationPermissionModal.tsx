@@ -2,7 +2,7 @@
 // Explains notification benefits and requests user permission
 
 import React from 'react';
-import { Modal, View, Text, Pressable, StyleSheet } from 'react-native';
+import { Modal, View, Text, StatusBar, Pressable, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, palette } from '../../theme/colors';
@@ -42,6 +42,7 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
       statusBarTranslucent
       onRequestClose={onDismiss}
     >
+      <StatusBar barStyle="light-content" backgroundColor="#08080F" />
       <View style={styles.overlay}>
         <View style={styles.card}>
           {/* Gradient bell icon */}

@@ -37,7 +37,7 @@ const RootNavigatorInner: React.FC = () => {
   const showOnboarding = hasStartedOnboarding && !showMainTabs;
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade', statusBarStyle: 'light', statusBarColor: '#08080F', statusBarAnimation: 'none' }}>
       {showMainTabs ? (
         <Stack.Screen name="MainTabs" component={MainTabNavigator} />
       ) : showOnboarding ? (

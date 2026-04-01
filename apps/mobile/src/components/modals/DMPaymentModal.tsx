@@ -6,6 +6,7 @@ import {
   Text,
   TouchableOpacity,
   Modal,
+  StatusBar,
   StyleSheet,
   Pressable,
   ActivityIndicator,
@@ -53,6 +54,7 @@ export const DMPaymentModal: React.FC<DMPaymentModalProps> = ({
       statusBarTranslucent
       onRequestClose={onClose}
     >
+      <StatusBar barStyle="light-content" backgroundColor="#08080F" />
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable style={styles.card} onPress={() => {}}>
           {/* Close button */}

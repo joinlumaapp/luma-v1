@@ -9,6 +9,7 @@ import {
   Image,
   StyleSheet,
   Modal,
+  StatusBar,
   Animated,
   Pressable,
 } from 'react-native';
@@ -80,6 +81,7 @@ export const QuickProfilePreview: React.FC<QuickProfilePreviewProps> = ({
 
   return (
     <Modal transparent visible={visible} animationType="none" statusBarTranslucent onRequestClose={handleClose}>
+      <StatusBar barStyle="light-content" backgroundColor="#08080F" />
       {/* Backdrop */}
       <Animated.View style={[styles.backdrop, { opacity: backdropAnim }]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
