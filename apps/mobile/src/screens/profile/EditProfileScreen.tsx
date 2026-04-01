@@ -32,6 +32,7 @@ import {
   ALCOHOL_OPTIONS, SEXUAL_ORIENTATION_OPTIONS, PETS_OPTIONS,
   RELIGION_OPTIONS, EXERCISE_OPTIONS as CONFIG_EXERCISE_OPTIONS,
   SMOKING_OPTIONS as CONFIG_SMOKING_OPTIONS, CHILDREN_OPTIONS as CONFIG_CHILDREN_OPTIONS,
+  LIFE_VALUES_OPTIONS,
 } from '../../constants/config';
 import { useProfileStore } from '../../stores/profileStore';
 import { photoService } from '../../services/photoService';
@@ -1330,7 +1331,7 @@ export const EditProfileScreen: React.FC = () => {
           <FieldRow icon="🚬" label="Sigara" value={smoking || ''} onPress={() => openPicker('Sigara', CONFIG_SMOKING_OPTIONS, 'smoking')} />
           <FieldRow icon="🐾" label="Evcil Hayvanlar" value={pets || ''} onPress={() => openPicker('Evcil Hayvanlar', PETS_OPTIONS, 'pets')} />
           <FieldRow icon="🕌" label="Din" value={religion || ''} onPress={() => openPicker('Din', RELIGION_OPTIONS, 'religion')} />
-          <FieldRow icon="🌐" label="Degerler" value={lifeValues || ''} onPress={() => {}} />
+          <FieldRow icon="🌐" label="Degerler" value={lifeValues || ''} onPress={() => openPicker('Senin icin hayattaki en onemli sey nedir?', LIFE_VALUES_OPTIONS, 'lifeValues')} />
 
           {/* ── İlgi Alanları ─────────────────────────────────────────── */}
           <View style={styles.section}>

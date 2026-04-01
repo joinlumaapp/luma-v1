@@ -414,6 +414,17 @@ export const CHILDREN_OPTIONS = [
   'Var', 'Yok', 'Istiyorum', 'Istemiyorum',
 ] as const;
 
+export const LIFE_VALUES_OPTIONS = [
+  'Aile ve Cocuklar',
+  'Bilim ve Arastirma',
+  'Dunyayi Iyilestirme',
+  'Eglence ve Dinlence',
+  'Guzellik ve Sanat',
+  'Kariyer ve Para',
+  'Kendini Gerceklestirme',
+  'Sohret ve Etkileme',
+] as const;
+
 // Ad placement configuration
 export const AD_CONFIG = {
   /** Feed: show ad after every N posts (free users only) */
