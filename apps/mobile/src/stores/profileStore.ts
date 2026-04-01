@@ -242,10 +242,11 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       set({
         profile,
         _photoIds: photoIds,
-        completionPercent: data.completionPercent,
         isLoading: false,
         error: null,
       });
+      // Always use local calculation (22 fields) — backend may have old formula
+      set({ completionPercent: get().calculateCompletion() });
     } catch (error: unknown) {
       if (__DEV__) {
         console.warn('Profil yukleme basarisiz:', error);
