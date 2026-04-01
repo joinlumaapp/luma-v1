@@ -21,10 +21,11 @@ import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { PROFILE_CONFIG } from '../../constants/config';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { ONBOARDING_TOTAL_STEPS } from '../../navigation/OnboardingNavigator';
 
 type NavProp = NativeStackNavigationProp<OnboardingStackParamList, 'Bio'>;
 
-const CURRENT_STEP = 13;
+const CURRENT_STEP = 12;
 
 const BIO_PROMPTS = [
   'Boş zamanlarında ne yapmayı seversin?',
@@ -61,7 +62,7 @@ export const BioScreen: React.FC = () => {
     >
       <BrandedBackground />
       {/* Progress indicator */}
-      <OnboardingProgress currentStep={CURRENT_STEP} />
+      <OnboardingProgress currentStep={CURRENT_STEP} totalSteps={ONBOARDING_TOTAL_STEPS} />
 
       {/* Content */}
       <View style={styles.content}>

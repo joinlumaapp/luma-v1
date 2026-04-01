@@ -172,7 +172,7 @@ export const InterestSelectionScreen: React.FC = () => {
 
   return (
     <OnboardingLayout
-      step={12}
+      step={11}
       totalSteps={15}
       showBack
       showSkip
