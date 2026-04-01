@@ -9,7 +9,6 @@ import {
   ScrollView,
   StyleSheet,
   Animated,
-  Alert,
   Modal,
   Image,
   PanResponder,
@@ -520,12 +519,14 @@ const ViewerGrid: React.FC<ViewerGridProps> = ({ viewers, isPremium, onUpgrade, 
   const lockPulse = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    Animated.loop(
+    const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(lockPulse, { toValue: 1.15, duration: 1800, useNativeDriver: true }),
         Animated.timing(lockPulse, { toValue: 1, duration: 1800, useNativeDriver: true }),
       ]),
-    ).start();
+    );
+    animation.start();
+    return () => animation.stop();
   }, [lockPulse]);
 
   const todayCount = viewers.filter((v) => isToday(v.lastViewedAt)).length;
@@ -557,7 +558,7 @@ const ViewerGrid: React.FC<ViewerGridProps> = ({ viewers, isPremium, onUpgrade, 
               badge={badge}
               lockPulse={lockPulse}
               entryDelay={entryDelay}
-              onPress={() => isPremium ? onCardPress(item) : onUpgrade()}
+              onPress={() => onCardPress(item)}
             />
           );
         })}
@@ -601,6 +602,7 @@ const ViewerGridCard: React.FC<ViewerGridCardProps> = ({
   item, index, isHero, isPremium, badge, lockPulse, entryDelay, onPress,
 }) => {
   const entryAnim = useRef(new Animated.Value(0)).current;
+  const tapRevealAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.timing(entryAnim, {
@@ -619,7 +621,18 @@ const ViewerGridCard: React.FC<ViewerGridCardProps> = ({
       opacity: entryAnim,
       transform: [{ translateY: entryAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }],
     }}>
-      <Pressable onPress={onPress} style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}>
+      <Pressable
+        onPress={() => {
+          if (!isPremium) {
+            Animated.sequence([
+              Animated.timing(tapRevealAnim, { toValue: 1, duration: 150, useNativeDriver: true }),
+              Animated.timing(tapRevealAnim, { toValue: 0, duration: 150, useNativeDriver: true }),
+            ]).start();
+          }
+          onPress();
+        }}
+        style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
+      >
         <View style={[gridStyles.card, { width: cardWidth, height: cardHeight }]}>
           {/* Blurred background */}
           <View style={[gridStyles.cardBg, { backgroundColor: palette.purple[100] }]}>
@@ -631,6 +644,18 @@ const ViewerGridCard: React.FC<ViewerGridCardProps> = ({
             colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.55)'] as [string, string]}
             style={gridStyles.cardOverlay}
           />
+
+          {/* Tap reveal flash */}
+          {!isPremium && (
+            <Animated.View
+              style={{
+                ...StyleSheet.absoluteFillObject,
+                backgroundColor: 'rgba(255,255,255,0.15)',
+                opacity: tapRevealAnim,
+              }}
+              pointerEvents="none"
+            />
+          )}
 
           {/* Shimmer sweep on locked cards */}
           {!isPremium && <ShimmerSweep />}
@@ -1247,9 +1272,14 @@ export const ViewersPreviewScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const eyeScale = useEyeBlink();
 
-  const { viewers, fetchViewers } = useViewersStore();
+  const { viewers, fetchViewers, revealViewer, isViewerRevealed } = useViewersStore();
   const packageTier = useAuthStore((st) => st.user?.packageTier ?? 'FREE') as PackageTier;
   const isPremium = packageTier !== 'FREE';
+
+  // Bottom sheet state
+  const [selectedViewer, setSelectedViewer] = useState<ProfileViewer | null>(null);
+  const [showDetailSheet, setShowDetailSheet] = useState(false);
+  const [showTeaserSheet, setShowTeaserSheet] = useState(false);
 
   useEffect(() => {
     fetchViewers();
@@ -1261,21 +1291,46 @@ export const ViewersPreviewScreen: React.FC = () => {
 
   const handleCardPress = useCallback(
     (item: ProfileViewer) => {
-      if (isPremium) {
-        navigation.navigate('ProfilePreview', { userId: item.viewerId });
+      // Premium or revealed → show detail sheet
+      if (isPremium || isViewerRevealed(item.viewerId)) {
+        setSelectedViewer(item);
+        setShowDetailSheet(true);
         return;
       }
-      Alert.alert(
-        'Kim olduğunu gör',
-        'Profiline kimlerin baktığını görmek için paketini yükselt.',
-        [
-          { text: 'Kapat', style: 'cancel' },
-          { text: 'Paketi Yükselt', onPress: navigateUpgrade },
-        ],
-      );
+
+      // Free user — try reveal via store
+      revealViewer(item.viewerId).then((revealed) => {
+        if (revealed) {
+          setSelectedViewer(item);
+          setShowDetailSheet(true);
+          return;
+        }
+
+        // No reveals left — show teaser sheet after card animation delay
+        setTimeout(() => setShowTeaserSheet(true), 400);
+      });
     },
-    [isPremium, navigation, navigateUpgrade],
+    [isPremium, isViewerRevealed, revealViewer],
   );
+
+  const handleViewProfile = useCallback((viewerId: string) => {
+    setShowDetailSheet(false);
+    navigation.navigate('ProfilePreview', { userId: viewerId });
+  }, [navigation]);
+
+  const handleSendMessage = useCallback((_viewerId: string) => {
+    setShowDetailSheet(false);
+    navigation.navigate('JetonMarket' as never);
+  }, [navigation]);
+
+  const handleDetailDismiss = useCallback(() => {
+    setShowDetailSheet(false);
+    setSelectedViewer(null);
+  }, []);
+
+  const handleTeaserDismiss = useCallback(() => {
+    setShowTeaserSheet(false);
+  }, []);
 
   const hasViewers = viewers.length > 0;
 
@@ -1314,6 +1369,25 @@ export const ViewersPreviewScreen: React.FC = () => {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Viewer Detail Sheet */}
+      <ViewerDetailSheet
+        visible={showDetailSheet}
+        viewer={selectedViewer}
+        onDismiss={handleDetailDismiss}
+        onViewProfile={handleViewProfile}
+        onSendMessage={handleSendMessage}
+      />
+
+      {/* Viewer Teaser Sheet */}
+      <ViewerTeaserSheet
+        visible={showTeaserSheet}
+        onDismiss={handleTeaserDismiss}
+        onUpgrade={() => {
+          setShowTeaserSheet(false);
+          navigateUpgrade();
+        }}
+      />
     </View>
   );
 };
