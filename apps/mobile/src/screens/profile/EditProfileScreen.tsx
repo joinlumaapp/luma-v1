@@ -429,12 +429,25 @@ export const EditProfileScreen: React.FC = () => {
     setSelectedInterests(profile.interestTags);
     setLocalGender(profile.gender ?? '');
     setLocalBirthDate(profile.birthDate ?? '');
+    // Extended fields
+    setWeight(profile.weight != null ? String(profile.weight) : '');
+    setSexualOrientation(profile.sexualOrientation ?? '');
+    setZodiacSign(profile.zodiacSign ?? '');
+    setEducationLevel(profile.educationLevel ?? '');
+    setMaritalStatus(profile.maritalStatus ?? '');
+    setAlcohol(profile.alcohol ?? '');
+    setPets(profile.pets ?? '');
+    setReligion(profile.religion ?? '');
+    setLifeValues(profile.lifeValues ?? '');
   }, [
     profile.firstName, profile.lastName,
     profile.bio, profile.city, profile.job, profile.education,
     profile.intentionTag, profile.height, profile.smoking,
     profile.sports, profile.children, profile.interestTags,
     profile.gender, profile.birthDate,
+    profile.weight, profile.sexualOrientation, profile.zodiacSign,
+    profile.educationLevel, profile.maritalStatus, profile.alcohol,
+    profile.pets, profile.religion, profile.lifeValues,
   ]);
 
   // ── Photo handlers ─────────────────────────────────────────────────────
@@ -629,6 +642,16 @@ export const EditProfileScreen: React.FC = () => {
         interestTags: selectedInterests,
         gender: localGender || undefined,
         birthDate: localBirthDate || undefined,
+        // Extended profile fields
+        weight: weight ? Number(weight) : null,
+        sexualOrientation,
+        zodiacSign,
+        educationLevel,
+        maritalStatus,
+        alcohol,
+        pets,
+        religion,
+        lifeValues,
       });
       navigation.goBack();
     } catch {
@@ -639,7 +662,10 @@ export const EditProfileScreen: React.FC = () => {
   }, [
     firstName, lastName,
     bio, city, job, education, intentionTag, height, smoking, exercise,
-    children, selectedInterests, localGender, localBirthDate, isSaving, updateProfile, navigation,
+    children, selectedInterests, localGender, localBirthDate,
+    weight, sexualOrientation, zodiacSign, educationLevel, maritalStatus,
+    alcohol, pets, religion, lifeValues,
+    isSaving, updateProfile, navigation,
   ]);
 
   const hasChanges =
@@ -656,7 +682,16 @@ export const EditProfileScreen: React.FC = () => {
     children !== profile.children ||
     JSON.stringify(selectedInterests) !== JSON.stringify(profile.interestTags) ||
     localGender !== (profile.gender ?? '') ||
-    localBirthDate !== (profile.birthDate ?? '');
+    localBirthDate !== (profile.birthDate ?? '') ||
+    weight !== (profile.weight != null ? String(profile.weight) : '') ||
+    sexualOrientation !== (profile.sexualOrientation ?? '') ||
+    zodiacSign !== (profile.zodiacSign ?? '') ||
+    educationLevel !== (profile.educationLevel ?? '') ||
+    maritalStatus !== (profile.maritalStatus ?? '') ||
+    alcohol !== (profile.alcohol ?? '') ||
+    pets !== (profile.pets ?? '') ||
+    religion !== (profile.religion ?? '') ||
+    lifeValues !== (profile.lifeValues ?? '');
 
   const age = calculateAge(localBirthDate || profile.birthDate);
   const answeredCount = Object.keys(profile.answers ?? {}).length;

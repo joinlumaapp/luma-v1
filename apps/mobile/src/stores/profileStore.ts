@@ -257,7 +257,15 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   },
 
   updateProfile: async (data) => {
-    set({ isLoading: true, error: null });
+    // Apply changes optimistically so they persist even if API fails
+    set((state) => ({
+      profile: { ...state.profile, ...data },
+      isLoading: true,
+      error: null,
+    }));
+    // Recalculate completion immediately with the new data
+    set({ completionPercent: get().calculateCompletion() });
+
     try {
       const response = await profileService.updateProfile(data);
       const profile = mapResponseToProfile(response);
@@ -265,20 +273,19 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       set({
         profile,
         _photoIds: photoIds,
-        completionPercent: response.completionPercent,
         isLoading: false,
         error: null,
       });
+      // Use local calculation — backend may have old formula
+      set({ completionPercent: get().calculateCompletion() });
     } catch (error: unknown) {
       try {
         devMockOrThrow(error, data, 'profileStore.updateProfile');
-        // In dev, apply changes locally anyway
-        set((state) => ({
-          profile: { ...state.profile, ...data },
-          isLoading: false,
-        }));
+        // In dev, keep the optimistic changes (already applied above)
+        set({ isLoading: false });
       } catch {
         const apiError = parseApiError(error as AxiosError);
+        // Keep the optimistic changes — will sync on next successful save
         set({ isLoading: false, error: apiError.userMessage });
       }
     }
