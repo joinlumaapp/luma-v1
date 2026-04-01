@@ -197,7 +197,7 @@ export const InterestSelectionScreen: React.FC = () => {
       >
         {/* Title */}
         <Text style={styles.title}>
-          Seni ne mutlu{'\n'}eder?
+          Ilgi alanlarin{'\n'}neler?
         </Text>
 
         {/* Counter */}
