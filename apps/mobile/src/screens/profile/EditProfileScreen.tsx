@@ -170,7 +170,7 @@ interface OptionPickerProps {
 const OptionPicker: React.FC<OptionPickerProps> = ({
   visible, title, options, selected, onSelect, onDismiss,
 }) => {
-  if (!visible) return null;
+  if (!visible || !options || options.length === 0) return null;
   return (
     <View style={sectionStyles.pickerOverlay}>
       <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onDismiss} />
@@ -178,7 +178,7 @@ const OptionPicker: React.FC<OptionPickerProps> = ({
         <View style={sectionStyles.pickerHandle} />
         <Text style={sectionStyles.pickerTitle}>{title}</Text>
         <ScrollView showsVerticalScrollIndicator={false}>
-          {options.map((opt) => (
+          {Array.from(options).map((opt) => (
             <TouchableOpacity
               key={opt}
               style={[sectionStyles.pickerOption, selected === opt && sectionStyles.pickerOptionSelected]}
@@ -360,7 +360,7 @@ export const EditProfileScreen: React.FC = () => {
   const [pickerConfig, setPickerConfig] = useState<{
     visible: boolean;
     title: string;
-    options: readonly string[];
+    options: string[];
     field: string;
   } | null>(null);
 
@@ -407,7 +407,7 @@ export const EditProfileScreen: React.FC = () => {
   pickerConfigRef.current = pickerConfig;
 
   const openPicker = useCallback((title: string, options: readonly string[], field: string) => {
-    setPickerConfig({ visible: true, title, options, field });
+    setPickerConfig({ visible: true, title, options: [...options], field });
   }, []);
 
   const handlePickerSelect = useCallback((value: string) => {
