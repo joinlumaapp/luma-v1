@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
+  ScrollView,
   Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -64,8 +65,13 @@ export const BioScreen: React.FC = () => {
       {/* Progress indicator */}
       <OnboardingProgress currentStep={CURRENT_STEP} totalSteps={ONBOARDING_TOTAL_STEPS} />
 
-      {/* Content */}
-      <View style={styles.content}>
+      {/* Content — scrollable so keyboard doesn't overlap */}
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.title}>Hakkında</Text>
         <Text style={styles.subtitle}>
           Kendini tanımla. İlgi çekici bir bio eşleşme şansını arttırır.
@@ -106,7 +112,6 @@ export const BioScreen: React.FC = () => {
             multiline
             textAlignVertical="top"
             maxLength={PROFILE_CONFIG.MAX_BIO_LENGTH}
-            autoFocus
             accessibilityLabel="Hakkında yazısı"
             accessibilityHint="Kendini tanımlayan bir bio yaz"
           />
@@ -127,10 +132,9 @@ export const BioScreen: React.FC = () => {
             </Text>
           </View>
         </View>
-      </View>
 
-      {/* Footer */}
-      <View style={styles.footer}>
+        {/* Footer inside scroll — always below content */}
+        <View style={styles.footer}>
         <TouchableOpacity
           style={styles.continueButton}
           onPress={handleContinue}
@@ -149,6 +153,7 @@ export const BioScreen: React.FC = () => {
           <Text style={styles.skipText}>Şimdilik Atla</Text>
         </TouchableOpacity>
       </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
@@ -160,8 +165,11 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  scrollContent: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.xl,
+    paddingBottom: spacing.xxl,
   },
   title: {
     ...typography.h2,
@@ -191,8 +199,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   inputContainer: {
-    flex: 1,
-    maxHeight: 200,
+    marginBottom: spacing.lg,
   },
   bioInput: {
     flex: 1,
