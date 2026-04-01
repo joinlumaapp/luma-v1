@@ -42,7 +42,8 @@ export const VISIBLE_MODES = INTENTION_TAGS.filter(
   (t): t is typeof INTENTION_TAGS[0] | typeof INTENTION_TAGS[1] => !('hidden' in t && t.hidden),
 );
 
-// Interest tags — predefined list for onboarding selection
+// Interest tags — predefined list for onboarding selection (legacy flat list)
+// @deprecated Use INTEREST_CATEGORIES for categorized picker. Kept for backward compat lookups.
 export const INTEREST_OPTIONS = [
   { id: 'travel', emoji: '\u2708\uFE0F', label: 'Seyahat' },
   { id: 'music', emoji: '\uD83C\uDFB5', label: 'Müzik' },
@@ -63,6 +64,209 @@ export const INTEREST_OPTIONS = [
   { id: 'hiking', emoji: '\uD83C\uDFD4\uFE0F', label: 'Dağcılık' },
   { id: 'coffee', emoji: '\u2615', label: 'Kahve & Şarap' },
 ] as const;
+
+// ── Categorized interests — Bumpy-style picker ───────────────────────────
+export interface InterestItem {
+  emoji: string;
+  label: string;
+}
+
+export interface InterestCategory {
+  title: string;
+  items: InterestItem[];
+}
+
+export const MAX_INTEREST_SELECTIONS = 15;
+export const INTEREST_CATEGORY_PREVIEW_COUNT = 6;
+
+export const INTEREST_CATEGORIES: InterestCategory[] = [
+  {
+    title: 'Seyahatler',
+    items: [
+      { emoji: '🌊', label: 'Denizler' },
+      { emoji: '⛰', label: 'Daglar' },
+      { emoji: '🌳', label: 'Doga' },
+      { emoji: '🗼', label: 'Gezilecek yerler' },
+      { emoji: '🏙', label: 'Sehirler' },
+      { emoji: '🧭', label: 'Yuruyus' },
+    ],
+  },
+  {
+    title: 'Yiyecek ve Icecek',
+    items: [
+      { emoji: '☕', label: 'Kahve' },
+      { emoji: '🫖', label: 'Cay' },
+      { emoji: '🍺', label: 'Bira' },
+      { emoji: '🍷', label: 'Sarap' },
+      { emoji: '🥃', label: 'Viski' },
+      { emoji: '🍹', label: 'Kokteyller' },
+      { emoji: '🍕', label: 'Pizza' },
+      { emoji: '🍣', label: 'Susi' },
+      { emoji: '🍔', label: 'Fast food' },
+      { emoji: '🥩', label: 'Izgara' },
+      { emoji: '🍲', label: 'Ev yemekleri' },
+      { emoji: '🍰', label: 'Tatlilar' },
+      { emoji: '🥗', label: 'Vejetaryen' },
+      { emoji: '🌱', label: 'Vegan' },
+    ],
+  },
+  {
+    title: 'Hobiler',
+    items: [
+      { emoji: '✍', label: 'Siir' },
+      { emoji: '📝', label: 'Nesir' },
+      { emoji: '💄', label: 'Makyaj' },
+      { emoji: '✏', label: 'Blog yazma' },
+      { emoji: '📱', label: 'Tik-Tok Cekme' },
+      { emoji: '🎨', label: 'Cizim' },
+      { emoji: '🎵', label: 'Muzik' },
+      { emoji: '📸', label: 'Fotografcilik' },
+      { emoji: '🎬', label: 'Tasarim' },
+      { emoji: '💉', label: 'Dovmeler' },
+      { emoji: '📚', label: 'Okuma' },
+      { emoji: '📺', label: 'TV' },
+      { emoji: '🎥', label: 'YouTube' },
+      { emoji: '🍳', label: 'Yemek pisirme' },
+      { emoji: '🌻', label: 'Bahcecilik' },
+      { emoji: '🎲', label: 'Masa oyunlari' },
+      { emoji: '❓', label: 'Akil oyunlari' },
+      { emoji: '🔭', label: 'Astronomi' },
+      { emoji: '🚗', label: 'Arabalar' },
+      { emoji: '🎮', label: 'Video oyunlari' },
+      { emoji: '💪', label: 'Saglikli yasam tarzi' },
+      { emoji: '🎣', label: 'Balikcilik' },
+      { emoji: '🛍', label: 'Alisveris' },
+    ],
+  },
+  {
+    title: 'Spor',
+    items: [
+      { emoji: '🧗', label: 'Tirmanma' },
+      { emoji: '🏸', label: 'Badminton' },
+      { emoji: '🏀', label: 'Basketbol' },
+      { emoji: '💪', label: 'Vucut Gelistirme' },
+      { emoji: '🏃', label: 'Kosma' },
+      { emoji: '⚾', label: 'Beyzbol' },
+      { emoji: '🥊', label: 'Boks' },
+      { emoji: '🤼', label: 'Gures' },
+      { emoji: '🚴', label: 'Bisiklet' },
+      { emoji: '🤽', label: 'Su topu' },
+      { emoji: '🏐', label: 'Voleybol' },
+      { emoji: '🤾', label: 'Hentbol' },
+      { emoji: '🤸', label: 'Jimnastik' },
+      { emoji: '🚣', label: 'Kurek cekme' },
+      { emoji: '🥋', label: 'Judo' },
+      { emoji: '🧘', label: 'Yoga' },
+      { emoji: '🏃‍♀️', label: 'Atletizm' },
+      { emoji: '🧘‍♂️', label: 'Meditasyon' },
+      { emoji: '🤸‍♀️', label: 'Pilates' },
+      { emoji: '🏊', label: 'Yuzme' },
+      { emoji: '🏄', label: 'Sorf' },
+      { emoji: '💃', label: 'Dans' },
+      { emoji: '🎾', label: 'Tenis' },
+      { emoji: '🏓', label: 'Masa tenisi' },
+      { emoji: '⚽', label: 'Futbol' },
+      { emoji: '🏒', label: 'Hokey' },
+      { emoji: '🖥', label: 'eSpor' },
+      { emoji: '🏎', label: 'Formula 1' },
+    ],
+  },
+  {
+    title: 'Muzik',
+    items: [
+      { emoji: '🎵', label: 'Halk Muzigi' },
+      { emoji: '🎵', label: 'Country muzik' },
+      { emoji: '🎵', label: 'Latin Amerika muzigi' },
+      { emoji: '🎵', label: 'Blues' },
+      { emoji: '🎵', label: 'R&B' },
+      { emoji: '🎵', label: 'Caz' },
+      { emoji: '🎵', label: 'Sanson' },
+      { emoji: '🎵', label: 'Romantik' },
+      { emoji: '🎵', label: 'Sanat sarkisi' },
+      { emoji: '🎵', label: 'Elektronik muzik' },
+      { emoji: '🎵', label: 'Rock' },
+      { emoji: '🎵', label: 'Hip-hop' },
+      { emoji: '🎵', label: 'Reggae' },
+      { emoji: '🎵', label: 'Funk' },
+      { emoji: '🎵', label: 'Yeni Dalga' },
+      { emoji: '🎵', label: 'Soul' },
+      { emoji: '🎵', label: 'Disko' },
+      { emoji: '🎵', label: 'Pop' },
+    ],
+  },
+  {
+    title: 'Evcil hayvanlar',
+    items: [
+      { emoji: '🐈', label: 'Kediler' },
+      { emoji: '🐕', label: 'Kopekler' },
+      { emoji: '🐦', label: 'Kuslar' },
+      { emoji: '🐟', label: 'Baliklar' },
+      { emoji: '🐇', label: 'Tavsanlar' },
+      { emoji: '🐍', label: 'Yilanlar' },
+    ],
+  },
+  {
+    title: 'Disari cikma',
+    items: [
+      { emoji: '☕', label: 'Kafeler' },
+      { emoji: '🍽', label: 'Restoranlar' },
+      { emoji: '🎤', label: 'Karaoke' },
+      { emoji: '🎭', label: 'Tiyatrolar' },
+      { emoji: '🍻', label: 'Barlar' },
+      { emoji: '🪩', label: 'Gece Kulupleri' },
+      { emoji: '🏛', label: 'Muzeler' },
+      { emoji: '🖼', label: 'Galeriler' },
+      { emoji: '🎤', label: 'Konserler' },
+      { emoji: '🌬', label: 'Nargile barlari' },
+    ],
+  },
+  {
+    title: 'Digerleri',
+    items: [
+      { emoji: '⚡', label: 'Harry Potter' },
+      { emoji: '🏋', label: 'Evde egzersiz' },
+      { emoji: '📱', label: 'Instagram' },
+      { emoji: '👟', label: 'Spor ayakkabi' },
+      { emoji: '🗣', label: 'Dil ogrenme' },
+      { emoji: '🏋‍♀️', label: 'Spor Salonu' },
+      { emoji: '☕', label: 'Kahveci' },
+      { emoji: '🫖', label: 'Cayci' },
+      { emoji: '🧁', label: 'Kekler' },
+      { emoji: '🏠', label: 'Serbest calisma' },
+      { emoji: '🆕', label: 'Yeni bir sey deneyin' },
+      { emoji: '⚖', label: 'Insan haklari' },
+      { emoji: '🍦', label: 'Dondurma' },
+      { emoji: '🍩', label: 'Lezzetli yemekler' },
+      { emoji: '🌳', label: 'Doga Koruma' },
+      { emoji: '🛋', label: 'Hicbir Sey Yapmama' },
+      { emoji: '😴', label: 'Uyku' },
+      { emoji: '🦁', label: 'Disney' },
+      { emoji: '🛡', label: 'Marvel' },
+      { emoji: '🦸', label: 'DC' },
+      { emoji: '🛍', label: 'Alisveris kolik' },
+      { emoji: '🌐', label: 'Iletisim kurma' },
+      { emoji: '🎮', label: 'PlayStation' },
+      { emoji: '🎮', label: 'XBox' },
+      { emoji: '🌧', label: 'Yagmurda yurume' },
+      { emoji: '😊', label: 'Mutluluk' },
+      { emoji: '📺', label: 'TV Programlari' },
+      { emoji: '💼', label: 'Girisimcilik' },
+      { emoji: '📈', label: 'Kripto Para' },
+      { emoji: '⭐', label: 'Astronomi' },
+      { emoji: '🌍', label: 'Ekolojik aktivizm' },
+      { emoji: '🏳‍🌈', label: 'LGBTQ+' },
+      { emoji: '🐉', label: 'Ejderhalar' },
+      { emoji: '☮', label: 'Dunya barisi' },
+      { emoji: '💬', label: 'Twitter' },
+      { emoji: '🖼', label: 'NFT' },
+      { emoji: '🃏', label: 'Poker' },
+      { emoji: '🦄', label: 'Girisimler' },
+      { emoji: '🛋', label: 'Vakit oldurme' },
+      { emoji: '🏐', label: 'Plaj voleybolu' },
+      { emoji: '❄', label: 'Sogugu sevmem' },
+    ],
+  },
+];
 
 // Package tiers — LOCKED at 4
 export const PACKAGE_TIERS = [

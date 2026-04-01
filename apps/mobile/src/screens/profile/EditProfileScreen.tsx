@@ -27,7 +27,9 @@ import { colors, palette } from '../../theme/colors';
 import { fontWeights, poppinsFonts } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 import {
-  INTEREST_OPTIONS,
+  INTEREST_CATEGORIES,
+  MAX_INTEREST_SELECTIONS,
+  INTEREST_CATEGORY_PREVIEW_COUNT,
   ZODIAC_SIGNS, EDUCATION_LEVELS, MARITAL_STATUS_OPTIONS,
   ALCOHOL_OPTIONS, SEXUAL_ORIENTATION_OPTIONS, PETS_OPTIONS,
   RELIGION_OPTIONS, EXERCISE_OPTIONS as CONFIG_EXERCISE_OPTIONS,
@@ -54,7 +56,7 @@ const PHOTO_CELL_HEIGHT = PHOTO_CELL_WIDTH * 1.45;
 const PHOTO_SLOTS = 9;
 
 const MAX_BIO_LENGTH = 500;
-const MAX_INTERESTS = 10;
+const MAX_INTERESTS = MAX_INTEREST_SELECTIONS;
 
 // ── Turkish city list ──────────────────────────────────────────────────────
 const TURKISH_CITIES: string[] = [
@@ -344,6 +346,7 @@ export const EditProfileScreen: React.FC = () => {
   const [exercise, setExercise] = useState(profile.sports);
   const [children, setChildren] = useState(profile.children);
   const [selectedInterests, setSelectedInterests] = useState<string[]>(profile.interestTags);
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isPhotoUploading, setIsPhotoUploading] = useState(false);
   const [showCityPicker, setShowCityPicker] = useState(false);
@@ -559,17 +562,28 @@ export const EditProfileScreen: React.FC = () => {
 
   // ── Interest tag toggle ────────────────────────────────────────────────
   const toggleInterest = useCallback(
-    (tagId: string) => {
+    (tagLabel: string) => {
       setSelectedInterests((prev) => {
-        if (prev.includes(tagId)) {
-          return prev.filter((t) => t !== tagId);
+        if (prev.includes(tagLabel)) {
+          return prev.filter((t) => t !== tagLabel);
         }
         if (prev.length >= MAX_INTERESTS) {
           Alert.alert('Limit', `En fazla ${MAX_INTERESTS} ilgi alani secebilirsin.`);
           return prev;
         }
-        return [...prev, tagId];
+        return [...prev, tagLabel];
       });
+    },
+    [],
+  );
+
+  // ── Category expand/collapse toggle ──────────────────────────────────
+  const toggleCategoryExpand = useCallback(
+    (categoryTitle: string) => {
+      setExpandedCategories((prev) => ({
+        ...prev,
+        [categoryTitle]: !prev[categoryTitle],
+      }));
     },
     [],
   );
@@ -1350,43 +1364,70 @@ export const EditProfileScreen: React.FC = () => {
           <FieldRow icon="🕌" label="Din" value={religion || ''} onPress={() => openPicker('Din', RELIGION_OPTIONS, 'religion')} />
           <FieldRow icon="🌐" label="Degerler" value={lifeValues || ''} onPress={() => openPicker('Senin icin hayattaki en onemli sey nedir?', VALUES_OPTIONS, 'lifeValues')} />
 
-          {/* ── İlgi Alanları ─────────────────────────────────────────── */}
+          {/* ── İlgi Alanları — Categorized Picker ────────────────────── */}
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.sectionTitle}>İlgi Alanları</Text>
               <Text style={styles.charCounter}>
-                {selectedInterests.length}/{MAX_INTERESTS}
+                Secilen: {selectedInterests.length}/{MAX_INTERESTS}
               </Text>
             </View>
-            <View style={styles.interestGrid}>
-              {INTEREST_OPTIONS.map((option) => {
-                const isSelected = selectedInterests.includes(option.id);
-                return (
-                  <TouchableOpacity
-                    key={option.id}
-                    style={[
-                      styles.interestChip,
-                      isSelected && styles.interestChipSelected,
-                    ]}
-                    onPress={() => toggleInterest(option.id)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.interestEmoji}>{option.emoji}</Text>
-                    <Text
-                      style={[
-                        styles.interestLabel,
-                        isSelected && styles.interestLabelSelected,
-                      ]}
+
+            {INTEREST_CATEGORIES.map((category) => {
+              const isExpanded = expandedCategories[category.title] ?? false;
+              const visibleItems = isExpanded
+                ? category.items
+                : category.items.slice(0, INTEREST_CATEGORY_PREVIEW_COUNT);
+              const hasMore = category.items.length > INTEREST_CATEGORY_PREVIEW_COUNT;
+
+              return (
+                <View key={category.title} style={styles.interestCategoryCard}>
+                  <Text style={styles.interestCategoryTitle}>{category.title}</Text>
+                  <View style={styles.interestGrid}>
+                    {visibleItems.map((item) => {
+                      const isSelected = selectedInterests.includes(item.label);
+                      return (
+                        <TouchableOpacity
+                          key={item.label}
+                          style={[
+                            styles.interestChip,
+                            isSelected && styles.interestChipSelected,
+                          ]}
+                          onPress={() => toggleInterest(item.label)}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={styles.interestEmoji}>{item.emoji}</Text>
+                          <Text
+                            style={[
+                              styles.interestLabel,
+                              isSelected && styles.interestLabelSelected,
+                            ]}
+                          >
+                            {item.label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                  {hasMore && (
+                    <TouchableOpacity
+                      style={styles.interestShowMoreBtn}
+                      onPress={() => toggleCategoryExpand(category.title)}
+                      activeOpacity={0.7}
                     >
-                      {option.label}
-                    </Text>
-                    {isSelected && (
-                      <Ionicons name="close-circle" size={16} color={palette.gold[600]} />
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+                      <Text style={styles.interestShowMoreText}>
+                        {isExpanded ? 'Daha az goster' : 'Daha fazla goster'}
+                      </Text>
+                      <Ionicons
+                        name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                        size={16}
+                        color={palette.gold[600]}
+                      />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              );
+            })}
           </View>
 
           {/* ── Prompt'larim ──────────────────────────────────────────── */}
@@ -1878,7 +1919,23 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semibold,
   },
 
-  // ── Interests ──
+  // ── Interests — Categorized ──
+  interestCategoryCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  interestCategoryTitle: {
+    fontSize: 15,
+    fontFamily: poppinsFonts.semibold,
+    fontWeight: fontWeights.semibold,
+    color: colors.text,
+    marginBottom: 10,
+    includeFontPadding: false,
+  },
   interestGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -1896,8 +1953,8 @@ const styles = StyleSheet.create({
     borderColor: colors.surfaceBorder,
   },
   interestChipSelected: {
-    borderColor: palette.gold[500],
-    backgroundColor: palette.gold[500] + '10',
+    borderColor: '#93C5FD',
+    backgroundColor: '#E0F2FE',
   },
   interestEmoji: {
     fontSize: 16,
@@ -1913,7 +1970,22 @@ const styles = StyleSheet.create({
   interestLabelSelected: {
     fontFamily: poppinsFonts.semibold,
     fontWeight: fontWeights.semibold,
-    color: palette.gold[700],
+    color: '#1E40AF',
+  },
+  interestShowMoreBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    marginTop: 10,
+    paddingVertical: 6,
+  },
+  interestShowMoreText: {
+    fontSize: 13,
+    fontFamily: poppinsFonts.medium,
+    fontWeight: fontWeights.medium,
+    color: palette.gold[600],
+    includeFontPadding: false,
   },
 
   // ── Prompts ──
