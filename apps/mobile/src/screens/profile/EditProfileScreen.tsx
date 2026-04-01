@@ -403,16 +403,20 @@ export const EditProfileScreen: React.FC = () => {
     lifeValues,
   };
 
+  const pickerConfigRef = useRef(pickerConfig);
+  pickerConfigRef.current = pickerConfig;
+
   const openPicker = useCallback((title: string, options: readonly string[], field: string) => {
     setPickerConfig({ visible: true, title, options, field });
   }, []);
 
   const handlePickerSelect = useCallback((value: string) => {
-    if (!pickerConfig) return;
-    const setter = extendedFieldSetters[pickerConfig.field];
+    const config = pickerConfigRef.current;
+    if (!config) return;
+    const setter = extendedFieldSetters[config.field];
     if (setter) setter(value);
     setPickerConfig(null);
-  }, [pickerConfig]);
+  }, []);
 
   // Sync from store on external changes
   useEffect(() => {
