@@ -58,10 +58,10 @@ const formatDistance = (km: number): string => {
   return `${Math.round(km)} km`;
 };
 
-/** Format "Pelin K." — firstName + lastName initial with period */
+/** Format "Pelin Kulaksiz" — firstName + full lastName */
 const formatDisplayName = (fName: string, lName?: string | null): string => {
   if (lName && lName.length > 0) {
-    return `${fName} ${lName.charAt(0).toUpperCase()}.`;
+    return `${fName} ${lName}`;
   }
   return fName;
 };
