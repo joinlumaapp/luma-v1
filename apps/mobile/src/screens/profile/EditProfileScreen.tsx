@@ -200,6 +200,7 @@ export const EditProfileScreen: React.FC = () => {
 
   // Store
   const profile = useProfileStore((state) => state.profile);
+  const completionPercent = useProfileStore((state) => state.completionPercent);
   const updateProfile = useProfileStore((state) => state.updateProfile);
   const uploadPhoto = useProfileStore((state) => state.uploadPhoto);
   const deletePhoto = useProfileStore((state) => state.deletePhoto);
@@ -553,7 +554,12 @@ export const EditProfileScreen: React.FC = () => {
             <Ionicons name="chevron-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Profili Duzenle</Text>
-          <View style={styles.headerSpacer} />
+          <Text style={{
+            fontSize: 13,
+            fontFamily: 'Poppins_600SemiBold',
+            fontWeight: '600',
+            color: colors.primary,
+          }}>%{completionPercent} doldurulmus</Text>
         </View>
 
         <ScrollView
