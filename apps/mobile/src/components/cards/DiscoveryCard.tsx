@@ -25,9 +25,18 @@ import { VideoProfile } from '../profile/VideoProfile';
 
 // ─── Types ────────────────────────────────────────────────────
 
+/** Format "Pelin K." — firstName + lastName initial with period */
+const formatDisplayName = (fName: string, lName?: string | null): string => {
+  if (lName && lName.length > 0) {
+    return `${fName} ${lName.charAt(0).toUpperCase()}.`;
+  }
+  return fName;
+};
+
 export interface DiscoveryCardProfile {
   userId: string;
   firstName: string;
+  lastName?: string | null;
   age: number;
   bio: string | null;
   city: string | null;
@@ -274,7 +283,7 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
         <View style={styles.nameCompatRow}>
           <View style={styles.nameSection}>
             <Text style={styles.nameText} numberOfLines={1}>
-              {profile.firstName}, {profile.age}
+              {formatDisplayName(profile.firstName, profile.lastName)}, {profile.age}
             </Text>
             {isSupreme && (
               <View style={styles.supremeCrownRow}>

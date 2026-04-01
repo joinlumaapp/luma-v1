@@ -67,6 +67,14 @@ const getActivityText = (viewerId: string): string => {
   return ACTIVITY_TEXTS[hash % ACTIVITY_TEXTS.length];
 };
 
+/** Format "Pelin K." — firstName + lastName initial with period */
+const formatDisplayName = (fName: string, lName?: string | null): string => {
+  if (lName && lName.length > 0) {
+    return `${fName} ${lName.charAt(0).toUpperCase()}.`;
+  }
+  return fName;
+};
+
 // ─── Eye Blink Animation Hook ───────────────────────────────────
 
 const useEyeBlink = () => {
@@ -884,7 +892,7 @@ const ViewerDetailSheet: React.FC<ViewerDetailSheetProps> = ({
   if (!viewer) return null;
 
   const displayName = viewer.firstName
-    ? `${viewer.firstName}${viewer.age ? `, ${viewer.age}` : ''}`
+    ? `${formatDisplayName(viewer.firstName, viewer.lastName)}${viewer.age ? `, ${viewer.age}` : ''}`
     : 'Birisi';
 
   return (

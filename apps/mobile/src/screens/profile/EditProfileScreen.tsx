@@ -213,6 +213,8 @@ export const EditProfileScreen: React.FC = () => {
   const videoUploadProgress = useProfileStore((state) => state.videoUploadProgress);
 
   // Local state
+  const [firstName, setFirstName] = useState(profile.firstName);
+  const [lastName, setLastName] = useState(profile.lastName);
   const [bio, setBio] = useState(profile.bio);
   const [city, setCity] = useState(profile.city);
   const [job, setJob] = useState(profile.job);
@@ -293,6 +295,8 @@ export const EditProfileScreen: React.FC = () => {
 
   // Sync from store on external changes
   useEffect(() => {
+    setFirstName(profile.firstName);
+    setLastName(profile.lastName);
     setBio(profile.bio);
     setCity(profile.city);
     setJob(profile.job);
@@ -304,6 +308,7 @@ export const EditProfileScreen: React.FC = () => {
     setChildren(profile.children);
     setSelectedInterests(profile.interestTags);
   }, [
+    profile.firstName, profile.lastName,
     profile.bio, profile.city, profile.job, profile.education,
     profile.intentionTag, profile.height, profile.smoking,
     profile.sports, profile.children, profile.interestTags,
@@ -487,6 +492,8 @@ export const EditProfileScreen: React.FC = () => {
     setIsSaving(true);
     try {
       await updateProfile({
+        firstName,
+        lastName,
         bio,
         city,
         job,
@@ -505,11 +512,14 @@ export const EditProfileScreen: React.FC = () => {
       setIsSaving(false);
     }
   }, [
+    firstName, lastName,
     bio, city, job, education, intentionTag, height, smoking, exercise,
     children, selectedInterests, isSaving, updateProfile, navigation,
   ]);
 
   const hasChanges =
+    firstName !== profile.firstName ||
+    lastName !== profile.lastName ||
     bio !== profile.bio ||
     city !== profile.city ||
     job !== profile.job ||
@@ -775,17 +785,41 @@ export const EditProfileScreen: React.FC = () => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Temel Bilgiler</Text>
 
-            {/* Name (read-only) */}
-            <View style={styles.infoRow}>
+            {/* First Name (editable) */}
+            <View style={styles.textFieldRow}>
               <View style={styles.infoIconCircle}>
                 <Ionicons name="person-outline" size={18} color={colors.text} />
               </View>
-              <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Isim</Text>
-                <Text style={styles.infoValue}>{profile.firstName || '-'}</Text>
+              <View style={styles.textFieldContent}>
+                <Text style={styles.infoLabel}>Ad</Text>
+                <TextInput
+                  style={styles.textFieldInput}
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  placeholder="Adını yaz..."
+                  placeholderTextColor={colors.textTertiary}
+                  maxLength={30}
+                  returnKeyType="done"
+                />
               </View>
-              <View style={styles.readOnlyTag}>
-                <Text style={styles.readOnlyTagText}>Değiştirilemez</Text>
+            </View>
+
+            {/* Last Name (editable) */}
+            <View style={styles.textFieldRow}>
+              <View style={styles.infoIconCircle}>
+                <Ionicons name="person-outline" size={18} color={colors.text} />
+              </View>
+              <View style={styles.textFieldContent}>
+                <Text style={styles.infoLabel}>Soyad</Text>
+                <TextInput
+                  style={styles.textFieldInput}
+                  value={lastName}
+                  onChangeText={setLastName}
+                  placeholder="Soyadını yaz..."
+                  placeholderTextColor={colors.textTertiary}
+                  maxLength={30}
+                  returnKeyType="done"
+                />
               </View>
             </View>
 

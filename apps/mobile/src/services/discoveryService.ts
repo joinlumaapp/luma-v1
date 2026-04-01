@@ -100,6 +100,7 @@ export interface FeedFilters {
 export interface LikeYouCard {
   userId: string;
   firstName: string;
+  lastName?: string | null;
   age: number;
   photoUrl: string;
   compatibilityPercent: number;

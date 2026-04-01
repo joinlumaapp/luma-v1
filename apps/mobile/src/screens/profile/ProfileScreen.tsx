@@ -60,6 +60,14 @@ const calculateAge = (birthDate: string): number => {
   return age;
 };
 
+/** Format "Pelin K." — firstName + lastName initial with period */
+const formatDisplayName = (fName: string, lName?: string | null): string => {
+  if (lName && lName.length > 0) {
+    return `${fName} ${lName.charAt(0).toUpperCase()}.`;
+  }
+  return fName;
+};
+
 // Helper: translate profile field values to Turkish display labels
 // Uses centralized translations from formatters.ts
 import {
@@ -504,7 +512,7 @@ export const ProfileScreen: React.FC = () => {
       <View style={styles.identityBlock}>
         <View style={styles.nameVerifiedRow}>
           <Text style={styles.userName}>
-            {profile.firstName || '-'}, {age}
+            {formatDisplayName(profile.firstName || '-', profile.lastName)}, {age}
           </Text>
           {isVerified && <VerifiedBadge size="large" animated />}
           {strengthData && (

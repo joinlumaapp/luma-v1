@@ -58,6 +58,14 @@ const formatDistance = (km: number): string => {
   return `${Math.round(km)} km`;
 };
 
+/** Format "Pelin K." — firstName + lastName initial with period */
+const formatDisplayName = (fName: string, lName?: string | null): string => {
+  if (lName && lName.length > 0) {
+    return `${fName} ${lName.charAt(0).toUpperCase()}.`;
+  }
+  return fName;
+};
+
 const getCompatColor = (percent: number): string => {
   if (percent >= 90) return colors.success;
   if (percent >= 70) return colors.primary;
@@ -455,7 +463,7 @@ const LikeCard = memo<LikeCardProps>(({ card, index, cardState, smartLabel, onCa
   });
 
   const blurRadius = isClear ? 0 : isTeaser ? 15 : 28;
-  const displayName = isClear ? `${card.firstName}, ${card.age}` : '???, ??';
+  const displayName = isClear ? `${formatDisplayName(card.firstName, card.lastName)}, ${card.age}` : '???, ??';
 
   return (
     <SlideIn direction="up" delay={index * 60 + (isLocked ? 100 : 0)} distance={20}>

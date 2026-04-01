@@ -67,6 +67,7 @@ export interface ProfileViewer {
   distanceKm: number | null;
   // Display fields for viewer detail sheet
   firstName: string | null;
+  lastName?: string | null;
   age: number | null;
   photoUrl: string | null;
   sharedInterests?: string[];
