@@ -435,13 +435,6 @@ export const SettingsScreen: React.FC = () => {
           active: true,
         },
         {
-          key: 'supreme_incognito',
-          icon: 'eye-off' as keyof typeof Ionicons.glyphMap,
-          title: 'Gizli Mod',
-          type: 'supreme_feature' as const,
-          active: true,
-        },
-        {
           key: 'supreme_aura',
           icon: 'sparkles' as keyof typeof Ionicons.glyphMap,
           title: 'Altın Aura Efekti',
@@ -677,8 +670,11 @@ export const SettingsScreen: React.FC = () => {
   const renderThemeSelector = () => (
     <View style={dynamicStyles.themeContainer}>
       <View style={dynamicStyles.themeOptions}>
-        {THEME_OPTIONS.map(({ mode, label, icon }) => {
+        {THEME_OPTIONS.map(({ mode, label }) => {
           const isSelected = themeMode === mode;
+          // Theme preview colors
+          const previewBg = mode === 'dark' ? '#1A1A2E' : mode === 'light' ? '#F5F0E8' : colors.surfaceLight;
+          const previewText = mode === 'dark' ? '#FFFFFF' : mode === 'light' ? '#2C1810' : colors.text;
           return (
             <TouchableOpacity
               key={mode}
@@ -691,11 +687,26 @@ export const SettingsScreen: React.FC = () => {
               accessibilityLabel={`${label} tema${isSelected ? ', seçili' : ''}`}
               accessibilityRole="button"
             >
-              <Ionicons
-                name={icon}
-                size={16}
-                color={isSelected ? colors.primary : colors.textTertiary}
-              />
+              {/* Mini LUMA preview */}
+              <View style={{
+                width: 40,
+                height: 28,
+                borderRadius: 6,
+                backgroundColor: previewBg,
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: 4,
+                borderWidth: 1,
+                borderColor: isSelected ? colors.primary : colors.surfaceBorder,
+              }}>
+                <Text style={{
+                  fontSize: 8,
+                  fontFamily: 'Poppins_700Bold',
+                  fontWeight: '700',
+                  color: previewText,
+                  letterSpacing: 1,
+                }}>LUMA</Text>
+              </View>
               <Text style={[
                 dynamicStyles.themeOptionText,
                 isSelected && dynamicStyles.themeOptionTextSelected,
@@ -713,7 +724,15 @@ export const SettingsScreen: React.FC = () => {
     // Render the dedicated IncognitoToggle component for the incognito row
     if (item.key === 'incognito') {
       return (
-        <View style={dynamicStyles.settingRow}>
+        <View style={{
+          marginHorizontal: spacing.md,
+          marginVertical: 2,
+          backgroundColor: colors.surface,
+          borderRadius: borderRadius.md,
+          borderWidth: 1,
+          borderColor: colors.surfaceBorder,
+          overflow: 'hidden',
+        }}>
           <IncognitoToggle onLockedPress={handleIncognitoLockedPress} />
         </View>
       );
@@ -1119,7 +1138,7 @@ function createDynamicStyles(c: ThemeColors) {
     },
     themeOption: {
       flex: 1,
-      flexDirection: 'row',
+      flexDirection: 'column',
       paddingVertical: spacing.sm + 2,
       paddingHorizontal: spacing.sm,
       borderRadius: borderRadius.md,
@@ -1128,7 +1147,7 @@ function createDynamicStyles(c: ThemeColors) {
       backgroundColor: c.surfaceLight,
       alignItems: 'center',
       justifyContent: 'center',
-      gap: spacing.xs,
+      gap: 2,
     },
     themeOptionSelected: {
       borderColor: c.primary,
