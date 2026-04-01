@@ -25,11 +25,12 @@ import { iapService } from '../../services/iapService';
 import { paymentService } from '../../services/paymentService';
 import { storage } from '../../utils/storage';
 import { useTheme } from '../../theme/ThemeContext';
-import type { ThemeColors, ThemeMode } from '../../theme/colors';
+import type { ThemeColors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { IncognitoToggle } from '../../components/discovery/IncognitoToggle';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -100,13 +101,6 @@ interface SettingSection {
   data: SettingItem[];
 }
 
-// Theme option labels (Turkish)
-const THEME_OPTIONS: { mode: ThemeMode; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { mode: 'light', label: 'Açık', icon: 'sunny-outline' },
-  { mode: 'dark', label: 'Koyu', icon: 'moon-outline' },
-  { mode: 'system', label: 'Sistem', icon: 'phone-portrait-outline' },
-];
-
 // Supreme gold constant
 const SUPREME_GOLD = '#D4AF37';
 
@@ -116,7 +110,7 @@ export const SettingsScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
-  const { colors, themeMode, setThemeMode } = useTheme();
+  const { colors } = useTheme();
 
   const packageTier = user?.packageTier ?? 'FREE';
   const isSupreme = packageTier === 'RESERVED';
@@ -554,21 +548,7 @@ export const SettingsScreen: React.FC = () => {
       ],
     },
 
-    // 5. Gorunum
-    {
-      title: 'Gorunum',
-      icon: 'color-palette-outline',
-      data: [
-        {
-          key: 'theme',
-          icon: 'sunny-outline',
-          title: 'Tema',
-          type: 'theme',
-        },
-      ],
-    },
-
-    // 6. Destek
+    // 5. Destek
     {
       title: 'Destek',
       icon: 'help-circle-outline',
@@ -667,59 +647,6 @@ export const SettingsScreen: React.FC = () => {
 
   // ── Render functions ──────────────────────────────────────────
 
-  const renderThemeSelector = () => (
-    <View style={dynamicStyles.themeContainer}>
-      <View style={dynamicStyles.themeOptions}>
-        {THEME_OPTIONS.map(({ mode, label }) => {
-          const isSelected = themeMode === mode;
-          // Theme preview colors
-          const previewBg = mode === 'dark' ? '#1A1A2E' : mode === 'light' ? '#F5F0E8' : colors.surfaceLight;
-          const previewText = mode === 'dark' ? '#FFFFFF' : mode === 'light' ? '#2C1810' : colors.text;
-          return (
-            <TouchableOpacity
-              key={mode}
-              style={[
-                dynamicStyles.themeOption,
-                isSelected && dynamicStyles.themeOptionSelected,
-              ]}
-              onPress={() => setThemeMode(mode)}
-              activeOpacity={0.7}
-              accessibilityLabel={`${label} tema${isSelected ? ', seçili' : ''}`}
-              accessibilityRole="button"
-            >
-              {/* Mini LUMA preview */}
-              <View style={{
-                width: 40,
-                height: 28,
-                borderRadius: 6,
-                backgroundColor: previewBg,
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginBottom: 4,
-                borderWidth: 1,
-                borderColor: isSelected ? colors.primary : colors.surfaceBorder,
-              }}>
-                <Text style={{
-                  fontSize: 8,
-                  fontFamily: 'Poppins_700Bold',
-                  fontWeight: '700',
-                  color: previewText,
-                  letterSpacing: 1,
-                }}>LUMA</Text>
-              </View>
-              <Text style={[
-                dynamicStyles.themeOptionText,
-                isSelected && dynamicStyles.themeOptionTextSelected,
-              ]}>
-                {label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-    </View>
-  );
-
   const renderItem = ({ item }: { item: SettingItem }) => {
     // Render the dedicated IncognitoToggle component for the incognito row
     if (item.key === 'incognito') {
@@ -737,8 +664,6 @@ export const SettingsScreen: React.FC = () => {
         </View>
       );
     }
-
-    if (item.type === 'theme') return renderThemeSelector();
 
     // Supreme feature row
     if (item.type === 'supreme_feature') {
@@ -919,6 +844,7 @@ export const SettingsScreen: React.FC = () => {
 
   return (
     <View style={[dynamicStyles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/* Header */}
       <View style={dynamicStyles.header}>
         <TouchableOpacity
