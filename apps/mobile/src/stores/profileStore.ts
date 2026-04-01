@@ -201,11 +201,13 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   videoUploadProgress: 0,
 
   // Actions
-  setField: (key, value) =>
+  setField: (key, value) => {
     set((state) => ({
       profile: { ...state.profile, [key]: value },
-      completionPercent: get().calculateCompletion(),
-    })),
+    }));
+    // Recalculate after state is written
+    set({ completionPercent: get().calculateCompletion() });
+  },
 
   setIntentionTag: (tag) =>
     set((state) => ({

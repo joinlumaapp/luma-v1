@@ -230,8 +230,16 @@ export const QuestionsScreen: React.FC = () => {
 
   const showAnalysisAndResult = useCallback(
     (finalAnswers: Record<string, string>) => {
-      setProfileField('answers', finalAnswers);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      try {
+        setProfileField('answers', finalAnswers);
+      } catch {
+        // Silent — answers saved in local state regardless
+      }
+      try {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } catch {
+        // Haptics may not be available
+      }
 
       setPhase('analysis');
       phaseOpacity.value = withDelay(100, withTiming(1, { duration: 500 }));
