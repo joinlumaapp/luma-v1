@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useWeeklyTopStore } from '../../stores/weeklyTopStore';
 import { colors, palette } from '../../theme/colors';
+import { WEEKLY_TOP_CONFIG } from '../../constants/config';
 import { useCoinStore } from '../../stores/coinStore';
 import { fontWeights } from '../../theme/typography';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
@@ -21,7 +22,7 @@ const WeeklyTopScreen: React.FC = () => {
     fetchWeeklyTop();
   }, []);
 
-  const REVEAL_COST = 40;
+  const REVEAL_COST = WEEKLY_TOP_CONFIG.REVEAL_COST_GOLD;
   const coinBalance = useCoinStore((s) => s.balance);
   const spendCoins = useCoinStore((s) => s.spendCoins);
 

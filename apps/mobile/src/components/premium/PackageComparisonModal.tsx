@@ -16,6 +16,7 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
+import { PACKAGE_TIERS } from '../../constants/config';
 
 // ─── Types ───────────────────────────────────────────────────
 interface PackageComparisonModalProps {
@@ -50,11 +51,16 @@ const TIER_LABELS: Record<PackageTier, string> = {
   RESERVED: 'Reserved',
 };
 
+const getTierPrice = (id: string): string => {
+  const tier = PACKAGE_TIERS.find(t => t.id === id);
+  return tier ? `${tier.priceDisplay}/ay` : '0₺';
+};
+
 const TIER_PRICES: Record<PackageTier, string> = {
-  FREE: '0₺',
-  GOLD: '349₺/ay',
-  PRO: '499₺/ay',
-  RESERVED: '599₺/ay',
+  FREE: getTierPrice('FREE'),
+  GOLD: getTierPrice('GOLD'),
+  PRO: getTierPrice('PRO'),
+  RESERVED: getTierPrice('RESERVED'),
 };
 
 // Tier order for hierarchy checks

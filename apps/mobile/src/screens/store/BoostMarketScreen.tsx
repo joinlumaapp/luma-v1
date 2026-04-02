@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { useCoinStore } from '../../stores/coinStore';
+import { BOOST_PACKS as BOOST_PACKS_CONFIG } from '../../constants/config';
 import { palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { fontWeights } from '../../theme/typography';
@@ -31,12 +32,7 @@ interface BoostPack {
   popular?: boolean;
 }
 
-const BOOST_PACKS: BoostPack[] = [
-  { id: 'boost_20', count: 20, costGold: 1500, discount: '%37 KAYDET', popular: true },
-  { id: 'boost_10', count: 10, costGold: 900, discount: '%32 KAYDET' },
-  { id: 'boost_5', count: 5, costGold: 500, discount: '%20 KAYDET' },
-  { id: 'boost_1', count: 1, costGold: 120 },
-];
+const BOOST_PACKS: BoostPack[] = [...BOOST_PACKS_CONFIG];
 
 // ── Pack Card ──
 const PackCard: React.FC<{

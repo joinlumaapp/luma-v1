@@ -500,6 +500,14 @@ export const BOOST_DURATION_OPTIONS = [
   { minutes: 1440, label: '24 saat', goldCost: 250 },
 ] as const;
 
+// Boost pack purchase options (jeton cost)
+export const BOOST_PACKS = [
+  { id: 'boost_20', count: 20, costGold: 1500, discount: '%37 KAYDET', popular: true },
+  { id: 'boost_10', count: 10, costGold: 900, discount: '%32 KAYDET' },
+  { id: 'boost_5', count: 5, costGold: 500, discount: '%20 KAYDET' },
+  { id: 'boost_1', count: 1, costGold: 120 },
+] as const;
+
 // Instant Connect daily session limits per package tier (-1 = unlimited)
 export const INSTANT_CONNECT_CONFIG = {
   DAILY_LIMITS: {
