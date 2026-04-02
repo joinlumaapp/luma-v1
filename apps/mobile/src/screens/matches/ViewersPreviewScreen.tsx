@@ -173,12 +173,9 @@ const EmptyState: React.FC<{ onUpgrade: () => void }> = ({ onUpgrade }) => {
   return (
     <View style={styles.empty}>
       {/* Floating particles */}
-      <Particle delay={0} startX={60} size={8} color={palette.purple[400] + '40'} />
-      <Particle delay={800} startX={180} size={6} color={palette.pink[400] + '35'} />
-      <Particle delay={1600} startX={120} size={10} color={palette.purple[300] + '30'} />
-      <Particle delay={2400} startX={250} size={7} color={palette.pink[300] + '40'} />
-      <Particle delay={600} startX={300} size={5} color={palette.purple[500] + '35'} />
-      <Particle delay={1200} startX={40} size={9} color={palette.pink[500] + '30'} />
+      <Particle delay={0} startX={80} size={8} color={palette.purple[400] + '35'} />
+      <Particle delay={1200} startX={200} size={6} color={palette.pink[400] + '30'} />
+      <Particle delay={2400} startX={280} size={7} color={palette.purple[300] + '35'} />
 
       <Animated.View style={{ alignItems: 'center', opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
 

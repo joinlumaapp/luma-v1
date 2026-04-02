@@ -82,15 +82,35 @@ function getPromoConfig(packageTier: PackageTier): PromoConfig | null {
   return null;
 }
 
+// A/B test: show promo to ~50% of users based on user ID hash
+const PROMO_AB_KEY = 'promo.abGroup';
+
+function getABGroup(userId: string | undefined): 'show' | 'holdout' {
+  // Persist group assignment so it's stable across sessions
+  const cached = storage.getString(PROMO_AB_KEY);
+  if (cached === 'show' || cached === 'holdout') return cached;
+
+  // Hash user ID to deterministically assign group
+  const hash = (userId ?? `anon-${Date.now()}`).split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  const group: 'show' | 'holdout' = hash % 2 === 0 ? 'show' : 'holdout';
+  storage.setString(PROMO_AB_KEY, group);
+  return group;
+}
+
 export const PromotionModal: React.FC = () => {
   const [visible, setVisible] = useState(false);
   const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE');
+  const userId = useAuthStore((s) => s.user?.id);
   const navigation = useNavigation<NativeStackNavigationProp<Record<string, object | undefined>>>();
 
   const config = getPromoConfig(packageTier);
 
   useEffect(() => {
     if (!config) return;
+
+    // A/B test: holdout group never sees promo
+    const abGroup = getABGroup(userId);
+    if (abGroup === 'holdout') return;
 
     // Only show once per session
     const alreadyShown = storage.getString(PROMO_SESSION_KEY);
@@ -110,7 +130,7 @@ export const PromotionModal: React.FC = () => {
     }, 4000);
 
     return () => clearTimeout(timer);
-  }, [config]);
+  }, [config, userId]);
 
   const handleDismiss = useCallback(() => {
     setVisible(false);
