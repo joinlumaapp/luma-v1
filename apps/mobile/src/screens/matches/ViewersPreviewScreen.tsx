@@ -95,187 +95,168 @@ const useEyeBlink = () => {
   return scaleAnim;
 };
 
-// ─── Floating Gradient Circle (background) ──────────────────────
-
-const FloatingCircle: React.FC<{ delay: number; top: number; size: number; color: string }> = ({ delay, top, size, color }) => {
-  const translateX = useRef(new Animated.Value(420)).current;
+// ─── Floating Particle ──────────────────────────────────────────
+const Particle: React.FC<{ delay: number; startX: number; size: number; color: string }> = ({ delay, startX, size, color }) => {
+  const translateY = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const animate = () => {
-      translateX.setValue(420);
+    const run = () => {
+      translateY.setValue(0);
       opacity.setValue(0);
       Animated.parallel([
-        Animated.timing(translateX, { toValue: -80, duration: 14000 + delay * 2500, useNativeDriver: true }),
+        Animated.timing(translateY, { toValue: -200, duration: 4000, useNativeDriver: true }),
         Animated.sequence([
-          Animated.timing(opacity, { toValue: 1, duration: 2000, useNativeDriver: true }),
-          Animated.delay(8000 + delay * 1500),
-          Animated.timing(opacity, { toValue: 0, duration: 2000, useNativeDriver: true }),
+          Animated.timing(opacity, { toValue: 0.7, duration: 800, useNativeDriver: true }),
+          Animated.delay(2000),
+          Animated.timing(opacity, { toValue: 0, duration: 1200, useNativeDriver: true }),
         ]),
-      ]).start(() => animate());
+      ]).start(() => run());
     };
-    const timer = setTimeout(animate, delay * 1800);
-    return () => clearTimeout(timer);
-  }, [translateX, opacity, delay]);
+    const t = setTimeout(run, delay);
+    return () => clearTimeout(t);
+  }, [translateY, opacity, delay]);
 
   return (
     <Animated.View style={{
-      position: 'absolute',
-      top,
-      width: size,
-      height: size,
-      borderRadius: size / 2,
-      backgroundColor: color,
-      opacity,
-      transform: [{ translateX }],
+      position: 'absolute', bottom: 80, left: startX,
+      width: size, height: size, borderRadius: size / 2,
+      backgroundColor: color, opacity, transform: [{ translateY }],
     }} />
   );
 };
 
-// ─── Glowing Orb ────────────────────────────────────────────────
-
-const GlowingOrb: React.FC = () => {
-  const breathe = useRef(new Animated.Value(1)).current;
-  const glowOpacity = useRef(new Animated.Value(0.4)).current;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.parallel([
-          Animated.timing(breathe, { toValue: 1.08, duration: 2500, useNativeDriver: true }),
-          Animated.timing(glowOpacity, { toValue: 0.7, duration: 2500, useNativeDriver: true }),
-        ]),
-        Animated.parallel([
-          Animated.timing(breathe, { toValue: 1, duration: 2500, useNativeDriver: true }),
-          Animated.timing(glowOpacity, { toValue: 0.4, duration: 2500, useNativeDriver: true }),
-        ]),
-      ]),
-    ).start();
-  }, [breathe, glowOpacity]);
-
-  return (
-    <Animated.View style={{ transform: [{ scale: breathe }], alignItems: 'center' }}>
-      {/* Outer glow ring */}
-      <Animated.View style={{
-        position: 'absolute',
-        width: 140, height: 140, borderRadius: 70,
-        backgroundColor: palette.purple[500] + '15',
-        opacity: glowOpacity,
-      }} />
-      {/* Inner orb */}
-      <LinearGradient
-        colors={[palette.purple[400] + '40', palette.pink[400] + '30', palette.purple[500] + '20'] as [string, string, string]}
-        style={{
-          width: 110, height: 110, borderRadius: 55,
-          justifyContent: 'center', alignItems: 'center',
-          shadowColor: palette.purple[500],
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.5,
-          shadowRadius: 20,
-          elevation: 10,
-        }}
-        start={{ x: 0.2, y: 0 }}
-        end={{ x: 0.8, y: 1 }}
-      >
-        <Ionicons name="eye-outline" size={42} color={colors.primary} style={{ opacity: 0.8 }} />
-      </LinearGradient>
-    </Animated.View>
-  );
-};
-
-// ─── Empty State (premium + alive) ──────────────────────────────
+// ─── Empty State (gösterişli) ──────────────────────────────────
 
 const EmptyState: React.FC<{ onUpgrade: () => void }> = ({ onUpgrade }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const orbPulse = useRef(new Animated.Value(1)).current;
+  const orbGlow = useRef(new Animated.Value(0.3)).current;
   const shimmerPos = useRef(new Animated.Value(-1)).current;
+  const ringRotate = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Fade + slide in
-    Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 900, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 900, useNativeDriver: true }),
+    // Entry animation
+    Animated.stagger(150, [
+      Animated.parallel([
+        Animated.timing(fadeAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
+        Animated.timing(slideAnim, { toValue: 0, duration: 1000, useNativeDriver: true }),
+      ]),
     ]).start();
 
-    // CTA shimmer loop
+    // Orb breathing
+    Animated.loop(Animated.sequence([
+      Animated.parallel([
+        Animated.timing(orbPulse, { toValue: 1.12, duration: 2000, useNativeDriver: true }),
+        Animated.timing(orbGlow, { toValue: 0.8, duration: 2000, useNativeDriver: true }),
+      ]),
+      Animated.parallel([
+        Animated.timing(orbPulse, { toValue: 1, duration: 2000, useNativeDriver: true }),
+        Animated.timing(orbGlow, { toValue: 0.3, duration: 2000, useNativeDriver: true }),
+      ]),
+    ])).start();
+
+    // CTA shimmer
     Animated.loop(
-      Animated.timing(shimmerPos, { toValue: 1, duration: 3000, useNativeDriver: true }),
+      Animated.timing(shimmerPos, { toValue: 1, duration: 2500, useNativeDriver: true }),
     ).start();
-  }, [fadeAnim, slideAnim, shimmerPos]);
+
+    // Ring rotation
+    Animated.loop(
+      Animated.timing(ringRotate, { toValue: 1, duration: 12000, useNativeDriver: true }),
+    ).start();
+  }, [fadeAnim, slideAnim, orbPulse, orbGlow, shimmerPos, ringRotate]);
+
+  const spin = ringRotate.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
   return (
     <View style={styles.empty}>
-      {/* Floating gradient circles */}
-      <FloatingCircle delay={0} top={15} size={60} color={palette.purple[400] + '06'} />
-      <FloatingCircle delay={1} top={90} size={40} color={palette.pink[400] + '05'} />
-      <FloatingCircle delay={2} top={160} size={50} color={palette.purple[300] + '04'} />
-      <FloatingCircle delay={3} top={45} size={35} color={palette.pink[300] + '06'} />
-      <FloatingCircle delay={4} top={130} size={45} color={palette.purple[500] + '05'} />
-      <FloatingCircle delay={5} top={200} size={30} color={palette.pink[500] + '04'} />
+      {/* Floating particles */}
+      <Particle delay={0} startX={60} size={8} color={palette.purple[400] + '40'} />
+      <Particle delay={800} startX={180} size={6} color={palette.pink[400] + '35'} />
+      <Particle delay={1600} startX={120} size={10} color={palette.purple[300] + '30'} />
+      <Particle delay={2400} startX={250} size={7} color={palette.pink[300] + '40'} />
+      <Particle delay={600} startX={300} size={5} color={palette.purple[500] + '35'} />
+      <Particle delay={1200} startX={40} size={9} color={palette.pink[500] + '30'} />
 
-      <Animated.View style={{
-        alignItems: 'center',
-        gap: 18,
-        opacity: fadeAnim,
-        transform: [{ translateY: slideAnim }],
-      }}>
-        {/* Glowing orb */}
-        <GlowingOrb />
+      <Animated.View style={{ alignItems: 'center', opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
 
-        {/* Main message */}
-        <View style={{ alignItems: 'center', gap: 4, marginTop: 8 }}>
-          <Text style={styles.emptyTitle}>Henüz keşfedilmedin…</Text>
-          <Text style={styles.emptySubtitle}>Ama insanlar sana çok yakın</Text>
-          <Text style={styles.emptyDynamic}>Şu anda keşfette gösteriliyorsun</Text>
+        {/* Glowing Orb with rotating rings */}
+        <View style={styles.emptyOrbContainer}>
+          {/* Outer rotating ring */}
+          <Animated.View style={[styles.emptyOrbitRing3, { transform: [{ rotate: spin }] }]}>
+            <View style={styles.emptyOrbitDot} />
+          </Animated.View>
+          {/* Middle ring */}
+          <View style={styles.emptyOrbitRing2} />
+          {/* Glow */}
+          <Animated.View style={[styles.emptyOrbGlow, { opacity: orbGlow }]} />
+          {/* Main orb */}
+          <Animated.View style={[styles.emptyOrbMain, { transform: [{ scale: orbPulse }] }]}>
+            <LinearGradient
+              colors={[palette.purple[500], palette.pink[500]] as [string, string]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.emptyOrbGradient}
+            >
+              <Ionicons name="eye" size={44} color="#FFFFFF" />
+            </LinearGradient>
+          </Animated.View>
         </View>
 
-        {/* Progress block */}
-        <View style={styles.emptyProgress}>
-          <View style={styles.emptyProgressHeader}>
-            <Text style={styles.emptyProgressTitle}>Profil gücü</Text>
-            <Text style={styles.emptyProgressPercent}>%65</Text>
+        {/* Title */}
+        <Text style={styles.emptyTitle}>Henüz keşfedilmedin</Text>
+        <Text style={styles.emptySubtitle}>
+          Ama merak etme — profilin şu anda{'\n'}keşfette gösteriliyor
+        </Text>
+
+        {/* Stats row */}
+        <View style={styles.emptyStatsRow}>
+          <View style={styles.emptyStatCard}>
+            <Ionicons name="people" size={20} color={palette.purple[500]} />
+            <Text style={styles.emptyStatNumber}>1.2K+</Text>
+            <Text style={styles.emptyStatLabel}>Aktif kullanıcı</Text>
           </View>
-          <View style={styles.emptyProgressBar}>
-            <View style={[styles.emptyProgressFill, { width: '65%' }]} />
-          </View>
-          <View style={styles.emptyChecklist}>
-            <View style={styles.emptyCheckItem}>
-              <Ionicons name="checkmark-circle" size={16} color={colors.success} />
-              <Text style={styles.emptyCheckText}>Fotoğraf eklendi</Text>
-            </View>
-            <View style={styles.emptyCheckItem}>
-              <Ionicons name="checkmark-circle" size={16} color={colors.success} />
-              <Text style={styles.emptyCheckText}>Bio yazıldı</Text>
-            </View>
-            <View style={styles.emptyCheckItem}>
-              <Ionicons name="square-outline" size={16} color={colors.textTertiary} />
-              <Text style={[styles.emptyCheckText, { color: colors.textTertiary }]}>İlgi alanı ekle</Text>
-            </View>
+          <View style={styles.emptyStatCard}>
+            <Ionicons name="flash" size={20} color={palette.pink[500]} />
+            <Text style={styles.emptyStatNumber}>10x</Text>
+            <Text style={styles.emptyStatLabel}>Boost ile görünürlük</Text>
           </View>
         </View>
 
         {/* CTA with shimmer */}
-        <Pressable onPress={onUpgrade} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}>
+        <Pressable onPress={onUpgrade} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1, marginTop: 8 }]}>
           <LinearGradient
             colors={[palette.purple[500], palette.pink[500], palette.purple[600]] as [string, string, string]}
-            style={styles.emptyCTA}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
+            style={styles.emptyCTA}
           >
             <Animated.View style={{
               ...StyleSheet.absoluteFillObject,
-              borderRadius: 16,
+              borderRadius: 28,
               backgroundColor: '#fff',
               opacity: shimmerPos.interpolate({
-                inputRange: [-1, 0, 1],
-                outputRange: [0, 0.15, 0],
+                inputRange: [-1, -0.5, 0, 0.5, 1],
+                outputRange: [0, 0, 0.2, 0, 0],
               }),
             }} />
-            <Ionicons name="rocket-outline" size={18} color="#fff" />
-            <Text style={styles.emptyCTAText}>Keşfette öne çık</Text>
+            <Ionicons name="rocket" size={20} color="#fff" />
+            <Text style={styles.emptyCTAText}>Keşfette Öne Çık</Text>
           </LinearGradient>
         </Pressable>
-        <Text style={styles.emptyCTASub}>10x daha fazla görünürlük</Text>
+
+        {/* Boost info pill */}
+        <Pressable onPress={onUpgrade}>
+          <View style={styles.emptyBoostPill}>
+            <Ionicons name="sparkles" size={14} color={palette.purple[500]} />
+            <Text style={styles.emptyBoostPillText}>
+              24 saat boyunca 10x daha fazla görünürlük
+            </Text>
+            <Ionicons name="chevron-forward" size={14} color={palette.purple[400]} />
+          </View>
+        </Pressable>
       </Animated.View>
     </View>
   );
@@ -1125,7 +1106,7 @@ export const ViewersPreviewScreen: React.FC = () => {
   }, [fetchViewers]);
 
   const navigateUpgrade = useCallback(() => {
-    navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' });
+    navigation.getParent()?.navigate('ProfileTab', { screen: 'BoostMarket' });
   }, [navigation]);
 
   const handleCardPress = useCallback(
@@ -1518,85 +1499,113 @@ const styles = StyleSheet.create({
   // Empty state
   empty: {
     alignItems: 'center',
-    paddingHorizontal: 28,
-    paddingTop: 30,
-    minHeight: 500,
+    paddingTop: 20,
+    minHeight: 550,
     overflow: 'hidden',
     position: 'relative',
   },
-  emptyTitle: {
-    fontSize: 22,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
-    color: colors.text,
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    fontSize: 15,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  emptyDynamic: {
-    fontSize: 12,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
-    color: colors.primary,
-    textAlign: 'center',
-    marginTop: 4,
-  },
-  emptyProgress: {
-    alignSelf: 'stretch',
-    backgroundColor: colors.surface,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-    padding: 16,
-    gap: 10,
-  },
-  emptyProgressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  // Orb
+  emptyOrbContainer: {
+    width: 200,
+    height: 200,
+    justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 24,
   },
-  emptyProgressTitle: {
-    fontSize: 14,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    color: colors.text,
-  },
-  emptyProgressPercent: {
-    fontSize: 14,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  emptyProgressBar: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.surfaceBorder,
+  emptyOrbMain: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     overflow: 'hidden',
   },
-  emptyProgressFill: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.primary,
-  },
-  emptyChecklist: {
-    gap: 6,
-    marginTop: 4,
-  },
-  emptyCheckItem: {
-    flexDirection: 'row',
+  emptyOrbGradient: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
   },
-  emptyCheckText: {
-    fontSize: 13,
+  emptyOrbGlow: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: palette.purple[500] + '18',
+  },
+  emptyOrbitRing2: {
+    position: 'absolute',
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    borderWidth: 1,
+    borderColor: palette.purple[500] + '20',
+  },
+  emptyOrbitRing3: {
+    position: 'absolute',
+    width: 190,
+    height: 190,
+    borderRadius: 95,
+    borderWidth: 1.5,
+    borderColor: palette.pink[400] + '18',
+    borderStyle: 'dashed',
+  },
+  emptyOrbitDot: {
+    position: 'absolute',
+    top: -4,
+    left: '50%',
+    marginLeft: -4,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: palette.pink[400],
+  },
+  // Text
+  emptyTitle: {
+    fontSize: 24,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  emptySubtitle: {
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 21,
+    marginBottom: 20,
+  },
+  // Stats row
+  emptyStatsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 8,
+  },
+  emptyStatCard: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    gap: 4,
+  },
+  emptyStatNumber: {
+    fontSize: 20,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: colors.text,
+  },
+  emptyStatLabel: {
+    fontSize: 10,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: colors.textTertiary,
+    textAlign: 'center',
   },
   emptyCTA: {
     flexDirection: 'row',
@@ -1625,5 +1634,23 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: colors.textTertiary,
     marginTop: 2,
+  },
+  emptyBoostPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: palette.purple[500] + '10',
+    borderWidth: 1,
+    borderColor: palette.purple[500] + '20',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginTop: 4,
+  },
+  emptyBoostPillText: {
+    fontSize: 11,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: palette.purple[600],
   },
 });

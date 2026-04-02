@@ -335,7 +335,25 @@ export const SettingsScreen: React.FC = () => {
   const phoneDisplay = user?.phone ?? '-';
   const emailDisplay = user?.email ?? 'Belirtilmedi';
 
+  const tierLabels: Record<string, string> = { FREE: 'Ücretsiz', GOLD: 'Gold', PRO: 'Pro', RESERVED: 'Supreme' };
+  const currentTierLabel = tierLabels[packageTier] ?? 'Ücretsiz';
+
   const sections: SettingSection[] = [
+    // 0. Üyelik
+    {
+      title: 'Üyelik',
+      icon: 'diamond-outline',
+      data: [
+        {
+          key: 'currentPlan',
+          icon: packageTier === 'FREE' ? 'rocket-outline' : 'star',
+          title: packageTier === 'FREE' ? "Premium'a Geç" : `${currentTierLabel} Üyelik`,
+          type: 'navigation',
+          subtitle: packageTier === 'FREE' ? 'Daha fazla özellik aç' : 'Aktif üyeliğini yönet',
+          onPress: () => navigation.navigate('MembershipPlans'),
+        },
+      ],
+    },
     // 1. Hesap Ayarları
     {
       title: 'Hesap Ayarları',

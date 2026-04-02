@@ -28,7 +28,7 @@ import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
 import { usePremiumStore } from '../../stores/premiumStore';
 import { useCoinStore, COIN_PACKS, type CoinPack } from '../../stores/coinStore';
-import { CoinBalance } from '../../components/common/CoinBalance';
+
 import { iapService } from '../../services/iapService';
 import { paymentService } from '../../services/paymentService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
@@ -592,29 +592,16 @@ const CoinPackCard: React.FC<{
   isLoading: boolean;
 }> = ({ pack, onPurchase, isLoading }) => (
   <View style={coinCardStyles.card}>
-    {pack.bestValue && (
+    {(pack.bestValue || pack.coins === 500) && (
       <View style={coinCardStyles.badge}>
         <LinearGradient
-          colors={['#F9D423', GLASS.goldAccent]}
+          colors={[palette.purple[500], palette.purple[700]]}
           style={coinCardStyles.badgeGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
         >
           <Ionicons name="star" size={10} color={palette.white} />
-          <Text style={coinCardStyles.badgeText}>EN IYI DEGER</Text>
-        </LinearGradient>
-      </View>
-    )}
-
-    {pack.coins === 500 && (
-      <View style={coinCardStyles.badge}>
-        <LinearGradient
-          colors={['#F9D423', GLASS.goldAccent]}
-          style={coinCardStyles.badgeGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-        >
-          <Text style={coinCardStyles.badgeText}>POPULER</Text>
+          <Text style={coinCardStyles.badgeText}>EN POPÜLER</Text>
         </LinearGradient>
       </View>
     )}
@@ -638,13 +625,13 @@ const CoinPackCard: React.FC<{
       disabled={isLoading}
     >
       <LinearGradient
-        colors={['#F9D423', GLASS.goldAccent]}
+        colors={[palette.purple[500], palette.pink[500]]}
         style={coinCardStyles.buyGradient}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 1, y: 0 }}
       >
         {isLoading ? (
-          <ActivityIndicator size="small" color="#1A1A1A" />
+          <ActivityIndicator size="small" color="#FFFFFF" />
         ) : (
           <Text style={coinCardStyles.buyText}>Satın Al</Text>
         )}
@@ -718,7 +705,7 @@ const coinCardStyles = StyleSheet.create({
   },
   buyText: {
     ...typography.button,
-    color: '#1A1A1A',
+    color: '#FFFFFF',
     fontWeight: fontWeights.bold,
   },
 });
@@ -827,8 +814,10 @@ export const MembershipPlansScreen: React.FC = () => {
 
   const handleExitFreePreview = useCallback(() => {
     setShowExitModal(false);
-    // Could navigate to a free preview flow — for now just close
     navigation.goBack();
+    setTimeout(() => {
+      navigation.getParent()?.navigate('DiscoveryTab', { screen: 'LikesYou' });
+    }, 300);
   }, [navigation]);
 
   const handleSelectPlan = useCallback((plan: 'free' | 'premium' | 'supreme') => {
@@ -1011,7 +1000,7 @@ export const MembershipPlansScreen: React.FC = () => {
           <Ionicons name="arrow-back" size={24} color={GLASS.textPrimary} />
         </TouchableOpacity>
         <Text style={screenStyles.headerTitle}>Üyelik & Jeton</Text>
-        <CoinBalance size="small" onPress={() => setActiveTab('coins')} />
+        <View style={{ width: 40 }} />
       </View>
 
       {/* Tab Toggle */}
@@ -1072,7 +1061,16 @@ export const MembershipPlansScreen: React.FC = () => {
           <>
             {/* ── Urgency Banner ── */}
             {currentCategory === 'free' && (
-              <View style={emotionalStyles.urgencyBanner}>
+              <TouchableOpacity
+                style={emotionalStyles.urgencyBanner}
+                activeOpacity={0.85}
+                onPress={() => {
+                  navigation.goBack();
+                  setTimeout(() => {
+                    navigation.getParent()?.navigate('DiscoveryTab', { screen: 'LikesYou' });
+                  }, 300);
+                }}
+              >
                 <LinearGradient
                   colors={[palette.purple[600], palette.pink[500]]}
                   start={{ x: 0, y: 0 }}
@@ -1115,7 +1113,7 @@ export const MembershipPlansScreen: React.FC = () => {
                     </Text>
                   </View>
                 </LinearGradient>
-              </View>
+              </TouchableOpacity>
             )}
 
             {/* Social proof banner */}

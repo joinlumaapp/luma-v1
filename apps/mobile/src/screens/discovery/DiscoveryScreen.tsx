@@ -70,7 +70,7 @@ import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { useSwipeRateLimiterStore, SKIP_COOLDOWN_COST } from '../../stores/swipeRateLimiterStore';
 import { CooldownOverlay } from '../../components/discovery/CooldownOverlay';
 import { BoostModal } from '../../components/boost/BoostModal';
-import { SelamButton } from '../../components/discovery/SelamButton';
+
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -963,7 +963,7 @@ export const DiscoveryScreen: React.FC = () => {
           <LikedYouTeaser
             count={3}
             blurredAvatars={[]}
-            onPress={() => navigation.getParent()?.navigate('MatchesTab', { screen: 'MatchesList' })}
+            onPress={() => navigation.navigate('LikesYou' as never)}
           />
         )}
 
@@ -1057,15 +1057,6 @@ export const DiscoveryScreen: React.FC = () => {
             </Animated.View>
           </Animated.View>
         </GestureDetector>
-      </View>
-
-      {/* Selam Gonder button — send a paid greeting to the current profile */}
-      <View style={styles.selamButtonRow}>
-        <SelamButton
-          recipientId={currentCard.id}
-          recipientName={currentCard.name}
-          onBuyJeton={() => navigation.navigate('JetonMarket' as never)}
-        />
       </View>
 
       {/* Action buttons */}
@@ -1527,11 +1518,6 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
     marginTop: 4,
-  },
-  // ── Selam Button Row ──
-  selamButtonRow: {
-    alignItems: 'center',
-    paddingTop: spacing.sm,
   },
   // ── Action Buttons ──
   actionsRow: {

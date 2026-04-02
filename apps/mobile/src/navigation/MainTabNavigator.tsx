@@ -71,6 +71,8 @@ import { InterestPickerScreen } from '../screens/profile/InterestPickerScreen';
 import { ReportScreen } from '../screens/moderation/ReportScreen';
 import { JetonMarketScreen } from '../screens/store/JetonMarketScreen';
 
+import { BoostMarketScreen } from '../screens/store/BoostMarketScreen';
+
 // Feed extra screens
 import { FeedProfileScreen } from '../screens/feed/FeedProfileScreen';
 import { PostDetailScreen } from '../screens/feed/PostDetailScreen';
@@ -249,6 +251,11 @@ const DiscoveryStackNavigator: React.FC = React.memo(() => (
       component={MembershipPlansScreen}
       options={{ animation: 'slide_from_bottom' }}
     />
+    <DiscoveryStack.Screen
+      name="JetonMarket"
+      component={JetonMarketScreen}
+      options={{ animation: 'slide_from_bottom' }}
+    />
   </DiscoveryStack.Navigator>
 ));
 DiscoveryStackNavigator.displayName = 'DiscoveryStackNavigator';
@@ -411,6 +418,11 @@ const ProfileStackNavigator: React.FC = React.memo(() => (
     <ProfileStack.Screen name="Questions" component={QuestionsScreen} />
     <ProfileStack.Screen name="FollowList" component={FollowListScreen} />
     <ProfileStack.Screen name="MyPosts" component={MyPostsScreen} />
+    <ProfileStack.Screen
+      name="BoostMarket"
+      component={BoostMarketScreen}
+      options={{ animation: 'slide_from_bottom', presentation: 'modal' }}
+    />
   </ProfileStack.Navigator>
 ));
 ProfileStackNavigator.displayName = 'ProfileStackNavigator';

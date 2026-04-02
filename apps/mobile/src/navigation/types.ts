@@ -60,6 +60,7 @@ export type DiscoveryStackParamList = {
   Waves: undefined;
   Report: { userId: string; userName: string };
   MembershipPlans: undefined;
+  JetonMarket: undefined;
 };
 
 // -- Matches Stack --
@@ -106,6 +107,7 @@ export type ProfileStackParamList = {
   InterestPicker: undefined;
   Settings: undefined;
   JetonMarket: undefined;
+  BoostMarket: undefined;
   Places: undefined;
   Relationship: undefined;
   CouplesClub: undefined;

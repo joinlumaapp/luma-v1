@@ -1,5 +1,5 @@
-// JetonMarketScreen — Coin purchase store with pack cards and ad reward
-// Uses theme system for dark/light mode support
+// JetonMarketScreen — Coin purchase store
+// LUMA themed hero + 2×2 pack grid + ad reward section
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -11,16 +11,17 @@ import {
   SafeAreaView,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { useCoinStore, COIN_PACKS, type CoinPack } from '../../stores/coinStore';
-import { useTheme } from '../../theme/ThemeContext';
 import { fontWeights } from '../../theme/typography';
-import { spacing, borderRadius, shadows } from '../../theme/spacing';
-import { palette } from '../../theme/colors';
+import { spacing, borderRadius } from '../../theme/spacing';
+import { palette, colors } from '../../theme/colors';
 import { useScreenTracking } from '../../hooks/useAnalytics';
+
 
 /** Maps coin pack IDs to App Store / Play Store product IDs */
 const PACK_ID_TO_PRODUCT: Record<string, string> = {
@@ -30,207 +31,91 @@ const PACK_ID_TO_PRODUCT: Record<string, string> = {
   gold_1000: 'com.luma.dating.gold.1000',
 };
 
-const GOLD_24K = {
-  light: '#FFD700',
-  medium: '#D4AF37',
-  dark: '#B8860B',
-  border: '#C5A028',
-};
-
-// ── Coin Stack Visual ────────────────────────────────────────
-const CoinStack: React.FC<{ count: number }> = ({ count }) => {
-  const stackCount = count >= 1000 ? 5 : count >= 500 ? 4 : 3;
-
-  return (
-    <View style={coinStackStyles.container}>
-      {Array.from({ length: stackCount }).map((_, index) => (
-        <LinearGradient
-          key={index}
-          colors={[GOLD_24K.light, GOLD_24K.medium, GOLD_24K.dark]}
-          style={[
-            coinStackStyles.coin,
-            {
-              bottom: index * 6,
-              zIndex: stackCount - index,
-              opacity: 1 - index * 0.08,
-            },
-          ]}
-          start={{ x: 0.3, y: 0 }}
-          end={{ x: 0.7, y: 1 }}
-        >
-          <Text style={coinStackStyles.coinText}>J</Text>
-        </LinearGradient>
-      ))}
-    </View>
-  );
-};
-
-const coinStackStyles = StyleSheet.create({
-  container: {
-    width: 64,
-    height: 80,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-  },
-  coin: {
-    position: 'absolute',
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: GOLD_24K.border,
-    shadowColor: GOLD_24K.light,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.5,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  coinText: {
-    fontSize: 22,
-    fontWeight: fontWeights.bold,
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-});
-
-// ── Pack Card ────────────────────────────────────────────────
+// ── Pack Card (2×2 grid) ──
 const PackCard: React.FC<{
   pack: CoinPack;
-  onPurchase: (packId: string) => void;
-  isLoading: boolean;
-  cardBg: string;
-  cardBorder: string;
-  textColor: string;
-  textSecondary: string;
-}> = ({ pack, onPurchase, isLoading, cardBg, cardBorder, textColor, textSecondary }) => (
-  <View style={[packCardStyles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+  selected: boolean;
+  onSelect: (id: string) => void;
+}> = ({ pack, selected, onSelect }) => (
+  <TouchableOpacity
+    style={[cardStyles.card, selected && cardStyles.cardSelected]}
+    onPress={() => onSelect(pack.id)}
+    activeOpacity={0.85}
+  >
     {pack.bestValue && (
-      <View style={packCardStyles.badge}>
-        <LinearGradient
-          colors={[palette.purple[500], palette.purple[700]]}
-          style={packCardStyles.badgeGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-        >
-          <Text style={packCardStyles.badgeText}>EN AVANTAJLI</Text>
-        </LinearGradient>
+      <View style={cardStyles.bestBadge}>
+        <Text style={cardStyles.bestText}>EN AVANTAJLI</Text>
       </View>
     )}
 
-    <View style={[packCardStyles.content, pack.bestValue && { paddingTop: spacing.md }]}>
-      <CoinStack count={pack.coins} />
-
-      <View style={packCardStyles.info}>
-        <Text style={[packCardStyles.amount, { color: textColor }]}>
-          {pack.coins.toLocaleString('tr-TR')}
-        </Text>
-        <Text style={[packCardStyles.label, { color: textSecondary }]}>Jeton</Text>
-        <Text style={[packCardStyles.price, { color: GOLD_24K.dark }]}>
-          {pack.price}
-        </Text>
-      </View>
-    </View>
-
-    <TouchableOpacity
-      style={packCardStyles.buyButton}
-      onPress={() => onPurchase(pack.id)}
-      activeOpacity={0.85}
-      disabled={isLoading}
-    >
-      <LinearGradient
-        colors={[GOLD_24K.light, GOLD_24K.medium]}
-        style={packCardStyles.buyGradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
-        {isLoading ? (
-          <ActivityIndicator size="small" color="#FFFFFF" />
-        ) : (
-          <Text style={packCardStyles.buyText}>Satın Al</Text>
-        )}
-      </LinearGradient>
-    </TouchableOpacity>
-  </View>
+    <Text style={cardStyles.count}>{pack.coins.toLocaleString('tr-TR')}</Text>
+    <Text style={cardStyles.label}>Jeton</Text>
+    <Text style={cardStyles.price}>{pack.price}</Text>
+  </TouchableOpacity>
 );
 
-const packCardStyles = StyleSheet.create({
+const cardStyles = StyleSheet.create({
   card: {
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-    overflow: 'hidden',
-    ...shadows.medium,
-  },
-  badge: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    zIndex: 10,
-  },
-  badgeGradient: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderBottomLeftRadius: borderRadius.md,
-  },
-  badgeText: {
-    fontSize: 10,
-    color: '#FFFFFF',
-    fontWeight: fontWeights.bold,
-    includeFontPadding: false,
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  info: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: borderRadius.lg,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.sm,
+    alignItems: 'center',
+    gap: 4,
+    minHeight: 140,
+    justifyContent: 'center',
   },
-  amount: {
-    fontSize: 32,
+  cardSelected: {
+    borderColor: palette.purple[500],
+    backgroundColor: '#FAF5FF',
+    borderWidth: 2,
+  },
+  count: {
+    fontSize: 28,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: fontWeights.bold,
+    color: '#1F2937',
   },
   label: {
     fontSize: 13,
-    marginBottom: spacing.xs,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: fontWeights.regular,
+    color: '#6B7280',
   },
   price: {
     fontSize: 17,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: fontWeights.bold,
+    color: palette.purple[700],
+    marginTop: 4,
   },
-  buyButton: {
-    borderRadius: borderRadius.md,
-    overflow: 'hidden',
+  bestBadge: {
+    position: 'absolute',
+    bottom: 8,
+    backgroundColor: palette.purple[500],
+    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
   },
-  buyGradient: {
-    height: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: borderRadius.md,
-  },
-  buyText: {
-    fontSize: 15,
+  bestText: {
+    fontSize: 9,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: fontWeights.bold,
     color: '#FFFFFF',
-    fontWeight: fontWeights.bold,
-    textShadowColor: 'rgba(0,0,0,0.15)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    letterSpacing: 0.5,
   },
 });
 
-// ── Main Screen ──────────────────────────────────────────────
+// ── Main Screen ──
 export const JetonMarketScreen: React.FC = () => {
   useScreenTracking('JetonMarket');
   const navigation = useNavigation();
-  const { colors } = useTheme();
   const { balance, isLoading, watchAd, isAdAvailable } = useCoinStore();
 
+  const [selectedPack, setSelectedPack] = useState<string>('gold_500');
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [adCooldown, setAdCooldown] = useState(0);
   const adCooldownUntil = useCoinStore((state) => state.adCooldownUntil);
@@ -241,12 +126,10 @@ export const JetonMarketScreen: React.FC = () => {
       setAdCooldown(0);
       return;
     }
-
     const tick = () => {
       const remaining = Math.max(0, adCooldownUntil - Date.now());
       setAdCooldown(remaining);
     };
-
     tick();
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
@@ -258,39 +141,38 @@ export const JetonMarketScreen: React.FC = () => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const handlePurchase = useCallback(
-    async (packId: string) => {
-      if (isPurchasing) return;
+  const handleSelect = useCallback((id: string) => {
+    setSelectedPack(id);
+  }, []);
 
-      const productId = PACK_ID_TO_PRODUCT[packId];
-      if (!productId) {
-        Alert.alert('Hata', 'Geçersiz jeton paketi.');
+  const handlePurchase = useCallback(async () => {
+    if (isPurchasing) return;
+
+    const productId = PACK_ID_TO_PRODUCT[selectedPack];
+    if (!productId) {
+      Alert.alert('Hata', 'Geçersiz jeton paketi.');
+      return;
+    }
+
+    const pack = COIN_PACKS.find((p) => p.id === selectedPack);
+    if (!pack) return;
+
+    setIsPurchasing(true);
+    try {
+      const success = await useCoinStore.getState().purchaseCoins(selectedPack);
+      if (!success) {
+        Alert.alert('Hata', 'Jeton satın alma başarısız oldu. Lütfen tekrar deneyin.');
         return;
       }
-
-      const pack = COIN_PACKS.find((p) => p.id === packId);
-      if (!pack) return;
-
-      setIsPurchasing(true);
-      try {
-        const success = await useCoinStore.getState().purchaseCoins(packId);
-
-        if (!success) {
-          Alert.alert('Hata', 'Jeton satın alma başarısız oldu. Lütfen tekrar deneyin.');
-          return;
-        }
-
-        Alert.alert('Başarılı!', `${pack.coins} Jeton hesabınıza eklendi.`);
-      } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : '';
-        if (message.includes('cancelled')) return;
-        Alert.alert('Hata', 'Jeton satın alma başarısız oldu. Lütfen tekrar deneyin.');
-      } finally {
-        setIsPurchasing(false);
-      }
-    },
-    [isPurchasing],
-  );
+      Alert.alert('Başarılı!', `${pack.coins} Jeton hesabınıza eklendi.`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : '';
+      if (message.includes('cancelled')) return;
+      Alert.alert('Hata', 'Jeton satın alma başarısız oldu. Lütfen tekrar deneyin.');
+    } finally {
+      setIsPurchasing(false);
+    }
+  }, [isPurchasing, selectedPack]);
 
   const handleWatchAd = useCallback(async () => {
     if (!isAdAvailable()) return;
@@ -299,72 +181,83 @@ export const JetonMarketScreen: React.FC = () => {
   }, [watchAd, isAdAvailable]);
 
   return (
-    <SafeAreaView style={[s.safe, { backgroundColor: colors.background }]}>
-      <View style={[s.container, { backgroundColor: colors.background }]}>
-        {/* Header */}
-        <View style={[s.header, { borderBottomColor: colors.divider }]}>
+    <SafeAreaView style={s.safe}>
+      <View style={s.container}>
+        {/* Hero section */}
+        <LinearGradient
+          colors={[palette.purple[500], palette.pink[500], palette.purple[700]] as [string, string, string]}
+          style={s.hero}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          {/* Close button */}
           <TouchableOpacity
+            style={s.closeButton}
             onPress={() => navigation.goBack()}
-            style={[s.backButton, { backgroundColor: colors.surface }]}
             activeOpacity={0.7}
           >
-            <Ionicons name="chevron-back" size={24} color={colors.text} />
+            <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
 
-          <Text style={[s.headerTitle, { color: colors.text }]}>Jeton Market</Text>
-
-          {/* Balance chip */}
-          <View style={[s.balanceChip, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
-            <View style={s.balanceCoin}>
-              <Text style={s.balanceCoinText}>J</Text>
-            </View>
-            <Text style={[s.balanceNumber, { color: GOLD_24K.dark }]}>
-              {balance.toLocaleString('tr-TR')}
-            </Text>
+          {/* Balance badge */}
+          <View style={s.balanceBadge}>
+            <Text style={{ fontSize: 14 }}>{'\uD83E\uDE99'}</Text>
+            <Text style={s.balanceNumber}>{balance.toLocaleString('tr-TR')}</Text>
           </View>
-        </View>
 
+          {/* Icon */}
+          <View style={s.iconCircle}>
+            <Text style={{ fontSize: 36 }}>{'\uD83E\uDE99'}</Text>
+          </View>
+
+          {/* Title */}
+          <Text style={s.heroTitle}>Jeton Market</Text>
+          <Text style={s.heroSubtitle}>
+            Jeton ile mesaj gönder,{'\n'}özel özellikleri aç
+          </Text>
+        </LinearGradient>
+
+        {/* Pack grid + ad section — scrollable */}
         <ScrollView
           style={s.scroll}
           contentContainerStyle={s.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Section title */}
-          <Text style={[s.sectionTitle, { color: colors.text }]}>Jeton Paketleri</Text>
-          <Text style={[s.sectionSubtitle, { color: colors.textSecondary }]}>
-            Jeton ile direkt mesaj gönder, özel özellikleri aç
-          </Text>
-
-          {/* Pack cards */}
-          {COIN_PACKS.map((pack) => (
-            <PackCard
-              key={pack.id}
-              pack={pack}
-              onPurchase={handlePurchase}
-              isLoading={isPurchasing}
-              cardBg={colors.surface}
-              cardBorder={colors.surfaceBorder}
-              textColor={colors.text}
-              textSecondary={colors.textSecondary}
-            />
-          ))}
+          <View style={s.packRow}>
+            {COIN_PACKS.slice(0, 2).map((pack) => (
+              <PackCard
+                key={pack.id}
+                pack={pack}
+                selected={selectedPack === pack.id}
+                onSelect={handleSelect}
+              />
+            ))}
+          </View>
+          <View style={s.packRow}>
+            {COIN_PACKS.slice(2, 4).map((pack) => (
+              <PackCard
+                key={pack.id}
+                pack={pack}
+                selected={selectedPack === pack.id}
+                onSelect={handleSelect}
+              />
+            ))}
+          </View>
 
           {/* Ad reward section */}
-          <View style={[s.adSection, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
+          <View style={s.adSection}>
             <View style={s.adHeader}>
               <Ionicons name="play-circle" size={28} color={palette.purple[500]} />
               <View style={s.adHeaderText}>
-                <Text style={[s.adTitle, { color: colors.text }]}>Reklam İzle</Text>
-                <Text style={[s.adSubtitle, { color: colors.textSecondary }]}>
-                  5-10 Jeton kazan
-                </Text>
+                <Text style={s.adTitle}>Reklam İzle</Text>
+                <Text style={s.adSubtitle}>5-10 Jeton kazan</Text>
               </View>
             </View>
 
             {adCooldown > 0 ? (
-              <View style={[s.cooldownContainer, { backgroundColor: colors.backgroundSecondary }]}>
+              <View style={s.cooldownContainer}>
                 <Ionicons name="time-outline" size={20} color={colors.textSecondary} />
-                <Text style={[s.cooldownText, { color: colors.textSecondary }]}>
+                <Text style={s.cooldownText}>
                   Sonraki reklam: {formatCooldown(adCooldown)}
                 </Text>
               </View>
@@ -376,7 +269,7 @@ export const JetonMarketScreen: React.FC = () => {
                 disabled={isLoading}
               >
                 <LinearGradient
-                  colors={[palette.purple[500], palette.purple[700]]}
+                  colors={[palette.purple[500], palette.purple[700]] as [string, string]}
                   style={s.adButtonGradient}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
@@ -394,6 +287,29 @@ export const JetonMarketScreen: React.FC = () => {
             )}
           </View>
         </ScrollView>
+
+        {/* CTA button — fixed at bottom */}
+        <View style={s.ctaSection}>
+          <TouchableOpacity
+            style={s.ctaButton}
+            onPress={handlePurchase}
+            activeOpacity={0.85}
+            disabled={isPurchasing}
+          >
+            <LinearGradient
+              colors={[palette.purple[500], palette.pink[500]] as [string, string]}
+              style={s.ctaGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              {isPurchasing ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text style={s.ctaText}>Satın Al</Text>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -402,86 +318,125 @@ export const JetonMarketScreen: React.FC = () => {
 const s = StyleSheet.create({
   safe: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
   },
   container: {
     flex: 1,
   },
-  // Header
-  header: {
-    flexDirection: 'row',
+  // Hero
+  hero: {
+    paddingTop: Platform.OS === 'ios' ? 16 : 40,
+    paddingBottom: 32,
+    paddingHorizontal: spacing.lg,
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  closeButton: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 16 : 40,
+    left: spacing.md,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.25)',
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 10,
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: fontWeights.bold,
-    fontFamily: 'Poppins_700Bold',
-    flex: 1,
-    marginLeft: spacing.sm,
-  },
-  balanceChip: {
+  balanceBadge: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 16 : 40,
+    right: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
+    backgroundColor: 'rgba(255,255,255,0.25)',
     borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    gap: spacing.xs,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 4,
+    gap: 4,
+    zIndex: 10,
   },
   balanceCoin: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: GOLD_24K.medium,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: GOLD_24K.border,
   },
   balanceCoinText: {
     fontSize: 11,
     fontWeight: fontWeights.bold,
-    color: '#FFFFFF',
+    color: palette.purple[500],
   },
   balanceNumber: {
     fontSize: 15,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: fontWeights.bold,
+    color: '#FFFFFF',
+  },
+  iconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 40,
+    marginBottom: 16,
+    borderWidth: 3,
+    borderColor: palette.purple[500],
+    ...Platform.select({
+      ios: {
+        shadowColor: 'rgba(0,0,0,0.15)',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 12,
+      },
+      android: { elevation: 6 },
+    }),
+  },
+  iconText: {
+    fontSize: 32,
+    fontWeight: fontWeights.bold,
+    color: palette.purple[500],
+  },
+  heroTitle: {
+    fontSize: 26,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: fontWeights.bold,
+    color: '#FFFFFF',
+    fontStyle: 'italic',
+    marginBottom: 8,
+  },
+  heroSubtitle: {
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: fontWeights.regular,
+    color: 'rgba(255,255,255,0.85)',
+    textAlign: 'center',
+    lineHeight: 20,
   },
   // Scroll
   scroll: {
     flex: 1,
   },
   scrollContent: {
-    padding: spacing.md,
-    paddingBottom: 40,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
+    gap: spacing.md,
   },
-  // Section
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: fontWeights.bold,
-    fontFamily: 'Poppins_700Bold',
-    marginBottom: spacing.xs,
-  },
-  sectionSubtitle: {
-    fontSize: 13,
-    marginBottom: spacing.lg,
+  packRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
   },
   // Ad section
   adSection: {
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.xl,
     borderWidth: 1,
+    borderColor: colors.surfaceBorder,
     padding: spacing.lg,
-    marginTop: spacing.sm,
-    ...shadows.small,
   },
   adHeader: {
     flexDirection: 'row',
@@ -496,9 +451,11 @@ const s = StyleSheet.create({
     fontSize: 17,
     fontWeight: fontWeights.bold,
     fontFamily: 'Poppins_700Bold',
+    color: colors.text,
   },
   adSubtitle: {
     fontSize: 12,
+    color: colors.textSecondary,
   },
   adButton: {
     borderRadius: borderRadius.md,
@@ -517,7 +474,6 @@ const s = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: fontWeights.bold,
   },
-  // Cooldown
   cooldownContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -525,9 +481,33 @@ const s = StyleSheet.create({
     gap: spacing.sm,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.md,
+    backgroundColor: colors.backgroundSecondary,
   },
   cooldownText: {
     fontSize: 14,
     fontWeight: fontWeights.medium,
+    color: colors.textSecondary,
+  },
+  // CTA
+  ctaSection: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: Platform.OS === 'ios' ? 32 : 24,
+    paddingTop: spacing.md,
+  },
+  ctaButton: {
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+  },
+  ctaGradient: {
+    height: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: borderRadius.lg,
+  },
+  ctaText: {
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: fontWeights.bold,
+    color: '#FFFFFF',
   },
 });

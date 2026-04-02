@@ -10,7 +10,6 @@ import {
   Animated,
   Easing,
   RefreshControl,
-  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -34,9 +33,10 @@ import { discoveryService } from '../../services/discoveryService';
 import type { BoostStatusResponse } from '../../services/discoveryService';
 import { BoostModal } from '../../components/boost/BoostModal';
 import { VerifiedBadge } from '../../components/common/VerifiedBadge';
+import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
 import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
 import { useScreenTracking } from '../../hooks/useAnalytics';
-import { CoinBalance } from '../../components/common/CoinBalance';
+
 import { DailyChallenge, WeeklyLeaderboard } from '../../components/engagement';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 import api from '../../services/api';
@@ -238,6 +238,29 @@ export const ProfileScreen: React.FC = () => {
   // Boost state
   const [boostStatus, setBoostStatus] = useState<BoostStatusResponse>({ isActive: false });
   const [showBoostModal, setShowBoostModal] = useState(false);
+  const [boostRemaining, setBoostRemaining] = useState('');
+
+  // Boost countdown timer
+  useEffect(() => {
+    if (!boostStatus.isActive || !boostStatus.endsAt) {
+      setBoostRemaining('');
+      return;
+    }
+    const tick = () => {
+      const ms = Math.max(0, new Date(boostStatus.endsAt!).getTime() - Date.now());
+      if (ms <= 0) {
+        setBoostRemaining('');
+        setBoostStatus({ isActive: false });
+        return;
+      }
+      const h = Math.floor(ms / 3600000);
+      const m = Math.floor((ms % 3600000) / 60000);
+      setBoostRemaining(`${h}sa ${m}dk`);
+    };
+    tick();
+    const interval = setInterval(tick, 60000);
+    return () => clearInterval(interval);
+  }, [boostStatus.isActive, boostStatus.endsAt]);
   const goldBalance = useCoinStore((s) => s.balance);
 
   // Pull-to-refresh state
@@ -350,22 +373,8 @@ export const ProfileScreen: React.FC = () => {
   }, [navigation]);
 
   const handleBoostPress = useCallback(() => {
-    if (packageTier === 'FREE') {
-      Alert.alert(
-        'Premium Özellik',
-        'Öne Çıkarma Gold ve üzeri paketlere özeldir.',
-        [
-          { text: 'Vazgeç', style: 'cancel' },
-          {
-            text: 'Paketi Yükselt',
-            onPress: () => navigation.navigate('MembershipPlans'),
-          },
-        ],
-      );
-      return;
-    }
-    setShowBoostModal(true);
-  }, [packageTier, navigation]);
+    navigation.navigate('BoostMarket');
+  }, [navigation]);
 
   // Pull-to-refresh handler — re-fetches all profile data
   const handleRefresh = useCallback(async () => {
@@ -467,7 +476,6 @@ export const ProfileScreen: React.FC = () => {
         <Text style={styles.headerTitle}>Profil</Text>
       </View>
       <View style={styles.headerRight}>
-        <CoinBalance size="small" />
         <TouchableOpacity
           onPress={handleSettings}
           style={styles.settingsButton}
@@ -492,6 +500,7 @@ export const ProfileScreen: React.FC = () => {
             {formatDisplayName(profile.firstName || '-', profile.lastName)}, {age}
           </Text>
           {isVerified && <VerifiedBadge size="large" animated />}
+          {packageTier !== 'FREE' && <SubscriptionBadge tier={packageTier} compact />}
           {strengthData && (
             <View style={[styles.strengthPill, { borderColor: getStrengthColor(strengthData.level) + '40' }]}>
               <Text style={[styles.strengthPillText, { color: getStrengthColor(strengthData.level) }]}>
@@ -508,39 +517,6 @@ export const ProfileScreen: React.FC = () => {
 
         {/* City */}
         <Text style={styles.cityText}>{profile.city || '-'}</Text>
-
-        {/* Profile strength card */}
-        <TouchableOpacity onPress={handleEditProfile} activeOpacity={0.7} style={styles.strengthCardContainer} accessibilityLabel={`Profil gücün yüzde ${completionPercent}, düzenlemek için dokunun`} accessibilityRole="button">
-          <View style={styles.strengthCardRow}>
-            <Text style={styles.strengthCardLabel}>Profil Gucun</Text>
-            <View style={styles.strengthCardTrack}>
-              <View style={[
-                styles.strengthCardFill,
-                {
-                  width: `${Math.min(completionPercent, 100)}%`,
-                  backgroundColor: completionPercent >= 85 ? '#22C55E' : completionPercent >= 60 ? palette.purple[500] : completionPercent >= 30 ? '#F59E0B' : '#EF4444',
-                },
-              ]} />
-            </View>
-            <Text style={[
-              styles.strengthCardPercent,
-              {
-                color: completionPercent >= 85 ? '#22C55E' : completionPercent >= 60 ? palette.purple[500] : completionPercent >= 30 ? '#F59E0B' : '#EF4444',
-              },
-            ]}>%{completionPercent}</Text>
-          </View>
-          {completionPercent < 100 && (
-            <Text style={styles.strengthCardHint}>
-              {profile.photos.length < 2 ? '💡 Daha fazla fotograf ekle'
-                : profile.bio.length < 50 ? '💡 Bio ekleyerek profilini guclendir'
-                : profile.interestTags.length === 0 ? '💡 Ilgi alanlarini sec'
-                : '💡 Detayli bilgilerini tamamla'}
-            </Text>
-          )}
-          {completionPercent >= 100 && (
-            <Text style={styles.strengthCardComplete}>✨ Profilin tamamlanmis!</Text>
-          )}
-        </TouchableOpacity>
 
         {/* Intention chip */}
         {intentionConfig && (
@@ -602,15 +578,85 @@ export const ProfileScreen: React.FC = () => {
           </LinearGradient>
         </TouchableOpacity>
 
-        {/* Premium — gold shimmer */}
+        {/* Premium / Üyelik */}
         <View style={styles.actionButtonFlex}>
           <GoldShimmerButton
             onPress={() => navigation.navigate('MembershipPlans')}
-            label="Premium"
-            icon="diamond"
+            label={packageTier === 'FREE' ? "Premium'a Geç" : packageTier === 'RESERVED' ? 'Supreme' : packageTier === 'PRO' ? 'Pro Üye' : 'Gold Üye'}
+            icon={packageTier === 'RESERVED' ? 'diamond' : packageTier === 'FREE' ? 'rocket' : 'star'}
           />
         </View>
       </View>
+
+      {/* Profile strength card */}
+      <TouchableOpacity onPress={handleEditProfile} activeOpacity={0.7} style={styles.strengthCardContainer} accessibilityLabel={`Profil gücün yüzde ${completionPercent}, düzenlemek için dokunun`} accessibilityRole="button">
+        <View style={styles.strengthCardRow}>
+          <Text style={styles.strengthCardLabel}>Profil Gucun</Text>
+          <View style={styles.strengthCardTrack}>
+            <View style={[
+              styles.strengthCardFill,
+              {
+                width: `${Math.min(completionPercent, 100)}%`,
+                backgroundColor: completionPercent >= 85 ? '#22C55E' : completionPercent >= 60 ? palette.purple[500] : completionPercent >= 30 ? '#F59E0B' : '#EF4444',
+              },
+            ]} />
+          </View>
+          <Text style={[
+            styles.strengthCardPercent,
+            {
+              color: completionPercent >= 85 ? '#22C55E' : completionPercent >= 60 ? palette.purple[500] : completionPercent >= 30 ? '#F59E0B' : '#EF4444',
+            },
+          ]}>%{completionPercent}</Text>
+        </View>
+        {completionPercent < 100 && (
+          <Text style={styles.strengthCardHint}>
+            {profile.photos.length < 2 ? '💡 Daha fazla fotograf ekle'
+              : profile.bio.length < 50 ? '💡 Bio ekleyerek profilini guclendir'
+              : profile.interestTags.length === 0 ? '💡 Ilgi alanlarini sec'
+              : '💡 Detayli bilgilerini tamamla'}
+          </Text>
+        )}
+        {completionPercent >= 100 && (
+          <Text style={styles.strengthCardComplete}>✨ Profilin tamamlanmis!</Text>
+        )}
+      </TouchableOpacity>
+
+      {/* Boost card */}
+      <TouchableOpacity
+        onPress={handleBoostPress}
+        activeOpacity={0.8}
+        style={styles.boostCard}
+        accessibilityLabel="Profilini öne çıkar"
+        accessibilityRole="button"
+        testID="profile-boost-btn"
+      >
+        <View style={styles.boostRow}>
+          <LinearGradient
+            colors={[palette.gold[400], palette.gold[600]] as [string, string, ...string[]]}
+            style={styles.boostIconGradient}
+          >
+            <Text style={styles.boostIconText}>{'\u26A1'}</Text>
+          </LinearGradient>
+          <View style={styles.boostContent}>
+            <Text style={styles.boostTitle}>
+              {boostStatus.isActive ? 'Öne Çıkarma Aktif' : 'Profilini Öne Çıkar'}
+            </Text>
+            <Text style={styles.boostSubtitle}>
+              {boostStatus.isActive
+                ? `Kalan süre: ${boostRemaining || '...'}`
+                : '24 saat boyunca 10x daha fazla görünürlük'}
+            </Text>
+          </View>
+          {boostStatus.isActive ? (
+            <View style={styles.boostActiveBadge}>
+              <View style={styles.boostActiveDot} />
+              <Text style={styles.boostActiveText}>Aktif</Text>
+            </View>
+          ) : (
+            <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+          )}
+        </View>
+      </TouchableOpacity>
 
       {/* Weekly views — compact inline (GOLD+ sees count, FREE sees teaser) */}
       {weeklyViewCount !== null && weeklyViewCount > 0 && (
@@ -769,45 +815,7 @@ export const ProfileScreen: React.FC = () => {
 
   // 4. Profil Kocu + Kisilik Tipi — removed
 
-  // 6. Boost card
-  infoSections.push(
-    <TouchableOpacity
-      key="boost"
-      style={styles.boostCard}
-      onPress={handleBoostPress}
-      activeOpacity={0.8}
-      accessibilityLabel="Profilini öne çıkar"
-      accessibilityRole="button"
-      testID="profile-boost-btn"
-    >
-      <View style={styles.boostRow}>
-        <LinearGradient
-          colors={[palette.gold[400], palette.gold[600]] as [string, string, ...string[]]}
-          style={styles.boostIconGradient}
-        >
-          <Text style={styles.boostIconText}>{'\u26A1'}</Text>
-        </LinearGradient>
-        <View style={styles.boostContent}>
-          <Text style={styles.boostTitle}>
-            {boostStatus.isActive ? 'Öne Çıkarma Aktif' : 'Profilini Öne Çıkar'}
-          </Text>
-          <Text style={styles.boostSubtitle}>
-            {boostStatus.isActive
-              ? 'Profilin 10x daha fazla görüntüleniyor'
-              : 'Keşfette 10x daha fazla görünürlük'}
-          </Text>
-        </View>
-        {boostStatus.isActive ? (
-          <View style={styles.boostActiveBadge}>
-            <View style={styles.boostActiveDot} />
-            <Text style={styles.boostActiveText}>Aktif</Text>
-          </View>
-        ) : (
-          <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
-        )}
-      </View>
-    </TouchableOpacity>,
-  );
+  // 6. Boost card — moved to topContent (above profile strength)
 
   // 6b. Timed Boost Offer — temporarily disabled for stability
   // TODO: Re-enable after SmartUpgradePrompts CachedAvatar fix

@@ -497,8 +497,8 @@ export const INSTANT_CONNECT_CONFIG = {
     PRO: 10,
     RESERVED: -1,
   },
-  MATCH_COST: 25,     // coins for first match
-  SWITCH_COST: 15,    // coins to switch to another match
+  MATCH_COST: 50,     // coins for first match
+  SWITCH_COST: 25,    // coins to switch to another match
 } as const;
 
 // Monthly token bonus per tier (awarded on subscription renewal)

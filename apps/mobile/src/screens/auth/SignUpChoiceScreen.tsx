@@ -55,7 +55,19 @@ export const SignUpChoiceScreen: React.FC = () => {
 
       {/* Buttons */}
       <View style={styles.footer}>
-        {/* Google button — hidden until Google Auth is implemented */}
+        {/* Google button — disabled until Google Auth is implemented */}
+        <TouchableOpacity
+          style={[styles.googleButton, styles.googleButtonDisabled]}
+          disabled={true}
+          activeOpacity={1}
+          accessibilityRole="button"
+          accessibilityLabel="Google ile bağlan, çok yakında"
+          accessibilityState={{ disabled: true }}
+        >
+          <Ionicons name="logo-google" size={20} color={onboardingColors.text} />
+          <Text style={styles.googleButtonText}>Google ile bağlan</Text>
+          <Text style={styles.comingSoonBadge}>Çok yakında</Text>
+        </TouchableOpacity>
 
         {/* Phone button */}
         <TouchableOpacity
@@ -118,6 +130,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: Platform.OS === 'ios' ? 48 : 36,
     gap: 12,
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 54,
+    borderRadius: 16,
+    backgroundColor: onboardingColors.surface,
+    borderWidth: 1.5,
+    borderColor: onboardingColors.surfaceBorder,
+    gap: 10,
+  },
+  googleButtonText: {
+    fontSize: 16,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: onboardingColors.text,
+  },
+  googleButtonDisabled: {
+    opacity: 0.45,
+  },
+  comingSoonBadge: {
+    fontSize: 10,
+    color: onboardingColors.textTertiary,
+    marginLeft: 4,
+    fontStyle: 'italic' as const,
   },
   phoneButton: {
     flexDirection: 'row',

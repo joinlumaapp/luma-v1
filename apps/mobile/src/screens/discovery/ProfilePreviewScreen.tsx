@@ -47,6 +47,7 @@ import { VerifiedBadge } from '../../components/common/VerifiedBadge';
 import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
 import { VideoProfile } from '../../components/profile/VideoProfile';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { SelamButton } from '../../components/discovery/SelamButton';
 
 // Interest tag lookup maps — covers both legacy IDs and new category labels
 const INTEREST_EMOJI_MAP: Record<string, string> = {};
@@ -840,7 +841,16 @@ export const ProfilePreviewScreen: React.FC = () => {
         />
       </View>
 
-      {/* Message — CENTER, PRIMARY CTA, largest with gradient */}
+      {/* Selam — compact paid greeting */}
+      <View style={styles.actionItem}>
+        <SelamButton
+          recipientId={userId}
+          recipientName={profile.name}
+          onBuyJeton={() => navigation.navigate('JetonMarket' as never)}
+        />
+      </View>
+
+      {/* Message — compact gradient pill */}
       <View style={styles.actionItem}>
         <Pressable
           onPress={() => setShowPaidMessageModal(true)}
@@ -854,8 +864,8 @@ export const ProfilePreviewScreen: React.FC = () => {
             end={{ x: 1, y: 0 }}
             style={styles.messageCtaGradient}
           >
-            <Ionicons name="chatbubble" size={18} color="#FFFFFF" />
-            <Text style={styles.messageCtaText}>Mesaj Gonder</Text>
+            <Ionicons name="chatbubble" size={16} color="#FFFFFF" />
+            <Text style={styles.messageCtaText}>Mesaj</Text>
           </LinearGradient>
         </Pressable>
       </View>
@@ -1250,7 +1260,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 14,
+    gap: 10,
     paddingTop: 48,
     paddingBottom: spacing.md,
   },
@@ -1271,13 +1281,13 @@ const styles = StyleSheet.create({
   messageCtaGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
+    gap: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderRadius: borderRadius.full,
   },
   messageCtaText: {
-    fontSize: 15,
+    fontSize: 12,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#FFFFFF',

@@ -1,39 +1,28 @@
-// SelamButton — Floating "Selam Gonder" button on discovery cards.
-// Lets users send a paid greeting (10 jeton) to someone they haven't matched with.
-// Shows jeton cost, handles balance check, and provides success/error feedback.
+// SelamButton — Compact "Selam" greeting button for profile preview footer.
+// Sends a paid greeting (50 jeton) with confirmation dialog before sending.
+// Matches the "Mesaj" button style — gradient pill with icon + label.
 
 import React, { useState, useCallback } from 'react';
 import {
-  View,
   Text,
   Pressable,
   StyleSheet,
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withSequence,
-  withTiming,
-} from 'react-native-reanimated';
 import { palette } from '../../theme/colors';
-import { spacing, borderRadius, shadows } from '../../theme/spacing';
+import { borderRadius } from '../../theme/spacing';
 import { useCoinStore, GREETING_COST } from '../../stores/coinStore';
 import { discoveryService } from '../../services/discoveryService';
 
 interface SelamButtonProps {
-  /** Target user ID to send greeting to */
   recipientId: string;
-  /** Target user's first name (for success feedback) */
   recipientName: string;
-  /** Called when user needs to navigate to jeton purchase */
   onBuyJeton: () => void;
 }
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export const SelamButton: React.FC<SelamButtonProps> = ({
   recipientId,
@@ -46,58 +35,15 @@ export const SelamButton: React.FC<SelamButtonProps> = ({
   const coinBalance = useCoinStore((s) => s.balance);
   const fetchBalance = useCoinStore((s) => s.fetchBalance);
 
-  // Animation values
-  const buttonScale = useSharedValue(1);
-  const successScale = useSharedValue(0);
-
-  const buttonAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: buttonScale.value }],
-  }));
-
-  const successAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: successScale.value }],
-    opacity: successScale.value,
-  }));
-
-  const handlePress = useCallback(async () => {
-    if (isSending || isSent) return;
-
-    // Check balance before calling API
-    if (coinBalance < GREETING_COST) {
-      Alert.alert(
-        'Yetersiz Jeton',
-        `Selam gondermek icin ${GREETING_COST} jeton gerekli. Jeton satin al.`,
-        [
-          { text: 'Vazgec', style: 'cancel' },
-          { text: 'Jeton Al', onPress: onBuyJeton },
-        ],
-      );
-      return;
-    }
-
-    // Press animation
-    buttonScale.value = withSequence(
-      withTiming(0.9, { duration: 80 }),
-      withSpring(1, { damping: 12, stiffness: 200 }),
-    );
+  const sendGreeting = useCallback(async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
     setIsSending(true);
 
     try {
       const result = await discoveryService.sendGreeting(recipientId);
-
       if (result.success) {
         setIsSent(true);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-        // Success pop animation
-        successScale.value = withSequence(
-          withSpring(1.2, { damping: 8, stiffness: 150 }),
-          withSpring(1, { damping: 12, stiffness: 200 }),
-        );
-
-        // Sync balance with server
         fetchBalance();
       }
     } catch (error: unknown) {
@@ -107,119 +53,103 @@ export const SelamButton: React.FC<SelamButtonProps> = ({
     } finally {
       setIsSending(false);
     }
-  }, [
-    isSending,
-    isSent,
-    coinBalance,
-    recipientId,
-    onBuyJeton,
-    buttonScale,
-    successScale,
-    fetchBalance,
-  ]);
+  }, [recipientId, fetchBalance]);
 
-  // Already sent state
+  const handlePress = useCallback(() => {
+    if (isSending || isSent) return;
+
+    if (coinBalance < GREETING_COST) {
+      Alert.alert(
+        'Yetersiz Jeton',
+        `Selam gondermek icin ${GREETING_COST} jeton gerekli.`,
+        [
+          { text: 'Vazgec', style: 'cancel' },
+          { text: 'Jeton Al', onPress: onBuyJeton },
+        ],
+      );
+      return;
+    }
+
+    Alert.alert(
+      'Selam Gonder',
+      `${recipientName} adli kisiye selam gondermek icin ${GREETING_COST} jeton harcanacak. Devam etmek istiyor musun?`,
+      [
+        { text: 'Vazgec', style: 'cancel' },
+        { text: 'Gonder', onPress: sendGreeting },
+      ],
+    );
+  }, [isSending, isSent, coinBalance, recipientName, onBuyJeton, sendGreeting]);
+
+  // Sent state — green check
   if (isSent) {
     return (
-      <Animated.View style={[styles.container, styles.sentContainer, successAnimatedStyle]}>
-        <Text style={styles.sentEmoji}>{'\u2714'}</Text>
-        <Text style={styles.sentText}>Selam Gonderildi!</Text>
-      </Animated.View>
+      <Pressable style={styles.wrapper} disabled>
+        <LinearGradient
+          colors={['#22C55E', '#16A34A'] as [string, string]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.gradient}
+        >
+          <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+          <Text style={styles.text}>Gonderildi</Text>
+        </LinearGradient>
+      </Pressable>
     );
   }
 
   return (
-    <AnimatedPressable
+    <Pressable
       onPress={handlePress}
       disabled={isSending}
-      accessibilityLabel={`${recipientName} adli kisiye selam gonder, ${GREETING_COST} jeton`}
+      accessibilityLabel={`${recipientName} adli kisiye selam gonder`}
       accessibilityRole="button"
-      accessibilityHint="Bu kisiye selam gondermek icin dokunun"
-      testID="selam-button"
-      style={[styles.container, buttonAnimatedStyle]}
+      style={styles.wrapper}
     >
-      <View style={styles.innerRow}>
+      <LinearGradient
+        colors={[palette.purple[500], palette.pink[500]] as [string, string]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.gradient}
+      >
         {isSending ? (
           <ActivityIndicator size="small" color="#FFFFFF" />
         ) : (
           <>
-            <Text style={styles.waveEmoji}>{'\uD83D\uDC4B'}</Text>
-            <Text style={styles.label}>Selam Gonder</Text>
-            <View style={styles.costBadge}>
-              <Text style={styles.costEmoji}>{'\uD83E\uDE99'}</Text>
-              <Text style={styles.costText}>{GREETING_COST}</Text>
-            </View>
+            <Text style={styles.emoji}>{'\uD83D\uDC4B'}</Text>
+            <Text style={styles.text}>Selam</Text>
           </>
         )}
-      </View>
-    </AnimatedPressable>
+      </LinearGradient>
+    </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    alignSelf: 'center',
+  wrapper: {
     borderRadius: borderRadius.full,
     overflow: 'hidden',
-    ...shadows.medium,
+    shadowColor: palette.purple[500],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  innerRow: {
+  gradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: palette.purple[600],
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
+    gap: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderRadius: borderRadius.full,
-    gap: spacing.xs + 2,
   },
-  waveEmoji: {
-    fontSize: 18,
-  },
-  label: {
+  emoji: {
     fontSize: 14,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    color: '#FFFFFF',
-    includeFontPadding: false,
   },
-  costBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    gap: 3,
-  },
-  costEmoji: {
-    fontSize: 12,
-  },
-  costText: {
+  text: {
     fontSize: 12,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#FFFFFF',
-    includeFontPadding: false,
-  },
-  sentContainer: {
-    backgroundColor: palette.purple[600],
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
-    borderRadius: borderRadius.full,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-  },
-  sentEmoji: {
-    fontSize: 16,
-    color: '#FFFFFF',
-  },
-  sentText: {
-    fontSize: 14,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    color: '#FFFFFF',
-    includeFontPadding: false,
+    letterSpacing: 0.2,
   },
 });
