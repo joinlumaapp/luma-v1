@@ -51,10 +51,8 @@ export const PasswordCreationScreen: React.FC = () => {
     if (!isValid) return;
     const { setPassword: storePassword } = useAuthStore.getState();
     storePassword(password);
-    // After password creation, new users start onboarding
-    const { setStartedOnboarding } = useAuthStore.getState();
-    setStartedOnboarding(true);
-  }, [password, isValid]);
+    navigation.navigate('SelfieVerification');
+  }, [password, isValid, navigation]);
 
   const handleBack = useCallback(() => {
     navigation.goBack();

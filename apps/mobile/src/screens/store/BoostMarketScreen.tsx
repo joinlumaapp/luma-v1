@@ -16,6 +16,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
+import { useCoinStore } from '../../stores/coinStore';
 import { palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { fontWeights } from '../../theme/typography';
@@ -25,16 +26,16 @@ import { useScreenTracking } from '../../hooks/useAnalytics';
 interface BoostPack {
   id: string;
   count: number;
-  price: string;
+  costGold: number;
   discount?: string;
   popular?: boolean;
 }
 
 const BOOST_PACKS: BoostPack[] = [
-  { id: 'boost_20', count: 20, price: '₺759,99', discount: '%37 KAYDET', popular: true },
-  { id: 'boost_10', count: 10, price: '₺409,99', discount: '%32 KAYDET' },
-  { id: 'boost_5', count: 5, price: '₺239,99', discount: '%20 KAYDET' },
-  { id: 'boost_1', count: 1, price: '₺59,99' },
+  { id: 'boost_20', count: 20, costGold: 1500, discount: '%37 KAYDET', popular: true },
+  { id: 'boost_10', count: 10, costGold: 900, discount: '%32 KAYDET' },
+  { id: 'boost_5', count: 5, costGold: 500, discount: '%20 KAYDET' },
+  { id: 'boost_1', count: 1, costGold: 120 },
 ];
 
 // ── Pack Card ──
@@ -65,7 +66,7 @@ const PackCard: React.FC<{
       </View>
     )}
 
-    <Text style={cardStyles.price}>{pack.price}</Text>
+    <Text style={cardStyles.price}>{'\uD83E\uDE99'} {pack.costGold}</Text>
   </TouchableOpacity>
 );
 
@@ -141,6 +142,8 @@ const cardStyles = StyleSheet.create({
 export const BoostMarketScreen: React.FC = () => {
   useScreenTracking('BoostMarket');
   const navigation = useNavigation();
+  const coinBalance = useCoinStore((s) => s.balance);
+  const spendCoins = useCoinStore((s) => s.spendCoins);
 
   const [selectedPack, setSelectedPack] = useState<string>('boost_20');
   const [isPurchasing, setIsPurchasing] = useState(false);
@@ -154,18 +157,36 @@ export const BoostMarketScreen: React.FC = () => {
     const pack = BOOST_PACKS.find((p) => p.id === selectedPack);
     if (!pack) return;
 
+    if (coinBalance < pack.costGold) {
+      Alert.alert(
+        'Yetersiz Jeton',
+        `Bu paket için ${pack.costGold} jeton gerekli. Mevcut bakiyen: ${coinBalance}`,
+        [
+          { text: 'Vazgeç', style: 'cancel' },
+          { text: 'Jeton Al', onPress: () => navigation.navigate('JetonMarket' as never) },
+        ],
+      );
+      return;
+    }
+
     setIsPurchasing(true);
     try {
-      // TODO: Integrate with real IAP when boost pack products are configured
-      Alert.alert(
-        'Başarılı!',
-        `${pack.count} Boost hakkı hesabına eklendi.`,
-        [{ text: 'Tamam', onPress: () => navigation.goBack() }],
-      );
+      const success = await spendCoins(pack.costGold, `Boost x${pack.count}`);
+      if (success) {
+        Alert.alert(
+          'Başarılı!',
+          `${pack.count} Boost hakkı hesabına eklendi.`,
+          [{ text: 'Tamam', onPress: () => navigation.goBack() }],
+        );
+      } else {
+        Alert.alert('Hata', 'Boost satın alma başarısız oldu. Tekrar deneyin.');
+      }
+    } catch {
+      Alert.alert('Hata', 'Bir sorun oluştu. Tekrar deneyin.');
     } finally {
       setIsPurchasing(false);
     }
-  }, [isPurchasing, selectedPack, navigation]);
+  }, [isPurchasing, selectedPack, coinBalance, spendCoins, navigation]);
 
   return (
     <SafeAreaView style={s.safe}>
@@ -185,6 +206,12 @@ export const BoostMarketScreen: React.FC = () => {
           >
             <Ionicons name="close" size={24} color="#FFFFFF" />
           </TouchableOpacity>
+
+          {/* Balance badge */}
+          <View style={s.balanceBadge}>
+            <Text style={{ fontSize: 14 }}>{'\uD83E\uDE99'}</Text>
+            <Text style={s.balanceText}>{coinBalance}</Text>
+          </View>
 
           {/* Icon */}
           <View style={s.iconCircle}>
@@ -277,6 +304,25 @@ const s = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
+  },
+  balanceBadge: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 16 : 40,
+    right: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    gap: 4,
+    zIndex: 10,
+  },
+  balanceText: {
+    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: fontWeights.bold,
+    color: '#FFFFFF',
   },
   iconCircle: {
     width: 80,

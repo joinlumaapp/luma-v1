@@ -455,9 +455,8 @@ export const ProfilePreviewScreen: React.FC = () => {
   const currentUserProfile = useProfileStore((s) => s.profile);
 
   const handleSwipe = (direction: 'left' | 'right') => {
-    if (profile) {
-      swipeAction(direction, profile.id);
-    }
+    if (!profile) return;
+    swipeAction(direction, profile.id);
     navigation.goBack();
   };
 
@@ -476,7 +475,7 @@ export const ProfilePreviewScreen: React.FC = () => {
           {profileError ? (
             <>
               <Ionicons name="person-outline" size={48} color={colors.textTertiary} />
-              <Text style={styles.emptyText}>Profil yuklenemedi</Text>
+              <Text style={styles.emptyText}>Profil yüklenemedi</Text>
               <TouchableOpacity
                 style={styles.retryButton}
                 onPress={() => {
@@ -492,7 +491,7 @@ export const ProfilePreviewScreen: React.FC = () => {
           ) : (
             <>
               <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={styles.emptyText}>Profil yukleniyor...</Text>
+              <Text style={styles.emptyText}>Profil yükleniyor...</Text>
             </>
           )}
         </View>

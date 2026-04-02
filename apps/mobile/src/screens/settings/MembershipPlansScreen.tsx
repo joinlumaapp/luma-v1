@@ -32,6 +32,7 @@ import { useCoinStore, COIN_PACKS, type CoinPack } from '../../stores/coinStore'
 import { iapService } from '../../services/iapService';
 import { paymentService } from '../../services/paymentService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
+import { PACKAGE_TIERS } from '../../constants/config';
 
 // ─── Constants ───────────────────────────────────────────────────────
 
@@ -314,7 +315,7 @@ const SupremeCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
           <Text style={cardStyles.tierSubtitle}>Elite deneyim</Text>
         </View>
         <View style={cardStyles.priceRight}>
-          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>{'1.299₺'}</Text>
+          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>{PACKAGE_TIERS.find(t => t.id === 'RESERVED')?.priceDisplay ?? '1.299₺'}</Text>
           <Text style={cardStyles.pricePeriod}>/ay</Text>
           {/* "En Populer" badge — below price */}
           <LinearGradient
@@ -397,7 +398,7 @@ const PremiumCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
           <Text style={cardStyles.tierSubtitle}>Tam erişim</Text>
         </View>
         <View style={cardStyles.priceContainer}>
-          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>{'349₺'}</Text>
+          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>{PACKAGE_TIERS.find(t => t.id === 'GOLD')?.priceDisplay ?? '349₺'}</Text>
           <Text style={cardStyles.pricePeriod}>/ay</Text>
         </View>
       </View>
@@ -468,7 +469,7 @@ const FreeCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
           <Text style={cardStyles.tierSubtitle}>Temel özellikler</Text>
         </View>
         <View style={cardStyles.priceContainer}>
-          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>{'0₺'}</Text>
+          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>{PACKAGE_TIERS.find(t => t.id === 'FREE')?.priceDisplay ?? '0₺'}</Text>
           <Text style={cardStyles.pricePeriod}>/ay</Text>
         </View>
       </View>

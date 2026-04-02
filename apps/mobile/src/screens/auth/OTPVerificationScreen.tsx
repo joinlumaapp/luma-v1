@@ -88,23 +88,22 @@ export const OTPVerificationScreen: React.FC = () => {
   const handleVerify = useCallback(async (otpCode: string) => {
     setIsVerifying(true);
     try {
-      // Founder test mode: 000000 auto-verifies
-      if (__DEV__ && isTestMode && otpCode === '000000') {
-        const { login, activateTrial } = useAuthStore.getState();
-        login('test-access-token', 'test-refresh-token', {
-          id: 'test-user-001',
-          displayId: 'test-001',
-          phone: phoneNumber,
-          isVerified: false,
-          packageTier: 'FREE',
-        });
-        // Activate 48-hour Gold trial for new test user
-        activateTrial();
-        // Award welcome bonus Jeton
-        useCoinStore.getState().claimWelcomeBonus();
-        // Test mode -> go to email entry for new user flow
-        navigation.navigate('EmailEntry');
-        return;
+      // Founder test mode: 000000 auto-verifies (DEV ONLY — stripped from production bundle)
+      if (__DEV__) {
+        if (isTestMode && otpCode === '000000') {
+          const { login, activateTrial } = useAuthStore.getState();
+          login('test-access-token', 'test-refresh-token', {
+            id: 'test-user-001',
+            displayId: 'test-001',
+            phone: phoneNumber,
+            isVerified: false,
+            packageTier: 'FREE',
+          });
+          activateTrial();
+          useCoinStore.getState().claimWelcomeBonus();
+          navigation.navigate('EmailEntry');
+          return;
+        }
       }
 
       // Use authStore.verifyOTP which handles analytics identify, socket connect,

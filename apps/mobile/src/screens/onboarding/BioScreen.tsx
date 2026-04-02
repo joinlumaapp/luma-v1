@@ -143,8 +143,10 @@ export const BioScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Footer inside scroll — always below content */}
-        <View style={styles.footer}>
+      </ScrollView>
+
+      {/* Footer outside scroll — stays above keyboard */}
+      <View style={styles.footer}>
         <TouchableOpacity
           style={styles.continueButton}
           onPress={handleContinue}
@@ -163,7 +165,6 @@ export const BioScreen: React.FC = () => {
           <Text style={styles.skipText}>Şimdilik Atla</Text>
         </TouchableOpacity>
       </View>
-      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
