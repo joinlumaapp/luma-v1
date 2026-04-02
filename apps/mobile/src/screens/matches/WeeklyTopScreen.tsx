@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import {
-  View, Text, TouchableOpacity, Image, StyleSheet, SafeAreaView,
+  View, Text, TouchableOpacity, Image, StyleSheet, SafeAreaView, Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useWeeklyTopStore } from '../../stores/weeklyTopStore';
 import { colors, palette } from '../../theme/colors';
+import { useCoinStore } from '../../stores/coinStore';
 import { fontWeights } from '../../theme/typography';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 import type { MatchesStackParamList } from '../../navigation/types';
@@ -20,14 +21,45 @@ const WeeklyTopScreen: React.FC = () => {
     fetchWeeklyTop();
   }, []);
 
-  const handleCardPress = (match: typeof matches[0]) => {
+  const REVEAL_COST = 40;
+  const coinBalance = useCoinStore((s) => s.balance);
+  const spendCoins = useCoinStore((s) => s.spendCoins);
+
+  const handleCardPress = useCallback(async (match: typeof matches[0]) => {
     if (match.isRevealed) {
       navigation.navigate('ProfilePreview', { userId: match.userId });
-    } else {
-      // TODO: Show jeton purchase modal (40 gold to reveal)
-      revealMatch(match.userId);
+      return;
     }
-  };
+
+    if (coinBalance < REVEAL_COST) {
+      Alert.alert(
+        'Yetersiz Jeton',
+        `Profili açmak için ${REVEAL_COST} jeton gerekli.`,
+        [
+          { text: 'Vazgeç', style: 'cancel' },
+          { text: 'Jeton Al', onPress: () => navigation.navigate('JetonMarket' as never) },
+        ],
+      );
+      return;
+    }
+
+    Alert.alert(
+      'Profili Aç',
+      `Bu profili görmek için ${REVEAL_COST} jeton harcanacak.`,
+      [
+        { text: 'Vazgeç', style: 'cancel' },
+        {
+          text: 'Aç',
+          onPress: async () => {
+            const success = await spendCoins(REVEAL_COST, 'weekly_top_reveal');
+            if (success) {
+              revealMatch(match.userId);
+            }
+          },
+        },
+      ],
+    );
+  }, [coinBalance, spendCoins, revealMatch, navigation, matches]);
 
   return (
     <SafeAreaView style={styles.container}>

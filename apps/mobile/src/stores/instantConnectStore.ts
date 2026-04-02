@@ -3,6 +3,8 @@
 
 import { create } from 'zustand';
 import { storage } from '../utils/storage';
+import { api } from '../services/api';
+import { devMockOrThrow } from '../utils/mockGuard';
 
 export type SurpriseConnectState = 'idle' | 'spinning' | 'revealed';
 
@@ -75,11 +77,22 @@ export const useInstantConnectStore = create<SurpriseConnectStore>((set, get) =>
     get().startSpin();
   },
 
-  likeUser: () => {
+  likeUser: async () => {
     const { matchedUser } = get();
     if (!matchedUser) return;
     get().incrementDailyUsage();
-    // TODO: Call match/like API
+
+    // Record like via API
+    try {
+      await api.post('/discovery/swipe', {
+        targetUserId: matchedUser.id,
+        direction: 'right',
+        source: 'instant_connect',
+      });
+    } catch (error) {
+      devMockOrThrow(error, true, 'instantConnectStore.likeUser');
+    }
+
     set({ state: 'idle', matchedUser: null });
   },
 
