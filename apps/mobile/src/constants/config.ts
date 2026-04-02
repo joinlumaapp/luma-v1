@@ -493,6 +493,13 @@ export const FLIRT_CONFIG = {
   },
 } as const;
 
+// Boost duration options with jeton costs
+export const BOOST_DURATION_OPTIONS = [
+  { minutes: 30, label: '30 dk', goldCost: 50 },
+  { minutes: 120, label: '2 saat', goldCost: 120 },
+  { minutes: 1440, label: '24 saat', goldCost: 250 },
+] as const;
+
 // Instant Connect daily session limits per package tier (-1 = unlimited)
 export const INSTANT_CONNECT_CONFIG = {
   DAILY_LIMITS: {

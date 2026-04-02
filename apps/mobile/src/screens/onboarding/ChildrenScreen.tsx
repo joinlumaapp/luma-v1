@@ -1,4 +1,4 @@
-// Onboarding step 9/15: Children status — single select
+// Onboarding step 8/13: Children status — single select
 
 import React, { useState, useCallback } from 'react';
 import {

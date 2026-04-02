@@ -1,4 +1,4 @@
-// Onboarding step 7/15: Sports frequency — single select
+// Onboarding step 6/13: Sports frequency — single select
 
 import React, { useState, useCallback } from 'react';
 import {

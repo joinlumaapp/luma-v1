@@ -14,7 +14,7 @@ import {
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { LiveStackParamList } from '../../navigation/types';
 import { Ionicons } from '@expo/vector-icons';
@@ -129,6 +129,7 @@ export const LiveScreen: React.FC = () => {
   useScreenTracking('Live');
 
   const [permission, requestPermission] = useCameraPermissions();
+  const isFocused = useIsFocused();
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const coinBalance = useCoinStore((s) => s.balance);
 
@@ -161,7 +162,7 @@ export const LiveScreen: React.FC = () => {
     navigation.getParent()?.navigate('DiscoveryTab', { screen: 'InstantConnect' });
   }, [coinBalance, navigation]);
 
-  // Camera not permitted yet → show fallback
+  // Camera not permitted → show fallback
   if (!permission?.granted) {
     return (
       <CameraFallback onRequestPermission={requestPermission} />
@@ -170,12 +171,14 @@ export const LiveScreen: React.FC = () => {
 
   return (
     <View style={s.container}>
-      {/* Full-screen front camera */}
-      <CameraView
-        style={StyleSheet.absoluteFill}
-        facing="front"
-        animateShutter={false}
-      />
+      {/* Full-screen front camera — only active when tab is focused */}
+      {isFocused && (
+        <CameraView
+          style={StyleSheet.absoluteFill}
+          facing="front"
+          animateShutter={false}
+        />
+      )}
 
       {/* Purple/pink gradient overlay */}
       <LinearGradient

@@ -1,4 +1,4 @@
-// Onboarding step 8/15: Smoking habits — single select
+// Onboarding step 7/13: Smoking habits — single select
 
 import React, { useState, useCallback } from 'react';
 import {
