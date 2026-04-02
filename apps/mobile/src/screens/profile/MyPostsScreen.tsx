@@ -107,7 +107,8 @@ export const MyPostsScreen: React.FC = () => {
   }, []);
 
   return (
-    <BrandedBackground>
+    <View style={{ flex: 1 }}>
+      <BrandedBackground />
       <View style={[screenStyles.container, { paddingTop: insets.top }]}>
         {/* Header */}
         <View style={screenStyles.header}>
@@ -140,7 +141,7 @@ export const MyPostsScreen: React.FC = () => {
           />
         )}
       </View>
-    </BrandedBackground>
+    </View>
   );
 };
 

@@ -93,6 +93,7 @@ export const OTPVerificationScreen: React.FC = () => {
         const { login, activateTrial } = useAuthStore.getState();
         login('test-access-token', 'test-refresh-token', {
           id: 'test-user-001',
+          displayId: 'test-001',
           phone: phoneNumber,
           isVerified: false,
           packageTier: 'FREE',

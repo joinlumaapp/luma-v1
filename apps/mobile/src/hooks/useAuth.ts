@@ -75,6 +75,7 @@ export const useAuth = (): UseAuthReturn => {
             const me = await authService.getMe();
             storeLogin(tokens.accessToken, tokens.refreshToken, {
               id: me.id,
+              displayId: me.displayId,
               phone: me.phone,
               isVerified: me.isFullyVerified,
               packageTier: (me.packageTier as PackageTier) || 'FREE',
@@ -91,6 +92,7 @@ export const useAuth = (): UseAuthReturn => {
               const me = await authService.getMe();
               storeLogin(refreshResponse.accessToken, refreshResponse.refreshToken, {
                 id: me.id,
+                displayId: me.displayId,
                 phone: me.phone,
                 isVerified: me.isFullyVerified,
                 packageTier: (me.packageTier as PackageTier) || 'FREE',
@@ -131,6 +133,7 @@ export const useAuth = (): UseAuthReturn => {
         const response = await authService.verifySms(phone, code);
         storeLogin(response.accessToken, response.refreshToken, {
           id: response.user.id,
+          displayId: response.user.displayId,
           phone: response.user.phone,
           isVerified: response.user.isVerified,
           packageTier: 'FREE',
@@ -158,6 +161,7 @@ export const useAuth = (): UseAuthReturn => {
       const response = await authService.login(phone, code);
       storeLogin(response.accessToken, response.refreshToken, {
         id: response.user.id,
+        displayId: response.user.displayId,
         phone: response.user.phone,
         isVerified: response.user.isVerified,
         packageTier: 'FREE',

@@ -10,7 +10,6 @@ import {
   Animated,
   Easing,
   RefreshControl,
-  Platform,
   Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -35,7 +34,6 @@ import { discoveryService } from '../../services/discoveryService';
 import type { BoostStatusResponse } from '../../services/discoveryService';
 import { BoostModal } from '../../components/boost/BoostModal';
 import { VerifiedBadge } from '../../components/common/VerifiedBadge';
-import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
 import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { CoinBalance } from '../../components/common/CoinBalance';
@@ -46,8 +44,6 @@ import { socialFeedService, type FeedPost } from '../../services/socialFeedServi
 // NowListening and listeningStore removed — music feature removed
 
 type ProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'Profile'>;
-
-const COUNTUP_DURATION = 800;
 
 const calculateAge = (birthDate: string): number => {
   if (!birthDate) return 0;
@@ -77,17 +73,6 @@ import {
   translateSports,
   translateChildren,
 } from '../../utils/formatters';
-
-const translateLookingFor = (ids: string[]): string[] => {
-  const map: Record<string, string> = {
-    long_term: 'Uzun süreli ilişki', short_term: 'Kısa süreli ilişki',
-    friendship: 'Arkadaşlık', travel_together: 'Birlikte gezmek',
-    SERIOUS_RELATIONSHIP: 'Ciddi ilişki',
-    EXPLORING: 'Keşfediyorum',
-    NOT_SURE: 'Emin Değilim',
-  };
-  return ids.map((id) => map[id] || id);
-};
 
 const INTEREST_TAG_DISPLAY: Record<string, { emoji: string; label: string }> = {
   // Legacy English IDs
@@ -146,45 +131,6 @@ interface AboutRow {
   label: string;
   value: string;
 }
-
-// ─── Animated count-up number ────────────────────────────────────────────────
-
-const CountUpStat: React.FC<{ target: number; label: string; suffix?: string }> = ({
-  target,
-  label,
-  suffix,
-}) => {
-  const animValue = useRef(new Animated.Value(0)).current;
-  const [displayValue, setDisplayValue] = useState(0);
-
-  useEffect(() => {
-    animValue.setValue(0);
-    Animated.timing(animValue, {
-      toValue: target,
-      duration: COUNTUP_DURATION,
-      useNativeDriver: false,
-    }).start();
-
-    const listenerId = animValue.addListener(({ value }) => {
-      setDisplayValue(Math.round(value));
-    });
-
-    return () => {
-      animValue.removeListener(listenerId);
-    };
-  }, [animValue, target]);
-
-  return (
-    <View style={styles.statItem}>
-      <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>
-        {displayValue}{suffix ?? ''}
-      </Text>
-      <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>
-        {label}
-      </Text>
-    </View>
-  );
-};
 
 // ─── Gold shimmer animation for Premium CTA ──────────────────────────────────
 
@@ -400,7 +346,7 @@ export const ProfileScreen: React.FC = () => {
 
   const handleBoostBuyGold = useCallback(() => {
     setShowBoostModal(false);
-    navigation.navigate('MembershipPlans');
+    navigation.navigate('JetonMarket');
   }, [navigation]);
 
   const handleBoostPress = useCallback(() => {
@@ -477,14 +423,6 @@ export const ProfileScreen: React.FC = () => {
 
   const handleSettings = () => {
     navigation.navigate('Settings');
-  };
-
-  const handleProfileCoach = () => {
-    navigation.navigate('ProfileCoach');
-  };
-
-  const handlePersonality = () => {
-    navigation.navigate('PersonalitySelection');
   };
 
   // Skeleton loading state
@@ -571,15 +509,38 @@ export const ProfileScreen: React.FC = () => {
         {/* City */}
         <Text style={styles.cityText}>{profile.city || '-'}</Text>
 
-        {/* Profile completion bar */}
-        {completionPercent < 100 && (
-          <TouchableOpacity onPress={handleEditProfile} activeOpacity={0.7} style={styles.completionBarContainer} accessibilityLabel={`Profil yüzde ${completionPercent} tamamlandı, düzenlemek için dokunun`} accessibilityRole="button">
-            <View style={styles.completionBarTrack}>
-              <View style={[styles.completionBarFill, { width: `${completionPercent}%` }]} />
+        {/* Profile strength card */}
+        <TouchableOpacity onPress={handleEditProfile} activeOpacity={0.7} style={styles.strengthCardContainer} accessibilityLabel={`Profil gücün yüzde ${completionPercent}, düzenlemek için dokunun`} accessibilityRole="button">
+          <View style={styles.strengthCardRow}>
+            <Text style={styles.strengthCardLabel}>Profil Gucun</Text>
+            <View style={styles.strengthCardTrack}>
+              <View style={[
+                styles.strengthCardFill,
+                {
+                  width: `${Math.min(completionPercent, 100)}%`,
+                  backgroundColor: completionPercent >= 85 ? '#22C55E' : completionPercent >= 60 ? palette.purple[500] : completionPercent >= 30 ? '#F59E0B' : '#EF4444',
+                },
+              ]} />
             </View>
-            <Text style={styles.completionBarText}>Profil %{completionPercent} tamamlandı</Text>
-          </TouchableOpacity>
-        )}
+            <Text style={[
+              styles.strengthCardPercent,
+              {
+                color: completionPercent >= 85 ? '#22C55E' : completionPercent >= 60 ? palette.purple[500] : completionPercent >= 30 ? '#F59E0B' : '#EF4444',
+              },
+            ]}>%{completionPercent}</Text>
+          </View>
+          {completionPercent < 100 && (
+            <Text style={styles.strengthCardHint}>
+              {profile.photos.length < 2 ? '💡 Daha fazla fotograf ekle'
+                : profile.bio.length < 50 ? '💡 Bio ekleyerek profilini guclendir'
+                : profile.interestTags.length === 0 ? '💡 Ilgi alanlarini sec'
+                : '💡 Detayli bilgilerini tamamla'}
+            </Text>
+          )}
+          {completionPercent >= 100 && (
+            <Text style={styles.strengthCardComplete}>✨ Profilin tamamlanmis!</Text>
+          )}
+        </TouchableOpacity>
 
         {/* Intention chip */}
         {intentionConfig && (
@@ -595,7 +556,7 @@ export const ProfileScreen: React.FC = () => {
       <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
         <TouchableOpacity
           style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}
-          onPress={() => navigation.navigate('MyPosts' as never)}
+          onPress={() => navigation.navigate('MyPosts')}
           activeOpacity={0.7}
         >
           <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{myPosts.length}</Text>
@@ -603,7 +564,7 @@ export const ProfileScreen: React.FC = () => {
         </TouchableOpacity>
         <TouchableOpacity
           style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}
-          onPress={() => navigation.navigate('FollowList' as never, { mode: 'followers' } as never)}
+          onPress={() => navigation.navigate('FollowList', { mode: 'followers' })}
           activeOpacity={0.7}
         >
           <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{followerCount}</Text>
@@ -611,7 +572,7 @@ export const ProfileScreen: React.FC = () => {
         </TouchableOpacity>
         <TouchableOpacity
           style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}
-          onPress={() => navigation.navigate('FollowList' as never, { mode: 'following' } as never)}
+          onPress={() => navigation.navigate('FollowList', { mode: 'following' })}
           activeOpacity={0.7}
         >
           <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{followingCount}</Text>
@@ -1045,25 +1006,55 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
   },
-  completionBarContainer: {
-    gap: 4,
-    marginTop: 4,
+  strengthCardContainer: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    borderRadius: 16,
+    marginTop: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    alignSelf: 'stretch',
   },
-  completionBarTrack: {
-    height: 4,
-    borderRadius: 2,
+  strengthCardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  strengthCardLabel: {
+    fontSize: 14,
+    fontWeight: fontWeights.semibold,
+    color: colors.text,
+  },
+  strengthCardTrack: {
+    flex: 1,
+    height: 8,
     backgroundColor: colors.surfaceBorder,
+    borderRadius: 4,
+    marginLeft: 10,
+    marginRight: 8,
     overflow: 'hidden',
   },
-  completionBarFill: {
+  strengthCardFill: {
     height: '100%',
-    borderRadius: 2,
-    backgroundColor: palette.purple[500],
+    borderRadius: 4,
   },
-  completionBarText: {
+  strengthCardPercent: {
+    fontSize: 14,
+    fontWeight: fontWeights.bold,
+    minWidth: 36,
+    textAlign: 'right',
+  },
+  strengthCardHint: {
+    fontSize: 12,
+    fontWeight: fontWeights.regular,
+    color: colors.textSecondary,
+    marginTop: 6,
+  },
+  strengthCardComplete: {
     fontSize: 12,
     fontWeight: fontWeights.medium,
-    color: colors.textSecondary,
+    color: '#22C55E',
+    marginTop: 6,
   },
   intentionChip: {
     borderRadius: borderRadius.full,

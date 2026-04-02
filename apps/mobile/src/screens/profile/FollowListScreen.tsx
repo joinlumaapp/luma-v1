@@ -15,8 +15,8 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { ProfileStackParamList } from '../../navigation/types';
-import { colors, palette } from '../../theme/colors';
-import { spacing, borderRadius } from '../../theme/spacing';
+import { colors } from '../../theme/colors';
+import { spacing } from '../../theme/spacing';
 import api from '../../services/api';
 import { socialFeedService } from '../../services/socialFeedService';
 import { BrandedBackground } from '../../components/common/BrandedBackground';

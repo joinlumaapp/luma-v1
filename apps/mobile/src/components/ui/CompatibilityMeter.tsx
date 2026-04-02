@@ -129,7 +129,6 @@ const CompatibilityMeterInner: React.FC<CompatibilityMeterProps> = ({
   const effectiveStrokeWidth = strokeWidth ?? Math.max(3, size * 0.04);
   const ringColor = getScoreColor(clampedScore);
   const glowColor = getGlowColor(clampedScore);
-  const _isSuper = clampedScore >= 90;
   const trackColor = 'rgba(212, 165, 116, 0.18)';
 
   // Animation shared values

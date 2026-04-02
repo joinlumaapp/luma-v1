@@ -3,16 +3,18 @@ import {
   View, Text, TouchableOpacity, Image, StyleSheet, SafeAreaView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useWeeklyTopStore } from '../../stores/weeklyTopStore';
 import { colors, palette } from '../../theme/colors';
 import { fontWeights } from '../../theme/typography';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import type { MatchesStackParamList } from '../../navigation/types';
 
 const WeeklyTopScreen: React.FC = () => {
-  const navigation = useNavigation();
-  const { matches, nextRefreshAt, fetchWeeklyTop, revealMatch, isLoading } = useWeeklyTopStore();
+  const navigation = useNavigation<NativeStackNavigationProp<MatchesStackParamList>>();
+  const { matches, nextRefreshAt, fetchWeeklyTop, revealMatch } = useWeeklyTopStore();
 
   useEffect(() => {
     fetchWeeklyTop();
@@ -20,7 +22,7 @@ const WeeklyTopScreen: React.FC = () => {
 
   const handleCardPress = (match: typeof matches[0]) => {
     if (match.isRevealed) {
-      navigation.navigate('ProfilePreview' as never, { userId: match.userId } as never);
+      navigation.navigate('ProfilePreview', { userId: match.userId });
     } else {
       // TODO: Show jeton purchase modal (40 gold to reveal)
       revealMatch(match.userId);

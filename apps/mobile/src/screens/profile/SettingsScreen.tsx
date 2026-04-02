@@ -389,7 +389,35 @@ export const SettingsScreen: React.FC = () => {
       ],
     },
 
-    // 2. Supreme Avantajlarim (only for Supreme members)
+    // 2. Sosyal Medya
+    {
+      title: 'Sosyal Medya',
+      icon: 'share-social-outline',
+      data: [
+        {
+          key: 'instagram',
+          icon: 'logo-instagram',
+          title: 'Instagram',
+          type: 'navigation',
+          onPress: () => {
+            Linking.openURL('instagram://user?username=lumajoin').catch(() => {
+              Linking.openURL('https://www.instagram.com/lumajoin/');
+            });
+          },
+        },
+        {
+          key: 'tiktok',
+          icon: 'logo-tiktok',
+          title: 'TikTok',
+          type: 'navigation',
+          onPress: () => {
+            Linking.openURL('https://www.tiktok.com/@lumajoin').catch(() => {});
+          },
+        },
+      ],
+    },
+
+    // 3. Supreme Avantajlarim (only for Supreme members)
     ...(isSupreme ? [{
       title: 'Supreme Avantajlarım',
       icon: 'diamond' as keyof typeof Ionicons.glyphMap,
@@ -761,6 +789,13 @@ export const SettingsScreen: React.FC = () => {
     // Action / Navigation row
     const isDestructive = item.type === 'action' && item.destructive === true;
 
+    // Social media icon colors
+    const socialIconColors: Record<string, string> = {
+      instagram: '#E1306C',
+      tiktok: '#000000',
+    };
+    const socialIconColor = socialIconColors[item.key];
+
     return (
       <TouchableOpacity
         style={dynamicStyles.settingRow}
@@ -777,7 +812,7 @@ export const SettingsScreen: React.FC = () => {
             <Ionicons
               name={item.icon}
               size={16}
-              color={isDestructive ? colors.error : colors.textSecondary}
+              color={isDestructive ? colors.error : socialIconColor ?? colors.textSecondary}
             />
           </View>
           <Text style={[

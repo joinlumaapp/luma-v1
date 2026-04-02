@@ -63,7 +63,6 @@ const GLASS = {
 /** Maps UI plan selection to the PackageTier used by iapService */
 const PLAN_TO_TIER: Record<string, PackageTier> = {
   supreme: 'RESERVED',
-  pro: 'PRO',
   premium: 'GOLD',
 };
 
@@ -84,11 +83,9 @@ interface TierFeature {
   label: string;
   free: FeatureStatus;
   premium: FeatureStatus;
-  pro: FeatureStatus;
   supreme: FeatureStatus;
   freeDetail?: string;
   premiumDetail?: string;
-  proDetail?: string;
   supremeDetail?: string;
 }
 
@@ -98,152 +95,116 @@ const FEATURES: TierFeature[] = [
     label: 'Günlük Beğeni',
     free: 'included',
     premium: 'included',
-    pro: 'included',
     supreme: 'included',
     freeDetail: 'Sınırsız',
     premiumDetail: 'Sınırsız',
-    proDetail: 'Sınırsız',
     supremeDetail: 'Sınırsız',
   },
   {
     label: 'Direkt Mesaj',
     free: 'included',
     premium: 'included',
-    pro: 'included',
     supreme: 'included',
     freeDetail: '1/gün',
     premiumDetail: '10/gün',
-    proDetail: 'Sınırsız',
     supremeDetail: 'Sınırsız',
+  },
+  {
+    label: 'Selam Gönder',
+    free: 'included',
+    premium: 'included',
+    supreme: 'included',
+    freeDetail: '3/gün (🪙10)',
+    premiumDetail: '10/gün (🪙5)',
+    supremeDetail: '20/gün (🪙3)',
+  },
+  {
+    label: 'Reklamsız Deneyim',
+    free: 'excluded',
+    premium: 'included',
+    supreme: 'included',
   },
   {
     label: 'Aylık Jeton',
     free: 'excluded',
     premium: 'included',
-    pro: 'included',
     supreme: 'included',
     premiumDetail: '250',
-    proDetail: '500',
     supremeDetail: '1000',
   },
   {
     label: 'Kimin Beğendiğini Gör',
     free: 'excluded',
     premium: 'included',
-    pro: 'included',
     supreme: 'included',
   },
   {
     label: 'Geri Alma',
     free: 'excluded',
     premium: 'included',
-    pro: 'included',
     supreme: 'included',
   },
   {
     label: 'Boost',
     free: 'excluded',
     premium: 'included',
-    pro: 'included',
     supreme: 'included',
     premiumDetail: '4/ay',
-    proDetail: 'Sınırsız',
     supremeDetail: 'Sınırsız',
-  },
-  {
-    label: 'Reklamsız Deneyim',
-    free: 'excluded',
-    premium: 'included',
-    pro: 'included',
-    supreme: 'included',
   },
   {
     label: 'Okundu Bilgisi',
     free: 'locked',
-    premium: 'excluded',
-    pro: 'included',
-    supreme: 'included',
-  },
-  {
-    label: 'Öncelikli Gösterim',
-    free: 'locked',
-    premium: 'locked',
-    pro: 'included',
-    supreme: 'included',
-  },
-  {
-    label: 'Gelişmiş Filtreler',
-    free: 'locked',
-    premium: 'locked',
-    pro: 'included',
+    premium: 'included',
     supreme: 'included',
   },
   {
     label: 'Profilimi Kim Gördü',
     free: 'locked',
     premium: 'included',
-    pro: 'included',
     supreme: 'included',
-  },
-  {
-    label: 'Hikaye Önde Gösterim',
-    free: 'locked',
-    premium: 'locked',
-    pro: 'included',
-    supreme: 'included',
-  },
-  {
-    label: 'Selam Gönder',
-    free: 'included',
-    premium: 'included',
-    pro: 'included',
-    supreme: 'included',
-    freeDetail: '3/gün',
-    premiumDetail: '20/gün',
-    proDetail: '20/gün',
-    supremeDetail: '20/gün',
   },
   {
     label: 'Hikaye Oluştur',
     free: 'included',
     premium: 'included',
-    pro: 'included',
     supreme: 'included',
     freeDetail: '1/gün',
     premiumDetail: '5/gün',
-    proDetail: 'Sınırsız',
     supremeDetail: 'Sınırsız',
+  },
+  {
+    label: 'Öncelikli Gösterim',
+    free: 'locked',
+    premium: 'included',
+    supreme: 'included',
+  },
+  {
+    label: 'Hikaye Önde Gösterim',
+    free: 'locked',
+    premium: 'included',
+    supreme: 'included',
+  },
+  {
+    label: 'Gelişmiş Filtreler',
+    free: 'locked',
+    premium: 'included',
+    supreme: 'included',
   },
   {
     label: 'Özel Rozet',
     free: 'locked',
     premium: 'locked',
-    pro: 'locked',
-    supreme: 'included',
-  },
-  {
-    label: 'VIP Destek',
-    free: 'locked',
-    premium: 'locked',
-    pro: 'locked',
-    supreme: 'included',
-  },
-  {
-    label: 'Özel Etkinlikler',
-    free: 'locked',
-    premium: 'locked',
-    pro: 'locked',
     supreme: 'included',
   },
 ];
 
 // Map PackageTier to plan category
-const getTierCategory = (tier: PackageTier): 'free' | 'premium' | 'pro' | 'supreme' => {
+const getTierCategory = (tier: PackageTier): 'free' | 'premium' | 'supreme' => {
   switch (tier) {
     case 'RESERVED':
       return 'supreme';
     case 'PRO':
-      return 'pro';
     case 'GOLD':
       return 'premium';
     default:
@@ -353,7 +314,7 @@ const SupremeCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
           <Text style={cardStyles.tierSubtitle}>Elite deneyim</Text>
         </View>
         <View style={cardStyles.priceRight}>
-          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>{'599₺'}</Text>
+          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>{'1.299₺'}</Text>
           <Text style={cardStyles.pricePeriod}>/ay</Text>
           {/* "En Populer" badge — below price */}
           <LinearGradient
@@ -491,84 +452,6 @@ const PremiumCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
 );
 
 // Pro Card — teal accent, between Premium and Supreme
-const PRO_TEAL = {
-  light: '#2DD4BF',
-  medium: '#14B8A6',
-  dark: '#0D9488',
-} as const;
-
-const ProCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
-  <View style={[cardStyles.cardOuter, cardStyles.proShadow]}>
-    <View style={[cardStyles.card, cardStyles.proCard]}>
-      {/* Header */}
-      <View style={cardStyles.cardHeader}>
-        <View style={cardStyles.tierIconContainer}>
-          <LinearGradient
-            colors={[PRO_TEAL.light, PRO_TEAL.dark]}
-            style={cardStyles.tierIcon}
-          >
-            <Ionicons name="flash" size={24} color={palette.white} />
-          </LinearGradient>
-        </View>
-        <View style={cardStyles.tierInfo}>
-          <Text style={[cardStyles.tierName, { color: PRO_TEAL.medium }]}>Pro</Text>
-          <Text style={cardStyles.tierSubtitle}>Gelişmiş özellikler</Text>
-        </View>
-        <View style={cardStyles.priceContainer}>
-          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>{'499\u20BA'}</Text>
-          <Text style={cardStyles.pricePeriod}>/ay</Text>
-        </View>
-      </View>
-
-      {/* Current plan badge */}
-      {isCurrentPlan && (
-        <View style={[cardStyles.currentBadge, { backgroundColor: 'rgba(20,184,166,0.15)' }]}>
-          <Ionicons name="checkmark-circle" size={16} color={PRO_TEAL.medium} />
-          <Text style={[cardStyles.currentBadgeText, { color: PRO_TEAL.medium }]}>
-            Mevcut Plan
-          </Text>
-        </View>
-      )}
-
-      {/* Divider */}
-      <View style={[cardStyles.divider, { borderColor: GLASS.divider }]} />
-
-      {/* Features */}
-      <View style={cardStyles.featureList}>
-        {FEATURES.map((feature) => (
-          <FeatureRow
-            key={feature.label}
-            label={feature.label}
-            status={feature.pro}
-            detail={feature.proDetail}
-            accentColor={PRO_TEAL.medium}
-          />
-        ))}
-      </View>
-
-      {/* CTA */}
-      {!isCurrentPlan && (
-        <TouchableOpacity
-          style={cardStyles.ctaContainer}
-          onPress={onSelect}
-          activeOpacity={0.85}
-          accessibilityRole="button"
-          accessibilityLabel="Pro planina yukselt"
-        >
-          <LinearGradient
-            colors={[PRO_TEAL.light, PRO_TEAL.dark]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={cardStyles.ctaGradient}
-          >
-            <Text style={cardStyles.ctaText}>Pro'ya Yukselt</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      )}
-    </View>
-  </View>
-);
-
 // Free Card — simple, muted design
 const FreeCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
   <View style={[cardStyles.cardOuter, cardStyles.freeShadow]}>
@@ -948,7 +831,7 @@ export const MembershipPlansScreen: React.FC = () => {
     navigation.goBack();
   }, [navigation]);
 
-  const handleSelectPlan = useCallback((plan: 'free' | 'premium' | 'pro' | 'supreme') => {
+  const handleSelectPlan = useCallback((plan: 'free' | 'premium' | 'supreme') => {
     if (isPurchasing) return;
 
     if (plan === 'free') {
@@ -982,7 +865,7 @@ export const MembershipPlansScreen: React.FC = () => {
         ],
       );
     } else {
-      const planLabel = plan === 'supreme' ? 'Supreme' : plan === 'pro' ? 'Pro' : 'Premium';
+      const planLabel = plan === 'supreme' ? 'Supreme' : 'Premium';
       const tier = PLAN_TO_TIER[plan];
       if (!tier) return;
 
@@ -1035,7 +918,9 @@ export const MembershipPlansScreen: React.FC = () => {
 
                 // Supreme → luxury celebration screen; others → simple alert
                 if (plan === 'supreme') {
-                  navigation.navigate('SupremeCelebration' as never);
+                  // SupremeCelebration is on the RootStack (2 levels up:
+                  // StackNav → TabNav → RootStack)
+                  navigation.getParent()?.getParent()?.navigate('SupremeCelebration' as never);
                 } else {
                   Alert.alert('Başarılı!', `${planLabel} aboneliğiniz aktif edildi!`);
                 }
@@ -1091,8 +976,8 @@ export const MembershipPlansScreen: React.FC = () => {
           platform: purchase.platform,
         });
 
-        // Update local coin balance
-        useCoinStore.getState().earnCoins(result.goldAdded, `${pack.coins} Jeton paketi satın alımı`);
+        // Refresh local balance from server (server already credited during receipt validation)
+        await useCoinStore.getState().fetchBalance();
 
         Alert.alert('Başarılı!', `${result.goldAdded} Jeton hesabınıza eklendi.`);
       } catch (error: unknown) {
@@ -1250,12 +1135,6 @@ export const MembershipPlansScreen: React.FC = () => {
             <SupremeCard
               isCurrentPlan={currentCategory === 'supreme'}
               onSelect={() => handleSelectPlan('supreme')}
-            />
-
-            {/* Pro Card */}
-            <ProCard
-              isCurrentPlan={currentCategory === 'pro'}
-              onSelect={() => handleSelectPlan('pro')}
             />
 
             {/* Premium Card */}
@@ -1617,20 +1496,6 @@ const cardStyles = StyleSheet.create({
   },
   premiumShadow: {
     shadowColor: '#8B5CF6',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-
-  // Pro card — teal glassmorphism
-  proCard: {
-    backgroundColor: GLASS.bg,
-    borderWidth: 1,
-    borderColor: 'rgba(20,184,166,0.25)',
-  },
-  proShadow: {
-    shadowColor: '#14B8A6',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 12,

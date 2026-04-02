@@ -21,7 +21,7 @@ export const AuthNavigator: React.FC = () => {
         headerShown: false,
         animation: 'slide_from_right',
         statusBarStyle: 'light',
-        statusBarColor: '#08080F',
+        statusBarBackgroundColor: '#08080F',
         statusBarAnimation: 'none',
       }}
     >

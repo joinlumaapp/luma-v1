@@ -58,6 +58,7 @@ export class StoriesService {
         user: {
           select: {
             id: true,
+            packageTier: true,
             profile: {
               select: { firstName: true },
             },
@@ -83,6 +84,7 @@ export class StoriesService {
         userId: string;
         userName: string;
         userAvatarUrl: string;
+        packageTier: string;
         stories: typeof stories;
         hasUnseenStories: boolean;
         latestStoryAt: string;
@@ -96,6 +98,7 @@ export class StoriesService {
           userId: storyUserId,
           userName: story.user.profile?.firstName ?? "Kullanici",
           userAvatarUrl: story.user.photos?.[0]?.url ?? "",
+          packageTier: story.user.packageTier,
           stories: [],
           hasUnseenStories: false,
           latestStoryAt: story.createdAt.toISOString(),
@@ -328,12 +331,26 @@ export class StoriesService {
   // ── Private helpers ──────────────────────────────────────────
 
   private async getFollowedUserIds(userId: string): Promise<string[]> {
-    // Get users from matches and follows
+    // Get users with MUTUAL follows only
     const follows = await this.prisma.userFollow.findMany({
       where: { followerId: userId },
       select: { followingId: true },
     });
 
+    const followingIds = follows.map((f) => f.followingId);
+
+    // Check which of those users also follow back
+    const mutualFollows = await this.prisma.userFollow.findMany({
+      where: {
+        followerId: { in: followingIds },
+        followingId: userId,
+      },
+      select: { followerId: true },
+    });
+
+    const mutualFollowIds = new Set(mutualFollows.map((f) => f.followerId));
+
+    // Get active matches
     const matches = await this.prisma.match.findMany({
       where: {
         OR: [{ userAId: userId }, { userBId: userId }],
@@ -343,7 +360,7 @@ export class StoriesService {
     });
 
     const ids = new Set<string>();
-    for (const f of follows) ids.add(f.followingId);
+    for (const id of mutualFollowIds) ids.add(id);
     for (const m of matches) {
       const partnerId = m.userAId === userId ? m.userBId : m.userAId;
       ids.add(partnerId);

@@ -20,10 +20,11 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type {
-  DiscoveryStackParamList,
+  FeedStackParamList,
   MainTabParamList,
 } from '../../navigation/types';
 import { useNotificationStore } from '../../stores/notificationStore';
+import { useAuthStore } from '../../stores/authStore';
 import type { Notification } from '../../services/notificationService';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
@@ -32,7 +33,7 @@ import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 
 type NotificationsNavProp = CompositeNavigationProp<
-  NativeStackNavigationProp<DiscoveryStackParamList, 'Notifications'>,
+  NativeStackNavigationProp<FeedStackParamList, 'Notifications'>,
   BottomTabNavigationProp<MainTabParamList>
 >;
 
@@ -84,6 +85,8 @@ const getTypeIcon = (
       return { name: 'person-add', color: '#3B82F6' };
     case 'PROFILE_LIKE':
       return { name: 'heart', color: '#EF4444' };
+    case 'STORY_LIKE':
+      return { name: 'heart-circle', color: '#E1306C' };
     case 'NEW_ACTIVITY':
       return { name: 'sparkles', color: '#F59E0B' };
     case 'SYSTEM':
@@ -161,7 +164,8 @@ SectionHeader.displayName = 'SectionHeader';
 const NotificationItem: React.FC<{
   notification: Notification;
   onPress: (notification: Notification) => void;
-}> = React.memo(({ notification, onPress }) => {
+  isBlurred: boolean;
+}> = React.memo(({ notification, onPress, isBlurred }) => {
   const photoUrl = getUserPhoto(notification);
   const timeAgo = getTimeAgo(notification.createdAt);
   const typeIcon = getTypeIcon(notification.type, notification.data);
@@ -171,13 +175,17 @@ const NotificationItem: React.FC<{
     <Pressable
       style={[styles.notifItem, !notification.isRead && styles.notifItemUnread]}
       onPress={() => onPress(notification)}
-      accessibilityLabel={`${prefix} ${suffix}`}
+      accessibilityLabel={isBlurred ? 'Kimin beğendiğini görmek için pakete yükselt' : `${prefix} ${suffix}`}
       accessibilityRole="button"
     >
       {/* Avatar with type badge overlay */}
       <View style={styles.avatarContainer}>
         {photoUrl ? (
-          <Image source={{ uri: photoUrl }} style={styles.avatar} />
+          <Image
+            source={{ uri: photoUrl }}
+            style={styles.avatar}
+            blurRadius={isBlurred ? 20 : 0}
+          />
         ) : (
           <View style={[styles.avatar, styles.avatarPlaceholder]}>
             <Ionicons name="person" size={20} color={colors.textTertiary} />
@@ -190,15 +198,31 @@ const NotificationItem: React.FC<{
 
       {/* Content */}
       <View style={styles.notifContent}>
-        <Text style={styles.notifText} numberOfLines={2}>
-          {prefix ? <Text style={styles.notifName}>{prefix}</Text> : null}
-          {suffix}
-        </Text>
-        <Text style={styles.notifTime}>{timeAgo}</Text>
+        {isBlurred ? (
+          <>
+            <Text style={styles.notifText} numberOfLines={2}>
+              <Text style={styles.notifName}>Birisi </Text>
+              gönderini beğendi
+            </Text>
+            <Text style={styles.blurredHint}>Kimin beğendiğini görmek için pakete yükselt</Text>
+          </>
+        ) : (
+          <>
+            <Text style={styles.notifText} numberOfLines={2}>
+              {prefix ? <Text style={styles.notifName}>{prefix}</Text> : null}
+              {suffix}
+            </Text>
+            <Text style={styles.notifTime}>{timeAgo}</Text>
+          </>
+        )}
       </View>
 
-      {/* Unread dot */}
-      {!notification.isRead && <View style={styles.unreadDot} />}
+      {/* Unread dot or lock icon */}
+      {isBlurred ? (
+        <Ionicons name="lock-closed" size={16} color={palette.purple[400]} />
+      ) : (
+        !notification.isRead && <View style={styles.unreadDot} />
+      )}
     </Pressable>
   );
 });
@@ -210,11 +234,16 @@ type FlatRow =
   | { type: 'header'; key: string; period: TimePeriod; unreadCount: number }
   | { type: 'item'; key: string; notification: Notification };
 
+// ---- Types that should show blurred for non-mutual strangers ----
+const BLURRABLE_TYPES = ['POST_LIKE', 'POST_COMMENT', 'COMMENT_REPLY', 'STORY_LIKE'];
+
 // ---- Main Screen ----
 export const NotificationsScreen: React.FC = () => {
   useScreenTracking('Notifications');
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NotificationsNavProp>();
+  const user = useAuthStore((state) => state.user);
+  const hasPaidPackage = user?.packageTier !== 'FREE';
   const {
     isLoading,
     unreadCount,
@@ -234,8 +263,26 @@ export const NotificationsScreen: React.FC = () => {
     refresh();
   }, [refresh]);
 
+  const isBlurredNotif = useCallback(
+    (notif: Notification): boolean => {
+      if (hasPaidPackage) return false;
+      const isMutual = notif.data?.isMutual as boolean | undefined;
+      return BLURRABLE_TYPES.includes(notif.type) && isMutual === false;
+    },
+    [hasPaidPackage],
+  );
+
   const handleNotificationPress = useCallback(
     (notif: Notification) => {
+      // Blurred notification → redirect to membership plans
+      if (isBlurredNotif(notif)) {
+        const tabNav = navigation.getParent();
+        if (tabNav) {
+          tabNav.navigate('ProfileTab', { screen: 'MembershipPlans' });
+        }
+        return;
+      }
+
       if (!notif.isRead) {
         markRead([notif.id]);
       }
@@ -245,32 +292,11 @@ export const NotificationsScreen: React.FC = () => {
 
       switch (notif.type) {
         case 'PROFILE_LIKE':
-        case 'NEW_FOLLOWER':
           if (data.userId) {
             navigation.navigate('ProfilePreview', { userId: data.userId as string });
           }
           break;
-        case 'NEW_MATCH':
-          if (data.matchId && tabNav) {
-            tabNav.navigate('MatchesTab', {
-              screen: 'MatchDetail',
-              params: { matchId: data.matchId as string },
-            });
-          }
-          break;
-        case 'MESSAGE':
-        case 'NEW_MESSAGE':
-          if (data.matchId && tabNav) {
-            tabNav.navigate('MatchesTab', {
-              screen: 'Chat',
-              params: {
-                matchId: data.matchId as string,
-                partnerName: (data.userName as string) ?? '',
-                partnerPhotoUrl: (data.userPhoto as string) ?? '',
-              },
-            });
-          }
-          break;
+        case 'STORY_LIKE':
         case 'POST_LIKE':
         case 'POST_COMMENT':
         case 'COMMENT_REPLY':
@@ -280,16 +306,18 @@ export const NotificationsScreen: React.FC = () => {
             });
           }
           break;
-        case 'SYSTEM':
-          if (data.activityTitle && tabNav) {
-            tabNav.navigate('LiveTab');
-          }
-          break;
         default:
           break;
       }
     },
-    [navigation, markRead],
+    [navigation, markRead, isBlurredNotif],
+  );
+
+  // Filter to only story likes, post likes, and post comments
+  const ALLOWED_TYPES = ['STORY_LIKE', 'POST_LIKE', 'POST_COMMENT', 'COMMENT_REPLY', 'PROFILE_LIKE'];
+  const filteredNotifications = useMemo(
+    () => notifications.filter((n) => ALLOWED_TYPES.includes(n.type)),
+    [notifications],
   );
 
   // Build flat data grouped by time period
@@ -301,7 +329,7 @@ export const NotificationsScreen: React.FC = () => {
       grouped.set(period, []);
     }
 
-    for (const notif of notifications) {
+    for (const notif of filteredNotifications) {
       const period = getTimePeriod(notif.createdAt);
       grouped.get(period)?.push(notif);
     }
@@ -336,10 +364,11 @@ export const NotificationsScreen: React.FC = () => {
         <NotificationItem
           notification={item.notification}
           onPress={handleNotificationPress}
+          isBlurred={isBlurredNotif(item.notification)}
         />
       );
     },
-    [handleNotificationPress],
+    [handleNotificationPress, isBlurredNotif],
   );
 
   const keyExtractor = useCallback((item: FlatRow) => item.key, []);
@@ -372,16 +401,16 @@ export const NotificationsScreen: React.FC = () => {
       </View>
 
       {/* Notification list */}
-      {isLoading && notifications.length === 0 ? (
+      {isLoading && filteredNotifications.length === 0 ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
-      ) : notifications.length === 0 ? (
+      ) : filteredNotifications.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="notifications-off-outline" size={48} color={colors.textTertiary} />
           <Text style={styles.emptyText}>Henüz bildirim yok</Text>
           <Text style={styles.emptySubtext}>
-            Yeni eşleşmeler, beğeniler ve mesajlar burada görünecek
+            Story ve gönderi beğenileri burada görünecek
           </Text>
         </View>
       ) : (
@@ -569,5 +598,11 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: colors.primary,
     flexShrink: 0,
+  },
+  blurredHint: {
+    ...typography.caption,
+    color: palette.purple[400],
+    fontWeight: '500',
+    marginTop: 2,
   },
 });

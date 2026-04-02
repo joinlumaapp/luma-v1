@@ -84,6 +84,8 @@ export type MatchesStackParamList = {
 // -- Live Stack --
 export type LiveStackParamList = {
   Live: undefined;
+  JetonMarket: undefined;
+  MembershipPlans: undefined;
 };
 
 // -- Feed Stack --
@@ -94,6 +96,7 @@ export type FeedStackParamList = {
   PostDetail: { postId: string; post?: import('../services/socialFeedService').FeedPost };
   StoryViewer: { userId: string; userName: string; userAvatarUrl: string; storyUsers?: any[] };
   StoryCreator: { mediaUri: string; mediaType: 'image' | 'video' };
+  Notifications: undefined;
 };
 
 // -- Profile Stack --

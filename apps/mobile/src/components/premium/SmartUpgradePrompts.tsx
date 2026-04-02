@@ -2,7 +2,7 @@
 // Contextual prompts that appear at the RIGHT moment, not randomly
 // Psychological triggers: social proof, scarcity, FOMO, loss aversion
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -14,13 +14,10 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
-import { useNavigation } from '@react-navigation/native';
 import { CachedAvatar } from '../common/CachedAvatar';
 import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { fontWeights } from '../../theme/typography';
-import { storage } from '../../utils/storage';
 
 // ─── 1. "Birisi seni begendi" teaser ────────────────────────────
 

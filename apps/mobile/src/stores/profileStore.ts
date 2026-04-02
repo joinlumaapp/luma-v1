@@ -44,6 +44,8 @@ export interface ProfileData {
   pets: string;
   religion: string;
   lifeValues: string;
+  /** MBTI personality type from the personality quiz (e.g. "ENFP") */
+  personalityType: string | null;
   isComplete: boolean;
   /** Profile video (10-30 seconds) */
   profileVideo: ProfileVideoData | null;
@@ -126,6 +128,7 @@ const initialProfile: ProfileData = {
   pets: '',
   religion: '',
   lifeValues: '',
+  personalityType: null,
   isComplete: false,
   profileVideo: null,
   prompts: [],
@@ -185,6 +188,7 @@ const mapResponseToProfile = (data: ProfileResponse): ProfileData => {
     pets: (data as { pets?: string }).pets ?? '',
     religion: (data as { religion?: string }).religion ?? '',
     lifeValues: (data as { lifeValues?: string }).lifeValues ?? '',
+    personalityType: (data as { personalityType?: string | null }).personalityType ?? null,
     isComplete: data.isComplete,
     profileVideo: videoData ? {
       url: videoData.url,
@@ -477,36 +481,36 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     const total = 22; // all possible fields
 
     // Core fields (required-ish)
-    if (profile.firstName.length > 0) filled++;
-    if (profile.birthDate.length > 0) filled++;
-    if (profile.gender.length > 0) filled++;
-    if (profile.intentionTag.length > 0) filled++;
-    if (profile.photos.length >= PROFILE_CONFIG.MIN_PHOTOS) filled++;
-    if (profile.bio.length >= PROFILE_CONFIG.MIN_BIO_LENGTH) filled++;
+    if ((profile.firstName ?? '').length > 0) filled++;
+    if ((profile.birthDate ?? '').length > 0) filled++;
+    if ((profile.gender ?? '').length > 0) filled++;
+    if ((profile.intentionTag ?? '').length > 0) filled++;
+    if ((profile.photos ?? []).length >= PROFILE_CONFIG.MIN_PHOTOS) filled++;
+    if ((profile.bio ?? '').length >= PROFILE_CONFIG.MIN_BIO_LENGTH) filled++;
 
     // Basic info
-    if (profile.job.length > 0) filled++;
-    if (profile.education.length > 0) filled++;
-    if (profile.city.length > 0) filled++;
+    if ((profile.job ?? '').length > 0) filled++;
+    if ((profile.education ?? '').length > 0) filled++;
+    if ((profile.city ?? '').length > 0) filled++;
     if (profile.height != null && profile.height > 0) filled++;
 
     // Extended info
-    if (profile.sexualOrientation.length > 0) filled++;
-    if (profile.zodiacSign.length > 0) filled++;
-    if (profile.educationLevel.length > 0) filled++;
-    if (profile.maritalStatus.length > 0) filled++;
-    if (profile.alcohol.length > 0) filled++;
-    if (profile.smoking.length > 0) filled++;
-    if (profile.children.length > 0) filled++;
-    if (profile.pets.length > 0) filled++;
-    if (profile.religion.length > 0) filled++;
+    if ((profile.sexualOrientation ?? '').length > 0) filled++;
+    if ((profile.zodiacSign ?? '').length > 0) filled++;
+    if ((profile.educationLevel ?? '').length > 0) filled++;
+    if ((profile.maritalStatus ?? '').length > 0) filled++;
+    if ((profile.alcohol ?? '').length > 0) filled++;
+    if ((profile.smoking ?? '').length > 0) filled++;
+    if ((profile.children ?? '').length > 0) filled++;
+    if ((profile.pets ?? '').length > 0) filled++;
+    if ((profile.religion ?? '').length > 0) filled++;
 
     // Personality
-    if (profile.interestTags.length > 0) filled++;
-    if (profile.prompts.length > 0) filled++;
+    if ((profile.interestTags ?? []).length > 0) filled++;
+    if ((profile.prompts ?? []).length > 0) filled++;
 
     // Compatibility
-    if (Object.keys(profile.answers).length > 0) filled++;
+    if (Object.keys(profile.answers ?? {}).length > 0) filled++;
 
     return Math.round((filled / total) * 100);
   },

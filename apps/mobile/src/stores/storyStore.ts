@@ -260,14 +260,25 @@ export const useStoryStore = create<StoryState>((set, get) => ({
   getOrderedStoryUsers: () => {
     const { storyUsers } = get();
 
+    // Package tier priority: RESERVED > PRO > GOLD > FREE
+    const TIER_PRIORITY: Record<string, number> = {
+      RESERVED: 3,
+      PRO: 2,
+      GOLD: 1,
+      FREE: 0,
+    };
+
     // Own stories first, then followed, then suggested (max 3)
     const currentId = getCurrentUser().id;
     const own = storyUsers.filter((u) => u.userId === currentId);
     const followed = storyUsers.filter((u) => u.userId !== currentId && u.isFollowing);
     const suggested = storyUsers.filter((u) => u.userId !== currentId && u.isSuggested && !u.isFollowing).slice(0, 3);
 
-    // Sort followed: unseen first, then by recency
+    // Sort followed: paid tiers first, then unseen, then by recency
     followed.sort((a, b) => {
+      const tierA = TIER_PRIORITY[a.packageTier ?? 'FREE'] ?? 0;
+      const tierB = TIER_PRIORITY[b.packageTier ?? 'FREE'] ?? 0;
+      if (tierA !== tierB) return tierB - tierA;
       if (a.hasUnseenStories && !b.hasUnseenStories) return -1;
       if (!a.hasUnseenStories && b.hasUnseenStories) return 1;
       return new Date(b.latestStoryAt).getTime() - new Date(a.latestStoryAt).getTime();

@@ -46,7 +46,7 @@ const defaultScreenOptions: NativeStackNavigationOptions = {
   gestureEnabled: true,
   contentStyle: { backgroundColor: ONBOARDING_BG },
   statusBarStyle: 'light',
-  statusBarColor: '#08080F',
+  statusBarBackgroundColor: '#08080F',
   statusBarAnimation: 'none',
 };
 

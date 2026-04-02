@@ -7,7 +7,7 @@ import { TouchableOpacity, Text, View, StyleSheet, Platform } from 'react-native
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCoinStore } from '../../stores/coinStore';
-import { fontWeights } from '../../theme/typography';
+
 
 const TEXT_BLACK = '#1A1A1A';
 const GOLD = '#D4AF37';

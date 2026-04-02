@@ -36,7 +36,7 @@ enableScreens(true);
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Navigation } from './src/navigation';
-import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
+import { ThemeProvider } from './src/theme/ThemeContext';
 import { ToastProvider, useToast } from './src/components/common/Toast';
 import { useNetworkStore } from './src/stores/networkStore';
 import { useAuthStore } from './src/stores/authStore';

@@ -59,6 +59,8 @@ export interface DiscoveryProfile {
   children?: string;
   job?: string;
   education?: string;
+  /** Badge keys earned by this user (e.g. ["first_spark", "verified_star"]) */
+  earnedBadges?: string[];
   /** Subscription tier for badge display */
   packageTier?: 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
   /** Profile prompts (Hinge-style question + answer) */

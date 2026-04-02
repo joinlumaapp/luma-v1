@@ -3,7 +3,7 @@
 // finger-tracking, velocity-based throws, spring-back, and haptic feedback.
 // Performance: eager fetch on mount, memoized card rendering
 
-import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -70,6 +70,7 @@ import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { useSwipeRateLimiterStore, SKIP_COOLDOWN_COST } from '../../stores/swipeRateLimiterStore';
 import { CooldownOverlay } from '../../components/discovery/CooldownOverlay';
 import { BoostModal } from '../../components/boost/BoostModal';
+import { SelamButton } from '../../components/discovery/SelamButton';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -149,9 +150,6 @@ export const DiscoveryScreen: React.FC = () => {
       Alert.alert('Hata', swipeError, [{ text: 'Tamam', onPress: clearError }]);
     }
   }, [swipeError, clearError]);
-
-  // ─── Auth user info ────────────────────────────────────
-  const currentUserId = useAuthStore((s) => s.user?.id);
 
   // ─── Package tier ──────────────────────────────────────
   const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE') as PackageTier;
@@ -341,8 +339,8 @@ export const DiscoveryScreen: React.FC = () => {
   // ─── Like sent toast removed (was too repetitive) ─────────
 
   // ─── Likes-you teaser state (FREE users only) ─────────────
-  const [likesYouCount, setLikesYouCount] = useState(0);
-  const [likesYouAvatars, setLikesYouAvatars] = useState<string[]>([]);
+  const [, setLikesYouCount] = useState(0);
+  const [, setLikesYouAvatars] = useState<string[]>([]);
 
   useEffect(() => {
     if (packageTier !== 'FREE') return;
@@ -1061,7 +1059,14 @@ export const DiscoveryScreen: React.FC = () => {
         </GestureDetector>
       </View>
 
-
+      {/* Selam Gonder button — send a paid greeting to the current profile */}
+      <View style={styles.selamButtonRow}>
+        <SelamButton
+          recipientId={currentCard.id}
+          recipientName={currentCard.name}
+          onBuyJeton={() => navigation.navigate('JetonMarket' as never)}
+        />
+      </View>
 
       {/* Action buttons */}
       <View style={styles.actionsRow}>
@@ -1522,6 +1527,11 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
     marginTop: 4,
+  },
+  // ── Selam Button Row ──
+  selamButtonRow: {
+    alignItems: 'center',
+    paddingTop: spacing.sm,
   },
   // ── Action Buttons ──
   actionsRow: {

@@ -362,7 +362,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         undosUsedToday: 0, batchCooldownEnd: null,
         totalCandidates: 0, premiumImpressions: 0,
         // Reset filters so next user does not inherit previous user's age/distance/gender prefs
-        filters: { minAge: 18, maxAge: 40, maxDistance: 50, intentionTags: [], genderPreference: 'all', height: null, education: [], smoking: [], drinking: [], exercise: [], zodiac: [] },
+        filters: {
+          minAge: 18, maxAge: 40, maxDistance: 50, intentionTags: [], genderPreference: 'all',
+          verifiedOnly: false, height: null, weight: null, education: [], smoking: [], drinking: [],
+          exercise: [], zodiac: [], religion: [], children: [], pets: [], maritalStatus: [],
+          languages: [], ethnicity: [], nationality: [], interests: [], sexualOrientation: [], values: [],
+        },
       });
     } catch { /* store may not be initialized */ }
 
@@ -397,12 +402,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     try {
       const { useActivityStore } = require('./activityStore') as typeof import('./activityStore');
-      useActivityStore.setState({ activities: [], isLoading: false, error: null });
+      useActivityStore.setState({ activities: [], isLoading: false, totalCount: 0, selectedCategory: null });
     } catch { /* store may not be initialized */ }
 
     try {
       const { useCrossedPathsStore } = require('./crossedPathsStore') as typeof import('./crossedPathsStore');
-      useCrossedPathsStore.setState({ paths: [], isLoading: false, error: null });
+      useCrossedPathsStore.setState({ paths: [], isLoading: false, totalCount: 0 });
     } catch { /* store may not be initialized */ }
 
     try {
@@ -412,13 +417,70 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     try {
       const { useWaveStore } = require('./waveStore') as typeof import('./waveStore');
-      useWaveStore.setState({ waves: [], isLoading: false, error: null });
+      useWaveStore.setState({ receivedWaves: [], sentWaves: [], quota: null, isLoading: false, pendingCount: 0 });
     } catch { /* store may not be initialized */ }
 
     // Reset premium store — critical: next user must not inherit stale tier/snapshot
     try {
       const { usePremiumStore } = require('./premiumStore') as typeof import('./premiumStore');
       usePremiumStore.getState().reset();
+    } catch { /* store may not be initialized */ }
+
+    // Reset remaining feature stores that hold user-specific data
+    try {
+      const { useViewersStore } = require('./viewersStore') as typeof import('./viewersStore');
+      useViewersStore.setState({
+        viewers: [], revealedIds: new Set<string>(), dailyRevealsUsed: 0,
+        dailyRevealsLimit: 1, isLoading: false, error: null,
+      });
+    } catch { /* store may not be initialized */ }
+
+    try {
+      const { useLikesRevealStore } = require('./likesRevealStore') as typeof import('./likesRevealStore');
+      useLikesRevealStore.setState({ revealedIds: new Set<string>(), dailyRevealsUsed: 0 });
+    } catch { /* store may not be initialized */ }
+
+    try {
+      const { useSecretAdmirerStore } = require('./secretAdmirerStore') as typeof import('./secretAdmirerStore');
+      useSecretAdmirerStore.setState({ receivedAdmirers: [], isLoading: false, error: null });
+    } catch { /* store may not be initialized */ }
+
+    try {
+      const { useWeeklyTopStore } = require('./weeklyTopStore') as typeof import('./weeklyTopStore');
+      useWeeklyTopStore.setState({ matches: [], generatedAt: null, nextRefreshAt: null, isLoading: false });
+    } catch { /* store may not be initialized */ }
+
+    try {
+      const { useFeedInteractionStore } = require('./feedInteractionStore') as typeof import('./feedInteractionStore');
+      useFeedInteractionStore.setState({
+        interactionCounts: {}, promptUserId: null, dismissedUserIds: new Set<string>(),
+      });
+    } catch { /* store may not be initialized */ }
+
+    try {
+      const { useFlirtStore } = require('./flirtStore') as typeof import('./flirtStore');
+      useFlirtStore.setState({
+        dailyFlirtCount: 0, lastFlirtDate: null, flirtRequests: {},
+        lifetimeFlirtsSent: 0, lifetimeFlirtsAccepted: 0, lifetimeFlirtsRejected: 0,
+      });
+    } catch { /* store may not be initialized */ }
+
+    try {
+      const { useMessageTrackingStore } = require('./messageTrackingStore') as typeof import('./messageTrackingStore');
+      useMessageTrackingStore.setState({
+        dailyMessageCount: 0, lastMessageDate: null, messagesPerUser: {},
+        lifetimeMessagesSent: 0,
+      });
+    } catch { /* store may not be initialized */ }
+
+    try {
+      const { useCallHistoryStore } = require('./callHistoryStore') as typeof import('./callHistoryStore');
+      useCallHistoryStore.getState().reset();
+    } catch { /* store may not be initialized */ }
+
+    try {
+      const { useSwipeRateLimiterStore } = require('./swipeRateLimiterStore') as typeof import('./swipeRateLimiterStore');
+      useSwipeRateLimiterStore.getState().resetSession();
     } catch { /* store may not be initialized */ }
   },
 

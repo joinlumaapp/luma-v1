@@ -478,11 +478,13 @@ export const PRIVATE_MESSAGE_CONFIG = {
 export const MONETIZATION_ENABLED = true;
 
 // Flirt request daily limits per package tier (-1 = unlimited)
+// All tiers have unlimited swipes — consistent with backend discovery service
+// and MembershipPlansScreen which shows "Sinirsiz" for all tiers.
 export const FLIRT_CONFIG = {
   DAILY_LIMITS: {
-    FREE: 3,
-    GOLD: 15,
-    PRO: 50,
+    FREE: -1,
+    GOLD: -1,
+    PRO: -1,
     RESERVED: -1,
   },
 } as const;

@@ -3,7 +3,7 @@
 // Tappable: navigates to MembershipPlans. Urgency mode when < 1 hour left.
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { Text, StyleSheet, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../../stores/authStore';
 import { palette } from '../../theme/colors';

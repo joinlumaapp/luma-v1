@@ -64,12 +64,6 @@ const TURKISH_CITIES: string[] = [
   'Sakarya', 'Malatya', 'Kahramanmaras', 'Erzurum',
 ];
 
-// ── Option type for intention tags ────────────────────────────────────────
-interface LifestyleOption {
-  value: string;
-  label: string;
-}
-
 // ── Age calculator ─────────────────────────────────────────────────────────
 const calculateAge = (birthDate: string): number => {
   if (!birthDate) return 0;
@@ -243,105 +237,6 @@ const OptionPicker: React.FC<OptionPickerProps> = ({
   );
 };
 
-// ─── Profile Completion Card ────────────────────────────────────
-
-interface ProfileCompletionCardProps {
-  percent: number;
-  profile: {
-    photos: string[];
-    bio: string;
-    interestTags: string[];
-    prompts: unknown[];
-  };
-}
-
-const ProfileCompletionCard: React.FC<ProfileCompletionCardProps> = ({ percent, profile: p }) => {
-  const fillColor =
-    percent >= 85 ? colors.success
-      : percent >= 60 ? colors.primary
-        : percent >= 30 ? '#F59E0B'
-          : colors.error;
-
-  const getHint = (): string | null => {
-    if (percent >= 100) return null;
-    if (p.photos.length < 2) return 'Daha fazla fotograf ekle';
-    if (p.bio.length < 50) return 'Bio ekleyerek profilini guclendir';
-    if (p.interestTags.length === 0) return 'Ilgi alanlarini sec';
-    if (p.prompts.length === 0) return 'Promptlarini doldur';
-    return 'Detayli bilgilerini tamamla';
-  };
-
-  const hint = getHint();
-  const isComplete = percent >= 100;
-
-  return (
-    <View style={{
-      backgroundColor: isComplete ? colors.success + '08' : colors.surface,
-      borderWidth: 1,
-      borderColor: isComplete ? colors.success + '30' : colors.surfaceBorder,
-      borderRadius: 16,
-      marginHorizontal: 24,
-      marginTop: 8,
-      marginBottom: 4,
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-    }}>
-      {/* Progress row */}
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <Text style={{
-          fontSize: 15,
-          fontFamily: 'Poppins_600SemiBold',
-          fontWeight: '600',
-          color: colors.text,
-        }}>Profil Gucun</Text>
-        <View style={{
-          flex: 1,
-          height: 8,
-          backgroundColor: colors.surfaceLight,
-          borderRadius: 4,
-          marginLeft: 12,
-          marginRight: 8,
-          overflow: 'hidden',
-        }}>
-          <View style={{
-            height: '100%',
-            width: `${Math.min(percent, 100)}%`,
-            backgroundColor: fillColor,
-            borderRadius: 4,
-          }} />
-        </View>
-        <Text style={{
-          fontSize: 14,
-          fontFamily: 'Poppins_700Bold',
-          fontWeight: '700',
-          color: fillColor,
-          minWidth: 36,
-          textAlign: 'right',
-        }}>%{percent}</Text>
-      </View>
-
-      {/* Hint row */}
-      {isComplete ? (
-        <Text style={{
-          fontSize: 12,
-          fontFamily: 'Poppins_500Medium',
-          fontWeight: '500',
-          color: colors.success,
-          marginTop: 8,
-        }}>{'✨'} Profilin tamamlanmis!</Text>
-      ) : hint ? (
-        <Text style={{
-          fontSize: 12,
-          fontFamily: 'Poppins_400Regular',
-          fontWeight: '400',
-          color: colors.textSecondary,
-          marginTop: 8,
-        }}>{'💡'} {hint}</Text>
-      ) : null}
-    </View>
-  );
-};
-
 // ═══════════════════════════════════════════════════════════════════════════
 // ── Main Component ─────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════
@@ -354,7 +249,6 @@ export const EditProfileScreen: React.FC = () => {
 
   // Store
   const profile = useProfileStore((state) => state.profile);
-  const completionPercent = useProfileStore((state) => state.completionPercent);
   const updateProfile = useProfileStore((state) => state.updateProfile);
   const uploadPhoto = useProfileStore((state) => state.uploadPhoto);
   const deletePhoto = useProfileStore((state) => state.deletePhoto);
@@ -774,8 +668,7 @@ export const EditProfileScreen: React.FC = () => {
           ]}
           keyboardShouldPersistTaps="handled"
         >
-          {/* ─── Completion Card ─── */}
-          <ProfileCompletionCard percent={completionPercent} profile={profile} />
+          {/* ─── Completion Card (moved to ProfileScreen) ─── */}
 
           {/* ─── Uyum Sorulari (top position for visibility) ─── */}
           {answeredCount < 45 && (
@@ -853,6 +746,58 @@ export const EditProfileScreen: React.FC = () => {
               </TouchableOpacity>
             </View>
           )}
+
+          {/* ── Kisilik Testi ──────────────────────────────────────────── */}
+          <SectionHeader title="Kisilik Tipin" description="Eglenceli bir quiz ile kisiligini kesfet" />
+          <TouchableOpacity
+            style={{
+              backgroundColor: colors.surface,
+              borderWidth: 1,
+              borderColor: colors.surfaceBorder,
+              borderRadius: 16,
+              marginHorizontal: 24,
+              padding: 16,
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}
+            onPress={() => navigation.navigate('PersonalitySelection' as never)}
+            activeOpacity={0.7}
+          >
+            <View style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: 'rgba(139, 92, 246, 0.12)',
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginRight: 12,
+            }}>
+              <Text style={{ fontSize: 22 }}>{profile.personalityType ? '🧠' : '🎯'}</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{
+                fontSize: 15,
+                fontWeight: '600',
+                fontFamily: poppinsFonts.semibold,
+                color: colors.text,
+              }}>
+                {profile.personalityType
+                  ? `${profile.personalityType}`
+                  : 'Kisilik Testini Coz'}
+              </Text>
+              <Text style={{
+                fontSize: 12,
+                fontFamily: poppinsFonts.regular,
+                color: colors.textTertiary,
+                marginTop: 2,
+              }}>
+                {profile.personalityType
+                  ? 'Tekrar coz veya sonucunu guncelle'
+                  : '5 eglenceli soru, 1 dakikada biter'}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+          </TouchableOpacity>
 
           {/* ─── Section 1: Medya ─── */}
 
@@ -1367,58 +1312,6 @@ export const EditProfileScreen: React.FC = () => {
           <FieldRow icon="🐾" label="Evcil Hayvanlar" value={pets || ''} onPress={() => openPicker('Evcil Hayvanlar', PETS_OPTIONS, 'pets')} />
           <FieldRow icon="🕌" label="Din" value={religion || ''} onPress={() => openPicker('Din', RELIGION_OPTIONS, 'religion')} />
           <FieldRow icon="🌐" label="Degerler" value={lifeValues || ''} onPress={() => openPicker('Senin icin hayattaki en onemli sey nedir?', VALUES_OPTIONS, 'lifeValues')} />
-
-          {/* ── Kisilik Testi ──────────────────────────────────────────── */}
-          <SectionHeader title="Kisilik Tipin" description="Eglenceli bir quiz ile kisiligini kesfet" />
-          <TouchableOpacity
-            style={{
-              backgroundColor: colors.surface,
-              borderWidth: 1,
-              borderColor: colors.surfaceBorder,
-              borderRadius: 16,
-              marginHorizontal: 24,
-              padding: 16,
-              flexDirection: 'row',
-              alignItems: 'center',
-            }}
-            onPress={() => navigation.navigate('PersonalitySelection' as never)}
-            activeOpacity={0.7}
-          >
-            <View style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              backgroundColor: 'rgba(139, 92, 246, 0.12)',
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginRight: 12,
-            }}>
-              <Text style={{ fontSize: 22 }}>{(profile as Record<string, unknown>).personalityType ? '🧠' : '🎯'}</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{
-                fontSize: 15,
-                fontWeight: '600',
-                fontFamily: poppinsFonts.semibold,
-                color: colors.text,
-              }}>
-                {(profile as Record<string, unknown>).personalityType
-                  ? `${(profile as Record<string, unknown>).personalityType as string}`
-                  : 'Kisilik Testini Coz'}
-              </Text>
-              <Text style={{
-                fontSize: 12,
-                fontFamily: poppinsFonts.regular,
-                color: colors.textTertiary,
-                marginTop: 2,
-              }}>
-                {(profile as Record<string, unknown>).personalityType
-                  ? 'Tekrar coz veya sonucunu guncelle'
-                  : '5 eglenceli soru, 1 dakikada biter'}
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
-          </TouchableOpacity>
 
           {/* ── Ilgi Alanlari ─────────────────────────────────────────── */}
           <SectionHeader title="Ilgi Alanlari" description="Baskalarina neyle ilgilendigini soyle" />

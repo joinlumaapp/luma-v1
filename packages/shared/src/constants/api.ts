@@ -60,6 +60,7 @@ export const API_ROUTES = {
     WEEKLY_REPORT: '/discovery/weekly-report',
     PRIORITY_BOOST: '/discovery/priority-boost',
     NEARBY_NOTIFY: '/discovery/nearby-notify',
+    SEND_GREETING: '/discovery/greeting',
   },
   // Subsystem 9: Matches
   MATCHES: {

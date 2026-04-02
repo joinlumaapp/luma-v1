@@ -7,7 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, palette } from '../../theme/colors';
 import { typography, fontWeights } from '../../theme/typography';
-import { spacing, borderRadius } from '../../theme/spacing';
+
 
 // ─── Types ──────────────────────────────────────────────────────
 

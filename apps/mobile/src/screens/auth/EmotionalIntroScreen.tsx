@@ -148,6 +148,7 @@ const EmotionalIntroScreen: React.FC = () => {
     const { login, setOnboarded } = useAuthStore.getState();
     login('dev-access-token', 'dev-refresh-token', {
       id: 'dev-user-001',
+      displayId: 'dev-001',
       phone: '+90 555 555 5555',
       isVerified: true,
       packageTier: 'RESERVED',
@@ -165,6 +166,7 @@ const EmotionalIntroScreen: React.FC = () => {
     const { login, setStartedOnboarding } = useAuthStore.getState();
     login('dev-access-token', 'dev-refresh-token', {
       id: 'dev-user-001',
+      displayId: 'dev-001',
       phone: '+90 555 555 5555',
       isVerified: true,
       packageTier: 'RESERVED',

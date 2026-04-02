@@ -87,7 +87,7 @@ export const LiveScreen: React.FC = () => {
             { text: 'Tamam', style: 'cancel' },
             {
               text: 'Paketi Yükselt',
-              onPress: () => navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' }),
+              onPress: () => navigation.navigate('MembershipPlans' as never),
             },
           ],
         );
@@ -101,7 +101,7 @@ export const LiveScreen: React.FC = () => {
         'Yetersiz Jeton',
         `Canlı bağlantı için ${LIVE_COST} jeton gerekli. Mevcut bakiyen: ${coinBalance}`,
         [
-          { text: 'Jeton Al', onPress: () => navigation.getParent()?.navigate('ProfileTab', { screen: 'JetonMarket' }) },
+          { text: 'Jeton Al', onPress: () => navigation.navigate('JetonMarket' as never) },
           { text: 'Kapat', style: 'cancel' },
         ],
       );
@@ -116,7 +116,7 @@ export const LiveScreen: React.FC = () => {
   }, [packageTier, dailySessionCount, lastSessionDate, coinBalance, navigation]);
 
   const handleBuyTokens = useCallback(() => {
-    navigation.getParent()?.navigate('ProfileTab', { screen: 'JetonMarket' });
+    navigation.navigate('JetonMarket' as never);
   }, [navigation]);
 
   return (

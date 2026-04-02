@@ -16,7 +16,7 @@ import {
 import { Throttle } from "@nestjs/throttler";
 import { DiscoveryService } from "./discovery.service";
 import { WeeklyReportService } from "./weekly-report.service";
-import { SwipeDto, FeedFilterDto } from "./dto";
+import { SwipeDto, FeedFilterDto, SendGreetingDto } from "./dto";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
 
 @ApiTags("Discovery")
@@ -113,5 +113,20 @@ export class DiscoveryController {
   })
   async getWeeklyReport(@CurrentUser("sub") userId: string) {
     return this.weeklyReportService.getWeeklyReport(userId);
+  }
+
+  // ── Selam Gonder (Send Greeting) ───────────────────────────────
+
+  @Post("greeting")
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 greetings per minute
+  @ApiOperation({
+    summary:
+      "Send a greeting to a user (costs 10 jeton, daily limits per package tier)",
+  })
+  async sendGreeting(
+    @CurrentUser("sub") userId: string,
+    @Body() dto: SendGreetingDto,
+  ) {
+    return this.discoveryService.sendGreeting(userId, dto.recipientId);
   }
 }

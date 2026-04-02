@@ -237,8 +237,14 @@ export class StorageController {
       throw new BadRequestException("File key is required");
     }
 
-    // Security: ensure the user can only delete their own files
-    if (!key.includes(userId)) {
+    // Security: ensure the user can only delete their own files.
+    // Use startsWith to prevent substring attacks (e.g., userId "abc" matching "abcdef").
+    const ownerPrefixes = [
+      `uploads/${userId}/`,
+      `photos/${userId}/`,
+      `thumbnails/${userId}/`,
+    ];
+    if (!ownerPrefixes.some((prefix) => key.startsWith(prefix))) {
       throw new BadRequestException("You can only delete your own files");
     }
 
@@ -269,8 +275,14 @@ export class StorageController {
       throw new BadRequestException("File key is required");
     }
 
-    // Security: ensure the user can only access their own files
-    if (!key.includes(userId)) {
+    // Security: ensure the user can only access their own files.
+    // Use startsWith to prevent substring attacks (e.g., userId "abc" matching "abcdef").
+    const ownerPrefixes = [
+      `uploads/${userId}/`,
+      `photos/${userId}/`,
+      `thumbnails/${userId}/`,
+    ];
+    if (!ownerPrefixes.some((prefix) => key.startsWith(prefix))) {
       throw new BadRequestException("You can only access your own files");
     }
 

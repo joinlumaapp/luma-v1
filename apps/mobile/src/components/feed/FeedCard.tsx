@@ -2,7 +2,7 @@
 // Layout: header (avatar + identity) -> intention -> content -> like action
 // Design: soft shadows, warm tones, generous spacing, Poppins typography hierarchy
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -137,7 +137,6 @@ interface FeedCardProps {
 }
 
 export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onProfilePress, onPostTap }) => {
-  const [showDoubleTapMenu, setShowDoubleTapMenu] = useState(false);
   const likeScale = useRef(new Animated.Value(1)).current;
   const likeGlow = useRef(new Animated.Value(0)).current;
   const likeCountAnim = useRef(new Animated.Value(0)).current;
@@ -149,7 +148,6 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onPr
       scale: new Animated.Value(0),
     }))
   ).current;
-  const doubleTapScale = useRef(new Animated.Value(0)).current;
   const lastTapRef = useRef<number>(0);
   const doubleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -256,13 +254,6 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onPr
       }, DOUBLE_TAP_DELAY);
     }
   }, [post, onPostTap, handleLikePress]);
-
-  const dismissDoubleTapMenu = useCallback(() => {
-    Animated.timing(doubleTapScale, { toValue: 0, duration: 150, useNativeDriver: true }).start(() => setShowDoubleTapMenu(false));
-    if (doubleTapTimerRef.current) { clearTimeout(doubleTapTimerRef.current); doubleTapTimerRef.current = null; }
-  }, [doubleTapScale]);
-
-  const handleDoubleTapLike = useCallback(() => { dismissDoubleTapMenu(); handleLikePress(); }, [dismissDoubleTapMenu, handleLikePress]);
 
   const currentUserId = useAuthStore((s) => s.user?.id);
   const isOwnPost = Boolean(currentUserId && post.userId === currentUserId);

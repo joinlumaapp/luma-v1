@@ -277,7 +277,6 @@ export const useMatchStore = create<MatchState>((set, get) => ({
       const { matches } = get();
       const newCount = matches.filter((m) => m.isNew).length;
       if (matches.length > 0) {
-        const topMatch = [...matches].sort((a, b) => b.compatibilityPercent - a.compatibilityPercent)[0];
         set({
           warmBanner: newCount > 0
             ? {

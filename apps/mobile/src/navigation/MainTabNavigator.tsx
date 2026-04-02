@@ -57,6 +57,7 @@ import { PlacesScreen } from '../screens/places/PlacesScreen';
 import { RelationshipScreen } from '../screens/relationship/RelationshipScreen';
 import { CouplesClubScreen } from '../screens/couples-club/CouplesClubScreen';
 import { NotificationSettingsScreen } from '../screens/settings/NotificationSettingsScreen';
+import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';
 import { MembershipPlansScreen } from '../screens/settings/MembershipPlansScreen';
 import { PersonalitySelectionScreen } from '../screens/profile/PersonalitySelectionScreen';
 import { ProfileCoachScreen } from '../screens/profile/ProfileCoachScreen';
@@ -108,13 +109,6 @@ const LiveStack = createNativeStackNavigator<LiveStackParamList>();
 const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
-
-/** Safe accessor for nested navigator state — avoids fragile `as` type assertions */
-function getNestedStateIndex(
-  route: { state?: { index?: number } } | undefined,
-): number | undefined {
-  return route?.state?.index;
-}
 
 /**
  * Creates a tabPress listener that always resets the stack to root
@@ -200,7 +194,7 @@ const DiscoveryStackNavigator: React.FC = React.memo(() => (
       headerShown: false,
       animation: 'slide_from_right',
       statusBarStyle: 'light',
-      statusBarColor: '#08080F',
+      statusBarBackgroundColor: '#08080F',
       statusBarAnimation: 'none',
     }}
   >
@@ -266,7 +260,7 @@ const MatchesStackNavigator: React.FC = React.memo(() => (
       headerShown: false,
       animation: 'slide_from_right',
       statusBarStyle: 'light',
-      statusBarColor: '#08080F',
+      statusBarBackgroundColor: '#08080F',
       statusBarAnimation: 'none',
     }}
   >
@@ -343,7 +337,7 @@ const FeedStackNavigator: React.FC = React.memo(() => (
       headerShown: false,
       animation: 'slide_from_right',
       statusBarStyle: 'light',
-      statusBarColor: '#08080F',
+      statusBarBackgroundColor: '#08080F',
       statusBarAnimation: 'none',
     }}
   >
@@ -365,6 +359,7 @@ const FeedStackNavigator: React.FC = React.memo(() => (
       component={StoryCreator}
       options={{ animation: 'slide_from_bottom', gestureEnabled: true, gestureDirection: 'vertical' }}
     />
+    <FeedStack.Screen name="Notifications" component={NotificationsScreen} />
   </FeedStack.Navigator>
 ));
 FeedStackNavigator.displayName = 'FeedStackNavigator';
@@ -375,11 +370,13 @@ const LiveStackNavigator: React.FC = React.memo(() => (
     screenOptions={{
       headerShown: false,
       statusBarStyle: 'light',
-      statusBarColor: '#08080F',
+      statusBarBackgroundColor: '#08080F',
       statusBarAnimation: 'none',
     }}
   >
     <LiveStack.Screen name="Live" component={LiveScreen} />
+    <LiveStack.Screen name="JetonMarket" component={JetonMarketScreen} />
+    <LiveStack.Screen name="MembershipPlans" component={MembershipPlansScreen} />
   </LiveStack.Navigator>
 ));
 LiveStackNavigator.displayName = 'LiveStackNavigator';
@@ -391,7 +388,7 @@ const ProfileStackNavigator: React.FC = React.memo(() => (
       headerShown: false,
       animation: 'slide_from_right',
       statusBarStyle: 'light',
-      statusBarColor: '#08080F',
+      statusBarBackgroundColor: '#08080F',
       statusBarAnimation: 'none',
     }}
   >

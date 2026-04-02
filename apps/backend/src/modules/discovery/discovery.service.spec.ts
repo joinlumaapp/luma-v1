@@ -39,6 +39,9 @@ const mockPrisma = {
     findMany: jest.fn(),
     findFirst: jest.fn(),
   },
+  report: {
+    findMany: jest.fn(),
+  },
   dailySwipeCount: {
     findUnique: jest.fn(),
     upsert: jest.fn(),
@@ -149,6 +152,7 @@ describe("DiscoveryService", () => {
       });
       mockPrisma.swipe.findMany.mockResolvedValue([]);
       mockPrisma.block.findMany.mockResolvedValue([]);
+      mockPrisma.report.findMany.mockResolvedValue([]);
       mockPrisma.userProfile.findMany.mockResolvedValue([]);
       mockPrisma.dailySwipeCount.findUnique.mockResolvedValue(null);
 
@@ -184,6 +188,7 @@ describe("DiscoveryService", () => {
       });
       mockPrisma.swipe.findMany.mockResolvedValue([]);
       mockPrisma.block.findMany.mockResolvedValue([]);
+      mockPrisma.report.findMany.mockResolvedValue([]);
       mockPrisma.userProfile.findMany.mockResolvedValue([
         {
           userId: "u2",
@@ -245,6 +250,7 @@ describe("DiscoveryService", () => {
       });
       mockPrisma.swipe.findMany.mockResolvedValue([{ targetId: "u2" }]);
       mockPrisma.block.findMany.mockResolvedValue([]);
+      mockPrisma.report.findMany.mockResolvedValue([]);
       mockPrisma.userProfile.findMany.mockResolvedValue([]);
       mockPrisma.dailySwipeCount.findUnique.mockResolvedValue(null);
 
@@ -270,6 +276,7 @@ describe("DiscoveryService", () => {
       mockPrisma.block.findMany.mockResolvedValue([
         { blockerId: "u1", blockedId: "u3" },
       ]);
+      mockPrisma.report.findMany.mockResolvedValue([]);
       mockPrisma.userProfile.findMany.mockResolvedValue([]);
       mockPrisma.dailySwipeCount.findUnique.mockResolvedValue(null);
 
@@ -277,6 +284,32 @@ describe("DiscoveryService", () => {
 
       const queryArgs = mockPrisma.userProfile.findMany.mock.calls[0][0];
       expect(queryArgs.where.userId.notIn).toContain("u3");
+      expect(result.cards).toHaveLength(0);
+    });
+
+    it("should exclude reported users", async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: "u1",
+        packageTier: "FREE",
+        profile: {
+          firstName: "Ali",
+          latitude: null,
+          longitude: null,
+          interestTags: [],
+        },
+      });
+      mockPrisma.swipe.findMany.mockResolvedValue([]);
+      mockPrisma.block.findMany.mockResolvedValue([]);
+      mockPrisma.report.findMany.mockResolvedValue([
+        { reportedId: "u5" },
+      ]);
+      mockPrisma.userProfile.findMany.mockResolvedValue([]);
+      mockPrisma.dailySwipeCount.findUnique.mockResolvedValue(null);
+
+      const result = await service.getDiscoveryFeed("u1");
+
+      const queryArgs = mockPrisma.userProfile.findMany.mock.calls[0][0];
+      expect(queryArgs.where.userId.notIn).toContain("u5");
       expect(result.cards).toHaveLength(0);
     });
 
@@ -293,6 +326,7 @@ describe("DiscoveryService", () => {
       });
       mockPrisma.swipe.findMany.mockResolvedValue([]);
       mockPrisma.block.findMany.mockResolvedValue([]);
+      mockPrisma.report.findMany.mockResolvedValue([]);
       mockPrisma.userProfile.findMany.mockResolvedValue([]);
       mockPrisma.dailySwipeCount.findUnique.mockResolvedValue({ count: 45 });
 
@@ -315,6 +349,7 @@ describe("DiscoveryService", () => {
       });
       mockPrisma.swipe.findMany.mockResolvedValue([]);
       mockPrisma.block.findMany.mockResolvedValue([]);
+      mockPrisma.report.findMany.mockResolvedValue([]);
       mockPrisma.userProfile.findMany.mockResolvedValue([]);
       mockPrisma.dailySwipeCount.findUnique.mockResolvedValue(null);
 
@@ -339,6 +374,7 @@ describe("DiscoveryService", () => {
       });
       mockPrisma.swipe.findMany.mockResolvedValue([]);
       mockPrisma.block.findMany.mockResolvedValue([]);
+      mockPrisma.report.findMany.mockResolvedValue([]);
       mockPrisma.userProfile.findMany.mockResolvedValue([]);
       mockPrisma.dailySwipeCount.findUnique.mockResolvedValue(null);
 
@@ -363,6 +399,7 @@ describe("DiscoveryService", () => {
       });
       mockPrisma.swipe.findMany.mockResolvedValue([]);
       mockPrisma.block.findMany.mockResolvedValue([]);
+      mockPrisma.report.findMany.mockResolvedValue([]);
       mockPrisma.userProfile.findMany.mockResolvedValue([]);
       mockPrisma.dailySwipeCount.findUnique.mockResolvedValue(null);
 
@@ -390,6 +427,7 @@ describe("DiscoveryService", () => {
       });
       mockPrisma.swipe.findMany.mockResolvedValue([]);
       mockPrisma.block.findMany.mockResolvedValue([]);
+      mockPrisma.report.findMany.mockResolvedValue([]);
       mockPrisma.userProfile.findMany.mockResolvedValue([
         {
           userId: "u2",
@@ -462,6 +500,7 @@ describe("DiscoveryService", () => {
         .mockResolvedValueOnce([]) // swiped IDs
         .mockResolvedValueOnce([{ swiperId: "u3", createdAt: new Date() }]); // super likers
       mockPrisma.block.findMany.mockResolvedValue([]);
+      mockPrisma.report.findMany.mockResolvedValue([]);
       mockPrisma.dailySwipeCount.findUnique.mockResolvedValue(null);
 
       mockPrisma.userProfile.findMany.mockResolvedValue([
@@ -530,6 +569,7 @@ describe("DiscoveryService", () => {
       });
       mockPrisma.swipe.findMany.mockResolvedValue([]);
       mockPrisma.block.findMany.mockResolvedValue([]);
+      mockPrisma.report.findMany.mockResolvedValue([]);
       mockPrisma.dailySwipeCount.findUnique.mockResolvedValue(null);
 
       // u4 has an active boost
@@ -567,6 +607,111 @@ describe("DiscoveryService", () => {
       expect(result.cards[0].isBoosted).toBe(true);
       // Boosted user's feedScore should be multiplied by 3x
       expect(result.cards[0].feedScore).toBeGreaterThan(0);
+    });
+  });
+
+  describe("package tier priority boost", () => {
+    beforeEach(() => {
+      mockPrisma.relationship.findFirst.mockResolvedValue(null);
+      mockPrisma.relationship.findMany.mockResolvedValue([]);
+      mockPrisma.profileBoost.findMany.mockResolvedValue([]);
+      mockPrisma.feedView.findMany.mockResolvedValue([]);
+      mockPrisma.swipe.findMany.mockResolvedValue([]);
+      mockPrisma.block.findMany.mockResolvedValue([]);
+      mockPrisma.report.findMany.mockResolvedValue([]);
+      mockPrisma.dailySwipeCount.findUnique.mockResolvedValue(null);
+      mockPrisma.compatibilityScore.findMany.mockResolvedValue([]);
+
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: "u1",
+        packageTier: "FREE",
+        profile: {
+          firstName: "Ali",
+          intentionTag: "SERIOUS_RELATIONSHIP",
+          latitude: null,
+          longitude: null,
+          interestTags: [],
+        },
+      });
+    });
+
+    const buildCandidate = (
+      userId: string,
+      packageTier: string,
+    ) => ({
+      userId,
+      firstName: `User-${userId}`,
+      birthDate: new Date("1995-01-01"),
+      bio: "Hello world bio text",
+      city: "Istanbul",
+      gender: "FEMALE",
+      intentionTag: "SERIOUS_RELATIONSHIP",
+      interestTags: [],
+      isComplete: true,
+      lastActiveAt: new Date(),
+      user: {
+        id: userId,
+        isSelfieVerified: false,
+        isFullyVerified: false,
+        packageTier,
+        createdAt: new Date("2024-01-01"),
+        photos: [{ id: "p1", url: "url", thumbnailUrl: "thumb" }],
+      },
+    });
+
+    it("should give RESERVED users a higher feed score than FREE users with identical profiles", async () => {
+      mockPrisma.userProfile.findMany.mockResolvedValue([
+        buildCandidate("u-free", "FREE"),
+        buildCandidate("u-reserved", "RESERVED"),
+      ]);
+
+      const result = await service.getDiscoveryFeed("u1");
+
+      const freeCard = result.cards.find((c) => c.userId === "u-free");
+      const reservedCard = result.cards.find((c) => c.userId === "u-reserved");
+
+      expect(freeCard).toBeDefined();
+      expect(reservedCard).toBeDefined();
+      // RESERVED gets +15, FREE gets +0 — all other factors are identical
+      expect(reservedCard!.feedScore).toBeGreaterThan(freeCard!.feedScore);
+      expect(reservedCard!.feedScore - freeCard!.feedScore).toBeCloseTo(15, 0);
+    });
+
+    it("should rank paid users higher: RESERVED > PRO > GOLD > FREE", async () => {
+      mockPrisma.userProfile.findMany.mockResolvedValue([
+        buildCandidate("u-free", "FREE"),
+        buildCandidate("u-gold", "GOLD"),
+        buildCandidate("u-pro", "PRO"),
+        buildCandidate("u-reserved", "RESERVED"),
+      ]);
+
+      const result = await service.getDiscoveryFeed("u1");
+
+      const scoreOf = (id: string) =>
+        result.cards.find((c) => c.userId === id)!.feedScore;
+
+      expect(scoreOf("u-reserved")).toBeGreaterThan(scoreOf("u-pro"));
+      expect(scoreOf("u-pro")).toBeGreaterThan(scoreOf("u-gold"));
+      expect(scoreOf("u-gold")).toBeGreaterThan(scoreOf("u-free"));
+    });
+
+    it("should apply correct boost amounts per tier", async () => {
+      mockPrisma.userProfile.findMany.mockResolvedValue([
+        buildCandidate("u-free", "FREE"),
+        buildCandidate("u-gold", "GOLD"),
+        buildCandidate("u-pro", "PRO"),
+        buildCandidate("u-reserved", "RESERVED"),
+      ]);
+
+      const result = await service.getDiscoveryFeed("u1");
+
+      const scoreOf = (id: string) =>
+        result.cards.find((c) => c.userId === id)!.feedScore;
+
+      const freeScore = scoreOf("u-free");
+      expect(scoreOf("u-gold") - freeScore).toBeCloseTo(5, 0);
+      expect(scoreOf("u-pro") - freeScore).toBeCloseTo(10, 0);
+      expect(scoreOf("u-reserved") - freeScore).toBeCloseTo(15, 0);
     });
   });
 
@@ -896,6 +1041,7 @@ describe("DiscoveryService", () => {
       });
       mockPrisma.swipe.findMany.mockResolvedValue([]);
       mockPrisma.block.findMany.mockResolvedValue([]);
+      mockPrisma.report.findMany.mockResolvedValue([]);
       mockPrisma.dailySwipeCount.findUnique.mockResolvedValue(null);
       mockPrisma.userProfile.findMany.mockResolvedValue([
         {
@@ -945,6 +1091,7 @@ describe("DiscoveryService", () => {
       });
       mockPrisma.swipe.findMany.mockResolvedValue([]);
       mockPrisma.block.findMany.mockResolvedValue([]);
+      mockPrisma.report.findMany.mockResolvedValue([]);
       mockPrisma.userProfile.findMany.mockResolvedValue([]);
       mockPrisma.dailySwipeCount.findUnique.mockResolvedValue(null);
 

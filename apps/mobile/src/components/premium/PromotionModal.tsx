@@ -85,7 +85,7 @@ function getPromoConfig(packageTier: PackageTier): PromoConfig | null {
 export const PromotionModal: React.FC = () => {
   const [visible, setVisible] = useState(false);
   const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE');
-  const navigation = useNavigation<NativeStackNavigationProp<Record<string, unknown>>>();
+  const navigation = useNavigation<NativeStackNavigationProp<Record<string, object | undefined>>>();
 
   const config = getPromoConfig(packageTier);
 

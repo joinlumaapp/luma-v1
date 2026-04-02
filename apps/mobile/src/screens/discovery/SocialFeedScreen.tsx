@@ -42,25 +42,26 @@ import { photoService } from '../../services/photoService';
 import { FeedCard } from '../../components/feed/FeedCard';
 // CommentSheet removed — comment system removed from feed
 // MatchPromptModal removed — actions moved to profile screen
-import { discoveryService } from '../../services/discoveryService';
 import { EngagementNudge } from '../../components/feed/EngagementNudge';
 // QuickProfilePreview removed — tapping post goes directly to full profile
 import { useFeedInteractionStore } from '../../stores/feedInteractionStore';
 import { useStoryStore } from '../../stores/storyStore';
 import { StoryRing } from '../../components/stories/StoryRing';
 import type { StoryUser } from '../../services/storyService';
-import { useFlirtStore } from '../../stores/flirtStore';
 import { FEED_POST_CONFIG } from '../../constants/config';
 import { getFeatureLimit, isUnlimited } from '../../constants/packageAccess';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { useScreenTracking } from '../../hooks/useAnalytics';
+import { AdBanner } from '../../components/ads';
 
 // ── Feed item union type for FlatList (posts + nudge cards) ──────
 const NUDGE_INTERVAL = 5; // show nudge every N posts without interaction
+const AD_INTERVAL = 5; // show an ad every N posts for FREE users
 
 type FeedListItem =
   | { type: 'post'; data: FeedPost }
-  | { type: 'nudge'; variant: number; key: string };
+  | { type: 'nudge'; variant: number; key: string }
+  | { type: 'ad'; adIndex: number; key: string };
 
 // ─── Filter Tabs ──────────────────────────────────────────────
 
@@ -339,12 +340,6 @@ const EmptyState: React.FC = () => (
 
 const getToday = (): string => new Date().toISOString().slice(0, 10);
 
-/** Generate a deterministic pseudo-view count from post id */
-const getViewCount = (postId: string): number => {
-  const hash = postId.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-  return (hash % 200) + 10;
-};
-
 // ─── Story Bar Section ────────────────────────────────────────
 // Fixed story bar between header and feed — does NOT scroll with FlatList
 
@@ -470,11 +465,6 @@ export const SocialFeedScreen: React.FC = () => {
 
   // Interaction tracking — triggers match prompt after repeated interactions
   const recordInteraction = useFeedInteractionStore((s) => s.recordInteraction);
-  const promptUserId = useFeedInteractionStore((s) => s.promptUserId);
-  const dismissPrompt = useFeedInteractionStore((s) => s.dismissPrompt);
-  const clearPrompt = useFeedInteractionStore((s) => s.clearPrompt);
-  // Resolve prompted user's info from posts
-  const promptedPost = promptUserId ? posts.find((p) => p.userId === promptUserId) : null;
 
   // Passive scroll tracking — counts posts seen since last interaction
   const [interactionCount, setInteractionCount] = useState(0);
@@ -484,11 +474,6 @@ export const SocialFeedScreen: React.FC = () => {
   const markInteraction = useCallback(() => {
     setInteractionCount((c) => c + 1);
   }, []);
-
-  // Flirt limits
-  const canFlirt = useFlirtStore((s) => s.canFlirt);
-  const recordFlirt = useFlirtStore((s) => s.recordFlirt);
-  const isFlirtPending = useFlirtStore((s) => s.isFlirtPending);
 
   // State
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -655,38 +640,6 @@ export const SocialFeedScreen: React.FC = () => {
     navigation.navigate('PostDetail', { postId: post.id, post });
   }, [navigation]);
 
-  // Internal helper — executes the flirt request after all checks pass
-  const executeFlirt = useCallback(
-    async (userId: string) => {
-      markInteraction();
-      if (userId !== currentUserId) {
-        recordInteraction(userId);
-      }
-
-      const post = posts.find((p) => p.userId === userId);
-      const userName = post?.userName ?? '';
-
-      try {
-        await discoveryService.swipe({ targetUserId: userId, direction: 'LIKE' });
-      } catch {
-        // Mock mode — continue with tracking
-      }
-
-      // Always track internally (even when limits not enforced)
-      recordFlirt(userId, userName);
-
-      Alert.alert(
-        'Flört İsteği Gönderildi \uD83D\uDC9C',
-        `${userName} flört isteğin iletildi. Kabul ederse sohbet başlayacak!`,
-        [{ text: 'Tamam' }],
-      );
-    },
-    [posts, recordInteraction, markInteraction, recordFlirt],
-  );
-
-  // Flirt and prompt logic removed — actions moved to profile screen
-
-
   const checkDailyLimit = useCallback((): boolean => {
     const tierPostLimit = FEED_POST_CONFIG.DAILY_LIMITS[packageTier as keyof typeof FEED_POST_CONFIG.DAILY_LIMITS];
     const isUnlimitedPosts = tierPostLimit === -1;
@@ -773,18 +726,31 @@ export const SocialFeedScreen: React.FC = () => {
     });
   }, []);
 
-  // ── Build feed list with engagement nudges ──
+  // ── Build feed list with engagement nudges and ads ──
+  const isFreeUser = packageTier === 'FREE';
+
   const feedListItems: FeedListItem[] = useMemo(() => {
     const items: FeedListItem[] = [];
     let nudgeVariant = 0;
+    let adVariant = 0;
 
     for (let i = 0; i < posts.length; i++) {
       items.push({ type: 'post', data: posts[i] });
 
+      const positionAfter = i + 1; // 1-indexed count of posts so far
+
+      // Insert ad after every AD_INTERVAL posts for FREE users
+      if (isFreeUser && positionAfter % AD_INTERVAL === 0) {
+        items.push({ type: 'ad', adIndex: adVariant, key: `ad-${i}` });
+        adVariant++;
+      }
+
       // Insert nudge after every NUDGE_INTERVAL posts if user hasn't interacted
+      // (skip nudge at the same position where an ad was just inserted)
       if (
-        (i + 1) % NUDGE_INTERVAL === 0 &&
-        interactionCount === 0
+        positionAfter % NUDGE_INTERVAL === 0 &&
+        interactionCount === 0 &&
+        !(isFreeUser && positionAfter % AD_INTERVAL === 0)
       ) {
         const nudgeKey = `nudge-${i}`;
         if (!dismissedNudges.has(nudgeKey)) {
@@ -794,7 +760,7 @@ export const SocialFeedScreen: React.FC = () => {
       }
     }
     return items;
-  }, [posts, interactionCount, dismissedNudges]);
+  }, [posts, interactionCount, dismissedNudges, isFreeUser]);
 
   // Render item — FeedCard or EngagementNudge
   const renderFeedItem = useCallback(
@@ -809,6 +775,9 @@ export const SocialFeedScreen: React.FC = () => {
             onDismiss={() => handleNudgeDismiss(item.key)}
           />
         );
+      }
+      if (item.type === 'ad') {
+        return <AdBanner index={item.adIndex} />;
       }
       return (
         <View style={feedItemStyles.wrapper}>
@@ -825,9 +794,10 @@ export const SocialFeedScreen: React.FC = () => {
     [handleLike, handleFollow, handleProfilePress, handlePostTap, handleNudgeDiscovery, handleNudgeMatches, handleNudgeScrollToTop, handleNudgeDismiss],
   );
 
-  const keyExtractor = useCallback((item: FeedListItem) =>
-    item.type === 'nudge' ? item.key : item.data.id,
-  []);
+  const keyExtractor = useCallback((item: FeedListItem) => {
+    if (item.type === 'post') return item.data.id;
+    return item.key;
+  }, []);
 
   // Header — rendered as a JSX element (not a component reference) so FlatList
   const listHeader = (
@@ -887,6 +857,14 @@ export const SocialFeedScreen: React.FC = () => {
       <View style={styles.headerArea}>
         <Text style={styles.headerTitle}>Akış</Text>
         <View style={styles.headerRight}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Notifications')}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityLabel="Bildirimler"
+            accessibilityRole="button"
+          >
+            <Ionicons name="notifications-outline" size={24} color={colors.text} />
+          </TouchableOpacity>
           <Image
             source={require('../../../assets/splash-logo.png')}
             style={styles.headerLogo}
@@ -1145,8 +1123,8 @@ const styles = StyleSheet.create({
     gap: spacing.smd,
   },
   headerLogo: {
-    width: 36,
-    height: 36,
+    width: 44,
+    height: 44,
   },
   loadingContainer: {
     flex: 1,
