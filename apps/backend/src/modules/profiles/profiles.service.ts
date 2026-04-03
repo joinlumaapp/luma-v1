@@ -1012,7 +1012,7 @@ export class ProfilesService {
   // ─── Profile Boost ───────────────────────────────────────────
 
   private static readonly BOOST_DURATION_MINUTES = 30;
-  private static readonly BOOST_GOLD_COST = 50;
+  private static readonly BOOST_GOLD_COST = 100;
 
   /** Check if user has an active boost */
   async getBoostStatus(userId: string) {
