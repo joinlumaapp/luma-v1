@@ -90,11 +90,6 @@ function initializeFirebase(): admin.app.App | null {
         throw error;
       }
     }
-  } else if (nodeEnv === "production") {
-    throw new Error(
-      "Firebase credentials are required in production. " +
-        "Set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY environment variables.",
-    );
   } else {
     configured = false;
     logger.warn(
