@@ -16,14 +16,29 @@ const VALID_GOLD_ACTIONS = [
   "spotlight",
   "travel_mode",
   "priority_message",
-  "voice_call",
-  "video_call",
+  // Matching redesign actions
+  "extra_likes_reveal",
+  "extra_viewers_reveal",
+  "viewer_delay_bypass",
+  "priority_visibility_1h",
+  "priority_visibility_3h",
+  "activity_strip_pin",
+  "secret_admirer_send",
+  "secret_admirer_extra_guess",
+  "compatibility_xray",
+  "super_compatible_reveal",
+  "ai_chat_suggestion_pack",
+  "nearby_notify",
+  "weekly_top_reveal",
+  "message_bundle_3",
+  "message_bundle_5",
+  "message_bundle_10",
 ] as const;
 
 export class SpendGoldDto {
   @ApiProperty({
     description:
-      "Action to spend gold on: profile_boost, super_like, read_receipts, undo_pass, spotlight, travel_mode, priority_message",
+      "Action to spend gold on. See GOLD_COSTS for full list: profile_boost, super_like, read_receipts, undo_pass, spotlight, travel_mode, priority_message, extra_likes_reveal, extra_viewers_reveal, viewer_delay_bypass, priority_visibility_1h, priority_visibility_3h, activity_strip_pin, secret_admirer_send, secret_admirer_extra_guess, compatibility_xray, super_compatible_reveal, ai_chat_suggestion_pack, nearby_notify, weekly_top_reveal, message_bundle_3, message_bundle_5, message_bundle_10",
     example: "profile_boost",
     enum: VALID_GOLD_ACTIONS,
   })
