@@ -56,7 +56,7 @@ describe("StoriesController", () => {
       ];
       mockStoriesService.getStories.mockResolvedValue(expected);
 
-      const req = { user: { userId: "u1" } };
+      const req = { user: { sub: "u1" } };
       const result = await controller.getStories(req);
 
       expect(result).toHaveLength(1);
@@ -67,7 +67,7 @@ describe("StoriesController", () => {
     it("should return empty array when no stories exist", async () => {
       mockStoriesService.getStories.mockResolvedValue([]);
 
-      const req = { user: { userId: "u1" } };
+      const req = { user: { sub: "u1" } };
       const result = await controller.getStories(req);
 
       expect(result).toEqual([]);
@@ -88,7 +88,7 @@ describe("StoriesController", () => {
       };
       mockStoriesService.createStory.mockResolvedValue(expected);
 
-      const req = { user: { userId: "u1" } };
+      const req = { user: { sub: "u1" } };
       const file = {
         fieldname: "media",
         originalname: "test.jpg",
@@ -118,7 +118,7 @@ describe("StoriesController", () => {
     it("should delete own story", async () => {
       mockStoriesService.deleteStory.mockResolvedValue(undefined);
 
-      const req = { user: { userId: "u1" } };
+      const req = { user: { sub: "u1" } };
       await controller.deleteStory(req, "s1");
 
       expect(mockStoriesService.deleteStory).toHaveBeenCalledWith("u1", "s1");
@@ -129,7 +129,7 @@ describe("StoriesController", () => {
         new NotFoundException("Hikaye bulunamadi"),
       );
 
-      const req = { user: { userId: "u1" } };
+      const req = { user: { sub: "u1" } };
       await expect(controller.deleteStory(req, "bad-id")).rejects.toThrow(
         NotFoundException,
       );
@@ -140,7 +140,7 @@ describe("StoriesController", () => {
         new ForbiddenException("Bu hikayeyi silme yetkiniz yok"),
       );
 
-      const req = { user: { userId: "u2" } };
+      const req = { user: { sub: "u2" } };
       await expect(controller.deleteStory(req, "s1")).rejects.toThrow(
         ForbiddenException,
       );
@@ -155,7 +155,7 @@ describe("StoriesController", () => {
     it("should mark story as viewed", async () => {
       mockStoriesService.markAsViewed.mockResolvedValue(undefined);
 
-      const req = { user: { userId: "u1" } };
+      const req = { user: { sub: "u1" } };
       await controller.markAsViewed(req, "s1");
 
       expect(mockStoriesService.markAsViewed).toHaveBeenCalledWith("u1", "s1");
@@ -178,7 +178,7 @@ describe("StoriesController", () => {
       ];
       mockStoriesService.getViewers.mockResolvedValue(expected);
 
-      const req = { user: { userId: "u1" } };
+      const req = { user: { sub: "u1" } };
       const result = await controller.getViewers(req, "s1");
 
       expect(result).toHaveLength(1);
@@ -190,7 +190,7 @@ describe("StoriesController", () => {
         new ForbiddenException("Goruntuleme bilgisine erisim yetkiniz yok"),
       );
 
-      const req = { user: { userId: "u2" } };
+      const req = { user: { sub: "u2" } };
       await expect(controller.getViewers(req, "s1")).rejects.toThrow(
         ForbiddenException,
       );
@@ -206,7 +206,7 @@ describe("StoriesController", () => {
       const expected = { success: true, message: "Yanitiniz gonderildi" };
       mockStoriesService.replyToStory.mockResolvedValue(expected);
 
-      const req = { user: { userId: "u1" } };
+      const req = { user: { sub: "u1" } };
       const result = await controller.replyToStory(req, "s1", {
         message: "Harika hikaye!",
       });
@@ -224,7 +224,7 @@ describe("StoriesController", () => {
         new NotFoundException("Hikaye bulunamadi"),
       );
 
-      const req = { user: { userId: "u1" } };
+      const req = { user: { sub: "u1" } };
       await expect(
         controller.replyToStory(req, "bad-id", { message: "test" }),
       ).rejects.toThrow(NotFoundException);
@@ -240,7 +240,7 @@ describe("StoriesController", () => {
       const expected = { liked: true, likeCount: 5 };
       mockStoriesService.toggleLike.mockResolvedValue(expected);
 
-      const req = { user: { userId: "u1" } };
+      const req = { user: { sub: "u1" } };
       const result = await controller.toggleLike(req, "s1");
 
       expect(result.liked).toBe(true);
@@ -252,7 +252,7 @@ describe("StoriesController", () => {
       const expected = { liked: false, likeCount: 4 };
       mockStoriesService.toggleLike.mockResolvedValue(expected);
 
-      const req = { user: { userId: "u1" } };
+      const req = { user: { sub: "u1" } };
       const result = await controller.toggleLike(req, "s1");
 
       expect(result.liked).toBe(false);

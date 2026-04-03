@@ -26,8 +26,15 @@ import {
   GoldTransactionType,
 } from "@prisma/client";
 import { randomBetween } from "./seed-utils";
+import * as crypto from "crypto";
 
 const prisma = new PrismaClient();
+
+/** Generate a unique display ID for seed users */
+function generateDisplayId(index: number): string {
+  const hex = crypto.randomBytes(5).toString("hex").toUpperCase();
+  return `LU-${hex}`;
+}
 
 // ============================================================
 // DEMO USER DATA
@@ -728,11 +735,13 @@ async function seedDemoData(): Promise<void> {
 async function seedDemoUsers(): Promise<string[]> {
   const userIds: string[] = [];
 
-  for (const demo of DEMO_USERS) {
+  for (let i = 0; i < DEMO_USERS.length; i++) {
+    const demo = DEMO_USERS[i];
     const user = await prisma.user.create({
       data: {
         phone: demo.phone,
         phoneCountryCode: demo.phoneCountryCode,
+        displayId: generateDisplayId(i),
         isActive: true,
         isSmsVerified: true,
         isSelfieVerified: demo.isVerified,
@@ -753,7 +762,7 @@ async function seedDemoUsers(): Promise<string[]> {
             isComplete: true,
             lastActiveAt: new Date(),
             locationUpdatedAt: new Date(),
-            interestTags: USER_INTEREST_TAGS[DEMO_USERS.indexOf(demo)] ?? [],
+            interestTags: USER_INTEREST_TAGS[i] ?? [],
           },
         },
       },

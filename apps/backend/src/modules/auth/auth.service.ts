@@ -28,6 +28,12 @@ const MAX_OTP_ATTEMPTS = 5;
 const SELFIE_LIVENESS_THRESHOLD = 0.7;
 const SELFIE_FACE_MATCH_THRESHOLD = 0.8;
 const MAX_ACTIVE_SESSIONS_PER_USER = 5;
+
+/** Generate a unique display ID for new users (e.g. "LU-7F3A9B2E1D") */
+function generateDisplayId(): string {
+  const hex = crypto.randomBytes(5).toString("hex").toUpperCase();
+  return `LU-${hex}`;
+}
 const SELFIE_MAX_BASE64_LENGTH = 5 * 1024 * 1024; // 5MB max selfie
 
 // ─── OTP Rate Limiting Constants ──────────────────────────────────
@@ -215,6 +221,7 @@ export class AuthService {
         data: {
           phone: dto.phone,
           phoneCountryCode: dto.countryCode,
+          displayId: generateDisplayId(),
         },
       });
       userId = user.id;

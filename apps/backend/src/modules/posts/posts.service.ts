@@ -38,7 +38,7 @@ interface PostWithUser {
   };
 }
 
-interface PostResponse {
+export interface PostResponse {
   id: string;
   userId: string;
   postType: string;
