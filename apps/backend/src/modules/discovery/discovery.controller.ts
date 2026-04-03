@@ -129,4 +129,28 @@ export class DiscoveryController {
   ) {
     return this.discoveryService.sendGreeting(userId, dto.recipientId);
   }
+
+  // ── Priority Boost (Oncelikli Gorunurluk) ─────────────────────────
+
+  @Post("priority-boost")
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @ApiOperation({
+    summary:
+      "Activate priority visibility boost (costs Gold, duration varies by tier)",
+  })
+  async priorityBoost(@CurrentUser("sub") userId: string) {
+    return this.discoveryService.activatePriorityBoost(userId);
+  }
+
+  // ── Nearby Notify (Yakin Cevre Bildirimi) ─────────────────────────
+
+  @Post("nearby-notify")
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @ApiOperation({
+    summary:
+      "Send a notification to nearby users about your presence (costs 35 Gold)",
+  })
+  async nearbyNotify(@CurrentUser("sub") userId: string) {
+    return this.discoveryService.sendNearbyNotify(userId);
+  }
 }

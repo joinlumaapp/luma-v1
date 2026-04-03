@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   ForbiddenException,
+  NotImplementedException,
   Logger,
 } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
@@ -1964,5 +1965,19 @@ export class DiscoveryService {
       greetingsSentToday: totalGreetingsToday + 1,
       dailyLimit,
     };
+  }
+
+  /** Activate priority visibility boost — costs Gold */
+  async activatePriorityBoost(userId: string) {
+    throw new NotImplementedException(
+      "Priority boost will be available in a future update",
+    );
+  }
+
+  /** Send nearby notification — costs 35 Gold */
+  async sendNearbyNotify(userId: string) {
+    throw new NotImplementedException(
+      "Nearby notify will be available in a future update",
+    );
   }
 }
