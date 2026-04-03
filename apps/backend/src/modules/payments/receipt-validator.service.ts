@@ -105,6 +105,7 @@ export interface ReceiptValidationResult {
 export class ReceiptValidatorService {
   private readonly logger = new Logger(ReceiptValidatorService.name);
   private readonly isProduction: boolean;
+  private readonly requireRealReceipts: boolean;
 
   // Apple configuration
   private readonly appleSharedSecret: string;
@@ -115,6 +116,15 @@ export class ReceiptValidatorService {
   constructor(private readonly configService: ConfigService) {
     this.isProduction =
       this.configService.get<string>("NODE_ENV") === "production";
+
+    this.requireRealReceipts =
+      this.configService.get<string>("REQUIRE_REAL_RECEIPTS") === "true";
+
+    if (this.requireRealReceipts) {
+      this.logger.log(
+        "REQUIRE_REAL_RECEIPTS is enabled. Mock receipts will be rejected.",
+      );
+    }
 
     this.appleSharedSecret = this.configService.get<string>(
       "APPLE_SHARED_SECRET",
@@ -449,7 +459,7 @@ export class ReceiptValidatorService {
     platform: string,
     receipt: string,
   ): AppleReceiptResult {
-    if (this.isProduction) {
+    if (this.isProduction || this.requireRealReceipts) {
       throw new NotImplementedException(
         "Apple receipt validation not yet configured",
       );
@@ -487,7 +497,7 @@ export class ReceiptValidatorService {
     productId: string,
     purchaseToken: string,
   ): GoogleReceiptResult {
-    if (this.isProduction) {
+    if (this.isProduction || this.requireRealReceipts) {
       this.logger.error(
         "Google Play credentials not configured in production. Receipt validation rejected.",
       );
