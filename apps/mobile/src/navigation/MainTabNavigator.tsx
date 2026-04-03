@@ -57,6 +57,7 @@ import { PlacesScreen } from '../screens/places/PlacesScreen';
 import { RelationshipScreen } from '../screens/relationship/RelationshipScreen';
 import { CouplesClubScreen } from '../screens/couples-club/CouplesClubScreen';
 import { NotificationSettingsScreen } from '../screens/settings/NotificationSettingsScreen';
+import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';
 import { MembershipPlansScreen } from '../screens/settings/MembershipPlansScreen';
 import { PersonalitySelectionScreen } from '../screens/profile/PersonalitySelectionScreen';
 import { ProfileCoachScreen } from '../screens/profile/ProfileCoachScreen';
@@ -65,9 +66,12 @@ import { BlockedUsersScreen } from '../screens/settings/BlockedUsersScreen';
 import { SafetyCenterScreen } from '../screens/settings/SafetyCenterScreen';
 import { AccountDeletionScreen } from '../screens/settings/AccountDeletionScreen';
 import { PrivacyPolicyScreen } from '../screens/settings/PrivacyPolicyScreen';
-import { QuestionsScreen } from '../screens/onboarding/QuestionsScreen';
+import { QuestionsScreen } from '../screens/profile/QuestionsScreen';
+import { InterestPickerScreen } from '../screens/profile/InterestPickerScreen';
 import { ReportScreen } from '../screens/moderation/ReportScreen';
 import { JetonMarketScreen } from '../screens/store/JetonMarketScreen';
+
+import { BoostMarketScreen } from '../screens/store/BoostMarketScreen';
 
 // Feed extra screens
 import { FeedProfileScreen } from '../screens/feed/FeedProfileScreen';
@@ -86,11 +90,10 @@ import { LiveScreen } from '../screens/live/LiveScreen';
 // Waves screen
 import { WavesScreen } from '../screens/waves/WavesScreen';
 
-// Notifications screen
-import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';
-
 // Matches extra screens
 import { DatePlannerScreen } from '../screens/matches/DatePlannerScreen';
+import SecretAdmirerScreen from '../screens/matches/SecretAdmirerScreen';
+import WeeklyTopScreen from '../screens/matches/WeeklyTopScreen';
 import { CallScreen } from '../screens/chat/CallScreen';
 import { IncomingCallOverlay } from '../components/chat/IncomingCallOverlay';
 import { MinimizedCallBar } from '../components/chat/MinimizedCallBar';
@@ -108,13 +111,6 @@ const LiveStack = createNativeStackNavigator<LiveStackParamList>();
 const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
-
-/** Safe accessor for nested navigator state — avoids fragile `as` type assertions */
-function getNestedStateIndex(
-  route: { state?: { index?: number } } | undefined,
-): number | undefined {
-  return route?.state?.index;
-}
 
 /**
  * Creates a tabPress listener that always resets the stack to root
@@ -199,6 +195,9 @@ const DiscoveryStackNavigator: React.FC = React.memo(() => (
     screenOptions={{
       headerShown: false,
       animation: 'slide_from_right',
+      statusBarStyle: 'light',
+      statusBarBackgroundColor: '#08080F',
+      statusBarAnimation: 'none',
     }}
   >
     <DiscoveryStack.Screen name="Discovery" component={DiscoveryScreen} />
@@ -207,7 +206,6 @@ const DiscoveryStackNavigator: React.FC = React.memo(() => (
       component={InstantConnectScreen}
       options={{ animation: 'fade', presentation: 'fullScreenModal' }}
     />
-    <DiscoveryStack.Screen name="Notifications" component={NotificationsScreen} />
     <DiscoveryStack.Screen
       name="ProfilePreview"
       component={ProfilePreviewScreen}
@@ -253,6 +251,11 @@ const DiscoveryStackNavigator: React.FC = React.memo(() => (
       component={MembershipPlansScreen}
       options={{ animation: 'slide_from_bottom' }}
     />
+    <DiscoveryStack.Screen
+      name="JetonMarket"
+      component={JetonMarketScreen}
+      options={{ animation: 'slide_from_bottom' }}
+    />
   </DiscoveryStack.Navigator>
 ));
 DiscoveryStackNavigator.displayName = 'DiscoveryStackNavigator';
@@ -263,6 +266,9 @@ const MatchesStackNavigator: React.FC = React.memo(() => (
     screenOptions={{
       headerShown: false,
       animation: 'slide_from_right',
+      statusBarStyle: 'light',
+      statusBarBackgroundColor: '#08080F',
+      statusBarAnimation: 'none',
     }}
   >
     <MatchesStack.Screen name="MatchesList" component={MatchesListScreen} />
@@ -310,6 +316,23 @@ const MatchesStackNavigator: React.FC = React.memo(() => (
       component={MembershipPlansScreen}
       options={{ animation: 'slide_from_bottom' }}
     />
+    <MatchesStack.Screen
+      name="SecretAdmirer"
+      component={SecretAdmirerScreen}
+      options={{
+        headerShown: false,
+        animation: 'slide_from_bottom',
+        presentation: 'modal',
+      }}
+    />
+    <MatchesStack.Screen
+      name="WeeklyTop"
+      component={WeeklyTopScreen}
+      options={{
+        headerShown: false,
+        animation: 'slide_from_bottom',
+      }}
+    />
   </MatchesStack.Navigator>
 ));
 MatchesStackNavigator.displayName = 'MatchesStackNavigator';
@@ -320,6 +343,9 @@ const FeedStackNavigator: React.FC = React.memo(() => (
     screenOptions={{
       headerShown: false,
       animation: 'slide_from_right',
+      statusBarStyle: 'light',
+      statusBarBackgroundColor: '#08080F',
+      statusBarAnimation: 'none',
     }}
   >
     <FeedStack.Screen name="SocialFeed" component={SocialFeedScreen} />
@@ -340,6 +366,7 @@ const FeedStackNavigator: React.FC = React.memo(() => (
       component={StoryCreator}
       options={{ animation: 'slide_from_bottom', gestureEnabled: true, gestureDirection: 'vertical' }}
     />
+    <FeedStack.Screen name="Notifications" component={NotificationsScreen} />
   </FeedStack.Navigator>
 ));
 FeedStackNavigator.displayName = 'FeedStackNavigator';
@@ -349,9 +376,14 @@ const LiveStackNavigator: React.FC = React.memo(() => (
   <LiveStack.Navigator
     screenOptions={{
       headerShown: false,
+      statusBarStyle: 'light',
+      statusBarBackgroundColor: '#08080F',
+      statusBarAnimation: 'none',
     }}
   >
     <LiveStack.Screen name="Live" component={LiveScreen} />
+    <LiveStack.Screen name="JetonMarket" component={JetonMarketScreen} />
+    <LiveStack.Screen name="MembershipPlans" component={MembershipPlansScreen} />
   </LiveStack.Navigator>
 ));
 LiveStackNavigator.displayName = 'LiveStackNavigator';
@@ -362,10 +394,14 @@ const ProfileStackNavigator: React.FC = React.memo(() => (
     screenOptions={{
       headerShown: false,
       animation: 'slide_from_right',
+      statusBarStyle: 'light',
+      statusBarBackgroundColor: '#08080F',
+      statusBarAnimation: 'none',
     }}
   >
     <ProfileStack.Screen name="Profile" component={ProfileScreen} />
     <ProfileStack.Screen name="EditProfile" component={DeferredEditProfile} />
+    <ProfileStack.Screen name="InterestPicker" component={InterestPickerScreen} />
     <ProfileStack.Screen name="Settings" component={SettingsScreen} />
     <ProfileStack.Screen name="JetonMarket" component={JetonMarketScreen} />
     <ProfileStack.Screen name="Places" component={PlacesScreen} />
@@ -382,6 +418,11 @@ const ProfileStackNavigator: React.FC = React.memo(() => (
     <ProfileStack.Screen name="Questions" component={QuestionsScreen} />
     <ProfileStack.Screen name="FollowList" component={FollowListScreen} />
     <ProfileStack.Screen name="MyPosts" component={MyPostsScreen} />
+    <ProfileStack.Screen
+      name="BoostMarket"
+      component={BoostMarketScreen}
+      options={{ animation: 'slide_from_bottom', presentation: 'modal' }}
+    />
   </ProfileStack.Navigator>
 ));
 ProfileStackNavigator.displayName = 'ProfileStackNavigator';
@@ -412,7 +453,6 @@ export const MainTabNavigator: React.FC = () => {
   const matchesTabBadge = newMatchCount + totalUnread;
 
   // Notification store integration
-  const notifUnreadCount = useNotificationStore((s) => s.unreadCount);
   const showPermissionModal = useNotificationStore((s) => s.showPermissionModal);
   const checkAndPromptPermission = useNotificationStore((s) => s.checkAndPromptPermission);
   const allowPermission = useNotificationStore((s) => s.allowPermission);
@@ -426,7 +466,7 @@ export const MainTabNavigator: React.FC = () => {
   return (
     <>
     <Tab.Navigator
-      initialRouteName="FeedTab"
+      initialRouteName="DiscoveryTab"
       backBehavior="history"
       detachInactiveScreens
       screenOptions={{
@@ -462,13 +502,9 @@ export const MainTabNavigator: React.FC = () => {
         options={{
           tabBarLabel: 'Keşfet',
           tabBarIcon: ({ focused }) => (
-            <TabIconWithBadge
-              name="compass"
-              focused={focused}
-              badgeCount={notifUnreadCount}
-            />
+            <TabIcon name="compass" focused={focused} />
           ),
-          tabBarAccessibilityLabel: `Keşfet${notifUnreadCount > 0 ? `, ${notifUnreadCount} bildirim` : ''}`,
+          tabBarAccessibilityLabel: 'Keşfet',
           tabBarButtonTestID: 'tab-discovery',
         }}
         listeners={({ navigation, route }) => createTabResetListener(navigation, route)}

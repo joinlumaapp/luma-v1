@@ -3,6 +3,8 @@
 
 import { create } from 'zustand';
 import { storage } from '../utils/storage';
+import { api } from '../services/api';
+import { devMockOrThrow } from '../utils/mockGuard';
 
 export type SurpriseConnectState = 'idle' | 'spinning' | 'revealed';
 
@@ -19,14 +21,14 @@ export interface SurpriseMatchUser {
 const DAILY_LIMIT_KEY = 'surprise_connect.dailyCount';
 const DAILY_LIMIT_DATE_KEY = 'surprise_connect.date';
 
-const MOCK_USERS: SurpriseMatchUser[] = [
+const MOCK_USERS: SurpriseMatchUser[] = __DEV__ ? [
   { id: 'surprise-1', name: 'Elif', age: 26, city: 'İstanbul', avatarUrl: 'https://i.pravatar.cc/150?img=1', compatibilityPercent: 82, isVerified: true },
   { id: 'surprise-2', name: 'Zeynep', age: 24, city: 'Ankara', avatarUrl: 'https://i.pravatar.cc/150?img=5', compatibilityPercent: 91, isVerified: true },
   { id: 'surprise-3', name: 'Merve', age: 28, city: 'İzmir', avatarUrl: 'https://i.pravatar.cc/150?img=23', compatibilityPercent: 78, isVerified: false },
   { id: 'surprise-4', name: 'Selin', age: 25, city: 'İstanbul', avatarUrl: 'https://i.pravatar.cc/150?img=9', compatibilityPercent: 88, isVerified: true },
   { id: 'surprise-5', name: 'Cansu', age: 22, city: 'Eskişehir', avatarUrl: 'https://i.pravatar.cc/150?img=29', compatibilityPercent: 73, isVerified: false },
   { id: 'surprise-6', name: 'Defne', age: 27, city: 'Antalya', avatarUrl: 'https://i.pravatar.cc/150?img=20', compatibilityPercent: 85, isVerified: false },
-];
+] : [];
 
 interface SurpriseConnectStore {
   state: SurpriseConnectState;
@@ -75,11 +77,22 @@ export const useInstantConnectStore = create<SurpriseConnectStore>((set, get) =>
     get().startSpin();
   },
 
-  likeUser: () => {
+  likeUser: async () => {
     const { matchedUser } = get();
     if (!matchedUser) return;
     get().incrementDailyUsage();
-    // TODO: Call match/like API
+
+    // Record like via API
+    try {
+      await api.post('/discovery/swipe', {
+        targetUserId: matchedUser.id,
+        direction: 'right',
+        source: 'instant_connect',
+      });
+    } catch (error) {
+      devMockOrThrow(error, true, 'instantConnectStore.likeUser');
+    }
+
     set({ state: 'idle', matchedUser: null });
   },
 

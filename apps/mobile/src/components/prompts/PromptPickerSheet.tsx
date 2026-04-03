@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Modal,
+  StatusBar,
   Animated,
   Dimensions,
   ScrollView,
@@ -48,9 +49,25 @@ export const PromptPickerSheet: React.FC<PromptPickerSheetProps> = ({
 
   const usedSet = new Set(usedPromptIds);
 
-  const filteredPrompts: PromptOption[] = selectedCategory
-    ? getPromptsByCategory(selectedCategory).filter((p) => !usedSet.has(p.id))
-    : PROMPT_BANK.filter((p) => !usedSet.has(p.id));
+  const filteredPrompts: PromptOption[] = (() => {
+    if (selectedCategory) {
+      return getPromptsByCategory(selectedCategory).filter((p) => !usedSet.has(p.id));
+    }
+    // Interleave prompts from all categories so users see variety
+    const byCategory = PROMPT_CATEGORIES.map((cat) =>
+      PROMPT_BANK.filter((p) => p.category === cat.key && !usedSet.has(p.id)),
+    );
+    const interleaved: PromptOption[] = [];
+    const maxLen = Math.max(...byCategory.map((arr) => arr.length));
+    for (let i = 0; i < maxLen; i++) {
+      for (const catPrompts of byCategory) {
+        if (i < catPrompts.length) {
+          interleaved.push(catPrompts[i]);
+        }
+      }
+    }
+    return interleaved;
+  })();
 
   const animateIn = useCallback(() => {
     setIsAnimating(true);
@@ -140,6 +157,7 @@ export const PromptPickerSheet: React.FC<PromptPickerSheetProps> = ({
       statusBarTranslucent
       onRequestClose={handleClose}
     >
+      <StatusBar barStyle="light-content" backgroundColor="#08080F" />
       <View style={styles.modalContainer}>
         {/* Backdrop */}
         <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>
@@ -178,46 +196,57 @@ export const PromptPickerSheet: React.FC<PromptPickerSheetProps> = ({
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoryRow}
-            style={styles.categoryScroll}
+            contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 12, gap: 10, alignItems: 'center' }}
+            style={{ flexGrow: 0, flexShrink: 0, marginBottom: 8 }}
           >
             <TouchableOpacity
-              style={[
-                styles.categoryChip,
-                selectedCategory === null && styles.categoryChipActive,
-              ]}
+              style={{
+                paddingHorizontal: 22,
+                paddingVertical: 12,
+                borderRadius: 100,
+                backgroundColor: selectedCategory === null ? colors.primary + '20' : colors.surface,
+                borderWidth: 1.5,
+                borderColor: selectedCategory === null ? colors.primary : colors.surfaceBorder,
+              }}
               onPress={() => setSelectedCategory(null)}
               activeOpacity={0.7}
             >
-              <Text
-                style={[
-                  styles.categoryChipText,
-                  selectedCategory === null && styles.categoryChipTextActive,
-                ]}
-              >
-                Tümünü Göster
+              <Text style={{
+                fontSize: 14,
+                fontFamily: 'Poppins_600SemiBold',
+                fontWeight: selectedCategory === null ? '600' : '500',
+                color: selectedCategory === null ? colors.primary : colors.textSecondary,
+              }}>
+                Tumunu Goster
               </Text>
             </TouchableOpacity>
-            {PROMPT_CATEGORIES.map((cat) => (
-              <TouchableOpacity
-                key={cat.key}
-                style={[
-                  styles.categoryChip,
-                  selectedCategory === cat.key && styles.categoryChipActive,
-                ]}
-                onPress={() => setSelectedCategory(cat.key)}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={[
-                    styles.categoryChipText,
-                    selectedCategory === cat.key && styles.categoryChipTextActive,
-                  ]}
+            {PROMPT_CATEGORIES.map((cat) => {
+              const isActive = selectedCategory === cat.key;
+              return (
+                <TouchableOpacity
+                  key={cat.key}
+                  style={{
+                    paddingHorizontal: 22,
+                    paddingVertical: 12,
+                    borderRadius: 100,
+                    backgroundColor: isActive ? colors.primary + '20' : colors.surface,
+                    borderWidth: 1.5,
+                    borderColor: isActive ? colors.primary : colors.surfaceBorder,
+                  }}
+                  onPress={() => setSelectedCategory(cat.key)}
+                  activeOpacity={0.7}
                 >
-                  {cat.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text style={{
+                    fontSize: 14,
+                    fontFamily: 'Poppins_600SemiBold',
+                    fontWeight: isActive ? '600' : '500',
+                    color: isActive ? colors.primary : colors.textSecondary,
+                  }}>
+                    {cat.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
 
           {/* Prompt List */}
@@ -232,6 +261,7 @@ export const PromptPickerSheet: React.FC<PromptPickerSheetProps> = ({
               data={filteredPrompts}
               renderItem={renderPromptItem}
               keyExtractor={keyExtractor}
+              style={{ flex: 1 }}
               contentContainerStyle={styles.promptList}
               showsVerticalScrollIndicator={false}
               bounces={Platform.OS === 'ios'}
@@ -288,19 +318,19 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   categoryScroll: {
-    maxHeight: 44,
+    flexGrow: 0,
   },
   categoryRow: {
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    gap: spacing.sm,
+    paddingVertical: 10,
+    gap: 10,
   },
   categoryChip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
     borderRadius: borderRadius.full,
     backgroundColor: colors.surface,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.surfaceBorder,
   },
   categoryChipActive: {
@@ -308,7 +338,9 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   categoryChipText: {
-    ...typography.bodySmall,
+    fontSize: 15,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
     color: colors.textSecondary,
   },
   categoryChipTextActive: {

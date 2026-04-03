@@ -1,5 +1,5 @@
 // Onboarding Bio step: Bio text input with character counter
-// Positioned after InterestSelection, before Photos in the onboarding flow.
+// Positioned after CitySelection, before PromptSelection in the onboarding flow.
 
 import React, { useState } from 'react';
 import {
@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
+  ScrollView,
   Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -21,15 +22,25 @@ import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { PROFILE_CONFIG } from '../../constants/config';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { ONBOARDING_TOTAL_STEPS } from '../../navigation/OnboardingNavigator';
 
 type NavProp = NativeStackNavigationProp<OnboardingStackParamList, 'Bio'>;
 
-const CURRENT_STEP = 13;
+const CURRENT_STEP = 10;
 
 const BIO_PROMPTS = [
-  'Boş zamanlarında ne yapmayı seversin?',
-  'İdeal bir hafta sonu nasıl geçer?',
-  'Hayatta en çok neye değer verirsin?',
+  {
+    question: 'Bos zamanlarinda ne yapmayi seversin?',
+    example: 'Kitap okumak, yuruyus yapmak ve yeni tarifler denemek beni mutlu ediyor.',
+  },
+  {
+    question: 'Ideal bir hafta sonu nasil gecer?',
+    example: 'Sabah kahve, ogle arkadaslarla bulusma, aksam guzel bir film.',
+  },
+  {
+    question: 'Hayatta en cok neye deger verirsin?',
+    example: 'Samimi iliskiler, yeni deneyimler ve kisisel gelisim benim icin onemli.',
+  },
 ];
 
 export const BioScreen: React.FC = () => {
@@ -61,16 +72,21 @@ export const BioScreen: React.FC = () => {
     >
       <BrandedBackground />
       {/* Progress indicator */}
-      <OnboardingProgress currentStep={CURRENT_STEP} />
+      <OnboardingProgress currentStep={CURRENT_STEP} totalSteps={ONBOARDING_TOTAL_STEPS} />
 
-      {/* Content */}
-      <View style={styles.content}>
+      {/* Content — scrollable so keyboard doesn't overlap */}
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.title}>Hakkında</Text>
         <Text style={styles.subtitle}>
           Kendini tanımla. İlgi çekici bir bio eşleşme şansını arttırır.
         </Text>
 
-        {/* Prompt suggestions */}
+        {/* Prompt suggestions with examples */}
         <View style={styles.promptsContainer}>
           {BIO_PROMPTS.map((prompt, index) => (
             <TouchableOpacity
@@ -78,14 +94,15 @@ export const BioScreen: React.FC = () => {
               style={styles.promptChip}
               onPress={() => {
                 if (bio.length === 0) {
-                  setBio(prompt + ' ');
+                  setBio(prompt.example);
                 }
               }}
-              accessibilityLabel={`Öneri: ${prompt}`}
+              accessibilityLabel={`Öneri: ${prompt.question}`}
               accessibilityRole="button"
-              accessibilityHint="Bu öneriyi bio alanına eklemek için dokun"
+              accessibilityHint="Bu ornegi bio alanina eklemek icin dokun"
             >
-              <Text style={styles.promptText}>{prompt}</Text>
+              <Text style={styles.promptQuestion}>{prompt.question}</Text>
+              <Text style={styles.promptExample}>Ornek: "{prompt.example}"</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -105,7 +122,6 @@ export const BioScreen: React.FC = () => {
             multiline
             textAlignVertical="top"
             maxLength={PROFILE_CONFIG.MAX_BIO_LENGTH}
-            autoFocus
             accessibilityLabel="Hakkında yazısı"
             accessibilityHint="Kendini tanımlayan bir bio yaz"
           />
@@ -126,9 +142,10 @@ export const BioScreen: React.FC = () => {
             </Text>
           </View>
         </View>
-      </View>
 
-      {/* Footer */}
+      </ScrollView>
+
+      {/* Footer outside scroll — stays above keyboard */}
       <View style={styles.footer}>
         <TouchableOpacity
           style={styles.continueButton}
@@ -159,8 +176,11 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  scrollContent: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.xl,
+    paddingBottom: spacing.xxl,
   },
   title: {
     ...typography.h2,
@@ -184,14 +204,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
   },
-  promptText: {
+  promptQuestion: {
     ...typography.bodySmall,
-    color: colors.textSecondary,
+    color: colors.text,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  promptExample: {
+    fontSize: 12,
+    color: colors.textTertiary,
     fontStyle: 'italic',
+    lineHeight: 18,
   },
   inputContainer: {
-    flex: 1,
-    maxHeight: 200,
+    marginBottom: spacing.lg,
   },
   bioInput: {
     flex: 1,

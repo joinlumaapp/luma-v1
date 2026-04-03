@@ -17,6 +17,7 @@ import {
   RefreshControl,
   Platform,
   Modal,
+  TouchableOpacity,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,8 +30,9 @@ import type { DiscoveryStackParamList, MatchesStackParamList, MainTabParamList }
 import { discoveryService } from '../../services/discoveryService';
 import type { LikeYouCard } from '../../services/discoveryService';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
-import { LIKES_VIEW_CONFIG } from '../../constants/config';
+import { LIKES_VIEW_CONFIG, SUPER_COMPATIBLE_THRESHOLD } from '../../constants/config';
 import { useScreenTracking } from '../../hooks/useAnalytics';
+import { useLikesRevealStore } from '../../stores/likesRevealStore';
 import { SlideIn } from '../../components/animations/SlideIn';
 import { UpgradePrompt } from '../../components/premium/UpgradePrompt';
 import { colors, palette } from '../../theme/colors';
@@ -56,16 +58,12 @@ const formatDistance = (km: number): string => {
   return `${Math.round(km)} km`;
 };
 
-// Format relative time for "liked X ago"
-const formatLikedAgo = (dateStr: string): string => {
-  const diffMs = Date.now() - new Date(dateStr).getTime();
-  const diffMin = Math.floor(diffMs / 60_000);
-  if (diffMin < 60) return `${diffMin}dk önce`;
-  const diffHour = Math.floor(diffMin / 60);
-  if (diffHour < 24) return `${diffHour}sa önce`;
-  const diffDay = Math.floor(diffHour / 24);
-  if (diffDay === 1) return 'Dün';
-  return `${diffDay}g önce`;
+/** Format "Pelin Kulaksiz" — firstName + full lastName */
+const formatDisplayName = (fName: string, lName?: string | null): string => {
+  if (lName && lName.length > 0) {
+    return `${fName} ${lName}`;
+  }
+  return fName;
 };
 
 const getCompatColor = (percent: number): string => {
@@ -74,19 +72,53 @@ const getCompatColor = (percent: number): string => {
   return colors.textSecondary;
 };
 
+// Card visibility state for progressive reveal
+type CardState = 'clear' | 'teaser' | 'locked';
+
+const getCardState = (
+  tier: PackageTier,
+  index: number,
+  totalCards: number,
+  isCardRevealed: boolean,
+): CardState => {
+  // Already revealed via store → always clear
+  if (isCardRevealed) return 'clear';
+
+  switch (tier) {
+    case 'FREE':
+      if (index < 2) return 'clear';
+      if (index < 5) return 'teaser';
+      return 'locked';
+
+    case 'GOLD': {
+      const clearCount = Math.ceil(totalCards * 0.75);
+      const teaserCount = Math.ceil(totalCards * 0.15);
+      if (index < clearCount) return 'clear';
+      if (index < clearCount + teaserCount) return 'teaser';
+      return 'locked';
+    }
+
+    case 'PRO':
+    case 'RESERVED':
+      return 'clear';
+
+    default:
+      return 'locked';
+  }
+};
+
 // Determine smart label for a card
 const getSmartLabel = (card: LikeYouCard, likes: LikeYouCard[]): string | null => {
-  // Highest compatibility
-  const maxCompat = Math.max(...likes.map((l) => l.compatibilityPercent));
-  if (card.compatibilityPercent === maxCompat && card.compatibilityPercent >= 80) return 'En yüksek uyum';
-  // Nearest
-  if (card.distanceKm != null && card.distanceKm < 2) return 'Sana yakın';
-  // Most shared interests
-  const maxShared = Math.max(...likes.map((l) => l.sharedInterests ?? 0));
-  if ((card.sharedInterests ?? 0) === maxShared && maxShared >= 3) return 'Yüksek uyum';
   // Recent
   const diffMs = Date.now() - new Date(card.likedAt).getTime();
-  if (diffMs < 3600_000) return 'Yeni beğeni';
+  if (diffMs < 3600_000) return 'Yeni';
+  // Highest compatibility
+  const maxCompat = Math.max(...likes.map((l) => l.compatibilityPercent));
+  if (card.compatibilityPercent === maxCompat && card.compatibilityPercent >= 80) return 'Yüksek uyum';
+  // Nearest
+  if (card.distanceKm != null && card.distanceKm < 2) return 'Sana yakın';
+  // Active hint
+  if (diffMs < 86400_000) return 'Şu an aktif';
   return null;
 };
 
@@ -280,24 +312,83 @@ const AnimatedLock: React.FC<{ index: number }> = ({ index }) => {
   );
 };
 
-// ─── Like card (blurred or clear) with hints ─────────────────
+// ─── Shimmer Light Sweep (LOCKED cards) ──────────────────────
+
+const ShimmerSweep: React.FC = () => {
+  const translateX = useRef(new Animated.Value(-CARD_SIZE)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.timing(translateX, {
+        toValue: CARD_SIZE * 2,
+        duration: 3000,
+        useNativeDriver: true,
+      }),
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [translateX]);
+
+  return (
+    <Animated.View
+      style={[
+        styles.shimmerSweep,
+        { transform: [{ translateX }, { rotate: '20deg' }] },
+      ]}
+      pointerEvents="none"
+    />
+  );
+};
+
+// ─── Teaser Lock (smaller, semi-transparent) ─────────────────
+
+const TeaserLock: React.FC = () => (
+  <View style={styles.teaserLockContainer}>
+    <LinearGradient
+      colors={[palette.purple[400], palette.pink[400]]}
+      style={styles.teaserLockCircle}
+    >
+      <Ionicons name="lock-closed" size={12} color="rgba(255,255,255,0.9)" />
+    </LinearGradient>
+  </View>
+);
+
+// ─── Like card with 3-state progressive reveal ─────────────
 
 interface LikeCardProps {
   card: LikeYouCard;
   index: number;
-  isBlurred: boolean;
+  cardState: CardState;
   smartLabel: string | null;
-  onCardPress: (userId: string) => void;
+  onCardPress: (userId: string, cardState: CardState) => void;
 }
 
-const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, smartLabel, onCardPress }) => {
+const LikeCard = memo<LikeCardProps>(({ card, index, cardState, smartLabel, onCardPress }) => {
+  const isClear = cardState === 'clear';
+  const isTeaser = cardState === 'teaser';
+  const isLocked = cardState === 'locked';
+
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const badgeBounce = useRef(new Animated.Value(0)).current;
+  const overlayOpacity = useRef(new Animated.Value(isLocked ? 0.35 : isTeaser ? 0.15 : 0)).current;
+  const glowBorderOpacity = useRef(new Animated.Value(0.15)).current;
+  const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
+    };
+  }, []);
+
+  // Sync overlayOpacity when cardState changes
+  useEffect(() => {
+    overlayOpacity.setValue(isLocked ? 0.35 : isTeaser ? 0.15 : 0);
+  }, [cardState, isLocked, isTeaser, overlayOpacity]);
 
   // Smart label bounce on mount
   useEffect(() => {
     if (!smartLabel) return;
-    Animated.sequence([
+    const anim = Animated.sequence([
       Animated.delay(index * 80 + 300),
       Animated.spring(badgeBounce, {
         toValue: 1,
@@ -305,12 +396,35 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, smartLabel, onCa
         friction: 8,
         useNativeDriver: true,
       }),
-    ]).start();
+    ]);
+    anim.start();
+    return () => anim.stop();
   }, [badgeBounce, smartLabel, index]);
+
+  // Pulsing glow border for LOCKED cards (iOS only)
+  useEffect(() => {
+    if (!isLocked || Platform.OS !== 'ios') return;
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowBorderOpacity, {
+          toValue: 0.35,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(glowBorderOpacity, {
+          toValue: 0.15,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [isLocked, glowBorderOpacity]);
 
   const handlePressIn = useCallback(() => {
     Animated.spring(scaleAnim, {
-      toValue: 1.03, tension: 200, friction: 10, useNativeDriver: true,
+      toValue: 0.97, tension: 200, friction: 10, useNativeDriver: true,
     }).start();
   }, [scaleAnim]);
 
@@ -321,8 +435,25 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, smartLabel, onCa
   }, [scaleAnim]);
 
   const handlePress = useCallback(() => {
-    onCardPress(card.userId);
-  }, [card.userId, onCardPress]);
+    if (isClear) {
+      onCardPress(card.userId, cardState);
+      return;
+    }
+    // Teaser & Locked: blur reveal animation + overlay fade, then callback after delay
+    Animated.parallel([
+      Animated.sequence([
+        Animated.timing(scaleAnim, { toValue: 0.97, duration: 120, useNativeDriver: true }),
+        Animated.timing(scaleAnim, { toValue: 1.02, duration: 180, useNativeDriver: true }),
+        Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+      ]),
+      Animated.timing(overlayOpacity, { toValue: 0.05, duration: 400, useNativeDriver: true }),
+    ]).start();
+    tapTimeoutRef.current = setTimeout(() => {
+      onCardPress(card.userId, cardState);
+      // Reset overlay if card wasn't unlocked (will be clear on re-render if it was)
+      overlayOpacity.setValue(isLocked ? 0.35 : isTeaser ? 0.15 : 0);
+    }, 500);
+  }, [card.userId, cardState, isClear, isLocked, isTeaser, scaleAnim, overlayOpacity, onCardPress]);
 
   const compatColor = getCompatColor(card.compatibilityPercent);
 
@@ -331,16 +462,19 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, smartLabel, onCa
     outputRange: [0.5, 1],
   });
 
+  const blurRadius = isClear ? 0 : isTeaser ? 15 : 28;
+  const displayName = isClear ? `${formatDisplayName(card.firstName, card.lastName)}, ${card.age}` : '???, ??';
+
   return (
-    <SlideIn direction="up" delay={index * 60} distance={20}>
+    <SlideIn direction="up" delay={index * 60 + (isLocked ? 100 : 0)} distance={20}>
       <Pressable
         onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         accessibilityLabel={
-          isBlurred
-            ? 'Profili görmek için Premium pakete geçin'
-            : `${card.firstName}, ${card.age} yaşında, yüzde ${card.compatibilityPercent} uyum`
+          isClear
+            ? `${card.firstName}, ${card.age} ya\u015F\u0131nda, y\u00FCzde ${card.compatibilityPercent} uyum`
+            : 'Profili g\u00F6rmek i\u00E7in dokun'
         }
         accessibilityRole="button"
       >
@@ -349,19 +483,89 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, smartLabel, onCa
           testID={`likes-you-card-${card.userId}`}
         >
           {/* Photo */}
-          <Image
-            source={{ uri: card.photoUrl }}
-            style={styles.cardPhoto}
-            blurRadius={isBlurred ? 20 : 0}
-          />
+          {card.photoUrl ? (
+            <Image
+              source={{ uri: card.photoUrl }}
+              style={styles.cardPhoto}
+              blurRadius={blurRadius}
+            />
+          ) : (
+            <LinearGradient
+              colors={[palette.purple[200], palette.pink[200]]}
+              style={styles.cardPhoto}
+            >
+              <Ionicons name="person" size={40} color={palette.purple[400]} style={{ opacity: 0.5 }} />
+            </LinearGradient>
+          )}
 
-          {/* Blur overlay with animated lock + progress ring */}
-          {isBlurred && (
-            <View style={styles.blurOverlay}>
+          {/* Dark overlay for teaser/locked — animated opacity on tap */}
+          {!isClear && (
+            <Animated.View
+              style={[styles.blurOverlay, { opacity: overlayOpacity }]}
+              pointerEvents="none"
+            />
+          )}
+
+          {/* Static purple glow border for CLEAR cards */}
+          {isClear && (
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  borderRadius: borderRadius.lg + 4,
+                  borderWidth: 1,
+                  borderColor: palette.purple[400] + '30',
+                },
+              ]}
+              pointerEvents="none"
+            />
+          )}
+
+          {/* Static glow border for TEASER cards */}
+          {isTeaser && (
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  borderRadius: borderRadius.lg + 4,
+                  borderWidth: 1,
+                  borderColor: palette.purple[400] + '40',
+                },
+              ]}
+              pointerEvents="none"
+            />
+          )}
+
+          {/* Pulsing glow border for LOCKED cards (iOS only) */}
+          {isLocked && Platform.OS === 'ios' && (
+            <Animated.View
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  borderRadius: borderRadius.lg + 4,
+                  borderWidth: 1.5,
+                  borderColor: palette.purple[400],
+                  opacity: glowBorderOpacity,
+                },
+              ]}
+              pointerEvents="none"
+            />
+          )}
+
+          {/* Super compatible dashed border hint (LOCKED + TEASER) */}
+          {!isClear && card.compatibilityPercent >= SUPER_COMPATIBLE_THRESHOLD && (
+            <View style={styles.superCompatBorder} pointerEvents="none" />
+          )}
+
+          {/* Lock overlays per state */}
+          {isTeaser && <TeaserLock />}
+          {isLocked && (
+            <>
               <View style={styles.lockPositioner}>
                 <AnimatedLock index={index} />
               </View>
-            </View>
+              <ShimmerSweep />
+            </>
           )}
 
           {/* Smart label with bounce */}
@@ -378,58 +582,35 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, smartLabel, onCa
             </Animated.View>
           )}
 
-          {/* Compatibility badge */}
-          <View style={[styles.compatBadge, { backgroundColor: compatColor + '25', borderColor: compatColor + '40' }]}>
-            <Text style={[styles.compatBadgeText, { color: compatColor }]}>
-              %{card.compatibilityPercent}
-            </Text>
-          </View>
-
-          {/* Comment indicator badge */}
-          {!isBlurred && card.comment && (
-            <View style={styles.commentBadge}>
-              <Ionicons name="chatbubble" size={10} color="#FFFFFF" />
-            </View>
-          )}
-
-          {/* Bottom info overlay — glassmorphism feel */}
+          {/* Bottom info overlay */}
           <LinearGradient
-            colors={['transparent', 'rgba(8, 8, 15, 0.50)', 'rgba(8, 8, 15, 0.90)']}
-            locations={[0, 0.25, 1]}
+            colors={['transparent', 'rgba(8, 8, 15, 0.50)', 'rgba(8, 8, 15, 0.92)']}
+            locations={[0, 0.2, 1]}
             style={styles.cardInfoOverlay}
           >
             <Text style={styles.cardName} numberOfLines={1}>
-              {isBlurred ? '...' : `${card.firstName}, ${card.age}`}
+              {displayName}
             </Text>
 
-            {/* Hint pills — glassmorphism style */}
-            {(card.distanceKm != null || (card.sharedInterests != null && card.sharedInterests > 0)) && (
-              <View style={styles.hintsRow}>
-                {card.distanceKm != null && (
-                  <View style={styles.hintChip}>
-                    <Ionicons name="location-outline" size={9} color="rgba(255,255,255,0.85)" />
-                    <Text style={styles.hintText}>
-                      {formatDistance(card.distanceKm)}
-                    </Text>
-                  </View>
-                )}
-                {card.sharedInterests != null && card.sharedInterests > 0 && (
-                  <View style={styles.hintChip}>
-                    <Ionicons name="sparkles-outline" size={9} color="rgba(255,255,255,0.85)" />
-                    <Text style={styles.hintText}>
-                      {card.sharedInterests} uyum noktası
-                    </Text>
-                  </View>
-                )}
+            {/* Distance row */}
+            {card.distanceKm != null && (
+              <View style={styles.distanceRow}>
+                <Text style={styles.distanceEmoji}>{'\uD83D\uDCCD'}</Text>
+                <Text style={styles.distanceText}>
+                  {formatDistance(card.distanceKm)}
+                </Text>
               </View>
             )}
 
-            {/* Comment for unlocked cards */}
-            {!isBlurred && card.comment && (
-              <Text style={styles.cardComment} numberOfLines={1}>
-                {`"${card.comment}"`}
+            {/* Compatibility pill */}
+            <View style={[
+              styles.compatPill,
+              { backgroundColor: compatColor + '20', borderColor: compatColor + '35' },
+            ]}>
+              <Text style={[styles.compatPillText, { color: compatColor }]}>
+                %{card.compatibilityPercent} uyum
               </Text>
-            )}
+            </View>
           </LinearGradient>
         </Animated.View>
       </Pressable>
@@ -437,121 +618,32 @@ const LikeCard = memo<LikeCardProps>(({ card, index, isBlurred, smartLabel, onCa
   );
 }, (prev, next) => (
   prev.card.userId === next.card.userId &&
-  prev.isBlurred === next.isBlurred &&
+  prev.cardState === next.cardState &&
   prev.index === next.index &&
   prev.smartLabel === next.smartLabel &&
-  prev.card.compatibilityPercent === next.card.compatibilityPercent &&
-  prev.card.comment === next.card.comment
+  prev.card.compatibilityPercent === next.card.compatibilityPercent
 ));
 
 LikeCard.displayName = 'LikeCard';
-
-// ─── Highlight Card ──────────────────────────────────────────
-
-interface HighlightCardProps {
-  type: 'most_compatible' | 'nearby';
-  card: LikeYouCard;
-  isBlurred: boolean;
-  onPress: (userId: string) => void;
-}
-
-const HighlightCard = memo<HighlightCardProps>(({ type, card, isBlurred, onPress }) => {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-
-  const title = type === 'most_compatible'
-    ? 'En uyumlu beğeni'
-    : 'Yakınında seni beğenen biri var';
-
-  const subtitle = type === 'most_compatible'
-    ? `%${card.compatibilityPercent} uyum${card.sharedInterests ? ` \u2022 ${card.sharedInterests} uyum noktası` : ''}`
-    : `${card.distanceKm != null ? formatDistance(card.distanceKm) + ' uzaklıkta' : ''}${card.sharedInterests ? ` \u2022 ${card.sharedInterests} uyum noktası` : ''}`;
-
-  const isCompat = type === 'most_compatible';
-  const accentColor = isCompat ? colors.success : palette.gold[400];
-  const iconName = isCompat ? 'sparkles' : 'location';
-  const gradientColors = isCompat
-    ? [colors.success + '12', colors.success + '06'] as [string, string]
-    : [palette.gold[400] + '12', palette.gold[400] + '06'] as [string, string];
-
-  const handlePressIn = useCallback(() => {
-    Animated.spring(scaleAnim, {
-      toValue: 0.97, tension: 200, friction: 10, useNativeDriver: true,
-    }).start();
-  }, [scaleAnim]);
-
-  const handlePressOut = useCallback(() => {
-    Animated.spring(scaleAnim, {
-      toValue: 1, tension: 200, friction: 10, useNativeDriver: true,
-    }).start();
-  }, [scaleAnim]);
-
-  return (
-    <Pressable
-      onPress={() => onPress(card.userId)}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      accessibilityLabel={title}
-      accessibilityRole="button"
-    >
-      <Animated.View style={[{ transform: [{ scale: scaleAnim }] }]}>
-        <LinearGradient
-          colors={gradientColors}
-          style={styles.highlightCard}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        >
-          {/* Photo */}
-          <View style={[styles.highlightPhotoWrap, { borderColor: accentColor + '50' }]}>
-            <Image
-              source={{ uri: card.photoUrl }}
-              style={styles.highlightPhoto}
-              blurRadius={isBlurred ? 20 : 0}
-            />
-            {isBlurred && (
-              <View style={styles.highlightBlurOverlay}>
-                <Ionicons name="lock-closed" size={16} color="rgba(255,255,255,0.8)" />
-              </View>
-            )}
-          </View>
-
-          {/* Info */}
-          <View style={styles.highlightInfo}>
-            <View style={[styles.highlightBadge, { backgroundColor: accentColor + '18' }]}>
-              <Ionicons name={iconName} size={10} color={accentColor} />
-              <Text style={[styles.highlightBadgeText, { color: accentColor }]}>
-                {title}
-              </Text>
-            </View>
-            <Text style={styles.highlightName} numberOfLines={1}>
-              {isBlurred ? '... yaşında biri' : `${card.firstName}, ${card.age}`}
-            </Text>
-            <Text style={styles.highlightSubtitle}>{subtitle}</Text>
-            <Text style={styles.highlightTime}>{formatLikedAgo(card.likedAt)}</Text>
-          </View>
-
-          {/* Arrow button */}
-          <View style={[styles.highlightArrow, { borderColor: accentColor + '30' }]}>
-            <Ionicons name="chevron-forward" size={18} color={accentColor} />
-          </View>
-        </LinearGradient>
-      </Animated.View>
-    </Pressable>
-  );
-});
-
-HighlightCard.displayName = 'HighlightCard';
 
 // ─── Main Screen ──────────────────────────────────────────────
 
 const getLikesTodayString = (): string => new Date().toISOString().split('T')[0];
 
-export const LikesYouScreen: React.FC = () => {
+interface LikesYouScreenProps {
+  embedded?: boolean;
+}
+
+export const LikesYouScreen: React.FC<LikesYouScreenProps> = ({ embedded = false }) => {
   useScreenTracking('LikesYou');
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<LikesYouNavProp>();
 
   const packageTier = (useAuthStore((s) => s.user?.packageTier ?? 'FREE')) as PackageTier;
-  const isBlurred = packageTier === 'FREE';
+  // Progressive reveal uses cardState per-card instead of binary isBlurred
+  const isFreeUser = packageTier === 'FREE';
+
+  const { revealProfile, isRevealed } = useLikesRevealStore();
 
   // Daily view limit
   const dailyLimit = LIKES_VIEW_CONFIG.DAILY_LIMITS[packageTier];
@@ -600,6 +692,7 @@ export const LikesYouScreen: React.FC = () => {
     const task = InteractionManager.runAfterInteractions(() => {
       fetchLikes();
     });
+
     return () => task.cancel();
   }, [fetchLikes]);
 
@@ -607,20 +700,6 @@ export const LikesYouScreen: React.FC = () => {
     setIsRefreshing(true);
     fetchLikes();
   }, [fetchLikes]);
-
-  // ─── Computed highlights ───────────────────────────────────
-
-  const mostCompatible = useMemo(() => {
-    if (likes.length === 0) return null;
-    return [...likes].sort((a, b) => b.compatibilityPercent - a.compatibilityPercent)[0];
-  }, [likes]);
-
-  const nearestLike = useMemo(() => {
-    const withDistance = likes.filter((l) => l.distanceKm != null && l.distanceKm < 5);
-    if (withDistance.length === 0) return null;
-    const sorted = [...withDistance].sort((a, b) => (a.distanceKm ?? 999) - (b.distanceKm ?? 999));
-    return sorted.find((l) => l.userId !== mostCompatible?.userId) ?? sorted[0];
-  }, [likes, mostCompatible]);
 
   // Smart labels map
   const smartLabelsMap = useMemo(() => {
@@ -636,34 +715,46 @@ export const LikesYouScreen: React.FC = () => {
 
   const [unlockedUserIds, setUnlockedUserIds] = useState<Set<string>>(new Set());
 
-  const handleCardPress = useCallback((userId: string) => {
-    if (unlockedUserIds.has(userId)) {
+  const handleCardPress = useCallback((userId: string, cardState: CardState) => {
+    // Already revealed via likesRevealStore or locally unlocked — go straight to profile
+    if (isRevealed(userId) || unlockedUserIds.has(userId)) {
       navigation.navigate('ProfilePreview', { userId });
       return;
     }
 
-    // If blurred and tapped — show unlock modal
-    if (isBlurred) {
-      const card = likes.find((l) => l.userId === userId);
-      if (card) {
-        setModalCard(card);
-        setShowModal(true);
+    // CLEAR cards — direct navigation
+    if (cardState === 'clear') {
+      if (!isUnlimitedViews && viewedToday >= dailyLimit) {
+        setShowUpgradePrompt(true);
+        return;
       }
+      if (!isUnlimitedViews) {
+        setViewedToday((prev) => prev + 1);
+        setUnlockedUserIds((prev) => new Set(prev).add(userId));
+      }
+      navigation.navigate('ProfilePreview', { userId });
       return;
     }
 
-    if (!isUnlimitedViews && viewedToday >= dailyLimit) {
-      // Show contextual upgrade sheet instead of blind paywall navigation.
-      // User stays on this screen and can dismiss without losing their place.
-      setShowUpgradePrompt(true);
+    // TEASER / LOCKED — try reveal via store, else show modal
+    // The tap reveal animation (blur reduction) is handled inside LikeCard.
+    // This callback fires after the 500ms delay.
+    const success = revealProfile(userId);
+    if (success) {
+      setUnlockedUserIds((prev) => new Set(prev).add(userId));
+      navigation.navigate('ProfilePreview', { userId });
       return;
     }
-    if (!isUnlimitedViews) {
-      setViewedToday((prev) => prev + 1);
-      setUnlockedUserIds((prev) => new Set(prev).add(userId));
+
+    // Reveal limit reached — show unlock modal
+    const card = likes.find((l) => l.userId === userId);
+    if (card) {
+      setModalCard(card);
+      setShowModal(true);
+    } else {
+      navigation.navigate('JetonMarket' as never);
     }
-    navigation.navigate('ProfilePreview', { userId });
-  }, [navigation, isBlurred, isUnlimitedViews, viewedToday, dailyLimit, unlockedUserIds, likes]);
+  }, [navigation, isUnlimitedViews, viewedToday, dailyLimit, unlockedUserIds, likes, isRevealed, revealProfile]);
 
   const handleUpgradePress = useCallback(() => {
     // Close the UnlockModal first, then show the UpgradePrompt bottom sheet.
@@ -696,19 +787,19 @@ export const LikesYouScreen: React.FC = () => {
 
   const renderItem = useCallback(
     ({ item, index }: { item: LikeYouCard; index: number }) => {
-      const isUnlocked = unlockedUserIds.has(item.userId);
-      const cardBlurred = isBlurred && !isUnlocked;
+      const isUnlocked = unlockedUserIds.has(item.userId) || isRevealed(item.userId);
+      const cardState = getCardState(packageTier, index, likes.length, isUnlocked);
       return (
         <LikeCard
           card={item}
           index={index}
-          isBlurred={cardBlurred}
+          cardState={cardState}
           smartLabel={smartLabelsMap.get(item.userId) ?? null}
           onCardPress={handleCardPress}
         />
       );
     },
-    [isBlurred, unlockedUserIds, handleCardPress, smartLabelsMap],
+    [packageTier, likes.length, unlockedUserIds, handleCardPress, smartLabelsMap, isRevealed],
   );
 
   const keyExtractor = useCallback((item: LikeYouCard) => item.userId, []);
@@ -736,178 +827,51 @@ export const LikesYouScreen: React.FC = () => {
   ), [handleDiscoverPress]);
 
   const renderHeader = useCallback(() => {
-    const elements: React.ReactNode[] = [];
+    if (!isFreeUser || total === 0) return null;
 
-    // ── Summary card — "Seni X kişi beğendi" ──
-    if (total > 0) {
-      elements.push(
-        <View key="summary-card" style={styles.summaryCard}>
+    return (
+      <View style={styles.likesTeaseHeader}>
+        <Text style={styles.likesTeaseTitle}>
+          {total} kişi seni beğendi
+        </Text>
+        <Text style={styles.likesTeaseSubtitle}>Kim olduklarını gör</Text>
+        <Pressable onPress={handleUpgradePress} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}>
           <LinearGradient
-            colors={[palette.purple[500] + '15', palette.pink[500] + '08', 'transparent']}
+            colors={[palette.purple[500], palette.purple[700]]}
+            style={styles.likesTeaseButton}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.summaryCardGradient}
           >
-            <View style={styles.summaryIconCircle}>
-              <Ionicons name="heart" size={22} color={palette.purple[400]} />
-            </View>
-            <View style={styles.summaryTextContainer}>
-              <Text style={styles.summaryMainText}>
-                Seni <Text style={styles.summaryCountHighlight}>{total} kişi</Text> beğendi
-              </Text>
-              <Text style={styles.summarySubText}>
-                {isBlurred
-                  ? viewsRemaining > 0
-                    ? 'İlk profili ücretsiz görüntüle'
-                    : 'Premium ile hepsini keşfet'
-                  : 'Profillere dokunarak keşfet'}
-              </Text>
-            </View>
+            <Ionicons name="lock-open-outline" size={16} color="#fff" />
+            <Text style={styles.likesTeaseButtonText}>Kilidi Aç</Text>
           </LinearGradient>
-        </View>,
-      );
-    }
-
-    // ── Highlight cards ──
-    if (mostCompatible && likes.length >= 3) {
-      const isUnlocked = unlockedUserIds.has(mostCompatible.userId);
-      elements.push(
-        <HighlightCard
-          key="highlight-compat"
-          type="most_compatible"
-          card={mostCompatible}
-          isBlurred={isBlurred && !isUnlocked}
-          onPress={handleCardPress}
-        />,
-      );
-    }
-
-    if (nearestLike && likes.length >= 3) {
-      const isUnlocked = unlockedUserIds.has(nearestLike.userId);
-      elements.push(
-        <HighlightCard
-          key="highlight-nearby"
-          type="nearby"
-          card={nearestLike}
-          isBlurred={isBlurred && !isUnlocked}
-          onPress={handleCardPress}
-        />,
-      );
-    }
-
-    // ── Free preview status card ──
-    if (!isUnlimitedViews && likes.length > 0 && isBlurred) {
-      elements.push(
-        <View key="limit-card" style={styles.viewLimitCard}>
-          <View style={styles.viewLimitIconContainer}>
-            <Ionicons
-              name={viewsRemaining > 0 ? 'eye-outline' : 'eye-off-outline'}
-              size={18}
-              color={viewsRemaining > 0 ? palette.gold[400] : colors.textTertiary}
-            />
-          </View>
-          <View style={styles.viewLimitTextContainer}>
-            <Text style={styles.viewLimitTitle}>
-              {viewsRemaining > 0
-                ? `Bugün ${viewsRemaining} ücretsiz profil görüntüleme hakkın var`
-                : 'Günlük ücretsiz hakkın bitti'}
-            </Text>
-            {viewsRemaining > 0 ? (
-              <Text style={styles.viewLimitHelper}>İstersen şimdi kullan</Text>
-            ) : (
-              <Pressable onPress={handleUpgradePress}>
-                <Text style={styles.viewLimitUpgradeLink}>Premium ile sınırsız gör</Text>
-              </Pressable>
-            )}
-          </View>
-        </View>,
-      );
-    }
-
-    // ── Premium upgrade card — for free users ──
-    if (isBlurred && likes.length > 0) {
-      elements.push(
-        <Pressable key="upgrade-card" onPress={handleUpgradePress}>
-          <LinearGradient
-            colors={[palette.purple[600], palette.purple[800]]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.upgradeCard}
-          >
-            <View style={styles.upgradeCardHeader}>
-              <Ionicons name="diamond" size={24} color={palette.gold[400]} />
-              <Text style={styles.upgradeCardTitle}>Hepsini Gör</Text>
-            </View>
-            <Text style={styles.upgradeCardSubtitle}>
-              {total} kişi seni beğendi — kilidi kaldır ve hemen eşleş
-            </Text>
-
-            {/* Benefits */}
-            <View style={styles.upgradeBenefits}>
-              {[
-                { icon: 'heart' as const, text: 'Seni beğenenleri gör' },
-                { icon: 'flash' as const, text: 'Anında eşleş' },
-                { icon: 'people' as const, text: 'Daha fazla profile eriş' },
-              ].map((benefit) => (
-                <View key={benefit.text} style={styles.upgradeBenefitRow}>
-                  <Ionicons name={benefit.icon} size={14} color={palette.purple[300]} />
-                  <Text style={styles.upgradeBenefitText}>{benefit.text}</Text>
-                </View>
-              ))}
-            </View>
-
-            {/* CTA */}
-            <View style={styles.upgradeCtaContainer}>
-              <LinearGradient
-                colors={[palette.gold[400], palette.gold[500]]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.upgradeCta}
-              >
-                <Ionicons name="lock-open" size={16} color={palette.purple[900]} />
-                <Text style={styles.upgradeCtaText}>Kilidi Aç</Text>
-              </LinearGradient>
-            </View>
-          </LinearGradient>
-        </Pressable>,
-      );
-    }
-
-    // ── Section label before grid ──
-    if (likes.length > 0) {
-      elements.push(
-        <Text key="grid-label" style={styles.gridSectionLabel}>
-          Tüm Beğenenler
-        </Text>,
-      );
-    }
-
-    return elements.length > 0 ? <>{elements}</> : null;
-  }, [
-    total, likes.length, mostCompatible, nearestLike,
-    isBlurred, isUnlimitedViews, viewsRemaining,
-    handleUpgradePress, handleCardPress, unlockedUserIds,
-  ]);
+        </Pressable>
+        <Text style={styles.likesTeaseSub}>Son 24 saat aktif kişiler</Text>
+      </View>
+    );
+  }, [total, isFreeUser, handleUpgradePress]);
 
   // ─── Skeleton loading state ─────────────────────────────────
 
   if (isLoading) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        <BrandedBackground />
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Pressable
-              onPress={() => navigation.goBack()}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <View style={styles.backButton}>
-                <Ionicons name="chevron-back" size={22} color={colors.text} />
-              </View>
-            </Pressable>
-            <Text style={styles.headerTitle}>Beğenenler</Text>
+      <View style={[styles.container, !embedded && { paddingTop: insets.top }]}>
+        {!embedded && <BrandedBackground />}
+        {!embedded && (
+          <View style={styles.header}>
+            <View style={styles.headerLeft}>
+              <Pressable
+                onPress={() => navigation.goBack()}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <View style={styles.backButton}>
+                  <Ionicons name="chevron-back" size={22} color={colors.text} />
+                </View>
+              </Pressable>
+              <Text style={styles.headerTitle}>Beğenenler</Text>
+            </View>
           </View>
-        </View>
+        )}
         <View style={styles.skeletonGrid}>
           {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
             <SkeletonCard key={`skeleton-${i}`} index={i} />
@@ -920,37 +884,39 @@ export const LikesYouScreen: React.FC = () => {
   // ─── Main render ────────────────────────────────────────────
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <BrandedBackground />
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Pressable
-            onPress={() => navigation.goBack()}
-            accessibilityLabel="Geri"
-            accessibilityRole="button"
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <View style={styles.backButton}>
-              <Ionicons name="chevron-back" size={22} color={colors.text} />
+    <View style={[styles.container, !embedded && { paddingTop: insets.top }]}>
+      {!embedded && <BrandedBackground />}
+      {/* Header — hidden when embedded in MatchesListScreen */}
+      {!embedded && (
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Pressable
+              onPress={() => navigation.goBack()}
+              accessibilityLabel="Geri"
+              accessibilityRole="button"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <View style={styles.backButton}>
+                <Ionicons name="chevron-back" size={22} color={colors.text} />
+              </View>
+            </Pressable>
+            <View>
+              <View style={styles.headerTitleRow}>
+                <Text style={styles.headerTitle}>Beğenenler</Text>
+                {total > 0 && (
+                  <LinearGradient
+                    colors={[palette.gold[400], palette.gold[500]]}
+                    style={styles.countBadge}
+                  >
+                    <Text style={styles.countBadgeText}>{total}</Text>
+                  </LinearGradient>
+                )}
+              </View>
+              <Text style={styles.headerSubtitle}>Sana ilgi duyan kişiler burada</Text>
             </View>
-          </Pressable>
-          <View>
-            <View style={styles.headerTitleRow}>
-              <Text style={styles.headerTitle}>Beğenenler</Text>
-              {total > 0 && (
-                <LinearGradient
-                  colors={[palette.gold[400], palette.gold[500]]}
-                  style={styles.countBadge}
-                >
-                  <Text style={styles.countBadgeText}>{total}</Text>
-                </LinearGradient>
-              )}
-            </View>
-            <Text style={styles.headerSubtitle}>Sana ilgi duyan kişiler burada</Text>
           </View>
         </View>
-      </View>
+      )}
 
       {/* Grid */}
       <FlatList
@@ -962,6 +928,30 @@ export const LikesYouScreen: React.FC = () => {
         contentContainerStyle={styles.gridContent}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmpty}
+        ListFooterComponent={likes.length > 0 ? (
+          <View style={{
+            margin: 16, padding: 14,
+            backgroundColor: 'rgba(139,92,246,0.1)',
+            borderWidth: 1, borderColor: 'rgba(139,92,246,0.2)',
+            borderRadius: 14, alignItems: 'center',
+          }}>
+            <Text style={{ color: '#fff', fontSize: 13, fontWeight: '500' }}>
+              Tüm beğenenlerini görmek ister misin?
+            </Text>
+            <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 4 }}>
+              Gold üyeler günde 10 profil açabiliyor
+            </Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('MembershipPlans' as never)}
+              style={{
+                marginTop: 10, backgroundColor: '#8B5CF6',
+                borderRadius: 10, paddingVertical: 10, paddingHorizontal: 40,
+              }}
+            >
+              <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>{'Gold\'a Yükselt 👑'}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -1015,6 +1005,50 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+
+  // ── Likes Tease Header (CTA above grid) ──
+  likesTeaseHeader: {
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    gap: 6,
+  },
+  likesTeaseTitle: {
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: colors.text,
+    textAlign: 'center',
+  },
+  likesTeaseSubtitle: {
+    fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  likesTeaseButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 48,
+    borderRadius: 14,
+    paddingHorizontal: 36,
+  },
+  likesTeaseButtonText: {
+    fontSize: 15,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#fff',
+  },
+  likesTeaseSub: {
+    fontSize: 11,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: colors.textTertiary,
+    marginTop: 2,
   },
 
   // ── Header ──
@@ -1080,241 +1114,90 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // ── Summary card ──
-  summaryCard: {
-    marginBottom: spacing.md,
-    borderRadius: borderRadius.xl,
-    overflow: 'hidden',
+  // ── Compact likes summary card ──
+  compactCard: {
+    marginBottom: spacing.smd,
+    padding: 14,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: palette.purple[500] + '20',
+    borderColor: colors.surfaceBorder,
+    borderRadius: 16,
   },
-  summaryCardGradient: {
+  compactRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md + 2,
-    gap: spacing.md,
+    justifyContent: 'space-between',
   },
-  summaryIconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: palette.purple[500] + '15',
-    justifyContent: 'center',
+  compactRowLeft: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: palette.purple[500] + '25',
-  },
-  summaryTextContainer: {
+    gap: 10,
     flex: 1,
   },
-  summaryMainText: {
-    ...typography.body,
+  compactHeartCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  compactMainText: {
     color: colors.text,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-  },
-  summaryCountHighlight: {
-    color: palette.purple[400],
+    fontSize: 15,
+    fontWeight: '700',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    fontSize: 18,
   },
-  summarySubText: {
-    fontSize: 12,
+  compactSubText: {
     color: colors.textSecondary,
-    marginTop: 3,
+    fontSize: 11,
+    marginTop: 1,
     fontFamily: 'Poppins_400Regular',
     fontWeight: '400',
   },
-
-  // ── Highlight cards ──
-  highlightCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.smd,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-    gap: spacing.md,
-  },
-  highlightPhotoWrap: {
-    position: 'relative',
-    width: 62,
-    height: 62,
-    borderRadius: 31,
-    overflow: 'hidden',
-    borderWidth: 2.5,
-  },
-  highlightPhoto: {
-    width: 57,
-    height: 57,
-  },
-  highlightBlurOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(30, 16, 53, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  highlightInfo: {
-    flex: 1,
-    gap: 3,
-  },
-  highlightBadge: {
-    alignSelf: 'flex-start',
+  compactUpgradeChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    backgroundColor: palette.purple[600],
     borderRadius: borderRadius.full,
     paddingHorizontal: 10,
-    paddingVertical: 3,
-    marginBottom: 2,
+    paddingVertical: 5,
   },
-  highlightBadgeText: {
-    fontSize: 10,
-    fontFamily: 'Poppins_600SemiBold',
+  compactUpgradeText: {
+    color: palette.gold[400],
+    fontSize: 11,
     fontWeight: '600',
-    letterSpacing: 0.2,
-  },
-  highlightName: {
-    ...typography.bodyLarge,
-    color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
-  highlightSubtitle: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    letterSpacing: 0.15,
+  compactDivider: {
+    height: 1,
+    backgroundColor: colors.divider,
+    marginVertical: 10,
   },
-  highlightTime: {
-    ...typography.captionSmall,
-    color: colors.textTertiary,
+  compactChipsRow: {
+    flexDirection: 'row',
+    gap: 8,
   },
-  highlightArrow: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-  },
-
-  // ── View limit card ──
-  viewLimitCard: {
+  compactChip: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.smd,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    gap: 6,
+    padding: 10,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-    gap: spacing.smd,
   },
-  viewLimitIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: palette.gold[400] + '12',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  viewLimitTextContainer: {
-    flex: 1,
-  },
-  viewLimitTitle: {
-    ...typography.caption,
+  compactChipTitle: {
     color: colors.text,
+    fontSize: 11,
+    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
+  },
+  compactChipValue: {
+    fontSize: 10,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
-  },
-  viewLimitHelper: {
-    fontSize: 11,
-    color: palette.gold[400],
-    marginTop: 2,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
-  },
-  viewLimitUpgradeLink: {
-    fontSize: 11,
-    color: palette.purple[400],
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    marginTop: 2,
-  },
-
-  // ── Premium upgrade card ──
-  upgradeCard: {
-    marginBottom: spacing.lg,
-    borderRadius: borderRadius.xl,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    ...Platform.select({
-      ios: {
-        shadowColor: palette.purple[500],
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.3,
-        shadowRadius: 16,
-      },
-      android: { elevation: 8 },
-    }),
-  },
-  upgradeCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.xs,
-  },
-  upgradeCardTitle: {
-    ...typography.h4,
-    color: '#FFFFFF',
-    letterSpacing: 0.3,
-  },
-  upgradeCardSubtitle: {
-    ...typography.caption,
-    color: palette.purple[200],
-    marginBottom: spacing.md,
-    lineHeight: 20,
-  },
-  upgradeBenefits: {
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  upgradeBenefitRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  upgradeBenefitText: {
-    ...typography.caption,
-    color: 'rgba(255, 255, 255, 0.85)',
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
-  },
-  upgradeCtaContainer: {
-    alignItems: 'center',
-  },
-  upgradeCta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.xl + 8,
-    paddingVertical: spacing.smd,
-    width: '100%',
-  },
-  upgradeCtaText: {
-    ...typography.button,
-    color: palette.purple[900],
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    letterSpacing: 0.5,
   },
 
   // ── Grid section label ──
@@ -1348,15 +1231,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: palette.purple[500] + '15',
+    borderColor: palette.purple[500] + '20',
     ...Platform.select({
       ios: {
-        shadowColor: palette.purple[500],
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.12,
-        shadowRadius: 8,
+        shadowColor: palette.purple[400],
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.18,
+        shadowRadius: 10,
       },
-      android: { elevation: 4 },
+      android: { elevation: 5 },
     }),
   },
   cardPhoto: {
@@ -1439,6 +1322,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
+  // ── Shimmer sweep ──
+  shimmerSweep: {
+    position: 'absolute',
+    top: -20,
+    width: CARD_SIZE * 0.4,
+    height: CARD_SIZE * 2.5,
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+  },
+
+  // ── Teaser lock ──
+  teaserLockContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    opacity: 0.6,
+  },
+  teaserLockCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: palette.purple[500],
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+      },
+      android: { elevation: 4 },
+    }),
+  },
+
   // ── Smart label ──
   smartLabelContainer: {
     position: 'absolute',
@@ -1457,38 +1373,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
     letterSpacing: 0.3,
-  },
-
-  // ── Compatibility badge ──
-  compatBadge: {
-    position: 'absolute',
-    top: spacing.xs + 2,
-    right: spacing.xs,
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    borderWidth: 1,
-  },
-  compatBadgeText: {
-    fontSize: 9,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    letterSpacing: 0.2,
-  },
-
-  // ── Comment badge ──
-  commentBadge: {
-    position: 'absolute',
-    top: spacing.xs + 2,
-    left: spacing.xs + 2,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: palette.purple[500],
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: palette.purple[400],
   },
 
   // ── Card info overlay — glassmorphism feel ──
@@ -1512,39 +1396,45 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },
-  hintsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 4,
-    marginTop: 5,
-  },
-  hintChip: {
+  // ── Distance & compat (new card layout) ──
+  distanceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
-    borderRadius: borderRadius.full,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    gap: 2,
+    marginTop: 3,
   },
-  hintText: {
+  distanceEmoji: {
+    fontSize: 8,
+    lineHeight: 12,
+  },
+  distanceText: {
     fontSize: 9,
     lineHeight: 13,
-    color: 'rgba(255, 255, 255, 0.95)',
+    color: 'rgba(255, 255, 255, 0.85)',
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     letterSpacing: 0.1,
   },
-  cardComment: {
-    fontSize: 9,
-    lineHeight: 13,
-    color: palette.purple[300],
-    fontStyle: 'italic',
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+  compatPill: {
+    alignSelf: 'flex-start',
+    borderRadius: 9999,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderWidth: 1,
     marginTop: 4,
+  },
+  compatPillText: {
+    fontSize: 8,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    letterSpacing: 0.2,
+  },
+  superCompatBorder: {
+    ...StyleSheet.absoluteFillObject,
+    borderColor: 'rgba(251, 191, 36, 0.3)',
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderRadius: borderRadius.lg + 4,
   },
 
   // ── Empty state ──

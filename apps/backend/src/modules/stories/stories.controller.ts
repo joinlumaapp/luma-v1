@@ -31,7 +31,7 @@ interface UploadedFile {
 }
 
 interface AuthenticatedRequest {
-  user: { userId: string };
+  user: { sub: string };
 }
 
 @Controller("stories")
@@ -42,7 +42,7 @@ export class StoriesController {
   /** GET /stories — Fetch all active stories from matched/followed users */
   @Get()
   async getStories(@Req() req: AuthenticatedRequest) {
-    return this.storiesService.getStories(req.user.userId);
+    return this.storiesService.getStories(req.user.sub);
   }
 
   /** POST /stories — Create a new story (multipart upload) */
@@ -53,7 +53,7 @@ export class StoriesController {
     @UploadedFile() file: UploadedFile,
     @Body() dto: CreateStoryDto,
   ) {
-    return this.storiesService.createStory(req.user.userId, file, dto);
+    return this.storiesService.createStory(req.user.sub, file, dto);
   }
 
   /** DELETE /stories/:id — Delete own story */
@@ -63,7 +63,7 @@ export class StoriesController {
     @Req() req: AuthenticatedRequest,
     @Param("id") storyId: string,
   ) {
-    await this.storiesService.deleteStory(req.user.userId, storyId);
+    await this.storiesService.deleteStory(req.user.sub, storyId);
   }
 
   /** POST /stories/:id/view — Mark a story as viewed */
@@ -73,7 +73,7 @@ export class StoriesController {
     @Req() req: AuthenticatedRequest,
     @Param("id") storyId: string,
   ) {
-    await this.storiesService.markAsViewed(req.user.userId, storyId);
+    await this.storiesService.markAsViewed(req.user.sub, storyId);
   }
 
   /** GET /stories/:id/viewers — Get list of viewers for own story */
@@ -82,7 +82,7 @@ export class StoriesController {
     @Req() req: AuthenticatedRequest,
     @Param("id") storyId: string,
   ) {
-    return this.storiesService.getViewers(req.user.userId, storyId);
+    return this.storiesService.getViewers(req.user.sub, storyId);
   }
 
   /** POST /stories/:id/reply — Send a reply to a story (creates chat message) */
@@ -93,7 +93,7 @@ export class StoriesController {
     @Body() dto: ReplyToStoryDto,
   ) {
     return this.storiesService.replyToStory(
-      req.user.userId,
+      req.user.sub,
       storyId,
       dto.message,
     );
@@ -105,6 +105,6 @@ export class StoriesController {
     @Req() req: AuthenticatedRequest,
     @Param("id") storyId: string,
   ) {
-    return this.storiesService.toggleLike(req.user.userId, storyId);
+    return this.storiesService.toggleLike(req.user.sub, storyId);
   }
 }

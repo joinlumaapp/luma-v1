@@ -1,4 +1,4 @@
-// Onboarding step 9/15: Children status — single select
+// Onboarding step 8/13: Children status — single select
 
 import React, { useState, useCallback } from 'react';
 import {
@@ -50,8 +50,8 @@ export const ChildrenScreen: React.FC = () => {
 
   return (
     <OnboardingLayout
-      step={9}
-      totalSteps={18}
+      step={8}
+      totalSteps={13}
       showBack
       showSkip
       onSkip={handleSkip}

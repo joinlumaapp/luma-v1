@@ -62,28 +62,6 @@ export interface FeedPost {
   createdAt: string;
 }
 
-export interface CommentReply {
-  id: string;
-  parentCommentId: string;
-  userId: string;
-  userName: string;
-  userAvatarUrl: string;
-  content: string;
-  createdAt: string;
-}
-
-export interface FeedComment {
-  id: string;
-  userId: string;
-  userName: string;
-  userAvatarUrl: string;
-  content: string;
-  createdAt: string;
-  likeCount: number;
-  isLiked: boolean;
-  replies: CommentReply[];
-}
-
 export interface CreatePostRequest {
   content: string;
   postType: FeedPostType;
@@ -259,9 +237,10 @@ export const socialFeedService = {
 
       } else {
         // ── Populer: sort by likes + recency ──
+        const currentTime = Date.now();
         filtered = filtered.sort((a, b) => {
-          const ageA = (now.getTime() - new Date(a.createdAt).getTime()) / 3_600_000;
-          const ageB = (now.getTime() - new Date(b.createdAt).getTime()) / 3_600_000;
+          const ageA = (currentTime - new Date(a.createdAt).getTime()) / 3_600_000;
+          const ageB = (currentTime - new Date(b.createdAt).getTime()) / 3_600_000;
           const scoreA = a.likeCount + Math.max(0, 1 - ageA / 48) * 60;
           const scoreB = b.likeCount + Math.max(0, 1 - ageB / 48) * 60;
           return scoreB - scoreA;
@@ -336,113 +315,6 @@ export const socialFeedService = {
     }
   },
 
-  // Get comments for a post
-  getComments: async (postId: string): Promise<FeedComment[]> => {
-    try {
-      const response = await api.get<FeedComment[]>(`/posts/${postId}/comments`);
-      return response.data;
-    } catch (error) {
-      const count = Math.min(3, 5);
-      const mockComments: FeedComment[] = [];
-      const names = ['Deniz', 'Ceren', 'Ela', 'Sude', 'Ece'];
-      const texts = [
-        'Çok güzel bir paylaşım, katılıyorum!',
-        'Ben de aynı şekilde düşünüyorum.',
-        'Harika bir bakış açısı, teşekkürler!',
-        'Bu konuda çok haklısın.',
-        'Kesinlikle, bunu herkesin bilmesi lazım.',
-      ];
-      const replyTexts = [
-        'Kesinlikle katılıyorum!',
-        'Çok doğru söylüyorsun.',
-        'Ben de öyle düşünüyorum.',
-      ];
-      for (let i = 0; i < count; i++) {
-        const commentId = `comment-${postId}-${i}`;
-        const replies: import('./socialFeedService').CommentReply[] = i === 0
-          ? [{
-              id: `reply-${postId}-0-0`,
-              parentCommentId: commentId,
-              userId: 'bot-comment-reply-0',
-              userName: 'Sude',
-              userAvatarUrl: 'https://i.pravatar.cc/150?img=53',
-              content: replyTexts[0],
-              createdAt: minutesAgo((i + 1) * 10),
-            }]
-          : [];
-        mockComments.push({
-          id: commentId,
-          userId: `bot-comment-${i}`,
-          userName: names[i % names.length],
-          userAvatarUrl: `https://i.pravatar.cc/150?img=${50 + i}`,
-          content: texts[i % texts.length],
-          createdAt: minutesAgo((i + 1) * 15),
-          likeCount: Math.floor(Math.random() * 20),
-          isLiked: false,
-          replies,
-        });
-      }
-      return devMockOrThrow(error, mockComments, 'socialFeedService.getComments');
-    }
-  },
-
-  // Add a comment to a post
-  addComment: async (postId: string, content: string): Promise<FeedComment> => {
-    try {
-      const response = await api.post<FeedComment>(`/posts/${postId}/comments`, { content });
-      return response.data;
-    } catch (error) {
-      return devMockOrThrow(error, {
-        id: `comment-dev-${Date.now()}`,
-        userId: 'dev-user-001',
-        userName: 'Sen',
-        userAvatarUrl: 'https://i.pravatar.cc/150?img=68',
-        content,
-        createdAt: new Date().toISOString(),
-        likeCount: 0,
-        isLiked: false,
-        replies: [],
-      }, 'socialFeedService.addComment');
-    }
-  },
-
-  // Like/unlike a comment
-  likeComment: async (commentId: string): Promise<{ likeCount: number; isLiked: boolean }> => {
-    try {
-      const response = await api.post<{ likeCount: number; isLiked: boolean }>(
-        `/posts/comments/${commentId}/like`
-      );
-      return response.data;
-    } catch (error) {
-      return devMockOrThrow(error, { likeCount: 0, isLiked: true }, 'socialFeedService.likeComment');
-    }
-  },
-
-  // Reply to a comment
-  replyToComment: async (
-    postId: string,
-    commentId: string,
-    content: string
-  ): Promise<CommentReply> => {
-    try {
-      const response = await api.post<CommentReply>(
-        `/posts/${postId}/comments/${commentId}/replies`,
-        { content }
-      );
-      return response.data;
-    } catch (error) {
-      return devMockOrThrow(error, {
-        id: `reply-dev-${Date.now()}`,
-        parentCommentId: commentId,
-        userId: 'dev-user-001',
-        userName: 'Sen',
-        userAvatarUrl: 'https://i.pravatar.cc/150?img=68',
-        content,
-        createdAt: new Date().toISOString(),
-      }, 'socialFeedService.replyToComment');
-    }
-  },
-
   // Get follow counts from local state (dev mode uses followedUserIds as source of truth)
   getFollowCounts: (): { followingCount: number; followerCount: number } => {
     return {
@@ -454,6 +326,28 @@ export const socialFeedService = {
   // Get current user's own posts from MOCK_POSTS
   getMyPosts: (): FeedPost[] => {
     return MOCK_POSTS.filter((p) => p.userId === 'dev-user-001');
+  },
+
+  /** Get users who liked the current user's posts */
+  getPostLikers: async (): Promise<{
+    likers: Array<{
+      userId: string;
+      userName: string;
+      userAge: number;
+      userAvatarUrl: string;
+      postId: string;
+      postContent: string;
+      likedAt: string;
+    }>;
+    total: number;
+  }> => {
+    try {
+      const res = await api.get('/posts/likers');
+      return res.data;
+    } catch {
+      // TODO: Backend endpoint not implemented yet, return empty
+      return { likers: [], total: 0 };
+    }
   },
 
   // Get mock posts (used by devSeedData)

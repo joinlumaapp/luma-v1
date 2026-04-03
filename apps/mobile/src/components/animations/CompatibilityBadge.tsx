@@ -102,13 +102,12 @@ const HalfRing: React.FC<HalfRingProps> = ({
 
 export const CompatibilityBadge: React.FC<CompatibilityBadgeProps> = ({
   score,
-  level,
+  level: _level,
   size = 50,
 }) => {
   const clampedScore = Math.max(0, Math.min(100, score));
   const ringColor = getRingColor(clampedScore);
   // level prop kept for API compatibility but no longer changes visuals
-  const _isSuper = level === 'super';
   const borderWidth = size >= 48 ? 3 : 2;
   const trackColor = 'rgba(212, 165, 116, 0.18)';
 

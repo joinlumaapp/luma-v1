@@ -20,6 +20,7 @@ import type { NotificationPreferences } from '../../services/notificationService
 import { useNotificationStore } from '../../stores/notificationStore';
 import { storage } from '../../utils/storage';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { useScreenTracking } from '../../hooks/useAnalytics';
 
 // ─── Settings Configuration ──────────────────────────────────────────
 
@@ -65,6 +66,7 @@ const STORAGE_KEY = 'notificationPreferences';
 // ─── Component ───────────────────────────────────────────────────────
 
 export const NotificationSettingsScreen: React.FC = () => {
+  useScreenTracking('NotificationSettings');
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const hasPermission = useNotificationStore((s) => s.hasPermission);

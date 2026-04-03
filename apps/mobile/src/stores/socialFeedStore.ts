@@ -7,10 +7,25 @@ import {
   type FeedFilter,
   type CreatePostRequest,
 } from '../services/socialFeedService';
+import { storage } from '../utils/storage';
+
+// ── Persistence keys ──────────────────────────────────────────────
+const STORAGE_KEYS = {
+  DAILY_POST_COUNT: 'feed.dailyPostCount',
+  LAST_POST_DATE: 'feed.lastPostDate',
+  DAILY_STORY_COUNT: 'feed.dailyStoryCount',
+  LAST_STORY_DATE: 'feed.lastStoryDate',
+  DAILY_FOLLOW_COUNT: 'feed.dailyFollowCount',
+  LAST_FOLLOW_DATE: 'feed.lastFollowDate',
+} as const;
+
+const getToday = (): string => new Date().toISOString().slice(0, 10);
 
 interface SocialFeedState {
   // State
   posts: FeedPost[];
+  /** Locally created posts that must survive API/mock refreshes */
+  localPosts: FeedPost[];
   filter: FeedFilter;
   isLoading: boolean;
   isRefreshing: boolean;
@@ -18,6 +33,18 @@ interface SocialFeedState {
   cursor: string | null;
   hasMore: boolean;
   viewedStoryUserIds: Set<string>;
+
+  // Daily post limit (persisted)
+  dailyPostCount: number;
+  lastPostDate: string | null;
+
+  // Daily story limit (persisted)
+  dailyStoryCount: number;
+  lastStoryDate: string | null;
+
+  // Daily follow limit (persisted)
+  dailyFollowCount: number;
+  lastFollowDate: string | null;
 
   // Actions
   fetchFeed: () => Promise<void>;
@@ -28,11 +55,29 @@ interface SocialFeedState {
   toggleFollow: (userId: string) => Promise<void>;
   createPost: (data: CreatePostRequest) => Promise<void>;
   markStoryViewed: (userId: string) => void;
+
+  // Daily limit actions
+  incrementDailyPost: () => void;
+  resetDailyPostIfNeeded: () => void;
+  incrementDailyStory: () => void;
+  resetDailyStoryIfNeeded: () => void;
+  incrementDailyFollow: () => void;
+  resetDailyFollowIfNeeded: () => void;
+}
+
+/** Merge server/mock posts with locally created posts, deduplicating by id.
+ *  Local posts are prepended so the user's own posts always appear first. */
+function mergeWithLocalPosts(serverPosts: FeedPost[], localPosts: FeedPost[]): FeedPost[] {
+  if (localPosts.length === 0) return serverPosts;
+  const serverIds = new Set(serverPosts.map((p) => p.id));
+  const uniqueLocal = localPosts.filter((p) => !serverIds.has(p.id));
+  return [...uniqueLocal, ...serverPosts];
 }
 
 export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
   // Initial state
   posts: [],
+  localPosts: [],
   filter: 'ONERILEN',
   isLoading: false,
   isRefreshing: false,
@@ -41,36 +86,47 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
   hasMore: false,
   viewedStoryUserIds: new Set<string>(),
 
+  // Hydrate daily limits from persisted storage (sync via cache)
+  dailyPostCount: storage.getNumber(STORAGE_KEYS.DAILY_POST_COUNT) ?? 0,
+  lastPostDate: storage.getString(STORAGE_KEYS.LAST_POST_DATE),
+  dailyStoryCount: storage.getNumber(STORAGE_KEYS.DAILY_STORY_COUNT) ?? 0,
+  lastStoryDate: storage.getString(STORAGE_KEYS.LAST_STORY_DATE),
+
+  dailyFollowCount: storage.getNumber(STORAGE_KEYS.DAILY_FOLLOW_COUNT) ?? 0,
+  lastFollowDate: storage.getString(STORAGE_KEYS.LAST_FOLLOW_DATE),
+
   // Actions
   fetchFeed: async () => {
-    const { filter } = get();
+    const { filter, localPosts } = get();
     set({ isLoading: true });
     try {
       // Service handles TAKIP fallback internally — no double-fetch needed
       const response = await socialFeedService.getFeed(filter, null);
       set({
-        posts: response.posts,
+        posts: mergeWithLocalPosts(response.posts, localPosts),
         cursor: response.nextCursor,
         hasMore: response.hasMore,
         isLoading: false,
       });
     } catch {
+      // On error, keep existing posts (including local) instead of clearing
       set({ isLoading: false });
     }
   },
 
   refreshFeed: async () => {
-    const { filter } = get();
+    const { filter, localPosts } = get();
     set({ isRefreshing: true });
     try {
       const response = await socialFeedService.getFeed(filter, null);
       set({
-        posts: response.posts,
+        posts: mergeWithLocalPosts(response.posts, localPosts),
         cursor: response.nextCursor,
         hasMore: response.hasMore,
         isRefreshing: false,
       });
     } catch {
+      // On error, keep existing posts instead of clearing
       set({ isRefreshing: false });
     }
   },
@@ -169,6 +225,7 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
       const newPost = await socialFeedService.createPost(data);
       set((state) => ({
         posts: [newPost, ...state.posts],
+        localPosts: [newPost, ...state.localPosts],
         isCreating: false,
       }));
     } catch {
@@ -182,5 +239,65 @@ export const useSocialFeedStore = create<SocialFeedState>((set, get) => ({
       next.add(userId);
       return { viewedStoryUserIds: next };
     });
+  },
+
+  // ── Daily post limit actions ────────────────────────────────────
+  incrementDailyPost: () => {
+    const today = getToday();
+    const { lastPostDate, dailyPostCount } = get();
+    const newCount = lastPostDate === today ? dailyPostCount + 1 : 1;
+    set({ dailyPostCount: newCount, lastPostDate: today });
+    storage.setNumber(STORAGE_KEYS.DAILY_POST_COUNT, newCount);
+    storage.setString(STORAGE_KEYS.LAST_POST_DATE, today);
+  },
+
+  resetDailyPostIfNeeded: () => {
+    const today = getToday();
+    const { lastPostDate } = get();
+    if (lastPostDate !== today) {
+      set({ dailyPostCount: 0, lastPostDate: today });
+      storage.setNumber(STORAGE_KEYS.DAILY_POST_COUNT, 0);
+      storage.setString(STORAGE_KEYS.LAST_POST_DATE, today);
+    }
+  },
+
+  // ── Daily story limit actions ───────────────────────────────────
+  incrementDailyStory: () => {
+    const today = getToday();
+    const { lastStoryDate, dailyStoryCount } = get();
+    const newCount = lastStoryDate === today ? dailyStoryCount + 1 : 1;
+    set({ dailyStoryCount: newCount, lastStoryDate: today });
+    storage.setNumber(STORAGE_KEYS.DAILY_STORY_COUNT, newCount);
+    storage.setString(STORAGE_KEYS.LAST_STORY_DATE, today);
+  },
+
+  resetDailyStoryIfNeeded: () => {
+    const today = getToday();
+    const { lastStoryDate } = get();
+    if (lastStoryDate !== today) {
+      set({ dailyStoryCount: 0, lastStoryDate: today });
+      storage.setNumber(STORAGE_KEYS.DAILY_STORY_COUNT, 0);
+      storage.setString(STORAGE_KEYS.LAST_STORY_DATE, today);
+    }
+  },
+
+  // ── Daily follow limit actions ─────────────────────────────────
+  incrementDailyFollow: () => {
+    const today = getToday();
+    const { lastFollowDate, dailyFollowCount } = get();
+    const newCount = lastFollowDate === today ? dailyFollowCount + 1 : 1;
+    set({ dailyFollowCount: newCount, lastFollowDate: today });
+    storage.setNumber(STORAGE_KEYS.DAILY_FOLLOW_COUNT, newCount);
+    storage.setString(STORAGE_KEYS.LAST_FOLLOW_DATE, today);
+  },
+
+  resetDailyFollowIfNeeded: () => {
+    const today = getToday();
+    const { lastFollowDate } = get();
+    if (lastFollowDate !== today) {
+      set({ dailyFollowCount: 0, lastFollowDate: today });
+      storage.setNumber(STORAGE_KEYS.DAILY_FOLLOW_COUNT, 0);
+      storage.setString(STORAGE_KEYS.LAST_FOLLOW_DATE, today);
+    }
   },
 }));

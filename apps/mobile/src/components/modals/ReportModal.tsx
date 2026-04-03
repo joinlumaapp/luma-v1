@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   TextInput,
   Modal,
+  StatusBar,
   Pressable,
   StyleSheet,
   ScrollView,
@@ -69,6 +70,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
       statusBarTranslucent
       onRequestClose={handleClose}
     >
+      <StatusBar barStyle="light-content" backgroundColor="#08080F" />
       <Pressable style={styles.overlay} onPress={handleClose}>
         <Pressable style={styles.sheet} onPress={() => {}}>
           {/* Handle bar */}

@@ -1,11 +1,11 @@
-// Onboarding flow: Name -> BirthDate -> Gender -> WhoToMeet -> WhatLookingFor -> Height
-// -> Sports -> Smoking -> Children -> CitySelection -> PersonalityIntro -> Interests
-// -> Bio -> PromptSelection -> Photos -> QuestionsIntro -> Questions -> Selfie
+// Onboarding flow: Name -> BirthDate -> Gender -> WhoToMeet -> Height
+// -> Sports -> Smoking -> Children -> CitySelection
+// -> Bio -> PromptSelection -> Photos -> Selfie
 //
 // Features:
 // - Smooth slide transitions between steps (slide_from_right with 300ms duration)
 // - Overall progress tracked via OnboardingLayout in each screen (step X of totalSteps)
-// - Disabled back gesture on SelfieVerification and Questions
+// - Disabled back gesture on SelfieVerification
 // - SelfieVerification uses fade_from_bottom for emphasis
 
 import React from 'react';
@@ -19,19 +19,14 @@ import { NameScreen } from '../screens/onboarding/NameScreen';
 import { BirthDateScreen } from '../screens/onboarding/BirthDateScreen';
 import { GenderScreen } from '../screens/onboarding/GenderScreen';
 import { WhoToMeetScreen } from '../screens/onboarding/WhoToMeetScreen';
-import { WhatLookingForScreen } from '../screens/onboarding/WhatLookingForScreen';
 import { HeightScreen } from '../screens/onboarding/HeightScreen';
 import { SportsScreen } from '../screens/onboarding/SportsScreen';
 import { SmokingScreen } from '../screens/onboarding/SmokingScreen';
 import { ChildrenScreen } from '../screens/onboarding/ChildrenScreen';
 import { CitySelectionScreen } from '../screens/onboarding/CitySelectionScreen';
-import { PersonalityIntroScreen } from '../screens/onboarding/PersonalityIntroScreen';
-import { InterestSelectionScreen } from '../screens/onboarding/InterestSelectionScreen';
 import { BioScreen } from '../screens/onboarding/BioScreen';
 import { PromptSelectionScreen } from '../screens/onboarding/PromptSelectionScreen';
 import { PhotosScreen } from '../screens/onboarding/PhotosScreen';
-import { QuestionsIntroScreen } from '../screens/onboarding/QuestionsIntroScreen';
-import { QuestionsScreen } from '../screens/onboarding/QuestionsScreen';
 import { SelfieVerificationScreen } from '../screens/auth/SelfieVerificationScreen';
 
 const Stack = createNativeStackNavigator<OnboardingStackParamList>();
@@ -40,8 +35,8 @@ const Stack = createNativeStackNavigator<OnboardingStackParamList>();
 const ONBOARDING_BG = '#F5F0E8';
 
 // Ordered screen names for reference (used by OnboardingLayout step/totalSteps)
-// Total: 18 screens. Each screen passes its own step number to OnboardingLayout.
-export const ONBOARDING_TOTAL_STEPS = 18;
+// Total: 13 screens. Each screen passes its own step number to OnboardingLayout.
+export const ONBOARDING_TOTAL_STEPS = 13;
 
 // Default screen options: smooth slide transitions, cream background
 const defaultScreenOptions: NativeStackNavigationOptions = {
@@ -50,6 +45,9 @@ const defaultScreenOptions: NativeStackNavigationOptions = {
   animationDuration: 300,
   gestureEnabled: true,
   contentStyle: { backgroundColor: ONBOARDING_BG },
+  statusBarStyle: 'light',
+  statusBarBackgroundColor: '#08080F',
+  statusBarAnimation: 'none',
 };
 
 export const OnboardingNavigator: React.FC = () => {
@@ -59,27 +57,14 @@ export const OnboardingNavigator: React.FC = () => {
       <Stack.Screen name="BirthDate" component={BirthDateScreen} />
       <Stack.Screen name="Gender" component={GenderScreen} />
       <Stack.Screen name="WhoToMeet" component={WhoToMeetScreen} />
-      <Stack.Screen name="WhatLookingFor" component={WhatLookingForScreen} />
       <Stack.Screen name="Height" component={HeightScreen} />
       <Stack.Screen name="Sports" component={SportsScreen} />
       <Stack.Screen name="Smoking" component={SmokingScreen} />
       <Stack.Screen name="Children" component={ChildrenScreen} />
       <Stack.Screen name="CitySelection" component={CitySelectionScreen} />
-      <Stack.Screen name="PersonalityIntro" component={PersonalityIntroScreen} />
-      <Stack.Screen name="InterestSelection" component={InterestSelectionScreen} />
       <Stack.Screen name="Bio" component={BioScreen} />
       <Stack.Screen name="PromptSelection" component={PromptSelectionScreen} />
       <Stack.Screen name="Photos" component={PhotosScreen} />
-      <Stack.Screen name="QuestionsIntro" component={QuestionsIntroScreen} />
-      <Stack.Screen
-        name="Questions"
-        component={QuestionsScreen}
-        options={{
-          gestureEnabled: false,
-          animation: 'fade',
-          animationDuration: 350,
-        }}
-      />
       <Stack.Screen
         name="SelfieVerification"
         component={SelfieVerificationScreen}

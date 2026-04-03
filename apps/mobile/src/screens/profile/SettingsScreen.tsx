@@ -25,11 +25,12 @@ import { iapService } from '../../services/iapService';
 import { paymentService } from '../../services/paymentService';
 import { storage } from '../../utils/storage';
 import { useTheme } from '../../theme/ThemeContext';
-import type { ThemeColors, ThemeMode } from '../../theme/colors';
+import type { ThemeColors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { IncognitoToggle } from '../../components/discovery/IncognitoToggle';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -39,7 +40,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 type SettingsNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'Settings'>;
 
 // ── Types ────────────────────────────────────────────────────────
-type SettingItemType = 'navigation' | 'toggle' | 'action' | 'display' | 'faq' | 'theme' | 'supreme_feature';
+type SettingItemType = 'navigation' | 'toggle' | 'action' | 'display' | 'faq' | 'supreme_feature';
 
 interface BaseSettingItem {
   key: string;
@@ -75,10 +76,6 @@ interface FAQSettingItem extends BaseSettingItem {
   answer: string;
 }
 
-interface ThemeSettingItem extends BaseSettingItem {
-  type: 'theme';
-}
-
 interface SupremeFeatureItem extends BaseSettingItem {
   type: 'supreme_feature';
   active: boolean;
@@ -90,7 +87,6 @@ type SettingItem =
   | ActionSettingItem
   | DisplaySettingItem
   | FAQSettingItem
-  | ThemeSettingItem
   | SupremeFeatureItem;
 
 interface SettingSection {
@@ -99,13 +95,6 @@ interface SettingSection {
   accentColor?: string;
   data: SettingItem[];
 }
-
-// Theme option labels (Turkish)
-const THEME_OPTIONS: { mode: ThemeMode; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { mode: 'light', label: 'Açık', icon: 'sunny-outline' },
-  { mode: 'dark', label: 'Koyu', icon: 'moon-outline' },
-  { mode: 'system', label: 'Sistem', icon: 'phone-portrait-outline' },
-];
 
 // Supreme gold constant
 const SUPREME_GOLD = '#D4AF37';
@@ -116,7 +105,7 @@ export const SettingsScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
-  const { colors, themeMode, setThemeMode } = useTheme();
+  const { colors } = useTheme();
 
   const packageTier = user?.packageTier ?? 'FREE';
   const isSupreme = packageTier === 'RESERVED';
@@ -167,8 +156,22 @@ export const SettingsScreen: React.FC = () => {
   const setMatchNotifications = useMemo(() => makeSetter(TOGGLE_KEYS.matchNotifications, setMatchNotificationsRaw), [makeSetter, TOGGLE_KEYS]);
   const setMessageNotifications = useMemo(() => makeSetter(TOGGLE_KEYS.messageNotifications, setMessageNotificationsRaw), [makeSetter, TOGGLE_KEYS]);
   const setAppAnnouncements = useMemo(() => makeSetter(TOGGLE_KEYS.appAnnouncements, setAppAnnouncementsRaw), [makeSetter, TOGGLE_KEYS]);
-  const setShowOnlineStatus = useMemo(() => makeSetter(TOGGLE_KEYS.showOnlineStatus, setShowOnlineStatusRaw), [makeSetter, TOGGLE_KEYS]);
-  const setShowDistance = useMemo(() => makeSetter(TOGGLE_KEYS.showDistance, setShowDistanceRaw), [makeSetter, TOGGLE_KEYS]);
+  const setShowOnlineStatus = useCallback((val: boolean) => {
+    setShowOnlineStatusRaw(val);
+    storage.setString(TOGGLE_KEYS.showOnlineStatus, val ? '1' : '0');
+    // Sync to backend (optimistic — don't revert on failure)
+    import('../../services/profileService').then(({ profileService }) =>
+      profileService.updateProfile({ showOnlineStatus: val })
+    ).catch(() => { /* optimistic: keep local value */ });
+  }, [TOGGLE_KEYS]);
+  const setShowDistance = useCallback((val: boolean) => {
+    setShowDistanceRaw(val);
+    storage.setString(TOGGLE_KEYS.showDistance, val ? '1' : '0');
+    // Sync to backend (optimistic — don't revert on failure)
+    import('../../services/profileService').then(({ profileService }) =>
+      profileService.updateProfile({ showDistance: val })
+    ).catch(() => { /* optimistic: keep local value */ });
+  }, [TOGGLE_KEYS]);
 
   // ── Freeze Account ──────────────────────────────────────────
   const [isAccountFrozen, setIsAccountFrozen] = useState(false);
@@ -188,17 +191,12 @@ export const SettingsScreen: React.FC = () => {
               setIsFreezing(true);
               try {
                 await import('../../services/profileService').then(({ profileService }) =>
-                  profileService.updateProfile({ isComplete: true })
+                  profileService.updateProfile({ isFrozen: false })
                 );
                 setIsAccountFrozen(false);
                 Alert.alert('Başarılı', 'Hesabınız tekrar aktif hale getirildi.');
               } catch {
-                if (__DEV__) {
-                  setIsAccountFrozen(false);
-                  Alert.alert('Başarılı', 'Hesabınız tekrar aktif hale getirildi.');
-                } else {
-                  Alert.alert('Hata', 'Hesap aktif edilirken bir sorun oluştu.');
-                }
+                Alert.alert('Hata', 'Hesap aktif edilirken bir sorun oluştu.');
               } finally {
                 setIsFreezing(false);
               }
@@ -222,17 +220,12 @@ export const SettingsScreen: React.FC = () => {
             setIsFreezing(true);
             try {
               await import('../../services/profileService').then(({ profileService }) =>
-                profileService.updateProfile({ isComplete: false })
+                profileService.updateProfile({ isFrozen: true })
               );
               setIsAccountFrozen(true);
               Alert.alert('Hesap Donduruldu', 'Profiliniz artık gizli. İstediğiniz zaman tekrar aktif edebilirsiniz.');
             } catch {
-              if (__DEV__) {
-                setIsAccountFrozen(true);
-                Alert.alert('Hesap Donduruldu', 'Profiliniz artık gizli. İstediğiniz zaman tekrar aktif edebilirsiniz.');
-              } else {
-                Alert.alert('Hata', 'Hesap dondurulurken bir sorun oluştu.');
-              }
+              Alert.alert('Hata', 'Hesap dondurulurken bir sorun oluştu.');
             } finally {
               setIsFreezing(false);
             }
@@ -342,27 +335,30 @@ export const SettingsScreen: React.FC = () => {
   const phoneDisplay = user?.phone ?? '-';
   const emailDisplay = user?.email ?? 'Belirtilmedi';
 
+  const tierLabels: Record<string, string> = { FREE: 'Ücretsiz', GOLD: 'Gold', PRO: 'Pro', RESERVED: 'Supreme' };
+  const currentTierLabel = tierLabels[packageTier] ?? 'Ücretsiz';
+
   const sections: SettingSection[] = [
+    // 0. Üyelik
+    {
+      title: 'Üyelik',
+      icon: 'diamond-outline',
+      data: [
+        {
+          key: 'currentPlan',
+          icon: packageTier === 'FREE' ? 'rocket-outline' : 'star',
+          title: packageTier === 'FREE' ? "Premium'a Geç" : `${currentTierLabel} Üyelik`,
+          type: 'navigation',
+          subtitle: packageTier === 'FREE' ? 'Daha fazla özellik aç' : 'Aktif üyeliğini yönet',
+          onPress: () => navigation.navigate('MembershipPlans'),
+        },
+      ],
+    },
     // 1. Hesap Ayarları
     {
       title: 'Hesap Ayarları',
       icon: 'person-outline',
       data: [
-        {
-          key: 'edit_profile',
-          icon: 'create-outline',
-          title: 'Profil Düzenle',
-          type: 'navigation',
-          onPress: () => navigation.navigate('EditProfile'),
-        },
-        {
-          key: 'edit_answers',
-          icon: 'chatbubbles-outline',
-          title: 'Cevaplarımı Düzenle',
-          subtitle: 'Uyumluluk sorularını tekrar yanıtla',
-          type: 'navigation',
-          onPress: () => navigation.navigate('Questions', { editMode: true }),
-        },
         {
           key: 'phone',
           icon: 'call-outline',
@@ -376,6 +372,13 @@ export const SettingsScreen: React.FC = () => {
           title: 'E-posta',
           type: 'display',
           subtitle: emailDisplay,
+        },
+        {
+          key: 'display_id',
+          icon: 'finger-print-outline',
+          title: 'Luma ID',
+          type: 'display',
+          subtitle: user?.displayId || 'Henüz atanmadı',
         },
         {
           key: 'packages',
@@ -404,7 +407,35 @@ export const SettingsScreen: React.FC = () => {
       ],
     },
 
-    // 2. Supreme Avantajlarim (only for Supreme members)
+    // 2. Sosyal Medya
+    {
+      title: 'Sosyal Medya',
+      icon: 'share-social-outline',
+      data: [
+        {
+          key: 'instagram',
+          icon: 'logo-instagram',
+          title: 'Instagram',
+          type: 'navigation',
+          onPress: () => {
+            Linking.openURL('instagram://user?username=lumajoin').catch(() => {
+              Linking.openURL('https://www.instagram.com/lumajoin/');
+            });
+          },
+        },
+        {
+          key: 'tiktok',
+          icon: 'logo-tiktok',
+          title: 'TikTok',
+          type: 'navigation',
+          onPress: () => {
+            Linking.openURL('https://www.tiktok.com/@lumajoin').catch(() => {});
+          },
+        },
+      ],
+    },
+
+    // 3. Supreme Avantajlarim (only for Supreme members)
     ...(isSupreme ? [{
       title: 'Supreme Avantajlarım',
       icon: 'diamond' as keyof typeof Ionicons.glyphMap,
@@ -435,13 +466,6 @@ export const SettingsScreen: React.FC = () => {
           key: 'supreme_undo',
           icon: 'arrow-undo' as keyof typeof Ionicons.glyphMap,
           title: 'Geri Alma',
-          type: 'supreme_feature' as const,
-          active: true,
-        },
-        {
-          key: 'supreme_incognito',
-          icon: 'eye-off' as keyof typeof Ionicons.glyphMap,
-          title: 'Gizli Mod',
           type: 'supreme_feature' as const,
           active: true,
         },
@@ -582,7 +606,7 @@ export const SettingsScreen: React.FC = () => {
           icon: 'help-outline',
           title: 'Gold ne işe yarar?',
           type: 'faq',
-          answer: 'Gold paketi ile sınırsız beğeni, detaylı uyumluluk analizi, 25 premium soru, günlük 5 süper beğeni ve kimin beğendiğini görme gibi özellikler kazanırsınız.',
+          answer: 'Gold paketi ile günlük 50 beğeni hakkı (FREE\'de 20), gelişmiş arama filtreleri, seni kim beğendi görme, profil öne çıkarma (boost), geri alma hakkı (günlük 1), reklamsız deneyim ve aylık bonus jeton kazanırsınız.',
         },
         {
           key: 'faq_delete',
@@ -642,7 +666,7 @@ export const SettingsScreen: React.FC = () => {
       }],
     }] : []),
 
-    // 7. Tehlike Bölgesi
+    // 8. Tehlike Bölgesi
     {
       title: 'Tehlike Bölgesi',
       icon: 'warning-outline',
@@ -664,52 +688,23 @@ export const SettingsScreen: React.FC = () => {
 
   // ── Render functions ──────────────────────────────────────────
 
-  const renderThemeSelector = () => (
-    <View style={dynamicStyles.themeContainer}>
-      <View style={dynamicStyles.themeOptions}>
-        {THEME_OPTIONS.map(({ mode, label, icon }) => {
-          const isSelected = themeMode === mode;
-          return (
-            <TouchableOpacity
-              key={mode}
-              style={[
-                dynamicStyles.themeOption,
-                isSelected && dynamicStyles.themeOptionSelected,
-              ]}
-              onPress={() => setThemeMode(mode)}
-              activeOpacity={0.7}
-              accessibilityLabel={`${label} tema${isSelected ? ', seçili' : ''}`}
-              accessibilityRole="button"
-            >
-              <Ionicons
-                name={icon}
-                size={16}
-                color={isSelected ? colors.primary : colors.textTertiary}
-              />
-              <Text style={[
-                dynamicStyles.themeOptionText,
-                isSelected && dynamicStyles.themeOptionTextSelected,
-              ]}>
-                {label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-    </View>
-  );
-
   const renderItem = ({ item }: { item: SettingItem }) => {
     // Render the dedicated IncognitoToggle component for the incognito row
     if (item.key === 'incognito') {
       return (
-        <View style={dynamicStyles.settingRow}>
+        <View style={{
+          marginHorizontal: spacing.md,
+          marginVertical: 2,
+          backgroundColor: colors.surface,
+          borderRadius: borderRadius.md,
+          borderWidth: 1,
+          borderColor: colors.surfaceBorder,
+          overflow: 'hidden',
+        }}>
           <IncognitoToggle onLockedPress={handleIncognitoLockedPress} />
         </View>
       );
     }
-
-    if (item.type === 'theme') return renderThemeSelector();
 
     // Supreme feature row
     if (item.type === 'supreme_feature') {
@@ -812,6 +807,13 @@ export const SettingsScreen: React.FC = () => {
     // Action / Navigation row
     const isDestructive = item.type === 'action' && item.destructive === true;
 
+    // Social media icon colors
+    const socialIconColors: Record<string, string> = {
+      instagram: '#E1306C',
+      tiktok: '#000000',
+    };
+    const socialIconColor = socialIconColors[item.key];
+
     return (
       <TouchableOpacity
         style={dynamicStyles.settingRow}
@@ -828,7 +830,7 @@ export const SettingsScreen: React.FC = () => {
             <Ionicons
               name={item.icon}
               size={16}
-              color={isDestructive ? colors.error : colors.textSecondary}
+              color={isDestructive ? colors.error : socialIconColor ?? colors.textSecondary}
             />
           </View>
           <Text style={[
@@ -890,6 +892,7 @@ export const SettingsScreen: React.FC = () => {
 
   return (
     <View style={[dynamicStyles.container, { paddingTop: insets.top }]}>
+      <BrandedBackground />
       {/* Header */}
       <View style={dynamicStyles.header}>
         <TouchableOpacity
@@ -1090,50 +1093,6 @@ function createDynamicStyles(c: ThemeColors) {
       ...typography.bodySmall,
       color: c.textSecondary,
       lineHeight: 20,
-    },
-
-    // Theme selector
-    themeContainer: {
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.lg,
-      marginHorizontal: spacing.md,
-      backgroundColor: c.surface,
-      borderRadius: borderRadius.md,
-      borderWidth: 1,
-      borderColor: c.surfaceBorder,
-      marginVertical: 2,
-    },
-    themeOptions: {
-      flexDirection: 'row',
-      gap: spacing.sm,
-    },
-    themeOption: {
-      flex: 1,
-      flexDirection: 'row',
-      paddingVertical: spacing.sm + 2,
-      paddingHorizontal: spacing.sm,
-      borderRadius: borderRadius.md,
-      borderWidth: 1,
-      borderColor: c.surfaceBorder,
-      backgroundColor: c.surfaceLight,
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: spacing.xs,
-    },
-    themeOptionSelected: {
-      borderColor: c.primary,
-      backgroundColor: c.primary + '15',
-    },
-    themeOptionText: {
-      ...typography.caption,
-      color: c.textSecondary,
-      fontFamily: 'Poppins_500Medium',
-      fontWeight: '500',
-    },
-    themeOptionTextSelected: {
-      color: c.primary,
-      fontFamily: 'Poppins_600SemiBold',
-      fontWeight: '600',
     },
 
     // Logout button

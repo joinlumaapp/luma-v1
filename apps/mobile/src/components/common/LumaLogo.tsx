@@ -3,7 +3,7 @@
 // Available to all departments for consistent branding across the app
 
 import React from 'react';
-import { Image, StyleSheet } from 'react-native';
+import { Image } from 'react-native';
 
 const lumaLogoSource = require('../../../assets/splash-logo.png');
 

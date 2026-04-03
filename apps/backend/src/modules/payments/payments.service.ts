@@ -122,6 +122,23 @@ const GOLD_COSTS: Record<string, { cost: number; descriptionTr: string }> = {
   spotlight: { cost: 75, descriptionTr: "30 dk bolge one cikarma" },
   travel_mode: { cost: 200, descriptionTr: "24 saat farkli sehirde profil gosterme" },
   priority_message: { cost: 40, descriptionTr: "Mesaji en uste cikarma" },
+  // ─── Matching Redesign Gold Actions ─────────────────────────
+  extra_likes_reveal: { cost: 20, descriptionTr: "Ekstra begeni acma" },
+  extra_viewers_reveal: { cost: 15, descriptionTr: "Ekstra profil goruntuleyici acma" },
+  viewer_delay_bypass: { cost: 25, descriptionTr: "Goruntuleme gecikmesi atlama" },
+  priority_visibility_1h: { cost: 60, descriptionTr: "1 saat oncelikli gorunurluk" },
+  priority_visibility_3h: { cost: 150, descriptionTr: "3 saat oncelikli gorunurluk" },
+  activity_strip_pin: { cost: 40, descriptionTr: "Aktivite seridine sabitleme" },
+  secret_admirer_send: { cost: 75, descriptionTr: "Gizli hayran gonderme" },
+  secret_admirer_extra_guess: { cost: 25, descriptionTr: "Ekstra tahmin hakki" },
+  compatibility_xray: { cost: 30, descriptionTr: "Uyum rontgeni acma" },
+  super_compatible_reveal: { cost: 20, descriptionTr: "Super uyumlu profil acma" },
+  ai_chat_suggestion_pack: { cost: 30, descriptionTr: "AI sohbet onerisi paketi" },
+  nearby_notify: { cost: 35, descriptionTr: "Yakin cevre bildirimi" },
+  weekly_top_reveal: { cost: 40, descriptionTr: "Haftalik top esleme acma" },
+  message_bundle_3: { cost: 350, descriptionTr: "3 mesaj paketi" },
+  message_bundle_5: { cost: 500, descriptionTr: "5 mesaj paketi" },
+  message_bundle_10: { cost: 800, descriptionTr: "10 mesaj paketi" },
 };
 
 // One-time purchase products (not subscription-based)
@@ -836,6 +853,23 @@ export class PaymentsService {
       spotlight: "SPOTLIGHT",
       travel_mode: "TRAVEL_MODE",
       priority_message: "PRIORITY_MESSAGE",
+      // Matching redesign actions
+      extra_likes_reveal: "EXTRA_LIKES_REVEAL",
+      extra_viewers_reveal: "EXTRA_VIEWERS_REVEAL",
+      viewer_delay_bypass: "VIEWER_DELAY_BYPASS",
+      priority_visibility_1h: "PRIORITY_VISIBILITY",
+      priority_visibility_3h: "PRIORITY_VISIBILITY",
+      activity_strip_pin: "ACTIVITY_STRIP_PIN",
+      secret_admirer_send: "SECRET_ADMIRER_SEND",
+      secret_admirer_extra_guess: "SECRET_ADMIRER_EXTRA_GUESS",
+      compatibility_xray: "COMPATIBILITY_XRAY",
+      super_compatible_reveal: "SUPER_COMPATIBLE_REVEAL",
+      ai_chat_suggestion_pack: "AI_CHAT_SUGGESTION",
+      nearby_notify: "NEARBY_NOTIFY",
+      weekly_top_reveal: "WEEKLY_TOP_REVEAL",
+      message_bundle_3: "MESSAGE_BUNDLE",
+      message_bundle_5: "MESSAGE_BUNDLE",
+      message_bundle_10: "MESSAGE_BUNDLE",
     };
 
     // Atomic debit inside a serializable transaction to prevent race conditions

@@ -7,6 +7,7 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
+  StatusBar,
   Animated,
   Vibration,
   Modal,
@@ -129,6 +130,7 @@ export const IncomingCallOverlay: React.FC = () => {
       animationType="fade"
       statusBarTranslucent
     >
+      <StatusBar barStyle="light-content" backgroundColor="#08080F" />
       <View style={[styles.overlay, { paddingTop: insets.top + spacing.xl, paddingBottom: insets.bottom + spacing.xl }]}>
         {/* Call type label */}
         <Text style={styles.callTypeLabel}>{callTypeLabel}</Text>

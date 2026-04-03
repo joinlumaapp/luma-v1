@@ -8,10 +8,11 @@
 
 import { create } from 'zustand';
 import { storage } from '../utils/storage';
+import { useAuthStore, type PackageTier } from './authStore';
 
 // ─── Constants ──────────────────────────────────────────────────
 
-/** Cards per batch before a speed-swiper check is triggered */
+/** Cards per batch before a speed-swiper check is triggered (FREE tier default) */
 export const BASE_BATCH_SIZE = 30;
 
 /** Swipes faster than this threshold (in seconds) count as "speed swiping" */
@@ -20,7 +21,7 @@ export const SPEED_THRESHOLD_MS = 1500;
 /** Consecutive fast swipes required to flag a user as speed-swiping */
 export const SPEED_SWIPE_STREAK = 5;
 
-/** Cooldown duration when speed swiping is detected (30 minutes) */
+/** Cooldown duration when speed swiping is detected — FREE tier default (30 minutes) */
 export const COOLDOWN_DURATION_MS = 30 * 60 * 1000;
 
 /** Jeton cost to skip a cooldown */
@@ -40,6 +41,30 @@ export const SELECTIVE_BATCH_MULTIPLIER = 1.3;
 
 /** Minimum time considered "thoughtful" per card (3 seconds) */
 export const THOUGHTFUL_THRESHOLD_MS = 3000;
+
+// ─── Tier-Based Config ─────────────────────────────────────────
+
+interface TierSwipeConfig {
+  /** Cards per batch */
+  batchSize: number;
+  /** Cooldown duration in ms (-1 = no cooldown) */
+  cooldownMs: number;
+}
+
+const TIER_SWIPE_CONFIG: Record<PackageTier, TierSwipeConfig> = {
+  FREE: { batchSize: 30, cooldownMs: 30 * 60 * 1000 },
+  GOLD: { batchSize: 50, cooldownMs: 15 * 60 * 1000 },
+  PRO: { batchSize: 100, cooldownMs: 5 * 60 * 1000 },
+  RESERVED: { batchSize: -1, cooldownMs: -1 }, // unlimited
+};
+
+/** Read the current user tier at call time (not at store creation time) */
+const getCurrentTier = (): PackageTier =>
+  useAuthStore.getState().user?.packageTier ?? 'FREE';
+
+/** Get tier-specific swipe config for the current user */
+const getTierConfig = (): TierSwipeConfig =>
+  TIER_SWIPE_CONFIG[getCurrentTier()];
 
 // ─── Persistence keys ───────────────────────────────────────────
 
@@ -148,16 +173,21 @@ export const useSwipeRateLimiterStore = create<SwipeRateLimiterState>((set, get)
     return 'normal';
   },
 
-  /** Calculate effective batch size based on like category */
+  /** Calculate effective batch size based on tier and like category */
   getEffectiveBatchSize: (): number => {
+    const config = getTierConfig();
+    // RESERVED tier = unlimited (-1)
+    if (config.batchSize === -1) return -1;
+
+    const baseBatch = config.batchSize;
     const category = get().getLikeCategory();
     switch (category) {
       case 'spam':
-        return Math.round(BASE_BATCH_SIZE * SPAM_BATCH_MULTIPLIER);
+        return Math.round(baseBatch * SPAM_BATCH_MULTIPLIER);
       case 'selective':
-        return Math.round(BASE_BATCH_SIZE * SELECTIVE_BATCH_MULTIPLIER);
+        return Math.round(baseBatch * SELECTIVE_BATCH_MULTIPLIER);
       default:
-        return BASE_BATCH_SIZE;
+        return baseBatch;
     }
   },
 
@@ -200,6 +230,10 @@ export const useSwipeRateLimiterStore = create<SwipeRateLimiterState>((set, get)
     const { isInitialized } = get();
     if (isInitialized) return;
 
+    const config = getTierConfig();
+    // RESERVED tier: unlimited batch (-1 means no limit tracking needed)
+    const initialBatch = config.batchSize === -1 ? Infinity : config.batchSize;
+
     // Check if session date matches today; if not, reset counters
     const storedDate = storage.getString(STORAGE_KEYS.SESSION_DATE);
     const today = getTodayStr();
@@ -221,7 +255,7 @@ export const useSwipeRateLimiterStore = create<SwipeRateLimiterState>((set, get)
         dislikeCount: 0,
         swipeTimestamps: [],
         consecutiveFastSwipes: 0,
-        currentBatchRemaining: BASE_BATCH_SIZE,
+        currentBatchRemaining: initialBatch,
         cooldownEndTime: cooldownEnd,
         isInitialized: true,
       });
@@ -280,6 +314,11 @@ export const useSwipeRateLimiterStore = create<SwipeRateLimiterState>((set, get)
 
   /** Check if cooldown should be triggered (batch exhausted + speed swiping) */
   shouldTriggerCooldown: (): boolean => {
+    const config = getTierConfig();
+
+    // RESERVED tier: no cooldown ever
+    if (config.cooldownMs === -1) return false;
+
     const state = get();
 
     // Batch not exhausted — no cooldown needed
@@ -301,9 +340,13 @@ export const useSwipeRateLimiterStore = create<SwipeRateLimiterState>((set, get)
     return false;
   },
 
-  /** Activate cooldown */
+  /** Activate cooldown using tier-based duration */
   startCooldown: () => {
-    const end = Date.now() + COOLDOWN_DURATION_MS;
+    const config = getTierConfig();
+    // RESERVED tier should never reach here, but guard anyway
+    if (config.cooldownMs === -1) return;
+
+    const end = Date.now() + config.cooldownMs;
     set({ cooldownEndTime: end });
     storage.setNumber(STORAGE_KEYS.COOLDOWN_END, end);
   },
@@ -316,9 +359,9 @@ export const useSwipeRateLimiterStore = create<SwipeRateLimiterState>((set, get)
     storage.delete(STORAGE_KEYS.COOLDOWN_END);
 
     // Reset batch for the new session
-    const batchSize = get().getEffectiveBatchSize();
+    const effectiveBatch = get().getEffectiveBatchSize();
     set({
-      currentBatchRemaining: batchSize,
+      currentBatchRemaining: effectiveBatch === -1 ? Infinity : effectiveBatch,
       consecutiveFastSwipes: 0,
       swipeTimestamps: [],
     });
@@ -328,9 +371,9 @@ export const useSwipeRateLimiterStore = create<SwipeRateLimiterState>((set, get)
 
   /** Reset batch for a new round (called when thoughtful users exhaust their batch) */
   resetBatch: () => {
-    const batchSize = get().getEffectiveBatchSize();
+    const effectiveBatch = get().getEffectiveBatchSize();
     set({
-      currentBatchRemaining: batchSize,
+      currentBatchRemaining: effectiveBatch === -1 ? Infinity : effectiveBatch,
       consecutiveFastSwipes: 0,
       // Keep timestamps for ongoing speed analysis but trim
       swipeTimestamps: get().swipeTimestamps.slice(-5),
@@ -339,11 +382,13 @@ export const useSwipeRateLimiterStore = create<SwipeRateLimiterState>((set, get)
 
   /** Full session reset (e.g. new day or logout) */
   resetSession: () => {
+    const config = getTierConfig();
+    const initialBatch = config.batchSize === -1 ? Infinity : config.batchSize;
     set({
       swipeTimestamps: [],
       likeCount: 0,
       dislikeCount: 0,
-      currentBatchRemaining: BASE_BATCH_SIZE,
+      currentBatchRemaining: initialBatch,
       cooldownEndTime: null,
       consecutiveFastSwipes: 0,
     });

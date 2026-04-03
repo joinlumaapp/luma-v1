@@ -42,7 +42,8 @@ export const VISIBLE_MODES = INTENTION_TAGS.filter(
   (t): t is typeof INTENTION_TAGS[0] | typeof INTENTION_TAGS[1] => !('hidden' in t && t.hidden),
 );
 
-// Interest tags — predefined list for onboarding selection
+// Interest tags — predefined list for onboarding selection (legacy flat list)
+// @deprecated Use INTEREST_CATEGORIES for categorized picker. Kept for backward compat lookups.
 export const INTEREST_OPTIONS = [
   { id: 'travel', emoji: '\u2708\uFE0F', label: 'Seyahat' },
   { id: 'music', emoji: '\uD83C\uDFB5', label: 'Müzik' },
@@ -64,6 +65,209 @@ export const INTEREST_OPTIONS = [
   { id: 'coffee', emoji: '\u2615', label: 'Kahve & Şarap' },
 ] as const;
 
+// ── Categorized interests — Bumpy-style picker ───────────────────────────
+export interface InterestItem {
+  emoji: string;
+  label: string;
+}
+
+export interface InterestCategory {
+  title: string;
+  items: InterestItem[];
+}
+
+export const MAX_INTEREST_SELECTIONS = 15;
+export const INTEREST_CATEGORY_PREVIEW_COUNT = 6;
+
+export const INTEREST_CATEGORIES: InterestCategory[] = [
+  {
+    title: 'Seyahatler',
+    items: [
+      { emoji: '🌊', label: 'Denizler' },
+      { emoji: '⛰', label: 'Daglar' },
+      { emoji: '🌳', label: 'Doga' },
+      { emoji: '🗼', label: 'Gezilecek yerler' },
+      { emoji: '🏙', label: 'Sehirler' },
+      { emoji: '🧭', label: 'Yuruyus' },
+    ],
+  },
+  {
+    title: 'Yiyecek ve Icecek',
+    items: [
+      { emoji: '☕', label: 'Kahve' },
+      { emoji: '🫖', label: 'Cay' },
+      { emoji: '🍺', label: 'Bira' },
+      { emoji: '🍷', label: 'Sarap' },
+      { emoji: '🥃', label: 'Viski' },
+      { emoji: '🍹', label: 'Kokteyller' },
+      { emoji: '🍕', label: 'Pizza' },
+      { emoji: '🍣', label: 'Susi' },
+      { emoji: '🍔', label: 'Fast food' },
+      { emoji: '🥩', label: 'Izgara' },
+      { emoji: '🍲', label: 'Ev yemekleri' },
+      { emoji: '🍰', label: 'Tatlilar' },
+      { emoji: '🥗', label: 'Vejetaryen' },
+      { emoji: '🌱', label: 'Vegan' },
+    ],
+  },
+  {
+    title: 'Hobiler',
+    items: [
+      { emoji: '✍', label: 'Siir' },
+      { emoji: '📝', label: 'Nesir' },
+      { emoji: '💄', label: 'Makyaj' },
+      { emoji: '✏', label: 'Blog yazma' },
+      { emoji: '📱', label: 'Tik-Tok Cekme' },
+      { emoji: '🎨', label: 'Cizim' },
+      { emoji: '🎵', label: 'Muzik' },
+      { emoji: '📸', label: 'Fotografcilik' },
+      { emoji: '🎬', label: 'Tasarim' },
+      { emoji: '💉', label: 'Dovmeler' },
+      { emoji: '📚', label: 'Okuma' },
+      { emoji: '📺', label: 'TV' },
+      { emoji: '🎥', label: 'YouTube' },
+      { emoji: '🍳', label: 'Yemek pisirme' },
+      { emoji: '🌻', label: 'Bahcecilik' },
+      { emoji: '🎲', label: 'Masa oyunlari' },
+      { emoji: '❓', label: 'Akil oyunlari' },
+      { emoji: '🔭', label: 'Astronomi' },
+      { emoji: '🚗', label: 'Arabalar' },
+      { emoji: '🎮', label: 'Video oyunlari' },
+      { emoji: '💪', label: 'Saglikli yasam tarzi' },
+      { emoji: '🎣', label: 'Balikcilik' },
+      { emoji: '🛍', label: 'Alisveris' },
+    ],
+  },
+  {
+    title: 'Spor',
+    items: [
+      { emoji: '🧗', label: 'Tirmanma' },
+      { emoji: '🏸', label: 'Badminton' },
+      { emoji: '🏀', label: 'Basketbol' },
+      { emoji: '💪', label: 'Vucut Gelistirme' },
+      { emoji: '🏃', label: 'Kosma' },
+      { emoji: '⚾', label: 'Beyzbol' },
+      { emoji: '🥊', label: 'Boks' },
+      { emoji: '🤼', label: 'Gures' },
+      { emoji: '🚴', label: 'Bisiklet' },
+      { emoji: '🤽', label: 'Su topu' },
+      { emoji: '🏐', label: 'Voleybol' },
+      { emoji: '🤾', label: 'Hentbol' },
+      { emoji: '🤸', label: 'Jimnastik' },
+      { emoji: '🚣', label: 'Kurek cekme' },
+      { emoji: '🥋', label: 'Judo' },
+      { emoji: '🧘', label: 'Yoga' },
+      { emoji: '🏃‍♀️', label: 'Atletizm' },
+      { emoji: '🧘‍♂️', label: 'Meditasyon' },
+      { emoji: '🤸‍♀️', label: 'Pilates' },
+      { emoji: '🏊', label: 'Yuzme' },
+      { emoji: '🏄', label: 'Sorf' },
+      { emoji: '💃', label: 'Dans' },
+      { emoji: '🎾', label: 'Tenis' },
+      { emoji: '🏓', label: 'Masa tenisi' },
+      { emoji: '⚽', label: 'Futbol' },
+      { emoji: '🏒', label: 'Hokey' },
+      { emoji: '🖥', label: 'eSpor' },
+      { emoji: '🏎', label: 'Formula 1' },
+    ],
+  },
+  {
+    title: 'Muzik',
+    items: [
+      { emoji: '🎵', label: 'Halk Muzigi' },
+      { emoji: '🎵', label: 'Country muzik' },
+      { emoji: '🎵', label: 'Latin Amerika muzigi' },
+      { emoji: '🎵', label: 'Blues' },
+      { emoji: '🎵', label: 'R&B' },
+      { emoji: '🎵', label: 'Caz' },
+      { emoji: '🎵', label: 'Sanson' },
+      { emoji: '🎵', label: 'Romantik' },
+      { emoji: '🎵', label: 'Sanat sarkisi' },
+      { emoji: '🎵', label: 'Elektronik muzik' },
+      { emoji: '🎵', label: 'Rock' },
+      { emoji: '🎵', label: 'Hip-hop' },
+      { emoji: '🎵', label: 'Reggae' },
+      { emoji: '🎵', label: 'Funk' },
+      { emoji: '🎵', label: 'Yeni Dalga' },
+      { emoji: '🎵', label: 'Soul' },
+      { emoji: '🎵', label: 'Disko' },
+      { emoji: '🎵', label: 'Pop' },
+    ],
+  },
+  {
+    title: 'Evcil hayvanlar',
+    items: [
+      { emoji: '🐈', label: 'Kediler' },
+      { emoji: '🐕', label: 'Kopekler' },
+      { emoji: '🐦', label: 'Kuslar' },
+      { emoji: '🐟', label: 'Baliklar' },
+      { emoji: '🐇', label: 'Tavsanlar' },
+      { emoji: '🐍', label: 'Yilanlar' },
+    ],
+  },
+  {
+    title: 'Disari cikma',
+    items: [
+      { emoji: '☕', label: 'Kafeler' },
+      { emoji: '🍽', label: 'Restoranlar' },
+      { emoji: '🎤', label: 'Karaoke' },
+      { emoji: '🎭', label: 'Tiyatrolar' },
+      { emoji: '🍻', label: 'Barlar' },
+      { emoji: '🪩', label: 'Gece Kulupleri' },
+      { emoji: '🏛', label: 'Muzeler' },
+      { emoji: '🖼', label: 'Galeriler' },
+      { emoji: '🎤', label: 'Konserler' },
+      { emoji: '🌬', label: 'Nargile barlari' },
+    ],
+  },
+  {
+    title: 'Digerleri',
+    items: [
+      { emoji: '⚡', label: 'Harry Potter' },
+      { emoji: '🏋', label: 'Evde egzersiz' },
+      { emoji: '📱', label: 'Instagram' },
+      { emoji: '👟', label: 'Spor ayakkabi' },
+      { emoji: '🗣', label: 'Dil ogrenme' },
+      { emoji: '🏋‍♀️', label: 'Spor Salonu' },
+      { emoji: '☕', label: 'Kahveci' },
+      { emoji: '🫖', label: 'Cayci' },
+      { emoji: '🧁', label: 'Kekler' },
+      { emoji: '🏠', label: 'Serbest calisma' },
+      { emoji: '🆕', label: 'Yeni bir sey deneyin' },
+      { emoji: '⚖', label: 'Insan haklari' },
+      { emoji: '🍦', label: 'Dondurma' },
+      { emoji: '🍩', label: 'Lezzetli yemekler' },
+      { emoji: '🌳', label: 'Doga Koruma' },
+      { emoji: '🛋', label: 'Hicbir Sey Yapmama' },
+      { emoji: '😴', label: 'Uyku' },
+      { emoji: '🦁', label: 'Disney' },
+      { emoji: '🛡', label: 'Marvel' },
+      { emoji: '🦸', label: 'DC' },
+      { emoji: '🛍', label: 'Alisveris kolik' },
+      { emoji: '🌐', label: 'Iletisim kurma' },
+      { emoji: '🎮', label: 'PlayStation' },
+      { emoji: '🎮', label: 'XBox' },
+      { emoji: '🌧', label: 'Yagmurda yurume' },
+      { emoji: '😊', label: 'Mutluluk' },
+      { emoji: '📺', label: 'TV Programlari' },
+      { emoji: '💼', label: 'Girisimcilik' },
+      { emoji: '📈', label: 'Kripto Para' },
+      { emoji: '⭐', label: 'Astronomi' },
+      { emoji: '🌍', label: 'Ekolojik aktivizm' },
+      { emoji: '🏳‍🌈', label: 'LGBTQ+' },
+      { emoji: '🐉', label: 'Ejderhalar' },
+      { emoji: '☮', label: 'Dunya barisi' },
+      { emoji: '💬', label: 'Twitter' },
+      { emoji: '🖼', label: 'NFT' },
+      { emoji: '🃏', label: 'Poker' },
+      { emoji: '🦄', label: 'Girisimler' },
+      { emoji: '🛋', label: 'Vakit oldurme' },
+      { emoji: '🏐', label: 'Plaj voleybolu' },
+      { emoji: '❄', label: 'Sogugu sevmem' },
+    ],
+  },
+];
+
 // Package tiers — LOCKED at 4
 export const PACKAGE_TIERS = [
   {
@@ -71,6 +275,7 @@ export const PACKAGE_TIERS = [
     name: 'Ücretsiz',
     tagline: 'Keşfetmeye başla',
     price: 0,
+    priceDisplay: '0₺',
     badge: null,
     features: [
       '20 beğeni / gün',
@@ -90,7 +295,8 @@ export const PACKAGE_TIERS = [
     id: 'GOLD',
     name: 'Premium',
     tagline: '\uD83D\uDD25 3x daha fazla eşleşme',
-    price: 14.99,
+    price: 349,
+    priceDisplay: '349₺',
     badge: 'En Popüler',
     features: [
       '\u2728 Sınırsız beğeni',
@@ -111,7 +317,8 @@ export const PACKAGE_TIERS = [
     id: 'PRO',
     name: 'Supreme',
     tagline: '\u26A1 Anında fark edil',
-    price: 29.99,
+    price: 499,
+    priceDisplay: '499₺',
     badge: 'En İyi Değer',
     features: [
       '\uD83D\uDC8E Premium\'daki her şey',
@@ -132,7 +339,8 @@ export const PACKAGE_TIERS = [
     id: 'RESERVED',
     name: 'Sınırsız',
     tagline: '\uD83D\uDC51 Elite deneyim',
-    price: 49.99,
+    price: 1299,
+    priceDisplay: '1.299₺',
     badge: 'Elite',
     features: [
       '\uD83D\uDC51 Supreme\'daki her şey',
@@ -274,14 +482,31 @@ export const PRIVATE_MESSAGE_CONFIG = {
 export const MONETIZATION_ENABLED = true;
 
 // Flirt request daily limits per package tier (-1 = unlimited)
+// All tiers have unlimited swipes — consistent with backend discovery service
+// and MembershipPlansScreen which shows "Sinirsiz" for all tiers.
 export const FLIRT_CONFIG = {
   DAILY_LIMITS: {
-    FREE: 3,
-    GOLD: 15,
-    PRO: 50,
+    FREE: -1,
+    GOLD: -1,
+    PRO: -1,
     RESERVED: -1,
   },
 } as const;
+
+// Boost duration options with jeton costs
+export const BOOST_DURATION_OPTIONS = [
+  { minutes: 30, label: '30 dk', goldCost: 50 },
+  { minutes: 120, label: '2 saat', goldCost: 120 },
+  { minutes: 1440, label: '24 saat', goldCost: 250 },
+] as const;
+
+// Boost pack purchase options (jeton cost)
+export const BOOST_PACKS = [
+  { id: 'boost_20', count: 20, costGold: 1500, discount: '%37 KAYDET', popular: true },
+  { id: 'boost_10', count: 10, costGold: 900, discount: '%32 KAYDET' },
+  { id: 'boost_5', count: 5, costGold: 500, discount: '%20 KAYDET' },
+  { id: 'boost_1', count: 1, costGold: 120 },
+] as const;
 
 // Instant Connect daily session limits per package tier (-1 = unlimited)
 export const INSTANT_CONNECT_CONFIG = {
@@ -291,20 +516,9 @@ export const INSTANT_CONNECT_CONFIG = {
     PRO: 10,
     RESERVED: -1,
   },
-  MATCH_COST: 25,     // coins for first match
-  SWITCH_COST: 15,    // coins to switch to another match
+  MATCH_COST: 50,     // coins for first match
+  SWITCH_COST: 25,    // coins to switch to another match
 } as const;
-
-// Video discovery daily limits per package tier (-1 = unlimited)
-export const VIDEO_DISCOVERY_CONFIG = {
-  DAILY_LIMITS: {
-    FREE: 10,
-    GOLD: -1,
-    PRO: -1,
-    RESERVED: -1,
-  },
-} as const;
-
 
 // Monthly token bonus per tier (awarded on subscription renewal)
 export const MONTHLY_TOKEN_BONUS = {
@@ -313,6 +527,128 @@ export const MONTHLY_TOKEN_BONUS = {
   PRO: 500,
   RESERVED: 1000,
 } as const;
+
+// ─── Kim Gördü — Viewer Reveal Config ─────────────────────────────
+export const VIEWERS_REVEAL_CONFIG = {
+  FREE: { dailyReveals: 1, delayHours: 24 },
+  GOLD: { dailyReveals: 5, delayHours: 6 },
+  PRO: { dailyReveals: 15, delayHours: 0 },
+  RESERVED: { dailyReveals: 999999, delayHours: 0 },
+} as const;
+
+// ─── Beğenenler — Likes Reveal Config ────────────────────────────
+// @deprecated Use LIKES_VIEW_CONFIG.DAILY_LIMITS instead. Kept for backward compatibility.
+export const LIKES_REVEAL_CONFIG = LIKES_VIEW_CONFIG.DAILY_LIMITS;
+
+// ─── Mesaj Paketleri ──────────────────────────────────────────────
+export const MESSAGE_BUNDLE_CONFIG = [
+  { id: 'msg_bundle_1', count: 1, costGold: 150, discountPercent: 0 },
+  { id: 'msg_bundle_3', count: 3, costGold: 350, discountPercent: 22 },
+  { id: 'msg_bundle_5', count: 5, costGold: 500, discountPercent: 33 },
+  { id: 'msg_bundle_10', count: 10, costGold: 800, discountPercent: 47 },
+] as const;
+
+// ─── Tier Ücretsiz Mesaj Hakları (aylık) ──────────────────────────
+export const FREE_MESSAGE_ALLOWANCE = {
+  FREE: 0,
+  GOLD: 1,
+  PRO: 3,
+  RESERVED: 5,
+} as const;
+
+// ─── Gizli Hayran — Secret Admirer Config ─────────────────────────
+export const SECRET_ADMIRER_CONFIG = {
+  COST_GOLD: 75,
+  EXTRA_GUESS_COST: 25,
+  FREE_GUESSES: 3,
+  EXPIRY_HOURS: 48,
+  FREE_SENDS_PER_MONTH: { FREE: 0, GOLD: 1, PRO: 3, RESERVED: 5 },
+} as const;
+
+// ─── Uyum Röntgeni — Compatibility X-Ray Config ──────────────────
+export const COMPATIBILITY_XRAY_CONFIG = {
+  COST_GOLD: 30,
+  FREE_PER_DAY: { FREE: 0, GOLD: 0, PRO: 10, RESERVED: 999999 },
+} as const;
+
+// ─── Haftalık Top 3 ───────────────────────────────────────────────
+export const WEEKLY_TOP_CONFIG = {
+  VISIBLE_COUNT: { FREE: 1, GOLD: 2, PRO: 3, RESERVED: 3 },
+  REVEAL_COST_GOLD: 40,
+  REFRESH_DAY: 1, // Monday
+} as const;
+
+// ─── AI Sohbet Önerileri ──────────────────────────────────────────
+export const AI_CHAT_SUGGESTION_CONFIG = {
+  FREE_PER_DAY: { FREE: 0, GOLD: 2, PRO: 5, RESERVED: 999999 },
+  PACK_SIZE: 10,
+  PACK_COST_GOLD: 30,
+} as const;
+
+// ─── Yakınında Etiketi Görünürlüğü ───────────────────────────────
+export const NEARBY_VISIBILITY_CONFIG = {
+  FREE: 'hidden' as const,
+  GOLD: 'label' as const,
+  PRO: 'distance' as const,
+  RESERVED: 'distance_push' as const,
+} as const;
+
+// ─── Süper Uyumlu Eşik ───────────────────────────────────────────
+export const SUPER_COMPATIBLE_THRESHOLD = 80;
+
+// ── Extended Profile Field Options ────────────────────────────
+
+export const ZODIAC_SIGNS = [
+  'Koc', 'Boga', 'Ikizler', 'Yengec', 'Aslan', 'Basak',
+  'Terazi', 'Akrep', 'Yay', 'Oglak', 'Kova', 'Balik',
+] as const;
+
+export const EDUCATION_LEVELS = [
+  'Lise', 'On Lisans', 'Lisans', 'Yuksek Lisans', 'Doktora',
+] as const;
+
+export const MARITAL_STATUS_OPTIONS = [
+  'Bekar', 'Bosanmis', 'Dul',
+] as const;
+
+export const ALCOHOL_OPTIONS = [
+  'Icmem', 'Bazen', 'Sosyal', 'Duzenli',
+] as const;
+
+export const SEXUAL_ORIENTATION_OPTIONS = [
+  'Heteroseksuel', 'Gay', 'Lezbiyen', 'Biseksuel', 'Diger',
+] as const;
+
+export const PETS_OPTIONS = [
+  'Kedi', 'Kopek', 'Kedi ve Kopek', 'Diger', 'Yok',
+] as const;
+
+export const RELIGION_OPTIONS = [
+  'Islam', 'Hristiyan', 'Yahudi', 'Ateist', 'Agnostik', 'Diger',
+] as const;
+
+export const EXERCISE_OPTIONS = [
+  'Hic', 'Bazen', 'Sik',
+] as const;
+
+export const SMOKING_OPTIONS = [
+  'Icmem', 'Bazen', 'Duzenli', 'Tolere Ederim',
+] as const;
+
+export const CHILDREN_OPTIONS = [
+  'Var', 'Yok', 'Istiyorum', 'Istemiyorum',
+] as const;
+
+export const LIFE_VALUES_OPTIONS = [
+  'Aile ve Cocuklar',
+  'Bilim ve Arastirma',
+  'Dunyayi Iyilestirme',
+  'Eglence ve Dinlence',
+  'Guzellik ve Sanat',
+  'Kariyer ve Para',
+  'Kendini Gerceklestirme',
+  'Sohret ve Etkileme',
+] as const;
 
 // Ad placement configuration
 export const AD_CONFIG = {

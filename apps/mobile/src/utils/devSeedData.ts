@@ -6,6 +6,7 @@ import { useMatchStore } from '../stores/matchStore';
 import { useChatStore } from '../stores/chatStore';
 import type { ReactionEmoji } from '../services/chatService';
 import { useProfileStore } from '../stores/profileStore';
+import type { ProfileData } from '../stores/profileStore';
 import { useNotificationStore } from '../stores/notificationStore';
 import { useCrossedPathsStore } from '../stores/crossedPathsStore';
 import { useSocialFeedStore } from '../stores/socialFeedStore';
@@ -802,13 +803,15 @@ const crossedPaths = [
 ];
 
 // ── Dev User's Own Profile ──────────────────────────────────────────
-const devUserProfile = {
+const devUserProfile: ProfileData = {
   firstName: 'Ari',
+  lastName: 'Yılmaz',
   birthDate: '1995-06-15',
   gender: 'MALE',
   genderPreference: ['female'],
   lookingFor: ['SERIOUS_RELATIONSHIP'],
   height: 178,
+  weight: 75,
   sports: 'often',
   smoking: 'never',
   children: 'want',
@@ -824,12 +827,27 @@ const devUserProfile = {
   city: 'İstanbul',
   job: 'Yazılım Mühendisi',
   education: 'Boğaziçi Üniversitesi',
+  sexualOrientation: 'heterosexual',
+  zodiacSign: 'İkizler',
+  educationLevel: 'Lisans',
+  maritalStatus: 'Bekar',
+  alcohol: 'sometimes',
+  pets: 'none',
+  religion: '',
+  lifeValues: 'Aile, kariyer, kişisel gelişim',
+  personalityType: 'ENFP',
   isComplete: true,
   profileVideo: null,
   isIncognito: false,
   incognitoExpiresAt: null,
+  isFrozen: false,
+  showOnlineStatus: true,
+  showDistance: true,
   prompts: [],
   favoriteSpots: [],
+  postCount: 5,
+  followerCount: 120,
+  followingCount: 85,
 };
 
 // ── Match Detail Data (compatibility breakdown) ────────────────────
@@ -914,6 +932,7 @@ export function seedDevData(): void {
     isAuthenticated: true,
     user: {
       id: 'dev-user-001',
+      displayId: 'LM-00001',
       phone: '+905551234567',
       isVerified: true,
       packageTier: 'FREE',
@@ -970,12 +989,24 @@ export function seedDevData(): void {
       maxDistance: 50,
       intentionTags: [],
       genderPreference: 'all',
+      verifiedOnly: false,
       height: null,
+      weight: null,
       education: [],
       smoking: [],
       drinking: [],
       exercise: [],
       zodiac: [],
+      religion: [],
+      children: [],
+      pets: [],
+      maritalStatus: [],
+      languages: [],
+      ethnicity: [],
+      nationality: [],
+      interests: [],
+      sexualOrientation: [],
+      values: [],
     },
   });
 

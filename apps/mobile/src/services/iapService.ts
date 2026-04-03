@@ -125,8 +125,11 @@ async function purchaseSubscription(
   const currentPlatform: 'apple' | 'google' =
     Platform.OS === 'ios' ? 'apple' : 'google';
 
-  // Mock mode — return dev receipt
+  // Mock mode — dev only, blocked in production
   if (isMockMode || !ExpoIAP) {
+    if (!__DEV__) {
+      throw new Error('IAP not available. Please try again later.');
+    }
     return createMockReceipt(productId, currentPlatform, 'subscription');
   }
 
@@ -173,8 +176,11 @@ async function purchaseGold(
   const currentPlatform: 'apple' | 'google' =
     Platform.OS === 'ios' ? 'apple' : 'google';
 
-  // Mock mode — return dev receipt
+  // Mock mode — dev only, blocked in production
   if (isMockMode || !ExpoIAP) {
+    if (!__DEV__) {
+      throw new Error('IAP not available. Please try again later.');
+    }
     return createMockReceipt(goldProductId, currentPlatform, 'gold');
   }
 

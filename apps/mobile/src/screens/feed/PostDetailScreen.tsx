@@ -23,6 +23,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { FeedStackParamList } from '../../navigation/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useSocialFeedStore } from '../../stores/socialFeedStore';
+import { useScreenTracking } from '../../hooks/useAnalytics';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
@@ -30,12 +31,21 @@ type PostDetailRouteProp = RouteProp<FeedStackParamList, 'PostDetail'>;
 type PostDetailNavProp = NativeStackNavigationProp<FeedStackParamList, 'PostDetail'>;
 
 export const PostDetailScreen: React.FC = () => {
+  useScreenTracking('PostDetail');
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<PostDetailNavProp>();
   const route = useRoute<PostDetailRouteProp>();
-  const { postId } = route.params;
+  const { postId, post: passedPost } = route.params;
 
-  const post = useSocialFeedStore((s) => s.posts.find((p) => p.id === postId));
+  // Look up the post from the store (both main feed and locally created posts)
+  const storePost = useSocialFeedStore((s) =>
+    s.posts.find((p) => p.id === postId) ?? s.localPosts.find((p) => p.id === postId),
+  );
+
+  // Use store data if available, otherwise fall back to the post passed via navigation params.
+  // This prevents an empty screen when the store's posts array is temporarily cleared
+  // (e.g. during filter changes, background refreshes, or when the API is unavailable).
+  const post = storePost ?? passedPost;
 
   const translateY = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(1)).current;
@@ -75,7 +85,7 @@ export const PostDetailScreen: React.FC = () => {
   if (!post) {
     return (
       <View style={styles.container}>
-        <StatusBar barStyle="light-content" />
+        <StatusBar barStyle="light-content" backgroundColor="#08080F" />
         <Text style={styles.emptyText}>Gönderi bulunamadı</Text>
       </View>
     );
@@ -94,7 +104,7 @@ export const PostDetailScreen: React.FC = () => {
   if (hasPhotos) {
     return (
       <Animated.View style={[styles.container, animatedStyle]} {...panResponder.panHandlers}>
-        <StatusBar barStyle="light-content" />
+        <StatusBar barStyle="light-content" backgroundColor="#08080F" />
 
         {/* Close button */}
         <TouchableOpacity
@@ -139,7 +149,7 @@ export const PostDetailScreen: React.FC = () => {
   if (hasVideo) {
     return (
       <Animated.View style={[styles.container, animatedStyle]} {...panResponder.panHandlers}>
-        <StatusBar barStyle="light-content" />
+        <StatusBar barStyle="light-content" backgroundColor="#08080F" />
 
         {/* Close button */}
         <TouchableOpacity
@@ -162,7 +172,7 @@ export const PostDetailScreen: React.FC = () => {
   // Text viewer — clean full-screen reading view
   return (
     <Animated.View style={[styles.container, animatedStyle]} {...panResponder.panHandlers}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="light-content" backgroundColor="#08080F" />
 
       {/* Close button */}
       <TouchableOpacity

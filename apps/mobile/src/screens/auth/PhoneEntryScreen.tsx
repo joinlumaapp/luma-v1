@@ -11,7 +11,6 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
-  StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
@@ -133,8 +132,6 @@ export const PhoneEntryScreen: React.FC = () => {
       locations={[0, 0.3, 0.55, 0.8, 1]}
       style={styles.container}
     >
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
-
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

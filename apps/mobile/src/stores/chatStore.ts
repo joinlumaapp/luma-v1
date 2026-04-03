@@ -24,6 +24,15 @@ import type {
   ReactionEmoji,
 } from '../services/chatService';
 
+// Per-match daily message limits for matched conversations.
+// FREE and GOLD users have capped messaging; PRO/RESERVED are unlimited.
+const MATCH_DAILY_MESSAGE_LIMITS: Record<PackageTier, number> = {
+  FREE: 5,
+  GOLD: 50,
+  PRO: -1,      // unlimited
+  RESERVED: -1, // unlimited
+};
+
 interface ChatState {
   // State
   conversations: ConversationSummary[];
@@ -46,6 +55,8 @@ interface ChatState {
   dailyMessagesSent: number;
   singleMessageCredits: number;
   lastMessageDate: string; // YYYY-MM-DD
+  // Per-match daily message counts: Record<"YYYY-MM-DD:matchId", count>
+  matchDailyMessageCounts: Record<string, number>;
 
   // Actions
   hydrateFromStorage: () => Promise<void>;
@@ -96,6 +107,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   dailyMessagesSent: 0,
   singleMessageCredits: 0,
   lastMessageDate: getTodayString(),
+  matchDailyMessageCounts: {},
 
   // Hydrate persisted messages from AsyncStorage into memory
   hydrateFromStorage: async () => {
@@ -233,24 +245,33 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  // Reserved for future: paid DM to non-matched users. Currently all chats are match-only,
-  // so the matchId branch always returns unlimited. The daily-limit logic below will activate
-  // when non-match messaging is introduced.
+  // Check whether the user can send another message. Enforces per-match daily
+  // limits even for matched conversations: FREE=5, GOLD=50, PRO/RESERVED=unlimited.
+  // Non-matched conversations (future: paid DM) use the global MESSAGE_CONFIG limits.
   checkMessageLimit: (matchId?: string) => {
-    // Matched conversations are always unlimited
+    const tier = (useAuthStore.getState().user?.packageTier ?? 'FREE') as PackageTier;
+    const today = getTodayString();
+
     if (matchId) {
       const matches = useMatchStore.getState().matches;
       const isMatched = matches.some((m) => m.id === matchId);
       if (isMatched) {
-        return { allowed: true, remaining: -1, limit: -1, isUnlimited: true };
+        const matchLimit = MATCH_DAILY_MESSAGE_LIMITS[tier];
+        if (matchLimit === -1) {
+          return { allowed: true, remaining: -1, limit: -1, isUnlimited: true };
+        }
+
+        const { matchDailyMessageCounts } = get();
+        const key = `${today}:${matchId}`;
+        const sent = matchDailyMessageCounts[key] ?? 0;
+        const remaining = Math.max(0, matchLimit - sent);
+        return { allowed: remaining > 0, remaining, limit: matchLimit, isUnlimited: false };
       }
     }
 
     const { dailyMessagesSent, singleMessageCredits, lastMessageDate } = get();
-    const today = getTodayString();
     const sent = lastMessageDate === today ? dailyMessagesSent : 0;
 
-    const tier = (useAuthStore.getState().user?.packageTier ?? 'FREE') as PackageTier;
     const limit = MESSAGE_CONFIG.DAILY_LIMITS[tier];
     const isUnlimited = limit === -1;
     const remaining = isUnlimited ? -1 : Math.max(0, limit - sent) + singleMessageCredits;
@@ -267,13 +288,25 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   sendMessage: async (matchId, content) => {
-    // Matched conversations are always unlimited
     const matches = useMatchStore.getState().matches;
     const isMatchedConversation = matches.some((m) => m.id === matchId);
+    const tier = (useAuthStore.getState().user?.packageTier ?? 'FREE') as PackageTier;
+    const today = getTodayString();
 
-    if (!isMatchedConversation) {
+    if (isMatchedConversation) {
+      // Enforce per-match daily message limit for matched conversations
+      const matchLimit = MATCH_DAILY_MESSAGE_LIMITS[tier];
+      if (matchLimit !== -1) {
+        const { matchDailyMessageCounts } = get();
+        const key = `${today}:${matchId}`;
+        const sent = matchDailyMessageCounts[key] ?? 0;
+        if (sent >= matchLimit) {
+          set({ isSending: false });
+          return false; // Per-match daily limit reached
+        }
+      }
+    } else {
       // Daily reset check — only for non-matched conversations
-      const today = getTodayString();
       const { lastMessageDate, dailyMessagesSent } = get();
       const currentSent = lastMessageDate === today ? dailyMessagesSent : 0;
       if (lastMessageDate !== today) {
@@ -281,7 +314,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }
 
       // Message limit gate
-      const tier = (useAuthStore.getState().user?.packageTier ?? 'FREE') as PackageTier;
       const limit = MESSAGE_CONFIG.DAILY_LIMITS[tier];
       const isUnlimited = limit === -1;
 
@@ -299,7 +331,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
     // Optimistic UI — show message immediately before API responds
     const now = new Date().toISOString();
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const userId = useAuthStore.getState().user?.id ?? 'dev-user-001';
+    const userId = useAuthStore.getState().user?.id ?? '';
+    if (!userId) { set({ isSending: false }); return false; }
     const optimisticMessage: ChatMessage = {
       id: tempId,
       matchId,
@@ -343,20 +376,33 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const today = getTodayString();
 
       // Replace optimistic message with real server/local message
-      set((state) => ({
-        messages: {
-          ...state.messages,
-          [matchId]: (state.messages[matchId] ?? []).map((msg) =>
-            msg.id === tempId ? response.message : msg
-          ),
-        },
-        isSending: false,
-        // Only count non-matched messages toward daily limit
-        ...(isMatchedConversation ? {} : {
-          dailyMessagesSent: (state.lastMessageDate === today ? state.dailyMessagesSent : 0) + 1,
-          lastMessageDate: today,
-        }),
-      }));
+      const matchCountKey = `${today}:${matchId}`;
+      set((state) => {
+        // Increment per-match daily counter for matched conversations,
+        // or increment global daily counter for non-matched conversations.
+        const matchCountUpdate = isMatchedConversation
+          ? {
+              matchDailyMessageCounts: {
+                ...state.matchDailyMessageCounts,
+                [matchCountKey]: (state.matchDailyMessageCounts[matchCountKey] ?? 0) + 1,
+              },
+            }
+          : {
+              dailyMessagesSent: (state.lastMessageDate === today ? state.dailyMessagesSent : 0) + 1,
+              lastMessageDate: today,
+            };
+
+        return {
+          messages: {
+            ...state.messages,
+            [matchId]: (state.messages[matchId] ?? []).map((msg) =>
+              msg.id === tempId ? response.message : msg
+            ),
+          },
+          isSending: false,
+          ...matchCountUpdate,
+        };
+      });
 
       // Update persistence: replace temp message with confirmed message
       await replaceMessageById(matchId, tempId, response.message);
@@ -394,7 +440,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   sendImageMessage: async (matchId, imageUri) => {
     const now = new Date().toISOString();
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const userId = useAuthStore.getState().user?.id ?? 'dev-user-001';
+    const userId = useAuthStore.getState().user?.id ?? '';
+    if (!userId) { set({ isSending: false }); return; }
     const optimisticMessage: ChatMessage = {
       id: tempId, matchId, senderId: userId, content: 'Fotoğraf',
       type: 'IMAGE', status: 'SENDING', mediaUrl: imageUri,
@@ -450,7 +497,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   sendGifMessage: async (matchId, gifUrl) => {
     const now = new Date().toISOString();
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const userId = useAuthStore.getState().user?.id ?? 'dev-user-001';
+    const userId = useAuthStore.getState().user?.id ?? '';
+    if (!userId) { set({ isSending: false }); return; }
     const optimisticMessage: ChatMessage = {
       id: tempId, matchId, senderId: userId, content: 'GIF',
       type: 'GIF', status: 'SENDING', mediaUrl: gifUrl,
@@ -497,7 +545,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   sendVoiceMessage: async (matchId, audioUri, duration) => {
     const now = new Date().toISOString();
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const userId = useAuthStore.getState().user?.id ?? 'dev-user-001';
+    const userId = useAuthStore.getState().user?.id ?? '';
+    if (!userId) { set({ isSending: false }); return; }
     const optimisticMessage: ChatMessage = {
       id: tempId, matchId, senderId: userId, content: 'Sesli mesaj',
       type: 'VOICE', status: 'SENDING', mediaUrl: audioUri, mediaDuration: duration,

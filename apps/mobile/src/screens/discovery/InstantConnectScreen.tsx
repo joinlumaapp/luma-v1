@@ -1,6 +1,6 @@
 // InstantConnectScreen — "Canlı Keşfet" 1:1 random video chat flow
 // Flow: Confirm → Searching (camera placeholder) → Connected (matched user overlay)
-// User spends 25 coins to start, 15 coins to skip to next match
+// User spends 50 coins to start, 25 coins to skip to next match
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
@@ -20,6 +20,7 @@ import { useInstantConnectStore } from '../../stores/instantConnectStore';
 import { useCoinStore, SURPRISE_MATCH_COST, SURPRISE_SWITCH_COST } from '../../stores/coinStore';
 import { CachedAvatar } from '../../components/common/CachedAvatar';
 import { palette } from '../../theme/colors';
+import { useScreenTracking } from '../../hooks/useAnalytics';
 import { spacing, borderRadius } from '../../theme/spacing';
 import * as Haptics from 'expo-haptics';
 
@@ -473,6 +474,7 @@ const ConnectedPhase: React.FC<{
 // ─── Main Screen ────────────────────────────────────────────────────────────
 
 export const InstantConnectScreen: React.FC = () => {
+  useScreenTracking('InstantConnect');
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
 
@@ -512,7 +514,7 @@ export const InstantConnectScreen: React.FC = () => {
     } else {
       Alert.alert('Yetersiz Jeton', 'Jeton bakiyen yetersiz. Jeton satin almak ister misin?', [
         { text: 'Vazgeç', style: 'cancel' },
-        { text: 'Jeton Al', onPress: () => navigation.getParent()?.navigate('ProfileTab', { screen: 'JetonMarket' }) },
+        { text: 'Jeton Al', onPress: () => navigation.navigate('JetonMarket' as never) },
       ]);
     }
   }, [spendCoins, startSpin, navigation]);
@@ -527,7 +529,7 @@ export const InstantConnectScreen: React.FC = () => {
     } else {
       Alert.alert('Yetersiz Jeton', 'Sonrakine gecmek icin yeterli jetonun yok.', [
         { text: 'Tamam', style: 'cancel' },
-        { text: 'Jeton Al', onPress: () => navigation.getParent()?.navigate('ProfileTab', { screen: 'JetonMarket' }) },
+        { text: 'Jeton Al', onPress: () => navigation.navigate('JetonMarket' as never) },
       ]);
     }
   }, [spendCoins, switchUser, navigation]);

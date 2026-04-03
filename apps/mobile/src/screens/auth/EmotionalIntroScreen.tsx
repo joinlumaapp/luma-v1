@@ -9,7 +9,6 @@ import {
   Image,
   StyleSheet,
   TouchableOpacity,
-  StatusBar,
   Platform,
   Modal,
   Pressable,
@@ -150,6 +149,7 @@ const EmotionalIntroScreen: React.FC = () => {
     const { login, setOnboarded } = useAuthStore.getState();
     login('dev-access-token', 'dev-refresh-token', {
       id: 'dev-user-001',
+      displayId: 'dev-001',
       phone: '+90 555 555 5555',
       isVerified: true,
       packageTier: 'RESERVED',
@@ -167,6 +167,7 @@ const EmotionalIntroScreen: React.FC = () => {
     const { login, setStartedOnboarding } = useAuthStore.getState();
     login('dev-access-token', 'dev-refresh-token', {
       id: 'dev-user-001',
+      displayId: 'dev-001',
       phone: '+90 555 555 5555',
       isVerified: true,
       packageTier: 'RESERVED',
@@ -198,8 +199,6 @@ const EmotionalIntroScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-
       {/* Full-screen gradient background */}
       <LinearGradient
         colors={['#E8959E', '#EDACB4', '#F2C0C6', '#F7D5D9', '#FFFFFF']}
@@ -252,7 +251,7 @@ const EmotionalIntroScreen: React.FC = () => {
             <Text style={styles.comingSoonBadge}>Çok yakında</Text>
           </TouchableOpacity>
 
-          {/* Diger secenekler button */}
+          {/* Telefon ile devam et button */}
           <TouchableOpacity
             style={styles.otherButton}
             onPress={handleOtherOptions}
@@ -397,7 +396,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semibold,
     color: palette.gray[900],
   },
-  // Other options button — dark/elegant
+  // Telefon ile devam et button — dark/elegant
   otherButton: {
     width: '100%',
     height: 56,

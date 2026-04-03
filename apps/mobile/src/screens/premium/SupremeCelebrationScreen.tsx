@@ -12,7 +12,6 @@ import {
   Animated,
   Easing,
   Pressable,
-  StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -414,8 +413,6 @@ export const SupremeCelebrationScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-
       {/* Background gradient */}
       <LinearGradient
         colors={['#1A0A2E', DEEP_PURPLE, '#2D1045', '#1A0A2E']}

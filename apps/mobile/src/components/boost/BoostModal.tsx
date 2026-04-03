@@ -40,11 +40,10 @@ interface BoostModalProps {
 
 // ─── Constants ──────────────────────────────────────────────────
 
-export const BOOST_DURATIONS: BoostDuration[] = [
-  { minutes: 30, label: '30 dk', goldCost: 50 },
-  { minutes: 120, label: '2 saat', goldCost: 120 },
-  { minutes: 1440, label: '24 saat', goldCost: 250 },
-];
+// Import from config for single source of truth
+import { BOOST_DURATION_OPTIONS } from '../../constants/config';
+
+export const BOOST_DURATIONS: BoostDuration[] = [...BOOST_DURATION_OPTIONS];
 
 // ─── Helpers ────────────────────────────────────────────────────
 

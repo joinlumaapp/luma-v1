@@ -5,9 +5,10 @@ import { matchService } from '../services/matchService';
 import type { MatchDetailResponse } from '../services/matchService';
 import { analyticsService, ANALYTICS_EVENTS } from '../services/analyticsService';
 import { getAllConversationMeta } from '../services/chatPersistence';
-import { parseApiError } from '../services/api';
+import api, { parseApiError } from '../services/api';
 import { devMockOrThrow } from '../utils/mockGuard';
 import type { AxiosError } from 'axios';
+import type { ActivityRingProfile, WarmNotificationBanner } from '@luma/shared';
 
 export interface Match {
   id: string;
@@ -45,6 +46,9 @@ interface MatchState {
   /** Number of matches user has NOT opened yet (isNew === true) */
   newMatchCount: number;
   error: string | null;
+  activityStrip: ActivityRingProfile[];
+  warmBanner: WarmNotificationBanner | null;
+  isLoadingStrip: boolean;
 
   // Actions
   fetchMatches: () => Promise<void>;
@@ -56,6 +60,8 @@ interface MatchState {
   addMatch: (match: Match) => void;
   updateMatchActivity: (matchId: string, lastMessage: string, lastActivity: string) => void;
   clearError: () => void;
+  fetchActivityStrip: () => Promise<void>;
+  fetchWarmBanner: () => Promise<void>;
 }
 
 // Transform backend MatchDetailResponse to store MatchDetail
@@ -89,6 +95,9 @@ export const useMatchStore = create<MatchState>((set, get) => ({
   totalCount: 0,
   newMatchCount: 0,
   error: null,
+  activityStrip: [],
+  warmBanner: null,
+  isLoadingStrip: false,
 
   // Actions
   fetchMatches: async () => {
@@ -235,4 +244,55 @@ export const useMatchStore = create<MatchState>((set, get) => ({
     })),
 
   clearError: () => set({ error: null }),
+
+  fetchActivityStrip: async () => {
+    set({ isLoadingStrip: true });
+    try {
+      const res = await api.get('/matches/activity-strip');
+      set({ activityStrip: res.data, isLoadingStrip: false });
+    } catch {
+      // Fallback: build strip from existing matches
+      const { matches } = get();
+      const fallbackStrip = matches.slice(0, 6).map((m) => ({
+        userId: m.userId,
+        name: m.name,
+        photoUrl: m.photoUrl,
+        ringType: (m.isNew
+            ? 'new_like'
+            : 'nearby') as 'nearby' | 'new_like' | 'locked',
+        compatibilityPercent: m.compatibilityPercent,
+        distanceKm: null,
+        isRevealed: true,
+      }));
+      set({ activityStrip: fallbackStrip, isLoadingStrip: false });
+    }
+  },
+
+  fetchWarmBanner: async () => {
+    try {
+      const res = await api.get('/matches/warm-banner');
+      set({ warmBanner: res.data });
+    } catch {
+      // Fallback banner from existing matches
+      const { matches } = get();
+      const newCount = matches.filter((m) => m.isNew).length;
+      if (matches.length > 0) {
+        set({
+          warmBanner: newCount > 0
+            ? {
+                message: `${newCount} yeni eşleşmen var!`,
+                detail: 'Hemen göz at, seni bekliyor',
+                emoji: '\u{1F49C}',
+                type: 'new_like' as const,
+              }
+            : {
+                message: `${matches.length} eşleşmen seni bekliyor!`,
+                detail: null,
+                emoji: '\u{1F49C}',
+                type: 'weekly_summary' as const,
+              },
+        });
+      }
+    }
+  },
 }));

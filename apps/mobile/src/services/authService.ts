@@ -17,6 +17,7 @@ export interface VerifySmsResponse {
   refreshToken: string;
   user: {
     id: string;
+    displayId: string;
     phone: string;
     isVerified: boolean;
     isNew: boolean;
@@ -31,6 +32,7 @@ export interface RefreshTokenResponse {
 
 export interface MeResponse {
   id: string;
+  displayId: string;
   phone: string;
   isActive: boolean;
   isSmsVerified: boolean;

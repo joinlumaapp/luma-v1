@@ -1,4 +1,4 @@
-// Onboarding step 13/15: Photo selection grid (cream/beige design)
+// Onboarding step 13/14: Photo selection grid (cream/beige design)
 // Local-only mode: photos are picked, compressed and stored as URIs, uploaded after registration
 // Features: gallery + camera picker, compression with progress, fade-in animation,
 // gold border on main photo, file size display, min 1 / max 6 validation
@@ -175,7 +175,7 @@ export const PhotosScreen: React.FC = () => {
         .filter((s): s is PhotoSlot => s !== null)
         .map((s) => s.uri);
       setProfileField('photos', uris);
-      navigation.navigate('QuestionsIntro');
+      navigation.navigate('SelfieVerification');
     }
   }, [isValid, photoSlots, setProfileField, navigation, buttonScale]);
 
@@ -265,8 +265,8 @@ export const PhotosScreen: React.FC = () => {
 
   return (
     <OnboardingLayout
-      step={15}
-      totalSteps={18}
+      step={12}
+      totalSteps={13}
       footer={
         <Animated.View style={buttonAnimStyle}>
           <FullWidthButton

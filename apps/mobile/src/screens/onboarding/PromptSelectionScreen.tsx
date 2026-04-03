@@ -343,8 +343,8 @@ export const PromptSelectionScreen: React.FC = () => {
 
   return (
     <OnboardingLayout
-      step={14}
-      totalSteps={18}
+      step={11}
+      totalSteps={13}
       showBack
       showSkip
       onSkip={handleSkip}

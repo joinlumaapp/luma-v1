@@ -100,6 +100,7 @@ export interface FeedFilters {
 export interface LikeYouCard {
   userId: string;
   firstName: string;
+  lastName?: string | null;
   age: number;
   photoUrl: string;
   compatibilityPercent: number;
@@ -192,6 +193,15 @@ export interface ProfileCoachResponse {
 export interface PersonalityResponse {
   mbtiType: string | null;
   enneagramType: string | null;
+}
+
+// ─── Send Greeting (Selam Gonder) ─────────────────────────────
+
+export interface SendGreetingResponse {
+  success: boolean;
+  newGoldBalance: number;
+  greetingsSentToday: number;
+  dailyLimit: number;
 }
 
 // ─── Mock Data (fallback when API is unavailable) ────────────
@@ -1028,6 +1038,24 @@ export const discoveryService = {
     } catch {
       // Profile not found or API down
       return null;
+    }
+  },
+
+  // ── Selam Gonder (Send Greeting) ──────────────────────────────
+  sendGreeting: async (recipientId: string): Promise<SendGreetingResponse> => {
+    try {
+      const response = await api.post<SendGreetingResponse>(
+        API_ROUTES.DISCOVERY.SEND_GREETING,
+        { recipientId },
+      );
+      return response.data;
+    } catch (error) {
+      return devMockOrThrow<SendGreetingResponse>(error, {
+        success: true,
+        newGoldBalance: 490,
+        greetingsSentToday: 1,
+        dailyLimit: 3,
+      }, 'discoveryService.sendGreeting');
     }
   },
 

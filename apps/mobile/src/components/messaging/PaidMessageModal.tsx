@@ -17,9 +17,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
+import { PAID_MESSAGE_CONFIG } from '../../constants/config';
 
-const PAID_MESSAGE_PRICE = 150;
-const MAX_MESSAGE_LENGTH = 300;
+const PAID_MESSAGE_PRICE = PAID_MESSAGE_CONFIG.PRICE_GOLD;
+const MAX_MESSAGE_LENGTH = PAID_MESSAGE_CONFIG.MAX_LENGTH;
 
 interface PaidMessageModalProps {
   visible: boolean;

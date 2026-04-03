@@ -27,19 +27,14 @@ export type OnboardingStackParamList = {
   BirthDate: undefined;
   Gender: undefined;
   WhoToMeet: undefined;
-  WhatLookingFor: undefined;
   Height: undefined;
   Sports: undefined;
   Smoking: undefined;
   Children: undefined;
   CitySelection: undefined;
-  PersonalityIntro: undefined;
-  InterestSelection: undefined;
   Bio: undefined;
   PromptSelection: undefined;
   Photos: undefined;
-  QuestionsIntro: undefined;
-  Questions: undefined;
   SelfieVerification: undefined;
 };
 
@@ -56,7 +51,6 @@ export type MainTabParamList = {
 export type DiscoveryStackParamList = {
   Discovery: undefined;
   InstantConnect: undefined;
-  Notifications: undefined;
   ProfilePreview: { userId: string };
   Filter: undefined;
   DailyQuestion: undefined;
@@ -66,6 +60,7 @@ export type DiscoveryStackParamList = {
   Waves: undefined;
   Report: { userId: string; userName: string };
   MembershipPlans: undefined;
+  JetonMarket: undefined;
 };
 
 // -- Matches Stack --
@@ -83,11 +78,15 @@ export type MatchesStackParamList = {
   JetonMarket: undefined;
   MembershipPlans: undefined;
   Report: { userId: string; userName: string };
+  SecretAdmirer: undefined;
+  WeeklyTop: undefined;
 };
 
 // -- Live Stack --
 export type LiveStackParamList = {
   Live: undefined;
+  JetonMarket: undefined;
+  MembershipPlans: undefined;
 };
 
 // -- Feed Stack --
@@ -95,17 +94,20 @@ export type FeedStackParamList = {
   SocialFeed: undefined;
   FeedProfile: { userId: string };
   ProfilePreview: { userId: string };
-  PostDetail: { postId: string };
+  PostDetail: { postId: string; post?: import('../services/socialFeedService').FeedPost };
   StoryViewer: { userId: string; userName: string; userAvatarUrl: string; storyUsers?: any[] };
   StoryCreator: { mediaUri: string; mediaType: 'image' | 'video' };
+  Notifications: undefined;
 };
 
 // -- Profile Stack --
 export type ProfileStackParamList = {
   Profile: undefined;
   EditProfile: undefined;
+  InterestPicker: undefined;
   Settings: undefined;
   JetonMarket: undefined;
+  BoostMarket: undefined;
   Places: undefined;
   Relationship: undefined;
   CouplesClub: undefined;

@@ -9,10 +9,19 @@ import {
   type StoryOverlay,
   type StoryViewer,
 } from '../services/storyService';
+import { useAuthStore } from './authStore';
+import { useProfileStore } from './profileStore';
 
-const CURRENT_USER_ID = 'dev-user-001';
-const CURRENT_USER_NAME = 'Sen';
-const CURRENT_USER_AVATAR = 'https://i.pravatar.cc/150?img=68';
+/** Read current user info dynamically from auth + profile stores */
+const getCurrentUser = () => {
+  const authUser = useAuthStore.getState().user;
+  const profile = useProfileStore.getState().profile;
+  return {
+    id: authUser?.id ?? '',
+    name: profile.firstName || 'Sen',
+    avatar: profile.photos[0] ?? '',
+  };
+};
 
 interface StoryState {
   // State
@@ -57,13 +66,14 @@ export const useStoryStore = create<StoryState>((set, get) => ({
       }));
 
       // Ensure own stories are included in storyUsers
-      const ownEntry = updatedUsers.find((u) => u.userId === CURRENT_USER_ID);
+      const currentUser = getCurrentUser();
+      const ownEntry = updatedUsers.find((u) => u.userId === currentUser.id);
       if (myStories.length > 0 && !ownEntry) {
         // Own user not in fetched list — add them
         updatedUsers.unshift({
-          userId: CURRENT_USER_ID,
-          userName: CURRENT_USER_NAME,
-          userAvatarUrl: CURRENT_USER_AVATAR,
+          userId: currentUser.id,
+          userName: currentUser.name,
+          userAvatarUrl: currentUser.avatar,
           isFollowing: false,
           stories: myStories,
           hasUnseenStories: false,
@@ -104,10 +114,11 @@ export const useStoryStore = create<StoryState>((set, get) => ({
       }
 
       set((state) => {
+        const currentUser = getCurrentUser();
         const updatedMyStories = [newStory, ...state.myStories];
 
         // Update storyUsers — insert into own bubble
-        const existingIdx = state.storyUsers.findIndex((u) => u.userId === CURRENT_USER_ID);
+        const existingIdx = state.storyUsers.findIndex((u) => u.userId === currentUser.id);
 
         if (__DEV__) {
           console.log('[StoryStore] Own user index in storyUsers:', existingIdx);
@@ -130,9 +141,9 @@ export const useStoryStore = create<StoryState>((set, get) => ({
         } else {
           // No own entry yet — create one at the beginning
           const ownUser: StoryUser = {
-            userId: CURRENT_USER_ID,
-            userName: CURRENT_USER_NAME,
-            userAvatarUrl: CURRENT_USER_AVATAR,
+            userId: currentUser.id,
+            userName: currentUser.name,
+            userAvatarUrl: currentUser.avatar,
             isFollowing: false,
             stories: [newStory],
             hasUnseenStories: false,
@@ -143,7 +154,7 @@ export const useStoryStore = create<StoryState>((set, get) => ({
 
         if (__DEV__) {
           console.log('[StoryStore] Updated storyUsers count:', updatedStoryUsers.length);
-          const ownEntry = updatedStoryUsers.find(u => u.userId === CURRENT_USER_ID);
+          const ownEntry = updatedStoryUsers.find(u => u.userId === currentUser.id);
           console.log('[StoryStore] Own entry stories count:', ownEntry?.stories.length ?? 0);
         }
 
@@ -249,13 +260,25 @@ export const useStoryStore = create<StoryState>((set, get) => ({
   getOrderedStoryUsers: () => {
     const { storyUsers } = get();
 
-    // Own stories first, then followed, then suggested (max 3)
-    const own = storyUsers.filter((u) => u.userId === CURRENT_USER_ID);
-    const followed = storyUsers.filter((u) => u.userId !== CURRENT_USER_ID && u.isFollowing);
-    const suggested = storyUsers.filter((u) => u.userId !== CURRENT_USER_ID && u.isSuggested && !u.isFollowing).slice(0, 3);
+    // Package tier priority: RESERVED > PRO > GOLD > FREE
+    const TIER_PRIORITY: Record<string, number> = {
+      RESERVED: 3,
+      PRO: 2,
+      GOLD: 1,
+      FREE: 0,
+    };
 
-    // Sort followed: unseen first, then by recency
+    // Own stories first, then followed, then suggested (max 3)
+    const currentId = getCurrentUser().id;
+    const own = storyUsers.filter((u) => u.userId === currentId);
+    const followed = storyUsers.filter((u) => u.userId !== currentId && u.isFollowing);
+    const suggested = storyUsers.filter((u) => u.userId !== currentId && u.isSuggested && !u.isFollowing).slice(0, 3);
+
+    // Sort followed: paid tiers first, then unseen, then by recency
     followed.sort((a, b) => {
+      const tierA = TIER_PRIORITY[a.packageTier ?? 'FREE'] ?? 0;
+      const tierB = TIER_PRIORITY[b.packageTier ?? 'FREE'] ?? 0;
+      if (tierA !== tierB) return tierB - tierA;
       if (a.hasUnseenStories && !b.hasUnseenStories) return -1;
       if (!a.hasUnseenStories && b.hasUnseenStories) return 1;
       return new Date(b.latestStoryAt).getTime() - new Date(a.latestStoryAt).getTime();

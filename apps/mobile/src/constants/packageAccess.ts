@@ -43,6 +43,7 @@ export const getMinTierLabel = (tier: PackageTier): string => {
 
 export type FeatureKey =
   | 'daily_likes'
+  | 'daily_follows'
   | 'undo'
   | 'who_likes'
   | 'visitors'
@@ -62,7 +63,9 @@ export type FeatureKey =
   | 'ad_free'
   | 'monthly_token_bonus'
   | 'suggested_story_views'
-  | 'flirt_start';
+  | 'flirt_start'
+  | 'story_creation'
+  | 'incognito';
 
 // ─── Feature Access Rules ────────────────────────────────────────
 
@@ -80,9 +83,15 @@ interface FeatureRule {
 export const FEATURE_RULES: Record<FeatureKey, FeatureRule> = {
   daily_likes: {
     minTier: 'FREE',
-    limits: { FREE: -1, GOLD: -1, PRO: -1, RESERVED: -1 },
+    limits: { FREE: 20, GOLD: 50, PRO: -1, RESERVED: -1 },
     labelTr: 'Günlük Beğeni',
-    descriptionTr: 'Sınırsız beğeni hakkı.',
+    descriptionTr: 'Günlük beğeni hakkını yükseltmek için paketini değiştir.',
+  },
+  daily_follows: {
+    minTier: 'FREE',
+    limits: { FREE: 20, GOLD: 100, PRO: -1, RESERVED: -1 },
+    labelTr: 'Günlük Takip',
+    descriptionTr: 'Günlük takip limitini yükseltmek için paketini değiştir.',
   },
   undo: {
     minTier: 'GOLD',
@@ -115,14 +124,14 @@ export const FEATURE_RULES: Record<FeatureKey, FeatureRule> = {
     descriptionTr: 'Profilini öne çıkar ve 10x daha fazla görünürlük kazan.',
   },
   advanced_filters: {
-    minTier: 'PRO',
-    limits: { FREE: 0, GOLD: 0, PRO: -1, RESERVED: -1 },
+    minTier: 'GOLD',
+    limits: { FREE: 0, GOLD: -1, PRO: -1, RESERVED: -1 },
     labelTr: 'Gelişmiş Filtreler',
     descriptionTr: 'Yaş, mesafe, niyet etiketi ve daha fazlasıyla aramayı daralt.',
   },
   priority_visibility: {
-    minTier: 'PRO',
-    limits: { FREE: 0, GOLD: 0, PRO: -1, RESERVED: -1 },
+    minTier: 'GOLD',
+    limits: { FREE: 0, GOLD: -1, PRO: -1, RESERVED: -1 },
     labelTr: 'Öncelikli Gösterim',
     descriptionTr: 'Profilin diğer kullanıcılara önce gösterilir.',
   },
@@ -133,8 +142,8 @@ export const FEATURE_RULES: Record<FeatureKey, FeatureRule> = {
     descriptionTr: 'Tüm uyumluluk boyutlarını detaylı gör.',
   },
   stories_visibility: {
-    minTier: 'PRO',
-    limits: { FREE: 0, GOLD: 0, PRO: -1, RESERVED: -1 },
+    minTier: 'GOLD',
+    limits: { FREE: 0, GOLD: -1, PRO: -1, RESERVED: -1 },
     labelTr: 'Hikaye Önde Gösterim',
     descriptionTr: 'Hikayelerin daha fazla kişiye gösterilir.',
   },
@@ -175,8 +184,8 @@ export const FEATURE_RULES: Record<FeatureKey, FeatureRule> = {
     descriptionTr: 'Eşleşmeden önce mesaj gönder — 150 Jeton.',
   },
   read_receipts: {
-    minTier: 'PRO',
-    limits: { FREE: 0, GOLD: 0, PRO: -1, RESERVED: -1 },
+    minTier: 'GOLD',
+    limits: { FREE: 0, GOLD: -1, PRO: -1, RESERVED: -1 },
     labelTr: 'Okundu Bilgisi',
     descriptionTr: 'Mesajlarının okunup okunmadığını gör.',
   },
@@ -204,6 +213,18 @@ export const FEATURE_RULES: Record<FeatureKey, FeatureRule> = {
     labelTr: 'Flört Başlat',
     descriptionTr: 'Flört isteği gönder. Limit dolunca 25 Jeton ile gönder.',
   },
+  story_creation: {
+    minTier: 'FREE',
+    limits: { FREE: 1, GOLD: 5, PRO: -1, RESERVED: -1 },
+    labelTr: 'Hikaye Oluştur',
+    descriptionTr: 'Daha fazla hikaye oluşturmak için paketini yükselt.',
+  },
+  incognito: {
+    minTier: 'PRO',
+    limits: { FREE: 0, GOLD: 0, PRO: -1, RESERVED: -1 },
+    labelTr: 'Gizli Mod',
+    descriptionTr: 'Keşfet akışında görünmeden profilleri incele.',
+  },
 };
 
 // ─── Convenience Helpers ─────────────────────────────────────────
@@ -214,6 +235,7 @@ export const canAccess = (
   feature: FeatureKey,
 ): boolean => {
   const rule = FEATURE_RULES[feature];
+  if (!rule) return false;
   return hasTierAccess(userTier, rule.minTier);
 };
 
@@ -221,17 +243,28 @@ export const canAccess = (
 export const getFeatureLimit = (
   userTier: PackageTier,
   feature: FeatureKey,
-): number => FEATURE_RULES[feature].limits[userTier];
+): number => {
+  const rule = FEATURE_RULES[feature];
+  if (!rule?.limits) return 0;
+  return rule.limits[userTier] ?? 0;
+};
 
 /** Check if the limit is unlimited */
 export const isUnlimited = (
   userTier: PackageTier,
   feature: FeatureKey,
-): boolean => FEATURE_RULES[feature].limits[userTier] === -1;
+): boolean => {
+  const rule = FEATURE_RULES[feature];
+  if (!rule?.limits) return false;
+  return rule.limits[userTier] === -1;
+};
 
 /** Get the minimum tier required for a feature */
-export const getRequiredTier = (feature: FeatureKey): PackageTier =>
-  FEATURE_RULES[feature].minTier;
+export const getRequiredTier = (feature: FeatureKey): PackageTier => {
+  const rule = FEATURE_RULES[feature];
+  if (!rule) return 'RESERVED';
+  return rule.minTier;
+};
 
 /** Map from PaywallFeature legacy type to FeatureKey */
 export const mapLegacyFeature = (
@@ -248,6 +281,7 @@ export const mapLegacyFeature = (
     feed: 'feed_post',
     boost: 'boost',
     daily_likes: 'daily_likes',
+    daily_follows: 'daily_follows',
     messages: 'messages',
     insights: 'compatibility_insights',
     waves: 'waves',
@@ -255,6 +289,8 @@ export const mapLegacyFeature = (
     read_receipts: 'read_receipts',
     ad_free: 'ad_free',
     monthly_token_bonus: 'monthly_token_bonus',
+    story_creation: 'story_creation',
+    incognito: 'incognito',
   };
   return mapping[legacy] ?? 'daily_likes';
 };

@@ -10,7 +10,6 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  StatusBar,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -42,6 +41,7 @@ export const PasswordCreationScreen: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [isFocused, setIsFocused] = useState<'password' | 'confirm' | null>(null);
 
   const allRulesPassed = PASSWORD_RULES.every((rule) => rule.test(password));
@@ -52,10 +52,8 @@ export const PasswordCreationScreen: React.FC = () => {
     if (!isValid) return;
     const { setPassword: storePassword } = useAuthStore.getState();
     storePassword(password);
-    // After password creation, new users start onboarding
-    const { setStartedOnboarding } = useAuthStore.getState();
-    setStartedOnboarding(true);
-  }, [password, isValid]);
+    navigation.navigate('SelfieVerification');
+  }, [password, isValid, navigation]);
 
   const handleBack = useCallback(() => {
     navigation.goBack();
@@ -66,7 +64,6 @@ export const PasswordCreationScreen: React.FC = () => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <StatusBar barStyle="dark-content" backgroundColor={onboardingColors.background} translucent />
       <BrandedBackground />
 
       {/* Header */}
@@ -141,7 +138,7 @@ export const PasswordCreationScreen: React.FC = () => {
             onChangeText={setConfirmPassword}
             placeholder="Şifreyi tekrarla"
             placeholderTextColor={onboardingColors.textSecondary}
-            secureTextEntry={!showPassword}
+            secureTextEntry={!showConfirm}
             autoCapitalize="none"
             autoCorrect={false}
             autoComplete="new-password"
@@ -151,6 +148,13 @@ export const PasswordCreationScreen: React.FC = () => {
             onSubmitEditing={handleContinue}
             testID="confirm-password-input"
           />
+          <TouchableOpacity
+            onPress={() => setShowConfirm((p) => !p)}
+            style={styles.toggleButton}
+            accessibilityLabel={showConfirm ? 'Şifreyi gizle' : 'Şifreyi göster'}
+          >
+            <Text style={styles.toggleText}>{showConfirm ? 'Gizle' : 'Göster'}</Text>
+          </TouchableOpacity>
         </View>
 
         {confirmPassword.length > 0 && !passwordsMatch && (

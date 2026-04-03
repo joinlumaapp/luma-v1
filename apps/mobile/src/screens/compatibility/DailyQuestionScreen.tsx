@@ -28,6 +28,7 @@ import {
   type AnswerStatsResponse,
 } from '../../services/dailyQuestionService';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { useScreenTracking } from '../../hooks/useAnalytics';
 
 const { width: _SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -540,6 +541,7 @@ const optionStyles = StyleSheet.create({
 // ─── Main Screen Component ────────────────────────────────────
 
 export const DailyQuestionScreen: React.FC = () => {
+  useScreenTracking('DailyQuestion');
   const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
 

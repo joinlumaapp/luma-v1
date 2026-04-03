@@ -15,7 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { palette } from '../../theme/colors';
 import { fontWeights, poppinsFonts } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
-import { INTEREST_OPTIONS } from '../../constants/config';
+import { INTEREST_OPTIONS, INTEREST_CATEGORIES } from '../../constants/config';
 import { formatActivityStatus, formatDistanceTurkish } from '../../utils/formatters';
 import { TierIndicator, GOLD_24K } from '../common/SubscriptionBadge';
 import { analyticsService, ANALYTICS_EVENTS } from '../../services/analyticsService';
@@ -25,9 +25,18 @@ import { VideoProfile } from '../profile/VideoProfile';
 
 // ─── Types ────────────────────────────────────────────────────
 
+/** Format "Pelin Kulaksiz" — firstName + full lastName */
+const formatDisplayName = (fName: string, lName?: string | null): string => {
+  if (lName && lName.length > 0) {
+    return `${fName} ${lName}`;
+  }
+  return fName;
+};
+
 export interface DiscoveryCardProfile {
   userId: string;
   firstName: string;
+  lastName?: string | null;
   age: number;
   bio: string | null;
   city: string | null;
@@ -71,44 +80,21 @@ for (const opt of INTEREST_OPTIONS) {
   INTEREST_LABEL_MAP[opt.id] = opt.label;
 }
 
-// ─── Interest emoji mapping — subtle prefix for each chip ────
+// ─── Interest emoji mapping — built from config sources ────
 
-const INTEREST_EMOJI: Record<string, string> = {
-  'Kitap': '📚',
-  'Kahve': '☕',
-  'Seyahat': '✈️',
-  'Müzik': '🎵',
-  'Spor': '⚽',
-  'Yoga': '🧘',
-  'Fotoğraf': '📷',
-  'Sinema': '🎬',
-  'Doğa': '🌿',
-  'Yemek': '🍽️',
-  'Dans': '💃',
-  'Sanat': '🎨',
-  'Oyun': '🎮',
-  'Teknoloji': '💻',
-  'Hayvanlar': '🐾',
-  'Yüzme': '🏊',
-  'Koşu': '🏃',
-  'Bisiklet': '🚴',
-  'Tiyatro': '🎭',
-  'Yazı': '✍️',
-  'Podcast': '🎙️',
-  'Dizi': '📺',
-  'Tasarım': '🎨',
-  'Meditasyon': '🧘',
-  'Kamp': '⛺',
-  'Dağcılık': '🏔️',
-  'Dalış': '🤿',
-  'Resim': '🖼️',
-  'Müzik Aleti': '🎸',
-  'Gönüllülük': '🤝',
-  'Sürüş': '🚗',
-  'Astroloji': '⭐',
-  'Bahçe': '🌱',
-  'Hikaye': '📖',
-};
+const INTEREST_EMOJI: Record<string, string> = {};
+// From legacy INTEREST_OPTIONS
+for (const opt of INTEREST_OPTIONS) {
+  INTEREST_EMOJI[opt.label] = opt.emoji;
+}
+// From categorized INTEREST_CATEGORIES (covers all new tags)
+for (const cat of INTEREST_CATEGORIES) {
+  for (const item of cat.items) {
+    if (!INTEREST_EMOJI[item.label]) {
+      INTEREST_EMOJI[item.label] = item.emoji;
+    }
+  }
+}
 
 // ─── Intention tag display config ────────────────────────────
 
@@ -274,7 +260,7 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
         <View style={styles.nameCompatRow}>
           <View style={styles.nameSection}>
             <Text style={styles.nameText} numberOfLines={1}>
-              {profile.firstName}, {profile.age}
+              {formatDisplayName(profile.firstName, profile.lastName)}, {profile.age}
             </Text>
             {isSupreme && (
               <View style={styles.supremeCrownRow}>

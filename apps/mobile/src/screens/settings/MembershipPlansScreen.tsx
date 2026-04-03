@@ -21,15 +21,18 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { SocialProofBanner } from '../../components/premium/SmartUpgradePrompts';
 import { palette } from '../../theme/colors';
 import { typography, fontWeights, fontSizes } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
 import { usePremiumStore } from '../../stores/premiumStore';
 import { useCoinStore, COIN_PACKS, type CoinPack } from '../../stores/coinStore';
-import { CoinBalance } from '../../components/common/CoinBalance';
+
 import { iapService } from '../../services/iapService';
 import { paymentService } from '../../services/paymentService';
+import { useScreenTracking } from '../../hooks/useAnalytics';
+import { PACKAGE_TIERS } from '../../constants/config';
 
 // ─── Constants ───────────────────────────────────────────────────────
 
@@ -108,12 +111,27 @@ const FEATURES: TierFeature[] = [
     supremeDetail: 'Sınırsız',
   },
   {
+    label: 'Selam Gönder',
+    free: 'included',
+    premium: 'included',
+    supreme: 'included',
+    freeDetail: '3/gün (🪙10)',
+    premiumDetail: '10/gün (🪙5)',
+    supremeDetail: '20/gün (🪙3)',
+  },
+  {
+    label: 'Reklamsız Deneyim',
+    free: 'excluded',
+    premium: 'included',
+    supreme: 'included',
+  },
+  {
     label: 'Aylık Jeton',
     free: 'excluded',
     premium: 'included',
     supreme: 'included',
     premiumDetail: '250',
-    supremeDetail: '500',
+    supremeDetail: '1000',
   },
   {
     label: 'Kimin Beğendiğini Gör',
@@ -136,21 +154,9 @@ const FEATURES: TierFeature[] = [
     supremeDetail: 'Sınırsız',
   },
   {
-    label: 'Reklamsız Deneyim',
-    free: 'excluded',
+    label: 'Okundu Bilgisi',
+    free: 'locked',
     premium: 'included',
-    supreme: 'included',
-  },
-  {
-    label: 'Öncelikli Gösterim',
-    free: 'locked',
-    premium: 'locked',
-    supreme: 'included',
-  },
-  {
-    label: 'Gelişmiş Filtreler',
-    free: 'locked',
-    premium: 'locked',
     supreme: 'included',
   },
   {
@@ -160,11 +166,37 @@ const FEATURES: TierFeature[] = [
     supreme: 'included',
   },
   {
-    label: 'Öncelikli Görünürlük',
+    label: 'Hikaye Oluştur',
+    free: 'included',
+    premium: 'included',
+    supreme: 'included',
+    freeDetail: '1/gün',
+    premiumDetail: '5/gün',
+    supremeDetail: 'Sınırsız',
+  },
+  {
+    label: 'Öncelikli Gösterim',
+    free: 'locked',
+    premium: 'included',
+    supreme: 'included',
+  },
+  {
+    label: 'Hikaye Önde Gösterim',
+    free: 'locked',
+    premium: 'included',
+    supreme: 'included',
+  },
+  {
+    label: 'Gelişmiş Filtreler',
+    free: 'locked',
+    premium: 'included',
+    supreme: 'included',
+  },
+  {
+    label: 'Özel Rozet',
     free: 'locked',
     premium: 'locked',
     supreme: 'included',
-    supremeDetail: 'İlk gösterilen ✨',
   },
 ];
 
@@ -173,8 +205,8 @@ const getTierCategory = (tier: PackageTier): 'free' | 'premium' | 'supreme' => {
   switch (tier) {
     case 'RESERVED':
       return 'supreme';
-    case 'GOLD':
     case 'PRO':
+    case 'GOLD':
       return 'premium';
     default:
       return 'free';
@@ -283,7 +315,7 @@ const SupremeCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
           <Text style={cardStyles.tierSubtitle}>Elite deneyim</Text>
         </View>
         <View style={cardStyles.priceRight}>
-          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>{'599₺'}</Text>
+          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>{PACKAGE_TIERS.find(t => t.id === 'RESERVED')?.priceDisplay ?? '1.299₺'}</Text>
           <Text style={cardStyles.pricePeriod}>/ay</Text>
           {/* "En Populer" badge — below price */}
           <LinearGradient
@@ -366,7 +398,7 @@ const PremiumCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
           <Text style={cardStyles.tierSubtitle}>Tam erişim</Text>
         </View>
         <View style={cardStyles.priceContainer}>
-          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>{'349₺'}</Text>
+          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>{PACKAGE_TIERS.find(t => t.id === 'GOLD')?.priceDisplay ?? '349₺'}</Text>
           <Text style={cardStyles.pricePeriod}>/ay</Text>
         </View>
       </View>
@@ -420,6 +452,7 @@ const PremiumCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
   </View>
 );
 
+// Pro Card — teal accent, between Premium and Supreme
 // Free Card — simple, muted design
 const FreeCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
   <View style={[cardStyles.cardOuter, cardStyles.freeShadow]}>
@@ -436,7 +469,7 @@ const FreeCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
           <Text style={cardStyles.tierSubtitle}>Temel özellikler</Text>
         </View>
         <View style={cardStyles.priceContainer}>
-          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>{'0₺'}</Text>
+          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>{PACKAGE_TIERS.find(t => t.id === 'FREE')?.priceDisplay ?? '0₺'}</Text>
           <Text style={cardStyles.pricePeriod}>/ay</Text>
         </View>
       </View>
@@ -560,29 +593,16 @@ const CoinPackCard: React.FC<{
   isLoading: boolean;
 }> = ({ pack, onPurchase, isLoading }) => (
   <View style={coinCardStyles.card}>
-    {pack.bestValue && (
+    {(pack.bestValue || pack.coins === 500) && (
       <View style={coinCardStyles.badge}>
         <LinearGradient
-          colors={['#F9D423', GLASS.goldAccent]}
+          colors={[palette.purple[500], palette.purple[700]]}
           style={coinCardStyles.badgeGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
         >
           <Ionicons name="star" size={10} color={palette.white} />
-          <Text style={coinCardStyles.badgeText}>EN IYI DEGER</Text>
-        </LinearGradient>
-      </View>
-    )}
-
-    {pack.coins === 500 && (
-      <View style={coinCardStyles.badge}>
-        <LinearGradient
-          colors={['#F9D423', GLASS.goldAccent]}
-          style={coinCardStyles.badgeGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-        >
-          <Text style={coinCardStyles.badgeText}>POPULER</Text>
+          <Text style={coinCardStyles.badgeText}>EN POPÜLER</Text>
         </LinearGradient>
       </View>
     )}
@@ -606,13 +626,13 @@ const CoinPackCard: React.FC<{
       disabled={isLoading}
     >
       <LinearGradient
-        colors={['#F9D423', GLASS.goldAccent]}
+        colors={[palette.purple[500], palette.pink[500]]}
         style={coinCardStyles.buyGradient}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 1, y: 0 }}
       >
         {isLoading ? (
-          <ActivityIndicator size="small" color="#1A1A1A" />
+          <ActivityIndicator size="small" color="#FFFFFF" />
         ) : (
           <Text style={coinCardStyles.buyText}>Satın Al</Text>
         )}
@@ -686,7 +706,7 @@ const coinCardStyles = StyleSheet.create({
   },
   buyText: {
     ...typography.button,
-    color: '#1A1A1A',
+    color: '#FFFFFF',
     fontWeight: fontWeights.bold,
   },
 });
@@ -694,6 +714,7 @@ const coinCardStyles = StyleSheet.create({
 // ─── Main Screen ──────────────────────────────────────────────────────
 
 export const MembershipPlansScreen: React.FC = () => {
+  useScreenTracking('MembershipPlans');
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const currentTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE');
@@ -794,8 +815,10 @@ export const MembershipPlansScreen: React.FC = () => {
 
   const handleExitFreePreview = useCallback(() => {
     setShowExitModal(false);
-    // Could navigate to a free preview flow — for now just close
     navigation.goBack();
+    setTimeout(() => {
+      navigation.getParent()?.navigate('DiscoveryTab', { screen: 'LikesYou' });
+    }, 300);
   }, [navigation]);
 
   const handleSelectPlan = useCallback((plan: 'free' | 'premium' | 'supreme') => {
@@ -885,7 +908,9 @@ export const MembershipPlansScreen: React.FC = () => {
 
                 // Supreme → luxury celebration screen; others → simple alert
                 if (plan === 'supreme') {
-                  navigation.navigate('SupremeCelebration' as never);
+                  // SupremeCelebration is on the RootStack (2 levels up:
+                  // StackNav → TabNav → RootStack)
+                  navigation.getParent()?.getParent()?.navigate('SupremeCelebration' as never);
                 } else {
                   Alert.alert('Başarılı!', `${planLabel} aboneliğiniz aktif edildi!`);
                 }
@@ -941,8 +966,8 @@ export const MembershipPlansScreen: React.FC = () => {
           platform: purchase.platform,
         });
 
-        // Update local coin balance
-        useCoinStore.getState().earnCoins(result.goldAdded, `${pack.coins} Jeton paketi satın alımı`);
+        // Refresh local balance from server (server already credited during receipt validation)
+        await useCoinStore.getState().fetchBalance();
 
         Alert.alert('Başarılı!', `${result.goldAdded} Jeton hesabınıza eklendi.`);
       } catch (error: unknown) {
@@ -976,7 +1001,7 @@ export const MembershipPlansScreen: React.FC = () => {
           <Ionicons name="arrow-back" size={24} color={GLASS.textPrimary} />
         </TouchableOpacity>
         <Text style={screenStyles.headerTitle}>Üyelik & Jeton</Text>
-        <CoinBalance size="small" onPress={() => setActiveTab('coins')} />
+        <View style={{ width: 40 }} />
       </View>
 
       {/* Tab Toggle */}
@@ -1037,7 +1062,16 @@ export const MembershipPlansScreen: React.FC = () => {
           <>
             {/* ── Urgency Banner ── */}
             {currentCategory === 'free' && (
-              <View style={emotionalStyles.urgencyBanner}>
+              <TouchableOpacity
+                style={emotionalStyles.urgencyBanner}
+                activeOpacity={0.85}
+                onPress={() => {
+                  navigation.goBack();
+                  setTimeout(() => {
+                    navigation.getParent()?.navigate('DiscoveryTab', { screen: 'LikesYou' });
+                  }, 300);
+                }}
+              >
                 <LinearGradient
                   colors={[palette.purple[600], palette.pink[500]]}
                   start={{ x: 0, y: 0 }}
@@ -1080,7 +1114,15 @@ export const MembershipPlansScreen: React.FC = () => {
                     </Text>
                   </View>
                 </LinearGradient>
-              </View>
+              </TouchableOpacity>
+            )}
+
+            {/* Social proof banner */}
+            {currentCategory === 'free' && (
+              <SocialProofBanner
+                recentUpgradeCount={47}
+                onPress={() => {}}
+              />
             )}
 
             {/* Subtitle */}

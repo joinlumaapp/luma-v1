@@ -62,7 +62,7 @@ export const PostEventMatchCard: React.FC<PostEventMatchCardProps> = ({
       {/* Attendee list */}
       {attendees.map((attendee) => (
         <View key={attendee.userId} style={styles.attendeeRow}>
-          <CachedAvatar uri={attendee.photoUrl} size={44} borderRadius={22} />
+          <CachedAvatar uri={attendee.photoUrl} size={44} />
           <View style={styles.attendeeInfo}>
             <View style={styles.nameRow}>
               <Text style={styles.attendeeName}>{attendee.name}</Text>

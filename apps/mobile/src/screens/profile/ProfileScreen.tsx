@@ -9,9 +9,7 @@ import {
   StyleSheet,
   Animated,
   Easing,
-  Share,
   RefreshControl,
-  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -22,6 +20,7 @@ import { colors, palette } from '../../theme/colors';
 import { fontWeights } from '../../theme/typography';
 import { Ionicons } from '@expo/vector-icons';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
+import { INTEREST_CATEGORIES } from '../../constants/config';
 import { useProfileStore } from '../../stores/profileStore';
 import { useAuthStore } from '../../stores/authStore';
 import { useMatchStore } from '../../stores/matchStore';
@@ -37,7 +36,7 @@ import { VerifiedBadge } from '../../components/common/VerifiedBadge';
 import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
 import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
 import { useScreenTracking } from '../../hooks/useAnalytics';
-import { CoinBalance } from '../../components/common/CoinBalance';
+
 import { DailyChallenge, WeeklyLeaderboard } from '../../components/engagement';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 import api from '../../services/api';
@@ -45,8 +44,6 @@ import { socialFeedService, type FeedPost } from '../../services/socialFeedServi
 // NowListening and listeningStore removed — music feature removed
 
 type ProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'Profile'>;
-
-const COUNTUP_DURATION = 800;
 
 const calculateAge = (birthDate: string): number => {
   if (!birthDate) return 0;
@@ -60,6 +57,14 @@ const calculateAge = (birthDate: string): number => {
   return age;
 };
 
+/** Format "Pelin Kulaksiz" — firstName + full lastName */
+const formatDisplayName = (fName: string, lName?: string | null): string => {
+  if (lName && lName.length > 0) {
+    return `${fName} ${lName}`;
+  }
+  return fName;
+};
+
 // Helper: translate profile field values to Turkish display labels
 // Uses centralized translations from formatters.ts
 import {
@@ -69,28 +74,55 @@ import {
   translateChildren,
 } from '../../utils/formatters';
 
-const translateLookingFor = (ids: string[]): string[] => {
-  const map: Record<string, string> = {
-    long_term: 'Uzun süreli ilişki', short_term: 'Kısa süreli ilişki',
-    friendship: 'Arkadaşlık', travel_together: 'Birlikte gezmek',
-    SERIOUS_RELATIONSHIP: 'Ciddi ilişki',
-    EXPLORING: 'Keşfediyorum',
-    NOT_SURE: 'Emin Değilim',
-  };
-  return ids.map((id) => map[id] || id);
+const INTEREST_TAG_DISPLAY: Record<string, { emoji: string; label: string }> = {
+  // Legacy English IDs
+  travel: { emoji: '✈️', label: 'Seyahat' },
+  music: { emoji: '🎵', label: 'Muzik' },
+  sports: { emoji: '🏃', label: 'Spor' },
+  cooking: { emoji: '🍳', label: 'Yemek' },
+  art: { emoji: '🎨', label: 'Sanat' },
+  technology: { emoji: '💻', label: 'Teknoloji' },
+  nature: { emoji: '🌿', label: 'Doga' },
+  books: { emoji: '📚', label: 'Kitap' },
+  movies: { emoji: '🎬', label: 'Film' },
+  photography: { emoji: '📷', label: 'Fotografcilik' },
+  dance: { emoji: '💃', label: 'Dans' },
+  yoga: { emoji: '🧘', label: 'Yoga' },
+  gaming: { emoji: '🎮', label: 'Oyun' },
+  animals: { emoji: '🐾', label: 'Hayvanlar' },
+  fashion: { emoji: '👗', label: 'Moda' },
+  football: { emoji: '⚽', label: 'Futbol' },
+  hiking: { emoji: '🏔️', label: 'Dagcilik' },
+  coffee: { emoji: '☕', label: 'Kahve' },
+  reading: { emoji: '📚', label: 'Okuma' },
+  meditation: { emoji: '🧘‍♂️', label: 'Meditasyon' },
+  swimming: { emoji: '🏊', label: 'Yuzme' },
+  fitness: { emoji: '💪', label: 'Fitness' },
+  beach: { emoji: '🏖️', label: 'Plaj' },
+  architecture: { emoji: '🏛', label: 'Mimari' },
+  design: { emoji: '🎬', label: 'Tasarim' },
+  guitar: { emoji: '🎸', label: 'Gitar' },
+  psychology: { emoji: '🧠', label: 'Psikoloji' },
+  food: { emoji: '🍽', label: 'Yemek' },
+  cats: { emoji: '🐈', label: 'Kediler' },
 };
-
-const INTEREST_TAG_LABELS: Record<string, string> = {
-  travel: 'Seyahat', music: 'Müzik', sports: 'Spor', cooking: 'Yemek',
-  art: 'Sanat', technology: 'Teknoloji', nature: 'Doğa', books: 'Kitap',
-  movies: 'Film', photography: 'Fotoğrafçılık', dance: 'Dans', yoga: 'Yoga',
-  gaming: 'Oyun', animals: 'Hayvanlar', fashion: 'Moda', football: 'Futbol',
-  hiking: 'Doğa Yürüyüşü', coffee: 'Kahve & Şarap',
-  reading: 'Okuma', meditation: 'Meditasyon', swimming: 'Yüzme',
-  fitness: 'Fitness', beach: 'Plaj', architecture: 'Mimari', design: 'Tasarım',
-  guitar: 'Gitar', psychology: 'Psikoloji', food: 'Yemek', cats: 'Kediler',
+// Build category emoji lookup from INTEREST_CATEGORIES
+const _categoryEmojiMap = new Map<string, string>();
+for (const cat of INTEREST_CATEGORIES) {
+  for (const item of cat.items) {
+    _categoryEmojiMap.set(item.label, item.emoji);
+  }
+}
+const getInterestTagDisplay = (tag: string): string => {
+  // 1. Check legacy English ID map
+  const entry = INTEREST_TAG_DISPLAY[tag];
+  if (entry) return `${entry.emoji} ${entry.label}`;
+  // 2. Check category emoji map (Turkish labels)
+  const emoji = _categoryEmojiMap.get(tag);
+  if (emoji) return `${emoji} ${tag}`;
+  // 3. Fallback — show as-is
+  return tag;
 };
-const translateInterestTag = (tag: string): string => INTEREST_TAG_LABELS[tag] || tag;
 
 // Hakkımda row data type
 interface AboutRow {
@@ -99,45 +131,6 @@ interface AboutRow {
   label: string;
   value: string;
 }
-
-// ─── Animated count-up number ────────────────────────────────────────────────
-
-const CountUpStat: React.FC<{ target: number; label: string; suffix?: string }> = ({
-  target,
-  label,
-  suffix,
-}) => {
-  const animValue = useRef(new Animated.Value(0)).current;
-  const [displayValue, setDisplayValue] = useState(0);
-
-  useEffect(() => {
-    animValue.setValue(0);
-    Animated.timing(animValue, {
-      toValue: target,
-      duration: COUNTUP_DURATION,
-      useNativeDriver: false,
-    }).start();
-
-    const listenerId = animValue.addListener(({ value }) => {
-      setDisplayValue(Math.round(value));
-    });
-
-    return () => {
-      animValue.removeListener(listenerId);
-    };
-  }, [animValue, target]);
-
-  return (
-    <View style={styles.statItem}>
-      <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>
-        {displayValue}{suffix ?? ''}
-      </Text>
-      <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>
-        {label}
-      </Text>
-    </View>
-  );
-};
 
 // ─── Gold shimmer animation for Premium CTA ──────────────────────────────────
 
@@ -224,6 +217,7 @@ export const ProfileScreen: React.FC = () => {
   const isLoading = useProfileStore((state) => state.isLoading);
   const fetchProfile = useProfileStore((state) => state.fetchProfile);
   const user = useAuthStore((state) => state.user);
+  const packageTier = user?.packageTier ?? 'FREE';
   const fetchMatches = useMatchStore((state) => state.fetchMatches);
   // Listening status removed — music feature removed
 
@@ -244,6 +238,29 @@ export const ProfileScreen: React.FC = () => {
   // Boost state
   const [boostStatus, setBoostStatus] = useState<BoostStatusResponse>({ isActive: false });
   const [showBoostModal, setShowBoostModal] = useState(false);
+  const [boostRemaining, setBoostRemaining] = useState('');
+
+  // Boost countdown timer
+  useEffect(() => {
+    if (!boostStatus.isActive || !boostStatus.endsAt) {
+      setBoostRemaining('');
+      return;
+    }
+    const tick = () => {
+      const ms = Math.max(0, new Date(boostStatus.endsAt!).getTime() - Date.now());
+      if (ms <= 0) {
+        setBoostRemaining('');
+        setBoostStatus({ isActive: false });
+        return;
+      }
+      const h = Math.floor(ms / 3600000);
+      const m = Math.floor((ms % 3600000) / 60000);
+      setBoostRemaining(`${h}sa ${m}dk`);
+    };
+    tick();
+    const interval = setInterval(tick, 60000);
+    return () => clearInterval(interval);
+  }, [boostStatus.isActive, boostStatus.endsAt]);
   const goldBalance = useCoinStore((s) => s.balance);
 
   // Pull-to-refresh state
@@ -287,7 +304,7 @@ export const ProfileScreen: React.FC = () => {
       setMyPosts(Array.isArray(data) ? data : Array.isArray(data.posts) ? data.posts : []);
     } catch {
       // Fallback: check feed mock data AND current store state for own posts
-      const userId = user?.id ?? 'dev-user-001';
+      const userId = user?.id ?? '';
       const allPosts: FeedPost[] = [];
 
       // Get posts from feed service (includes mock data)
@@ -352,7 +369,11 @@ export const ProfileScreen: React.FC = () => {
 
   const handleBoostBuyGold = useCallback(() => {
     setShowBoostModal(false);
-    navigation.navigate('MembershipPlans');
+    navigation.navigate('JetonMarket');
+  }, [navigation]);
+
+  const handleBoostPress = useCallback(() => {
+    navigation.navigate('BoostMarket');
   }, [navigation]);
 
   // Pull-to-refresh handler — re-fetches all profile data
@@ -413,14 +434,6 @@ export const ProfileScreen: React.FC = () => {
     navigation.navigate('Settings');
   };
 
-  const handleProfileCoach = () => {
-    navigation.navigate('ProfileCoach');
-  };
-
-  const handlePersonality = () => {
-    navigation.navigate('PersonalitySelection');
-  };
-
   // Skeleton loading state
   if (isLoading && !profile.firstName) {
     return (
@@ -456,7 +469,6 @@ export const ProfileScreen: React.FC = () => {
   ];
 
   // ── Header Bar ──────────────────────────────────────────────────────────────
-  const packageTier = user?.packageTier ?? 'FREE';
 
   const headerBar = (
     <View style={[styles.headerBar, { paddingTop: insets.top }]}>
@@ -464,7 +476,6 @@ export const ProfileScreen: React.FC = () => {
         <Text style={styles.headerTitle}>Profil</Text>
       </View>
       <View style={styles.headerRight}>
-        <CoinBalance size="small" />
         <TouchableOpacity
           onPress={handleSettings}
           style={styles.settingsButton}
@@ -486,9 +497,10 @@ export const ProfileScreen: React.FC = () => {
       <View style={styles.identityBlock}>
         <View style={styles.nameVerifiedRow}>
           <Text style={styles.userName}>
-            {profile.firstName || '-'}, {age}
+            {formatDisplayName(profile.firstName || '-', profile.lastName)}, {age}
           </Text>
           {isVerified && <VerifiedBadge size="large" animated />}
+          {packageTier !== 'FREE' && <SubscriptionBadge tier={packageTier} compact />}
           {strengthData && (
             <View style={[styles.strengthPill, { borderColor: getStrengthColor(strengthData.level) + '40' }]}>
               <Text style={[styles.strengthPillText, { color: getStrengthColor(strengthData.level) }]}>
@@ -506,16 +518,6 @@ export const ProfileScreen: React.FC = () => {
         {/* City */}
         <Text style={styles.cityText}>{profile.city || '-'}</Text>
 
-        {/* Profile completion bar */}
-        {completionPercent < 100 && (
-          <TouchableOpacity onPress={handleEditProfile} activeOpacity={0.7} style={styles.completionBarContainer} accessibilityLabel={`Profil yüzde ${completionPercent} tamamlandı, düzenlemek için dokunun`} accessibilityRole="button">
-            <View style={styles.completionBarTrack}>
-              <View style={[styles.completionBarFill, { width: `${completionPercent}%` }]} />
-            </View>
-            <Text style={styles.completionBarText}>Profil %{completionPercent} tamamlandı</Text>
-          </TouchableOpacity>
-        )}
-
         {/* Intention chip */}
         {intentionConfig && (
           <View style={[styles.intentionChip, { backgroundColor: intentionConfig.bg }]}>
@@ -530,7 +532,7 @@ export const ProfileScreen: React.FC = () => {
       <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
         <TouchableOpacity
           style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}
-          onPress={() => navigation.navigate('MyPosts' as never)}
+          onPress={() => navigation.navigate('MyPosts')}
           activeOpacity={0.7}
         >
           <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{myPosts.length}</Text>
@@ -538,7 +540,7 @@ export const ProfileScreen: React.FC = () => {
         </TouchableOpacity>
         <TouchableOpacity
           style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}
-          onPress={() => navigation.navigate('FollowList' as never, { mode: 'followers' } as never)}
+          onPress={() => navigation.navigate('FollowList', { mode: 'followers' })}
           activeOpacity={0.7}
         >
           <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{followerCount}</Text>
@@ -546,7 +548,7 @@ export const ProfileScreen: React.FC = () => {
         </TouchableOpacity>
         <TouchableOpacity
           style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}
-          onPress={() => navigation.navigate('FollowList' as never, { mode: 'following' } as never)}
+          onPress={() => navigation.navigate('FollowList', { mode: 'following' })}
           activeOpacity={0.7}
         >
           <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{followingCount}</Text>
@@ -576,44 +578,110 @@ export const ProfileScreen: React.FC = () => {
           </LinearGradient>
         </TouchableOpacity>
 
-        {/* Share — outlined */}
-        <TouchableOpacity
-          onPress={() => {
-            const userId = user?.id ?? '';
-            Share.share({
-              message: `LUMA'da profilime göz at! https://luma.dating/profile/${userId}`,
-              title: 'LUMA Profil',
-            }).catch(() => {});
-          }}
-          activeOpacity={0.85}
-          style={styles.actionButtonFlex}
-          accessibilityLabel="Profili paylaş"
-          accessibilityRole="button"
-        >
-          <View style={styles.outlinedButton}>
-            <Ionicons name="share-outline" size={15} color={palette.purple[600]} />
-            <Text style={styles.outlinedButtonText}>Paylaş</Text>
-          </View>
-        </TouchableOpacity>
-
-        {/* Premium — gold shimmer */}
+        {/* Premium / Üyelik */}
         <View style={styles.actionButtonFlex}>
           <GoldShimmerButton
             onPress={() => navigation.navigate('MembershipPlans')}
-            label="Premium"
-            icon="diamond"
+            label={packageTier === 'FREE' ? "Premium'a Geç" : packageTier === 'RESERVED' ? 'Supreme' : packageTier === 'PRO' ? 'Pro Üye' : 'Gold Üye'}
+            icon={packageTier === 'RESERVED' ? 'diamond' : packageTier === 'FREE' ? 'rocket' : 'star'}
           />
         </View>
       </View>
 
-      {/* Weekly views — compact inline */}
-      {weeklyViewCount !== null && weeklyViewCount > 0 && (
-        <View style={styles.weeklyViewsRow}>
-          <View style={styles.weeklyViewsDot} />
-          <Text style={styles.weeklyViewsText}>
-            Bu hafta <Text style={styles.weeklyViewsBold}>{weeklyViewCount} kişi</Text> profilini gördü
-          </Text>
+      {/* Profile strength card */}
+      <TouchableOpacity onPress={handleEditProfile} activeOpacity={0.7} style={styles.strengthCardContainer} accessibilityLabel={`Profil gücün yüzde ${completionPercent}, düzenlemek için dokunun`} accessibilityRole="button">
+        <View style={styles.strengthCardRow}>
+          <Text style={styles.strengthCardLabel}>Profil Gucun</Text>
+          <View style={styles.strengthCardTrack}>
+            <View style={[
+              styles.strengthCardFill,
+              {
+                width: `${Math.min(completionPercent, 100)}%`,
+                backgroundColor: completionPercent >= 85 ? '#22C55E' : completionPercent >= 60 ? palette.purple[500] : completionPercent >= 30 ? '#F59E0B' : '#EF4444',
+              },
+            ]} />
+          </View>
+          <Text style={[
+            styles.strengthCardPercent,
+            {
+              color: completionPercent >= 85 ? '#22C55E' : completionPercent >= 60 ? palette.purple[500] : completionPercent >= 30 ? '#F59E0B' : '#EF4444',
+            },
+          ]}>%{completionPercent}</Text>
         </View>
+        {completionPercent < 100 && (
+          <Text style={styles.strengthCardHint}>
+            {profile.photos.length < 2 ? '💡 Daha fazla fotograf ekle'
+              : profile.bio.length < 50 ? '💡 Bio ekleyerek profilini guclendir'
+              : profile.interestTags.length === 0 ? '💡 Ilgi alanlarini sec'
+              : '💡 Detayli bilgilerini tamamla'}
+          </Text>
+        )}
+        {completionPercent >= 100 && (
+          <Text style={styles.strengthCardComplete}>✨ Profilin tamamlanmis!</Text>
+        )}
+      </TouchableOpacity>
+
+      {/* Boost card */}
+      <TouchableOpacity
+        onPress={handleBoostPress}
+        activeOpacity={0.8}
+        style={styles.boostCard}
+        accessibilityLabel="Profilini öne çıkar"
+        accessibilityRole="button"
+        testID="profile-boost-btn"
+      >
+        <View style={styles.boostRow}>
+          <LinearGradient
+            colors={[palette.gold[400], palette.gold[600]] as [string, string, ...string[]]}
+            style={styles.boostIconGradient}
+          >
+            <Text style={styles.boostIconText}>{'\u26A1'}</Text>
+          </LinearGradient>
+          <View style={styles.boostContent}>
+            <Text style={styles.boostTitle}>
+              {boostStatus.isActive ? 'Öne Çıkarma Aktif' : 'Profilini Öne Çıkar'}
+            </Text>
+            <Text style={styles.boostSubtitle}>
+              {boostStatus.isActive
+                ? `Kalan süre: ${boostRemaining || '...'}`
+                : '24 saat boyunca 10x daha fazla görünürlük'}
+            </Text>
+          </View>
+          {boostStatus.isActive ? (
+            <View style={styles.boostActiveBadge}>
+              <View style={styles.boostActiveDot} />
+              <Text style={styles.boostActiveText}>Aktif</Text>
+            </View>
+          ) : (
+            <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+          )}
+        </View>
+      </TouchableOpacity>
+
+      {/* Weekly views — compact inline (GOLD+ sees count, FREE sees teaser) */}
+      {weeklyViewCount !== null && weeklyViewCount > 0 && (
+        packageTier === 'FREE' ? (
+          <TouchableOpacity
+            style={styles.weeklyViewsRow}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('MembershipPlans')}
+            accessibilityLabel="Gold ile profil görüntüleyenleri gör"
+            accessibilityRole="button"
+          >
+            <Ionicons name="lock-closed" size={14} color={palette.gold[500]} />
+            <Text style={styles.weeklyViewsText}>
+              <Text style={styles.weeklyViewsBold}>{weeklyViewCount} kişi</Text> profilini gördü —{' '}
+              <Text style={styles.weeklyViewsGoldCta}>Gold ile öğren</Text>
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.weeklyViewsRow}>
+            <View style={styles.weeklyViewsDot} />
+            <Text style={styles.weeklyViewsText}>
+              Bu hafta <Text style={styles.weeklyViewsBold}>{weeklyViewCount} kişi</Text> profilini gördü
+            </Text>
+          </View>
+        )
       )}
     </View>
   );
@@ -626,15 +694,20 @@ export const ProfileScreen: React.FC = () => {
     <View key="about" style={styles.section}>
       <Text style={styles.sectionTitle}>Hakkında</Text>
       <Text style={styles.bioText}>{profile.bio || '-'}</Text>
-      {profile.lookingFor.length > 0 && (
+      {profile.intentionTag.length > 0 && (
         <View style={styles.lookingForSection}>
-          <Text style={styles.subsectionTitle}>Burada olma sebebim</Text>
+          <Text style={styles.subsectionTitle}>Hedefim</Text>
           <View style={styles.chipRow}>
-            {translateLookingFor(profile.lookingFor).map((label) => (
-              <View key={label} style={styles.lookingForChip}>
-                <Text style={styles.lookingForChipText}>{label}</Text>
-              </View>
-            ))}
+            <View style={styles.lookingForChip}>
+              <Text style={styles.lookingForChipText}>
+                {profile.intentionTag === 'MARRIAGE' ? 'Evlenmek'
+                  : profile.intentionTag === 'SERIOUS_RELATIONSHIP' ? 'Bir iliski bulmak'
+                  : profile.intentionTag === 'FRIENDSHIP' ? 'Sohbet ve arkadaslik'
+                  : profile.intentionTag === 'LEARN_CULTURES' ? 'Kulturleri ogrenmek'
+                  : profile.intentionTag === 'TRAVEL' ? 'Dunyayi gezmek'
+                  : profile.intentionTag}
+              </Text>
+            </View>
           </View>
         </View>
       )}
@@ -648,12 +721,57 @@ export const ProfileScreen: React.FC = () => {
     infoSections.push(
       <View key="interests" style={styles.section}>
         <Text style={styles.sectionTitle}>
-          İlgi Alanları ({profile.interestTags.length}/10)
+          Ilgi Alanlari ({profile.interestTags.length}/15)
         </Text>
         <View style={styles.chipRow}>
           {profile.interestTags.map((tag) => (
             <View key={tag} style={styles.hobbyChip}>
-              <Text style={styles.hobbyChipText}>{translateInterestTag(tag)}</Text>
+              <Text style={styles.hobbyChipText}>{getInterestTagDisplay(tag)}</Text>
+            </View>
+          ))}
+        </View>
+      </View>,
+    );
+  }
+
+  // 2b. Prompts — Hinge-style Q&A cards
+  if (profile.prompts.length > 0) {
+    infoSections.push(
+      <View key="prompts" style={styles.section}>
+        <Text style={styles.sectionTitle}>Sorular & Cevaplar</Text>
+        <View style={{ gap: 12 }}>
+          {profile.prompts.map((prompt) => (
+            <View
+              key={prompt.id}
+              style={{
+                backgroundColor: colors.surface,
+                borderRadius: 16,
+                padding: 18,
+                borderWidth: 1,
+                borderColor: colors.surfaceBorder,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: fontWeights.medium,
+                  color: colors.textTertiary,
+                  marginBottom: 8,
+                  lineHeight: 19,
+                }}
+              >
+                {prompt.question}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: fontWeights.semibold,
+                  color: colors.text,
+                  lineHeight: 24,
+                }}
+              >
+                {prompt.answer}
+              </Text>
             </View>
           ))}
         </View>
@@ -695,75 +813,12 @@ export const ProfileScreen: React.FC = () => {
     </View>,
   );
 
-  // 4. Profil Kocu + Kişilik Tipi
-  infoSections.push(
-    <View key="quick-actions" style={styles.quickActionsRow}>
-      <TouchableOpacity
-        style={styles.quickActionCard}
-        onPress={handleProfileCoach}
-        activeOpacity={0.7}
-        accessibilityLabel="Profil Kocu"
-        accessibilityRole="button"
-      >
-        <View style={styles.quickActionIconCircle}>
-          <Text style={styles.quickActionEmoji}>{'\u2728'}</Text>
-        </View>
-        <Text style={styles.quickActionLabel}>Profil Kocu</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.quickActionCard}
-        onPress={handlePersonality}
-        activeOpacity={0.7}
-        accessibilityLabel="Kişilik Tipi"
-        accessibilityRole="button"
-      >
-        <View style={styles.quickActionIconCircle}>
-          <Text style={styles.quickActionEmoji}>{'\uD83E\uDDE0'}</Text>
-        </View>
-        <Text style={styles.quickActionLabel}>Kişilik Tipi</Text>
-      </TouchableOpacity>
-    </View>,
-  );
+  // 4. Profil Kocu + Kisilik Tipi — removed
 
-  // 6. Boost card
-  infoSections.push(
-    <TouchableOpacity
-      key="boost"
-      style={styles.boostCard}
-      onPress={() => setShowBoostModal(true)}
-      activeOpacity={0.8}
-      accessibilityLabel="Profilini öne çıkar"
-      accessibilityRole="button"
-      testID="profile-boost-btn"
-    >
-      <View style={styles.boostRow}>
-        <LinearGradient
-          colors={[palette.gold[400], palette.gold[600]] as [string, string, ...string[]]}
-          style={styles.boostIconGradient}
-        >
-          <Text style={styles.boostIconText}>{'\u26A1'}</Text>
-        </LinearGradient>
-        <View style={styles.boostContent}>
-          <Text style={styles.boostTitle}>
-            {boostStatus.isActive ? 'Öne Çıkarma Aktif' : 'Profilini Öne Çıkar'}
-          </Text>
-          <Text style={styles.boostSubtitle}>
-            {boostStatus.isActive
-              ? 'Profilin 10x daha fazla görüntüleniyor'
-              : 'Keşfette 10x daha fazla görünürlük'}
-          </Text>
-        </View>
-        {boostStatus.isActive ? (
-          <View style={styles.boostActiveBadge}>
-            <View style={styles.boostActiveDot} />
-            <Text style={styles.boostActiveText}>Aktif</Text>
-          </View>
-        ) : (
-          <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
-        )}
-      </View>
-    </TouchableOpacity>,
-  );
+  // 6. Boost card — moved to topContent (above profile strength)
+
+  // 6b. Timed Boost Offer — temporarily disabled for stability
+  // TODO: Re-enable after SmartUpgradePrompts CachedAvatar fix
 
   // 7. Daily Challenge card
   infoSections.push(
@@ -959,25 +1014,55 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
   },
-  completionBarContainer: {
-    gap: 4,
-    marginTop: 4,
+  strengthCardContainer: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    borderRadius: 16,
+    marginTop: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    alignSelf: 'stretch',
   },
-  completionBarTrack: {
-    height: 4,
-    borderRadius: 2,
+  strengthCardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  strengthCardLabel: {
+    fontSize: 14,
+    fontWeight: fontWeights.semibold,
+    color: colors.text,
+  },
+  strengthCardTrack: {
+    flex: 1,
+    height: 8,
     backgroundColor: colors.surfaceBorder,
+    borderRadius: 4,
+    marginLeft: 10,
+    marginRight: 8,
     overflow: 'hidden',
   },
-  completionBarFill: {
+  strengthCardFill: {
     height: '100%',
-    borderRadius: 2,
-    backgroundColor: palette.purple[500],
+    borderRadius: 4,
   },
-  completionBarText: {
+  strengthCardPercent: {
+    fontSize: 14,
+    fontWeight: fontWeights.bold,
+    minWidth: 36,
+    textAlign: 'right',
+  },
+  strengthCardHint: {
+    fontSize: 12,
+    fontWeight: fontWeights.regular,
+    color: colors.textSecondary,
+    marginTop: 6,
+  },
+  strengthCardComplete: {
     fontSize: 12,
     fontWeight: fontWeights.medium,
-    color: colors.textSecondary,
+    color: '#22C55E',
+    marginTop: 6,
   },
   intentionChip: {
     borderRadius: borderRadius.full,
@@ -1123,6 +1208,10 @@ const styles = StyleSheet.create({
   weeklyViewsBold: {
     fontWeight: fontWeights.bold,
     color: colors.text,
+  },
+  weeklyViewsGoldCta: {
+    fontWeight: fontWeights.semibold,
+    color: palette.gold[500],
   },
 
   // ── Listening status section ──

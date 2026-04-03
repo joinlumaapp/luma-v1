@@ -2,7 +2,7 @@
 // Layout: header (avatar + identity) -> intention -> content -> like action
 // Design: soft shadows, warm tones, generous spacing, Poppins typography hierarchy
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { INTENTION_TAG_OPTIONS, type FeedPost } from '../../services/socialFeedService';
+import { useAuthStore } from '../../stores/authStore';
 // NowListening removed — music feature removed from feed
 
 // ─── Time Ago Helper ──────────────────────────────────────────
@@ -136,7 +137,6 @@ interface FeedCardProps {
 }
 
 export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onProfilePress, onPostTap }) => {
-  const [showDoubleTapMenu, setShowDoubleTapMenu] = useState(false);
   const likeScale = useRef(new Animated.Value(1)).current;
   const likeGlow = useRef(new Animated.Value(0)).current;
   const likeCountAnim = useRef(new Animated.Value(0)).current;
@@ -148,7 +148,6 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onPr
       scale: new Animated.Value(0),
     }))
   ).current;
-  const doubleTapScale = useRef(new Animated.Value(0)).current;
   const lastTapRef = useRef<number>(0);
   const doubleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -256,14 +255,8 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onPr
     }
   }, [post, onPostTap, handleLikePress]);
 
-  const dismissDoubleTapMenu = useCallback(() => {
-    Animated.timing(doubleTapScale, { toValue: 0, duration: 150, useNativeDriver: true }).start(() => setShowDoubleTapMenu(false));
-    if (doubleTapTimerRef.current) { clearTimeout(doubleTapTimerRef.current); doubleTapTimerRef.current = null; }
-  }, [doubleTapScale]);
-
-  const handleDoubleTapLike = useCallback(() => { dismissDoubleTapMenu(); handleLikePress(); }, [dismissDoubleTapMenu, handleLikePress]);
-
-  const isOwnPost = post.userId === 'dev-user-001';
+  const currentUserId = useAuthStore((s) => s.user?.id);
+  const isOwnPost = Boolean(currentUserId && post.userId === currentUserId);
   const timeAgo = formatTimeAgo(post.createdAt);
 
   return (
@@ -581,21 +574,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: palette.rose[400],
   },
-  _doubleTapFlirtBtn_removed: {
-    // Removed: flirt button no longer in feed
-    display: 'none',
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    backgroundColor: palette.coral[500],
-    borderWidth: 2,
-    borderColor: palette.coral[300],
-    shadowColor: palette.coral[500],
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 14,
-    elevation: 10,
-  },
   doubleTapBtnText: {
     fontSize: 10,
     color: '#FFFFFF',
@@ -662,56 +640,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // ── Flirt CTA removed — actions moved to profile screen ──
-  _flirtCta_removed: {
-    display: 'none',
-  },
-  _flirtCtaInner_removed: {
-    borderRadius: borderRadius.full,
-    overflow: 'hidden',
-    shadowColor: palette.coral[500],
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  _flirtCtaGradient_removed: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: spacing.md + 4,
-    paddingVertical: 9,
-    borderRadius: borderRadius.full,
-  },
-  _flirtCtaText_removed: {
-    fontSize: 13,
-    color: '#FFFFFF',
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
-    letterSpacing: 0.3,
-  },
-
-  // ── Mini Comment Input — removed, comments disabled ──
-  _commentInput_removed: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm + 2,
-    backgroundColor: colors.surfaceLight,
-    borderRadius: borderRadius.xl,
-    paddingHorizontal: spacing.md + 2,
-    paddingVertical: spacing.sm + 3,
-    marginTop: spacing.smd,
-    borderWidth: 0.5,
-    borderColor: palette.purple[100] + '50',
-  },
-  _commentPlaceholder_removed: {
-    flex: 1,
-    fontSize: 13,
-    color: colors.textTertiary,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
-    letterSpacing: 0.1,
-  },
 });
 
 // ─── Media Styles ─────────────────────────────────────────────

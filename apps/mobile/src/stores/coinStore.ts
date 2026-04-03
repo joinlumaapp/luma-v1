@@ -38,8 +38,9 @@ export const PRIORITY_MESSAGE_COST = 30;   // Priority message (shown first)
 export const UNDO_SWIPE_COST = 5;          // Extra undo beyond daily free limit
 export const SUGGESTED_STORY_VIEW_COST = 20; // View suggested story beyond limit (GOLD_COSTS.SUGGESTED_STORY_VIEW)
 export const FLIRT_START_COST = 25;           // Flirt beyond daily limit — aligned with GOLD_COSTS.FLIRT_START
-export const SURPRISE_MATCH_COST = 25;     // Canlı Keşfet — first match
-export const SURPRISE_SWITCH_COST = 15;    // Canlı Keşfet — switch to another
+export const SURPRISE_MATCH_COST = 50;     // Canlı Keşfet — first match
+export const SURPRISE_SWITCH_COST = 25;    // Canlı Keşfet — switch to another
+export const GREETING_COST = 50;           // Selam Gonder — send greeting to unmatched user
 
 // ── Earn rewards ──
 export const WELCOME_BONUS = 100;              // New user gift

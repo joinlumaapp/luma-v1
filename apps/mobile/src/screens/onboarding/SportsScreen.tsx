@@ -1,4 +1,4 @@
-// Onboarding step 7/15: Sports frequency — single select
+// Onboarding step 6/13: Sports frequency — single select
 
 import React, { useState, useCallback } from 'react';
 import {
@@ -49,8 +49,8 @@ export const SportsScreen: React.FC = () => {
 
   return (
     <OnboardingLayout
-      step={7}
-      totalSteps={18}
+      step={6}
+      totalSteps={13}
       showBack
       showSkip
       onSkip={handleSkip}

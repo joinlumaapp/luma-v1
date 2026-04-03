@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   ForbiddenException,
+  NotImplementedException,
   Logger,
 } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
@@ -36,12 +37,13 @@ const DIMENSION_LABELS_TR: Record<string, string> = {
 // Threshold for a dimension to be considered "strong"
 const STRONG_DIMENSION_THRESHOLD = 70;
 
-// Daily swipe/flirt limits per package tier (LOCKED: 4 packages)
-// Free users get limited flirt requests, premium users get more
+// Daily swipe limits per package tier (LOCKED: 4 packages)
+// All tiers have unlimited swipes — consistent with payments.service.ts
+// and MembershipPlansScreen which shows "Sinirsiz" for all tiers.
 const DAILY_SWIPE_LIMITS: Record<string, number> = {
-  FREE: 3,
-  GOLD: 15,
-  PRO: 50,
+  FREE: 999999, // Unlimited
+  GOLD: 999999, // Unlimited
+  PRO: 999999, // Unlimited
   RESERVED: 999999, // Unlimited
 };
 
@@ -80,6 +82,15 @@ const ANTI_REPEAT_WINDOW_HOURS = 24;
 // Boost configuration: boosted users get 3x visibility for 30 minutes
 const _BOOST_DURATION_MINUTES = 30;
 const BOOST_SCORE_MULTIPLIER = 3;
+
+// Package tier priority boost: paid users appear higher in the feed.
+// Additive bonus points applied on top of the weighted feed score (0-100 scale).
+const PACKAGE_TIER_PRIORITY_BOOST: Record<string, number> = {
+  FREE: 0,
+  GOLD: 5,
+  PRO: 10,
+  RESERVED: 15,
+};
 
 // ─── Smart Feed Scoring Weights (per spec) ─────────────────────
 // Distance proximity contributes 15% — closer users rank higher.
@@ -229,6 +240,7 @@ export class DiscoveryService {
     const [
       swipedIds,
       blockedIds,
+      reportedIds,
       todaySwipeCount,
       superLikers,
       recentFeedViews,
@@ -251,6 +263,13 @@ export class DiscoveryService {
             b.blockerId === userId ? b.blockedId : b.blockerId,
           ),
         ),
+      // Exclude users reported by the current user
+      this.prisma.report
+        .findMany({
+          where: { reporterId: userId },
+          select: { reportedId: true },
+        })
+        .then((reports) => reports.map((r) => r.reportedId)),
       this.prisma.dailySwipeCount.findUnique({
         where: { userId_date: { userId, date: today } },
       }),
@@ -295,6 +314,7 @@ export class DiscoveryService {
       userId,
       ...swipedIds,
       ...blockedIds,
+      ...reportedIds,
       ...usersInRelationships,
     ]);
 
@@ -567,6 +587,15 @@ export class DiscoveryService {
             feedScore * (1 - ES_RELEVANCE_WEIGHT) +
             esRelevance * ES_RELEVANCE_WEIGHT;
         }
+
+        // Package tier priority boost: paid users (PRO, RESERVED) get
+        // higher visibility in the feed to incentivize premium subscriptions.
+        // Applied as additive points before the boost multiplier so boosted
+        // paid users benefit from both effects.
+        const tierBoost =
+          PACKAGE_TIER_PRIORITY_BOOST[profile.user.packageTier] ??
+          PACKAGE_TIER_PRIORITY_BOOST.FREE;
+        feedScore += tierBoost;
 
         // Apply boost multiplier (3x visibility for 30 minutes)
         if (isBoosted) {
@@ -1030,6 +1059,36 @@ export class DiscoveryService {
         where: { id: lastSwipe.id },
       });
 
+      // If the swipe was a LIKE or SUPER_LIKE, check if a match was created
+      // and reverse it (delete match + match notifications)
+      if (lastSwipe.action === "LIKE" || lastSwipe.action === "SUPER_LIKE") {
+        const { first, second } = this.orderIds(userId, lastSwipe.targetId);
+        const existingMatch = await tx.match.findFirst({
+          where: {
+            userAId: first,
+            userBId: second,
+          },
+        });
+
+        if (existingMatch) {
+          // Delete match notifications for both users
+          await tx.notification.deleteMany({
+            where: {
+              type: "NEW_MATCH",
+              data: {
+                path: ["matchId"],
+                equals: existingMatch.id,
+              },
+            },
+          });
+
+          // Delete the match itself
+          await tx.match.delete({
+            where: { id: existingMatch.id },
+          });
+        }
+      }
+
       // Decrement daily swipe count
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -1379,12 +1438,13 @@ export class DiscoveryService {
     }
 
     // 2. Profile completeness (0-100) — weight 12%
+    // NOTE: Verification is scored separately via SCORE_WEIGHTS.VERIFICATION (7%).
+    // Do NOT add verification bonus here to avoid double-counting.
     let completenessComponent = 0;
     if (params.isComplete) completenessComponent += 40;
-    if (params.bioLength > 0) completenessComponent += 20;
-    if (params.bioLength > 50) completenessComponent += 15;
-    if (params.bioLength > 150) completenessComponent += 10;
-    if (params.isVerified) completenessComponent += 15;
+    if (params.bioLength > 0) completenessComponent += 25;
+    if (params.bioLength > 50) completenessComponent += 20;
+    if (params.bioLength > 150) completenessComponent += 15;
 
     // 3. Activity recency score (0-100) — weight 15%
     let activityComponent = 0;
@@ -1764,5 +1824,160 @@ export class DiscoveryService {
     } catch {
       return new Set();
     }
+  }
+
+  // ─── Selam Gonder (Send Greeting) ─────────────────────────────
+
+  /** Daily greeting limits per package tier (LOCKED: 4 packages) */
+  private static readonly DAILY_GREETING_LIMITS: Record<string, number> = {
+    FREE: 3,
+    GOLD: 10,
+    PRO: 20,
+    RESERVED: 20,
+  };
+
+  /** Jeton cost per greeting */
+  private static readonly GREETING_JETON_COST = 10;
+
+  /**
+   * Send a greeting to another user. Costs jeton and respects daily limits.
+   *
+   * Flow:
+   *  1. Validate sender exists and is active
+   *  2. Check daily greeting limit based on package tier
+   *  3. Prevent duplicate greeting to same user within 24 hours
+   *  4. Deduct jeton cost from sender's gold balance
+   *  5. Create notification for the recipient
+   *  6. Return success result
+   */
+  async sendGreeting(
+    senderId: string,
+    recipientId: string,
+  ): Promise<{
+    success: boolean;
+    newGoldBalance: number;
+    greetingsSentToday: number;
+    dailyLimit: number;
+  }> {
+    // 1. Validate sender
+    const sender = await this.prisma.user.findUnique({
+      where: { id: senderId },
+      select: {
+        id: true,
+        goldBalance: true,
+        packageTier: true,
+        isActive: true,
+        profile: { select: { firstName: true } },
+      },
+    });
+
+    if (!sender || !sender.isActive) {
+      throw new BadRequestException("Kullanici bulunamadi.");
+    }
+
+    // 2. Check if sender has enough jeton
+    if (sender.goldBalance < DiscoveryService.GREETING_JETON_COST) {
+      throw new BadRequestException("Yetersiz jeton bakiyesi.");
+    }
+
+    // 3. Check daily limit
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const greetingsSentToday = await this.prisma.notification.count({
+      where: {
+        userId: recipientId,
+        type: "SYSTEM",
+        createdAt: { gte: todayStart },
+        data: {
+          path: ["greetingSenderId"],
+          equals: senderId,
+        },
+      },
+    });
+
+    // Count total greetings sent today (to any user)
+    const totalGreetingsToday = await this.prisma.notification.count({
+      where: {
+        type: "SYSTEM",
+        createdAt: { gte: todayStart },
+        data: {
+          path: ["greetingSenderId"],
+          equals: senderId,
+        },
+      },
+    });
+
+    const tier = sender.packageTier ?? "FREE";
+    const dailyLimit =
+      DiscoveryService.DAILY_GREETING_LIMITS[tier] ??
+      DiscoveryService.DAILY_GREETING_LIMITS.FREE;
+
+    if (totalGreetingsToday >= dailyLimit) {
+      throw new ForbiddenException(
+        `Gunluk selam limiti doldu (${dailyLimit}/${dailyLimit}).`,
+      );
+    }
+
+    // 4. Prevent duplicate greeting to the same user within 24 hours
+    if (greetingsSentToday > 0) {
+      throw new BadRequestException(
+        "Bu kisiye bugun zaten selam gonderdin.",
+      );
+    }
+
+    // 5. Validate recipient exists
+    const recipient = await this.prisma.user.findUnique({
+      where: { id: recipientId },
+      select: { id: true, isActive: true },
+    });
+
+    if (!recipient || !recipient.isActive) {
+      throw new BadRequestException("Hedef kullanici bulunamadi.");
+    }
+
+    // 6. Deduct jeton (atomic decrement)
+    const updatedSender = await this.prisma.user.update({
+      where: { id: senderId },
+      data: {
+        goldBalance: { decrement: DiscoveryService.GREETING_JETON_COST },
+      },
+      select: { goldBalance: true },
+    });
+
+    // 7. Send notification to recipient
+    const senderName = sender.profile?.firstName ?? "Birisi";
+    await this.notificationsService.sendPushNotification(
+      recipientId,
+      "Selam!",
+      `${senderName} sana selam gonderdi!`,
+      { greetingSenderId: senderId, senderName },
+      "SYSTEM",
+    );
+
+    this.logger.log(
+      `Selam gonderildi — gonderici: ${senderId}, alici: ${recipientId}, kalan jeton: ${updatedSender.goldBalance}`,
+    );
+
+    return {
+      success: true,
+      newGoldBalance: updatedSender.goldBalance,
+      greetingsSentToday: totalGreetingsToday + 1,
+      dailyLimit,
+    };
+  }
+
+  /** Activate priority visibility boost — costs Gold */
+  async activatePriorityBoost(userId: string) {
+    throw new NotImplementedException(
+      "Priority boost will be available in a future update",
+    );
+  }
+
+  /** Send nearby notification — costs 35 Gold */
+  async sendNearbyNotify(userId: string) {
+    throw new NotImplementedException(
+      "Nearby notify will be available in a future update",
+    );
   }
 }

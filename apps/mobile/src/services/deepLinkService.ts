@@ -309,6 +309,16 @@ export const linkingConfig = {
               MembershipPlans: 'membership-plans',
             },
           },
+          FeedTab: {
+            screens: {
+              SocialFeed: 'feed',
+            },
+          },
+          LiveTab: {
+            screens: {
+              Live: 'live',
+            },
+          },
         },
       },
     },

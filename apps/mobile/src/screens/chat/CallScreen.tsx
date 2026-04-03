@@ -186,7 +186,7 @@ export const CallScreen: React.FC = () => {
   if (!isPremium) {
     return (
       <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-        <StatusBar barStyle="light-content" />
+        <StatusBar barStyle="light-content" backgroundColor="#08080F" />
         <View style={styles.premiumGate}>
           <View style={styles.premiumIcon}>
             <Text style={styles.premiumIconText}>
@@ -198,7 +198,7 @@ export const CallScreen: React.FC = () => {
           </Text>
           <Text style={styles.premiumSubtitle}>
             Arama ozelligi Gold ve ustu paketlere ozeldir.{'\n'}
-            Paketini yukselt ve hemen aramaya basla!
+            Paketini yükselt ve hemen aramaya başla!
           </Text>
           <TouchableOpacity
             style={styles.upgradeButton}
@@ -241,7 +241,7 @@ export const CallScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="light-content" backgroundColor="#08080F" />
 
       {/* Top bar: minimize + quality */}
       <View style={styles.topBar}>

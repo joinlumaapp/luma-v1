@@ -24,6 +24,13 @@ export class UpdateProfileDto {
   @MaxLength(50)
   firstName?: string;
 
+  @ApiPropertyOptional({ description: 'Last name', minLength: 1, maxLength: 50 })
+  @IsOptional()
+  @IsString()
+  @MinLength(1, { message: 'Soyisim en az 1 karakter olmali' })
+  @MaxLength(50)
+  lastName?: string;
+
   @ApiPropertyOptional({
     description: "Birth date (ISO format)",
     example: "1998-06-15",

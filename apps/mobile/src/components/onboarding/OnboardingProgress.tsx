@@ -1,4 +1,5 @@
-// Onboarding progress indicator — animated step bar with labels and check marks
+// Onboarding progress indicator — clean animated progress bar with step counter
+// Design: purple gradient bar + right-aligned "Adım X/Y" text, no circles or labels
 
 import React, { useEffect, useRef } from 'react';
 import {
@@ -7,43 +8,30 @@ import {
   StyleSheet,
   Animated,
 } from 'react-native';
-import { colors } from '../../theme/colors';
-import { typography } from '../../theme/typography';
+import { palette } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 
-/** Labels for each onboarding step (Turkish) — Questions first */
-const STEP_LABELS = [
-  'Sorular',
-  'Ad',
-  'Dogum',
-  'Cinsiyet',
-  'Niyet',
-  'Foto',
-  'Hakkinda',
-] as const;
-
-const TOTAL_STEPS = STEP_LABELS.length;
-
 interface OnboardingProgressProps {
-  /** Current step number (1-based, 1 through 7) */
+  /** Current step number (1-based) */
   currentStep: number;
+  /** Total number of steps */
+  totalSteps: number;
 }
 
 export const OnboardingProgress: React.FC<OnboardingProgressProps> = ({
   currentStep,
+  totalSteps,
 }) => {
-  // Animated fill width for the progress bar
   const fillAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Animate the fill to the current step's position
-    const targetWidth = (currentStep / TOTAL_STEPS) * 100;
+    const targetWidth = (currentStep / totalSteps) * 100;
     Animated.timing(fillAnim, {
       toValue: targetWidth,
       duration: 350,
       useNativeDriver: false,
     }).start();
-  }, [currentStep, fillAnim]);
+  }, [currentStep, totalSteps, fillAnim]);
 
   const fillWidth = fillAnim.interpolate({
     inputRange: [0, 100],
@@ -52,62 +40,14 @@ export const OnboardingProgress: React.FC<OnboardingProgressProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* Progress bar with animated fill */}
-      <View style={styles.barContainer}>
-        <View style={styles.barBackground}>
-          <Animated.View
-            style={[styles.barFill, { width: fillWidth }]}
-          />
-        </View>
-        <Text style={styles.stepCounter}>{currentStep}/{TOTAL_STEPS}</Text>
-      </View>
+      {/* Step counter — right-aligned */}
+      <Text style={styles.stepText}>
+        Adım {currentStep}/{totalSteps}
+      </Text>
 
-      {/* Step indicators with labels */}
-      <View style={styles.stepsRow}>
-        {STEP_LABELS.map((label, index) => {
-          const stepNumber = index + 1;
-          const isCompleted = stepNumber < currentStep;
-          const isCurrent = stepNumber === currentStep;
-          const isUpcoming = stepNumber > currentStep;
-
-          return (
-            <View key={label} style={styles.stepItem}>
-              <View
-                style={[
-                  styles.stepDot,
-                  isCompleted && styles.stepDotCompleted,
-                  isCurrent && styles.stepDotCurrent,
-                  isUpcoming && styles.stepDotUpcoming,
-                ]}
-              >
-                {isCompleted ? (
-                  <Text style={styles.checkMark}>{'V'}</Text>
-                ) : (
-                  <Text
-                    style={[
-                      styles.stepNumber,
-                      isCurrent && styles.stepNumberCurrent,
-                      isUpcoming && styles.stepNumberUpcoming,
-                    ]}
-                  >
-                    {stepNumber}
-                  </Text>
-                )}
-              </View>
-              <Text
-                style={[
-                  styles.stepLabel,
-                  isCompleted && styles.stepLabelCompleted,
-                  isCurrent && styles.stepLabelCurrent,
-                  isUpcoming && styles.stepLabelUpcoming,
-                ]}
-                numberOfLines={1}
-              >
-                {label}
-              </Text>
-            </View>
-          );
-        })}
+      {/* Progress bar */}
+      <View style={styles.trackBackground}>
+        <Animated.View style={[styles.trackFill, { width: fillWidth }]} />
       </View>
     </View>
   );
@@ -119,89 +59,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.sm,
   },
-  barContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
+  stepText: {
+    fontSize: 13,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: palette.gray[400],
+    textAlign: 'right',
+    marginBottom: 6,
   },
-  barBackground: {
-    flex: 1,
+  trackBackground: {
     height: 4,
-    backgroundColor: colors.surfaceBorder,
-    borderRadius: 2,
+    backgroundColor: palette.gray[200],
+    borderRadius: 9999,
     overflow: 'hidden',
   },
-  barFill: {
+  trackFill: {
     height: '100%',
-    backgroundColor: colors.primary,
-    borderRadius: 2,
-  },
-  stepCounter: {
-    ...typography.caption,
-    color: colors.textTertiary,
-    minWidth: 28,
-    textAlign: 'right',
-  },
-  stepsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  stepItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  stepDot: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 2,
-  },
-  stepDotCompleted: {
-    backgroundColor: colors.primary,
-  },
-  stepDotCurrent: {
-    backgroundColor: colors.primary,
-    borderWidth: 2,
-    borderColor: colors.primary + '60',
-  },
-  stepDotUpcoming: {
-    backgroundColor: colors.surfaceBorder,
-  },
-  checkMark: {
-    color: colors.text,
-    fontSize: 11,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-  },
-  stepNumber: {
-    ...typography.captionSmall,
-    color: colors.text,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-  },
-  stepNumberCurrent: {
-    color: colors.text,
-  },
-  stepNumberUpcoming: {
-    color: colors.textTertiary,
-  },
-  stepLabel: {
-    ...typography.captionSmall,
-    fontSize: 9,
-    textAlign: 'center',
-  },
-  stepLabelCompleted: {
-    color: colors.primary,
-  },
-  stepLabelCurrent: {
-    color: colors.text,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-  },
-  stepLabelUpcoming: {
-    color: colors.textTertiary,
+    borderRadius: 9999,
+    backgroundColor: palette.purple[500],
   },
 });

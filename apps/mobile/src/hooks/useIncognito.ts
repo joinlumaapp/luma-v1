@@ -2,11 +2,9 @@
 // When active, user does not appear in discovery feed but existing matches remain visible
 
 import { useCallback, useMemo } from 'react';
-import { useAuthStore, type PackageTier } from '../stores/authStore';
+import { useAuthStore } from '../stores/authStore';
 import { useProfileStore } from '../stores/profileStore';
-
-/** Package tiers that can use incognito mode */
-const INCOGNITO_ELIGIBLE_TIERS: ReadonlySet<PackageTier> = new Set(['PRO', 'RESERVED']);
+import { canAccess } from '../constants/packageAccess';
 
 interface UseIncognitoResult {
   /** Whether incognito mode is currently active */
@@ -26,7 +24,7 @@ export const useIncognito = (): UseIncognitoResult => {
   const incognitoExpiresAt = useProfileStore((s) => s.profile.incognitoExpiresAt ?? null);
 
   const canUseIncognito = useMemo(
-    () => INCOGNITO_ELIGIBLE_TIERS.has(packageTier),
+    () => canAccess(packageTier, 'incognito'),
     [packageTier],
   );
 

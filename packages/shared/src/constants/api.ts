@@ -58,6 +58,9 @@ export const API_ROUTES = {
     DAILY_PICKS: '/discovery/daily-picks',
     VIEW_DAILY_PICK: '/discovery/daily-picks/:pickedUserId/view', // PATCH
     WEEKLY_REPORT: '/discovery/weekly-report',
+    PRIORITY_BOOST: '/discovery/priority-boost',
+    NEARBY_NOTIFY: '/discovery/nearby-notify',
+    SEND_GREETING: '/discovery/greeting',
   },
   // Subsystem 9: Matches
   MATCHES: {
@@ -68,6 +71,20 @@ export const API_ROUTES = {
     GET_DATE_PLANS: '/matches/:matchId/date-plans',
     RESPOND_DATE_PLAN: '/matches/date-plans/:planId/respond',
     DELETE_DATE_PLAN: '/matches/date-plans/:planId',
+    // ─── Viewers (Kim Gördü) ──────────────────────────
+    GET_VIEWERS: '/matches/viewers',
+    // ─── Secret Admirer ───────────────────────────────
+    SEND_SECRET_ADMIRER: '/matches/secret-admirer',
+    GUESS_SECRET_ADMIRER: '/matches/secret-admirer/:id/guess',
+    GET_SECRET_ADMIRERS: '/matches/secret-admirers',
+    // ─── Weekly Top ───────────────────────────────────
+    GET_WEEKLY_TOP: '/matches/weekly-top',
+    // ─── Compatibility X-Ray ──────────────────────────
+    GET_COMPATIBILITY_XRAY: '/matches/:id/compatibility-xray',
+    // ─── Activity Strip ───────────────────────────────
+    GET_ACTIVITY_STRIP: '/matches/activity-strip',
+    // ─── Warm Banner ──────────────────────────────────
+    GET_WARM_BANNER: '/matches/warm-banner',
   },
   // Subsystem 11: Relationships
   RELATIONSHIPS: {

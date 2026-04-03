@@ -24,7 +24,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MatchesStackParamList } from '../../navigation/types';
 import { colors } from '../../theme/colors';
-import { typography } from '../../theme/typography';
+import { typography, fontWeights } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { useMatchStore } from '../../stores/matchStore';
 import type { Match } from '../../stores/matchStore';
@@ -33,7 +33,6 @@ import { getAllConversationMeta } from '../../services/chatPersistence';
 import { profileService } from '../../services/profileService';
 import type { ProfileVisitor } from '../../services/profileService';
 import { SlideIn } from '../../components/animations/SlideIn';
-import { PulseGlow } from '../../components/animations/PulseGlow';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { formatMatchActivity, formatActivityStatus } from '../../utils/formatters';
 import { TierIndicator } from '../../components/common/SubscriptionBadge';
@@ -42,11 +41,13 @@ import { useEngagementStore } from '../../stores/engagementStore';
 import { useAuthStore } from '../../stores/authStore';
 import { palette } from '../../theme/colors';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { LikesYouScreen } from '../discovery/LikesYouScreen';
+import { WeeklyInsightNudge } from '../../components/premium/SmartUpgradePrompts';
 
 type MatchesNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'MatchesList'>;
 
 // ─── Tab type ────────────────────────────────────────────────
-type TabKey = 'matches' | 'messages' | 'viewers';
+type TabKey = 'matches' | 'messages' | 'likes' | 'viewers';
 
 // Conversation starter suggestions for matches with no messages
 const CONVERSATION_STARTERS = [
@@ -159,13 +160,6 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
     }).start();
   }, [avatarScaleAnim]);
 
-  // Single warm gold for all compatibility scores — clean premium look
-  const getCompatibilityColor = (_percent: number): string => {
-    return '#D4A574';
-  };
-
-  const isSuperCompatible = item.compatibilityPercent >= 90;
-
   const avatarContent = (
     <CachedAvatar
       uri={item.photoUrl}
@@ -174,26 +168,12 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
     />
   );
 
-  // Simple avatar render: subtle ring for new, PulseGlow for super compat only
   const renderAvatar = () => {
     if (item.isNew) {
       return (
         <NewMatchRing>
           {avatarContent}
         </NewMatchRing>
-      );
-    }
-    if (isSuperCompatible) {
-      return (
-        <PulseGlow
-          color={colors.success}
-          size={layout.avatarMedium}
-          glowRadius={12}
-          duration={2000}
-          style={styles.pulseGlowAvatar}
-        >
-          {avatarContent}
-        </PulseGlow>
       );
     }
     return avatarContent;
@@ -270,6 +250,17 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
               </LinearGradient>
             )}
             </View>
+            {/* Compatibility indicator */}
+            <View style={styles.compatRow}>
+              <Text style={styles.compatText}>
+                %{item.compatibilityPercent} uyumlu
+              </Text>
+              {item.isVerified && (
+                <View style={styles.verifiedDot}>
+                  <Ionicons name="checkmark-circle" size={14} color={colors.success} />
+                </View>
+              )}
+            </View>
             {item.lastMessage ? (
               <Text style={styles.messagePreview} numberOfLines={1}>
                 {item.lastMessage}
@@ -312,18 +303,6 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
             )}
           </View>
 
-          {/* Compatibility */}
-          <View style={styles.compatibilityContainer}>
-            <Text
-              style={[
-                styles.compatibilityPercent,
-                { color: getCompatibilityColor(item.compatibilityPercent) },
-              ]}
-            >
-              %{item.compatibilityPercent}
-            </Text>
-            <Text style={styles.compatibilityLabel}>Uyum</Text>
-          </View>
         </Animated.View>
       </TouchableWithoutFeedback>
   );
@@ -336,6 +315,7 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
 }, (prev, next) => (
   prev.item.id === next.item.id &&
   prev.item.isNew === next.item.isNew &&
+  prev.item.isVerified === next.item.isVerified &&
   prev.item.compatibilityPercent === next.item.compatibilityPercent &&
   prev.item.lastActivity === next.item.lastActivity &&
   prev.item.lastMessage === next.item.lastMessage &&
@@ -968,22 +948,52 @@ export const MatchesListScreen: React.FC = () => {
   // Stable key extractor reference
   const keyExtractor = useCallback((item: Match) => item.id, []);
 
+  const handleEmptyCta = useCallback((tab: TabKey) => {
+    switch (tab) {
+      case 'matches':
+        // Navigate to Discovery tab
+        navigation.getParent()?.navigate('DiscoveryTab', { screen: 'Discovery' });
+        break;
+      case 'messages':
+        // Switch to matches tab within the same screen
+        setActiveTab('matches');
+        break;
+      case 'likes':
+        // Navigate to EditProfile in ProfileTab
+        navigation.getParent()?.navigate('ProfileTab', { screen: 'EditProfile' });
+        break;
+      case 'viewers':
+        // Navigate to MembershipPlans
+        navigation.navigate('MembershipPlans');
+        break;
+    }
+  }, [navigation]);
+
   const renderEmptyList = useCallback(() => {
     const emptyConfig = {
       matches: {
         icon: '\uD83D\uDC9E',
         title: 'Henüz Eşleşmen Yok',
         subtitle: 'Keşfet sekmesinde profilleri beğenerek eşleşme oluşturabilirsin.',
+        ctaLabel: "Keşfet'e Git",
       },
       messages: {
         icon: '\uD83D\uDCAC',
         title: 'Henüz Mesajın Yok',
         subtitle: 'Eşleşmelerine mesaj göndererek sohbet başlatabilirsin.',
+        ctaLabel: 'Eşleşmelerini Gör',
+      },
+      likes: {
+        icon: '\uD83D\uDC9C',
+        title: 'Henüz Beğenen Yok',
+        subtitle: 'Profilini zenginleştirerek daha fazla beğeni alabilirsin.',
+        ctaLabel: 'Profilini Güçlendir',
       },
       viewers: {
         icon: '\uD83D\uDC40',
         title: 'Henüz Kimse Bakmamış',
         subtitle: 'Profilini zenginleştirerek daha fazla görüntülenme alabilirsin.',
+        ctaLabel: 'Premium ile Öne Çık',
       },
     };
     const cfg = emptyConfig[activeTab];
@@ -992,9 +1002,18 @@ export const MatchesListScreen: React.FC = () => {
         <Text style={styles.emptyIcon}>{cfg.icon}</Text>
         <Text style={styles.emptyTitle}>{cfg.title}</Text>
         <Text style={styles.emptySubtitle}>{cfg.subtitle}</Text>
+        <TouchableOpacity
+          style={styles.emptyCtaButton}
+          onPress={() => handleEmptyCta(activeTab)}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel={cfg.ctaLabel}
+        >
+          <Text style={styles.emptyCtaText}>{cfg.ctaLabel}</Text>
+        </TouchableOpacity>
       </View>
     );
-  }, [activeTab]);
+  }, [activeTab, handleEmptyCta]);
 
   // Memoized viewers header — avoids inline function in FlatList ListHeaderComponent
   const renderViewersHeader = useMemo(() => (
@@ -1067,7 +1086,7 @@ export const MatchesListScreen: React.FC = () => {
         {([
           { key: 'matches' as const, label: 'Eşleşmeler', emoji: '💞', isNav: false, isPremiumOnly: false },
           { key: 'messages' as const, label: 'Mesajlar', emoji: '💬', isNav: false, isPremiumOnly: false },
-          { key: 'likes' as const, label: 'Beğenenler', emoji: '💜', isNav: true, isPremiumOnly: true },
+          { key: 'likes' as const, label: 'Beğenenler', emoji: '💜', isNav: false, isPremiumOnly: false },
           { key: 'viewers' as const, label: 'Kim Gördü', emoji: '👀', isNav: false, isPremiumOnly: true },
         ]).map((tab, tabIndex) => {
           const isActive = tab.isNav ? false : activeTab === tab.key;
@@ -1140,7 +1159,9 @@ export const MatchesListScreen: React.FC = () => {
       </View>
 
       {/* List — switches render function based on active tab */}
-      {activeTab === 'viewers' ? (
+      {activeTab === 'likes' ? (
+        <LikesYouScreen embedded />
+      ) : activeTab === 'viewers' ? (
         <FlatList
           data={viewers}
           keyExtractor={viewerKeyExtractor}
@@ -1171,7 +1192,20 @@ export const MatchesListScreen: React.FC = () => {
           keyExtractor={keyExtractor}
           renderItem={activeTab === 'messages' ? renderMessageItem : renderMatchItem}
           contentContainerStyle={styles.listContent}
-          ListHeaderComponent={renderNudgeSection}
+          ListHeaderComponent={
+            <>
+              {!isPremium && activeTab === 'matches' && (
+                <WeeklyInsightNudge
+                  viewCount={12}
+                  likeCount={5}
+                  missedMatches={3}
+                  onUpgrade={() => navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' })}
+                  onDismiss={() => {}}
+                />
+              )}
+              {renderNudgeSection()}
+            </>
+          }
           ListEmptyComponent={renderEmptyList}
           showsVerticalScrollIndicator={false}
           ItemSeparatorComponent={ItemSeparator}
@@ -1414,9 +1448,6 @@ const styles = StyleSheet.create({
   avatarContainer: {
     position: 'relative',
   },
-  pulseGlowAvatar: {
-    borderRadius: layout.avatarMedium / 2,
-  },
   avatarImage: {
     width: layout.avatarMedium,
     height: layout.avatarMedium,
@@ -1616,17 +1647,19 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.background,
   },
-  compatibilityContainer: {
+  compatRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
+    marginTop: 2,
   },
-  compatibilityPercent: {
-    ...typography.bodyLarge,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+  compatText: {
+    ...typography.caption,
+    color: colors.primary,
+    fontWeight: fontWeights.medium,
   },
-  compatibilityLabel: {
-    ...typography.captionSmall,
-    color: colors.textTertiary,
+  verifiedDot: {
+    marginLeft: 2,
   },
   // ── Mesajlar tab: chat icon ──
   chatIconContainer: {
@@ -1662,6 +1695,18 @@ const styles = StyleSheet.create({
   emptySubtitle: {
     ...typography.body,
     color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  emptyCtaButton: {
+    marginTop: spacing.lg,
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+  },
+  emptyCtaText: {
+    ...typography.button,
+    color: '#FFFFFF',
     textAlign: 'center',
   },
   // ── Skeleton loader ──

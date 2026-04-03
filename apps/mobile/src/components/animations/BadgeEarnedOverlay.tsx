@@ -6,6 +6,7 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
+  StatusBar,
   Animated,
   Modal,
   Dimensions,
@@ -297,6 +298,7 @@ export const BadgeEarnedOverlay: React.FC<BadgeEarnedOverlayProps> = ({
       statusBarTranslucent
       onRequestClose={onDismiss}
     >
+      <StatusBar barStyle="light-content" backgroundColor="#08080F" />
       <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]}>
         {/* Sparkle particles */}
         {sparkles.map((config, idx) => (

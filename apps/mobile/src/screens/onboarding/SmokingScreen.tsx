@@ -1,4 +1,4 @@
-// Onboarding step 8/15: Smoking habits — single select
+// Onboarding step 7/13: Smoking habits — single select
 
 import React, { useState, useCallback } from 'react';
 import {
@@ -50,8 +50,8 @@ export const SmokingScreen: React.FC = () => {
 
   return (
     <OnboardingLayout
-      step={8}
-      totalSteps={18}
+      step={7}
+      totalSteps={13}
       showBack
       showSkip
       onSkip={handleSkip}

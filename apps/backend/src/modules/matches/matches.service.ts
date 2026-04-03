@@ -439,6 +439,234 @@ export class MatchesService {
     return starters[Math.floor(Math.random() * starters.length)];
   }
 
+  // ─── Viewers (Kim Gördü) ─────────────────────────────────────────
+
+  /**
+   * Get profile viewers for the current user.
+   * Returns blurred/revealed viewers based on the user's package tier.
+   */
+  async getViewers(
+    userId: string,
+    tier: string,
+  ): Promise<{
+    viewers: any[];
+    dailyRevealsUsed: number;
+    dailyRevealsLimit: number;
+  }> {
+    const viewerConfig: Record<
+      string,
+      { dailyReveals: number; delayHours: number }
+    > = {
+      FREE: { dailyReveals: 1, delayHours: 24 },
+      GOLD: { dailyReveals: 5, delayHours: 6 },
+      PRO: { dailyReveals: 15, delayHours: 0 },
+      RESERVED: { dailyReveals: 999999, delayHours: 0 },
+    };
+
+    const config = viewerConfig[tier] ?? viewerConfig.FREE;
+
+    // TODO: Fetch actual viewers from DB using Prisma
+    // const viewers = await this.prisma.profileView.findMany({
+    //   where: { viewedUserId: userId },
+    //   orderBy: { lastViewedAt: 'desc' },
+    //   include: { viewer: { select: { id: true, profile: true, photos: true } } },
+    // });
+
+    // TODO: Check daily reveal usage from DB
+    const dailyRevealsUsed = 0;
+
+    // Mock data — will be replaced with real DB queries
+    const mockViewers = [
+      {
+        id: "v1",
+        viewerId: "user_mock_1",
+        name: "Gizli",
+        age: null,
+        photoUrl: "",
+        viewCount: 3,
+        lastViewedAt: new Date().toISOString(),
+        distanceKm: 5,
+        isRevealed: dailyRevealsUsed < config.dailyReveals,
+      },
+      {
+        id: "v2",
+        viewerId: "user_mock_2",
+        name: "Gizli",
+        age: null,
+        photoUrl: "",
+        viewCount: 1,
+        lastViewedAt: new Date().toISOString(),
+        distanceKm: 12,
+        isRevealed: false,
+      },
+    ];
+
+    return {
+      viewers: mockViewers,
+      dailyRevealsUsed,
+      dailyRevealsLimit: config.dailyReveals,
+    };
+  }
+
+  // ─── Activity Strip (Canlı Aktivite Şeridi) ────────────────────
+
+  /**
+   * Get activity strip profiles — recently active, nearby, or super compatible users.
+   */
+  async getActivityStrip(userId: string, tier: string): Promise<any[]> {
+    // TODO: Fetch real activity ring profiles from DB
+    // const recentActive = await this.prisma.user.findMany({
+    //   where: { lastActiveAt: { gte: new Date(Date.now() - 30 * 60 * 1000) } },
+    //   select: { id: true, profile: true, photos: true },
+    //   take: 10,
+    // });
+
+    const tierRingLimit: Record<string, number> = {
+      FREE: 3,
+      GOLD: 6,
+      PRO: 10,
+      RESERVED: 10,
+    };
+
+    const limit = tierRingLimit[tier] ?? 3;
+
+    // Mock data — will be replaced with real DB queries
+    const mockProfiles = [
+      {
+        userId: "u_act_1",
+        name: "Deniz",
+        photoUrl: "",
+        ringType: "super_compatible" as const,
+        compatibilityPercent: 91,
+        distanceKm: 3,
+        isRevealed: true,
+      },
+      {
+        userId: "u_act_2",
+        name: "Ece",
+        photoUrl: "",
+        ringType: "nearby" as const,
+        compatibilityPercent: null,
+        distanceKm: 1,
+        isRevealed: true,
+      },
+      {
+        userId: "u_act_3",
+        name: "Gizli",
+        photoUrl: "",
+        ringType: "locked" as const,
+        compatibilityPercent: null,
+        distanceKm: null,
+        isRevealed: false,
+      },
+    ];
+
+    return mockProfiles.slice(0, limit);
+  }
+
+  // ─── Warm Banner (Samimi Bildirim Afişi) ────────────────────────
+
+  /**
+   * Get a warm notification banner for the matches screen.
+   * Returns a contextual, encouraging message based on user activity.
+   */
+  async getWarmBanner(userId: string): Promise<{
+    message: string;
+    detail: string | null;
+    emoji: string;
+    type: "super_compatible" | "nearby" | "weekly_summary" | "new_like";
+  }> {
+    // TODO: Fetch real user activity data from DB to generate contextual banners
+    // const recentLikes = await this.prisma.swipe.count({
+    //   where: { targetId: userId, action: 'LIKE', createdAt: { gte: last24h } },
+    // });
+    // const nearbyCount = await this.prisma.user.count({
+    //   where: { ... nearby logic ... },
+    // });
+
+    // Mock — return a sample warm message
+    return {
+      message: "Bu hafta 3 kişiyle süper uyumlusun!",
+      detail: "Hemen keşfet ve tanışmaya başla.",
+      emoji: "💫",
+      type: "super_compatible",
+    };
+  }
+
+  // ─── Weekly Top Matches (Haftalık Top 3) ────────────────────────
+
+  /**
+   * Get the top 3 most compatible recent likes for the current user this week.
+   * Revealed count depends on the user's package tier.
+   */
+  async getWeeklyTop(
+    userId: string,
+    tier: string,
+  ): Promise<{
+    matches: any[];
+    generatedAt: string;
+    nextRefreshAt: string;
+  }> {
+    const visibleCount: Record<string, number> = {
+      FREE: 1,
+      GOLD: 2,
+      PRO: 3,
+      RESERVED: 3,
+    };
+    const limit = visibleCount[tier] || 1;
+
+    // TODO: Fetch top 3 most compatible recent likes from DB
+    // const topLikes = await this.prisma.swipe.findMany({
+    //   where: { targetId: userId, action: 'LIKE', createdAt: { gte: startOfWeek } },
+    //   orderBy: { ... by compatibility score ... },
+    //   take: 3,
+    // });
+
+    const mockMatches = [
+      {
+        userId: "u1",
+        name: "Elif",
+        age: 26,
+        photoUrl: "",
+        compatibilityPercent: 92,
+        isRevealed: true,
+        matchReason: "Süper uyumlu",
+      },
+      {
+        userId: "u2",
+        name: "Selin",
+        age: 24,
+        photoUrl: "",
+        compatibilityPercent: 87,
+        isRevealed: false,
+        matchReason: "Yüksek uyum",
+      },
+      {
+        userId: "u3",
+        name: "Ayşe",
+        age: 25,
+        photoUrl: "",
+        compatibilityPercent: 83,
+        isRevealed: false,
+        matchReason: "Yüksek uyum",
+      },
+    ].map((m, i) => ({ ...m, isRevealed: i < limit }));
+
+    const nextMonday = new Date();
+    nextMonday.setDate(
+      nextMonday.getDate() + ((8 - nextMonday.getDay()) % 7 || 7),
+    );
+    nextMonday.setHours(0, 0, 0, 0);
+
+    return {
+      matches: mockMatches,
+      generatedAt: new Date().toISOString(),
+      nextRefreshAt: nextMonday.toISOString(),
+    };
+  }
+
+  // ─── Private Helpers ───────────────────────────────────────────
+
   private orderIds(a: string, b: string) {
     return a < b ? { first: a, second: b } : { first: b, second: a };
   }

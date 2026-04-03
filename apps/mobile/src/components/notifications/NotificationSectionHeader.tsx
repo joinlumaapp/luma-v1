@@ -20,7 +20,6 @@ const GROUP_ICONS: Record<NotificationGroupKey, string> = {
   LIKE: '\u2764',          // red heart
   SOCIAL: '\u2606',        // star
   MESSAGE: '\u2709',       // envelope
-  BADGE: '\u2606',         // star
   SYSTEM: '\u2699',        // gear
   OTHER: '\u2022',         // bullet
 };
@@ -31,7 +30,6 @@ const GROUP_COLORS: Record<NotificationGroupKey, string> = {
   LIKE: colors.error,
   SOCIAL: colors.accent,
   MESSAGE: colors.info,
-  BADGE: colors.accent,
   SYSTEM: colors.textSecondary,
   OTHER: colors.textTertiary,
 };

@@ -252,9 +252,6 @@ export const ChatScreen: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [showGifPicker, setShowGifPicker] = useState(false);
-  const [isRecordingVoice, setIsRecordingVoice] = useState(false);
-  const [recordingDuration, setRecordingDuration] = useState(0);
-  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // ── Shared cleanup — single source of truth ────────────────────────────────
   // Called by both blur cleanup and beforeRemove to ensure consistent teardown.
@@ -265,12 +262,6 @@ export const ChatScreen: React.FC = () => {
     setShowGifPicker(false);
     setFullscreenImage(null);
     setImagePreview(null);
-    setIsRecordingVoice(false);
-    setRecordingDuration(0);
-    if (recordingTimerRef.current) {
-      clearInterval(recordingTimerRef.current);
-      recordingTimerRef.current = null;
-    }
   }, [stopTyping]);
 
   // ── Android back button priority chain ──────────────────────────────────────
@@ -330,6 +321,11 @@ export const ChatScreen: React.FC = () => {
 
   const currentUserId = useAuthStore((state) => state.user?.id);
   const checkMessageLimit = useChatStore((state) => state.checkMessageLimit);
+  // Subscribe to matchDailyMessageCounts so limit info re-computes when counts change.
+  // The value itself is unused — the subscription triggers re-renders.
+  useChatStore(
+    (state) => state.matchDailyMessageCounts[`${new Date().toISOString().split('T')[0]}:${matchId}`] ?? 0,
+  );
   const messageLimitInfo = checkMessageLimit(matchId);
   const [showLimitReached, setShowLimitReached] = useState(false);
 
@@ -344,8 +340,6 @@ export const ChatScreen: React.FC = () => {
   const sendMessage = useChatStore((state) => state.sendMessage);
   const sendImageMessage = useChatStore((state) => state.sendImageMessage);
   const sendGifMessage = useChatStore((state) => state.sendGifMessage);
-  // Voice message sending disabled until expo-av integration
-  // const sendVoiceMessage = useChatStore((state) => state.sendVoiceMessage);
   const markAsRead = useChatStore((state) => state.markAsRead);
   const toggleReaction = useChatStore((state) => state.toggleReaction);
   const retryMessage = useChatStore((state) => state.retryMessage);
@@ -398,10 +392,28 @@ export const ChatScreen: React.FC = () => {
   const packageTier = useAuthStore((state) => state.user?.packageTier ?? 'FREE');
   const showReadReceipts = packageTier === 'PRO' || packageTier === 'RESERVED';
 
+  // Read receipt upsell banner — shown once per chat session for FREE/GOLD users
+  const [readReceiptBannerDismissed, setReadReceiptBannerDismissed] = useState(false);
+  const showReadReceiptUpsell = !showReadReceipts && !readReceiptBannerDismissed;
+
   // Call feature
   const startCall = useCallStore((state) => state.startCall);
   const callState = useCallStore((state) => state.callState);
   const handleStartCall = useCallback((type: 'voice' | 'video') => {
+    if (packageTier === 'FREE') {
+      Alert.alert(
+        'Premium Özellik',
+        'Sesli ve görüntülü arama Gold ve üzeri paketlere özeldir.',
+        [
+          { text: 'Vazgeç', style: 'cancel' },
+          {
+            text: 'Paketi Yükselt',
+            onPress: () => navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' }),
+          },
+        ],
+      );
+      return;
+    }
     const remoteUserInfo: RemoteCallUser = {
       id: partnerUserId ?? matchId,
       name: partnerName,
@@ -409,19 +421,32 @@ export const ChatScreen: React.FC = () => {
     };
     startCall(matchId, type, remoteUserInfo);
     navigation.navigate('Call', { matchId, partnerName, callType: type });
-  }, [startCall, matchId, partnerName, partnerUserId, navigation]);
+  }, [startCall, matchId, partnerName, partnerUserId, navigation, packageTier]);
   const isInCall = callState !== 'idle';
 
   const handleSend = useCallback(async () => {
     const trimmed = inputText.trim();
     if (!trimmed || isSending) return;
 
-    // Check limit BEFORE sending — if blocked, show limit UI and return.
+    // Check limit BEFORE sending — if blocked, show limit alert and return.
     // sendMessage returning false means API failure, handled inline by the
     // FAILED bubble — we must NOT show showLimitReached in that case.
     const limitInfo = messageLimitInfo;
     if (!limitInfo.allowed) {
       setShowLimitReached(true);
+      Alert.alert(
+        'Mesaj Limiti',
+        'Bug\u00FCnk\u00FC mesaj hakk\u0131n doldu. Daha fazla mesaj g\u00F6ndermek i\u00E7in paketini y\u00FCkselt.',
+        [
+          { text: 'Tamam', style: 'cancel' },
+          {
+            text: 'Paketi Y\u00FCkselt',
+            onPress: () => {
+              navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' });
+            },
+          },
+        ],
+      );
       return;
     }
 
@@ -433,7 +458,7 @@ export const ChatScreen: React.FC = () => {
     // sendMessage adds the optimistic bubble immediately (status: SENDING).
     // On failure it marks the bubble as FAILED with inline retry — no Alert needed.
     await sendMessage(matchId, trimmed);
-  }, [inputText, isSending, matchId, sendMessage, messageLimitInfo, stopTyping]);
+  }, [inputText, isSending, matchId, sendMessage, messageLimitInfo, stopTyping, navigation]);
 
   // Image picker handler
   const handlePickImage = useCallback(async () => {
@@ -473,40 +498,6 @@ export const ChatScreen: React.FC = () => {
     sendGifMessage(matchId, gifUrl);
     setShowGifPicker(false);
   }, [matchId, sendGifMessage]);
-
-  // Voice recording start handler — disabled until expo-av integration
-  // To re-enable: uncomment and wire to mic button onPress
-  // const handleVoiceRecordStart = useCallback(() => {
-  //   setIsRecordingVoice(true);
-  //   setRecordingDuration(0);
-  //   recordingTimerRef.current = setInterval(() => {
-  //     setRecordingDuration((prev) => prev + 1);
-  //   }, 1000);
-  // }, []);
-
-  const handleVoiceRecordStop = useCallback(async () => {
-    setIsRecordingVoice(false);
-    if (recordingTimerRef.current) {
-      clearInterval(recordingTimerRef.current);
-      recordingTimerRef.current = null;
-    }
-    // Voice recording requires expo-av — planned for V2
-  }, []);
-
-  const handleVoiceRecordCancel = useCallback(() => {
-    setIsRecordingVoice(false);
-    setRecordingDuration(0);
-    if (recordingTimerRef.current) {
-      clearInterval(recordingTimerRef.current);
-      recordingTimerRef.current = null;
-    }
-  }, []);
-
-  const formatRecordingTime = useCallback((seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  }, []);
 
   const handleLoadMore = useCallback(() => {
     if (hasMore && !isLoadingMessages) {
@@ -721,23 +712,33 @@ export const ChatScreen: React.FC = () => {
             onPress={() => handleStartCall('voice')}
             disabled={isInCall}
             activeOpacity={0.7}
-            accessibilityLabel="Sesli arama baslat"
+            accessibilityLabel="Sesli arama başlat"
             accessibilityRole="button"
             testID="chat-voice-call-btn"
             style={[styles.callButton, isInCall && styles.callButtonDisabled]}
           >
             <Text style={styles.callButtonText}>{'\uD83D\uDCDE'}</Text>
+            {packageTier === 'FREE' && (
+              <View style={styles.callLockBadge}>
+                <Text style={styles.callLockIcon}>{'\uD83D\uDD12'}</Text>
+              </View>
+            )}
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => handleStartCall('video')}
             disabled={isInCall}
             activeOpacity={0.7}
-            accessibilityLabel="Goruntulu arama baslat"
+            accessibilityLabel="Görüntülü arama başlat"
             accessibilityRole="button"
             testID="chat-video-call-btn"
             style={[styles.callButton, isInCall && styles.callButtonDisabled]}
           >
             <Text style={styles.callButtonText}>{'\uD83C\uDFA5'}</Text>
+            {packageTier === 'FREE' && (
+              <View style={styles.callLockBadge}>
+                <Text style={styles.callLockIcon}>{'\uD83D\uDD12'}</Text>
+              </View>
+            )}
           </TouchableOpacity>
           {/* Date Planner shortcut (Issue 5) */}
           <TouchableOpacity
@@ -812,6 +813,34 @@ export const ChatScreen: React.FC = () => {
           />
         )}
 
+        {/* Read receipt upsell banner — one-time per session, FREE/GOLD only */}
+        {showReadReceiptUpsell && messages.length > 0 && (
+          <TouchableOpacity
+            style={styles.readReceiptUpsellBanner}
+            onPress={() => {
+              setReadReceiptBannerDismissed(true);
+              navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' });
+            }}
+            activeOpacity={0.8}
+            accessibilityLabel="Okundu bilgisi PRO özelliği"
+            accessibilityRole="button"
+            testID="chat-read-receipt-upsell"
+          >
+            <Text style={styles.readReceiptUpsellText}>
+              Mesajlarının okunup okunmadığını gör — PRO ile aç
+            </Text>
+            <TouchableOpacity
+              onPress={() => setReadReceiptBannerDismissed(true)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityLabel="Kapat"
+              accessibilityRole="button"
+              testID="chat-read-receipt-upsell-dismiss"
+            >
+              <Text style={styles.readReceiptUpsellDismiss}>✕</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        )}
+
         {/* Typing indicator */}
         {isTyping && <TypingIndicator partnerName={partnerName} />}
 
@@ -855,35 +884,6 @@ export const ChatScreen: React.FC = () => {
                 <Text style={styles.sendButtonText}>{'\u2191'}</Text>
               )}
             </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Voice recording overlay */}
-        {isRecordingVoice && (
-          <View style={styles.voiceRecordingBar}>
-            <View style={styles.voiceRecordingDot} />
-            <Text style={styles.voiceRecordingTime}>{formatRecordingTime(recordingDuration)}</Text>
-            <Text style={styles.voiceRecordingLabel}>Kayıt yapılıyor...</Text>
-            <View style={styles.voiceRecordingActions}>
-              <TouchableOpacity
-                onPress={handleVoiceRecordCancel}
-                style={styles.voiceRecordCancelBtn}
-                accessibilityLabel="Kaydı iptal et"
-                accessibilityRole="button"
-                testID="chat-voice-cancel-btn"
-              >
-                <Text style={styles.voiceRecordCancelText}>{'\u2715'}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleVoiceRecordStop}
-                style={styles.voiceRecordSendBtn}
-                accessibilityLabel="Sesli mesajı gönder"
-                accessibilityRole="button"
-                testID="chat-voice-send-btn"
-              >
-                <Text style={styles.voiceRecordSendText}>{'\u2191'}</Text>
-              </TouchableOpacity>
-            </View>
           </View>
         )}
 
@@ -964,7 +964,6 @@ export const ChatScreen: React.FC = () => {
         ) : (
         <>
         {/* Input area */}
-        {!isRecordingVoice && (
         <View style={[styles.inputArea, { paddingBottom: keyboardVisible ? spacing.xs : Math.max(insets.bottom, spacing.sm) }]}>
           {/* Camera/image picker button */}
           <TouchableOpacity
@@ -1012,10 +1011,10 @@ export const ChatScreen: React.FC = () => {
             <TouchableOpacity
               style={[
                 styles.sendButton,
-                isSending && styles.sendButtonDisabled,
+                (isSending || !messageLimitInfo.allowed) && styles.sendButtonDisabled,
               ]}
               onPress={handleSend}
-              disabled={isSending}
+              disabled={isSending || !messageLimitInfo.allowed}
               activeOpacity={0.8}
               accessibilityLabel="Mesaj gönder"
               accessibilityRole="button"
@@ -1043,7 +1042,6 @@ export const ChatScreen: React.FC = () => {
             </TouchableOpacity>
           )}
         </View>
-        )}
         </>
         )}
       </KeyboardAvoidingView>
@@ -1191,6 +1189,22 @@ const styles = StyleSheet.create({
   },
   callButtonText: {
     fontSize: 16,
+  },
+  callLockBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  callLockIcon: {
+    fontSize: 8,
   },
   moreButtonText: {
     fontSize: 20,
@@ -1397,67 +1411,6 @@ const styles = StyleSheet.create({
   micButtonDisabled: {
     opacity: 0.4,
   },
-  // Voice recording bar
-  voiceRecordingBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.divider,
-    backgroundColor: 'rgba(239, 68, 68, 0.08)',
-    gap: spacing.sm,
-  },
-  voiceRecordingDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#EF4444',
-  },
-  voiceRecordingTime: {
-    ...typography.bodyLarge,
-    color: colors.text,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    fontVariant: ['tabular-nums'] as const,
-  },
-  voiceRecordingLabel: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    flex: 1,
-  },
-  voiceRecordingActions: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  voiceRecordCancelBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  voiceRecordCancelText: {
-    fontSize: 16,
-    color: '#EF4444',
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-  },
-  voiceRecordSendBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  voiceRecordSendText: {
-    fontSize: 18,
-    color: colors.text,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-  },
   // GIF picker modal overlay
   gifPickerOverlay: {
     flex: 1,
@@ -1509,6 +1462,30 @@ const styles = StyleSheet.create({
     color: colors.error,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
+  },
+  // Read receipt upsell styles
+  readReceiptUpsellBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.primary + '15',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.primary + '30',
+  },
+  readReceiptUpsellText: {
+    ...typography.caption,
+    color: colors.primary,
+    flex: 1,
+    marginRight: spacing.sm,
+  },
+  readReceiptUpsellDismiss: {
+    ...typography.caption,
+    color: colors.textTertiary,
+    fontSize: 14,
+    lineHeight: 18,
+    paddingHorizontal: spacing.xs,
   },
   limitReachedArea: {
     paddingHorizontal: spacing.lg,

@@ -28,6 +28,7 @@ import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { useAuthStore } from '../../stores/authStore';
+import { useProfileStore } from '../../stores/profileStore';
 import { useSocialFeedStore } from '../../stores/socialFeedStore';
 import {
   FEED_POST_TYPES,
@@ -41,27 +42,26 @@ import { photoService } from '../../services/photoService';
 import { FeedCard } from '../../components/feed/FeedCard';
 // CommentSheet removed — comment system removed from feed
 // MatchPromptModal removed — actions moved to profile screen
-import { discoveryService } from '../../services/discoveryService';
 import { EngagementNudge } from '../../components/feed/EngagementNudge';
 // QuickProfilePreview removed — tapping post goes directly to full profile
 import { useFeedInteractionStore } from '../../stores/feedInteractionStore';
 import { useStoryStore } from '../../stores/storyStore';
 import { StoryRing } from '../../components/stories/StoryRing';
 import type { StoryUser } from '../../services/storyService';
-import { useFlirtStore } from '../../stores/flirtStore';
 import { FEED_POST_CONFIG } from '../../constants/config';
-import { useCoinStore, SUGGESTED_STORY_VIEW_COST, FLIRT_START_COST } from '../../stores/coinStore';
-// MusicPicker removed — music feature removed
-import { FEATURE_RULES, isUnlimited as isFeatureUnlimited } from '../../constants/packageAccess';
-import type { PackageTier } from '../../stores/authStore';
+import { getFeatureLimit, isUnlimited } from '../../constants/packageAccess';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { useScreenTracking } from '../../hooks/useAnalytics';
+import { AdBanner } from '../../components/ads';
 
 // ── Feed item union type for FlatList (posts + nudge cards) ──────
 const NUDGE_INTERVAL = 5; // show nudge every N posts without interaction
+const AD_INTERVAL = 5; // show an ad every N posts for FREE users
 
 type FeedListItem =
   | { type: 'post'; data: FeedPost }
-  | { type: 'nudge'; variant: number; key: string };
+  | { type: 'nudge'; variant: number; key: string }
+  | { type: 'ad'; adIndex: number; key: string };
 
 // ─── Filter Tabs ──────────────────────────────────────────────
 
@@ -340,12 +340,6 @@ const EmptyState: React.FC = () => (
 
 const getToday = (): string => new Date().toISOString().slice(0, 10);
 
-/** Generate a deterministic pseudo-view count from post id */
-const getViewCount = (postId: string): number => {
-  const hash = postId.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-  return (hash % 200) + 10;
-};
-
 // ─── Story Bar Section ────────────────────────────────────────
 // Fixed story bar between header and feed — does NOT scroll with FlatList
 
@@ -355,7 +349,6 @@ interface StoryBarSectionProps {
   seenStoryIds: Set<string>;
   onCreateStory: () => void;
   onViewStory: (userId: string, userName: string, avatarUrl: string) => void;
-  onSuggestedStoryPress: (userId: string, userName: string, avatarUrl: string) => void;
 }
 
 const StoryBarSection: React.FC<StoryBarSectionProps> = ({
@@ -364,13 +357,12 @@ const StoryBarSection: React.FC<StoryBarSectionProps> = ({
   seenStoryIds,
   onCreateStory,
   onViewStory,
-  onSuggestedStoryPress,
 }) => {
-  // Separate followed users from suggested users — exclude own user from the list
-  const followedUsers = storyUsers.filter((u) => !u.isSuggested && u.userId !== 'dev-user-001');
-  const suggestedUsers = storyUsers.filter((u) => u.isSuggested && u.userId !== 'dev-user-001').slice(0, 3);
+  // Exclude own user from the list
+  const currentUid = useAuthStore.getState().user?.id ?? '';
+  const followedUsers = storyUsers.filter((u) => !u.isSuggested && u.userId !== currentUid);
 
-  // Sort followed: unseen stories first, then by latest story time
+  // Sort: unseen stories first, then by latest story time
   const sortedFollowed = [...followedUsers].sort((a, b) => {
     const aUnseen = a.stories.some((s) => !seenStoryIds.has(s.id));
     const bUnseen = b.stories.some((s) => !seenStoryIds.has(s.id));
@@ -390,14 +382,17 @@ const StoryBarSection: React.FC<StoryBarSectionProps> = ({
         {/* Own story — always first */}
         <StoryRing
           userName="Hikaye"
-          avatarUrl="https://i.pravatar.cc/150?img=68"
+          avatarUrl={useProfileStore.getState().profile.photos[0] ?? ''}
           isOwnStory
           hasStories={myStoryCount > 0}
           isSeen={false}
           showLabel={false}
           onPress={() => {
             if (myStoryCount > 0) {
-              onViewStory('dev-user-001', 'Sen', 'https://i.pravatar.cc/150?img=68');
+              const uid = useAuthStore.getState().user?.id ?? '';
+              const uName = useProfileStore.getState().profile.firstName || 'Sen';
+              const uPhoto = useProfileStore.getState().profile.photos[0] ?? '';
+              onViewStory(uid, uName, uPhoto);
             } else {
               onCreateStory();
             }
@@ -420,25 +415,6 @@ const StoryBarSection: React.FC<StoryBarSectionProps> = ({
             />
           );
         })}
-
-        {/* Divider between followed and suggested */}
-        {suggestedUsers.length > 0 && sortedFollowed.length > 0 && (
-          <View style={sbStyles.divider} />
-        )}
-
-        {/* Suggested stories (max 3) — taps go through daily limit check */}
-        {suggestedUsers.map((user) => (
-          <StoryRing
-            key={user.userId}
-            userName={user.userName}
-            avatarUrl={user.userAvatarUrl}
-            hasStories={user.stories.length > 0}
-            isSeen={false}
-            isSuggested
-            showLabel={false}
-            onPress={() => onSuggestedStoryPress(user.userId, user.userName, user.userAvatarUrl)}
-          />
-        ))}
       </ScrollView>
     </View>
   );
@@ -449,13 +425,29 @@ const StoryBarSection: React.FC<StoryBarSectionProps> = ({
 type FeedNavProp = NativeStackNavigationProp<FeedStackParamList, 'SocialFeed'>;
 
 export const SocialFeedScreen: React.FC = () => {
+  useScreenTracking('SocialFeed');
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<FeedNavProp>();
   const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE');
+  const currentUserId = useAuthStore((s) => s.user?.id ?? '');
 
-  // Daily post tracking for free users
-  const [dailyPostCount, setDailyPostCount] = useState(0);
-  const [lastPostDate, setLastPostDate] = useState<string | null>(null);
+  // Daily post tracking — persisted in Zustand store
+  const dailyPostCount = useSocialFeedStore((s) => s.dailyPostCount);
+  const lastPostDate = useSocialFeedStore((s) => s.lastPostDate);
+  const incrementDailyPost = useSocialFeedStore((s) => s.incrementDailyPost);
+  const resetDailyPostIfNeeded = useSocialFeedStore((s) => s.resetDailyPostIfNeeded);
+
+  // Daily story creation tracking — persisted in Zustand store
+  const dailyStoryCount = useSocialFeedStore((s) => s.dailyStoryCount);
+  const lastStoryDate = useSocialFeedStore((s) => s.lastStoryDate);
+  const incrementDailyStory = useSocialFeedStore((s) => s.incrementDailyStory);
+  const resetDailyStoryIfNeeded = useSocialFeedStore((s) => s.resetDailyStoryIfNeeded);
+
+  // Daily follow tracking — persisted in Zustand store
+  const dailyFollowCount = useSocialFeedStore((s) => s.dailyFollowCount);
+  const lastFollowDate = useSocialFeedStore((s) => s.lastFollowDate);
+  const incrementDailyFollow = useSocialFeedStore((s) => s.incrementDailyFollow);
+  const resetDailyFollowIfNeeded = useSocialFeedStore((s) => s.resetDailyFollowIfNeeded);
 
   // Store selectors
   const posts = useSocialFeedStore((s) => s.posts);
@@ -473,11 +465,6 @@ export const SocialFeedScreen: React.FC = () => {
 
   // Interaction tracking — triggers match prompt after repeated interactions
   const recordInteraction = useFeedInteractionStore((s) => s.recordInteraction);
-  const promptUserId = useFeedInteractionStore((s) => s.promptUserId);
-  const dismissPrompt = useFeedInteractionStore((s) => s.dismissPrompt);
-  const clearPrompt = useFeedInteractionStore((s) => s.clearPrompt);
-  // Resolve prompted user's info from posts
-  const promptedPost = promptUserId ? posts.find((p) => p.userId === promptUserId) : null;
 
   // Passive scroll tracking — counts posts seen since last interaction
   const [interactionCount, setInteractionCount] = useState(0);
@@ -488,26 +475,18 @@ export const SocialFeedScreen: React.FC = () => {
     setInteractionCount((c) => c + 1);
   }, []);
 
-  // Flirt limits
-  const canFlirt = useFlirtStore((s) => s.canFlirt);
-  const recordFlirt = useFlirtStore((s) => s.recordFlirt);
-  const isFlirtPending = useFlirtStore((s) => s.isFlirtPending);
-
   // State
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedPostType, setSelectedPostType] = useState<FeedPostType>('text');
   // quickPreviewPost state removed — no intermediate modals
 
-  // Suggested story daily view tracking
-  const [suggestedStoryViewsToday, setSuggestedStoryViewsToday] = useState(0);
-  const [suggestedStoryViewDate, setSuggestedStoryViewDate] = useState<string>(getToday());
-  const coinBalance = useCoinStore((s) => s.balance);
-  const spendCoins = useCoinStore((s) => s.spendCoins);
-
   useEffect(() => {
+    // Reset daily counters if the date has changed (persisted values may be stale)
+    resetDailyPostIfNeeded();
+    resetDailyStoryIfNeeded();
+    resetDailyFollowIfNeeded();
     fetchFeed();
-    fetchStories();
-  }, [fetchFeed, fetchStories]);
+  }, [fetchFeed, resetDailyPostIfNeeded, resetDailyStoryIfNeeded, resetDailyFollowIfNeeded]);
 
   const handleRefresh = useCallback(() => {
     refreshFeed();
@@ -526,12 +505,38 @@ export const SocialFeedScreen: React.FC = () => {
   const seenStoryIds = useStoryStore((s) => s.seenStoryIds);
   const fetchStories = useStoryStore((s) => s.fetchStories);
 
+  // Fetch stories on mount (separate from feed fetch to avoid hoisting issues)
+  useEffect(() => {
+    fetchStories();
+  }, [fetchStories]);
+
   // Story handlers
   const [showStorySheet, setShowStorySheet] = useState(false);
 
   const handleCreateStory = useCallback(() => {
+    // Check daily story creation limit based on package tier
+    const storyLimit = getFeatureLimit(packageTier, 'story_creation');
+    const isUnlimitedStories = storyLimit === -1;
+    if (!isUnlimitedStories) {
+      const today = getToday();
+      const todayCount = lastStoryDate === today ? dailyStoryCount : 0;
+      if (todayCount >= storyLimit) {
+        Alert.alert(
+          'Günlük Limit',
+          'Günlük hikaye limitin doldu. Daha fazla hikaye oluşturmak için paketini yükselt.',
+          [
+            { text: 'Tamam', style: 'cancel' },
+            {
+              text: 'Paketi Yükselt',
+              onPress: () => navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' }),
+            },
+          ],
+        );
+        return;
+      }
+    }
     setShowStorySheet(true);
-  }, []);
+  }, [packageTier, dailyStoryCount, lastStoryDate, navigation]);
 
   const handleStoryPick = useCallback(async (type: 'photo' | 'video' | 'gallery') => {
     setShowStorySheet(false);
@@ -549,9 +554,11 @@ export const SocialFeedScreen: React.FC = () => {
     }
 
     if (uri) {
+      // Increment daily story count (persisted in store)
+      incrementDailyStory();
       navigation.navigate('StoryCreator', { mediaUri: uri, mediaType: mType });
     }
-  }, [navigation]);
+  }, [navigation, incrementDailyStory]);
 
   const handleStoryView = useCallback((userId: string, userName: string, avatarUrl: string) => {
     // Open StoryViewer within FeedStack so user stays in Akış tab on close
@@ -564,99 +571,60 @@ export const SocialFeedScreen: React.FC = () => {
     });
   }, [navigation]);
 
-  // Suggested story press — check daily view limit before opening
-  const handleSuggestedStoryPress = useCallback(
-    (userId: string, userName: string, avatarUrl: string) => {
-      const tier = packageTier as PackageTier;
-      const unlimited = isFeatureUnlimited(tier, 'suggested_story_views');
-      const dailyLimit = FEATURE_RULES['suggested_story_views'].limits[tier];
-
-      // Reset counter if day changed
-      const today = getToday();
-      const viewsUsed = suggestedStoryViewDate === today ? suggestedStoryViewsToday : 0;
-
-      // Unlimited or under limit — open normally
-      if (unlimited || viewsUsed < dailyLimit) {
-        setSuggestedStoryViewDate(today);
-        setSuggestedStoryViewsToday(viewsUsed + 1);
-        handleStoryView(userId, userName, avatarUrl);
-        return;
-      }
-
-      // Limit reached — show Alert with coin spend or upgrade options
-      const costLabel = `Jeton Kullan (${SUGGESTED_STORY_VIEW_COST})`;
-      const hasEnoughCoins = coinBalance >= SUGGESTED_STORY_VIEW_COST;
-
-      Alert.alert(
-        'Günlük Limit Doldu',
-        `Bugünkü ${dailyLimit} önerilen hikaye hakkın bitti. Jeton harcayarak izleyebilir veya paketini yükselterek limitini artırabilirsin.`,
-        [
-          {
-            text: 'Kapat',
-            style: 'cancel',
-          },
-          {
-            text: 'Paketi Yükselt',
-            onPress: () =>
-              navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' }),
-          },
-          {
-            text: hasEnoughCoins ? costLabel : `${costLabel} (yetersiz)`,
-            style: 'default',
-            onPress: async () => {
-              if (!hasEnoughCoins) {
-                Alert.alert('Yetersiz Jeton', 'Jeton bakiyen yeterli değil. Jeton satın alabilirsin.', [
-                  { text: 'Tamam', style: 'cancel' },
-                ]);
-                return;
-              }
-              const success = await spendCoins(
-                SUGGESTED_STORY_VIEW_COST,
-                `suggested_story_view:${userId}`,
-              );
-              if (success) {
-                handleStoryView(userId, userName, avatarUrl);
-              }
-            },
-          },
-        ],
-      );
-    },
-    [
-      packageTier,
-      suggestedStoryViewsToday,
-      suggestedStoryViewDate,
-      coinBalance,
-      spendCoins,
-      handleStoryView,
-      navigation,
-    ],
-  );
-
   const handleLike = useCallback(
     (postId: string) => {
       toggleLike(postId);
       markInteraction();
       // Track interaction: find post owner and record
       const post = posts.find((p) => p.id === postId);
-      if (post && post.userId !== 'dev-user-001') {
+      if (post && post.userId !== currentUserId) {
         recordInteraction(post.userId);
       }
     },
-    [toggleLike, posts, recordInteraction, markInteraction],
+    [toggleLike, posts, recordInteraction, markInteraction, currentUserId],
   );
 
   // Comment handlers removed — comment system removed from feed
 
   const handleFollow = useCallback(
     (userId: string) => {
+      // Determine if this is a follow (not unfollow) by checking current state
+      const currentPost = posts.find((p) => p.userId === userId);
+      const isCurrentlyFollowing = currentPost?.isFollowing ?? false;
+
+      // Only enforce limit on follows, not unfollows
+      if (!isCurrentlyFollowing) {
+        const followLimit = getFeatureLimit(packageTier, 'daily_follows');
+        const unlimited = isUnlimited(packageTier, 'daily_follows');
+        if (!unlimited) {
+          const today = getToday();
+          const todayCount = lastFollowDate === today ? dailyFollowCount : 0;
+          if (todayCount >= followLimit) {
+            Alert.alert(
+              'Günlük Limit',
+              'Günlük takip limitin doldu. Daha fazla kişi takip etmek için paketini yükselt.',
+              [
+                { text: 'Tamam', style: 'cancel' },
+                {
+                  text: 'Paketi Yükselt',
+                  onPress: () => navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' }),
+                },
+              ],
+            );
+            return;
+          }
+        }
+        // Count this follow
+        incrementDailyFollow();
+      }
+
       toggleFollow(userId);
       markInteraction();
-      if (userId !== 'dev-user-001') {
+      if (userId !== currentUserId) {
         recordInteraction(userId);
       }
     },
-    [toggleFollow, recordInteraction, markInteraction],
+    [toggleFollow, recordInteraction, markInteraction, posts, packageTier, dailyFollowCount, lastFollowDate, incrementDailyFollow, navigation, currentUserId],
   );
 
   const handleProfilePress = useCallback(
@@ -668,40 +636,9 @@ export const SocialFeedScreen: React.FC = () => {
 
   const handlePostTap = useCallback((post: FeedPost) => {
     // Tapping post opens full-screen post detail view
-    navigation.navigate('PostDetail', { postId: post.id });
+    // Pass the full post object so the detail screen has data even if the store refreshes
+    navigation.navigate('PostDetail', { postId: post.id, post });
   }, [navigation]);
-
-  // Internal helper — executes the flirt request after all checks pass
-  const executeFlirt = useCallback(
-    async (userId: string) => {
-      markInteraction();
-      if (userId !== 'dev-user-001') {
-        recordInteraction(userId);
-      }
-
-      const post = posts.find((p) => p.userId === userId);
-      const userName = post?.userName ?? '';
-
-      try {
-        await discoveryService.swipe({ targetUserId: userId, direction: 'LIKE' });
-      } catch {
-        // Mock mode — continue with tracking
-      }
-
-      // Always track internally (even when limits not enforced)
-      recordFlirt(userId, userName);
-
-      Alert.alert(
-        'Flört İsteği Gönderildi \uD83D\uDC9C',
-        `${userName} flört isteğin iletildi. Kabul ederse sohbet başlayacak!`,
-        [{ text: 'Tamam' }],
-      );
-    },
-    [posts, recordInteraction, markInteraction, recordFlirt],
-  );
-
-  // Flirt and prompt logic removed — actions moved to profile screen
-
 
   const checkDailyLimit = useCallback((): boolean => {
     const tierPostLimit = FEED_POST_CONFIG.DAILY_LIMITS[packageTier as keyof typeof FEED_POST_CONFIG.DAILY_LIMITS];
@@ -733,11 +670,9 @@ export const SocialFeedScreen: React.FC = () => {
     const uri = await photoService.pickFromGallery();
     if (uri) {
       createPost({ content: '', postType: 'photo', photoUrls: [uri] });
-      const today = getToday();
-      setDailyPostCount((prev) => (lastPostDate === today ? prev + 1 : 1));
-      setLastPostDate(today);
+      incrementDailyPost();
     }
-  }, [checkDailyLimit, createPost, lastPostDate]);
+  }, [checkDailyLimit, createPost, incrementDailyPost]);
 
   // Video butonu — sadece videolar açılsın
   const handleVideoPost = useCallback(async () => {
@@ -745,11 +680,9 @@ export const SocialFeedScreen: React.FC = () => {
     const uri = await photoService.pickVideoFromGallery();
     if (uri) {
       createPost({ content: '', postType: 'video', photoUrls: [], videoUrl: uri });
-      const today = getToday();
-      setDailyPostCount((prev) => (lastPostDate === today ? prev + 1 : 1));
-      setLastPostDate(today);
+      incrementDailyPost();
     }
-  }, [checkDailyLimit, createPost, lastPostDate]);
+  }, [checkDailyLimit, createPost, incrementDailyPost]);
 
   // Yazı butonu — modal açılsın
   const handleTextPost = useCallback(() => {
@@ -766,12 +699,10 @@ export const SocialFeedScreen: React.FC = () => {
         photoUrls,
         videoUrl,
       });
-      const today = getToday();
-      setDailyPostCount((prev) => (lastPostDate === today ? prev + 1 : 1));
-      setLastPostDate(today);
+      incrementDailyPost();
       setShowCreateModal(false);
     },
-    [createPost, lastPostDate],
+    [createPost, incrementDailyPost],
   );
 
   // ── Nudge handlers ──
@@ -795,18 +726,31 @@ export const SocialFeedScreen: React.FC = () => {
     });
   }, []);
 
-  // ── Build feed list with engagement nudges ──
+  // ── Build feed list with engagement nudges and ads ──
+  const isFreeUser = packageTier === 'FREE';
+
   const feedListItems: FeedListItem[] = useMemo(() => {
     const items: FeedListItem[] = [];
     let nudgeVariant = 0;
+    let adVariant = 0;
 
     for (let i = 0; i < posts.length; i++) {
       items.push({ type: 'post', data: posts[i] });
 
+      const positionAfter = i + 1; // 1-indexed count of posts so far
+
+      // Insert ad after every AD_INTERVAL posts for FREE users
+      if (isFreeUser && positionAfter % AD_INTERVAL === 0) {
+        items.push({ type: 'ad', adIndex: adVariant, key: `ad-${i}` });
+        adVariant++;
+      }
+
       // Insert nudge after every NUDGE_INTERVAL posts if user hasn't interacted
+      // (skip nudge at the same position where an ad was just inserted)
       if (
-        (i + 1) % NUDGE_INTERVAL === 0 &&
-        interactionCount === 0
+        positionAfter % NUDGE_INTERVAL === 0 &&
+        interactionCount === 0 &&
+        !(isFreeUser && positionAfter % AD_INTERVAL === 0)
       ) {
         const nudgeKey = `nudge-${i}`;
         if (!dismissedNudges.has(nudgeKey)) {
@@ -816,7 +760,7 @@ export const SocialFeedScreen: React.FC = () => {
       }
     }
     return items;
-  }, [posts, interactionCount, dismissedNudges]);
+  }, [posts, interactionCount, dismissedNudges, isFreeUser]);
 
   // Render item — FeedCard or EngagementNudge
   const renderFeedItem = useCallback(
@@ -831,6 +775,9 @@ export const SocialFeedScreen: React.FC = () => {
             onDismiss={() => handleNudgeDismiss(item.key)}
           />
         );
+      }
+      if (item.type === 'ad') {
+        return <AdBanner index={item.adIndex} />;
       }
       return (
         <View style={feedItemStyles.wrapper}>
@@ -847,9 +794,10 @@ export const SocialFeedScreen: React.FC = () => {
     [handleLike, handleFollow, handleProfilePress, handlePostTap, handleNudgeDiscovery, handleNudgeMatches, handleNudgeScrollToTop, handleNudgeDismiss],
   );
 
-  const keyExtractor = useCallback((item: FeedListItem) =>
-    item.type === 'nudge' ? item.key : item.data.id,
-  []);
+  const keyExtractor = useCallback((item: FeedListItem) => {
+    if (item.type === 'post') return item.data.id;
+    return item.key;
+  }, []);
 
   // Header — rendered as a JSX element (not a component reference) so FlatList
   const listHeader = (
@@ -897,7 +845,6 @@ export const SocialFeedScreen: React.FC = () => {
         seenStoryIds={seenStoryIds}
         onCreateStory={handleCreateStory}
         onViewStory={handleStoryView}
-        onSuggestedStoryPress={handleSuggestedStoryPress}
       />
       {listHeader}
     </View>
@@ -911,21 +858,12 @@ export const SocialFeedScreen: React.FC = () => {
         <Text style={styles.headerTitle}>Akış</Text>
         <View style={styles.headerRight}>
           <TouchableOpacity
-            style={styles.headerIconBtn}
-            onPress={() => Alert.alert('Arama', 'Arama özelliği yakında!')}
-            activeOpacity={0.7}
+            onPress={() => navigation.navigate('Notifications')}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityLabel="Bildirimler"
+            accessibilityRole="button"
           >
-            <Ionicons name="search-outline" size={22} color={colors.text} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.headerIconBtn}
-            onPress={() => Alert.alert('Bildirimler', 'Bildirim özelliği yakında!')}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="notifications-outline" size={22} color={colors.text} />
-            <View style={styles.notifBadge}>
-              <Text style={styles.notifBadgeText}>3</Text>
-            </View>
+            <Ionicons name="notifications-outline" size={24} color={colors.text} />
           </TouchableOpacity>
           <Image
             source={require('../../../assets/splash-logo.png')}
@@ -1043,16 +981,6 @@ const sbStyles = StyleSheet.create({
     paddingTop: spacing.sm,
     paddingBottom: spacing.md + 4,
     alignItems: 'center',
-  },
-  /** Subtle vertical divider between followed and suggested stories */
-  divider: {
-    width: 1,
-    height: 48,
-    backgroundColor: palette.gold[600],
-    opacity: 0.3,
-    alignSelf: 'center',
-    borderRadius: 1,
-    marginHorizontal: spacing.xs,
   },
 });
 
@@ -1194,37 +1122,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.smd,
   },
-  headerIconBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.surfaceLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  notifBadge: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: palette.coral[500],
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: colors.background,
-  },
-  notifBadgeText: {
-    fontSize: 9,
-    color: palette.white,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-  },
   headerLogo: {
-    width: 36,
-    height: 36,
+    width: 44,
+    height: 44,
   },
   loadingContainer: {
     flex: 1,

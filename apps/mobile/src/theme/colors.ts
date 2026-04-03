@@ -336,7 +336,7 @@ export const lightTheme = {
   border: palette.gray[200],
   divider: palette.gray[100],
   overlay: 'rgba(0, 0, 0, 0.4)',
-  statusBar: 'dark-content' as const,
+  statusBar: 'light-content' as const,
   success: palette.success,
   error: palette.error,
   warning: palette.warning,
@@ -374,7 +374,7 @@ export const creamTheme = {
   border: '#E8E0D4',
   divider: '#EDE8DF',
   overlay: 'rgba(0, 0, 0, 0.4)',
-  statusBar: 'dark-content' as const,
+  statusBar: 'light-content' as const,
   success: palette.success,
   error: palette.error,
   warning: palette.warning,
@@ -390,7 +390,7 @@ export const creamTheme = {
 
 export type ThemeColors = {
   [K in keyof typeof darkTheme]: K extends 'statusBar'
-    ? 'light-content' | 'dark-content'
+    ? 'light-content'
     : (typeof darkTheme)[K] extends readonly string[]
       ? readonly string[]
       : string;

@@ -2,6 +2,7 @@
 
 export interface User {
   id: string;
+  displayId: string;
   phone: string;
   createdAt: Date;
   updatedAt: Date;
@@ -17,6 +18,7 @@ export interface User {
 export interface UserProfile {
   userId: string;
   firstName: string;
+  lastName: string | null;
   birthDate: Date;
   gender: Gender;
   bio: string | null;
@@ -28,10 +30,18 @@ export interface UserProfile {
   country: string | null;
   latitude: number | null;
   longitude: number | null;
-  currentMood: string | null;
-  moodSetAt: Date | null;
   voiceIntroUrl: string | null;
   voiceIntroDuration: number | null;
+  // Extended profile fields (Bumpy-inspired)
+  weight?: number | null;
+  sexualOrientation?: string | null;
+  zodiacSign?: string | null;
+  educationLevel?: string | null;
+  maritalStatus?: string | null;
+  alcohol?: string | null;
+  pets?: string | null;
+  religion?: string | null;
+  lifeValues?: string | null;
 }
 
 export interface UserPhoto {
@@ -45,11 +55,13 @@ export interface UserPhoto {
   createdAt: Date;
 }
 
-// Subsystem 4: Intention Tags — LOCKED: 3 Tags
+// Subsystem 4: Intention Tags — Extended to 5 Tags
 export enum IntentionTag {
+  MARRIAGE = 'MARRIAGE',
   SERIOUS_RELATIONSHIP = 'SERIOUS_RELATIONSHIP',
-  EXPLORING = 'EXPLORING',
-  NOT_SURE = 'NOT_SURE',
+  FRIENDSHIP = 'FRIENDSHIP',
+  LEARN_CULTURES = 'LEARN_CULTURES',
+  TRAVEL = 'TRAVEL',
 }
 
 export enum Gender {

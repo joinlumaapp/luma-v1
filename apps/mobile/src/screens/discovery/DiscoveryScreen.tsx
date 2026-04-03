@@ -3,7 +3,7 @@
 // finger-tracking, velocity-based throws, spring-back, and haptic feedback.
 // Performance: eager fetch on mount, memoized card rendering
 
-import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -45,7 +45,6 @@ import { useDiscoveryStore } from '../../stores/discoveryStore';
 import { useLocation } from '../../hooks/useLocation';
 import { useProfileStore } from '../../stores/profileStore';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
-import { useNotificationStore } from '../../stores/notificationStore';
 import { useCoinStore } from '../../stores/coinStore';
 import { matchService } from '../../services/matchService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
@@ -54,7 +53,8 @@ import { MatchAnimation } from '../../components/animations/MatchAnimation';
 import { DiscoveryCard } from '../../components/cards/DiscoveryCard';
 import { CompatibilityBottomSheet } from '../../components/discovery/CompatibilityBottomSheet';
 import { TrialBanner } from '../../components/premium/TrialBanner';
-import { discoveryService } from '../../services/discoveryService';
+import { LikedYouTeaser, MatchUpgradeNudge } from '../../components/premium/SmartUpgradePrompts';
+import { discoveryService, type BoostStatusResponse } from '../../services/discoveryService';
 import type { LoginStreakResponse } from '../../services/discoveryService';
 import { StreakBanner } from '../../components/streak/StreakBanner';
 import { generateCompactReasons } from '../../utils/compatReasons';
@@ -65,9 +65,12 @@ import { useEngagementStore } from '../../stores/engagementStore';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
+import { DISCOVERY_CONFIG } from '../../constants/config';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { useSwipeRateLimiterStore, SKIP_COOLDOWN_COST } from '../../stores/swipeRateLimiterStore';
 import { CooldownOverlay } from '../../components/discovery/CooldownOverlay';
+import { BoostModal } from '../../components/boost/BoostModal';
+
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -113,6 +116,7 @@ export const DiscoveryScreen: React.FC = () => {
   const undosUsedToday = useDiscoveryStore((s) => s.undosUsedToday);
   const updateLocation = useDiscoveryStore((s) => s.updateLocation);
   const coinBalance = useCoinStore((s) => s.balance);
+  const dailyRemaining = useDiscoveryStore((s) => s.dailyRemaining);
   const swipeError = useDiscoveryStore((s) => s.error);
   const clearError = useDiscoveryStore((s) => s.clearError);
 
@@ -147,13 +151,6 @@ export const DiscoveryScreen: React.FC = () => {
     }
   }, [swipeError, clearError]);
 
-  // Notification badge
-  const notifUnreadCount = useNotificationStore((s) => s.unreadCount);
-  const fetchNotifications = useNotificationStore((s) => s.fetchNotifications);
-
-  // ─── Auth user info ────────────────────────────────────
-  const currentUserId = useAuthStore((s) => s.user?.id);
-
   // ─── Package tier ──────────────────────────────────────
   const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE') as PackageTier;
 
@@ -179,6 +176,18 @@ export const DiscoveryScreen: React.FC = () => {
     // Nothing extra needed — store handles dismiss
   }, []);
 
+
+  // ─── Daily swipe limit gate ─────────────────────────────
+  const hasUnlimitedSwipes = packageTier === 'PRO' || packageTier === 'RESERVED';
+  const isDailyLimitReached = !hasUnlimitedSwipes && dailyRemaining <= 0;
+  const [showLimitOverlay, setShowLimitOverlay] = useState(false);
+
+  // Show limit overlay when daily likes are exhausted (non-unlimited tiers)
+  useEffect(() => {
+    if (isDailyLimitReached) {
+      setShowLimitOverlay(true);
+    }
+  }, [isDailyLimitReached]);
 
   // ─── Undo access gate — tier-based daily limits ─────────
   const canUseUndo = packageTier !== 'FREE';
@@ -242,6 +251,68 @@ export const DiscoveryScreen: React.FC = () => {
     setCompatSheetUserId(null);
   }, []);
 
+  // ─── Filter navigation ─────────────────
+  const handleFilterPress = useCallback(() => {
+    navigation.navigate('Filter');
+  }, [navigation]);
+
+  // ─── Boost state ──────────────────────────────────────────
+  const [boostStatus, setBoostStatus] = useState<BoostStatusResponse>({ isActive: false });
+  const [showBoostModal, setShowBoostModal] = useState(false);
+  const [boostRemaining, setBoostRemaining] = useState('');
+
+  useEffect(() => {
+    discoveryService.getBoostStatus().then(setBoostStatus).catch(() => {});
+  }, []);
+
+  // Boost countdown timer
+  useEffect(() => {
+    if (!boostStatus.isActive || !boostStatus.endsAt) {
+      setBoostRemaining('');
+      return;
+    }
+    const tick = () => {
+      const diff = new Date(boostStatus.endsAt!).getTime() - Date.now();
+      if (diff <= 0) {
+        setBoostStatus({ isActive: false });
+        setBoostRemaining('');
+        return;
+      }
+      const min = Math.floor(diff / 60000);
+      const sec = Math.floor((diff % 60000) / 1000);
+      setBoostRemaining(`${min}:${sec.toString().padStart(2, '0')}`);
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [boostStatus.isActive, boostStatus.endsAt]);
+
+  const handleBoostActivate = useCallback(async (durationMinutes: number) => {
+    const result = await discoveryService.activateBoost(durationMinutes);
+    if (result.success) {
+      setBoostStatus({ isActive: true, endsAt: result.endsAt, remainingSeconds: durationMinutes * 60 });
+      useCoinStore.getState().fetchBalance();
+    }
+  }, []);
+
+  const handleBoostPress = useCallback(() => {
+    if (packageTier === 'FREE') {
+      Alert.alert(
+        'Premium Özellik',
+        'Öne Çıkarma Gold ve üzeri paketlere özeldir.',
+        [
+          { text: 'Vazgeç', style: 'cancel' },
+          {
+            text: 'Paketi Yükselt',
+            onPress: () => navigation.navigate('JetonMarket' as never),
+          },
+        ],
+      );
+      return;
+    }
+    setShowBoostModal(true);
+  }, [packageTier, navigation]);
+
   // ─── Login streak state ─────────────────────────────────
   const [streakData, setStreakData] = useState<LoginStreakResponse | null>(null);
   const [_persistentStreakCount, setPersistentStreakCount] = useState<number>(0);
@@ -266,6 +337,23 @@ export const DiscoveryScreen: React.FC = () => {
   }, []);
 
   // ─── Like sent toast removed (was too repetitive) ─────────
+
+  // ─── Likes-you teaser state (FREE users only) ─────────────
+  const [, setLikesYouCount] = useState(0);
+  const [, setLikesYouAvatars] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (packageTier !== 'FREE') return;
+    discoveryService.getLikesYou().then((data) => {
+      setLikesYouCount(data.total);
+      setLikesYouAvatars(data.likes.slice(0, 3).map((l) => l.photoUrl));
+    }).catch(() => { /* non-blocking */ });
+  }, [packageTier]);
+
+  // ─── Match upgrade nudge state (FREE users post-match) ─────
+  const [showMatchUpgradeNudge, setShowMatchUpgradeNudge] = useState(false);
+  const [lastMatchName, setLastMatchName] = useState('');
+  const [lastMatchAvatar, setLastMatchAvatar] = useState('');
 
   // Match detail state
   const [matchConversationStarters, setMatchConversationStarters] = useState<string[]>([]);
@@ -299,8 +387,7 @@ export const DiscoveryScreen: React.FC = () => {
   // since lazy:false pre-mounts all tabs, data should load immediately
   useEffect(() => {
     checkAndLoadBatch();
-    fetchNotifications();
-  }, [checkAndLoadBatch, fetchNotifications]);
+  }, [checkAndLoadBatch]);
 
   // Auto-reload when batch cooldown expires
   useEffect(() => {
@@ -361,6 +448,12 @@ export const DiscoveryScreen: React.FC = () => {
   }, []);
 
   const handleSwipeComplete = useCallback((direction: 'left' | 'right') => {
+    // Block right swipes (likes) when daily limit is reached for limited tiers
+    if (direction === 'right' && !hasUnlimitedSwipes && dailyRemaining <= 0) {
+      setShowLimitOverlay(true);
+      return;
+    }
+
     const card = currentCardRef.current;
     if (card) {
       swipeAction(direction, card.id);
@@ -388,7 +481,7 @@ export const DiscoveryScreen: React.FC = () => {
         }
       }, 100);
     }
-  }, [swipeAction, incrementChallenge, recordSwipe, getRemainingCards, getSwipeBehavior, shouldTriggerCooldown, startCooldown, resetBatch]);
+  }, [swipeAction, incrementChallenge, recordSwipe, getRemainingCards, getSwipeBehavior, shouldTriggerCooldown, startCooldown, resetBatch, hasUnlimitedSwipes, dailyRemaining]);
 
 
   const handleCardTap = useCallback(() => {
@@ -423,10 +516,16 @@ export const DiscoveryScreen: React.FC = () => {
   }, [dismissMatch, navigation, matchedCard, currentMatchId]);
 
   const handleMatchDismiss = useCallback(() => {
+    // Capture match info before dismissing for the upgrade nudge
+    if (packageTier === 'FREE' && matchedCard) {
+      setLastMatchName(matchedCard.name);
+      setLastMatchAvatar(matchedCard.photoUrls[0] ?? '');
+      setShowMatchUpgradeNudge(true);
+    }
     dismissMatch();
     setMatchConversationStarters([]);
     setMatchExplanation(undefined);
-  }, [dismissMatch]);
+  }, [dismissMatch, packageTier, matchedCard]);
 
   const handleActivitySuggest = useCallback(() => {
     const card = matchedCard;
@@ -630,22 +729,34 @@ export const DiscoveryScreen: React.FC = () => {
 
   const handleLikeWithComment = useCallback(() => {
     if (!currentCard) return;
+    if (!hasUnlimitedSwipes && dailyRemaining <= 0) {
+      setShowLimitOverlay(true);
+      setShowCommentModal(false);
+      setLikeComment('');
+      return;
+    }
     const comment = likeComment.trim() || undefined;
     translateX.value = withSpring(SCREEN_WIDTH + 200, SPRING_EXIT);
     swipeAction('right', currentCard.id, comment);
     recordSwipe('right');
     setShowCommentModal(false);
     setLikeComment('');
-  }, [currentCard, likeComment, swipeAction, translateX, recordSwipe]);
+  }, [currentCard, likeComment, swipeAction, translateX, recordSwipe, hasUnlimitedSwipes, dailyRemaining]);
 
   const handleLikeSkipComment = useCallback(() => {
     if (!currentCard) return;
+    if (!hasUnlimitedSwipes && dailyRemaining <= 0) {
+      setShowLimitOverlay(true);
+      setShowCommentModal(false);
+      setLikeComment('');
+      return;
+    }
     translateX.value = withSpring(SCREEN_WIDTH + 200, SPRING_EXIT);
     swipeAction('right', currentCard.id);
     recordSwipe('right');
     setShowCommentModal(false);
     setLikeComment('');
-  }, [currentCard, swipeAction, translateX, recordSwipe]);
+  }, [currentCard, swipeAction, translateX, recordSwipe, hasUnlimitedSwipes, dailyRemaining]);
 
   // ─── Loading state ─────────────────────────────────────────
 
@@ -660,26 +771,28 @@ export const DiscoveryScreen: React.FC = () => {
             </View>
             <View style={styles.headerRight}>
               <Pressable
-                onPress={() => navigation.navigate('Notifications')}
-                accessibilityLabel={`Bildirimler${notifUnreadCount > 0 ? `, ${notifUnreadCount} okunmamis` : ''}`}
+                onPress={handleBoostPress}
+                accessibilityLabel={boostStatus.isActive ? `Boost aktif: ${boostRemaining} kaldı` : 'Profilini öne çıkar'}
                 accessibilityRole="button"
               >
-                <View style={styles.filterButton}>
-                  <Ionicons name={notifUnreadCount > 0 ? 'notifications' : 'notifications-outline'} size={18} color={colors.text} />
-                  {notifUnreadCount > 0 && (
-                    <View style={styles.notifBadge} pointerEvents="none">
-                      <Text style={styles.notifBadgeText}>{notifUnreadCount > 9 ? '9+' : notifUnreadCount}</Text>
-                    </View>
-                  )}
-                </View>
+                {boostStatus.isActive ? (
+                  <View style={styles.boostTimerPill} testID="discovery-boost-btn">
+                    <Ionicons name="flash" size={14} color={palette.gold[500]} />
+                    <Text style={styles.boostTimerText}>{boostRemaining}</Text>
+                  </View>
+                ) : (
+                  <View style={styles.filterButton} testID="discovery-boost-btn">
+                    <Ionicons name="flash" size={18} color={colors.text} />
+                  </View>
+                )}
               </Pressable>
               <Pressable
-                onPress={() => navigation.navigate('Filter')}
+                onPress={handleFilterPress}
                 accessibilityLabel="Filtreleri aç"
                 accessibilityRole="button"
               >
-                <View style={styles.filterButton} testID="discovery-filter-btn">
-                  <Text style={styles.filterIcon}>{'\u2699'}</Text>
+              <View style={styles.filterButton} testID="discovery-filter-btn">
+                  <Ionicons name="options-outline" size={20} color={colors.text} />
                 </View>
               </Pressable>
             </View>
@@ -707,26 +820,28 @@ export const DiscoveryScreen: React.FC = () => {
             </View>
             <View style={styles.headerRight}>
               <Pressable
-                onPress={() => navigation.navigate('Notifications')}
-                accessibilityLabel={`Bildirimler${notifUnreadCount > 0 ? `, ${notifUnreadCount} okunmamis` : ''}`}
+                onPress={handleBoostPress}
+                accessibilityLabel={boostStatus.isActive ? `Boost aktif: ${boostRemaining} kaldı` : 'Profilini öne çıkar'}
                 accessibilityRole="button"
               >
-                <View style={styles.filterButton}>
-                  <Ionicons name={notifUnreadCount > 0 ? 'notifications' : 'notifications-outline'} size={18} color={colors.text} />
-                  {notifUnreadCount > 0 && (
-                    <View style={styles.notifBadge} pointerEvents="none">
-                      <Text style={styles.notifBadgeText}>{notifUnreadCount > 9 ? '9+' : notifUnreadCount}</Text>
-                    </View>
-                  )}
-                </View>
+                {boostStatus.isActive ? (
+                  <View style={styles.boostTimerPill} testID="discovery-boost-btn">
+                    <Ionicons name="flash" size={14} color={palette.gold[500]} />
+                    <Text style={styles.boostTimerText}>{boostRemaining}</Text>
+                  </View>
+                ) : (
+                  <View style={styles.filterButton} testID="discovery-boost-btn">
+                    <Ionicons name="flash" size={18} color={colors.text} />
+                  </View>
+                )}
               </Pressable>
               <Pressable
-                onPress={() => navigation.navigate('Filter')}
+                onPress={handleFilterPress}
                 accessibilityLabel="Filtreleri aç"
                 accessibilityRole="button"
               >
-                <View style={styles.filterButton} testID="discovery-filter-btn">
-                  <Text style={styles.filterIcon}>{'\u2699'}</Text>
+              <View style={styles.filterButton} testID="discovery-filter-btn">
+                  <Ionicons name="options-outline" size={20} color={colors.text} />
                 </View>
               </Pressable>
             </View>
@@ -739,23 +854,31 @@ export const DiscoveryScreen: React.FC = () => {
             <Text style={styles.emptyIconLetter}>L</Text>
           </Animated.View>
 
-          <Text style={styles.emptyTitle}>Yeni profiller hazır!</Text>
+          <Text style={styles.emptyTitle}>Şu an yakınında yeni profil yok</Text>
           <Text style={styles.emptySubtitle}>
-            Senin için özenle seçilmiş profiller seni bekliyor.
+            Filtrelerini genişleterek daha fazla kişi görebilirsin.
           </Text>
 
           <Pressable
-            onPress={() => refreshFeed()}
-            accessibilityLabel="Yenile"
+            onPress={handleFilterPress}
+            accessibilityLabel="Filtreleri genişlet"
             accessibilityRole="button"
-            accessibilityHint="Yeni profilleri yüklemek için dokunun"
           >
             <View
               style={styles.refreshButton}
-              testID="discovery-refresh-btn"
+              testID="discovery-filter-expand-btn"
             >
-              <Text style={styles.refreshButtonText}>Yenile</Text>
+              <Text style={styles.refreshButtonText}>Filtreleri Genişlet</Text>
             </View>
+          </Pressable>
+
+          <Pressable
+            onPress={() => refreshFeed()}
+            accessibilityLabel="Tekrar ara"
+            accessibilityRole="button"
+            style={{ marginTop: 8 }}
+          >
+            <Text style={[styles.refreshButtonText, { color: colors.textTertiary }]}>Tekrar Ara</Text>
           </Pressable>
         </View>
       </View>
@@ -792,28 +915,41 @@ export const DiscoveryScreen: React.FC = () => {
             <Image source={require('../../../assets/splash-logo.png')} style={styles.headerLogo} resizeMode="contain" />
           </View>
           <View style={styles.headerRight}>
-            <Pressable
-              onPress={() => navigation.navigate('Notifications')}
-              accessibilityLabel={`Bildirimler${notifUnreadCount > 0 ? `, ${notifUnreadCount} okunmamis` : ''}`}
-              accessibilityRole="button"
-            >
-              <View style={styles.filterButton}>
-                <Ionicons name={notifUnreadCount > 0 ? 'notifications' : 'notifications-outline'} size={18} color={colors.text} />
-                {notifUnreadCount > 0 && (
-                  <View style={styles.notifBadge}>
-                    <Text style={styles.notifBadgeText}>{notifUnreadCount > 9 ? '9+' : notifUnreadCount}</Text>
-                  </View>
-                )}
+            {/* Daily remaining swipe badge — hidden for unlimited tiers */}
+            {!hasUnlimitedSwipes && (
+              <View
+                style={[
+                  styles.dailyLimitBadge,
+                  dailyRemaining <= 5 && dailyRemaining > 0 && styles.dailyLimitBadgeWarning,
+                  dailyRemaining <= 0 && styles.dailyLimitBadgeExhausted,
+                ]}
+                accessibilityLabel={`${dailyRemaining} beğeni hakkın kaldı`}
+                testID="discovery-daily-limit-badge"
+              >
+                <Ionicons
+                  name="heart"
+                  size={12}
+                  color={dailyRemaining <= 0 ? palette.error : dailyRemaining <= 5 ? palette.gold[600] : colors.textSecondary}
+                />
+                <Text
+                  style={[
+                    styles.dailyLimitBadgeText,
+                    dailyRemaining <= 5 && dailyRemaining > 0 && styles.dailyLimitBadgeTextWarning,
+                    dailyRemaining <= 0 && styles.dailyLimitBadgeTextExhausted,
+                  ]}
+                >
+                  {dailyRemaining}
+                </Text>
               </View>
-            </Pressable>
+            )}
             <Pressable
-              onPress={() => navigation.navigate('Filter')}
+              onPress={handleFilterPress}
               accessibilityLabel="Filtreleri aç"
               accessibilityRole="button"
               accessibilityHint="Keşif filtrelerini düzenlemek için dokunun"
             >
               <View style={styles.filterButton} testID="discovery-filter-btn">
-                <Text style={styles.filterIcon}>{'\u2699'}</Text>
+                <Ionicons name="options-outline" size={20} color={colors.text} />
               </View>
             </Pressable>
           </View>
@@ -821,6 +957,15 @@ export const DiscoveryScreen: React.FC = () => {
 
         {/* Trial banner — shows remaining Gold trial time */}
         <TrialBanner />
+
+        {/* Liked you teaser — FREE users only */}
+        {packageTier === 'FREE' && (
+          <LikedYouTeaser
+            count={3}
+            blurredAvatars={[]}
+            onPress={() => navigation.navigate('LikesYou' as never)}
+          />
+        )}
 
       </View>
 
@@ -914,8 +1059,6 @@ export const DiscoveryScreen: React.FC = () => {
         </GestureDetector>
       </View>
 
-
-
       {/* Action buttons */}
       <View style={styles.actionsRow}>
         {/* Undo button — tier-based with Gold cost */}
@@ -994,6 +1137,56 @@ export const DiscoveryScreen: React.FC = () => {
         />
       )}
 
+      {/* Daily swipe limit overlay — shown when FREE/GOLD tiers exhaust daily likes */}
+      {showLimitOverlay && isDailyLimitReached && (
+        <Modal
+          visible
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowLimitOverlay(false)}
+        >
+          <View style={styles.limitOverlay}>
+            <View style={styles.limitOverlayCard}>
+              <View style={styles.limitOverlayIconCircle}>
+                <Ionicons name="heart-dislike" size={32} color={palette.pink[500]} />
+              </View>
+              <Text style={styles.limitOverlayTitle}>
+                Günlük beğeni hakkın doldu
+              </Text>
+              <Text style={styles.limitOverlaySubtitle}>
+                {packageTier === 'FREE'
+                  ? `Ücretsiz pakette günde ${DISCOVERY_CONFIG.DAILY_LIKES.FREE} beğeni hakkın var. Daha fazlası için paketini yükselt.`
+                  : `Premium pakette günde ${DISCOVERY_CONFIG.DAILY_LIKES.GOLD} beğeni hakkın var. Sınırsız beğeni için paketini yükselt.`}
+              </Text>
+              <Pressable
+                onPress={() => {
+                  setShowLimitOverlay(false);
+                  navigation.navigate('ProfileTab', { screen: 'MembershipPlans' } as never);
+                }}
+                accessibilityLabel="Paketi yükselt"
+                accessibilityRole="button"
+                testID="discovery-limit-upgrade-btn"
+              >
+                <View style={styles.limitOverlayUpgradeBtn}>
+                  <Ionicons name="diamond" size={18} color="#FFFFFF" style={{ marginRight: spacing.sm }} />
+                  <Text style={styles.limitOverlayUpgradeBtnText}>Paketi Yükselt</Text>
+                </View>
+              </Pressable>
+              <Pressable
+                onPress={() => setShowLimitOverlay(false)}
+                accessibilityLabel="Tamam"
+                accessibilityRole="button"
+                testID="discovery-limit-dismiss-btn"
+              >
+                <View style={styles.limitOverlayDismissBtn}>
+                  <Text style={styles.limitOverlayDismissBtnText}>Tamam</Text>
+                </View>
+              </Pressable>
+            </View>
+          </View>
+        </Modal>
+      )}
+
       {/* Match celebration overlay — only render when matchedCard exists */}
       {(!showMatchAnimation || matchedCard) && (
         <MatchAnimation
@@ -1021,6 +1214,30 @@ export const DiscoveryScreen: React.FC = () => {
         targetUserId={compatSheetUserId}
         onClose={handleCompatClose}
       />
+
+      {/* Boost modal */}
+      <BoostModal
+        visible={showBoostModal}
+        onClose={() => setShowBoostModal(false)}
+        goldBalance={coinBalance}
+        boostStatus={boostStatus}
+        onActivate={handleBoostActivate}
+        onBuyGold={() => { setShowBoostModal(false); navigation.navigate('JetonMarket' as never); }}
+      />
+
+      {/* Match upgrade nudge — shown after match animation for FREE users */}
+      {showMatchUpgradeNudge && (
+        <MatchUpgradeNudge
+          matchName={lastMatchName}
+          matchAvatarUrl={lastMatchAvatar}
+          feature="unlimited_chat"
+          onUpgrade={() => {
+            setShowMatchUpgradeNudge(false);
+            navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' });
+          }}
+          onDismiss={() => setShowMatchUpgradeNudge(false)}
+        />
+      )}
 
       {/* Like-with-comment modal */}
       <Modal
@@ -1162,18 +1379,35 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   filterButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 12,
     backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.surfaceBorder,
   },
-  filterIcon: {
-    ...typography.bodyLarge,
-    color: colors.text,
+  boostButtonActive: {
+    backgroundColor: palette.gold[500] + '15',
+    borderColor: palette.gold[500] + '40',
+  },
+  boostTimerPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: palette.gold[500] + '18',
+    borderWidth: 1,
+    borderColor: palette.gold[500] + '40',
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  boostTimerText: {
+    fontSize: 12,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: palette.gold[600],
   },
   instantConnectButton: {
     backgroundColor: palette.purple[600],
@@ -1224,28 +1458,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
     textAlign: 'center',
-  },
-  notifBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -2,
-    backgroundColor: '#EF4444',
-    borderRadius: 8,
-    minWidth: 16,
-    height: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 3,
-    borderWidth: 1.5,
-    borderColor: colors.background,
-  },
-  notifBadgeText: {
-    ...typography.captionSmall,
-    color: '#FFFFFF',
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    fontSize: 9,
-    lineHeight: 12,
   },
   // ── Card Stack ──
   cardStack: {
@@ -1499,6 +1711,104 @@ const styles = StyleSheet.create({
   commentModalSendText: {
     ...typography.button,
     color: '#FFFFFF',
+  },
+
+  // ── Daily Limit Badge (header) ──
+  dailyLimitBadge: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    gap: 3,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.surfaceBorder,
+  },
+  dailyLimitBadgeWarning: {
+    backgroundColor: palette.gold[50],
+    borderColor: palette.gold[300],
+  },
+  dailyLimitBadgeExhausted: {
+    backgroundColor: palette.pink[50],
+    borderColor: palette.pink[300],
+  },
+  dailyLimitBadgeText: {
+    ...typography.captionSmall,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600' as const,
+    color: colors.textSecondary,
+  },
+  dailyLimitBadgeTextWarning: {
+    color: palette.gold[600],
+  },
+  dailyLimitBadgeTextExhausted: {
+    color: palette.error,
+  },
+
+  // ── Daily Limit Overlay ──
+  limitOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: spacing.lg,
+  },
+  limitOverlayCard: {
+    backgroundColor: colors.background,
+    borderRadius: borderRadius.xxl,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.lg,
+    alignItems: 'center' as const,
+    width: '100%' as const,
+    maxWidth: 340,
+    ...shadows.large,
+  },
+  limitOverlayIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: palette.pink[50],
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    marginBottom: spacing.md,
+  },
+  limitOverlayTitle: {
+    ...typography.h4,
+    color: colors.text,
+    textAlign: 'center' as const,
+    marginBottom: spacing.sm,
+  },
+  limitOverlaySubtitle: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+    textAlign: 'center' as const,
+    marginBottom: spacing.lg,
+    lineHeight: 20,
+  },
+  limitOverlayUpgradeBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: palette.purple[600],
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    width: '100%' as const,
+    marginBottom: spacing.sm,
+  },
+  limitOverlayUpgradeBtnText: {
+    ...typography.button,
+    color: '#FFFFFF',
+  },
+  limitOverlayDismissBtn: {
+    paddingVertical: spacing.smd,
+    paddingHorizontal: spacing.lg,
+  },
+  limitOverlayDismissBtnText: {
+    ...typography.buttonSmall,
+    color: colors.textSecondary,
   },
 });
 

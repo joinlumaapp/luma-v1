@@ -30,7 +30,7 @@ import { spacing, borderRadius } from '../../theme/spacing';
 import { useDiscoveryStore, type DiscoveryProfile } from '../../stores/discoveryStore';
 import { useMatchStore } from '../../stores/matchStore';
 import { matchService } from '../../services/matchService';
-import { INTEREST_OPTIONS } from '../../constants/config';
+import { INTEREST_OPTIONS, INTEREST_CATEGORIES } from '../../constants/config';
 import { ActivityStatus } from '../../components/common/ActivityStatus';
 import { generateExpandedReasons } from '../../utils/compatReasons';
 import { FavoriteSpotsCard } from '../../components/profile/FavoriteSpotsCard';
@@ -47,16 +47,22 @@ import { VerifiedBadge } from '../../components/common/VerifiedBadge';
 import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
 import { VideoProfile } from '../../components/profile/VideoProfile';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { SelamButton } from '../../components/discovery/SelamButton';
 
-// Interest tag lookup maps
+// Interest tag lookup maps — covers both legacy IDs and new category labels
 const INTEREST_EMOJI_MAP: Record<string, string> = {};
-for (const opt of INTEREST_OPTIONS) {
-  INTEREST_EMOJI_MAP[opt.id] = opt.emoji;
-}
-
 const INTEREST_LABEL_MAP: Record<string, string> = {};
 for (const opt of INTEREST_OPTIONS) {
+  INTEREST_EMOJI_MAP[opt.id] = opt.emoji;
   INTEREST_LABEL_MAP[opt.id] = opt.label;
+}
+// From categorized INTEREST_CATEGORIES (new tags stored as labels)
+for (const cat of INTEREST_CATEGORIES) {
+  for (const item of cat.items) {
+    if (!INTEREST_EMOJI_MAP[item.label]) {
+      INTEREST_EMOJI_MAP[item.label] = item.emoji;
+    }
+  }
 }
 
 type ProfilePreviewRouteProp = RouteProp<DiscoveryStackParamList, 'ProfilePreview'>;
@@ -449,9 +455,8 @@ export const ProfilePreviewScreen: React.FC = () => {
   const currentUserProfile = useProfileStore((s) => s.profile);
 
   const handleSwipe = (direction: 'left' | 'right') => {
-    if (profile) {
-      swipeAction(direction, profile.id);
-    }
+    if (!profile) return;
+    swipeAction(direction, profile.id);
     navigation.goBack();
   };
 
@@ -470,7 +475,7 @@ export const ProfilePreviewScreen: React.FC = () => {
           {profileError ? (
             <>
               <Ionicons name="person-outline" size={48} color={colors.textTertiary} />
-              <Text style={styles.emptyText}>Profil yuklenemedi</Text>
+              <Text style={styles.emptyText}>Profil yüklenemedi</Text>
               <TouchableOpacity
                 style={styles.retryButton}
                 onPress={() => {
@@ -486,7 +491,7 @@ export const ProfilePreviewScreen: React.FC = () => {
           ) : (
             <>
               <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={styles.emptyText}>Profil yukleniyor...</Text>
+              <Text style={styles.emptyText}>Profil yükleniyor...</Text>
             </>
           )}
         </View>
@@ -835,7 +840,16 @@ export const ProfilePreviewScreen: React.FC = () => {
         />
       </View>
 
-      {/* Message — CENTER, PRIMARY CTA, largest with gradient */}
+      {/* Selam — compact paid greeting */}
+      <View style={styles.actionItem}>
+        <SelamButton
+          recipientId={userId}
+          recipientName={profile.name}
+          onBuyJeton={() => navigation.navigate('JetonMarket' as never)}
+        />
+      </View>
+
+      {/* Message — compact gradient pill */}
       <View style={styles.actionItem}>
         <Pressable
           onPress={() => setShowPaidMessageModal(true)}
@@ -849,8 +863,8 @@ export const ProfilePreviewScreen: React.FC = () => {
             end={{ x: 1, y: 0 }}
             style={styles.messageCtaGradient}
           >
-            <Ionicons name="chatbubble" size={18} color="#FFFFFF" />
-            <Text style={styles.messageCtaText}>Mesaj Gonder</Text>
+            <Ionicons name="chatbubble" size={16} color="#FFFFFF" />
+            <Text style={styles.messageCtaText}>Mesaj</Text>
           </LinearGradient>
         </Pressable>
       </View>
@@ -910,7 +924,7 @@ export const ProfilePreviewScreen: React.FC = () => {
             const chatMessage: ChatMessage = {
               id: result.messageId || `paid-${Date.now()}`,
               matchId: result.matchId,
-              senderId: useAuthStore.getState().user?.id ?? 'dev-user-001',
+              senderId: useAuthStore.getState().user?.id ?? '',
               content: message,
               type: 'TEXT',
               status: 'SENT',
@@ -1245,7 +1259,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 14,
+    gap: 10,
     paddingTop: 48,
     paddingBottom: spacing.md,
   },
@@ -1266,13 +1280,13 @@ const styles = StyleSheet.create({
   messageCtaGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
+    gap: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderRadius: borderRadius.full,
   },
   messageCtaText: {
-    fontSize: 15,
+    fontSize: 12,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#FFFFFF',

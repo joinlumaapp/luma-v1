@@ -33,8 +33,8 @@ interface BlockedUser {
 
 // DEV mock data — only used via devMockOrThrow guard (throws in production)
 const DEV_MOCK_BLOCKED_USERS: BlockedUser[] = [
-  { id: 'mock-1', name: 'Test Kullanici 1', avatarUrl: null, blockedAt: '2026-02-15T10:00:00Z' },
-  { id: 'mock-2', name: 'Test Kullanici 2', avatarUrl: null, blockedAt: '2026-03-01T14:30:00Z' },
+  { id: 'mock-1', name: 'Test Kullanıcı 1', avatarUrl: null, blockedAt: '2026-02-15T10:00:00Z' },
+  { id: 'mock-2', name: 'Test Kullanıcı 2', avatarUrl: null, blockedAt: '2026-03-01T14:30:00Z' },
 ];
 
 export const BlockedUsersScreen: React.FC = () => {
@@ -175,7 +175,7 @@ export const BlockedUsersScreen: React.FC = () => {
       </View>
       <Text style={dynamicStyles.emptyTitle}>Engellenen kullanici yok</Text>
       <Text style={dynamicStyles.emptySubtitle}>
-        Engellediginiz kullanicilar burada gorunecek
+        Engellediğiniz kullanıcılar burada görünecek
       </Text>
     </View>
   ), [dynamicStyles, colors.textTertiary]);

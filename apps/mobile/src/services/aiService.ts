@@ -2,7 +2,7 @@
 // Offline-first: uses local templates with AI-quality output
 // Ready for Claude API integration when backend is connected
 
-import { storage } from '../utils/storage';
+
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -343,7 +343,7 @@ const REPLY_TEMPLATES: Record<string, string[]> = {
 };
 
 export function generateChatSuggestions(
-  lastMessage: string,
+  _lastMessage: string,
   context: 'greeting' | 'question' | 'compliment' | 'hobby' | 'plan' | 'general' = 'general',
 ): AIChatSuggestion[] {
   const templates = REPLY_TEMPLATES[context] ?? REPLY_TEMPLATES.general;

@@ -17,6 +17,7 @@ export interface ProfileVideoData {
 
 export interface ProfileData {
   firstName: string;
+  lastName: string;
   birthDate: string;
   gender: string;
   genderPreference: string[];
@@ -33,6 +34,18 @@ export interface ProfileData {
   city: string;
   job: string;
   education: string;
+  // Extended profile fields (Bumpy-inspired)
+  weight: number | null;
+  sexualOrientation: string;
+  zodiacSign: string;
+  educationLevel: string;
+  maritalStatus: string;
+  alcohol: string;
+  pets: string;
+  religion: string;
+  lifeValues: string;
+  /** MBTI personality type from the personality quiz (e.g. "ENFP") */
+  personalityType: string | null;
   isComplete: boolean;
   /** Profile video (10-30 seconds) */
   profileVideo: ProfileVideoData | null;
@@ -44,6 +57,12 @@ export interface ProfileData {
   isIncognito: boolean;
   /** Timestamp (ms) when incognito expires, null = indefinite while active */
   incognitoExpiresAt: number | null;
+  /** Whether the account is frozen (profile hidden, not discoverable) */
+  isFrozen: boolean;
+  /** Whether to show online status to other users */
+  showOnlineStatus: boolean;
+  /** Whether to show distance to other users */
+  showDistance: boolean;
   /** Social stats — post, follower, following counts */
   postCount: number;
   followerCount: number;
@@ -83,6 +102,7 @@ interface ProfileState {
 
 const initialProfile: ProfileData = {
   firstName: '',
+  lastName: '',
   birthDate: '',
   gender: '',
   genderPreference: [],
@@ -99,22 +119,50 @@ const initialProfile: ProfileData = {
   city: '',
   job: '',
   education: '',
+  weight: null,
+  sexualOrientation: '',
+  zodiacSign: '',
+  educationLevel: '',
+  maritalStatus: '',
+  alcohol: '',
+  pets: '',
+  religion: '',
+  lifeValues: '',
+  personalityType: null,
   isComplete: false,
   profileVideo: null,
   prompts: [],
   favoriteSpots: [],
   isIncognito: false,
   incognitoExpiresAt: null,
+  isFrozen: false,
+  showOnlineStatus: true,
+  showDistance: true,
   postCount: 0,
   followerCount: 0,
   followingCount: 0,
 };
 
 // Transform backend ProfileResponse to store ProfileData
+// Migrate legacy English interest IDs to Turkish labels
+const LEGACY_TAG_MIGRATION: Record<string, string> = {
+  travel: 'Seyahat', music: 'Muzik', sports: 'Spor', cooking: 'Yemek pisirme',
+  art: 'Sanat', technology: 'Teknoloji', nature: 'Doga', books: 'Okuma',
+  movies: 'Film', photography: 'Fotografcilik', dance: 'Dans', yoga: 'Yoga',
+  gaming: 'Video oyunlari', animals: 'Kediler', fashion: 'Moda', football: 'Futbol',
+  hiking: 'Yuruyus', coffee: 'Kahve', reading: 'Okuma', meditation: 'Meditasyon',
+  swimming: 'Yuzme', fitness: 'Vucut Gelistirme', beach: 'Denizler',
+  architecture: 'Muzeler', design: 'Tasarim', guitar: 'Muzik',
+  psychology: 'Akil oyunlari', food: 'Ev yemekleri', cats: 'Kediler',
+};
+const migrateInterestTags = (tags: string[]): string[] =>
+  tags.map((tag) => LEGACY_TAG_MIGRATION[tag] ?? tag);
+
 const mapResponseToProfile = (data: ProfileResponse): ProfileData => {
   const videoData = (data as { profileVideo?: { url: string; thumbnailUrl: string; duration: number } | null }).profileVideo ?? null;
   return {
     firstName: data.firstName,
+    lastName: (data as { lastName?: string }).lastName ?? '',
     birthDate: data.birthDate,
     gender: data.gender,
     genderPreference: Array.isArray((data as { genderPreference?: string[] }).genderPreference) ? (data as { genderPreference?: string[] }).genderPreference! : [],
@@ -124,13 +172,23 @@ const mapResponseToProfile = (data: ProfileResponse): ProfileData => {
     smoking: (data as { smoking?: string }).smoking ?? '',
     children: (data as { children?: string }).children ?? '',
     intentionTag: data.intentionTag,
-    interestTags: Array.isArray((data as { interestTags?: string[] }).interestTags) ? (data as { interestTags?: string[] }).interestTags! : [],
+    interestTags: migrateInterestTags(Array.isArray((data as { interestTags?: string[] }).interestTags) ? (data as { interestTags?: string[] }).interestTags! : []),
     photos: data.photos.map((p) => p.url),
     bio: data.bio,
     answers: {},
     city: data.city,
     job: (data as { job?: string }).job ?? '',
     education: (data as { education?: string }).education ?? '',
+    weight: (data as { weight?: number | null }).weight ?? null,
+    sexualOrientation: (data as { sexualOrientation?: string }).sexualOrientation ?? '',
+    zodiacSign: (data as { zodiacSign?: string }).zodiacSign ?? '',
+    educationLevel: (data as { educationLevel?: string }).educationLevel ?? '',
+    maritalStatus: (data as { maritalStatus?: string }).maritalStatus ?? '',
+    alcohol: (data as { alcohol?: string }).alcohol ?? '',
+    pets: (data as { pets?: string }).pets ?? '',
+    religion: (data as { religion?: string }).religion ?? '',
+    lifeValues: (data as { lifeValues?: string }).lifeValues ?? '',
+    personalityType: (data as { personalityType?: string | null }).personalityType ?? null,
     isComplete: data.isComplete,
     profileVideo: videoData ? {
       url: videoData.url,
@@ -141,6 +199,9 @@ const mapResponseToProfile = (data: ProfileResponse): ProfileData => {
     favoriteSpots: Array.isArray((data as { favoriteSpots?: ProfileData['favoriteSpots'] }).favoriteSpots) ? (data as { favoriteSpots?: ProfileData['favoriteSpots'] }).favoriteSpots! : [],
     isIncognito: (data as { isIncognito?: boolean }).isIncognito ?? false,
     incognitoExpiresAt: (data as { incognitoExpiresAt?: number | null }).incognitoExpiresAt ?? null,
+    isFrozen: (data as { isFrozen?: boolean }).isFrozen ?? false,
+    showOnlineStatus: (data as { showOnlineStatus?: boolean }).showOnlineStatus ?? true,
+    showDistance: (data as { showDistance?: boolean }).showDistance ?? true,
     postCount: (data as { postCount?: number }).postCount ?? 0,
     followerCount: (data as { followerCount?: number }).followerCount ?? 0,
     followingCount: (data as { followingCount?: number }).followingCount ?? 0,
@@ -158,11 +219,13 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   videoUploadProgress: 0,
 
   // Actions
-  setField: (key, value) =>
+  setField: (key, value) => {
     set((state) => ({
       profile: { ...state.profile, [key]: value },
-      completionPercent: get().calculateCompletion(),
-    })),
+    }));
+    // Recalculate after state is written
+    set({ completionPercent: get().calculateCompletion() });
+  },
 
   setIntentionTag: (tag) =>
     set((state) => ({
@@ -197,10 +260,11 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       set({
         profile,
         _photoIds: photoIds,
-        completionPercent: data.completionPercent,
         isLoading: false,
         error: null,
       });
+      // Always use local calculation (22 fields) — backend may have old formula
+      set({ completionPercent: get().calculateCompletion() });
     } catch (error: unknown) {
       if (__DEV__) {
         console.warn('Profil yukleme basarisiz:', error);
@@ -211,7 +275,15 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   },
 
   updateProfile: async (data) => {
-    set({ isLoading: true, error: null });
+    // Apply changes optimistically so they persist even if API fails
+    set((state) => ({
+      profile: { ...state.profile, ...data },
+      isLoading: true,
+      error: null,
+    }));
+    // Recalculate completion immediately with the new data
+    set({ completionPercent: get().calculateCompletion() });
+
     try {
       const response = await profileService.updateProfile(data);
       const profile = mapResponseToProfile(response);
@@ -219,20 +291,19 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       set({
         profile,
         _photoIds: photoIds,
-        completionPercent: response.completionPercent,
         isLoading: false,
         error: null,
       });
+      // Use local calculation — backend may have old formula
+      set({ completionPercent: get().calculateCompletion() });
     } catch (error: unknown) {
       try {
         devMockOrThrow(error, data, 'profileStore.updateProfile');
-        // In dev, apply changes locally anyway
-        set((state) => ({
-          profile: { ...state.profile, ...data },
-          isLoading: false,
-        }));
+        // In dev, keep the optimistic changes (already applied above)
+        set({ isLoading: false });
       } catch {
         const apiError = parseApiError(error as AxiosError);
+        // Keep the optimistic changes — will sync on next successful save
         set({ isLoading: false, error: apiError.userMessage });
       }
     }
@@ -321,12 +392,11 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       _photoIds: newIds,
     });
 
-    // Sync with backend
+    // Sync with backend (non-blocking — keep local change even if API fails)
     try {
       await profileService.reorderPhotos(newIds);
     } catch {
-      // Revert on failure
-      set({ profile: { ...get().profile, photos: profile.photos }, _photoIds });
+      // Keep local reorder — will sync on next save
     }
   },
 
@@ -408,17 +478,41 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   calculateCompletion: () => {
     const { profile } = get();
     let filled = 0;
-    const totalFields = 7;
+    const total = 22; // all possible fields
 
-    if (profile.firstName.length > 0) filled++;
-    if (profile.birthDate.length > 0) filled++;
-    if (profile.gender.length > 0) filled++;
-    if (profile.intentionTag.length > 0) filled++;
-    if (profile.photos.length >= PROFILE_CONFIG.MIN_PHOTOS) filled++;
-    if (profile.bio.length >= PROFILE_CONFIG.MIN_BIO_LENGTH) filled++;
-    if (Object.keys(profile.answers).length > 0) filled++;
+    // Core fields (required-ish)
+    if ((profile.firstName ?? '').length > 0) filled++;
+    if ((profile.birthDate ?? '').length > 0) filled++;
+    if ((profile.gender ?? '').length > 0) filled++;
+    if ((profile.intentionTag ?? '').length > 0) filled++;
+    if ((profile.photos ?? []).length >= PROFILE_CONFIG.MIN_PHOTOS) filled++;
+    if ((profile.bio ?? '').length >= PROFILE_CONFIG.MIN_BIO_LENGTH) filled++;
 
-    return Math.round((filled / totalFields) * 100);
+    // Basic info
+    if ((profile.job ?? '').length > 0) filled++;
+    if ((profile.education ?? '').length > 0) filled++;
+    if ((profile.city ?? '').length > 0) filled++;
+    if (profile.height != null && profile.height > 0) filled++;
+
+    // Extended info
+    if ((profile.sexualOrientation ?? '').length > 0) filled++;
+    if ((profile.zodiacSign ?? '').length > 0) filled++;
+    if ((profile.educationLevel ?? '').length > 0) filled++;
+    if ((profile.maritalStatus ?? '').length > 0) filled++;
+    if ((profile.alcohol ?? '').length > 0) filled++;
+    if ((profile.smoking ?? '').length > 0) filled++;
+    if ((profile.children ?? '').length > 0) filled++;
+    if ((profile.pets ?? '').length > 0) filled++;
+    if ((profile.religion ?? '').length > 0) filled++;
+
+    // Personality
+    if ((profile.interestTags ?? []).length > 0) filled++;
+    if ((profile.prompts ?? []).length > 0) filled++;
+
+    // Compatibility
+    if (Object.keys(profile.answers ?? {}).length > 0) filled++;
+
+    return Math.round((filled / total) * 100);
   },
 
   reset: () =>

@@ -49,7 +49,7 @@ export const WhoToMeetScreen: React.FC = () => {
   const handleConfirm = () => {
     if (selected.length > 0) {
       setProfileField('genderPreference', selected);
-      navigation.navigate('WhatLookingFor');
+      navigation.navigate('Height');
     }
   };
 
@@ -58,7 +58,7 @@ export const WhoToMeetScreen: React.FC = () => {
   return (
     <OnboardingLayout
       step={4}
-      totalSteps={18}
+      totalSteps={13}
       footer={
         <FullWidthButton
           label="Onayla"

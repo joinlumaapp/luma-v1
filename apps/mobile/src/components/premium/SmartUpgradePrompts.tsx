@@ -2,7 +2,7 @@
 // Contextual prompts that appear at the RIGHT moment, not randomly
 // Psychological triggers: social proof, scarcity, FOMO, loss aversion
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -14,13 +14,10 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
-import { useNavigation } from '@react-navigation/native';
 import { CachedAvatar } from '../common/CachedAvatar';
 import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { fontWeights } from '../../theme/typography';
-import { storage } from '../../utils/storage';
 
 // ─── 1. "Birisi seni begendi" teaser ────────────────────────────
 
@@ -51,7 +48,7 @@ export const LikedYouTeaser: React.FC<LikedYouTeaserProps> = ({ count, blurredAv
         <View style={teaserStyles.avatarRow}>
           {blurredAvatars.slice(0, 3).map((uri, i) => (
             <View key={i} style={[teaserStyles.blurredAvatar, { marginLeft: i > 0 ? -10 : 0, zIndex: 3 - i }]}>
-              <CachedAvatar uri={uri} size={36} borderRadius={18} />
+              <CachedAvatar uri={uri} size={36} />
               <View style={teaserStyles.blurOverlay} />
             </View>
           ))}
@@ -286,7 +283,7 @@ export const MatchUpgradeNudge: React.FC<MatchUpgradeNudgeProps> = ({
   return (
     <Animated.View style={[nudgeStyles.container, { transform: [{ translateY: slideAnim }] }]}>
       <View style={nudgeStyles.row}>
-        <CachedAvatar uri={matchAvatarUrl} size={40} borderRadius={20} />
+        <CachedAvatar uri={matchAvatarUrl} size={40} />
         <View style={nudgeStyles.textCol}>
           <Text style={nudgeStyles.title}>{config.title}</Text>
           <Text style={nudgeStyles.subtitle}>

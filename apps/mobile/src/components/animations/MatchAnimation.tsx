@@ -9,6 +9,7 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
+  StatusBar,
   Animated,
   Easing,
   Modal,
@@ -562,6 +563,7 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
       statusBarTranslucent
       onRequestClose={onClose}
     >
+      <StatusBar barStyle="light-content" backgroundColor="#08080F" />
       {/* Full-screen backdrop */}
       <Animated.View style={[styles.backdrop, { opacity: overlayOpacity }]}>
         {/* Gradient background — purple to pink */}

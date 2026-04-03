@@ -44,6 +44,8 @@ export interface StoryUser {
   userId: string;
   userName: string;
   userAvatarUrl: string;
+  /** Package tier of the story creator — used for priority sorting */
+  packageTier?: 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
   stories: Story[];
   hasUnseenStories: boolean;
   latestStoryAt: string;
@@ -83,6 +85,7 @@ const MOCK_STORY_USERS: StoryUser[] = [
     userId: 'bot-001',
     userName: 'Elif',
     userAvatarUrl: 'https://i.pravatar.cc/150?img=1',
+    packageTier: 'FREE',
     isFollowing: true,
     hasUnseenStories: true,
     latestStoryAt: hoursAgo(1),
@@ -140,6 +143,7 @@ const MOCK_STORY_USERS: StoryUser[] = [
     userId: 'bot-006',
     userName: 'Merve',
     userAvatarUrl: 'https://i.pravatar.cc/150?img=23',
+    packageTier: 'PRO',
     isFollowing: true,
     hasUnseenStories: true,
     latestStoryAt: hoursAgo(3),
@@ -167,6 +171,7 @@ const MOCK_STORY_USERS: StoryUser[] = [
     userId: 'bot-005',
     userName: 'Defne',
     userAvatarUrl: 'https://i.pravatar.cc/150?img=20',
+    packageTier: 'GOLD',
     isFollowing: true,
     hasUnseenStories: false,
     latestStoryAt: hoursAgo(8),
@@ -192,6 +197,7 @@ const MOCK_STORY_USERS: StoryUser[] = [
     userId: 'bot-007',
     userName: 'Buse',
     userAvatarUrl: 'https://i.pravatar.cc/150?img=25',
+    packageTier: 'RESERVED',
     isFollowing: true,
     hasUnseenStories: true,
     latestStoryAt: hoursAgo(5),
@@ -219,6 +225,7 @@ const MOCK_STORY_USERS: StoryUser[] = [
     userId: 'bot-010',
     userName: 'Ebru',
     userAvatarUrl: 'https://i.pravatar.cc/150?img=36',
+    packageTier: 'FREE',
     isFollowing: true,
     hasUnseenStories: true,
     latestStoryAt: hoursAgo(4),
@@ -279,6 +286,7 @@ const MOCK_STORY_USERS: StoryUser[] = [
     userId: 'bot-011',
     userName: 'Naz',
     userAvatarUrl: 'https://i.pravatar.cc/150?img=38',
+    packageTier: 'FREE',
     isFollowing: false,
     isSuggested: true,
     hasUnseenStories: true,
@@ -307,6 +315,7 @@ const MOCK_STORY_USERS: StoryUser[] = [
     userId: 'bot-009',
     userName: 'Ipek',
     userAvatarUrl: 'https://i.pravatar.cc/150?img=32',
+    packageTier: 'GOLD',
     isFollowing: false,
     isSuggested: true,
     hasUnseenStories: true,

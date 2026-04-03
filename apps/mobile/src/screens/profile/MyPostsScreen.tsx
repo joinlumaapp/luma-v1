@@ -19,7 +19,9 @@ import { spacing } from '../../theme/spacing';
 import api from '../../services/api';
 import { socialFeedService, type FeedPost } from '../../services/socialFeedService';
 import { useSocialFeedStore } from '../../stores/socialFeedStore';
+import { useAuthStore } from '../../stores/authStore';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { useScreenTracking } from '../../hooks/useAnalytics';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const GRID_GAP = 2;
@@ -27,6 +29,7 @@ const NUM_COLUMNS = 3;
 const TILE_SIZE = (SCREEN_WIDTH - GRID_GAP * (NUM_COLUMNS + 1)) / NUM_COLUMNS;
 
 export const MyPostsScreen: React.FC = () => {
+  useScreenTracking('MyPosts');
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
 
@@ -51,7 +54,8 @@ export const MyPostsScreen: React.FC = () => {
       // 2. Also check store for recently created posts not yet in MOCK_POSTS
       const storePosts = useSocialFeedStore.getState().posts;
       for (const sp of storePosts) {
-        if (sp.userId === 'dev-user-001' && !allPosts.find((ap) => ap.id === sp.id)) {
+        const myId = useAuthStore.getState().user?.id ?? '';
+        if (myId && sp.userId === myId && !allPosts.find((ap) => ap.id === sp.id)) {
           allPosts.push(sp);
         }
       }
@@ -103,7 +107,8 @@ export const MyPostsScreen: React.FC = () => {
   }, []);
 
   return (
-    <BrandedBackground>
+    <View style={{ flex: 1 }}>
+      <BrandedBackground />
       <View style={[screenStyles.container, { paddingTop: insets.top }]}>
         {/* Header */}
         <View style={screenStyles.header}>
@@ -136,7 +141,7 @@ export const MyPostsScreen: React.FC = () => {
           />
         )}
       </View>
-    </BrandedBackground>
+    </View>
   );
 };
 

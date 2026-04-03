@@ -11,6 +11,7 @@ import {
   Image,
   FlatList,
   Modal,
+  StatusBar,
   StyleSheet,
   Animated,
   Dimensions,
@@ -244,6 +245,7 @@ export const MusicPicker: React.FC<MusicPickerProps> = ({ visible, onClose, onSe
       statusBarTranslucent
       onRequestClose={handleClose}
     >
+      <StatusBar barStyle="light-content" backgroundColor="#08080F" />
       <View style={pickerStyles.overlay}>
         {/* Backdrop */}
         <Animated.View

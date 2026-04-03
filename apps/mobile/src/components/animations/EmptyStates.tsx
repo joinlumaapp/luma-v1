@@ -38,8 +38,8 @@ interface EmptyFeedProps {
 }
 
 export const EmptyFeed: React.FC<EmptyFeedProps> = memo(({
-  title = 'Profiller araniyor',
-  subtitle = 'Sana uyumlu kisileri buluyoruz...',
+  title = 'Profiller aranıyor',
+  subtitle = 'Sana uyumlu kişileri buluyoruz...',
 }) => {
   const heartScale = useRef(new Animated.Value(1)).current;
   const ring1Scale = useRef(new Animated.Value(0.5)).current;
@@ -200,8 +200,8 @@ interface EmptyChatProps {
 }
 
 export const EmptyChat: React.FC<EmptyChatProps> = memo(({
-  title = 'Henuz mesajin yok',
-  subtitle = 'Eslesmelerinle sohbet baslatmak icin bir adim at!',
+  title = 'Henüz mesajın yok',
+  subtitle = 'Eşleşmelerinle sohbet başlatmak için bir adım at!',
 }) => {
   const bubble1Y = useRef(new Animated.Value(0)).current;
   const bubble2Y = useRef(new Animated.Value(0)).current;
@@ -427,7 +427,7 @@ export const LoadingPulse: React.FC<LoadingPulseProps> = memo(({
   return (
     <View
       style={styles.loadingContainer}
-      accessibilityLabel="Yukleniyor"
+      accessibilityLabel="Yükleniyor"
       accessibilityRole="progressbar"
     >
       {/* Glow backdrop */}
