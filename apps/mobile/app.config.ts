@@ -12,7 +12,7 @@ const getAppName = (): string => {
 
 const getUniqueIdentifier = (): string => {
   if (IS_DEV) return 'com.luma.dating.dev';
-  if (IS_PREVIEW) return 'com.luma.dating.preview';
+  // Preview uses production package name to match google-services.json
   return 'com.luma.dating';
 };
 
