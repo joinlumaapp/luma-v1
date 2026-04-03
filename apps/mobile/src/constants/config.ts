@@ -10,8 +10,8 @@ export const APP_CONFIG: {
 } = {
   APP_NAME: 'LUMA',
   APP_VERSION: '0.1.0',
-  API_BASE_URL: __DEV__ ? 'http://localhost:3000' : 'https://api.luma.dating',
-  WS_BASE_URL: __DEV__ ? 'ws://localhost:3000' : 'wss://api.luma.dating',
+  API_BASE_URL: __DEV__ ? 'http://localhost:3000' : 'https://luma-v1-production.up.railway.app',
+  WS_BASE_URL: __DEV__ ? 'ws://localhost:3000' : 'wss://luma-v1-production.up.railway.app',
   MIXPANEL_TOKEN: process.env.EXPO_PUBLIC_MIXPANEL_TOKEN ?? '', // Read from environment — empty string disables Mixpanel
   GIPHY_API_KEY: '', // Set via environment — falls back to Giphy public beta key in giphyService
 };
