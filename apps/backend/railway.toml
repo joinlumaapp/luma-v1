@@ -4,7 +4,7 @@ buildCommand = "npx prisma generate && npm run build"
 
 [deploy]
 startCommand = "node dist/main.js"
-preDeployCommand = "npx prisma migrate deploy"
+preDeployCommand = "npx prisma db push --skip-generate"
 healthcheckPath = "/api/v1/health/ping"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
