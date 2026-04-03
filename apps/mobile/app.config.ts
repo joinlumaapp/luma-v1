@@ -2,7 +2,7 @@ import { ExpoConfig, ConfigContext } from 'expo/config';
 
 const IS_DEV = process.env.APP_ENV === 'development';
 const IS_PREVIEW = process.env.APP_ENV === 'preview';
-const EAS_PROJECT_ID = process.env.EAS_PROJECT_ID ?? '';
+const EAS_PROJECT_ID = process.env.EAS_PROJECT_ID ?? '6931100f-868f-4059-996a-a82d1bea9fee';
 
 const getAppName = (): string => {
   if (IS_DEV) return 'LUMA (Dev)';
@@ -31,7 +31,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   userInterfaceStyle: 'automatic',
   scheme: 'luma',
   icon: './assets/icon.png',
-  owner: 'luma-dating',
+  owner: 'lumaapp',
 
   splash: {
     image: './assets/splash-logo.png',

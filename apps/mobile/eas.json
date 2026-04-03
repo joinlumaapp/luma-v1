@@ -7,13 +7,12 @@
     "base": {
       "node": "20.11.0",
       "env": {
-        "SENTRY_DSN": "",
-        "MIXPANEL_TOKEN": "",
-        "REVENUECAT_API_KEY_IOS": "",
-        "REVENUECAT_API_KEY_ANDROID": "",
-        "GOOGLE_MAPS_API_KEY_IOS": "",
-        "GOOGLE_MAPS_API_KEY_ANDROID": "",
-        "EAS_PROJECT_ID": ""
+        "SENTRY_DSN": "PLACEHOLDER",
+        "MIXPANEL_TOKEN": "PLACEHOLDER",
+        "REVENUECAT_API_KEY_IOS": "PLACEHOLDER",
+        "REVENUECAT_API_KEY_ANDROID": "PLACEHOLDER",
+        "GOOGLE_MAPS_API_KEY_IOS": "PLACEHOLDER",
+        "GOOGLE_MAPS_API_KEY_ANDROID": "PLACEHOLDER"
       }
     },
     "development": {

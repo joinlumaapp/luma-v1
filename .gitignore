@@ -77,7 +77,7 @@ service-account.json
 *.keystore
 
 # Firebase & Google Play
-google-services.json
+# google-services.json is needed by EAS Build — not sensitive (client-side config)
 google-services-key.json
 GoogleService-Info.plist
 *firebase-adminsdk*.json

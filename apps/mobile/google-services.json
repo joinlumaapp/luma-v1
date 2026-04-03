@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "398670613677",
+    "project_id": "luma-dating",
+    "storage_bucket": "luma-dating.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:398670613677:android:025713bf30c8d7a193ca24",
+        "android_client_info": {
+          "package_name": "com.luma.dating"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgo1qcdF2_NCXUSdswkFVfTJMeb_-CZr0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
