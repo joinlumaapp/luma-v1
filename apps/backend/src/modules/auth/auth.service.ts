@@ -227,8 +227,10 @@ export class AuthService {
       userId = user.id;
     }
 
-    // Generate OTP and create verification record
-    const otpCode = this.generateOtp();
+    // Generate OTP — use fixed code when no SMS provider is configured (test mode)
+    const useTestOtp = !this.configService.get("TWILIO_ACCOUNT_SID") &&
+      !this.configService.get("NETGSM_USERCODE");
+    const otpCode = useTestOtp ? "123456" : this.generateOtp();
     const otpExpiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
     // Expire any existing pending SMS verifications for this user

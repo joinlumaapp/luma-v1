@@ -278,6 +278,18 @@ export class SmsProvider {
       return result;
     }
 
+    // If no SMS provider is configured, fall back to mock (log OTP to console)
+    if (!this.netgsm.isConfigured() && !this.twilio.isConfigured()) {
+      this.logger.warn(
+        "No SMS provider configured — using mock provider. OTP will be logged.",
+      );
+      const result = await this.mock.sendOtp(phone, code);
+      if (result) {
+        await this.recordSmsRequest(phone);
+      }
+      return result;
+    }
+
     // Production: select provider based on phone prefix
     const isTurkish = phone.startsWith("+90");
     const primary: SmsProviderInterface = isTurkish ? this.netgsm : this.twilio;
