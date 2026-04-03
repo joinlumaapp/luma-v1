@@ -151,7 +151,7 @@ export class BadgesService {
     for (const badge of allBadges) {
       const isEarned = earnedMap.has(badge.id);
       const earnedAt = earnedMap.get(badge.id) ?? null;
-      const criteria = badge.criteria as BadgeCriteria | null;
+      const criteria = badge.criteria as unknown as BadgeCriteria | null;
 
       if (isEarned) {
         // Earned badges show 100% progress

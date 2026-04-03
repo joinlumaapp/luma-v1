@@ -4,7 +4,24 @@ import {
   ForbiddenException,
 } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
-import type { CallHistoryItem } from "@luma/shared";
+/** Inline type from @luma/shared — avoids monorepo resolution issues in Railway */
+export interface CallHistoryItem {
+  id: string;
+  matchId: string;
+  callerId: string;
+  receiverId: string;
+  callType: string;
+  status: string;
+  startedAt: string;
+  answeredAt: string | null;
+  endedAt: string | null;
+  durationSeconds: number | null;
+  goldCost: number;
+  endedBy: string | null;
+  createdAt: string;
+  partner: { userId: string; firstName: string; photoUrl: string | null };
+  isOutgoing: boolean;
+}
 
 @Injectable()
 export class CallHistoryService {

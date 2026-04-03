@@ -19,7 +19,8 @@ import { PrismaService } from "../../prisma/prisma.service";
 import { WsConnectionService } from "../../common/providers/ws-connection.service";
 import { PresenceService } from "../presence/presence.service";
 import { SendMessageDto } from "./dto/send-message.dto";
-import { GOLD_COSTS } from "@luma/shared";
+/** Inline from @luma/shared — avoids monorepo resolution issues in Railway */
+const GOLD_COSTS = { VOICE_CALL: 25, VIDEO_CALL: 50 } as const;
 
 /**
  * Authenticated socket interface — userId attached after JWT handshake.

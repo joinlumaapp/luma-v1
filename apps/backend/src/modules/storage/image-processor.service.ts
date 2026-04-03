@@ -1,5 +1,6 @@
 import { Injectable, Logger, BadRequestException } from "@nestjs/common";
-import sharp from "sharp";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const sharp = require("sharp");
 
 // ────────────────────────────────────────────────────────────────────
 // Types
@@ -99,7 +100,7 @@ export class ImageProcessorService {
       );
     }
 
-    let metadata: sharp.Metadata;
+    let metadata: { format?: string; width?: number; height?: number; exif?: Buffer };
     try {
       metadata = await sharp(buffer).metadata();
     } catch {
@@ -115,8 +116,8 @@ export class ImageProcessorService {
       );
     }
 
-    const width = metadata.width ?? 0;
-    const height = metadata.height ?? 0;
+    const width: number = metadata.width ?? 0;
+    const height: number = metadata.height ?? 0;
 
     if (width < MIN_IMAGE_WIDTH || height < MIN_IMAGE_HEIGHT) {
       throw new BadRequestException(
