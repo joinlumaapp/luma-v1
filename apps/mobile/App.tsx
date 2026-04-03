@@ -432,6 +432,6 @@ export default function App(): React.JSX.Element {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#3D1B5B',
+    backgroundColor: '#E8959E',
   },
 });

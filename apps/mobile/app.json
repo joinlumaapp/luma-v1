@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/splash-logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#3D1B5B"
+      "backgroundColor": "#E8959E"
     },
     "updates": {
       "enabled": false

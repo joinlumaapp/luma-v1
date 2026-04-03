@@ -36,7 +36,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   splash: {
     image: './assets/splash-logo.png',
     resizeMode: 'contain',
-    backgroundColor: '#3D1B5B',
+    backgroundColor: '#E8959E',
   },
 
   updates: {
@@ -88,7 +88,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     adaptiveIcon: {
       foregroundImage: './assets/adaptive-icon.png',
-      backgroundColor: '#3D1B5B',
+      backgroundColor: '#E8959E',
     },
     softwareKeyboardLayoutMode: 'resize',
     package: getUniqueIdentifier(),
