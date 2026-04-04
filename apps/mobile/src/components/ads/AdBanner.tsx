@@ -43,7 +43,7 @@ const MOCK_ADS: ReadonlyArray<{
     accentColor: palette.pink[400],
   },
   {
-    headline: 'LUMA Gold',
+    headline: 'LUMA Premium',
     body: 'Seni beğenen profilleri hemen gör.',
     icon: 'star',
     accentColor: palette.gold[400],

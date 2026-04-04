@@ -45,7 +45,7 @@ const PACKAGE_DEFINITIONS = {
     name: "Gold",
     nameTr: "Gold",
     monthlyPriceUsd: 14.99,
-    monthlyPriceTry: 349.99,
+    monthlyPriceTry: 499,
     features: {
       dailySwipes: 999999,
       coreQuestions: 20,
@@ -85,7 +85,7 @@ const PACKAGE_DEFINITIONS = {
     name: "Reserved",
     nameTr: "Reserved",
     monthlyPriceUsd: 49.99,
-    monthlyPriceTry: 1299.99,
+    monthlyPriceTry: 1199,
     features: {
       dailySwipes: 999999,
       coreQuestions: 20,

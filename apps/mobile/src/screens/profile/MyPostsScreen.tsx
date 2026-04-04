@@ -22,11 +22,80 @@ import { useSocialFeedStore } from '../../stores/socialFeedStore';
 import { useAuthStore } from '../../stores/authStore';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { useScreenTracking } from '../../hooks/useAnalytics';
+import { videoService } from '../../services/videoService';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const GRID_GAP = 2;
 const NUM_COLUMNS = 3;
 const TILE_SIZE = (SCREEN_WIDTH - GRID_GAP * (NUM_COLUMNS + 1)) / NUM_COLUMNS;
+
+// ─── Video Thumbnail Tile ─────────────────────────────────────
+// Displays a thumbnail for video posts. Uses thumbnailUrl from the server
+// when available; otherwise generates one on the fly via expo-video-thumbnails.
+
+const VideoThumbnailTile: React.FC<{ videoUrl: string; thumbnailUrl: string | null }> = ({
+  videoUrl,
+  thumbnailUrl,
+}) => {
+  const [thumbUri, setThumbUri] = useState<string | null>(thumbnailUrl);
+  const [isLoading, setIsLoading] = useState(!thumbnailUrl);
+
+  useEffect(() => {
+    // If we already have a server-provided thumbnail, use it
+    if (thumbnailUrl) {
+      setThumbUri(thumbnailUrl);
+      setIsLoading(false);
+      return;
+    }
+
+    // Generate thumbnail from video URL on the fly
+    let cancelled = false;
+    const generate = async () => {
+      setIsLoading(true);
+      const uri = await videoService.generateThumbnail(videoUrl);
+      if (!cancelled) {
+        setThumbUri(uri);
+        setIsLoading(false);
+      }
+    };
+    generate();
+    return () => {
+      cancelled = true;
+    };
+  }, [videoUrl, thumbnailUrl]);
+
+  if (isLoading) {
+    return (
+      <View style={[gridStyles.image, gridStyles.videoFallback]}>
+        <ActivityIndicator size="small" color={palette.purple[400]} />
+      </View>
+    );
+  }
+
+  if (thumbUri) {
+    return (
+      <View style={gridStyles.image}>
+        <Image source={{ uri: thumbUri }} style={gridStyles.thumbnailImage} resizeMode="cover" />
+        {/* Video indicator overlay */}
+        <View style={gridStyles.videoIndicator}>
+          <Ionicons name="play" size={10} color="#FFFFFF" />
+        </View>
+      </View>
+    );
+  }
+
+  // Final fallback: no thumbnail could be generated (e.g. remote URL that
+  // expo-video-thumbnails cannot process). Show a styled placeholder with the
+  // video icon, but darker and more polished than before.
+  return (
+    <View style={[gridStyles.image, gridStyles.videoFallback]}>
+      <Ionicons name="videocam" size={24} color={palette.purple[300]} />
+      <View style={gridStyles.videoIndicator}>
+        <Ionicons name="play" size={10} color="#FFFFFF" />
+      </View>
+    </View>
+  );
+};
 
 export const MyPostsScreen: React.FC = () => {
   useScreenTracking('MyPosts');
@@ -79,11 +148,20 @@ export const MyPostsScreen: React.FC = () => {
     return (
       <View style={gridStyles.tile}>
         {hasPhoto ? (
-          <Image source={{ uri: item.photoUrls[0] }} style={gridStyles.image} resizeMode="cover" />
+          <>
+            <Image source={{ uri: item.photoUrls[0] }} style={gridStyles.image} resizeMode="cover" />
+            {/* Video indicator for posts that have both photo and video */}
+            {hasVideo && (
+              <View style={gridStyles.videoIndicator}>
+                <Ionicons name="play" size={10} color="#FFFFFF" />
+              </View>
+            )}
+          </>
         ) : hasVideo ? (
-          <View style={[gridStyles.image, gridStyles.videoPlaceholder]}>
-            <Ionicons name="videocam" size={28} color={palette.purple[400]} />
-          </View>
+          <VideoThumbnailTile
+            videoUrl={item.videoUrl!}
+            thumbnailUrl={item.thumbnailUrl ?? null}
+          />
         ) : (
           <View style={[gridStyles.image, gridStyles.textPlaceholder]}>
             <Text style={gridStyles.textContent} numberOfLines={4}>{item.content}</Text>
@@ -203,10 +281,25 @@ const gridStyles = StyleSheet.create({
     height: '100%',
     backgroundColor: colors.surfaceLight,
   },
-  videoPlaceholder: {
+  videoFallback: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: palette.purple[50],
+    backgroundColor: colors.surfaceLight,
+  },
+  thumbnailImage: {
+    width: '100%',
+    height: '100%',
+  },
+  videoIndicator: {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   textPlaceholder: {
     justifyContent: 'center',

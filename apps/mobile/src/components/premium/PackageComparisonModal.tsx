@@ -46,9 +46,9 @@ const TIER_COLORS: Record<PackageTier, string> = {
 
 const TIER_LABELS: Record<PackageTier, string> = {
   FREE: 'Ücretsiz',
-  GOLD: 'Gold',
+  GOLD: 'Premium',
   PRO: 'Pro',
-  RESERVED: 'Reserved',
+  RESERVED: 'Supreme',
 };
 
 const getTierPrice = (id: string): string => {

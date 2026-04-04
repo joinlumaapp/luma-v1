@@ -403,7 +403,7 @@ export const ChatScreen: React.FC = () => {
     if (packageTier === 'FREE') {
       Alert.alert(
         'Premium Özellik',
-        'Sesli ve görüntülü arama Gold ve üzeri paketlere özeldir.',
+        'Sesli ve görüntülü arama Premium ve üzeri paketlere özeldir.',
         [
           { text: 'Vazgeç', style: 'cancel' },
           {
@@ -914,7 +914,7 @@ export const ChatScreen: React.FC = () => {
               onPress={() => {
                 Alert.alert(
                   'Tek Mesaj Paketi',
-                  `₺${MESSAGE_CONFIG.SINGLE_MESSAGE_PACK_PRICE} karşılığında 1 ekstra mesaj gönder. Gold bakiyenden düşülecek.`,
+                  `₺${MESSAGE_CONFIG.SINGLE_MESSAGE_PACK_PRICE} karşılığında 1 ekstra mesaj gönder. Jeton bakiyenden düşülecek.`,
                   [
                     { text: 'İptal', style: 'cancel' },
                     {

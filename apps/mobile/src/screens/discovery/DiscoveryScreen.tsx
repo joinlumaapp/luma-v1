@@ -299,7 +299,7 @@ export const DiscoveryScreen: React.FC = () => {
     if (packageTier === 'FREE') {
       Alert.alert(
         'Premium Özellik',
-        'Öne Çıkarma Gold ve üzeri paketlere özeldir.',
+        'Öne Çıkarma Premium ve üzeri paketlere özeldir.',
         [
           { text: 'Vazgeç', style: 'cancel' },
           {
@@ -1102,7 +1102,7 @@ export const DiscoveryScreen: React.FC = () => {
               onPress={() => {
                 Alert.alert(
                   'Premium Özellik',
-                  'Geri alma özelliği için Gold veya üzeri paket gereklidir.',
+                  'Geri alma özelliği için Premium veya üzeri paket gereklidir.',
                   [
                     { text: 'Vazgeç', style: 'cancel' },
                     { text: 'Paketleri Gör', onPress: () => navigation.navigate('ProfileTab', { screen: 'MembershipPlans' } as never) },

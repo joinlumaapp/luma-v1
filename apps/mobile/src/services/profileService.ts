@@ -50,10 +50,13 @@ export interface ProfileFields {
   followingCount?: number;
 }
 
-// Backend GET /profiles/me returns a NESTED structure
+// Backend GET /profiles/me returns a NESTED structure.
+// `profile` is null when the user has not yet created their profile (e.g. SMS-verified but
+// onboarding incomplete). The rest of the envelope (userId, photos, profileCompletion) is
+// always present.
 export interface NestedProfileResponse {
   userId: string;
-  profile: ProfileFields;
+  profile: ProfileFields | null;
   photos: Array<{ id: string; url: string; order: number; moderationStatus?: string }>;
   profileCompletion: number;
 }

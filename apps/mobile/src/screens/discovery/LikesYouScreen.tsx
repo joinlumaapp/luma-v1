@@ -939,7 +939,7 @@ export const LikesYouScreen: React.FC<LikesYouScreenProps> = ({ embedded = false
               Tüm beğenenlerini görmek ister misin?
             </Text>
             <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 4 }}>
-              Gold üyeler günde 10 profil açabiliyor
+              Premium üyeler günde 10 profil açabiliyor
             </Text>
             <TouchableOpacity
               onPress={() => navigation.navigate('MembershipPlans' as never)}
@@ -948,7 +948,7 @@ export const LikesYouScreen: React.FC<LikesYouScreenProps> = ({ embedded = false
                 borderRadius: 10, paddingVertical: 10, paddingHorizontal: 40,
               }}
             >
-              <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>{'Gold\'a Yükselt 👑'}</Text>
+              <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>{'Premium\'a Yükselt 👑'}</Text>
             </TouchableOpacity>
           </View>
         ) : null}

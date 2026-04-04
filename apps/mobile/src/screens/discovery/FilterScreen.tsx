@@ -191,7 +191,7 @@ export const FilterScreen: React.FC = () => {
 
   const showUpgradeAlert = useCallback(
     (requiredTier: RequiredTier) => {
-      const tierName = requiredTier === 'GOLD' ? 'Gold' : 'Pro';
+      const tierName = requiredTier === 'GOLD' ? 'Premium' : 'Pro';
       Alert.alert(
         `${tierName} Filtresi`,
         `Bu filtre ${tierName} paketi ile kullanılabilir. Yükseltmek ister misin?`,
@@ -410,7 +410,7 @@ export const FilterScreen: React.FC = () => {
           {locked && (
             <View style={s.lockedBadge}>
               <Ionicons name="lock-closed" size={12} color={palette.gold[600]} />
-              <Text style={s.lockedBadgeText}>{requiredTier === 'GOLD' ? 'Gold' : 'Pro'}</Text>
+              <Text style={s.lockedBadgeText}>{requiredTier === 'GOLD' ? 'Premium' : 'Pro'}</Text>
             </View>
           )}
           <View style={s.chipRow} pointerEvents={locked ? 'none' : 'auto'}>
@@ -475,7 +475,7 @@ export const FilterScreen: React.FC = () => {
           {locked && (
             <View style={s.lockedBadge}>
               <Ionicons name="lock-closed" size={12} color={palette.gold[600]} />
-              <Text style={s.lockedBadgeText}>{requiredTier === 'GOLD' ? 'Gold' : 'Pro'}</Text>
+              <Text style={s.lockedBadgeText}>{requiredTier === 'GOLD' ? 'Premium' : 'Pro'}</Text>
             </View>
           )}
           <Text style={s.cardValue}>{label}</Text>
@@ -534,7 +534,7 @@ export const FilterScreen: React.FC = () => {
         {/* ═══════════════ TEMEL FİLTRELER ═══════════════ */}
         <Text style={s.sectionHeader}>Temel tercihler</Text>
 
-        {/* Gender — Gold+ */}
+        {/* Gender — Premium+ */}
         <View style={s.filterSection}>
           <Text style={s.questionLabel}>Kimi arıyorsun?</Text>
           <TouchableOpacity
@@ -546,7 +546,7 @@ export const FilterScreen: React.FC = () => {
             {isFree && (
               <View style={s.lockedBadge}>
                 <Ionicons name="lock-closed" size={12} color={palette.gold[600]} />
-                <Text style={s.lockedBadgeText}>Gold</Text>
+                <Text style={s.lockedBadgeText}>Premium</Text>
               </View>
             )}
             <View pointerEvents={isFree ? 'none' : 'auto'}>
@@ -555,7 +555,7 @@ export const FilterScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Age — Gold+ */}
+        {/* Age — Premium+ */}
         <View style={s.filterSection}>
           <Text style={s.questionLabel}>Kaç yaşında olsun?</Text>
           <TouchableOpacity
@@ -567,7 +567,7 @@ export const FilterScreen: React.FC = () => {
             {isFree && (
               <View style={s.lockedBadge}>
                 <Ionicons name="lock-closed" size={12} color={palette.gold[600]} />
-                <Text style={s.lockedBadgeText}>Gold</Text>
+                <Text style={s.lockedBadgeText}>Premium</Text>
               </View>
             )}
             <View pointerEvents={isFree ? 'none' : 'auto'}>
@@ -576,7 +576,7 @@ export const FilterScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Distance — Gold+ */}
+        {/* Distance — Premium+ */}
         <View style={s.filterSection}>
           <Text style={s.questionLabel}>Ne kadar yakın olsun?</Text>
           <TouchableOpacity
@@ -588,7 +588,7 @@ export const FilterScreen: React.FC = () => {
             {isFree && (
               <View style={s.lockedBadge}>
                 <Ionicons name="lock-closed" size={12} color={palette.gold[600]} />
-                <Text style={s.lockedBadgeText}>Gold</Text>
+                <Text style={s.lockedBadgeText}>Premium</Text>
               </View>
             )}
             <View pointerEvents={isFree ? 'none' : 'auto'}>
@@ -597,7 +597,7 @@ export const FilterScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Verified — Gold+ */}
+        {/* Verified — Premium+ */}
         <View style={s.filterSection}>
           <Text style={s.questionLabel}>Sadece doğrulanmış profiller mi görmek istersin?</Text>
           <TouchableOpacity
@@ -609,7 +609,7 @@ export const FilterScreen: React.FC = () => {
             {isFree && (
               <View style={s.lockedBadge}>
                 <Ionicons name="lock-closed" size={12} color={palette.gold[600]} />
-                <Text style={s.lockedBadgeText}>Gold</Text>
+                <Text style={s.lockedBadgeText}>Premium</Text>
               </View>
             )}
             <View style={s.verifiedRow} pointerEvents={isFree ? 'none' : 'auto'}>
@@ -625,7 +625,7 @@ export const FilterScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Intentions — Gold+ */}
+        {/* Intentions — Premium+ */}
         {renderChipCard(
           'Ne arıyor olsun?', '',
           INTENTION_OPTIONS.map((t) => t.label),
@@ -642,7 +642,7 @@ export const FilterScreen: React.FC = () => {
           'GOLD',
         )}
 
-        {/* Interests — Gold+ */}
+        {/* Interests — Premium+ */}
         {renderChipCard(
           'Hangi ilgi alanlarını paylaşsın?', '',
           INTEREST_OPTIONS, selectedInterests, toggleInArray(setSelectedInterests), 'interests', 'GOLD',
@@ -657,7 +657,7 @@ export const FilterScreen: React.FC = () => {
             onPress={() => showUpgradeAlert('GOLD')}
             activeOpacity={0.8}
           >
-            <Text style={s.upgradeBannerText}>Gold ile daha detaylı tercih belirle</Text>
+            <Text style={s.upgradeBannerText}>Premium ile daha detaylı tercih belirle</Text>
             <View style={s.upgradeBannerBtn}>
               <Text style={s.upgradeBannerBtnText}>Yükselt</Text>
             </View>

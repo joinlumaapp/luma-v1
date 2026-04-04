@@ -165,7 +165,7 @@ export const GoldBalance: React.FC<GoldBalanceProps> = ({ balance }) => {
           >
             {/* Header */}
             <View style={historyStyles.header}>
-              <Text style={historyStyles.title}>Gold Geçmişi</Text>
+              <Text style={historyStyles.title}>Jeton Geçmişi</Text>
               <TouchableOpacity
                 onPress={() => setModalVisible(false)}
                 style={historyStyles.closeButton}
@@ -182,7 +182,7 @@ export const GoldBalance: React.FC<GoldBalanceProps> = ({ balance }) => {
               </View>
               <View>
                 <Text style={historyStyles.balanceLabelText}>Mevcut Bakiye</Text>
-                <Text style={historyStyles.balanceValueText}>{balance} Gold</Text>
+                <Text style={historyStyles.balanceValueText}>{balance} Jeton</Text>
               </View>
             </View>
 
@@ -203,7 +203,7 @@ export const GoldBalance: React.FC<GoldBalanceProps> = ({ balance }) => {
                 ) : (
                   <View style={historyStyles.emptyContainer}>
                     <Text style={historyStyles.emptyText}>
-                      Henüz Gold işlemi yok
+                      Henüz jeton işlemi yok
                     </Text>
                   </View>
                 )

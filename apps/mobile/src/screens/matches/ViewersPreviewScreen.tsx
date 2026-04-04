@@ -878,7 +878,7 @@ const ViewerTeaserSheet: React.FC<ViewerTeaserSheetProps> = ({
               style={sheetStyles.primaryCTA}
             >
               <Ionicons name="diamond" size={18} color="#fff" />
-              <Text style={sheetStyles.primaryCTAText}>Gold ile Aç</Text>
+              <Text style={sheetStyles.primaryCTAText}>Premium ile Aç</Text>
             </LinearGradient>
           </Pressable>
         </View>

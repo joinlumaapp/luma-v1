@@ -140,7 +140,7 @@ export const SendWaveModal: React.FC<SendWaveModalProps> = ({
                 activeOpacity={0.8}
               >
                 <Text style={styles.coinButtonText}>
-                  🪙 {WAVE_COIN_COST} Gold Coin ile Gönder
+                  🪙 {WAVE_COIN_COST} Jeton ile Gönder
                 </Text>
               </TouchableOpacity>
             </View>
@@ -154,7 +154,7 @@ export const SendWaveModal: React.FC<SendWaveModalProps> = ({
               activeOpacity={0.7}
             >
               <Text style={styles.coinAltText}>
-                veya 🪙 {WAVE_COIN_COST} Gold Coin ile gönder (günlük hakkından düşmez)
+                veya 🪙 {WAVE_COIN_COST} Jeton ile gönder (günlük hakkından düşmez)
               </Text>
             </TouchableOpacity>
           )}

@@ -383,7 +383,7 @@ export const BadgeEarnedOverlay: React.FC<BadgeEarnedOverlayProps> = ({
           >
             <Text style={styles.goldRewardIcon}>G</Text>
             <Text style={styles.goldRewardText}>
-              +{goldReward} Gold kazandin!
+              +{goldReward} Jeton kazandin!
             </Text>
           </Animated.View>
         )}

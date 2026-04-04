@@ -335,7 +335,7 @@ export const SettingsScreen: React.FC = () => {
   const phoneDisplay = user?.phone ?? '-';
   const emailDisplay = user?.email ?? 'Belirtilmedi';
 
-  const tierLabels: Record<string, string> = { FREE: 'Ücretsiz', GOLD: 'Gold', PRO: 'Pro', RESERVED: 'Supreme' };
+  const tierLabels: Record<string, string> = { FREE: 'Ücretsiz', GOLD: 'Premium', PRO: 'Pro', RESERVED: 'Supreme' };
   const currentTierLabel = tierLabels[packageTier] ?? 'Ücretsiz';
 
   const sections: SettingSection[] = [
@@ -604,9 +604,9 @@ export const SettingsScreen: React.FC = () => {
         {
           key: 'faq_gold',
           icon: 'help-outline',
-          title: 'Gold ne işe yarar?',
+          title: 'Premium ne işe yarar?',
           type: 'faq',
-          answer: 'Gold paketi ile günlük 50 beğeni hakkı (FREE\'de 20), gelişmiş arama filtreleri, seni kim beğendi görme, profil öne çıkarma (boost), geri alma hakkı (günlük 1), reklamsız deneyim ve aylık bonus jeton kazanırsınız.',
+          answer: 'Premium paketi ile günlük 50 beğeni hakkı (FREE\'de 20), gelişmiş arama filtreleri, seni kim beğendi görme, profil öne çıkarma (boost), geri alma hakkı (günlük 1), reklamsız deneyim ve aylık bonus jeton kazanırsınız.',
         },
         {
           key: 'faq_delete',

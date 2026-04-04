@@ -38,6 +38,11 @@
       "softwareKeyboardLayoutMode": "resize",
       "package": "com.luma.dating",
       "versionCode": 1,
+      "statusBar": {
+        "barStyle": "light-content",
+        "backgroundColor": "#08080F",
+        "translucent": false
+      },
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",

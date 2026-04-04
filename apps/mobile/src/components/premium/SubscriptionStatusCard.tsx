@@ -37,9 +37,9 @@ const TIER_COLORS: Record<string, string> = {
 
 const TIER_DISPLAY_NAMES: Record<string, string> = {
   FREE: 'Ücretsiz',
-  GOLD: 'Gold',
+  GOLD: 'Premium',
   PRO: 'Pro',
-  RESERVED: 'Reserved',
+  RESERVED: 'Supreme',
 };
 
 // ─── Component ───────────────────────────────────────────────

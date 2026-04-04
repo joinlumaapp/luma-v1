@@ -197,7 +197,7 @@ export const CallScreen: React.FC = () => {
             {callType === 'video' ? 'Görüntülü Arama' : 'Sesli Arama'}
           </Text>
           <Text style={styles.premiumSubtitle}>
-            Arama özelliği Gold ve üstü paketlere özeldir.{'\n'}
+            Arama özelliği Premium ve üstü paketlere özeldir.{'\n'}
             Paketini yükselt ve hemen aramaya başla!
           </Text>
           <TouchableOpacity

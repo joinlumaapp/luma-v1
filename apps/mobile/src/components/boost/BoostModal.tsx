@@ -230,7 +230,7 @@ export const BoostModal: React.FC<BoostModalProps> = ({
 
               {/* Current balance */}
               <View style={styles.balanceRow}>
-                <Text style={styles.balanceLabel}>Mevcut Gold:</Text>
+                <Text style={styles.balanceLabel}>Mevcut Jeton:</Text>
                 <Text
                   style={[
                     styles.balanceValue,
@@ -265,22 +265,22 @@ export const BoostModal: React.FC<BoostModalProps> = ({
                   <TouchableOpacity
                     style={[styles.activateButton, styles.activateButtonDisabled]}
                     disabled
-                    accessibilityLabel="Yetersiz Gold"
+                    accessibilityLabel="Yetersiz Jeton"
                     testID="boost-disabled-btn"
                   >
                     <Text style={styles.activateButtonTextDisabled}>
-                      Yetersiz Gold
+                      Yetersiz Jeton
                     </Text>
                   </TouchableOpacity>
                   {onBuyGold && (
                     <TouchableOpacity
                       onPress={onBuyGold}
                       activeOpacity={0.7}
-                      accessibilityLabel="Gold satın al"
+                      accessibilityLabel="Jeton satın al"
                       accessibilityRole="link"
                       testID="boost-buy-gold-btn"
                     >
-                      <Text style={styles.buyGoldText}>Gold Satın Al</Text>
+                      <Text style={styles.buyGoldText}>Jeton Satın Al</Text>
                     </TouchableOpacity>
                   )}
                 </View>

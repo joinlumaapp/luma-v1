@@ -176,23 +176,48 @@ const errorStyles = StyleSheet.create({
 });
 
 // ─── Global Status Bar ───────────────────────────────────────────────
-// White text/icons on solid black background — consistent across all screens.
-// Re-applies on mount and whenever the app returns to foreground to
-// counteract any overrides from navigation transitions or third-party libs.
+// White text/icons on solid dark background (#08080F) — consistent across
+// all screens. This color matches the app background used in all navigators,
+// the tab bar, and every modal/overlay in the app.
+//
+// WHY THIS WORKS (and previous attempts did not):
+// 1. react-native-screens' native stack navigator applies its own
+//    statusBarBackgroundColor on every screen transition, overriding both
+//    the <StatusBar> component and the imperative StatusBar.set*() API.
+//    Previous fixes used #000000 while navigators used #08080F, creating
+//    a constant race condition the navigators always won.
+// 2. We now use #08080F everywhere (same as navigators), so even if a
+//    navigator re-applies the color after a transition, it is the same
+//    value — no visible flash or mismatch.
+// 3. StatusBar.pushStackEntry gives this component guaranteed precedence
+//    in the React Native status bar stack.
+// 4. A 500ms interval acts as a safety net against third-party libraries
+//    or modals that may reset the bar style.
+// 5. AppState listener re-applies when returning from background.
+
+const STATUS_BAR_COLOR = '#08080F';
+
 function ThemedStatusBar(): React.JSX.Element {
   useEffect(() => {
     const applyStatusBar = (): void => {
       RNStatusBar.setBarStyle('light-content', true);
-      RNStatusBar.setBackgroundColor('#000000', true);
+      RNStatusBar.setBackgroundColor(STATUS_BAR_COLOR, true);
       RNStatusBar.setTranslucent(false);
     };
 
-    // Apply immediately
+    // Push a stack entry for guaranteed precedence over other StatusBar users
+    const stackEntry = RNStatusBar.pushStackEntry({
+      barStyle: 'light-content',
+      backgroundColor: STATUS_BAR_COLOR,
+      translucent: false,
+    });
+
+    // Apply immediately via imperative API as well
     applyStatusBar();
 
-    // Re-apply on interval to counteract navigation transitions, modal
+    // Re-apply every 500ms to counteract navigation transitions, modal
     // opens/closes, and third-party library overrides that reset the bar.
-    const interval = setInterval(applyStatusBar, 1000);
+    const interval = setInterval(applyStatusBar, 500);
 
     // Also re-apply when app comes to foreground
     const subscription = AppState.addEventListener('change', (state: AppStateStatus) => {
@@ -202,6 +227,7 @@ function ThemedStatusBar(): React.JSX.Element {
     });
 
     return () => {
+      RNStatusBar.popStackEntry(stackEntry);
       clearInterval(interval);
       subscription.remove();
     };
@@ -210,7 +236,7 @@ function ThemedStatusBar(): React.JSX.Element {
   return (
     <RNStatusBar
       barStyle="light-content"
-      backgroundColor="#000000"
+      backgroundColor={STATUS_BAR_COLOR}
       translucent={false}
     />
   );

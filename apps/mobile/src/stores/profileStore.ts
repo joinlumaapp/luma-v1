@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { profileService } from '../services/profileService';
-import type { ProfileResponse, NestedProfileResponse, ProfileFields } from '../services/profileService';
+import type { ProfileResponse, NestedProfileResponse, FlatProfileResponse, ProfileFields } from '../services/profileService';
 import { PROFILE_CONFIG } from '../constants/config';
 import { parseApiError } from '../services/api';
 import { devMockOrThrow } from '../utils/mockGuard';
@@ -159,13 +159,16 @@ const migrateInterestTags = (tags: string[]): string[] =>
   tags.map((tag) => LEGACY_TAG_MIGRATION[tag] ?? tag);
 
 /**
- * Type guard: returns true when the backend response uses the nested format
- * (GET /profiles/me returns { userId, profile: {...}, photos, profileCompletion }).
+ * Type guard: returns true when the backend response uses the nested envelope format.
+ * GET /profiles/me returns { userId, profile: {...} | null, photos, profileCompletion }.
+ *
+ * NOTE: `profile` can be null when the user exists (SMS-verified) but has not yet
+ * created their UserProfile record during onboarding. We detect the nested format
+ * by checking for `userId` and `profileCompletion` keys — NOT by checking whether
+ * `profile` is non-null.
  */
 const isNestedResponse = (data: ProfileResponse): data is NestedProfileResponse =>
-  typeof (data as NestedProfileResponse).profile === 'object' &&
-  (data as NestedProfileResponse).profile !== null &&
-  'userId' in data;
+  'userId' in data && 'profileCompletion' in data;
 
 /**
  * Extract photo array from either response shape.
@@ -181,10 +184,17 @@ const extractPhotos = (data: ProfileResponse): Array<{ id: string; url: string; 
  * Transform backend ProfileResponse (nested OR flat) to store ProfileData.
  * The nested shape comes from GET /profiles/me; the flat shape comes from
  * PATCH /profiles (updateProfile).
+ *
+ * When the nested response has profile: null (user has no UserProfile record yet),
+ * all profile fields fall back to their defaults via null-coalescing.
  */
 const mapResponseToProfile = (data: ProfileResponse): ProfileData => {
-  // Resolve the profile fields object — nested responses wrap them in `data.profile`
-  const fields: ProfileFields = isNestedResponse(data) ? data.profile : data;
+  // Resolve the profile fields object — nested responses wrap them in `data.profile`.
+  // When profile is null (no UserProfile record), use an empty object so every field
+  // falls through to its ?? default below.
+  const fields: Partial<ProfileFields> = isNestedResponse(data)
+    ? (data.profile ?? {})
+    : data;
 
   const photos = extractPhotos(data);
   const videoData = fields.profileVideo ?? null;
@@ -284,6 +294,18 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const data = await profileService.getProfile();
+
+      if (__DEV__) {
+        const nested = isNestedResponse(data);
+        const profileObj = nested ? (data as NestedProfileResponse).profile : null;
+        console.log('[ProfileStore] fetchProfile response:', {
+          isNested: nested,
+          hasProfile: profileObj !== null && profileObj !== undefined,
+          firstName: nested ? profileObj?.firstName : (data as FlatProfileResponse).firstName,
+          photoCount: (nested ? (data as NestedProfileResponse).photos : (data as FlatProfileResponse).photos)?.length ?? 0,
+        });
+      }
+
       const profile = mapResponseToProfile(data);
       const photos = extractPhotos(data);
       const photoIds = photos.map((p) => p.id);

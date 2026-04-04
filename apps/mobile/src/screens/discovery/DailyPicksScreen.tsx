@@ -197,13 +197,13 @@ const PickCard = memo<PickCardProps>(({ card, index, isCardBlurred, onCardPress,
         onPressOut={handlePressOut}
         accessibilityLabel={
           isCardBlurred
-            ? 'Profili görmek için Gold pakete geçin'
+            ? 'Profili görmek için Premium pakete geçin'
             : `${card.firstName}, ${card.age} yaşında, ${card.city}, yüzde ${card.compatibilityPercent} uyum`
         }
         accessibilityRole="button"
         accessibilityHint={
           isCardBlurred
-            ? 'Gold paketine yükseltmek için dokunun'
+            ? 'Premium paketine yükseltmek için dokunun'
             : 'Profil önizlemesini görmek için dokunun'
         }
       >
@@ -390,18 +390,18 @@ export const DailyPicksScreen: React.FC = () => {
         <Pressable
           onPress={handleUpgradePress}
           style={styles.upgradeFooter}
-          accessibilityLabel="Gold ile hepsini gör"
+          accessibilityLabel="Premium ile hepsini gör"
           accessibilityRole="button"
           accessibilityHint="Tüm günlük seçkileri açmak için dokunun"
         >
           <View style={styles.upgradeFooterContent}>
             <Text style={styles.upgradeFooterIcon}>{'\u2B50'}</Text>
-            <Text style={styles.upgradeFooterTitle}>Gold ile hepsini gör</Text>
+            <Text style={styles.upgradeFooterTitle}>Premium ile hepsini gör</Text>
             <Text style={styles.upgradeFooterSubtitle}>
               Günde 10 özenle seçilmiş profili keşfet
             </Text>
             <View style={styles.upgradeFooterButton}>
-              <Text style={styles.upgradeFooterButtonText}>Gold&apos;a Geç</Text>
+              <Text style={styles.upgradeFooterButtonText}>Premium&apos;a Geç</Text>
             </View>
           </View>
         </Pressable>

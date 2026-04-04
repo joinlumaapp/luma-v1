@@ -582,7 +582,7 @@ export const ProfileScreen: React.FC = () => {
         <View style={styles.actionButtonFlex}>
           <GoldShimmerButton
             onPress={() => navigation.navigate('MembershipPlans')}
-            label={packageTier === 'FREE' ? "Premium'a Geç" : packageTier === 'RESERVED' ? 'Supreme' : packageTier === 'PRO' ? 'Pro Üye' : 'Gold Üye'}
+            label={packageTier === 'FREE' ? "Premium'a Geç" : packageTier === 'RESERVED' ? 'Supreme' : packageTier === 'PRO' ? 'Pro Üye' : 'Premium Üye'}
             icon={packageTier === 'RESERVED' ? 'diamond' : packageTier === 'FREE' ? 'rocket' : 'star'}
           />
         </View>
@@ -665,13 +665,12 @@ export const ProfileScreen: React.FC = () => {
             style={styles.weeklyViewsRow}
             activeOpacity={0.7}
             onPress={() => navigation.navigate('MembershipPlans')}
-            accessibilityLabel="Gold ile profil görüntüleyenleri gör"
+            accessibilityLabel="Premium ile profil görüntüleyenleri gör"
             accessibilityRole="button"
           >
-            <Ionicons name="lock-closed" size={14} color={palette.gold[500]} />
             <Text style={styles.weeklyViewsText}>
               <Text style={styles.weeklyViewsBold}>{weeklyViewCount} kişi</Text> profilini gördü —{' '}
-              <Text style={styles.weeklyViewsGoldCta}>Gold ile öğren</Text>
+              <Text style={styles.weeklyViewsGoldCta}>Premium ile öğren</Text>
             </Text>
           </TouchableOpacity>
         ) : (

@@ -39,6 +39,7 @@ import {
   type FeedPostType,
 } from '../../services/socialFeedService';
 import { photoService } from '../../services/photoService';
+import { videoService } from '../../services/videoService';
 import { FeedCard } from '../../components/feed/FeedCard';
 // CommentSheet removed — comment system removed from feed
 // MatchPromptModal removed — actions moved to profile screen
@@ -858,12 +859,18 @@ export const SocialFeedScreen: React.FC = () => {
   }, [checkDailyLimit]);
 
   const handleCreatePost = useCallback(
-    (content: string, postType: FeedPostType, photoUrls: string[], videoUrl: string | null) => {
+    async (content: string, postType: FeedPostType, photoUrls: string[], videoUrl: string | null) => {
+      // Generate thumbnail for video posts so the grid view shows a preview
+      let thumbnailUrl: string | null = null;
+      if (videoUrl) {
+        thumbnailUrl = await videoService.generateThumbnail(videoUrl);
+      }
       createPost({
         content,
         postType,
         photoUrls,
         videoUrl,
+        thumbnailUrl,
       });
       incrementDailyPost();
       setShowCreateModal(false);

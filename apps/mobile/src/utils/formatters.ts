@@ -155,7 +155,7 @@ export const formatActivityStatus = (
  * Format gold amount with Turkish locale
  */
 export const formatGold = (amount: number): string => {
-  return `${amount.toLocaleString('tr-TR')} Gold`;
+  return `${amount.toLocaleString('tr-TR')} Jeton`;
 };
 
 /**
@@ -333,9 +333,9 @@ const INTENTION_TAG_LABELS: Record<string, string> = {
 
 const PACKAGE_TIER_LABELS: Record<string, string> = {
   FREE: 'Ücretsiz',
-  GOLD: 'Gold',
+  GOLD: 'Premium',
   PRO: 'Pro',
-  RESERVED: 'Reserved',
+  RESERVED: 'Supreme',
 };
 
 /** Translate gender enum to Turkish display label */

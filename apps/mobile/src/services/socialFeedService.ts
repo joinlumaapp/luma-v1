@@ -57,6 +57,8 @@ export interface FeedPost {
   content: string;
   photoUrls: string[];
   videoUrl: string | null;
+  /** Server-provided thumbnail for video posts (may be absent from older API responses) */
+  thumbnailUrl?: string | null;
   likeCount: number;
   isLiked: boolean;
   createdAt: string;
@@ -67,6 +69,7 @@ export interface CreatePostRequest {
   postType: FeedPostType;
   photoUrls: string[];
   videoUrl?: string | null;
+  thumbnailUrl?: string | null;
 }
 
 export interface FeedResponse {
@@ -137,6 +140,7 @@ const MOCK_POSTS: FeedPost[] = [
     content: 'Bugün sahilde yürüyüş yaptım ve kendi kendime düşündüm: hayatta en çok neye değer veriyorum? Cevap hep aynı: samimi insanlar.',
     photoUrls: [],
     videoUrl: null,
+    thumbnailUrl: null,
     likeCount: 42,
     isLiked: false,
     createdAt: minutesAgo(12),
@@ -156,6 +160,7 @@ const MOCK_POSTS: FeedPost[] = [
     content: 'İlk buluşmada karşı tarafta en çok neye dikkat edersiniz? Ben göz teması ve dinleme becerisine bakıyorum.',
     photoUrls: [],
     videoUrl: null,
+    thumbnailUrl: null,
     likeCount: 67,
     isLiked: true,
     createdAt: minutesAgo(35),
@@ -175,6 +180,7 @@ const MOCK_POSTS: FeedPost[] = [
     content: 'Kapadokya\'da gün doğumu... Balon turu hayatımın en güzel deneyimiydi. Yanınızda doğru insanla her yer cennet.',
     photoUrls: ['https://picsum.photos/seed/cappadocia/600/400'],
     videoUrl: null,
+    thumbnailUrl: null,
     likeCount: 128,
     isLiked: false,
     createdAt: hoursAgo(1),
@@ -194,6 +200,7 @@ const MOCK_POSTS: FeedPost[] = [
     content: 'Yağmurlu bir akşamda Fazıl Say dinlemek... Ruhumu iyileştiren tek şey bu. Müzik seven biri varsa yazışalım!',
     photoUrls: [],
     videoUrl: null,
+    thumbnailUrl: null,
     likeCount: 53,
     isLiked: false,
     createdAt: hoursAgo(2),
@@ -276,6 +283,7 @@ export const socialFeedService = {
         content: data.content,
         photoUrls: data.photoUrls,
         videoUrl: data.videoUrl ?? null,
+        thumbnailUrl: data.thumbnailUrl ?? null,
         likeCount: 0,
         isLiked: false,
         createdAt: new Date().toISOString(),

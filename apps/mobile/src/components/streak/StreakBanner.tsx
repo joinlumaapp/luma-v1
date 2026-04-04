@@ -115,7 +115,7 @@ export const StreakBanner: React.FC<StreakBannerProps> = ({
         style={styles.touchArea}
         onPress={handleDismiss}
         activeOpacity={0.9}
-        accessibilityLabel={`${streak} gün seri, +${goldAwarded} Gold`}
+        accessibilityLabel={`${streak} gün seri, +${goldAwarded} Jeton`}
         accessibilityRole="alert"
         testID="streak-banner"
       >
@@ -144,7 +144,7 @@ export const StreakBanner: React.FC<StreakBannerProps> = ({
             },
           ]}
         >
-          <Text style={styles.goldText}>+{goldAwarded} Gold</Text>
+          <Text style={styles.goldText}>+{goldAwarded} Jeton</Text>
         </Animated.View>
       </TouchableOpacity>
     </Animated.View>

@@ -295,8 +295,8 @@ export const PACKAGE_TIERS = [
     id: 'GOLD',
     name: 'Premium',
     tagline: '\uD83D\uDD25 3x daha fazla eşleşme',
-    price: 349,
-    priceDisplay: '349₺',
+    price: 499,
+    priceDisplay: '499₺',
     badge: 'En Popüler',
     features: [
       '\u2728 Sınırsız beğeni',
@@ -339,8 +339,8 @@ export const PACKAGE_TIERS = [
     id: 'RESERVED',
     name: 'Sınırsız',
     tagline: '\uD83D\uDC51 Elite deneyim',
-    price: 1299,
-    priceDisplay: '1.299₺',
+    price: 1199,
+    priceDisplay: '1.199₺',
     badge: 'Elite',
     features: [
       '\uD83D\uDC51 Supreme\'daki her şey',

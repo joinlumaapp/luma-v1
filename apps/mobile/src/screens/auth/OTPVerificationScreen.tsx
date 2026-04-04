@@ -133,7 +133,7 @@ export const OTPVerificationScreen: React.FC = () => {
         useCoinStore.getState().claimWelcomeBonus();
         Alert.alert(
           'Hoş geldin!',
-          '48 saatlik Premium deneyimin başladı! Gold özelliklerinin keyfini çıkar.\n\nHoş geldin hediyesi: 100 Jeton!',
+          '48 saatlik Premium deneyimin başladı! Premium özelliklerinin keyfini çıkar.\n\nHoş geldin hediyesi: 100 Jeton!',
         );
         navigation.navigate('EmailEntry');
         return;
