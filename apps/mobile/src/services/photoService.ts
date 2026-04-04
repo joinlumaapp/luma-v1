@@ -244,7 +244,7 @@ export const photoService = {
       const mediaType = asset.type === 'video' ? 'video' : 'image';
       return { uri: asset.uri, type: mediaType };
     } catch {
-      Alert.alert('Hata', 'Fotograf cekilirken bir sorun olustu.', [{ text: 'Tamam' }]);
+      Alert.alert('Hata', 'Fotoğraf çekilirken bir sorun oluştu.', [{ text: 'Tamam' }]);
       return null;
     }
   },

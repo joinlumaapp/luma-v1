@@ -79,11 +79,11 @@ const calculateAge = (birthDate: string): number => {
 
 // ── Intention tag options (Bumpy-inspired) ────────────────────────────────
 const INTENTION_OPTIONS: Array<{ value: string; label: string; emoji: string; description: string }> = [
-  { value: 'MARRIAGE', label: 'Evlenmek', emoji: '💍', description: 'Evlenecek birini bulmak ve ortak bir gelecek insa etmek' },
-  { value: 'SERIOUS_RELATIONSHIP', label: 'Bir iliski bulmak', emoji: '💖', description: 'Uzun bir iliski yasamak icin ruh esini bulmak' },
-  { value: 'FRIENDSHIP', label: 'Sohbet etmek ve arkadaslarla tanismak', emoji: '💬', description: 'Farkli insanlarla baski altinda olmadan konusmak' },
-  { value: 'LEARN_CULTURES', label: 'Diger kulturleri ogrenmek', emoji: '🎓', description: 'Yeni dil pratigi yapmak ve yeni bir seyler ogrenmek' },
-  { value: 'TRAVEL', label: 'Dunyayi gezmek', emoji: '✈️', description: 'Seyahat arkadaslariyla tanismak ve deneyimlerini paylasmak' },
+  { value: 'MARRIAGE', label: 'Evlenmek', emoji: '💍', description: 'Evlenecek birini bulmak ve ortak bir gelecek inşa etmek' },
+  { value: 'SERIOUS_RELATIONSHIP', label: 'Bir ilişki bulmak', emoji: '💖', description: 'Uzun bir ilişki yaşamak için ruh eşini bulmak' },
+  { value: 'FRIENDSHIP', label: 'Sohbet etmek ve arkadaşlarla tanışmak', emoji: '💬', description: 'Farklı insanlarla baskı altında olmadan konuşmak' },
+  { value: 'LEARN_CULTURES', label: 'Diğer kültürleri öğrenmek', emoji: '🎓', description: 'Yeni dil pratiği yapmak ve yeni bir şeyler öğrenmek' },
+  { value: 'TRAVEL', label: 'Dünyayı gezmek', emoji: '✈️', description: 'Seyahat arkadaşlarıyla tanışmak ve deneyimlerini paylaşmak' },
 ];
 
 // ── Life values options (inline to avoid import issues) ───────────────────
@@ -98,15 +98,15 @@ for (const cat of INTEREST_CATEGORIES) {
 // Legacy English IDs → Turkish labels with emoji
 const LEGACY_INTEREST_MAP: Record<string, { emoji: string; display: string }> = {
   travel: { emoji: '✈️', display: 'Seyahat' },
-  music: { emoji: '🎵', display: 'Muzik' },
+  music: { emoji: '🎵', display: 'Müzik' },
   sports: { emoji: '🏃', display: 'Spor' },
   cooking: { emoji: '🍳', display: 'Yemek' },
   art: { emoji: '🎨', display: 'Sanat' },
   technology: { emoji: '💻', display: 'Teknoloji' },
-  nature: { emoji: '🌿', display: 'Doga' },
+  nature: { emoji: '🌿', display: 'Doğa' },
   books: { emoji: '📚', display: 'Kitap' },
   movies: { emoji: '🎬', display: 'Film' },
-  photography: { emoji: '📷', display: 'Fotografcilik' },
+  photography: { emoji: '📷', display: 'Fotoğrafçılık' },
   dance: { emoji: '💃', display: 'Dans' },
   yoga: { emoji: '🧘', display: 'Yoga' },
   gaming: { emoji: '🎮', display: 'Oyun' },
@@ -123,14 +123,14 @@ const getInterestDisplay = (tag: string): { emoji: string; display: string } =>
   interestLookup.get(tag) ?? { emoji: '', display: tag };
 
 const VALUES_OPTIONS: string[] = [
-  'Aile ve Cocuklar',
-  'Bilim ve Arastirma',
-  'Dunyayi Iyilestirme',
-  'Eglence ve Dinlence',
-  'Guzellik ve Sanat',
+  'Aile ve Çocuklar',
+  'Bilim ve Araştırma',
+  'Dünyayı İyileştirme',
+  'Eğlence ve Dinlence',
+  'Güzellik ve Sanat',
   'Kariyer ve Para',
-  'Kendini Gerceklestirme',
-  'Sohret ve Etkileme',
+  'Kendini Gerçekleştirme',
+  'Şöhret ve Etkileme',
 ];
 
 // ── Height values ──────────────────────────────────────────────────────────
@@ -420,7 +420,7 @@ export const EditProfileScreen: React.FC = () => {
             if (profile.photos.length <= 2) {
               Alert.alert(
                 'Silinemez',
-                'En az 2 fotograf gereklidir. Silmek için once yeni fotograf ekleyin.',
+                'En az 2 fotoğraf gereklidir. Silmek için önce yeni fotoğraf ekleyin.',
               );
               return;
             }
@@ -655,7 +655,7 @@ export const EditProfileScreen: React.FC = () => {
           >
             <Ionicons name="chevron-back" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Profili Duzenle</Text>
+          <Text style={styles.headerTitle}>Profili Düzenle</Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -691,14 +691,14 @@ export const EditProfileScreen: React.FC = () => {
                     fontFamily: 'Poppins_700Bold',
                     fontWeight: '700',
                     color: colors.text,
-                  }}>Uyum Sorularini Tamamla</Text>
+                  }}>Uyum Sorularını Tamamla</Text>
                   <Text style={{
                     fontSize: 12,
                     fontFamily: 'Poppins_400Regular',
                     fontWeight: '400',
                     color: colors.textSecondary,
                     marginTop: 2,
-                  }}>Sorulari cevapla, %92 daha fazla eslesme sans yakala!</Text>
+                  }}>Soruları cevapla, %92 daha fazla eşleşme şansı yakala!</Text>
                 </View>
               </View>
 
@@ -747,8 +747,8 @@ export const EditProfileScreen: React.FC = () => {
             </View>
           )}
 
-          {/* ── Kisilik Testi ──────────────────────────────────────────── */}
-          <SectionHeader title="Kisilik Tipin" description="Eglenceli bir quiz ile kisiligini kesfet" />
+          {/* ── Kişilik Testi ──────────────────────────────────────────── */}
+          <SectionHeader title="Kişilik Tipin" description="Eğlenceli bir quiz ile kişiliğini keşfet" />
           <TouchableOpacity
             style={{
               backgroundColor: colors.surface,
@@ -783,7 +783,7 @@ export const EditProfileScreen: React.FC = () => {
               }}>
                 {profile.personalityType
                   ? `${profile.personalityType}`
-                  : 'Kisilik Testini Coz'}
+                  : 'Kişilik Testini Çöz'}
               </Text>
               <Text style={{
                 fontSize: 12,
@@ -792,8 +792,8 @@ export const EditProfileScreen: React.FC = () => {
                 marginTop: 2,
               }}>
                 {profile.personalityType
-                  ? 'Tekrar coz veya sonucunu guncelle'
-                  : '5 eglenceli soru, 1 dakikada biter'}
+                  ? 'Tekrar çöz veya sonucunu güncelle'
+                  : '5 eğlenceli soru, 1 dakikada biter'}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
@@ -812,7 +812,7 @@ export const EditProfileScreen: React.FC = () => {
               <View style={styles.videoUploadingContainer}>
                 <ActivityIndicator size="small" color={palette.gold[500]} />
                 <Text style={styles.videoUploadingText}>
-                  Yukleniyor... %{videoUploadProgress}
+                  Yükleniyor... %{videoUploadProgress}
                 </Text>
                 <View style={styles.videoProgressBarBg}>
                   <View
@@ -868,7 +868,7 @@ export const EditProfileScreen: React.FC = () => {
                     activeOpacity={0.7}
                   >
                     <Ionicons name="swap-horizontal" size={16} color={palette.gold[600]} />
-                    <Text style={styles.videoActionText}>Degistir</Text>
+                    <Text style={styles.videoActionText}>Değiştir</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.videoActionButton, styles.videoActionDelete]}
@@ -900,7 +900,7 @@ export const EditProfileScreen: React.FC = () => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Fotoğraflar</Text>
             <Text style={styles.sectionHint}>
-              Ilk fotograf profil fotografin olacak. En az 2, en fazla 6 fotograf ekle.
+              İlk fotoğraf profil fotoğrafın olacak. En az 2, en fazla 6 fotoğraf ekle.
             </Text>
             <View style={styles.photoGrid}>
               {photoSlots.map((uri, index) => {
@@ -949,7 +949,7 @@ export const EditProfileScreen: React.FC = () => {
                     ) : isUploading ? (
                       <View style={styles.photoEmptyContent}>
                         <ActivityIndicator size="small" color={palette.gold[500]} />
-                        <Text style={styles.photoUploadingText}>Yukleniyor...</Text>
+                        <Text style={styles.photoUploadingText}>Yükleniyor...</Text>
                       </View>
                     ) : (
                       <View style={styles.photoEmptyContent}>
@@ -1295,26 +1295,26 @@ export const EditProfileScreen: React.FC = () => {
             })}
           </View>
 
-          {/* ─── Section 3: Hakkimda Daha Fazlasi ─── */}
+          {/* ─── Section 3: Hakkımda Daha Fazlası ─── */}
           <SectionHeader
-            title="Hakkimda Daha Fazlasi"
-            description="Uygun kisileri bulmak icin kendiniz hakkinda daha fazla bilgi belirtin"
+            title="Hakkımda Daha Fazlası"
+            description="Uygun kişileri bulmak için kendiniz hakkında daha fazla bilgi belirtin"
           />
           <FieldRow icon="⚖️" label="Kilo" value={weight ? `${weight} kg` : ''} onPress={() => {}} />
-          <FieldRow icon="⚥" label="Cinsel Yonelim" value={sexualOrientation || ''} onPress={() => openPicker('Cinsel Yonelim', SEXUAL_ORIENTATION_OPTIONS, 'sexualOrientation')} />
-          <FieldRow icon="♍" label="Burc" value={zodiacSign || ''} onPress={() => openPicker('Burc', ZODIAC_SIGNS, 'zodiacSign')} />
+          <FieldRow icon="⚥" label="Cinsel Yönelim" value={sexualOrientation || ''} onPress={() => openPicker('Cinsel Yönelim', SEXUAL_ORIENTATION_OPTIONS, 'sexualOrientation')} />
+          <FieldRow icon="♍" label="Burç" value={zodiacSign || ''} onPress={() => openPicker('Burç', ZODIAC_SIGNS, 'zodiacSign')} />
           <FieldRow icon="🏋️" label="Egzersiz" value={exercise || ''} onPress={() => openPicker('Egzersiz', CONFIG_EXERCISE_OPTIONS, 'exercise')} />
-          <FieldRow icon="🎓" label="Egitim Seviyesi" value={educationLevel || ''} onPress={() => openPicker('Egitim Seviyesi', EDUCATION_LEVELS, 'educationLevel')} />
+          <FieldRow icon="🎓" label="Eğitim Seviyesi" value={educationLevel || ''} onPress={() => openPicker('Eğitim Seviyesi', EDUCATION_LEVELS, 'educationLevel')} />
           <FieldRow icon="💕" label="Medeni Durum" value={maritalStatus || ''} onPress={() => openPicker('Medeni Durum', MARITAL_STATUS_OPTIONS, 'maritalStatus')} />
-          <FieldRow icon="👶" label="Cocuklar" value={children || ''} onPress={() => openPicker('Cocuklar', CONFIG_CHILDREN_OPTIONS, 'children')} />
-          <FieldRow icon="🍷" label="Icki" value={alcohol || ''} onPress={() => openPicker('Icki', ALCOHOL_OPTIONS, 'alcohol')} />
+          <FieldRow icon="👶" label="Çocuklar" value={children || ''} onPress={() => openPicker('Çocuklar', CONFIG_CHILDREN_OPTIONS, 'children')} />
+          <FieldRow icon="🍷" label="İçki" value={alcohol || ''} onPress={() => openPicker('İçki', ALCOHOL_OPTIONS, 'alcohol')} />
           <FieldRow icon="🚬" label="Sigara" value={smoking || ''} onPress={() => openPicker('Sigara', CONFIG_SMOKING_OPTIONS, 'smoking')} />
           <FieldRow icon="🐾" label="Evcil Hayvanlar" value={pets || ''} onPress={() => openPicker('Evcil Hayvanlar', PETS_OPTIONS, 'pets')} />
           <FieldRow icon="🕌" label="Din" value={religion || ''} onPress={() => openPicker('Din', RELIGION_OPTIONS, 'religion')} />
-          <FieldRow icon="🌐" label="Degerler" value={lifeValues || ''} onPress={() => openPicker('Senin icin hayattaki en onemli sey nedir?', VALUES_OPTIONS, 'lifeValues')} />
+          <FieldRow icon="🌐" label="Değerler" value={lifeValues || ''} onPress={() => openPicker('Senin için hayattaki en önemli şey nedir?', VALUES_OPTIONS, 'lifeValues')} />
 
-          {/* ── Ilgi Alanlari ─────────────────────────────────────────── */}
-          <SectionHeader title="Ilgi Alanlari" description="Baskalarina neyle ilgilendigini soyle" />
+          {/* ── İlgi Alanları ─────────────────────────────────────────── */}
+          <SectionHeader title="İlgi Alanları" description="Başkalarına neyle ilgilendiğini söyle" />
           <TouchableOpacity
             style={{
               backgroundColor: colors.surface,
@@ -1344,13 +1344,13 @@ export const EditProfileScreen: React.FC = () => {
               </View>
             ) : (
               <Text style={{ fontSize: 14, color: colors.textTertiary, fontFamily: 'Poppins_400Regular' }}>
-                Ilgi alanlarini sec (en fazla 15)
+                İlgi alanlarını seç (en fazla 15)
               </Text>
             )}
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 12 }}>
               <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
               <Text style={{ fontSize: 14, color: colors.primary, fontFamily: 'Poppins_600SemiBold', fontWeight: '600', marginLeft: 6 }}>
-                {profile.interestTags.length > 0 ? 'Duzenle' : 'Sec'}
+                {profile.interestTags.length > 0 ? 'Düzenle' : 'Seç'}
               </Text>
             </View>
           </TouchableOpacity>
@@ -1411,22 +1411,22 @@ export const EditProfileScreen: React.FC = () => {
           </View>
 
 
-          {/* ── Ses Tanitimi ──────────────────────────────────────────── */}
+          {/* ── Ses Tanıtımı ──────────────────────────────────────────── */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Ses Tanitimi</Text>
+            <Text style={styles.sectionTitle}>Ses Tanıtımı</Text>
             <Text style={styles.sectionHint}>
-              Sesini kaydet ve profilini daha kisisel hale getir.
+              Sesini kaydet ve profilini daha kişisel hale getir.
             </Text>
             <TouchableOpacity
               style={styles.voiceButton}
               onPress={() => {
                 Alert.alert(
-                  'Yakin Zamanda',
-                  'Ses tanitimi özelligi yakın zamanda aktif olacak.',
+                  'Yakın Zamanda',
+                  'Ses tanıtımı özelliği yakın zamanda aktif olacak.',
                 );
               }}
               activeOpacity={0.7}
-              accessibilityLabel="Ses tanitimi kaydet"
+              accessibilityLabel="Ses tanıtımı kaydet"
               accessibilityRole="button"
             >
               <View style={styles.voiceIconCircle}>
@@ -1451,7 +1451,7 @@ export const EditProfileScreen: React.FC = () => {
               styles.saveButtonOuter,
               (!hasChanges && !isSaving) && styles.saveButtonDisabled,
             ]}
-            accessibilityLabel="Degisiklikleri kaydet"
+            accessibilityLabel="Değişiklikleri kaydet"
             accessibilityRole="button"
           >
             <LinearGradient

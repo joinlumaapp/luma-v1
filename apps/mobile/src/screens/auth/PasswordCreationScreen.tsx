@@ -50,10 +50,12 @@ export const PasswordCreationScreen: React.FC = () => {
 
   const handleContinue = useCallback(() => {
     if (!isValid) return;
-    const { setPassword: storePassword } = useAuthStore.getState();
+    const { setPassword: storePassword, setStartedOnboarding } = useAuthStore.getState();
     storePassword(password);
-    navigation.navigate('SelfieVerification');
-  }, [password, isValid, navigation]);
+    // Transition from Auth flow to Onboarding flow (Name -> ... -> Photos -> Selfie).
+    // Setting hasStartedOnboarding causes RootNavigator to switch to OnboardingNavigator.
+    setStartedOnboarding(true);
+  }, [password, isValid]);
 
   const handleBack = useCallback(() => {
     navigation.goBack();

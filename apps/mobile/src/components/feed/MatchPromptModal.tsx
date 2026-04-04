@@ -1,5 +1,5 @@
 // MatchPromptModal — triggered when user interacts with the same person 3+ times
-// "Bu kisiye ilgi duyuyor gibisin 👀 Flort baslat?"
+// "Bu kişiye ilgi duyuyor gibisin 👀 Flört başlat?"
 // Animated modal with user info, Start Flirt CTA, and dismiss
 
 import React, { useEffect, useRef } from 'react';

@@ -19,9 +19,9 @@ export interface FeedPostTypeOption {
 }
 
 export const FEED_POST_TYPES: FeedPostTypeOption[] = [
-  { type: 'photo', emoji: '\uD83D\uDCF8', label: 'Fotograf', color: '#8B5CF6' },
+  { type: 'photo', emoji: '\uD83D\uDCF8', label: 'Fotoğraf', color: '#8B5CF6' },
   { type: 'video', emoji: '\uD83C\uDFA5', label: 'Video', color: '#EC4899' },
-  { type: 'text', emoji: '\u270D\uFE0F', label: 'Yazi', color: '#10B981' },
+  { type: 'text', emoji: '\u270D\uFE0F', label: 'Yazı', color: '#10B981' },
 ];
 
 export type IntentionTag = 'SERIOUS_RELATIONSHIP' | 'EXPLORING' | 'NOT_SURE';

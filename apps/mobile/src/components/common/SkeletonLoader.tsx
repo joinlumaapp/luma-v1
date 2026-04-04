@@ -77,7 +77,7 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
         },
         style,
       ]}
-      accessibilityLabel="Yukleniyor"
+      accessibilityLabel="Yükleniyor"
       accessibilityRole="progressbar"
     />
   );

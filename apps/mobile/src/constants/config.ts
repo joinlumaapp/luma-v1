@@ -84,15 +84,15 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
     title: 'Seyahatler',
     items: [
       { emoji: '🌊', label: 'Denizler' },
-      { emoji: '⛰', label: 'Daglar' },
-      { emoji: '🌳', label: 'Doga' },
+      { emoji: '⛰', label: 'Dağlar' },
+      { emoji: '🌳', label: 'Doğa' },
       { emoji: '🗼', label: 'Gezilecek yerler' },
-      { emoji: '🏙', label: 'Sehirler' },
-      { emoji: '🧭', label: 'Yuruyus' },
+      { emoji: '🏙', label: 'Şehirler' },
+      { emoji: '🧭', label: 'Yürüyüş' },
     ],
   },
   {
-    title: 'Yiyecek ve Icecek',
+    title: 'Yiyecek ve İçecek',
     items: [
       { emoji: '☕', label: 'Kahve' },
       { emoji: '🫖', label: 'Cay' },
@@ -117,16 +117,16 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
       { emoji: '📝', label: 'Nesir' },
       { emoji: '💄', label: 'Makyaj' },
       { emoji: '✏', label: 'Blog yazma' },
-      { emoji: '📱', label: 'Tik-Tok Cekme' },
-      { emoji: '🎨', label: 'Cizim' },
-      { emoji: '🎵', label: 'Muzik' },
-      { emoji: '📸', label: 'Fotografcilik' },
-      { emoji: '🎬', label: 'Tasarim' },
-      { emoji: '💉', label: 'Dovmeler' },
+      { emoji: '📱', label: 'Tik-Tok Çekme' },
+      { emoji: '🎨', label: 'Çizim' },
+      { emoji: '🎵', label: 'Müzik' },
+      { emoji: '📸', label: 'Fotoğrafçılık' },
+      { emoji: '🎬', label: 'Tasarım' },
+      { emoji: '💉', label: 'Dövmeler' },
       { emoji: '📚', label: 'Okuma' },
       { emoji: '📺', label: 'TV' },
       { emoji: '🎥', label: 'YouTube' },
-      { emoji: '🍳', label: 'Yemek pisirme' },
+      { emoji: '🍳', label: 'Yemek pişirme' },
       { emoji: '🌻', label: 'Bahcecilik' },
       { emoji: '🎲', label: 'Masa oyunlari' },
       { emoji: '❓', label: 'Akil oyunlari' },
@@ -172,18 +172,18 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
     ],
   },
   {
-    title: 'Muzik',
+    title: 'Müzik',
     items: [
-      { emoji: '🎵', label: 'Halk Muzigi' },
-      { emoji: '🎵', label: 'Country muzik' },
-      { emoji: '🎵', label: 'Latin Amerika muzigi' },
+      { emoji: '🎵', label: 'Halk Müziği' },
+      { emoji: '🎵', label: 'Country müzik' },
+      { emoji: '🎵', label: 'Latin Amerika müziği' },
       { emoji: '🎵', label: 'Blues' },
       { emoji: '🎵', label: 'R&B' },
       { emoji: '🎵', label: 'Caz' },
-      { emoji: '🎵', label: 'Sanson' },
+      { emoji: '🎵', label: 'Şanson' },
       { emoji: '🎵', label: 'Romantik' },
-      { emoji: '🎵', label: 'Sanat sarkisi' },
-      { emoji: '🎵', label: 'Elektronik muzik' },
+      { emoji: '🎵', label: 'Sanat şarkısı' },
+      { emoji: '🎵', label: 'Elektronik müzik' },
       { emoji: '🎵', label: 'Rock' },
       { emoji: '🎵', label: 'Hip-hop' },
       { emoji: '🎵', label: 'Reggae' },
@@ -221,18 +221,18 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
     ],
   },
   {
-    title: 'Digerleri',
+    title: 'Diğerleri',
     items: [
       { emoji: '⚡', label: 'Harry Potter' },
       { emoji: '🏋', label: 'Evde egzersiz' },
       { emoji: '📱', label: 'Instagram' },
       { emoji: '👟', label: 'Spor ayakkabi' },
-      { emoji: '🗣', label: 'Dil ogrenme' },
+      { emoji: '🗣', label: 'Dil öğrenme' },
       { emoji: '🏋‍♀️', label: 'Spor Salonu' },
       { emoji: '☕', label: 'Kahveci' },
-      { emoji: '🫖', label: 'Cayci' },
+      { emoji: '🫖', label: 'Çaycı' },
       { emoji: '🧁', label: 'Kekler' },
-      { emoji: '🏠', label: 'Serbest calisma' },
+      { emoji: '🏠', label: 'Serbest çalışma' },
       { emoji: '🆕', label: 'Yeni bir sey deneyin' },
       { emoji: '⚖', label: 'Insan haklari' },
       { emoji: '🍦', label: 'Dondurma' },
@@ -247,23 +247,23 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
       { emoji: '🌐', label: 'Iletisim kurma' },
       { emoji: '🎮', label: 'PlayStation' },
       { emoji: '🎮', label: 'XBox' },
-      { emoji: '🌧', label: 'Yagmurda yurume' },
+      { emoji: '🌧', label: 'Yağmurda yürüme' },
       { emoji: '😊', label: 'Mutluluk' },
-      { emoji: '📺', label: 'TV Programlari' },
-      { emoji: '💼', label: 'Girisimcilik' },
+      { emoji: '📺', label: 'TV Programları' },
+      { emoji: '💼', label: 'Girişimcilik' },
       { emoji: '📈', label: 'Kripto Para' },
       { emoji: '⭐', label: 'Astronomi' },
       { emoji: '🌍', label: 'Ekolojik aktivizm' },
       { emoji: '🏳‍🌈', label: 'LGBTQ+' },
       { emoji: '🐉', label: 'Ejderhalar' },
-      { emoji: '☮', label: 'Dunya barisi' },
+      { emoji: '☮', label: 'Dünya barışı' },
       { emoji: '💬', label: 'Twitter' },
       { emoji: '🖼', label: 'NFT' },
       { emoji: '🃏', label: 'Poker' },
-      { emoji: '🦄', label: 'Girisimler' },
-      { emoji: '🛋', label: 'Vakit oldurme' },
+      { emoji: '🦄', label: 'Girişimler' },
+      { emoji: '🛋', label: 'Vakit öldürme' },
       { emoji: '🏐', label: 'Plaj voleybolu' },
-      { emoji: '❄', label: 'Sogugu sevmem' },
+      { emoji: '❄', label: 'Soğuğu sevmem' },
     ],
   },
 ];
@@ -483,7 +483,7 @@ export const MONETIZATION_ENABLED = true;
 
 // Flirt request daily limits per package tier (-1 = unlimited)
 // All tiers have unlimited swipes — consistent with backend discovery service
-// and MembershipPlansScreen which shows "Sinirsiz" for all tiers.
+// and MembershipPlansScreen which shows "Sınırsız" for all tiers.
 export const FLIRT_CONFIG = {
   DAILY_LIMITS: {
     FREE: -1,
@@ -599,55 +599,55 @@ export const SUPER_COMPATIBLE_THRESHOLD = 80;
 // ── Extended Profile Field Options ────────────────────────────
 
 export const ZODIAC_SIGNS = [
-  'Koc', 'Boga', 'Ikizler', 'Yengec', 'Aslan', 'Basak',
-  'Terazi', 'Akrep', 'Yay', 'Oglak', 'Kova', 'Balik',
+  'Koç', 'Boğa', 'İkizler', 'Yengeç', 'Aslan', 'Başak',
+  'Terazi', 'Akrep', 'Yay', 'Oğlak', 'Kova', 'Balık',
 ] as const;
 
 export const EDUCATION_LEVELS = [
-  'Lise', 'On Lisans', 'Lisans', 'Yuksek Lisans', 'Doktora',
+  'Lise', 'Ön Lisans', 'Lisans', 'Yüksek Lisans', 'Doktora',
 ] as const;
 
 export const MARITAL_STATUS_OPTIONS = [
-  'Bekar', 'Bosanmis', 'Dul',
+  'Bekar', 'Boşanmış', 'Dul',
 ] as const;
 
 export const ALCOHOL_OPTIONS = [
-  'Icmem', 'Bazen', 'Sosyal', 'Duzenli',
+  'İçmem', 'Bazen', 'Sosyal', 'Düzenli',
 ] as const;
 
 export const SEXUAL_ORIENTATION_OPTIONS = [
-  'Heteroseksuel', 'Gay', 'Lezbiyen', 'Biseksuel', 'Diger',
+  'Heteroseksüel', 'Gay', 'Lezbiyen', 'Biseksüel', 'Diğer',
 ] as const;
 
 export const PETS_OPTIONS = [
-  'Kedi', 'Kopek', 'Kedi ve Kopek', 'Diger', 'Yok',
+  'Kedi', 'Köpek', 'Kedi ve Köpek', 'Diğer', 'Yok',
 ] as const;
 
 export const RELIGION_OPTIONS = [
-  'Islam', 'Hristiyan', 'Yahudi', 'Ateist', 'Agnostik', 'Diger',
+  'İslam', 'Hristiyan', 'Yahudi', 'Ateist', 'Agnostik', 'Diğer',
 ] as const;
 
 export const EXERCISE_OPTIONS = [
-  'Hic', 'Bazen', 'Sik',
+  'Hiç', 'Bazen', 'Sık',
 ] as const;
 
 export const SMOKING_OPTIONS = [
-  'Icmem', 'Bazen', 'Duzenli', 'Tolere Ederim',
+  'İçmem', 'Bazen', 'Düzenli', 'Tolere Ederim',
 ] as const;
 
 export const CHILDREN_OPTIONS = [
-  'Var', 'Yok', 'Istiyorum', 'Istemiyorum',
+  'Var', 'Yok', 'İstiyorum', 'İstemiyorum',
 ] as const;
 
 export const LIFE_VALUES_OPTIONS = [
-  'Aile ve Cocuklar',
-  'Bilim ve Arastirma',
-  'Dunyayi Iyilestirme',
-  'Eglence ve Dinlence',
-  'Guzellik ve Sanat',
+  'Aile ve Çocuklar',
+  'Bilim ve Araştırma',
+  'Dünyayı İyileştirme',
+  'Eğlence ve Dinlence',
+  'Güzellik ve Sanat',
   'Kariyer ve Para',
-  'Kendini Gerceklestirme',
-  'Sohret ve Etkileme',
+  'Kendini Gerçekleştirme',
+  'Şöhret ve Etkileme',
 ] as const;
 
 // Ad placement configuration

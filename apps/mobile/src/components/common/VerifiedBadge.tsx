@@ -49,7 +49,7 @@ export const VerifiedBadge: React.FC<VerifiedBadgeProps> = ({
           transform: [{ scale: scaleAnim }],
         },
       ]}
-      accessibilityLabel="Dogrulanmis profil"
+      accessibilityLabel="Doğrulanmış profil"
       accessibilityRole="image"
     >
       <View style={styles.innerCircle}>

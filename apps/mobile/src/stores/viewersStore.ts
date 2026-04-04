@@ -1,4 +1,4 @@
-// viewersStore — Kim Gordu (profile viewers) state management with reveal tracking
+// viewersStore — Kim Gördü (profile viewers) state management with reveal tracking
 
 import { create } from 'zustand';
 import api from '../services/api';

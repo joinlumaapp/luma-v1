@@ -152,10 +152,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Connect WebSocket
       socketService.connect(response.accessToken);
 
+      // Determine onboarded status from API response:
+      // - New user (isNew = true / no profile) => NOT onboarded, needs profile setup
+      // - Returning user (isNew = false / has profile) => already onboarded
+      const isNewUser = response.user.isNew;
+      const isOnboarded = !isNewUser;
+
+      // Persist onboarded state for returning users so session restore works
+      if (isOnboarded) {
+        await storage.setOnboarded(true);
+      }
+
       set({
         accessToken: response.accessToken,
         refreshToken: response.refreshToken,
         isAuthenticated: true,
+        isOnboarded,
         isLoading: false,
         user,
         error: null,
@@ -170,15 +182,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         id: 'dev-user-001',
         displayId: 'LM-00001',
         phone,
-        isVerified: true,
-        packageTier: 'RESERVED',
+        isVerified: false,
+        packageTier: 'FREE',
       };
       try {
         devMockOrThrow(error, mockUser, 'authStore.verifyOTP');
+        // Dev mock: treat as new user (not onboarded) so onboarding flow is testable
         set({
           accessToken: 'dev-access-token',
           refreshToken: 'dev-refresh-token',
           isAuthenticated: true,
+          isOnboarded: false,
           isLoading: false,
           user: mockUser,
           error: null,

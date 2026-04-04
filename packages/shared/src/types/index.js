@@ -25,4 +25,5 @@ __exportStar(require("./place"), exports);
 __exportStar(require("./analytics"), exports);
 __exportStar(require("./admin"), exports);
 __exportStar(require("./call-history"), exports);
+__exportStar(require("./post"), exports);
 //# sourceMappingURL=index.js.map

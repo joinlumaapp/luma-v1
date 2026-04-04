@@ -1196,9 +1196,9 @@ export const MatchesListScreen: React.FC = () => {
             <>
               {!isPremium && activeTab === 'matches' && (
                 <WeeklyInsightNudge
-                  viewCount={12}
-                  likeCount={5}
-                  missedMatches={3}
+                  viewCount={viewersCount}
+                  likeCount={likesYouCount}
+                  missedMatches={0}
                   onUpgrade={() => navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' })}
                   onDismiss={() => {}}
                 />

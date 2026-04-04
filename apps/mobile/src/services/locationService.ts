@@ -53,13 +53,13 @@ export const formatDistanceTr = (km: number | null | undefined): string | null =
     return `${km.toFixed(1)} km uzaginda`;
   }
   if (km < 50) {
-    return `${Math.round(km)} km uzaginda`;
+    return `${Math.round(km)} km uzağında`;
   }
-  // 50+ km: show "Ayni sehirde" for moderate distances, exact for very far
+  // 50+ km: show "Aynı şehirde" for moderate distances, exact for very far
   if (km < 100) {
-    return 'Ayni sehirde';
+    return 'Aynı şehirde';
   }
-  return `${Math.round(km)} km uzaginda`;
+  return `${Math.round(km)} km uzağında`;
 };
 
 export const locationService = {

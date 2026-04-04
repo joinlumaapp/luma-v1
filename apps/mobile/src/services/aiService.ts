@@ -52,26 +52,26 @@ interface ProfileContext {
 
 const MATCH_TEMPLATES = {
   highCompat: [
-    '{name} ile iletisim tarzlariniz cok benzer — birbirinizi anlamak icin fazla kelimeye ihtiyaciniz yok.',
-    '{name} ile yasam hedefleriniz ortusiyor, bu uzun vadeli uyumun gostergesi.',
-    'Degerleriniz neredeyse ayni! {name} ile guclu bir temel uzerine insa edebilirsiniz.',
-    '{name} ile duygusal zekaniz birbirine yakin — birbirinizi hissedebilirsiniz.',
+    '{name} ile iletişim tarzlarınız çok benzer — birbirinizi anlamak için fazla kelimeye ihtiyacınız yok.',
+    '{name} ile yaşam hedefleriniz örtüşüyor, bu uzun vadeli uyumun göstergesi.',
+    'Değerleriniz neredeyse aynı! {name} ile güçlü bir temel üzerine inşa edebilirsiniz.',
+    '{name} ile duygusal zekanız birbirine yakın — birbirinizi hissedebilirsiniz.',
   ],
   sharedInterests: [
-    '{interests} konusunda ortak tutkunuz var — ilk bulusma icin harika bir konu!',
-    'Ikiniz de {interests} seviyorsunuz — bu uyumun guzel bir isareti.',
+    '{interests} konusunda ortak tutkunuz var — ilk buluşma için harika bir konu!',
+    'İkiniz de {interests} seviyorsunuz — bu uyumun güzel bir işareti.',
   ],
   sameIntention: [
-    'Ikiniz de ayni niyettesiniz — bu baslangic icin onemli.',
-    'Iliskiden beklentileriniz ortusiyor, bu nadir bulunan bir uyum.',
+    'İkiniz de aynı niyettesiniz — bu başlangıç için önemli.',
+    'İlişkiden beklentileriniz örtüşüyor, bu nadir bulunan bir uyum.',
   ],
   sameCity: [
-    'Ayni sehirdesiniz — bulusma planlamak cok kolay!',
-    '{city} sizi bir araya getiriyor — belki yakinlardasinizdir.',
+    'Aynı şehirdesiniz — buluşma planlamak çok kolay!',
+    '{city} sizi bir araya getiriyor — belki yakınlardasınızdır.',
   ],
   complementary: [
-    'Farkliklariniz birbirinizi tamamliyor — dengeyi seversiniz.',
-    'Zit kutuplar birbirini ceker — ikiniz de farkli bakis acilari sunuyorsunuz.',
+    'Farklılıklarınız birbirinizi tamamlıyor — dengeyi seversiniz.',
+    'Zıt kutuplar birbirini çeker — ikiniz de farklı bakış açıları sunuyorsunuz.',
   ],
 };
 
@@ -119,20 +119,20 @@ export function generateSmartMatchExplanation(
   // Summary
   let summary: string;
   if (compatPercent >= 90) {
-    summary = `${targetProfile.name} ile mukemmel bir uyumunuz var! Ortak degerleriniz ve yasam tarziniz birbirine cok yakin.`;
+    summary = `${targetProfile.name} ile mükemmel bir uyumunuz var! Ortak değerleriniz ve yaşam tarzınız birbirine çok yakın.`;
   } else if (compatPercent >= 75) {
-    summary = `${targetProfile.name} ile guclu bir uyum goruyoruz. Birbirinizi tanidikca daha da yakinlasabilirsiniz.`;
+    summary = `${targetProfile.name} ile güçlü bir uyum görüyoruz. Birbirinizi tanıdıkça daha da yakınlaşabilirsiniz.`;
   } else if (compatPercent >= 60) {
-    summary = `${targetProfile.name} ile ilginc bir potansiyel var. Farkliklariniz sizi zenginlestirebilir.`;
+    summary = `${targetProfile.name} ile ilginç bir potansiyel var. Farklılıklarınız sizi zenginleştirebilir.`;
   } else {
-    summary = `${targetProfile.name} ile farkli bakis acilariniz olabilir ama bu yeni seyler ogrenmeniz icin bir firsat!`;
+    summary = `${targetProfile.name} ile farklı bakış açılarınız olabilir ama bu yeni şeyler öğrenmeniz için bir fırsat!`;
   }
 
   // Default talking points
   if (talkingPoints.length === 0) {
     talkingPoints.push(
-      'Hafta sonu planlarinizi paylasarak baslayabilirsiniz.',
-      'En sevdiginiz seyahat aninizisorun — harika bir sohbet baslangici!',
+      'Hafta sonu planlarınızı paylaşarak başlayabilirsiniz.',
+      'En sevdiğiniz seyahat anınızı sorun — harika bir sohbet başlangıcı!',
     );
   }
 
@@ -143,33 +143,33 @@ export function generateSmartMatchExplanation(
 
 const ICEBREAKER_BANK: Record<IcebreakerTone, string[]> = {
   funny: [
-    'Netflix sifreni paylasmana kac gun kaldi? Sadece merak 😄',
-    'Eger bir pizza malzemesi olsaydin ne olurdun? Ben kesinlikle ekstra peynir 🍕',
-    'Profilini gordum ve kahvemi doktum — sorumluluk kabul ediyor musun? ☕',
-    'Biri "merhaba" yazarsa siradanliktan olursun, ben farkli olmak istedim 🎯',
-    'Dunyada en son kalan iki kisi olsak, ilk ne yapardik? (Dogru cevap: pizza siparis etmek)',
+    'Netflix şifreni paylaşmana kaç gün kaldı? Sadece merak 😄',
+    'Eğer bir pizza malzemesi olsaydın ne olurdun? Ben kesinlikle ekstra peynir 🍕',
+    'Profilini gördüm ve kahvemi döktüm — sorumluluk kabul ediyor musun? ☕',
+    'Biri "merhaba" yazarsa sıradanlıktan ölürsün, ben farklı olmak istedim 🎯',
+    'Dünyada en son kalan iki kişi olsak, ilk ne yapardık? (Doğru cevap: pizza sipariş etmek)',
   ],
   romantic: [
-    'Gulumsemen gozlerinden bile belli oluyor, merak ettim seni taniyabilir miyim? 🌹',
-    'Bazi profiller gorunce duraksarsin — seninki o profillerden biri ✨',
-    'Sana "guzelsin" demek kolay, ama seni dinlemek istiyorum — anlat bakalim 💫',
-    'Gozlerinde bir hikaye var, duymak isterim 📖',
+    'Gülümsemen gözlerinden bile belli oluyor, merak ettim seni tanıyabilir miyim? 🌹',
+    'Bazı profiller görünce duraksarsın — seninki o profillerden biri ✨',
+    'Sana "güzelsin" demek kolay, ama seni dinlemek istiyorum — anlat bakalım 💫',
+    'Gözlerinde bir hikaye var, duymak isterim 📖',
   ],
   casual: [
-    'Selam! Profilinde {interest} gordum — ben de bayiliyorum! Favorin hangisi?',
-    'Merhaba {name}! {city} en sevdigin mekan neresi?',
-    'Hey! Bio\'nu okuyunca yazmak istedim — cok samimi 😊',
-    'Selam! Haftasonun nasil geciyor?',
+    'Selam! Profilinde {interest} gördüm — ben de bayılıyorum! Favorin hangisi?',
+    'Merhaba {name}! {city} en sevdiğin mekan neresi?',
+    'Hey! Bio\'nu okuyunca yazmak istedim — çok samimi 😊',
+    'Selam! Haftasonun nasıl geçiyor?',
   ],
   flirty: [
-    'Profilini gordum, geri donus yapma ihtimalin var mi? Cunku ben simdiden like\'ladim 😏',
-    'Eger guzellik suc olsaydi, sen coktan muebbet alirdin 🔥',
-    'Sol mi kaydiracaktim ama parmagim seni gormezden gelmeyi reddetti 💘',
+    'Profilini gördüm, geri dönüş yapma ihtimalin var mı? Çünkü ben şimdiden like\'ladım 😏',
+    'Eğer güzellik suç olsaydı, sen çoktan müebbet alırdın 🔥',
+    'Sola mı kaydıracaktım ama parmağım seni görmezden gelmeyi reddetti 💘',
   ],
   deep: [
-    'Hayatta seni en cok heyecanlandiran sey ne? Gercekten merak ediyorum.',
-    'Kendini 3 kelimeyle anlatsan ne derdin? Ben: merakli, hayalci, kararsiz 😄',
-    'En son ne zaman "vay be, hayat guzel" dedin?',
+    'Hayatta seni en çok heyecanlandıran şey ne? Gerçekten merak ediyorum.',
+    'Kendini 3 kelimeyle anlatsan ne derdin? Ben: meraklı, hayalci, kararsız 😄',
+    'En son ne zaman "vay be, hayat güzel" dedin?',
     'Eger zaman makinan olsa, nereye giderdin ve neden?',
   ],
 };
@@ -221,7 +221,7 @@ export function analyzeProfile(profile: ProfileContext): AIProfileTip[] {
     tips.push({
       id: 'photos_count',
       category: 'photo',
-      tip: 'En az 3 fotograf ekle — profiller 3+ fotografla %70 daha fazla etkilesim aliyor.',
+      tip: 'En az 3 fotoğraf ekle — profiller 3+ fotoğrafla %70 daha fazla etkileşim alıyor.',
       priority: 'high',
       icon: 'camera-outline',
     });
@@ -230,7 +230,7 @@ export function analyzeProfile(profile: ProfileContext): AIProfileTip[] {
     tips.push({
       id: 'photos_variety',
       category: 'photo',
-      tip: 'Farkli ortamlarda fotograflar ekle: dis mekan, hobilerini gosterir, gulumsedigin bir kare.',
+      tip: 'Farklı ortamlarda fotoğraflar ekle: dış mekan, hobilerini gösterir, gülümsediğin bir kare.',
       priority: 'medium',
       icon: 'images-outline',
     });
@@ -241,7 +241,7 @@ export function analyzeProfile(profile: ProfileContext): AIProfileTip[] {
     tips.push({
       id: 'bio_short',
       category: 'bio',
-      tip: 'Biyografin cok kisa! Kendini 2-3 cumleyle tanit — insanlar sana mesaj atabilecek bir kapı arar.',
+      tip: 'Biyografin çok kısa! Kendini 2-3 cümleyle tanıt — insanlar sana mesaj atabilecek bir kapı arar.',
       priority: 'high',
       icon: 'create-outline',
     });
@@ -249,7 +249,7 @@ export function analyzeProfile(profile: ProfileContext): AIProfileTip[] {
     tips.push({
       id: 'bio_expand',
       category: 'bio',
-      tip: 'Biyografine bir espri veya ilginc bir detay ekle — dikkat cekici profiller %40 daha fazla eslesme aliyor.',
+      tip: 'Biyografine bir espri veya ilginç bir detay ekle — dikkat çekici profiller %40 daha fazla eşleşme alıyor.',
       priority: 'medium',
       icon: 'bulb-outline',
     });
@@ -260,7 +260,7 @@ export function analyzeProfile(profile: ProfileContext): AIProfileTip[] {
     tips.push({
       id: 'interests_few',
       category: 'interests',
-      tip: 'En az 5 ilgi alani ekle — ortak hobileri olan insanlarla eslesmek cok daha kolay.',
+      tip: 'En az 5 ilgi alanı ekle — ortak hobileri olan insanlarla eşleşmek çok daha kolay.',
       priority: 'high',
       icon: 'heart-outline',
     });
@@ -271,7 +271,7 @@ export function analyzeProfile(profile: ProfileContext): AIProfileTip[] {
     tips.push({
       id: 'prompts_add',
       category: 'prompts',
-      tip: 'Profil sorularini yanitla! Insanlarin sana ilk mesaj atmasini kolaylastirir.',
+      tip: 'Profil sorularını yanıtla! İnsanların sana ilk mesaj atmasını kolaylaştırır.',
       priority: 'medium',
       icon: 'chatbubble-ellipses-outline',
     });
@@ -282,7 +282,7 @@ export function analyzeProfile(profile: ProfileContext): AIProfileTip[] {
     tips.push({
       id: 'job_missing',
       category: 'general',
-      tip: 'Meslegi belirtmek guven olusturur — insanlar ciddi profillere daha cok ilgi gosteriyor.',
+      tip: 'Mesleği belirtmek güven oluşturur — insanlar ciddi profillere daha çok ilgi gösteriyor.',
       priority: 'low',
       icon: 'briefcase-outline',
     });
@@ -293,7 +293,7 @@ export function analyzeProfile(profile: ProfileContext): AIProfileTip[] {
     tips.push({
       id: 'intention_missing',
       category: 'general',
-      tip: 'Ne aradigini belirt — ayni niyetteki insanlarla eslesmek %30 daha kolay.',
+      tip: 'Ne aradığını belirt — aynı niyetteki insanlarla eşleşmek %30 daha kolay.',
       priority: 'medium',
       icon: 'flag-outline',
     });
@@ -310,34 +310,34 @@ export function analyzeProfile(profile: ProfileContext): AIProfileTip[] {
 
 const REPLY_TEMPLATES: Record<string, string[]> = {
   greeting: [
-    'Merhaba! Nasilsin? 😊',
-    'Selaam! Profilini cok begendim, tanismak isterim 🌟',
-    'Hey! Gunun nasil geciyor?',
+    'Merhaba! Nasılsın? 😊',
+    'Selaam! Profilini çok beğendim, tanışmak isterim 🌟',
+    'Hey! Günün nasıl geçiyor?',
   ],
   question: [
-    'Iyi soru! Benim icin {topic} cok onemli, sen ne dusunuyorsun?',
-    'Hmm, dusunmem lazim ama ilk aklima gelen... 😄',
-    'Cok guzel bir soru sordun! Sana detayli anlatmak isterim.',
+    'İyi soru! Benim için {topic} çok önemli, sen ne düşünüyorsun?',
+    'Hmm, düşünmem lazım ama ilk aklıma gelen... 😄',
+    'Çok güzel bir soru sordun! Sana detaylı anlatmak isterim.',
   ],
   compliment: [
-    'Cok tatlisin, tesekkur ederim! 😊',
-    'Aww, bu cok guzel bir sey! Sen de cok kibarsin 💫',
-    'Bu beni cok mutlu etti, sagol! ☺️',
+    'Çok tatlısın, teşekkür ederim! 😊',
+    'Aww, bu çok güzel bir şey! Sen de çok kibarsın 💫',
+    'Bu beni çok mutlu etti, sağol! ☺️',
   ],
   hobby: [
     'Ben de bayiliyorum! En son ne zaman yaptin?',
-    'Gercekten mi? Bu konuda cok tutkulum! Anlatsana 🎯',
+    'Gerçekten mi? Bu konuda çok tutkulum! Anlatsana 🎯',
     'Harika! Belki birlikte deneyebiliriz? 😊',
   ],
   plan: [
     'Kulaga harika geliyor! Ne zaman musait olursun?',
     'Olur! Hafta sonu nasil sana?',
-    'Cok isterim! Mekan onerisi var mi?',
+    'Çok isterim! Mekan önerisi var mı?',
   ],
   general: [
     'Anlat bakalim, merak ettim 😊',
-    'Haha cok iyi! 😄',
-    'Aynen oyle, katiliyorum!',
+    'Haha çok iyi! 😄',
+    'Aynen öyle, katılıyorum!',
     'Vay be, bunu bilmiyordum!',
   ],
 };

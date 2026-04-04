@@ -118,6 +118,114 @@ const FilterTab: React.FC<FilterTabProps> = React.memo(({ filter, isActive, onPr
   );
 });
 
+// ─── Media Caption Modal ─────────────────────────────────────
+// Shown after the user picks a photo or video — lets them add an
+// optional caption before posting.
+
+interface MediaCaptionModalProps {
+  visible: boolean;
+  mediaUri: string | null;
+  mediaType: 'photo' | 'video';
+  onClose: () => void;
+  onSubmit: (caption: string) => void;
+  isCreating: boolean;
+}
+
+const MediaCaptionModal: React.FC<MediaCaptionModalProps> = ({
+  visible,
+  mediaUri,
+  mediaType,
+  onClose,
+  onSubmit,
+  isCreating,
+}) => {
+  const [caption, setCaption] = useState('');
+  const insets = useSafeAreaInsets();
+
+  const handleSubmit = useCallback(() => {
+    const trimmed = caption.trim();
+    if (containsProfanity(trimmed)) {
+      Alert.alert('Uyari', PROFANITY_WARNING);
+      return;
+    }
+    onSubmit(trimmed);
+    setCaption('');
+  }, [caption, onSubmit]);
+
+  const handleClose = useCallback(() => {
+    setCaption('');
+    onClose();
+  }, [onClose]);
+
+  if (!mediaUri) return null;
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent>
+      <KeyboardAvoidingView
+        style={mediaCaptionStyles.overlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={handleClose} />
+        <View style={[mediaCaptionStyles.container, { paddingBottom: insets.bottom + spacing.md }]}>
+          {/* Header */}
+          <View style={mediaCaptionStyles.header}>
+            <TouchableOpacity onPress={handleClose} activeOpacity={0.7}>
+              <Text style={mediaCaptionStyles.cancelText}>Vazgeç</Text>
+            </TouchableOpacity>
+            <Text style={mediaCaptionStyles.headerTitle}>
+              {mediaType === 'photo' ? 'Fotoğraf Paylaş' : 'Video Paylaş'}
+            </Text>
+            <TouchableOpacity
+              onPress={handleSubmit}
+              activeOpacity={0.7}
+              disabled={isCreating}
+            >
+              <LinearGradient
+                colors={[palette.purple[400], palette.pink[500]]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={mediaCaptionStyles.submitButton}
+              >
+                <Text style={mediaCaptionStyles.submitButtonText}>
+                  {isCreating ? 'Paylaşılıyor...' : 'Gönder'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+
+          {/* Media Preview */}
+          <View style={mediaCaptionStyles.previewContainer}>
+            <Image source={{ uri: mediaUri }} style={mediaCaptionStyles.previewImage} resizeMode="cover" />
+            {mediaType === 'video' && (
+              <View style={mediaCaptionStyles.videoPlayOverlay}>
+                <Ionicons name="play-circle" size={48} color="rgba(255,255,255,0.85)" />
+              </View>
+            )}
+          </View>
+
+          {/* Caption Input */}
+          <TextInput
+            style={mediaCaptionStyles.captionInput}
+            placeholder="Açıklama yaz..."
+            placeholderTextColor={colors.textTertiary}
+            value={caption}
+            onChangeText={setCaption}
+            multiline
+            maxLength={500}
+            autoFocus
+            textAlignVertical="top"
+          />
+
+          {/* Character count */}
+          <View style={mediaCaptionStyles.bottomBar}>
+            <Text style={mediaCaptionStyles.charCount}>{caption.length}/500</Text>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+};
+
 // ─── Create Post Modal ────────────────────────────────────────
 
 interface CreatePostModalProps {
@@ -164,7 +272,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
 
   const handleAddPhoto = useCallback(async () => {
     if (attachedPhotos.length >= MAX_POST_PHOTOS) {
-      Alert.alert('Limit', `En fazla ${MAX_POST_PHOTOS} fotograf ekleyebilirsin.`);
+      Alert.alert('Limit', `En fazla ${MAX_POST_PHOTOS} fotoğraf ekleyebilirsin.`);
       return;
     }
     const uri = await photoService.pickFromGallery();
@@ -205,8 +313,12 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
     <Modal visible={visible} animationType="slide" transparent>
       <KeyboardAvoidingView
         style={modalStyles.overlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
+        {/* Dismiss backdrop — tapping outside the modal closes it */}
+        <TouchableOpacity style={modalStyles.dismissArea} activeOpacity={1} onPress={onClose} />
+
         <View style={[modalStyles.container, { paddingBottom: insets.bottom + spacing.md }]}>
           {/* Header */}
           <View style={modalStyles.header}>
@@ -238,57 +350,63 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
             </TouchableOpacity>
           </View>
 
-          {/* Music section removed — music feature removed */}
+          {/* Scrollable content area — ensures text input stays visible above keyboard */}
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            bounces={false}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={modalStyles.scrollContent}
+          >
+            {/* Text Input */}
+            <TextInput
+              style={modalStyles.textInput}
+              placeholder={getPlaceholder()}
+              placeholderTextColor={colors.textTertiary}
+              value={content}
+              onChangeText={setContent}
+              multiline
+              maxLength={500}
+              autoFocus
+              textAlignVertical="top"
+            />
 
-          {/* Text Input */}
-          <TextInput
-            style={modalStyles.textInput}
-            placeholder={getPlaceholder()}
-            placeholderTextColor={colors.textTertiary}
-            value={content}
-            onChangeText={setContent}
-            multiline
-            maxLength={500}
-            autoFocus
-            textAlignVertical="top"
-          />
-
-          {/* Attached Media Preview */}
-          {(attachedPhotos.length > 0 || attachedVideo) && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={modalStyles.mediaPreviewRow}
-            >
-              {attachedPhotos.map((uri, index) => (
-                <View key={`photo-${index}`} style={modalStyles.mediaThumb}>
-                  <Image source={{ uri }} style={modalStyles.mediaThumbImage} />
-                  <TouchableOpacity
-                    style={modalStyles.mediaRemoveButton}
-                    onPress={() => handleRemovePhoto(index)}
-                  >
-                    <Text style={modalStyles.mediaRemoveText}>X</Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
-              {attachedVideo && (
-                <View style={modalStyles.mediaThumb}>
-                  <Image source={{ uri: attachedVideo }} style={modalStyles.mediaThumbImage} />
-                  <View style={modalStyles.videoOverlay}>
-                    <Text style={modalStyles.videoOverlayText}>{'\u25B6'}</Text>
+            {/* Attached Media Preview */}
+            {(attachedPhotos.length > 0 || attachedVideo) && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={modalStyles.mediaPreviewRow}
+              >
+                {attachedPhotos.map((uri, index) => (
+                  <View key={`photo-${index}`} style={modalStyles.mediaThumb}>
+                    <Image source={{ uri }} style={modalStyles.mediaThumbImage} />
+                    <TouchableOpacity
+                      style={modalStyles.mediaRemoveButton}
+                      onPress={() => handleRemovePhoto(index)}
+                    >
+                      <Text style={modalStyles.mediaRemoveText}>X</Text>
+                    </TouchableOpacity>
                   </View>
-                  <TouchableOpacity
-                    style={modalStyles.mediaRemoveButton}
-                    onPress={handleRemoveVideo}
-                  >
-                    <Text style={modalStyles.mediaRemoveText}>X</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </ScrollView>
-          )}
+                ))}
+                {attachedVideo && (
+                  <View style={modalStyles.mediaThumb}>
+                    <Image source={{ uri: attachedVideo }} style={modalStyles.mediaThumbImage} />
+                    <View style={modalStyles.videoOverlay}>
+                      <Text style={modalStyles.videoOverlayText}>{'\u25B6'}</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={modalStyles.mediaRemoveButton}
+                      onPress={handleRemoveVideo}
+                    >
+                      <Text style={modalStyles.mediaRemoveText}>X</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </ScrollView>
+            )}
+          </ScrollView>
 
-          {/* Bottom bar: media buttons + char count */}
+          {/* Bottom bar: media buttons + char count — pinned below scroll area */}
           <View style={modalStyles.bottomBar}>
             <View style={modalStyles.mediaButtons}>
               {(postType === 'photo' || postType === 'text') && (
@@ -480,6 +598,30 @@ export const SocialFeedScreen: React.FC = () => {
   const [selectedPostType, setSelectedPostType] = useState<FeedPostType>('text');
   // quickPreviewPost state removed — no intermediate modals
 
+  // Media caption modal state — shown after photo/video selection
+  const [showMediaCaptionModal, setShowMediaCaptionModal] = useState(false);
+  const [pendingMediaUri, setPendingMediaUri] = useState<string | null>(null);
+  const [pendingMediaType, setPendingMediaType] = useState<'photo' | 'video'>('photo');
+
+  // Video visibility tracking — only auto-play videos that are on screen
+  const [visiblePostIds, setVisiblePostIds] = useState<Set<string>>(new Set());
+
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 60,
+  }).current;
+
+  const onViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: Array<{ item: FeedListItem; isViewable: boolean }> }) => {
+      const ids = new Set<string>();
+      for (const entry of viewableItems) {
+        if (entry.isViewable && entry.item.type === 'post' && entry.item.data.videoUrl) {
+          ids.add(entry.item.data.id);
+        }
+      }
+      setVisiblePostIds(ids);
+    },
+  ).current;
+
   useEffect(() => {
     // Reset daily counters if the date has changed (persisted values may be stale)
     resetDailyPostIfNeeded();
@@ -664,25 +806,49 @@ export const SocialFeedScreen: React.FC = () => {
     return true;
   }, [packageTier, dailyPostCount, lastPostDate, navigation]);
 
-  // Fotoğraf butonu — direkt galeri açılsın
+  // Fotoğraf butonu — galeri aç, sonra caption modal göster
   const handlePhotoPost = useCallback(async () => {
     if (!checkDailyLimit()) return;
     const uri = await photoService.pickFromGallery();
     if (uri) {
-      createPost({ content: '', postType: 'photo', photoUrls: [uri] });
-      incrementDailyPost();
+      setPendingMediaUri(uri);
+      setPendingMediaType('photo');
+      setShowMediaCaptionModal(true);
     }
-  }, [checkDailyLimit, createPost, incrementDailyPost]);
+  }, [checkDailyLimit]);
 
-  // Video butonu — sadece videolar açılsın
+  // Video butonu — galeri ac, sonra caption modal goster
   const handleVideoPost = useCallback(async () => {
     if (!checkDailyLimit()) return;
     const uri = await photoService.pickVideoFromGallery();
     if (uri) {
-      createPost({ content: '', postType: 'video', photoUrls: [], videoUrl: uri });
-      incrementDailyPost();
+      setPendingMediaUri(uri);
+      setPendingMediaType('video');
+      setShowMediaCaptionModal(true);
     }
-  }, [checkDailyLimit, createPost, incrementDailyPost]);
+  }, [checkDailyLimit]);
+
+  // Media caption modal submit — post with media + optional caption
+  const handleMediaCaptionSubmit = useCallback(
+    (caption: string) => {
+      if (!pendingMediaUri) return;
+      if (pendingMediaType === 'photo') {
+        createPost({ content: caption, postType: 'photo', photoUrls: [pendingMediaUri] });
+      } else {
+        createPost({ content: caption, postType: 'video', photoUrls: [], videoUrl: pendingMediaUri });
+      }
+      incrementDailyPost();
+      setShowMediaCaptionModal(false);
+      setPendingMediaUri(null);
+    },
+    [pendingMediaUri, pendingMediaType, createPost, incrementDailyPost],
+  );
+
+  // Media caption modal close — discard pending media
+  const handleMediaCaptionClose = useCallback(() => {
+    setShowMediaCaptionModal(false);
+    setPendingMediaUri(null);
+  }, []);
 
   // Yazı butonu — modal açılsın
   const handleTextPost = useCallback(() => {
@@ -787,11 +953,12 @@ export const SocialFeedScreen: React.FC = () => {
             onFollow={handleFollow}
             onProfilePress={handleProfilePress}
             onPostTap={handlePostTap}
+            isVisible={visiblePostIds.has(item.data.id)}
           />
         </View>
       );
     },
-    [handleLike, handleFollow, handleProfilePress, handlePostTap, handleNudgeDiscovery, handleNudgeMatches, handleNudgeScrollToTop, handleNudgeDismiss],
+    [handleLike, handleFollow, handleProfilePress, handlePostTap, handleNudgeDiscovery, handleNudgeMatches, handleNudgeScrollToTop, handleNudgeDismiss, visiblePostIds],
   );
 
   const keyExtractor = useCallback((item: FeedListItem) => {
@@ -883,7 +1050,7 @@ export const SocialFeedScreen: React.FC = () => {
           ref={flatListRef}
           style={{ flex: 1 }}
           data={feedListItems}
-          extraData={feedListItems}
+          extraData={visiblePostIds}
           keyExtractor={keyExtractor}
           renderItem={renderFeedItem}
           ListHeaderComponent={feedListHeader}
@@ -897,6 +1064,8 @@ export const SocialFeedScreen: React.FC = () => {
               tintColor={colors.primary}
             />
           }
+          viewabilityConfig={viewabilityConfig}
+          onViewableItemsChanged={onViewableItemsChanged}
           initialNumToRender={8}
           maxToRenderPerBatch={8}
           windowSize={5}
@@ -905,12 +1074,22 @@ export const SocialFeedScreen: React.FC = () => {
         />
       )}
 
-      {/* Create Post Modal */}
+      {/* Create Post Modal (text posts) */}
       <CreatePostModal
         visible={showCreateModal}
         postType={selectedPostType}
         onClose={() => setShowCreateModal(false)}
         onSubmit={handleCreatePost}
+        isCreating={isCreating}
+      />
+
+      {/* Media Caption Modal (photo/video posts) */}
+      <MediaCaptionModal
+        visible={showMediaCaptionModal}
+        mediaUri={pendingMediaUri}
+        mediaType={pendingMediaType}
+        onClose={handleMediaCaptionClose}
+        onSubmit={handleMediaCaptionSubmit}
         isCreating={isCreating}
       />
 
@@ -1198,9 +1377,9 @@ const tabStyles = StyleSheet.create({
   },
 });
 
-// ─── Modal Styles ─────────────────────────────────────────────
+// ─── Media Caption Modal Styles ──────────────────────────────
 
-const modalStyles = StyleSheet.create({
+const mediaCaptionStyles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
@@ -1211,7 +1390,101 @@ const modalStyles = StyleSheet.create({
     borderTopLeftRadius: borderRadius.xxl,
     borderTopRightRadius: borderRadius.xxl,
     paddingTop: spacing.md,
+    maxHeight: '90%',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.divider,
+  },
+  headerTitle: {
+    ...typography.body,
+    color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+  },
+  cancelText: {
+    ...typography.body,
+    color: colors.textSecondary,
+  },
+  submitButton: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+  },
+  submitButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+  },
+  previewContainer: {
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+    backgroundColor: colors.surfaceLight,
+    position: 'relative',
+  },
+  previewImage: {
+    width: '100%',
+    height: 220,
+    borderRadius: borderRadius.xl,
+  },
+  videoPlayOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
+  captionInput: {
+    ...typography.body,
+    color: colors.text,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    minHeight: 80,
+    maxHeight: 140,
+    textAlignVertical: 'top',
+  },
+  bottomBar: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
+  },
+  charCount: {
+    ...typography.captionSmall,
+    color: colors.textTertiary,
+  },
+});
+
+// ─── Modal Styles ─────────────────────────────────────────────
+
+const modalStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'flex-end',
+  },
+  dismissArea: {
+    flex: 1,
+  },
+  container: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: borderRadius.xxl,
+    borderTopRightRadius: borderRadius.xxl,
+    paddingTop: spacing.md,
     maxHeight: '85%',
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   header: {
     flexDirection: 'row',

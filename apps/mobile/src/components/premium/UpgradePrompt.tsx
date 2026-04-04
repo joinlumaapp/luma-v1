@@ -177,17 +177,17 @@ const FEATURE_MAP: Record<PaywallFeature, FeatureConfig> = {
   },
   flirt: {
     icon: '\uD83D\uDD25',
-    title: 'Daha Fazla Flort Istegi',
+    title: 'Daha Fazla Flört İsteği',
     description:
-      'Gunluk flort limitine ulastin. Premium ile gunluk 15, Supreme ile 50, Sinirsiz ile limitsiz flort gonder.',
+      'Günlük flört limitine ulaştın. Premium ile günlük 15, Supreme ile 50, Sınırsız ile limitsiz flört gönder.',
     minimumTier: 'GOLD',
     tierLabel: 'Premium+',
   },
   private_message: {
     icon: '\uD83D\uDCAC',
-    title: 'Ozel Mesaj Gonder',
+    title: 'Özel Mesaj Gönder',
     description:
-      'Yorumlardan ozel mesaja gec. Premium ile gunluk 10, Sınırsız ile sinirsiz ozel mesaj hakki.',
+      'Yorumlardan özel mesaja geç. Premium ile günlük 10, Sınırsız ile sınırsız özel mesaj hakkı.',
     minimumTier: 'GOLD',
     tierLabel: 'Premium+',
   },

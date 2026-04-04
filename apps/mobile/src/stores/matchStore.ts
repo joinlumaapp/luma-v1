@@ -136,7 +136,7 @@ export const useMatchStore = create<MatchState>((set, get) => ({
       });
     } catch (error: unknown) {
       if (__DEV__) {
-        console.warn('Eslesmeler yukleme basarisiz, servis mock fallback kullanilacak:', error);
+        console.warn('Eşleşmeler yükleme başarısız, servis mock fallback kullanılacak:', error);
       }
       const apiError = parseApiError(error as AxiosError);
       set({ isLoading: false, error: apiError.userMessage });

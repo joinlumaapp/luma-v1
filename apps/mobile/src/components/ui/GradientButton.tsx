@@ -153,7 +153,7 @@ const GradientButtonInner: React.FC<GradientButtonProps> = ({
       disabled={isDisabled}
       testID={testID}
       accessibilityRole="button"
-      accessibilityLabel={loading ? `${title}, yukleniyor` : title}
+      accessibilityLabel={loading ? `${title}, yükleniyor` : title}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
     >
       <Animated.View

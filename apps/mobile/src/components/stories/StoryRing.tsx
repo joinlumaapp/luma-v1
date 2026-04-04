@@ -127,9 +127,9 @@ export const StoryRing: React.FC<StoryRingProps> = ({
       onLongPress={onLongPress}
       accessibilityLabel={
         isOwnStory
-          ? 'Gonderini paylas'
+          ? 'Gönderini paylaş'
           : isSuggested
-            ? `${userName} onerilen hikaye`
+            ? `${userName} önerilen hikaye`
             : `${userName} hikayeleri`
       }
       accessibilityRole="button"

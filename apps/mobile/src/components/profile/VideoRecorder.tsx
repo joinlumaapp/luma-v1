@@ -113,9 +113,9 @@ export const VideoRecorder: React.FC<VideoRecorderProps> = ({
     if (selectedVideo) {
       Alert.alert(
         'İptal Et',
-        'Video secimini iptal etmek istediginizden emin misiniz?',
+        'Video seçimini iptal etmek istediğinizden emin misiniz?',
         [
-          { text: 'Hayir', style: 'cancel' },
+          { text: 'Hayır', style: 'cancel' },
           {
             text: 'Evet',
             onPress: () => {
@@ -217,10 +217,10 @@ export const VideoRecorder: React.FC<VideoRecorderProps> = ({
             {/* Description */}
             <View style={styles.descriptionBlock}>
               <Ionicons name="videocam" size={48} color={palette.gold[500]} />
-              <Text style={styles.descriptionTitle}>Video ile Tanistiralim</Text>
+              <Text style={styles.descriptionTitle}>Video ile Tanıştıralım</Text>
               <Text style={styles.descriptionText}>
-                10-30 saniyelik bir video ile profilini canlandir!{'\n'}
-                Kendin ol, dogal ol.
+                10-30 saniyelik bir video ile profilini canlandır!{'\n'}
+                Kendin ol, doğal ol.
               </Text>
             </View>
 

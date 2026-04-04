@@ -46,6 +46,22 @@ var GoldTransactionType;
     GoldTransactionType["PRIORITY_MESSAGE"] = "PRIORITY_MESSAGE";
     GoldTransactionType["VOICE_CALL"] = "VOICE_CALL";
     GoldTransactionType["VIDEO_CALL"] = "VIDEO_CALL";
+    GoldTransactionType["EXTRA_LIKES_REVEAL"] = "EXTRA_LIKES_REVEAL";
+    GoldTransactionType["EXTRA_VIEWERS_REVEAL"] = "EXTRA_VIEWERS_REVEAL";
+    GoldTransactionType["VIEWER_DELAY_BYPASS"] = "VIEWER_DELAY_BYPASS";
+    GoldTransactionType["PRIORITY_VISIBILITY_1H"] = "PRIORITY_VISIBILITY_1H";
+    GoldTransactionType["PRIORITY_VISIBILITY_3H"] = "PRIORITY_VISIBILITY_3H";
+    GoldTransactionType["ACTIVITY_STRIP_PIN"] = "ACTIVITY_STRIP_PIN";
+    GoldTransactionType["SECRET_ADMIRER_SEND"] = "SECRET_ADMIRER_SEND";
+    GoldTransactionType["SECRET_ADMIRER_EXTRA_GUESS"] = "SECRET_ADMIRER_EXTRA_GUESS";
+    GoldTransactionType["COMPATIBILITY_XRAY"] = "COMPATIBILITY_XRAY";
+    GoldTransactionType["SUPER_COMPATIBLE_REVEAL"] = "SUPER_COMPATIBLE_REVEAL";
+    GoldTransactionType["AI_CHAT_SUGGESTION_PACK"] = "AI_CHAT_SUGGESTION_PACK";
+    GoldTransactionType["NEARBY_NOTIFY"] = "NEARBY_NOTIFY";
+    GoldTransactionType["WEEKLY_TOP_REVEAL"] = "WEEKLY_TOP_REVEAL";
+    GoldTransactionType["MESSAGE_BUNDLE_3"] = "MESSAGE_BUNDLE_3";
+    GoldTransactionType["MESSAGE_BUNDLE_5"] = "MESSAGE_BUNDLE_5";
+    GoldTransactionType["MESSAGE_BUNDLE_10"] = "MESSAGE_BUNDLE_10";
 })(GoldTransactionType || (exports.GoldTransactionType = GoldTransactionType = {}));
 // Package feature definitions — Single authoritative source
 exports.PACKAGE_FEATURES = {
@@ -117,6 +133,27 @@ exports.GOLD_COSTS = {
     FLIRT_START: 25, // Send a flirt request beyond daily limit
     VOICE_CALL: 25, // Voice call with match
     VIDEO_CALL: 50, // Video call with match
+    SEND_MESSAGE: 150, // Send paid message to non-match
+    GREETING: 50, // Send greeting (Selam) to unmatched user
+    WAVE_EXTRA: 5, // Send wave beyond daily limit
+    MATCH_EXTEND: 5, // Extend match countdown +24h
+    DATE_PLANNER: 5, // Create date plan with match
+    EXTRA_LIKES_REVEAL: 20,
+    EXTRA_VIEWERS_REVEAL: 15,
+    VIEWER_DELAY_BYPASS: 25,
+    PRIORITY_VISIBILITY_1H: 60,
+    PRIORITY_VISIBILITY_3H: 150,
+    ACTIVITY_STRIP_PIN: 40,
+    SECRET_ADMIRER_SEND: 75,
+    SECRET_ADMIRER_EXTRA_GUESS: 25,
+    COMPATIBILITY_XRAY: 30,
+    SUPER_COMPATIBLE_REVEAL: 20,
+    AI_CHAT_SUGGESTION_PACK: 30,
+    NEARBY_NOTIFY: 35,
+    WEEKLY_TOP_REVEAL: 40,
+    MESSAGE_BUNDLE_3: 350,
+    MESSAGE_BUNDLE_5: 500,
+    MESSAGE_BUNDLE_10: 800,
 };
 // Package tier hierarchy for upgrade validation
 exports.PACKAGE_TIER_ORDER = {

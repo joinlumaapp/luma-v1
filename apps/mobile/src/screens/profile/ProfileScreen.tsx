@@ -77,15 +77,15 @@ import {
 const INTEREST_TAG_DISPLAY: Record<string, { emoji: string; label: string }> = {
   // Legacy English IDs
   travel: { emoji: '✈️', label: 'Seyahat' },
-  music: { emoji: '🎵', label: 'Muzik' },
+  music: { emoji: '🎵', label: 'Müzik' },
   sports: { emoji: '🏃', label: 'Spor' },
   cooking: { emoji: '🍳', label: 'Yemek' },
   art: { emoji: '🎨', label: 'Sanat' },
   technology: { emoji: '💻', label: 'Teknoloji' },
-  nature: { emoji: '🌿', label: 'Doga' },
+  nature: { emoji: '🌿', label: 'Doğa' },
   books: { emoji: '📚', label: 'Kitap' },
   movies: { emoji: '🎬', label: 'Film' },
-  photography: { emoji: '📷', label: 'Fotografcilik' },
+  photography: { emoji: '📷', label: 'Fotoğrafçılık' },
   dance: { emoji: '💃', label: 'Dans' },
   yoga: { emoji: '🧘', label: 'Yoga' },
   gaming: { emoji: '🎮', label: 'Oyun' },
@@ -591,7 +591,7 @@ export const ProfileScreen: React.FC = () => {
       {/* Profile strength card */}
       <TouchableOpacity onPress={handleEditProfile} activeOpacity={0.7} style={styles.strengthCardContainer} accessibilityLabel={`Profil gücün yüzde ${completionPercent}, düzenlemek için dokunun`} accessibilityRole="button">
         <View style={styles.strengthCardRow}>
-          <Text style={styles.strengthCardLabel}>Profil Gucun</Text>
+          <Text style={styles.strengthCardLabel}>Profil Gücün</Text>
           <View style={styles.strengthCardTrack}>
             <View style={[
               styles.strengthCardFill,
@@ -610,14 +610,14 @@ export const ProfileScreen: React.FC = () => {
         </View>
         {completionPercent < 100 && (
           <Text style={styles.strengthCardHint}>
-            {profile.photos.length < 2 ? '💡 Daha fazla fotograf ekle'
-              : profile.bio.length < 50 ? '💡 Bio ekleyerek profilini guclendir'
-              : profile.interestTags.length === 0 ? '💡 Ilgi alanlarini sec'
-              : '💡 Detayli bilgilerini tamamla'}
+            {profile.photos.length < 2 ? '💡 Daha fazla fotoğraf ekle'
+              : profile.bio.length < 50 ? '💡 Bio ekleyerek profilini güçlendir'
+              : profile.interestTags.length === 0 ? '💡 İlgi alanlarını seç'
+              : '💡 Detaylı bilgilerini tamamla'}
           </Text>
         )}
         {completionPercent >= 100 && (
-          <Text style={styles.strengthCardComplete}>✨ Profilin tamamlanmis!</Text>
+          <Text style={styles.strengthCardComplete}>✨ Profilin tamamlanmış!</Text>
         )}
       </TouchableOpacity>
 
@@ -701,10 +701,10 @@ export const ProfileScreen: React.FC = () => {
             <View style={styles.lookingForChip}>
               <Text style={styles.lookingForChipText}>
                 {profile.intentionTag === 'MARRIAGE' ? 'Evlenmek'
-                  : profile.intentionTag === 'SERIOUS_RELATIONSHIP' ? 'Bir iliski bulmak'
-                  : profile.intentionTag === 'FRIENDSHIP' ? 'Sohbet ve arkadaslik'
-                  : profile.intentionTag === 'LEARN_CULTURES' ? 'Kulturleri ogrenmek'
-                  : profile.intentionTag === 'TRAVEL' ? 'Dunyayi gezmek'
+                  : profile.intentionTag === 'SERIOUS_RELATIONSHIP' ? 'Bir ilişki bulmak'
+                  : profile.intentionTag === 'FRIENDSHIP' ? 'Sohbet ve arkadaşlık'
+                  : profile.intentionTag === 'LEARN_CULTURES' ? 'Kültürleri öğrenmek'
+                  : profile.intentionTag === 'TRAVEL' ? 'Dünyayı gezmek'
                   : profile.intentionTag}
               </Text>
             </View>
@@ -721,7 +721,7 @@ export const ProfileScreen: React.FC = () => {
     infoSections.push(
       <View key="interests" style={styles.section}>
         <Text style={styles.sectionTitle}>
-          Ilgi Alanlari ({profile.interestTags.length}/15)
+          İlgi Alanları ({profile.interestTags.length}/15)
         </Text>
         <View style={styles.chipRow}>
           {profile.interestTags.map((tag) => (

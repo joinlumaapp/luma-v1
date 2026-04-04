@@ -4,19 +4,22 @@
 // Text: clean reading view on dark background
 // No profile actions, no buttons — pure content. Tap to dismiss.
 
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   View,
   Text,
   Image,
   TouchableOpacity,
+  Pressable,
   StyleSheet,
   Dimensions,
   StatusBar,
   FlatList,
   Animated,
   PanResponder,
+  ActivityIndicator,
 } from 'react-native';
+import { Video, ResizeMode, type AVPlaybackStatus } from 'expo-av';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -29,6 +32,102 @@ const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
 type PostDetailRouteProp = RouteProp<FeedStackParamList, 'PostDetail'>;
 type PostDetailNavProp = NativeStackNavigationProp<FeedStackParamList, 'PostDetail'>;
+
+// ─── Full-Screen Video Player ────────────────────────────────
+
+interface FullScreenVideoPlayerProps {
+  videoUrl: string;
+}
+
+const FullScreenVideoPlayer: React.FC<FullScreenVideoPlayerProps> = ({ videoUrl }) => {
+  const videoRef = useRef<Video>(null);
+  const [isMuted, setIsMuted] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  const handlePlaybackStatusUpdate = useCallback((status: AVPlaybackStatus) => {
+    if (!status.isLoaded) {
+      if (status.error) {
+        setHasError(true);
+        setIsLoading(false);
+      }
+      return;
+    }
+    setIsLoading(false);
+    setIsPlaying(status.isPlaying);
+  }, []);
+
+  const handleTogglePlay = useCallback(() => {
+    if (!videoRef.current) return;
+    if (isPlaying) {
+      videoRef.current.pauseAsync().catch(() => {});
+    } else {
+      videoRef.current.playAsync().catch(() => {});
+    }
+  }, [isPlaying]);
+
+  const handleToggleMute = useCallback(() => {
+    setIsMuted((prev) => !prev);
+  }, []);
+
+  if (hasError) {
+    return (
+      <View style={styles.videoContainer}>
+        <Ionicons name="videocam-off-outline" size={48} color="rgba(255,255,255,0.5)" />
+        <Text style={styles.videoHint}>Video yüklenemedi</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.videoContainer}>
+      <Video
+        ref={videoRef}
+        source={{ uri: videoUrl }}
+        style={styles.videoPlayer}
+        resizeMode={ResizeMode.CONTAIN}
+        isLooping
+        isMuted={isMuted}
+        shouldPlay
+        onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
+        onError={() => {
+          setHasError(true);
+          setIsLoading(false);
+        }}
+      />
+
+      {/* Tap to toggle play/pause */}
+      <Pressable style={styles.videoTapOverlay} onPress={handleTogglePlay}>
+        {!isPlaying && !isLoading && (
+          <View style={styles.videoPlayIndicator}>
+            <Ionicons name="play" size={48} color="#FFFFFF" />
+          </View>
+        )}
+      </Pressable>
+
+      {/* Loading spinner */}
+      {isLoading && (
+        <View style={styles.videoLoadingOverlay}>
+          <ActivityIndicator size="large" color="#FFFFFF" />
+        </View>
+      )}
+
+      {/* Mute/unmute button — bottom right */}
+      <Pressable
+        style={styles.videoMuteButton}
+        onPress={handleToggleMute}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
+        <Ionicons
+          name={isMuted ? 'volume-mute' : 'volume-high'}
+          size={22}
+          color="#FFFFFF"
+        />
+      </Pressable>
+    </View>
+  );
+};
 
 export const PostDetailScreen: React.FC = () => {
   useScreenTracking('PostDetail');
@@ -141,6 +240,13 @@ export const PostDetailScreen: React.FC = () => {
             </View>
           )}
         />
+
+        {/* Caption overlay — bottom of screen */}
+        {post.content.length > 0 && (
+          <View style={[styles.captionOverlay, { paddingBottom: insets.bottom + 16 }]}>
+            <Text style={styles.captionText}>{post.content}</Text>
+          </View>
+        )}
       </Animated.View>
     );
   }
@@ -160,11 +266,15 @@ export const PostDetailScreen: React.FC = () => {
           <Ionicons name="close" size={28} color="#FFFFFF" />
         </TouchableOpacity>
 
-        {/* Video player placeholder — replace with actual video player */}
-        <View style={styles.videoContainer}>
-          <Ionicons name="play-circle" size={64} color="rgba(255,255,255,0.7)" />
-          <Text style={styles.videoHint}>Video oynatıcı</Text>
-        </View>
+        {/* Full-screen video player */}
+        <FullScreenVideoPlayer videoUrl={post.videoUrl!} />
+
+        {/* Caption overlay — bottom of screen */}
+        {post.content.length > 0 && (
+          <View style={[styles.captionOverlay, { paddingBottom: insets.bottom + 16 }]}>
+            <Text style={styles.captionText}>{post.content}</Text>
+          </View>
+        )}
       </Animated.View>
     );
   }
@@ -251,6 +361,43 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
+  videoPlayer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  videoTapOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
+  },
+  videoPlayIndicator: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingLeft: 4,
+  },
+  videoLoadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    zIndex: 3,
+  },
+  videoMuteButton: {
+    position: 'absolute',
+    bottom: 40,
+    right: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 4,
+  },
   videoHint: {
     color: 'rgba(255,255,255,0.4)',
     fontSize: 14,
@@ -269,5 +416,31 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_400Regular',
     lineHeight: 34,
     textAlign: 'center',
+  },
+
+  // Caption overlay — shown at bottom of photo/video viewers
+  captionOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    backgroundColor: 'transparent',
+    // Gradient-like fade from transparent to semi-black via shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -10 },
+    shadowOpacity: 0.8,
+    shadowRadius: 20,
+  },
+  captionText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontFamily: 'Poppins_400Regular',
+    lineHeight: 22,
+    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
 });

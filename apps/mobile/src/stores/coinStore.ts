@@ -8,6 +8,7 @@ import { api, parseApiError } from '../services/api';
 import { paymentService } from '../services/paymentService';
 import { iapService } from '../services/iapService';
 import { devMockOrThrow } from '../utils/mockGuard';
+import { GOLD_COSTS } from '@luma/shared';
 import type { AxiosError } from 'axios';
 
 export interface CoinPack {
@@ -25,22 +26,22 @@ export const COIN_PACKS: CoinPack[] = [
   { id: 'gold_1000', coins: 1000, price: '349,99₺' },
 ];
 
-export const DM_COST = 50;
+// ── Spend costs — derived from authoritative GOLD_COSTS in @luma/shared ──
+export const DM_COST = GOLD_COSTS.SEND_MESSAGE;                      // 150 — paid DM to non-match
 export const AD_REWARD_MIN = 5;
 export const AD_REWARD_MAX = 10;
 
-// ── Spend costs ──
-export const INSTANT_MESSAGE_COST = 20;
-export const PROFILE_BOOST_COST = 100;
-export const EXTRA_LIKES_COST = 15;        // Buy 5 extra likes
-export const PROFILE_HIGHLIGHT_COST = 10;  // Highlight profile for 1 hour
-export const PRIORITY_MESSAGE_COST = 30;   // Priority message (shown first)
-export const UNDO_SWIPE_COST = 5;          // Extra undo beyond daily free limit
-export const SUGGESTED_STORY_VIEW_COST = 20; // View suggested story beyond limit (GOLD_COSTS.SUGGESTED_STORY_VIEW)
-export const FLIRT_START_COST = 25;           // Flirt beyond daily limit — aligned with GOLD_COSTS.FLIRT_START
-export const SURPRISE_MATCH_COST = 50;     // Canlı Keşfet — first match
-export const SURPRISE_SWITCH_COST = 25;    // Canlı Keşfet — switch to another
-export const GREETING_COST = 50;           // Selam Gonder — send greeting to unmatched user
+export const INSTANT_MESSAGE_COST = GOLD_COSTS.SEND_MESSAGE;         // 150 — paid message to non-match
+export const PROFILE_BOOST_COST = GOLD_COSTS.PROFILE_BOOST;          // 100 — 24h profile boost
+export const EXTRA_LIKES_COST = GOLD_COSTS.EXTRA_LIKES_REVEAL;       // 20 — buy 5 extra likes
+export const PROFILE_HIGHLIGHT_COST = GOLD_COSTS.PRIORITY_VISIBILITY_1H; // 60 — highlight profile 1 hour
+export const PRIORITY_MESSAGE_COST = GOLD_COSTS.PRIORITY_MESSAGE;    // 40 — priority message (shown first)
+export const UNDO_SWIPE_COST = GOLD_COSTS.UNDO_PASS;                 // 30 — undo a passed profile
+export const SUGGESTED_STORY_VIEW_COST = GOLD_COSTS.SUGGESTED_STORY_VIEW; // 20 — view suggested story
+export const FLIRT_START_COST = GOLD_COSTS.FLIRT_START;               // 25 — flirt beyond daily limit
+export const SURPRISE_MATCH_COST = GOLD_COSTS.GREETING;              // 50 — Canlı Keşfet first match
+export const SURPRISE_SWITCH_COST = GOLD_COSTS.SUPER_LIKE;           // 25 — Canlı Keşfet switch
+export const GREETING_COST = GOLD_COSTS.GREETING;                    // 50 — Selam Gönder greeting
 
 // ── Earn rewards ──
 export const WELCOME_BONUS = 100;              // New user gift
@@ -332,7 +333,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
     // Sync earn to API (fire-and-forget)
     api.post('/users/me/gold/earn', { amount, source }).catch(() => {
       if (__DEV__) {
-        console.warn('Jeton kazanma API senkronizasyonu basarisiz');
+        console.warn('Jeton kazanma API senkronizasyonu başarısız');
       }
     });
   },
@@ -514,7 +515,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
     // Sync with API (fire-and-forget)
     api.post('/users/me/gold/daily-checkin').catch(() => {
       if (__DEV__) {
-        console.warn('Gunluk giris API senkronizasyonu basarisiz');
+        console.warn('Günlük giriş API senkronizasyonu başarısız');
       }
     });
 
@@ -808,7 +809,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
       id: generateId(),
       amount: STREAK_MILESTONE_REWARD,
       type: 'earn',
-      reason: `${milestone} gunluk seri odulu`,
+      reason: `${milestone} günlük seri ödülü`,
       timestamp: Date.now(),
     };
 
@@ -843,7 +844,7 @@ export const useCoinStore = create<CoinState>((set, get) => ({
       id: generateId(),
       amount: -EXTRA_LIKES_COST,
       type: 'spend',
-      reason: `${EXTRA_LIKES_COUNT} ek begeni`,
+      reason: `${EXTRA_LIKES_COUNT} ek beğeni`,
       timestamp: Date.now(),
     };
 

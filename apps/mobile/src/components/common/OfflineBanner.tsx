@@ -11,9 +11,9 @@ import { palette } from '../../theme/colors';
 
 type BannerState = 'hidden' | 'offline' | 'reconnecting' | 'reconnected';
 
-/** How long "Baglanti kuruluyor..." is shown before switching to "reconnected" */
+/** How long "Bağlantı kuruluyor..." is shown before switching to "reconnected" */
 const RECONNECTING_DISPLAY_MS = 1200;
-/** How long "Baglanti saglandi" is shown before auto-hiding */
+/** How long "Bağlantı sağlandı" is shown before auto-hiding */
 const RECONNECTED_DISPLAY_MS = 2000;
 
 export const OfflineBanner: React.FC = () => {

@@ -42,7 +42,7 @@ export const useCallHistoryStore = create<CallHistoryState>((set, get) => ({
         isLoading: false,
       });
     } catch {
-      set({ error: 'Arama gecmisi yuklenemedi', isLoading: false });
+      set({ error: 'Arama geçmişi yüklenemedi', isLoading: false });
     }
   },
 

@@ -213,7 +213,7 @@ export const videoService = {
       return result.uri;
     } catch {
       if (__DEV__) {
-        console.warn('Video thumbnail olusturulamadi');
+        console.warn('Video thumbnail oluşturulamadı');
       }
       return null;
     }

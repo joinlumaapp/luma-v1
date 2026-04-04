@@ -5,6 +5,7 @@ import { create } from 'zustand';
 import { storage } from '../utils/storage';
 import { api } from '../services/api';
 import { devMockOrThrow } from '../utils/mockGuard';
+import { GOLD_COSTS } from '@luma/shared';
 
 // ── Daily Reward Calendar ──
 export const DAILY_REWARDS = [
@@ -20,8 +21,8 @@ export const DAILY_REWARDS = [
 /** Multiplier applied after completing a full 7-day cycle */
 export const STREAK_MULTIPLIER = 1.5;
 
-/** Cost to extend a match countdown by 24 hours */
-export const MATCH_EXTEND_COST = 5;
+/** Cost to extend a match countdown by 24 hours — from shared GOLD_COSTS */
+export const MATCH_EXTEND_COST = GOLD_COSTS.MATCH_EXTEND;
 
 /** Match countdown duration in milliseconds (24 hours) */
 export const MATCH_COUNTDOWN_MS = 24 * 60 * 60 * 1000;
@@ -318,14 +319,14 @@ export const useEngagementStore = create<EngagementState>((set, get) => ({
 
     // Earn jetons via coinStore
     const { useCoinStore } = require('./coinStore');
-    useCoinStore.getState().earnCoins(finalJetons, `Gunluk odul - Gun ${currentRewardDay}`);
+    useCoinStore.getState().earnCoins(finalJetons, `Günlük ödül - Gün ${currentRewardDay}`);
 
     // Sync with backend
     api.post('/engagement/daily-reward/claim', {
       day: currentRewardDay,
       jetons: finalJetons,
     }).catch(() => {
-      if (__DEV__) console.warn('Gunluk odul API senkronizasyonu basarisiz');
+      if (__DEV__) console.warn('Günlük ödül API senkronizasyonu başarısız');
     });
 
     return {
@@ -402,7 +403,7 @@ export const useEngagementStore = create<EngagementState>((set, get) => ({
 
     // Earn jetons
     const { useCoinStore } = require('./coinStore');
-    useCoinStore.getState().earnCoins(reward, `Gorev odulu: ${currentChallenge.title}`);
+    useCoinStore.getState().earnCoins(reward, `Görev ödülü: ${currentChallenge.title}`);
 
     return reward;
   },
@@ -461,7 +462,7 @@ export const useEngagementStore = create<EngagementState>((set, get) => ({
     const coinState = useCoinStore.getState();
     if (coinState.balance < MATCH_EXTEND_COST) return false;
 
-    const spent = await coinState.spendCoins(MATCH_EXTEND_COST, `Esleme suresi uzatma: ${matchId}`);
+    const spent = await coinState.spendCoins(MATCH_EXTEND_COST, `Eşleşme süresi uzatma: ${matchId}`);
     if (!spent) return false;
 
     const newExpiry = current + MATCH_COUNTDOWN_MS;

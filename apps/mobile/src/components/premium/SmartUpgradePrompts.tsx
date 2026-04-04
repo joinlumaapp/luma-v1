@@ -15,6 +15,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { CachedAvatar } from '../common/CachedAvatar';
+import { GOLD_COSTS } from '@luma/shared';
 import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { fontWeights } from '../../theme/typography';
@@ -56,10 +57,10 @@ export const LikedYouTeaser: React.FC<LikedYouTeaserProps> = ({ count, blurredAv
 
         <View style={teaserStyles.textCol}>
           <Text style={teaserStyles.title}>
-            {count} kisi seni begendi
+            {count} kişi seni beğendi
           </Text>
           <Text style={teaserStyles.subtitle}>
-            Kim oldugunu gormek ister misin?
+            Kim olduğunu görmek ister misin?
           </Text>
         </View>
 
@@ -110,7 +111,7 @@ const teaserStyles = StyleSheet.create({
   },
 });
 
-// ─── 2. Sinirli sureli boost teklifi ─────────────────────────────
+// ─── 2. Sınırlı süreli boost teklifi ─────────────────────────────
 
 interface TimedBoostOfferProps {
   discountPercent: number;
@@ -232,7 +233,7 @@ const boostStyles = StyleSheet.create({
   },
 });
 
-// ─── 3. Eslesme sonrasi premium onerisi ──────────────────────────
+// ─── 3. Eşleşme sonrası premium önerisi ──────────────────────────
 
 interface MatchUpgradeNudgeProps {
   matchName: string;
@@ -245,22 +246,22 @@ interface MatchUpgradeNudgeProps {
 const NUDGE_CONFIG = {
   priority_message: {
     icon: 'arrow-up-circle' as const,
-    title: 'Mesajin one cikarilsin mi?',
-    subtitle: '{name} her gun onlarca mesaj aliyor. Oncelikli mesaj ile ilk sen gorun.',
-    cta: 'Oncelikli Gonder',
-    cost: '30 Jeton',
+    title: 'Mesajın öne çıkarılsın mı?',
+    subtitle: '{name} her gün onlarca mesaj alıyor. Öncelikli mesaj ile ilk sen görün.',
+    cta: 'Öncelikli Gönder',
+    cost: `${GOLD_COSTS.PRIORITY_MESSAGE} Jeton`,
   },
   see_read: {
     icon: 'eye-outline' as const,
-    title: 'Mesajin okundu mu?',
-    subtitle: '{name} mesajini okudugunda bildirim al. Premium ile bu ozellik aktif.',
-    cta: 'Premium\'a Gec',
+    title: 'Mesajın okundu mu?',
+    subtitle: '{name} mesajını okuduğunda bildirim al. Premium ile bu özellik aktif.',
+    cta: 'Premium\'a Geç',
     cost: '',
   },
   unlimited_chat: {
     icon: 'chatbubbles-outline' as const,
     title: 'Sohbete devam et!',
-    subtitle: 'Gunluk mesaj limitine ulastin. Premium ile sinir olmadan sohbet et.',
+    subtitle: 'Günlük mesaj limitine ulaştın. Premium ile sınır olmadan sohbet et.',
     cta: 'Limiti Kaldir',
     cost: '',
   },
@@ -373,11 +374,16 @@ export const WeeklyInsightNudge: React.FC<WeeklyInsightNudgeProps> = ({
   onUpgrade,
   onDismiss,
 }) => {
+  // Hide the card entirely when there is no activity to report
+  if (viewCount === 0 && likeCount === 0 && missedMatches === 0) {
+    return null;
+  }
+
   return (
     <View style={weeklyStyles.container}>
       <View style={weeklyStyles.header}>
         <Ionicons name="bar-chart-outline" size={18} color={palette.purple[500]} />
-        <Text style={weeklyStyles.headerTitle}>Haftalik Rapor</Text>
+        <Text style={weeklyStyles.headerTitle}>Haftalık Rapor</Text>
         <TouchableOpacity onPress={onDismiss} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Ionicons name="close" size={18} color={colors.textTertiary} />
         </TouchableOpacity>
@@ -387,24 +393,24 @@ export const WeeklyInsightNudge: React.FC<WeeklyInsightNudgeProps> = ({
       <View style={weeklyStyles.statsRow}>
         <View style={weeklyStyles.statItem}>
           <Text style={weeklyStyles.statNumber}>{viewCount}</Text>
-          <Text style={weeklyStyles.statLabel}>Goruntuleme</Text>
+          <Text style={weeklyStyles.statLabel}>Görüntüleme</Text>
         </View>
         <View style={weeklyStyles.statDivider} />
         <View style={weeklyStyles.statItem}>
           <Text style={weeklyStyles.statNumber}>{likeCount}</Text>
-          <Text style={weeklyStyles.statLabel}>Begeni</Text>
+          <Text style={weeklyStyles.statLabel}>Beğeni</Text>
         </View>
         <View style={weeklyStyles.statDivider} />
         <View style={weeklyStyles.statItem}>
           <Text style={[weeklyStyles.statNumber, { color: '#EF4444' }]}>{missedMatches}</Text>
-          <Text style={weeklyStyles.statLabel}>Kacirilan</Text>
+          <Text style={weeklyStyles.statLabel}>Kaçırılan</Text>
         </View>
       </View>
 
       {/* Loss aversion message */}
       {missedMatches > 0 && (
         <Text style={weeklyStyles.lossText}>
-          Bu hafta {missedMatches} potansiyel eslesmeyi kacirdin. Premium ile hepsini gor.
+          Bu hafta {missedMatches} potansiyel eşleşmeyi kaçırdın. Premium ile hepsini gör.
         </Text>
       )}
 
@@ -415,7 +421,7 @@ export const WeeklyInsightNudge: React.FC<WeeklyInsightNudgeProps> = ({
           end={{ x: 1, y: 0 }}
           style={weeklyStyles.upgradeButton}
         >
-          <Text style={weeklyStyles.upgradeText}>Kacirma, Premium'a Gec</Text>
+          <Text style={weeklyStyles.upgradeText}>Kaçırma, Premium'a Geç</Text>
         </LinearGradient>
       </TouchableOpacity>
     </View>
@@ -481,7 +487,7 @@ export const SocialProofBanner: React.FC<SocialProofBannerProps> = ({ recentUpgr
     <TouchableOpacity style={socialStyles.container} onPress={onPress} activeOpacity={0.8}>
       <Ionicons name="trending-up" size={16} color={palette.purple[500]} />
       <Text style={socialStyles.text}>
-        Son 24 saatte <Text style={socialStyles.bold}>{recentUpgradeCount} kisi</Text> Premium'a gecti
+        Son 24 saatte <Text style={socialStyles.bold}>{recentUpgradeCount} kişi</Text> Premium'a geçti
       </Text>
       <Ionicons name="chevron-forward" size={14} color={colors.textTertiary} />
     </TouchableOpacity>

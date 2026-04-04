@@ -51,7 +51,7 @@ const BANNER_CONFIG = {
     iconName: 'sparkles' as const,
     iconColor: '#fff',
     accentColor: colors.primary,
-    actionText: 'Kesfet',
+    actionText: 'Keşfet',
   },
   new_like: {
     gradientColors: [palette.pink[500] + '18', palette.purple[500] + '0C'] as [string, string],

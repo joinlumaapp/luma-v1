@@ -35,11 +35,11 @@ const BIO_PROMPTS = [
   },
   {
     question: 'Ideal bir hafta sonu nasil gecer?',
-    example: 'Sabah kahve, ogle arkadaslarla bulusma, aksam guzel bir film.',
+    example: 'Sabah kahve, öğle arkadaşlarla buluşma, akşam güzel bir film.',
   },
   {
-    question: 'Hayatta en cok neye deger verirsin?',
-    example: 'Samimi iliskiler, yeni deneyimler ve kisisel gelisim benim icin onemli.',
+    question: 'Hayatta en çok neye değer verirsin?',
+    example: 'Samimi ilişkiler, yeni deneyimler ve kişisel gelişim benim için önemli.',
   },
 ];
 
@@ -99,10 +99,10 @@ export const BioScreen: React.FC = () => {
               }}
               accessibilityLabel={`Öneri: ${prompt.question}`}
               accessibilityRole="button"
-              accessibilityHint="Bu ornegi bio alanina eklemek icin dokun"
+              accessibilityHint="Bu örneği bio alanına eklemek için dokun"
             >
               <Text style={styles.promptQuestion}>{prompt.question}</Text>
-              <Text style={styles.promptExample}>Ornek: "{prompt.example}"</Text>
+              <Text style={styles.promptExample}>Örnek: "{prompt.example}"</Text>
             </TouchableOpacity>
           ))}
         </View>

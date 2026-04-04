@@ -122,26 +122,25 @@ export const OTPVerificationScreen: React.FC = () => {
       // Track OTP verified event
       analyticsService.track(ANALYTICS_EVENTS.OTP_VERIFIED, {});
 
-      // verifyOTP succeeded — check if user is new (not yet onboarded)
-      const { isOnboarded, user, activateTrial } = useAuthStore.getState();
-      const isNewUser = !isOnboarded && !user?.isVerified;
+      // verifyOTP sets isOnboarded based on API response (user.isNew flag):
+      // - New user (no profile): isOnboarded = false
+      // - Returning user (has profile): isOnboarded = true
+      const { isOnboarded, activateTrial } = useAuthStore.getState();
 
-      if (isNewUser) {
-        // Activate 48-hour Gold trial for new phone-registered users
+      if (!isOnboarded) {
+        // New user -> activate trial, award welcome bonus, then collect email + password
         activateTrial();
-        // Award welcome bonus Jeton
         useCoinStore.getState().claimWelcomeBonus();
         Alert.alert(
           'Hoş geldin!',
           '48 saatlik Premium deneyimin başladı! Gold özelliklerinin keyfini çıkar.\n\nHoş geldin hediyesi: 100 Jeton!',
         );
-        // New user -> collect email + password before onboarding
         navigation.navigate('EmailEntry');
         return;
       }
 
-      // Existing user -> go to MainTabs
-      useAuthStore.getState().setOnboarded(true);
+      // Returning user with complete profile -> RootNavigator will show MainTabs
+      // because isAuthenticated=true and isOnboarded=true (already set by verifyOTP)
     } catch {
       setFailedAttempts((prev) => prev + 1);
       Alert.alert('Hata', 'Kod geçersiz. Tekrar deneyin.');
@@ -427,10 +426,15 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: onboardingColors.surfaceBorder,
     textAlign: 'center',
-    fontSize: 24,
+    textAlignVertical: 'center',
+    fontSize: 22,
+    lineHeight: 28,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: fontWeights.bold,
     color: onboardingColors.text,
+    includeFontPadding: false,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
   },
   otpInputActive: {
     borderColor: onboardingColors.text,

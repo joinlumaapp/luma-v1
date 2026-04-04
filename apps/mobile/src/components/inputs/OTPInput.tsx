@@ -89,6 +89,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'visible',
   },
   boxFocused: {
     borderColor: colors.primary,
@@ -102,8 +103,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary + '10',
   },
   digit: {
-    ...typography.h3,
+    fontFamily: typography.h3.fontFamily,
+    fontWeight: typography.h3.fontWeight,
+    fontSize: 22,
+    lineHeight: 28,
     color: colors.text,
+    includeFontPadding: false,
+    textAlign: 'center',
+    textAlignVertical: 'center',
   },
   hiddenInput: {
     position: 'absolute',

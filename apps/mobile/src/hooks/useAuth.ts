@@ -81,8 +81,12 @@ export const useAuth = (): UseAuthReturn => {
               packageTier: (me.packageTier as PackageTier) || 'FREE',
             });
 
-            const onboarded = await storage.getOnboarded();
+            // Use API profile completeness as source of truth, fall back to local storage
+            const onboarded = me.profile?.isComplete ?? (await storage.getOnboarded());
             setOnboarded(onboarded);
+            if (onboarded) {
+              await storage.setOnboarded(true);
+            }
           } catch {
             // Token is invalid — try refreshing
             try {
@@ -98,8 +102,12 @@ export const useAuth = (): UseAuthReturn => {
                 packageTier: (me.packageTier as PackageTier) || 'FREE',
               });
 
-              const onboarded = await storage.getOnboarded();
+              // Use API profile completeness as source of truth, fall back to local storage
+              const onboarded = me.profile?.isComplete ?? (await storage.getOnboarded());
               setOnboarded(onboarded);
+              if (onboarded) {
+                await storage.setOnboarded(true);
+              }
             } catch {
               // Refresh also failed — user needs to re-login
               await storage.clearTokens();

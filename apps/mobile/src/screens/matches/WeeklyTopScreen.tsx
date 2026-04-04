@@ -111,7 +111,7 @@ const WeeklyTopScreen: React.FC = () => {
                 <View style={styles.lockIcon}>
                   <Ionicons name="lock-closed" size={24} color={palette.purple[400]} />
                 </View>
-                <Text style={styles.lockText}>40 jeton ile aç</Text>
+                <Text style={styles.lockText}>{REVEAL_COST} jeton ile aç</Text>
                 <View style={styles.compatBadgeBlurred}>
                   <Text style={styles.compatTextBlurred}>%??</Text>
                 </View>

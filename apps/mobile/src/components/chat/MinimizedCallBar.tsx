@@ -55,7 +55,7 @@ export const MinimizedCallBar: React.FC = () => {
   if (!isActive) return null;
 
   const label = callState === 'connecting'
-    ? 'Baglaniyor...'
+    ? 'Bağlanıyor...'
     : `Arama devam ediyor \u2014 ${formatDuration(callDuration)}`;
 
   return (

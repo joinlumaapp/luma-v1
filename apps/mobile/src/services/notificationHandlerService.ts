@@ -152,16 +152,16 @@ export function mapNotificationToScreen(
       };
     }
 
-    // Yeni begeni — LikesYouScreen
+    // Yeni beğeni — LikesYouScreen
     case 'NEW_LIKE':
     case 'PROFILE_LIKE':
       return { screen: 'LikesYou', params: undefined };
 
-    // Gunluk secmeler — DailyPicksScreen
+    // Günlük seçmeler — DailyPicksScreen
     case 'DAILY_PICKS':
       return { screen: 'DailyPicks', params: undefined };
 
-    // Uyumluluk guncellemesi — CompatibilityInsightScreen
+    // Uyumluluk güncellemesi — CompatibilityInsightScreen
     case 'COMPATIBILITY_UPDATE': {
       const matchId = data.matchId as string | undefined;
       if (!matchId) return null;

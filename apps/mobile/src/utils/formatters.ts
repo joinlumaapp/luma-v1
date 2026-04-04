@@ -249,7 +249,7 @@ export const formatPhoneNumber = (phone: string): string => {
  * Format price in TL
  */
 export const formatPrice = (amount: number): string => {
-  if (amount === 0) return 'Ucretsiz';
+  if (amount === 0) return 'Ücretsiz';
   return `${amount.toFixed(2)} TL`;
 };
 

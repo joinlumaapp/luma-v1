@@ -194,20 +194,20 @@ export const CallScreen: React.FC = () => {
             </Text>
           </View>
           <Text style={styles.premiumTitle}>
-            {callType === 'video' ? 'Goruntulu Arama' : 'Sesli Arama'}
+            {callType === 'video' ? 'Görüntülü Arama' : 'Sesli Arama'}
           </Text>
           <Text style={styles.premiumSubtitle}>
-            Arama ozelligi Gold ve ustu paketlere ozeldir.{'\n'}
+            Arama özelliği Gold ve üstü paketlere özeldir.{'\n'}
             Paketini yükselt ve hemen aramaya başla!
           </Text>
           <TouchableOpacity
             style={styles.upgradeButton}
             onPress={handleUpgrade}
             activeOpacity={0.85}
-            accessibilityLabel="Paketi yukselt"
+            accessibilityLabel="Paketi yükselt"
             accessibilityRole="button"
           >
-            <Text style={styles.upgradeButtonText}>Paketi Yukselt</Text>
+            <Text style={styles.upgradeButtonText}>Paketi Yükselt</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
@@ -226,11 +226,11 @@ export const CallScreen: React.FC = () => {
   // ── Status label ───────────────────────────────────────────
   const statusLabel = (() => {
     switch (callState) {
-      case 'outgoing': return 'Araniyor...';
+      case 'outgoing': return 'Aranıyor...';
       case 'incoming': return 'Gelen Arama';
-      case 'connecting': return 'Baglaniyor...';
+      case 'connecting': return 'Bağlanıyor...';
       case 'connected': return formatDuration(callDuration);
-      case 'ended': return 'Arama Sonlandi';
+      case 'ended': return 'Arama Sonlandı';
       default: return '';
     }
   })();
@@ -276,7 +276,7 @@ export const CallScreen: React.FC = () => {
               /* Connecting state overlay */
               <View style={styles.videoOverlay}>
                 <Text style={styles.videoOverlayName}>{displayName}</Text>
-                <Text style={styles.videoOverlayStatus}>Video baglantisi kuruluyor...</Text>
+                <Text style={styles.videoOverlayStatus}>Video bağlantısı kuruluyor...</Text>
               </View>
             ) : (
               /* Connected but no real stream yet */

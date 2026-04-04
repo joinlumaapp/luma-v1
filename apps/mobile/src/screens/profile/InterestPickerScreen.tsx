@@ -53,7 +53,7 @@ export const InterestPickerScreen: React.FC = () => {
         <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Ilgi alanlari</Text>
+        <Text style={styles.headerTitle}>İlgi alanları</Text>
         <View style={{ width: 24 }} />
       </View>
 

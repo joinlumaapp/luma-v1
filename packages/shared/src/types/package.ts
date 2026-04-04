@@ -198,6 +198,11 @@ export const GOLD_COSTS = {
   FLIRT_START: 25, // Send a flirt request beyond daily limit
   VOICE_CALL: 25, // Voice call with match
   VIDEO_CALL: 50, // Video call with match
+  SEND_MESSAGE: 150, // Send paid message to non-match
+  GREETING: 50, // Send greeting (Selam) to unmatched user
+  WAVE_EXTRA: 5, // Send wave beyond daily limit
+  MATCH_EXTEND: 5, // Extend match countdown +24h
+  DATE_PLANNER: 5, // Create date plan with match
   EXTRA_LIKES_REVEAL: 20,
   EXTRA_VIEWERS_REVEAL: 15,
   VIEWER_DELAY_BYPASS: 25,
@@ -235,6 +240,11 @@ export type GoldSpendAction =
   | 'PRIORITY_MESSAGE'
   | 'VOICE_CALL'
   | 'VIDEO_CALL'
+  | 'SEND_MESSAGE'
+  | 'GREETING'
+  | 'WAVE_EXTRA'
+  | 'MATCH_EXTEND'
+  | 'DATE_PLANNER'
   | 'EXTRA_LIKES_REVEAL'
   | 'EXTRA_VIEWERS_REVEAL'
   | 'VIEWER_DELAY_BYPASS'

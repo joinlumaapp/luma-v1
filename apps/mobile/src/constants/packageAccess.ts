@@ -1,5 +1,5 @@
 // Package access rules — single source of truth for all feature gating
-// Tiers: free < gold (Premium) < pro (Supreme) < reserved (Sinirsiz)
+// Tiers: free < gold (Premium) < pro (Supreme) < reserved (Sınırsız)
 
 import type { PackageTier } from '../stores/authStore';
 
@@ -21,7 +21,7 @@ export const hasTierAccess = (
 // ─── Display Names ───────────────────────────────────────────────
 
 export const TIER_DISPLAY_NAMES: Record<PackageTier, string> = {
-  FREE: 'Ucretsiz',
+  FREE: 'Ücretsiz',
   GOLD: 'Premium',
   PRO: 'Supreme',
   RESERVED: 'Sınırsız',
@@ -36,7 +36,7 @@ export const getMinTierLabel = (tier: PackageTier): string => {
   if (tier === 'GOLD') return 'Premium+';
   if (tier === 'PRO') return 'Supreme+';
   if (tier === 'RESERVED') return 'Sınırsız';
-  return 'Ucretsiz';
+  return 'Ücretsiz';
 };
 
 // ─── Feature Keys ────────────────────────────────────────────────

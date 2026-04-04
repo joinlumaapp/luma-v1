@@ -9,4 +9,5 @@ export * from './place';
 export * from './analytics';
 export * from './admin';
 export * from './call-history';
+export * from './post';
 //# sourceMappingURL=index.d.ts.map

@@ -146,14 +146,14 @@ const initialProfile: ProfileData = {
 // Transform backend ProfileResponse to store ProfileData
 // Migrate legacy English interest IDs to Turkish labels
 const LEGACY_TAG_MIGRATION: Record<string, string> = {
-  travel: 'Seyahat', music: 'Muzik', sports: 'Spor', cooking: 'Yemek pisirme',
-  art: 'Sanat', technology: 'Teknoloji', nature: 'Doga', books: 'Okuma',
-  movies: 'Film', photography: 'Fotografcilik', dance: 'Dans', yoga: 'Yoga',
-  gaming: 'Video oyunlari', animals: 'Kediler', fashion: 'Moda', football: 'Futbol',
-  hiking: 'Yuruyus', coffee: 'Kahve', reading: 'Okuma', meditation: 'Meditasyon',
-  swimming: 'Yuzme', fitness: 'Vucut Gelistirme', beach: 'Denizler',
-  architecture: 'Muzeler', design: 'Tasarim', guitar: 'Muzik',
-  psychology: 'Akil oyunlari', food: 'Ev yemekleri', cats: 'Kediler',
+  travel: 'Seyahat', music: 'Müzik', sports: 'Spor', cooking: 'Yemek pişirme',
+  art: 'Sanat', technology: 'Teknoloji', nature: 'Doğa', books: 'Okuma',
+  movies: 'Film', photography: 'Fotoğrafçılık', dance: 'Dans', yoga: 'Yoga',
+  gaming: 'Video oyunları', animals: 'Kediler', fashion: 'Moda', football: 'Futbol',
+  hiking: 'Yürüyüş', coffee: 'Kahve', reading: 'Okuma', meditation: 'Meditasyon',
+  swimming: 'Yüzme', fitness: 'Vücut Geliştirme', beach: 'Denizler',
+  architecture: 'Müzeler', design: 'Tasarım', guitar: 'Müzik',
+  psychology: 'Akıl oyunları', food: 'Ev yemekleri', cats: 'Kediler',
 };
 const migrateInterestTags = (tags: string[]): string[] =>
   tags.map((tag) => LEGACY_TAG_MIGRATION[tag] ?? tag);
@@ -267,7 +267,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       set({ completionPercent: get().calculateCompletion() });
     } catch (error: unknown) {
       if (__DEV__) {
-        console.warn('Profil yukleme basarisiz:', error);
+        console.warn('Profil yükleme başarısız:', error);
       }
       const apiError = parseApiError(error as AxiosError);
       set({ isLoading: false, error: apiError.userMessage });

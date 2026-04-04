@@ -836,7 +836,7 @@ export const ProfilePreviewScreen: React.FC = () => {
           glowColor="#EF4444"
           size={48}
           onPress={() => handleSwipe('left')}
-          accessibilityLabel="Gec"
+          accessibilityLabel="Geç"
         />
       </View>
 
@@ -853,7 +853,7 @@ export const ProfilePreviewScreen: React.FC = () => {
       <View style={styles.actionItem}>
         <Pressable
           onPress={() => setShowPaidMessageModal(true)}
-          accessibilityLabel="Mesaj Gonder"
+          accessibilityLabel="Mesaj Gönder"
           accessibilityRole="button"
           style={styles.messageCta}
         >

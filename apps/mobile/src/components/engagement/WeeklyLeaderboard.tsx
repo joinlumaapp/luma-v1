@@ -30,8 +30,8 @@ interface CategoryTab {
 }
 
 const CATEGORIES: CategoryTab[] = [
-  { key: 'most_liked', label: 'En Cok Begenilen', icon: 'heart' },
-  { key: 'most_messaged', label: 'En Cok Mesaj', icon: 'chatbubble' },
+  { key: 'most_liked', label: 'En Çok Beğenilen', icon: 'heart' },
+  { key: 'most_messaged', label: 'En Çok Mesaj', icon: 'chatbubble' },
   { key: 'best_compatibility', label: 'En Uyumlu', icon: 'star' },
 ];
 

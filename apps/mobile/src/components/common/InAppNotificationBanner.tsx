@@ -1,6 +1,6 @@
-// Uygulama ici bildirim banner'i — on planda gelen bildirimler icin
-// Yukaridan asagi kayarak gorünür, 4 saniye sonra otomatik kapanir
-// Dokunarak ilgili ekrana yonlendirilir, yukari kaydirarak kapatilir
+// Uygulama içi bildirim banner'ı — ön planda gelen bildirimler için
+// Yukarıdan aşağı kayarak görünür, 4 saniye sonra otomatik kapanır
+// Dokunarak ilgili ekrana yönlendirilir, yukarı kaydırarak kapatılır
 
 import React, { useEffect, useRef, useCallback, useState } from 'react';
 import {

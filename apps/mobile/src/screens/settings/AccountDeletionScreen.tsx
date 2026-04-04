@@ -102,7 +102,7 @@ export const AccountDeletionScreen: React.FC = () => {
     } catch {
       if (__DEV__) {
         // Allow proceeding in development mode for testing
-        console.warn('OTP dogrulama basarisiz, gelistirme modunda devam ediliyor');
+        console.warn('OTP doğrulama başarısız, geliştirme modunda devam ediliyor');
         setShowFinalModal(true);
         return;
       }
@@ -136,10 +136,10 @@ export const AccountDeletionScreen: React.FC = () => {
         <View style={dynamicStyles.warningIconCircle}>
           <Ionicons name="warning" size={24} color={colors.error} />
         </View>
-        <Text style={dynamicStyles.warningTitle}>Hesabinizi silmek uzeresiniz</Text>
+        <Text style={dynamicStyles.warningTitle}>Hesabınızı silmek üzeresiniz</Text>
         <Text style={dynamicStyles.warningText}>
-          Hesabinizi sildiginizde tum verileriniz, eslesmeleriniz, sohbetleriniz ve
-          profiliniz kalici olarak silinecektir.
+          Hesabınızı sildiğinizde tüm verileriniz, eşleşmeleriniz, sohbetleriniz ve
+          profiliniz kalıcı olarak silinecektir.
         </Text>
       </View>
 
@@ -147,11 +147,11 @@ export const AccountDeletionScreen: React.FC = () => {
       <View style={dynamicStyles.infoCard}>
         <Ionicons name="time-outline" size={20} color={colors.primary} />
         <View style={dynamicStyles.infoTextContainer}>
-          <Text style={dynamicStyles.infoTitle}>30 Gun Kurtarma Suresi</Text>
+          <Text style={dynamicStyles.infoTitle}>30 Gün Kurtarma Süresi</Text>
           <Text style={dynamicStyles.infoText}>
-            Hesabiniz silindikten sonra 30 gun icinde tekrar giris yaparak
-            hesabinizi kurtarabilirsiniz. Bu sure dolduktan sonra tum veriler
-            kalici olarak silinir.
+            Hesabınız silindikten sonra 30 gün içinde tekrar giriş yaparak
+            hesabınızı kurtarabilirsiniz. Bu süre dolduktan sonra tüm veriler
+            kalıcı olarak silinir.
           </Text>
         </View>
       </View>
@@ -228,7 +228,7 @@ export const AccountDeletionScreen: React.FC = () => {
         <View style={dynamicStyles.otpIconCircle}>
           <Ionicons name="shield-checkmark-outline" size={32} color={colors.primary} />
         </View>
-        <Text style={dynamicStyles.otpTitle}>Kimlik Dogrulama</Text>
+        <Text style={dynamicStyles.otpTitle}>Kimlik Doğrulama</Text>
         <Text style={dynamicStyles.otpSubtitle}>
           Telefon numaraniza gönderilen 6 haneli doğrulama kodunu girin.
         </Text>
@@ -250,7 +250,7 @@ export const AccountDeletionScreen: React.FC = () => {
             onPress={handleSendOtp}
             activeOpacity={0.7}
           >
-            <Text style={dynamicStyles.resendText}>Kodu tekrar gonder</Text>
+            <Text style={dynamicStyles.resendText}>Kodu tekrar gönder</Text>
           </TouchableOpacity>
         )}
 
@@ -266,7 +266,7 @@ export const AccountDeletionScreen: React.FC = () => {
           {isVerifyingOtp ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
-            <Text style={dynamicStyles.deleteButtonText}>Dogrula ve Devam Et</Text>
+            <Text style={dynamicStyles.deleteButtonText}>Doğrula ve Devam Et</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -309,10 +309,10 @@ export const AccountDeletionScreen: React.FC = () => {
             <View style={dynamicStyles.modalIconCircle}>
               <Ionicons name="alert-circle" size={32} color={colors.error} />
             </View>
-            <Text style={dynamicStyles.modalTitle}>Son Uyari!</Text>
+            <Text style={dynamicStyles.modalTitle}>Son Uyarı!</Text>
             <Text style={dynamicStyles.modalMessage}>
-              Bu islem geri alinamaz. Hesabiniz 30 gun icinde kurtarilmazsa
-              tum verileriniz kalici olarak silinecektir.
+              Bu işlem geri alınamaz. Hesabınız 30 gün içinde kurtarılmazsa
+              tüm verileriniz kalıcı olarak silinecektir.
             </Text>
 
             <View style={staticStyles.modalActions}>

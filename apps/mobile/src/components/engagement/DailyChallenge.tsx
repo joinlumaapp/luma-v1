@@ -221,18 +221,18 @@ export const DailyChallenge: React.FC<DailyChallengeProps> = ({
               end={{ x: 1, y: 0 }}
               style={styles.claimBtn}
             >
-              <Text style={styles.claimBtnText}>Odulu Topla</Text>
+              <Text style={styles.claimBtnText}>Ödülü Topla</Text>
             </LinearGradient>
           </Pressable>
         ) : claimed ? (
           <View style={styles.claimedRow}>
             <Ionicons name="checkmark-circle" size={16} color={palette.success} />
-            <Text style={styles.claimedText}>Tamamlandi!</Text>
+            <Text style={styles.claimedText}>Tamamlandı!</Text>
           </View>
         ) : (
           <View style={styles.timerRow}>
             <Ionicons name="time-outline" size={14} color={colors.textTertiary} />
-            <Text style={styles.timerText}>Yeni gorev: {countdown}</Text>
+            <Text style={styles.timerText}>Yeni görev: {countdown}</Text>
           </View>
         )}
       </View>

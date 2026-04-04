@@ -13,20 +13,22 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useWaveStore } from '../../stores/waveStore';
 import { useAuthStore } from '../../stores/authStore';
+import { WAVE_CONFIG } from '../../constants/config';
+import { GOLD_COSTS } from '@luma/shared';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 
-// ─── Wave limits per tier ─────────────────────────────────────────
+// ─── Wave limits per tier (from config single source of truth) ────
 
 const WAVE_DAILY_LIMITS: Record<string, number> = {
-  free: 3,
-  gold: 20,
-  pro: 20,
-  reserved: 20,
+  FREE: WAVE_CONFIG.DAILY_LIMITS.FREE,
+  GOLD: WAVE_CONFIG.DAILY_LIMITS.GOLD,
+  PRO: WAVE_CONFIG.DAILY_LIMITS.PRO,
+  RESERVED: WAVE_CONFIG.DAILY_LIMITS.RESERVED,
 };
 
-const WAVE_COIN_COST = 5;
+const WAVE_COIN_COST = GOLD_COSTS.WAVE_EXTRA;
 
 interface SendWaveModalProps {
   visible: boolean;
@@ -62,7 +64,7 @@ export const SendWaveModal: React.FC<SendWaveModalProps> = ({
     }
   }, [visible, fetchQuota, slideAnim]);
 
-  const dailyLimit = WAVE_DAILY_LIMITS[packageTier] ?? 3;
+  const dailyLimit = WAVE_DAILY_LIMITS[packageTier.toUpperCase()] ?? 3;
   const remaining = quota?.remaining ?? 0;
   const hasQuota = remaining > 0;
 

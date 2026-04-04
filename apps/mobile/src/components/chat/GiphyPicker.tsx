@@ -55,7 +55,7 @@ const GifThumbnail = memo<GifThumbnailProps>(({ gif, onSelect }) => {
       activeOpacity={0.8}
       accessibilityLabel={gif.title || 'GIF'}
       accessibilityRole="button"
-      accessibilityHint="Bu GIF\'i gondermek icin dokunun"
+      accessibilityHint="Bu GIF\'i göndermek için dokunun"
     >
       <Image
         source={{ uri: gif.previewUrl }}
@@ -247,7 +247,7 @@ export const GiphyPicker: React.FC<GiphyPickerProps> = ({ onSelect, onClose }) =
       {isLoading && gifs.length === 0 ? (
         <View style={pickerStyles.centerContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={pickerStyles.loadingText}>GIF\'ler yukleniyor...</Text>
+          <Text style={pickerStyles.loadingText}>GIF\'ler yükleniyor...</Text>
         </View>
       ) : error ? (
         <View style={pickerStyles.centerContainer}>

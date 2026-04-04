@@ -61,11 +61,11 @@ interface ActivitiesResponse {
 
 export const ACTIVITY_TYPE_LABELS: Record<ActivityType, string> = {
   coffee: 'Kahve & Sohbet',
-  food: 'Yemek & Icecek',
-  sport: 'Spor & Doga',
-  culture: 'Kultur & Sanat',
-  nightlife: 'Gece & Eglence',
-  other: 'Diger',
+  food: 'Yemek & İçecek',
+  sport: 'Spor & Doğa',
+  culture: 'Kültür & Sanat',
+  nightlife: 'Gece & Eğlence',
+  other: 'Diğer',
 };
 
 export const ACTIVITY_TYPE_ICONS: Record<ActivityType, string> = {

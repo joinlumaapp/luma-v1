@@ -48,7 +48,7 @@ export const SelamButton: React.FC<SelamButtonProps> = ({
       }
     } catch (error: unknown) {
       const message =
-        error instanceof Error ? error.message : 'Selam gonderilemedi.';
+        error instanceof Error ? error.message : 'Selam gönderilemedi.';
       Alert.alert('Hata', message);
     } finally {
       setIsSending(false);
@@ -61,9 +61,9 @@ export const SelamButton: React.FC<SelamButtonProps> = ({
     if (coinBalance < GREETING_COST) {
       Alert.alert(
         'Yetersiz Jeton',
-        `Selam gondermek icin ${GREETING_COST} jeton gerekli.`,
+        `Selam göndermek için ${GREETING_COST} jeton gerekli.`,
         [
-          { text: 'Vazgec', style: 'cancel' },
+          { text: 'Vazgeç', style: 'cancel' },
           { text: 'Jeton Al', onPress: onBuyJeton },
         ],
       );
@@ -71,11 +71,11 @@ export const SelamButton: React.FC<SelamButtonProps> = ({
     }
 
     Alert.alert(
-      'Selam Gonder',
-      `${recipientName} adli kisiye selam gondermek icin ${GREETING_COST} jeton harcanacak. Devam etmek istiyor musun?`,
+      'Selam Gönder',
+      `${recipientName} adlı kişiye selam göndermek için ${GREETING_COST} jeton harcanacak. Devam etmek istiyor musun?`,
       [
-        { text: 'Vazgec', style: 'cancel' },
-        { text: 'Gonder', onPress: sendGreeting },
+        { text: 'Vazgeç', style: 'cancel' },
+        { text: 'Gönder', onPress: sendGreeting },
       ],
     );
   }, [isSending, isSent, coinBalance, recipientName, onBuyJeton, sendGreeting]);
@@ -91,7 +91,7 @@ export const SelamButton: React.FC<SelamButtonProps> = ({
           style={styles.gradient}
         >
           <Ionicons name="checkmark" size={16} color="#FFFFFF" />
-          <Text style={styles.text}>Gonderildi</Text>
+          <Text style={styles.text}>Gönderildi</Text>
         </LinearGradient>
       </Pressable>
     );
@@ -101,7 +101,7 @@ export const SelamButton: React.FC<SelamButtonProps> = ({
     <Pressable
       onPress={handlePress}
       disabled={isSending}
-      accessibilityLabel={`${recipientName} adli kisiye selam gonder`}
+      accessibilityLabel={`${recipientName} adlı kişiye selam gönder`}
       accessibilityRole="button"
       style={styles.wrapper}
     >

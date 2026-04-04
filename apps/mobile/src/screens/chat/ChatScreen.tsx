@@ -850,7 +850,7 @@ export const ChatScreen: React.FC = () => {
             <View style={styles.uploadProgressTrack}>
               <View style={[styles.uploadProgressFill, { width: `${imageUploadProgress}%` }]} />
             </View>
-            <Text style={styles.uploadProgressText}>Yukleniyor %{imageUploadProgress}</Text>
+            <Text style={styles.uploadProgressText}>Yükleniyor %{imageUploadProgress}</Text>
           </View>
         )}
 

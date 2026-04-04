@@ -371,7 +371,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
       });
     } catch (error: unknown) {
       if (__DEV__) {
-        console.warn('Kesif akisi yukleme basarisiz, servis mock fallback kullanilacak:', error);
+        console.warn('Keşif akışı yükleme başarısız, servis mock fallback kullanılacak:', error);
       }
       const apiError = parseApiError(error as AxiosError);
       set({ isLoading: false, error: apiError.userMessage });
@@ -489,7 +489,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
       });
 
       if (__DEV__) {
-        console.warn('Swipe basarisiz:', error);
+        console.warn('Swipe başarısız:', error);
       }
     }
   },

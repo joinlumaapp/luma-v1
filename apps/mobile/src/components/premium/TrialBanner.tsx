@@ -73,7 +73,7 @@ export const TrialBanner: React.FC = () => {
     <Pressable
       onPress={handlePress}
       accessibilityRole="button"
-      accessibilityLabel="Premium deneme suresi — planlari gor"
+      accessibilityLabel="Premium deneme süresi — planları gör"
       style={({ pressed }) => [
         styles.container,
         isUrgent && styles.containerUrgent,

@@ -175,31 +175,35 @@ const errorStyles = StyleSheet.create({
   },
 });
 
-// ─── Forced Dark Status Bar ───────────────────────────────────────────
-// Always dark background (#08080F) with white text — never changes.
-// Uses an interval to forcefully re-apply every second, catching any
-// override caused by navigation transitions, modals, or third-party libs.
+// ─── Global Status Bar ───────────────────────────────────────────────
+// White text/icons on solid black background — consistent across all screens.
+// Re-applies on mount and whenever the app returns to foreground to
+// counteract any overrides from navigation transitions or third-party libs.
 function ThemedStatusBar(): React.JSX.Element {
   useEffect(() => {
-    const forceStatusBar = (): void => {
+    const applyStatusBar = (): void => {
       RNStatusBar.setBarStyle('light-content', true);
-      RNStatusBar.setBackgroundColor('#08080F', true);
+      RNStatusBar.setBackgroundColor('#000000', true);
       RNStatusBar.setTranslucent(false);
     };
 
-    // Force immediately
-    forceStatusBar();
+    // Apply immediately
+    applyStatusBar();
 
-    // Force on interval to catch any overrides
-    const interval = setInterval(forceStatusBar, 1000);
+    // Re-apply when app comes to foreground (catches modal/navigation overrides)
+    const subscription = AppState.addEventListener('change', (state: AppStateStatus) => {
+      if (state === 'active') {
+        applyStatusBar();
+      }
+    });
 
-    return () => clearInterval(interval);
+    return () => subscription.remove();
   }, []);
 
   return (
     <RNStatusBar
       barStyle="light-content"
-      backgroundColor="#08080F"
+      backgroundColor="#000000"
       translucent={false}
     />
   );

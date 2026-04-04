@@ -131,7 +131,7 @@ export const CardSkeleton: React.FC<CardSkeletonProps> = memo(({
           transform: [{ scale: pulseAnim }],
         },
       ]}
-      accessibilityLabel="Profil karti yukleniyor"
+      accessibilityLabel="Profil kartı yükleniyor"
       accessibilityRole="progressbar"
     >
       {/* Photo area */}

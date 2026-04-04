@@ -103,8 +103,8 @@ export const SwipeStamp: React.FC<SwipeStampProps> = memo(({
       pointerEvents="none"
       accessibilityLabel={
         type === 'like'
-          ? 'Begeni damgasi'
-          : 'Gecme damgasi'
+          ? 'Beğeni damgası'
+          : 'Geçme damgası'
       }
     >
       <Animated.Text

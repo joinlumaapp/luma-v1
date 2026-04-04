@@ -17,6 +17,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../stores/authStore';
 import { useTestModeStore } from '../../stores/testModeStore';
+import { storage } from '../../utils/storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
@@ -48,6 +49,7 @@ export const SelfieVerificationScreen: React.FC = () => {
       const timer = setTimeout(() => {
         setVerified(true);
         useAuthStore.getState().setOnboarded(true);
+        storage.setOnboarded(true);
       }, 2000);
       return () => clearTimeout(timer);
     }
@@ -107,7 +109,9 @@ export const SelfieVerificationScreen: React.FC = () => {
           'Selfie doğrulaması başarısız oldu. Tekrar deneyebilir veya atlayabilirsin.',
         );
       }
+      // Mark onboarding as complete — persist to storage for session restore
       useAuthStore.getState().setOnboarded(true);
+      await storage.setOnboarded(true);
     } catch {
       Alert.alert('Hata', 'Selfie doğrulanırken bir hata oluştu. Lütfen tekrar deneyin.');
     } finally {
@@ -118,7 +122,9 @@ export const SelfieVerificationScreen: React.FC = () => {
   const handleSkip = () => {
     // User skips selfie verification — NOT marked as verified
     useAuthStore.getState().setVerified(false);
+    // Mark onboarding as complete — persist to storage for session restore
     useAuthStore.getState().setOnboarded(true);
+    storage.setOnboarded(true);
   };
 
   const handleBack = () => {

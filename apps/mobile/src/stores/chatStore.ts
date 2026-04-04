@@ -166,7 +166,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       });
     } catch (error: unknown) {
       if (__DEV__) {
-        console.warn('Sohbet listesi yukleme basarisiz, servis fallback kullanilacak:', error);
+        console.warn('Sohbet listesi yükleme başarısız, servis fallback kullanılacak:', error);
       }
       const apiError = parseApiError(error as AxiosError);
       set({ isLoadingConversations: false, error: apiError.userMessage });

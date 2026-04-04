@@ -31,7 +31,7 @@ interface MatchCountdownProps {
 }
 
 const formatTimeRemaining = (ms: number): string => {
-  if (ms <= 0) return 'Sure doldu';
+  if (ms <= 0) return 'Süre doldu';
   const totalSeconds = Math.floor(ms / 1000);
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -93,7 +93,7 @@ export const MatchCountdown: React.FC<MatchCountdownProps> = ({
         // Remove the expired match from the list and clean up countdown
         removeMatchCountdown(matchId);
         unmatch(matchId).catch(() => {
-          if (__DEV__) console.warn('Suresi dolan eslestirme kaldirma basarisiz');
+          if (__DEV__) console.warn('Süresi dolan eşleştirme kaldırma başarısız');
         });
         if (onExpired) onExpired();
       }
@@ -128,7 +128,7 @@ export const MatchCountdown: React.FC<MatchCountdownProps> = ({
           color={colorSet.text}
         />
         <Text style={[styles.inlineText, { color: colorSet.text }]}>
-          {expired ? 'Sure doldu' : formatTimeRemaining(remaining)}
+          {expired ? 'Süre doldu' : formatTimeRemaining(remaining)}
         </Text>
         {!expired && urgency === 'critical' && (
           <Pressable onPress={handleExtend} style={styles.inlineExtend}>

@@ -2,7 +2,7 @@
 // Layout: header (avatar + identity) -> intention -> content -> like action
 // Design: soft shadows, warm tones, generous spacing, Poppins typography hierarchy
 
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,9 @@ import {
   Image,
   StyleSheet,
   Animated,
+  ActivityIndicator,
 } from 'react-native';
+import { Video, ResizeMode, type AVPlaybackStatus } from 'expo-av';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -31,10 +33,10 @@ const formatTimeAgo = (dateString: string): string => {
   const diffHour = Math.floor(diffMs / 3_600_000);
   const diffDay = Math.floor(diffMs / 86_400_000);
 
-  if (diffMin < 1) return 'az once';
+  if (diffMin < 1) return 'az önce';
   if (diffMin < 60) return `${diffMin} dk`;
   if (diffHour < 24) return `${diffHour} sa`;
-  if (diffDay < 7) return `${diffDay} gun`;
+  if (diffDay < 7) return `${diffDay} gün`;
   return new Date(dateString).toLocaleDateString('tr-TR', {
     day: 'numeric',
     month: 'short',
@@ -42,30 +44,146 @@ const formatTimeAgo = (dateString: string): string => {
 };
 
 
+// ─── Feed Video Player ──────────────────────────────────────
+
+interface FeedVideoPlayerProps {
+  videoUrl: string;
+  isVisible: boolean;
+}
+
+const FeedVideoPlayer: React.FC<FeedVideoPlayerProps> = ({ videoUrl, isVisible }) => {
+  const videoRef = useRef<Video>(null);
+  const [isMuted, setIsMuted] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // Auto-play when visible, pause when scrolled off
+  useEffect(() => {
+    if (!videoRef.current || hasError) return;
+    if (isVisible) {
+      videoRef.current.playAsync().catch(() => {});
+    } else {
+      videoRef.current.pauseAsync().catch(() => {});
+      setIsPlaying(false);
+    }
+  }, [isVisible, hasError]);
+
+  const handlePlaybackStatusUpdate = useCallback((status: AVPlaybackStatus) => {
+    if (!mountedRef.current) return;
+    if (!status.isLoaded) {
+      if (status.error) {
+        setHasError(true);
+        setIsLoading(false);
+      }
+      return;
+    }
+    setIsLoading(false);
+    setIsPlaying(status.isPlaying);
+  }, []);
+
+  const handleTogglePlay = useCallback(() => {
+    if (!videoRef.current) return;
+    if (isPlaying) {
+      videoRef.current.pauseAsync().catch(() => {});
+    } else {
+      videoRef.current.playAsync().catch(() => {});
+    }
+  }, [isPlaying]);
+
+  const handleToggleMute = useCallback(() => {
+    setIsMuted((prev) => !prev);
+  }, []);
+
+  const handleError = useCallback(() => {
+    if (!mountedRef.current) return;
+    setHasError(true);
+    setIsLoading(false);
+  }, []);
+
+  if (hasError) {
+    return (
+      <View style={mediaStyles.videoContainer}>
+        <View style={mediaStyles.videoErrorContainer}>
+          <Ionicons name="videocam-off-outline" size={28} color="rgba(255,255,255,0.6)" />
+          <Text style={mediaStyles.videoErrorText}>Video yüklenemedi</Text>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={mediaStyles.videoContainer}>
+      <Video
+        ref={videoRef}
+        source={{ uri: videoUrl }}
+        style={mediaStyles.videoPlayer}
+        resizeMode={ResizeMode.COVER}
+        isLooping
+        isMuted={isMuted}
+        shouldPlay={isVisible}
+        onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
+        onError={handleError}
+      />
+
+      {/* Tap area for play/pause */}
+      <Pressable style={mediaStyles.videoTapOverlay} onPress={handleTogglePlay}>
+        {!isPlaying && !isLoading && (
+          <View style={mediaStyles.playButton}>
+            <Ionicons name="play" size={28} color={palette.purple[500]} style={{ marginLeft: 2 }} />
+          </View>
+        )}
+      </Pressable>
+
+      {/* Loading indicator */}
+      {isLoading && (
+        <View style={mediaStyles.videoLoadingOverlay}>
+          <ActivityIndicator size="small" color="#FFFFFF" />
+        </View>
+      )}
+
+      {/* Bottom gradient */}
+      <LinearGradient
+        colors={['transparent', 'rgba(0,0,0,0.5)']}
+        style={mediaStyles.imageGradientOverlay}
+        pointerEvents="none"
+      />
+
+      {/* Mute/unmute button */}
+      <Pressable
+        style={mediaStyles.muteButton}
+        onPress={handleToggleMute}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
+        <Ionicons
+          name={isMuted ? 'volume-mute' : 'volume-high'}
+          size={16}
+          color="#FFFFFF"
+        />
+      </Pressable>
+    </View>
+  );
+};
+
 // ─── Media Section (photos + video) ──────────────────────────
 
 interface MediaSectionProps {
   photos: string[];
   videoUrl: string | null;
+  isVisible?: boolean;
 }
 
-const MediaSection: React.FC<MediaSectionProps> = ({ photos, videoUrl }) => {
+const MediaSection: React.FC<MediaSectionProps> = ({ photos, videoUrl, isVisible = false }) => {
   if (videoUrl) {
-    return (
-      <View style={mediaStyles.videoContainer}>
-        <Image source={{ uri: videoUrl }} style={mediaStyles.videoThumb} resizeMode="cover" />
-        <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.5)']}
-          style={mediaStyles.imageGradientOverlay}
-          pointerEvents="none"
-        />
-        <View style={mediaStyles.playOverlay}>
-          <View style={mediaStyles.playButton}>
-            <Text style={mediaStyles.playIcon}>{'\u25B6'}</Text>
-          </View>
-        </View>
-      </View>
-    );
+    return <FeedVideoPlayer videoUrl={videoUrl} isVisible={isVisible} />;
   }
 
   if (photos.length === 0) return null;
@@ -134,9 +252,11 @@ interface FeedCardProps {
   onFollow: (userId: string) => void;
   onProfilePress: (userId: string) => void;
   onPostTap?: (post: FeedPost) => void;
+  /** Whether this card is currently visible in the viewport (for video auto-play) */
+  isVisible?: boolean;
 }
 
-export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onProfilePress, onPostTap }) => {
+export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onProfilePress, onPostTap, isVisible = false }) => {
   const likeScale = useRef(new Animated.Value(1)).current;
   const likeGlow = useRef(new Animated.Value(0)).current;
   const likeCountAnim = useRef(new Animated.Value(0)).current;
@@ -326,9 +446,9 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onPr
 
       {/* ── Content (tappable) ── */}
       <Pressable onPress={handleContentPress}>
-        <TextContent content={post.content} />
+        {post.content.length > 0 && <TextContent content={post.content} />}
 
-        <MediaSection photos={post.photoUrls} videoUrl={post.videoUrl} />
+        <MediaSection photos={post.photoUrls} videoUrl={post.videoUrl} isVisible={isVisible} />
 
         {/* MusicCard removed — music feature removed */}
 
@@ -653,12 +773,15 @@ const mediaStyles = StyleSheet.create({
     backgroundColor: colors.surfaceLight,
     position: 'relative' as const,
   },
-  videoThumb: { width: '100%', height: '100%' },
-  playOverlay: {
+  videoPlayer: {
+    width: '100%',
+    height: '100%',
+  },
+  videoTapOverlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.15)',
+    zIndex: 2,
   },
   playButton: {
     width: 50,
@@ -673,7 +796,37 @@ const mediaStyles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 4,
   },
-  playIcon: { fontSize: 20, color: palette.purple[500], marginLeft: 3 },
+  videoLoadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    zIndex: 3,
+  },
+  muteButton: {
+    position: 'absolute',
+    bottom: spacing.sm,
+    right: spacing.sm,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 4,
+  },
+  videoErrorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.surfaceLight,
+    gap: 8,
+  },
+  videoErrorText: {
+    color: colors.textTertiary,
+    fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
+  },
   imageGradientOverlay: {
     position: 'absolute',
     left: 0,

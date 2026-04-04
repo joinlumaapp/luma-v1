@@ -12,7 +12,7 @@
  * <StatCard
  *   icon="heart"
  *   value={142}
- *   label="Eslesme"
+ *   label="Eşleşme"
  *   gradient
  * />
  * <StatCard

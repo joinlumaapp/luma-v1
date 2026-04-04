@@ -902,7 +902,7 @@ export const DiscoveryScreen: React.FC = () => {
             onRefresh={handlePullRefresh}
             tintColor="#D4AF37"
             colors={['#D4AF37']}
-            title="Yeni profiller yukleniyor..."
+            title="Yeni profiller yükleniyor..."
             titleColor={colors.textSecondary}
           />
         }

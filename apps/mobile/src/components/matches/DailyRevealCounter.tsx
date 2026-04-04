@@ -30,7 +30,7 @@ export const DailyRevealCounter: React.FC<DailyRevealCounterProps> = ({
   return (
     <View style={styles.container}>
       <View style={styles.leftSection}>
-        <Text style={styles.label}>Gunluk acim:</Text>
+        <Text style={styles.label}>Günlük açım:</Text>
         <View style={styles.dots}>
           {Array.from({ length: limit }).map((_, i) => (
             <View

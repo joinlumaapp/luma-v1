@@ -527,7 +527,7 @@ export const InstantConnectScreen: React.FC = () => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
       switchUser();
     } else {
-      Alert.alert('Yetersiz Jeton', 'Sonrakine gecmek icin yeterli jetonun yok.', [
+      Alert.alert('Yetersiz Jeton', 'Sonrakine geçmek için yeterli jetonun yok.', [
         { text: 'Tamam', style: 'cancel' },
         { text: 'Jeton Al', onPress: () => navigation.navigate('JetonMarket' as never) },
       ]);

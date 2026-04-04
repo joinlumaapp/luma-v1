@@ -113,7 +113,7 @@ export const IcebreakerInput: React.FC<IcebreakerInputProps> = ({
 
   const isPhoto = target.type === 'photo';
   const placeholderText = isPhoto
-    ? `Bu fotograf hakkinda bir sey yaz...`
+    ? `Bu fotoğraf hakkında bir şey yaz...`
     : `Bu yanita yorum yap...`;
   const charCount = text.length;
   const isOverLimit = charCount > MAX_CHARS;
@@ -197,7 +197,7 @@ export const IcebreakerInput: React.FC<IcebreakerInputProps> = ({
               onPress={handleSend}
               disabled={!canSend}
               style={[styles.sendButton, !canSend && styles.sendButtonDisabled]}
-              accessibilityLabel="Begeni ve mesaj gonder"
+              accessibilityLabel="Beğeni ve mesaj gönder"
               accessibilityRole="button"
             >
               <LinearGradient
@@ -227,7 +227,7 @@ export const IcebreakerInput: React.FC<IcebreakerInputProps> = ({
           {/* Character counter */}
           <View style={styles.counterRow}>
             <Text style={styles.hintText}>
-              Begeni + mesaj birlikte gonderilir
+              Beğeni + mesaj birlikte gönderilir
             </Text>
             <Text
               style={[

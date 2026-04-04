@@ -223,7 +223,7 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
           contentFit="cover"
           priority="high"
           transition={300}
-          accessibilityLabel={`${profile.firstName} profil fotografi`}
+          accessibilityLabel={`${profile.firstName} profil fotoğrafı`}
         />
       ) : (
         <View style={styles.photoPlaceholder}>

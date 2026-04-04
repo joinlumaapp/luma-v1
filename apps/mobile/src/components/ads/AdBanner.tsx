@@ -32,19 +32,19 @@ const MOCK_ADS: ReadonlyArray<{
 }> = [
   {
     headline: 'LUMA Premium',
-    body: 'Sinirsiz begeni, gelismis filtreler ve daha fazlasi.',
+    body: 'Sınırsız beğeni, gelişmiş filtreler ve daha fazlası.',
     icon: 'diamond',
     accentColor: palette.purple[400],
   },
   {
-    headline: 'Super Eslesmeler',
-    body: 'Uyumluluk puanini gor, en iyi eslesmelerini bul.',
+    headline: 'Süper Eşleşmeler',
+    body: 'Uyumluluk puanını gör, en iyi eşleşmelerini bul.',
     icon: 'sparkles',
     accentColor: palette.pink[400],
   },
   {
     headline: 'LUMA Gold',
-    body: 'Seni begenen profilleri hemen gor.',
+    body: 'Seni beğenen profilleri hemen gör.',
     icon: 'star',
     accentColor: palette.gold[400],
   },
@@ -126,7 +126,7 @@ export const AdBanner: React.FC<AdBannerProps> = React.memo(({ index = 0 }) => {
         {/* Upgrade CTA */}
         <View style={adStyles.ctaRow}>
           <Text style={adStyles.upgradeHint}>
-            Reklamsiz deneyim icin pakete yukselt
+            Reklamsız deneyim için pakete yükselt
           </Text>
           <TouchableOpacity
             style={adStyles.ctaButton}

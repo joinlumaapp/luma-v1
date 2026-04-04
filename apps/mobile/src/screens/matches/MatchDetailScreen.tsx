@@ -22,7 +22,7 @@ import { colors, palette } from '../../theme/colors';
 import { fontWeights } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { useMatchStore } from '../../stores/matchStore';
-// coinStore import removed — Super Like / Boost buttons no longer shown on match detail
+import { GOLD_COSTS } from '@luma/shared';
 import { useScreenTracking, analyticsService, ANALYTICS_EVENTS } from '../../hooks/useAnalytics';
 import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
 import { VerifiedBadge } from '../../components/common/VerifiedBadge';
@@ -358,7 +358,7 @@ export const MatchDetailScreen: React.FC = () => {
             <Ionicons name="calendar" size={16} color={palette.purple[600]} />
             <Text style={styles.outlinedButtonText}>Buluşma Planla</Text>
             <View style={styles.jetonCostChip}>
-              <Text style={styles.jetonCostText}>5 Jeton</Text>
+              <Text style={styles.jetonCostText}>{GOLD_COSTS.DATE_PLANNER} Jeton</Text>
             </View>
           </View>
         </TouchableOpacity>

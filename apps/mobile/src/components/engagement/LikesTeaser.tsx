@@ -124,7 +124,7 @@ export const LikesTeaser: React.FC<LikesTeaserProps> = ({ onPressPremium, onPres
           {/* Text */}
           <View style={styles.textBlock}>
             <Text style={styles.title}>
-              {count} kisi seni begendi!
+              {count} kişi seni beğendi!
             </Text>
             <Text style={styles.subtitle}>
               {isPremium

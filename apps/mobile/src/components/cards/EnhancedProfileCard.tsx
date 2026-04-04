@@ -112,7 +112,7 @@ const DotIndicators: React.FC<DotIndicatorsProps> = ({ count, activeIndex }) => 
   if (count <= 1) return null;
 
   return (
-    <View style={dotStyles.container} accessibilityLabel={`Fotograf ${activeIndex + 1} / ${count}`}>
+    <View style={dotStyles.container} accessibilityLabel={`Fotoğraf ${activeIndex + 1} / ${count}`}>
       {Array.from({ length: count }, (_, i) => (
         <View
           key={i}
@@ -195,7 +195,7 @@ const EnhancedProfileCardInner: React.FC<EnhancedProfileCardProps> = ({
         contentFit="cover"
         priority="high"
         transition={200}
-        accessibilityLabel={`${name} profil fotografi`}
+        accessibilityLabel={`${name} profil fotoğrafı`}
       />
     ),
     [width, height, name],
@@ -257,7 +257,7 @@ const EnhancedProfileCardInner: React.FC<EnhancedProfileCardProps> = ({
 
       {/* Verified badge — top left */}
       {isVerified && (
-        <View style={styles.verifiedBadge} accessibilityLabel="Dogrulanmis profil">
+        <View style={styles.verifiedBadge} accessibilityLabel="Doğrulanmış profil">
           <Ionicons name="checkmark" size={14} color={palette.white} />
         </View>
       )}

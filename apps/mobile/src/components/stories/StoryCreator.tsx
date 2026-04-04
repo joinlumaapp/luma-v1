@@ -634,7 +634,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
       <View style={[styles.bottomBar, { bottom: insets.bottom + 16 }]}>
         <TouchableOpacity style={styles.changeImageButton} onPress={handlePickFromGallery}>
           <Ionicons name="images-outline" size={20} color="#FFFFFF" />
-          <Text style={styles.changeImageText}>Degistir</Text>
+          <Text style={styles.changeImageText}>Değiştir</Text>
         </TouchableOpacity>
 
         <TouchableOpacity

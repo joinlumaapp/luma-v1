@@ -81,13 +81,13 @@ export const DMPaymentModal: React.FC<DMPaymentModalProps> = ({
           {/* Title */}
           <Text style={styles.title}>Direkt Mesaj Gönder</Text>
           <Text style={styles.subtitle}>
-            {recipientName} adli kisiye mesaj gonder
+            {recipientName} adlı kişiye mesaj gönder
           </Text>
 
           {/* Cost display */}
           <View style={styles.costContainer}>
             <View style={styles.costRow}>
-              <Text style={styles.costLabel}>Mesaj ucreti</Text>
+              <Text style={styles.costLabel}>Mesaj ücreti</Text>
               <View style={styles.costValue}>
                 <View style={styles.miniCoin}>
                   <Text style={styles.miniCoinText}>J</Text>
