@@ -93,11 +93,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     softwareKeyboardLayoutMode: 'resize',
     package: getUniqueIdentifier(),
     versionCode: 1,
-    statusBar: {
-      barStyle: 'light-content',
-      backgroundColor: '#08080F',
-      translucent: false,
-    },
     permissions: [
       'CAMERA',
       'READ_EXTERNAL_STORAGE',
