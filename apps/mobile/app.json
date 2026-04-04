@@ -86,7 +86,8 @@
           "photosPermission": "LUMA, profilinize fotograf eklemek icin galeri erisinize ihtiyac duyuyor.",
           "cameraPermission": "LUMA, profil dogrulama ve fotograf cekmek icin kameraniza erisim istiyor."
         }
-      ]
+      ],
+      "@infinitered/react-native-mlkit-face-detection"
     ],
     "extra": {},
     "owner": "luma-dating"

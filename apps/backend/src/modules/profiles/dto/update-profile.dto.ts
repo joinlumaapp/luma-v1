@@ -10,6 +10,7 @@ import {
   MinLength,
   Min,
   Max,
+  ValidateIf,
 } from "class-validator";
 
 export class UpdateProfileDto {
@@ -54,6 +55,7 @@ export class UpdateProfileDto {
   })
   @IsOptional()
   @IsString()
+  @ValidateIf((o) => o.bio !== undefined && o.bio !== null && o.bio !== "")
   @MinLength(10, { message: "Hakkinda yazisi en az 10 karakter olmali" })
   @MaxLength(500)
   bio?: string;

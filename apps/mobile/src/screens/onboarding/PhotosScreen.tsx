@@ -30,6 +30,7 @@ import type { OnboardingStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../stores/profileStore';
 import { photoService } from '../../services/photoService';
 import type { CompressedImage } from '../../services/photoService';
+import { validateProfilePhoto } from '../../services/faceDetectionService';
 import { PROFILE_CONFIG } from '../../constants/config';
 import {
   OnboardingLayout,
@@ -62,6 +63,7 @@ export const PhotosScreen: React.FC = () => {
     Array.from({ length: ONBOARDING_PHOTO_SLOTS }, () => null)
   );
   const [compressingIndex, setCompressingIndex] = useState<number | null>(null);
+  const [detectingFace, setDetectingFace] = useState(false);
   const setProfileField = useProfileStore((state) => state.setField);
 
   // Animation value for the continue button
@@ -74,6 +76,29 @@ export const PhotosScreen: React.FC = () => {
   const isValid = photoSlots[0] !== null && selectedCount >= PROFILE_CONFIG.MIN_PHOTOS;
 
   const processPhoto = useCallback(async (uri: string, index: number) => {
+    // For the first slot (profile photo), validate that a face is visible
+    if (index === 0) {
+      setDetectingFace(true);
+      setCompressingIndex(index);
+      try {
+        const hasFace = await validateProfilePhoto(uri);
+        if (!hasFace) {
+          // Face validation failed — reject the photo, alert already shown by service
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          setDetectingFace(false);
+          setCompressingIndex(null);
+          return;
+        }
+      } catch {
+        // If face detection itself throws, allow the photo through (graceful degradation)
+        if (__DEV__) {
+          console.warn('[PhotosScreen] Face detection threw unexpectedly, allowing photo');
+        }
+      } finally {
+        setDetectingFace(false);
+      }
+    }
+
     setCompressingIndex(index);
     try {
       const compressed = await photoService.compressImage(uri);
@@ -207,7 +232,9 @@ export const PhotosScreen: React.FC = () => {
         {isCompressing ? (
           <View style={styles.compressingContent}>
             <ActivityIndicator size="small" color={onboardingColors.text} />
-            <Text style={styles.compressingText}>İşleniyor...</Text>
+            <Text style={styles.compressingText}>
+              {isMain && detectingFace ? 'Y\u00fcz kontrol ediliyor...' : '\u0130\u015fleniyor...'}
+            </Text>
           </View>
         ) : slot ? (
           <Animated.View

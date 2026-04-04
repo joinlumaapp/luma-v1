@@ -1,4 +1,4 @@
-// Onboarding Bio step: Bio text input with character counter
+// Onboarding Bio step: Bio text input with character counter and pre-made templates
 // Positioned after CitySelection, before PromptSelection in the onboarding flow.
 
 import React, { useState } from 'react';
@@ -17,7 +17,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { OnboardingStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../stores/profileStore';
 import { OnboardingProgress } from '../../components/onboarding/OnboardingProgress';
-import { colors } from '../../theme/colors';
+import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { PROFILE_CONFIG } from '../../constants/config';
@@ -28,13 +28,25 @@ type NavProp = NativeStackNavigationProp<OnboardingStackParamList, 'Bio'>;
 
 const CURRENT_STEP = 10;
 
+/** Pre-made bio templates users can tap to fill in */
+const BIO_TEMPLATES: string[] = [
+  'Hayatın tadını çıkarmayı seven, spontane planlar yapan biriyim.',
+  'Kitap kurdu, kahve bağımlısı. Sakin bir akşam ya da canlı bir sohbet — ikisi de olur.',
+  'Spor, müzik ve iyi yemek üçgenim. Beraber keşfedelim!',
+  'Doğa yürüyüşleri, film geceleri ve samimi sohbetler benim işim.',
+  'Kariyer odaklı ama eğlenceyi de ihmal etmeyen biri. Dengeyi seviyorum.',
+  'Seyahat etmeyi, yeni kültürler tanımayı ve lezzetli yemekler keşfetmeyi seviyorum.',
+  'Sosyal, enerjik ve pozitif biri. Hayata gülümseyerek bakıyorum.',
+  'Sakin, düşünceli ve derin sohbetleri seven biriyim. Yüzeysel değil, gerçek bağlantılar arıyorum.',
+];
+
 const BIO_PROMPTS = [
   {
-    question: 'Bos zamanlarinda ne yapmayi seversin?',
-    example: 'Kitap okumak, yuruyus yapmak ve yeni tarifler denemek beni mutlu ediyor.',
+    question: 'Boş zamanlarında ne yapmayı seversin?',
+    example: 'Kitap okumak, yürüyüş yapmak ve yeni tarifler denemek beni mutlu ediyor.',
   },
   {
-    question: 'Ideal bir hafta sonu nasil gecer?',
+    question: 'İdeal bir hafta sonu nasıl geçer?',
     example: 'Sabah kahve, öğle arkadaşlarla buluşma, akşam güzel bir film.',
   },
   {
@@ -46,6 +58,7 @@ const BIO_PROMPTS = [
 export const BioScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
   const [bio, setBio] = useState('');
+  const [selectedTemplateIndex, setSelectedTemplateIndex] = useState<number | null>(null);
   const setProfileField = useProfileStore((state) => state.setField);
 
   const trimmedBio = bio.trim();
@@ -53,6 +66,21 @@ export const BioScreen: React.FC = () => {
   const isNearLimit = charCount > PROFILE_CONFIG.MAX_BIO_LENGTH * 0.8;
   const isTooShort = trimmedBio.length > 0 && trimmedBio.length < PROFILE_CONFIG.MIN_BIO_LENGTH;
   const isValidBio = trimmedBio.length >= PROFILE_CONFIG.MIN_BIO_LENGTH;
+
+  const handleTemplateSelect = (template: string, index: number) => {
+    setBio(template);
+    setSelectedTemplateIndex(index);
+  };
+
+  const handleBioChange = (text: string) => {
+    if (text.length <= PROFILE_CONFIG.MAX_BIO_LENGTH) {
+      setBio(text);
+      // Clear template selection when user manually edits to something different
+      if (selectedTemplateIndex !== null && text !== BIO_TEMPLATES[selectedTemplateIndex]) {
+        setSelectedTemplateIndex(null);
+      }
+    }
+  };
 
   const handleContinue = () => {
     if (isValidBio) {
@@ -86,6 +114,43 @@ export const BioScreen: React.FC = () => {
           Kendini tanımla. İlgi çekici bir bio eşleşme şansını arttırır.
         </Text>
 
+        {/* Pre-made bio templates — horizontally scrollable */}
+        <View style={styles.templatesSection}>
+          <Text style={styles.templatesSectionLabel}>Hazır şablonlar</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.templatesListContent}
+            style={styles.templatesList}
+          >
+            {BIO_TEMPLATES.map((template, index) => {
+              const isSelected = selectedTemplateIndex === index;
+              return (
+                <TouchableOpacity
+                  key={`template-${index}`}
+                  style={[styles.templateChip, isSelected && styles.templateChipSelected]}
+                  onPress={() => handleTemplateSelect(template, index)}
+                  activeOpacity={0.7}
+                  accessibilityLabel={`Şablon: ${template}`}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isSelected }}
+                  accessibilityHint="Bu şablonu bio alanına eklemek için dokun"
+                >
+                  <Text
+                    style={[
+                      styles.templateChipText,
+                      isSelected && styles.templateChipTextSelected,
+                    ]}
+                    numberOfLines={2}
+                  >
+                    {template}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+
         {/* Prompt suggestions with examples */}
         <View style={styles.promptsContainer}>
           {BIO_PROMPTS.map((prompt, index) => (
@@ -112,11 +177,7 @@ export const BioScreen: React.FC = () => {
           <TextInput
             style={styles.bioInput}
             value={bio}
-            onChangeText={(text) => {
-              if (text.length <= PROFILE_CONFIG.MAX_BIO_LENGTH) {
-                setBio(text);
-              }
-            }}
+            onChangeText={handleBioChange}
             placeholder="Kendinden bahset..."
             placeholderTextColor={colors.textTertiary}
             multiline
@@ -191,6 +252,42 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.textSecondary,
     marginBottom: spacing.md,
+  },
+  templatesSection: {
+    marginBottom: spacing.md,
+  },
+  templatesSectionLabel: {
+    ...typography.label,
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+  },
+  templatesList: {
+    marginHorizontal: -spacing.lg,
+  },
+  templatesListContent: {
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
+  },
+  templateChip: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.smd,
+    borderWidth: 1.5,
+    borderColor: colors.surfaceBorder,
+    width: 220,
+  },
+  templateChipSelected: {
+    borderColor: palette.purple[400],
+    backgroundColor: palette.purple[50],
+  },
+  templateChipText: {
+    ...typography.bodySmall,
+    color: colors.text,
+    lineHeight: 20,
+  },
+  templateChipTextSelected: {
+    color: palette.purple[700],
   },
   promptsContainer: {
     gap: spacing.sm,

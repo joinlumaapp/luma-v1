@@ -2,6 +2,7 @@
 // Features: follow system, photo/video/text posts, profanity filter
 // Uses real API with mock data fallback for dev mode
 
+import { Platform } from 'react-native';
 import api from './api';
 import { devMockOrThrow, assertDevOnly } from '../utils/mockGuard';
 
@@ -355,6 +356,55 @@ export const socialFeedService = {
     } catch {
       // TODO: Backend endpoint not implemented yet, return empty
       return { likers: [], total: 0 };
+    }
+  },
+
+  /**
+   * Upload a media file (photo or video) to the storage backend.
+   * Returns the public URL that can be used in a post.
+   *
+   * Uses POST /storage/upload (multipart/form-data) which stores the file
+   * in S3 (production) or local uploads/ directory (dev mode) and returns
+   * a publicly accessible URL.
+   *
+   * This MUST be called before createPost for photo/video posts so that
+   * the post stores a real URL instead of a local device file:// URI.
+   *
+   * In dev mode, falls back to the local URI if the upload endpoint
+   * is unavailable, so the app still works without a running backend.
+   */
+  uploadPostMedia: async (localUri: string, mediaType: 'photo' | 'video'): Promise<string> => {
+    const fileName = localUri.split('/').pop() ?? `post_media_${Date.now()}`;
+    const ext = fileName.split('.').pop()?.toLowerCase() ?? '';
+
+    let mimeType: string;
+    if (mediaType === 'video') {
+      mimeType = ext === 'mov' ? 'video/quicktime' : 'video/mp4';
+    } else {
+      if (ext === 'png') mimeType = 'image/png';
+      else if (ext === 'webp') mimeType = 'image/webp';
+      else if (ext === 'heic') mimeType = 'image/heic';
+      else mimeType = 'image/jpeg';
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('file', {
+        uri: Platform.OS === 'ios' ? localUri.replace('file://', '') : localUri,
+        type: mimeType,
+        name: fileName,
+      } as unknown as Blob);
+
+      const response = await api.post<{ url: string; key: string; size: number }>(
+        '/storage/upload',
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      );
+
+      return response.data.url;
+    } catch (error) {
+      // In dev mode, fall back to local URI so posts still display on-device
+      return devMockOrThrow(error, localUri, 'socialFeedService.uploadPostMedia');
     }
   },
 

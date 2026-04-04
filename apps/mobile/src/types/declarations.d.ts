@@ -1,5 +1,27 @@
 // Module declarations for packages without types or not yet installed
 
+declare module '@infinitered/react-native-mlkit-face-detection' {
+  interface Face {
+    bounds: { x: number; y: number; width: number; height: number };
+    smilingProbability?: number;
+    leftEyeOpenProbability?: number;
+    rightEyeOpenProbability?: number;
+    rollAngle?: number;
+    yawAngle?: number;
+    trackingId?: number;
+  }
+
+  function detectFaces(imageUri: string): Promise<Face[]>;
+
+  const _default: {
+    detectFaces: typeof detectFaces;
+  };
+
+  export default _default;
+  export { detectFaces };
+  export type { Face };
+}
+
 declare module '@sentry/react-native' {
   export function init(options: {
     dsn: string;

@@ -18,6 +18,7 @@ import type { AuthStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../stores/authStore';
 import { useProfileStore } from '../../stores/profileStore';
 import { useTestModeStore } from '../../stores/testModeStore';
+import { validateSelfieFace } from '../../services/faceDetectionService';
 import { storage } from '../../utils/storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../theme/colors';
@@ -36,6 +37,7 @@ export const SelfieVerificationScreen: React.FC = () => {
   const [permission, requestPermission] = useCameraPermissions();
   const [isTakingSelfie, setIsTakingSelfie] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isValidatingFace, setIsValidatingFace] = useState(false);
   const [selfieComplete, setSelfieComplete] = useState(false);
   const [capturedUri, setCapturedUri] = useState<string | null>(null);
   const [capturedBase64, setCapturedBase64] = useState<string | null>(null);
@@ -45,35 +47,93 @@ export const SelfieVerificationScreen: React.FC = () => {
   const isTestMode = useTestModeStore((state) => state.isTestMode);
   const updateProfile = useProfileStore((state) => state.updateProfile);
 
+  // Get the first profile photo for the reference display
+  const profilePhotos = useProfileStore((state) => state.profile.photos);
+  const firstProfilePhoto = profilePhotos.length > 0 ? profilePhotos[0] : null;
+
   /**
    * Save collected onboarding profile fields to the backend before marking
    * onboarding as complete. Without this, firstName and other fields collected
    * during onboarding would remain only in the client-side Zustand store and
    * never reach the database, causing "Kullanici" fallback everywhere.
+   *
+   * This function:
+   * 1. Sends text profile fields via PATCH /profiles/me
+   * 2. Uploads each selected photo via POST /profiles/photos (multipart)
+   * 3. Only sends non-empty fields to avoid backend DTO validation errors
    */
   const saveProfileAndComplete = useCallback(async () => {
-    const { profile } = useProfileStore.getState();
+    const { profile, uploadPhoto } = useProfileStore.getState();
+
+    // Build payload with only non-empty fields to avoid DTO validation rejecting
+    // empty strings (e.g. bio with @MinLength(10) would reject '')
+    const profilePayload: Record<string, unknown> = {};
+    if (profile.firstName && profile.firstName.trim().length > 0) {
+      profilePayload.firstName = profile.firstName.trim();
+    }
+    if (profile.lastName && profile.lastName.trim().length > 0) {
+      profilePayload.lastName = profile.lastName.trim();
+    }
+    if (profile.birthDate && profile.birthDate.length > 0) {
+      profilePayload.birthDate = profile.birthDate;
+    }
+    if (profile.gender && profile.gender.length > 0) {
+      profilePayload.gender = profile.gender;
+    }
+    if (profile.bio && profile.bio.trim().length >= 10) {
+      profilePayload.bio = profile.bio.trim();
+    }
+    if (profile.city && profile.city.trim().length > 0) {
+      profilePayload.city = profile.city.trim();
+    }
+    if (profile.intentionTag && profile.intentionTag.length > 0) {
+      profilePayload.intentionTag = profile.intentionTag;
+    }
+    if (profile.interestTags && profile.interestTags.length > 0) {
+      profilePayload.interestTags = profile.interestTags;
+    }
+    if (profile.height != null && profile.height > 0) {
+      profilePayload.height = profile.height;
+    }
+
+    // Step 1: Save text profile fields
     try {
-      await updateProfile({
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        birthDate: profile.birthDate,
-        gender: profile.gender,
-        bio: profile.bio,
-        city: profile.city,
-        intentionTag: profile.intentionTag,
-        interestTags: profile.interestTags,
-        height: profile.height,
-        job: profile.job,
-        education: profile.education,
-      });
-    } catch {
-      // Profile save failed but we still allow onboarding to complete.
-      // The profile will sync on next app launch or profile edit.
       if (__DEV__) {
-        console.warn('Profil kaydedilemedi, onboarding devam ediyor');
+        console.log('[Onboarding] Saving profile fields:', JSON.stringify(profilePayload));
+      }
+      await updateProfile(profilePayload);
+      if (__DEV__) {
+        console.log('[Onboarding] Profile fields saved successfully');
+      }
+    } catch (profileError) {
+      if (__DEV__) {
+        console.error('[Onboarding] Profile save failed:', profileError);
+      }
+      // Continue to photo upload even if profile save fails —
+      // profile can be retried on next app launch
+    }
+
+    // Step 2: Upload photos one by one (multipart/form-data)
+    const photoUris = profile.photos ?? [];
+    if (photoUris.length > 0) {
+      if (__DEV__) {
+        console.log(`[Onboarding] Uploading ${photoUris.length} photos...`);
+      }
+      for (let i = 0; i < photoUris.length; i++) {
+        try {
+          await uploadPhoto(photoUris[i]);
+          if (__DEV__) {
+            console.log(`[Onboarding] Photo ${i + 1}/${photoUris.length} uploaded`);
+          }
+        } catch (photoError) {
+          if (__DEV__) {
+            console.error(`[Onboarding] Photo ${i + 1} upload failed:`, photoError);
+          }
+          // Continue uploading remaining photos even if one fails
+        }
       }
     }
+
     useAuthStore.getState().setOnboarded(true);
     await storage.setOnboarded(true);
   }, [updateProfile]);
@@ -110,12 +170,33 @@ export const SelfieVerificationScreen: React.FC = () => {
         base64: true,
       });
       if (photo) {
+        // Validate that the selfie contains a face before proceeding
+        setIsValidatingFace(true);
+        const faceResult = await validateSelfieFace(photo.uri);
+        setIsValidatingFace(false);
+
+        if (!faceResult.valid) {
+          if (faceResult.reason === 'multiple_faces') {
+            Alert.alert(
+              'Birden Fazla Y\u00fcz Alg\u0131land\u0131',
+              'Selfie\'de yaln\u0131zca senin y\u00fcz\u00fcn g\u00f6r\u00fcnmeli. L\u00fctfen tek ba\u015f\u0131na tekrar dene.',
+            );
+          } else {
+            Alert.alert(
+              'Y\u00fcz Alg\u0131lanamad\u0131',
+              'Selfie\'deki y\u00fcz, profil foto\u011fraf\u0131nla e\u015fle\u015fmiyor. L\u00fctfen kendi foto\u011fraf\u0131n\u0131 kullan.',
+            );
+          }
+          return;
+        }
+
         setCapturedUri(photo.uri);
         setCapturedBase64(photo.base64 ?? null);
         setSelfieComplete(true);
       }
     } catch {
-      Alert.alert('Hata', 'Selfie çekilemedi. Lütfen tekrar deneyin.');
+      setIsValidatingFace(false);
+      Alert.alert('Hata', 'Selfie \u00e7ekilemedi. L\u00fctfen tekrar deneyin.');
     } finally {
       setIsTakingSelfie(false);
     }
@@ -179,8 +260,23 @@ export const SelfieVerificationScreen: React.FC = () => {
       <View style={styles.content}>
         <Text style={styles.title}>Selfie Doğrulama</Text>
         <Text style={styles.subtitle}>
-          Profilinin gerçek olduğunu doğrulamak için bir selfie çek. Yüzün net görünmeli.
+          Profilinin ger\u00e7ek oldu\u011funu do\u011frulamak i\u00e7in bir selfie \u00e7ek. Y\u00fcz\u00fcn net g\u00f6r\u00fcnmeli.
         </Text>
+
+        {/* Profile photo reference — accountability reminder */}
+        {firstProfilePhoto && (
+          <View style={styles.referenceContainer}>
+            <Image
+              source={{ uri: firstProfilePhoto }}
+              style={styles.referencePhoto}
+              resizeMode="cover"
+              accessibilityLabel="Profil foto\u011fraf\u0131n"
+            />
+            <Text style={styles.referenceText}>
+              Profil foto\u011fraf\u0131nla ayn\u0131 ki\u015fi oldu\u011fundan emin ol
+            </Text>
+          </View>
+        )}
 
         {/* Camera preview area */}
         <View style={styles.cameraContainer}>
@@ -259,16 +355,20 @@ export const SelfieVerificationScreen: React.FC = () => {
           </>
         ) : (
           <TouchableOpacity
-            style={[styles.selfieButton, (isTakingSelfie || !permissionGranted) && styles.selfieButtonDisabled]}
+            style={[styles.selfieButton, (isTakingSelfie || isValidatingFace || !permissionGranted) && styles.selfieButtonDisabled]}
             onPress={handleTakeSelfie}
-            disabled={isTakingSelfie || !permissionGranted}
+            disabled={isTakingSelfie || isValidatingFace || !permissionGranted}
             activeOpacity={0.85}
             accessibilityRole="button"
-            accessibilityLabel="Selfie çek"
+            accessibilityLabel="Selfie \u00e7ek"
           >
-            <Text style={styles.selfieButtonText}>
-              {isTakingSelfie ? 'Çekiliyor...' : 'Selfie Çek'}
-            </Text>
+            {isValidatingFace ? (
+              <ActivityIndicator color={colors.text} />
+            ) : (
+              <Text style={styles.selfieButtonText}>
+                {isTakingSelfie ? '\u00c7ekiliyor...' : 'Selfie \u00c7ek'}
+              </Text>
+            )}
           </TouchableOpacity>
         )}
 
@@ -317,6 +417,30 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: spacing.lg,
     lineHeight: 24,
+  },
+  referenceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    padding: spacing.smd,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: spacing.smd,
+  },
+  referencePhoto: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
+  referenceText: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+    flex: 1,
+    lineHeight: 20,
   },
   cameraContainer: {
     alignItems: 'center',

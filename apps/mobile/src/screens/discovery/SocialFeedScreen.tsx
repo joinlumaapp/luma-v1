@@ -31,6 +31,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { useProfileStore } from '../../stores/profileStore';
 import { useSocialFeedStore } from '../../stores/socialFeedStore';
 import {
+  socialFeedService,
   FEED_POST_TYPES,
   containsProfanity,
   PROFANITY_WARNING,
@@ -829,18 +830,29 @@ export const SocialFeedScreen: React.FC = () => {
     }
   }, [checkDailyLimit]);
 
-  // Media caption modal submit — post with media + optional caption
+  // Media caption modal submit — upload media to storage, then create post with real URL
   const handleMediaCaptionSubmit = useCallback(
-    (caption: string) => {
+    async (caption: string) => {
       if (!pendingMediaUri) return;
-      if (pendingMediaType === 'photo') {
-        createPost({ content: caption, postType: 'photo', photoUrls: [pendingMediaUri] });
-      } else {
-        createPost({ content: caption, postType: 'video', photoUrls: [], videoUrl: pendingMediaUri });
-      }
-      incrementDailyPost();
       setShowMediaCaptionModal(false);
-      setPendingMediaUri(null);
+
+      try {
+        // Upload the local file to storage backend to get a real URL
+        const uploadedUrl = await socialFeedService.uploadPostMedia(pendingMediaUri, pendingMediaType);
+
+        if (pendingMediaType === 'photo') {
+          createPost({ content: caption, postType: 'photo', photoUrls: [uploadedUrl] });
+        } else {
+          // Generate a local thumbnail for immediate display in the grid
+          const thumbnailUrl = await videoService.generateThumbnail(pendingMediaUri);
+          createPost({ content: caption, postType: 'video', photoUrls: [], videoUrl: uploadedUrl, thumbnailUrl });
+        }
+        incrementDailyPost();
+      } catch {
+        Alert.alert('Yükleme Hatası', 'Medya yüklenirken bir sorun oluştu. Lütfen tekrar deneyin.');
+      } finally {
+        setPendingMediaUri(null);
+      }
     },
     [pendingMediaUri, pendingMediaType, createPost, incrementDailyPost],
   );
@@ -860,20 +872,42 @@ export const SocialFeedScreen: React.FC = () => {
 
   const handleCreatePost = useCallback(
     async (content: string, postType: FeedPostType, photoUrls: string[], videoUrl: string | null) => {
-      // Generate thumbnail for video posts so the grid view shows a preview
-      let thumbnailUrl: string | null = null;
-      if (videoUrl) {
-        thumbnailUrl = await videoService.generateThumbnail(videoUrl);
+      try {
+        // Upload any local media files to storage before creating the post.
+        // Local URIs (file://, content://, ph://) are not accessible outside the device.
+        const uploadedPhotoUrls: string[] = [];
+        for (const uri of photoUrls) {
+          if (uri.startsWith('file://') || uri.startsWith('content://') || uri.startsWith('ph://')) {
+            const uploaded = await socialFeedService.uploadPostMedia(uri, 'photo');
+            uploadedPhotoUrls.push(uploaded);
+          } else {
+            uploadedPhotoUrls.push(uri);
+          }
+        }
+
+        let uploadedVideoUrl: string | null = videoUrl;
+        let thumbnailUrl: string | null = null;
+        if (videoUrl) {
+          // Generate thumbnail from local file before uploading (needs local access)
+          thumbnailUrl = await videoService.generateThumbnail(videoUrl);
+
+          if (videoUrl.startsWith('file://') || videoUrl.startsWith('content://') || videoUrl.startsWith('ph://')) {
+            uploadedVideoUrl = await socialFeedService.uploadPostMedia(videoUrl, 'video');
+          }
+        }
+
+        createPost({
+          content,
+          postType,
+          photoUrls: uploadedPhotoUrls,
+          videoUrl: uploadedVideoUrl,
+          thumbnailUrl,
+        });
+        incrementDailyPost();
+        setShowCreateModal(false);
+      } catch {
+        Alert.alert('Yükleme Hatası', 'Medya yüklenirken bir sorun oluştu. Lütfen tekrar deneyin.');
       }
-      createPost({
-        content,
-        postType,
-        photoUrls,
-        videoUrl,
-        thumbnailUrl,
-      });
-      incrementDailyPost();
-      setShowCreateModal(false);
     },
     [createPost, incrementDailyPost],
   );

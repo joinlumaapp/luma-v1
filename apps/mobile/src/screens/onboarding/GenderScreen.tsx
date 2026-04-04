@@ -57,7 +57,7 @@ export const GenderScreen: React.FC = () => {
     >
       <Text style={styles.title}>Kendini nasıl tanımlıyorsun?</Text>
       <Text style={styles.subtitle}>
-        Daha sonra müşteri hizmetleri ile iletişime geçerek bu bilgileri düzeltebilirsin.
+        Daha sonra profil ayarlarından değiştirebilirsin.
       </Text>
 
       <View style={styles.optionsContainer}>
