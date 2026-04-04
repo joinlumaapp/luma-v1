@@ -473,7 +473,7 @@ const LikeCard = memo<LikeCardProps>(({ card, index, cardState, smartLabel, onCa
         onPressOut={handlePressOut}
         accessibilityLabel={
           isClear
-            ? `${card.firstName}, ${card.age} ya\u015F\u0131nda, y\u00FCzde ${card.compatibilityPercent} uyum`
+            ? `${card.firstName}, ${card.age} yaşında, yüzde ${card.compatibilityPercent} uyum`
             : 'Profili g\u00F6rmek i\u00E7in dokun'
         }
         accessibilityRole="button"

@@ -68,8 +68,8 @@ export const validateProfilePhoto = async (uri: string): Promise<boolean> => {
 
   if (!result.hasFace) {
     Alert.alert(
-      'Y\u00fcz Alg\u0131lanamad\u0131',
-      'Profil foto\u011fraf\u0131nda y\u00fcz\u00fcn net g\u00f6r\u00fcnmeli. L\u00fctfen y\u00fcz\u00fcn\u00fcn g\u00f6r\u00fcnd\u00fc\u011f\u00fc bir foto\u011fraf se\u00e7.',
+      'Yüz Algılanamadı',
+      'Profil fotoğrafında yüzün net görünmeli. Lütfen yüzünün göründüğü bir fotoğraf seç.',
       [{ text: 'Tamam' }],
     );
     return false;

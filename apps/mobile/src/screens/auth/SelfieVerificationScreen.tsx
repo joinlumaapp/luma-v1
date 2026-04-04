@@ -178,13 +178,13 @@ export const SelfieVerificationScreen: React.FC = () => {
         if (!faceResult.valid) {
           if (faceResult.reason === 'multiple_faces') {
             Alert.alert(
-              'Birden Fazla Y\u00fcz Alg\u0131land\u0131',
-              'Selfie\'de yaln\u0131zca senin y\u00fcz\u00fcn g\u00f6r\u00fcnmeli. L\u00fctfen tek ba\u015f\u0131na tekrar dene.',
+              'Birden Fazla Yüz Algılandı',
+              'Selfie\'de yalnızca senin yüzün görünmeli. Lütfen tek başına tekrar dene.',
             );
           } else {
             Alert.alert(
-              'Y\u00fcz Alg\u0131lanamad\u0131',
-              'Selfie\'deki y\u00fcz, profil foto\u011fraf\u0131nla e\u015fle\u015fmiyor. L\u00fctfen kendi foto\u011fraf\u0131n\u0131 kullan.',
+              'Yüz Algılanamadı',
+              'Selfie\'deki yüz, profil fotoğrafınla eşleşmiyor. Lütfen kendi fotoğrafını kullan.',
             );
           }
           return;
@@ -196,7 +196,7 @@ export const SelfieVerificationScreen: React.FC = () => {
       }
     } catch {
       setIsValidatingFace(false);
-      Alert.alert('Hata', 'Selfie \u00e7ekilemedi. L\u00fctfen tekrar deneyin.');
+      Alert.alert('Hata', 'Selfie çekilemedi. Lütfen tekrar deneyin.');
     } finally {
       setIsTakingSelfie(false);
     }
@@ -260,7 +260,7 @@ export const SelfieVerificationScreen: React.FC = () => {
       <View style={styles.content}>
         <Text style={styles.title}>Selfie Doğrulama</Text>
         <Text style={styles.subtitle}>
-          Profilinin ger\u00e7ek oldu\u011funu do\u011frulamak i\u00e7in bir selfie \u00e7ek. Y\u00fcz\u00fcn net g\u00f6r\u00fcnmeli.
+          Profilinin gerçek olduğunu doğrulamak için bir selfie çek. Yüzün net görünmeli.
         </Text>
 
         {/* Profile photo reference — accountability reminder */}
@@ -270,10 +270,10 @@ export const SelfieVerificationScreen: React.FC = () => {
               source={{ uri: firstProfilePhoto }}
               style={styles.referencePhoto}
               resizeMode="cover"
-              accessibilityLabel="Profil foto\u011fraf\u0131n"
+              accessibilityLabel="Profil fotoğrafın"
             />
             <Text style={styles.referenceText}>
-              Profil foto\u011fraf\u0131nla ayn\u0131 ki\u015fi oldu\u011fundan emin ol
+              Profil fotoğrafınla aynı kişi olduğundan emin ol
             </Text>
           </View>
         )}
@@ -360,7 +360,7 @@ export const SelfieVerificationScreen: React.FC = () => {
             disabled={isTakingSelfie || isValidatingFace || !permissionGranted}
             activeOpacity={0.85}
             accessibilityRole="button"
-            accessibilityLabel="Selfie \u00e7ek"
+            accessibilityLabel="Selfie çek"
           >
             {isValidatingFace ? (
               <ActivityIndicator color={colors.text} />

@@ -436,7 +436,7 @@ export const ChatScreen: React.FC = () => {
       setShowLimitReached(true);
       Alert.alert(
         'Mesaj Limiti',
-        'Bug\u00FCnk\u00FC mesaj hakk\u0131n doldu. Daha fazla mesaj g\u00F6ndermek i\u00E7in paketini y\u00FCkselt.',
+        'Bugünkü mesaj hakkın doldu. Daha fazla mesaj göndermek için paketini yükselt.',
         [
           { text: 'Tamam', style: 'cancel' },
           {

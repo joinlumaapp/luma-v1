@@ -233,7 +233,7 @@ export const PhotosScreen: React.FC = () => {
           <View style={styles.compressingContent}>
             <ActivityIndicator size="small" color={onboardingColors.text} />
             <Text style={styles.compressingText}>
-              {isMain && detectingFace ? 'Y\u00fcz kontrol ediliyor...' : '\u0130\u015fleniyor...'}
+              {isMain && detectingFace ? 'Yüz kontrol ediliyor...' : 'İşleniyor...'}
             </Text>
           </View>
         ) : slot ? (
