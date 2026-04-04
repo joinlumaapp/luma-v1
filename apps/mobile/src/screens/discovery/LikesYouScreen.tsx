@@ -855,7 +855,7 @@ export const LikesYouScreen: React.FC<LikesYouScreenProps> = ({ embedded = false
 
   if (isLoading) {
     return (
-      <View style={[styles.container, !embedded && { paddingTop: insets.top }]}>
+      <View style={[styles.container, !embedded && { paddingTop: insets.top }, embedded && styles.embeddedContainer]}>
         {!embedded && <BrandedBackground />}
         {!embedded && (
           <View style={styles.header}>
@@ -884,7 +884,7 @@ export const LikesYouScreen: React.FC<LikesYouScreenProps> = ({ embedded = false
   // ─── Main render ────────────────────────────────────────────
 
   return (
-    <View style={[styles.container, !embedded && { paddingTop: insets.top }]}>
+    <View style={[styles.container, !embedded && { paddingTop: insets.top }, embedded && styles.embeddedContainer]}>
       {!embedded && <BrandedBackground />}
       {/* Header — hidden when embedded in MatchesListScreen */}
       {!embedded && (
@@ -1005,6 +1005,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  embeddedContainer: {
+    backgroundColor: 'transparent',
   },
 
   // ── Likes Tease Header (CTA above grid) ──
@@ -1217,6 +1220,7 @@ const styles = StyleSheet.create({
   gridContent: {
     paddingHorizontal: GRID_PADDING,
     paddingBottom: spacing.xxl + 20,
+    flexGrow: 1,
   },
   gridRow: {
     gap: GRID_GAP,

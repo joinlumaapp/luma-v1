@@ -269,7 +269,7 @@ export class PostsService {
         select: { firstName: true },
       });
       this.notificationsService
-        .notifyPostLike(post.userId, likerProfile?.firstName ?? "Birisi", postId)
+        .notifyPostLike(post.userId, likerProfile?.firstName || "Birisi", postId)
         .catch(() => {});
     }
 
@@ -315,7 +315,7 @@ export class PostsService {
 
     return likes.map((like) => ({
       userId: like.user.id,
-      userName: like.user.profile?.firstName ?? "Kullanici",
+      userName: like.user.profile?.firstName || "Kullanici",
       userAvatarUrl: like.user.photos?.[0]?.url ?? "",
       likedAt: like.createdAt.toISOString(),
     }));
@@ -380,7 +380,7 @@ export class PostsService {
       videoUrl: post.videoUrl,
       likeCount: post.likeCount,
       createdAt: post.createdAt.toISOString(),
-      userName: profile?.firstName ?? "Kullanici",
+      userName: profile?.firstName || "Kullanici",
       userAge: age,
       userCity: profile?.city ?? "",
       userAvatarUrl: post.user.photos?.[0]?.url ?? "",

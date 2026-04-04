@@ -681,7 +681,7 @@ export class ChatGateway
       this.notifyUser(partnerId, "call:initiate", {
         matchId: data.matchId,
         callerId: userId,
-        callerName: caller.profile?.firstName ?? "Kullanici",
+        callerName: caller.profile?.firstName || "Kullanici",
         callType: data.callType,
         timestamp: new Date().toISOString(),
       });

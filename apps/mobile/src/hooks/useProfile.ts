@@ -26,29 +26,24 @@ export const useProfile = (): UseProfileReturn => {
   const completionPercent = useProfileStore((state) => state.completionPercent);
   const storeSetField = useProfileStore((state) => state.setField);
   const storeUpdateProfile = useProfileStore((state) => state.updateProfile);
+  const storeFetchProfile = useProfileStore((state) => state.fetchProfile);
 
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Delegate to the store's fetchProfile which correctly handles
+  // the nested backend response structure ({ userId, profile, photos, profileCompletion })
   const fetchProfile = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await profileService.getProfile();
-      storeSetField('firstName', data.firstName);
-      storeSetField('birthDate', data.birthDate);
-      storeSetField('gender', data.gender);
-      storeSetField('intentionTag', data.intentionTag);
-      storeSetField('bio', data.bio);
-      storeSetField('city', data.city);
-      storeSetField('photos', data.photos.map((p) => p.url));
-      storeSetField('isComplete', data.isComplete);
-    } catch (err) {
+      await storeFetchProfile();
+    } catch {
       setError('Profil yüklenemedi. Tekrar deneyin.');
     } finally {
       setIsLoading(false);
     }
-  }, [storeSetField]);
+  }, [storeFetchProfile]);
 
   const updateProfile = useCallback(
     async (data: Partial<ProfileData>): Promise<boolean> => {

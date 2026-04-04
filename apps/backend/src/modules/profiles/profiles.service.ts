@@ -118,7 +118,7 @@ export class ProfilesService {
       where: { userId },
       create: {
         userId,
-        firstName: dto.firstName ?? "",
+        firstName: dto.firstName?.trim() || "Kullanici",
         birthDate: dto.birthDate
           ? new Date(dto.birthDate)
           : new Date("2000-01-01"),
@@ -133,7 +133,7 @@ export class ProfilesService {
         isComplete: false,
       },
       update: {
-        ...(dto.firstName !== undefined && { firstName: dto.firstName }),
+        ...(dto.firstName !== undefined && { firstName: dto.firstName.trim() || undefined }),
         ...(dto.birthDate !== undefined && {
           birthDate: new Date(dto.birthDate),
         }),

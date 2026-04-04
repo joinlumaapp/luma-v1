@@ -124,7 +124,7 @@ export class UsersService {
       select: { firstName: true },
     });
     this.notificationsService
-      .notifyNewFollower(followingId, followerProfile?.firstName ?? "Birisi", followerId)
+      .notifyNewFollower(followingId, followerProfile?.firstName || "Birisi", followerId)
       .catch(() => {});
 
     return { isFollowing: true };
@@ -154,7 +154,7 @@ export class UsersService {
 
     return follows.map((f) => ({
       userId: f.follower.id,
-      name: f.follower.profile?.firstName ?? "Kullanici",
+      name: f.follower.profile?.firstName || "Kullanici",
       avatarUrl: f.follower.photos[0]?.url ?? null,
     }));
   }
@@ -183,7 +183,7 @@ export class UsersService {
 
     return follows.map((f) => ({
       userId: f.following.id,
-      name: f.following.profile?.firstName ?? "Kullanici",
+      name: f.following.profile?.firstName || "Kullanici",
       avatarUrl: f.following.photos[0]?.url ?? null,
     }));
   }

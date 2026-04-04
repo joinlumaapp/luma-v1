@@ -316,7 +316,7 @@ export class CallHistoryService {
       createdAt: call.createdAt.toISOString(),
       partner: {
         userId: partner.id,
-        firstName: partner.profile?.firstName ?? "Kullanici",
+        firstName: partner.profile?.firstName || "Kullanici",
         photoUrl: partner.photos[0]?.url ?? null,
       },
       isOutgoing,

@@ -1438,6 +1438,7 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
+    flexGrow: 1,
   },
   matchCard: {
     flexDirection: 'row',

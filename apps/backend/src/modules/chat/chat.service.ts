@@ -87,7 +87,7 @@ export class ChatService {
           matchId: match.id,
           partner: {
             userId: partner.id,
-            firstName: partner.profile?.firstName ?? "Kullanici",
+            firstName: partner.profile?.firstName || "Kullanici",
             photoUrl: partner.photos[0]?.thumbnailUrl ?? null,
           },
           lastMessage: lastMessage

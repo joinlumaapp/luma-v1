@@ -96,7 +96,7 @@ export class StoriesService {
       if (!userStoriesMap.has(storyUserId)) {
         userStoriesMap.set(storyUserId, {
           userId: storyUserId,
-          userName: story.user.profile?.firstName ?? "Kullanici",
+          userName: story.user.profile?.firstName || "Kullanici",
           userAvatarUrl: story.user.photos?.[0]?.url ?? "",
           packageTier: story.user.packageTier,
           stories: [],
@@ -212,7 +212,7 @@ export class StoriesService {
 
     return views.map((view) => ({
       userId: view.viewer.id,
-      userName: view.viewer.profile?.firstName ?? "Kullanici",
+      userName: view.viewer.profile?.firstName || "Kullanici",
       userAvatarUrl: view.viewer.photos?.[0]?.url ?? "",
       viewedAt: view.viewedAt.toISOString(),
     }));
@@ -303,7 +303,7 @@ export class StoriesService {
         select: { firstName: true },
       });
       this.notificationsService
-        .notifyStoryLike(story.userId, likerProfile?.firstName ?? "Birisi", storyId)
+        .notifyStoryLike(story.userId, likerProfile?.firstName || "Birisi", storyId)
         .catch(() => {});
     }
 

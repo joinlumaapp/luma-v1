@@ -4,21 +4,69 @@ import { API_ROUTES } from '@luma/shared';
 import api, { buildUrl } from './api';
 import type { ProfileData } from '../stores/profileStore';
 
-export interface ProfileResponse {
-  id: string;
+// Flat profile fields shared by both response shapes
+export interface ProfileFields {
+  id?: string;
   firstName: string;
+  lastName?: string;
   birthDate: string;
-  age: number;
+  age?: number;
   gender: string;
   intentionTag: string;
   bio: string;
-  photos: Array<{ id: string; url: string; order: number }>;
   city: string;
   isComplete: boolean;
-  completionPercent: number;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+  // Extended fields the backend may include
+  job?: string;
+  education?: string;
+  height?: number | null;
+  weight?: number | null;
+  sexualOrientation?: string;
+  zodiacSign?: string;
+  educationLevel?: string;
+  maritalStatus?: string;
+  alcohol?: string;
+  smoking?: string;
+  children?: string;
+  pets?: string;
+  religion?: string;
+  lifeValues?: string;
+  personalityType?: string | null;
+  interestTags?: string[];
+  genderPreference?: string[];
+  lookingFor?: string[];
+  profileVideo?: { url: string; thumbnailUrl: string; duration: number } | null;
+  prompts?: Array<{ id: string; question: string; answer: string; order: number }>;
+  favoriteSpots?: Array<{ name: string; category: string }>;
+  isIncognito?: boolean;
+  incognitoExpiresAt?: number | null;
+  isFrozen?: boolean;
+  showOnlineStatus?: boolean;
+  showDistance?: boolean;
+  postCount?: number;
+  followerCount?: number;
+  followingCount?: number;
 }
+
+// Backend GET /profiles/me returns a NESTED structure
+export interface NestedProfileResponse {
+  userId: string;
+  profile: ProfileFields;
+  photos: Array<{ id: string; url: string; order: number; moderationStatus?: string }>;
+  profileCompletion: number;
+}
+
+// Backend PATCH /profiles returns a FLAT structure (Prisma upsert result).
+// Note: the PATCH response may NOT include photos (only the profile record).
+export interface FlatProfileResponse extends ProfileFields {
+  photos?: Array<{ id: string; url: string; order: number }>;
+  completionPercent?: number;
+}
+
+// Union type — the mobile app must handle both shapes
+export type ProfileResponse = NestedProfileResponse | FlatProfileResponse;
 
 // Profile strength breakdown item
 export interface ProfileStrengthItem {

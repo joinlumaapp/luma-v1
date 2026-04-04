@@ -190,14 +190,21 @@ function ThemedStatusBar(): React.JSX.Element {
     // Apply immediately
     applyStatusBar();
 
-    // Re-apply when app comes to foreground (catches modal/navigation overrides)
+    // Re-apply on interval to counteract navigation transitions, modal
+    // opens/closes, and third-party library overrides that reset the bar.
+    const interval = setInterval(applyStatusBar, 1000);
+
+    // Also re-apply when app comes to foreground
     const subscription = AppState.addEventListener('change', (state: AppStateStatus) => {
       if (state === 'active') {
         applyStatusBar();
       }
     });
 
-    return () => subscription.remove();
+    return () => {
+      clearInterval(interval);
+      subscription.remove();
+    };
   }, []);
 
   return (
