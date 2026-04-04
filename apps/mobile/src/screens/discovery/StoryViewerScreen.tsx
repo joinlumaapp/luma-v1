@@ -12,13 +12,13 @@ import {
   TextInput,
   StyleSheet,
   Dimensions,
-  StatusBar,
   Animated as RNAnimated,
   PanResponder,
   Platform,
   KeyboardAvoidingView,
   Share,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { Video, ResizeMode } from 'expo-av';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -567,7 +567,7 @@ export const StoryViewerScreen: React.FC = () => {
   if (!currentStory) {
     return (
       <View style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#08080F" />
+        <StatusBar style="light" backgroundColor="#08080F" />
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>Hikaye bulunamadi</Text>
           <TouchableOpacity style={styles.emptyCloseButton} onPress={handleClose}>
@@ -586,7 +586,7 @@ export const StoryViewerScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#08080F" />
+      <StatusBar style="light" backgroundColor="#08080F" />
       {/* Backdrop fade */}
       <RNAnimated.View style={[StyleSheet.absoluteFill, { backgroundColor: '#000', opacity: swipeOpacity }]} />
 

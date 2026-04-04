@@ -14,11 +14,11 @@ import {
   Dimensions,
   Platform,
   Alert,
-  StatusBar,
   ScrollView,
   PanResponder,
   KeyboardAvoidingView,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
@@ -307,7 +307,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
   }, [imageUri, navigation]);
 
   if (!imageUri) {
-    return <View style={styles.container}><StatusBar barStyle="light-content" backgroundColor="#08080F" /></View>;
+    return <View style={styles.container}><StatusBar style="light" backgroundColor="#08080F" /></View>;
   }
 
   // ─── Preview Mode ──────────────────────────────────────────
@@ -315,7 +315,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
   if (showPreview) {
     return (
       <View style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#08080F" />
+        <StatusBar style="light" backgroundColor="#08080F" />
         {mediaType === 'video' ? (
           <Video
             source={{ uri: imageUri! }}
@@ -394,7 +394,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#08080F" />
+      <StatusBar style="light" backgroundColor="#08080F" />
 
       {/* Background image */}
       <View

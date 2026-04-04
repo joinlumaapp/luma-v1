@@ -10,9 +10,9 @@ import {
   Image,
   StyleSheet,
   Modal,
-  StatusBar,
   Animated,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
@@ -68,7 +68,7 @@ export const MatchPromptModal: React.FC<MatchPromptModalProps> = ({
       statusBarTranslucent
       onRequestClose={onDismiss}
     >
-      <StatusBar barStyle="light-content" backgroundColor="#08080F" />
+      <StatusBar style="light" backgroundColor="#08080F" />
       <View style={styles.backdrop}>
         <Animated.View
           style={[

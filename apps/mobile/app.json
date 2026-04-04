@@ -30,6 +30,11 @@
         "NSUserTrackingUsageDescription": "LUMA, size daha iyi bir deneyim sunmak icin reklam takibi kullanmak istiyor."
       }
     },
+    "androidStatusBar": {
+      "barStyle": "light-content",
+      "backgroundColor": "#08080F",
+      "translucent": false
+    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

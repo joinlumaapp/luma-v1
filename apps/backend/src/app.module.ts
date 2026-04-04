@@ -15,7 +15,6 @@ import { PrismaModule } from "./prisma/prisma.module";
 // Middleware
 import { RequestLoggerMiddleware } from "./middleware/request-logger.middleware";
 import { SecurityHeadersMiddleware } from "./middleware/security-headers.middleware";
-import { RateLimitMiddleware } from "./middleware/rate-limit.middleware";
 
 // Feature modules (Subsystems 1-19)
 import { AuthModule } from "./modules/auth/auth.module";
@@ -67,21 +66,27 @@ import { WsConnectionModule } from "./common/providers/ws-connection.module";
     }),
 
     // Rate limiting (global — 3-tier: burst / sustained / per-minute)
+    // These limits are per-IP and apply across ALL endpoints combined.
+    // Individual endpoints can override via @Throttle() or skip via @SkipThrottle().
+    // Note: The RateLimitMiddleware (Redis-based) was REMOVED because having two
+    // rate-limiting layers caused double-counting — a single request was counted
+    // by both ThrottlerGuard and the middleware, effectively halving the real limits.
+    // Auth endpoints already have per-route @Throttle() overrides in auth.controller.ts.
     ThrottlerModule.forRoot([
       {
         name: "short",
         ttl: 1000, // 1 second window
-        limit: 10, // max 10 requests per second (burst protection)
+        limit: 20, // max 20 requests per second (burst protection)
       },
       {
         name: "medium",
         ttl: 10000, // 10 second window
-        limit: 50, // max 50 requests per 10 seconds
+        limit: 100, // max 100 requests per 10 seconds
       },
       {
         name: "long",
         ttl: 60000, // 1 minute window
-        limit: 100, // max 100 requests per minute
+        limit: 300, // max 300 requests per minute
       },
     ]),
 
@@ -132,8 +137,10 @@ export class AppModule implements NestModule {
     // Security headers — applied to all routes first
     consumer.apply(SecurityHeadersMiddleware).forRoutes("*");
 
-    // Redis-based rate limiting — applied to all routes
-    consumer.apply(RateLimitMiddleware).forRoutes("*");
+    // Note: Redis-based RateLimitMiddleware was REMOVED.
+    // ThrottlerGuard (APP_GUARD) now handles all rate limiting.
+    // The dual-layer approach was causing double-counting — each request
+    // was counted twice, making the effective limit half the configured value.
 
     // Request logging — applied to all routes
     consumer.apply(RequestLoggerMiddleware).forRoutes("*");

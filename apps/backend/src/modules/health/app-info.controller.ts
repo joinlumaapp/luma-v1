@@ -1,5 +1,6 @@
 import { Controller, Get } from "@nestjs/common";
 import { ApiTags, ApiOperation } from "@nestjs/swagger";
+import { SkipThrottle } from "@nestjs/throttler";
 import { Public } from "../../common/decorators/current-user.decorator";
 
 /** Minimum desteklenen uygulama sürümü */
@@ -28,6 +29,7 @@ interface AppConfigResponse {
 }
 
 @ApiTags("Health")
+@SkipThrottle()
 @Controller("app")
 export class AppInfoController {
   /**

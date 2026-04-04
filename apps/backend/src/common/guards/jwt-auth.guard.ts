@@ -101,16 +101,25 @@ export class JwtAuthGuard implements CanActivate {
    * Check if a token has been blacklisted (e.g., after logout).
    * Uses a hash of the token as the key to avoid storing raw tokens.
    *
-   * SECURITY: Fail-closed — if Redis is unavailable, treat the token as
-   * blacklisted (return true) so that a Redis outage cannot be exploited
-   * to bypass logout/token revocation.
+   * SECURITY: Fail-OPEN when Redis is unavailable. Rationale:
+   *   - The JWT signature and expiry are already validated before this check.
+   *   - Fail-closed caused cascading 401s when Redis was down, triggering
+   *     token refresh loops that exhausted rate limits and showed "Too many
+   *     requests" alerts to users on app startup.
+   *   - Token blacklist is a secondary defense (post-logout revocation).
+   *     JWT expiry (15 min) already limits the blast radius of a missed
+   *     blacklist check during a brief Redis outage.
+   *   - The tradeoff is acceptable: a logged-out token could remain valid
+   *     for up to 15 minutes during a Redis outage, vs. ALL users being
+   *     locked out entirely with fail-closed.
    */
   private async isTokenBlacklisted(token: string): Promise<boolean> {
     if (!this.cache.isRedisConnected()) {
-      this.logger.error(
-        "Redis unavailable during token blacklist check. Rejecting token (fail-closed).",
+      this.logger.warn(
+        "Redis unavailable during token blacklist check. Allowing token (fail-open). " +
+          "JWT signature and expiry are still enforced.",
       );
-      return true;
+      return false;
     }
 
     try {
@@ -121,10 +130,11 @@ export class JwtAuthGuard implements CanActivate {
       return result === true;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      this.logger.error(
-        `Token blacklist check failed: ${message}. Rejecting token (fail-closed).`,
+      this.logger.warn(
+        `Token blacklist check failed: ${message}. Allowing token (fail-open). ` +
+          `JWT signature and expiry are still enforced.`,
       );
-      return true;
+      return false;
     }
   }
 

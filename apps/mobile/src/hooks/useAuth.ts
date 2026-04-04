@@ -71,15 +71,28 @@ export const useAuth = (): UseAuthReturn => {
           useAuthStore.getState().setTokens(tokens.accessToken, tokens.refreshToken);
 
           try {
-            // Validate token by fetching current user
+            // Validate token by fetching current user.
+            // If the token is expired, the Axios response interceptor automatically
+            // handles 401 by refreshing the token and retrying this request.
+            // We do NOT manually retry here to avoid duplicate refresh-token calls
+            // that waste rate-limit quota and can trigger 429 errors on startup.
             const me = await authService.getMe();
-            storeLogin(tokens.accessToken, tokens.refreshToken, {
-              id: me.id,
-              displayId: me.displayId,
-              phone: me.phone,
-              isVerified: me.isFullyVerified,
-              packageTier: (me.packageTier as PackageTier) || 'FREE',
-            });
+
+            // getMe succeeded (possibly after interceptor-driven token refresh).
+            // Read the current tokens from the store — they may have been updated
+            // by the interceptor's refresh flow.
+            const currentTokens = useAuthStore.getState();
+            storeLogin(
+              currentTokens.accessToken ?? tokens.accessToken,
+              currentTokens.refreshToken ?? tokens.refreshToken,
+              {
+                id: me.id,
+                displayId: me.displayId,
+                phone: me.phone,
+                isVerified: me.isFullyVerified,
+                packageTier: (me.packageTier as PackageTier) || 'FREE',
+              },
+            );
 
             // Use API profile completeness as source of truth, fall back to local storage
             const onboarded = me.profile?.isComplete ?? (await storage.getOnboarded());
@@ -88,32 +101,12 @@ export const useAuth = (): UseAuthReturn => {
               await storage.setOnboarded(true);
             }
           } catch {
-            // Token is invalid — try refreshing
-            try {
-              const refreshResponse = await authService.refreshToken(tokens.refreshToken);
-              await storage.setTokens(refreshResponse.accessToken, refreshResponse.refreshToken);
-
-              const me = await authService.getMe();
-              storeLogin(refreshResponse.accessToken, refreshResponse.refreshToken, {
-                id: me.id,
-                displayId: me.displayId,
-                phone: me.phone,
-                isVerified: me.isFullyVerified,
-                packageTier: (me.packageTier as PackageTier) || 'FREE',
-              });
-
-              // Use API profile completeness as source of truth, fall back to local storage
-              const onboarded = me.profile?.isComplete ?? (await storage.getOnboarded());
-              setOnboarded(onboarded);
-              if (onboarded) {
-                await storage.setOnboarded(true);
-              }
-            } catch {
-              // Refresh also failed — user needs to re-login
-              await storage.clearTokens();
-              await storage.clearOnboarded();
-              setLoading(false);
-            }
+            // getMe failed even after the interceptor attempted token refresh.
+            // The interceptor already called logout() if refresh failed,
+            // so we just need to clean up local storage.
+            await storage.clearTokens();
+            await storage.clearOnboarded();
+            setLoading(false);
           }
         } else {
           setLoading(false);

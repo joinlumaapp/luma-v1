@@ -7,12 +7,12 @@ import {
   TouchableOpacity,
   TextInput,
   Modal,
-  StatusBar,
   Pressable,
   StyleSheet,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
@@ -70,7 +70,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
       statusBarTranslucent
       onRequestClose={handleClose}
     >
-      <StatusBar barStyle="light-content" backgroundColor="#08080F" />
+      <StatusBar style="light" backgroundColor="#08080F" />
       <Pressable style={styles.overlay} onPress={handleClose}>
         <Pressable style={styles.sheet} onPress={() => {}}>
           {/* Handle bar */}

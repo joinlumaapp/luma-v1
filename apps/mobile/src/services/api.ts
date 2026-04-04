@@ -58,6 +58,24 @@ export const ERROR_MESSAGES = {
 const RATE_LIMIT_AUTO_RETRY_THRESHOLD_MS = 10_000;
 
 /**
+ * URL patterns for background/silent requests that should NOT show a user-facing
+ * Alert when rate-limited. These are requests the app makes automatically
+ * (session restore, token refresh, premium sync, version check, notification refresh)
+ * — the user did not initiate them and showing a blocking dialog is confusing.
+ */
+const SILENT_RATE_LIMIT_PATTERNS: ReadonlyArray<RegExp> = [
+  /\/auth\/refresh-token/,
+  /\/auth\/logout/,
+  /\/users\/me$/,
+  /\/app\/info/,
+  /\/app\/config/,
+  /\/health/,
+  /\/payments\/status/,
+  /\/payments\/trial/,
+  /\/notifications/,
+];
+
+/**
  * Format a retry-after duration (in ms) into a user-friendly Turkish message.
  * Uses seconds for short waits, minutes for longer ones.
  */
@@ -286,8 +304,17 @@ api.interceptors.response.use(
         return api(originalRequest);
       }
 
-      // For non-GET or long waits, show alert and reject
-      Alert.alert('Hız Sınırı', userMsg);
+      // Only show a user-facing alert for requests the user initiated.
+      // Background/silent requests (token refresh, session restore, premium sync,
+      // version check, etc.) should fail quietly — the caller handles the error.
+      const requestUrl = originalRequest.url ?? '';
+      const isSilentRequest = SILENT_RATE_LIMIT_PATTERNS.some((p) => p.test(requestUrl));
+
+      if (!isSilentRequest) {
+        Alert.alert('Hız Sınırı', userMsg);
+      } else if (__DEV__) {
+        console.log(`[API] Suppressed rate limit alert for background request: ${requestUrl}`);
+      }
 
       // Attach parsed info to the error for callers
       (error as AxiosError & { apiError?: ApiError }).apiError = parsed;

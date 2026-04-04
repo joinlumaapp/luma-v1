@@ -6,10 +6,10 @@ import {
   Modal,
   StyleSheet,
   Dimensions,
-  StatusBar,
   Animated,
   type RefreshControlProps,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
@@ -79,7 +79,7 @@ function PhotoViewer({ visible, photos, initialIndex, onClose }: PhotoViewerProp
       onRequestClose={onClose}
     >
       <View style={styles.viewerOverlay}>
-        <StatusBar barStyle="light-content" backgroundColor="#08080F" />
+        <StatusBar style="light" backgroundColor="#08080F" />
 
         {/* Close button */}
         <TouchableOpacity

@@ -7,13 +7,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   Modal,
-  StatusBar,
   Animated,
   Dimensions,
   ScrollView,
   FlatList,
   Platform,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
@@ -157,7 +157,7 @@ export const PromptPickerSheet: React.FC<PromptPickerSheetProps> = ({
       statusBarTranslucent
       onRequestClose={handleClose}
     >
-      <StatusBar barStyle="light-content" backgroundColor="#08080F" />
+      <StatusBar style="light" backgroundColor="#08080F" />
       <View style={styles.modalContainer}>
         {/* Backdrop */}
         <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>

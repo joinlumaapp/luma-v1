@@ -3,7 +3,6 @@
 import React, { Component, useEffect, useRef } from 'react';
 import {
   AppState,
-  StatusBar as RNStatusBar,
   StyleSheet,
   View,
   Text,
@@ -11,6 +10,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
+import { StatusBar, setStatusBarStyle, setStatusBarBackgroundColor, setStatusBarTranslucent } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 // expo-updates is only available in EAS builds, not in Expo Go dev client.
 // We lazy-import it in the error boundary restart handler to avoid crashes.
@@ -176,71 +176,30 @@ const errorStyles = StyleSheet.create({
 });
 
 // ─── Global Status Bar ───────────────────────────────────────────────
-// White text/icons on solid dark background (#08080F) — consistent across
-// all screens. This color matches the app background used in all navigators,
-// the tab bar, and every modal/overlay in the app.
+// Uses expo-status-bar which integrates properly with the Expo runtime
+// and does NOT conflict with react-native-screens native status bar
+// management. Previous attempts using react-native's StatusBar component
+// failed because react-native-screens overrides it at the native Android
+// level during screen transitions.
 //
-// WHY THIS WORKS (and previous attempts did not):
-// 1. react-native-screens' native stack navigator applies its own
-//    statusBarBackgroundColor on every screen transition, overriding both
-//    the <StatusBar> component and the imperative StatusBar.set*() API.
-//    Previous fixes used #000000 while navigators used #08080F, creating
-//    a constant race condition the navigators always won.
-// 2. We now use #08080F everywhere (same as navigators), so even if a
-//    navigator re-applies the color after a transition, it is the same
-//    value — no visible flash or mismatch.
-// 3. StatusBar.pushStackEntry gives this component guaranteed precedence
-//    in the React Native status bar stack.
-// 4. A 500ms interval acts as a safety net against third-party libraries
-//    or modals that may reset the bar style.
-// 5. AppState listener re-applies when returning from background.
+// expo-status-bar style values (different from react-native!):
+//   'light' = light-colored (white) text/icons → for dark backgrounds
+//   'dark'  = dark-colored (black) text/icons  → for light backgrounds
+//
+// The native stack navigators also set statusBarStyle/statusBarBackgroundColor
+// per-screen via react-native-screens options — those are compatible with
+// expo-status-bar and do not conflict.
 
 const STATUS_BAR_COLOR = '#08080F';
 
-function ThemedStatusBar(): React.JSX.Element {
-  useEffect(() => {
-    const applyStatusBar = (): void => {
-      RNStatusBar.setBarStyle('light-content', true);
-      RNStatusBar.setBackgroundColor(STATUS_BAR_COLOR, true);
-      RNStatusBar.setTranslucent(false);
-    };
-
-    // Push a stack entry for guaranteed precedence over other StatusBar users
-    const stackEntry = RNStatusBar.pushStackEntry({
-      barStyle: 'light-content',
-      backgroundColor: STATUS_BAR_COLOR,
-      translucent: false,
-    });
-
-    // Apply immediately via imperative API as well
-    applyStatusBar();
-
-    // Re-apply every 500ms to counteract navigation transitions, modal
-    // opens/closes, and third-party library overrides that reset the bar.
-    const interval = setInterval(applyStatusBar, 500);
-
-    // Also re-apply when app comes to foreground
-    const subscription = AppState.addEventListener('change', (state: AppStateStatus) => {
-      if (state === 'active') {
-        applyStatusBar();
-      }
-    });
-
-    return () => {
-      RNStatusBar.popStackEntry(stackEntry);
-      clearInterval(interval);
-      subscription.remove();
-    };
-  }, []);
-
-  return (
-    <RNStatusBar
-      barStyle="light-content"
-      backgroundColor={STATUS_BAR_COLOR}
-      translucent={false}
-    />
-  );
-}
+// Apply status bar settings imperatively at module load time (before any
+// React component mounts) so the very first frame has the correct colors.
+// This is the key difference from previous attempts: expo-status-bar's
+// imperative API talks directly to the native module, not through React's
+// StatusBar stack which react-native-screens overrides.
+setStatusBarTranslucent(false);
+setStatusBarBackgroundColor(STATUS_BAR_COLOR, false);
+setStatusBarStyle('light');
 
 // ─── Network Monitor ──────────────────────────────────────────────────
 function NetworkMonitor(): null {
@@ -452,7 +411,11 @@ export default function App(): React.JSX.Element {
         <SafeAreaProvider>
           <ThemeProvider>
             <ToastProvider>
-              <ThemedStatusBar />
+              <StatusBar
+                style="light"
+                backgroundColor={STATUS_BAR_COLOR}
+                translucent={false}
+              />
               <AppVersionGate />
               <NetworkMonitor />
               <NotificationInitializer />

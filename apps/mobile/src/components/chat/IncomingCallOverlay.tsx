@@ -7,11 +7,11 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  StatusBar,
   Animated,
   Vibration,
   Modal,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -130,7 +130,7 @@ export const IncomingCallOverlay: React.FC = () => {
       animationType="fade"
       statusBarTranslucent
     >
-      <StatusBar barStyle="light-content" backgroundColor="#08080F" />
+      <StatusBar style="light" backgroundColor="#08080F" />
       <View style={[styles.overlay, { paddingTop: insets.top + spacing.xl, paddingBottom: insets.bottom + spacing.xl }]}>
         {/* Call type label */}
         <Text style={styles.callTypeLabel}>{callTypeLabel}</Text>

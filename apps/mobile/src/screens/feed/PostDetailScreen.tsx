@@ -13,12 +13,12 @@ import {
   Pressable,
   StyleSheet,
   Dimensions,
-  StatusBar,
   FlatList,
   Animated,
   PanResponder,
   ActivityIndicator,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { Video, ResizeMode, type AVPlaybackStatus } from 'expo-av';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
@@ -184,7 +184,7 @@ export const PostDetailScreen: React.FC = () => {
   if (!post) {
     return (
       <View style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#08080F" />
+        <StatusBar style="light" backgroundColor="#08080F" />
         <Text style={styles.emptyText}>Gönderi bulunamadı</Text>
       </View>
     );
@@ -203,7 +203,7 @@ export const PostDetailScreen: React.FC = () => {
   if (hasPhotos) {
     return (
       <Animated.View style={[styles.container, animatedStyle]} {...panResponder.panHandlers}>
-        <StatusBar barStyle="light-content" backgroundColor="#08080F" />
+        <StatusBar style="light" backgroundColor="#08080F" />
 
         {/* Close button */}
         <TouchableOpacity
@@ -255,7 +255,7 @@ export const PostDetailScreen: React.FC = () => {
   if (hasVideo) {
     return (
       <Animated.View style={[styles.container, animatedStyle]} {...panResponder.panHandlers}>
-        <StatusBar barStyle="light-content" backgroundColor="#08080F" />
+        <StatusBar style="light" backgroundColor="#08080F" />
 
         {/* Close button */}
         <TouchableOpacity
@@ -282,7 +282,7 @@ export const PostDetailScreen: React.FC = () => {
   // Text viewer — clean full-screen reading view
   return (
     <Animated.View style={[styles.container, animatedStyle]} {...panResponder.panHandlers}>
-      <StatusBar barStyle="light-content" backgroundColor="#08080F" />
+      <StatusBar style="light" backgroundColor="#08080F" />
 
       {/* Close button */}
       <TouchableOpacity
