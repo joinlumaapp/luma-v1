@@ -167,7 +167,7 @@ export class EngagementService {
 
         const entries = streakResults.map((r, index) => ({
           userId: r.userId,
-          name: profiles.get(r.userId)?.name ?? "Kullanici",
+          name: profiles.get(r.userId)?.name || "Kullanici",
           photoUrl: profiles.get(r.userId)?.photoUrl ?? "",
           score: r.currentStreak,
           rank: index + 1,
@@ -186,7 +186,7 @@ export class EngagementService {
 
     const entries = results.map((r, index) => ({
       userId: r.userId,
-      name: profiles.get(r.userId)?.name ?? "Kullanici",
+      name: profiles.get(r.userId)?.name || "Kullanici",
       photoUrl: profiles.get(r.userId)?.photoUrl ?? "",
       score: Number(r.score),
       rank: index + 1,
@@ -356,7 +356,7 @@ export class EngagementService {
     const map = new Map<string, { name: string; photoUrl: string }>();
     for (const user of users) {
       map.set(user.id, {
-        name: user.profile?.firstName ?? "Kullanici",
+        name: user.profile?.firstName || "Kullanici",
         photoUrl: user.photos[0]?.thumbnailUrl ?? "",
       });
     }

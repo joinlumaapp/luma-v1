@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
+  ScrollView,
   Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -80,8 +81,13 @@ export const PasswordCreationScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Content */}
-      <View style={styles.content}>
+      {/* Scrollable Content */}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.title}>Şifre Oluştur</Text>
         <Text style={styles.subtitle}>
           Hesabını korumak için güvenli bir şifre belirle.
@@ -162,7 +168,7 @@ export const PasswordCreationScreen: React.FC = () => {
         {confirmPassword.length > 0 && !passwordsMatch && (
           <Text style={styles.errorText}>Şifreler uyuşmuyor.</Text>
         )}
-      </View>
+      </ScrollView>
 
       {/* Continue button */}
       <View style={styles.footer}>
@@ -203,10 +209,14 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: fontWeights.semibold,
   },
-  content: {
+  scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: spacing.lg + 4,
     paddingTop: spacing.xl,
+    paddingBottom: 24,
   },
   title: {
     fontSize: 28,

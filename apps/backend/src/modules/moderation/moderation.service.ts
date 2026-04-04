@@ -395,7 +395,7 @@ export class ModerationService {
 
     const blockedUsers = blocks.map((block: (typeof blocks)[number]) => ({
       userId: block.blocked.id,
-      firstName: block.blocked.profile?.firstName ?? "Kullanici",
+      firstName: block.blocked.profile?.firstName || "Kullanici",
       photoUrl: block.blocked.photos[0]?.thumbnailUrl ?? null,
       blockedAt: block.createdAt.toISOString(),
     }));

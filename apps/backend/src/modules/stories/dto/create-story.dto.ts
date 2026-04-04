@@ -10,7 +10,7 @@ import {
   Min,
   Max,
 } from "class-validator";
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 
 export enum StoryMediaType {
   IMAGE = "image",
@@ -70,6 +70,16 @@ export class CreateStoryDto {
   @IsEnum(StoryMediaType)
   mediaType!: StoryMediaType;
 
+  @Transform(({ value }) => {
+    if (typeof value === "string") {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => StoryOverlayDto)

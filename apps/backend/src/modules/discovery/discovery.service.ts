@@ -1946,7 +1946,7 @@ export class DiscoveryService {
     });
 
     // 7. Send notification to recipient
-    const senderName = sender.profile?.firstName ?? "Birisi";
+    const senderName = sender.profile?.firstName || "Birisi";
     await this.notificationsService.sendPushNotification(
       recipientId,
       "Selam!",

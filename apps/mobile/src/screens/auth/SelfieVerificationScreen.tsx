@@ -16,6 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../stores/authStore';
+import { useProfileStore } from '../../stores/profileStore';
 import { useTestModeStore } from '../../stores/testModeStore';
 import { storage } from '../../utils/storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -42,19 +43,52 @@ export const SelfieVerificationScreen: React.FC = () => {
   const setVerified = useAuthStore((state) => state.setVerified);
   const verifySelfie = useAuthStore((state) => state.verifySelfie);
   const isTestMode = useTestModeStore((state) => state.isTestMode);
+  const updateProfile = useProfileStore((state) => state.updateProfile);
+
+  /**
+   * Save collected onboarding profile fields to the backend before marking
+   * onboarding as complete. Without this, firstName and other fields collected
+   * during onboarding would remain only in the client-side Zustand store and
+   * never reach the database, causing "Kullanici" fallback everywhere.
+   */
+  const saveProfileAndComplete = useCallback(async () => {
+    const { profile } = useProfileStore.getState();
+    try {
+      await updateProfile({
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        birthDate: profile.birthDate,
+        gender: profile.gender,
+        bio: profile.bio,
+        city: profile.city,
+        intentionTag: profile.intentionTag,
+        interestTags: profile.interestTags,
+        height: profile.height,
+        job: profile.job,
+        education: profile.education,
+      });
+    } catch {
+      // Profile save failed but we still allow onboarding to complete.
+      // The profile will sync on next app launch or profile edit.
+      if (__DEV__) {
+        console.warn('Profil kaydedilemedi, onboarding devam ediyor');
+      }
+    }
+    useAuthStore.getState().setOnboarded(true);
+    await storage.setOnboarded(true);
+  }, [updateProfile]);
 
   // Founder test mode: auto-approve selfie after 2s
   useEffect(() => {
     if (__DEV__ && isTestMode) {
-      const timer = setTimeout(() => {
+      const timer = setTimeout(async () => {
         setVerified(true);
-        useAuthStore.getState().setOnboarded(true);
-        storage.setOnboarded(true);
+        await saveProfileAndComplete();
       }, 2000);
       return () => clearTimeout(timer);
     }
     return undefined;
-  }, [isTestMode, setVerified]);
+  }, [isTestMode, setVerified, saveProfileAndComplete]);
 
   const handleRequestPermission = useCallback(async () => {
     const result = await requestPermission();
@@ -109,9 +143,8 @@ export const SelfieVerificationScreen: React.FC = () => {
           'Selfie doğrulaması başarısız oldu. Tekrar deneyebilir veya atlayabilirsin.',
         );
       }
-      // Mark onboarding as complete — persist to storage for session restore
-      useAuthStore.getState().setOnboarded(true);
-      await storage.setOnboarded(true);
+      // Save profile fields to backend, then mark onboarding as complete
+      await saveProfileAndComplete();
     } catch {
       Alert.alert('Hata', 'Selfie doğrulanırken bir hata oluştu. Lütfen tekrar deneyin.');
     } finally {
@@ -119,12 +152,11 @@ export const SelfieVerificationScreen: React.FC = () => {
     }
   };
 
-  const handleSkip = () => {
+  const handleSkip = async () => {
     // User skips selfie verification — NOT marked as verified
     useAuthStore.getState().setVerified(false);
-    // Mark onboarding as complete — persist to storage for session restore
-    useAuthStore.getState().setOnboarded(true);
-    storage.setOnboarded(true);
+    // Save profile fields to backend, then mark onboarding as complete
+    await saveProfileAndComplete();
   };
 
   const handleBack = () => {

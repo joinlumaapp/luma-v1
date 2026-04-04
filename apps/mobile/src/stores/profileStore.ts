@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { profileService } from '../services/profileService';
-import type { ProfileResponse } from '../services/profileService';
+import type { ProfileResponse, NestedProfileResponse, ProfileFields } from '../services/profileService';
 import { PROFILE_CONFIG } from '../constants/config';
 import { parseApiError } from '../services/api';
 import { devMockOrThrow } from '../utils/mockGuard';
@@ -158,53 +158,82 @@ const LEGACY_TAG_MIGRATION: Record<string, string> = {
 const migrateInterestTags = (tags: string[]): string[] =>
   tags.map((tag) => LEGACY_TAG_MIGRATION[tag] ?? tag);
 
+/**
+ * Type guard: returns true when the backend response uses the nested format
+ * (GET /profiles/me returns { userId, profile: {...}, photos, profileCompletion }).
+ */
+const isNestedResponse = (data: ProfileResponse): data is NestedProfileResponse =>
+  typeof (data as NestedProfileResponse).profile === 'object' &&
+  (data as NestedProfileResponse).profile !== null &&
+  'userId' in data;
+
+/**
+ * Extract photo array from either response shape.
+ */
+const extractPhotos = (data: ProfileResponse): Array<{ id: string; url: string; order: number }> => {
+  if (isNestedResponse(data)) {
+    return data.photos ?? [];
+  }
+  return data.photos ?? [];
+};
+
+/**
+ * Transform backend ProfileResponse (nested OR flat) to store ProfileData.
+ * The nested shape comes from GET /profiles/me; the flat shape comes from
+ * PATCH /profiles (updateProfile).
+ */
 const mapResponseToProfile = (data: ProfileResponse): ProfileData => {
-  const videoData = (data as { profileVideo?: { url: string; thumbnailUrl: string; duration: number } | null }).profileVideo ?? null;
+  // Resolve the profile fields object — nested responses wrap them in `data.profile`
+  const fields: ProfileFields = isNestedResponse(data) ? data.profile : data;
+
+  const photos = extractPhotos(data);
+  const videoData = fields.profileVideo ?? null;
+
   return {
-    firstName: data.firstName,
-    lastName: (data as { lastName?: string }).lastName ?? '',
-    birthDate: data.birthDate,
-    gender: data.gender,
-    genderPreference: Array.isArray((data as { genderPreference?: string[] }).genderPreference) ? (data as { genderPreference?: string[] }).genderPreference! : [],
-    lookingFor: Array.isArray((data as { lookingFor?: string[] }).lookingFor) ? (data as { lookingFor?: string[] }).lookingFor! : [],
-    height: (data as { height?: number | null }).height ?? null,
-    sports: (data as { sports?: string }).sports ?? '',
-    smoking: (data as { smoking?: string }).smoking ?? '',
-    children: (data as { children?: string }).children ?? '',
-    intentionTag: data.intentionTag,
-    interestTags: migrateInterestTags(Array.isArray((data as { interestTags?: string[] }).interestTags) ? (data as { interestTags?: string[] }).interestTags! : []),
-    photos: data.photos.map((p) => p.url),
-    bio: data.bio,
+    firstName: fields.firstName ?? '',
+    lastName: fields.lastName ?? '',
+    birthDate: fields.birthDate ? String(fields.birthDate) : '',
+    gender: fields.gender ?? '',
+    genderPreference: Array.isArray(fields.genderPreference) ? fields.genderPreference : [],
+    lookingFor: Array.isArray(fields.lookingFor) ? fields.lookingFor : [],
+    height: fields.height ?? null,
+    sports: (fields as { sports?: string }).sports ?? '',
+    smoking: fields.smoking ?? '',
+    children: fields.children ?? '',
+    intentionTag: fields.intentionTag ?? '',
+    interestTags: migrateInterestTags(Array.isArray(fields.interestTags) ? fields.interestTags : []),
+    photos: photos.map((p) => p.url),
+    bio: fields.bio ?? '',
     answers: {},
-    city: data.city,
-    job: (data as { job?: string }).job ?? '',
-    education: (data as { education?: string }).education ?? '',
-    weight: (data as { weight?: number | null }).weight ?? null,
-    sexualOrientation: (data as { sexualOrientation?: string }).sexualOrientation ?? '',
-    zodiacSign: (data as { zodiacSign?: string }).zodiacSign ?? '',
-    educationLevel: (data as { educationLevel?: string }).educationLevel ?? '',
-    maritalStatus: (data as { maritalStatus?: string }).maritalStatus ?? '',
-    alcohol: (data as { alcohol?: string }).alcohol ?? '',
-    pets: (data as { pets?: string }).pets ?? '',
-    religion: (data as { religion?: string }).religion ?? '',
-    lifeValues: (data as { lifeValues?: string }).lifeValues ?? '',
-    personalityType: (data as { personalityType?: string | null }).personalityType ?? null,
-    isComplete: data.isComplete,
+    city: fields.city ?? '',
+    job: fields.job ?? '',
+    education: fields.education ?? '',
+    weight: fields.weight ?? null,
+    sexualOrientation: fields.sexualOrientation ?? '',
+    zodiacSign: fields.zodiacSign ?? '',
+    educationLevel: fields.educationLevel ?? '',
+    maritalStatus: fields.maritalStatus ?? '',
+    alcohol: fields.alcohol ?? '',
+    pets: fields.pets ?? '',
+    religion: fields.religion ?? '',
+    lifeValues: fields.lifeValues ?? '',
+    personalityType: fields.personalityType ?? null,
+    isComplete: fields.isComplete ?? false,
     profileVideo: videoData ? {
       url: videoData.url,
       thumbnailUrl: videoData.thumbnailUrl,
       duration: videoData.duration,
     } : null,
-    prompts: Array.isArray((data as { prompts?: ProfileData['prompts'] }).prompts) ? (data as { prompts?: ProfileData['prompts'] }).prompts! : [],
-    favoriteSpots: Array.isArray((data as { favoriteSpots?: ProfileData['favoriteSpots'] }).favoriteSpots) ? (data as { favoriteSpots?: ProfileData['favoriteSpots'] }).favoriteSpots! : [],
-    isIncognito: (data as { isIncognito?: boolean }).isIncognito ?? false,
-    incognitoExpiresAt: (data as { incognitoExpiresAt?: number | null }).incognitoExpiresAt ?? null,
-    isFrozen: (data as { isFrozen?: boolean }).isFrozen ?? false,
-    showOnlineStatus: (data as { showOnlineStatus?: boolean }).showOnlineStatus ?? true,
-    showDistance: (data as { showDistance?: boolean }).showDistance ?? true,
-    postCount: (data as { postCount?: number }).postCount ?? 0,
-    followerCount: (data as { followerCount?: number }).followerCount ?? 0,
-    followingCount: (data as { followingCount?: number }).followingCount ?? 0,
+    prompts: Array.isArray(fields.prompts) ? fields.prompts : [],
+    favoriteSpots: Array.isArray(fields.favoriteSpots) ? fields.favoriteSpots : [],
+    isIncognito: fields.isIncognito ?? false,
+    incognitoExpiresAt: fields.incognitoExpiresAt ?? null,
+    isFrozen: fields.isFrozen ?? false,
+    showOnlineStatus: fields.showOnlineStatus ?? true,
+    showDistance: fields.showDistance ?? true,
+    postCount: fields.postCount ?? 0,
+    followerCount: fields.followerCount ?? 0,
+    followingCount: fields.followingCount ?? 0,
   };
 };
 
@@ -256,7 +285,8 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     try {
       const data = await profileService.getProfile();
       const profile = mapResponseToProfile(data);
-      const photoIds = data.photos.map((p) => p.id);
+      const photos = extractPhotos(data);
+      const photoIds = photos.map((p) => p.id);
       set({
         profile,
         _photoIds: photoIds,
@@ -287,9 +317,15 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     try {
       const response = await profileService.updateProfile(data);
       const profile = mapResponseToProfile(response);
-      const photoIds = response.photos.map((p) => p.id);
+      const photos = extractPhotos(response);
+      // PATCH /profiles may not return photos — preserve existing IDs when absent
+      const photoIds = photos.length > 0 ? photos.map((p) => p.id) : get()._photoIds;
+      // Preserve existing photo URLs in the profile when backend omits them
+      const mergedProfile = profile.photos.length === 0 && get().profile.photos.length > 0
+        ? { ...profile, photos: get().profile.photos }
+        : profile;
       set({
-        profile,
+        profile: mergedProfile,
         _photoIds: photoIds,
         isLoading: false,
         error: null,

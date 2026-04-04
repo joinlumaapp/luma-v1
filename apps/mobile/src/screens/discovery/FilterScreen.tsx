@@ -520,7 +520,7 @@ export const FilterScreen: React.FC = () => {
         <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12}>
           <Ionicons name="close" size={28} color={colors.text} />
         </TouchableOpacity>
-        <Text style={s.headerTitle}>Arama filtreleri</Text>
+        <Text style={s.headerTitle}>Sana uygun olanı bul</Text>
         <TouchableOpacity onPress={handleReset} hitSlop={12}>
           <Text style={s.resetText}>Sıfırla</Text>
         </TouchableOpacity>
@@ -532,7 +532,7 @@ export const FilterScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* ═══════════════ TEMEL FİLTRELER ═══════════════ */}
-        <Text style={s.sectionHeader}>Temel filtreler</Text>
+        <Text style={s.sectionHeader}>Temel tercihler</Text>
 
         {/* Gender — Gold+ */}
         <View style={s.filterSection}>
@@ -557,7 +557,7 @@ export const FilterScreen: React.FC = () => {
 
         {/* Age — Gold+ */}
         <View style={s.filterSection}>
-          <Text style={s.questionLabel}>Onlar kaç yaşında?</Text>
+          <Text style={s.questionLabel}>Kaç yaşında olsun?</Text>
           <TouchableOpacity
             style={isFree ? s.cardLocked : undefined}
             onPress={isFree ? () => showUpgradeAlert('GOLD') : undefined}
@@ -578,7 +578,7 @@ export const FilterScreen: React.FC = () => {
 
         {/* Distance — Gold+ */}
         <View style={s.filterSection}>
-          <Text style={s.questionLabel}>Onlar nerede?</Text>
+          <Text style={s.questionLabel}>Ne kadar yakın olsun?</Text>
           <TouchableOpacity
             style={isFree ? s.cardLocked : undefined}
             onPress={isFree ? () => showUpgradeAlert('GOLD') : undefined}
@@ -599,7 +599,7 @@ export const FilterScreen: React.FC = () => {
 
         {/* Verified — Gold+ */}
         <View style={s.filterSection}>
-          <Text style={s.questionLabel}>Kendilerini doğruladılar mı?</Text>
+          <Text style={s.questionLabel}>Sadece doğrulanmış profiller mi görmek istersin?</Text>
           <TouchableOpacity
             style={[s.card, isFree && s.cardLocked]}
             onPress={isFree ? () => showUpgradeAlert('GOLD') : undefined}
@@ -614,7 +614,7 @@ export const FilterScreen: React.FC = () => {
             )}
             <View style={s.verifiedRow} pointerEvents={isFree ? 'none' : 'auto'}>
               <Ionicons name="checkmark-circle" size={22} color={colors.primary} />
-              <Text style={s.verifiedLabel}>Yalnızca doğrulanmış profiller</Text>
+              <Text style={s.verifiedLabel}>Sadece doğrulanmış profiller</Text>
               <Switch
                 value={verifiedOnly}
                 onValueChange={setVerifiedOnly}
@@ -627,7 +627,7 @@ export const FilterScreen: React.FC = () => {
 
         {/* Intentions — Gold+ */}
         {renderChipCard(
-          'Onların hedefleri nelerdir?', '',
+          'Ne arıyor olsun?', '',
           INTENTION_OPTIONS.map((t) => t.label),
           selectedTags.map((id) => INTENTION_OPTIONS.find((t) => t.id === id)?.label ?? id),
           (label) => {
@@ -644,12 +644,12 @@ export const FilterScreen: React.FC = () => {
 
         {/* Interests — Gold+ */}
         {renderChipCard(
-          'Bazı ilgi alanlarını paylaşıyorlar mı?', '',
+          'Hangi ilgi alanlarını paylaşsın?', '',
           INTEREST_OPTIONS, selectedInterests, toggleInArray(setSelectedInterests), 'interests', 'GOLD',
         )}
 
         {/* ═══════════════ GELİŞMİŞ FİLTRELER ═══════════════ */}
-        <Text style={s.sectionHeader}>Gelişmiş filtreler</Text>
+        <Text style={s.sectionHeader}>Detaylı tercihler</Text>
 
         {!hasAccess(packageTier, 'GOLD') && (
           <TouchableOpacity
@@ -657,7 +657,7 @@ export const FilterScreen: React.FC = () => {
             onPress={() => showUpgradeAlert('GOLD')}
             activeOpacity={0.8}
           >
-            <Text style={s.upgradeBannerText}>Filtrelerini Gold ile ince ayar yap</Text>
+            <Text style={s.upgradeBannerText}>Gold ile daha detaylı tercih belirle</Text>
             <View style={s.upgradeBannerBtn}>
               <Text style={s.upgradeBannerBtnText}>Yükselt</Text>
             </View>
@@ -666,93 +666,93 @@ export const FilterScreen: React.FC = () => {
 
         {/* Languages */}
         {renderChipCard(
-          'Hangi dilleri biliyorlar?', '',
+          'Hangi dilleri bilmesini istersin?', '',
           LANGUAGE_OPTIONS, selectedLanguages, toggleInArray(setSelectedLanguages), 'languages', 'GOLD',
         )}
 
         {/* Ethnicity */}
         {renderChipCard(
-          'Onların etnik kökenleri neler?', '',
+          'Etnik kökeni ne olsun?', '',
           ETHNICITY_OPTIONS, selectedEthnicity, toggleInArray(setSelectedEthnicity), 'ethnicity', 'GOLD',
         )}
 
         {/* Height */}
         {renderRangeCard(
-          'Ne kadar uzunlar?', '',
+          'Boyu ne kadar olsun?', '',
           heightMin, heightMax, HEIGHT_MIN, HEIGHT_MAX, 'cm',
           setHeightMin, setHeightMax, 'height', 'GOLD',
         )}
 
         {/* Weight */}
         {renderRangeCard(
-          'Ne kadar kilolar?', '',
+          'Kilosu ne kadar olsun?', '',
           weightMin, weightMax, WEIGHT_MIN, WEIGHT_MAX, 'kg',
           setWeightMin, setWeightMax, 'weight', 'GOLD',
         )}
 
         {/* Sexual orientation */}
         {renderChipCard(
-          'Cinsel yönelimleri nedir?', '',
+          'Cinsel yönelimi ne olsun?', '',
           SEXUAL_ORIENTATION_OPTIONS, selectedOrientation, toggleInArray(setSelectedOrientation), 'orientation', 'GOLD',
         )}
 
         {/* Zodiac */}
         {renderChipCard(
-          'Burçları nedir?', '',
+          'Burcu ne olsun?', '',
           ZODIAC_OPTIONS, selectedZodiac, toggleInArray(setSelectedZodiac), 'zodiac', 'PRO',
         )}
 
         {/* Exercise */}
         {renderChipCard(
-          'Spor yapıyorlar mı?', '',
+          'Spor yapıyor olsun mu?', '',
           EXERCISE_OPTIONS, selectedExercise, toggleInArray(setSelectedExercise), 'exercise', 'GOLD',
         )}
 
         {/* Education */}
         {renderChipCard(
-          'Eğitim seviyeleri nedir?', '',
+          'Eğitim seviyesi ne olsun?', '',
           EDUCATION_OPTIONS, selectedEducation, toggleInArray(setSelectedEducation), 'education', 'GOLD',
         )}
 
         {/* Marital Status */}
         {renderChipCard(
-          'Medeni durumları nedir?', '',
+          'Medeni durumu ne olsun?', '',
           MARITAL_OPTIONS, selectedMarital, toggleInArray(setSelectedMarital), 'marital', 'GOLD',
         )}
 
         {/* Children */}
         {renderChipCard(
-          'Çocukları var mı?', '',
+          'Çocuk durumu ne olsun?', '',
           CHILDREN_OPTIONS, selectedChildren, toggleInArray(setSelectedChildren), 'children', 'GOLD',
         )}
 
         {/* Drinking */}
         {renderChipCard(
-          'Ne sıklıkla içiyorlar?', '',
+          'Alkol kullanıyor olsun mu?', '',
           DRINKING_OPTIONS, selectedDrinking, toggleInArray(setSelectedDrinking), 'drinking', 'GOLD',
         )}
 
         {/* Smoking */}
         {renderChipCard(
-          'Ne sıklıkla sigara içiyorlar?', '',
+          'Sigara içiyor olsun mu?', '',
           SMOKING_OPTIONS, selectedSmoking, toggleInArray(setSelectedSmoking), 'smoking', 'GOLD',
         )}
 
         {/* Pets */}
         {renderChipCard(
-          'Evcil hayvanları var mı?', '',
+          'Evcil hayvanı olsun mu?', '',
           PETS_OPTIONS, selectedPets, toggleInArray(setSelectedPets), 'pets', 'GOLD',
         )}
 
         {/* Religion */}
         {renderChipCard(
-          'Hangi dine inanıyorlar?', '',
+          'Dini inancı ne olsun?', '',
           RELIGION_OPTIONS, selectedReligion, toggleInArray(setSelectedReligion), 'religion', 'GOLD',
         )}
 
         {/* Values */}
         {renderChipCard(
-          'Hayatlarında en önemli şey nedir?', '',
+          'Hayatında neye değer versin?', '',
           VALUES_OPTIONS, selectedValues, toggleInArray(setSelectedValues), 'values', 'GOLD',
         )}
 
@@ -780,7 +780,7 @@ interface FallbackToggleProps {
 
 const FallbackToggle: React.FC<FallbackToggleProps> = ({ value, onToggle, disabled }) => (
   <View style={s.fallbackRow}>
-    <Text style={s.fallbackLabel}>Bitersem diğer kişileri göster</Text>
+    <Text style={s.fallbackLabel}>Sonuç biterse diğer kişileri de göster</Text>
     <Switch
       value={value}
       onValueChange={onToggle}
