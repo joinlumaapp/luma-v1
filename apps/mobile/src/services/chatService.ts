@@ -89,7 +89,9 @@ export const chatService = {
       const response = await api.get<ConversationsResponse>(API_ROUTES.CHAT.GET_CONVERSATIONS);
       return response.data;
     } catch (error) {
-      // Build conversations from local persistence meta + match store
+      // In production, propagate the error so UI shows proper error state.
+      if (!__DEV__) throw error;
+      // Dev fallback: build conversations from local persistence meta + match store
       const { useMatchStore } = require('../stores/matchStore');
       const matches = useMatchStore.getState().matches;
       const meta = getAllConversationMeta();
@@ -155,7 +157,9 @@ export const chatService = {
         cursor: response.data.cursor,
       };
     } catch (error) {
-      // Return persisted messages — this is the key persistence fix
+      // In production, propagate the error so UI shows proper error state.
+      if (!__DEV__) throw error;
+      // Dev fallback: return persisted local messages
       return devMockOrThrow(error, {
         messages: persisted,
         total: persisted.length,
@@ -180,7 +184,9 @@ export const chatService = {
       await persistMessage(matchId, response.data.message);
       return response.data;
     } catch (error) {
-      // Mock fallback — create a local message so chat works in dev
+      // In production, propagate the error so UI shows proper error state.
+      // In dev, create a local mock message so chat is testable without backend.
+      if (!__DEV__) throw error;
       const { useAuthStore } = require('../stores/authStore');
       const userId = useAuthStore.getState().user?.id ?? '';
       const now = new Date().toISOString();
@@ -197,7 +203,6 @@ export const chatService = {
         isRead: false,
         reactions: [],
       };
-      // Persist locally — this ensures the message survives app restart
       await persistMessage(matchId, message);
       return devMockOrThrow(error, { message }, 'chatService.sendMessage');
     }
@@ -253,7 +258,9 @@ export const chatService = {
       await persistMessage(matchId, response.data.message);
       return response.data;
     } catch (error) {
-      // Mock fallback for image messages
+      // In production, propagate the error so UI shows proper error state.
+      // In dev, create a local mock message so image chat is testable without backend.
+      if (!__DEV__) throw error;
       const { useAuthStore } = require('../stores/authStore');
       const userId = useAuthStore.getState().user?.id ?? '';
       const now = new Date().toISOString();
@@ -291,6 +298,8 @@ export const chatService = {
       await persistMessage(matchId, response.data.message);
       return response.data;
     } catch (error) {
+      // In production, propagate the error so UI shows proper error state.
+      if (!__DEV__) throw error;
       const { useAuthStore } = require('../stores/authStore');
       const userId = useAuthStore.getState().user?.id ?? '';
       const now = new Date().toISOString();
@@ -345,6 +354,8 @@ export const chatService = {
       await persistMessage(matchId, response.data.message);
       return response.data;
     } catch (error) {
+      // In production, propagate the error so UI shows proper error state.
+      if (!__DEV__) throw error;
       const { useAuthStore } = require('../stores/authStore');
       const userId = useAuthStore.getState().user?.id ?? '';
       const now = new Date().toISOString();

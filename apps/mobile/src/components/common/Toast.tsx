@@ -64,13 +64,16 @@ const ToastItem: React.FC<{ toast: ToastMessage; onDismiss: (id: string) => void
 }) => {
   const translateY = useRef(new Animated.Value(-100)).current;
   const opacity = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0.9)).current;
+  const iconScale = useRef(new Animated.Value(0.5)).current;
 
   useEffect(() => {
-    // Slide in
+    // Slide in with spring for smooth deceleration
     Animated.parallel([
-      Animated.timing(translateY, {
+      Animated.spring(translateY, {
         toValue: 0,
-        duration: ANIMATION_DURATION,
+        tension: 80,
+        friction: 12,
         useNativeDriver: true,
       }),
       Animated.timing(opacity, {
@@ -78,7 +81,21 @@ const ToastItem: React.FC<{ toast: ToastMessage; onDismiss: (id: string) => void
         duration: ANIMATION_DURATION,
         useNativeDriver: true,
       }),
-    ]).start();
+      Animated.spring(scale, {
+        toValue: 1,
+        tension: 100,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      // Icon pulse after toast appears
+      Animated.spring(iconScale, {
+        toValue: 1,
+        tension: 200,
+        friction: 6,
+        useNativeDriver: true,
+      }).start();
+    });
 
     // Auto dismiss
     const timer = setTimeout(() => {
@@ -99,7 +116,7 @@ const ToastItem: React.FC<{ toast: ToastMessage; onDismiss: (id: string) => void
     }, TOAST_DURATION);
 
     return () => clearTimeout(timer);
-  }, [translateY, opacity, onDismiss, toast.id]);
+  }, [translateY, opacity, scale, iconScale, onDismiss, toast.id]);
 
   const toastColors = getToastColors(toast.type);
 
@@ -110,14 +127,19 @@ const ToastItem: React.FC<{ toast: ToastMessage; onDismiss: (id: string) => void
         {
           backgroundColor: toastColors.bg,
           borderLeftColor: toastColors.border,
-          transform: [{ translateY }],
+          transform: [{ translateY }, { scale }],
           opacity,
         },
       ]}
     >
-      <View style={[styles.iconContainer, { backgroundColor: toastColors.border }]}>
+      <Animated.View
+        style={[
+          styles.iconContainer,
+          { backgroundColor: toastColors.border, transform: [{ scale: iconScale }] },
+        ]}
+      >
         <Text style={styles.iconText}>{getToastIcon(toast.type)}</Text>
-      </View>
+      </Animated.View>
       <View style={styles.textContainer}>
         <Text style={styles.toastTitle}>{toast.title}</Text>
         {toast.message ? (

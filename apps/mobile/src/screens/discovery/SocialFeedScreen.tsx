@@ -18,6 +18,7 @@ import {
   Image,
   Animated,
 } from 'react-native';
+import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -545,6 +546,7 @@ type FeedNavProp = NativeStackNavigationProp<FeedStackParamList, 'SocialFeed'>;
 
 export const SocialFeedScreen: React.FC = () => {
   useScreenTracking('SocialFeed');
+  const { getAnimatedStyle } = useStaggeredEntrance(2); // header + feed content
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<FeedNavProp>();
   const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE');
@@ -1060,8 +1062,8 @@ export const SocialFeedScreen: React.FC = () => {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <BrandedBackground />
-      {/* Header — always visible at top */}
-      <View style={styles.headerArea}>
+      {/* Header — always visible at top, entrance animation */}
+      <Animated.View style={[styles.headerArea, getAnimatedStyle(0)]}>
         <Text style={styles.headerTitle}>Akış</Text>
         <View style={styles.headerRight}>
           <TouchableOpacity
@@ -1078,13 +1080,13 @@ export const SocialFeedScreen: React.FC = () => {
             resizeMode="contain"
           />
         </View>
-      </View>
+      </Animated.View>
 
       {/* Feed — story bar is part of the list header, scrolls with content like Instagram */}
       {isLoading && posts.length === 0 ? (
-        <View style={styles.loadingContainer}>
+        <Animated.View style={[styles.loadingContainer, getAnimatedStyle(1)]}>
           <ActivityIndicator size="large" color={colors.primary} />
-        </View>
+        </Animated.View>
       ) : (
         <FlatList
           ref={flatListRef}

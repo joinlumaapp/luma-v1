@@ -385,7 +385,9 @@ export const storyService = {
       });
       return response.data;
     } catch (error) {
-      // Mock story creation
+      // In production, propagate the error so UI shows proper error state.
+      if (!__DEV__) throw error;
+      // Dev fallback: mock story creation
       const story: Story = {
         id: `story-dev-${Date.now()}`,
         userId: 'dev-user-001',

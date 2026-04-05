@@ -19,7 +19,9 @@ import {
   Alert,
   RefreshControl,
   Image,
+  Animated as RNAnimated,
 } from 'react-native';
+import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
@@ -93,6 +95,7 @@ type DiscoveryNavProp = CompositeNavigationProp<
 
 export const DiscoveryScreen: React.FC = () => {
   useScreenTracking('Discovery');
+  const { getAnimatedStyle } = useStaggeredEntrance(2); // header + card stack
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<DiscoveryNavProp>();
 
@@ -907,8 +910,8 @@ export const DiscoveryScreen: React.FC = () => {
           />
         }
       >
-      {/* Dark header area */}
-      <View style={styles.darkHeaderArea}>
+      {/* Dark header area — entrance animation */}
+      <RNAnimated.View style={[styles.darkHeaderArea, getAnimatedStyle(0)]}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -967,9 +970,9 @@ export const DiscoveryScreen: React.FC = () => {
           />
         )}
 
-      </View>
+      </RNAnimated.View>
 
-      {/* Card stack */}
+      {/* Card stack — entrance animation */}
       <View style={styles.cardStack}>
         {/* Next card (behind) — animates forward as current card is dragged */}
         {nextCard && (

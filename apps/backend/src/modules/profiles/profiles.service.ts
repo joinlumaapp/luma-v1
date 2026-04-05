@@ -1018,12 +1018,32 @@ export class ProfilesService {
       throw new NotFoundException("Profil bulunamadı");
     }
 
-    // Fetch social counts in parallel
-    const [followerCount, followingCount, postCount] = await Promise.all([
-      this.prisma.userFollow.count({ where: { followingId: userId } }),
-      this.prisma.userFollow.count({ where: { followerId: userId } }),
-      this.prisma.post.count({ where: { userId, deletedAt: null } }),
-    ]);
+    // Order IDs consistently for compatibility score lookup (userAId < userBId)
+    const [firstId, secondId] =
+      viewerId < userId ? [viewerId, userId] : [userId, viewerId];
+
+    // Fetch social counts, follow status, and compatibility score in parallel
+    const [followerCount, followingCount, postCount, followRecord, compatScore] =
+      await Promise.all([
+        this.prisma.userFollow.count({ where: { followingId: userId } }),
+        this.prisma.userFollow.count({ where: { followerId: userId } }),
+        this.prisma.post.count({ where: { userId, deletedAt: null } }),
+        this.prisma.userFollow.findUnique({
+          where: {
+            followerId_followingId: {
+              followerId: viewerId,
+              followingId: userId,
+            },
+          },
+          select: { id: true },
+        }),
+        this.prisma.compatibilityScore.findUnique({
+          where: {
+            userAId_userBId: { userAId: firstId, userBId: secondId },
+          },
+          select: { finalScore: true },
+        }),
+      ]);
 
     // Get basic user record for package tier and verification
     const user = await this.prisma.user.findUnique({
@@ -1062,9 +1082,9 @@ export class ProfilesService {
       education: profile.education ?? null,
       isVerified: user?.isFullyVerified || user?.isSelfieVerified || false,
       packageTier: user?.packageTier ?? "FREE",
-      compatibilityPercent: 0, // TODO: calculate real compatibility
+      compatibilityPercent: compatScore ? Math.round(compatScore.finalScore) : 0,
       intentionTag: profile.intentionTag ?? null,
-      isFollowing: false, // TODO: check actual follow status
+      isFollowing: !!followRecord,
       zodiacSign: profile.zodiacSign ?? null,
       smoking: profile.smoking ?? null,
       children: profile.children ?? null,

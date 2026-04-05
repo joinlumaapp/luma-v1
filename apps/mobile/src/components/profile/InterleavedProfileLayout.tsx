@@ -7,12 +7,27 @@ import {
   StyleSheet,
   Dimensions,
   Animated,
+  FlatList,
   type RefreshControlProps,
+  type NativeSyntheticEvent,
+  type NativeScrollEvent,
 } from 'react-native';
+import ReanimatedDefault, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
+
+const ReanimatedView = ReanimatedDefault.View;
+import {
+  GestureDetector,
+  Gesture,
+  GestureHandlerRootView,
+} from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
+import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -41,7 +56,106 @@ interface InterleavedProfileLayoutProps {
   refreshControl?: React.ReactElement<RefreshControlProps>;
 }
 
-// ─── Full-Screen Photo Viewer ────────────────────────────────────────────────
+// ─── Pinch-to-Zoom Photo Item ────────────────────────────────────────────────
+
+interface ZoomablePhotoProps {
+  uri: string;
+}
+
+function ZoomablePhoto({ uri }: ZoomablePhotoProps) {
+  const scale = useSharedValue(1);
+  const savedScale = useSharedValue(1);
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const savedTranslateX = useSharedValue(0);
+  const savedTranslateY = useSharedValue(0);
+
+  const pinchGesture = Gesture.Pinch()
+    .onUpdate((e) => {
+      scale.value = savedScale.value * e.scale;
+    })
+    .onEnd(() => {
+      if (scale.value < 1) {
+        scale.value = withSpring(1, { damping: 15, stiffness: 200 });
+        savedScale.value = 1;
+        translateX.value = withSpring(0, { damping: 15, stiffness: 200 });
+        translateY.value = withSpring(0, { damping: 15, stiffness: 200 });
+        savedTranslateX.value = 0;
+        savedTranslateY.value = 0;
+      } else if (scale.value > 3) {
+        scale.value = withSpring(3, { damping: 15, stiffness: 200 });
+        savedScale.value = 3;
+      } else {
+        savedScale.value = scale.value;
+      }
+    });
+
+  const panGesture = Gesture.Pan()
+    .minPointers(2)
+    .onUpdate((e) => {
+      if (savedScale.value > 1) {
+        translateX.value = savedTranslateX.value + e.translationX;
+        translateY.value = savedTranslateY.value + e.translationY;
+      }
+    })
+    .onEnd(() => {
+      savedTranslateX.value = translateX.value;
+      savedTranslateY.value = translateY.value;
+    });
+
+  const doubleTap = Gesture.Tap()
+    .numberOfTaps(2)
+    .onStart(() => {
+      if (savedScale.value > 1) {
+        scale.value = withSpring(1, { damping: 15, stiffness: 200 });
+        savedScale.value = 1;
+        translateX.value = withSpring(0, { damping: 15, stiffness: 200 });
+        translateY.value = withSpring(0, { damping: 15, stiffness: 200 });
+        savedTranslateX.value = 0;
+        savedTranslateY.value = 0;
+      } else {
+        scale.value = withSpring(2, { damping: 15, stiffness: 200 });
+        savedScale.value = 2;
+      }
+    });
+
+  const composedGesture = Gesture.Simultaneous(pinchGesture, panGesture, doubleTap);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+      { scale: scale.value },
+    ],
+  }));
+
+  return (
+    <GestureDetector gesture={composedGesture}>
+      <ReanimatedView style={[zoomStyles.photoContainer, animatedStyle]}>
+        <Image
+          source={{ uri }}
+          style={zoomStyles.photo}
+          resizeMode="contain"
+        />
+      </ReanimatedView>
+    </GestureDetector>
+  );
+}
+
+const zoomStyles = StyleSheet.create({
+  photoContainer: {
+    width: SCREEN_WIDTH,
+    height: SCREEN_WIDTH * 1.25,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  photo: {
+    width: SCREEN_WIDTH,
+    height: SCREEN_WIDTH * 1.25,
+  },
+});
+
+// ─── Full-Screen Photo Viewer (Swipeable Carousel + Pinch-to-Zoom) ──────────
 
 interface PhotoViewerProps {
   visible: boolean;
@@ -52,21 +166,50 @@ interface PhotoViewerProps {
 
 function PhotoViewer({ visible, photos, initialIndex, onClose }: PhotoViewerProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const flatListRef = useRef<FlatList>(null);
   const insets = useSafeAreaInsets();
 
   React.useEffect(() => {
     if (visible) {
       setCurrentIndex(initialIndex);
+      // Scroll to initial index after mount
+      setTimeout(() => {
+        flatListRef.current?.scrollToIndex({ index: initialIndex, animated: false });
+      }, 50);
     }
   }, [visible, initialIndex]);
 
-  const goToPrevious = useCallback(() => {
-    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : prev));
-  }, []);
+  const handleScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const offsetX = e.nativeEvent.contentOffset.x;
+      const newIndex = Math.round(offsetX / SCREEN_WIDTH);
+      if (newIndex >= 0 && newIndex < photos.length) {
+        setCurrentIndex(newIndex);
+      }
+    },
+    [photos.length],
+  );
 
-  const goToNext = useCallback(() => {
-    setCurrentIndex((prev) => (prev < photos.length - 1 ? prev + 1 : prev));
-  }, [photos.length]);
+  const renderItem = useCallback(
+    ({ item }: { item: string }) => (
+      <ZoomablePhoto uri={item} />
+    ),
+    [],
+  );
+
+  const keyExtractor = useCallback(
+    (_item: string, index: number) => `viewer-photo-${index}`,
+    [],
+  );
+
+  const getItemLayout = useCallback(
+    (_data: ArrayLike<string> | null | undefined, index: number) => ({
+      length: SCREEN_WIDTH,
+      offset: SCREEN_WIDTH * index,
+      index,
+    }),
+    [],
+  );
 
   if (!visible || photos.length === 0) return null;
 
@@ -78,7 +221,7 @@ function PhotoViewer({ visible, photos, initialIndex, onClose }: PhotoViewerProp
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      <View style={styles.viewerOverlay}>
+      <GestureHandlerRootView style={styles.viewerOverlay}>
         <StatusBar style="light" backgroundColor="#08080F" />
 
         {/* Close button */}
@@ -91,35 +234,37 @@ function PhotoViewer({ visible, photos, initialIndex, onClose }: PhotoViewerProp
           <Ionicons name="close" size={28} color="#FFFFFF" />
         </TouchableOpacity>
 
-        {/* Photo — clean, no progress bars */}
-        <Image
-          source={{ uri: photos[currentIndex] }}
-          style={styles.viewerImage}
-          resizeMode="contain"
+        {/* Horizontal swipe carousel */}
+        <FlatList
+          ref={flatListRef}
+          data={photos}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={handleScroll}
+          getItemLayout={getItemLayout}
+          initialScrollIndex={initialIndex}
+          style={styles.viewerCarousel}
+          contentContainerStyle={styles.viewerCarouselContent}
         />
 
-        {/* Left arrow */}
-        {currentIndex > 0 && (
-          <TouchableOpacity
-            style={[styles.viewerArrow, styles.viewerArrowLeft]}
-            onPress={goToPrevious}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="chevron-back" size={32} color="#FFFFFF" />
-          </TouchableOpacity>
+        {/* Page indicator dots */}
+        {photos.length > 1 && (
+          <View style={styles.dotsContainer}>
+            {photos.map((_, i) => (
+              <View
+                key={`dot-${i}`}
+                style={[
+                  styles.dot,
+                  i === currentIndex && styles.dotActive,
+                ]}
+              />
+            ))}
+          </View>
         )}
-
-        {/* Right arrow */}
-        {currentIndex < photos.length - 1 && (
-          <TouchableOpacity
-            style={[styles.viewerArrow, styles.viewerArrowRight]}
-            onPress={goToNext}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="chevron-forward" size={32} color="#FFFFFF" />
-          </TouchableOpacity>
-        )}
-      </View>
+      </GestureHandlerRootView>
     </Modal>
   );
 }
@@ -381,7 +526,7 @@ const styles = StyleSheet.create({
     // No borderRadius on image — parent overflow:hidden handles clipping cleanly
   },
 
-  // Full-screen viewer — clean
+  // Full-screen viewer — swipeable carousel + pinch-to-zoom
   viewerOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.95)',
@@ -399,26 +544,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  viewerImage: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_WIDTH * 1.25,
+  viewerCarousel: {
+    flex: 0,
   },
-  viewerArrow: {
-    position: 'absolute',
-    top: '50%',
-    marginTop: -24,
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.full,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  viewerCarouselContent: {
+    alignItems: 'center',
+  },
+  // Page indicator dots
+  dotsContainer: {
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 10,
+    paddingVertical: spacing.md,
+    gap: 8,
   },
-  viewerArrowLeft: {
-    left: spacing.md,
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
-  viewerArrowRight: {
-    right: spacing.md,
+  dotActive: {
+    backgroundColor: palette.purple[400],
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
 });

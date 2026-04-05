@@ -908,7 +908,9 @@ export const discoveryService = {
       const response = await api.post<SwipeResponse>(API_ROUTES.DISCOVERY.SWIPE, data);
       return response.data;
     } catch (error) {
-      // Mock swipe response — simulate occasional matches on likes
+      // In production, propagate the error so UI shows proper error state.
+      if (!__DEV__) throw error;
+      // Dev fallback: simulate occasional matches on likes
       const isLike = data.direction === 'LIKE';
       const isMatch = isLike && Math.random() < 0.25;
       return devMockOrThrow<SwipeResponse>(error, {
@@ -980,6 +982,9 @@ export const discoveryService = {
       const response = await api.post<ActivateBoostResponse>('/profiles/boost', { durationMinutes });
       return response.data;
     } catch (error) {
+      // In production, propagate the error so UI shows proper error state.
+      if (!__DEV__) throw error;
+      // Dev fallback: simulate boost activation
       const goldCosts: Record<number, number> = { 30: 50, 120: 120, 1440: 250 };
       const cost = goldCosts[durationMinutes] ?? 50;
       return devMockOrThrow<ActivateBoostResponse>(error, {

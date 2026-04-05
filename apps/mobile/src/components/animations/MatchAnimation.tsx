@@ -84,18 +84,24 @@ interface FloatingHeartConfig {
   size: number;
 }
 
-const FLOATING_HEART_COUNT = 8;
+const FLOATING_HEART_COUNT = 12;
+
+// Mixed particle types: hearts, stars, sparkles for variety
+const PARTICLE_EMOJIS = ['💜', '💖', '✨', '⭐', '💫', '🌟', '💗', '❤️', '✨', '💜', '⭐', '💖'];
 
 const generateFloatingHearts = (): FloatingHeartConfig[] =>
   Array.from({ length: FLOATING_HEART_COUNT }, (_, i) => ({
     x: (SCREEN_WIDTH / FLOATING_HEART_COUNT) * i + Math.random() * (SCREEN_WIDTH / FLOATING_HEART_COUNT),
-    delay: i * 200,
-    duration: 2800 + Math.random() * 1200,
-    size: 12 + Math.random() * 10,
+    delay: i * 150,
+    duration: 2400 + Math.random() * 1400,
+    size: 10 + Math.random() * 14,
   }));
 
-const FloatingHeart: React.FC<{ config: FloatingHeartConfig }> = ({ config }) => {
+const FloatingHeart: React.FC<{ config: FloatingHeartConfig; index: number }> = ({ config, index }) => {
   const anim = useRef(new Animated.Value(0)).current;
+  const emoji = PARTICLE_EMOJIS[index % PARTICLE_EMOJIS.length];
+  // Wider sway for sparkle/star particles
+  const swayAmount = emoji === '✨' || emoji === '⭐' || emoji === '🌟' || emoji === '💫' ? 24 : 16;
 
   useEffect(() => {
     const loop = Animated.loop(
@@ -120,11 +126,16 @@ const FloatingHeart: React.FC<{ config: FloatingHeartConfig }> = ({ config }) =>
   });
   const opacity = anim.interpolate({
     inputRange: [0, 0.08, 0.75, 1],
-    outputRange: [0, 0.55, 0.55, 0],
+    outputRange: [0, 0.65, 0.65, 0],
   });
   const sway = anim.interpolate({
-    inputRange: [0, 0.3, 0.7, 1],
-    outputRange: [config.x, config.x + 16, config.x - 16, config.x],
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: [config.x, config.x + swayAmount, config.x - swayAmount * 0.5, config.x + swayAmount * 0.3, config.x],
+  });
+  // Sparkle/star particles rotate as they float
+  const rotate = anim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
   });
 
   return (
@@ -134,12 +145,12 @@ const FloatingHeart: React.FC<{ config: FloatingHeartConfig }> = ({ config }) =>
         {
           fontSize: config.size,
           opacity,
-          transform: [{ translateX: sway }, { translateY }],
+          transform: [{ translateX: sway }, { translateY }, { rotate }],
         },
       ]}
       pointerEvents="none"
     >
-      {'💜'}
+      {emoji}
     </Animated.Text>
   );
 };
@@ -325,6 +336,10 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
   const cardTranslateY = useRef(new Animated.Value(60)).current;
   const cardOpacity = useRef(new Animated.Value(0)).current;
 
+  // Screen flash & shake
+  const flashOpacity = useRef(new Animated.Value(0)).current;
+  const shakeX = useRef(new Animated.Value(0)).current;
+
   // Avatars
   const userSlide = useRef(new Animated.Value(-SCREEN_WIDTH * 0.35)).current;
   const matchSlide = useRef(new Animated.Value(SCREEN_WIDTH * 0.35)).current;
@@ -385,9 +400,42 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
     buttonsOpacity.setValue(0);
     buttonsTranslateY.setValue(24);
     ctaPulse.setValue(1);
+    flashOpacity.setValue(0);
+    shakeX.setValue(0);
 
-    // Haptics
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    // Triple haptic pulses (3x light taps with 100ms spacing)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), 100);
+    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 200);
+
+    // Screen flash — brief white flash overlay (200ms)
+    Animated.sequence([
+      Animated.timing(flashOpacity, {
+        toValue: 0.5,
+        duration: 80,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }),
+      Animated.timing(flashOpacity, {
+        toValue: 0,
+        duration: 120,
+        easing: Easing.in(Easing.ease),
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Screen shake — ±2px for 300ms
+    const shakeSequence = Animated.loop(
+      Animated.sequence([
+        Animated.timing(shakeX, { toValue: 2, duration: 30, useNativeDriver: true }),
+        Animated.timing(shakeX, { toValue: -2, duration: 30, useNativeDriver: true }),
+        Animated.timing(shakeX, { toValue: 1.5, duration: 30, useNativeDriver: true }),
+        Animated.timing(shakeX, { toValue: -1.5, duration: 30, useNativeDriver: true }),
+        Animated.timing(shakeX, { toValue: 0, duration: 30, useNativeDriver: true }),
+      ]),
+      { iterations: 2 },
+    );
+    shakeSequence.start();
 
     // Main sequence — total target: ~800ms
     Animated.sequence([
@@ -545,6 +593,8 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
     buttonsOpacity,
     buttonsTranslateY,
     ctaPulse,
+    flashOpacity,
+    shakeX,
   ]);
 
   const heartCompositeScale = Animated.multiply(
@@ -564,18 +614,31 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
       onRequestClose={onClose}
     >
       <StatusBar style="light" backgroundColor="#08080F" />
-      {/* Full-screen backdrop */}
-      <Animated.View style={[styles.backdrop, { opacity: overlayOpacity }]}>
+      {/* Full-screen backdrop with shake */}
+      <Animated.View style={[styles.backdrop, { opacity: overlayOpacity, transform: [{ translateX: shakeX }] }]}>
         {/* Gradient background — purple to pink */}
         <LinearGradient colors={GRADIENT_BG} style={StyleSheet.absoluteFill} />
+
+        {/* Screen flash overlay — brief white glow */}
+        <Animated.View
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              backgroundColor: '#FFFFFF',
+              opacity: flashOpacity,
+              zIndex: 50,
+            },
+          ]}
+          pointerEvents="none"
+        />
 
         {/* Glow edges */}
         <View style={styles.glowTopLeft} />
         <View style={styles.glowBottomRight} />
 
-        {/* Floating hearts */}
+        {/* Floating hearts, stars & sparkles */}
         {floatingHearts.map((cfg, i) => (
-          <FloatingHeart key={`fh-${i}`} config={cfg} />
+          <FloatingHeart key={`fh-${i}`} config={cfg} index={i} />
         ))}
 
         {/* Card */}

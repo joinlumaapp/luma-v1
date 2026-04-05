@@ -15,6 +15,7 @@ import {
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../../navigation/types';
 import {
@@ -57,6 +58,53 @@ function getNotificationIcon(type: string): keyof typeof Ionicons.glyphMap {
   return NOTIFICATION_ICONS[type.toUpperCase()] || 'notifications-outline';
 }
 
+// ─── Bildirim türüne göre renk eşlemesi ──────────────────────────────
+
+type NotificationColor = {
+  iconBg: string;
+  borderColor: string;
+  accentColor: string;
+};
+
+const MATCH_TYPES = new Set([
+  'NEW_MATCH', 'PROFILE_LIKE', 'NEW_LIKE', 'MATCH_URGENCY',
+  'MISSED_LIKES', 'RELATIONSHIP_REQUEST', 'POST_LIKE', 'NEW_FOLLOWER',
+]);
+const MESSAGE_TYPES = new Set([
+  'NEW_MESSAGE', 'MESSAGE', 'POST_COMMENT', 'COMMENT_REPLY',
+]);
+const REWARD_TYPES = new Set([
+  'DAILY_PICKS', 'BOOST_ACTIVE', 'SUBSCRIPTION_EXPIRING', 'FOMO',
+  'WEEKLY_CONTENT',
+]);
+
+function getNotificationColors(type: string): NotificationColor {
+  const key = type.toUpperCase();
+  if (MATCH_TYPES.has(key)) {
+    return { iconBg: 'rgba(236, 72, 153, 0.25)', borderColor: 'rgba(236, 72, 153, 0.5)', accentColor: '#EC4899' };
+  }
+  if (MESSAGE_TYPES.has(key)) {
+    return { iconBg: 'rgba(59, 130, 246, 0.25)', borderColor: 'rgba(59, 130, 246, 0.5)', accentColor: '#3B82F6' };
+  }
+  if (REWARD_TYPES.has(key)) {
+    return { iconBg: 'rgba(245, 158, 11, 0.25)', borderColor: 'rgba(245, 158, 11, 0.5)', accentColor: '#F59E0B' };
+  }
+  // System / default — green
+  return { iconBg: 'rgba(16, 185, 129, 0.25)', borderColor: 'rgba(16, 185, 129, 0.5)', accentColor: '#10B981' };
+}
+
+/** Type-specific haptic feedback */
+function triggerHaptic(type: string): void {
+  const key = type.toUpperCase();
+  if (MATCH_TYPES.has(key)) {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  } else if (MESSAGE_TYPES.has(key)) {
+    Haptics.selectionAsync();
+  } else {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  }
+}
+
 // ─── Otomatik kapanma süresi ─────────────────────────────────────────
 
 const AUTO_DISMISS_MS = 4000;
@@ -70,8 +118,20 @@ export const InAppNotificationBanner: React.FC = () => {
   const [currentNotification, setCurrentNotification] = useState<InAppNotificationData | null>(null);
   const translateY = useRef(new Animated.Value(-200)).current;
   const opacity = useRef(new Animated.Value(0)).current;
+  const iconScale = useRef(new Animated.Value(1)).current;
   const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isVisible = useRef(false);
+
+  // Icon bounce animation — runs after banner slides in
+  const playIconBounce = useCallback(() => {
+    iconScale.setValue(0.5);
+    Animated.spring(iconScale, {
+      toValue: 1,
+      tension: 200,
+      friction: 6,
+      useNativeDriver: true,
+    }).start();
+  }, [iconScale]);
 
   // Kapatma animasyonu
   const dismissBanner = useCallback(() => {
@@ -109,6 +169,7 @@ export const InAppNotificationBanner: React.FC = () => {
         setTimeout(() => {
           setCurrentNotification(notification);
           isVisible.current = true;
+          triggerHaptic(notification.type);
 
           Animated.parallel([
             Animated.spring(translateY, {
@@ -122,7 +183,7 @@ export const InAppNotificationBanner: React.FC = () => {
               duration: ANIMATION_DURATION,
               useNativeDriver: true,
             }),
-          ]).start();
+          ]).start(() => playIconBounce());
 
           // Otomatik kapanma
           dismissTimer.current = setTimeout(dismissBanner, AUTO_DISMISS_MS);
@@ -130,6 +191,7 @@ export const InAppNotificationBanner: React.FC = () => {
       } else {
         setCurrentNotification(notification);
         isVisible.current = true;
+        triggerHaptic(notification.type);
 
         Animated.parallel([
           Animated.spring(translateY, {
@@ -143,13 +205,13 @@ export const InAppNotificationBanner: React.FC = () => {
             duration: ANIMATION_DURATION,
             useNativeDriver: true,
           }),
-        ]).start();
+        ]).start(() => playIconBounce());
 
         // Otomatik kapanma
         dismissTimer.current = setTimeout(dismissBanner, AUTO_DISMISS_MS);
       }
     },
-    [translateY, opacity, dismissBanner],
+    [translateY, opacity, dismissBanner, playIconBounce],
   );
 
   // Yukarı kaydırma ile kapatma — PanResponder
@@ -270,6 +332,7 @@ export const InAppNotificationBanner: React.FC = () => {
   if (!currentNotification) return null;
 
   const iconName = getNotificationIcon(currentNotification.type);
+  const notifColors = getNotificationColors(currentNotification.type);
 
   return (
     <Animated.View
@@ -283,16 +346,21 @@ export const InAppNotificationBanner: React.FC = () => {
       ]}
       {...panResponder.panHandlers}
     >
-      <BlurView intensity={80} tint="dark" style={styles.blurContainer}>
+      <BlurView intensity={80} tint="dark" style={[styles.blurContainer, { borderColor: notifColors.borderColor }]}>
         <TouchableOpacity
           style={styles.content}
           onPress={handlePress}
           activeOpacity={0.8}
         >
-          {/* Bildirim ikonu */}
-          <View style={styles.iconContainer}>
-            <Ionicons name={iconName} size={20} color="#FFFFFF" />
-          </View>
+          {/* Bildirim ikonu — animated bounce */}
+          <Animated.View
+            style={[
+              styles.iconContainer,
+              { backgroundColor: notifColors.iconBg, transform: [{ scale: iconScale }] },
+            ]}
+          >
+            <Ionicons name={iconName} size={20} color={notifColors.accentColor} />
+          </Animated.View>
 
           {/* Bildirim metni */}
           <View style={styles.textContainer}>
@@ -329,7 +397,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: 'rgba(20, 20, 34, 0.85)',
     borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.3)',
+    borderColor: 'rgba(139, 92, 246, 0.3)', // default fallback, overridden per-type
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -353,7 +421,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(139, 92, 246, 0.3)',
+    backgroundColor: 'rgba(139, 92, 246, 0.3)', // default, overridden per-type inline
     justifyContent: 'center',
     alignItems: 'center',
   },

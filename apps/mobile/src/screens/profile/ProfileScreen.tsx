@@ -11,6 +11,7 @@ import {
   Easing,
   RefreshControl,
 } from 'react-native';
+import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -209,6 +210,7 @@ const INTENTION_CONFIG: Record<string, { label: string; bg: string; text: string
 
 export const ProfileScreen: React.FC = () => {
   useScreenTracking('Profile');
+  const { getAnimatedStyle } = useStaggeredEntrance(2); // header bar + profile content
   const navigation = useNavigation<ProfileNavigationProp>();
   const insets = useSafeAreaInsets();
 
@@ -845,23 +847,25 @@ export const ProfileScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <BrandedBackground />
-      <InterleavedProfileLayout
-        photos={profile.photos}
-        topContent={topContent}
-        infoSections={infoSections}
-        headerBar={headerBar}
-        scrollBottomPadding={spacing.xl * 2}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={handleRefresh}
-            tintColor="#D4AF37"
-            colors={['#D4AF37']}
-            title="Güncelleniyor..."
-            titleColor={colors.textSecondary}
-          />
-        }
-      />
+      <Animated.View style={[{ flex: 1 }, getAnimatedStyle(0)]}>
+        <InterleavedProfileLayout
+          photos={profile.photos}
+          topContent={topContent}
+          infoSections={infoSections}
+          headerBar={headerBar}
+          scrollBottomPadding={spacing.xl * 2}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              tintColor="#D4AF37"
+              colors={['#D4AF37']}
+              title="Güncelleniyor..."
+              titleColor={colors.textSecondary}
+            />
+          }
+        />
+      </Animated.View>
 
       {/* Boost modal */}
       <BoostModal

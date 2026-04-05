@@ -9,3 +9,4 @@ export { OptimizedImage } from './OptimizedImage';
 export { OfflineBanner } from './OfflineBanner';
 export { CoinBalance } from './CoinBalance';
 export { LumaLogo, lumaLogoAsset } from './LumaLogo';
+export { AnimatedTextInput } from './AnimatedTextInput';

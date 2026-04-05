@@ -159,6 +159,9 @@ export const waveService = {
       const response = await api.post<SendWaveResponse>('/waves', { receiverId, useCoins });
       return response.data;
     } catch (error) {
+      // In production, propagate the error so UI shows proper error state.
+      if (!__DEV__) throw error;
+      // Dev fallback: simulate wave send
       const mockWave: Wave = {
         id: `w_${Date.now()}`,
         senderId: 'current_user',
@@ -198,7 +201,10 @@ export const waveService = {
       });
       return response.data;
     } catch (error) {
-      // Mock fallback — simulate successful payment and chat creation
+      // In production, propagate the error so UI shows proper error state.
+      // Paid messages must NEVER silently succeed with fake data.
+      if (!__DEV__) throw error;
+      // Dev fallback: simulate successful payment and chat creation
       const mockMatchId = `paid_${Date.now()}`;
       return devMockOrThrow(error, {
         matchId: mockMatchId,

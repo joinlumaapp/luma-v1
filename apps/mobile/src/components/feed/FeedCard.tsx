@@ -10,9 +10,16 @@ import {
   Pressable,
   Image,
   StyleSheet,
-  Animated,
   ActivityIndicator,
 } from 'react-native';
+import ReanimatedAnimated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  withSequence,
+  Easing as REasing,
+} from 'react-native-reanimated';
 import { Video, ResizeMode, type AVPlaybackStatus } from 'expo-av';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -22,6 +29,234 @@ import { spacing, borderRadius } from '../../theme/spacing';
 import { INTENTION_TAG_OPTIONS, type FeedPost } from '../../services/socialFeedService';
 import { useAuthStore } from '../../stores/authStore';
 // NowListening removed — music feature removed from feed
+
+// ─── Animated Like Button (Reanimated) ───────────────────────
+
+const PARTICLE_COUNT = 5;
+const HEART_COLOR_GRAY = '#9CA3AF'; // colors.textSecondary equivalent
+const HEART_COLOR_RED = '#EF4444';
+
+interface HeartParticle {
+  angle: number; // radians, direction of burst
+  distance: number; // how far to travel
+  size: number; // font size
+}
+
+const generateParticles = (): HeartParticle[] =>
+  Array.from({ length: PARTICLE_COUNT }, (_, i) => {
+    const baseAngle = (Math.PI * 2 * i) / PARTICLE_COUNT;
+    const jitter = (Math.random() - 0.5) * 0.5;
+    return {
+      angle: baseAngle + jitter,
+      distance: 28 + Math.random() * 18,
+      size: 8 + Math.random() * 4,
+    };
+  });
+
+// Individual burst particle — properly uses hooks at component level
+interface BurstParticleProps {
+  particle: HeartParticle;
+  progress: { value: number };
+}
+
+const PARTICLE_BASE_STYLE = {
+  position: 'absolute' as const,
+  color: HEART_COLOR_RED,
+  zIndex: 10,
+};
+
+const BurstParticle: React.FC<BurstParticleProps> = ({ particle, progress }) => {
+  const animStyle = useAnimatedStyle(() => {
+    const p = progress.value;
+    const tx = Math.cos(particle.angle) * particle.distance * p;
+    const ty = Math.sin(particle.angle) * particle.distance * p;
+    const opacity = p < 0.7 ? 1 : 1 - (p - 0.7) / 0.3;
+    const scale = p < 0.3 ? p / 0.3 : 1 - (p - 0.3) * 0.6;
+    return {
+      transform: [
+        { translateX: tx },
+        { translateY: ty },
+        { scale: Math.max(0, scale) },
+      ],
+      opacity: Math.max(0, opacity),
+    };
+  });
+
+  return (
+    <ReanimatedAnimated.Text
+      style={[
+        PARTICLE_BASE_STYLE,
+        { fontSize: particle.size },
+        animStyle,
+      ]}
+    >
+      {'\u2764'}
+    </ReanimatedAnimated.Text>
+  );
+};
+
+interface AnimatedLikeButtonProps {
+  isLiked: boolean;
+  likeCount: number;
+  onPress: () => void;
+}
+
+const AnimatedLikeButton: React.FC<AnimatedLikeButtonProps> = ({
+  isLiked,
+  likeCount,
+  onPress,
+}) => {
+  const heartScale = useSharedValue(1);
+  const countScale = useSharedValue(1);
+  const glowOpacity = useSharedValue(0);
+  const particleProgress = useSharedValue(0);
+  const particlesRef = useRef(generateParticles());
+
+  const handlePress = useCallback(() => {
+    const willLike = !isLiked;
+
+    // Haptic feedback — Medium impact for satisfying feel
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    // Heart icon: scale 1 → 1.3 → 1.0 spring (300ms feel)
+    heartScale.value = withSequence(
+      withTiming(0.85, { duration: 60 }),
+      withSpring(1.3, { damping: 8, stiffness: 350, mass: 0.6 }),
+      withSpring(1, { damping: 12, stiffness: 200 }),
+    );
+
+    // Like count: brief scale pop
+    countScale.value = withSequence(
+      withTiming(1.25, { duration: 100 }),
+      withSpring(1, { damping: 12, stiffness: 200 }),
+    );
+
+    if (willLike) {
+      // Glow pulse behind heart
+      glowOpacity.value = withSequence(
+        withTiming(0.6, { duration: 120 }),
+        withTiming(0, { duration: 280 }),
+      );
+
+      // Burst particles outward, then fade
+      particlesRef.current = generateParticles();
+      particleProgress.value = 0;
+      particleProgress.value = withTiming(1, {
+        duration: 500,
+        easing: REasing.out(REasing.cubic),
+      });
+    }
+
+    onPress();
+  }, [isLiked, onPress, heartScale, countScale, glowOpacity, particleProgress]);
+
+  const heartAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: heartScale.value }],
+  }));
+
+  const countAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: countScale.value }],
+  }));
+
+  const glowAnimStyle = useAnimatedStyle(() => ({
+    opacity: glowOpacity.value,
+    transform: [{ scale: 1 + glowOpacity.value * 0.3 }],
+  }));
+
+  return (
+    <View style={likeButtonStyles.actionRow}>
+      <TouchableOpacity style={likeButtonStyles.actionBtn} onPress={handlePress} activeOpacity={0.7}>
+        <View style={likeButtonStyles.likeWrapper}>
+          {/* Glow pulse behind heart */}
+          <ReanimatedAnimated.View
+            style={[likeButtonStyles.likeGlow, glowAnimStyle]}
+          />
+
+          {/* Burst particles */}
+          {particlesRef.current.map((p, i) => (
+            <BurstParticle key={i} particle={p} progress={particleProgress} />
+          ))}
+
+          {/* Heart icon + count */}
+          <ReanimatedAnimated.View
+            style={[
+              likeButtonStyles.actionBtnInner,
+              isLiked && likeButtonStyles.actionBtnActive,
+              heartAnimStyle,
+            ]}
+          >
+            <Ionicons
+              name={isLiked ? 'heart' : 'heart-outline'}
+              size={22}
+              color={isLiked ? HEART_COLOR_RED : HEART_COLOR_GRAY}
+            />
+            {likeCount > 0 && (
+              <ReanimatedAnimated.Text
+                style={[
+                  likeButtonStyles.actionCount,
+                  isLiked && { color: palette.rose[500] },
+                  countAnimStyle,
+                ]}
+              >
+                {likeCount}
+              </ReanimatedAnimated.Text>
+            )}
+          </ReanimatedAnimated.View>
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+const likeButtonStyles = StyleSheet.create({
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: spacing.sm + 2,
+  },
+  actionBtn: {},
+  likeWrapper: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  likeGlow: {
+    position: 'absolute',
+    top: -6,
+    left: -6,
+    right: -6,
+    bottom: -6,
+    borderRadius: borderRadius.full,
+    backgroundColor: HEART_COLOR_RED + '30',
+  },
+  particle: {
+    position: 'absolute',
+    color: HEART_COLOR_RED,
+    zIndex: 10,
+  },
+  actionBtnInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.surfaceLight,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  actionBtnActive: {
+    backgroundColor: palette.rose[50],
+    borderColor: palette.rose[200],
+  },
+  actionCount: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+  },
+});
 
 // ─── Time Ago Helper ──────────────────────────────────────────
 
@@ -257,17 +492,6 @@ interface FeedCardProps {
 }
 
 export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onProfilePress, onPostTap, isVisible = false }) => {
-  const likeScale = useRef(new Animated.Value(1)).current;
-  const likeGlow = useRef(new Animated.Value(0)).current;
-  const likeCountAnim = useRef(new Animated.Value(0)).current;
-  const floatingHearts = useRef(
-    Array.from({ length: 3 }, () => ({
-      opacity: new Animated.Value(0),
-      translateY: new Animated.Value(0),
-      translateX: new Animated.Value(0),
-      scale: new Animated.Value(0),
-    }))
-  ).current;
   const lastTapRef = useRef<number>(0);
   const doubleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -278,78 +502,8 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onPr
   }, [onFollow, post.userId]);
 
   const handleLikePress = useCallback(() => {
-    const willLike = !post.isLiked;
-
-    // Haptic feedback — light tap
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-    // Scale bounce: pop up then bouncy spring back
-    Animated.sequence([
-      Animated.timing(likeScale, { toValue: 0.85, duration: 80, useNativeDriver: true }),
-      Animated.spring(likeScale, { toValue: 1.2, friction: 3, tension: 400, useNativeDriver: true }),
-      Animated.spring(likeScale, { toValue: 1, friction: 4, tension: 300, useNativeDriver: true }),
-    ]).start();
-
-    // Glow pulse on like
-    if (willLike) {
-      likeGlow.setValue(0);
-      Animated.sequence([
-        Animated.timing(likeGlow, { toValue: 1, duration: 150, useNativeDriver: true }),
-        Animated.timing(likeGlow, { toValue: 0, duration: 300, useNativeDriver: true }),
-      ]).start();
-
-      // Floating heart particles
-      floatingHearts.forEach((heart, i) => {
-        heart.opacity.setValue(0);
-        heart.translateY.setValue(0);
-        heart.translateX.setValue(0);
-        heart.scale.setValue(0);
-        Animated.parallel([
-          Animated.timing(heart.opacity, {
-            toValue: 0.8,
-            duration: 150,
-            delay: i * 60,
-            useNativeDriver: true,
-          }),
-          Animated.timing(heart.scale, {
-            toValue: 0.6 + i * 0.15,
-            duration: 200,
-            delay: i * 60,
-            useNativeDriver: true,
-          }),
-          Animated.timing(heart.translateY, {
-            toValue: -(20 + i * 12),
-            duration: 500,
-            delay: i * 60,
-            useNativeDriver: true,
-          }),
-          Animated.timing(heart.translateX, {
-            toValue: (i - 1) * 14,
-            duration: 500,
-            delay: i * 60,
-            useNativeDriver: true,
-          }),
-        ]).start(() => {
-          Animated.timing(heart.opacity, {
-            toValue: 0,
-            duration: 200,
-            useNativeDriver: true,
-          }).start();
-        });
-      });
-    }
-
-    // Count animation: slide up on like, slide down on unlike
-    likeCountAnim.setValue(willLike ? 8 : -8);
-    Animated.spring(likeCountAnim, {
-      toValue: 0,
-      friction: 6,
-      tension: 200,
-      useNativeDriver: true,
-    }).start();
-
     onLike(post.id);
-  }, [onLike, post.id, post.isLiked, likeScale, likeGlow, likeCountAnim, floatingHearts]);
+  }, [onLike, post.id]);
 
   const handleProfilePress = useCallback(() => {
     onProfilePress(post.userId);
@@ -458,62 +612,12 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onPr
       {/* ── Action Separator ── */}
       <View style={styles.actionSeparator} />
 
-      {/* ── Centered Like Button ── */}
-      <View style={styles.actionRow}>
-        <TouchableOpacity style={styles.actionBtn} onPress={handleLikePress} activeOpacity={0.7}>
-          <View style={styles.likeWrapper}>
-            {/* Glow pulse behind heart */}
-            <Animated.View
-              style={[
-                styles.likeGlow,
-                {
-                  opacity: likeGlow,
-                  transform: [{ scale: Animated.add(likeGlow, new Animated.Value(0.8)) }],
-                },
-              ]}
-            />
-
-            {/* Floating heart particles */}
-            {floatingHearts.map((heart, i) => (
-              <Animated.Text
-                key={i}
-                style={[
-                  styles.floatingHeart,
-                  {
-                    opacity: heart.opacity,
-                    transform: [
-                      { translateY: heart.translateY },
-                      { translateX: heart.translateX },
-                      { scale: heart.scale },
-                    ],
-                  },
-                ]}
-              >
-                {'\u2764'}
-              </Animated.Text>
-            ))}
-
-            <Animated.View style={[styles.actionBtnInner, post.isLiked && styles.actionBtnActive, { transform: [{ scale: likeScale }] }]}>
-              <Ionicons
-                name={post.isLiked ? 'heart' : 'heart-outline'}
-                size={22}
-                color={post.isLiked ? palette.rose[500] : colors.textSecondary}
-              />
-              {post.likeCount > 0 && (
-                <Animated.Text
-                  style={[
-                    styles.actionCount,
-                    post.isLiked && { color: palette.rose[500] },
-                    { transform: [{ translateY: likeCountAnim }] },
-                  ]}
-                >
-                  {post.likeCount}
-                </Animated.Text>
-              )}
-            </Animated.View>
-          </View>
-        </TouchableOpacity>
-      </View>
+      {/* ── Centered Like Button (Reanimated) ── */}
+      <AnimatedLikeButton
+        isLiked={post.isLiked}
+        likeCount={post.likeCount}
+        onPress={handleLikePress}
+      />
 
     </View>
   );
@@ -710,55 +814,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
 
-  // ── Horizontal Action Bar ──
-  actionRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: spacing.sm + 2,
-  },
-  actionBtn: {},
-  likeWrapper: {
-    position: 'relative',
-  },
-  likeGlow: {
-    position: 'absolute',
-    top: -4,
-    left: -4,
-    right: -4,
-    bottom: -4,
-    borderRadius: borderRadius.full,
-    backgroundColor: palette.rose[400] + '20',
-  },
-  floatingHeart: {
-    position: 'absolute',
-    top: 0,
-    left: 8,
-    fontSize: 10,
-    color: palette.rose[400],
-    zIndex: 10,
-  },
-  actionBtnInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.surfaceLight,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-  },
-  actionBtnActive: {
-    backgroundColor: palette.rose[50],
-    borderColor: palette.rose[200],
-  },
-  actionCount: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-  },
+  // ── Like button styles now in AnimatedLikeButton (likeButtonStyles) ──
 
 });
 

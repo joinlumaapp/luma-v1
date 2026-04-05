@@ -5,9 +5,10 @@
 //   detachInactiveScreens frees memory, React.memo stack navigators,
 //   deferred mount for heavy sub-screens (chat, edit profile, etc.)
 
-import React, { useEffect } from 'react';
-import { StyleSheet, View, Text, Platform } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { StyleSheet, View, Text, Platform, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { CommonActions } from '@react-navigation/native';
@@ -115,6 +116,7 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 /**
  * Creates a tabPress listener that always resets the stack to root
  * when the user taps a tab — whether switching to it or re-pressing it.
+ * Also triggers haptic feedback (Impact.Light) on every tab press.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function createTabResetListener(
@@ -123,6 +125,9 @@ function createTabResetListener(
 ) {
   return {
     tabPress: (e: { preventDefault: () => void }) => {
+      // Haptic feedback on every tab press
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
       const tabState = navigation.getState?.();
       if (!tabState?.routes) return;
       const thisRoute = tabState.routes.find((r: { name: string }) => r.name === route.name);
@@ -151,17 +156,54 @@ const TAB_ICONS: Record<string, { active: keyof typeof Ionicons.glyphMap; inacti
   user: { active: 'person', inactive: 'person-outline' },
 };
 
-// Tab icon component with 6px active dot indicator — memoized to prevent re-renders
+// Tab icon component with animated scale press + animated active dot indicator
 const TabIcon: React.FC<{ name: string; focused: boolean }> = React.memo(({ name, focused }) => {
   const icons = TAB_ICONS[name];
   const iconName = icons ? (focused ? icons.active : icons.inactive) : 'help-outline';
   const iconColor = focused ? '#8B5CF6' : 'rgba(150, 150, 150, 0.7)';
 
+  // Scale press animation — bounces from 0.85 to 1.0 when tab changes
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  // Indicator dot scale — animates from 0 to 1 when becoming active
+  const dotScale = useRef(new Animated.Value(focused ? 1 : 0)).current;
+
+  useEffect(() => {
+    if (focused) {
+      // Bounce the icon
+      scaleAnim.setValue(0.85);
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 300,
+        friction: 10,
+        useNativeDriver: true,
+      }).start();
+      // Scale in the dot
+      Animated.spring(dotScale, {
+        toValue: 1,
+        tension: 200,
+        friction: 8,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      // Scale out the dot
+      Animated.timing(dotScale, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [focused, scaleAnim, dotScale]);
+
   return (
-    <View style={styles.tabIconContainer}>
+    <Animated.View style={[styles.tabIconContainer, { transform: [{ scale: scaleAnim }] }]}>
       <Ionicons name={iconName} size={24} color={iconColor} />
-      {focused && <View style={styles.tabIndicator} />}
-    </View>
+      <Animated.View
+        style={[
+          styles.tabIndicator,
+          { transform: [{ scale: dotScale }], opacity: dotScale },
+        ]}
+      />
+    </Animated.View>
   );
 });
 TabIcon.displayName = 'TabIcon';
