@@ -287,6 +287,7 @@ export class AuthService {
     refreshToken: string;
     user: {
       id: string;
+      displayId: string;
       phone: string;
       isVerified: boolean;
       isNew: boolean;
@@ -335,6 +336,7 @@ export class AuthService {
       ...tokens,
       user: {
         id: user.id,
+        displayId: user.displayId ?? '',
         phone: user.phone,
         isVerified: true,
         isNew: !user.profile,
@@ -568,17 +570,54 @@ export class AuthService {
       where: { refreshToken: hashedRefreshToken },
     });
 
-    if (!session || session.isRevoked) {
-      // Possible token theft — revoke ALL sessions for this user
-      if (session) {
-        this.logger.warn(
-          `Revoked refresh token reuse detected for user ${session.userId}. Revoking all sessions.`,
-        );
-        await this.prisma.userSession.updateMany({
-          where: { userId: session.userId },
-          data: { isRevoked: true },
+    if (!session) {
+      throw new UnauthorizedException(
+        "Refresh token geçersiz veya iptal edilmiş",
+      );
+    }
+
+    // If session was recently revoked (within 10 seconds), this is likely a
+    // concurrent refresh from the same client, not token theft. Return the
+    // latest active session's tokens instead of revoking all sessions.
+    if (session.isRevoked) {
+      const revokedAt = session.createdAt;
+      const gracePeriodMs = 10_000;
+      if (revokedAt && Date.now() - revokedAt.getTime() < gracePeriodMs) {
+        // Find the newest active session for this user
+        const latestSession = await this.prisma.userSession.findFirst({
+          where: { userId: session.userId, isRevoked: false },
+          orderBy: { createdAt: "desc" },
         });
+        if (latestSession) {
+          // Re-use the existing session — generate new access token only
+          const user = await this.prisma.user.findUnique({
+            where: { id: payload.sub },
+          });
+          if (user && user.isActive && !user.deletedAt) {
+            const accessToken = await this.jwtService.signAsync(
+              {
+                sub: user.id,
+                phone: user.phone,
+                isVerified: user.isSelfieVerified,
+                packageTier: user.packageTier,
+              },
+              {
+                expiresIn:
+                  this.configService.get<string>("JWT_ACCESS_EXPIRY") || "15m",
+              },
+            );
+            return { accessToken, refreshToken: dto.refreshToken };
+          }
+        }
       }
+
+      this.logger.warn(
+        `Revoked refresh token reuse detected for user ${session.userId}. Revoking all sessions.`,
+      );
+      await this.prisma.userSession.updateMany({
+        where: { userId: session.userId },
+        data: { isRevoked: true },
+      });
       throw new UnauthorizedException(
         "Refresh token geçersiz veya iptal edilmiş",
       );
@@ -669,13 +708,19 @@ export class AuthService {
         },
       });
 
-      // 6. Deactivate device tokens (stop push notifications)
+      // 6. Soft-delete all user posts
+      await tx.post.updateMany({
+        where: { userId },
+        data: { deletedAt: new Date() },
+      });
+
+      // 7. Deactivate device tokens (stop push notifications)
       await tx.deviceToken.updateMany({
         where: { userId },
         data: { isActive: false },
       });
 
-      // 7. Remove from active matches (unmatch all)
+      // 8. Remove from active matches (unmatch all)
       await tx.match.updateMany({
         where: {
           OR: [{ userAId: userId }, { userBId: userId }],

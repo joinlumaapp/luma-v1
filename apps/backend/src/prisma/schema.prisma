@@ -189,6 +189,15 @@ model UserProfile {
   exercise       String?         @db.VarChar(20)   // aktif, bazen, nadiren
   zodiacSign     String?         @map("zodiac_sign") @db.VarChar(20)
   religion       String?         @db.VarChar(50)
+  // Extended profile fields
+  jobTitle       String?         @map("job_title") @db.VarChar(100)
+  children       String?         @db.VarChar(30)   // var, yok, istiyor, istemiyor
+  weight         Int?                              // kg
+  sexualOrientation String?     @map("sexual_orientation") @db.VarChar(30)
+  educationLevel String?        @map("education_level") @db.VarChar(30) // lise, universite, yuksek_lisans, doktora
+  maritalStatus  String?        @map("marital_status") @db.VarChar(30)
+  pets           String?         @db.VarChar(30)   // var, yok, istiyor
+  lifeValues     String?         @map("life_values") @db.VarChar(200)
   isIncognito    Boolean      @default(false) @map("is_incognito") // hide from discovery feed
   // Personality types (MBTI + Enneagram)
   mbtiType       String?      @map("mbti_type") @db.VarChar(4)       // INTJ, ENFP, etc.

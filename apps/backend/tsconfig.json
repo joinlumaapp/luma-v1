@@ -5,10 +5,8 @@
     "rootDir": "./src",
     "module": "commonjs",
     "target": "ES2022",
-    "baseUrl": "./",
-    "ignoreDeprecations": "6.0",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     },
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,

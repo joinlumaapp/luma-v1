@@ -2,7 +2,7 @@ import { ExpoConfig, ConfigContext } from 'expo/config';
 
 const IS_DEV = process.env.APP_ENV === 'development';
 const IS_PREVIEW = process.env.APP_ENV === 'preview';
-const EAS_PROJECT_ID = process.env.EAS_PROJECT_ID ?? '6931100f-868f-4059-996a-a82d1bea9fee';
+const EAS_PROJECT_ID = process.env.EAS_PROJECT_ID ?? '5a31e1e3-32b8-4ecf-a021-2de457659dc3';
 
 const getAppName = (): string => {
   if (IS_DEV) return 'LUMA (Dev)';
@@ -31,7 +31,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   userInterfaceStyle: 'automatic',
   scheme: 'luma',
   icon: './assets/icon.png',
-  owner: 'lumaapp',
+  owner: 'luma-dev',
 
   splash: {
     image: './assets/splash-logo.png',
@@ -120,6 +120,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
 
   plugins: [
+    [
+      './plugins/withAndroidStatusBar',
+      {
+        statusBarColor: '#000000',
+        lightIcons: true,
+      },
+    ],
     [
       'expo-notifications',
       {

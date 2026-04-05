@@ -5,6 +5,7 @@ import {
   IsNumber,
   IsArray,
   IsOptional,
+  IsObject,
   IsEnum,
   ValidateNested,
   Min,
@@ -21,7 +22,9 @@ export class AnalyticsEventDto {
   event!: string;
 
   @ApiProperty({ description: "Event properties (key-value pairs)" })
-  properties!: Record<string, string | number | boolean | null>;
+  @IsObject()
+  @IsOptional()
+  properties?: Record<string, string | number | boolean | null>;
 
   @ApiProperty({ description: "Unix timestamp in milliseconds" })
   @IsNumber()

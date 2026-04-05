@@ -8,6 +8,7 @@ import * as crypto from "crypto";
 import { PrismaService } from "../../prisma/prisma.service";
 import { ContentScannerService } from "../moderation/content-scanner.service";
 import { LumaCacheService } from "../cache/cache.service";
+import { StorageService } from "../storage/storage.service";
 import { UpdateProfileDto, SetIntentionTagDto, ReorderPhotosDto } from "./dto";
 import { calculateAge } from "../../common/utils/date.utils";
 
@@ -26,6 +27,7 @@ export class ProfilesService {
     private readonly prisma: PrismaService,
     private readonly contentScanner: ContentScannerService,
     private readonly cache: LumaCacheService,
+    private readonly storageService: StorageService,
   ) {}
 
   /**
@@ -131,6 +133,21 @@ export class ProfilesService {
         longitude: dto.longitude,
         intentionTag: dto.intentionTag ?? "NOT_SURE",
         interestTags: dto.interestTags ?? [],
+        height: dto.height,
+        education: dto.education,
+        smoking: dto.smoking,
+        drinking: dto.drinking,
+        exercise: dto.exercise,
+        zodiacSign: dto.zodiacSign,
+        religion: dto.religion,
+        jobTitle: dto.jobTitle,
+        children: dto.children,
+        weight: dto.weight,
+        sexualOrientation: dto.sexualOrientation,
+        educationLevel: dto.educationLevel,
+        maritalStatus: dto.maritalStatus,
+        pets: dto.pets,
+        lifeValues: dto.lifeValues,
         isComplete: false,
       },
       update: {
@@ -151,6 +168,21 @@ export class ProfilesService {
         ...(dto.interestTags !== undefined && {
           interestTags: dto.interestTags,
         }),
+        ...(dto.height !== undefined && { height: dto.height }),
+        ...(dto.education !== undefined && { education: dto.education }),
+        ...(dto.smoking !== undefined && { smoking: dto.smoking }),
+        ...(dto.drinking !== undefined && { drinking: dto.drinking }),
+        ...(dto.exercise !== undefined && { exercise: dto.exercise }),
+        ...(dto.zodiacSign !== undefined && { zodiacSign: dto.zodiacSign }),
+        ...(dto.religion !== undefined && { religion: dto.religion }),
+        ...(dto.jobTitle !== undefined && { jobTitle: dto.jobTitle }),
+        ...(dto.children !== undefined && { children: dto.children }),
+        ...(dto.weight !== undefined && { weight: dto.weight }),
+        ...(dto.sexualOrientation !== undefined && { sexualOrientation: dto.sexualOrientation }),
+        ...(dto.educationLevel !== undefined && { educationLevel: dto.educationLevel }),
+        ...(dto.maritalStatus !== undefined && { maritalStatus: dto.maritalStatus }),
+        ...(dto.pets !== undefined && { pets: dto.pets }),
+        ...(dto.lifeValues !== undefined && { lifeValues: dto.lifeValues }),
         lastActiveAt: new Date(),
       },
     });
@@ -209,11 +241,14 @@ export class ProfilesService {
       );
     }
 
-    // In production: Upload to S3 and generate thumbnails
-    // For now: Mock URL generation
-    const photoId = crypto.randomUUID();
-    const url = `https://cdn.luma.app/photos/${userId}/${photoId}.jpg`;
-    const thumbnailUrl = `https://cdn.luma.app/photos/${userId}/${photoId}_thumb.jpg`;
+    // Upload to S3 and generate thumbnails
+    const photoResult = await this.storageService.uploadProfilePhoto(
+      userId,
+      file.buffer,
+      photoCount,
+    );
+    const url = photoResult.url;
+    const thumbnailUrl = photoResult.thumbnailUrl;
 
     const photo = await this.prisma.userPhoto.create({
       data: {
@@ -230,6 +265,7 @@ export class ProfilesService {
     const moderationResult = await this.moderatePhoto(photo.id, userId);
 
     return {
+      id: photo.id,
       photoId: photo.id,
       url: photo.url,
       thumbnailUrl: photo.thumbnailUrl,
@@ -1092,7 +1128,7 @@ export class ProfilesService {
           type: "PROFILE_BOOST",
           amount: -ProfilesService.BOOST_GOLD_COST,
           balance: updatedUser.goldBalance,
-          description: `Profil Boost - ${ProfilesService.BOOST_DURATION_MINUTES} dakika`,
+          description: `Profil Boost - ${ProfilesService.BOOST_DURATION_MINUTES} dakika (${ProfilesService.BOOST_GOLD_COST} Gold)`,
         },
       });
 

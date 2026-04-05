@@ -82,7 +82,10 @@ export class PostsService {
       }
     }
 
-    const whereClause: Record<string, unknown> = { deletedAt: null };
+    const whereClause: Record<string, unknown> = {
+      deletedAt: null,
+      user: { deletedAt: null, isActive: true },
+    };
     if (userIdFilter) {
       whereClause.userId = { in: userIdFilter };
     }

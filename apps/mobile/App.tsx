@@ -182,10 +182,8 @@ const errorStyles = StyleSheet.create({
 // failed because react-native-screens overrides it at the native Android
 // level during screen transitions.
 //
-// Expo SDK 54 + Android edge-to-edge: backgroundColor is deprecated and has no effect.
-// The app uses light/cream backgrounds, so status bar icons must be DARK to be visible.
-// 'dark' = dark-colored (black) icons → for light backgrounds
-setStatusBarStyle('dark');
+// Status bar: light = WHITE icons on dark/black status bar background
+setStatusBarStyle('light');
 
 // ─── Network Monitor ──────────────────────────────────────────────────
 function NetworkMonitor(): null {
@@ -397,7 +395,7 @@ export default function App(): React.JSX.Element {
         <SafeAreaProvider>
           <ThemeProvider>
             <ToastProvider>
-              <StatusBar style="dark" />
+              <StatusBar style="light" backgroundColor="#000000" />
               <AppVersionGate />
               <NetworkMonitor />
               <NotificationInitializer />

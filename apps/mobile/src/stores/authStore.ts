@@ -69,7 +69,7 @@ interface AuthState {
   updatePackageTier: (tier: PackageTier) => void;
   setEmail: (email: string) => void;
   setPassword: (password: string) => void;
-  activateTrial: () => void;
+  activateTrial: () => Promise<void>;
   checkTrialExpiry: () => boolean;
   loadTrialState: () => void;
   clearError: () => void;
@@ -142,15 +142,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Persist tokens
       await storage.setTokens(response.accessToken, response.refreshToken);
 
-      // Identify user for analytics
-      analyticsService.identify({
-        userId: user.id,
-        packageTier: user.packageTier,
-        isVerified: user.isVerified,
-      });
+      // Identify user for analytics (non-blocking)
+      try {
+        analyticsService.identify({
+          userId: user.id,
+          packageTier: user.packageTier,
+          isVerified: user.isVerified,
+        });
+      } catch {
+        // Analytics failure should not block authentication
+      }
 
-      // Connect WebSocket
-      socketService.connect(response.accessToken);
+      // Connect WebSocket (non-blocking — don't crash auth flow if socket fails)
+      try {
+        socketService.connect(response.accessToken);
+      } catch {
+        // Socket connection failure should not block authentication
+      }
 
       // Determine onboarded status from API response:
       // - New user (isNew = true / no profile) => NOT onboarded, needs profile setup

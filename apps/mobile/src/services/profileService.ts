@@ -111,9 +111,33 @@ export const profileService = {
     return response.data;
   },
 
-  // Update profile fields
+  // Update profile fields — maps mobile field names to backend DTO field names
   updateProfile: async (data: Partial<ProfileData>): Promise<ProfileResponse> => {
-    const response = await api.patch<ProfileResponse>(API_ROUTES.PROFILE.UPDATE, data);
+    // Map mobile field names to backend expected names
+    const { job, sports, alcohol, ...rest } = data as Record<string, unknown>;
+    const payload: Record<string, unknown> = { ...rest };
+    if (job !== undefined) payload.jobTitle = job;
+    if (sports !== undefined) payload.exercise = sports;
+    if (alcohol !== undefined) payload.drinking = alcohol;
+    // Remove mobile-only fields that backend doesn't understand
+    delete payload.genderPreference;
+    delete payload.lookingFor;
+    delete payload.photos;
+    delete payload.answers;
+    delete payload.personalityType;
+    delete payload.isComplete;
+    delete payload.profileVideo;
+    delete payload.prompts;
+    delete payload.favoriteSpots;
+    delete payload.isIncognito;
+    delete payload.incognitoExpiresAt;
+    delete payload.isFrozen;
+    delete payload.showOnlineStatus;
+    delete payload.showDistance;
+    delete payload.postCount;
+    delete payload.followerCount;
+    delete payload.followingCount;
+    const response = await api.patch<ProfileResponse>(API_ROUTES.PROFILE.UPDATE, payload);
     return response.data;
   },
 

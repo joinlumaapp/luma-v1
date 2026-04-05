@@ -80,7 +80,7 @@ export const OTPVerificationScreen: React.FC = () => {
   // Auto-verify when all digits entered
   useEffect(() => {
     const fullCode = code.join('');
-    if (fullCode.length === OTP_LENGTH && !code.includes('')) {
+    if (fullCode.length === OTP_LENGTH && !code.includes('') && !isVerifying) {
       handleVerify(fullCode);
     }
   }, [code]);
@@ -99,8 +99,8 @@ export const OTPVerificationScreen: React.FC = () => {
             isVerified: false,
             packageTier: 'FREE',
           });
-          activateTrial();
-          useCoinStore.getState().claimWelcomeBonus();
+          activateTrial().catch(() => {});
+          try { useCoinStore.getState().claimWelcomeBonus(); } catch {}
           navigation.navigate('EmailEntry');
           return;
         }
@@ -129,8 +129,9 @@ export const OTPVerificationScreen: React.FC = () => {
 
       if (!isOnboarded) {
         // New user -> activate trial, award welcome bonus, then collect email + password
-        activateTrial();
-        useCoinStore.getState().claimWelcomeBonus();
+        // Non-blocking: trial activation failure must NOT trigger logout
+        activateTrial().catch(() => {});
+        try { useCoinStore.getState().claimWelcomeBonus(); } catch {}
         Alert.alert(
           'Hoş geldin!',
           '48 saatlik Premium deneyimin başladı! Premium özelliklerinin keyfini çıkar.\n\nHoş geldin hediyesi: 100 Jeton!',

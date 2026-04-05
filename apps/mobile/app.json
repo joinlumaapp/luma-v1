@@ -31,7 +31,8 @@
       }
     },
     "androidStatusBar": {
-      "barStyle": "dark-content"
+      "barStyle": "light-content",
+      "backgroundColor": "#000000"
     },
     "android": {
       "adaptiveIcon": {

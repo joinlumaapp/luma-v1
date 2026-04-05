@@ -4,6 +4,7 @@ import {
   IsString,
   IsArray,
   IsNumber,
+  IsInt,
   IsEnum,
   IsDateString,
   MaxLength,
@@ -104,12 +105,6 @@ export class UpdateProfileDto {
   @MaxLength(100)
   jobTitle?: string;
 
-  @ApiPropertyOptional({ description: "Company name", maxLength: 100 })
-  @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  company?: string;
-
   @ApiPropertyOptional({ description: "Education / School", maxLength: 100 })
   @IsOptional()
   @IsString()
@@ -122,6 +117,79 @@ export class UpdateProfileDto {
   @Min(100)
   @Max(250)
   height?: number;
+
+  @ApiPropertyOptional({ description: "Smoking status", maxLength: 20 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  smoking?: string;
+
+  @ApiPropertyOptional({ description: "Drinking status", maxLength: 20 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  drinking?: string;
+
+  @ApiPropertyOptional({ description: "Exercise frequency", maxLength: 20 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  exercise?: string;
+
+  @ApiPropertyOptional({ description: "Zodiac sign", maxLength: 20 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  zodiacSign?: string;
+
+  @ApiPropertyOptional({ description: "Religion", maxLength: 50 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  religion?: string;
+
+  @ApiPropertyOptional({ description: "Children status", maxLength: 30 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  children?: string;
+
+  @ApiPropertyOptional({ description: "Weight in kg" })
+  @IsOptional()
+  @IsInt()
+  @Min(30)
+  @Max(300)
+  weight?: number;
+
+  @ApiPropertyOptional({ description: "Sexual orientation", maxLength: 30 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  sexualOrientation?: string;
+
+  @ApiPropertyOptional({ description: "Education level", maxLength: 30 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  educationLevel?: string;
+
+  @ApiPropertyOptional({ description: "Marital status", maxLength: 30 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  maritalStatus?: string;
+
+  @ApiPropertyOptional({ description: "Pets status", maxLength: 30 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  pets?: string;
+
+  @ApiPropertyOptional({ description: "Life values", maxLength: 200 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  lifeValues?: string;
 
   @ApiPropertyOptional({
     description: "Interests / hobbies tags",

@@ -20,7 +20,6 @@ export const AuthNavigator: React.FC = () => {
       screenOptions={{
         headerShown: false,
         animation: 'slide_from_right',
-        statusBarStyle: 'dark',
         statusBarAnimation: 'none',
       }}
     >

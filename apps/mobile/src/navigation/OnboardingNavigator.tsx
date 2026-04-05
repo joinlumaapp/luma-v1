@@ -45,7 +45,6 @@ const defaultScreenOptions: NativeStackNavigationOptions = {
   animationDuration: 300,
   gestureEnabled: true,
   contentStyle: { backgroundColor: ONBOARDING_BG },
-  statusBarStyle: 'dark',
   statusBarAnimation: 'none',
 };
 

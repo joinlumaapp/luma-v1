@@ -21,7 +21,7 @@ const QUEUEABLE_PATTERNS: Array<{ pattern: RegExp; actionType: OfflineActionType
   { pattern: /\/discovery\/undo/, actionType: 'undo_swipe' },
   { pattern: /\/chat\/.*\/messages/, actionType: 'send_message' },
   { pattern: /\/chat\/.*\/react/, actionType: 'react_message' },
-  { pattern: /\/profile\/me/, actionType: 'update_profile' },
+  { pattern: /\/profiles\/me/, actionType: 'update_profile' },
   { pattern: /\/users\/.*\/report/, actionType: 'report_user' },
   { pattern: /\/users\/.*\/block/, actionType: 'block_user' },
 ];
@@ -322,7 +322,10 @@ api.interceptors.response.use(
     }
 
     // ── 401 Unauthorized — attempt token refresh ────────────────
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Skip refresh for auth endpoints (logout, refresh-token) to prevent infinite loops
+    const requestUrl = originalRequest.url ?? '';
+    const isAuthEndpoint = requestUrl.includes('/auth/logout') || requestUrl.includes('/auth/refresh-token');
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -363,9 +366,10 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        // Refresh failed — log user out
-        useAuthStore.getState().logout();
-        await storage.clearTokens();
+        // Refresh failed — log user out (only if currently authenticated)
+        if (useAuthStore.getState().isAuthenticated) {
+          await useAuthStore.getState().logout();
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

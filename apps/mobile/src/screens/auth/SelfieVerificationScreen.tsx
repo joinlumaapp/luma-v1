@@ -95,6 +95,48 @@ export const SelfieVerificationScreen: React.FC = () => {
     if (profile.height != null && profile.height > 0) {
       profilePayload.height = profile.height;
     }
+    if (profile.smoking && profile.smoking.length > 0) {
+      profilePayload.smoking = profile.smoking;
+    }
+    if (profile.sports && profile.sports.length > 0) {
+      profilePayload.sports = profile.sports;
+    }
+    if (profile.children && profile.children.length > 0) {
+      profilePayload.children = profile.children;
+    }
+    if (profile.job && profile.job.length > 0) {
+      profilePayload.job = profile.job;
+    }
+    if (profile.education && profile.education.length > 0) {
+      profilePayload.education = profile.education;
+    }
+    if (profile.alcohol && profile.alcohol.length > 0) {
+      profilePayload.alcohol = profile.alcohol;
+    }
+    if (profile.zodiacSign && profile.zodiacSign.length > 0) {
+      profilePayload.zodiacSign = profile.zodiacSign;
+    }
+    if (profile.religion && profile.religion.length > 0) {
+      profilePayload.religion = profile.religion;
+    }
+    if (profile.weight != null && profile.weight > 0) {
+      profilePayload.weight = profile.weight;
+    }
+    if (profile.sexualOrientation && profile.sexualOrientation.length > 0) {
+      profilePayload.sexualOrientation = profile.sexualOrientation;
+    }
+    if (profile.educationLevel && profile.educationLevel.length > 0) {
+      profilePayload.educationLevel = profile.educationLevel;
+    }
+    if (profile.maritalStatus && profile.maritalStatus.length > 0) {
+      profilePayload.maritalStatus = profile.maritalStatus;
+    }
+    if (profile.pets && profile.pets.length > 0) {
+      profilePayload.pets = profile.pets;
+    }
+    if (profile.lifeValues && profile.lifeValues.length > 0) {
+      profilePayload.lifeValues = profile.lifeValues;
+    }
 
     // Step 1: Save text profile fields
     try {

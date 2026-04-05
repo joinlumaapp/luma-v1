@@ -574,7 +574,7 @@ export const EditProfileScreen: React.FC = () => {
         gender: localGender || undefined,
         birthDate: localBirthDate || undefined,
         // Extended profile fields
-        weight: weight ? Number(weight) : null,
+        weight: weight ? Number(weight) : undefined,
         sexualOrientation,
         zodiacSign,
         educationLevel,

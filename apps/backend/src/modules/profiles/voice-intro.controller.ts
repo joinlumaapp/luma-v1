@@ -22,7 +22,7 @@ import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
 import { UploadVoiceIntroDto } from "./dto/voice-intro.dto";
 import { PrismaService } from "../../prisma/prisma.service";
-import * as crypto from "crypto";
+import { StorageService } from "../storage/storage.service";
 
 /**
  * VoiceIntroController — Profile voice introduction feature.
@@ -51,7 +51,10 @@ const ALLOWED_AUDIO_TYPES = [
 @UseGuards(JwtAuthGuard)
 @Controller("profiles")
 export class VoiceIntroController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storageService: StorageService,
+  ) {}
 
   @Post("voice-intro")
   @ApiOperation({ summary: "Upload a 30-second voice introduction" })
@@ -95,10 +98,12 @@ export class VoiceIntroController {
       throw new NotFoundException("Kullanici bulunamadi");
     }
 
-    // In production: Upload to S3
-    // For now: Mock URL generation
-    const voiceId = crypto.randomUUID();
-    const url = `https://cdn.luma.app/voice/${userId}/${voiceId}.m4a`;
+    // Upload to S3
+    const voiceResult = await this.storageService.uploadVoiceIntro(
+      userId,
+      file.buffer,
+    );
+    const url = voiceResult.url;
 
     // Store voice intro URL in profile
     const profile = await this.prisma.userProfile.update({
@@ -163,8 +168,18 @@ export class VoiceIntroController {
       throw new BadRequestException("Silinecek sesli tanitim bulunamadi");
     }
 
-    // In production: Delete from S3
-    // await this.s3Service.deleteObject(profile.voiceIntroUrl);
+    // Delete from S3 (best-effort, don't block on failure)
+    try {
+      // Extract S3 key from URL (e.g. "voice/userId/uuid.m4a")
+      const urlParts = profile.voiceIntroUrl.split("/");
+      const keyStart = urlParts.indexOf("voice");
+      if (keyStart >= 0) {
+        const key = urlParts.slice(keyStart).join("/");
+        await this.storageService.deleteFile(key);
+      }
+    } catch {
+      // Ignore S3 deletion failure — DB cleanup is more important
+    }
 
     await this.prisma.userProfile.update({
       where: { userId },
