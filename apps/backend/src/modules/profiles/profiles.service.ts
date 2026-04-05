@@ -374,8 +374,17 @@ export class ProfilesService {
       where: { id: photoId },
     });
 
-    // In production: Delete from S3 bucket
-    // await this.s3Service.deleteObject(photo.url);
+    // Delete from S3 (best-effort)
+    try {
+      const urlParts = photo.url.split("/");
+      const keyStart = urlParts.indexOf("photos");
+      if (keyStart >= 0) {
+        const key = urlParts.slice(keyStart).join("/");
+        await this.storageService.deleteFile(key);
+      }
+    } catch {
+      // S3 deletion failure is non-blocking
+    }
 
     // Reorder remaining photos
     const remainingPhotos = await this.prisma.userPhoto.findMany({

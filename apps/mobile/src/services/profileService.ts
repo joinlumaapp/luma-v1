@@ -19,7 +19,9 @@ export interface ProfileFields {
   createdAt?: string;
   updatedAt?: string;
   // Extended fields the backend may include
+  // Backend uses jobTitle/drinking/exercise; mobile uses job/alcohol/sports
   job?: string;
+  jobTitle?: string;
   education?: string;
   height?: number | null;
   weight?: number | null;
@@ -28,11 +30,13 @@ export interface ProfileFields {
   educationLevel?: string;
   maritalStatus?: string;
   alcohol?: string;
+  drinking?: string;
   smoking?: string;
   children?: string;
   pets?: string;
   religion?: string;
   lifeValues?: string;
+  exercise?: string;
   personalityType?: string | null;
   interestTags?: string[];
   genderPreference?: string[];

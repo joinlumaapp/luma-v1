@@ -113,7 +113,7 @@ export class UpdateProfileDto {
 
   @ApiPropertyOptional({ description: "Height in centimeters" })
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   @Min(100)
   @Max(250)
   height?: number;
