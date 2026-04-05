@@ -75,6 +75,120 @@ interface TextOverlayState {
   color: string;
 }
 
+// ─── Draggable Overlay Components ────────────────────────────
+
+interface DraggableTextOverlayProps {
+  overlay: TextOverlayState;
+  isDrawMode: boolean;
+  onDragEnd: (id: string, x: number, y: number) => void;
+  onTap: (overlay: TextOverlayState) => void;
+}
+
+const DraggableTextOverlay: React.FC<DraggableTextOverlayProps> = React.memo(
+  ({ overlay, isDrawMode, onDragEnd, onTap }) => {
+    const startPos = useRef({ x: overlay.x, y: overlay.y });
+    const drawModeRef = useRef(isDrawMode);
+    const overlayRef = useRef(overlay);
+    const onDragEndRef = useRef(onDragEnd);
+    const onTapRef = useRef(onTap);
+    drawModeRef.current = isDrawMode;
+    overlayRef.current = overlay;
+    onDragEndRef.current = onDragEnd;
+    onTapRef.current = onTap;
+
+    const panResponder = useRef(
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => !drawModeRef.current,
+        onMoveShouldSetPanResponder: (_, gs) =>
+          !drawModeRef.current && (Math.abs(gs.dx) > 4 || Math.abs(gs.dy) > 4),
+        onPanResponderGrant: () => {
+          startPos.current = { x: overlayRef.current.x, y: overlayRef.current.y };
+        },
+        onPanResponderRelease: (_, gs) => {
+          const finalX = startPos.current.x + gs.dx;
+          const finalY = startPos.current.y + gs.dy;
+          if (Math.abs(gs.dx) < 5 && Math.abs(gs.dy) < 5) {
+            onTapRef.current(overlayRef.current);
+          } else {
+            onDragEndRef.current(overlayRef.current.id, finalX, finalY);
+          }
+        },
+      }),
+    ).current;
+
+    return (
+      <View
+        {...panResponder.panHandlers}
+        style={{
+          position: 'absolute',
+          left: overlay.x,
+          top: overlay.y,
+          padding: 8,
+          backgroundColor: 'rgba(0,0,0,0.3)',
+          borderRadius: 6,
+        }}
+      >
+        <Text
+          style={{
+            fontFamily: 'Poppins_600SemiBold',
+            fontWeight: '600',
+            fontSize: overlay.fontSize,
+            color: overlay.color,
+            textShadowColor: 'rgba(0,0,0,0.5)',
+            textShadowOffset: { width: 1, height: 1 },
+            textShadowRadius: 3,
+          }}
+        >
+          {overlay.content}
+        </Text>
+      </View>
+    );
+  },
+);
+
+interface DraggableStickerOverlayProps {
+  sticker: { id: string; emoji: string; x: number; y: number };
+  isDrawMode: boolean;
+  onDragEnd: (id: string, x: number, y: number) => void;
+}
+
+const DraggableStickerOverlay: React.FC<DraggableStickerOverlayProps> = React.memo(
+  ({ sticker, isDrawMode, onDragEnd }) => {
+    const startPos = useRef({ x: sticker.x, y: sticker.y });
+    const drawModeRef = useRef(isDrawMode);
+    const stickerRef = useRef(sticker);
+    const onDragEndRef = useRef(onDragEnd);
+    drawModeRef.current = isDrawMode;
+    stickerRef.current = sticker;
+    onDragEndRef.current = onDragEnd;
+
+    const panResponder = useRef(
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => !drawModeRef.current,
+        onMoveShouldSetPanResponder: (_, gs) =>
+          !drawModeRef.current && (Math.abs(gs.dx) > 4 || Math.abs(gs.dy) > 4),
+        onPanResponderGrant: () => {
+          startPos.current = { x: stickerRef.current.x, y: stickerRef.current.y };
+        },
+        onPanResponderRelease: (_, gs) => {
+          const finalX = startPos.current.x + gs.dx;
+          const finalY = startPos.current.y + gs.dy;
+          onDragEndRef.current(stickerRef.current.id, finalX, finalY);
+        },
+      }),
+    ).current;
+
+    return (
+      <View
+        {...panResponder.panHandlers}
+        style={{ position: 'absolute', left: sticker.x, top: sticker.y }}
+      >
+        <Text style={{ fontSize: 40, position: 'relative' }}>{sticker.emoji}</Text>
+      </View>
+    );
+  },
+);
+
 // ─── Props ───────────────────────────────────────────────────
 
 interface StoryCreatorProps {
@@ -137,6 +251,10 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
   // ── Show preview mode ──
   const [showPreview, setShowPreview] = useState(false);
 
+  // ── Upload progress ──
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [isUploading, setIsUploading] = useState(false);
+
   // ─── Pan Responder for Drawing ─────────────────────────────
 
   const drawPanResponder = useRef(
@@ -167,6 +285,28 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
       },
     }),
   ).current;
+
+  // ─── Drag handlers for text and sticker overlays ─────────────
+
+  const handleTextDragEnd = useCallback((id: string, x: number, y: number) => {
+    setTextOverlays((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, x, y } : t)),
+    );
+  }, []);
+
+  const handleStickerDragEnd = useCallback((id: string, x: number, y: number) => {
+    setStickerOverlays((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, x, y } : s)),
+    );
+  }, []);
+
+  const handleTextTap = useCallback((overlay: TextOverlayState) => {
+    setEditingTextId(overlay.id);
+    setTextInput(overlay.content);
+    setTextFontSize(overlay.fontSize);
+    setSelectedColor(overlay.color);
+    setActiveMode('text');
+  }, []);
 
   // ─── Capture Handlers ──
 
@@ -272,14 +412,20 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
     ];
 
     if (__DEV__) console.log('[Story] Publishing:', { mediaType, uri: imageUri?.slice(-30), overlayCount: overlays.length });
+    setIsUploading(true);
+    setUploadProgress(0);
     try {
-      await createStory(imageUri, mediaType, overlays);
+      await createStory(imageUri, mediaType, overlays, (progress) => {
+        setUploadProgress(progress);
+      });
       if (__DEV__) console.log('[Story] Published successfully as', mediaType);
+      setIsUploading(false);
       onStoryCreated?.();
-      // Önce geri dön, sonra bildirim göster (Alert store güncellemesini bloke etmesin)
       navigation.goBack();
     } catch {
-      Alert.alert('Hata', 'Hikaye paylaşılamadı. Lütfen tekrar dene.', [{ text: 'Tamam' }]);
+      setIsUploading(false);
+      setUploadProgress(0);
+      Alert.alert('Hata', 'Hikaye paylasilamadi. Lutfen tekrar dene.', [{ text: 'Tamam' }]);
     }
   }, [imageUri, mediaType, textOverlays, stickerOverlays, drawingPaths, createStory, onStoryCreated, navigation]);
 
@@ -376,13 +522,22 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
             <Ionicons name="time-outline" size={14} color="rgba(255,255,255,0.6)" />
             <Text style={styles.expiryText}>Hikayen 24 saat sonra kaybolacak</Text>
           </View>
+          {/* Upload progress indicator */}
+          {isUploading && (
+            <View style={styles.progressBarContainer}>
+              <View style={[styles.progressBarFill, { width: `${Math.max(uploadProgress, 5)}%` }]} />
+              <Text style={styles.progressBarText}>
+                {uploadProgress < 100 ? `Yukleniyor %${uploadProgress}` : 'Tamamlaniyor...'}
+              </Text>
+            </View>
+          )}
           <TouchableOpacity
-            style={[styles.publishButton, isCreating && styles.publishButtonDisabled]}
+            style={[styles.publishButton, (isCreating || isUploading) && styles.publishButtonDisabled]}
             onPress={handlePublish}
-            disabled={isCreating}
+            disabled={isCreating || isUploading}
           >
             <Text style={styles.publishButtonText}>
-              {isCreating ? 'Paylaşılıyor...' : 'Paylaş'}
+              {isCreating || isUploading ? 'Paylasiliyor...' : 'Paylas'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -403,41 +558,25 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
       >
         <Image source={{ uri: imageUri }} style={styles.fullImage} resizeMode="cover" />
 
-        {/* Render text overlays */}
+        {/* Render draggable text overlays */}
         {textOverlays.map((overlay) => (
-          <TouchableOpacity
+          <DraggableTextOverlay
             key={overlay.id}
-            style={[
-              styles.textOverlayPreview,
-              { left: overlay.x, top: overlay.y },
-            ]}
-            onPress={() => {
-              setEditingTextId(overlay.id);
-              setTextInput(overlay.content);
-              setTextFontSize(overlay.fontSize);
-              setSelectedColor(overlay.color);
-              setActiveMode('text');
-            }}
-          >
-            <Text
-              style={[
-                styles.overlayText,
-                { fontSize: overlay.fontSize, color: overlay.color },
-              ]}
-            >
-              {overlay.content}
-            </Text>
-          </TouchableOpacity>
+            overlay={overlay}
+            isDrawMode={activeMode === 'draw'}
+            onDragEnd={handleTextDragEnd}
+            onTap={handleTextTap}
+          />
         ))}
 
-        {/* Render sticker overlays */}
+        {/* Render draggable sticker overlays */}
         {stickerOverlays.map((sticker) => (
-          <Text
+          <DraggableStickerOverlay
             key={sticker.id}
-            style={[styles.stickerEmoji, { left: sticker.x, top: sticker.y }]}
-          >
-            {sticker.emoji}
-          </Text>
+            sticker={sticker}
+            isDrawMode={activeMode === 'draw'}
+            onDragEnd={handleStickerDragEnd}
+          />
         ))}
 
         {/* Drawing paths rendered as dots (simplified — real app uses react-native-svg) */}
@@ -1007,6 +1146,32 @@ const styles = StyleSheet.create({
   expiryText: {
     ...typography.captionSmall,
     color: 'rgba(255,255,255,0.6)',
+  },
+
+  // Upload progress
+  progressBarContainer: {
+    width: '100%',
+    height: 28,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 14,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  progressBarFill: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: palette.purple[500],
+    borderRadius: 14,
+  },
+  progressBarText: {
+    textAlign: 'center',
+    fontSize: 12,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600' as const,
+    color: '#FFFFFF',
   },
 });
 

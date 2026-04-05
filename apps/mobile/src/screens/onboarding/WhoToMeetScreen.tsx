@@ -20,7 +20,7 @@ import {
 
 type WhoToMeetNavigationProp = NativeStackNavigationProp<OnboardingStackParamList, 'WhoToMeet'>;
 
-type PreferenceOption = 'male' | 'female';
+type PreferenceOption = 'male' | 'female' | 'other';
 
 interface PreferenceChoice {
   value: PreferenceOption;
@@ -30,6 +30,7 @@ interface PreferenceChoice {
 const PREFERENCE_OPTIONS: PreferenceChoice[] = [
   { value: 'male', label: 'Erkek' },
   { value: 'female', label: 'Kadın' },
+  { value: 'other', label: 'Diğer' },
 ];
 
 export const WhoToMeetScreen: React.FC = () => {

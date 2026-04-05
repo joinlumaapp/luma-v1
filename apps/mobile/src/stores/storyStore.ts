@@ -34,7 +34,7 @@ interface StoryState {
 
   // Actions
   fetchStories: () => Promise<void>;
-  createStory: (mediaUri: string, mediaType: 'image' | 'video', overlays: StoryOverlay[]) => Promise<void>;
+  createStory: (mediaUri: string, mediaType: 'image' | 'video', overlays: StoryOverlay[], onProgress?: (percent: number) => void) => Promise<void>;
   deleteStory: (storyId: string) => Promise<void>;
   markAsSeen: (storyId: string) => void;
   replyToStory: (storyId: string, message: string) => Promise<void>;
@@ -98,14 +98,14 @@ export const useStoryStore = create<StoryState>((set, get) => ({
     }
   },
 
-  createStory: async (mediaUri, mediaType, overlays) => {
+  createStory: async (mediaUri, mediaType, overlays, onProgress) => {
     set({ isCreating: true });
     try {
       const newStory = await storyService.createStory({
         mediaUri,
         mediaType,
         overlays,
-      });
+      }, onProgress);
 
       if (__DEV__) {
         console.log('[StoryStore] New story created:', newStory.id, newStory.mediaType);

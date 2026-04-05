@@ -63,15 +63,11 @@ export class UpdateProfileDto {
 
   @ApiPropertyOptional({
     description: "Intention tag",
-    enum: ["SERIOUS_RELATIONSHIP", "EXPLORING", "NOT_SURE"],
+    enum: ["SERIOUS_RELATIONSHIP", "EXPLORING", "NOT_SURE", "MARRIAGE", "FRIENDSHIP", "LEARN_CULTURES", "TRAVEL"],
   })
   @IsOptional()
-  @IsEnum({
-    SERIOUS_RELATIONSHIP: "SERIOUS_RELATIONSHIP",
-    EXPLORING: "EXPLORING",
-    NOT_SURE: "NOT_SURE",
-  })
-  intentionTag?: "SERIOUS_RELATIONSHIP" | "EXPLORING" | "NOT_SURE";
+  @IsString()
+  intentionTag?: string;
 
   @ApiPropertyOptional({ description: "City" })
   @IsOptional()

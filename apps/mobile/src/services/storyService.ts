@@ -360,7 +360,10 @@ export const storyService = {
   },
 
   /** Create a new story with media and overlays */
-  createStory: async (data: CreateStoryRequest): Promise<Story> => {
+  createStory: async (
+    data: CreateStoryRequest,
+    onProgress?: (percent: number) => void,
+  ): Promise<Story> => {
     try {
       const formData = new FormData();
       formData.append('media', {
@@ -373,6 +376,12 @@ export const storyService = {
 
       const response = await api.post<Story>('/stories', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (event) => {
+          if (event.total && onProgress) {
+            const percent = Math.round((event.loaded * 100) / event.total);
+            onProgress(percent);
+          }
+        },
       });
       return response.data;
     } catch (error) {

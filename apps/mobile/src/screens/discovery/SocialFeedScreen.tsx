@@ -478,8 +478,10 @@ const StoryBarSection: React.FC<StoryBarSectionProps> = ({
   onCreateStory,
   onViewStory,
 }) => {
-  // Exclude own user from the list
-  const currentUid = useAuthStore.getState().user?.id ?? '';
+  // Use reactive hooks so photo updates trigger re-render
+  const currentUid = useAuthStore((s) => s.user?.id ?? '');
+  const myFirstPhoto = useProfileStore((s) => s.profile.photos[0] ?? '');
+  const myFirstName = useProfileStore((s) => s.profile.firstName || 'Sen');
   const followedUsers = storyUsers.filter((u) => !u.isSuggested && u.userId !== currentUid);
 
   // Sort: unseen stories first, then by latest story time
@@ -502,17 +504,14 @@ const StoryBarSection: React.FC<StoryBarSectionProps> = ({
         {/* Own story — always first */}
         <StoryRing
           userName="Hikaye"
-          avatarUrl={useProfileStore.getState().profile.photos[0] ?? ''}
+          avatarUrl={myFirstPhoto}
           isOwnStory
           hasStories={myStoryCount > 0}
           isSeen={false}
           showLabel={false}
           onPress={() => {
             if (myStoryCount > 0) {
-              const uid = useAuthStore.getState().user?.id ?? '';
-              const uName = useProfileStore.getState().profile.firstName || 'Sen';
-              const uPhoto = useProfileStore.getState().profile.photos[0] ?? '';
-              onViewStory(uid, uName, uPhoto);
+              onViewStory(currentUid, myFirstName, myFirstPhoto);
             } else {
               onCreateStory();
             }

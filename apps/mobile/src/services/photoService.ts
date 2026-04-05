@@ -30,7 +30,6 @@ const DEFAULT_QUALITY = 0.8;
 const IMAGE_PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
   mediaTypes: ImagePicker.MediaTypeOptions.Images,
   allowsEditing: true,
-  aspect: [3, 4],
   quality: 1, // We compress manually for control
 };
 
@@ -338,7 +337,11 @@ export const photoService = {
    * Upload a photo to /profiles/photos via multipart/form-data.
    * Compresses the image first, then uploads.
    */
-  uploadPhoto: async (uri: string, position: number): Promise<PhotoUploadResponse> => {
+  uploadPhoto: async (
+    uri: string,
+    position: number,
+    onProgress?: (percent: number) => void,
+  ): Promise<PhotoUploadResponse> => {
     // Compress before upload
     const compressed = await photoService.compressImage(uri);
 
@@ -359,6 +362,12 @@ export const photoService = {
         formData,
         {
           headers: { 'Content-Type': 'multipart/form-data' },
+          onUploadProgress: (event) => {
+            if (event.total && onProgress) {
+              const percent = Math.round((event.loaded * 100) / event.total);
+              onProgress(percent);
+            }
+          },
         },
       );
 

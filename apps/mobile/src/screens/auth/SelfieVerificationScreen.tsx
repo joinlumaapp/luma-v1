@@ -47,6 +47,13 @@ export const SelfieVerificationScreen: React.FC = () => {
   const isTestMode = useTestModeStore((state) => state.isTestMode);
   const updateProfile = useProfileStore((state) => state.updateProfile);
 
+  // Auto-request camera permission when the screen mounts
+  useEffect(() => {
+    if (permission && !permission.granted && permission.status !== 'denied') {
+      requestPermission();
+    }
+  }, [permission, requestPermission]);
+
   // Get the first profile photo for the reference display
   const profilePhotos = useProfileStore((state) => state.profile.photos);
   const firstProfilePhoto = profilePhotos.length > 0 ? profilePhotos[0] : null;

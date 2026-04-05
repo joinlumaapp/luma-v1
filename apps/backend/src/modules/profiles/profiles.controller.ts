@@ -82,6 +82,15 @@ export class ProfilesController {
     return this.profilesService.getProfileVisitors(userId);
   }
 
+  @Get(":userId/public")
+  @ApiOperation({ summary: "Get public profile for another user" })
+  async getPublicProfile(
+    @CurrentUser("sub") viewerId: string,
+    @Param("userId") userId: string,
+  ) {
+    return this.profilesService.getPublicProfile(viewerId, userId);
+  }
+
   @Patch("me")
   @ApiOperation({ summary: "Update current user profile" })
   async updateProfile(

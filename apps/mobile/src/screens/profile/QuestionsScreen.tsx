@@ -289,7 +289,9 @@ export const QuestionsScreen: React.FC = () => {
         compatibilityService.submitAnswer({
           questionId: currentQuestion.id,
           answerIndex: currentQuestion.options.findIndex((o) => o.id === option.id),
-        }).catch(() => {});
+        }).catch((error) => {
+          console.warn('[Compat] Answer save failed:', error?.message || error);
+        });
       }
 
       if (isLastQuestion) {

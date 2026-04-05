@@ -44,8 +44,8 @@ const ALLOWED_CHAT_IMAGE_TYPES = [
 /** Maximum chat image file size: 10 MB. */
 const MAX_CHAT_IMAGE_SIZE = MAX_PHOTO_SIZE;
 
-/** Maximum generic upload size: 10 MB. */
-const MAX_GENERIC_UPLOAD_SIZE = 10 * 1024 * 1024;
+/** Maximum generic upload size: 50 MB (supports video uploads from feed posts). */
+const MAX_GENERIC_UPLOAD_SIZE = 50 * 1024 * 1024;
 
 // ────────────────────────────────────────────────────────────────────
 // Multer file interface (avoids `any` type)
@@ -86,9 +86,11 @@ export class StorageController {
   // ─── Generic Upload ──────────────────────────────────────────
 
   @Post("storage/upload")
-  @ApiOperation({ summary: "Upload a file to S3 (max 10 MB)" })
+  @ApiOperation({ summary: "Upload a file to S3 (max 50 MB)" })
   @ApiConsumes("multipart/form-data")
-  @UseInterceptors(FileInterceptor("file"))
+  @UseInterceptors(
+    FileInterceptor("file", { limits: { fileSize: MAX_GENERIC_UPLOAD_SIZE } }),
+  )
   async uploadFile(
     @CurrentUser("sub") userId: string,
     @UploadedFile() file: MulterFile,

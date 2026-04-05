@@ -94,6 +94,8 @@ export const StoryBubble: React.FC<StoryBubbleProps> = React.memo(({
 
   const hasUnseen = seenCount < storyCount;
   const allSeen = !hasUnseen && storyCount > 0;
+  // Treat empty strings as no avatar — prevents broken image loads
+  const validAvatarUrl = avatarUrl && avatarUrl.trim().length > 0 ? avatarUrl : 'https://i.pravatar.cc/150?img=0';
 
   // ── No stories state ──
   if (noStories || storyCount === 0) {
@@ -101,7 +103,7 @@ export const StoryBubble: React.FC<StoryBubbleProps> = React.memo(({
       <View style={s.item}>
         <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
           <View style={s.emptyWrap}>
-            <Image source={{ uri: avatarUrl }} style={s.avatar} />
+            <Image source={{ uri: validAvatarUrl }} style={s.avatar} />
           </View>
         </TouchableOpacity>
         {isOwn && onPlusPress && (
@@ -129,7 +131,7 @@ export const StoryBubble: React.FC<StoryBubbleProps> = React.memo(({
 
             {/* Inner cutout (creates ring effect) + avatar */}
             <View style={s.innerCircle}>
-              <Image source={{ uri: avatarUrl }} style={s.avatar} />
+              <Image source={{ uri: validAvatarUrl }} style={s.avatar} />
             </View>
 
             {/* Segment gaps (divides ring into segments) */}

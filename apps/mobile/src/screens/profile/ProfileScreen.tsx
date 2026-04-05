@@ -466,6 +466,13 @@ export const ProfileScreen: React.FC = () => {
     { icon: 'flame-outline', iconBg: 'rgba(239, 68, 68, 0.10)', label: 'Sigara', value: profile.smoking ? translateSmoking(profile.smoking) : 'Belirtilmedi' },
     { icon: 'resize-outline', iconBg: 'rgba(139, 92, 246, 0.10)', label: 'Boy', value: profile.height ? `${profile.height} cm` : 'Belirtilmedi' },
     { icon: 'fitness-outline', iconBg: 'rgba(59, 130, 246, 0.10)', label: 'Spor', value: profile.sports ? translateSports(profile.sports) : 'Belirtilmedi' },
+    { icon: 'star-outline', iconBg: 'rgba(245, 158, 11, 0.10)', label: 'Burç', value: profile.zodiacSign ? profile.zodiacSign : 'Belirtilmedi' },
+    { icon: 'paw-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'Evcil Hayvan', value: profile.pets ? profile.pets : 'Belirtilmedi' },
+    { icon: 'wine-outline', iconBg: 'rgba(139, 92, 246, 0.10)', label: 'Alkol', value: profile.alcohol ? profile.alcohol : 'Belirtilmedi' },
+    { icon: 'leaf-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'Din', value: profile.religion ? profile.religion : 'Belirtilmedi' },
+    { icon: 'heart-half-outline', iconBg: 'rgba(236, 72, 153, 0.10)', label: 'Medeni Durum', value: profile.maritalStatus ? profile.maritalStatus : 'Belirtilmedi' },
+    { icon: 'ribbon-outline', iconBg: 'rgba(59, 130, 246, 0.10)', label: 'Eğitim Seviyesi', value: profile.educationLevel ? profile.educationLevel : 'Belirtilmedi' },
+    { icon: 'barbell-outline', iconBg: 'rgba(139, 92, 246, 0.10)', label: 'Kilo', value: profile.weight ? `${profile.weight} kg` : 'Belirtilmedi' },
   ];
 
   // ── Header Bar ──────────────────────────────────────────────────────────────
@@ -784,12 +791,9 @@ export const ProfileScreen: React.FC = () => {
       <Text style={styles.sectionTitle}>Hakkımda</Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
         {aboutRows.map((row) => (
-          <TouchableOpacity
+          <View
             key={row.label}
-            onPress={handleEditProfile}
-            activeOpacity={0.7}
-            accessibilityLabel={`${row.label}: ${row.value}, düzenlemek için dokunun`}
-            accessibilityRole="button"
+            accessibilityLabel={`${row.label}: ${row.value}`}
             style={{
               width: '47%' as unknown as number,
               backgroundColor: colors.surface,
@@ -806,7 +810,7 @@ export const ProfileScreen: React.FC = () => {
               <Text style={{ fontSize: 11, fontWeight: '500', color: colors.textTertiary, letterSpacing: 0.5 }}>{row.label}</Text>
             </View>
             <Text style={{ fontSize: 15, fontWeight: '600', color: row.value === 'Belirtilmedi' ? colors.textTertiary : colors.text }} numberOfLines={1} adjustsFontSizeToFit>{row.value}</Text>
-          </TouchableOpacity>
+          </View>
         ))}
       </View>
     </View>,

@@ -296,6 +296,10 @@ export const EditProfileScreen: React.FC = () => {
   const [religion, setReligion] = useState<string>(profile.religion ?? '');
   const [lifeValues, setLifeValues] = useState<string>(profile.lifeValues ?? '');
 
+  // Snapshot store-managed fields at mount so hasChanges can detect mutations
+  const initialPromptsRef = useRef(JSON.stringify(profile.prompts));
+  const initialFavoriteSpotsRef = useRef(JSON.stringify(profile.favoriteSpots));
+
   // Option picker state
   const [pickerConfig, setPickerConfig] = useState<{
     visible: boolean;
@@ -621,7 +625,9 @@ export const EditProfileScreen: React.FC = () => {
     alcohol !== (profile.alcohol ?? '') ||
     pets !== (profile.pets ?? '') ||
     religion !== (profile.religion ?? '') ||
-    lifeValues !== (profile.lifeValues ?? '');
+    lifeValues !== (profile.lifeValues ?? '') ||
+    JSON.stringify(profile.prompts) !== initialPromptsRef.current ||
+    JSON.stringify(profile.favoriteSpots) !== initialFavoriteSpotsRef.current;
 
   const age = calculateAge(localBirthDate || profile.birthDate);
   const answeredCount = Object.keys(profile.answers ?? {}).length;

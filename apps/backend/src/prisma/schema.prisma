@@ -239,11 +239,15 @@ model UserPhoto {
   @@map("user_photos")
 }
 
-// Subsystem 4: Intention Tags — LOCKED: 3 Tags
+// Subsystem 4: Intention Tags — 7 Tags
 enum IntentionTag {
   SERIOUS_RELATIONSHIP
   EXPLORING
   NOT_SURE
+  MARRIAGE
+  FRIENDSHIP
+  LEARN_CULTURES
+  TRAVEL
 }
 
 enum Gender {

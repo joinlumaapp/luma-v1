@@ -412,6 +412,12 @@ export const LiveScreen: React.FC = () => {
             toValue: 1, duration: 400, useNativeDriver: true,
           }),
         ]).start();
+      }).catch((error) => {
+        console.warn('[Live] Coin spend failed:', error);
+        resetStore();
+        setPhase('idle');
+        controlsSlideAnim.setValue(100);
+        controlsOpacityAnim.setValue(0);
       });
     }
   }, [storeState, matchedUser, phase, coinBalance, spendCoins, navigation, resetStore, controlsSlideAnim, controlsOpacityAnim]);
@@ -476,6 +482,9 @@ export const LiveScreen: React.FC = () => {
             ],
           );
         }
+      }).catch((error) => {
+        console.warn('[Live] Billing failed:', error);
+        clearBillingInterval();
       });
     }, 60_000);
 

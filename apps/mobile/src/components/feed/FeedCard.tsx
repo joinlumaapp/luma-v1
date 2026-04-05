@@ -842,7 +842,8 @@ const mediaStyles = StyleSheet.create({
   },
   singlePhoto: {
     width: '100%',
-    height: 260,
+    height: 350,
+    borderRadius: borderRadius.lg,
     backgroundColor: colors.surfaceLight,
   },
   doubleContainer: {

@@ -46,6 +46,7 @@ export class ProfilesService {
           ...(isOwner ? {} : { where: { isApproved: true } }),
           orderBy: { order: "asc" },
         },
+        profilePrompts: { orderBy: { order: "asc" } },
       },
     });
 
@@ -69,6 +70,12 @@ export class ProfilesService {
         ...(isOwner && !p.isApproved
           ? { moderationStatus: "pending" as const }
           : {}),
+      })),
+      prompts: (user.profilePrompts ?? []).map((p) => ({
+        id: p.id,
+        question: p.question,
+        answer: p.answer,
+        order: p.order,
       })),
       profileCompletion: completion,
     };
@@ -994,6 +1001,78 @@ export class ProfilesService {
         videoDuration: 0,
       },
     });
+  }
+
+  // ─── Public Profile ──────────────────────────────────────────
+
+  /**
+   * Get a public profile for viewing another user from the feed.
+   * Combines profile data, social counts, and prompts.
+   */
+  async getPublicProfile(viewerId: string, userId: string) {
+    // Get profile data (isOwner = false → only approved photos)
+    const profileData = await this.getProfile(userId, false);
+    const profile = profileData.profile;
+
+    if (!profile) {
+      throw new NotFoundException("Profil bulunamadı");
+    }
+
+    // Fetch social counts in parallel
+    const [followerCount, followingCount, postCount] = await Promise.all([
+      this.prisma.userFollow.count({ where: { followingId: userId } }),
+      this.prisma.userFollow.count({ where: { followerId: userId } }),
+      this.prisma.post.count({ where: { userId, deletedAt: null } }),
+    ]);
+
+    // Get basic user record for package tier and verification
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        packageTier: true,
+        isFullyVerified: true,
+        isSelfieVerified: true,
+      },
+    });
+
+    const age = profile.birthDate
+      ? calculateAge(new Date(profile.birthDate))
+      : null;
+
+    // Find primary photo URL
+    const avatarUrl =
+      profileData.photos.find((p) => p.isPrimary)?.url ??
+      profileData.photos[0]?.url ??
+      null;
+
+    return {
+      userId,
+      name: profile.firstName,
+      age,
+      city: profile.city ?? null,
+      avatarUrl,
+      bio: profile.bio ?? null,
+      followerCount,
+      followingCount,
+      postCount,
+      photos: profileData.photos,
+      interestTags: profile.interestTags ?? [],
+      height: profile.height ?? null,
+      job: profile.jobTitle ?? null,
+      education: profile.education ?? null,
+      isVerified: user?.isFullyVerified || user?.isSelfieVerified || false,
+      packageTier: user?.packageTier ?? "FREE",
+      compatibilityPercent: 0, // TODO: calculate real compatibility
+      intentionTag: profile.intentionTag ?? null,
+      isFollowing: false, // TODO: check actual follow status
+      zodiacSign: profile.zodiacSign ?? null,
+      smoking: profile.smoking ?? null,
+      children: profile.children ?? null,
+      pets: profile.pets ?? null,
+      alcohol: profile.drinking ?? null,
+      religion: profile.religion ?? null,
+      prompts: profileData.prompts,
+    };
   }
 
   // ─── Profile Prompts ─────────────────────────────────────────

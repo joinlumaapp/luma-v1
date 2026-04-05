@@ -373,7 +373,11 @@ export const socialFeedService = {
    * In dev mode, falls back to the local URI if the upload endpoint
    * is unavailable, so the app still works without a running backend.
    */
-  uploadPostMedia: async (localUri: string, mediaType: 'photo' | 'video'): Promise<string> => {
+  uploadPostMedia: async (
+    localUri: string,
+    mediaType: 'photo' | 'video',
+    onProgress?: (percent: number) => void,
+  ): Promise<string> => {
     const fileName = localUri.split('/').pop() ?? `post_media_${Date.now()}`;
     const ext = fileName.split('.').pop()?.toLowerCase() ?? '';
 
@@ -395,10 +399,22 @@ export const socialFeedService = {
         name: fileName,
       } as unknown as Blob);
 
+      // Use a longer timeout for media uploads (60s for photos, 120s for videos)
+      const uploadTimeout = mediaType === 'video' ? 120_000 : 60_000;
+
       const response = await api.post<{ url: string; key: string; size: number }>(
         '/storage/upload',
         formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } },
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: uploadTimeout,
+          onUploadProgress: (event) => {
+            if (event.total && onProgress) {
+              const percent = Math.round((event.loaded * 100) / event.total);
+              onProgress(percent);
+            }
+          },
+        },
       );
 
       return response.data.url;

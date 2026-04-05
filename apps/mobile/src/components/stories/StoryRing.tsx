@@ -117,6 +117,8 @@ export const StoryRing: React.FC<StoryRingProps> = ({
 
   const ringStyle = getRingStyle();
   const initial = userName ? userName[0].toUpperCase() : '?';
+  // Treat empty strings as no avatar — prevents broken image loads
+  const validAvatarUrl = avatarUrl && avatarUrl.trim().length > 0 ? avatarUrl : undefined;
 
   // Outer glow ring dimensions for suggested stories
   const glowRingSize = dims.ring + 6;
@@ -162,9 +164,9 @@ export const StoryRing: React.FC<StoryRingProps> = ({
           },
         ]}
       >
-        {avatarUrl ? (
+        {validAvatarUrl ? (
           <Image
-            source={{ uri: avatarUrl }}
+            source={{ uri: validAvatarUrl }}
             style={[
               styles.avatar,
               {
