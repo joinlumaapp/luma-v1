@@ -9,8 +9,10 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
+  StatusBar as RNStatusBar,
 } from 'react-native';
-import { StatusBar, setStatusBarStyle } from 'expo-status-bar';
+import { StatusBar, setStatusBarStyle, setStatusBarBackgroundColor, setStatusBarTranslucent } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 // expo-updates is only available in EAS builds, not in Expo Go dev client.
 // We lazy-import it in the error boundary restart handler to avoid crashes.
@@ -184,6 +186,14 @@ const errorStyles = StyleSheet.create({
 //
 // Status bar: light = WHITE icons on dark/black status bar background
 setStatusBarStyle('light');
+if (Platform.OS === 'android') {
+  setStatusBarBackgroundColor('#000000', false);
+  setStatusBarTranslucent(false);
+  // Also set via RN StatusBar for edge-to-edge compatibility
+  RNStatusBar.setBackgroundColor('#000000');
+  RNStatusBar.setBarStyle('light-content');
+  RNStatusBar.setTranslucent(false);
+}
 
 // ─── Network Monitor ──────────────────────────────────────────────────
 function NetworkMonitor(): null {

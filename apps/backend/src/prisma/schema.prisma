@@ -656,6 +656,7 @@ model Subscription {
 enum PaymentPlatform {
   APPLE
   GOOGLE
+  TRIAL
 }
 
 model IapReceipt {

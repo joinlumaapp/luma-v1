@@ -183,6 +183,22 @@ export const QuestionsScreen: React.FC = () => {
             isPremium: q.isPremium,
           }));
         if (normalized.length > 0) setQuestions(normalized);
+
+        // Load previously saved answers and skip to first unanswered
+        const previousAnswers: Record<string, string> = {};
+        let firstUnansweredIndex = 0;
+        response.questions.forEach((q, idx) => {
+          if (q.answeredOptionId) {
+            previousAnswers[q.id] = q.answeredOptionId;
+            if (idx >= firstUnansweredIndex) firstUnansweredIndex = idx + 1;
+          }
+        });
+        if (Object.keys(previousAnswers).length > 0) {
+          setAnswers(previousAnswers);
+          // Skip to first unanswered question (capped at list length)
+          const cappedIndex = Math.min(firstUnansweredIndex, normalized.length - 1);
+          setCurrentIndex(cappedIndex);
+        }
       } catch { /* fallback */ }
     };
     fetchFromApi();
@@ -268,11 +284,15 @@ export const QuestionsScreen: React.FC = () => {
       setSelectedOption(null);
       setSlideDirection('forward');
 
+      // Save each answer individually to backend (non-blocking)
+      if (currentQuestion) {
+        compatibilityService.submitAnswer({
+          questionId: currentQuestion.id,
+          answerIndex: currentQuestion.options.findIndex((o) => o.id === option.id),
+        }).catch(() => {});
+      }
+
       if (isLastQuestion) {
-        // Save answers locally first, then try API (non-blocking)
-        compatibilityService.submitAnswers(newAnswers).catch(() => {
-          // Silent fail — answers are saved locally via setProfileField
-        });
         showAnalysisAndResult(newAnswers);
       } else {
         const nextIndex = currentIndex + 1;

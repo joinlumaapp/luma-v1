@@ -193,6 +193,54 @@ export class PaymentsService {
   }
 
   /**
+   * Activate a 48-hour premium trial for new users (no IAP receipt needed).
+   * Only one trial per user lifetime.
+   */
+  async activateTrial(userId: string) {
+    // Check if user already used a trial
+    const existingTrial = await this.prisma.subscription.findFirst({
+      where: { userId, isTrial: true },
+    });
+
+    if (existingTrial) {
+      throw new BadRequestException("Deneme suresi daha once kullanilmis");
+    }
+
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 48 * 60 * 60 * 1000); // 48 hours
+
+    // Create trial subscription record
+    await this.prisma.subscription.create({
+      data: {
+        userId,
+        packageTier: "GOLD",
+        platform: "TRIAL",
+        productId: "trial_48h",
+        startDate: now,
+        expiryDate: expiresAt,
+        isActive: true,
+        autoRenew: false,
+        isTrial: true,
+        trialEndDate: expiresAt,
+      },
+    });
+
+    // Update user's package tier to GOLD
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { packageTier: "GOLD" },
+    });
+
+    this.logger.log(`Trial activated for user ${userId}, expires at ${expiresAt.toISOString()}`);
+
+    return {
+      packageTier: "GOLD",
+      expiresAt: expiresAt.toISOString(),
+      trialDurationHours: 48,
+    };
+  }
+
+  /**
    * Subscribe to a package tier.
    * Validates receipt with platform store and activates subscription.
    * Supports 7-day free trial for first-time subscribers.

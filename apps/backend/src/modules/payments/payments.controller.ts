@@ -46,6 +46,14 @@ export class PaymentsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post("trial/activate")
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Activate 48-hour premium trial for new users" })
+  async activateTrial(@CurrentUser("sub") userId: string) {
+    return this.paymentsService.activateTrial(userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post("subscribe")
   @ApiBearerAuth()
   @ApiOperation({ summary: "Subscribe to a package tier" })

@@ -214,7 +214,7 @@ const mapResponseToProfile = (data: ProfileResponse): ProfileData => {
     interestTags: migrateInterestTags(Array.isArray(fields.interestTags) ? fields.interestTags : []),
     photos: photos.map((p) => p.url),
     bio: fields.bio ?? '',
-    answers: {},
+    answers: (fields as Record<string, unknown>).answers as Record<string, string> ?? {},
     city: fields.city ?? '',
     job: fields.jobTitle ?? fields.job ?? '',
     education: fields.education ?? '',

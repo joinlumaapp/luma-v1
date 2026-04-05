@@ -368,6 +368,7 @@ export const storyService = {
         type: data.mediaType === 'video' ? 'video/mp4' : 'image/jpeg',
         name: `story_${Date.now()}.${data.mediaType === 'video' ? 'mp4' : 'jpg'}`,
       } as unknown as Blob);
+      formData.append('mediaType', data.mediaType);
       formData.append('overlays', JSON.stringify(data.overlays));
 
       const response = await api.post<Story>('/stories', formData, {

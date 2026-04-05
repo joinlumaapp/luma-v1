@@ -928,7 +928,7 @@ export const EditProfileScreen: React.FC = () => {
                         <Image
                           source={{ uri }}
                           style={styles.photoImage}
-                          resizeMode="cover"
+                          resizeMode="contain"
                         />
                         {/* Remove button */}
                         <View style={styles.photoRemoveButton}>
@@ -1609,6 +1609,7 @@ const styles = StyleSheet.create({
   photoImage: {
     width: '100%',
     height: '100%',
+    backgroundColor: '#F0F0F0',
   },
   photoRemoveButton: {
     position: 'absolute',
