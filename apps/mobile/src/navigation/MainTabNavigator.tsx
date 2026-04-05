@@ -195,8 +195,7 @@ const DiscoveryStackNavigator: React.FC = React.memo(() => (
     screenOptions={{
       headerShown: false,
       animation: 'slide_from_right',
-      statusBarStyle: 'light',
-      statusBarBackgroundColor: '#08080F',
+      statusBarStyle: 'dark',
       statusBarAnimation: 'none',
     }}
   >
@@ -266,8 +265,7 @@ const MatchesStackNavigator: React.FC = React.memo(() => (
     screenOptions={{
       headerShown: false,
       animation: 'slide_from_right',
-      statusBarStyle: 'light',
-      statusBarBackgroundColor: '#08080F',
+      statusBarStyle: 'dark',
       statusBarAnimation: 'none',
     }}
   >
@@ -343,8 +341,7 @@ const FeedStackNavigator: React.FC = React.memo(() => (
     screenOptions={{
       headerShown: false,
       animation: 'slide_from_right',
-      statusBarStyle: 'light',
-      statusBarBackgroundColor: '#08080F',
+      statusBarStyle: 'dark',
       statusBarAnimation: 'none',
     }}
   >
@@ -376,8 +373,7 @@ const LiveStackNavigator: React.FC = React.memo(() => (
   <LiveStack.Navigator
     screenOptions={{
       headerShown: false,
-      statusBarStyle: 'light',
-      statusBarBackgroundColor: '#08080F',
+      statusBarStyle: 'dark',
       statusBarAnimation: 'none',
     }}
   >
@@ -394,8 +390,7 @@ const ProfileStackNavigator: React.FC = React.memo(() => (
     screenOptions={{
       headerShown: false,
       animation: 'slide_from_right',
-      statusBarStyle: 'light',
-      statusBarBackgroundColor: '#08080F',
+      statusBarStyle: 'dark',
       statusBarAnimation: 'none',
     }}
   >

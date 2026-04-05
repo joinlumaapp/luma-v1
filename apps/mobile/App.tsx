@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import { StatusBar, setStatusBarStyle, setStatusBarBackgroundColor, setStatusBarTranslucent } from 'expo-status-bar';
+import { StatusBar, setStatusBarStyle } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 // expo-updates is only available in EAS builds, not in Expo Go dev client.
 // We lazy-import it in the error boundary restart handler to avoid crashes.
@@ -182,24 +182,10 @@ const errorStyles = StyleSheet.create({
 // failed because react-native-screens overrides it at the native Android
 // level during screen transitions.
 //
-// expo-status-bar style values (different from react-native!):
-//   'light' = light-colored (white) text/icons → for dark backgrounds
-//   'dark'  = dark-colored (black) text/icons  → for light backgrounds
-//
-// The native stack navigators also set statusBarStyle/statusBarBackgroundColor
-// per-screen via react-native-screens options — those are compatible with
-// expo-status-bar and do not conflict.
-
-const STATUS_BAR_COLOR = '#08080F';
-
-// Apply status bar settings imperatively at module load time (before any
-// React component mounts) so the very first frame has the correct colors.
-// This is the key difference from previous attempts: expo-status-bar's
-// imperative API talks directly to the native module, not through React's
-// StatusBar stack which react-native-screens overrides.
-setStatusBarTranslucent(false);
-setStatusBarBackgroundColor(STATUS_BAR_COLOR, false);
-setStatusBarStyle('light');
+// Expo SDK 54 + Android edge-to-edge: backgroundColor is deprecated and has no effect.
+// The app uses light/cream backgrounds, so status bar icons must be DARK to be visible.
+// 'dark' = dark-colored (black) icons → for light backgrounds
+setStatusBarStyle('dark');
 
 // ─── Network Monitor ──────────────────────────────────────────────────
 function NetworkMonitor(): null {
@@ -411,11 +397,7 @@ export default function App(): React.JSX.Element {
         <SafeAreaProvider>
           <ThemeProvider>
             <ToastProvider>
-              <StatusBar
-                style="light"
-                backgroundColor={STATUS_BAR_COLOR}
-                translucent={false}
-              />
+              <StatusBar style="dark" />
               <AppVersionGate />
               <NetworkMonitor />
               <NotificationInitializer />
