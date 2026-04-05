@@ -138,7 +138,7 @@ export class ProfilesService {
         country: dto.country,
         latitude: dto.latitude,
         longitude: dto.longitude,
-        intentionTag: dto.intentionTag ?? "NOT_SURE",
+        intentionTag: (dto.intentionTag ?? "NOT_SURE") as any,
         interestTags: dto.interestTags ?? [],
         height: dto.height,
         education: dto.education,
@@ -170,7 +170,7 @@ export class ProfilesService {
         ...(dto.latitude !== undefined && { latitude: dto.latitude }),
         ...(dto.longitude !== undefined && { longitude: dto.longitude }),
         ...(dto.intentionTag !== undefined && {
-          intentionTag: dto.intentionTag,
+          intentionTag: dto.intentionTag as any,
         }),
         ...(dto.interestTags !== undefined && {
           interestTags: dto.interestTags,
