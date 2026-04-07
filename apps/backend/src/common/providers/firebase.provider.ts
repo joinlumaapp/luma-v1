@@ -63,7 +63,6 @@ function initializeFirebase(): admin.app.App | null {
 
   initAttempted = true;
   const config = readFirebaseConfig();
-  const nodeEnv = process.env.NODE_ENV ?? "development";
 
   if (config) {
     try {
@@ -87,7 +86,12 @@ function initializeFirebase(): admin.app.App | null {
         );
       } else {
         logger.error(`Firebase initialization failed: ${message}`);
-        throw error;
+        logger.warn(
+          "Firebase will be disabled — push notifications will be mocked. " +
+            "Fix FIREBASE_PRIVATE_KEY (must include PEM headers) to restore.",
+        );
+        configured = false;
+        firebaseApp = null;
       }
     }
   } else {
