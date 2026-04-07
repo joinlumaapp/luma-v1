@@ -270,8 +270,12 @@ export class AuthService {
     // Record this OTP request for rate limiting (Redis-backed)
     await this.recordOtpRequest(dto.phone);
 
-    // Send SMS (mock in development, Twilio in production)
-    await this.sendSmsOtp(dto.phone, otpCode);
+    // Send SMS — skip entirely when using test OTP (no SMS provider needed)
+    if (!useTestOtp) {
+      await this.sendSmsOtp(dto.phone, otpCode);
+    } else {
+      this.logger.log(`[TEST OTP] SMS skipped for ${dto.phone.slice(0, 4)}****. Code: 123456`);
+    }
 
     // Track device fingerprint for abuse detection
     if (dto.deviceId) {
