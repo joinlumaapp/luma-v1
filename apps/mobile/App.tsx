@@ -405,7 +405,7 @@ export default function App(): React.JSX.Element {
         <SafeAreaProvider>
           <ThemeProvider>
             <ToastProvider>
-              <StatusBar style="light" backgroundColor="#000000" />
+              <StatusBar style="dark" backgroundColor="#F5F0E8" />
               <AppVersionGate />
               <NetworkMonitor />
               <NotificationInitializer />

@@ -229,13 +229,18 @@ export class AuthService {
     const isDev = this.configService.get("NODE_ENV") !== "production";
     const hasSmsProvider = !!this.configService.get("TWILIO_ACCOUNT_SID") ||
       !!this.configService.get("NETGSM_USERCODE");
+    const allowTestOtp = this.configService.get("ALLOW_TEST_OTP") === "true";
 
-    if (!isDev && !hasSmsProvider) {
+    if (!isDev && !hasSmsProvider && !allowTestOtp) {
       this.logger.error("CRITICAL: No SMS provider configured in production! OTP cannot be sent.");
       throw new BadRequestException("SMS servisi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.");
     }
 
-    const otpCode = (isDev && !hasSmsProvider) ? "123456" : this.generateOtp();
+    const useTestOtp = !hasSmsProvider && (isDev || allowTestOtp);
+    const otpCode = useTestOtp ? "123456" : this.generateOtp();
+    if (useTestOtp && !isDev) {
+      this.logger.warn(`[TEST MODE] Using test OTP for ${dto.phone}. REMOVE ALLOW_TEST_OTP before public launch!`);
+    }
     const otpExpiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
     // Expire any existing pending SMS verifications for this user

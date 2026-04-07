@@ -2,7 +2,7 @@
 // Lila/purple gradient background, LUMA logo, Google + Diğer seçenekler
 // Founder Test Panel: long-press LUMA logo 3s to open
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,17 @@ import {
   Linking,
   Dimensions,
 } from 'react-native';
+import Animated, {
+  FadeInDown,
+  FadeInUp,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withRepeat,
+  withSequence,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -31,7 +42,7 @@ import { spacing, borderRadius } from '../../theme/spacing';
 import { fontWeights } from '../../theme/typography';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const LOGO_SIZE = SCREEN_WIDTH * 0.90;
+const LOGO_SIZE = SCREEN_WIDTH * 0.68;
 const lumaLogo = require('../../../assets/splash-logo.png');
 
 type IntroNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'EmotionalIntro'>;
@@ -133,9 +144,31 @@ const EmotionalIntroScreen: React.FC = () => {
   const navigation = useNavigation<IntroNavigationProp>();
   const [showTestPanel, setShowTestPanel] = useState(false);
 
+  // Phone button press animation
+  const phoneScale = useSharedValue(1);
+  const phoneAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: phoneScale.value }],
+  }));
+
+  // Subtle background breathing animation (premium feel)
+  const bgOpacity = useSharedValue(0);
+  useEffect(() => {
+    bgOpacity.value = withRepeat(
+      withSequence(
+        withTiming(0.06, { duration: 4000, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: 4000, easing: Easing.inOut(Easing.sin) }),
+      ),
+      -1,
+      true,
+    );
+  }, [bgOpacity]);
+  const bgAnimStyle = useAnimatedStyle(() => ({
+    opacity: bgOpacity.value,
+  }));
+
   // Navigation handlers
   const handleOtherOptions = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     navigation.navigate('PhoneEntry');
   }, [navigation]);
 
@@ -199,12 +232,18 @@ const EmotionalIntroScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Full-screen gradient background */}
+      {/* Full-screen gradient — deeper rose to warm cream */}
       <LinearGradient
-        colors={['#E8959E', '#EDACB4', '#F2C0C6', '#F7D5D9', '#FFFFFF']}
-        locations={[0, 0.35, 0.6, 0.85, 1]}
+        colors={['#D4687A', '#E8959E', '#F2C0C6', '#F5ECDF', '#F5F0E8']}
+        locations={[0, 0.25, 0.5, 0.8, 1]}
         style={styles.gradientBackground}
       >
+        {/* Subtle purple breathing overlay (premium feel) */}
+        <Animated.View
+          style={[styles.breathingOverlay, bgAnimStyle]}
+          pointerEvents="none"
+        />
+
         {/* DEV test button */}
         {__DEV__ && (
           <TouchableOpacity
@@ -222,74 +261,104 @@ const EmotionalIntroScreen: React.FC = () => {
         {/* Top spacer */}
         <View style={styles.topSpacer} />
 
-        {/* Center — LUMA 3D logo */}
+        {/* Center — LUMA 3D logo with entrance animation */}
         <View style={styles.logoSection}>
-          <Pressable onLongPress={handleLogoLongPress} delayLongPress={3000}>
-            <View style={styles.logoContainer}>
-              <Image
-                source={lumaLogo}
-                style={styles.logoImage}
-                resizeMode="contain"
-              />
-            </View>
-          </Pressable>
+          <Animated.View entering={FadeInDown.duration(800).delay(200).springify().damping(12)}>
+            <Pressable onLongPress={handleLogoLongPress} delayLongPress={3000}>
+              <View style={styles.logoContainer}>
+                <Image
+                  source={lumaLogo}
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
+              </View>
+            </Pressable>
+          </Animated.View>
         </View>
 
-        {/* Bottom section — buttons */}
+        {/* Tagline — emotional hook */}
+        <Animated.View entering={FadeInUp.duration(600).delay(500)} style={styles.taglineContainer}>
+          <Text style={styles.tagline}>Gerçek uyum için kendin ol.</Text>
+        </Animated.View>
+
+        {/* Bottom section — buttons with staggered entrance */}
         <View style={styles.bottomSection}>
           {/* Google button — disabled until Google Auth is implemented */}
-          <TouchableOpacity
-            style={[styles.googleButton, styles.googleButtonDisabled]}
-            disabled={true}
-            activeOpacity={1}
-            accessibilityRole="button"
-            accessibilityLabel="Google ile bağlan, çok yakında"
-            accessibilityState={{ disabled: true }}
-          >
-            <Ionicons name="logo-google" size={20} color={palette.gray[900]} />
-            <Text style={styles.googleButtonText}>Google ile bağlan</Text>
-            <Text style={styles.comingSoonBadge}>Çok yakında</Text>
-          </TouchableOpacity>
+          <Animated.View entering={FadeInUp.duration(500).delay(600)} style={styles.fullWidth}>
+            <TouchableOpacity
+              style={[styles.googleButton, styles.googleButtonDisabled]}
+              disabled={true}
+              activeOpacity={1}
+              accessibilityRole="button"
+              accessibilityLabel="Google ile bağlan, çok yakında"
+              accessibilityState={{ disabled: true }}
+            >
+              <Ionicons name="logo-google" size={20} color={palette.gray[900]} />
+              <Text style={styles.googleButtonText}>Google ile bağlan</Text>
+              <View style={styles.comingSoonPill}>
+                <Text style={styles.comingSoonBadge}>Çok yakında</Text>
+              </View>
+            </TouchableOpacity>
+          </Animated.View>
 
-          {/* Telefon ile devam et button */}
-          <TouchableOpacity
-            style={styles.otherButton}
-            onPress={handleOtherOptions}
-            activeOpacity={0.9}
-            accessibilityRole="button"
-            accessibilityLabel="Telefon ile devam et"
-          >
-            <Text style={styles.otherButtonText}>Telefon ile devam et</Text>
-          </TouchableOpacity>
+          {/* Telefon ile devam et button — gradient + press animation */}
+          <Animated.View entering={FadeInUp.duration(500).delay(750)} style={styles.fullWidth}>
+            <Pressable
+              onPressIn={() => {
+                phoneScale.value = withSpring(0.96, { damping: 14, stiffness: 200 });
+              }}
+              onPressOut={() => {
+                phoneScale.value = withSpring(1, { damping: 14, stiffness: 200 });
+              }}
+              onPress={handleOtherOptions}
+              accessibilityRole="button"
+              accessibilityLabel="Telefon ile devam et"
+            >
+              <Animated.View style={[styles.otherButton, phoneAnimStyle]}>
+                <LinearGradient
+                  colors={['#D4506A', '#C4405A', '#A83350']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.otherButtonGradient}
+                >
+                  <Text style={styles.otherButtonText}>Telefon ile devam et</Text>
+                </LinearGradient>
+              </Animated.View>
+            </Pressable>
+          </Animated.View>
 
           {/* Login link for existing users */}
-          <TouchableOpacity onPress={handleLogin} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="Giriş yap">
-            <Text style={styles.loginText}>
-              {'Zaten hesabın var mı? '}
-              <Text style={styles.loginLink}>Giriş yap</Text>
-            </Text>
-          </TouchableOpacity>
+          <Animated.View entering={FadeInUp.duration(400).delay(900)}>
+            <TouchableOpacity onPress={handleLogin} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="Giriş yap">
+              <Text style={styles.loginText}>
+                {'Zaten hesabın var mı? '}
+                <Text style={styles.loginLink}>Giriş yap</Text>
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
 
           {/* Privacy note — with tappable legal links */}
-          <Text style={styles.privacyText}>
-            {'Kaydolarak, '}
-            <Text
-              style={styles.privacyLink}
-              onPress={() => Linking.openURL('https://luma.dating/terms')}
-              accessibilityRole="link"
-            >
-              Genel Kullanım Koşullarımızı
+          <Animated.View entering={FadeInUp.duration(400).delay(1050)}>
+            <Text style={styles.privacyText}>
+              {'Kaydolarak, '}
+              <Text
+                style={styles.privacyLink}
+                onPress={() => Linking.openURL('https://luma.dating/terms')}
+                accessibilityRole="link"
+              >
+                Genel Kullanım Koşullarımızı
+              </Text>
+              {' ve '}
+              <Text
+                style={styles.privacyLink}
+                onPress={() => Linking.openURL('https://luma.dating/privacy')}
+                accessibilityRole="link"
+              >
+                Gizlilik Politikamızı
+              </Text>
+              {' kabul etmiş olursun.'}
             </Text>
-            {' ve '}
-            <Text
-              style={styles.privacyLink}
-              onPress={() => Linking.openURL('https://luma.dating/privacy')}
-              accessibilityRole="link"
-            >
-              Gizlilik Politikamızı
-            </Text>
-            {' kabul etmiş olursun.'}
-          </Text>
+          </Animated.View>
         </View>
       </LinearGradient>
 
@@ -323,6 +392,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'space-between',
   },
+  breathingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#8B5CF6',
+  },
+  fullWidth: {
+    width: '100%',
+  },
   devButton: {
     position: 'absolute',
     top: Platform.OS === 'ios' ? 56 : 40,
@@ -343,13 +419,29 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
   },
   topSpacer: {
-    height: Platform.OS === 'ios' ? 80 : 60,
+    height: Platform.OS === 'ios' ? 40 : 20,
   },
-  // LUMA logo section
+  // LUMA logo section — pushed slightly above visual center
   logoSection: {
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
     flex: 1,
+    paddingBottom: SCREEN_WIDTH * 0.06,
+  },
+  // Tagline — emotional hook between logo and buttons
+  taglineContainer: {
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.lg,
+  },
+  tagline: {
+    fontSize: 18,
+    fontFamily: 'Poppins_300Light',
+    fontWeight: '300' as const,
+    color: 'rgba(80, 40, 60, 0.7)',
+    textAlign: 'center' as const,
+    letterSpacing: 0.5,
+    lineHeight: 26,
   },
   logoContainer: {
     width: LOGO_SIZE,
@@ -364,7 +456,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: Platform.OS === 'ios' ? 48 : 36,
     alignItems: 'center',
-    gap: 12,
+    gap: 14,
   },
   // Google button — white, rounded
   googleButton: {
@@ -396,14 +488,27 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semibold,
     color: palette.gray[900],
   },
-  // Telefon ile devam et button — dark/elegant
+  // Telefon ile devam et button — gradient + glow
   otherButton: {
     width: '100%',
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#C4405A',
-    justifyContent: 'center',
-    alignItems: 'center',
+    overflow: 'hidden' as const,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#C4405A',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.35,
+        shadowRadius: 14,
+      },
+      android: { elevation: 8 },
+    }),
+  },
+  otherButtonGradient: {
+    flex: 1,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    borderRadius: 28,
   },
   otherButtonText: {
     fontSize: 16,
@@ -411,28 +516,37 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semibold,
     color: palette.white,
   },
-  // Login link
+  // Login link — more visible for returning users
   loginText: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: 'Poppins_400Regular',
     fontWeight: fontWeights.regular,
-    color: 'rgba(80, 40, 60, 0.6)',
+    color: 'rgba(80, 40, 60, 0.7)',
   },
   loginLink: {
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: fontWeights.bold,
     color: '#C4405A',
-    textDecorationLine: 'underline',
+    textDecorationLine: 'none',
   },
-  // Google button disabled state
+  // Google button disabled state — visible but clearly "coming soon"
   googleButtonDisabled: {
-    opacity: 0.45,
+    opacity: 0.7,
+    borderColor: 'rgba(200, 160, 170, 0.2)',
+  },
+  comingSoonPill: {
+    backgroundColor: 'rgba(196, 64, 90, 0.6)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginLeft: 4,
   },
   comingSoonBadge: {
-    fontSize: 10,
-    color: palette.gray[500],
-    marginLeft: 4,
-    fontStyle: 'italic' as const,
+    fontSize: 9,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500' as const,
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
   },
   // Privacy text
   privacyText: {
