@@ -11,4 +11,5 @@ export {
   MatchUpgradeNudge,
   WeeklyInsightNudge,
   SocialProofBanner,
+  SupremePromoBanner,
 } from './SmartUpgradePrompts';

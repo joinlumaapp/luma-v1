@@ -2,6 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { NotFoundException } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { PrismaService } from "../../prisma/prisma.service";
+import { NotificationsService } from "../notifications/notifications.service";
 
 const mockPrisma = {
   user: {
@@ -19,6 +20,7 @@ describe("UsersService", () => {
       providers: [
         UsersService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: NotificationsService, useValue: { sendPush: jest.fn(), sendInApp: jest.fn(), notifyAccountDeleted: jest.fn() } },
       ],
     }).compile();
     service = module.get<UsersService>(UsersService);

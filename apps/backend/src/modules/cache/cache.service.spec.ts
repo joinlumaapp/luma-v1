@@ -377,7 +377,7 @@ describe("LumaCacheService", () => {
   describe("CACHE_TTL constants", () => {
     it("should have correct TTL values", () => {
       expect(CACHE_TTL.USER_PROFILE).toBe(300);
-      expect(CACHE_TTL.DISCOVERY_FEED).toBe(60);
+      expect(CACHE_TTL.DISCOVERY_FEED).toBe(300);
       expect(CACHE_TTL.COMPATIBILITY_SCORE).toBe(3600);
       expect(CACHE_TTL.MATCH_LIST).toBe(180);
       expect(CACHE_TTL.QUESTIONS).toBe(86400);

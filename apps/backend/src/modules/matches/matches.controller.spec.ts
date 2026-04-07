@@ -4,6 +4,8 @@ import { ThrottlerGuard } from "@nestjs/throttler";
 import { MatchesController } from "./matches.controller";
 import { MatchesService } from "./matches.service";
 import { DatePlanService } from "./date-plan.service";
+import { SecretAdmirerService } from "./secret-admirer.service";
+import { CompatibilityXrayService } from "./compatibility-xray.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 
 describe("MatchesController", () => {
@@ -22,6 +24,16 @@ describe("MatchesController", () => {
     cancelDatePlan: jest.fn(),
   };
 
+  const mockSecretAdmirerService = {
+    send: jest.fn(),
+    guess: jest.fn(),
+    getReceived: jest.fn(),
+  };
+
+  const mockCompatibilityXrayService = {
+    getXray: jest.fn(),
+  };
+
   beforeEach(async () => {
     jest.resetAllMocks();
 
@@ -30,6 +42,8 @@ describe("MatchesController", () => {
       providers: [
         { provide: MatchesService, useValue: mockMatchesService },
         { provide: DatePlanService, useValue: mockDatePlanService },
+        { provide: SecretAdmirerService, useValue: mockSecretAdmirerService },
+        { provide: CompatibilityXrayService, useValue: mockCompatibilityXrayService },
       ],
     })
       .overrideGuard(JwtAuthGuard)

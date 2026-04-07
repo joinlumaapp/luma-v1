@@ -1216,7 +1216,7 @@ export class DiscoveryService {
     FREE: 3,
     GOLD: 10,
     PRO: 10,
-    RESERVED: 10,
+    RESERVED: 999999,
   };
 
   /**
@@ -1702,15 +1702,16 @@ export class DiscoveryService {
 
     try {
       const now = new Date();
-      const values = viewedUserIds
-        .map(
-          (vid) =>
-            `(gen_random_uuid(), '${userId}'::uuid, '${vid}'::uuid, '${now.toISOString()}'::timestamptz)`,
-        )
-        .join(", ");
-
-      await this.prisma.$executeRawUnsafe(
-        `INSERT INTO feed_views (id, user_id, viewed_user_id, viewed_at) VALUES ${values} ON CONFLICT DO NOTHING`,
+      // Use parameterized queries to prevent SQL injection.
+      // Insert each view individually using Prisma's safe tagged template literals.
+      await Promise.all(
+        viewedUserIds.map((vid) =>
+          this.prisma.$executeRaw`
+            INSERT INTO feed_views (id, user_id, viewed_user_id, viewed_at)
+            VALUES (gen_random_uuid(), ${userId}::uuid, ${vid}::uuid, ${now}::timestamptz)
+            ON CONFLICT DO NOTHING
+          `,
+        ),
       );
     } catch {
       // Non-critical: silently fail if feed_views table doesn't exist yet
@@ -1833,7 +1834,7 @@ export class DiscoveryService {
     FREE: 3,
     GOLD: 10,
     PRO: 20,
-    RESERVED: 20,
+    RESERVED: 999999,
   };
 
   /** Jeton cost per greeting */

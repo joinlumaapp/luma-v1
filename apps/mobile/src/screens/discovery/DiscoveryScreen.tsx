@@ -55,7 +55,7 @@ import { MatchAnimation } from '../../components/animations/MatchAnimation';
 import { DiscoveryCard } from '../../components/cards/DiscoveryCard';
 import { CompatibilityBottomSheet } from '../../components/discovery/CompatibilityBottomSheet';
 import { TrialBanner } from '../../components/premium/TrialBanner';
-import { LikedYouTeaser, MatchUpgradeNudge } from '../../components/premium/SmartUpgradePrompts';
+import { LikedYouTeaser, MatchUpgradeNudge, SupremePromoBanner } from '../../components/premium/SmartUpgradePrompts';
 import { discoveryService, type BoostStatusResponse } from '../../services/discoveryService';
 import type { LoginStreakResponse } from '../../services/discoveryService';
 import { StreakBanner } from '../../components/streak/StreakBanner';
@@ -960,6 +960,13 @@ export const DiscoveryScreen: React.FC = () => {
 
         {/* Trial banner — shows remaining Gold trial time */}
         <TrialBanner />
+
+        {/* Supreme promo banner — FREE and GOLD users only */}
+        {(packageTier === 'FREE' || packageTier === 'GOLD') && (
+          <SupremePromoBanner
+            onPress={() => navigation.navigate('MembershipPlans' as never)}
+          />
+        )}
 
         {/* Liked you teaser — FREE users only */}
         {packageTier === 'FREE' && (

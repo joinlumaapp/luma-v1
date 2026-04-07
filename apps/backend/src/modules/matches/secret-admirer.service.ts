@@ -9,7 +9,7 @@ const SECRET_ADMIRER_CONFIG = {
     FREE: 0,
     GOLD: 1,
     PRO: 3,
-    RESERVED: 5,
+    RESERVED: 999999,
   } as Record<string, number>,
 };
 

@@ -90,6 +90,7 @@ describe("AuthService", () => {
 
   const mockPrismaUserSession = {
     findUnique: jest.fn(),
+    findFirst: jest.fn(),
     findMany: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
@@ -250,13 +251,14 @@ describe("AuthService", () => {
 
       const result = await service.register(registerDto);
 
-      expect(result.isNewUser).toBe(true);
+      // Security: isNewUser is always false to prevent phone enumeration
+      expect(result.isNewUser).toBe(false);
       expect(result.message).toBeDefined();
       expect(mockPrismaUser.create).toHaveBeenCalledWith({
-        data: {
+        data: expect.objectContaining({
           phone: "+905551234567",
           phoneCountryCode: "TR",
-        },
+        }),
       });
       // Should expire existing pending verifications
       expect(mockPrismaUserVerification.updateMany).toHaveBeenCalledWith(
@@ -673,6 +675,7 @@ describe("AuthService", () => {
         refreshToken: "valid-refresh-token",
         isRevoked: true, // Already revoked
         userId: "user-uuid-1",
+        createdAt: new Date(Date.now() - 60_000), // 60s ago, outside 10s grace period
       });
 
       mockJwtService.verifyAsync.mockResolvedValue({ sub: "user-uuid-1" });
@@ -824,6 +827,7 @@ describe("AuthService", () => {
             userPhoto: { deleteMany: jest.fn().mockResolvedValue({}) },
             userSession: { updateMany: jest.fn().mockResolvedValue({}) },
             subscription: { updateMany: jest.fn().mockResolvedValue({}) },
+            post: { updateMany: jest.fn().mockResolvedValue({}) },
             deviceToken: { updateMany: jest.fn().mockResolvedValue({}) },
             match: { updateMany: jest.fn().mockResolvedValue({}) },
           };
@@ -852,6 +856,7 @@ describe("AuthService", () => {
             userPhoto: { deleteMany: jest.fn().mockResolvedValue({}) },
             userSession: { updateMany: jest.fn().mockResolvedValue({}) },
             subscription: { updateMany: jest.fn().mockResolvedValue({}) },
+            post: { updateMany: jest.fn().mockResolvedValue({}) },
             deviceToken: { updateMany: jest.fn().mockResolvedValue({}) },
             match: { updateMany: jest.fn().mockResolvedValue({}) },
           };
@@ -881,6 +886,7 @@ describe("AuthService", () => {
             userPhoto: { deleteMany: jest.fn().mockResolvedValue({}) },
             userSession: { updateMany: jest.fn().mockResolvedValue({}) },
             subscription: { updateMany: jest.fn().mockResolvedValue({}) },
+            post: { updateMany: jest.fn().mockResolvedValue({}) },
             deviceToken: { updateMany: jest.fn().mockResolvedValue({}) },
             match: { updateMany: jest.fn().mockResolvedValue({}) },
           };
@@ -912,6 +918,7 @@ describe("AuthService", () => {
             userPhoto: { deleteMany: jest.fn().mockResolvedValue({}) },
             userSession: { updateMany: jest.fn().mockResolvedValue({}) },
             subscription: { updateMany: jest.fn().mockResolvedValue({}) },
+            post: { updateMany: jest.fn().mockResolvedValue({}) },
             deviceToken: { updateMany: jest.fn().mockResolvedValue({}) },
             match: { updateMany: jest.fn().mockResolvedValue({}) },
           };
@@ -950,6 +957,7 @@ describe("AuthService", () => {
             userPhoto: { deleteMany: jest.fn().mockResolvedValue({}) },
             userSession: { updateMany: jest.fn().mockResolvedValue({}) },
             subscription: { updateMany: jest.fn().mockResolvedValue({}) },
+            post: { updateMany: jest.fn().mockResolvedValue({}) },
             deviceToken: { updateMany: jest.fn().mockResolvedValue({}) },
             match: { updateMany: jest.fn().mockResolvedValue({}) },
           };

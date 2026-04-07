@@ -6,6 +6,11 @@ import {
 } from "@nestjs/common";
 import { PlacesService } from "./places.service";
 import { PrismaService } from "../../prisma/prisma.service";
+import { BadgesService } from "../badges/badges.service";
+
+const mockBadgesService = {
+  checkAndAwardBadges: jest.fn().mockResolvedValue(undefined),
+};
 
 const mockPrisma = {
   discoveredPlace: {
@@ -23,6 +28,7 @@ const mockPrisma = {
   },
   placeMemory: { create: jest.fn(), findMany: jest.fn() },
   notification: { create: jest.fn() },
+  userProfile: { findUnique: jest.fn() },
 };
 
 describe("PlacesService", () => {
@@ -34,6 +40,7 @@ describe("PlacesService", () => {
       providers: [
         PlacesService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: BadgesService, useValue: mockBadgesService },
       ],
     }).compile();
     service = module.get<PlacesService>(PlacesService);

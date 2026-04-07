@@ -790,7 +790,7 @@ describe("DiscoveryService", () => {
         .mockResolvedValueOnce({ id: "u2", isActive: true });
       mockPrisma.block.findFirst.mockResolvedValue(null);
       mockPrisma.swipe.findUnique.mockResolvedValue(null);
-      mockPrisma.dailySwipeCount.upsert.mockResolvedValue({ count: 200 }); // PRO limit reached
+      mockPrisma.dailySwipeCount.upsert.mockResolvedValue({ count: 999999 }); // All tiers have 999999 unlimited limit
 
       await expect(
         service.swipe("u1", {
@@ -821,7 +821,7 @@ describe("DiscoveryService", () => {
         direction: SwipeDirection.PASS,
       });
 
-      expect(result.direction).toBe("pass");
+      expect(result.direction).toBe("PASS");
       expect(result.isMatch).toBe(false);
     });
 

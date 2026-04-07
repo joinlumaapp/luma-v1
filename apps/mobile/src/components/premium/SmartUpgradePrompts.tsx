@@ -510,3 +510,97 @@ const socialStyles = StyleSheet.create({
     fontFamily: 'Poppins_600SemiBold', fontWeight: fontWeights.semibold, color: colors.text,
   },
 });
+
+// ─── 6. Supreme Sınırsız Tanıtım Bildirimi ──────────────────────
+
+const SUPREME_SLOGANS = [
+  { title: 'Limit yok, sınır yok ✨', subtitle: 'Supreme ile her şey sınırsız — beğen, mesaj at, keşfet!' },
+  { title: 'Sınırsız beğen, sınırsız eşleş 💎', subtitle: 'Supreme\'da limit diye bir şey yok. Tam gaz ilerle!' },
+  { title: 'Kısıtlama bitti, özgürlük başladı 🚀', subtitle: 'Supreme ayrıcalığıyla tüm özellikler sonsuza kadar senin.' },
+  { title: 'Herkesi gör, herkesle eşleş 👑', subtitle: 'Supreme ile seni beğenenleri anında gör, sınırsız mesaj at.' },
+  { title: 'Beklemek mi? Supreme\'da yok öyle şey ⚡', subtitle: 'Sınırsız boost, sınırsız beğeni, sınırsız bağlantı.' },
+] as const;
+
+interface SupremePromoBannerProps {
+  onPress: () => void;
+}
+
+export const SupremePromoBanner: React.FC<SupremePromoBannerProps> = ({ onPress }) => {
+  const slideAnim = useRef(new Animated.Value(-100)).current;
+  const [sloganIndex] = useState(() => Math.floor(Math.random() * SUPREME_SLOGANS.length));
+  const slogan = SUPREME_SLOGANS[sloganIndex];
+
+  useEffect(() => {
+    Animated.spring(slideAnim, {
+      toValue: 0,
+      tension: 50,
+      friction: 9,
+      useNativeDriver: true,
+    }).start();
+  }, [slideAnim]);
+
+  return (
+    <Animated.View style={[supremeStyles.wrapper, { transform: [{ translateY: slideAnim }] }]}>
+      <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
+        <LinearGradient
+          colors={['#7C3AED', '#9333EA', '#A855F7']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={supremeStyles.container}
+        >
+          <View style={supremeStyles.iconContainer}>
+            <Ionicons name="diamond" size={24} color="#FCD34D" />
+          </View>
+          <View style={supremeStyles.textContainer}>
+            <Text style={supremeStyles.title}>{slogan.title}</Text>
+            <Text style={supremeStyles.subtitle}>{slogan.subtitle}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.7)" />
+        </LinearGradient>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
+const supremeStyles = StyleSheet.create({
+  wrapper: {
+    marginHorizontal: spacing.md,
+    marginVertical: spacing.sm,
+  },
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 14,
+    gap: 12,
+    ...Platform.select({
+      ios: { shadowColor: '#7C3AED', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 },
+      android: { elevation: 6 },
+    }),
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  textContainer: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 15,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: fontWeights.bold,
+    color: '#FFFFFF',
+  },
+  subtitle: {
+    fontSize: 12,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: fontWeights.regular,
+    color: 'rgba(255,255,255,0.85)',
+    marginTop: 2,
+  },
+});

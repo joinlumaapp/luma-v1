@@ -3,6 +3,7 @@ import { ThrottlerGuard } from "@nestjs/throttler";
 import { AnalyticsController } from "./analytics.controller";
 import { AnalyticsService } from "./analytics.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
+import { AdminGuard } from "../../common/guards/admin.guard";
 
 describe("AnalyticsController", () => {
   let controller: AnalyticsController;
@@ -26,6 +27,8 @@ describe("AnalyticsController", () => {
       .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
       .overrideGuard(ThrottlerGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(AdminGuard)
       .useValue({ canActivate: () => true })
       .compile();
 

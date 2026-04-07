@@ -3,10 +3,20 @@ import { NotFoundException, BadRequestException } from "@nestjs/common";
 import { ThrottlerGuard } from "@nestjs/throttler";
 import { VoiceIntroController } from "./voice-intro.controller";
 import { PrismaService } from "../../prisma/prisma.service";
+import { StorageService } from "../storage/storage.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 
 describe("VoiceIntroController", () => {
   let controller: VoiceIntroController;
+
+  const mockStorageService = {
+    uploadVoiceIntro: jest.fn().mockResolvedValue({
+      url: "https://cdn.luma.app/voice/user-uuid-1/some-id.m4a",
+      key: "voice/user-uuid-1/some-id.m4a",
+      duration: 25,
+    }),
+    deleteFile: jest.fn().mockResolvedValue(undefined),
+  };
 
   const mockPrisma = {
     user: {
@@ -21,9 +31,20 @@ describe("VoiceIntroController", () => {
   beforeEach(async () => {
     jest.resetAllMocks();
 
+    // Re-set default mock implementations after resetAllMocks
+    mockStorageService.uploadVoiceIntro.mockResolvedValue({
+      url: "https://cdn.luma.app/voice/user-uuid-1/some-id.m4a",
+      key: "voice/user-uuid-1/some-id.m4a",
+      duration: 25,
+    });
+    mockStorageService.deleteFile.mockResolvedValue(undefined);
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [VoiceIntroController],
-      providers: [{ provide: PrismaService, useValue: mockPrisma }],
+      providers: [
+        { provide: PrismaService, useValue: mockPrisma },
+        { provide: StorageService, useValue: mockStorageService },
+      ],
     })
       .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
@@ -139,7 +160,7 @@ describe("VoiceIntroController", () => {
 
       mockPrisma.user.findUnique.mockResolvedValue({ id: userId });
       mockPrisma.userProfile.update.mockResolvedValue({
-        voiceIntroUrl: "https://cdn.luma.app/voice/user-uuid-1/id.m4a",
+        voiceIntroUrl: "https://cdn.luma.app/voice/user-uuid-1/some-id.m4a",
         voiceIntroDuration: 20,
       });
 

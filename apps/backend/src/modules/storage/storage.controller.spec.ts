@@ -76,7 +76,7 @@ describe("StorageController", () => {
         originalname: "big.dat",
         encoding: "7bit",
         mimetype: "application/octet-stream",
-        size: 11 * 1024 * 1024,
+        size: 51 * 1024 * 1024, // 51MB, exceeds 50MB limit
         buffer: Buffer.alloc(1),
       };
 

@@ -312,7 +312,7 @@ describe("NotificationsService", () => {
       expect(result.stored).toBe(true);
       const createCall = mockPrisma.notification.create.mock.calls[0][0];
       expect(createCall.data.type).toBe("SUBSCRIPTION_EXPIRING");
-      expect(createCall.data.body).toContain("3 gun");
+      expect(createCall.data.body).toContain("3 gün");
       expect(createCall.data.body).toContain("Gold");
     });
   });

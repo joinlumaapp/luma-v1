@@ -139,12 +139,13 @@ describe("JwtAuthGuard", () => {
     expect(IS_PUBLIC_KEY).toBe("isPublic");
   });
 
-  it("should reject token when Redis is unavailable (fail-closed)", async () => {
+  it("should allow token when Redis is unavailable (fail-open for availability)", async () => {
     (cacheService.isRedisConnected as jest.Mock).mockReturnValue(false);
 
-    await expect(
-      guard.canActivate(createMockContext("Bearer valid.jwt.token")),
-    ).rejects.toThrow("Bu oturum sonlandirildi");
+    const result = await guard.canActivate(
+      createMockContext("Bearer valid.jwt.token"),
+    );
+    expect(result).toBe(true);
   });
 
   it("should reject token when it is blacklisted in cache", async () => {

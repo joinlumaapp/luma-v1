@@ -13,6 +13,16 @@ jest.mock("../storage/storage.service", () => ({
 
 import { StoriesService } from "./stories.service";
 import { StorageService } from "../storage/storage.service";
+import { ChatService } from "../chat/chat.service";
+import { NotificationsService } from "../notifications/notifications.service";
+
+const mockChatService = {
+  sendMessage: jest.fn().mockResolvedValue(undefined),
+};
+
+const mockNotificationsService = {
+  notifyStoryLike: jest.fn().mockResolvedValue(undefined),
+};
 
 const mockPrisma = {
   story: {
@@ -33,7 +43,8 @@ const mockPrisma = {
     count: jest.fn(),
   },
   userFollow: { findMany: jest.fn() },
-  match: { findMany: jest.fn() },
+  match: { findMany: jest.fn(), findFirst: jest.fn() },
+  userProfile: { findUnique: jest.fn() },
 };
 
 describe("StoriesService", () => {
@@ -47,6 +58,8 @@ describe("StoriesService", () => {
         StoriesService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: StorageService, useValue: mockStorageService },
+        { provide: ChatService, useValue: mockChatService },
+        { provide: NotificationsService, useValue: mockNotificationsService },
       ],
     }).compile();
 
@@ -310,10 +323,18 @@ describe("StoriesService", () => {
       mockPrisma.story.findUnique.mockResolvedValue({
         id: "s1",
         userId: "u2",
+        mediaUrl: "https://cdn.luma.app/stories/s1.jpg",
+        mediaType: "image",
         user: {
           id: "u2",
           profile: { firstName: "Ahmet" },
         },
+      });
+      mockPrisma.match.findFirst.mockResolvedValue({
+        id: "match1",
+        userAId: "u1",
+        userBId: "u2",
+        isActive: true,
       });
 
       const result = await service.replyToStory("u1", "s1", "Harika hikaye!");

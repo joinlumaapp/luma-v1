@@ -74,13 +74,28 @@ export class ContentScannerService {
     // 5. Otherwise → safe: true
 
     // Production guard: AWS Rekognition integration is not yet wired.
-    // Log a critical warning but allow content through to avoid blocking uploads.
-    this.logger.error(
-      `[PRODUCTION WARNING] Content scanning is enabled but AWS Rekognition integration is not implemented. ` +
-        `Photo auto-approved WITHOUT moderation: ${imageUrl}. ` +
-        `This must be resolved before public launch.`,
-    );
+    // FAIL-CLOSED: reject uploads until moderation is properly implemented.
+    // This prevents inappropriate content from being visible on the platform.
+    const isProduction =
+      this.config.get<string>("NODE_ENV") === "production";
 
+    if (isProduction) {
+      this.logger.error(
+        `[PRODUCTION] Content scanning enabled but AWS Rekognition not implemented. ` +
+          `Photo REJECTED (fail-closed) for safety: ${imageUrl}`,
+      );
+      return {
+        safe: false,
+        confidence: 1,
+        labels: ["moderation_not_configured"],
+      };
+    }
+
+    // Non-production with flag enabled: allow through with warning
+    this.logger.warn(
+      `[STAGING] Content scanning enabled but AWS Rekognition not wired. ` +
+        `Photo auto-approved for testing: ${imageUrl}`,
+    );
     return { safe: true, confidence: 0, labels: [] };
   }
 

@@ -25,6 +25,7 @@ const mockPrisma = {
     findUnique: jest.fn(),
   },
   $transaction: jest.fn(),
+  $executeRaw: jest.fn(),
 };
 
 const mockBadgesService = {
@@ -306,7 +307,13 @@ describe("PaymentsService", () => {
     });
 
     it("should throw NotFoundException when user not found", async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrisma.$transaction.mockImplementation(
+        async (fn: (tx: typeof mockPrisma) => Promise<unknown>) => {
+          mockPrisma.$executeRaw.mockResolvedValue(0); // no rows updated
+          mockPrisma.user.findUnique.mockResolvedValue(null); // user not found
+          return fn(mockPrisma);
+        },
+      );
 
       await expect(
         service.spendGold("u1", { action: "super_like" }),
@@ -314,7 +321,13 @@ describe("PaymentsService", () => {
     });
 
     it("should throw BadRequestException for insufficient gold", async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 10 });
+      mockPrisma.$transaction.mockImplementation(
+        async (fn: (tx: typeof mockPrisma) => Promise<unknown>) => {
+          mockPrisma.$executeRaw.mockResolvedValue(0); // no rows updated (insufficient)
+          mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 10 });
+          return fn(mockPrisma);
+        },
+      );
 
       await expect(
         service.spendGold("u1", { action: "super_like" }), // costs 25
@@ -322,10 +335,12 @@ describe("PaymentsService", () => {
     });
 
     it("should debit gold and return new balance", async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 100 });
       mockPrisma.$transaction.mockImplementation(
-        async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
-          await fn(mockPrisma);
+        async (fn: (tx: typeof mockPrisma) => Promise<unknown>) => {
+          mockPrisma.$executeRaw.mockResolvedValue(1); // 1 row updated
+          mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 75 }); // post-debit balance
+          mockPrisma.goldTransaction.create.mockResolvedValue({});
+          return fn(mockPrisma);
         },
       );
 
@@ -341,10 +356,12 @@ describe("PaymentsService", () => {
     });
 
     it("should correctly charge for profile_boost (100 gold)", async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 200 });
       mockPrisma.$transaction.mockImplementation(
-        async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
-          await fn(mockPrisma);
+        async (fn: (tx: typeof mockPrisma) => Promise<unknown>) => {
+          mockPrisma.$executeRaw.mockResolvedValue(1);
+          mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 100 });
+          mockPrisma.goldTransaction.create.mockResolvedValue({});
+          return fn(mockPrisma);
         },
       );
 
@@ -1038,37 +1055,41 @@ describe("PaymentsService", () => {
   // ═══════════════════════════════════════════════════════════════
 
   describe("spendGold() — all valid actions", () => {
-    it("should correctly charge for super_like (25 gold)", async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 100 });
+    // Helper: mock a successful gold spend transaction
+    function mockSuccessfulSpend(newBalance: number) {
       mockPrisma.$transaction.mockImplementation(
-        async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
-          await fn(mockPrisma);
+        async (fn: (tx: typeof mockPrisma) => Promise<unknown>) => {
+          mockPrisma.$executeRaw.mockResolvedValue(1); // 1 row updated
+          mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: newBalance });
+          mockPrisma.goldTransaction.create.mockResolvedValue({});
+          return fn(mockPrisma);
         },
       );
+    }
 
+    it("should correctly charge for super_like (25 gold)", async () => {
+      mockSuccessfulSpend(75);
       const result = await service.spendGold("u1", { action: "super_like" });
-
       expect(result.goldSpent).toBe(25);
       expect(result.newBalance).toBe(75);
       expect(result.action).toBe("super_like");
     });
 
     it("should reject spend when balance is exactly at the cost", async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 25 });
-      mockPrisma.$transaction.mockImplementation(
-        async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
-          await fn(mockPrisma);
-        },
-      );
-
+      mockSuccessfulSpend(0);
       const result = await service.spendGold("u1", { action: "super_like" });
-
       expect(result.spent).toBe(true);
       expect(result.newBalance).toBe(0);
     });
 
     it("should reject when balance is 1 below cost", async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 24 });
+      mockPrisma.$transaction.mockImplementation(
+        async (fn: (tx: typeof mockPrisma) => Promise<unknown>) => {
+          mockPrisma.$executeRaw.mockResolvedValue(0); // 0 rows = insufficient
+          mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 24 });
+          return fn(mockPrisma);
+        },
+      );
 
       await expect(
         service.spendGold("u1", { action: "super_like" }),
@@ -1076,83 +1097,46 @@ describe("PaymentsService", () => {
     });
 
     it("should correctly charge for read_receipts (15 gold)", async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 100 });
-      mockPrisma.$transaction.mockImplementation(
-        async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
-          await fn(mockPrisma);
-        },
-      );
-
+      mockSuccessfulSpend(85);
       const result = await service.spendGold("u1", { action: "read_receipts" });
       expect(result.goldSpent).toBe(15);
       expect(result.newBalance).toBe(85);
     });
 
     it("should correctly charge for undo_pass (30 gold)", async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 100 });
-      mockPrisma.$transaction.mockImplementation(
-        async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
-          await fn(mockPrisma);
-        },
-      );
-
+      mockSuccessfulSpend(70);
       const result = await service.spendGold("u1", { action: "undo_pass" });
       expect(result.goldSpent).toBe(30);
       expect(result.newBalance).toBe(70);
     });
 
     it("should correctly charge for spotlight (75 gold)", async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 100 });
-      mockPrisma.$transaction.mockImplementation(
-        async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
-          await fn(mockPrisma);
-        },
-      );
-
+      mockSuccessfulSpend(25);
       const result = await service.spendGold("u1", { action: "spotlight" });
       expect(result.goldSpent).toBe(75);
       expect(result.newBalance).toBe(25);
     });
 
     it("should correctly charge for travel_mode (200 gold)", async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 300 });
-      mockPrisma.$transaction.mockImplementation(
-        async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
-          await fn(mockPrisma);
-        },
-      );
-
+      mockSuccessfulSpend(100);
       const result = await service.spendGold("u1", { action: "travel_mode" });
       expect(result.goldSpent).toBe(200);
       expect(result.newBalance).toBe(100);
     });
 
     it("should correctly charge for priority_message (40 gold)", async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 100 });
-      mockPrisma.$transaction.mockImplementation(
-        async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
-          await fn(mockPrisma);
-        },
-      );
-
+      mockSuccessfulSpend(60);
       const result = await service.spendGold("u1", { action: "priority_message" });
       expect(result.goldSpent).toBe(40);
       expect(result.newBalance).toBe(60);
     });
 
     it("should include referenceId when provided", async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ goldBalance: 100 });
-      mockPrisma.$transaction.mockImplementation(
-        async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
-          await fn(mockPrisma);
-        },
-      );
-
+      mockSuccessfulSpend(75);
       const result = await service.spendGold("u1", {
         action: "super_like",
         referenceId: "target-user-123",
       });
-
       expect(result.spent).toBe(true);
     });
   });

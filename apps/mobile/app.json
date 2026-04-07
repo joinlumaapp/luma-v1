@@ -31,8 +31,8 @@
       }
     },
     "androidStatusBar": {
-      "barStyle": "dark-content",
-      "backgroundColor": "#F5F0E8"
+      "barStyle": "light-content",
+      "backgroundColor": "#1A1A2E"
     },
     "android": {
       "adaptiveIcon": {
@@ -88,6 +88,10 @@
       ],
       "@infinitered/react-native-mlkit-face-detection"
     ],
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/icon.png"
+    },
     "extra": {},
     "owner": "luma-dating"
   }

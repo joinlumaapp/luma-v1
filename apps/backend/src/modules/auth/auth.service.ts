@@ -206,7 +206,6 @@ export class AuthService {
     });
 
     let userId: string;
-    let isNewUser = false;
 
     if (existingUser) {
       // Existing user — just send a new OTP for login
@@ -216,7 +215,6 @@ export class AuthService {
       userId = existingUser.id;
     } else {
       // New user — create account
-      isNewUser = true;
       const user = await this.prisma.user.create({
         data: {
           phone: dto.phone,
@@ -227,10 +225,17 @@ export class AuthService {
       userId = user.id;
     }
 
-    // Generate OTP — use fixed code when no SMS provider is configured (test mode)
-    const useTestOtp = !this.configService.get("TWILIO_ACCOUNT_SID") &&
-      !this.configService.get("NETGSM_USERCODE");
-    const otpCode = useTestOtp ? "123456" : this.generateOtp();
+    // Generate OTP — use fixed code ONLY in development when no SMS provider is configured
+    const isDev = this.configService.get("NODE_ENV") !== "production";
+    const hasSmsProvider = !!this.configService.get("TWILIO_ACCOUNT_SID") ||
+      !!this.configService.get("NETGSM_USERCODE");
+
+    if (!isDev && !hasSmsProvider) {
+      this.logger.error("CRITICAL: No SMS provider configured in production! OTP cannot be sent.");
+      throw new BadRequestException("SMS servisi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.");
+    }
+
+    const otpCode = (isDev && !hasSmsProvider) ? "123456" : this.generateOtp();
     const otpExpiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
     // Expire any existing pending SMS verifications for this user
@@ -270,7 +275,9 @@ export class AuthService {
 
     return {
       message: "Dogrulama kodu gonderildi",
-      isNewUser,
+      // Always return false to prevent phone number enumeration.
+      // The actual new-user state is determined during OTP verification (verifySms).
+      isNewUser: false,
       remainingAttempts: rateLimit.remainingAttempts,
       retryAfterSeconds: 0,
       cooldownSeconds: rateLimit.cooldownSeconds,

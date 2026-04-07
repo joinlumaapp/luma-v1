@@ -2,6 +2,9 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { NotFoundException, BadRequestException } from "@nestjs/common";
 import { ProfilesService } from "./profiles.service";
 import { PrismaService } from "../../prisma/prisma.service";
+import { ContentScannerService } from "../moderation/content-scanner.service";
+import { LumaCacheService } from "../cache/cache.service";
+import { StorageService } from "../storage/storage.service";
 import { IntentionTagValue } from "./dto/set-intention-tag.dto";
 
 // ─── Mock crypto.randomUUID ───────────────────────────────────────────
@@ -85,11 +88,13 @@ describe("ProfilesService", () => {
 
   const mockPrismaUserPhoto = {
     findMany: jest.fn(),
+    findUnique: jest.fn(),
     count: jest.fn(),
     create: jest.fn(),
     findFirst: jest.fn(),
     delete: jest.fn(),
     update: jest.fn(),
+    updateMany: jest.fn(),
   };
 
   const mockPrismaProfilePrompt = {
@@ -130,15 +135,52 @@ describe("ProfilesService", () => {
     $transaction: jest.fn(),
   };
 
+  const mockContentScanner = {
+    scanText: jest.fn().mockResolvedValue({ safe: true }),
+    scanImage: jest.fn().mockResolvedValue({ safe: true }),
+    scanPhoto: jest.fn().mockResolvedValue({ safe: true, labels: [], confidence: 0 }),
+  };
+
+  const mockCacheService = {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(undefined),
+    del: jest.fn().mockResolvedValue(undefined),
+    invalidatePattern: jest.fn().mockResolvedValue(undefined),
+  };
+
+  const mockStorageService = {
+    uploadFile: jest.fn().mockResolvedValue({ url: "https://cdn.luma.app/test.jpg", key: "test-key" }),
+    uploadProfilePhoto: jest.fn().mockResolvedValue({
+      url: "https://cdn.luma.app/photos/user-uuid-1/mock-photo-uuid-1234.jpg",
+      thumbnailUrl: "https://cdn.luma.app/photos/user-uuid-1/mock-photo-uuid-1234_thumb.jpg",
+    }),
+    deleteFile: jest.fn().mockResolvedValue(undefined),
+    deleteProfilePhoto: jest.fn().mockResolvedValue(undefined),
+    getSignedUrl: jest.fn().mockResolvedValue("https://cdn.luma.app/signed"),
+  };
+
   // ─── Setup ────────────────────────────────────────────────────────
 
   beforeEach(async () => {
     jest.clearAllMocks();
 
+    // Default mocks that many tests need (can be overridden per test)
+    mockPrismaUserPhoto.findUnique.mockResolvedValue({
+      url: "https://cdn.luma.app/photos/user-uuid-1/mock-photo-uuid-1234.jpg",
+    });
+    mockContentScanner.scanPhoto.mockResolvedValue({ safe: true, labels: [], confidence: 0 });
+    mockStorageService.uploadProfilePhoto.mockResolvedValue({
+      url: "https://cdn.luma.app/photos/user-uuid-1/mock-photo-uuid-1234.jpg",
+      thumbnailUrl: "https://cdn.luma.app/photos/user-uuid-1/mock-photo-uuid-1234_thumb.jpg",
+    });
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProfilesService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: ContentScannerService, useValue: mockContentScanner },
+        { provide: LumaCacheService, useValue: mockCacheService },
+        { provide: StorageService, useValue: mockStorageService },
       ],
     }).compile();
 
@@ -203,6 +245,7 @@ describe("ProfilesService", () => {
           photos: {
             orderBy: { order: "asc" },
           },
+          profilePrompts: { orderBy: { order: "asc" } },
         },
       });
     });
@@ -370,7 +413,7 @@ describe("ProfilesService", () => {
       await service.updateProfile("user-uuid-1", dto);
 
       const upsertCall = mockPrismaUserProfile.upsert.mock.calls[0][0];
-      expect(upsertCall.create.firstName).toBe("");
+      expect(upsertCall.create.firstName).toBe("Kullanici");
       expect(upsertCall.create.gender).toBe("OTHER");
       expect(upsertCall.create.intentionTag).toBe("NOT_SURE");
       expect(upsertCall.create.isComplete).toBe(false);
@@ -637,14 +680,14 @@ describe("ProfilesService", () => {
     });
 
     it("should throw BadRequestException when user already has max photos", async () => {
-      mockPrismaUserPhoto.count.mockResolvedValue(20);
+      mockPrismaUserPhoto.count.mockResolvedValue(6);
 
       await expect(
         service.uploadPhoto("user-uuid-1", validFile),
       ).rejects.toThrow(BadRequestException);
       await expect(
         service.uploadPhoto("user-uuid-1", validFile),
-      ).rejects.toThrow("20");
+      ).rejects.toThrow("6");
     });
 
     it("should set first photo as primary (order=0, isPrimary=true)", async () => {
@@ -722,6 +765,7 @@ describe("ProfilesService", () => {
 
   describe("deletePhoto()", () => {
     it("should delete a photo and return remaining count", async () => {
+      mockPrismaUserPhoto.count.mockResolvedValue(3); // Above MIN_PHOTOS
       const photo = createMockPhoto();
       mockPrismaUserPhoto.findFirst.mockResolvedValue(photo);
       mockPrismaUserPhoto.delete.mockResolvedValue(photo);
@@ -735,6 +779,7 @@ describe("ProfilesService", () => {
     });
 
     it("should throw NotFoundException when photo does not exist", async () => {
+      mockPrismaUserPhoto.count.mockResolvedValue(3); // Above MIN_PHOTOS
       mockPrismaUserPhoto.findFirst.mockResolvedValue(null);
 
       await expect(
@@ -746,6 +791,7 @@ describe("ProfilesService", () => {
     });
 
     it("should throw NotFoundException when photo belongs to another user", async () => {
+      mockPrismaUserPhoto.count.mockResolvedValue(3); // Above MIN_PHOTOS
       mockPrismaUserPhoto.findFirst.mockResolvedValue(null); // findFirst with userId filter returns null
 
       await expect(
@@ -754,6 +800,7 @@ describe("ProfilesService", () => {
     });
 
     it("should verify photo belongs to user using findFirst with userId", async () => {
+      mockPrismaUserPhoto.count.mockResolvedValue(3); // Above MIN_PHOTOS
       mockPrismaUserPhoto.findFirst.mockResolvedValue(null);
 
       await expect(
@@ -766,6 +813,7 @@ describe("ProfilesService", () => {
     });
 
     it("should reorder remaining photos after deletion", async () => {
+      mockPrismaUserPhoto.count.mockResolvedValue(4); // Above MIN_PHOTOS
       const photo = createMockPhoto({ id: "photo-to-delete", order: 0 });
       const remaining = [
         createMockPhoto({ id: "photo-2", order: 2 }),
@@ -796,6 +844,7 @@ describe("ProfilesService", () => {
     });
 
     it("should set first remaining photo as primary after deletion", async () => {
+      mockPrismaUserPhoto.count.mockResolvedValue(3); // Above MIN_PHOTOS
       const photo = createMockPhoto({ id: "deleted-photo" });
       const remaining = [createMockPhoto({ id: "remaining-photo", order: 1 })];
 
@@ -812,18 +861,15 @@ describe("ProfilesService", () => {
       });
     });
 
-    it("should handle deletion when it is the last remaining photo", async () => {
-      const photo = createMockPhoto();
-      mockPrismaUserPhoto.findFirst.mockResolvedValue(photo);
-      mockPrismaUserPhoto.delete.mockResolvedValue(photo);
-      mockPrismaUserPhoto.findMany.mockResolvedValue([]); // No remaining photos
+    it("should throw BadRequestException when trying to delete below minimum photos", async () => {
+      mockPrismaUserPhoto.count.mockResolvedValue(2); // At MIN_PHOTOS
 
-      const result = await service.deletePhoto("user-uuid-1", "photo-uuid-1");
-
-      expect(result.deleted).toBe(true);
-      expect(result.remainingCount).toBe(0);
-      // No update calls because no remaining photos
-      expect(mockPrismaUserPhoto.update).not.toHaveBeenCalled();
+      await expect(
+        service.deletePhoto("user-uuid-1", "photo-uuid-1"),
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.deletePhoto("user-uuid-1", "photo-uuid-1"),
+      ).rejects.toThrow("Minimum");
     });
   });
 
@@ -1140,15 +1186,15 @@ describe("ProfilesService", () => {
     };
 
     it("should allow upload when user has MAX_PHOTOS - 1 photos", async () => {
-      mockPrismaUserPhoto.count.mockResolvedValue(19); // MAX_PHOTOS is 20
+      mockPrismaUserPhoto.count.mockResolvedValue(5); // MAX_PHOTOS is 6
       mockPrismaUserPhoto.create.mockResolvedValue(
-        createMockPhoto({ order: 19, isPrimary: false }),
+        createMockPhoto({ order: 5, isPrimary: false }),
       );
 
       const result = await service.uploadPhoto("user-uuid-1", validFile);
 
       expect(result).toBeDefined();
-      expect(result.order).toBe(19);
+      expect(result.order).toBe(5);
     });
 
     it("should reject upload when user has exactly MAX_PHOTOS photos", async () => {

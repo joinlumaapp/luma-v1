@@ -1,4 +1,21 @@
 // LUMA application configuration
+import Constants from 'expo-constants';
+
+// Read API URL from Expo config (set via app.config.ts extra.apiUrl)
+// Falls back to Railway staging URL if not set, then localhost for dev
+const expoApiUrl = Constants.expoConfig?.extra?.apiUrl as string | undefined;
+
+const getApiBaseUrl = (): string => {
+  if (__DEV__) return 'http://localhost:3000/api/v1';
+  if (expoApiUrl) return `${expoApiUrl}/api/v1`;
+  return 'https://luma-v1-production.up.railway.app/api/v1';
+};
+
+const getWsBaseUrl = (): string => {
+  if (__DEV__) return 'ws://localhost:3000';
+  if (expoApiUrl) return expoApiUrl.replace(/^http/, 'ws');
+  return 'wss://luma-v1-production.up.railway.app';
+};
 
 export const APP_CONFIG: {
   readonly APP_NAME: string;
@@ -9,11 +26,11 @@ export const APP_CONFIG: {
   readonly GIPHY_API_KEY: string;
 } = {
   APP_NAME: 'LUMA',
-  APP_VERSION: '0.1.0',
-  API_BASE_URL: __DEV__ ? 'http://localhost:3000/api/v1' : 'https://luma-v1-production.up.railway.app/api/v1',
-  WS_BASE_URL: __DEV__ ? 'ws://localhost:3000' : 'wss://luma-v1-production.up.railway.app',
-  MIXPANEL_TOKEN: process.env.EXPO_PUBLIC_MIXPANEL_TOKEN ?? '', // Read from environment — empty string disables Mixpanel
-  GIPHY_API_KEY: '', // Set via environment — falls back to Giphy public beta key in giphyService
+  APP_VERSION: '1.0.0',
+  API_BASE_URL: getApiBaseUrl(),
+  WS_BASE_URL: getWsBaseUrl(),
+  MIXPANEL_TOKEN: process.env.EXPO_PUBLIC_MIXPANEL_TOKEN ?? '',
+  GIPHY_API_KEY: '',
 };
 
 // LOCKED architecture constants — do not modify
@@ -445,7 +462,7 @@ export const WAVE_CONFIG = {
     FREE: 3,
     GOLD: 20,
     PRO: 20,
-    RESERVED: 20,
+    RESERVED: -1, // Sınırsız
   },
   COIN_COST: 5,
 } as const;
@@ -562,7 +579,7 @@ export const SECRET_ADMIRER_CONFIG = {
   EXTRA_GUESS_COST: 25,
   FREE_GUESSES: 3,
   EXPIRY_HOURS: 48,
-  FREE_SENDS_PER_MONTH: { FREE: 0, GOLD: 1, PRO: 3, RESERVED: 5 },
+  FREE_SENDS_PER_MONTH: { FREE: 0, GOLD: 1, PRO: 3, RESERVED: -1 },
 } as const;
 
 // ─── Uyum Röntgeni — Compatibility X-Ray Config ──────────────────
@@ -573,7 +590,7 @@ export const COMPATIBILITY_XRAY_CONFIG = {
 
 // ─── Haftalık Top 3 ───────────────────────────────────────────────
 export const WEEKLY_TOP_CONFIG = {
-  VISIBLE_COUNT: { FREE: 1, GOLD: 2, PRO: 3, RESERVED: 3 },
+  VISIBLE_COUNT: { FREE: 1, GOLD: 2, PRO: 3, RESERVED: 999999 },
   REVEAL_COST_GOLD: 40,
   REFRESH_DAY: 1, // Monday
 } as const;
