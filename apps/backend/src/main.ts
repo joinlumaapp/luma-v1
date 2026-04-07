@@ -51,15 +51,58 @@ async function bootstrap() {
 
   // CORS configuration with explicit allowed origins
   const allowedOrigins = process.env.CORS_ORIGINS?.split(",") || [
+    "http://localhost",
     "http://localhost:3000",
     "http://localhost:8081",
+    "http://localhost:19006",
   ];
+
+  // Paths that allow requests with no origin header (health checks, server-to-server)
+  const noOriginWhitelistPrefixes = ["/api/v1/health"];
+
+  // Block requests with no Origin header on sensitive endpoints (CSRF protection).
+  // Mobile apps use native HTTP clients that bypass CORS entirely; they authenticate
+  // via Authorization header (JWT) which is not automatically attached by browsers.
+  app.use((req: import("express").Request, res: import("express").Response, next: import("express").NextFunction) => {
+    const origin = req.headers.origin;
+    // If there's an Origin header, CORS middleware handles validation
+    if (origin) {
+      next();
+      return;
+    }
+    // Requests with Authorization header are from authenticated API clients (mobile app / server)
+    if (req.headers.authorization) {
+      next();
+      return;
+    }
+    // Allow whitelisted paths without origin (health checks)
+    const isWhitelisted = noOriginWhitelistPrefixes.some((prefix) =>
+      req.path.startsWith(prefix),
+    );
+    if (isWhitelisted) {
+      next();
+      return;
+    }
+    // Allow safe HTTP methods (GET, HEAD, OPTIONS) without origin
+    const safeMethod = ["GET", "HEAD", "OPTIONS"].includes(req.method);
+    if (safeMethod) {
+      next();
+      return;
+    }
+    // Block state-changing requests with no origin and no auth (potential CSRF)
+    res.status(403).json({
+      statusCode: 403,
+      error: "Forbidden",
+      message: "Origin header required",
+    });
+  });
+
   app.enableCors({
     origin: (
       origin: string | undefined,
       callback: (err: Error | null, allow?: boolean) => void,
     ) => {
-      // Allow requests with no origin (mobile apps, server-to-server)
+      // Allow requests with no origin (mobile apps via native HTTP, already filtered above)
       if (!origin) {
         callback(null, true);
         return;
@@ -67,7 +110,9 @@ async function bootstrap() {
       if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error("CORS politikasi tarafindan engellendi"));
+        // Don't throw — just deny CORS headers. Non-browser clients (mobile)
+        // still receive the response; only browsers enforce CORS blocking.
+        callback(null, false);
       }
     },
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
