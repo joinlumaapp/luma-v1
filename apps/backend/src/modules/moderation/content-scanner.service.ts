@@ -79,7 +79,10 @@ export class ContentScannerService {
     const isProduction =
       this.config.get<string>("NODE_ENV") === "production";
 
-    if (isProduction) {
+    const allowSkipModeration =
+      this.config.get<string>("ALLOW_SKIP_MODERATION") === "true";
+
+    if (isProduction && !allowSkipModeration) {
       this.logger.error(
         `[PRODUCTION] Content scanning enabled but AWS Rekognition not implemented. ` +
           `Photo REJECTED (fail-closed) for safety: ${imageUrl}`,
@@ -89,6 +92,14 @@ export class ContentScannerService {
         confidence: 1,
         labels: ["moderation_not_configured"],
       };
+    }
+
+    if (isProduction && allowSkipModeration) {
+      this.logger.warn(
+        `[PRE-LAUNCH] Moderation skipped for testing: ${imageUrl}. ` +
+          `REMOVE ALLOW_SKIP_MODERATION before public launch!`,
+      );
+      return { safe: true, confidence: 0, labels: [] };
     }
 
     // Non-production with flag enabled: allow through with warning
