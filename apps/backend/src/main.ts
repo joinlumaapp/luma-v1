@@ -196,9 +196,16 @@ async function bootstrap() {
 
   // Socket.IO Redis adapter for horizontal WebSocket scaling
   const configService = app.get(ConfigService);
-  const redisIoAdapter = new RedisIoAdapter(app, configService);
-  await redisIoAdapter.connectToRedis();
-  app.useWebSocketAdapter(redisIoAdapter);
+  try {
+    const redisIoAdapter = new RedisIoAdapter(app, configService);
+    await redisIoAdapter.connectToRedis();
+    app.useWebSocketAdapter(redisIoAdapter);
+  } catch (redisErr) {
+    const logger = new Logger("Bootstrap");
+    logger.warn(
+      `Redis IO adapter failed — WebSocket scaling disabled: ${redisErr}`,
+    );
+  }
 
   app.enableShutdownHooks();
 
@@ -212,5 +219,7 @@ async function bootstrap() {
   }
 }
 
-bootstrap();
-// deploy trigger 1775599687
+bootstrap().catch((err) => {
+  console.error("FATAL: Bootstrap failed:", err);
+  process.exit(1);
+});
