@@ -113,7 +113,7 @@ const LEGACY_INTEREST_MAP: Record<string, { emoji: string; display: string }> = 
   animals: { emoji: '🐾', display: 'Hayvanlar' },
   fashion: { emoji: '👗', display: 'Moda' },
   football: { emoji: '⚽', display: 'Futbol' },
-  hiking: { emoji: '🏔️', display: 'Dagcilik' },
+  hiking: { emoji: '🏔️', display: 'Dağcılık' },
   coffee: { emoji: '☕', display: 'Kahve' },
 };
 for (const [id, val] of Object.entries(LEGACY_INTEREST_MAP)) {

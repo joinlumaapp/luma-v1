@@ -1,0 +1,260 @@
+- generic [ref=e100]:
+  - generic [ref=e103] [cursor=pointer]: 
+  - generic [ref=e108]:
+    - generic [ref=e109]: Doğum tarihin
+    - generic [ref=e110]: Gün
+    - generic [ref=e113]:
+      - radio "Gün 1" [ref=e114] [cursor=pointer]:
+        - generic [ref=e115]: "1"
+      - radio "Gün 2" [ref=e116] [cursor=pointer]:
+        - generic [ref=e117]: "2"
+      - radio "Gün 3" [ref=e118] [cursor=pointer]:
+        - generic [ref=e119]: "3"
+      - radio "Gün 4" [ref=e120] [cursor=pointer]:
+        - generic [ref=e121]: "4"
+      - radio "Gün 5" [ref=e122] [cursor=pointer]:
+        - generic [ref=e123]: "5"
+      - radio "Gün 6" [ref=e124] [cursor=pointer]:
+        - generic [ref=e125]: "6"
+      - radio "Gün 7" [ref=e126] [cursor=pointer]:
+        - generic [ref=e127]: "7"
+      - radio "Gün 8" [ref=e128] [cursor=pointer]:
+        - generic [ref=e129]: "8"
+      - radio "Gün 9" [ref=e130] [cursor=pointer]:
+        - generic [ref=e131]: "9"
+      - radio "Gün 10" [ref=e132] [cursor=pointer]:
+        - generic [ref=e133]: "10"
+      - radio "Gün 11" [ref=e134] [cursor=pointer]:
+        - generic [ref=e135]: "11"
+      - radio "Gün 12" [ref=e136] [cursor=pointer]:
+        - generic [ref=e137]: "12"
+      - radio "Gün 13" [ref=e138] [cursor=pointer]:
+        - generic [ref=e139]: "13"
+      - radio "Gün 14" [ref=e140] [cursor=pointer]:
+        - generic [ref=e141]: "14"
+      - radio "Gün 15" [ref=e142] [cursor=pointer]:
+        - generic [ref=e143]: "15"
+      - radio "Gün 16" [ref=e144] [cursor=pointer]:
+        - generic [ref=e145]: "16"
+      - radio "Gün 17" [ref=e146] [cursor=pointer]:
+        - generic [ref=e147]: "17"
+      - radio "Gün 18" [ref=e148] [cursor=pointer]:
+        - generic [ref=e149]: "18"
+      - radio "Gün 19" [ref=e150] [cursor=pointer]:
+        - generic [ref=e151]: "19"
+      - radio "Gün 20" [ref=e152] [cursor=pointer]:
+        - generic [ref=e153]: "20"
+      - radio "Gün 21" [ref=e154] [cursor=pointer]:
+        - generic [ref=e155]: "21"
+      - radio "Gün 22" [ref=e156] [cursor=pointer]:
+        - generic [ref=e157]: "22"
+      - radio "Gün 23" [ref=e158] [cursor=pointer]:
+        - generic [ref=e159]: "23"
+      - radio "Gün 24" [ref=e160] [cursor=pointer]:
+        - generic [ref=e161]: "24"
+      - radio "Gün 25" [ref=e162] [cursor=pointer]:
+        - generic [ref=e163]: "25"
+      - radio "Gün 26" [ref=e164] [cursor=pointer]:
+        - generic [ref=e165]: "26"
+      - radio "Gün 27" [ref=e166] [cursor=pointer]:
+        - generic [ref=e167]: "27"
+      - radio "Gün 28" [ref=e168] [cursor=pointer]:
+        - generic [ref=e169]: "28"
+      - radio "Gün 29" [ref=e170] [cursor=pointer]:
+        - generic [ref=e171]: "29"
+      - radio "Gün 30" [ref=e172] [cursor=pointer]:
+        - generic [ref=e173]: "30"
+    - generic [ref=e176]: Ay
+    - generic [ref=e179]:
+      - radio "Ay Ocak" [ref=e180] [cursor=pointer]:
+        - generic [ref=e181]: Oca
+      - radio "Ay Şubat" [ref=e182] [cursor=pointer]:
+        - generic [ref=e183]: Şub
+      - radio "Ay Mart" [ref=e184] [cursor=pointer]:
+        - generic [ref=e185]: Mar
+      - radio "Ay Nisan" [ref=e186] [cursor=pointer]:
+        - generic [ref=e187]: Nis
+      - radio "Ay Mayıs" [ref=e188] [cursor=pointer]:
+        - generic [ref=e189]: May
+      - radio "Ay Haziran" [active] [ref=e190] [cursor=pointer]:
+        - generic [ref=e191]: Haz
+      - radio "Ay Temmuz" [ref=e192] [cursor=pointer]:
+        - generic [ref=e193]: Tem
+      - radio "Ay Ağustos" [ref=e194] [cursor=pointer]:
+        - generic [ref=e195]: Ağu
+      - radio "Ay Eylül" [ref=e196] [cursor=pointer]:
+        - generic [ref=e197]: Eyl
+      - radio "Ay Ekim" [ref=e198] [cursor=pointer]:
+        - generic [ref=e199]: Eki
+      - radio "Ay Kasım" [ref=e200] [cursor=pointer]:
+        - generic [ref=e201]: Kas
+      - radio "Ay Aralık" [ref=e202] [cursor=pointer]:
+        - generic [ref=e203]: Ara
+    - generic [ref=e204]: Yıl
+    - generic [ref=e207]:
+      - radio "Yıl 2008" [ref=e208] [cursor=pointer]:
+        - generic [ref=e209]: "2008"
+      - radio "Yıl 2007" [ref=e210] [cursor=pointer]:
+        - generic [ref=e211]: "2007"
+      - radio "Yıl 2006" [ref=e212] [cursor=pointer]:
+        - generic [ref=e213]: "2006"
+      - radio "Yıl 2005" [ref=e214] [cursor=pointer]:
+        - generic [ref=e215]: "2005"
+      - radio "Yıl 2004" [ref=e216] [cursor=pointer]:
+        - generic [ref=e217]: "2004"
+      - radio "Yıl 2003" [ref=e218] [cursor=pointer]:
+        - generic [ref=e219]: "2003"
+      - radio "Yıl 2002" [ref=e220] [cursor=pointer]:
+        - generic [ref=e221]: "2002"
+      - radio "Yıl 2001" [ref=e222] [cursor=pointer]:
+        - generic [ref=e223]: "2001"
+      - radio "Yıl 2000" [ref=e224] [cursor=pointer]:
+        - generic [ref=e225]: "2000"
+      - radio "Yıl 1999" [ref=e226] [cursor=pointer]:
+        - generic [ref=e227]: "1999"
+      - radio "Yıl 1998" [ref=e228] [cursor=pointer]:
+        - generic [ref=e229]: "1998"
+      - radio "Yıl 1997" [ref=e230] [cursor=pointer]:
+        - generic [ref=e231]: "1997"
+      - radio "Yıl 1996" [ref=e232] [cursor=pointer]:
+        - generic [ref=e233]: "1996"
+      - radio "Yıl 1995" [ref=e234] [cursor=pointer]:
+        - generic [ref=e235]: "1995"
+      - radio "Yıl 1994" [ref=e236] [cursor=pointer]:
+        - generic [ref=e237]: "1994"
+      - radio "Yıl 1993" [ref=e238] [cursor=pointer]:
+        - generic [ref=e239]: "1993"
+      - radio "Yıl 1992" [ref=e240] [cursor=pointer]:
+        - generic [ref=e241]: "1992"
+      - radio "Yıl 1991" [ref=e242] [cursor=pointer]:
+        - generic [ref=e243]: "1991"
+      - radio "Yıl 1990" [ref=e244] [cursor=pointer]:
+        - generic [ref=e245]: "1990"
+      - radio "Yıl 1989" [ref=e246] [cursor=pointer]:
+        - generic [ref=e247]: "1989"
+      - radio "Yıl 1988" [ref=e248] [cursor=pointer]:
+        - generic [ref=e249]: "1988"
+      - radio "Yıl 1987" [ref=e250] [cursor=pointer]:
+        - generic [ref=e251]: "1987"
+      - radio "Yıl 1986" [ref=e252] [cursor=pointer]:
+        - generic [ref=e253]: "1986"
+      - radio "Yıl 1985" [ref=e254] [cursor=pointer]:
+        - generic [ref=e255]: "1985"
+      - radio "Yıl 1984" [ref=e256] [cursor=pointer]:
+        - generic [ref=e257]: "1984"
+      - radio "Yıl 1983" [ref=e258] [cursor=pointer]:
+        - generic [ref=e259]: "1983"
+      - radio "Yıl 1982" [ref=e260] [cursor=pointer]:
+        - generic [ref=e261]: "1982"
+      - radio "Yıl 1981" [ref=e262] [cursor=pointer]:
+        - generic [ref=e263]: "1981"
+      - radio "Yıl 1980" [ref=e264] [cursor=pointer]:
+        - generic [ref=e265]: "1980"
+      - radio "Yıl 1979" [ref=e266] [cursor=pointer]:
+        - generic [ref=e267]: "1979"
+      - radio "Yıl 1978" [ref=e268] [cursor=pointer]:
+        - generic [ref=e269]: "1978"
+      - radio "Yıl 1977" [ref=e270] [cursor=pointer]:
+        - generic [ref=e271]: "1977"
+      - radio "Yıl 1976" [ref=e272] [cursor=pointer]:
+        - generic [ref=e273]: "1976"
+      - radio "Yıl 1975" [ref=e274] [cursor=pointer]:
+        - generic [ref=e275]: "1975"
+      - radio "Yıl 1974" [ref=e276] [cursor=pointer]:
+        - generic [ref=e277]: "1974"
+      - radio "Yıl 1973" [ref=e278] [cursor=pointer]:
+        - generic [ref=e279]: "1973"
+      - radio "Yıl 1972" [ref=e280] [cursor=pointer]:
+        - generic [ref=e281]: "1972"
+      - radio "Yıl 1971" [ref=e282] [cursor=pointer]:
+        - generic [ref=e283]: "1971"
+      - radio "Yıl 1970" [ref=e284] [cursor=pointer]:
+        - generic [ref=e285]: "1970"
+      - radio "Yıl 1969" [ref=e286] [cursor=pointer]:
+        - generic [ref=e287]: "1969"
+      - radio "Yıl 1968" [ref=e288] [cursor=pointer]:
+        - generic [ref=e289]: "1968"
+      - radio "Yıl 1967" [ref=e290] [cursor=pointer]:
+        - generic [ref=e291]: "1967"
+      - radio "Yıl 1966" [ref=e292] [cursor=pointer]:
+        - generic [ref=e293]: "1966"
+      - radio "Yıl 1965" [ref=e294] [cursor=pointer]:
+        - generic [ref=e295]: "1965"
+      - radio "Yıl 1964" [ref=e296] [cursor=pointer]:
+        - generic [ref=e297]: "1964"
+      - radio "Yıl 1963" [ref=e298] [cursor=pointer]:
+        - generic [ref=e299]: "1963"
+      - radio "Yıl 1962" [ref=e300] [cursor=pointer]:
+        - generic [ref=e301]: "1962"
+      - radio "Yıl 1961" [ref=e302] [cursor=pointer]:
+        - generic [ref=e303]: "1961"
+      - radio "Yıl 1960" [ref=e304] [cursor=pointer]:
+        - generic [ref=e305]: "1960"
+      - radio "Yıl 1959" [ref=e306] [cursor=pointer]:
+        - generic [ref=e307]: "1959"
+      - radio "Yıl 1958" [ref=e308] [cursor=pointer]:
+        - generic [ref=e309]: "1958"
+      - radio "Yıl 1957" [ref=e310] [cursor=pointer]:
+        - generic [ref=e311]: "1957"
+      - radio "Yıl 1956" [ref=e312] [cursor=pointer]:
+        - generic [ref=e313]: "1956"
+      - radio "Yıl 1955" [ref=e314] [cursor=pointer]:
+        - generic [ref=e315]: "1955"
+      - radio "Yıl 1954" [ref=e316] [cursor=pointer]:
+        - generic [ref=e317]: "1954"
+      - radio "Yıl 1953" [ref=e318] [cursor=pointer]:
+        - generic [ref=e319]: "1953"
+      - radio "Yıl 1952" [ref=e320] [cursor=pointer]:
+        - generic [ref=e321]: "1952"
+      - radio "Yıl 1951" [ref=e322] [cursor=pointer]:
+        - generic [ref=e323]: "1951"
+      - radio "Yıl 1950" [ref=e324] [cursor=pointer]:
+        - generic [ref=e325]: "1950"
+      - radio "Yıl 1949" [ref=e326] [cursor=pointer]:
+        - generic [ref=e327]: "1949"
+      - radio "Yıl 1948" [ref=e328] [cursor=pointer]:
+        - generic [ref=e329]: "1948"
+      - radio "Yıl 1947" [ref=e330] [cursor=pointer]:
+        - generic [ref=e331]: "1947"
+      - radio "Yıl 1946" [ref=e332] [cursor=pointer]:
+        - generic [ref=e333]: "1946"
+      - radio "Yıl 1945" [ref=e334] [cursor=pointer]:
+        - generic [ref=e335]: "1945"
+      - radio "Yıl 1944" [ref=e336] [cursor=pointer]:
+        - generic [ref=e337]: "1944"
+      - radio "Yıl 1943" [ref=e338] [cursor=pointer]:
+        - generic [ref=e339]: "1943"
+      - radio "Yıl 1942" [ref=e340] [cursor=pointer]:
+        - generic [ref=e341]: "1942"
+      - radio "Yıl 1941" [ref=e342] [cursor=pointer]:
+        - generic [ref=e343]: "1941"
+      - radio "Yıl 1940" [ref=e344] [cursor=pointer]:
+        - generic [ref=e345]: "1940"
+      - radio "Yıl 1939" [ref=e346] [cursor=pointer]:
+        - generic [ref=e347]: "1939"
+      - radio "Yıl 1938" [ref=e348] [cursor=pointer]:
+        - generic [ref=e349]: "1938"
+      - radio "Yıl 1937" [ref=e350] [cursor=pointer]:
+        - generic [ref=e351]: "1937"
+      - radio "Yıl 1936" [ref=e352] [cursor=pointer]:
+        - generic [ref=e353]: "1936"
+      - radio "Yıl 1935" [ref=e354] [cursor=pointer]:
+        - generic [ref=e355]: "1935"
+      - radio "Yıl 1934" [ref=e356] [cursor=pointer]:
+        - generic [ref=e357]: "1934"
+      - radio "Yıl 1933" [ref=e358] [cursor=pointer]:
+        - generic [ref=e359]: "1933"
+      - radio "Yıl 1932" [ref=e360] [cursor=pointer]:
+        - generic [ref=e361]: "1932"
+      - radio "Yıl 1931" [ref=e362] [cursor=pointer]:
+        - generic [ref=e363]: "1931"
+      - radio "Yıl 1930" [ref=e364] [cursor=pointer]:
+        - generic [ref=e365]: "1930"
+      - radio "Yıl 1929" [ref=e366] [cursor=pointer]:
+        - generic [ref=e367]: "1929"
+    - generic [ref=e371]:
+      - generic [ref=e372]: 
+      - generic [ref=e373]: "Burcun: İkizler. Profilinde gösterilsin mi? Daha sonra..."
+      - switch "Burcu profilde göster" [ref=e374] [cursor=pointer]:
+        - switch "Burcu profilde göster" [checked] [ref=e377]
+  - generic [ref=e370]: 

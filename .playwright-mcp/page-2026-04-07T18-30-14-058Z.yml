@@ -1,0 +1,173 @@
+- generic [ref=e76]:
+  - generic [ref=e1112]:
+    - generic [ref=e1113]:
+      - button "Geri" [ref=e1114] [cursor=pointer]:
+        - generic [ref=e1115]: 
+      - generic [ref=e1116]: Ayarlar
+    - generic [ref=e1118]:
+      - generic [ref=e1121]:
+        - generic [ref=e1122]: 
+        - generic [ref=e1123]: ÜYELIK
+      - button "Premium'a Geç" [ref=e1125] [cursor=pointer]:
+        - generic [ref=e1126]:
+          - generic [ref=e1128]: 
+          - generic [ref=e1129]: Premium'a Geç
+        - generic [ref=e1130]: 
+      - generic [ref=e1135]:
+        - generic [ref=e1136]: 
+        - generic [ref=e1137]: HESAP AYARLARI
+      - generic [ref=e1140]:
+        - generic [ref=e1142]: 
+        - generic [ref=e1143]:
+          - generic [ref=e1144]: Telefon Numarası
+          - generic [ref=e1145]: "+905551234567"
+      - generic [ref=e1148]:
+        - generic [ref=e1150]: 
+        - generic [ref=e1151]:
+          - generic [ref=e1152]: E-posta
+          - generic [ref=e1153]: Belirtilmedi
+      - generic [ref=e1156]:
+        - generic [ref=e1158]: 
+        - generic [ref=e1159]:
+          - generic [ref=e1160]: Luma ID
+          - generic [ref=e1161]: LM-00001
+      - button "Paketler ve Abonelik" [ref=e1163] [cursor=pointer]:
+        - generic [ref=e1164]:
+          - generic [ref=e1166]: 
+          - generic [ref=e1167]: Paketler ve Abonelik
+        - generic [ref=e1168]: 
+      - button "Satın Alımları Geri Yükle" [ref=e1170] [cursor=pointer]:
+        - generic [ref=e1171]:
+          - generic [ref=e1173]: 
+          - generic [ref=e1174]: Satın Alımları Geri Yükle
+      - generic [ref=e1179]:
+        - generic [ref=e1180]: 
+        - generic [ref=e1181]: SOSYAL MEDYA
+      - button "Instagram" [ref=e1183] [cursor=pointer]:
+        - generic [ref=e1184]:
+          - generic [ref=e1186]: 
+          - generic [ref=e1187]: Instagram
+        - generic [ref=e1188]: 
+      - button "TikTok" [ref=e1190] [cursor=pointer]:
+        - generic [ref=e1191]:
+          - generic [ref=e1193]: 
+          - generic [ref=e1194]: TikTok
+        - generic [ref=e1195]: 
+      - generic [ref=e1200]:
+        - generic [ref=e1201]: 
+        - generic [ref=e1202]: BILDIRIMLER
+      - generic [ref=e1204]:
+        - generic [ref=e1205]:
+          - generic [ref=e1207]: 
+          - generic [ref=e1209]: Yeni Eşleşmeler
+        - switch "Yeni Eşleşmeler" [ref=e1210] [cursor=pointer]:
+          - switch "Yeni Eşleşmeler" [checked] [ref=e1213]
+      - generic [ref=e1215]:
+        - generic [ref=e1216]:
+          - generic [ref=e1218]: 
+          - generic [ref=e1220]: Mesajlar
+        - switch "Mesajlar" [ref=e1221] [cursor=pointer]:
+          - switch "Mesajlar" [checked] [ref=e1224]
+      - generic [ref=e1226]:
+        - generic [ref=e1227]:
+          - generic [ref=e1229]: 
+          - generic [ref=e1231]: Uygulama Duyuruları
+        - switch "Uygulama Duyuruları" [ref=e1232] [cursor=pointer]:
+          - switch "Uygulama Duyuruları" [checked] [ref=e1235]
+      - generic [ref=e1237]:
+        - generic [ref=e1238]:
+          - generic [ref=e1240]: 
+          - generic [ref=e1242]: Tüm Bildirimler
+        - switch "Tüm Bildirimler" [ref=e1243] [cursor=pointer]:
+          - switch "Tüm Bildirimler" [checked] [ref=e1246]
+      - button "Detaylı Bildirim Ayarları" [ref=e1248] [cursor=pointer]:
+        - generic [ref=e1249]:
+          - generic [ref=e1251]: 
+          - generic [ref=e1252]: Detaylı Bildirim Ayarları
+        - generic [ref=e1253]: 
+      - generic [ref=e1258]:
+        - generic [ref=e1259]: 
+        - generic [ref=e1260]: GIZLILIK VE GÜVENLIK
+      - button "Güvenlik Merkezi" [ref=e1262] [cursor=pointer]:
+        - generic [ref=e1263]:
+          - generic [ref=e1265]: 
+          - generic [ref=e1266]: Güvenlik Merkezi
+        - generic [ref=e1267]: 
+      - generic [ref=e1269]:
+        - generic [ref=e1270]:
+          - generic [ref=e1272]: 
+          - generic [ref=e1274]: Çevrimiçi Durumu Göster
+        - switch "Çevrimiçi Durumu Göster" [ref=e1275] [cursor=pointer]:
+          - switch "Çevrimiçi Durumu Göster" [checked] [ref=e1278]
+      - generic [ref=e1280]:
+        - generic [ref=e1281]:
+          - generic [ref=e1283]: 
+          - generic [ref=e1285]: Mesafeyi Göster
+        - switch "Mesafeyi Göster" [ref=e1286] [cursor=pointer]:
+          - switch "Mesafeyi Göster" [checked] [ref=e1289]
+      - generic [ref=e1292] [cursor=pointer]:
+        - generic [ref=e1293]:
+          - generic [ref=e1294]:
+            - generic [ref=e1295]: 
+            - generic [ref=e1296]: Gizli Mod
+          - generic [ref=e1297]:
+            - generic [ref=e1298]: 
+            - generic [ref=e1299]: Pro ile aç
+        - generic [ref=e1300]: Profilin sadece beğendiğin kişilere görünür
+      - button "Engellenen Kullanıcılar" [ref=e1302] [cursor=pointer]:
+        - generic [ref=e1303]:
+          - generic [ref=e1305]: 
+          - generic [ref=e1306]: Engellenen Kullanıcılar
+        - generic [ref=e1307]: 
+      - button "Hesabı Dondur" [ref=e1309] [cursor=pointer]:
+        - generic [ref=e1310]:
+          - generic [ref=e1312]: 
+          - generic [ref=e1313]: Hesabı Dondur
+      - generic [ref=e1318]:
+        - generic [ref=e1319]: 
+        - generic [ref=e1320]: DESTEK
+      - button "Eşleşme nasıl oluyor?" [ref=e1323] [cursor=pointer]:
+        - generic [ref=e1324]:
+          - generic [ref=e1326]: 
+          - generic [ref=e1327]: Eşleşme nasıl oluyor?
+        - generic [ref=e1328]: 
+      - button "Premium ne işe yarar?" [ref=e1331] [cursor=pointer]:
+        - generic [ref=e1332]:
+          - generic [ref=e1334]: 
+          - generic [ref=e1335]: Premium ne işe yarar?
+        - generic [ref=e1336]: 
+      - generic [ref=e1338]:
+        - button "Çıkış yap" [ref=e1339] [cursor=pointer]:
+          - generic [ref=e1340]: 
+          - generic [ref=e1341]: Çıkış Yap
+        - generic [ref=e1342]: LUMA v1.0.0
+  - tablist [ref=e172]:
+    - tab "Sosyal Akış" [ref=e174] [cursor=pointer]:
+      - generic [ref=e175]:
+        - generic [ref=e178]: 
+        - generic [ref=e182]: 
+      - generic [ref=e183]: Akış
+    - tab "Keşfet" [ref=e185] [cursor=pointer]:
+      - generic [ref=e186]:
+        - generic [ref=e189]: 
+        - generic [ref=e193]: 
+      - generic [ref=e194]: Keşfet
+    - tab "Canlı Bağlantı" [ref=e196] [cursor=pointer]:
+      - generic [ref=e197]:
+        - generic [ref=e200]: 
+        - generic [ref=e204]: 
+      - generic [ref=e205]: Canlı
+    - tab "Eşleşmeler, 0 yeni eşleşme, 3 okunmamış mesaj" [ref=e207] [cursor=pointer]:
+      - generic [ref=e208]:
+        - generic [ref=e211]:
+          - generic [ref=e213]: 
+          - generic [ref=e216]: "3"
+        - generic [ref=e219]:
+          - generic [ref=e221]: 
+          - generic [ref=e223]: "3"
+      - generic [ref=e224]: Eşleşme
+    - tab "Profil" [selected] [ref=e226] [cursor=pointer]:
+      - generic [ref=e227]:
+        - generic [ref=e230]: 
+        - generic [ref=e234]: 
+      - generic [ref=e235]: Profil

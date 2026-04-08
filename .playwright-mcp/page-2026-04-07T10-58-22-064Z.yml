@@ -1,0 +1,38 @@
+- generic [ref=e796]:
+  - generic [ref=e797]:
+    - generic [ref=e799] [cursor=pointer]: 
+    - generic [ref=e805] [cursor=pointer]: Atla
+  - generic [ref=e806]:
+    - generic [ref=e807]: Yaşadığın şehir
+    - generic [ref=e808]: Kendi dünyani paylaş
+    - generic [ref=e809]:
+      - generic [ref=e810]: 
+      - textbox "Şehir adı" [ref=e811]:
+        - /placeholder: Şehir adı yaz...
+    - generic [ref=e812]: Popüler şehirler
+    - generic [ref=e814]:
+      - button "İstanbul" [ref=e815] [cursor=pointer]:
+        - generic [ref=e816]: İstanbul
+      - button "Ankara" [ref=e817] [cursor=pointer]:
+        - generic [ref=e818]: Ankara
+      - button "İzmir" [ref=e819] [cursor=pointer]:
+        - generic [ref=e820]: İzmir
+      - button "Antalya" [ref=e821] [cursor=pointer]:
+        - generic [ref=e822]: Antalya
+      - button "Bursa" [ref=e823] [cursor=pointer]:
+        - generic [ref=e824]: Bursa
+      - button "Adana" [ref=e825] [cursor=pointer]:
+        - generic [ref=e826]: Adana
+      - button "Gaziantep" [ref=e827] [cursor=pointer]:
+        - generic [ref=e828]: Gaziantep
+      - button "Konya" [ref=e829] [cursor=pointer]:
+        - generic [ref=e830]: Konya
+      - button "Mersin" [ref=e831] [cursor=pointer]:
+        - generic [ref=e832]: Mersin
+      - button "Eskişehir" [ref=e833] [cursor=pointer]:
+        - generic [ref=e834]: Eskişehir
+      - button "Kayseri" [ref=e835] [cursor=pointer]:
+        - generic [ref=e836]: Kayseri
+      - button "Trabzon" [ref=e837] [cursor=pointer]:
+        - generic [ref=e838]: Trabzon
+  - generic [ref=e841]: 

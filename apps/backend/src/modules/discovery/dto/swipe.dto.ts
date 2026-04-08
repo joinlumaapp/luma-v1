@@ -4,6 +4,7 @@ import {
   IsString,
   IsEnum,
   IsOptional,
+  IsUUID,
   MaxLength,
 } from "class-validator";
 
@@ -18,7 +19,7 @@ export class SwipeDto {
     description: "Target user ID being swiped on",
   })
   @IsNotEmpty()
-  @IsString()
+  @IsUUID()
   targetUserId!: string;
 
   @ApiProperty({

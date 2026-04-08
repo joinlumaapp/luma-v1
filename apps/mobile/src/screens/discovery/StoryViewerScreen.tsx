@@ -682,7 +682,7 @@ export const StoryViewerScreen: React.FC = () => {
             </TouchableOpacity>
             {!canSeeViewerDetails && (
               <Text style={styles.viewerUpsellText}>
-                PRO ile kimlerin gorduğunu oğren
+                PRO ile kimlerin gördüğünü öğren
               </Text>
             )}
           </View>

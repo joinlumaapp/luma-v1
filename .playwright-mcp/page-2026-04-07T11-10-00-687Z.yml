@@ -1,0 +1,15 @@
+- generic [ref=e705]:
+  - generic [ref=e706]:
+    - generic [ref=e708] [cursor=pointer]: 
+    - generic [ref=e714] [cursor=pointer]: Atla
+  - generic [ref=e715]:
+    - generic [ref=e716]: Sporla aran nasıl?
+    - generic [ref=e717]: Hayat tarzını paylaşarak daha uyumlu eşleşmelere ulaşabilirsin.
+    - generic [ref=e718]:
+      - radio "Pek yapmam" [ref=e719] [cursor=pointer]:
+        - generic [ref=e720]: Pek yapmam
+      - radio "Ara sıra yaparım" [ref=e721] [cursor=pointer]:
+        - generic [ref=e722]: Ara sıra yaparım
+      - radio "Düzenli yaparım" [ref=e723] [cursor=pointer]:
+        - generic [ref=e724]: Düzenli yaparım
+  - generic [ref=e727]: 

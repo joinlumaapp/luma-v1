@@ -14,6 +14,7 @@ import {
   Animated,
   RefreshControl,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { CachedAvatar } from '../../components/common/CachedAvatar';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -248,7 +249,7 @@ export const ChatListScreen: React.FC = () => {
 
   const renderEmptyList = useCallback(() => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyIcon}>{'...'}</Text>
+      <Text style={styles.emptyIcon}>{'💬'}</Text>
       <Text style={styles.emptyTitle}>Henüz Sohbetin Yok</Text>
       <Text style={styles.emptySubtitle}>
         Eşleşmelerine mesaj göndererek sohbet başlatabilirsin.
@@ -269,8 +270,8 @@ export const ChatListScreen: React.FC = () => {
       <BrandedBackground />
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backText}>{'\u2039'}</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton} accessibilityLabel="Geri" accessibilityRole="button">
+          <Ionicons name="arrow-back" size={22} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mesajlar</Text>
         <View style={styles.headerSpacer} />
@@ -451,7 +452,7 @@ const styles = StyleSheet.create({
   },
   unreadCount: {
     ...typography.captionSmall,
-    color: colors.text,
+    color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },

@@ -1,0 +1,23 @@
+- generic [ref=e895]:
+  - generic [ref=e896]:
+    - generic [ref=e898] [cursor=pointer]: 
+    - generic [ref=e904] [cursor=pointer]: Atla
+  - generic [ref=e908]:
+    - generic [ref=e909]: Kendini tanıt
+    - generic [ref=e910]: 3 soru seç ve cevapla. Bu cevaplar profilinde görünecek.
+    - generic [ref=e911]:
+      - button "Soru seç, slot 1" [ref=e913] [cursor=pointer]:
+        - generic [ref=e914]:
+          - generic [ref=e916]: 
+          - generic [ref=e917]: Soru Seç
+      - button "Soru seç, slot 2" [ref=e919] [cursor=pointer]:
+        - generic [ref=e920]:
+          - generic [ref=e922]: 
+          - generic [ref=e923]: Soru Seç
+      - button "Soru seç, slot 3" [ref=e925] [cursor=pointer]:
+        - generic [ref=e926]:
+          - generic [ref=e928]: 
+          - generic [ref=e929]: Soru Seç
+  - generic [ref=e931]:
+    - generic [ref=e937]: 0/3 tamamlandı
+    - generic [ref=e938]: Devam Et

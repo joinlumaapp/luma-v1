@@ -1,0 +1,17 @@
+- generic [ref=e739]:
+  - generic [ref=e740]:
+    - generic [ref=e742] [cursor=pointer]: 
+    - generic [ref=e748] [cursor=pointer]: Atla
+  - generic [ref=e749]:
+    - generic [ref=e750]: Sigarayla aran nasıl?
+    - generic [ref=e751]: Bu bilgi profilinde görüntülenecek.
+    - generic [ref=e752]:
+      - radio "Evet içiyorum" [ref=e753] [cursor=pointer]:
+        - generic [ref=e754]: Evet içiyorum
+      - radio "Ara sıra içerim" [ref=e755] [cursor=pointer]:
+        - generic [ref=e756]: Ara sıra içerim
+      - radio "İçmem" [ref=e757] [cursor=pointer]:
+        - generic [ref=e758]: İçmem
+      - radio "İçmem ama içenlere karışmam" [ref=e759] [cursor=pointer]:
+        - generic [ref=e760]: İçmem ama içenlere karışmam
+  - generic [ref=e763]: 

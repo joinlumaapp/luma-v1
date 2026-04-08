@@ -1,0 +1,19 @@
+- generic [ref=e2]:
+  - generic [ref=e14]:
+    - generic [ref=e16] [cursor=pointer]: DEV
+    - generic [ref=e23]:
+      - button "Google ile bağlan, çok yakında" [disabled]:
+        - generic [ref=e24]: Google ile bağlan
+        - generic [ref=e25]: Çok yakında
+      - button "Telefon ile devam et" [ref=e26] [cursor=pointer]:
+        - generic [ref=e27]: Telefon ile devam et
+      - button "Giriş yap" [ref=e28] [cursor=pointer]:
+        - generic [ref=e29]: Zaten hesabın var mı? Giriş yap
+      - generic [ref=e30]:
+        - text: Kaydolarak,
+        - link "Genel Kullanım Koşullarımızı" [ref=e31] [cursor=pointer]
+        - text: ve
+        - link "Gizlilik Politikamızı" [ref=e32] [cursor=pointer]
+        - text: kabul etmiş olursun.
+  - generic:
+    - img

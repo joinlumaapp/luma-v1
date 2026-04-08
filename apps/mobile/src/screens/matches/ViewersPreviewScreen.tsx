@@ -1126,7 +1126,7 @@ export const ViewersPreviewScreen: React.FC = () => {
 
         // No reveals left — show teaser sheet after card animation delay
         teaserTimeoutRef.current = setTimeout(() => setShowTeaserSheet(true), 400);
-      });
+      }).catch((err) => console.warn('[ViewersPreview] Reveal failed:', err));
     },
     [isPremium, isViewerRevealed, revealViewer],
   );

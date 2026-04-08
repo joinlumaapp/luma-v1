@@ -31,7 +31,7 @@ import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const HERO_HEIGHT = SCREEN_WIDTH * 1.5; // 2:3 portrait ratio — shows face + upper body naturally
+const HERO_HEIGHT = SCREEN_WIDTH * 1.25; // 4:5 ratio — shows full upper body without excessive face crop
 
 // Parallax config
 const PARALLAX_FACTOR = 0.15; // 15% slower than scroll for depth effect

@@ -22,6 +22,7 @@ import Animated, {
   withSequence,
   Easing,
 } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useAuthStore } from '../../stores/authStore';
 import { useNavigation } from '@react-navigation/native';
@@ -128,8 +129,8 @@ export const PhoneEntryScreen: React.FC = () => {
 
   return (
     <LinearGradient
-      colors={['#E8959E', '#EDACB4', '#F2C0C6', '#F7D5D9', '#FFFFFF']}
-      locations={[0, 0.3, 0.55, 0.8, 1]}
+      colors={['#D4687A', '#E8959E', '#F2C0C6', '#F5ECDF', '#F5F0E8']}
+      locations={[0, 0.25, 0.5, 0.8, 1]}
       style={styles.container}
     >
       <KeyboardAvoidingView
@@ -144,7 +145,7 @@ export const PhoneEntryScreen: React.FC = () => {
             accessibilityLabel="Geri"
             accessibilityRole="button"
           >
-            <Text style={styles.backText}>{'\u2190'}</Text>
+            <Ionicons name="arrow-back" size={22} color={onboardingColors.text} />
           </TouchableOpacity>
         </View>
 
@@ -272,14 +273,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: onboardingColors.surfaceBorder,
   },
-  backText: {
-    fontSize: 20,
-    color: onboardingColors.text,
-  },
+  // backText removed — using Ionicons icon instead
   content: {
     flex: 1,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
+    paddingTop: spacing.lg,
+    justifyContent: 'center',
   },
   title: {
     fontSize: 28,

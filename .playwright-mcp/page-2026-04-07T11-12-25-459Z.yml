@@ -1,0 +1,41 @@
+- generic [ref=e840]:
+  - generic [ref=e841]:
+    - generic [ref=e843] [cursor=pointer]: 
+    - generic [ref=e849] [cursor=pointer]: Atla
+  - generic [ref=e852]:
+    - generic [ref=e853]: Hakkında
+    - generic [ref=e854]: Kendini tanımla. İlgi çekici bir bio eşleşme şansını arttırır.
+    - generic [ref=e855]:
+      - generic [ref=e856]: Hazır şablonlar
+      - generic [ref=e858]:
+        - 'button "Şablon: Hayatın tadını çıkarmayı seven, spontane planlar yapan biriyim." [ref=e859] [cursor=pointer]':
+          - generic [ref=e860]: Hayatın tadını çıkarmayı seven, spontane planlar yapan biriyim.
+        - 'button "Şablon: Kitap kurdu, kahve bağımlısı. Sakin bir akşam ya da canlı bir sohbet — ikisi de olur." [ref=e861] [cursor=pointer]':
+          - generic [ref=e862]: Kitap kurdu, kahve bağımlısı. Sakin bir akşam ya da canlı bir sohbet — ikisi de olur.
+        - 'button "Şablon: Spor, müzik ve iyi yemek üçgenim. Beraber keşfedelim!" [ref=e863] [cursor=pointer]':
+          - generic [ref=e864]: Spor, müzik ve iyi yemek üçgenim. Beraber keşfedelim!
+        - 'button "Şablon: Doğa yürüyüşleri, film geceleri ve samimi sohbetler benim işim." [ref=e865] [cursor=pointer]':
+          - generic [ref=e866]: Doğa yürüyüşleri, film geceleri ve samimi sohbetler benim işim.
+        - 'button "Şablon: Kariyer odaklı ama eğlenceyi de ihmal etmeyen biri. Dengeyi seviyorum." [ref=e867] [cursor=pointer]':
+          - generic [ref=e868]: Kariyer odaklı ama eğlenceyi de ihmal etmeyen biri. Dengeyi seviyorum.
+        - 'button "Şablon: Seyahat etmeyi, yeni kültürler tanımayı ve lezzetli yemekler keşfetmeyi seviyorum." [ref=e869] [cursor=pointer]':
+          - generic [ref=e870]: Seyahat etmeyi, yeni kültürler tanımayı ve lezzetli yemekler keşfetmeyi seviyorum.
+        - 'button "Şablon: Sosyal, enerjik ve pozitif biri. Hayata gülümseyerek bakıyorum." [ref=e871] [cursor=pointer]':
+          - generic [ref=e872]: Sosyal, enerjik ve pozitif biri. Hayata gülümseyerek bakıyorum.
+        - 'button "Şablon: Sakin, düşünceli ve derin sohbetleri seven biriyim. Yüzeysel değil, gerçek bağlantılar arıyorum." [ref=e873] [cursor=pointer]':
+          - generic [ref=e874]: Sakin, düşünceli ve derin sohbetleri seven biriyim. Yüzeysel değil, gerçek bağlantılar arıyorum.
+    - generic [ref=e875]:
+      - 'button "Öneri: Boş zamanlarında ne yapmayı seversin?" [ref=e876] [cursor=pointer]':
+        - generic [ref=e877]: Boş zamanlarında ne yapmayı seversin?
+        - generic [ref=e878]: "Örnek: \"Kitap okumak, yürüyüş yapmak ve yeni tarifler denemek beni mutlu ediyor.\""
+      - 'button "Öneri: İdeal bir hafta sonu nasıl geçer?" [ref=e879] [cursor=pointer]':
+        - generic [ref=e880]: İdeal bir hafta sonu nasıl geçer?
+        - generic [ref=e881]: "Örnek: \"Sabah kahve, öğle arkadaşlarla buluşma, akşam güzel bir film.\""
+      - 'button "Öneri: Hayatta en çok neye değer verirsin?" [ref=e882] [cursor=pointer]':
+        - generic [ref=e883]: Hayatta en çok neye değer verirsin?
+        - generic [ref=e884]: "Örnek: \"Samimi ilişkiler, yeni deneyimler ve kişisel gelişim benim için önemli.\""
+    - generic [ref=e885]:
+      - textbox "Hakkında yazısı" [ref=e886]:
+        - /placeholder: Kendinden bahset...
+      - generic [ref=e888]: 0/500
+  - generic [ref=e891] [cursor=pointer]: Devam

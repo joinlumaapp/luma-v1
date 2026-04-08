@@ -80,6 +80,9 @@ export const WhoToMeetScreen: React.FC = () => {
               style={[styles.optionCard, isSelected && styles.optionCardSelected]}
               onPress={() => toggleOption(option.value)}
               activeOpacity={0.8}
+              accessibilityLabel={option.label}
+              accessibilityRole="checkbox"
+              accessibilityState={{ selected: isSelected }}
             >
               <Text style={[styles.optionLabel, isSelected && styles.optionLabelSelected]}>
                 {option.label}
@@ -120,6 +123,8 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 15,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
     lineHeight: 22,
     color: onboardingColors.textSecondary,
     marginBottom: 32,
@@ -178,6 +183,8 @@ const styles = StyleSheet.create({
   },
   privacyText: {
     fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
     lineHeight: 18,
     color: onboardingColors.textSecondary,
     flex: 1,

@@ -209,8 +209,8 @@ export const BirthDateScreen: React.FC = () => {
           <Switch
             value={showZodiac}
             onValueChange={setShowZodiac}
-            trackColor={{ false: onboardingColors.surfaceBorder, true: '#B8A5D0' }}
-            thumbColor={showZodiac ? '#FFFFFF' : '#FFFFFF'}
+            trackColor={{ false: onboardingColors.surfaceBorder, true: onboardingColors.checkGreen }}
+            thumbColor={onboardingColors.selectedText}
             accessibilityLabel="Burcu profilde göster"
             accessibilityRole="switch"
           />

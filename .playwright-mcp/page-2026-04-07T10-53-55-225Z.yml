@@ -1,0 +1,14 @@
+- generic [ref=e384]:
+  - generic [ref=e387] [cursor=pointer]: 
+  - generic [ref=e392]:
+    - generic [ref=e393]: Kendini nasıl tanımlıyorsun?
+    - generic [ref=e394]: Daha sonra profil ayarlarından değiştirebilirsin.
+    - generic [ref=e395]:
+      - radio "Erkek" [ref=e396] [cursor=pointer]:
+        - generic [ref=e397]: Erkek
+      - radio "Kadın" [active] [ref=e398] [cursor=pointer]:
+        - generic [ref=e399]: Kadın
+        - generic [ref=e406]: 
+      - radio "Diğer" [ref=e400] [cursor=pointer]:
+        - generic [ref=e401]: Diğer
+  - generic [ref=e404] [cursor=pointer]: 

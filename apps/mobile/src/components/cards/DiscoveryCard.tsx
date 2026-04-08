@@ -601,11 +601,11 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   tagEmoji: {
-    fontSize: 11,
+    fontSize: 14,
     includeFontPadding: false,
   },
   tagLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: fontWeights.medium,
     fontFamily: poppinsFonts.medium,
     color: 'rgba(255,255,255,0.8)',

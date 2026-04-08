@@ -1,0 +1,17 @@
+- generic [ref=e767]:
+  - generic [ref=e768]:
+    - generic [ref=e770] [cursor=pointer]: 
+    - generic [ref=e776] [cursor=pointer]: Atla
+  - generic [ref=e777]:
+    - generic [ref=e778]: Çocuğun var mı?
+    - generic [ref=e779]: Bu bilgi profilinde görüntülenecek.
+    - generic [ref=e780]:
+      - radio "Çocuğum var" [ref=e781] [cursor=pointer]:
+        - generic [ref=e782]: Çocuğum var
+      - radio "Çocuğum yok" [ref=e783] [cursor=pointer]:
+        - generic [ref=e784]: Çocuğum yok
+      - radio "İleride olabilir" [ref=e785] [cursor=pointer]:
+        - generic [ref=e786]: İleride olabilir
+      - radio "Çocuk istemiyorum" [ref=e787] [cursor=pointer]:
+        - generic [ref=e788]: Çocuk istemiyorum
+  - generic [ref=e791]: 

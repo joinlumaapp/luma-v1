@@ -1,0 +1,104 @@
+- generic [ref=e68]:
+  - generic [ref=e80]:
+    - generic [ref=e81]:
+      - generic [ref=e86]:
+        - generic "20 beğeni hakkın kaldı" [ref=e87]:
+          - generic [ref=e88]: 
+          - generic [ref=e89]: "20"
+        - button "Filtreleri aç" [ref=e90] [cursor=pointer]:
+          - generic [ref=e92]: 
+      - generic [ref=e94] [cursor=pointer]:
+        - generic [ref=e95]:
+          - generic [ref=e96]: 3 kişi seni beğendi
+          - generic [ref=e97]: Kim olduğunu görmek ister misin?
+        - generic [ref=e99]: 
+    - generic [ref=e100]:
+      - generic [ref=e102]:
+        - img "Ayşe profil fotoğrafı" [ref=e277]
+        - generic [ref=e106]: 
+        - generic:
+          - generic [ref=e107]:
+            - generic [ref=e109]: Ayşe, 23
+            - button "Uyum yuzde 95" [ref=e278] [cursor=pointer]:
+              - generic [ref=e111]: "%95"
+              - generic [ref=e112]: uyum
+          - generic [ref=e113]:
+            - generic [ref=e114]:
+              - generic [ref=e115]: 
+              - generic [ref=e116]: 2.1 km uzaginda
+            - generic [ref=e279]: ·
+            - generic [ref=e282]: Şu an aktif
+          - generic [ref=e284]: Ciddi ilişki
+          - generic [ref=e117]:
+            - generic [ref=e286]: psychology
+            - generic [ref=e288]: reading
+            - generic [ref=e290]: meditation
+          - generic [ref=e127]: Psikoloji öğrencisi. İnsanları anlamak en büyük tutkum.
+      - button "Elif, 26 yaşında, İstanbul" [ref=e291]:
+        - generic [ref=e130]:
+          - img "Elif profil fotoğrafı" [ref=e292]
+          - generic [ref=e134]: 
+          - generic:
+            - generic [ref=e135]:
+              - generic [ref=e137]: Elif, 26
+              - button "Uyum yuzde 92" [ref=e293] [cursor=pointer]:
+                - generic [ref=e139]: "%92"
+                - generic [ref=e140]: uyum
+            - generic [ref=e141]:
+              - generic [ref=e142]:
+                - generic [ref=e143]: 
+                - generic [ref=e144]: 3.2 km uzaginda
+              - generic [ref=e294]: ·
+              - generic [ref=e297]: Şu an aktif
+            - generic [ref=e299]: Ciddi ilişki
+            - generic [ref=e145]:
+              - generic [ref=e301]: reading
+              - generic [ref=e149]:
+                - generic [ref=e150]: ☕
+                - generic [ref=e151]: Kahve & Şarap
+              - generic [ref=e152]:
+                - generic [ref=e153]: ✈️
+                - generic [ref=e154]: Seyahat
+            - generic [ref=e155]: Kitap kurdu, kahve bağımlısı. Hayatı keşfetmeyi seven biri.
+        - generic:
+          - generic:
+            - generic: ✓
+            - generic: BEĞEN
+        - generic:
+          - generic:
+            - generic: ✕
+            - generic: PAS
+    - button "Geri al — Premium özellik" [ref=e158] [cursor=pointer]:
+      - generic [ref=e159]:
+        - generic [ref=e160]: 
+        - generic [ref=e162]: 
+  - tablist [ref=e164]:
+    - tab "Sosyal Akış" [ref=e166] [cursor=pointer]:
+      - generic [ref=e167]:
+        - generic [ref=e170]: 
+        - generic [ref=e174]: 
+      - generic [ref=e175]: Akış
+    - tab "Keşfet" [selected] [ref=e177] [cursor=pointer]:
+      - generic [ref=e178]:
+        - generic [ref=e181]: 
+        - generic [ref=e185]: 
+      - generic [ref=e186]: Keşfet
+    - tab "Canlı Bağlantı" [ref=e188] [cursor=pointer]:
+      - generic [ref=e189]:
+        - generic [ref=e192]: 
+        - generic [ref=e196]: 
+      - generic [ref=e197]: Canlı
+    - tab "Eşleşmeler, 0 yeni eşleşme, 3 okunmamış mesaj" [ref=e199] [cursor=pointer]:
+      - generic [ref=e200]:
+        - generic [ref=e203]:
+          - generic [ref=e205]: 
+          - generic [ref=e208]: "3"
+        - generic [ref=e211]:
+          - generic [ref=e213]: 
+          - generic [ref=e215]: "3"
+      - generic [ref=e216]: Eşleşme
+    - tab "Profil" [ref=e218] [cursor=pointer]:
+      - generic [ref=e219]:
+        - generic [ref=e222]: 
+        - generic [ref=e226]: 
+      - generic [ref=e227]: Profil

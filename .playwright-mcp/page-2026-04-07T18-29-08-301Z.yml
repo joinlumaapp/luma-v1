@@ -1,0 +1,38 @@
+- generic [ref=e76]:
+  - generic [ref=e740]:
+    - generic [ref=e744]: 
+    - generic [ref=e745]: Kamera izni gerekli
+    - generic [ref=e746]: Canlı bağlantı için kameranı açman gerekiyor
+    - generic [ref=e748] [cursor=pointer]:
+      - generic [ref=e749]: 
+      - generic [ref=e750]: Kameraya Izin Ver
+  - tablist [ref=e172]:
+    - tab "Sosyal Akış" [ref=e174] [cursor=pointer]:
+      - generic [ref=e175]:
+        - generic [ref=e178]: 
+        - generic [ref=e182]: 
+      - generic [ref=e183]: Akış
+    - tab "Keşfet" [ref=e185] [cursor=pointer]:
+      - generic [ref=e186]:
+        - generic [ref=e189]: 
+        - generic [ref=e193]: 
+      - generic [ref=e194]: Keşfet
+    - tab "Canlı Bağlantı" [active] [selected] [ref=e196] [cursor=pointer]:
+      - generic [ref=e197]:
+        - generic [ref=e200]: 
+        - generic [ref=e204]: 
+      - generic [ref=e205]: Canlı
+    - tab "Eşleşmeler, 0 yeni eşleşme, 3 okunmamış mesaj" [ref=e207] [cursor=pointer]:
+      - generic [ref=e208]:
+        - generic [ref=e211]:
+          - generic [ref=e213]: 
+          - generic [ref=e216]: "3"
+        - generic [ref=e219]:
+          - generic [ref=e221]: 
+          - generic [ref=e223]: "3"
+      - generic [ref=e224]: Eşleşme
+    - tab "Profil" [ref=e226] [cursor=pointer]:
+      - generic [ref=e227]:
+        - generic [ref=e230]: 
+        - generic [ref=e234]: 
+      - generic [ref=e235]: Profil

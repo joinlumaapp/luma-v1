@@ -1,0 +1,158 @@
+- generic [ref=e76]:
+  - generic [ref=e315]:
+    - generic [ref=e316]:
+      - generic [ref=e317]: Akış
+      - button "Bildirimler" [ref=e319] [cursor=pointer]:
+        - generic [ref=e320]: 
+    - generic [ref=e325]:
+      - generic [ref=e327]:
+        - button "Gönderini paylaş" [ref=e331] [cursor=pointer]:
+          - generic [ref=e336]: +
+        - generic [ref=e337]:
+          - generic [ref=e338]:
+            - generic [ref=e339]: Gönderini paylaş...
+            - generic [ref=e340]:
+              - generic [ref=e341] [cursor=pointer]:
+                - generic [ref=e342]: 
+                - generic [ref=e343]: Fotoğraf
+              - generic [ref=e344] [cursor=pointer]:
+                - generic [ref=e345]: 
+                - generic [ref=e346]: Video
+              - generic [ref=e347] [cursor=pointer]:
+                - generic [ref=e348]: 
+                - generic [ref=e349]: Yazı
+          - generic [ref=e350]:
+            - generic [ref=e353] [cursor=pointer]:
+              - generic [ref=e354]: 
+              - generic [ref=e355]: Popüler
+            - generic [ref=e357] [cursor=pointer]:
+              - generic [ref=e358]: 
+              - generic [ref=e359]: Takip
+      - generic [ref=e362]:
+        - generic [ref=e363]:
+          - generic [ref=e368] [cursor=pointer]:
+            - generic [ref=e369]:
+              - generic [ref=e370]: Elif
+              - generic [ref=e371]: 
+            - generic [ref=e372]:
+              - generic [ref=e373]: İstanbul
+              - generic [ref=e374]: ·
+              - generic [ref=e375]: 13 dk
+          - generic [ref=e376] [cursor=pointer]:
+            - generic [ref=e377]: 
+            - generic [ref=e378]: Takip
+        - generic [ref=e379]:
+          - generic [ref=e380]: 💍
+          - generic [ref=e381]: Ciddi İlişki
+        - generic [ref=e384] [cursor=pointer]: "Bugün sahilde yürüyüş yaptım ve kendi kendime düşündüm: hayatta en çok neye değer veriyorum? Cevap hep aynı: samimi insanlar."
+        - generic [ref=e388] [cursor=pointer]:
+          - generic: ❤
+          - generic: ❤
+          - generic: ❤
+          - generic: ❤
+          - generic: ❤
+          - generic [ref=e390]:
+            - generic [ref=e391]: 
+            - generic [ref=e392]: "42"
+      - generic [ref=e395]:
+        - generic [ref=e396]:
+          - generic [ref=e401] [cursor=pointer]:
+            - generic [ref=e402]:
+              - generic [ref=e403]: Zeynep
+              - generic [ref=e404]: 
+            - generic [ref=e405]:
+              - generic [ref=e406]: Ankara
+              - generic [ref=e407]: ·
+              - generic [ref=e408]: 36 dk
+          - generic [ref=e410] [cursor=pointer]: Takip Et
+        - generic [ref=e411]:
+          - generic [ref=e412]: 💜
+          - generic [ref=e413]: Keşfediyorum
+        - generic [ref=e416] [cursor=pointer]: İlk buluşmada karşı tarafta en çok neye dikkat edersiniz? Ben göz teması ve dinleme becerisine bakıyorum.
+        - generic [ref=e420] [cursor=pointer]:
+          - generic: ❤
+          - generic: ❤
+          - generic: ❤
+          - generic: ❤
+          - generic: ❤
+          - generic [ref=e422]:
+            - generic [ref=e423]: 
+            - generic [ref=e424]: "67"
+      - generic [ref=e427]:
+        - generic [ref=e428]:
+          - generic [ref=e433] [cursor=pointer]:
+            - generic [ref=e434]:
+              - generic [ref=e435]: Merve
+              - generic [ref=e436]: 
+            - generic [ref=e437]:
+              - generic [ref=e438]: İzmir
+              - generic [ref=e439]: ·
+              - generic [ref=e440]: 1 sa
+          - generic [ref=e441] [cursor=pointer]:
+            - generic [ref=e442]: 
+            - generic [ref=e443]: Takip
+        - generic [ref=e444]:
+          - generic [ref=e445]: 💍
+          - generic [ref=e446]: Ciddi İlişki
+        - generic [ref=e449] [cursor=pointer]: Kapadokya'da gün doğumu... Balon turu hayatımın en güzel deneyimiydi. Yanınızda doğru insanla her yer cennet.
+        - generic [ref=e456] [cursor=pointer]:
+          - generic: ❤
+          - generic: ❤
+          - generic: ❤
+          - generic: ❤
+          - generic: ❤
+          - generic [ref=e458]:
+            - generic [ref=e459]: 
+            - generic [ref=e460]: "128"
+      - generic [ref=e463]:
+        - generic [ref=e464]:
+          - generic [ref=e469] [cursor=pointer]:
+            - generic [ref=e471]: Ayşe
+            - generic [ref=e472]:
+              - generic [ref=e473]: Bursa
+              - generic [ref=e474]: ·
+              - generic [ref=e475]: 2 sa
+          - generic [ref=e477] [cursor=pointer]: Takip Et
+        - generic [ref=e478]:
+          - generic [ref=e479]: 👥
+          - generic [ref=e480]: Arkadaş Arıyorum
+        - generic [ref=e483] [cursor=pointer]: Yağmurlu bir akşamda Fazıl Say dinlemek... Ruhumu iyileştiren tek şey bu. Müzik seven biri varsa yazışalım!
+        - generic [ref=e487] [cursor=pointer]:
+          - generic: ❤
+          - generic: ❤
+          - generic: ❤
+          - generic: ❤
+          - generic: ❤
+          - generic [ref=e489]:
+            - generic [ref=e490]: 
+            - generic [ref=e491]: "53"
+  - tablist [ref=e172]:
+    - tab "Sosyal Akış" [active] [selected] [ref=e174] [cursor=pointer]:
+      - generic [ref=e175]:
+        - generic [ref=e178]: 
+        - generic [ref=e182]: 
+      - generic [ref=e183]: Akış
+    - tab "Keşfet" [ref=e185] [cursor=pointer]:
+      - generic [ref=e186]:
+        - generic [ref=e189]: 
+        - generic [ref=e193]: 
+      - generic [ref=e194]: Keşfet
+    - tab "Canlı Bağlantı" [ref=e196] [cursor=pointer]:
+      - generic [ref=e197]:
+        - generic [ref=e200]: 
+        - generic [ref=e204]: 
+      - generic [ref=e205]: Canlı
+    - tab "Eşleşmeler, 0 yeni eşleşme, 3 okunmamış mesaj" [ref=e207] [cursor=pointer]:
+      - generic [ref=e208]:
+        - generic [ref=e211]:
+          - generic [ref=e213]: 
+          - generic [ref=e216]: "3"
+        - generic [ref=e219]:
+          - generic [ref=e221]: 
+          - generic [ref=e223]: "3"
+      - generic [ref=e224]: Eşleşme
+    - tab "Profil" [ref=e226] [cursor=pointer]:
+      - generic [ref=e227]:
+        - generic [ref=e230]: 
+        - generic [ref=e234]: 
+      - generic [ref=e235]: Profil

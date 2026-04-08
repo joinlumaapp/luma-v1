@@ -1,0 +1,17 @@
+- generic [ref=e411]:
+  - generic [ref=e414] [cursor=pointer]: 
+  - generic [ref=e419]:
+    - generic [ref=e420]: Kiminle tanışmak istiyorsun?
+    - generic [ref=e421]: Bir veya daha çok seçenek seç.
+    - generic [ref=e422]:
+      - checkbox "Erkek" [ref=e423] [cursor=pointer]:
+        - generic [ref=e424]: Erkek
+      - checkbox "Kadın" [active] [ref=e426] [cursor=pointer]:
+        - generic [ref=e427]: Kadın
+        - generic [ref=e437]: 
+      - checkbox "Diğer" [ref=e429] [cursor=pointer]:
+        - generic [ref=e430]: Diğer
+    - generic [ref=e432]:
+      - generic [ref=e433]: 
+      - generic [ref=e434]: Devam ederek cinsel yönelimine ilişkin bilgilerin, sana servis sunmak amacıyla kullanılacaktır.
+  - generic [ref=e436] [cursor=pointer]: Onayla

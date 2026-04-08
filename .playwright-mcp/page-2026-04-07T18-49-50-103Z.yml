@@ -1,0 +1,37 @@
+- generic [ref=e1]:
+  - generic [ref=e14]:
+    - generic [ref=e16] [cursor=pointer]: DEV
+    - generic [ref=e26]: Gerçek uyum için kendin ol.
+    - generic [ref=e19]:
+      - generic [ref=e27]:
+        - button "Google ile bağlan, çok yakında" [disabled]:
+          - generic [ref=e28]: 
+          - generic [ref=e29]: Google ile bağlan
+          - generic [ref=e31]: Çok yakında
+      - button "Telefon ile devam et" [ref=e33] [cursor=pointer]:
+        - generic [ref=e36]: Telefon ile devam et
+      - button "Giriş yap" [ref=e38] [cursor=pointer]:
+        - generic [ref=e39]: Zaten hesabın var mı? Giriş yap
+      - generic [ref=e41]:
+        - text: Kaydolarak,
+        - link "Genel Kullanım Koşullarımızı" [ref=e42] [cursor=pointer]
+        - text: ve
+        - link "Gizlilik Politikamızı" [ref=e43] [cursor=pointer]
+        - text: kabul etmiş olursun.
+  - dialog [ref=e45]:
+    - generic [ref=e48] [cursor=pointer]:
+      - generic [ref=e49]: Founder Test Modu
+      - generic [ref=e50]: Sadece geliştirme modunda görünür
+      - generic [ref=e51]:
+        - generic [ref=e52]: Founder Girişi (Tam Atla)
+        - generic [ref=e53]: Auth + onboarding atla, mock data ile MainTabs'a git
+      - generic [ref=e54]:
+        - generic [ref=e55]: Onboarding'den Başla
+        - generic [ref=e56]: Auth atla, Ad ekranından başlat (tam akış testi)
+      - generic [ref=e57]:
+        - generic [ref=e58]: Normal Test (Akış İçi)
+        - generic [ref=e59]: "OTP: 000000 otomatik, selfie otomatik onayla"
+      - generic [ref=e60]:
+        - generic [ref=e61]: Sıfırla (Landing'e Dön)
+        - generic [ref=e62]: Tüm veriyi sil, kayıt ekranından başlat
+      - generic [ref=e64]: Kapat

@@ -100,6 +100,8 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 15,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
     lineHeight: 22,
     color: onboardingColors.textSecondary,
     marginBottom: 32,

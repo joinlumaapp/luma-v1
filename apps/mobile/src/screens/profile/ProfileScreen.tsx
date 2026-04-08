@@ -93,7 +93,7 @@ const INTEREST_TAG_DISPLAY: Record<string, { emoji: string; label: string }> = {
   animals: { emoji: '🐾', label: 'Hayvanlar' },
   fashion: { emoji: '👗', label: 'Moda' },
   football: { emoji: '⚽', label: 'Futbol' },
-  hiking: { emoji: '🏔️', label: 'Dagcilik' },
+  hiking: { emoji: '🏔️', label: 'Dağcılık' },
   coffee: { emoji: '☕', label: 'Kahve' },
   reading: { emoji: '📚', label: 'Okuma' },
   meditation: { emoji: '🧘‍♂️', label: 'Meditasyon' },

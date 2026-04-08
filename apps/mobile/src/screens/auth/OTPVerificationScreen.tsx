@@ -18,6 +18,7 @@ import type { AuthStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../stores/authStore';
 import { useTestModeStore } from '../../stores/testModeStore';
 import { useCoinStore } from '../../stores/coinStore';
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { onboardingColors } from '../../components/onboarding/OnboardingLayout';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
@@ -243,7 +244,7 @@ export const OTPVerificationScreen: React.FC = () => {
           accessibilityLabel="Geri"
           accessibilityRole="button"
         >
-          <Text style={styles.backText}>{'<'}</Text>
+          <Ionicons name="arrow-back" size={22} color={onboardingColors.text} />
         </TouchableOpacity>
       </View>
 

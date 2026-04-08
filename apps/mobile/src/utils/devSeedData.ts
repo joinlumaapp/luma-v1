@@ -182,7 +182,7 @@ const discoveryProfiles = [
     city: 'İstanbul',
     compatibilityPercent: 65,
     photoUrls: ['https://i.pravatar.cc/400?img=41'],
-    bio: 'Eczacı, bilim meraklısı. Netflix ve pipoporn izlerken uyuyakalmak en büyük yeteneğim.',
+    bio: 'Eczacı, bilim meraklısı. Netflix ve belgesel izlerken uyuyakalmak en büyük yeteneğim.',
     intentionTag: 'Keşfediyorum',
     isVerified: true,
     distanceKm: 13.5,

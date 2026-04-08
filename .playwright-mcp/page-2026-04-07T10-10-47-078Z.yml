@@ -1,0 +1,17 @@
+- generic [ref=e38]:
+  - button "Geri" [ref=e40] [cursor=pointer]:
+    - generic [ref=e41]: ←
+  - generic [ref=e42]:
+    - generic [ref=e43]: Telefon Numaranı Gir
+    - generic [ref=e44]: Sana bir doğrulama kodu göndereceğiz. Sadece bir dakika!
+    - generic [ref=e45]:
+      - button "Ülke kodu seçici, +90" [ref=e46] [cursor=pointer]:
+        - generic [ref=e47]: 🇹🇷
+        - generic [ref=e48]: "+90"
+        - generic [ref=e49]: ▾
+      - textbox "Telefon numarası" [active] [ref=e51]:
+        - /placeholder: 5XX XXX XXXX
+  - generic [ref=e52]:
+    - button "Devam et" [disabled]:
+      - generic [ref=e53]: Doğrulama Kodu Gönder
+    - generic [ref=e54]: Numaranı kimseyle paylaşmıyoruz.

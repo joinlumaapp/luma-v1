@@ -1,0 +1,110 @@
+- generic [ref=e68]:
+  - generic [ref=e80]:
+    - generic [ref=e81]:
+      - generic [ref=e86]:
+        - generic "20 beğeni hakkın kaldı" [ref=e87]:
+          - generic [ref=e88]: 
+          - generic [ref=e89]: "20"
+        - button "Filtreleri aç" [ref=e90] [cursor=pointer]:
+          - generic [ref=e92]: 
+      - generic [ref=e95] [cursor=pointer]:
+        - generic [ref=e97]: 
+        - generic [ref=e98]:
+          - generic [ref=e99]: Kısıtlama bitti, özgürlük başladı 🚀
+          - generic [ref=e100]: Supreme ayrıcalığıyla tüm özellikler sonsuza kadar senin.
+        - generic [ref=e101]: 
+      - generic [ref=e103] [cursor=pointer]:
+        - generic [ref=e104]:
+          - generic [ref=e105]: 3 kişi seni beğendi
+          - generic [ref=e106]: Kim olduğunu görmek ister misin?
+        - generic [ref=e108]: 
+    - generic [ref=e109]:
+      - generic [ref=e111]:
+        - img "Zeynep profil fotoğrafı" [ref=e113]
+        - generic [ref=e115]: 
+        - generic:
+          - generic [ref=e116]:
+            - generic [ref=e118]: Zeynep, 27
+            - button "Uyum yuzde 91" [ref=e119] [cursor=pointer]:
+              - generic [ref=e120]: "%91"
+              - generic [ref=e121]: uyum
+          - generic [ref=e123]:
+            - generic [ref=e124]: 
+            - generic [ref=e125]: 4.1 km uzaginda
+          - generic [ref=e126]:
+            - generic [ref=e127]:
+              - generic [ref=e128]: 💻
+              - generic [ref=e129]: Teknoloji
+            - generic [ref=e130]:
+              - generic [ref=e131]: 🧘
+              - generic [ref=e132]: Yoga
+            - generic [ref=e133]:
+              - generic [ref=e134]: ☕
+              - generic [ref=e135]: Kahve & Şarap
+          - generic [ref=e136]: Yazılım mühendisi, yoga tutkunu. İyi bir sohbet, iyi bir kahve ve iyi bir kitap...
+      - button "Elif, 25 yaşında, İstanbul" [ref=e138]:
+        - generic [ref=e139]:
+          - img "Elif profil fotoğrafı" [ref=e141]
+          - generic [ref=e143]: 
+          - generic:
+            - generic [ref=e144]:
+              - generic [ref=e146]: Elif, 25
+              - button "Uyum yuzde 94" [ref=e147] [cursor=pointer]:
+                - generic [ref=e148]: "%94"
+                - generic [ref=e149]: uyum
+            - generic [ref=e151]:
+              - generic [ref=e152]: 
+              - generic [ref=e153]: 2.3 km uzaginda
+            - generic [ref=e154]:
+              - generic [ref=e155]:
+                - generic [ref=e156]: 📚
+                - generic [ref=e157]: Kitap
+              - generic [ref=e158]:
+                - generic [ref=e159]: ☕
+                - generic [ref=e160]: Kahve & Şarap
+              - generic [ref=e161]:
+                - generic [ref=e162]: ✈️
+                - generic [ref=e163]: Seyahat
+            - generic [ref=e164]: Kitap kurdu, kahve bağımlısı. Hafta sonları Prens Adaları'nda bisiklet sürmek be...
+        - generic:
+          - generic:
+            - generic: ✓
+            - generic: BEĞEN
+        - generic:
+          - generic:
+            - generic: ✕
+            - generic: PAS
+    - button "Geri al — Premium özellik" [ref=e167] [cursor=pointer]:
+      - generic [ref=e168]:
+        - generic [ref=e169]: 
+        - generic [ref=e171]: 
+  - tablist [ref=e173]:
+    - tab "Sosyal Akış" [ref=e175] [cursor=pointer]:
+      - generic [ref=e176]:
+        - generic [ref=e179]: 
+        - generic [ref=e183]: 
+      - generic [ref=e184]: Akış
+    - tab "Keşfet" [selected] [ref=e186] [cursor=pointer]:
+      - generic [ref=e187]:
+        - generic [ref=e190]: 
+        - generic [ref=e194]: 
+      - generic [ref=e195]: Keşfet
+    - tab "Canlı Bağlantı" [ref=e197] [cursor=pointer]:
+      - generic [ref=e198]:
+        - generic [ref=e201]: 
+        - generic [ref=e205]: 
+      - generic [ref=e206]: Canlı
+    - tab "Eşleşmeler, 0 yeni eşleşme, 3 okunmamış mesaj" [ref=e208] [cursor=pointer]:
+      - generic [ref=e209]:
+        - generic [ref=e212]:
+          - generic [ref=e214]: 
+          - generic [ref=e217]: "3"
+        - generic [ref=e220]:
+          - generic [ref=e222]: 
+          - generic [ref=e224]: "3"
+      - generic [ref=e225]: Eşleşme
+    - tab "Profil" [ref=e227] [cursor=pointer]:
+      - generic [ref=e228]:
+        - generic [ref=e231]: 
+        - generic [ref=e235]: 
+      - generic [ref=e236]: Profil

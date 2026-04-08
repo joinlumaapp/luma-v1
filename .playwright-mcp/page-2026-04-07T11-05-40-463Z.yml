@@ -1,0 +1,10 @@
+- generic [ref=e73]:
+  - generic [ref=e79]:
+    - generic [ref=e80]: Adın
+    - generic [ref=e81]: Profilinde görünecek adın ve soyadın
+    - generic [ref=e82]:
+      - textbox "Adın" [active] [ref=e83]:
+        - /placeholder: Ad
+      - textbox "Soyadın" [ref=e84]:
+        - /placeholder: Soyad
+  - generic [ref=e87]: 

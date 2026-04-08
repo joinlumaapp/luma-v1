@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 2,
     borderStyle: 'dashed',
-    borderColor: '#D4CFC7',
+    borderColor: onboardingColors.surfaceBorder,
     backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
@@ -526,7 +526,7 @@ const styles = StyleSheet.create({
   },
   quoteIcon: {
     fontSize: 20,
-    color: '#D4CFC7',
+    color: onboardingColors.surfaceBorder,
     lineHeight: 22,
     marginTop: -2,
   },

@@ -35,6 +35,16 @@ const RATE_LIMIT_TIERS: ReadonlyArray<{
     pattern: /^\/api\/v1\/chat\/.*\/messages/,
     tier: { limit: 60, windowSeconds: 60 },
   },
+  // Admin endpoints: 30 per minute (abuse prevention)
+  {
+    pattern: /^\/api\/v1\/admin\//,
+    tier: { limit: 30, windowSeconds: 60 },
+  },
+  // Payment endpoints: 10 per minute (fraud prevention)
+  {
+    pattern: /^\/api\/v1\/payments\//,
+    tier: { limit: 10, windowSeconds: 60 },
+  },
 ] as const;
 
 /** Default: 100 requests per minute per IP */

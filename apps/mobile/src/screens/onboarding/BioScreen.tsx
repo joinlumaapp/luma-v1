@@ -16,17 +16,14 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { OnboardingStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../stores/profileStore';
-import { OnboardingProgress } from '../../components/onboarding/OnboardingProgress';
-import { colors, palette } from '../../theme/colors';
-import { typography } from '../../theme/typography';
-import { spacing, borderRadius, layout } from '../../theme/spacing';
+import {
+  OnboardingLayout,
+  FullWidthButton,
+  onboardingColors,
+} from '../../components/onboarding/OnboardingLayout';
 import { PROFILE_CONFIG } from '../../constants/config';
-import { BrandedBackground } from '../../components/common/BrandedBackground';
-import { ONBOARDING_TOTAL_STEPS } from '../../navigation/OnboardingNavigator';
 
 type NavProp = NativeStackNavigationProp<OnboardingStackParamList, 'Bio'>;
-
-const CURRENT_STEP = 10;
 
 /** Pre-made bio templates users can tap to fill in */
 const BIO_TEMPLATES: string[] = [
@@ -95,283 +92,252 @@ export const BioScreen: React.FC = () => {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <BrandedBackground />
-      {/* Progress indicator */}
-      <OnboardingProgress currentStep={CURRENT_STEP} totalSteps={ONBOARDING_TOTAL_STEPS} />
-
-      {/* Content — scrollable so keyboard doesn't overlap */}
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.title}>Hakkında</Text>
-        <Text style={styles.subtitle}>
-          Kendini tanımla. İlgi çekici bir bio eşleşme şansını arttırır.
-        </Text>
-
-        {/* Pre-made bio templates — horizontally scrollable */}
-        <View style={styles.templatesSection}>
-          <Text style={styles.templatesSectionLabel}>Hazır şablonlar</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.templatesListContent}
-            style={styles.templatesList}
-          >
-            {BIO_TEMPLATES.map((template, index) => {
-              const isSelected = selectedTemplateIndex === index;
-              return (
-                <TouchableOpacity
-                  key={`template-${index}`}
-                  style={[styles.templateChip, isSelected && styles.templateChipSelected]}
-                  onPress={() => handleTemplateSelect(template, index)}
-                  activeOpacity={0.7}
-                  accessibilityLabel={`Şablon: ${template}`}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: isSelected }}
-                  accessibilityHint="Bu şablonu bio alanına eklemek için dokun"
-                >
-                  <Text
-                    style={[
-                      styles.templateChipText,
-                      isSelected && styles.templateChipTextSelected,
-                    ]}
-                    numberOfLines={2}
-                  >
-                    {template}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
-
-        {/* Prompt suggestions with examples */}
-        <View style={styles.promptsContainer}>
-          {BIO_PROMPTS.map((prompt, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.promptChip}
-              onPress={() => {
-                if (bio.length === 0) {
-                  setBio(prompt.example);
-                }
-              }}
-              accessibilityLabel={`Öneri: ${prompt.question}`}
-              accessibilityRole="button"
-              accessibilityHint="Bu örneği bio alanına eklemek için dokun"
-            >
-              <Text style={styles.promptQuestion}>{prompt.question}</Text>
-              <Text style={styles.promptExample}>Örnek: "{prompt.example}"</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Bio input */}
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.bioInput}
-            value={bio}
-            onChangeText={handleBioChange}
-            placeholder="Kendinden bahset..."
-            placeholderTextColor={colors.textTertiary}
-            multiline
-            textAlignVertical="top"
-            maxLength={PROFILE_CONFIG.MAX_BIO_LENGTH}
-            accessibilityLabel="Hakkında yazısı"
-            accessibilityHint="Kendini tanımlayan bir bio yaz"
+      <OnboardingLayout
+        step={10}
+        totalSteps={13}
+        showBack
+        showSkip
+        onSkip={handleSkip}
+        footer={
+          <FullWidthButton
+            label="Devam"
+            onPress={handleContinue}
+            disabled={false}
           />
-          <View style={styles.counterRow}>
-            {isTooShort && (
-              <Text style={styles.minLengthHint}>
-                En az {PROFILE_CONFIG.MIN_BIO_LENGTH} karakter ({trimmedBio.length}/{PROFILE_CONFIG.MIN_BIO_LENGTH})
-              </Text>
-            )}
-            <Text
-              style={[
-                styles.charCounter,
-                isNearLimit && styles.charCounterWarning,
-                charCount >= PROFILE_CONFIG.MAX_BIO_LENGTH && styles.charCounterLimit,
-              ]}
+        }
+      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={styles.title}>Hakkında</Text>
+          <Text style={styles.subtitle}>
+            Kendini tanımla. İlgi çekici bir bio eşleşme şansını arttırır.
+          </Text>
+
+          {/* Pre-made bio templates -- horizontally scrollable */}
+          <View style={styles.templatesSection}>
+            <Text style={styles.templatesSectionLabel}>Hazır şablonlar</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.templatesListContent}
             >
-              {charCount}/{PROFILE_CONFIG.MAX_BIO_LENGTH}
-            </Text>
+              {BIO_TEMPLATES.map((template, index) => {
+                const isSelected = selectedTemplateIndex === index;
+                return (
+                  <TouchableOpacity
+                    key={`template-${index}`}
+                    style={[styles.templateChip, isSelected && styles.templateChipSelected]}
+                    onPress={() => handleTemplateSelect(template, index)}
+                    activeOpacity={0.7}
+                    accessibilityLabel={`Şablon: ${template}`}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isSelected }}
+                    accessibilityHint="Bu şablonu bio alanına eklemek için dokun"
+                  >
+                    <Text
+                      style={[
+                        styles.templateChipText,
+                        isSelected && styles.templateChipTextSelected,
+                      ]}
+                      numberOfLines={2}
+                    >
+                      {template}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
           </View>
-        </View>
 
-      </ScrollView>
+          {/* Prompt suggestions with examples */}
+          <View style={styles.promptsContainer}>
+            {BIO_PROMPTS.map((prompt, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.promptChip}
+                onPress={() => {
+                  if (bio.length === 0) {
+                    setBio(prompt.example);
+                  }
+                }}
+                accessibilityLabel={`Öneri: ${prompt.question}`}
+                accessibilityRole="button"
+                accessibilityHint="Bu örneği bio alanına eklemek için dokun"
+              >
+                <Text style={styles.promptQuestion}>{prompt.question}</Text>
+                <Text style={styles.promptExample}>Örnek: "{prompt.example}"</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
-      {/* Footer outside scroll — stays above keyboard */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.continueButton}
-          onPress={handleContinue}
-          activeOpacity={0.85}
-          accessibilityLabel="Devam"
-          accessibilityRole="button"
-        >
-          <Text style={styles.continueButtonText}>Devam</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={handleSkip}
-          style={styles.skipButton}
-          accessibilityLabel="Şimdilik atla"
-          accessibilityRole="button"
-        >
-          <Text style={styles.skipText}>Şimdilik Atla</Text>
-        </TouchableOpacity>
-      </View>
+          {/* Bio input */}
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.bioInput}
+              value={bio}
+              onChangeText={handleBioChange}
+              placeholder="Kendinden bahset..."
+              placeholderTextColor={onboardingColors.textTertiary}
+              multiline
+              textAlignVertical="top"
+              maxLength={PROFILE_CONFIG.MAX_BIO_LENGTH}
+              accessibilityLabel="Hakkında yazısı"
+              accessibilityHint="Kendini tanımlayan bir bio yaz"
+            />
+            <View style={styles.counterRow}>
+              {isTooShort && (
+                <Text style={styles.minLengthHint}>
+                  En az {PROFILE_CONFIG.MIN_BIO_LENGTH} karakter ({trimmedBio.length}/{PROFILE_CONFIG.MIN_BIO_LENGTH})
+                </Text>
+              )}
+              <Text
+                style={[
+                  styles.charCounter,
+                  isNearLimit && styles.charCounterWarning,
+                  charCount >= PROFILE_CONFIG.MAX_BIO_LENGTH && styles.charCounterLimit,
+                ]}
+              >
+                {charCount}/{PROFILE_CONFIG.MAX_BIO_LENGTH}
+              </Text>
+            </View>
+          </View>
+        </ScrollView>
+      </OnboardingLayout>
     </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
+  flex: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.xxl,
+    paddingBottom: 32,
   },
   title: {
-    ...typography.h2,
-    color: colors.text,
-    marginBottom: spacing.sm,
+    fontSize: 28,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: onboardingColors.text,
+    marginBottom: 8,
   },
   subtitle: {
-    ...typography.body,
-    color: colors.textSecondary,
-    marginBottom: spacing.md,
+    fontSize: 15,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    lineHeight: 22,
+    color: onboardingColors.textSecondary,
+    marginBottom: 16,
   },
   templatesSection: {
-    marginBottom: spacing.md,
+    marginBottom: 16,
   },
   templatesSectionLabel: {
-    ...typography.label,
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-  },
-  templatesList: {
-    marginHorizontal: -spacing.lg,
+    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: onboardingColors.textSecondary,
+    marginBottom: 8,
   },
   templatesListContent: {
-    paddingHorizontal: spacing.lg,
-    gap: spacing.sm,
+    gap: 10,
+    paddingRight: 20,
   },
   templateChip: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.smd,
+    backgroundColor: onboardingColors.surface,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderWidth: 1.5,
-    borderColor: colors.surfaceBorder,
+    borderColor: onboardingColors.surfaceBorder,
     width: 220,
   },
   templateChipSelected: {
-    borderColor: palette.purple[400],
-    backgroundColor: palette.purple[50],
+    borderColor: onboardingColors.selectedBg,
+    backgroundColor: onboardingColors.selectedBg,
   },
   templateChipText: {
-    ...typography.bodySmall,
-    color: colors.text,
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: onboardingColors.text,
     lineHeight: 20,
   },
   templateChipTextSelected: {
-    color: palette.purple[700],
+    color: onboardingColors.selectedText,
   },
   promptsContainer: {
-    gap: spacing.sm,
-    marginBottom: spacing.md,
+    gap: 10,
+    marginBottom: 16,
   },
   promptChip: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    backgroundColor: onboardingColors.surface,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
+    borderColor: onboardingColors.surfaceBorder,
   },
   promptQuestion: {
-    ...typography.bodySmall,
-    color: colors.text,
+    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
+    color: onboardingColors.text,
     marginBottom: 4,
   },
   promptExample: {
     fontSize: 12,
-    color: colors.textTertiary,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: onboardingColors.textTertiary,
     fontStyle: 'italic',
     lineHeight: 18,
   },
   inputContainer: {
-    marginBottom: spacing.lg,
+    marginBottom: 16,
   },
   bioInput: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    ...typography.body,
-    color: colors.text,
+    backgroundColor: onboardingColors.surface,
+    borderRadius: 16,
+    padding: 16,
+    fontSize: 16,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: onboardingColors.text,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
+    borderColor: onboardingColors.surfaceBorder,
     minHeight: 120,
   },
   counterRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: spacing.xs,
+    marginTop: 6,
   },
   minLengthHint: {
-    ...typography.caption,
-    color: colors.warning,
+    fontSize: 12,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: onboardingColors.textTertiary,
   },
   charCounter: {
-    ...typography.caption,
-    color: colors.textTertiary,
+    fontSize: 12,
+    fontFamily: 'Poppins_400Regular',
+    fontWeight: '400',
+    color: onboardingColors.textTertiary,
     textAlign: 'right',
     marginLeft: 'auto',
   },
   charCounterWarning: {
-    color: colors.warning,
+    color: onboardingColors.textSecondary,
   },
   charCounterLimit: {
-    color: colors.error,
-  },
-  footer: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxl,
-    gap: spacing.sm,
-  },
-  continueButton: {
-    backgroundColor: colors.primary,
-    height: layout.buttonHeight,
-    borderRadius: borderRadius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  continueButtonText: {
-    ...typography.button,
-    color: colors.text,
-  },
-  skipButton: {
-    height: layout.buttonSmallHeight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  skipText: {
-    ...typography.bodySmall,
-    color: colors.textTertiary,
+    color: onboardingColors.text,
   },
 });
