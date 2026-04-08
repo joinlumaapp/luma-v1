@@ -4,7 +4,7 @@
 
 ---
 
-## Overall Status: 🟡 In Progress — Core features built, refinement needed
+## Overall Status: 🟡 In Progress — Core features built, refinement and integrations needed
 
 ---
 
@@ -12,76 +12,110 @@
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Phone OTP Login | ✅ Done | +90 TR default, SMS doğrulama çalışıyor |
-| Google Sign-In | 🟡 Placeholder | "Çok yakında" badge — henüz entegre değil |
-| Apple Sign-In | ❌ Not Started | iOS App Store için zorunlu — eklenecek |
-| Onboarding Flow | ✅ Done | İsim, doğum tarihi, cinsiyet, fotoğraf yükleme |
-| Uyum Analizi (20 soru) | ✅ Done | 20 soru, 4 seçenek, progress bar çalışıyor |
-| Kişilik Testi (5 soru) | ✅ Done | İsteğe bağlı, profil etiketi veriyor |
-| Hedef Seçimi | ✅ Done | 5 seçenek mevcut |
+| Phone OTP Login | ✅ Done | PhoneEntryScreen + OTPVerificationScreen |
+| Email Entry | ✅ Done | EmailEntryScreen exists |
+| Password Creation | ✅ Done | PasswordCreationScreen exists |
+| Sign Up Choice | ✅ Done | SignUpChoiceScreen with options |
+| Selfie Verification | ✅ Done | SelfieVerificationScreen UI |
+| Emotional Intro | ✅ Done | EmotionalIntroScreen |
+| Google Sign-In | 🟡 Placeholder | UI exists, backend integration pending |
+| Apple Sign-In | ❌ Not Started | Required for iOS App Store |
+| Onboarding: Name | ✅ Done | NameScreen |
+| Onboarding: Birth Date | ✅ Done | BirthDateScreen |
+| Onboarding: Gender | ✅ Done | GenderScreen |
+| Onboarding: Height | ✅ Done | HeightScreen |
+| Onboarding: City | ✅ Done | CitySelectionScreen |
+| Onboarding: Photos | ✅ Done | PhotosScreen |
+| Onboarding: Bio | ✅ Done | BioScreen |
+| Onboarding: Smoking | ✅ Done | SmokingScreen |
+| Onboarding: Children | ✅ Done | ChildrenScreen |
+| Onboarding: Sports | ✅ Done | SportsScreen |
+| Onboarding: Who to Meet | ✅ Done | WhoToMeetScreen |
+| Onboarding: Prompts | ✅ Done | PromptSelectionScreen |
+| Backend auth module | ✅ Done | auth.controller + auth.service + sms.provider |
 
 ---
 
-## Tab 1: Akış (Feed)
+## Tab 1: Akis (Feed)
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Story circles | ✅ Done | Yatay kaydırmalı, "+" ile ekleme |
-| Story oluşturma | ✅ Done | Paket limitli (1/5/sınırsız) |
-| Story 24 saat süresi | 🟡 Needs Testing | Expire logic kontrol edilmeli |
-| Gönderi paylaşımı | ✅ Done | Fotoğraf, Video, Yazı |
-| Popüler tab | ✅ Done | Mesafe + etkileşim sıralaması |
-| Takip tab | ✅ Done | Takip edilenlerin gönderileri |
-| Beğeni/Yorum | 🟡 Partial | Temel etkileşimler var, animasyonlar eksik |
-| Hedef tag on posts | ✅ Done | "Arkadaş Arıyorum" gibi etiketler görünüyor |
+| SocialFeed screen | ✅ Done | SocialFeedScreen — tab root |
+| Story viewer | ✅ Done | StoryViewerScreen |
+| Story creator | ✅ Done | StoryCreator component |
+| Feed profile view | ✅ Done | FeedProfileScreen |
+| Post detail | ✅ Done | PostDetailScreen |
+| Notifications screen | ✅ Done | NotificationsScreen (accessible from feed) |
+| Backend stories module | ✅ Done | stories.controller + stories.service |
+| Backend posts module | ✅ Done | posts.controller + posts.service |
+| Story 24h expiry | 🟡 Partial | Backend logic exists, needs testing |
+| Popüler / Takip tabs | 🟡 Partial | Basic feed exists, algorithm refinement needed |
+| Begeni/Yorum animations | 🟡 Partial | Basic interactions work, animations incomplete |
 
 ---
 
-## Tab 2: Keşfet (Discover)
+## Tab 2: Kesfet (Discover)
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Kart swipe UI | ✅ Done | Sağ/sol swipe çalışıyor (test kullanıcı yok) |
-| Uyum yüzdesi on cards | 🟡 Needs Implementation | Kart üzerinde uyum skoru gösterilmeli |
-| Süper Beğeni (swipe up) | 🟡 Needs Testing | Jeton kesme logic kontrol edilmeli |
-| Boost butonu | ✅ Done | Profil öne çıkarma ekranı mevcut |
-| Filter butonu | ✅ Done | Temel filtreler çalışıyor |
-| Gelişmiş filtreler (paketli) | 🟡 Partial | Premium/Supreme farkı uygulanmalı |
-| Empty state | ✅ Done | "Yakınında profil yok" + "Filtreleri Genişlet" |
-| Eşleşme animasyonu | ❌ Not Started | Konfeti/kalp animasyonu eklenecek |
+| Discovery screen (swipe) | ✅ Done | DiscoveryScreen with card swipe |
+| Profile preview | ✅ Done | ProfilePreviewScreen |
+| Compatibility preview card | ✅ Done | CompatibilityPreviewCard component |
+| Filter screen | ✅ Done | FilterScreen |
+| Likes You screen | ✅ Done | LikesYouScreen |
+| Daily Picks screen | ✅ Done | DailyPicksScreen |
+| Daily Question | ✅ Done | DailyQuestionScreen + backend daily-question module |
+| Crossed Paths | ✅ Done | CrossedPathsScreen |
+| Instant Connect | ✅ Done | InstantConnectScreen |
+| Waves | ✅ Done | WavesScreen |
+| Backend discovery module | ✅ Done | discovery.controller + discovery.service |
+| Uyum yüzdesi on cards | 🟡 Partial | Component exists, real score integration pending |
+| Super Begeni (swipe up) | 🟡 Partial | UI exists, jeton deduction needs testing |
+| Gelismis filtreler (paket bazli) | 🟡 Partial | Basic filters done, Premium/Supreme differentiation needed |
+| Eslesme animasyonu (konfeti/kalp) | ❌ Not Started | Must add on mutual like |
+| Boost activation | 🟡 Partial | UI exists (BoostMarketScreen), backend integration partial |
 
 ---
 
-## Tab 3: Canlı (Live)
+## Tab 3: Canli (Live)
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Kamera görünümü | ✅ Done | Full-screen kamera çalışıyor |
-| Jeton counter | ✅ Done | Sağ üstte jeton bakiyesi görünüyor |
-| "Bağlan" butonu | ✅ Done | Gradient pink-purple buton |
-| WebRTC video eşleştirme | 🟡 Partial | Altyapı var, gerçek eşleştirme test edilmeli |
-| Uyum bazlı eşleştirme | ❌ Not Started | Algoritma entegrasyonu yapılacak |
-| Görüşme sonu seçenekler | ❌ Not Started | Takip Et / Beğen / Sonraki butonları |
-| Jeton kesme per session | 🟡 Needs Testing | Logic var, test edilmeli |
+| Live screen | ✅ Done | LiveScreen with camera UI |
+| Jeton counter on screen | ✅ Done | Shows jeton balance |
+| Baglan button | ✅ Done | Gradient button present |
+| JetonMarket navigation | ✅ Done | Can buy jetons from Live tab |
+| MembershipPlans navigation | ✅ Done | Can upgrade from Live tab |
+| WebRTC video matching | 🟡 Partial | Infrastructure exists, real pairing untested |
+| Uyum bazli eslestirme | ❌ Not Started | Algorithm integration for live pairing |
+| Gorusme sonu secenekler | ❌ Not Started | Takip Et / Begen / Sonraki buttons |
+| Jeton kesme per session | 🟡 Partial | Logic exists, needs testing |
 
 ---
 
-## Tab 4: Eşleşme (Matches)
+## Tab 4: Eslesme (Matches)
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Eşleşmeler tab | ✅ Done | Grid görünümü |
-| Mesajlar tab | ✅ Done | Chat listesi |
-| Beğenenler tab | ✅ Done | Blurlu görünüm (paket bazlı) |
-| Takipçiler tab | ❌ Not Started | Yeni tab — blurlu/net paket bazlı |
-| Kim Gördü tab | ✅ Done | Kilit ikonu (paket bazlı) |
-| Text messaging | ✅ Done | Temel mesajlaşma çalışıyor |
-| Voice call (mesajlaşma içi) | 🟡 Partial | UI var, WebRTC entegrasyonu eksik |
-| Video call (mesajlaşma içi) | 🟡 Partial | UI var, WebRTC entegrasyonu eksik |
-| Selam Gönder | 🟡 Needs Testing | Jeton kesme kontrol edilmeli |
-| Okundu Bilgisi | 🟡 Partial | Premium+ kontrolü uygulanmalı |
-| Buz Kırıcı Oyunlar | ❌ Not Started | Yeni özellik — V1'e eklenecek |
-| Empty state | ✅ Done | "Henüz Eşleşmen Yok" + "Keşfet'e Git" |
+| Matches list | ✅ Done | MatchesListScreen |
+| Match detail | ✅ Done | MatchDetailScreen |
+| Viewers preview | ✅ Done | ViewersPreviewScreen (Kim Gordu) |
+| Chat list | ✅ Done | ChatListScreen |
+| Chat screen | ✅ Done | ChatScreen with deferred mount |
+| Call screen | ✅ Done | CallScreen (voice + video UI) |
+| Date planner | ✅ Done | DatePlannerScreen |
+| Secret admirer | ✅ Done | SecretAdmirerScreen |
+| Weekly top | ✅ Done | WeeklyTopScreen |
+| Compatibility insight | ✅ Done | CompatibilityInsightScreen |
+| Likes You (from matches) | ✅ Done | LikesYouScreen accessible |
+| Backend matches module | ✅ Done | matches.controller + matches.service + date-plan + secret-admirer + compatibility-xray |
+| Backend chat module | ✅ Done | chat.controller + chat.service + chat.gateway + icebreaker + call-history |
+| WebRTC voice call | 🟡 Partial | CallScreen UI done, WebRTC integration incomplete |
+| WebRTC video call | 🟡 Partial | CallScreen UI done, WebRTC integration incomplete |
+| Selam Gonder | 🟡 Partial | Jeton deduction needs testing |
+| Okundu Bilgisi | 🟡 Partial | Premium+ package check needs implementation |
+| Buz Kirici Oyunlar | 🟡 Partial | Backend icebreaker controller exists, mobile UI incomplete |
+| Takipciler sub-tab | 🟡 Partial | FollowListScreen exists but not as dedicated Eslesme sub-tab |
 
 ---
 
@@ -89,22 +123,34 @@
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Profil görünümü | ✅ Done | Kapak fotoğrafı, isim, yaş, şehir, badge'ler |
-| Hakkımda grid | ✅ Done | 12 bilgi kartı (Yaş, Cinsiyet, Şehir, İş, etc.) |
-| Profil Gücü bar | ✅ Done | %32 gösteriyor, ipuçları veriyor |
-| Profilini Öne Çıkar (Boost) | ✅ Done | 24 saat 10x görünürlük CTA |
-| "X kişi gördü — Premium ile öğren" | ✅ Done | Upsell CTA çalışıyor |
-| Kaşif görevleri | ✅ Done | 5 profili keşfet, timer, progress bar |
-| Bu Haftanın Yıldızları | ✅ Done | 3 kategori tab'ı görünüyor |
-| Düzenle — Kişilik Testi | ✅ Done | 5 soru, 1 dakika |
-| Düzenle — Profil Videosu | ✅ Done | 10-30 sn video ekleme UI |
-| Düzenle — Fotoğraflar | ✅ Done | 3x3 grid, min 2 max 9, "Ana" etiketi |
-| Düzenle — Hedefim | ✅ Done | 5 seçenek |
-| Düzenle — Hakkımda Daha Fazlası | ✅ Done | 12 alan (Kilo → Değerler) |
-| Düzenle — İlgi Alanları | ✅ Done | Max 15 seçim |
-| Düzenle — Prompt'larım | ✅ Done | Max 3 soru |
-| Düzenle — Sevdiğin Mekanlar | ✅ Done | Max 8, kategoriler, popüler mekanlar |
-| Settings | 🟡 Partial | Temel ayarlar var, bildirim tercihleri eksik |
+| Profile screen | ✅ Done | ProfileScreen |
+| Edit profile | ✅ Done | EditProfileScreen |
+| Interest picker | ✅ Done | InterestPickerScreen |
+| Settings | ✅ Done | SettingsScreen |
+| Questions (Uyum) | ✅ Done | QuestionsScreen |
+| Personality selection | ✅ Done | PersonalitySelectionScreen (Kisilik Testi) |
+| Profile coach | ✅ Done | ProfileCoachScreen (Profil Gucu) |
+| Follow list | ✅ Done | FollowListScreen |
+| My posts | ✅ Done | MyPostsScreen |
+| Places (Mekanlar) | ✅ Done | PlacesScreen |
+| Relationship status | ✅ Done | RelationshipScreen |
+| Couples Club | ✅ Done | CouplesClubScreen |
+| Backend profiles module | ✅ Done | profiles.controller + profiles.service + mood + voice-intro |
+| Backend engagement module | ✅ Done | engagement.controller + engagement.service (Kasif) |
+| Backend badges module | ✅ Done | badges.controller + badges.service |
+
+---
+
+## Settings & Safety
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Notification settings | ✅ Done | NotificationSettingsScreen |
+| Membership plans | ✅ Done | MembershipPlansScreen (3 paket gorunumu) |
+| Blocked users | ✅ Done | BlockedUsersScreen |
+| Safety center | ✅ Done | SafetyCenterScreen |
+| Account deletion | ✅ Done | AccountDeletionScreen |
+| Privacy policy | ✅ Done | PrivacyPolicyScreen |
 
 ---
 
@@ -112,53 +158,108 @@
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Paket ekranı (3 paket) | ✅ Done | Ücretsiz/Premium/Supreme görünüyor |
-| Jeton mağazası | ✅ Done | 3 paket (79.99₺/199.99₺/349.99₺) |
-| Boost mağazası | ✅ Done | 4 seçenek (120-1500 jeton) |
-| In-app purchase (iOS) | ❌ Not Started | App Store entegrasyonu yapılacak |
-| In-app purchase (Android) | ❌ Not Started | Google Play entegrasyonu yapılacak |
-| Jeton kesme logic | 🟡 Partial | Bazı yerlerde çalışıyor, tümü test edilmeli |
-| Paket limitleri enforcement | 🟡 Partial | Bazı limitler uygulanıyor, tümü kontrol edilmeli |
-| AdMob reklam entegrasyonu | ❌ Not Started | Rewarded ads sistemi kurulacak |
+| Paket ekrani (3 paket) | ✅ Done | MembershipPlansScreen — Ucretsiz/Premium/Supreme |
+| Jeton magazasi | ✅ Done | JetonMarketScreen (3 paket: 79.99/199.99/349.99 TL) |
+| Boost magazasi | ✅ Done | BoostMarketScreen |
+| Supreme celebration | ✅ Done | SupremeCelebrationScreen |
+| Backend payments module | ✅ Done | payments.controller + payments.service + receipt-validator |
+| In-app purchase (iOS) | ❌ Not Started | App Store entegrasyonu yapilacak |
+| In-app purchase (Android) | ❌ Not Started | Google Play entegrasyonu yapilacak |
+| Jeton kesme logic | 🟡 Partial | Some actions deduct, full coverage incomplete |
+| Paket limitleri enforcement | 🟡 Partial | Some limits applied, full enforcement needed |
+| AdMob reklam entegrasyonu | ❌ Not Started | Rewarded ads for free users |
 
 ---
 
-## Yeni Özellikler (V1'e eklenecek)
-
-| Feature | Status | Priority |
-|---------|--------|----------|
-| Günün Eşleşmesi | ❌ Not Started | Yüksek |
-| Ortak Mekan Önerisi | ❌ Not Started | Orta |
-| Mood Status | ❌ Not Started | Orta |
-| Buz Kırıcı Oyunlar | ❌ Not Started | Yüksek |
-| Haftalık Uyum Raporu | ❌ Not Started | Düşük |
-| Eşleşme animasyonu (konfeti/kalp) | ❌ Not Started | Yüksek |
-| Bumpy-tarzı animasyonlar | ❌ Not Started | Yüksek |
-
----
-
-## Infrastructure & Deploy
+## Compatibility & Algorithm
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Railway backend deploy | 🟡 Issues | Deploy sorunları yaşanıyor |
-| EAS APK build | 🟡 In Progress | Preview build kuyruğunda |
+| Uyum Analizi (20 soru) | ✅ Done | QuestionsScreen + backend compatibility module |
+| Kisilik Testi (5 soru) | ✅ Done | PersonalitySelectionScreen |
+| Compatibility scoring | ✅ Done | Backend compatibility.service |
+| Daily question | ✅ Done | DailyQuestionScreen + backend daily-question module |
+| Compatibility insight (xray) | ✅ Done | CompatibilityInsightScreen + backend compatibility-xray.service |
+| Weekly report | ✅ Done | Backend weekly-report.service |
+| Gunun Eslesmesi (AI daily) | ❌ Not Started | AI-powered daily recommendation |
+| Haftalik Uyum Raporu (mobile) | 🟡 Partial | Backend exists, mobile push/display incomplete |
+
+---
+
+## Real-time & Communication
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| WebSocket chat | ✅ Done | chat.gateway (Socket.io) |
+| Text messaging | ✅ Done | ChatScreen |
+| Presence (online status) | ✅ Done | Backend presence module + usePresenceTracking hook |
+| Incoming call overlay | ✅ Done | IncomingCallOverlay component |
+| Minimized call bar | ✅ Done | MinimizedCallBar component |
+| Call store listeners | ✅ Done | setupCallStoreListeners in MainTabNavigator |
+| WebRTC actual call flow | 🟡 Partial | UI complete, WebRTC peer connection incomplete |
+
+---
+
+## Moderation & Safety
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Report screen | ✅ Done | ReportScreen (accessible from Discovery + Matches) |
+| Backend moderation module | ✅ Done | moderation.controller + moderation.service + content-scanner |
+| Backend admin module | ✅ Done | admin.controller + admin.service |
+| Block system | ✅ Done | BlockedUsersScreen + backend |
+| Content scanning | ✅ Done | content-scanner.service |
+| Photo verification (selfie) | ✅ Done | SelfieVerificationScreen + backend |
+
+---
+
+## Infrastructure & Backend Services
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Health check | ✅ Done | health.controller + app-info.controller |
+| Storage (S3) | ✅ Done | storage module with image-processor |
+| Search service | ✅ Done | search.module + search.service |
+| Analytics module | ✅ Done | analytics.controller + analytics.service |
+| Tasks/scheduler | ✅ Done | tasks.module + tasks.service |
+| Cache module | ✅ Done | Backend cache module exists |
+| Relationships module | ✅ Done | relationships.controller + relationships.service |
+| Users module | ✅ Done | Backend users module exists |
 | Docker setup | ✅ Done | docker-compose.yml mevcut |
-| CI/CD (GitHub Actions) | 🟡 Partial | Temel pipeline var |
-| PostgreSQL | ✅ Done | Railway üzerinde çalışıyor |
-| Redis | 🟡 Needs Setup | Cache layer kurulacak |
-| Elasticsearch | ❌ Not Started | Kullanıcı arama için gerekecek |
+| Railway backend deploy | 🟡 Issues | Deploy sorunlari yasaniyor |
+| EAS APK build | 🟡 In Progress | Preview build kuyruğunda |
+| CI/CD (GitHub Actions) | 🟡 Partial | Basic pipeline exists |
+| Redis caching | 🟡 Partial | Module exists, full integration ongoing |
+| Elasticsearch | ❌ Not Started | User search needs ES integration |
+
+---
+
+## New V1 Features (Not Yet Implemented)
+
+| Feature | Status | Priority |
+|---------|--------|----------|
+| Eslesme animasyonu (konfeti/kalp) | ❌ Not Started | Yuksek |
+| Bumpy-tarzi mikro-animasyonlar | ❌ Not Started | Yuksek |
+| Gunun Eslesmesi (AI daily) | ❌ Not Started | Yuksek |
+| Ortak Mekan Onerisi | ❌ Not Started | Orta |
+| Mood Status | 🟡 Partial | Backend mood.controller exists, mobile incomplete |
+| Canli uyum eslestirme | ❌ Not Started | Orta |
+| Canli gorusme sonu secenekler | ❌ Not Started | Orta |
+| In-app purchase (iOS + Android) | ❌ Not Started | Yuksek |
+| AdMob reklam sistemi | ❌ Not Started | Orta |
+| Apple Sign-In | ❌ Not Started | Yuksek (App Store zorunlu) |
 
 ---
 
 ## Next Steps (Priority Order)
-1. 🔴 Apple Sign-In ekle (App Store zorunluluğu)
-2. 🔴 Google Sign-In entegre et (şu an placeholder)
-3. 🔴 Eşleşme animasyonları (konfeti/kalp) — Bumpy referansı
-4. 🟡 Takipçiler tab'ını ekle (Eşleşme bölümünde)
-5. 🟡 Buz Kırıcı Oyunlar implementasyonu
-6. 🟡 Günün Eşleşmesi özelliği
-7. 🟡 Canlı'da uyum bazlı eşleştirme
-8. 🟡 WebRTC sesli/görüntülü arama (mesajlaşma içi)
-9. 🟡 In-app purchase entegrasyonu (App Store + Google Play)
-10. 🟡 AdMob reklam sistemi
+
+1. Apple Sign-In (App Store zorunlulugu)
+2. Google Sign-In entegrasyonu (su an placeholder)
+3. In-app purchase (App Store + Google Play)
+4. Eslesme animasyonlari (konfeti/kalp) — Bumpy referansi
+5. Gunun Eslesmesi ozelligi
+6. Canli'da uyum bazli eslestirme + gorusme sonu butonlar
+7. WebRTC sesli/goruntulu arama (tam entegrasyon)
+8. Paket limitleri tam enforcement
+9. Jeton kesme logic tam kapsam
+10. AdMob reklam sistemi

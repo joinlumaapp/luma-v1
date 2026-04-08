@@ -1,124 +1,154 @@
 # LUMA V1 — Development Roadmap
 
 **Last Updated:** 2026-04-08
+**Structure:** 8 phases, 16 weeks
+**Start Date:** April 2026
 
 ---
 
-## Phase 1: Critical Fixes & Auth (Week 1-2)
-**Goal:** Authentication tam çalışsın, deploy stabil olsun
+## Phase 1: Core Infrastructure (Week 1-2)
+**Target:** 8-21 Nisan 2026
+**Goal:** Auth, DB ve temel API altyapisi stabil calissin
 
-- [ ] Apple Sign-In implementasyonu (iOS App Store zorunlu)
-- [ ] Google Sign-In gerçek entegrasyon ("Çok yakında" → aktif)
-- [ ] Railway backend deploy sorunlarını çöz
-- [ ] API URL'lerini production sunucuya bağla
-- [ ] Status bar düzeltmesi (siyah arka plan, beyaz ikonlar)
-- [ ] Logo büyütme ve yukarı taşıma
-
----
-
-## Phase 2: Core Experience Polish (Week 2-4)
-**Goal:** Ana kullanıcı deneyimi pürüzsüz olsun
-
-### Keşfet
-- [ ] Kart üzerinde uyum yüzdesi gösterimi
-- [ ] Eşleşme animasyonu (konfeti + kalp — Bumpy referansı)
-- [ ] Swipe animasyonlarını yumuşat
-- [ ] Süper Beğeni jeton kesme testi
-- [ ] Gelişmiş filtrelerde paket kontrolü (Free: temel, Premium: +ilgi alanı, Supreme: tümü)
-
-### Eşleşme
-- [ ] Takipçiler tab'ını ekle (5. sub-tab)
-- [ ] Beğenenler blurlu/net paket kontrolü
-- [ ] Takipçiler blurlu/net paket kontrolü
-- [ ] Kim Gördü paket kontrolü
-
-### Akış
-- [ ] Beğeni kalp animasyonu
-- [ ] Yorum sistemi iyileştirme
-- [ ] Story expire logic testi (24 saat)
-- [ ] Hikaye oluşturma paket limiti kontrolü
-
-### Profil
-- [ ] Bildirim tercihleri ekranı (3 katmanlı sistem)
-- [ ] Profil Gücü hesaplama mantığını düzelt
+- [ ] Railway backend deploy stabilizasyonu
+- [ ] PostgreSQL sema finalizasyonu (Prisma)
+- [ ] Redis cache + rate limiting kurulumu
+- [ ] Telefon + OTP giris sistemi (Netgsm entegrasyonu)
+- [ ] Test OTP sistemi (gelistirme icin)
+- [ ] Google Sign-In entegrasyonu
+- [ ] Apple Sign-In entegrasyonu (iOS App Store zorunlu)
+- [ ] API URL'lerini production sunucuya baglama
+- [ ] Health check endpoint + monitoring
+- [ ] Monorepo yapisini dogrulama (apps/mobile + apps/backend + packages/shared)
 
 ---
 
-## Phase 3: Communication Features (Week 4-6)
-**Goal:** Mesajlaşma ve iletişim tam çalışsın
+## Phase 2: Onboarding + Profile Setup (Week 3-4)
+**Target:** 22 Nisan - 5 Mayis 2026
+**Goal:** Kullanici kayit akisi ve profil olusturma tamamlansin
 
-- [ ] WebRTC sesli arama (eşleşme/arkadaş arası — mesajlaşma içi)
-- [ ] WebRTC görüntülü arama (eşleşme/arkadaş arası — mesajlaşma içi)
-- [ ] Selam Gönder jeton kesme doğrulama
-- [ ] Okundu Bilgisi paket kontrolü (Premium+)
-- [ ] Buz Kırıcı Oyunlar implementasyonu:
-  - [ ] "2 Doğru 1 Yanlış" mini-oyunu
-  - [ ] Hızlı soru promptları
-  - [ ] "Bu mu O mu?" (This or That)
-
----
-
-## Phase 4: Live & Matching Engine (Week 6-8)
-**Goal:** Canlı keşfet ve algoritma entegrasyonu
-
-- [ ] Canlı'da uyum bazlı eşleştirme algoritması
-- [ ] Görüşme sonu butonları (Takip Et / Beğen / Sonraki)
-- [ ] Karşılıklı takip = Arkadaş otomatik oluşturma
-- [ ] Jeton kesme per Canlı session
-- [ ] Paket bazlı günlük Canlı limiti (Free: 3, Premium: 10, Supreme: sınırsız)
-- [ ] Günün Eşleşmesi özelliği (AI-powered günlük öneri)
+- [ ] Onboarding akisi (isim, dogum tarihi, cinsiyet, boy, sehir, bio, foto)
+- [ ] Uyum Analizi — 20 soru (ZORUNLU, uyum yuzdesi hesaplar)
+- [ ] Kisilik Testi — 5 soru (istege bagli, profil etiketi verir)
+- [ ] 5 Hedef secimi (Evlenmek, Iliski bulmak, Sohbet/arkadaslik, Kulturler, Gezi)
+- [ ] Profil Gucu hesaplama
+- [ ] Foto yukleme (S3 entegrasyonu)
+- [ ] Prompt/bio alanlari
+- [ ] Profil duzenleme ekrani
 
 ---
 
-## Phase 5: New V1 Features (Week 8-10)
-**Goal:** Yeni özellikleri ekle
+## Phase 3: Kesfet — Discovery with Swipe (Week 5-6)
+**Target:** 6-19 Mayis 2026
+**Goal:** Kart swipe sistemi tam calissin
 
-- [ ] Mood Status (Anlık Ruh Hali) — profilde durum paylaşımı
-- [ ] Ortak Mekan Önerisi — eşleşme sonrası mekan önerme
-- [ ] Haftalık Uyum Raporu — haftalık özet bildirimi
-- [ ] Bumpy-tarzı animasyonlar ve geçişler (tüm ekranlarda)
-- [ ] Gradient tema iyileştirmeleri (pink-peach light, purple-dark premium)
+- [ ] Kesfet tab — kart swipe UI (begen/pas gec/super begeni)
+- [ ] Uyum yuzdesi kart uzerinde gosterim
+- [ ] Uyum bazli siralama algoritmasi
+- [ ] Gelismis filtreler (yas, sehir, boy, hedef) + paket bazli erisim
+- [ ] Super Begeni — jeton kesme
+- [ ] Eslesmeler olusturma (karsilikli begeni)
+- [ ] Eslesme animasyonu (konfeti + kalp — Bumpy referansi)
+- [ ] Swipe animasyonlarini yumusat
+- [ ] Gunun Eslesmesi (AI-powered gunluk oneri)
+- [ ] Boost sistemi (jeton ile)
 
 ---
 
-## Phase 6: Monetization & Ads (Week 10-12)
-**Goal:** Gelir modeli tam çalışsın
+## Phase 4: Akis — Feed (Week 7-8)
+**Target:** 20 Mayis - 2 Haziran 2026
+**Goal:** Instagram tarzi hikaye ve gonderi sistemi
 
-- [ ] In-app purchase — App Store entegrasyonu
+- [ ] Akis tab — Populer/Takip alt tablari
+- [ ] Hikaye olusturma + goruntuleme (24 saat expire)
+- [ ] Gonderi olusturma (foto/video/yazi)
+- [ ] Begeni kalp animasyonu
+- [ ] Yorum sistemi
+- [ ] Takip sistemi (tek tarafli)
+- [ ] Karsilikli takip = Arkadas otomatik olusturma
+- [ ] Hikaye/gonderi paket limiti kontrolu
+- [ ] Mood Status (Anlik Ruh Hali) profilde durum paylasimi
+
+---
+
+## Phase 5: Eslesme + Chat (Week 9-10)
+**Target:** 3-16 Haziran 2026
+**Goal:** Mesajlasma ve iletisim tam calissin
+
+- [ ] Eslesme tab — 5 alt tab: Eslesmeler, Mesajlar, Begeenenler, Takipciler, Kim Gordu
+- [ ] Begeenenler blur/net paket kontrolu
+- [ ] Takipciler blur/net paket kontrolu
+- [ ] Kim Gordu paket kontrolu
+- [ ] WebSocket bazli gercek zamanli mesajlasma
+- [ ] Selam Gonder (jeton ile)
+- [ ] Buz Kirici Oyunlar (2 Dogru 1 Yanlis, Hizli soru, Bu mu O mu)
+- [ ] Okundu bilgisi (Premium+)
+- [ ] WebRTC sesli arama (eslesme/arkadas arasi)
+- [ ] WebRTC goruntulu arama (eslesme/arkadas arasi)
+- [ ] Ortak Mekan Onerisi (eslesme sonrasi mekan)
+
+---
+
+## Phase 6: Canli — Live Video (Week 11-12)
+**Target:** 17-30 Haziran 2026
+**Goal:** Omegle tarzi canli kesif tam calissin
+
+- [ ] Canli tab — rastgele video eslestirme
+- [ ] Uyum bazli eslestirme algoritmasi
+- [ ] Gorusme sonu butonlari (Takip Et / Begen / Sonraki)
+- [ ] Jeton kesme per Canli session
+- [ ] Paket bazli gunluk Canli limiti (Free: 3, Premium: 10, Supreme: sinirsiz)
+- [ ] WebRTC altyapi stabilizasyonu
+- [ ] Moderasyon/guvenlik kontrolleri
+
+---
+
+## Phase 7: Payments — 3 Packages + Jeton (Week 13-14)
+**Target:** 1-14 Temmuz 2026
+**Goal:** Gelir modeli tam calissin
+
+- [ ] 3 paket tanimlama: Ucretsiz (0TL), Premium (499TL/ay), Supreme (1.199TL/ay)
 - [ ] In-app purchase — Google Play entegrasyonu
-- [ ] Jeton satın alma flow testi
-- [ ] Boost satın alma flow testi
-- [ ] Subscription (Premium/Supreme) satın alma flow
+- [ ] In-app purchase — App Store entegrasyonu
+- [ ] Subscription (Premium/Supreme) satin alma akisi
+- [ ] Jeton satin alma akisi (79,99TL / 199,99TL / 349,99TL)
+- [ ] Boost satin alma akisi
 - [ ] AdMob rewarded ads entegrasyonu (free users)
-- [ ] Reklam izle → jeton kazan flow
-- [ ] Paket limitleri tam enforcement (tüm özellikler)
+- [ ] Reklam izle → jeton kazan akisi
+- [ ] Kasif gorevleri → jeton kazan sistemi
+- [ ] Paket limitleri tam enforcement (tum ozellikler)
 
 ---
 
-## Phase 7: Safety & Quality (Week 12-14)
-**Goal:** Güvenlik ve kalite kontrolü
+## Phase 8: Polish, Notifications, Admin Panel, Launch Prep (Week 15-16)
+**Target:** 15-28 Temmuz 2026
+**Goal:** Lansmana hazirlik
 
-- [ ] Rapor sistemi (fake profil, taciz, spam, uygunsuz içerik)
+### Notifications
+- [ ] Firebase push notification entegrasyonu
+- [ ] 3 katmanli bildirim sistemi (Kritik/Onemli/Dusuk)
+- [ ] Bildirim tercihleri ekrani
+
+### Safety & Quality
+- [ ] Rapor sistemi (fake profil, taciz, spam, uygunsuz icerik)
 - [ ] Engelleme sistemi
-- [ ] Sahte profil tespiti (otomasyon)
-- [ ] Fotoğraf doğrulama (selfie verification)
-- [ ] Anti-manipulation kontrolleri (Uyum Analizi)
-- [ ] Content moderation hooks
-- [ ] Rate limiting (spam önleme)
+- [ ] Sahte profil tespiti
+- [ ] Foto dogrulama (selfie verification)
+- [ ] Rate limiting (spam onleme)
 
----
+### Polish
+- [ ] Bumpy-tarzi animasyonlar ve gecisler (tum ekranlarda)
+- [ ] Gradient tema iyilestirmeleri (pink-peach light, purple-dark premium)
+- [ ] Haftalik Uyum Raporu (gamification)
+- [ ] Performance optimizasyonu
 
-## Phase 8: Testing & Launch Prep (Week 14-16)
-**Goal:** Lansmana hazırlık
-
-- [ ] Tüm özelliklerin unit test'leri
-- [ ] API integration test'leri
-- [ ] E2E test'leri (kritik flow'lar)
-- [ ] Performance optimization
-- [ ] iOS App Store submission
+### Testing & Launch
+- [ ] Unit test'ler + API integration test'ler
+- [ ] E2E test'ler (kritik akislar)
 - [ ] Google Play Store submission
-- [ ] Beta test grubu oluşturma
-- [ ] Founder Badge ilk 777 kullanıcı sistemi
+- [ ] iOS App Store submission
+- [ ] Beta test grubu olusturma
+- [ ] Founder Badge ilk 777 kullanici sistemi
 - [ ] Launch marketing materyalleri
 
 ---
@@ -127,21 +157,21 @@
 
 | Milestone | Target | Status |
 |-----------|--------|--------|
-| Auth tam çalışır | Hafta 2 | 🟡 |
-| İlk stabil APK | Hafta 3 | 🟡 |
-| Eşleşme sistemi tam | Hafta 5 | ❌ |
-| Mesajlaşma + arama | Hafta 6 | ❌ |
-| Canlı keşfet tam | Hafta 8 | ❌ |
-| Monetization aktif | Hafta 12 | ❌ |
-| Beta test | Hafta 14 | ❌ |
-| App Store / Play Store | Hafta 16 | ❌ |
+| Auth + DB stabil | Hafta 2 (21 Nisan) | 🟡 |
+| Onboarding tamamlandi | Hafta 4 (5 Mayis) | 🟡 |
+| Kesfet + swipe calisiyor | Hafta 6 (19 Mayis) | ❌ |
+| Akis + hikayeler calisiyor | Hafta 8 (2 Haziran) | ❌ |
+| Mesajlasma + arama calisiyor | Hafta 10 (16 Haziran) | ❌ |
+| Canli video calisiyor | Hafta 12 (30 Haziran) | ❌ |
+| Monetization aktif | Hafta 14 (14 Temmuz) | ❌ |
+| App Store / Play Store | Hafta 16 (28 Temmuz) | ❌ |
 
 ---
 
 ## Technical Debt
 - Railway deploy stability
-- API URL yönlendirme
-- WebRTC altyapı kurulumu
-- Redis cache layer
+- WebRTC altyapi kurulumu
 - Elasticsearch user search
-- Push notification (FCM) setup
+- Firebase push notification (FCM) setup
+- Netgsm SMS entegrasyonu
+- Redis cache layer optimization
