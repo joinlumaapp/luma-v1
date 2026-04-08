@@ -12,7 +12,7 @@ LUMA is a compatibility-first social discovery platform that combines meaningful
 - **4 Relationship Types**: Takip, Arkadas, Eslesme, Super Begeni
 - **5 Hedefler**: Evlenmek, Iliski bulmak, Sohbet/Arkadas, Kulturleri ogrenmek, Dunyayi gezmek
 - **Jeton Economy**: In-app currency for premium actions
-- **Uyum Score Range**: 47-97%
+- **Uyum Score Range**: 47-97% (90+ = Super Uyum)
 - **Photos**: Min 2, Max 9
 
 ## Tech Stack
@@ -211,6 +211,7 @@ Yas, Cinsiyet, Sehir, Is, Egitim, Cocuk, Sigara, Boy, Spor, Burc, Evcil Hayvan, 
 - Progress bar shows completion (Soru 1/20, 2/20, etc.)
 - "Atla" (Skip) option available but discouraged
 - Results calculate **uyum yuzdesi** (compatibility %) between users (range: 47-97%)
+- 90+ = **Super Uyum** with special UI treatment (glow, badge, konfeti)
 - This is the CORE matching algorithm -- all recommendations depend on it
 - Questions organized across 8 psychological categories: lifestyle, values, communication style, future plans, personality traits, relationship approach, social habits, conflict resolution
 
@@ -270,7 +271,7 @@ In-app currency for premium actions across all packages.
 
 ### Boost System
 - "24 saat boyunca profilini one cikar ve 10x daha fazla gorunurluk kazan"
-- Boost packages (jeton cost): 1 boost (120), 5 boost (500), 10 boost (900), 15 boost (1500)
+- Boost packages (jeton cost): 1 boost (120), 5 boost (500), 10 boost (900), 20 boost (1500)
 - Supreme: Unlimited boost
 - Premium: 4 boost/ay included
 
@@ -343,8 +344,8 @@ Weekly summary: compatibility stats, most active day, profile views, gamificatio
 - **3 packages ONLY**: Ucretsiz, Premium, Supreme (NO Gold, Pro, or Reserved -- those are REMOVED)
 - **Uyum Analizi**: exactly 20 questions, 4 options each (NOT Likert 1-5)
 - **Kisilik Testi**: exactly 5 questions
-- **Hedef options**: exactly 5 (Evlenmek, Iliski, Sohbet/Arkadas, Kultur, Dunya gezme)
-- **Uyum score range**: 47-97%
+- **Hedef options**: exactly 5 (Evlenmek, Iliski bulmak, Sohbet/Arkadas, Kulturleri ogrenmek, Dunyayi gezmek)
+- **Uyum score range**: 47-97% (90+ = Super Uyum)
 - **Photos**: min 2, max 9
 - **Ilgi Alanlari**: max 15
 - **Prompt'larim**: max 3

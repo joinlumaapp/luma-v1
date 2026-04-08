@@ -1,4 +1,4 @@
-# LUMA V1 — Debug & Known Issues Log
+# LUMA V1 -- Debug & Known Issues Log
 
 **Last Updated:** 2026-04-08
 
@@ -6,14 +6,14 @@
 
 ## Active Issues
 
-### FIXED — API URL Pointing to Unreachable Domain
+### FIXED -- API URL Pointing to Unreachable Domain
 - **Date fixed:** 2026-04-08
 - **Symptom:** Mobile app could not connect to production API
 - **Root cause:** API URL in app.config.ts was pointing to wrong/unreachable domain
 - **Fix:** Updated API URL to correct Railway production endpoint
 - **Status:** FIXED
 
-### OPEN — Firebase PRIVATE_KEY Needs Fixing
+### OPEN -- Firebase PRIVATE_KEY Needs Fixing
 - **Severity:** Medium
 - **Symptom:** Push notifications disabled; Firebase PEM error on startup
 - **Root cause:** FIREBASE_PRIVATE_KEY environment variable has formatting issues (newlines not properly escaped)
@@ -21,7 +21,7 @@
 - **Fix applied:** Wrapped Firebase init in try/catch to prevent app crash
 - **Next step:** Regenerate Firebase service account key, properly escape PRIVATE_KEY in Railway env vars
 
-### OPEN — Netgsm SMS Not Configured Yet
+### OPEN -- Netgsm SMS Not Configured Yet
 - **Severity:** Medium
 - **Symptom:** Real SMS OTP cannot be sent to users
 - **Workaround:** Using test OTP (hardcoded code) for development and testing
@@ -33,7 +33,7 @@
 
 | Lesson | Detail |
 |--------|--------|
-| preDeployCommand | Do NOT put `prisma migrate` in preDeployCommand — causes startup hang. Removed from railway.toml. |
+| preDeployCommand | Do NOT put `prisma migrate` in preDeployCommand -- causes startup hang. Removed from railway.toml. |
 | CSRF middleware | CSRF middleware blocked all mobile API requests. Removed entirely for mobile API compatibility. |
 | Redis IO adapter | If Redis IO adapter fails to connect, app should still start. Added graceful degradation. |
 | Health endpoint | Always have a `/health` endpoint for Railway to check service status. |
@@ -48,7 +48,6 @@
 | Tier | Free (limited builds per month) |
 | Queue time | 15-25 minutes per build |
 | Strategy | Collect ALL issues before triggering a build. Do not waste builds on single fixes. |
-| Current status | 28 builds remaining (as of 5 Nisan) — use carefully |
 | Build command | `npx eas build --platform android --profile preview` |
 | Check status | `npx eas build:list --limit 5` |
 
@@ -65,7 +64,7 @@
 | 2026-04-08 | Redis IO adapter failure crashing app | Added fallback, app starts without Redis adapter |
 | 2026-04-08 | Logo too small on login screen | Enlarged and repositioned |
 | 2026-04-08 | Status bar not visible on dark screens | Set to black background with white icons |
-| 2026-04-08 | MD files describing old "Room" concept | All MD files rewritten to match current app |
+| 2026-04-08 | MD files describing old "Room" concept | All MD files rewritten to match current app architecture |
 
 ---
 

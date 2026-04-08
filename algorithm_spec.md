@@ -1,4 +1,4 @@
-# LUMA V1 — Algorithm Specification
+# LUMA V1 -- Algorithm Specification
 **Version:** 2.0 (New Architecture)
 **Last Updated:** 2026-04-08
 
@@ -31,6 +31,7 @@ LUMA has two separate test systems. They serve different purposes and must not b
 | Can skip | NO -- required to use the app |
 | Can retake | Yes, periodically (cooldown enforced) |
 | Purpose | Calculates uyum yuzdesi (compatibility percentage) between two users |
+| Score range | 47-97 (90+ = Super Uyum) |
 | Storage | Answers stored permanently in user profile |
 
 ### 2.2 Kisilik Testi (Personality Quiz) -- OPTIONAL
@@ -172,7 +173,7 @@ IF final_score >= 90 THEN super_uyum = TRUE
 | UI glow animation | Subtle glow effect on profile card in Kesfet |
 | Priority in Kesfet | Pushed to top of card stack |
 | Gunun Eslesmesi priority | Considered first for daily match recommendation |
-| Special match animation | Confetti + heart animation on match |
+| Special match animation | Konfeti + kalp animation on match |
 | Profile badge | "Super Uyum" indicator visible to both users |
 | Notification | Both users notified when Super Uyum detected |
 
@@ -274,7 +275,8 @@ live_match_score = (uyum_score * 0.45)
 
 ### Canli Rules
 - Each session costs jeton (amount varies by package)
-- Maximum session duration: configurable per package
+- Ucretsiz users have limited daily sessions
+- Supreme users: unlimited sessions
 - Users can follow each other during/after session
 - Follow from Canli creates Takip (one-way), mutual becomes Arkadas
 - Canli is discovery ONLY; voice/video calls between matches happen in Messaging
@@ -284,7 +286,7 @@ live_match_score = (uyum_score * 0.45)
 
 ## 9. Gunun Eslesmesi (Daily Match) AI Recommendation Algorithm
 
-Every day at a configured time, the system selects ONE profile to recommend to each user. This is the highest-quality signal in the app.
+Every day at a configured time, the system selects profiles to recommend to each user. This is the highest-quality signal in the app.
 
 ### Selection Process
 
@@ -315,12 +317,11 @@ daily_match_score = (uyum_score * 0.35)
 - The same profile cannot be Gunun Eslesmesi for the same user twice in a row
 - Blocked/reported users are excluded
 - User must have completed Uyum Analizi to be eligible as either sender or receiver
-- Daily match notification is sent as a Critical notification (always push)
 
-### Premium/Supreme Advantages
-- Ucretsiz: Receives Gunun Eslesmesi but cannot see full profile (blurred, tap to use jeton)
-- Premium: Full profile visible, can send Selam directly
-- Supreme: Full profile visible + sees WHY they matched (top 3 uyum categories highlighted)
+### Package-Based Allocation
+- Ucretsiz: 1/hafta (weekly)
+- Premium: 1/gun (daily)
+- Supreme: 3/gun (3 daily recommendations)
 
 ---
 
@@ -335,7 +336,7 @@ The uyum score is the backbone of LUMA. It influences every section differently:
 | **Akis (Takip)** | 15% weight | Lower weight since user already chose to follow |
 | **Canli** | 45% weight | Strongest signal for live matching quality |
 | **Gunun Eslesmesi** | 35% weight + 75 threshold | Must meet minimum; highest uyum considered first |
-| **Begeenenler** | Sort order | Users who liked you sorted by uyum (highest first) |
+| **Begeniler** | Sort order | Users who liked you sorted by uyum (highest first) |
 | **Kim Gordu** | Sort order | Profile viewers sorted by uyum |
 | **Takipciler** | Sort order | New followers sorted by uyum |
 | **Super Uyum badge** | Display trigger | Shows on cards/profiles when uyum >= 90 |
@@ -395,13 +396,13 @@ Default confidence_factor = 1.0 (no reduction). Flags can reduce it to minimum 0
 
 LUMA has 5 hedef options. Their compatibility with each other affects ranking:
 
-| | Evlenmek | Iliski | Sohbet/Arkadas | Kultur | Dunya Gezme |
-|---|---------|--------|----------------|--------|-------------|
+| | Evlenmek | Iliski bulmak | Sohbet/Arkadas | Kulturleri ogrenmek | Dunyayi gezmek |
+|---|---------|---------------|----------------|---------------------|----------------|
 | **Evlenmek** | 1.0 | 0.7 | 0.2 | 0.3 | 0.3 |
-| **Iliski** | 0.7 | 1.0 | 0.5 | 0.5 | 0.5 |
+| **Iliski bulmak** | 0.7 | 1.0 | 0.5 | 0.5 | 0.5 |
 | **Sohbet/Arkadas** | 0.2 | 0.5 | 1.0 | 0.8 | 0.8 |
-| **Kultur** | 0.3 | 0.5 | 0.8 | 1.0 | 0.9 |
-| **Dunya Gezme** | 0.3 | 0.5 | 0.8 | 0.9 | 1.0 |
+| **Kulturleri ogrenmek** | 0.3 | 0.5 | 0.8 | 1.0 | 0.9 |
+| **Dunyayi gezmek** | 0.3 | 0.5 | 0.8 | 0.9 | 1.0 |
 
 - Same hedef = 1.0 (perfect alignment)
 - Compatible hedefs (e.g., Sohbet + Kultur) = 0.8

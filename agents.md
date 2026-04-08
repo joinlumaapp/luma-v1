@@ -1,4 +1,4 @@
-# LUMA Claude Code — Agents & Skills Guide
+# LUMA Claude Code -- Agents & Skills Guide
 
 ## What Are Agents?
 Agents are specialized Claude Code personas, each focused on a specific department of the app. When you invoke an agent, Claude Code switches to that domain's expertise, rules, and context.
@@ -18,6 +18,7 @@ Store agents in: `.claude/agents/`
 - Use Zustand for state management
 - All user-facing text in Turkish
 - Test on both iOS and Android
+- Photos: min 2, max 9
 
 ### 2. backend-core (backend-core.md)
 **Role:** NestJS backend API development
@@ -43,6 +44,7 @@ Store agents in: `.claude/agents/`
 **Focus:** Uyum scoring, Kesfet ordering, Canli matching, Gunun Eslesmesi
 **Rules:**
 - Score range MUST be 47-97
+- 90+ = Super Uyum with special UI effects
 - Package NEVER affects raw score
 - Test with edge cases (all same answers, rapid completion)
 - Optimize for performance (cache computed scores)
@@ -64,31 +66,32 @@ Store agents in: `.claude/agents/`
 - WebSocket (Socket.io) for real-time messaging
 - WebRTC for voice/video calls and Canli
 - Jeton deduction for premium actions
-- Read receipts — check package permission
+- Read receipts -- check package permission
 - Canli = random discovery ONLY, not matched user calls
 
 ### 7. discovery (discovery.md)
-**Role:** Kesfet tab — card swipe and discovery features
-**Focus:** Swipe UI, filters, boost, Super Begeni, Gunun Eslesmesi, DailyPicks
+**Role:** Kesfet tab -- card swipe and discovery features
+**Focus:** Swipe UI, filters, boost, Super Begeni, Gunun Eslesmesi
 **Rules:**
 - Uyum score displayed on cards
 - Package-based filter limits
 - Jeton deduction for Super Begeni
 - Match animation (konfeti/kalp) on mutual like
+- Boost lasts 24 hours
 
 ### 8. matching (matching.md)
-**Role:** Eslesme tab — matches, likes, followers, viewers
-**Focus:** Match list, likes you, followers, kim gordu, secret admirer, weekly top
+**Role:** Eslesme tab -- matches, likes, followers, viewers
+**Focus:** Match list, likes you, followers, kim gordu, weekly top
 **Rules:**
-- 5 sub-tabs: Eslesmeler, Mesajlar, Begeenenler, Takipciler, Kim Gordu
+- 5 sub-tabs: Eslesmeler, Mesajlar, Begeniler, Takipciler, Kim Gordu
 - Package-based blur/visibility
 - Date planner for matched users
 
 ### 9. profile (profile.md)
-**Role:** Profile tab — user profile, editing, gamification
+**Role:** Profile tab -- user profile, editing, gamification
 **Focus:** Profile display, edit flow, Kasif missions, Bu Haftanin Yildizlari, Profil Gucu
 **Rules:**
-- Max 6 photos, min 2
+- Max 9 photos, min 2
 - Profil Gucu bar computed from completeness
 - Kasif missions reset daily
 - Leaderboard resets every Monday
@@ -98,7 +101,7 @@ Store agents in: `.claude/agents/`
 **Focus:** Subscription management, jeton transactions, boost activation, AdMob
 **Rules:**
 - 3 packages ONLY: Ucretsiz, Premium, Supreme
-- NO feature fully locked — only quantity limits
+- NO feature fully locked -- only quantity limits
 - Jeton balance must be atomic (no race conditions)
 - In-app purchase via App Store / Google Play APIs
 - AdMob rewarded ads for free users only
@@ -153,7 +156,6 @@ The following agent files also exist in the repository for specialized subsystem
 | harmony.md | Harmony/compatibility sub-algorithms |
 | places.md | Sevdigin Mekanlar feature |
 | relationship.md | Relationship types and social graph logic |
-| shared-types.md | @luma/shared package types management |
 
 ---
 

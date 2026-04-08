@@ -1,4 +1,4 @@
-# LUMA Scope Lock — Non-Negotiable Rules
+# LUMA Scope Lock -- Non-Negotiable Rules
 
 These rules define the boundaries of LUMA V1. If any of these change, the scope lock is violated.
 
@@ -9,14 +9,15 @@ These rules define the boundaries of LUMA V1. If any of these change, the scope 
 | Item | Value | Notes |
 |------|-------|-------|
 | Paketler | **3** | Ucretsiz, Premium, Supreme |
-| Uyum Analizi soruları | **20** | Zorunlu, 4 secenek |
-| Kisilik Testi soruları | **5** | Istege bagli |
-| Hedefler | **5** | Evlenmek, Iliski, Sohbet/Arkadas, Kultur, Dunya Gezme |
+| Uyum Analizi sorulari | **20** | Zorunlu, 4 secenek |
+| Kisilik Testi sorulari | **5** | Istege bagli |
+| Hedefler | **5** | Evlenmek, Iliski bulmak, Sohbet/Arkadas, Kulturleri ogrenmek, Dunyayi gezmek |
 | Ana tab'lar | **5** | Akis, Kesfet, Canli, Eslesme, Profil |
-| Eslesme alt tab'ları | **5** | Eslesmeler, Mesajlar, Begeenenler, Takipciler, Kim Gordu |
+| Eslesme alt tab'lari | **5** | Eslesmeler, Mesajlar, Begeniler, Takipciler, Kim Gordu |
 | Iliski turleri | **4** | Takip, Arkadas, Eslesme, Super Begeni |
 | Uyum skor araligi | **47-97** | 100% matematik olarak imkansiz |
-| Maksimum fotograf | **6** | Profil basina |
+| Super Uyum esigi | **90+** | Ozel UI efektleri tetikler |
+| Maksimum fotograf | **9** | Profil basina (min 2, max 9) |
 | Bildirim katmanlari | **3** | Kritik, Onemli, Dusuk |
 
 ---
@@ -24,7 +25,7 @@ These rules define the boundaries of LUMA V1. If any of these change, the scope 
 ## Locked Package System
 
 - **3 paket ONLY**: Ucretsiz (0 TL), Premium (499 TL/ay), Supreme (1.199 TL/ay)
-- **NO Gold, Pro, or Reserved packages** — these are permanently removed
+- **NO Gold, Pro, or Reserved packages** -- these are permanently removed
 - Supreme is positioned as "En Populer"
 
 ### Core Rule: NO Feature Is Locked
@@ -33,12 +34,15 @@ Every feature in the app is accessible to ALL users (Ucretsiz included). Package
 
 | Feature | Ucretsiz | Premium | Supreme |
 |---------|----------|---------|---------|
-| Gunluk begeni | 10 | 50 | Sinirsiz |
+| Kesfet swipe | Limited/gun | More/gun | Sinirsiz |
 | Hikaye paylasimi | 1/gun | 5/gun | Sinirsiz |
-| Canli gorusme | 1/gun | 5/gun | Sinirsiz |
+| Canli gorusme | Limited/gun | More/gun | Sinirsiz |
 | Gelismis filtreler | Temel set | Genisletilmis | Tam set |
-| Okundu bilgisi | Yok | Var | Var |
+| Okundu bilgisi | Hayir | Evet | Evet |
 | Kim Gordu | Blur'lu | Net | Net + detay |
+| Begeni gorunurlugu | 1-2 blurlu | Sinirli net | Sinirsiz net |
+| Boost | Jeton ile satin al | 4/ay dahil | Sinirsiz |
+| Gunun Eslesmesi | 1/hafta | 1/gun | 3/gun |
 
 ---
 
@@ -46,9 +50,9 @@ Every feature in the app is accessible to ALL users (Ucretsiz included). Package
 
 - Compatibility score range: **47-97**
 - 100% is mathematically impossible
-- **90+ = Super Uyum** (Super Compatibility)
+- **90+ = Super Uyum** (Super Compatibility) with special UI treatment
+- Super Uyum triggers: glow animation, priority in Kesfet, ozel konfeti animasyonu, badge
 - Package type NEVER alters compatibility scores
-- Premium/Supreme only increases confidence precision, not raw score
 
 ---
 
@@ -65,9 +69,9 @@ Every feature in the app is accessible to ALL users (Ucretsiz included). Package
 
 ## Locked Authentication
 
-- Phone (OTP) — primary, always available
-- Google Sign-In — required
-- Apple Sign-In — required (iOS App Store mandate)
+- Phone (OTP) -- primary, always available
+- Google Sign-In -- planned
+- Apple Sign-In -- planned (iOS App Store mandate)
 
 ---
 
@@ -89,6 +93,7 @@ Every feature in the app is accessible to ALL users (Ucretsiz included). Package
 - Jeton-powered actions: Selam Gonder, Super Begeni, Boost, Canli gorusme, sesli/goruntulu arama (free users)
 - Jeton kazanma: Kasif gorevleri, reklam izleme
 - Jeton balance must be atomic (no race conditions)
+- Aylik jeton: Ucretsiz 0, Premium 250, Supreme 1000
 
 ---
 
@@ -105,9 +110,9 @@ Every feature in the app is accessible to ALL users (Ucretsiz included). Package
 
 | Tier | Examples | Default |
 |------|----------|---------|
-| Kritik | Eslesme, mesaj, super begeni | Her zaman push |
-| Onemli | Takipci, begeni, arkadaslik | Varsayilan acik |
-| Dusuk | Hikaye goruntuleme, gonderi etkilesimi | Varsayilan kapali |
+| Kritik | Eslesme, mesaj, super begeni, canli eslesme bulundu | Her zaman push |
+| Onemli | Takipci, begeni, arkadaslik, gunun eslesmesi hazir | Varsayilan acik |
+| Dusuk | Hikaye goruntuleme, gonderi etkilesimi, kasif gorevi hatirlatma | Varsayilan kapali |
 
 ---
 
@@ -118,6 +123,26 @@ Every feature in the app is accessible to ALL users (Ucretsiz included). Package
 - Smooth animations on all interactions
 - Dark theme for Uyelik & Jeton screens
 - Eslesme animasyonu: konfeti/kalp
+- Super Uyum (90+): glow effect on profile cards
+
+---
+
+## Permanently Removed Concepts
+
+These concepts are **permanently removed** from V1. They must never appear in code, UI, or documentation:
+
+| Removed | Replaced By |
+|---------|-------------|
+| Room (Compatibility Room) | Kesfet swipe + Canli random video |
+| 45-question system (20+25) | 20+5 system (Uyum Analizi + Kisilik Testi) |
+| Gold package | Removed entirely |
+| Pro package | Removed entirely |
+| Reserved package | Removed entirely |
+| Intention tags (3 adet) | 5 Hedefler |
+| Likert 1-5 scale | 4 discrete choices |
+| Room uzatma (99 TL) | Removed entirely |
+| Tek soru analizi (69 TL) | Removed entirely |
+| Premium questions (21-45) | Removed entirely |
 
 ---
 
@@ -131,3 +156,4 @@ Every feature in the app is accessible to ALL users (Ucretsiz included). Package
 - Gamification mission types and rewards
 - Popular places list content
 - Ad placement positions
+- Daily swipe/message limits per package (exact numbers)

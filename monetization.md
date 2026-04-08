@@ -13,26 +13,25 @@ Hedef: Herkese tattir -> Premium kullanicilar daha fazlasini istesin -> Supreme 
 |---------|-----------------|---------------------|----------------------|
 | **Etiket** | Tadimlik, kisitli | Her ozellige erisim, makul limitler | Sinirsiz + ozel ayricaliklar |
 | **Rozet** | -- | Premium rozeti | "En Populer" rozeti |
-| **Gunluk Begeni** | Sinirsiz | Sinirsiz | Sinirsiz |
-| **Direkt Mesaj** | 1/gun | 10/gun | Sinirsiz |
+| **Kesfet Swipe** | Limited/gun | More/gun | Sinirsiz |
+| **Direkt Mesaj** | Limited/gun | More/gun | Sinirsiz |
 | **Selam Gonder** | 3/gun (10 jeton) | 10/gun (5 jeton) | 20/gun (3 jeton) |
 | **Reklamsiz Deneyim** | Hayir (reklam gosterilir) | Evet | Evet |
 | **Aylik Jeton** | 0 (gorev + reklam ile kazan) | 250 | 1.000 |
 | **Kimin Begendigini Gor** | 1-2 blurlu onizleme | Sinirli sayida net gorme | Sinirsiz, tumu net |
 | **Geri Alma** | 1/gun | 5/gun | Sinirsiz |
 | **Boost** | Yalnizca jeton ile satin al | 4/ay dahil | Sinirsiz |
-| **Okundu Bilgisi** | 1/gun deneme | Evet | Evet |
+| **Okundu Bilgisi** | Hayir | Evet | Evet |
 | **Profilimi Kim Gordu** | Sadece sayi, isimler blurlu | Evet (sinirli) | Sinirsiz |
 | **Hikaye Olustur** | 1/gun | 5/gun | Sinirsiz |
+| **Hikaye Onde Gosterim** | Hayir | Hayir | Evet |
 | **Oncelikli Gosterim** | Hayir | Evet | Evet (en yuksek oncelik) |
-| **Hikaye Onde Gosterim** | Hayir | Evet | Evet |
-| **Gelismis Filtreler** | Temel (yas, cinsiyet, mesafe) | Evet (ilgi alani, egitim, yasam tarzi) | Tumu acik |
-| **Ozel Rozet** | Hayir | Hayir (Supreme'e ozel) | Supreme rozeti |
+| **Gelismis Filtreler** | Temel (yas, cinsiyet, mesafe) | Evet (ilgi alani, egitim, yasam tarzi) | Tumu acik + gelismis kombinasyonlar |
 | **Gunun Eslesmesi** | 1/hafta | 1/gun | 3/gun |
 | **Buz Kirici Oyunlar** | 1/gun | 5/gun | Sinirsiz |
 | **Haftalik Rapor** | Basit ozet | Detayli rapor | VIP detayli rapor + oneriler |
-| **Canli Gorusme** | 3/gun | 10/gun | Sinirsiz |
-| **Sesli/Goruntulu Arama** | Jeton ile | 5/gun dahil | Sinirsiz |
+| **Canli Gorusme** | Limited/gun | More/gun | Sinirsiz |
+| **Sesli/Goruntulu Arama** | Jeton ile | Dahil (sinirli) | Sinirsiz |
 | **Reklam Izle** | Evet (odullu reklam ile jeton kazan) | -- | -- |
 
 ### Paket Stratejisi
@@ -48,7 +47,7 @@ Hedef: Herkese tattir -> Premium kullanicilar daha fazlasini istesin -> Supreme 
 Bu sistemde "kilitli ozellik" kavrami YOKTUR. Tum kullanicilar tum ozellikleri deneyebilir.
 
 Fark yalnizca su boyutlardadir:
-- **Miktar:** Ucretsiz kullanici 1/gun mesaj atar, Premium 10/gun, Supreme sinirsiz
+- **Miktar:** Ucretsiz kullanici sinirli mesaj atar, Premium daha fazla, Supreme sinirsiz
 - **Kalite:** Ucretsiz kullanici blurlu onizleme gorur, Premium net gorur, Supreme tumu net
 - **Jeton maliyeti:** Ucretsiz kullanici 10 jeton harcar, Premium 5, Supreme 3
 - **Dahil haklar:** Premium'a 4 boost/ay dahil, Supreme'a sinirsiz dahil
@@ -106,9 +105,9 @@ Bu yaklasim sayesinde:
 | Paket | Jeton Maliyeti | Tasarruf |
 |-------|---------------|----------|
 | 1 Boost | 120 | -- |
-| 5 Boost | 500 | %20 kaydet |
-| 10 Boost | 900 | %32 kaydet |
-| 20 Boost | 1.500 | %37 kaydet -- **EN POPULER** |
+| 5 Boost | 500 | %17 kaydet |
+| 10 Boost | 900 | %25 kaydet |
+| 20 Boost | 1.500 | %38 kaydet -- **EN POPULER** |
 
 ### Paketlere Dahil Boost Haklari
 - **Ucretsiz:** Boost yok (yalnizca jeton ile satin alabilir)
@@ -122,10 +121,10 @@ Bu yaklasim sayesinde:
 ### Reklam Gosterim Alanlari
 - Kesfet kartlari arasinda native reklam (her 5-7 kartta 1)
 - Akis'ta gonderiler arasinda native reklam
-- Tam ekran interstisyel (sinirli, UX bozmayacak siklkta)
+- Tam ekran interstisyel (sinirli, UX bozmayacak siklikta)
 
 ### Odullu Reklam (Rewarded Ads)
-- Kullanici gonderili olarak reklam izler
+- Kullanici gonullu olarak reklam izler
 - Her reklam basina 5 jeton odul
 - Gunluk izlenebilecek reklam limiti: 10 reklam (50 jeton/gun potansiyel)
 - Gecici ozellik acma: 1 reklam izleyerek 1 saatlik okundu bilgisi, vb.
@@ -141,9 +140,9 @@ Bu yaklasim sayesinde:
 
 | Gelir Kanali | Aciklama | Tahmini Etki |
 |-------------|---------|-------------|
-| **Abonelikler** | Premium (499 TL/ay) + Supreme (1.199 TL/ay) | Ana gelir kaynak |
+| **Abonelikler** | Premium (499 TL/ay) + Supreme (1.199 TL/ay) | Ana gelir kaynagi |
 | **Jeton Satislari** | Uygulama ici jeton paketleri (79,99-349,99 TL) | Yuksek hacim, tekrarlayan |
-| **Boost Satislari** | Jeton ile boost paketleri | Jeton tuketimini artir |
+| **Boost Satislari** | Jeton ile boost paketleri | Jeton tuketimini artirir |
 | **Odullu Reklamlar** | Ucretsiz kullanicilar reklam izler, jeton kazanir (AdMob) | Dusuk birim, yuksek hacim |
 | **Native Reklamlar** | Ucretsiz kullanicilara akis/kesfet arasi reklam | Pasif gelir |
 
@@ -158,4 +157,4 @@ Bu yaklasim sayesinde:
 - Ilk 777 kullanici ozel "Kurucu" rozeti alir
 - Rozet kalici ve satin alinamaz
 - Profilde ozel tanitim olarak gosterilir
-- Ilk abonelige ozel lansman indirimi iceri
+- Ilk abonelige ozel lansman indirimi icerir
