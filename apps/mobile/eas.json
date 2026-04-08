@@ -44,7 +44,7 @@
       },
       "env": {
         "APP_ENV": "preview",
-        "API_URL": "https://api-preview.luma.dating"
+        "API_URL": "https://luma-v1-production.up.railway.app"
       },
       "channel": "preview"
     },
@@ -61,7 +61,7 @@
       },
       "env": {
         "APP_ENV": "production",
-        "API_URL": "https://api.luma.dating"
+        "API_URL": "https://luma-v1-production.up.railway.app"
       },
       "channel": "production"
     }

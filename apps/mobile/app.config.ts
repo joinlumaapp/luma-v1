@@ -18,8 +18,8 @@ const getUniqueIdentifier = (): string => {
 
 const getApiUrl = (): string => {
   if (IS_DEV) return process.env.API_URL ?? 'http://localhost:3000';
-  if (IS_PREVIEW) return 'https://api-preview.luma.dating';
-  return 'https://api.luma.dating';
+  if (IS_PREVIEW) return 'https://luma-v1-production.up.railway.app';
+  return 'https://luma-v1-production.up.railway.app';
 };
 
 export default ({ config }: ConfigContext): ExpoConfig => ({

@@ -21,6 +21,8 @@ export const AuthNavigator: React.FC = () => {
         headerShown: false,
         animation: 'slide_from_right',
         statusBarAnimation: 'none',
+        statusBarStyle: 'light',
+        statusBarColor: '#000000',
       }}
     >
       <Stack.Screen name="EmotionalIntro" component={EmotionalIntroScreen} />

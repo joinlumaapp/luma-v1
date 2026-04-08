@@ -42,7 +42,7 @@ import { spacing, borderRadius } from '../../theme/spacing';
 import { fontWeights } from '../../theme/typography';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const LOGO_SIZE = SCREEN_WIDTH * 0.68;
+const LOGO_SIZE = SCREEN_WIDTH * 0.82;
 const lumaLogo = require('../../../assets/splash-logo.png');
 
 type IntroNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'EmotionalIntro'>;
@@ -419,14 +419,14 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
   },
   topSpacer: {
-    height: Platform.OS === 'ios' ? 40 : 20,
+    height: Platform.OS === 'ios' ? 16 : 8,
   },
-  // LUMA logo section — pushed slightly above visual center
+  // LUMA logo section — pushed up, minimal top space
   logoSection: {
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     flex: 1,
-    paddingBottom: SCREEN_WIDTH * 0.06,
+    paddingBottom: 0,
   },
   // Tagline — emotional hook between logo and buttons
   taglineContainer: {

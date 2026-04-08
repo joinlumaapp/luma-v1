@@ -118,9 +118,8 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
  * when the user taps a tab — whether switching to it or re-pressing it.
  * Also triggers haptic feedback (Impact.Light) on every tab press.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function createTabResetListener(
-  navigation: any,
+  navigation: { getState?: () => { routes: { name: string; state?: unknown }[] }; dispatch: (action: unknown) => void },
   route: { name: string },
 ) {
   return {
@@ -238,6 +237,8 @@ const DiscoveryStackNavigator: React.FC = React.memo(() => (
       headerShown: false,
       animation: 'slide_from_right',
       statusBarAnimation: 'none',
+      statusBarStyle: 'light',
+      statusBarColor: '#000000',
     }}
   >
     <DiscoveryStack.Screen name="Discovery" component={DiscoveryScreen} />
@@ -307,6 +308,8 @@ const MatchesStackNavigator: React.FC = React.memo(() => (
       headerShown: false,
       animation: 'slide_from_right',
       statusBarAnimation: 'none',
+      statusBarStyle: 'light',
+      statusBarColor: '#000000',
     }}
   >
     <MatchesStack.Screen name="MatchesList" component={MatchesListScreen} />
@@ -382,6 +385,8 @@ const FeedStackNavigator: React.FC = React.memo(() => (
       headerShown: false,
       animation: 'slide_from_right',
       statusBarAnimation: 'none',
+      statusBarStyle: 'light',
+      statusBarColor: '#000000',
     }}
   >
     <FeedStack.Screen name="SocialFeed" component={SocialFeedScreen} />
@@ -413,6 +418,8 @@ const LiveStackNavigator: React.FC = React.memo(() => (
     screenOptions={{
       headerShown: false,
       statusBarAnimation: 'none',
+      statusBarStyle: 'light',
+      statusBarColor: '#000000',
     }}
   >
     <LiveStack.Screen name="Live" component={LiveScreen} />
@@ -429,6 +436,8 @@ const ProfileStackNavigator: React.FC = React.memo(() => (
       headerShown: false,
       animation: 'slide_from_right',
       statusBarAnimation: 'none',
+      statusBarStyle: 'light',
+      statusBarColor: '#000000',
     }}
   >
     <ProfileStack.Screen name="Profile" component={ProfileScreen} />
