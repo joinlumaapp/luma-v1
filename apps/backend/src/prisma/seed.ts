@@ -1,12 +1,12 @@
 // LUMA V1 — Database Seed Script (Comprehensive)
-// Seeds: 45 Compatibility Questions, Badge Definitions,
+// Seeds: 20 Core + 25 Extended Compatibility Questions, Badge Definitions,
 // 11 Demo Users with Profiles,
 // Photos, Answers, Matches, Chat Messages, and Badge Awards
 //
 // ADMIN NOTE: Admin access is env-based (ADMIN_USER_IDS).
 // To grant admin privileges to a seed user, copy their UUID from the
 // database after seeding and add it to the ADMIN_USER_IDS environment
-// variable (comma-separated). Recommended: use Baran (RESERVED tier,
+// variable (comma-separated). Recommended: use Baran (SUPREME tier,
 // phone: +905559990011) as the admin user for development.
 
 import {
@@ -66,12 +66,12 @@ const DEMO_USERS: DemoUser[] = [
     country: "Turkey",
     latitude: 41.0082,
     longitude: 28.9784,
-    intentionTag: IntentionTag.SERIOUS_RELATIONSHIP,
+    intentionTag: IntentionTag.EVLENMEK,
     bio: "Kitap kurdu, kahve bagimli. Haftasonlari sahilde yurumek en sevdigim aktivite. Derin sohbetlere bayilirim, yuzeysel konusmalara sabrim yok. Ruh esimi ariyorum.",
     phone: "+905551234501",
     phoneCountryCode: "+90",
     isVerified: true,
-    packageTier: PackageTier.PRO,
+    packageTier: PackageTier.SUPREME,
     goldBalance: 150,
   },
   {
@@ -82,12 +82,12 @@ const DEMO_USERS: DemoUser[] = [
     country: "Turkey",
     latitude: 41.0422,
     longitude: 29.0083,
-    intentionTag: IntentionTag.SERIOUS_RELATIONSHIP,
+    intentionTag: IntentionTag.ILISKI,
     bio: "Yazilimci, dagci, aci kahve tiryakisi. Hafta ici kod yazarim, haftasonu zirveler tirmanirim. Hayatta tutkuyla yasayan birini ariyorum.",
     phone: "+905551234502",
     phoneCountryCode: "+90",
     isVerified: true,
-    packageTier: PackageTier.GOLD,
+    packageTier: PackageTier.PREMIUM,
     goldBalance: 80,
   },
   {
@@ -98,7 +98,7 @@ const DEMO_USERS: DemoUser[] = [
     country: "Turkey",
     latitude: 39.9334,
     longitude: 32.8597,
-    intentionTag: IntentionTag.EXPLORING,
+    intentionTag: IntentionTag.KULTUR,
     bio: "Universite ogrencisi, sanat ve muzik hayatim. Gitar calarim, resim yaparim, yeni insanlarla tanismak beni mutlu eder. Hayati kesfediyorum!",
     phone: "+905551234503",
     phoneCountryCode: "+90",
@@ -114,12 +114,12 @@ const DEMO_USERS: DemoUser[] = [
     country: "Turkey",
     latitude: 38.4237,
     longitude: 27.1428,
-    intentionTag: IntentionTag.SERIOUS_RELATIONSHIP,
+    intentionTag: IntentionTag.ILISKI,
     bio: "Muzisyen, seyahat tutkunu, iyi bir dinleyici. Jazz barlarda performans sergilerim. Hayatin ritmine uyum saglayacak birini ariyorum.",
     phone: "+905551234504",
     phoneCountryCode: "+90",
     isVerified: true,
-    packageTier: PackageTier.GOLD,
+    packageTier: PackageTier.PREMIUM,
     goldBalance: 60,
   },
   {
@@ -130,7 +130,7 @@ const DEMO_USERS: DemoUser[] = [
     country: "Turkey",
     latitude: 41.0136,
     longitude: 28.955,
-    intentionTag: IntentionTag.NOT_SURE,
+    intentionTag: IntentionTag.SOHBET_ARKADAS,
     bio: "Grafik tasarimci, renkleri ve detaylari severim. Kedilerim benim her seyim. Iyi bir sohbet iyi bir iliskinin baslangicidir.",
     phone: "+905551234505",
     phoneCountryCode: "+90",
@@ -146,7 +146,7 @@ const DEMO_USERS: DemoUser[] = [
     country: "Turkey",
     latitude: 36.8969,
     longitude: 30.7133,
-    intentionTag: IntentionTag.EXPLORING,
+    intentionTag: IntentionTag.DUNYA_GEZME,
     bio: "Sporcu, doga sever, dalga sorfcusu. Deniz kenarinda yasiyorum ve her gunu dolu dolu geciriyorum. Enerjik ve pozitif insanlarla tanismak isterim.",
     phone: "+905551234506",
     phoneCountryCode: "+90",
@@ -162,12 +162,12 @@ const DEMO_USERS: DemoUser[] = [
     country: "Turkey",
     latitude: 41.0053,
     longitude: 29.0126,
-    intentionTag: IntentionTag.SERIOUS_RELATIONSHIP,
+    intentionTag: IntentionTag.EVLENMEK,
     bio: "Tip ogrencisi, gelecekte cocuk doktoru olmak istiyorum. Sabah erkenci, gece okuyan, hafta sonu kahvalti yapan biriyim. Guvenilir ve samimi birini ariyorum.",
     phone: "+905551234507",
     phoneCountryCode: "+90",
     isVerified: true,
-    packageTier: PackageTier.PRO,
+    packageTier: PackageTier.SUPREME,
     goldBalance: 200,
   },
   {
@@ -178,12 +178,12 @@ const DEMO_USERS: DemoUser[] = [
     country: "Turkey",
     latitude: 40.1885,
     longitude: 29.061,
-    intentionTag: IntentionTag.SERIOUS_RELATIONSHIP,
+    intentionTag: IntentionTag.ILISKI,
     bio: "Girisimci, teknoloji meraklisi. Kendi startupimi kurdum ve buyutuyorum. Is disinda yemek yapmak ve yeni tatlar kesfetmek en buyuk hobim.",
     phone: "+905551234508",
     phoneCountryCode: "+90",
     isVerified: true,
-    packageTier: PackageTier.GOLD,
+    packageTier: PackageTier.PREMIUM,
     goldBalance: 100,
   },
   {
@@ -194,7 +194,7 @@ const DEMO_USERS: DemoUser[] = [
     country: "Turkey",
     latitude: 41.0351,
     longitude: 28.9833,
-    intentionTag: IntentionTag.EXPLORING,
+    intentionTag: IntentionTag.KULTUR,
     bio: "Avukat, yoga tutkunu, kitap delisi. Hafta ici mahkemelerde, hafta sonu mat ustunde. Hayatta dengeyi ve huzuru ariyorum. Zeki sohbetlere bayilirim.",
     phone: "+905551234509",
     phoneCountryCode: "+90",
@@ -210,7 +210,7 @@ const DEMO_USERS: DemoUser[] = [
     country: "Turkey",
     latitude: 41.0255,
     longitude: 28.9744,
-    intentionTag: IntentionTag.NOT_SURE,
+    intentionTag: IntentionTag.SOHBET_ARKADAS,
     bio: "Fotograf sanatcisi, sokaklari ve insanlari cekmekten keyif alirim. Her karede bir hikaye ararım. Hayata farkli bir perspektiften bakan birini bulmak istiyorum.",
     phone: "+905551234510",
     phoneCountryCode: "+90",
@@ -226,12 +226,12 @@ const DEMO_USERS: DemoUser[] = [
     country: "Turkey",
     latitude: 41.0155,
     longitude: 28.9795,
-    intentionTag: IntentionTag.SERIOUS_RELATIONSHIP,
+    intentionTag: IntentionTag.EVLENMEK,
     bio: "Teknoloji girisimcisi, kitap kurdu, muzik tutkunu. Hayatta anlam arayan, kaliteli sohbete degil dedikodulara vakit ayiran biriyim.",
     phone: "+905559990011",
     phoneCountryCode: "+90",
     isVerified: true,
-    packageTier: PackageTier.RESERVED,
+    packageTier: PackageTier.SUPREME,
     goldBalance: 5000,
   },
 ];
@@ -408,7 +408,7 @@ const USER_BADGE_AWARDS: Record<number, string[]> = {
   7: ["first_spark", "verified_star", "gold_member"], // Emre
   8: ["first_spark"], // Ece
   9: ["first_spark", "soul_mate"], // Kaan
-  10: ["first_spark", "verified_star", "question_explorer", "gold_member"], // Baran (RESERVED)
+  10: ["first_spark", "verified_star", "question_explorer", "gold_member"], // Baran (SUPREME)
 };
 
 // Interest tags per user (indices into INTEREST_TAGS)
@@ -662,9 +662,6 @@ async function seedDemoData(): Promise<void> {
     prisma.placeMemory.deleteMany(),
     prisma.placeCheckIn.deleteMany(),
     prisma.discoveredPlace.deleteMany(),
-    prisma.coupleBadge.deleteMany(),
-    prisma.couplesClubParticipant.deleteMany(),
-    prisma.relationship.deleteMany(),
     prisma.userSession.deleteMany(),
     prisma.userVerification.deleteMany(),
     prisma.userProfile.deleteMany(),
@@ -681,7 +678,7 @@ async function seedDemoData(): Promise<void> {
 
   // 2b. Create premium question answers for paid-tier users
   await seedDemoPremiumAnswers(userIds);
-  console.log("  Premium answers seeded (Q21-Q45 for GOLD/PRO/RESERVED users)");
+  console.log("  Premium answers seeded (Q21-Q45 for PREMIUM/SUPREME users)");
 
   // 3. Create swipes and matches
   const matchIds = await seedDemoMatches(userIds);
@@ -801,9 +798,9 @@ async function seedDemoUsers(): Promise<string[]> {
 // ============================================================
 
 async function seedDemoAnswers(userIds: string[]): Promise<void> {
-  // Fetch all core questions (Q1-Q20) ordered by questionNumber
+  // Fetch all questions (Q1-Q20) ordered by questionNumber
   const questions = await prisma.compatibilityQuestion.findMany({
-    where: { isPremium: false },
+    where: { questionNumber: { lte: 20 } },
     include: { options: { orderBy: { order: "asc" } } },
     orderBy: { questionNumber: "asc" },
   });
@@ -829,13 +826,13 @@ async function seedDemoAnswers(userIds: string[]): Promise<void> {
 }
 
 // ============================================================
-// PREMIUM ANSWERS SEEDER (Q21-Q45 for GOLD/PRO/RESERVED users)
+// PREMIUM ANSWERS SEEDER (Q21-Q45 for PREMIUM/SUPREME users)
 // ============================================================
 
 async function seedDemoPremiumAnswers(userIds: string[]): Promise<void> {
   // Fetch all premium questions (Q21-Q45) ordered by questionNumber
   const premiumQuestions = await prisma.compatibilityQuestion.findMany({
-    where: { isPremium: true },
+    where: { questionNumber: { gt: 20 } },
     include: { options: { orderBy: { order: "asc" } } },
     orderBy: { questionNumber: "asc" },
   });
@@ -845,11 +842,10 @@ async function seedDemoPremiumAnswers(userIds: string[]): Promise<void> {
     return;
   }
 
-  // Only seed premium answers for paid-tier users (GOLD, PRO, RESERVED)
+  // Only seed premium answers for paid-tier users (PREMIUM, SUPREME)
   const paidTiers = new Set<PackageTier>([
-    PackageTier.GOLD,
-    PackageTier.PRO,
-    PackageTier.RESERVED,
+    PackageTier.PREMIUM,
+    PackageTier.SUPREME,
   ]);
 
   for (let userIdx = 0; userIdx < DEMO_USERS.length; userIdx++) {
@@ -933,7 +929,6 @@ async function seedDemoMatches(userIds: string[]): Promise<string[]> {
       data: {
         userAId,
         userBId,
-        baseScore: pair.score,
         finalScore: pair.score,
         level: pair.level,
         dimensionScores: {
@@ -1012,7 +1007,6 @@ async function seedAdditionalCompatibilityScores(
       data: {
         userAId: userIds[pair.aIdx],
         userBId: userIds[pair.bIdx],
-        baseScore: pair.score,
         finalScore: pair.score,
         level: pair.level,
         dimensionScores: {
@@ -1139,7 +1133,6 @@ async function seedCompatibilityQuestions(): Promise<void> {
     questionNumber: number;
     category: string;
     weight: number;
-    isPremium: boolean;
     textEn: string;
     textTr: string;
     options: Array<{ labelEn: string; labelTr: string; value: number }>;
@@ -1151,7 +1144,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 1,
       category: "COMMUNICATION",
       weight: 1.2,
-      isPremium: false,
+
       textEn: "What do you do during an argument?",
       textTr: "Bir tartışmada ne yaparsın?",
       options: [
@@ -1181,7 +1174,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 2,
       category: "COMMUNICATION",
       weight: 1.2,
-      isPremium: false,
+
       textEn: "How do you express your feelings?",
       textTr: "Duygularını nasıl ifade edersin?",
       options: [
@@ -1211,7 +1204,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 3,
       category: "COMMUNICATION",
       weight: 1.2,
-      isPremium: false,
+
       textEn: "What does an ideal evening conversation look like?",
       textTr: "İdeal bir akşam sohbeti nasıl olur?",
       options: [
@@ -1243,7 +1236,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 4,
       category: "LIFE_GOALS",
       weight: 1.2,
-      isPremium: false,
+
       textEn: "Where do you see yourself in 5 years?",
       textTr: "5 yıl sonra kendini nerede görüyorsun?",
       options: [
@@ -1273,7 +1266,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 5,
       category: "LIFE_GOALS",
       weight: 1.2,
-      isPremium: false,
+
       textEn: "How should work-life balance be?",
       textTr: "İş-yaşam dengesi sence nasıl olmalı?",
       options: [
@@ -1303,7 +1296,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 6,
       category: "LIFE_GOALS",
       weight: 1.2,
-      isPremium: false,
+
       textEn: "What is your approach to money?",
       textTr: "Para konusundaki yaklaşımınız?",
       options: [
@@ -1335,7 +1328,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 7,
       category: "VALUES",
       weight: 1.5,
-      isPremium: false,
+
       textEn: "What is the most important value in a relationship?",
       textTr: "Bir ilişkide en önemli değer?",
       options: [
@@ -1365,7 +1358,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 8,
       category: "VALUES",
       weight: 1.5,
-      isPremium: false,
+
       textEn: "How do you approach different opinions?",
       textTr: "Farklı görüşlere nasıl yaklaşırsın?",
       options: [
@@ -1395,7 +1388,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 9,
       category: "VALUES",
       weight: 1.5,
-      isPremium: false,
+
       textEn: "What does family mean to you?",
       textTr: "Aile sence ne ifade ediyor?",
       options: [
@@ -1427,7 +1420,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 10,
       category: "LIFESTYLE",
       weight: 1.0,
-      isPremium: false,
+
       textEn: "Your ideal weekend?",
       textTr: "İdeal hafta sonun?",
       options: [
@@ -1453,7 +1446,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 11,
       category: "LIFESTYLE",
       weight: 1.0,
-      isPremium: false,
+
       textEn: "How about health and fitness?",
       textTr: "Sağlık ve fitness konusunda?",
       options: [
@@ -1483,7 +1476,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 12,
       category: "LIFESTYLE",
       weight: 1.0,
-      isPremium: false,
+
       textEn: "Your social media usage?",
       textTr: "Sosyal medya kullanımının?",
       options: [
@@ -1515,7 +1508,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 13,
       category: "EMOTIONAL_INTELLIGENCE",
       weight: 1.2,
-      isPremium: false,
+
       textEn: "What do you do when you have a tough day?",
       textTr: "Zor bir gün geçirdiğinde ne yaparsın?",
       options: [
@@ -1545,7 +1538,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 14,
       category: "EMOTIONAL_INTELLIGENCE",
       weight: 1.2,
-      isPremium: false,
+
       textEn: "When you notice your partner is sad?",
       textTr: "Partnerinin üzgün olduğunu fark ettiğinde?",
       options: [
@@ -1575,7 +1568,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 15,
       category: "EMOTIONAL_INTELLIGENCE",
       weight: 1.2,
-      isPremium: false,
+
       textEn: "What do you think about vulnerability?",
       textTr: "Kırılganlık hakkında ne düşünüyorsun?",
       options: [
@@ -1607,7 +1600,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 16,
       category: "RELATIONSHIP_EXPECTATIONS",
       weight: 1.5,
-      isPremium: false,
+
       textEn: "How much time together in a relationship?",
       textTr: "İlişkide ne kadar birlikte zaman?",
       options: [
@@ -1637,7 +1630,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 17,
       category: "RELATIONSHIP_EXPECTATIONS",
       weight: 1.5,
-      isPremium: false,
+
       textEn: "Physical closeness for you?",
       textTr: "Fiziksel yakınlık sence?",
       options: [
@@ -1667,7 +1660,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 18,
       category: "RELATIONSHIP_EXPECTATIONS",
       weight: 1.5,
-      isPremium: false,
+
       textEn: "Which is your love language?",
       textTr: "Aşk dili hangisi?",
       options: [
@@ -1699,7 +1692,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 19,
       category: "SOCIAL_COMPATIBILITY",
       weight: 1.0,
-      isPremium: false,
+
       textEn: "Your partner's friend circle?",
       textTr: "Partnerinin arkadaş çevresi?",
       options: [
@@ -1729,7 +1722,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 20,
       category: "SOCIAL_COMPATIBILITY",
       weight: 1.0,
-      isPremium: false,
+
       textEn: "What kind of person are you in a group?",
       textTr: "Topluluk içinde nasıl birisin?",
       options: [
@@ -1763,7 +1756,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 21,
       category: "ATTACHMENT_STYLE",
       weight: 1.5,
-      isPremium: true,
+
       textEn: "When your partner doesn't respond for hours, what do you feel?",
       textTr: "Partnerin saatlerce cevap vermezse ne hissedersin?",
       options: [
@@ -1793,7 +1786,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 22,
       category: "ATTACHMENT_STYLE",
       weight: 1.5,
-      isPremium: true,
+
       textEn: "How fast do you get emotionally attached?",
       textTr: "Duygusal olarak ne kadar hızlı bağlanırsın?",
       options: [
@@ -1823,7 +1816,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 23,
       category: "ATTACHMENT_STYLE",
       weight: 1.5,
-      isPremium: true,
+
       textEn: "After a breakup, how do you cope?",
       textTr: "Bir ayrılıktan sonra nasıl başa çıkarsın?",
       options: [
@@ -1853,7 +1846,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 24,
       category: "ATTACHMENT_STYLE",
       weight: 1.5,
-      isPremium: true,
+
       textEn: "What makes you feel most secure in a relationship?",
       textTr: "İlişkide seni en çok ne güvende hissettirir?",
       options: [
@@ -1885,7 +1878,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 25,
       category: "LOVE_LANGUAGE",
       weight: 1.2,
-      isPremium: true,
+
       textEn: "How do you most like to receive love?",
       textTr: "Sevgiyi en çok nasıl almak istersin?",
       options: [
@@ -1915,7 +1908,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 26,
       category: "LOVE_LANGUAGE",
       weight: 1.2,
-      isPremium: true,
+
       textEn: "You want to show love to your partner. What do you do?",
       textTr: "Partnerine sevgini göstermek istiyorsun. Ne yaparsın?",
       options: [
@@ -1945,7 +1938,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 27,
       category: "LOVE_LANGUAGE",
       weight: 1.2,
-      isPremium: true,
+
       textEn: "What makes you feel most appreciated?",
       textTr: "Seni en çok ne takdir edilmiş hissettirir?",
       options: [
@@ -1977,7 +1970,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 28,
       category: "CONFLICT_STYLE",
       weight: 1.5,
-      isPremium: true,
+
       textEn: "During a conflict with your partner, you typically...",
       textTr: "Partnerinle bir çatışmada genellikle...",
       options: [
@@ -2007,7 +2000,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 29,
       category: "CONFLICT_STYLE",
       weight: 1.5,
-      isPremium: true,
+
       textEn: "After a fight, how do you reconcile?",
       textTr: "Bir kavgadan sonra nasıl barışırsın?",
       options: [
@@ -2037,7 +2030,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 30,
       category: "CONFLICT_STYLE",
       weight: 1.5,
-      isPremium: true,
+
       textEn: "What is your biggest relationship deal-breaker?",
       textTr: "İlişkide en büyük kırmızı çizgin ne?",
       options: [
@@ -2065,7 +2058,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 31,
       category: "FUTURE_VISION",
       weight: 1.5,
-      isPremium: true,
+
       textEn: "Do you want children?",
       textTr: "Çocuk istiyor musun?",
       options: [
@@ -2087,7 +2080,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 32,
       category: "FUTURE_VISION",
       weight: 1.5,
-      isPremium: true,
+
       textEn: "Where would you ideally live?",
       textTr: "İdeal olarak nerede yaşamak istersin?",
       options: [
@@ -2117,7 +2110,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 33,
       category: "FUTURE_VISION",
       weight: 1.5,
-      isPremium: true,
+
       textEn: "Describe your ideal life in 10 years.",
       textTr: "10 yıl sonra ideal hayatını anlat.",
       options: [
@@ -2147,7 +2140,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 34,
       category: "FUTURE_VISION",
       weight: 1.5,
-      isPremium: true,
+
       textEn: "How important is financial stability before marriage?",
       textTr: "Evlilik öncesi finansal güvence ne kadar önemli?",
       options: [
@@ -2179,7 +2172,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 35,
       category: "INTELLECTUAL",
       weight: 1.0,
-      isPremium: true,
+
       textEn: "How curious are you about learning new things?",
       textTr: "Yeni şeyler öğrenmeye ne kadar meraklısın?",
       options: [
@@ -2209,7 +2202,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 36,
       category: "INTELLECTUAL",
       weight: 1.0,
-      isPremium: true,
+
       textEn: "Do you enjoy intellectual debates?",
       textTr: "Entelektüel tartışmalardan hoşlanır mısın?",
       options: [
@@ -2239,7 +2232,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 37,
       category: "INTELLECTUAL",
       weight: 1.0,
-      isPremium: true,
+
       textEn: "How do you prefer to learn?",
       textTr: "Nasıl öğrenmeyi tercih edersin?",
       options: [
@@ -2271,7 +2264,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 38,
       category: "INTIMACY",
       weight: 1.2,
-      isPremium: true,
+
       textEn: "How comfortable are you with emotional intimacy?",
       textTr: "Duygusal yakınlık konusunda ne kadar rahatsın?",
       options: [
@@ -2301,7 +2294,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 39,
       category: "INTIMACY",
       weight: 1.2,
-      isPremium: true,
+
       textEn: "How important is physical intimacy in a relationship?",
       textTr: "İlişkide fiziksel yakınlık ne kadar önemli?",
       options: [
@@ -2331,7 +2324,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 40,
       category: "INTIMACY",
       weight: 1.2,
-      isPremium: true,
+
       textEn: "How quickly do you share your deepest secrets?",
       textTr: "En derin sırlarını ne kadar hızlı paylaşırsın?",
       options: [
@@ -2363,7 +2356,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 41,
       category: "GROWTH_MINDSET",
       weight: 1.0,
-      isPremium: true,
+
       textEn: "How do you handle constructive criticism?",
       textTr: "Yapıcı eleştiriyi nasıl karşılarsın?",
       options: [
@@ -2393,7 +2386,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 42,
       category: "GROWTH_MINDSET",
       weight: 1.0,
-      isPremium: true,
+
       textEn: "When faced with a big change in life, you...",
       textTr: "Hayatında büyük bir değişiklikle karşılaştığında...",
       options: [
@@ -2423,7 +2416,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 43,
       category: "GROWTH_MINDSET",
       weight: 1.0,
-      isPremium: true,
+
       textEn: "Do you believe people can fundamentally change?",
       textTr: "İnsanların temelden değişebileceğine inanıyor musun?",
       options: [
@@ -2455,7 +2448,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 44,
       category: "CORE_FEARS",
       weight: 1.5,
-      isPremium: true,
+
       textEn: "What is your biggest fear in a relationship?",
       textTr: "İlişkide en büyük korkun ne?",
       options: [
@@ -2485,7 +2478,7 @@ async function seedCompatibilityQuestions(): Promise<void> {
       questionNumber: 45,
       category: "CORE_FEARS",
       weight: 1.5,
-      isPremium: true,
+
       textEn: "What would make you end a relationship?",
       textTr: "Seni bir ilişkiyi bitirmeye ne iter?",
       options: [
@@ -2523,7 +2516,6 @@ async function seedCompatibilityQuestions(): Promise<void> {
         textEn: q.textEn,
         textTr: q.textTr,
         weight: q.weight,
-        isPremium: q.isPremium,
         order: q.questionNumber,
         options: {
           create: q.options.map((opt, idx) => ({
@@ -2776,16 +2768,15 @@ async function seedDemoSubscriptions(userIds: string[]): Promise<void> {
     const expiryDate = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000);
 
     const productIdMap: Record<string, string> = {
-      [PackageTier.GOLD]: "com.luma.gold.monthly",
-      [PackageTier.PRO]: "com.luma.pro.monthly",
-      [PackageTier.RESERVED]: "com.luma.reserved.monthly",
+      [PackageTier.PREMIUM]: "com.luma.premium.monthly",
+      [PackageTier.SUPREME]: "com.luma.supreme.monthly",
     };
 
     subscriptions.push({
       userId: userIds[i],
       packageTier: demo.packageTier,
       platform: i % 2 === 0 ? PaymentPlatform.APPLE : PaymentPlatform.GOOGLE,
-      productId: productIdMap[demo.packageTier] ?? "com.luma.gold.monthly",
+      productId: productIdMap[demo.packageTier] ?? "com.luma.premium.monthly",
       startDate,
       expiryDate,
       isActive: true,
@@ -2868,11 +2859,9 @@ async function seedDemoGoldTransactions(userIds: string[]): Promise<void> {
     // Initial subscription allocation (if paid user)
     if (demo.packageTier !== PackageTier.FREE) {
       const allocation =
-        demo.packageTier === PackageTier.PRO
-          ? 150
-          : demo.packageTier === PackageTier.RESERVED
-            ? 500
-            : 50;
+        demo.packageTier === PackageTier.SUPREME
+          ? 500
+          : 50;
       runningBalance += allocation;
       transactions.push({
         userId,

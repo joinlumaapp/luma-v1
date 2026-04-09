@@ -85,20 +85,11 @@ export class PlacesService {
       });
     }
 
-    // Check if user is in a relationship (for couple check-in)
-    const relationship = await this.prisma.relationship.findFirst({
-      where: {
-        OR: [{ userAId: userId }, { userBId: userId }],
-        status: "ACTIVE",
-      },
-    });
-
     // Create check-in
     const checkIn = await this.prisma.placeCheckIn.create({
       data: {
         placeId: place.id,
         userId,
-        relationshipId: relationship?.id,
       },
     });
 
@@ -109,24 +100,6 @@ export class PlacesService {
           placeId: place.id,
           userId,
           note: dto.note,
-        },
-      });
-    }
-
-    // Notify partner if in relationship
-    if (relationship) {
-      const partnerId =
-        relationship.userAId === userId
-          ? relationship.userBId
-          : relationship.userAId;
-
-      await this.prisma.notification.create({
-        data: {
-          userId: partnerId,
-          type: "SYSTEM",
-          title: "Yeni Check-in!",
-          body: `Partneriniz "${dto.placeName}" mekanına check-in yaptı.`,
-          data: { placeId: place.id, checkInId: checkIn.id },
         },
       });
     }
@@ -145,39 +118,27 @@ export class PlacesService {
   }
 
   /**
-   * Verify that two users have an active relationship or match.
+   * Verify that two users have an active match.
    * Throws ForbiddenException if no connection exists.
    */
   private async verifyPartnerAccess(
     userId: string,
     partnerId: string,
   ): Promise<void> {
-    const relationship = await this.prisma.relationship.findFirst({
+    const match = await this.prisma.match.findFirst({
       where: {
         OR: [
           { userAId: userId, userBId: partnerId },
           { userAId: partnerId, userBId: userId },
         ],
-        status: "ACTIVE",
+        isActive: true,
       },
     });
 
-    if (!relationship) {
-      const match = await this.prisma.match.findFirst({
-        where: {
-          OR: [
-            { userAId: userId, userBId: partnerId },
-            { userAId: partnerId, userBId: userId },
-          ],
-          isActive: true,
-        },
-      });
-
-      if (!match) {
-        throw new ForbiddenException(
-          "Bu kullanici ile mekan bilgilerinizi paylasma yetkiniz yok",
-        );
-      }
+    if (!match) {
+      throw new ForbiddenException(
+        "Bu kullanici ile mekan bilgilerinizi paylasma yetkiniz yok",
+      );
     }
   }
 

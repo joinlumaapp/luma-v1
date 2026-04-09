@@ -295,6 +295,20 @@ export const profileService = {
     }
   },
 
+  // Set or clear mood status (Anlık Ruh Hali)
+  setMood: async (mood: string | null): Promise<{
+    mood: string | null;
+    moodSetAt: string | null;
+    expiresAt: string | null;
+  }> => {
+    const response = await api.patch<{
+      mood: string | null;
+      moodSetAt: string | null;
+      expiresAt: string | null;
+    }>('/profiles/mood', { mood });
+    return response.data;
+  },
+
   // Get unique profile view count for the last 7 days
   getWeeklyViewCount: async (): Promise<{ count: number }> => {
     try {

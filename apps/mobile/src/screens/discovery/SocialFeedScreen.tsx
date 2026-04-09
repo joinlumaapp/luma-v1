@@ -12,7 +12,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
-  ActivityIndicator,
   ScrollView,
   Alert,
   Image,
@@ -43,7 +42,8 @@ import {
 import { photoService } from '../../services/photoService';
 import { videoService } from '../../services/videoService';
 import { FeedCard } from '../../components/feed/FeedCard';
-// CommentSheet removed — comment system removed from feed
+import { CommentSheet } from '../../components/feed/CommentSheet';
+import { LikeSheet } from '../../components/feed/LikeSheet';
 // MatchPromptModal removed — actions moved to profile screen
 import { EngagementNudge } from '../../components/feed/EngagementNudge';
 // QuickProfilePreview removed — tapping post goes directly to full profile
@@ -56,6 +56,14 @@ import { getFeatureLimit, isUnlimited } from '../../constants/packageAccess';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { AdBanner } from '../../components/ads';
+import { FeedSkeleton } from '../../components/animations/SkeletonLoader';
+import ReAnimated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  Easing as ReEasing,
+} from 'react-native-reanimated';
 
 // ── Feed item union type for FlatList (posts + nudge cards) ──────
 const NUDGE_INTERVAL = 5; // show nudge every N posts without interaction
@@ -504,7 +512,7 @@ const StoryBarSection: React.FC<StoryBarSectionProps> = ({
       >
         {/* Own story — always first */}
         <StoryRing
-          userName="Hikaye"
+          userName={myFirstName}
           avatarUrl={myFirstPhoto}
           isOwnStory
           hasStories={myStoryCount > 0}
@@ -584,6 +592,26 @@ export const SocialFeedScreen: React.FC = () => {
   const createPost = useSocialFeedStore((s) => s.createPost);
 
 
+  // Rotating logo animation for pull-to-refresh header
+  const logoRotation = useSharedValue(0);
+
+  React.useEffect(() => {
+    if (isRefreshing) {
+      logoRotation.value = 0;
+      logoRotation.value = withRepeat(
+        withTiming(360, { duration: 1000, easing: ReEasing.linear }),
+        -1,
+        false,
+      );
+    } else {
+      logoRotation.value = withTiming(0, { duration: 200 });
+    }
+  }, [isRefreshing, logoRotation]);
+
+  const rotatingLogoStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${logoRotation.value}deg` }],
+  }));
+
   // Interaction tracking — triggers match prompt after repeated interactions
   const recordInteraction = useFeedInteractionStore((s) => s.recordInteraction);
 
@@ -605,6 +633,12 @@ export const SocialFeedScreen: React.FC = () => {
   const [showMediaCaptionModal, setShowMediaCaptionModal] = useState(false);
   const [pendingMediaUri, setPendingMediaUri] = useState<string | null>(null);
   const [pendingMediaType, setPendingMediaType] = useState<'photo' | 'video'>('photo');
+
+  // Comment sheet state
+  const [commentSheetPostId, setCommentSheetPostId] = useState<string | null>(null);
+
+  // Like sheet state
+  const [likeSheetPostId, setLikeSheetPostId] = useState<string | null>(null);
 
   // Video visibility tracking — only auto-play videos that are on screen
   const [visiblePostIds, setVisiblePostIds] = useState<Set<string>>(new Set());
@@ -729,7 +763,15 @@ export const SocialFeedScreen: React.FC = () => {
     [toggleLike, posts, recordInteraction, markInteraction, currentUserId],
   );
 
-  // Comment handlers removed — comment system removed from feed
+  // Open comment sheet for a post
+  const handleComment = useCallback((postId: string) => {
+    setCommentSheetPostId(postId);
+  }, []);
+
+  // Open like sheet for a post
+  const handleLikeCountPress = useCallback((postId: string) => {
+    setLikeSheetPostId(postId);
+  }, []);
 
   const handleFollow = useCallback(
     (userId: string) => {
@@ -992,15 +1034,17 @@ export const SocialFeedScreen: React.FC = () => {
           <FeedCard
             post={item.data}
             onLike={handleLike}
+            onComment={handleComment}
             onFollow={handleFollow}
             onProfilePress={handleProfilePress}
             onPostTap={handlePostTap}
+            onLikeCountPress={handleLikeCountPress}
             isVisible={visiblePostIds.has(item.data.id)}
           />
         </View>
       );
     },
-    [handleLike, handleFollow, handleProfilePress, handlePostTap, handleNudgeDiscovery, handleNudgeMatches, handleNudgeScrollToTop, handleNudgeDismiss, visiblePostIds],
+    [handleLike, handleComment, handleFollow, handleProfilePress, handlePostTap, handleLikeCountPress, handleNudgeDiscovery, handleNudgeMatches, handleNudgeScrollToTop, handleNudgeDismiss, visiblePostIds],
   );
 
   const keyExtractor = useCallback((item: FeedListItem) => {
@@ -1085,7 +1129,7 @@ export const SocialFeedScreen: React.FC = () => {
       {/* Feed — story bar is part of the list header, scrolls with content like Instagram */}
       {isLoading && posts.length === 0 ? (
         <Animated.View style={[styles.loadingContainer, getAnimatedStyle(1)]}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <FeedSkeleton />
         </Animated.View>
       ) : (
         <FlatList
@@ -1095,15 +1139,31 @@ export const SocialFeedScreen: React.FC = () => {
           extraData={visiblePostIds}
           keyExtractor={keyExtractor}
           renderItem={renderFeedItem}
-          ListHeaderComponent={feedListHeader}
           ListEmptyComponent={EmptyState}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
+          ListHeaderComponent={
+            <>
+              {isRefreshing && (
+                <View style={styles.refreshLogoContainer}>
+                  <ReAnimated.Image
+                    source={require('../../../assets/images/luma-logo.png')}
+                    style={[styles.refreshLogo, rotatingLogoStyle]}
+                    resizeMode="contain"
+                  />
+                </View>
+              )}
+              {feedListHeader}
+            </>
+          }
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
               onRefresh={handleRefresh}
-              tintColor={colors.primary}
+              colors={['#8B5CF6']}
+              tintColor="#8B5CF6"
+              title="Yenileniyor..."
+              titleColor="#8B5CF6"
             />
           }
           viewabilityConfig={viewabilityConfig}
@@ -1135,7 +1195,29 @@ export const SocialFeedScreen: React.FC = () => {
         isCreating={isCreating}
       />
 
-      {/* CommentSheet removed — comment system removed */}
+      {/* Comment Sheet */}
+      {commentSheetPostId && (
+        <CommentSheet
+          visible={!!commentSheetPostId}
+          onClose={() => setCommentSheetPostId(null)}
+          postId={commentSheetPostId}
+          commentCount={
+            posts.find((p) => p.id === commentSheetPostId)?.commentCount ?? 0
+          }
+        />
+      )}
+
+      {/* Like Sheet */}
+      {likeSheetPostId && (
+        <LikeSheet
+          visible={!!likeSheetPostId}
+          onClose={() => setLikeSheetPostId(null)}
+          postId={likeSheetPostId}
+          likeCount={
+            posts.find((p) => p.id === likeSheetPostId)?.likeCount ?? 0
+          }
+        />
+      )}
 
       {/* QuickProfilePreview and MatchPromptModal removed — actions in profile screen only */}
 
@@ -1349,8 +1431,14 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
+  },
+  refreshLogoContainer: {
     alignItems: 'center',
+    paddingVertical: spacing.sm,
+  },
+  refreshLogo: {
+    width: 30,
+    height: 30,
   },
   listContent: {
     paddingBottom: spacing.xxl * 2,

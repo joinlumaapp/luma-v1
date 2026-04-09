@@ -1,6 +1,6 @@
 const { withAndroidStyles } = require('expo/config-plugins');
 
-function withAndroidStatusBar(config, { statusBarColor = '#000000', lightIcons = true } = {}) {
+function withAndroidStatusBar(config, { statusBarColor = '#0d0d14', lightIcons = true } = {}) {
   return withAndroidStyles(config, (config) => {
     const styles = config.modResults;
 

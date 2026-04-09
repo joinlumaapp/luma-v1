@@ -22,7 +22,7 @@ function getTierRingStyle(
   tier: PackageTier | undefined,
   size: number,
 ): ViewStyle | null {
-  if (tier === 'RESERVED') {
+  if (tier === 'SUPREME') {
     const outerSize = size + 6;
     return {
       width: outerSize,
@@ -41,7 +41,7 @@ function getTierRingStyle(
     };
   }
 
-  if (tier === 'GOLD' || tier === 'PRO') {
+  if (tier === 'PREMIUM') {
     const outerSize = size + 5;
     return {
       width: outerSize,

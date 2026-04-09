@@ -2,7 +2,6 @@
 
 export interface User {
   id: string;
-  displayId: string;
   phone: string;
   createdAt: Date;
   updatedAt: Date;
@@ -18,7 +17,6 @@ export interface User {
 export interface UserProfile {
   userId: string;
   firstName: string;
-  lastName: string | null;
   birthDate: Date;
   gender: Gender;
   bio: string | null;
@@ -30,18 +28,10 @@ export interface UserProfile {
   country: string | null;
   latitude: number | null;
   longitude: number | null;
+  currentMood: string | null;
+  moodSetAt: Date | null;
   voiceIntroUrl: string | null;
   voiceIntroDuration: number | null;
-  // Extended profile fields (Bumpy-inspired)
-  weight?: number | null;
-  sexualOrientation?: string | null;
-  zodiacSign?: string | null;
-  educationLevel?: string | null;
-  maritalStatus?: string | null;
-  alcohol?: string | null;
-  pets?: string | null;
-  religion?: string | null;
-  lifeValues?: string | null;
 }
 
 export interface UserPhoto {
@@ -55,27 +45,26 @@ export interface UserPhoto {
   createdAt: Date;
 }
 
-// Subsystem 4: Intention Tags — Extended to 5 Tags
+// Hedef (Intention Tags) — LOCKED: 5 Tags
 export enum IntentionTag {
-  MARRIAGE = 'MARRIAGE',
-  SERIOUS_RELATIONSHIP = 'SERIOUS_RELATIONSHIP',
-  FRIENDSHIP = 'FRIENDSHIP',
-  LEARN_CULTURES = 'LEARN_CULTURES',
-  TRAVEL = 'TRAVEL',
+  EVLENMEK = 'evlenmek',
+  ILISKI = 'iliski',
+  SOHBET_ARKADAS = 'sohbet_arkadas',
+  KULTUR = 'kultur',
+  DUNYA_GEZME = 'dunya_gezme',
 }
 
 export enum Gender {
-  MALE = 'MALE',
-  FEMALE = 'FEMALE',
-  OTHER = 'OTHER',
+  MALE = 'male',
+  FEMALE = 'female',
+  OTHER = 'other',
 }
 
-// Subsystem 16: Package Tiers — LOCKED: 4 Packages
+// Package Tiers — LOCKED: 3 Packages (NO Gold/Pro/Reserved)
 export enum PackageTier {
-  FREE = 'FREE',
-  GOLD = 'GOLD',
-  PRO = 'PRO',
-  RESERVED = 'RESERVED',
+  FREE = 'free',
+  PREMIUM = 'premium',
+  SUPREME = 'supreme',
 }
 
 export enum VerificationStatus {

@@ -39,7 +39,7 @@ export class PaymentsController {
   @Public()
   @Get("packages")
   @ApiOperation({
-    summary: "Get all subscription packages (4 tiers) and gold packs",
+    summary: "Get all subscription packages (3 tiers) and gold packs",
   })
   async getPackages() {
     return this.paymentsService.getPackages();
@@ -99,7 +99,7 @@ export class PaymentsController {
   @Post("package/upgrade")
   @ApiBearerAuth()
   @ApiOperation({
-    summary: "Upgrade package tier (Free -> Gold -> Pro -> Reserved)",
+    summary: "Upgrade package tier (Free -> Premium -> Supreme)",
   })
   async upgradePackage(
     @CurrentUser("sub") userId: string,
@@ -114,7 +114,7 @@ export class PaymentsController {
   @Post("package/downgrade")
   @ApiBearerAuth()
   @ApiOperation({
-    summary: "Downgrade package tier (Reserved -> Pro -> Gold -> Free)",
+    summary: "Downgrade package tier (Supreme -> Premium -> Free)",
   })
   async downgradePackage(
     @CurrentUser("sub") userId: string,

@@ -4,7 +4,7 @@
 import { create } from 'zustand';
 import { FLIRT_CONFIG, MONETIZATION_ENABLED } from '../constants/config';
 
-type PackageTier = 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
+type PackageTier = 'FREE' | 'PREMIUM' | 'SUPREME';
 
 type FlirtStatus = 'pending' | 'accepted' | 'rejected' | 'expired';
 

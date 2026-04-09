@@ -22,7 +22,7 @@ import { colors, palette } from '../../theme/colors';
 import { fontWeights } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { useMatchStore } from '../../stores/matchStore';
-import { GOLD_COSTS } from '@luma/shared';
+import { JETON_COSTS } from '@luma/shared';
 import { useScreenTracking, analyticsService, ANALYTICS_EVENTS } from '../../hooks/useAnalytics';
 import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
 import { VerifiedBadge } from '../../components/common/VerifiedBadge';
@@ -81,6 +81,10 @@ export const MatchDetailScreen: React.FC = () => {
       partnerName: selectedMatch?.name ?? '',
     });
   }, [navigation, matchId, selectedMatch]);
+
+  const handleIcebreakerGame = useCallback(() => {
+    Alert.alert('Çok Yakında!', 'Bu özellik çok yakında aktif olacak.');
+  }, []);
 
   const handleUnmatch = useCallback(() => {
     Alert.alert(
@@ -358,11 +362,22 @@ export const MatchDetailScreen: React.FC = () => {
             <Ionicons name="calendar" size={16} color={palette.purple[600]} />
             <Text style={styles.outlinedButtonText}>Buluşma Planla</Text>
             <View style={styles.jetonCostChip}>
-              <Text style={styles.jetonCostText}>{GOLD_COSTS.DATE_PLANNER} Jeton</Text>
+              <Text style={styles.jetonCostText}>{JETON_COSTS.DATE_PLANNER} Jeton</Text>
             </View>
           </View>
         </TouchableOpacity>
       </View>
+
+      {/* Icebreaker Game — full-width outlined button */}
+      <TouchableOpacity
+        onPress={handleIcebreakerGame}
+        activeOpacity={0.85}
+      >
+        <View style={styles.icebreakerButton}>
+          <Ionicons name="game-controller" size={16} color={palette.purple[600]} />
+          <Text style={styles.outlinedButtonText}>Buz Kırıcı Oyun Başlat</Text>
+        </View>
+      </TouchableOpacity>
 
       {/* Unmatch — subtle text */}
       <TouchableOpacity
@@ -659,6 +674,17 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.bold,
     color: palette.purple[600],
     letterSpacing: 0.2,
+  },
+  icebreakerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderRadius: borderRadius.md,
+    paddingVertical: 14,
+    borderWidth: 1.5,
+    borderColor: palette.purple[400],
+    backgroundColor: 'rgba(139, 92, 246, 0.04)',
   },
   unmatchButton: {
     alignItems: 'center',

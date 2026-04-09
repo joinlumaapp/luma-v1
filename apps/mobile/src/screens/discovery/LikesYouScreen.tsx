@@ -90,7 +90,7 @@ const getCardState = (
       if (index < 5) return 'teaser';
       return 'locked';
 
-    case 'GOLD': {
+    case 'PREMIUM': {
       const clearCount = Math.ceil(totalCards * 0.75);
       const teaserCount = Math.ceil(totalCards * 0.15);
       if (index < clearCount) return 'clear';
@@ -98,8 +98,7 @@ const getCardState = (
       return 'locked';
     }
 
-    case 'PRO':
-    case 'RESERVED':
+    case 'SUPREME':
       return 'clear';
 
     default:

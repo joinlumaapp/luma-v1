@@ -15,7 +15,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { CachedAvatar } from '../common/CachedAvatar';
-import { GOLD_COSTS } from '@luma/shared';
+import { JETON_COSTS } from '@luma/shared';
 import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { fontWeights } from '../../theme/typography';
@@ -249,7 +249,7 @@ const NUDGE_CONFIG = {
     title: 'Mesajın öne çıkarılsın mı?',
     subtitle: '{name} her gün onlarca mesaj alıyor. Öncelikli mesaj ile ilk sen görün.',
     cta: 'Öncelikli Gönder',
-    cost: `${GOLD_COSTS.PRIORITY_MESSAGE} Jeton`,
+    cost: `${JETON_COSTS.PRIORITY_MESSAGE} Jeton`,
   },
   see_read: {
     icon: 'eye-outline' as const,

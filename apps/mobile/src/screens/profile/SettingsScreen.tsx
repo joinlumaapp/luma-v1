@@ -108,7 +108,7 @@ export const SettingsScreen: React.FC = () => {
   const { colors } = useTheme();
 
   const packageTier = user?.packageTier ?? 'FREE';
-  const isSupreme = packageTier === 'RESERVED';
+  const isSupreme = packageTier === 'SUPREME';
 
   // ── Notification toggles ──────────────────────────────────────
   const [pushNotifications, setPushNotificationsRaw] = useState(true);
@@ -335,7 +335,7 @@ export const SettingsScreen: React.FC = () => {
   const phoneDisplay = user?.phone ?? '-';
   const emailDisplay = user?.email ?? 'Belirtilmedi';
 
-  const tierLabels: Record<string, string> = { FREE: 'Ücretsiz', GOLD: 'Premium', PRO: 'Pro', RESERVED: 'Supreme' };
+  const tierLabels: Record<string, string> = { FREE: 'Ücretsiz', PREMIUM: 'Premium', SUPREME: 'Supreme' };
   const currentTierLabel = tierLabels[packageTier] ?? 'Ücretsiz';
 
   const sections: SettingSection[] = [

@@ -1,7 +1,7 @@
 // SignUpChoiceScreen — Auth stack: Phone / Google registration choice
 // Cream/beige theme, no step counter
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Platform,
 } from 'react-native';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,6 +30,24 @@ export const SignUpChoiceScreen: React.FC = () => {
   const handleBack = () => {
     navigation.goBack();
   };
+
+  const handleAppleSignIn = useCallback(async () => {
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      // TODO: Send credential.identityToken to backend
+      console.log('Apple sign in success:', credential.user);
+    } catch (e: unknown) {
+      const error = e as { code?: string };
+      if (error.code !== 'ERR_REQUEST_CANCELED') {
+        console.error('Apple sign in error:', e);
+      }
+    }
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -55,6 +74,17 @@ export const SignUpChoiceScreen: React.FC = () => {
 
       {/* Buttons */}
       <View style={styles.footer}>
+        {/* Apple Sign-In — iOS only */}
+        {Platform.OS === 'ios' && (
+          <AppleAuthentication.AppleAuthenticationButton
+            buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+            buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
+            cornerRadius={16}
+            style={styles.appleButton}
+            onPress={handleAppleSignIn}
+          />
+        )}
+
         {/* Google button — disabled until Google Auth is implemented */}
         <TouchableOpacity
           style={[styles.googleButton, styles.googleButtonDisabled]}
@@ -130,6 +160,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: Platform.OS === 'ios' ? 48 : 36,
     gap: 12,
+  },
+  appleButton: {
+    width: '100%',
+    height: 54,
   },
   googleButton: {
     flexDirection: 'row',

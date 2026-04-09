@@ -1,26 +1,30 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsEnum } from "class-validator";
+import { IsOptional, IsEnum } from "class-validator";
 
 /**
- * 6 mood types for "Bugün Ne Moddayım?" feature.
- * Moods expire after 24 hours.
+ * 4 mood types for "Anlık Ruh Hali" feature.
+ * Moods expire after 4 hours.
  */
 export enum MoodValue {
-  SAKIN = "SAKIN",
-  ENERJIK = "ENERJIK",
-  YARATICI = "YARATICI",
-  DUSUNCELI = "DUSUNCELI",
-  HEYECANLI = "HEYECANLI",
-  MUTLU = "MUTLU",
+  SOHBETE_ACIGIM = "sohbete_acigim",
+  BUGUN_SESSIZIM = "bugun_sessizim",
+  BULUSMAYA_VARIM = "bulusmaya_varim",
+  KAFEDE_TAKILIYORUM = "kafede_takiliyorum",
 }
 
 export class SetMoodDto {
   @ApiProperty({
-    description: "Current mood (expires after 24h)",
+    description:
+      "Current mood (expires after 4h). Send null to clear the mood.",
     enum: MoodValue,
-    example: MoodValue.ENERJIK,
+    example: MoodValue.SOHBETE_ACIGIM,
+    nullable: true,
+    required: false,
   })
-  @IsNotEmpty()
-  @IsEnum(MoodValue)
-  mood!: MoodValue;
+  @IsOptional()
+  @IsEnum(MoodValue, {
+    message:
+      "Geçersiz mood değeri. Geçerli değerler: sohbete_acigim, bugun_sessizim, bulusmaya_varim, kafede_takiliyorum",
+  })
+  mood!: MoodValue | null;
 }

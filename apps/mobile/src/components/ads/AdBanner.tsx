@@ -21,7 +21,7 @@ import { spacing, borderRadius, shadows } from '../../theme/spacing';
 import type { FeedStackParamList } from '../../navigation/types';
 
 // ── Paid tiers that should never see ads ────────────────────────
-const AD_FREE_TIERS: ReadonlySet<PackageTier> = new Set(['GOLD', 'PRO', 'RESERVED']);
+const AD_FREE_TIERS: ReadonlySet<PackageTier> = new Set(['PREMIUM', 'SUPREME']);
 
 // ── Mock ad creatives — rotate through for variety ─────────────
 const MOCK_ADS: ReadonlyArray<{

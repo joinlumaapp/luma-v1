@@ -22,18 +22,24 @@
  * />
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
   Pressable,
   StyleSheet,
   Dimensions,
-  FlatList,
-  type NativeSyntheticEvent,
-  type NativeScrollEvent,
   type ListRenderItemInfo,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  useAnimatedScrollHandler,
+  interpolate,
+  Extrapolation,
+  withSpring,
+  type SharedValue,
+} from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, palette } from '../../theme/colors';
@@ -101,26 +107,56 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const DEFAULT_CARD_WIDTH = SCREEN_WIDTH - spacing.md * 2;
 const DEFAULT_CARD_HEIGHT = SCREEN_HEIGHT * 0.68;
 
-// ─── Dot indicator ────────────────────────────────────────────
+// ─── Animated Dot indicator ──────────────────────────────────
+
+interface AnimatedDotProps {
+  index: number;
+  scrollX: SharedValue<number>;
+  cardWidth: number;
+}
+
+const AnimatedDot: React.FC<AnimatedDotProps> = ({ index, scrollX, cardWidth }) => {
+  const animatedStyle = useAnimatedStyle(() => {
+    const inputRange = [
+      (index - 1) * cardWidth,
+      index * cardWidth,
+      (index + 1) * cardWidth,
+    ];
+    const dotWidth = interpolate(
+      scrollX.value,
+      inputRange,
+      [8, 24, 8],
+      Extrapolation.CLAMP,
+    );
+    const opacity = interpolate(
+      scrollX.value,
+      inputRange,
+      [0.45, 1, 0.45],
+      Extrapolation.CLAMP,
+    );
+
+    return {
+      width: withSpring(dotWidth, { damping: 15, stiffness: 200 }),
+      opacity,
+    };
+  });
+
+  return <Animated.View style={[dotStyles.dot, animatedStyle]} />;
+};
 
 interface DotIndicatorsProps {
   count: number;
-  activeIndex: number;
+  scrollX: SharedValue<number>;
+  cardWidth: number;
 }
 
-const DotIndicators: React.FC<DotIndicatorsProps> = ({ count, activeIndex }) => {
+const DotIndicators: React.FC<DotIndicatorsProps> = ({ count, scrollX, cardWidth }) => {
   if (count <= 1) return null;
 
   return (
-    <View style={dotStyles.container} accessibilityLabel={`Fotoğraf ${activeIndex + 1} / ${count}`}>
+    <View style={dotStyles.container}>
       {Array.from({ length: count }, (_, i) => (
-        <View
-          key={i}
-          style={[
-            dotStyles.dot,
-            i === activeIndex ? dotStyles.dotActive : dotStyles.dotInactive,
-          ]}
-        />
+        <AnimatedDot key={i} index={i} scrollX={scrollX} cardWidth={cardWidth} />
       ))}
     </View>
   );
@@ -141,16 +177,64 @@ const dotStyles = StyleSheet.create({
   dot: {
     height: 4,
     borderRadius: 2,
-  },
-  dotActive: {
-    width: 24,
     backgroundColor: palette.white,
   },
-  dotInactive: {
-    width: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.45)',
-  },
 });
+
+// ─── Parallax Photo ──────────────────────────────────────────
+
+interface ParallaxPhotoProps {
+  uri: string;
+  index: number;
+  scrollX: SharedValue<number>;
+  cardWidth: number;
+  cardHeight: number;
+  name: string;
+}
+
+const PARALLAX_FACTOR = 0.15;
+
+const ParallaxPhoto: React.FC<ParallaxPhotoProps> = ({
+  uri,
+  index,
+  scrollX,
+  cardWidth,
+  cardHeight,
+  name,
+}) => {
+  const parallaxStyle = useAnimatedStyle(() => {
+    const inputRange = [
+      (index - 1) * cardWidth,
+      index * cardWidth,
+      (index + 1) * cardWidth,
+    ];
+    const translateX = interpolate(
+      scrollX.value,
+      inputRange,
+      [-cardWidth * PARALLAX_FACTOR, 0, cardWidth * PARALLAX_FACTOR],
+      Extrapolation.CLAMP,
+    );
+
+    return {
+      transform: [{ translateX }],
+    };
+  });
+
+  return (
+    <View style={{ width: cardWidth, height: cardHeight, overflow: 'hidden' }}>
+      <Animated.View style={[{ width: cardWidth * (1 + PARALLAX_FACTOR * 2), height: cardHeight, marginLeft: -cardWidth * PARALLAX_FACTOR }, parallaxStyle]}>
+        <CachedImage
+          uri={uri}
+          style={{ width: cardWidth * (1 + PARALLAX_FACTOR * 2), height: cardHeight }}
+          contentFit="cover"
+          priority="high"
+          transition={200}
+          accessibilityLabel={`${name} profil fotoğrafı`}
+        />
+      </Animated.View>
+    </View>
+  );
+};
 
 // ─── Component ────────────────────────────────────────────────
 
@@ -168,9 +252,11 @@ const EnhancedProfileCardInner: React.FC<EnhancedProfileCardProps> = ({
   width = DEFAULT_CARD_WIDTH,
   height = DEFAULT_CARD_HEIGHT,
 }) => {
-  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const intention = INTENTION_CONFIG[intentionTag];
   const safePhotos = photos.length > 0 ? photos : [];
+
+  // Parallax scroll tracking
+  const scrollX = useSharedValue(0);
 
   const scoreColor = isSuperCompatible
     ? palette.gold[400]
@@ -178,27 +264,24 @@ const EnhancedProfileCardInner: React.FC<EnhancedProfileCardProps> = ({
       ? palette.purple[400]
       : palette.gray[400];
 
-  const handleScroll = useCallback(
-    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const offsetX = event.nativeEvent.contentOffset.x;
-      const index = Math.round(offsetX / width);
-      setActivePhotoIndex(index);
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollX.value = event.contentOffset.x;
     },
-    [width],
-  );
+  });
 
   const renderPhoto = useCallback(
-    ({ item }: ListRenderItemInfo<string>) => (
-      <CachedImage
+    ({ item, index: photoIndex }: ListRenderItemInfo<string>) => (
+      <ParallaxPhoto
         uri={item}
-        style={{ width, height }}
-        contentFit="cover"
-        priority="high"
-        transition={200}
-        accessibilityLabel={`${name} profil fotoğrafı`}
+        index={photoIndex}
+        scrollX={scrollX}
+        cardWidth={width}
+        cardHeight={height}
+        name={name}
       />
     ),
-    [width, height, name],
+    [width, height, name, scrollX],
   );
 
   const keyExtractor = useCallback((_item: string, index: number) => `photo-${index}`, []);
@@ -209,16 +292,16 @@ const EnhancedProfileCardInner: React.FC<EnhancedProfileCardProps> = ({
       accessibilityLabel={`${name}, ${age} yas, ${city}`}
       accessibilityRole="summary"
     >
-      {/* Photo carousel */}
+      {/* Photo carousel with parallax */}
       {safePhotos.length > 0 ? (
-        <FlatList
+        <Animated.FlatList
           data={safePhotos}
           renderItem={renderPhoto}
           keyExtractor={keyExtractor}
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
-          onScroll={handleScroll}
+          onScroll={scrollHandler}
           scrollEventThrottle={16}
           bounces={false}
           style={StyleSheet.absoluteFill}
@@ -229,8 +312,8 @@ const EnhancedProfileCardInner: React.FC<EnhancedProfileCardProps> = ({
         </View>
       )}
 
-      {/* Dot indicators */}
-      <DotIndicators count={safePhotos.length} activeIndex={activePhotoIndex} />
+      {/* Animated dot indicators */}
+      <DotIndicators count={safePhotos.length} scrollX={scrollX} cardWidth={width} />
 
       {/* Bottom gradient overlay */}
       <LinearGradient

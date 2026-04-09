@@ -1,7 +1,7 @@
 // Profile Coach screen — AI profil koclugu
 // Shows rule-based tips to improve profile quality
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,11 +11,20 @@ import {
   ActivityIndicator,
   InteractionManager,
 } from 'react-native';
+import ReAnimated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  withSequence,
+  withDelay,
+} from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { discoveryService } from '../../services/discoveryService';
 import type { ProfileCoachTip } from '../../services/discoveryService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
+import { notificationAsync } from '../../utils/haptics';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
@@ -70,6 +79,42 @@ export const ProfileCoachScreen: React.FC = () => {
   const [tips, setTips] = useState<ProfileCoachTip[]>([]);
   const [profileStrength, setProfileStrength] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Animated strength bar
+  const prevStrength = useRef(0);
+  const strengthBarWidth = useSharedValue(0);
+  const celebrationScale = useSharedValue(0);
+  const celebrationOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    if (profileStrength > prevStrength.current) {
+      strengthBarWidth.value = withTiming(profileStrength / 100, { duration: 800 });
+      notificationAsync('success');
+
+      if (profileStrength >= 100) {
+        celebrationScale.value = withSequence(
+          withSpring(1.3, { damping: 6 }),
+          withSpring(1.0, { damping: 10 }),
+        );
+        celebrationOpacity.value = withSequence(
+          withTiming(1, { duration: 200 }),
+          withDelay(1000, withTiming(0, { duration: 500 })),
+        );
+      }
+    } else {
+      strengthBarWidth.value = withTiming(profileStrength / 100, { duration: 400 });
+    }
+    prevStrength.current = profileStrength;
+  }, [profileStrength, strengthBarWidth, celebrationScale, celebrationOpacity]);
+
+  const strengthBarAnimatedStyle = useAnimatedStyle(() => ({
+    width: `${strengthBarWidth.value * 100}%`,
+  }));
+
+  const celebrationAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: celebrationOpacity.value,
+    transform: [{ scale: celebrationScale.value }],
+  }));
 
   const fetchTips = useCallback(async () => {
     try {
@@ -131,7 +176,7 @@ export const ProfileCoachScreen: React.FC = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Strength score */}
+          {/* Strength score — animated */}
           <View style={styles.strengthCard}>
             <Text style={styles.strengthLabel}>Profil Gücün</Text>
             <View style={styles.strengthRow}>
@@ -151,15 +196,19 @@ export const ProfileCoachScreen: React.FC = () => {
               >
                 {getStrengthLabel(profileStrength)}
               </Text>
+              {/* 100% celebration */}
+              <ReAnimated.View style={[styles.celebrationEmoji, celebrationAnimatedStyle]} pointerEvents="none">
+                <Text style={styles.celebrationEmojiText}>{'\uD83C\uDF89'}</Text>
+              </ReAnimated.View>
             </View>
             <View style={styles.strengthBarBg}>
-              <View
+              <ReAnimated.View
                 style={[
                   styles.strengthBarFill,
                   {
-                    width: `${Math.min(100, profileStrength)}%`,
                     backgroundColor: getStrengthColor(profileStrength),
                   },
+                  strengthBarAnimatedStyle,
                 ]}
               />
             </View>
@@ -246,6 +295,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceBorder,
   },
   strengthBarFill: { height: 8, borderRadius: 4 },
+  celebrationEmoji: {
+    position: 'absolute',
+    right: -4,
+    top: -8,
+  },
+  celebrationEmojiText: {
+    fontSize: 24,
+  },
   // Sections
   section: { marginBottom: spacing.lg },
   sectionTitle: {

@@ -56,8 +56,8 @@ model User {
   reportedBy       Report[]          @relation("ReportsReceived")
   blocksGiven      Block[]           @relation("BlocksGiven")
   blocksReceived   Block[]           @relation("BlocksReceived")
-  relationshipsAsA Relationship[]    @relation("RelationshipUserA")
-  relationshipsAsB Relationship[]    @relation("RelationshipUserB")
+  canliAsA         CanliSession[]    @relation("CanliUserA")
+  canliAsB         CanliSession[]    @relation("CanliUserB")
   placeCheckIns    PlaceCheckIn[]
   placeMemories    PlaceMemory[]
   deviceTokens     DeviceToken[]
@@ -82,6 +82,7 @@ model User {
   callsReceived          CallHistory[]     @relation("CallsReceived")
   posts                  Post[]
   postLikes              PostLike[]
+  postComments           PostComment[]
 
   @@index([deletedAt])                // Soft-delete: filter active/deleted users
   @@index([packageTier])              // Tier filtering: find users by package
@@ -162,7 +163,7 @@ model UserProfile {
   birthDate     DateTime     @map("birth_date") @db.Date
   gender        Gender
   bio           String?      @db.VarChar(500)
-  // Subsystem 4: Intention Tag — LOCKED: 3 Tags
+  // Subsystem 4: Hedefler — LOCKED: 5 Tags
   intentionTag  IntentionTag @map("intention_tag")
   // Location (privacy-safe)
   city          String?      @db.VarChar(100)
@@ -239,15 +240,13 @@ model UserPhoto {
   @@map("user_photos")
 }
 
-// Subsystem 4: Intention Tags — 7 Tags
+// Subsystem 4: Hedefler — 5 Tags (LOCKED)
 enum IntentionTag {
-  SERIOUS_RELATIONSHIP
-  EXPLORING
-  NOT_SURE
-  MARRIAGE
-  FRIENDSHIP
-  LEARN_CULTURES
-  TRAVEL
+  EVLENMEK
+  ILISKI
+  SOHBET_ARKADAS
+  KULTUR
+  DUNYA_GEZME
 }
 
 enum Gender {
@@ -258,18 +257,17 @@ enum Gender {
 
 // ============================================================
 // SUBSYSTEM 5 & 6: Compatibility Engine
-// 20 core questions + 25 premium questions = 45 total (LOCKED)
-// Base score + Deep score + Super Compatibility trigger
+// 20 mandatory questions, 4 choices each, score range 47-97
+// 90+ = Super Uyum. NO premium questions.
 // ============================================================
 
 model CompatibilityQuestion {
   id             String           @id @default(uuid()) @db.Uuid
-  questionNumber Int              @unique @map("question_number") // 1-45
+  questionNumber Int              @unique @map("question_number") // 1-20
   category       QuestionCategory
   textEn         String           @map("text_en")
   textTr         String           @map("text_tr")
-  weight         Float            @default(1.0) // 1.0, 1.2, or 1.5
-  isPremium      Boolean          @default(false) @map("is_premium") // true for Q21-Q45
+  weight         Float            @default(1.0) // category weight
   order          Int
   isActive       Boolean          @default(true) @map("is_active")
   createdAt      DateTime         @default(now()) @map("created_at")
@@ -278,7 +276,6 @@ model CompatibilityQuestion {
   answers      UserAnswer[]
   dailyAnswers DailyQuestionAnswer[]
 
-  @@index([isPremium])
   @@map("compatibility_questions")
 }
 
@@ -315,16 +312,14 @@ model UserAnswer {
 }
 
 // Subsystem 7: Compatibility Levels — LOCKED: 2 Levels
-// Pre-computed pairwise compatibility scores
+// Pre-computed pairwise compatibility scores (range: 47-97, 90+ = SUPER)
 model CompatibilityScore {
   id           String             @id @default(uuid()) @db.Uuid
   userAId      String             @map("user_a_id") @db.Uuid
   userBId      String             @map("user_b_id") @db.Uuid
-  baseScore    Float              @map("base_score") // 0-100 from 20 core questions
-  deepScore    Float?             @map("deep_score") // 0-100 from all 45 questions
-  finalScore   Float              @map("final_score") // weighted combination
+  finalScore   Float              @map("final_score") // 47-97 range, single score from 20 questions
   level        CompatibilityLevel @default(NORMAL)
-  dimensionScores Json?           @map("dimension_scores") // JSON: { communication: 85, values: 72, ... }
+  dimensionScores Json?           @map("dimension_scores") // JSON: { communication: 85, conflict: 72, ... }
   calculatedAt DateTime           @default(now()) @map("calculated_at")
   updatedAt    DateTime           @updatedAt @map("updated_at")
 
@@ -337,23 +332,15 @@ model CompatibilityScore {
 }
 
 enum QuestionCategory {
-  // Core (Q1-Q20)
-  COMMUNICATION
-  LIFE_GOALS
-  VALUES
-  LIFESTYLE
-  EMOTIONAL_INTELLIGENCE
-  RELATIONSHIP_EXPECTATIONS
-  SOCIAL_COMPATIBILITY
-  // Premium (Q21-Q45)
-  ATTACHMENT_STYLE
-  LOVE_LANGUAGE
-  CONFLICT_STYLE
-  FUTURE_VISION
-  INTELLECTUAL
-  INTIMACY
-  GROWTH_MINDSET
-  CORE_FEARS
+  // 8 psychological categories across 20 questions
+  COMMUNICATION          // Iletisim Tarzi (Q1-Q3, 15%)
+  CONFLICT_RESOLUTION    // Catisma Cozumu (Q4-Q5, 15%)
+  EMOTIONAL_DEPTH        // Duygusal Derinlik (Q6-Q8, 15%)
+  SOCIAL_ENERGY          // Sosyal Enerji (Q9-Q10, 10%)
+  LIFE_PACE              // Yasam Temposu (Q11-Q12, 10%)
+  LONG_TERM_VISION       // Uzun Vadeli Vizyon (Q13-Q15, 15%)
+  RELATIONSHIP_EXPECTATIONS // Iliski Beklentisi (Q16-Q17, 10%)
+  LIFESTYLE_COMPATIBILITY   // Yasam Tarzi Uyumu (Q18-Q20, 10%)
 }
 
 enum CompatibilityLevel {
@@ -439,95 +426,9 @@ enum MatchAnimationType {
 }
 
 // ============================================================
-// SUBSYSTEM 11: Relationship Mode
-// Manual activation, Couple Badge, Hidden / Visible mode
+// SUBSYSTEM 11: Removed — Relationship Mode & Couples Club
+// These features are permanently removed from V1.
 // ============================================================
-
-model Relationship {
-  id          String             @id @default(uuid()) @db.Uuid
-  userAId     String             @map("user_a_id") @db.Uuid
-  userBId     String             @map("user_b_id") @db.Uuid
-  status      RelationshipStatus @default(PROPOSED)
-  isVisible   Boolean            @default(true) @map("is_visible")
-  activatedAt DateTime?          @map("activated_at")
-  endedAt     DateTime?          @map("ended_at")
-  createdAt   DateTime           @default(now()) @map("created_at")
-
-  // 48-hour exit confirmation fields
-  deactivationInitiatedAt   DateTime?  @map("deactivation_initiated_at")
-  deactivationInitiatedBy   String?    @map("deactivation_initiated_by") @db.Uuid
-  deactivationDeadline      DateTime?  @map("deactivation_deadline")
-
-  userA                    User                      @relation("RelationshipUserA", fields: [userAId], references: [id])
-  userB                    User                      @relation("RelationshipUserB", fields: [userBId], references: [id])
-  coupleBadge              CoupleBadge?
-  couplesClubParticipants  CouplesClubParticipant[]
-
-  @@unique([userAId, userBId])
-  @@index([userAId, status]) // Relationship: active relationships for user
-  @@index([userBId, status]) // Relationship: active relationships for user
-  @@map("relationships")
-}
-
-enum RelationshipStatus {
-  PROPOSED
-  ACTIVE
-  HIDDEN
-  ENDING
-  ENDED
-}
-
-model CoupleBadge {
-  id             String   @id @default(uuid()) @db.Uuid
-  relationshipId String   @unique @map("relationship_id") @db.Uuid
-  badgeType      String   @map("badge_type") @db.VarChar(50)
-  issuedAt       DateTime @default(now()) @map("issued_at")
-
-  relationship Relationship @relation(fields: [relationshipId], references: [id], onDelete: Cascade)
-
-  @@map("couple_badges")
-}
-
-// ============================================================
-// SUBSYSTEM 12: Couples Club
-// Couples-only access, 2v2 interactions, Group events
-// STATUS: Active — used in RelationshipsService and AppInfoController.
-// DO NOT remove: referenced by relationships.service.ts (CRUD operations)
-// and app-info.controller.ts (feature flags).
-// ============================================================
-
-model CouplesClubEvent {
-  id          String   @id @default(uuid()) @db.Uuid
-  title       String   @db.VarChar(200)
-  titleTr     String   @map("title_tr") @db.VarChar(200)
-  description String
-  descriptionTr String @map("description_tr")
-  eventDate   DateTime @map("event_date")
-  location    String?
-  maxCouples  Int      @map("max_couples")
-  imageUrl    String?  @map("image_url")
-  isActive    Boolean  @default(true) @map("is_active")
-  createdAt   DateTime @default(now()) @map("created_at")
-
-  participants CouplesClubParticipant[]
-
-  @@index([eventDate])
-  @@map("couples_club_events")
-}
-
-model CouplesClubParticipant {
-  id             String   @id @default(uuid()) @db.Uuid
-  eventId        String   @map("event_id") @db.Uuid
-  relationshipId String   @map("relationship_id") @db.Uuid
-  rsvpStatus     String   @map("rsvp_status") @db.VarChar(20) // attending, maybe, declined
-  joinedAt       DateTime @default(now()) @map("joined_at")
-
-  event        CouplesClubEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  relationship Relationship     @relation(fields: [relationshipId], references: [id])
-
-  @@unique([eventId, relationshipId])
-  @@map("couples_club_participants")
-}
 
 // ============================================================
 // SUBSYSTEM 13: Discovered Places
@@ -555,7 +456,6 @@ model PlaceCheckIn {
   id             String   @id @default(uuid()) @db.Uuid
   placeId        String   @map("place_id") @db.Uuid
   userId         String   @map("user_id") @db.Uuid
-  relationshipId String?  @map("relationship_id") @db.Uuid
   checkedInAt    DateTime @default(now()) @map("checked_in_at")
 
   place DiscoveredPlace @relation(fields: [placeId], references: [id], onDelete: Cascade)
@@ -619,15 +519,14 @@ model UserBadge {
 }
 
 // ============================================================
-// SUBSYSTEM 16: Package Structure (LOCKED: 4 Packages)
-// Free, Gold, Pro, Reserved
+// SUBSYSTEM 16: Package Structure (LOCKED: 3 Packages)
+// Free, Premium, Supreme
 // ============================================================
 
 enum PackageTier {
   FREE
-  GOLD
-  PRO
-  RESERVED
+  PREMIUM
+  SUPREME
 }
 
 model Subscription {
@@ -747,7 +646,9 @@ enum NotificationType {
   MATCH_REMOVED
   BADGE_EARNED
   SUBSCRIPTION_EXPIRING
-  RELATIONSHIP_REQUEST
+  CANLI_MATCH_FOUND
+  DAILY_MATCH_READY
+  FRIENDSHIP_FORMED
   SYSTEM
   POST_LIKE
   STORY_LIKE
@@ -1001,7 +902,7 @@ model UserFavoriteSpot {
 
 // ============================================================
 // SUBSYSTEM: Profile Boost
-// 30-minute visibility boost, costs Gold
+// 24-hour visibility boost (10x), costs 120 jeton
 // ============================================================
 
 model ProfileBoost {
@@ -1245,8 +1146,9 @@ model Post {
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
 
-  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  likes PostLike[]
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes    PostLike[]
+  comments PostComment[]
 
   @@index([userId, createdAt])
   @@index([createdAt])
@@ -1268,9 +1170,60 @@ model PostLike {
   @@map("post_likes")
 }
 
+model PostComment {
+  id        String   @id @default(uuid()) @db.Uuid
+  postId    String   @map("post_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  text      String   @db.VarChar(500)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([postId, createdAt])
+  @@index([userId])
+  @@map("post_comments")
+}
+
+// ============================================================
+// SUBSYSTEM: Canlı Sessions (Omegle-style random video)
+// Random video matching for discovery ONLY.
+// Voice/video calls between matches happen in CallHistory.
+// ============================================================
+
+model CanliSession {
+  id                 String             @id @default(uuid()) @db.Uuid
+  userAId            String             @map("user_a_id") @db.Uuid
+  userBId            String             @map("user_b_id") @db.Uuid
+  status             CanliSessionStatus @default(SEARCHING)
+  compatibilityScore Int                @map("compatibility_score")
+  startedAt          DateTime?          @map("started_at")
+  endedAt            DateTime?          @map("ended_at")
+  jetonSpent         Int                @default(0) @map("jeton_spent")
+  createdAt          DateTime           @default(now()) @map("created_at")
+
+  userA User @relation("CanliUserA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB User @relation("CanliUserB", fields: [userBId], references: [id], onDelete: Cascade)
+
+  @@index([userAId, createdAt])
+  @@index([userBId, createdAt])
+  @@index([status])
+  @@map("canli_sessions")
+}
+
+enum CanliSessionStatus {
+  SEARCHING
+  CONNECTING
+  ACTIVE
+  ENDED
+  CANCELLED
+  FAILED
+}
+
 // ============================================================
 // SUBSYSTEM: Call History (Voice & Video Calls)
-// Persistent call records for tracking call sessions
+// Persistent call records for matched/friended user calls
 // ============================================================
 
 enum CallStatus {

@@ -22,7 +22,7 @@ const WeeklyTopScreen: React.FC = () => {
     fetchWeeklyTop();
   }, []);
 
-  const REVEAL_COST = WEEKLY_TOP_CONFIG.REVEAL_COST_GOLD;
+  const REVEAL_COST = WEEKLY_TOP_CONFIG.REVEAL_COST_JETON;
   const coinBalance = useCoinStore((s) => s.balance);
   const spendCoins = useCoinStore((s) => s.spendCoins);
 

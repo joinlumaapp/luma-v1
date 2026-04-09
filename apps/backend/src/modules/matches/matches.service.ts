@@ -187,8 +187,6 @@ export class MatchesService {
     const compatScore = await this.prisma.compatibilityScore.findUnique({
       where: { userAId_userBId: { userAId: first, userBId: second } },
       select: {
-        baseScore: true,
-        deepScore: true,
         finalScore: true,
         level: true,
         dimensionScores: true,
@@ -216,8 +214,6 @@ export class MatchesService {
         level: match.compatibilityLevel,
         animationType: match.animationType,
         breakdown,
-        baseScore: compatScore?.baseScore,
-        deepScore: compatScore?.deepScore,
         explanation,
       },
       conversationStarters,
@@ -458,9 +454,8 @@ export class MatchesService {
       { dailyReveals: number; delayHours: number }
     > = {
       FREE: { dailyReveals: 1, delayHours: 24 },
-      GOLD: { dailyReveals: 5, delayHours: 6 },
-      PRO: { dailyReveals: 15, delayHours: 0 },
-      RESERVED: { dailyReveals: 999999, delayHours: 0 },
+      PREMIUM: { dailyReveals: 5, delayHours: 6 },
+      SUPREME: { dailyReveals: 999999, delayHours: 0 },
     };
 
     const config = viewerConfig[tier] ?? viewerConfig.FREE;
@@ -523,9 +518,8 @@ export class MatchesService {
 
     const tierRingLimit: Record<string, number> = {
       FREE: 3,
-      GOLD: 6,
-      PRO: 10,
-      RESERVED: 10,
+      PREMIUM: 6,
+      SUPREME: 10,
     };
 
     const limit = tierRingLimit[tier] ?? 3;
@@ -609,9 +603,8 @@ export class MatchesService {
   }> {
     const visibleCount: Record<string, number> = {
       FREE: 1,
-      GOLD: 2,
-      PRO: 3,
-      RESERVED: 3,
+      PREMIUM: 2,
+      SUPREME: 3,
     };
     const limit = visibleCount[tier] || 1;
 
@@ -662,6 +655,175 @@ export class MatchesService {
       matches: mockMatches,
       generatedAt: new Date().toISOString(),
       nextRefreshAt: nextMonday.toISOString(),
+    };
+  }
+
+  // ─── Daily Match (Günün Eşleşmesi) ─────────────────────────────
+
+  /**
+   * Get AI-powered daily match recommendation based on uyum score.
+   * Package limits: FREE = 1/week, PREMIUM = 1/day, SUPREME = 3/day.
+   */
+  async getDailyMatch(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, packageTier: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException("Kullanıcı bulunamadı");
+    }
+
+    const tier = user.packageTier as string;
+    const limits: Record<string, number> = {
+      FREE: 1,
+      PREMIUM: 1,
+      SUPREME: 3,
+    };
+    const tierLimit = limits[tier] ?? 1;
+
+    // Today at midnight (UTC)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // FREE users: 1 per week — check last 7 days
+    if (tier === "FREE") {
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const weekPicks = await this.prisma.dailyPick.count({
+        where: { userId, date: { gte: weekAgo } },
+      });
+      if (weekPicks >= 1) {
+        const lastPick = await this.prisma.dailyPick.findFirst({
+          where: { userId },
+          orderBy: { date: "desc" },
+        });
+        const nextAvailable = lastPick
+          ? new Date(lastPick.date.getTime() + 7 * 24 * 60 * 60 * 1000)
+          : new Date();
+        return {
+          match: null,
+          remaining: 0,
+          nextAvailableAt: nextAvailable.toISOString(),
+          limit: 1,
+          period: "weekly" as const,
+        };
+      }
+    } else {
+      // PREMIUM / SUPREME: check daily usage
+      const todayPicks = await this.prisma.dailyPick.count({
+        where: { userId, date: { gte: today } },
+      });
+      if (todayPicks >= tierLimit) {
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return {
+          match: null,
+          remaining: 0,
+          nextAvailableAt: tomorrow.toISOString(),
+          limit: tierLimit,
+          period: "daily" as const,
+        };
+      }
+    }
+
+    // Count how many picks used today (for remaining calculation)
+    const todayPicks = await this.prisma.dailyPick.count({
+      where: { userId, date: { gte: today } },
+    });
+
+    // Collect user IDs to exclude: recent picks (last 30 days) + blocked users
+    const recentPickRecords = await this.prisma.dailyPick.findMany({
+      where: {
+        userId,
+        date: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+      },
+      select: { pickedUserId: true },
+    });
+    const excludeIds = recentPickRecords.map((p) => p.pickedUserId);
+
+    // Add blocked users to exclude list
+    const blocks = await this.prisma.block.findMany({
+      where: { OR: [{ blockerId: userId }, { blockedId: userId }] },
+      select: { blockerId: true, blockedId: true },
+    });
+    for (const b of blocks) {
+      excludeIds.push(b.blockerId === userId ? b.blockedId : b.blockerId);
+    }
+
+    // Also exclude the user themselves
+    excludeIds.push(userId);
+
+    // Find the top compatible user (minimum 75% for daily match)
+    const bestMatch = await this.prisma.compatibilityScore.findFirst({
+      where: {
+        OR: [
+          { userAId: userId, userBId: { notIn: excludeIds } },
+          { userBId: userId, userAId: { notIn: excludeIds } },
+        ],
+        finalScore: { gte: 75 },
+      },
+      orderBy: { finalScore: "desc" },
+    });
+
+    if (!bestMatch) {
+      return {
+        match: null,
+        remaining: tierLimit - todayPicks,
+        nextAvailableAt: null,
+        limit: tierLimit,
+        period: tier === "FREE" ? ("weekly" as const) : ("daily" as const),
+      };
+    }
+
+    const matchedUserId =
+      bestMatch.userAId === userId ? bestMatch.userBId : bestMatch.userAId;
+
+    // Create DailyPick record
+    await this.prisma.dailyPick.create({
+      data: {
+        userId,
+        pickedUserId: matchedUserId,
+        date: new Date(),
+      },
+    });
+
+    // Get matched user profile
+    const matchedUser = await this.prisma.user.findUnique({
+      where: { id: matchedUserId },
+      include: {
+        profile: {
+          select: {
+            firstName: true,
+            birthDate: true,
+            city: true,
+          },
+        },
+        photos: {
+          where: { isApproved: true },
+          orderBy: { order: "asc" },
+          take: 3,
+        },
+      },
+    });
+
+    const age = matchedUser?.profile?.birthDate
+      ? calculateAge(matchedUser.profile.birthDate)
+      : null;
+
+    return {
+      match: {
+        userId: matchedUserId,
+        firstName: matchedUser?.profile?.firstName ?? "Kullanıcı",
+        age,
+        city: matchedUser?.profile?.city ?? null,
+        photoUrl: matchedUser?.photos[0]?.url ?? null,
+        compatibilityScore: bestMatch.finalScore,
+        isSuperCompatible: bestMatch.finalScore >= 90,
+      },
+      remaining: tierLimit - todayPicks - 1,
+      nextAvailableAt: null,
+      limit: tierLimit,
+      period: tier === "FREE" ? ("weekly" as const) : ("daily" as const),
     };
   }
 

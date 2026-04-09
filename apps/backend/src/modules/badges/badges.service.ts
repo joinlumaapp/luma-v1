@@ -385,14 +385,14 @@ export class BadgesService {
       }
 
       case "couple_goal": {
-        // Has an active relationship
-        const relationship = await this.prisma.relationship.findFirst({
+        // Has at least one active match (relationship model removed)
+        const activeMatch = await this.prisma.match.count({
           where: {
             OR: [{ userAId: userId }, { userBId: userId }],
-            status: "ACTIVE",
+            isActive: true,
           },
         });
-        return relationship !== null;
+        return activeMatch >= 1;
       }
 
       case "explorer": {
@@ -404,12 +404,12 @@ export class BadgesService {
       }
 
       case "gold_member": {
-        // User has an active Gold or higher subscription
+        // User has an active Premium or Supreme subscription
         const subscription = await this.prisma.subscription.findFirst({
           where: {
             userId,
             isActive: true,
-            packageTier: { in: ["GOLD", "PRO", "RESERVED"] },
+            packageTier: { in: ["PREMIUM", "SUPREME"] },
           },
         });
         return subscription !== null;
@@ -489,14 +489,15 @@ export class BadgesService {
       }
 
       case "relationship_activated": {
-        const relationship = await this.prisma.relationship.findFirst({
+        // Relationship model removed; check for active match instead
+        const activeMatchCount = await this.prisma.match.count({
           where: {
             OR: [{ userAId: userId }, { userBId: userId }],
-            status: "ACTIVE",
+            isActive: true,
           },
         });
-        currentValue = relationship ? 1 : 0;
-        description = "İlişki modunu aktifleştir";
+        currentValue = activeMatchCount > 0 ? 1 : 0;
+        description = "Aktif bir eşleşme elde et";
         break;
       }
 
@@ -514,11 +515,11 @@ export class BadgesService {
           where: {
             userId,
             isActive: true,
-            packageTier: { in: ["GOLD", "PRO", "RESERVED"] },
+            packageTier: { in: ["PREMIUM", "SUPREME"] },
           },
         });
         currentValue = activeSub ? 1 : 0;
-        description = "Gold veya ustu abonelik baslat";
+        description = "Premium veya ustu abonelik baslat";
         break;
       }
 

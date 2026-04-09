@@ -25,7 +25,7 @@ export interface Match {
   matchedAt: string;
   lastMessage: string | null;
   /** Subscription tier for badge display */
-  packageTier?: 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
+  packageTier?: 'FREE' | 'PREMIUM' | 'SUPREME';
 }
 
 export interface MatchDetail extends Match {

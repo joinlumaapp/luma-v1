@@ -1,5 +1,5 @@
 // Matches list screen — premium animations, skeleton loader, PulseGlow for high compatibility
-// Tabs: 💞 Eşleşmeler | 💬 Mesajlar | 💜 Beğenenler | 👀 Seni Kim Gördü
+// Tabs: 💞 Eşleşmeler | 💬 Mesajlar | 💜 Beğenenler | 👥 Takipçiler | 👀 Seni Kim Gördü
 // Performance: eager fetch on mount, FlatList tuning, memoized components
 
 import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
@@ -46,8 +46,17 @@ import { WeeklyInsightNudge } from '../../components/premium/SmartUpgradePrompts
 
 type MatchesNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'MatchesList'>;
 
+// Follower item for Takipçiler tab — will be replaced by API type later
+interface FollowerItem {
+  id: string;
+  name: string;
+  photoUrl: string | null;
+  followedAt: string;
+  isBlurred: boolean;
+}
+
 // ─── Tab type ────────────────────────────────────────────────
-type TabKey = 'matches' | 'messages' | 'likes' | 'viewers';
+type TabKey = 'matches' | 'messages' | 'likes' | 'followers' | 'viewers';
 
 // Conversation starter suggestions for matches with no messages
 const CONVERSATION_STARTERS = [
@@ -580,7 +589,7 @@ const ViewerCard = memo<ViewerCardProps>(({ item, index }) => {
           <View style={styles.viewerAction}>
             {item.isBlurred ? (
               <View style={styles.viewerUpgradeBadge}>
-                <Text style={styles.viewerUpgradeText}>PRO</Text>
+                <Text style={styles.viewerUpgradeText}>Premium</Text>
               </View>
             ) : (
               <View style={styles.viewerArrowCircle}>
@@ -598,6 +607,124 @@ const ViewerCard = memo<ViewerCardProps>(({ item, index }) => {
 ));
 
 ViewerCard.displayName = 'ViewerCard';
+
+// ─── Follower card (Takipçiler tab) ────────────────────────
+interface FollowerCardProps {
+  item: FollowerItem;
+  index: number;
+}
+
+const FollowerCard = memo<FollowerCardProps>(({ item, index }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = useCallback(() => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.97,
+      tension: 200,
+      friction: 10,
+      useNativeDriver: true,
+    }).start();
+  }, [scaleAnim]);
+
+  const handlePressOut = useCallback(() => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      tension: 200,
+      friction: 10,
+      useNativeDriver: true,
+    }).start();
+  }, [scaleAnim]);
+
+  const timeAgo = useMemo(() => {
+    const diff = Date.now() - new Date(item.followedAt).getTime();
+    const minutes = Math.floor(diff / (1000 * 60));
+    if (minutes < 1) return 'Şimdi';
+    if (minutes < 60) return `${minutes} dk önce`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} saat önce`;
+    const days = Math.floor(hours / 24);
+    if (days === 1) return 'Dün';
+    return `${days} gün önce`;
+  }, [item.followedAt]);
+
+  return (
+    <SlideIn direction="right" delay={index * 80} distance={24}>
+      <TouchableWithoutFeedback
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        accessibilityLabel={`${item.isBlurred ? 'Gizli profil' : item.name}, ${timeAgo} takip etti`}
+        accessibilityRole="button"
+        accessibilityHint={item.isBlurred ? 'Premium ile profili görebilirsin' : 'Profili görmek için dokunun'}
+      >
+        <Animated.View
+          style={[
+            styles.viewerCard,
+            { transform: [{ scale: scaleAnim }] },
+          ]}
+          testID={`follower-card-${item.id}`}
+        >
+          {/* Avatar */}
+          <View style={styles.viewerAvatarWrapper}>
+            {item.isBlurred ? (
+              <View style={styles.viewerBlurredAvatar}>
+                <View style={styles.viewerBlurredInner}>
+                  <Text style={styles.viewerBlurredInitial}>?</Text>
+                </View>
+                <View style={styles.viewerLockBadge}>
+                  <Text style={styles.viewerLockIcon}>{'\uD83D\uDD12'}</Text>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.viewerAvatarBorder}>
+                <CachedAvatar
+                  uri={item.photoUrl ?? ''}
+                  size={56}
+                  name={item.name ?? '?'}
+                />
+              </View>
+            )}
+          </View>
+
+          {/* Info */}
+          <View style={styles.viewerInfo}>
+            <Text style={[styles.viewerName, item.isBlurred && styles.viewerNameBlurred]} numberOfLines={1}>
+              {item.isBlurred ? 'Gizli Profil' : item.name}
+            </Text>
+            <View style={styles.viewerTimeRow}>
+              <View style={styles.viewerTimeDot} />
+              <Text style={styles.viewerTimeText}>
+                {timeAgo}
+              </Text>
+            </View>
+            {item.isBlurred && (
+              <View style={styles.viewerPremiumHint}>
+                <Text style={styles.viewerPremiumHintText}>Premium ile gör</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Action arrow / lock */}
+          <View style={styles.viewerAction}>
+            {item.isBlurred ? (
+              <View style={styles.viewerUpgradeBadge}>
+                <Text style={styles.viewerUpgradeText}>Premium</Text>
+              </View>
+            ) : (
+              <View style={styles.viewerArrowCircle}>
+                <Text style={styles.viewerArrowText}>{'\u203A'}</Text>
+              </View>
+            )}
+          </View>
+        </Animated.View>
+      </TouchableWithoutFeedback>
+    </SlideIn>
+  );
+}, (prev, next) => (
+  prev.item.id === next.item.id &&
+  prev.index === next.index
+));
+
+FollowerCard.displayName = 'FollowerCard';
 
 // Memoized separator to avoid creating new component instances on each render
 const ItemSeparator = memo(() => <View style={styles.separator} />);
@@ -619,10 +746,16 @@ export const MatchesListScreen: React.FC = () => {
   const [viewers, setViewers] = useState<ProfileVisitor[]>([]);
   const [viewersCount, setViewersCount] = useState(0);
   const [likesYouCount, setLikesYouCount] = useState(0);
+  // TODO: Replace with API call when follower endpoint is ready
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followers, setFollowers] = useState<FollowerItem[]>([]);
+  // Suppress unused warnings — setters will be used when API is integrated
+  void setFollowersCount;
+  void setFollowers;
   const [isRefreshing, setIsRefreshing] = useState(false);
   const tabScrollRef = useRef<ScrollView>(null);
   const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE');
-  const isPremium = ['GOLD', 'PRO', 'RESERVED'].includes(packageTier);
+  const isPremium = ['PREMIUM', 'SUPREME'].includes(packageTier);
 
   // Fetch profile visitors + likes-you count
   useEffect(() => {
@@ -962,6 +1095,10 @@ export const MatchesListScreen: React.FC = () => {
         // Navigate to EditProfile in ProfileTab
         navigation.getParent()?.navigate('ProfileTab', { screen: 'EditProfile' });
         break;
+      case 'followers':
+        // Navigate to EditProfile to improve profile and attract followers
+        navigation.getParent()?.navigate('ProfileTab', { screen: 'EditProfile' });
+        break;
       case 'viewers':
         // Navigate to MembershipPlans
         navigation.navigate('MembershipPlans');
@@ -988,6 +1125,12 @@ export const MatchesListScreen: React.FC = () => {
         title: 'Henüz Beğenen Yok',
         subtitle: 'Profilini zenginleştirerek daha fazla beğeni alabilirsin.',
         ctaLabel: 'Profilini Güçlendir',
+      },
+      followers: {
+        icon: '\uD83D\uDC65',
+        title: 'Henüz takipçin yok',
+        subtitle: 'Profilini paylaş ve takipçi kazan!',
+        ctaLabel: 'Profilini Paylaş',
       },
       viewers: {
         icon: '\uD83D\uDC40',
@@ -1073,7 +1216,7 @@ export const MatchesListScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* Tabs: 💞 Eşleşmeler | 💬 Mesajlar | 💜 Beğenenler | 👀 Seni Kim Gördü */}
+      {/* Tabs: 💞 Eşleşmeler | 💬 Mesajlar | 💜 Beğenenler | 👥 Takipçiler | 👀 Seni Kim Gördü */}
       <View style={styles.tabScrollWrapper}>
       <ScrollView
         ref={tabScrollRef}
@@ -1087,6 +1230,7 @@ export const MatchesListScreen: React.FC = () => {
           { key: 'matches' as const, label: 'Eşleşmeler', emoji: '💞', isNav: false, isPremiumOnly: false },
           { key: 'messages' as const, label: 'Mesajlar', emoji: '💬', isNav: false, isPremiumOnly: false },
           { key: 'likes' as const, label: 'Beğenenler', emoji: '💜', isNav: false, isPremiumOnly: false },
+          { key: 'followers' as const, label: 'Takipçiler', emoji: '👥', isNav: false, isPremiumOnly: false },
           { key: 'viewers' as const, label: 'Kim Gördü', emoji: '👀', isNav: false, isPremiumOnly: true },
         ]).map((tab, tabIndex) => {
           const isActive = tab.isNav ? false : activeTab === tab.key;
@@ -1094,6 +1238,7 @@ export const MatchesListScreen: React.FC = () => {
           const badgeCount = tab.key === 'likes' ? likesYouCount
             : tab.key === 'messages' ? totalUnread
             : tab.key === 'viewers' ? viewersCount
+            : tab.key === 'followers' ? followersCount
             : 0;
 
           return (
@@ -1161,6 +1306,51 @@ export const MatchesListScreen: React.FC = () => {
       {/* List — switches render function based on active tab */}
       {activeTab === 'likes' ? (
         <LikesYouScreen embedded />
+      ) : activeTab === 'followers' ? (
+        <FlatList
+          data={followers}
+          keyExtractor={(item: FollowerItem) => item.id}
+          renderItem={({ item, index }: { item: FollowerItem; index: number }) => (
+            <FollowerCard item={item} index={index} />
+          )}
+          contentContainerStyle={[styles.listContent, styles.viewersListContent]}
+          ListHeaderComponent={
+            <View style={styles.viewersHeader}>
+              <View style={styles.viewersHeaderRow}>
+                <Text style={styles.viewersHeaderTitle}>Takipçilerin</Text>
+                {followersCount > 0 && (
+                  <View style={styles.viewersCountBadge}>
+                    <Text style={styles.viewersCountBadgeText}>
+                      {followersCount > 99 ? '99+' : followersCount}
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.viewersHeaderSubtitle}>
+                {followersCount > 0
+                  ? `${followersCount} kişi seni takip ediyor`
+                  : 'Henüz takipçin yok'}
+              </Text>
+            </View>
+          }
+          ListEmptyComponent={renderEmptyList}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              tintColor="#D4AF37"
+              colors={['#D4AF37']}
+              title="Güncelleniyor..."
+              titleColor={colors.textSecondary}
+            />
+          }
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          removeClippedSubviews={true}
+          updateCellsBatchingPeriod={50}
+        />
       ) : activeTab === 'viewers' ? (
         <FlatList
           data={viewers}

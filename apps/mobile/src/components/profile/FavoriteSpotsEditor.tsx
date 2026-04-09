@@ -39,18 +39,18 @@ interface FavoriteSpotsEditorProps {
 // ── Popular Istanbul Suggestions ──────────────────────────────────────────────
 
 const POPULAR_SUGGESTIONS: Array<{ name: string; category: string }> = [
-  { name: 'Kadikoy', category: 'semt' },
+  { name: 'Kadıköy', category: 'semt' },
   { name: 'Bebek Sahili', category: 'sahil' },
-  { name: 'Belgrad Ormani', category: 'park' },
-  { name: 'Nisantasi', category: 'semt' },
-  { name: 'Karakoy', category: 'semt' },
+  { name: 'Belgrad Ormanı', category: 'park' },
+  { name: 'Nişantaşı', category: 'semt' },
+  { name: 'Karaköy', category: 'semt' },
   { name: 'Cihangir', category: 'semt' },
-  { name: 'Kiz Kulesi', category: 'tarihi' },
-  { name: 'Camlica Tepesi', category: 'doga' },
+  { name: 'Kız Kulesi', category: 'tarihi' },
+  { name: 'Çamlıca Tepesi', category: 'doga' },
   { name: 'Moda Sahili', category: 'sahil' },
-  { name: 'Ortakoy', category: 'semt' },
+  { name: 'Ortaköy', category: 'semt' },
   { name: 'Balat', category: 'semt' },
-  { name: 'Istiklal Caddesi', category: 'semt' },
+  { name: 'İstiklal Caddesi', category: 'semt' },
 ];
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -157,7 +157,7 @@ export function FavoriteSpotsEditor({
   return (
     <View style={styles.container}>
       {/* Section Title */}
-      <Text style={styles.title}>Sevdigin Mekanlar</Text>
+      <Text style={styles.title}>Sevdiğin Mekanlar</Text>
       <Text style={styles.subtitle}>
         Profilinde gorunecek favori mekanlarini ekle ({spots.length}/{maxSpots})
       </Text>
@@ -282,7 +282,7 @@ export function FavoriteSpotsEditor({
       {/* Popular Suggestions */}
       {!atLimit && (
         <View style={styles.suggestionsSection}>
-          <Text style={styles.suggestionsLabel}>Populer Mekanlar</Text>
+          <Text style={styles.suggestionsLabel}>Popüler Mekanlar</Text>
           <View style={styles.suggestionsGrid}>
             {POPULAR_SUGGESTIONS.map((suggestion) => {
               const cat = getSpotCategory(suggestion.category);

@@ -57,13 +57,11 @@ describe("CompatibilityController", () => {
             questionNumber: 1,
             category: "VALUES",
             textTr: "İlişkide en önemli değer nedir?",
-            isPremium: false,
             isAnswered: false,
           },
         ],
         answeredCount: 0,
         totalCount: 20,
-        hasPremiumAccess: false,
       };
       mockCompatibilityService.getQuestions.mockResolvedValue(expected);
 
@@ -71,22 +69,19 @@ describe("CompatibilityController", () => {
 
       expect(result.questions).toHaveLength(1);
       expect(result.totalCount).toBe(20);
-      expect(result.hasPremiumAccess).toBe(false);
     });
 
-    it("should return all 45 questions for premium user", async () => {
+    it("should return all 20 questions for premium user", async () => {
       const expected = {
-        questions: Array(45).fill({ id: "q", isAnswered: false }),
+        questions: Array(20).fill({ id: "q", isAnswered: false }),
         answeredCount: 10,
-        totalCount: 45,
-        hasPremiumAccess: true,
+        totalCount: 20,
       };
       mockCompatibilityService.getQuestions.mockResolvedValue(expected);
 
       const result = await controller.getQuestions(userId);
 
-      expect(result.totalCount).toBe(45);
-      expect(result.hasPremiumAccess).toBe(true);
+      expect(result.totalCount).toBe(20);
     });
 
     it("should throw NotFoundException when user does not exist", async () => {
@@ -104,7 +99,6 @@ describe("CompatibilityController", () => {
         questions: [],
         answeredCount: 0,
         totalCount: 20,
-        hasPremiumAccess: false,
       });
 
       await controller.getQuestions(userId);
@@ -130,7 +124,7 @@ describe("CompatibilityController", () => {
         optionId: "opt-3",
         saved: true,
         answeredCount: 5,
-        totalCount: 45,
+        totalCount: 20,
       };
       mockCompatibilityService.submitAnswer.mockResolvedValue(expected);
 
@@ -207,7 +201,7 @@ describe("CompatibilityController", () => {
         saved: true,
         savedCount: 2,
         answeredCount: 12,
-        totalCount: 45,
+        totalCount: 20,
       };
       mockCompatibilityService.submitAnswersBulk.mockResolvedValue(expected);
 
@@ -304,8 +298,6 @@ describe("CompatibilityController", () => {
       const expected = {
         userId,
         targetUserId,
-        baseScore: 78,
-        deepScore: 82,
         finalScore: 79,
         level: "NORMAL",
         isSuperCompatible: false,
@@ -327,8 +319,6 @@ describe("CompatibilityController", () => {
       const expected = {
         userId,
         targetUserId,
-        baseScore: 92,
-        deepScore: 88,
         finalScore: 91,
         level: "SUPER",
         isSuperCompatible: true,
@@ -349,8 +339,6 @@ describe("CompatibilityController", () => {
       const expected = {
         userId,
         targetUserId,
-        baseScore: 0,
-        deepScore: null,
         finalScore: 0,
         level: "NORMAL",
         isSuperCompatible: false,

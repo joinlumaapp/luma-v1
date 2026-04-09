@@ -37,30 +37,27 @@ const DIMENSION_LABELS_TR: Record<string, string> = {
 // Threshold for a dimension to be considered "strong"
 const STRONG_DIMENSION_THRESHOLD = 70;
 
-// Daily swipe limits per package tier (LOCKED: 4 packages)
+// Daily swipe limits per package tier (LOCKED: 3 packages)
 // All tiers have unlimited swipes — consistent with payments.service.ts
 // and MembershipPlansScreen which shows "Sinirsiz" for all tiers.
 const DAILY_SWIPE_LIMITS: Record<string, number> = {
   FREE: 999999, // Unlimited
-  GOLD: 999999, // Unlimited
-  PRO: 999999, // Unlimited
-  RESERVED: 999999, // Unlimited
+  PREMIUM: 999999, // Unlimited
+  SUPREME: 999999, // Unlimited
 };
 
-// Daily super like limits per package tier (LOCKED: 4 packages)
+// Daily super like limits per package tier (LOCKED: 3 packages)
 const DAILY_SUPER_LIKE_LIMITS: Record<string, number> = {
   FREE: 1,
-  GOLD: 10,
-  PRO: 999999, // Unlimited
-  RESERVED: 999999, // Unlimited
+  PREMIUM: 10,
+  SUPREME: 999999, // Unlimited
 };
 
-// Daily feed view limits per package tier (LOCKED: 4 packages)
+// Daily feed view limits per package tier (LOCKED: 3 packages)
 const DAILY_FEED_VIEW_LIMITS: Record<string, number> = {
   FREE: 20,
-  GOLD: 50,
-  PRO: 999999, // Unlimited
-  RESERVED: 999999, // Unlimited
+  PREMIUM: 50,
+  SUPREME: 999999, // Unlimited
 };
 
 // Undo swipe time window in milliseconds (5 seconds)
@@ -87,9 +84,8 @@ const BOOST_SCORE_MULTIPLIER = 3;
 // Additive bonus points applied on top of the weighted feed score (0-100 scale).
 const PACKAGE_TIER_PRIORITY_BOOST: Record<string, number> = {
   FREE: 0,
-  GOLD: 5,
-  PRO: 10,
-  RESERVED: 15,
+  PREMIUM: 5,
+  SUPREME: 15,
 };
 
 // ─── Smart Feed Scoring Weights (per spec) ─────────────────────
@@ -147,6 +143,8 @@ interface ScoredFeedCard {
   feedScore: number;
   isBoosted: boolean;
   isSuperLiker: boolean;
+  currentMood: string | null;
+  moodSetAt: string | null;
 }
 
 /** Paginated feed response */
@@ -198,25 +196,6 @@ export class DiscoveryService {
       const cacheKey = CACHE_KEYS.discoveryFeed(userId);
       const cached = await this.cache.get<PaginatedFeed>(cacheKey);
       if (cached) return cached;
-    }
-
-    // Block discovery for users with an active relationship
-    const activeRelationship = await this.prisma.relationship.findFirst({
-      where: {
-        OR: [{ userAId: userId }, { userBId: userId }],
-        status: "ACTIVE",
-      },
-    });
-
-    if (activeRelationship) {
-      return {
-        cards: [],
-        remaining: 0,
-        dailyLimit: 0,
-        totalCandidates: 0,
-        cursor: null,
-        hasMore: false,
-      };
     }
 
     // Get current user with profile
@@ -287,17 +266,6 @@ export class DiscoveryService {
       this.getRecentFeedViews(userId, antiRepeatCutoff),
     ]);
 
-    // Exclude users who are currently in active relationships
-    const activeRelationships = await this.prisma.relationship.findMany({
-      where: { status: "ACTIVE" },
-      select: { userAId: true, userBId: true },
-    });
-    const usersInRelationships = new Set<string>();
-    for (const rel of activeRelationships) {
-      usersInRelationships.add(rel.userAId);
-      usersInRelationships.add(rel.userBId);
-    }
-
     // Build anti-repeat set (profiles shown in last 24h)
     const recentlyShownIds = new Set(
       recentFeedViews.map((v: { viewedUserId: string }) => v.viewedUserId),
@@ -315,7 +283,6 @@ export class DiscoveryService {
       ...swipedIds,
       ...blockedIds,
       ...reportedIds,
-      ...usersInRelationships,
     ]);
 
     // Apply cursor-based pagination: if cursor provided, exclude IDs before cursor
@@ -588,7 +555,7 @@ export class DiscoveryService {
             esRelevance * ES_RELEVANCE_WEIGHT;
         }
 
-        // Package tier priority boost: paid users (PRO, RESERVED) get
+        // Package tier priority boost: paid users (PREMIUM, SUPREME) get
         // higher visibility in the feed to incentivize premium subscriptions.
         // Applied as additive points before the boost multiplier so boosted
         // paid users benefit from both effects.
@@ -606,6 +573,14 @@ export class DiscoveryService {
         const dimensions = score?.dimensionScores ?? null;
         const strongCategories = this.getStrongCategories(dimensions);
         const compatExplanation = this.buildCompatExplanation(dimensions);
+
+        // Check mood expiry (4 hours)
+        const MOOD_EXPIRY_MS = 4 * 60 * 60 * 1000;
+        const moodSetAt = profile.moodSetAt as Date | null;
+        const isMoodActive =
+          profile.currentMood &&
+          moodSetAt &&
+          new Date().getTime() - moodSetAt.getTime() < MOOD_EXPIRY_MS;
 
         return {
           userId: profile.userId,
@@ -637,6 +612,8 @@ export class DiscoveryService {
           feedScore,
           isBoosted,
           isSuperLiker,
+          currentMood: isMoodActive ? (profile.currentMood as string) : null,
+          moodSetAt: isMoodActive && moodSetAt ? moodSetAt.toISOString() : null,
         };
       },
     );
@@ -1214,9 +1191,8 @@ export class DiscoveryService {
   /** Number of daily picks per package tier */
   private static readonly DAILY_PICK_COUNTS: Record<string, number> = {
     FREE: 3,
-    GOLD: 10,
-    PRO: 10,
-    RESERVED: 999999,
+    PREMIUM: 10,
+    SUPREME: 999999,
   };
 
   /**
@@ -1829,12 +1805,11 @@ export class DiscoveryService {
 
   // ─── Selam Gonder (Send Greeting) ─────────────────────────────
 
-  /** Daily greeting limits per package tier (LOCKED: 4 packages) */
+  /** Daily greeting limits per package tier (LOCKED: 3 packages) */
   private static readonly DAILY_GREETING_LIMITS: Record<string, number> = {
     FREE: 3,
-    GOLD: 10,
-    PRO: 20,
-    RESERVED: 999999,
+    PREMIUM: 10,
+    SUPREME: 999999,
   };
 
   /** Jeton cost per greeting */

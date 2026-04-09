@@ -57,7 +57,7 @@ interface FeedUserProfile {
   education: string;
   intentionTag: string;
   zodiacSign: string;
-  packageTier?: 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
+  packageTier?: 'FREE' | 'PREMIUM' | 'SUPREME';
   // currentlyListening removed — music feature removed
 }
 
@@ -73,7 +73,7 @@ const DEV_MOCK_PROFILES: Record<string, FeedUserProfile> | null = __DEV__ ? {
     compatibilityPercent: 92,
     hobbies: ['Yoga', 'Kitap', 'Seyahat', 'Fotoğrafçılık'],
     height: '168 cm', job: 'Grafik Tasarımcı', education: 'İstanbul Üniversitesi', intentionTag: 'Ciddi İlişki', zodiacSign: 'Başak',
-    packageTier: 'GOLD',
+    packageTier: 'PREMIUM',
     // currentlyListening removed
   },
   'bot-002': {
@@ -84,7 +84,7 @@ const DEV_MOCK_PROFILES: Record<string, FeedUserProfile> | null = __DEV__ ? {
     compatibilityPercent: 68,
     hobbies: ['Dans', 'Müzik', 'Yüzme', 'Pilates', 'Sinema'],
     height: '172 cm', job: 'Pazarlama Uzmanı', education: 'Bilkent Üniversitesi', intentionTag: 'Keşfediyorum', zodiacSign: 'İkizler',
-    packageTier: 'RESERVED',
+    packageTier: 'SUPREME',
   },
 } : null;
 
@@ -188,7 +188,7 @@ export const FeedProfileScreen: React.FC = () => {
   const [isFollowing, setIsFollowing] = useState(false);
 
   const packageTier = useAuthStore((s) => s.user?.packageTier);
-  const isPremium = packageTier === 'GOLD' || packageTier === 'PRO' || packageTier === 'RESERVED';
+  const isPremium = packageTier === 'PREMIUM' || packageTier === 'SUPREME';
 
   useEffect(() => {
     let cancelled = false;

@@ -1,19 +1,18 @@
 // LUMA V1 — Compatibility System Types
-// Subsystems 5, 6, 7
-
-// Subsystem 5: Core Compatibility — 20 Questions
-// Subsystem 6: Premium Compatibility — 25 Questions
-// Total: 45 Questions — LOCKED
+// Updated: 2026-04-08
+//
+// Uyum Analizi: 20 questions, 4 options each, MANDATORY during onboarding
+// Kişilik Testi: 5 questions, OPTIONAL, gives personality tag only (cosmetic)
+// Premium questions: REMOVED (no 25 premium questions, no 45 total)
 
 export interface CompatibilityQuestion {
   id: string;
-  questionNumber: number; // 1-45
+  questionNumber: number; // 1-20 (Uyum Analizi)
   category: QuestionCategory;
   text: string;
-  textTr: string; // Turkish version
-  options: QuestionOption[];
+  textTr: string;
+  options: [QuestionOption, QuestionOption, QuestionOption, QuestionOption]; // Always exactly 4
   weight: number; // 1.0, 1.2, or 1.5
-  isPremium: boolean; // true for Q21-Q45
   order: number;
 }
 
@@ -34,108 +33,64 @@ export interface UserAnswer {
 export interface CompatibilityScore {
   userAId: string;
   userBId: string;
-  baseScore: number; // 0-100 (from 20 core questions)
-  deepScore: number | null; // 0-100 (from all 45 questions, null if not premium)
-  finalScore: number; // 0-100 (weighted combination)
+  score: number; // 47-97 (display range)
+  rawScore: number; // 0-100 (internal calculation)
   level: CompatibilityLevel;
   calculatedAt: Date;
 }
 
-// Subsystem 7: Compatibility Levels — LOCKED: 2 Levels
 export enum CompatibilityLevel {
-  NORMAL = 'NORMAL',
-  SUPER = 'SUPER',
+  NORMAL = 'NORMAL',       // score < 90
+  SUPER = 'SUPER',         // score >= 90 (Süper Uyum)
 }
 
-// Extended compatibility level labels for UI display (Turkish)
-export enum CompatibilityLevelLabel {
-  YUKSEK_UYUM = 'Yüksek Uyum',   // 80%+
-  IYI_UYUM = 'İyi Uyum',          // 60-79%
-  ORTA_UYUM = 'Orta Uyum',        // 40-59%
-  DUSUK_UYUM = 'Düşük Uyum',      // <40%
-}
-
-// Full compatibility result returned from scoring algorithm
-export interface CompatibilityResult {
-  userId: string;
-  targetUserId: string;
-  score: number;                    // 0-100 final score
-  level: CompatibilityLevel;        // NORMAL or SUPER (LOCKED: 2 levels)
-  levelLabel: CompatibilityLevelLabel; // Turkish display label
-  baseScore: number;                // core questions score
-  deepScore: number | null;         // all questions score (null if no premium answers)
-  categoryScores: CategoryScore[];  // per-category breakdown
-  topReasons: string[];             // top 3 reasons in Turkish
-  bonuses: CompatibilityBonuses;    // bonus points breakdown
-  commonQuestions: number;           // number of questions both users answered
-  isSuperCompatible: boolean;       // shorthand for level === SUPER
-}
-
-// Per-category compatibility breakdown
-export interface CategoryScore {
-  category: QuestionCategory;
-  categoryLabel: string;            // Turkish display label
-  score: number;                    // 0-100
-  matchedQuestions: number;         // questions both answered in this category
-  totalQuestions: number;           // total questions in this category
-}
-
-// Bonus points applied to compatibility score
-export interface CompatibilityBonuses {
-  intentionTagMatch: number;        // +10% for same intention, 0 otherwise
-  sameCityBonus: number;            // +5% for same city, 0 otherwise
-  totalBonus: number;               // sum of all bonuses
-}
-
-// Question categories mapping to psychological dimensions
+// 8 psychological categories for Uyum Analizi (20 questions)
 export enum QuestionCategory {
-  // Core Questions (Q1-Q20)
-  COMMUNICATION = 'COMMUNICATION', // Q1-Q3
-  LIFE_GOALS = 'LIFE_GOALS', // Q4-Q6
-  VALUES = 'VALUES', // Q7-Q9
-  LIFESTYLE = 'LIFESTYLE', // Q10-Q12
-  EMOTIONAL_INTELLIGENCE = 'EMOTIONAL_INTELLIGENCE', // Q13-Q15
-  RELATIONSHIP_EXPECTATIONS = 'RELATIONSHIP_EXPECTATIONS', // Q16-Q18
-  SOCIAL_COMPATIBILITY = 'SOCIAL_COMPATIBILITY', // Q19-Q20
-  // Premium Questions (Q21-Q45)
-  ATTACHMENT_STYLE = 'ATTACHMENT_STYLE', // Q21-Q24
-  LOVE_LANGUAGE = 'LOVE_LANGUAGE', // Q25-Q27
-  CONFLICT_STYLE = 'CONFLICT_STYLE', // Q28-Q30
-  FUTURE_VISION = 'FUTURE_VISION', // Q31-Q34
-  INTELLECTUAL = 'INTELLECTUAL', // Q35-Q37
-  INTIMACY = 'INTIMACY', // Q38-Q40
-  GROWTH_MINDSET = 'GROWTH_MINDSET', // Q41-Q43
-  CORE_FEARS = 'CORE_FEARS', // Q44-Q45
+  COMMUNICATION = 'communication',                       // Q1-Q3
+  LIFE_GOALS = 'life_goals',                             // Q4-Q6
+  VALUES = 'values',                                     // Q7-Q9
+  LIFESTYLE = 'lifestyle',                               // Q10-Q12
+  EMOTIONAL_INTELLIGENCE = 'emotional_intelligence',     // Q13-Q15
+  RELATIONSHIP_EXPECTATIONS = 'relationship_expectations', // Q16-Q18
+  SOCIAL_COMPATIBILITY = 'social_compatibility',         // Q19-Q20
 }
 
-// Score display bounds — LOCKED per product spec
+// Kişilik Testi (5 questions, optional) — separate from Uyum Analizi
+export interface PersonalityQuestion {
+  id: string;
+  questionNumber: number; // 1-5
+  text: string;
+  textTr: string;
+  options: [PersonalityOption, PersonalityOption, PersonalityOption, PersonalityOption];
+}
+
+export interface PersonalityOption {
+  id: string;
+  label: string;
+  labelTr: string;
+  personalityType: PersonalityType;
+}
+
+// Kişilik tipi tag shown on profile (cosmetic only, does NOT affect matching)
+export enum PersonalityType {
+  ACIK_FIKIRLI = 'acik_fikirli',         // Açık Fikirli
+  LIDER_KARARLI = 'lider_kararli',       // Lider ve kararlı
+  SESSIZ_DERIN = 'sessiz_derin',         // Sessiz ve derin
+  EGLENCELI_ENERJIK = 'eglenceli_enerjik', // Eğlenceli ve enerjik
+  MANTIKLI_ANALITIK = 'mantikli_analitik', // Mantıklı ve analitik
+}
+
+export const PERSONALITY_TYPE_LABELS: Record<PersonalityType, { en: string; tr: string }> = {
+  [PersonalityType.ACIK_FIKIRLI]: { en: 'Open-minded', tr: 'Açık Fikirli' },
+  [PersonalityType.LIDER_KARARLI]: { en: 'Leader & Decisive', tr: 'Lider ve Kararlı' },
+  [PersonalityType.SESSIZ_DERIN]: { en: 'Quiet & Deep', tr: 'Sessiz ve Derin' },
+  [PersonalityType.EGLENCELI_ENERJIK]: { en: 'Fun & Energetic', tr: 'Eğlenceli ve Enerjik' },
+  [PersonalityType.MANTIKLI_ANALITIK]: { en: 'Logical & Analytical', tr: 'Mantıklı ve Analitik' },
+};
+
+// Score display bounds — LOCKED
 export const MIN_DISPLAY_SCORE = 47;
 export const MAX_DISPLAY_SCORE = 97;
 
-// Super Compatibility threshold criteria
-export const SUPER_COMPATIBILITY_THRESHOLD = {
-  minimumDeepScore: 90,
-  minimumDimensionScore: 60,
-  requiredHighDimensions: 3,
-  highDimensionThreshold: 90,
-} as const;
-
-// Scoring constants for the compatibility algorithm
-export const SCORING_CONSTANTS = {
-  // Points awarded based on answer proximity (option order distance)
-  EXACT_MATCH_POINTS: 100,
-  ADJACENT_MATCH_POINTS: 70,     // 1 step apart
-  TWO_STEP_MATCH_POINTS: 40,     // 2 steps apart
-  FAR_MATCH_POINTS: 10,          // 3+ steps apart
-
-  // Core questions are weighted 2x compared to premium
-  CORE_QUESTION_WEIGHT_MULTIPLIER: 2,
-  PREMIUM_QUESTION_WEIGHT_MULTIPLIER: 1,
-
-  // Bonus percentages
-  INTENTION_TAG_MATCH_BONUS: 10,  // +10% for matching intention tags
-  SAME_CITY_BONUS: 5,             // +5% for same city
-
-  // Redis cache TTL for computed scores (24 hours)
-  SCORE_CACHE_TTL_SECONDS: 86400,
-} as const;
+// Super Compatibility threshold
+export const SUPER_COMPATIBILITY_THRESHOLD = 90;

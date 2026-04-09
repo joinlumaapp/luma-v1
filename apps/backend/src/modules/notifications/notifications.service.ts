@@ -52,9 +52,17 @@ const NOTIFICATION_TEMPLATES: Record<NotificationType, NotificationTemplate> = {
     title: "Abonelik Hatırlatma",
     body: "{packageName} aboneliğiniz {daysLeft} gün içinde sona erecek",
   },
-  RELATIONSHIP_REQUEST: {
-    title: "İlişki İsteği",
-    body: "{name} sana ilişki isteği gönderdi",
+  CANLI_MATCH_FOUND: {
+    title: "Canlı Eşleşme!",
+    body: "Uyumlu biri bulundu. Hemen bağlan!",
+  },
+  DAILY_MATCH_READY: {
+    title: "Günün Eşleşmesi",
+    body: "Bugünkü önerimiz hazır!",
+  },
+  FRIENDSHIP_FORMED: {
+    title: "Yeni Arkadaş!",
+    body: "{name} ile artık arkadaşsınız",
   },
   SYSTEM: {
     title: "LUMA",
@@ -85,7 +93,9 @@ const TYPE_TO_PREF_KEY: Record<
   MATCH_REMOVED: "newMatches",
   BADGE_EARNED: "badges",
   SUBSCRIPTION_EXPIRING: "system",
-  RELATIONSHIP_REQUEST: "newMatches",
+  CANLI_MATCH_FOUND: "newMatches",
+  DAILY_MATCH_READY: "newMatches",
+  FRIENDSHIP_FORMED: "newMatches",
   SYSTEM: "system",
   POST_LIKE: "system",
   STORY_LIKE: "system",
@@ -856,11 +866,25 @@ export class NotificationsService {
   }
 
   /**
-   * Notify user of a relationship request.
+   * Notify user that a compatible Canli (live video) match was found.
    */
-  async notifyRelationshipRequest(userId: string, requesterName: string) {
-    return this.sendTemplatedNotification(userId, "RELATIONSHIP_REQUEST", {
-      name: requesterName,
+  async notifyCanliMatchFound(userId: string) {
+    return this.sendTemplatedNotification(userId, "CANLI_MATCH_FOUND", {});
+  }
+
+  /**
+   * Notify user that their daily match recommendation is ready.
+   */
+  async notifyDailyMatchReady(userId: string) {
+    return this.sendTemplatedNotification(userId, "DAILY_MATCH_READY", {});
+  }
+
+  /**
+   * Notify user that a friendship was formed (mutual follow).
+   */
+  async notifyFriendshipFormed(userId: string, friendName: string) {
+    return this.sendTemplatedNotification(userId, "FRIENDSHIP_FORMED", {
+      name: friendName,
     });
   }
 

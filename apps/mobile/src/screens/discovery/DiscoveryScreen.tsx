@@ -12,7 +12,6 @@ import {
   StyleSheet,
   Dimensions,
   Platform,
-  ActivityIndicator,
   Modal,
   KeyboardAvoidingView,
   ScrollView,
@@ -51,13 +50,16 @@ import { useCoinStore } from '../../stores/coinStore';
 import { matchService } from '../../services/matchService';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { MatchAnimation } from '../../components/animations/MatchAnimation';
+import { ConfettiOverlay } from '../../components/animations/ConfettiOverlay';
+import { HeartAnimation } from '../../components/animations/HeartAnimation';
 // LikeSentToast removed — was too repetitive for users
 import { DiscoveryCard } from '../../components/cards/DiscoveryCard';
 import { CompatibilityBottomSheet } from '../../components/discovery/CompatibilityBottomSheet';
 import { TrialBanner } from '../../components/premium/TrialBanner';
 import { LikedYouTeaser, MatchUpgradeNudge, SupremePromoBanner } from '../../components/premium/SmartUpgradePrompts';
-import { discoveryService, type BoostStatusResponse } from '../../services/discoveryService';
+import { discoveryService, type BoostStatusResponse, type DailyMatchResponse } from '../../services/discoveryService';
 import type { LoginStreakResponse } from '../../services/discoveryService';
+import { DailyMatchCard } from '../../components/discovery/DailyMatchCard';
 import { StreakBanner } from '../../components/streak/StreakBanner';
 import { generateCompactReasons } from '../../utils/compatReasons';
 import {
@@ -72,6 +74,7 @@ import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { useSwipeRateLimiterStore, SKIP_COOLDOWN_COST } from '../../stores/swipeRateLimiterStore';
 import { CooldownOverlay } from '../../components/discovery/CooldownOverlay';
 import { BoostModal } from '../../components/boost/BoostModal';
+import { DiscoverySkeleton } from '../../components/animations/SkeletonLoader';
 
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -181,7 +184,7 @@ export const DiscoveryScreen: React.FC = () => {
 
 
   // ─── Daily swipe limit gate ─────────────────────────────
-  const hasUnlimitedSwipes = packageTier === 'PRO' || packageTier === 'RESERVED';
+  const hasUnlimitedSwipes = packageTier === 'SUPREME';
   const isDailyLimitReached = !hasUnlimitedSwipes && dailyRemaining <= 0;
   const [showLimitOverlay, setShowLimitOverlay] = useState(false);
 
@@ -194,11 +197,11 @@ export const DiscoveryScreen: React.FC = () => {
 
   // ─── Undo access gate — tier-based daily limits ─────────
   const canUseUndo = packageTier !== 'FREE';
-  const undoDailyLimits: Record<PackageTier, number> = { FREE: 0, GOLD: 1, PRO: 3, RESERVED: 999999 };
+  const undoDailyLimits: Record<PackageTier, number> = { FREE: 0, PREMIUM: 1, SUPREME: 999999 };
   const undoDailyLimit = undoDailyLimits[packageTier];
   const hasFreeUndoRemaining = undosUsedToday < undoDailyLimit;
-  const undoNeedsGold = canUseUndo && !hasFreeUndoRemaining;
-  const UNDO_GOLD_COST_UI = 5;
+  const undoNeedsJeton = canUseUndo && !hasFreeUndoRemaining;
+  const UNDO_JETON_COST_UI = 5;
 
   // ─── Rate limiter cooldown state ─────────────────────────
   const [showCooldown, setShowCooldown] = useState(false);
@@ -235,6 +238,9 @@ export const DiscoveryScreen: React.FC = () => {
       setIsRefreshing(false);
     }
   }, [checkAndLoadBatch]);
+
+  // ─── Like heart animation state ─────────────────────────
+  const [showLikeHeart, setShowLikeHeart] = useState(false);
 
   // ─── Like-with-comment modal state ──────────────────────
   const [showCommentModal, setShowCommentModal] = useState(false);
@@ -338,6 +344,23 @@ export const DiscoveryScreen: React.FC = () => {
   const handleStreakDismiss = useCallback(() => {
     setStreakData(null);
   }, []);
+
+  // ─── Daily match (Gunun Eslesmesi) state ────────────────────
+  const [dailyMatchData, setDailyMatchData] = useState<DailyMatchResponse | null>(null);
+  const [dailyMatchLoading, setDailyMatchLoading] = useState(true);
+
+  useEffect(() => {
+    discoveryService.getDailyMatch().then((data) => {
+      setDailyMatchData(data);
+      setDailyMatchLoading(false);
+    }).catch(() => {
+      setDailyMatchLoading(false);
+    });
+  }, []);
+
+  const handleDailyMatchPress = useCallback((userId: string) => {
+    navigation.navigate('ProfilePreview', { userId });
+  }, [navigation]);
 
   // ─── Like sent toast removed (was too repetitive) ─────────
 
@@ -459,6 +482,11 @@ export const DiscoveryScreen: React.FC = () => {
 
     const card = currentCardRef.current;
     if (card) {
+      // Trigger heart animation on like (right swipe)
+      if (direction === 'right') {
+        setShowLikeHeart(true);
+      }
+
       swipeAction(direction, card.id);
 
       // Track for daily challenge
@@ -802,9 +830,7 @@ export const DiscoveryScreen: React.FC = () => {
           </View>
           <TrialBanner />
         </View>
-        <View style={styles.emptyContainer}>
-          <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: spacing.md }} />
-        </View>
+        <DiscoverySkeleton />
       </View>
     );
   }
@@ -958,11 +984,11 @@ export const DiscoveryScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Trial banner — shows remaining Gold trial time */}
+        {/* Trial banner — shows remaining Premium trial time */}
         <TrialBanner />
 
-        {/* Supreme promo banner — FREE and GOLD users only */}
-        {(packageTier === 'FREE' || packageTier === 'GOLD') && (
+        {/* Supreme promo banner — FREE and PREMIUM users only */}
+        {(packageTier === 'FREE' || packageTier === 'PREMIUM') && (
           <SupremePromoBanner
             onPress={() => navigation.navigate('MembershipPlans' as never)}
           />
@@ -974,6 +1000,15 @@ export const DiscoveryScreen: React.FC = () => {
             count={3}
             blurredAvatars={[]}
             onPress={() => navigation.navigate('LikesYou' as never)}
+          />
+        )}
+
+        {/* Daily match card — Gunun Eslesmesi */}
+        {(dailyMatchLoading || dailyMatchData) && (
+          <DailyMatchCard
+            data={dailyMatchData ?? { match: null, remaining: 0, nextAvailableAt: null, limit: 1, period: 'daily' }}
+            onPress={handleDailyMatchPress}
+            isLoading={dailyMatchLoading}
           />
         )}
 
@@ -1077,11 +1112,11 @@ export const DiscoveryScreen: React.FC = () => {
             <Pressable
               onPress={() => {
                 if (!canUndo) return;
-                // Check if Gold is needed and insufficient
-                if (undoNeedsGold && coinBalance < UNDO_GOLD_COST_UI) {
+                // Check if jeton is needed and insufficient
+                if (undoNeedsJeton && coinBalance < UNDO_JETON_COST_UI) {
                   Alert.alert(
                     'Yetersiz Jeton',
-                    `Geri alma için ${UNDO_GOLD_COST_UI} jeton gerekli. Jeton satın al.`,
+                    `Geri alma için ${UNDO_JETON_COST_UI} jeton gerekli. Jeton satın al.`,
                     [
                       { text: 'Vazgeç', style: 'cancel' },
                       { text: 'Jeton Al', onPress: () => navigation.navigate('ProfileTab', { screen: 'MembershipPlans' } as never) },
@@ -1092,15 +1127,15 @@ export const DiscoveryScreen: React.FC = () => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 undoLastSwipe();
               }}
-              accessibilityLabel={undoNeedsGold ? `Geri al — ${UNDO_GOLD_COST_UI} jeton` : 'Geri al'}
+              accessibilityLabel={undoNeedsJeton ? `Geri al — ${UNDO_JETON_COST_UI} jeton` : 'Geri al'}
               accessibilityRole="button"
               accessibilityHint="Son kaydırma işlemini geri almak için dokunun"
             >
               <View style={styles.undoButton} testID="discovery-undo-btn">
                 <Ionicons name="arrow-undo" size={20} color={palette.gold[500]} />
-                {undoNeedsGold && (
+                {undoNeedsJeton && (
                   <View style={styles.undoGoldBadge}>
-                    <Text style={styles.undoGoldText}>{UNDO_GOLD_COST_UI}</Text>
+                    <Text style={styles.undoGoldText}>{UNDO_JETON_COST_UI}</Text>
                   </View>
                 )}
               </View>
@@ -1147,7 +1182,7 @@ export const DiscoveryScreen: React.FC = () => {
         />
       )}
 
-      {/* Daily swipe limit overlay — shown when FREE/GOLD tiers exhaust daily likes */}
+      {/* Daily swipe limit overlay — shown when FREE/PREMIUM tiers exhaust daily likes */}
       {showLimitOverlay && isDailyLimitReached && (
         <Modal
           visible
@@ -1166,7 +1201,7 @@ export const DiscoveryScreen: React.FC = () => {
               <Text style={styles.limitOverlaySubtitle}>
                 {packageTier === 'FREE'
                   ? `Ücretsiz pakette günde ${DISCOVERY_CONFIG.DAILY_LIKES.FREE} beğeni hakkın var. Daha fazlası için paketini yükselt.`
-                  : `Premium pakette günde ${DISCOVERY_CONFIG.DAILY_LIKES.GOLD} beğeni hakkın var. Sınırsız beğeni için paketini yükselt.`}
+                  : `Premium pakette günde ${DISCOVERY_CONFIG.DAILY_LIKES.PREMIUM} beğeni hakkın var. Sınırsız beğeni için paketini yükselt.`}
               </Text>
               <Pressable
                 onPress={() => {
@@ -1197,6 +1232,12 @@ export const DiscoveryScreen: React.FC = () => {
         </Modal>
       )}
 
+      {/* Like heart animation overlay */}
+      <HeartAnimation visible={showLikeHeart} onComplete={() => setShowLikeHeart(false)} />
+
+      {/* Confetti overlay — plays during match celebration */}
+      <ConfettiOverlay visible={showMatchAnimation && !!matchedCard} />
+
       {/* Match celebration overlay — only render when matchedCard exists */}
       {(!showMatchAnimation || matchedCard) && (
         <MatchAnimation
@@ -1207,7 +1248,7 @@ export const DiscoveryScreen: React.FC = () => {
           userPhotoUrl={userPhotoUrl}
           compatibilityScore={matchedCard?.compatibilityPercent ?? 0}
           isSuperCompatible={matchedCard ? matchedCard.compatibilityPercent >= 90 : false}
-          isSupremeMember={matchedCard?.packageTier === 'RESERVED' || packageTier === 'RESERVED'}
+          isSupremeMember={matchedCard?.packageTier === 'SUPREME' || packageTier === 'SUPREME'}
           conversationStarters={matchConversationStarters}
           compatibilityExplanation={matchExplanation}
           onSendMessage={handleMatchSendMessage}

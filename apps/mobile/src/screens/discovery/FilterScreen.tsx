@@ -25,7 +25,7 @@ import { useScreenTracking } from '../../hooks/useAnalytics';
 // ── Types ──────────────────────────────────────────────────────────
 
 type GenderPreference = 'male' | 'female' | 'all';
-type RequiredTier = 'GOLD' | 'PRO';
+type RequiredTier = 'PREMIUM' | 'SUPREME';
 
 // ── Constants ──────────────────────────────────────────────────────
 
@@ -105,8 +105,8 @@ const clamp = (value: number, min: number, max: number): number =>
   Math.min(Math.max(value, min), max);
 
 const hasAccess = (userTier: PackageTier, requiredTier: RequiredTier): boolean => {
-  const tierRank: Record<PackageTier, number> = { FREE: 0, GOLD: 1, PRO: 2, RESERVED: 3 };
-  const requiredRank: Record<RequiredTier, number> = { GOLD: 1, PRO: 2 };
+  const tierRank: Record<PackageTier, number> = { FREE: 0, PREMIUM: 1, SUPREME: 2 };
+  const requiredRank: Record<RequiredTier, number> = { PREMIUM: 1, SUPREME: 2 };
   return tierRank[userTier] >= requiredRank[requiredTier];
 };
 
@@ -191,7 +191,7 @@ export const FilterScreen: React.FC = () => {
 
   const showUpgradeAlert = useCallback(
     (requiredTier: RequiredTier) => {
-      const tierName = requiredTier === 'GOLD' ? 'Premium' : 'Pro';
+      const tierName = requiredTier === 'PREMIUM' ? 'Premium' : 'Supreme';
       Alert.alert(
         `${tierName} Filtresi`,
         `Bu filtre ${tierName} paketi ile kullanılabilir. Yükseltmek ister misin?`,
@@ -215,7 +215,7 @@ export const FilterScreen: React.FC = () => {
   // ── Apply ──
 
   const handleApply = useCallback(() => {
-    const paidUser = hasAccess(packageTier, 'GOLD');
+    const paidUser = hasAccess(packageTier, 'PREMIUM');
     // FREE users: gender=all, age=default, distance=default
     const parsedMinAge = paidUser ? clamp(minAge, AGE_MIN, AGE_MAX) : AGE_MIN;
     const parsedMaxAge = paidUser ? clamp(maxAge, parsedMinAge, AGE_MAX) : 40;
@@ -224,8 +224,8 @@ export const FilterScreen: React.FC = () => {
       : DISCOVERY_CONFIG.DEFAULT_DISTANCE_KM;
     const effectiveGender = paidUser ? genderPreference : 'all';
 
-    const isGold = paidUser;
-    const isPro = hasAccess(packageTier, 'PRO');
+    const isPremium = paidUser;
+    const isSupreme = hasAccess(packageTier, 'SUPREME');
 
     const hMin = clamp(heightMin, HEIGHT_MIN, HEIGHT_MAX);
     const hMax = clamp(heightMax, hMin, HEIGHT_MAX);
@@ -242,22 +242,22 @@ export const FilterScreen: React.FC = () => {
       maxDistance: parsedDistance,
       intentionTags: selectedTags,
       verifiedOnly,
-      height: isGold && heightChanged ? { min: hMin, max: hMax } : null,
-      weight: isGold && weightChanged ? { min: wMin, max: wMax } : null,
-      education: isGold ? selectedEducation : [],
-      smoking: isGold ? selectedSmoking : [],
-      drinking: isGold ? selectedDrinking : [],
-      exercise: isGold ? selectedExercise : [],
-      zodiac: isPro ? selectedZodiac : [],
-      religion: isGold ? selectedReligion : [],
-      children: isGold ? selectedChildren : [],
-      pets: isGold ? selectedPets : [],
-      maritalStatus: isGold ? selectedMarital : [],
-      languages: isGold ? selectedLanguages : [],
-      ethnicity: isGold ? selectedEthnicity : [],
+      height: isPremium && heightChanged ? { min: hMin, max: hMax } : null,
+      weight: isPremium && weightChanged ? { min: wMin, max: wMax } : null,
+      education: isPremium ? selectedEducation : [],
+      smoking: isPremium ? selectedSmoking : [],
+      drinking: isPremium ? selectedDrinking : [],
+      exercise: isPremium ? selectedExercise : [],
+      zodiac: isSupreme ? selectedZodiac : [],
+      religion: isPremium ? selectedReligion : [],
+      children: isPremium ? selectedChildren : [],
+      pets: isPremium ? selectedPets : [],
+      maritalStatus: isPremium ? selectedMarital : [],
+      languages: isPremium ? selectedLanguages : [],
+      ethnicity: isPremium ? selectedEthnicity : [],
       interests: selectedInterests,
-      sexualOrientation: isGold ? selectedOrientation : [],
-      values: isGold ? selectedValues : [],
+      sexualOrientation: isPremium ? selectedOrientation : [],
+      values: isPremium ? selectedValues : [],
       nationality: [],
     });
 
@@ -410,7 +410,7 @@ export const FilterScreen: React.FC = () => {
           {locked && (
             <View style={s.lockedBadge}>
               <Ionicons name="lock-closed" size={12} color={palette.gold[600]} />
-              <Text style={s.lockedBadgeText}>{requiredTier === 'GOLD' ? 'Premium' : 'Pro'}</Text>
+              <Text style={s.lockedBadgeText}>{requiredTier === 'PREMIUM' ? 'Premium' : 'Supreme'}</Text>
             </View>
           )}
           <View style={s.chipRow} pointerEvents={locked ? 'none' : 'auto'}>
@@ -475,7 +475,7 @@ export const FilterScreen: React.FC = () => {
           {locked && (
             <View style={s.lockedBadge}>
               <Ionicons name="lock-closed" size={12} color={palette.gold[600]} />
-              <Text style={s.lockedBadgeText}>{requiredTier === 'GOLD' ? 'Premium' : 'Pro'}</Text>
+              <Text style={s.lockedBadgeText}>{requiredTier === 'PREMIUM' ? 'Premium' : 'Supreme'}</Text>
             </View>
           )}
           <Text style={s.cardValue}>{label}</Text>
@@ -539,7 +539,7 @@ export const FilterScreen: React.FC = () => {
           <Text style={s.questionLabel}>Kimi arıyorsun?</Text>
           <TouchableOpacity
             style={isFree ? s.cardLocked : undefined}
-            onPress={isFree ? () => showUpgradeAlert('GOLD') : undefined}
+            onPress={isFree ? () => showUpgradeAlert('PREMIUM') : undefined}
             activeOpacity={isFree ? 0.7 : 1}
             disabled={!isFree}
           >
@@ -560,7 +560,7 @@ export const FilterScreen: React.FC = () => {
           <Text style={s.questionLabel}>Kaç yaşında olsun?</Text>
           <TouchableOpacity
             style={isFree ? s.cardLocked : undefined}
-            onPress={isFree ? () => showUpgradeAlert('GOLD') : undefined}
+            onPress={isFree ? () => showUpgradeAlert('PREMIUM') : undefined}
             activeOpacity={isFree ? 0.7 : 1}
             disabled={!isFree}
           >
@@ -581,7 +581,7 @@ export const FilterScreen: React.FC = () => {
           <Text style={s.questionLabel}>Ne kadar yakın olsun?</Text>
           <TouchableOpacity
             style={isFree ? s.cardLocked : undefined}
-            onPress={isFree ? () => showUpgradeAlert('GOLD') : undefined}
+            onPress={isFree ? () => showUpgradeAlert('PREMIUM') : undefined}
             activeOpacity={isFree ? 0.7 : 1}
             disabled={!isFree}
           >
@@ -602,7 +602,7 @@ export const FilterScreen: React.FC = () => {
           <Text style={s.questionLabel}>Sadece doğrulanmış profiller mi görmek istersin?</Text>
           <TouchableOpacity
             style={[s.card, isFree && s.cardLocked]}
-            onPress={isFree ? () => showUpgradeAlert('GOLD') : undefined}
+            onPress={isFree ? () => showUpgradeAlert('PREMIUM') : undefined}
             activeOpacity={isFree ? 0.7 : 1}
             disabled={!isFree}
           >
@@ -639,22 +639,22 @@ export const FilterScreen: React.FC = () => {
             }
           },
           'intention',
-          'GOLD',
+          'PREMIUM',
         )}
 
         {/* Interests — Premium+ */}
         {renderChipCard(
           'Hangi ilgi alanlarını paylaşsın?', '',
-          INTEREST_OPTIONS, selectedInterests, toggleInArray(setSelectedInterests), 'interests', 'GOLD',
+          INTEREST_OPTIONS, selectedInterests, toggleInArray(setSelectedInterests), 'interests', 'PREMIUM',
         )}
 
         {/* ═══════════════ GELİŞMİŞ FİLTRELER ═══════════════ */}
         <Text style={s.sectionHeader}>Detaylı tercihler</Text>
 
-        {!hasAccess(packageTier, 'GOLD') && (
+        {!hasAccess(packageTier, 'PREMIUM') && (
           <TouchableOpacity
             style={s.upgradeBanner}
-            onPress={() => showUpgradeAlert('GOLD')}
+            onPress={() => showUpgradeAlert('PREMIUM')}
             activeOpacity={0.8}
           >
             <Text style={s.upgradeBannerText}>Premium ile daha detaylı tercih belirle</Text>
@@ -667,93 +667,93 @@ export const FilterScreen: React.FC = () => {
         {/* Languages */}
         {renderChipCard(
           'Hangi dilleri bilmesini istersin?', '',
-          LANGUAGE_OPTIONS, selectedLanguages, toggleInArray(setSelectedLanguages), 'languages', 'GOLD',
+          LANGUAGE_OPTIONS, selectedLanguages, toggleInArray(setSelectedLanguages), 'languages', 'PREMIUM',
         )}
 
         {/* Ethnicity */}
         {renderChipCard(
           'Etnik kökeni ne olsun?', '',
-          ETHNICITY_OPTIONS, selectedEthnicity, toggleInArray(setSelectedEthnicity), 'ethnicity', 'GOLD',
+          ETHNICITY_OPTIONS, selectedEthnicity, toggleInArray(setSelectedEthnicity), 'ethnicity', 'PREMIUM',
         )}
 
         {/* Height */}
         {renderRangeCard(
           'Boyu ne kadar olsun?', '',
           heightMin, heightMax, HEIGHT_MIN, HEIGHT_MAX, 'cm',
-          setHeightMin, setHeightMax, 'height', 'GOLD',
+          setHeightMin, setHeightMax, 'height', 'PREMIUM',
         )}
 
         {/* Weight */}
         {renderRangeCard(
           'Kilosu ne kadar olsun?', '',
           weightMin, weightMax, WEIGHT_MIN, WEIGHT_MAX, 'kg',
-          setWeightMin, setWeightMax, 'weight', 'GOLD',
+          setWeightMin, setWeightMax, 'weight', 'PREMIUM',
         )}
 
         {/* Sexual orientation */}
         {renderChipCard(
           'Cinsel yönelimi ne olsun?', '',
-          SEXUAL_ORIENTATION_OPTIONS, selectedOrientation, toggleInArray(setSelectedOrientation), 'orientation', 'GOLD',
+          SEXUAL_ORIENTATION_OPTIONS, selectedOrientation, toggleInArray(setSelectedOrientation), 'orientation', 'PREMIUM',
         )}
 
         {/* Zodiac */}
         {renderChipCard(
           'Burcu ne olsun?', '',
-          ZODIAC_OPTIONS, selectedZodiac, toggleInArray(setSelectedZodiac), 'zodiac', 'PRO',
+          ZODIAC_OPTIONS, selectedZodiac, toggleInArray(setSelectedZodiac), 'zodiac', 'SUPREME',
         )}
 
         {/* Exercise */}
         {renderChipCard(
           'Spor yapıyor olsun mu?', '',
-          EXERCISE_OPTIONS, selectedExercise, toggleInArray(setSelectedExercise), 'exercise', 'GOLD',
+          EXERCISE_OPTIONS, selectedExercise, toggleInArray(setSelectedExercise), 'exercise', 'PREMIUM',
         )}
 
         {/* Education */}
         {renderChipCard(
           'Eğitim seviyesi ne olsun?', '',
-          EDUCATION_OPTIONS, selectedEducation, toggleInArray(setSelectedEducation), 'education', 'GOLD',
+          EDUCATION_OPTIONS, selectedEducation, toggleInArray(setSelectedEducation), 'education', 'PREMIUM',
         )}
 
         {/* Marital Status */}
         {renderChipCard(
           'Medeni durumu ne olsun?', '',
-          MARITAL_OPTIONS, selectedMarital, toggleInArray(setSelectedMarital), 'marital', 'GOLD',
+          MARITAL_OPTIONS, selectedMarital, toggleInArray(setSelectedMarital), 'marital', 'PREMIUM',
         )}
 
         {/* Children */}
         {renderChipCard(
           'Çocuk durumu ne olsun?', '',
-          CHILDREN_OPTIONS, selectedChildren, toggleInArray(setSelectedChildren), 'children', 'GOLD',
+          CHILDREN_OPTIONS, selectedChildren, toggleInArray(setSelectedChildren), 'children', 'PREMIUM',
         )}
 
         {/* Drinking */}
         {renderChipCard(
           'Alkol kullanıyor olsun mu?', '',
-          DRINKING_OPTIONS, selectedDrinking, toggleInArray(setSelectedDrinking), 'drinking', 'GOLD',
+          DRINKING_OPTIONS, selectedDrinking, toggleInArray(setSelectedDrinking), 'drinking', 'PREMIUM',
         )}
 
         {/* Smoking */}
         {renderChipCard(
           'Sigara içiyor olsun mu?', '',
-          SMOKING_OPTIONS, selectedSmoking, toggleInArray(setSelectedSmoking), 'smoking', 'GOLD',
+          SMOKING_OPTIONS, selectedSmoking, toggleInArray(setSelectedSmoking), 'smoking', 'PREMIUM',
         )}
 
         {/* Pets */}
         {renderChipCard(
           'Evcil hayvanı olsun mu?', '',
-          PETS_OPTIONS, selectedPets, toggleInArray(setSelectedPets), 'pets', 'GOLD',
+          PETS_OPTIONS, selectedPets, toggleInArray(setSelectedPets), 'pets', 'PREMIUM',
         )}
 
         {/* Religion */}
         {renderChipCard(
           'Dini inancı ne olsun?', '',
-          RELIGION_OPTIONS, selectedReligion, toggleInArray(setSelectedReligion), 'religion', 'GOLD',
+          RELIGION_OPTIONS, selectedReligion, toggleInArray(setSelectedReligion), 'religion', 'PREMIUM',
         )}
 
         {/* Values */}
         {renderChipCard(
           'Hayatında neye değer versin?', '',
-          VALUES_OPTIONS, selectedValues, toggleInArray(setSelectedValues), 'values', 'GOLD',
+          VALUES_OPTIONS, selectedValues, toggleInArray(setSelectedValues), 'values', 'PREMIUM',
         )}
 
         {/* Bottom spacing */}

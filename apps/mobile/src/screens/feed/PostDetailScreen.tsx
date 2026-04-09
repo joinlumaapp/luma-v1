@@ -27,6 +27,8 @@ import type { FeedStackParamList } from '../../navigation/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useSocialFeedStore } from '../../stores/socialFeedStore';
 import { useScreenTracking } from '../../hooks/useAnalytics';
+import { CommentSheet } from '../../components/feed/CommentSheet';
+import { LikeSheet } from '../../components/feed/LikeSheet';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
@@ -129,12 +131,53 @@ const FullScreenVideoPlayer: React.FC<FullScreenVideoPlayerProps> = ({ videoUrl 
   );
 };
 
+// Engagement bar shown at bottom of post detail
+const EngagementBar: React.FC<{
+  post: { id: string; likeCount: number; commentCount?: number };
+  bottomInset: number;
+  onLikesPress: () => void;
+  onCommentsPress: () => void;
+}> = ({ post, bottomInset, onLikesPress, onCommentsPress }) => (
+  <View style={[engagementStyles.bar, { paddingBottom: bottomInset + 8 }]}>
+    <TouchableOpacity style={engagementStyles.btn} onPress={onLikesPress} activeOpacity={0.7}>
+      <Ionicons name="heart" size={20} color="#FF6B8A" />
+      <Text style={engagementStyles.count}>{post.likeCount || 0}</Text>
+      <Text style={engagementStyles.label}>Beğenenler</Text>
+    </TouchableOpacity>
+    <TouchableOpacity style={engagementStyles.btn} onPress={onCommentsPress} activeOpacity={0.7}>
+      <Ionicons name="chatbubble-outline" size={20} color="#FFFFFF" />
+      <Text style={engagementStyles.count}>{post.commentCount || 0}</Text>
+      <Text style={engagementStyles.label}>Yorumlar</Text>
+    </TouchableOpacity>
+  </View>
+);
+
+const engagementStyles = StyleSheet.create({
+  bar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 32,
+    paddingTop: 12,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    zIndex: 20,
+  },
+  btn: { alignItems: 'center', gap: 2 },
+  count: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+  label: { color: 'rgba(255,255,255,0.5)', fontSize: 11 },
+});
+
 export const PostDetailScreen: React.FC = () => {
   useScreenTracking('PostDetail');
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<PostDetailNavProp>();
   const route = useRoute<PostDetailRouteProp>();
   const { postId, post: passedPost } = route.params;
+  const [showLikes, setShowLikes] = useState(false);
+  const [showComments, setShowComments] = useState(false);
 
   // Look up the post from the store (both main feed and locally created posts)
   const storePost = useSocialFeedStore((s) =>
@@ -243,10 +286,14 @@ export const PostDetailScreen: React.FC = () => {
 
         {/* Caption overlay — bottom of screen */}
         {post.content.length > 0 && (
-          <View style={[styles.captionOverlay, { paddingBottom: insets.bottom + 16 }]}>
+          <View style={[styles.captionOverlay, { paddingBottom: insets.bottom + 60 }]}>
             <Text style={styles.captionText}>{post.content}</Text>
           </View>
         )}
+
+        <EngagementBar post={post} bottomInset={insets.bottom} onLikesPress={() => setShowLikes(true)} onCommentsPress={() => setShowComments(true)} />
+        <LikeSheet visible={showLikes} onClose={() => setShowLikes(false)} postId={postId} likeCount={post.likeCount || 0} />
+        <CommentSheet visible={showComments} onClose={() => setShowComments(false)} postId={postId} commentCount={post.commentCount || 0} />
       </Animated.View>
     );
   }
@@ -271,10 +318,14 @@ export const PostDetailScreen: React.FC = () => {
 
         {/* Caption overlay — bottom of screen */}
         {post.content.length > 0 && (
-          <View style={[styles.captionOverlay, { paddingBottom: insets.bottom + 16 }]}>
+          <View style={[styles.captionOverlay, { paddingBottom: insets.bottom + 60 }]}>
             <Text style={styles.captionText}>{post.content}</Text>
           </View>
         )}
+
+        <EngagementBar post={post} bottomInset={insets.bottom} onLikesPress={() => setShowLikes(true)} onCommentsPress={() => setShowComments(true)} />
+        <LikeSheet visible={showLikes} onClose={() => setShowLikes(false)} postId={postId} likeCount={post.likeCount || 0} />
+        <CommentSheet visible={showComments} onClose={() => setShowComments(false)} postId={postId} commentCount={post.commentCount || 0} />
       </Animated.View>
     );
   }
@@ -297,6 +348,10 @@ export const PostDetailScreen: React.FC = () => {
       <View style={styles.textContainer}>
         <Text style={styles.fullText}>{post.content}</Text>
       </View>
+
+      <EngagementBar post={post} bottomInset={insets.bottom} onLikesPress={() => setShowLikes(true)} onCommentsPress={() => setShowComments(true)} />
+      <LikeSheet visible={showLikes} onClose={() => setShowLikes(false)} postId={postId} likeCount={post.likeCount || 0} />
+      <CommentSheet visible={showComments} onClose={() => setShowComments(false)} postId={postId} commentCount={post.commentCount || 0} />
     </Animated.View>
   );
 };

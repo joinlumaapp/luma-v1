@@ -5,7 +5,7 @@ import { create } from 'zustand';
 import { storage } from '../utils/storage';
 import { api } from '../services/api';
 import { devMockOrThrow } from '../utils/mockGuard';
-import { GOLD_COSTS } from '@luma/shared';
+import { JETON_COSTS } from '@luma/shared';
 
 // ── Daily Reward Calendar ──
 export const DAILY_REWARDS = [
@@ -21,8 +21,8 @@ export const DAILY_REWARDS = [
 /** Multiplier applied after completing a full 7-day cycle */
 export const STREAK_MULTIPLIER = 1.5;
 
-/** Cost to extend a match countdown by 24 hours — from shared GOLD_COSTS */
-export const MATCH_EXTEND_COST = GOLD_COSTS.MATCH_EXTEND;
+/** Cost to extend a match countdown by 24 hours — from shared JETON_COSTS */
+export const MATCH_EXTEND_COST = JETON_COSTS.MATCH_EXTEND;
 
 /** Match countdown duration in milliseconds (24 hours) */
 export const MATCH_COUNTDOWN_MS = 24 * 60 * 60 * 1000;

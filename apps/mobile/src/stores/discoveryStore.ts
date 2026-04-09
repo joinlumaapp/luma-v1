@@ -21,12 +21,11 @@ const UNDO_DAILY_DATE_KEY = 'luma_undo_daily_date';
 // Daily free undo limits per package tier
 const DAILY_UNDO_LIMITS: Record<PackageTier, number> = {
   FREE: 0,
-  GOLD: 1,
-  PRO: 3,
-  RESERVED: 999999, // Unlimited
+  PREMIUM: 1,
+  SUPREME: 999999, // Unlimited
 };
 
-// Gold cost per extra undo beyond the free daily allowance
+// Jeton cost per extra undo beyond the free daily allowance
 export const UNDO_GOLD_COST = 5;
 
 export interface DiscoveryProfile {
@@ -62,7 +61,7 @@ export interface DiscoveryProfile {
   /** Badge keys earned by this user (e.g. ["first_spark", "verified_star"]) */
   earnedBadges?: string[];
   /** Subscription tier for badge display */
-  packageTier?: 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
+  packageTier?: 'FREE' | 'PREMIUM' | 'SUPREME';
   /** Profile prompts (Hinge-style question + answer) */
   prompts?: Array<{ id: string; question: string; answer: string; order: number }>;
   /** Profile video URL */
@@ -180,7 +179,7 @@ const mapFeedCardToProfile = (card: FeedCard): DiscoveryProfile => ({
 });
 
 // ─── Supreme Visibility Priority ─────────────────────────────
-// Boosts 'RESERVED' (Supreme) profiles to the top 5% of the feed stack.
+// Boosts 'SUPREME' profiles to the top 5% of the feed stack.
 // Among supreme profiles, higher feedScore wins. Non-supreme order is preserved.
 
 const sortWithSupremePriority = (profiles: DiscoveryProfile[]): DiscoveryProfile[] => {
@@ -188,7 +187,7 @@ const sortWithSupremePriority = (profiles: DiscoveryProfile[]): DiscoveryProfile
   const regular: DiscoveryProfile[] = [];
 
   for (const p of profiles) {
-    if (p.packageTier === 'RESERVED') {
+    if (p.packageTier === 'SUPREME') {
       supreme.push(p);
     } else {
       regular.push(p);

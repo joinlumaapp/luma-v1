@@ -1,7 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { TasksService } from "./tasks.service";
 import { PrismaService } from "../../prisma/prisma.service";
-import { RelationshipsService } from "../relationships/relationships.service";
 import { StoriesService } from "../stories/stories.service";
 import { PaymentsService } from "../payments/payments.service";
 
@@ -16,10 +15,6 @@ describe("TasksService", () => {
     userSession: { deleteMany: jest.fn() },
     notification: { deleteMany: jest.fn() },
     userProfile: { updateMany: jest.fn() },
-  };
-
-  const mockRelationshipsService = {
-    autoEndExpiredRelationships: jest.fn(),
   };
 
   const mockStoriesService = {
@@ -37,7 +32,6 @@ describe("TasksService", () => {
       providers: [
         TasksService,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: RelationshipsService, useValue: mockRelationshipsService },
         { provide: StoriesService, useValue: mockStoriesService },
         { provide: PaymentsService, useValue: mockPaymentsService },
       ],
@@ -176,35 +170,11 @@ describe("TasksService", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════
-  // autoEndExpiredRelationships()
-  // ═══════════════════════════════════════════════════════════════
-
-  describe("autoEndExpiredRelationships()", () => {
-    it("should delegate to relationshipsService.autoEndExpiredRelationships", async () => {
-      mockRelationshipsService.autoEndExpiredRelationships.mockResolvedValue(3);
-
-      await service.autoEndExpiredRelationships();
-
-      expect(
-        mockRelationshipsService.autoEndExpiredRelationships,
-      ).toHaveBeenCalledTimes(1);
-    });
-
-    it("should not throw when no expired relationships", async () => {
-      mockRelationshipsService.autoEndExpiredRelationships.mockResolvedValue(0);
-
-      await expect(
-        service.autoEndExpiredRelationships(),
-      ).resolves.toBeUndefined();
-    });
-  });
-
-  // ═══════════════════════════════════════════════════════════════
   // cleanupExpiredMoods()
   // ═══════════════════════════════════════════════════════════════
 
   describe("cleanupExpiredMoods()", () => {
-    it("should clear moods older than 24 hours", async () => {
+    it("should clear moods older than 4 hours", async () => {
       mockPrisma.userProfile.updateMany.mockResolvedValue({ count: 5 });
 
       await service.cleanupExpiredMoods();

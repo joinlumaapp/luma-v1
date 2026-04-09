@@ -64,7 +64,12 @@
       "Bash(RAILWAY_TOKEN=\"9117342f-8679-4bea-b287-028d5fc82c87\" railway status)",
       "Bash(RAILWAY_TOKEN=\"06b7779e-5f49-45c7-adc6-f41035d2470f\" railway status)",
       "Bash(RAILWAY_TOKEN=\"06b7779e-5f49-45c7-adc6-f41035d2470f\" railway redeploy --service luma-v1 --yes)",
-      "Bash(RAILWAY_TOKEN=\"d9b989d8-b558-4605-abd7-8897609d8e8f\" railway logs --tail 50)"
+      "Bash(RAILWAY_TOKEN=\"d9b989d8-b558-4605-abd7-8897609d8e8f\" railway logs --tail 50)",
+      "Bash(python3 write_all_md_files.py)",
+      "Read(//home/ubuntu-user/projects/luma-v1/apps/mobile/**)"
+    ],
+    "additionalDirectories": [
+      "/home/ubuntu-user/projects/luma-v1/.claude/agents"
     ]
   }
 }

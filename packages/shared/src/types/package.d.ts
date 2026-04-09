@@ -1,21 +1,11 @@
 import { PackageTier } from './user';
-export type SubscriptionDuration = 'monthly' | 'quarterly' | 'yearly';
-export interface PricingTier {
-    duration: SubscriptionDuration;
-    price: number;
-    monthlyEquivalent: number;
-    savingsPercent: number;
-}
-export declare const PACKAGE_PRICING: Record<'GOLD' | 'PRO' | 'RESERVED', PricingTier[]>;
 export interface PackageDefinition {
     tier: PackageTier;
     name: string;
     nameTr: string;
-    dailySwipeLimit: number;
-    hasPremiumQuestions: boolean;
-    hasSuperCompatibilityView: boolean;
-    hasProfileBoost: boolean;
-    monthlyGoldAllocation: number;
+    priceTryMonthly: number;
+    monthlyJeton: number;
+    isAdFree: boolean;
 }
 export interface Subscription {
     id: string;
@@ -28,198 +18,189 @@ export interface Subscription {
     expiryDate: Date;
     isActive: boolean;
     autoRenew: boolean;
-    isTrial: boolean;
-    trialEndDate: Date | null;
-    gracePeriodEnd: Date | null;
     createdAt: Date;
     cancelledAt: Date | null;
 }
 export declare enum PaymentPlatform {
-    APPLE = "APPLE",
-    GOOGLE = "GOOGLE"
+    APPLE = "apple",
+    GOOGLE = "google"
 }
-export interface GoldTransaction {
+export interface JetonTransaction {
     id: string;
     userId: string;
-    type: GoldTransactionType;
+    type: JetonTransactionType;
     amount: number;
     balance: number;
     description: string;
     referenceId: string | null;
     createdAt: Date;
 }
-export declare enum GoldTransactionType {
-    PURCHASE = "PURCHASE",// Bought Gold pack
-    SUBSCRIPTION_ALLOCATION = "SUBSCRIPTION_ALLOCATION",// Monthly package bonus
-    REFERRAL_BONUS = "REFERRAL_BONUS",// Invited a friend
-    BADGE_REWARD = "BADGE_REWARD",// Earned a badge
-    STREAK_REWARD = "STREAK_REWARD",// Streak bonus reward
-    DAILY_LOGIN = "DAILY_LOGIN",// Daily login bonus
-    PROFILE_BOOST = "PROFILE_BOOST",// Boosted profile
-    SUPER_LIKE = "SUPER_LIKE",// Sent a super like
-    READ_RECEIPTS = "READ_RECEIPTS",// See if message was read
-    UNDO_PASS = "UNDO_PASS",// Undo a passed profile
-    SPOTLIGHT = "SPOTLIGHT",// 30 min area spotlight
-    TRAVEL_MODE = "TRAVEL_MODE",// 24h travel mode
-    PRIORITY_MESSAGE = "PRIORITY_MESSAGE",// Pin message to top
-    VOICE_CALL = "VOICE_CALL",// Paid voice call
-    VIDEO_CALL = "VIDEO_CALL",// Paid video call
-    EXTRA_LIKES_REVEAL = "EXTRA_LIKES_REVEAL",
-    EXTRA_VIEWERS_REVEAL = "EXTRA_VIEWERS_REVEAL",
-    VIEWER_DELAY_BYPASS = "VIEWER_DELAY_BYPASS",
-    PRIORITY_VISIBILITY_1H = "PRIORITY_VISIBILITY_1H",
-    PRIORITY_VISIBILITY_3H = "PRIORITY_VISIBILITY_3H",
-    ACTIVITY_STRIP_PIN = "ACTIVITY_STRIP_PIN",
-    SECRET_ADMIRER_SEND = "SECRET_ADMIRER_SEND",
-    SECRET_ADMIRER_EXTRA_GUESS = "SECRET_ADMIRER_EXTRA_GUESS",
-    COMPATIBILITY_XRAY = "COMPATIBILITY_XRAY",
-    SUPER_COMPATIBLE_REVEAL = "SUPER_COMPATIBLE_REVEAL",
-    AI_CHAT_SUGGESTION_PACK = "AI_CHAT_SUGGESTION_PACK",
-    NEARBY_NOTIFY = "NEARBY_NOTIFY",
-    WEEKLY_TOP_REVEAL = "WEEKLY_TOP_REVEAL",
-    MESSAGE_BUNDLE_3 = "MESSAGE_BUNDLE_3",
-    MESSAGE_BUNDLE_5 = "MESSAGE_BUNDLE_5",
-    MESSAGE_BUNDLE_10 = "MESSAGE_BUNDLE_10"
+export declare enum JetonTransactionType {
+    PURCHASE = "purchase",
+    SUBSCRIPTION_ALLOCATION = "subscription_allocation",
+    MISSION_REWARD = "mission_reward",// Kaşif daily missions
+    AD_REWARD = "ad_reward",// Rewarded ad watched
+    PROFILE_COMPLETION = "profile_completion",// One-time bonus
+    LEADERBOARD_REWARD = "leaderboard_reward",// Weekly star reward
+    PROFILE_BOOST = "profile_boost",
+    SUPER_LIKE = "super_like",
+    SELAM_GONDER = "selam_gonder",// Icebreaker message
+    CANLI_SESSION = "canli_session",// Live video match
+    VOICE_CALL = "voice_call",// Voice call (free users)
+    VIDEO_CALL = "video_call",// Video call (free users)
+    UNDO_SWIPE = "undo_swipe"
 }
-export interface GoldPack {
-    id: string;
-    amount: number;
-    priceUsd: number;
-    priceTry: number;
-    appleProductId: string;
-    googleProductId: string;
-    isPopular: boolean;
-}
-export declare const PACKAGE_FEATURES: {
-    readonly FREE: {
-        readonly dailySwipes: 999999;
-        readonly monthlyGold: 0;
-        readonly premiumQuestions: false;
-        readonly seeWhoLikedYou: false;
-        readonly readReceipts: false;
-        readonly profileBoost: false;
-        readonly undoSwipe: false;
-        readonly priorityInFeed: false;
+export declare const JETON_COSTS: {
+    readonly SUPER_LIKE: 15;
+    readonly BOOST_24H: 120;
+    readonly CANLI_SESSION: 20;
+    readonly VOICE_CALL: 10;
+    readonly VIDEO_CALL: 15;
+    readonly UNDO_EXTRA: 10;
+    readonly UNDO_PASS: 10;
+    readonly SELAM_GONDER: {
+        readonly FREE: 10;
+        readonly PREMIUM: 5;
+        readonly SUPREME: 3;
     };
-    readonly GOLD: {
-        readonly dailySwipes: 999999;
-        readonly monthlyGold: 250;
-        readonly premiumQuestions: true;
-        readonly seeWhoLikedYou: true;
-        readonly readReceipts: false;
-        readonly profileBoost: false;
-        readonly undoSwipe: true;
-        readonly priorityInFeed: false;
-    };
-    readonly PRO: {
-        readonly dailySwipes: 999999;
-        readonly monthlyGold: 500;
-        readonly premiumQuestions: true;
-        readonly seeWhoLikedYou: true;
-        readonly readReceipts: true;
-        readonly profileBoost: true;
-        readonly undoSwipe: true;
-        readonly priorityInFeed: true;
-    };
-    readonly RESERVED: {
-        readonly dailySwipes: 999999;
-        readonly monthlyGold: 1000;
-        readonly premiumQuestions: true;
-        readonly seeWhoLikedYou: true;
-        readonly readReceipts: true;
-        readonly profileBoost: true;
-        readonly undoSwipe: true;
-        readonly priorityInFeed: true;
-    };
-};
-export declare const GOLD_PACKS: readonly [{
-    readonly id: "gold_50";
-    readonly amount: 50;
-    readonly price: 4.99;
-    readonly currency: "USD";
-}, {
-    readonly id: "gold_150";
-    readonly amount: 150;
-    readonly price: 12.99;
-    readonly currency: "USD";
-}, {
-    readonly id: "gold_500";
-    readonly amount: 500;
-    readonly price: 39.99;
-    readonly currency: "USD";
-}, {
-    readonly id: "gold_1000";
-    readonly amount: 1000;
-    readonly price: 69.99;
-    readonly currency: "USD";
-}];
-export declare const GOLD_PACKS_TRY: readonly [{
-    readonly id: "gold_50";
-    readonly amount: 50;
-    readonly bonus: 0;
-    readonly priceTry: 29.99;
-    readonly priceUsd: 4.99;
-}, {
-    readonly id: "gold_150";
-    readonly amount: 150;
-    readonly bonus: 10;
-    readonly priceTry: 79.99;
-    readonly priceUsd: 12.99;
-}, {
-    readonly id: "gold_500";
-    readonly amount: 500;
-    readonly bonus: 50;
-    readonly priceTry: 199.99;
-    readonly priceUsd: 39.99;
-}, {
-    readonly id: "gold_1000";
-    readonly amount: 1000;
-    readonly bonus: 150;
-    readonly priceTry: 349.99;
-    readonly priceUsd: 69.99;
-}];
-export declare const GOLD_COSTS: {
-    readonly PROFILE_BOOST: 100;
-    readonly SUPER_LIKE: 25;
-    readonly READ_RECEIPTS: 15;
-    readonly UNDO_PASS: 30;
-    readonly SPOTLIGHT: 75;
-    readonly TRAVEL_MODE: 200;
+    readonly PROFILE_BOOST: 120;
     readonly PRIORITY_MESSAGE: 40;
-    readonly SUGGESTED_STORY_VIEW: 20;
-    readonly FLIRT_START: 25;
-    readonly VOICE_CALL: 25;
-    readonly VIDEO_CALL: 50;
     readonly SEND_MESSAGE: 150;
     readonly GREETING: 50;
     readonly WAVE_EXTRA: 5;
     readonly MATCH_EXTEND: 5;
     readonly DATE_PLANNER: 5;
     readonly EXTRA_LIKES_REVEAL: 20;
-    readonly EXTRA_VIEWERS_REVEAL: 15;
-    readonly VIEWER_DELAY_BYPASS: 25;
     readonly PRIORITY_VISIBILITY_1H: 60;
-    readonly PRIORITY_VISIBILITY_3H: 150;
-    readonly ACTIVITY_STRIP_PIN: 40;
-    readonly SECRET_ADMIRER_SEND: 75;
-    readonly SECRET_ADMIRER_EXTRA_GUESS: 25;
-    readonly COMPATIBILITY_XRAY: 30;
-    readonly SUPER_COMPATIBLE_REVEAL: 20;
-    readonly AI_CHAT_SUGGESTION_PACK: 30;
-    readonly NEARBY_NOTIFY: 35;
-    readonly WEEKLY_TOP_REVEAL: 40;
-    readonly MESSAGE_BUNDLE_3: 350;
-    readonly MESSAGE_BUNDLE_5: 500;
-    readonly MESSAGE_BUNDLE_10: 800;
+    readonly SUGGESTED_STORY_VIEW: 20;
+    readonly FLIRT_START: 25;
+};
+export declare const JETON_PACKS: readonly [{
+    readonly id: "jeton_100";
+    readonly amount: 100;
+    readonly priceTry: 79.99;
+    readonly isPopular: false;
+}, {
+    readonly id: "jeton_500";
+    readonly amount: 500;
+    readonly priceTry: 199.99;
+    readonly isPopular: true;
+}, {
+    readonly id: "jeton_1000";
+    readonly amount: 1000;
+    readonly priceTry: 349.99;
+    readonly isPopular: false;
+}];
+export declare const BOOST_PACKS: readonly [{
+    readonly id: "boost_1";
+    readonly count: 1;
+    readonly jetonCost: 120;
+    readonly savings: any;
+}, {
+    readonly id: "boost_5";
+    readonly count: 5;
+    readonly jetonCost: 500;
+    readonly savings: "%20 kaydet";
+}, {
+    readonly id: "boost_bulk_1";
+    readonly count: 8;
+    readonly jetonCost: 900;
+    readonly savings: "%32 kaydet";
+}, {
+    readonly id: "boost_bulk_2";
+    readonly count: 13;
+    readonly jetonCost: 1500;
+    readonly savings: "%37 kaydet";
+}];
+export declare const PACKAGE_FEATURES: {
+    readonly FREE: {
+        readonly nameTr: "Ücretsiz";
+        readonly priceTryMonthly: 0;
+        readonly monthlyJeton: 0;
+        readonly isAdFree: false;
+        readonly dailySwipes: 999999;
+        readonly dailyDirectMessages: 1;
+        readonly dailySelamGonder: 3;
+        readonly dailyUndo: 1;
+        readonly monthlyBoosts: 0;
+        readonly readReceipts: false;
+        readonly seeWhoLikedYou: "blurred";
+        readonly profileViewers: "count_only";
+        readonly dailyStories: 1;
+        readonly priorityInFeed: false;
+        readonly storyPriority: false;
+        readonly advancedFilters: false;
+        readonly specialBadge: false;
+        readonly dailyMatch: 1;
+        readonly dailyMatchUnit: "week";
+        readonly dailyIcebreakerGames: 1;
+        readonly weeklyReport: "basic";
+        readonly dailyLiveSessions: 3;
+        readonly dailyVoiceVideoCalls: 0;
+    };
+    readonly PREMIUM: {
+        readonly nameTr: "Premium";
+        readonly priceTryMonthly: 499;
+        readonly monthlyJeton: 250;
+        readonly isAdFree: true;
+        readonly dailySwipes: 999999;
+        readonly dailyDirectMessages: 10;
+        readonly dailySelamGonder: 10;
+        readonly dailyUndo: 5;
+        readonly monthlyBoosts: 4;
+        readonly readReceipts: true;
+        readonly seeWhoLikedYou: "limited";
+        readonly profileViewers: "limited";
+        readonly dailyStories: 5;
+        readonly priorityInFeed: true;
+        readonly storyPriority: true;
+        readonly advancedFilters: true;
+        readonly specialBadge: false;
+        readonly dailyMatch: 1;
+        readonly dailyMatchUnit: "day";
+        readonly dailyIcebreakerGames: 5;
+        readonly weeklyReport: "detailed";
+        readonly dailyLiveSessions: 10;
+        readonly dailyVoiceVideoCalls: 5;
+    };
+    readonly SUPREME: {
+        readonly nameTr: "Supreme";
+        readonly priceTryMonthly: 1199;
+        readonly monthlyJeton: 1000;
+        readonly isAdFree: true;
+        readonly dailySwipes: 999999;
+        readonly dailyDirectMessages: 999999;
+        readonly dailySelamGonder: 20;
+        readonly dailyUndo: 999999;
+        readonly monthlyBoosts: 999999;
+        readonly readReceipts: true;
+        readonly seeWhoLikedYou: "unlimited";
+        readonly profileViewers: "unlimited";
+        readonly dailyStories: 999999;
+        readonly priorityInFeed: true;
+        readonly storyPriority: true;
+        readonly advancedFilters: true;
+        readonly specialBadge: true;
+        readonly dailyMatch: 3;
+        readonly dailyMatchUnit: "day";
+        readonly dailyIcebreakerGames: 999999;
+        readonly weeklyReport: "vip";
+        readonly dailyLiveSessions: 999999;
+        readonly dailyVoiceVideoCalls: 999999;
+    };
 };
 export declare const PACKAGE_TIER_ORDER: Record<PackageTier, number>;
-export type GoldSpendAction = 'PROFILE_BOOST' | 'SUPER_LIKE' | 'READ_RECEIPTS' | 'UNDO_PASS' | 'SPOTLIGHT' | 'TRAVEL_MODE' | 'PRIORITY_MESSAGE' | 'VOICE_CALL' | 'VIDEO_CALL' | 'SEND_MESSAGE' | 'GREETING' | 'WAVE_EXTRA' | 'MATCH_EXTEND' | 'DATE_PLANNER' | 'EXTRA_LIKES_REVEAL' | 'EXTRA_VIEWERS_REVEAL' | 'VIEWER_DELAY_BYPASS' | 'PRIORITY_VISIBILITY_1H' | 'PRIORITY_VISIBILITY_3H' | 'ACTIVITY_STRIP_PIN' | 'SECRET_ADMIRER_SEND' | 'SECRET_ADMIRER_EXTRA_GUESS' | 'COMPATIBILITY_XRAY' | 'SUPER_COMPATIBLE_REVEAL' | 'AI_CHAT_SUGGESTION_PACK' | 'NEARBY_NOTIFY' | 'WEEKLY_TOP_REVEAL' | 'MESSAGE_BUNDLE_3' | 'MESSAGE_BUNDLE_5' | 'MESSAGE_BUNDLE_10';
+export declare const FOUNDER_BADGE: {
+    readonly maxUsers: 777;
+    readonly key: "kurucu";
+    readonly nameTr: "Kurucu";
+    readonly nameEn: "Founder";
+};
 export interface TransactionHistoryItem {
     id: string;
-    type: GoldTransactionType;
+    type: JetonTransactionType;
     amount: number;
     balance: number;
     description: string;
     createdAt: Date;
 }
-//# sourceMappingURL=package.d.ts.map

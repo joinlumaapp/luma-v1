@@ -41,20 +41,21 @@ export interface UserPhoto {
     createdAt: Date;
 }
 export declare enum IntentionTag {
-    SERIOUS_RELATIONSHIP = "SERIOUS_RELATIONSHIP",
-    EXPLORING = "EXPLORING",
-    NOT_SURE = "NOT_SURE"
+    EVLENMEK = "evlenmek",
+    ILISKI = "iliski",
+    SOHBET_ARKADAS = "sohbet_arkadas",
+    KULTUR = "kultur",
+    DUNYA_GEZME = "dunya_gezme"
 }
 export declare enum Gender {
-    MALE = "MALE",
-    FEMALE = "FEMALE",
-    OTHER = "OTHER"
+    MALE = "male",
+    FEMALE = "female",
+    OTHER = "other"
 }
 export declare enum PackageTier {
-    FREE = "FREE",
-    GOLD = "GOLD",
-    PRO = "PRO",
-    RESERVED = "RESERVED"
+    FREE = "free",
+    PREMIUM = "premium",
+    SUPREME = "supreme"
 }
 export declare enum VerificationStatus {
     PENDING = "PENDING",
@@ -66,4 +67,3 @@ export declare enum VerificationType {
     SMS = "SMS",
     SELFIE = "SELFIE"
 }
-//# sourceMappingURL=user.d.ts.map

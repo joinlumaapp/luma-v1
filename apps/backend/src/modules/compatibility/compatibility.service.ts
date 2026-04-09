@@ -12,8 +12,7 @@ import { SubmitAnswerDto, SubmitAnswersBulkDto } from "./dto";
 
 // LOCKED: 2 Compatibility Levels
 const SUPER_COMPATIBILITY_THRESHOLD = 90;
-const CORE_QUESTION_COUNT = 20;
-const TOTAL_QUESTION_COUNT = 45;
+const QUESTION_COUNT = 20;
 
 // Score display bounds — LOCKED per product spec
 const MIN_DISPLAY_SCORE = 47;
@@ -32,47 +31,32 @@ const ADJACENT_MATCH_POINTS = 70; // 1 step apart
 const TWO_STEP_MATCH_POINTS = 40; // 2 steps apart
 const FAR_MATCH_POINTS = 10; // 3+ steps apart
 
-// Core questions weighted 2x compared to premium questions
-const CORE_WEIGHT_MULTIPLIER = 2;
-const PREMIUM_WEIGHT_MULTIPLIER = 1;
+// All 20 questions are equally weighted (no premium tier)
+const QUESTION_WEIGHT_MULTIPLIER = 1;
 
 // Bonus percentages for profile alignment
 const INTENTION_TAG_BONUS_PERCENT = 10; // +10% for matching intention tags
 const SAME_CITY_BONUS_PERCENT = 5; // +5% for same city
 
-// Turkish labels for compatibility dimension categories
+// Turkish labels for compatibility dimension categories (8 new categories)
 const DIMENSION_LABELS_TR: Record<string, string> = {
   COMMUNICATION: "İletişim Tarzı",
-  LIFE_GOALS: "Yaşam Hedefleri",
-  VALUES: "Değerler",
-  LIFESTYLE: "Yaşam Tarzı",
-  EMOTIONAL_INTELLIGENCE: "Duygusal Zekâ",
+  CONFLICT_RESOLUTION: "Çatışma Çözümü",
+  EMOTIONAL_DEPTH: "Duygusal Derinlik",
+  SOCIAL_ENERGY: "Sosyal Enerji",
+  LIFE_PACE: "Yaşam Temposu",
+  LONG_TERM_VISION: "Uzun Vadeli Vizyon",
   RELATIONSHIP_EXPECTATIONS: "İlişki Beklentileri",
-  SOCIAL_COMPATIBILITY: "Sosyal Uyum",
-  ATTACHMENT_STYLE: "Bağlanma Tarzı",
-  LOVE_LANGUAGE: "Sevgi Dili",
-  CONFLICT_STYLE: "Çatışma Yaklaşımı",
-  FUTURE_VISION: "Gelecek Vizyonu",
-  INTELLECTUAL: "Entelektüel Uyum",
-  INTIMACY: "Yakınlık",
-  GROWTH_MINDSET: "Gelişim Odaklılık",
-  CORE_FEARS: "Temel Kaygılar",
+  LIFESTYLE_COMPATIBILITY: "Yaşam Tarzı Uyumu",
   // Lowercase variants for consistent lookup
   communication: "İletişim Tarzı",
-  life_goals: "Yaşam Hedefleri",
-  values: "Değerler",
-  lifestyle: "Yaşam Tarzı",
-  emotional_intelligence: "Duygusal Zekâ",
+  conflict_resolution: "Çatışma Çözümü",
+  emotional_depth: "Duygusal Derinlik",
+  social_energy: "Sosyal Enerji",
+  life_pace: "Yaşam Temposu",
+  long_term_vision: "Uzun Vadeli Vizyon",
   relationship_expectations: "İlişki Beklentileri",
-  social_compatibility: "Sosyal Uyum",
-  attachment_style: "Bağlanma Tarzı",
-  love_language: "Sevgi Dili",
-  conflict_style: "Çatışma Yaklaşımı",
-  future_vision: "Gelecek Vizyonu",
-  intellectual: "Entelektüel Uyum",
-  intimacy: "Yakınlık",
-  growth_mindset: "Gelişim Odaklılık",
-  core_fears: "Temel Kaygılar",
+  lifestyle_compatibility: "Yaşam Tarzı Uyumu",
 };
 
 // Conversation starter templates per category (Turkish)
@@ -81,135 +65,78 @@ const CONVERSATION_STARTERS_TR: Record<string, string[]> = {
     "İletişimde en çok neye önem verirsiniz?",
     "Zor bir konuyu nasıl dile getirirsiniz?",
   ],
-  LIFE_GOALS: [
-    "5 yıl sonra kendinizi nerede görüyorsunuz?",
-    "Hayattaki en büyük hedefiniz ne?",
+  CONFLICT_RESOLUTION: [
+    "Bir anlaşmazlık yaşandığında nasıl tepki verirsiniz?",
+    "Çözüm odaklı mısınız yoksa önce duyguları mı konuşursunuz?",
   ],
-  VALUES: [
-    "Sizin için vazgeçilmez değerleriniz neler?",
-    "Hayatta en çok neye önem verirsiniz?",
+  EMOTIONAL_DEPTH: [
+    "Duygularınızı nasıl ifade edersiniz?",
+    "Zor zamanlarla nasıl başa çıkarsınız?",
   ],
-  LIFESTYLE: [
+  SOCIAL_ENERGY: [
+    "Arkadaşlıklarınız sizin için ne ifade ediyor?",
+    "Sosyal ortamlarda kendinizi nasıl hissedersiniz?",
+  ],
+  LIFE_PACE: [
     "İdeal bir hafta sonu nasıl geçirir?",
     "Serbest zamanınızda en çok ne yapmayı seversiniz?",
   ],
-  EMOTIONAL_INTELLIGENCE: [
-    "Duygularınızı nasıl ifade edersiniz?",
-    "Zor zamanlarla nasıl başa çıkarsınız?",
+  LONG_TERM_VISION: [
+    "5 yıl sonra kendinizi nerede görüyorsunuz?",
+    "Hayattaki en büyük hedefiniz ne?",
   ],
   RELATIONSHIP_EXPECTATIONS: [
     "İdeal bir ilişkide en önemli şey sizce ne?",
     "Bir ilişkiden beklentileriniz neler?",
   ],
-  SOCIAL_COMPATIBILITY: [
-    "Arkadaşlıklarınız sizin için ne ifade ediyor?",
-    "Sosyal ortamlarda kendinizi nasıl hissedersiniz?",
-  ],
-  ATTACHMENT_STYLE: [
-    "Yakınlık kurarken kendinizi rahat hisseder misiniz?",
-    "Güven sizin için ne anlama geliyor?",
-  ],
-  LOVE_LANGUAGE: [
-    "Sevginizi nasıl gösterirsiniz?",
-    "Sevildiğini en çok ne zaman hissedersiniz?",
-  ],
-  CONFLICT_STYLE: [
-    "Bir anlaşmazlık yaşandığında nasıl tepki verirsiniz?",
-    "Çözüm odaklı mısınız yoksa önce duyguları mı konuşursunuz?",
-  ],
-  FUTURE_VISION: [
-    "Geleceğe dair en büyük hayaliniz ne?",
-    "Hayatınızda neyi değiştirmek isterdiniz?",
-  ],
-  INTELLECTUAL: [
-    "Yeni bir şey öğrenmeyi sever misiniz?",
-    "Hangi konularda tutkulu sayılırsınız?",
-  ],
-  INTIMACY: [
-    "Yakınlık sizin için ne anlam taşıyor?",
-    "Bir ilişkide fiziksel ve duygusal yakınlık dengesi nasıl olmalı?",
-  ],
-  GROWTH_MINDSET: [
-    "Kendinizi geliştirmek için neler yapıyorsunuz?",
-    "Hatalarınızdan nasıl ders çıkarırsınız?",
-  ],
-  CORE_FEARS: [
-    "Bir ilişkide sizi en çok ne endişelendirir?",
-    "Güven konusunda nasıl hissediyorsunuz?",
+  LIFESTYLE_COMPATIBILITY: [
+    "Sizin için vazgeçilmez yaşam alışkanlıklarınız neler?",
+    "Hayat tarzınızda en çok neye önem verirsiniz?",
   ],
 };
 
-// Turkish reason templates based on category scores
+// Turkish reason templates based on category scores (8 new categories)
 const REASON_TEMPLATES_TR: Record<string, { high: string; medium: string }> = {
-  communication: {
+  COMMUNICATION: {
     high: "İletişim tarzlarınız çok uyumlu",
     medium: "İletişim konusunda birbirinizi tamamlıyorsunuz",
   },
-  life_goals: {
-    high: "Yaşam hedefleriniz örtüşüyor",
-    medium: "Benzer yaşam hedeflerine sahipsiniz",
-  },
-  values: {
-    high: "Temel değerleriniz aynı noktada",
-    medium: "Ortak değerleriniz var",
-  },
-  lifestyle: {
-    high: "Yaşam tarzlarınız birbiriyle uyumlu",
-    medium: "Birbirinize denk bir yaşam tempoinuz var",
-  },
-  emotional_intelligence: {
-    high: "Duygusal zekâ seviyeniz birbirine çok yakın",
-    medium: "Duygusal anlayışınız uyumlu",
-  },
-  relationship_expectations: {
-    high: "İlişki beklentileriniz neredeyse aynı",
-    medium: "İlişkide ortak beklentileriniz var",
-  },
-  social_compatibility: {
-    high: "Sosyal uyumunuz mükemmel",
-    medium: "Sosyal dünyalarınız birbirine yakın",
-  },
-  attachment_style: {
-    high: "Bağlanma tarzlarınız birbirine çok uygun",
-    medium: "Güven ve yakınlık konusunda birbirinizi tamamlıyorsunuz",
-  },
-  love_language: {
-    high: "Sevgi dilleriniz örtüşüyor",
-    medium: "Sevgiyi ifade biçimleriniz uyumlu",
-  },
-  conflict_style: {
+  CONFLICT_RESOLUTION: {
     high: "Çatışma çözme yaklaşımlarınız benzer",
     medium: "Sorunlara birlikte yaklaşabilirsiniz",
   },
-  future_vision: {
-    high: "Gelecek vizyonunuz ortak bir noktada buluşuyor",
+  EMOTIONAL_DEPTH: {
+    high: "Duygusal derinliğiniz birbirine çok yakın",
+    medium: "Duygusal anlayışınız uyumlu",
+  },
+  SOCIAL_ENERGY: {
+    high: "Sosyal enerji seviyeniz mükemmel uyumlu",
+    medium: "Sosyal dünyalarınız birbirine yakın",
+  },
+  LIFE_PACE: {
+    high: "Yaşam tempolarınız birbiriyle uyumlu",
+    medium: "Birbirinize denk bir yaşam tempoinuz var",
+  },
+  LONG_TERM_VISION: {
+    high: "Uzun vadeli vizyonunuz ortak bir noktada buluşuyor",
     medium: "Geleceğe benzer gözlerle bakıyorsunuz",
   },
-  intellectual: {
-    high: "Entelektüel uyumunuz harika",
-    medium: "Düşünce dünyanız birbirine yakın",
+  RELATIONSHIP_EXPECTATIONS: {
+    high: "İlişki beklentileriniz neredeyse aynı",
+    medium: "İlişkide ortak beklentileriniz var",
   },
-  intimacy: {
-    high: "Yakınlık anlayışınız birbirinize çok uygun",
-    medium: "Yakınlık konusunda uyumlu bir çiftsiniz",
-  },
-  growth_mindset: {
-    high: "Birlikte gelişmeye çok uygunsunuz",
-    medium: "Gelişim odaklı bakış açınız ortak",
-  },
-  core_fears: {
-    high: "Temel kaygılarınız benzer, birbirinizi anlayabilirsiniz",
-    medium: "Endişelerinizi paylaşarak bağlarınızı güçlendirirsiniz",
+  LIFESTYLE_COMPATIBILITY: {
+    high: "Yaşam tarzlarınız birbiriyle uyumlu",
+    medium: "Yaşam alışkanlıklarınız birbirine yakın",
   },
 };
 
 // Categories where balanced opposites are beneficial (complementary pairing)
 // These categories benefit from diversity, not just similarity
 const COMPLEMENTARY_CATEGORIES = new Set([
-  "social_compatibility", // Introverts + extroverts can complement
-  "lifestyle", // Different life paces can balance
-  "conflict_style", // Different conflict approaches can be healthy
-  "attachment_style", // Anxious + secure pairing is well-documented
+  "SOCIAL_ENERGY", // Introverts + extroverts can complement
+  "LIFE_PACE", // Different life paces can balance
+  "CONFLICT_RESOLUTION", // Different conflict approaches can be healthy
 ]);
 
 // Compatibility level label thresholds (before display clamping)
@@ -232,7 +159,6 @@ interface AnswerData {
   value: number; // normalized 0-1 value
   weight: number; // question weight from DB
   category: string; // question category
-  isPremium: boolean; // whether this is a premium question
 }
 
 // ─── Internal type for category score accumulation ────────────
@@ -246,8 +172,6 @@ interface CategoryAccumulator {
 interface CachedCompatibilityScore {
   userId: string;
   targetUserId: string;
-  baseScore: number;
-  deepScore: number | null;
   finalScore: number;
   level: string;
   levelLabel: string;
@@ -280,27 +204,23 @@ export class CompatibilityService {
 
   /**
    * Get all compatibility questions.
-   * LUMA has exactly 45 questions: 20 core + 25 premium (LOCKED).
-   * Free users only see 20 core; Gold/Pro/Reserved see all 45.
+   * LUMA has exactly 20 mandatory uyum questions (LOCKED).
    */
   async getQuestions(userId: string) {
-    // Get user's package tier
+    // Validate user exists
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { packageTier: true },
+      select: { id: true },
     });
 
     if (!user) {
       throw new NotFoundException("Kullanıcı bulunamadı");
     }
 
-    const hasPremiumAccess = user.packageTier !== "FREE";
-
-    // Fetch questions with options
+    // Fetch all active questions with options
     const questions = await this.prisma.compatibilityQuestion.findMany({
       where: {
         isActive: true,
-        ...(hasPremiumAccess ? {} : { isPremium: false }),
       },
       include: {
         options: {
@@ -338,7 +258,6 @@ export class CompatibilityService {
         textEn: string;
         textTr: string;
         weight: number;
-        isPremium: boolean;
         options: unknown[];
       }) => ({
         id: q.id,
@@ -347,7 +266,6 @@ export class CompatibilityService {
         textEn: q.textEn,
         textTr: q.textTr,
         weight: q.weight,
-        isPremium: q.isPremium,
         options: q.options,
         answeredOptionId: answeredMap.get(q.id) ?? null,
         isAnswered: answeredMap.has(q.id),
@@ -357,8 +275,7 @@ export class CompatibilityService {
     return {
       questions: questionsWithStatus,
       answeredCount: answers.length,
-      totalCount: hasPremiumAccess ? TOTAL_QUESTION_COUNT : CORE_QUESTION_COUNT,
-      hasPremiumAccess,
+      totalCount: QUESTION_COUNT,
     };
   }
 
@@ -377,20 +294,6 @@ export class CompatibilityService {
 
     if (!question || !question.isActive) {
       throw new NotFoundException("Soru bulunamadı");
-    }
-
-    // Check premium access
-    if (question.isPremium) {
-      const user = await this.prisma.user.findUnique({
-        where: { id: userId },
-        select: { packageTier: true },
-      });
-
-      if (user?.packageTier === "FREE") {
-        throw new ForbiddenException(
-          "Premium sorulara erişmek için Gold veya üzeri pakete geçin",
-        );
-      }
     }
 
     // Validate answer index
@@ -434,7 +337,7 @@ export class CompatibilityService {
       optionId: selectedOption.id,
       saved: true,
       answeredCount,
-      totalCount: TOTAL_QUESTION_COUNT,
+      totalCount: QUESTION_COUNT,
     };
   }
 
@@ -446,14 +349,12 @@ export class CompatibilityService {
     // Validate user exists
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { packageTier: true },
+      select: { id: true },
     });
 
     if (!user) {
       throw new NotFoundException("Kullanıcı bulunamadı");
     }
-
-    const hasPremiumAccess = user.packageTier !== "FREE";
 
     // Fetch all referenced questions with their options
     const questionIds = dto.answers.map((a) => a.questionId);
@@ -464,10 +365,10 @@ export class CompatibilityService {
 
     const questionMap = new Map<
       string,
-      { id: string; isPremium: boolean; options: { id: string }[] }
+      { id: string; options: { id: string }[] }
     >(
       questions.map(
-        (q: { id: string; isPremium: boolean; options: { id: string }[] }) => [
+        (q: { id: string; options: { id: string }[] }) => [
           q.id,
           q,
         ],
@@ -479,11 +380,6 @@ export class CompatibilityService {
       const question = questionMap.get(answer.questionId);
       if (!question) {
         throw new NotFoundException(`Soru bulunamadı: ${answer.questionId}`);
-      }
-      if (question.isPremium && !hasPremiumAccess) {
-        throw new ForbiddenException(
-          "Premium sorulara erişmek için Gold veya üzeri pakete geçin",
-        );
       }
       const validOptionIds = question.options.map((o: { id: string }) => o.id);
       if (!validOptionIds.includes(answer.optionId)) {
@@ -528,13 +424,13 @@ export class CompatibilityService {
       saved: true,
       savedCount: dto.answers.length,
       answeredCount,
-      totalCount: hasPremiumAccess ? TOTAL_QUESTION_COUNT : CORE_QUESTION_COUNT,
+      totalCount: QUESTION_COUNT,
     };
   }
 
   /**
    * Check daily compatibility check limit for the user's tier.
-   * Free=1/day, Gold=3/day, Pro=5/day, Reserved=unlimited
+   * Free=1/day, Premium=5/day, Supreme=unlimited
    */
   private async checkDailyCompatibilityLimit(userId: string): Promise<void> {
     const user = await this.prisma.user.findUnique({
@@ -544,9 +440,8 @@ export class CompatibilityService {
 
     const DAILY_COMPAT_LIMITS: Record<string, number> = {
       FREE: 1,
-      GOLD: 3,
-      PRO: 5,
-      RESERVED: 999999,
+      PREMIUM: 5,
+      SUPREME: 999999,
     };
 
     const dailyLimit = DAILY_COMPAT_LIMITS[user?.packageTier ?? "FREE"] ?? 1;
@@ -677,7 +572,6 @@ export class CompatibilityService {
       const q = a.question as {
         weight: number;
         category: string;
-        isPremium: boolean;
         options: Array<{ id: string; order: number; value: number }>;
       };
       const opt = a.option as { value: number; order: number };
@@ -687,7 +581,6 @@ export class CompatibilityService {
         value: opt.value,
         weight: q.weight,
         category: q.category,
-        isPremium: q.isPremium,
       });
     }
 
@@ -696,7 +589,6 @@ export class CompatibilityService {
       const q = b.question as {
         weight: number;
         category: string;
-        isPremium: boolean;
         options: Array<{ id: string; order: number; value: number }>;
       };
       const opt = b.option as { value: number; order: number };
@@ -706,7 +598,6 @@ export class CompatibilityService {
         value: opt.value,
         weight: q.weight,
         category: q.category,
-        isPremium: q.isPremium,
       });
     }
 
@@ -717,8 +608,6 @@ export class CompatibilityService {
       const emptyResponse: CachedCompatibilityScore = {
         userId: userAId,
         targetUserId: userBId,
-        baseScore: MIN_DISPLAY_SCORE,
-        deepScore: null,
         finalScore: MIN_DISPLAY_SCORE,
         level: "NORMAL",
         levelLabel: "Orta Uyum",
@@ -734,10 +623,8 @@ export class CompatibilityService {
 
     // Calculate scores per category using step-based scoring
     const categoryAccumulators: Record<string, CategoryAccumulator> = {};
-    let coreWeightedPoints = 0;
-    let coreMaxPoints = 0;
-    let premiumWeightedPoints = 0;
-    let premiumMaxPoints = 0;
+    let totalWeightedPoints = 0;
+    let totalMaxPoints = 0;
 
     for (const qId of commonQuestionIds) {
       const a = mapA.get(qId)!;
@@ -768,12 +655,9 @@ export class CompatibilityService {
         rawPoints = Math.min(EXACT_MATCH_POINTS, rawPoints + 15);
       }
 
-      // Apply tier-based weight multiplier: core questions count 2x
-      const tierMultiplier = a.isPremium
-        ? PREMIUM_WEIGHT_MULTIPLIER
-        : CORE_WEIGHT_MULTIPLIER;
-      const weightedPoints = rawPoints * a.weight * tierMultiplier;
-      const maxPossible = EXACT_MATCH_POINTS * a.weight * tierMultiplier;
+      // Apply weight multiplier
+      const weightedPoints = rawPoints * a.weight * QUESTION_WEIGHT_MULTIPLIER;
+      const maxPossible = EXACT_MATCH_POINTS * a.weight * QUESTION_WEIGHT_MULTIPLIER;
 
       // Accumulate category scores
       if (!categoryAccumulators[a.category]) {
@@ -787,14 +671,9 @@ export class CompatibilityService {
       categoryAccumulators[a.category].maxPoints += maxPossible;
       categoryAccumulators[a.category].count++;
 
-      // Accumulate totals separately for core and premium
-      if (a.isPremium) {
-        premiumWeightedPoints += weightedPoints;
-        premiumMaxPoints += maxPossible;
-      } else {
-        coreWeightedPoints += weightedPoints;
-        coreMaxPoints += maxPossible;
-      }
+      // Accumulate totals
+      totalWeightedPoints += weightedPoints;
+      totalMaxPoints += maxPossible;
     }
 
     // Fetch both user profiles for bonus calculation
@@ -830,28 +709,17 @@ export class CompatibilityService {
 
     const totalBonus = intentionBonus + cityBonus;
 
-    // Calculate raw percentage scores (0-100 range)
-    const rawBaseScore =
-      coreMaxPoints > 0 ? (coreWeightedPoints / coreMaxPoints) * 100 : 0;
+    // Calculate raw percentage score (0-100 range)
+    const rawScore =
+      totalMaxPoints > 0 ? (totalWeightedPoints / totalMaxPoints) * 100 : 0;
 
-    const hasPremiumAnswers = premiumMaxPoints > 0;
-    const allPoints = coreWeightedPoints + premiumWeightedPoints;
-    const allMax = coreMaxPoints + premiumMaxPoints;
-    const rawDeepScore =
-      hasPremiumAnswers && allMax > 0 ? (allPoints / allMax) * 100 : null;
+    // Apply bonuses and clamp to display range [47-97]
+    const rawScoreWithBonuses = Math.min(100, rawScore + totalBonus);
 
-    // MASTER BRIEF: Premium NEVER changes displayed score, only ranking visibility
-    // finalScore is ALWAYS based on core answers only, plus bonuses
-    const rawFinalScore = rawBaseScore;
-    const rawFinalScoreWithBonuses = Math.min(100, rawFinalScore + totalBonus);
-
-    // Clamp all scores to display range [47-97] — no 100%, minimum 47
     const clampScore = (raw: number): number =>
       Math.round(Math.max(MIN_DISPLAY_SCORE, Math.min(MAX_DISPLAY_SCORE, raw)));
 
-    const baseScore = clampScore(rawBaseScore);
-    const deepScore = rawDeepScore !== null ? clampScore(rawDeepScore) : null;
-    const finalScore = clampScore(rawFinalScoreWithBonuses);
+    const finalScore = clampScore(rawScoreWithBonuses);
 
     // Category breakdown
     const breakdown: Record<string, number> = {};
@@ -895,7 +763,7 @@ export class CompatibilityService {
         : "NORMAL";
 
     // Determine display-friendly level label
-    const levelLabel = this.getLevelLabel(rawFinalScoreWithBonuses);
+    const levelLabel = this.getLevelLabel(rawScoreWithBonuses);
 
     // Generate top 3 compatibility reasons in Turkish
     const topReasons = this.getTopCompatibilityReasons(
@@ -912,34 +780,26 @@ export class CompatibilityService {
       create: {
         userAId: first,
         userBId: second,
-        baseScore,
-        deepScore,
         finalScore,
         level,
         dimensionScores: breakdown,
       },
       update: {
-        baseScore,
-        deepScore,
         finalScore,
         level,
         dimensionScores: breakdown,
       },
     });
 
-    // Award Deep Match badge if both users answered all 45 questions
-    if (deepScore !== null) {
-      await Promise.all([
-        this.badgesService.checkAndAwardBadges(first, "compatibility"),
-        this.badgesService.checkAndAwardBadges(second, "compatibility"),
-      ]);
-    }
+    // Award compatibility badges
+    await Promise.all([
+      this.badgesService.checkAndAwardBadges(first, "compatibility"),
+      this.badgesService.checkAndAwardBadges(second, "compatibility"),
+    ]);
 
     const response: CachedCompatibilityScore = {
       userId: userAId,
       targetUserId: userBId,
-      baseScore: score.baseScore,
-      deepScore: score.deepScore,
       finalScore: score.finalScore,
       level: score.level,
       levelLabel,
@@ -1063,7 +923,6 @@ export class CompatibilityService {
             category: true,
             textEn: true,
             textTr: true,
-            isPremium: true,
           },
         },
         option: {
@@ -1087,7 +946,6 @@ export class CompatibilityService {
             category: string;
             textEn: string;
             textTr: string;
-            isPremium: boolean;
           };
           option: { id: string; labelEn: string; labelTr: string };
           answeredAt: Date;
@@ -1097,7 +955,6 @@ export class CompatibilityService {
           category: a.question.category,
           textEn: a.question.textEn,
           textTr: a.question.textTr,
-          isPremium: a.question.isPremium,
           selectedOption: {
             id: a.option.id,
             labelEn: a.option.labelEn,
@@ -1107,7 +964,7 @@ export class CompatibilityService {
         }),
       ),
       totalAnswered: answers.length,
-      totalQuestions: TOTAL_QUESTION_COUNT,
+      totalQuestions: QUESTION_COUNT,
     };
   }
 
@@ -1262,8 +1119,6 @@ export class CompatibilityService {
     userId: string,
     targetUserId: string,
     score: {
-      baseScore: number;
-      deepScore: number | null;
       finalScore: number;
       level: string;
       dimensionScores: unknown;
@@ -1287,8 +1142,6 @@ export class CompatibilityService {
     return {
       userId,
       targetUserId,
-      baseScore: score.baseScore,
-      deepScore: score.deepScore,
       finalScore: score.finalScore,
       level: score.level,
       levelLabel: this.getLevelLabel(score.finalScore),

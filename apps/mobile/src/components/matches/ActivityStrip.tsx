@@ -127,7 +127,7 @@ export const ActivityStrip: React.FC<ActivityStripProps> = ({
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>
-          {'\uD83D\uDD25'} Canli Aktivite
+          {'\uD83D\uDD25'} Canlı Aktivite
         </Text>
         <Text style={styles.headerMore}>Hepsini gor {'\u2192'}</Text>
       </View>

@@ -12,9 +12,9 @@ import { devMockOrThrow } from '../utils/mockGuard';
 import { clearAllChatData } from '../services/chatPersistence';
 import type { AxiosError } from 'axios';
 
-export type PackageTier = 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
+export type PackageTier = 'FREE' | 'PREMIUM' | 'SUPREME';
 
-/** Duration of the Gold trial for new phone-registered users (48 hours in ms) */
+/** Duration of the Premium trial for new phone-registered users (48 hours in ms) */
 const TRIAL_DURATION_MS = 48 * 60 * 60 * 1000;
 
 /** Storage key for persisting trial expiry timestamp */
@@ -433,11 +433,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch { /* store may not be initialized */ }
 
     try {
-      const { useRelationshipStore } = require('./relationshipStore') as typeof import('./relationshipStore');
-      useRelationshipStore.setState({ relationship: null, isLoading: false, error: null });
-    } catch { /* store may not be initialized */ }
-
-    try {
       const { useWaveStore } = require('./waveStore') as typeof import('./waveStore');
       useWaveStore.setState({ receivedWaves: [], sentWaves: [], quota: null, isLoading: false, pendingCount: 0 });
     } catch { /* store may not be initialized */ }
@@ -700,7 +695,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       storage.setNumber(TRIAL_EXPIRY_KEY, expiresAt);
       set((state) => ({
         trialExpiresAt: expiresAt,
-        user: state.user ? { ...state.user, packageTier: (res.data.packageTier as PackageTier) ?? 'GOLD' } : null,
+        user: state.user ? { ...state.user, packageTier: (res.data.packageTier as PackageTier) ?? 'PREMIUM' } : null,
       }));
       // Sync premiumStore so the new tier is immediately reflected everywhere
       const { usePremiumStore } = await import('./premiumStore');
@@ -713,7 +708,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         storage.setNumber(TRIAL_EXPIRY_KEY, expiresAt);
         set((state) => ({
           trialExpiresAt: expiresAt,
-          user: state.user ? { ...state.user, packageTier: 'GOLD' as PackageTier } : null,
+          user: state.user ? { ...state.user, packageTier: 'PREMIUM' as PackageTier } : null,
         }));
       } else {
         // In production, bubble the error so the UI can show a proper message
@@ -740,7 +735,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   loadTrialState: () => {
     // Restore the trial expiry timestamp for UI display (e.g. TrialBanner countdown).
-    // We intentionally do NOT promote packageTier to GOLD here — the server-confirmed
+    // We intentionally do NOT promote packageTier to PREMIUM here — the server-confirmed
     // tier comes from restoreSession → premiumStore.syncPremiumState which runs on
     // every app startup. Local storage is only used to show the remaining time, not
     // to grant access.

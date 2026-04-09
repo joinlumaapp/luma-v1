@@ -25,12 +25,11 @@ import type {
 } from '../services/chatService';
 
 // Per-match daily message limits for matched conversations.
-// FREE and GOLD users have capped messaging; PRO/RESERVED are unlimited.
+// FREE users have capped messaging; PREMIUM has higher cap; SUPREME is unlimited.
 const MATCH_DAILY_MESSAGE_LIMITS: Record<PackageTier, number> = {
   FREE: 5,
-  GOLD: 50,
-  PRO: -1,      // unlimited
-  RESERVED: -1, // unlimited
+  PREMIUM: 50,
+  SUPREME: -1, // unlimited
 };
 
 interface ChatState {
@@ -246,7 +245,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   // Check whether the user can send another message. Enforces per-match daily
-  // limits even for matched conversations: FREE=5, GOLD=50, PRO/RESERVED=unlimited.
+  // limits even for matched conversations: FREE=5, PREMIUM=50, SUPREME=unlimited.
   // Non-matched conversations (future: paid DM) use the global MESSAGE_CONFIG limits.
   checkMessageLimit: (matchId?: string) => {
     const tier = (useAuthStore.getState().user?.packageTier ?? 'FREE') as PackageTier;

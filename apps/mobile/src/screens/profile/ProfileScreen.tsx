@@ -10,7 +10,17 @@ import {
   Animated,
   Easing,
   RefreshControl,
+  Image,
 } from 'react-native';
+import ReAnimated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  withSequence,
+  withDelay,
+} from 'react-native-reanimated';
+import { notificationAsync } from '../../utils/haptics';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -30,6 +40,7 @@ import {
   profileService,
   type ProfileStrengthResponse,
 } from '../../services/profileService';
+import { ScrollView as HScrollView } from 'react-native';
 import { discoveryService } from '../../services/discoveryService';
 import type { BoostStatusResponse } from '../../services/discoveryService';
 import { BoostModal } from '../../components/boost/BoostModal';
@@ -37,6 +48,7 @@ import { VerifiedBadge } from '../../components/common/VerifiedBadge';
 import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
 import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
 import { useScreenTracking } from '../../hooks/useAnalytics';
+import { ProfileSkeleton } from '../../components/animations/SkeletonLoader';
 
 import { DailyChallenge, WeeklyLeaderboard } from '../../components/engagement';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
@@ -73,6 +85,7 @@ import {
   translateSmoking,
   translateSports,
   translateChildren,
+  translateDrinking,
 } from '../../utils/formatters';
 
 const INTEREST_TAG_DISPLAY: Record<string, { emoji: string; label: string }> = {
@@ -198,11 +211,44 @@ const getStrengthColor = (level: 'low' | 'medium' | 'high'): string => {
 
 // ─── Intention tag display config ────────────────────────────────────────────
 
+// ─── Time Ago Helper ──────────────────────────────────────────
+const formatTimeAgo = (dateString: string): string => {
+  const now = Date.now();
+  const then = new Date(dateString).getTime();
+  const diffMs = now - then;
+  const diffMin = Math.floor(diffMs / 60_000);
+  const diffHour = Math.floor(diffMs / 3_600_000);
+  const diffDay = Math.floor(diffMs / 86_400_000);
+
+  if (diffMin < 1) return 'az once';
+  if (diffMin < 60) return `${diffMin} dk`;
+  if (diffHour < 24) return `${diffHour} sa`;
+  if (diffDay < 7) return `${diffDay} gun`;
+  return new Date(dateString).toLocaleDateString('tr-TR', {
+    day: 'numeric',
+    month: 'short',
+  });
+};
+
 const INTENTION_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
   SERIOUS_RELATIONSHIP: { label: 'Ciddi İlişki', bg: 'rgba(139, 92, 246, 0.12)', text: palette.purple[600] },
   EXPLORING: { label: 'Yeni Keşifler', bg: 'rgba(236, 72, 153, 0.12)', text: palette.pink[600] },
   NOT_SURE: { label: 'Açık Fikirli', bg: 'rgba(251, 191, 36, 0.12)', text: palette.gold[700] },
 };
+
+// ─── Mood Options (Anlık Ruh Hali) ───────────────────────────────────────────
+const MOOD_OPTIONS = [
+  { id: 'sohbete_acigim', label: 'Sohbete açığım', emoji: '\uD83D\uDCAC', color: '#22C55E' },
+  { id: 'bugun_sessizim', label: 'Bugün sessizim', emoji: '\uD83E\uDD2B', color: '#6B7280' },
+  { id: 'bulusmaya_varim', label: 'Buluşmaya varım', emoji: '\u2615', color: '#F59E0B' },
+  { id: 'kafede_takiliyorum', label: 'Kafede takılıyorum', emoji: '\uD83C\uDFEA', color: '#3B82F6' },
+] as const;
+
+/** Map mood id to Turkish display label */
+const MOOD_LABEL_MAP: Record<string, { label: string; emoji: string; color: string }> = {};
+for (const m of MOOD_OPTIONS) {
+  MOOD_LABEL_MAP[m.id] = { label: m.label, emoji: m.emoji, color: m.color };
+}
 
 // ═════════════════════════════════════════════════════════════════════════════
 // ── Main Component ──────────────────────────────────────────────────────────
@@ -222,6 +268,66 @@ export const ProfileScreen: React.FC = () => {
   const packageTier = user?.packageTier ?? 'FREE';
   const fetchMatches = useMatchStore((state) => state.fetchMatches);
   // Listening status removed — music feature removed
+
+  // ── Profile Strength animation (reanimated) ───────────────────────────────
+  const prevCompletionPercent = useRef(completionPercent);
+  const strengthProgressWidth = useSharedValue(completionPercent / 100);
+  const celebrationScale = useSharedValue(0);
+  const celebrationOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    if (completionPercent > prevCompletionPercent.current) {
+      // Animate progress bar fill
+      strengthProgressWidth.value = withTiming(completionPercent / 100, { duration: 800 });
+
+      // Haptic feedback on increase
+      notificationAsync('success');
+
+      // Celebration at 100%
+      if (completionPercent >= 100) {
+        celebrationScale.value = withSequence(
+          withSpring(1.3, { damping: 6 }),
+          withSpring(1.0, { damping: 10 }),
+        );
+        celebrationOpacity.value = withSequence(
+          withTiming(1, { duration: 200 }),
+          withDelay(1000, withTiming(0, { duration: 500 })),
+        );
+      }
+    } else {
+      // Initial render or decrease — set immediately
+      strengthProgressWidth.value = withTiming(completionPercent / 100, { duration: 400 });
+    }
+    prevCompletionPercent.current = completionPercent;
+  }, [completionPercent, strengthProgressWidth, celebrationScale, celebrationOpacity]);
+
+  const strengthFillAnimatedStyle = useAnimatedStyle(() => ({
+    width: `${strengthProgressWidth.value * 100}%`,
+  }));
+
+  const celebrationAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: celebrationOpacity.value,
+    transform: [{ scale: celebrationScale.value }],
+  }));
+
+  // Mood state (Anlık Ruh Hali)
+  const [currentMood, setCurrentMood] = useState<string | null>(null);
+  const [moodLoading, setMoodLoading] = useState(false);
+
+  const handleMoodPress = useCallback(async (moodId: string) => {
+    if (moodLoading) return;
+    setMoodLoading(true);
+    try {
+      // Tapping same mood = clear, tapping different = set new
+      const newMood = currentMood === moodId ? null : moodId;
+      const result = await profileService.setMood(newMood);
+      setCurrentMood(result.mood);
+    } catch {
+      // Silently fail
+    } finally {
+      setMoodLoading(false);
+    }
+  }, [currentMood, moodLoading]);
 
   // My posts state
   const [myPosts, setMyPosts] = useState<FeedPost[]>([]);
@@ -378,6 +484,22 @@ export const ProfileScreen: React.FC = () => {
     navigation.navigate('BoostMarket');
   }, [navigation]);
 
+  // Fetch current mood from profile API
+  const fetchMood = useCallback(async () => {
+    try {
+      const userId = user?.id;
+      if (!userId) return;
+      const res = await api.get<{ mood: string | null; isActive: boolean }>(`/profiles/mood/${userId}`);
+      if (res.data.isActive && res.data.mood) {
+        setCurrentMood(res.data.mood);
+      } else {
+        setCurrentMood(null);
+      }
+    } catch {
+      // Silently fail — mood is non-critical
+    }
+  }, [user?.id]);
+
   // Pull-to-refresh handler — re-fetches all profile data
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -389,11 +511,12 @@ export const ProfileScreen: React.FC = () => {
         fetchBoostStatus(),
         fetchMyPosts(),
         fetchFollowCounts(),
+        fetchMood(),
       ]);
     } finally {
       setIsRefreshing(false);
     }
-  }, [fetchProfile, fetchStrength, fetchWeeklyViews, fetchBoostStatus, fetchMyPosts, fetchFollowCounts]);
+  }, [fetchProfile, fetchStrength, fetchWeeklyViews, fetchBoostStatus, fetchMyPosts, fetchFollowCounts, fetchMood]);
 
   useEffect(() => {
     fetchProfile();
@@ -403,7 +526,8 @@ export const ProfileScreen: React.FC = () => {
     fetchMatches();
     fetchMyPosts();
     fetchFollowCounts();
-  }, [fetchProfile, fetchStrength, fetchWeeklyViews, fetchBoostStatus, fetchMatches, fetchMyPosts, fetchFollowCounts]);
+    fetchMood();
+  }, [fetchProfile, fetchStrength, fetchWeeklyViews, fetchBoostStatus, fetchMatches, fetchMyPosts, fetchFollowCounts, fetchMood]);
 
   // Shimmer for loading
   useEffect(() => {
@@ -443,12 +567,7 @@ export const ProfileScreen: React.FC = () => {
         <View style={styles.headerBar}>
           <Text style={styles.headerTitle}>Profil</Text>
         </View>
-        <View style={styles.skeletonContainer}>
-          <Animated.View style={[styles.skeletonAvatar, { opacity: shimmerAnim }]} />
-          <Animated.View style={[styles.skeletonNameBlock, { opacity: shimmerAnim }]} />
-          <Animated.View style={[styles.skeletonCardBlock, { opacity: shimmerAnim }]} />
-          <Animated.View style={[styles.skeletonCardBlock, { opacity: shimmerAnim }]} />
-        </View>
+        <ProfileSkeleton />
       </View>
     );
   }
@@ -470,7 +589,7 @@ export const ProfileScreen: React.FC = () => {
     { icon: 'fitness-outline', iconBg: 'rgba(59, 130, 246, 0.10)', label: 'Spor', value: profile.sports ? translateSports(profile.sports) : 'Belirtilmedi' },
     { icon: 'star-outline', iconBg: 'rgba(245, 158, 11, 0.10)', label: 'Burç', value: profile.zodiacSign ? profile.zodiacSign : 'Belirtilmedi' },
     { icon: 'paw-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'Evcil Hayvan', value: profile.pets ? profile.pets : 'Belirtilmedi' },
-    { icon: 'wine-outline', iconBg: 'rgba(139, 92, 246, 0.10)', label: 'Alkol', value: profile.alcohol ? profile.alcohol : 'Belirtilmedi' },
+    { icon: 'wine-outline', iconBg: 'rgba(139, 92, 246, 0.10)', label: 'Alkol', value: profile.alcohol ? translateDrinking(profile.alcohol) : 'Belirtilmedi' },
     { icon: 'leaf-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'Din', value: profile.religion ? profile.religion : 'Belirtilmedi' },
     { icon: 'heart-half-outline', iconBg: 'rgba(236, 72, 153, 0.10)', label: 'Medeni Durum', value: profile.maritalStatus ? profile.maritalStatus : 'Belirtilmedi' },
     { icon: 'ribbon-outline', iconBg: 'rgba(59, 130, 246, 0.10)', label: 'Eğitim Seviyesi', value: profile.educationLevel ? profile.educationLevel : 'Belirtilmedi' },
@@ -537,6 +656,49 @@ export const ProfileScreen: React.FC = () => {
         )}
       </View>
 
+      {/* Mood selector — Anlık Ruh Hali */}
+      <View style={styles.moodSection}>
+        <Text style={styles.moodSectionTitle}>Anlık Ruh Halin</Text>
+        <HScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.moodChipsContainer}
+        >
+          {MOOD_OPTIONS.map((mood) => {
+            const isSelected = currentMood === mood.id;
+            return (
+              <TouchableOpacity
+                key={mood.id}
+                style={[
+                  styles.moodChip,
+                  isSelected
+                    ? { backgroundColor: mood.color, borderColor: mood.color }
+                    : { backgroundColor: 'transparent', borderColor: colors.surfaceBorder },
+                ]}
+                onPress={() => handleMoodPress(mood.id)}
+                activeOpacity={0.7}
+                disabled={moodLoading}
+                accessibilityLabel={`${mood.label} ${isSelected ? '(aktif)' : ''}`}
+                accessibilityRole="button"
+              >
+                {isSelected && <View style={styles.moodActiveDot} />}
+                <Text style={styles.moodChipEmoji}>{mood.emoji}</Text>
+                <Text
+                  style={[
+                    styles.moodChipLabel,
+                    isSelected
+                      ? { color: '#FFFFFF' }
+                      : { color: colors.textSecondary },
+                  ]}
+                >
+                  {mood.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </HScrollView>
+      </View>
+
       {/* Premium stats row — tappable */}
       <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
         <TouchableOpacity
@@ -591,23 +753,23 @@ export const ProfileScreen: React.FC = () => {
         <View style={styles.actionButtonFlex}>
           <GoldShimmerButton
             onPress={() => navigation.navigate('MembershipPlans')}
-            label={packageTier === 'FREE' ? "Premium'a Geç" : packageTier === 'RESERVED' ? 'Supreme' : packageTier === 'PRO' ? 'Pro Üye' : 'Premium Üye'}
-            icon={packageTier === 'RESERVED' ? 'diamond' : packageTier === 'FREE' ? 'rocket' : 'star'}
+            label={packageTier === 'FREE' ? "Premium'a Geç" : packageTier === 'SUPREME' ? 'Supreme' : 'Premium Üye'}
+            icon={packageTier === 'SUPREME' ? 'diamond' : packageTier === 'FREE' ? 'rocket' : 'star'}
           />
         </View>
       </View>
 
-      {/* Profile strength card */}
+      {/* Profile strength card — animated fill + celebration */}
       <TouchableOpacity onPress={handleEditProfile} activeOpacity={0.7} style={styles.strengthCardContainer} accessibilityLabel={`Profil gücün yüzde ${completionPercent}, düzenlemek için dokunun`} accessibilityRole="button">
         <View style={styles.strengthCardRow}>
           <Text style={styles.strengthCardLabel}>Profil Gücün</Text>
           <View style={styles.strengthCardTrack}>
-            <View style={[
+            <ReAnimated.View style={[
               styles.strengthCardFill,
               {
-                width: `${Math.min(completionPercent, 100)}%`,
                 backgroundColor: completionPercent >= 85 ? '#22C55E' : completionPercent >= 60 ? palette.purple[500] : completionPercent >= 30 ? '#F59E0B' : '#EF4444',
               },
+              strengthFillAnimatedStyle,
             ]} />
           </View>
           <Text style={[
@@ -616,6 +778,10 @@ export const ProfileScreen: React.FC = () => {
               color: completionPercent >= 85 ? '#22C55E' : completionPercent >= 60 ? palette.purple[500] : completionPercent >= 30 ? '#F59E0B' : '#EF4444',
             },
           ]}>%{completionPercent}</Text>
+          {/* 100% celebration emoji */}
+          <ReAnimated.View style={[styles.celebrationEmoji, celebrationAnimatedStyle]} pointerEvents="none">
+            <Text style={styles.celebrationEmojiText}>{'\uD83C\uDF89'}</Text>
+          </ReAnimated.View>
         </View>
         {completionPercent < 100 && (
           <Text style={styles.strengthCardHint}>
@@ -626,9 +792,42 @@ export const ProfileScreen: React.FC = () => {
           </Text>
         )}
         {completionPercent >= 100 && (
-          <Text style={styles.strengthCardComplete}>✨ Profilin tamamlanmış!</Text>
+          <Text style={styles.strengthCardComplete}>{'\u2728'} Profilin tamamlanmış!</Text>
         )}
       </TouchableOpacity>
+
+      {/* Uyum Analizi completion reminder card */}
+      {(() => {
+        const answeredCount = profile.answers ? Object.keys(profile.answers).length : 0;
+        const isUyumComplete = answeredCount >= 20;
+        if (!isUyumComplete) {
+          const remainingPercent = 100 - Math.round((answeredCount / 20) * 100);
+          return (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Questions', { editMode: true })}
+              activeOpacity={0.8}
+              style={styles.uyumReminderCard}
+              accessibilityLabel={`Uyum analizini tamamla, ${answeredCount} / 20 soru tamamlandı`}
+              accessibilityRole="button"
+              testID="profile-uyum-reminder"
+            >
+              <View style={styles.uyumReminderRow}>
+                <View style={styles.uyumReminderIconContainer}>
+                  <Text style={styles.uyumReminderIcon}>{'\uD83D\uDCCA'}</Text>
+                </View>
+                <View style={styles.uyumReminderContent}>
+                  <Text style={styles.uyumReminderTitle}>Uyum Analizini Tamamla</Text>
+                  <Text style={styles.uyumReminderSubtitle}>
+                    {answeredCount}/20 soru tamamland{'\u0131'} — %{remainingPercent} kald{'\u0131'}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={palette.purple[400]} />
+              </View>
+            </TouchableOpacity>
+          );
+        }
+        return null;
+      })()}
 
       {/* Boost card */}
       <TouchableOpacity
@@ -667,7 +866,7 @@ export const ProfileScreen: React.FC = () => {
         </View>
       </TouchableOpacity>
 
-      {/* Weekly views — compact inline (GOLD+ sees count, FREE sees teaser) */}
+      {/* Weekly views — compact inline (PREMIUM+ sees count, FREE sees teaser) */}
       {weeklyViewCount !== null && weeklyViewCount > 0 && (
         packageTier === 'FREE' ? (
           <TouchableOpacity
@@ -697,6 +896,80 @@ export const ProfileScreen: React.FC = () => {
   // ── Info Sections (interleaved with photos) ─────────────────────────────────
   const infoSections: React.ReactNode[] = [];
 
+  // 0. Gonderilerim — recent posts preview with like/comment counts
+  infoSections.push(
+    <View key="my-posts" style={styles.section}>
+      <View style={styles.myPostsHeader}>
+        <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>
+          Gonderilerim ({myPosts.length})
+        </Text>
+        {myPosts.length > 0 && (
+          <TouchableOpacity
+            onPress={() => navigation.navigate('MyPosts')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.myPostsSeeAll}>Tumunu Gor</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+      {myPosts.length === 0 ? (
+        <View style={styles.myPostsEmpty}>
+          <Text style={styles.myPostsEmptyText}>
+            Henuz gonderin yok {'\u2014'} ilk gonderini paylas!
+          </Text>
+        </View>
+      ) : (
+        <View style={styles.myPostsList}>
+          {myPosts.slice(0, 4).map((post) => {
+            const hasPhoto = post.photoUrls.length > 0;
+            const snippet = post.content.length > 60
+              ? post.content.substring(0, 60) + '...'
+              : post.content;
+            return (
+              <TouchableOpacity
+                key={post.id}
+                style={styles.myPostCard}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate('MyPosts')}
+              >
+                {hasPhoto && (
+                  <Image
+                    source={{ uri: post.photoUrls[0] }}
+                    style={styles.myPostThumb}
+                    resizeMode="cover"
+                  />
+                )}
+                {!hasPhoto && post.videoUrl && (
+                  <View style={[styles.myPostThumb, styles.myPostVideoPlaceholder]}>
+                    <Ionicons name="videocam" size={16} color={palette.purple[300]} />
+                  </View>
+                )}
+                <View style={styles.myPostInfo}>
+                  {snippet.length > 0 && (
+                    <Text style={styles.myPostSnippet} numberOfLines={2}>
+                      {snippet}
+                    </Text>
+                  )}
+                  <View style={styles.myPostStats}>
+                    <View style={styles.myPostStatItem}>
+                      <Ionicons name="heart" size={12} color="#EF4444" />
+                      <Text style={styles.myPostStatText}>{post.likeCount}</Text>
+                    </View>
+                    <View style={styles.myPostStatItem}>
+                      <Ionicons name="chatbubble" size={12} color="#9CA3AF" />
+                      <Text style={styles.myPostStatText}>{post.commentCount}</Text>
+                    </View>
+                    <Text style={styles.myPostTime}>{formatTimeAgo(post.createdAt)}</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
+    </View>,
+  );
+
   // 1. Hakkında — bio + lookingFor chips
   infoSections.push(
     <View key="about" style={styles.section}>
@@ -708,9 +981,15 @@ export const ProfileScreen: React.FC = () => {
           <View style={styles.chipRow}>
             <View style={styles.lookingForChip}>
               <Text style={styles.lookingForChipText}>
-                {profile.intentionTag === 'MARRIAGE' ? 'Evlenmek'
+                {profile.intentionTag === 'EVLENMEK' ? 'Evlenmek'
+                  : profile.intentionTag === 'ILISKI' ? 'Bir ilişki bulmak'
+                  : profile.intentionTag === 'SOHBET_ARKADAS' ? 'Sohbet / Arkadaşlık'
+                  : profile.intentionTag === 'KULTUR' ? 'Kültürleri öğrenmek'
+                  : profile.intentionTag === 'DUNYA_GEZME' ? 'Dünyayı gezmek'
+                  // Legacy keys
+                  : profile.intentionTag === 'MARRIAGE' ? 'Evlenmek'
                   : profile.intentionTag === 'SERIOUS_RELATIONSHIP' ? 'Bir ilişki bulmak'
-                  : profile.intentionTag === 'FRIENDSHIP' ? 'Sohbet ve arkadaşlık'
+                  : profile.intentionTag === 'FRIENDSHIP' ? 'Sohbet / Arkadaşlık'
                   : profile.intentionTag === 'LEARN_CULTURES' ? 'Kültürleri öğrenmek'
                   : profile.intentionTag === 'TRAVEL' ? 'Dünyayı gezmek'
                   : profile.intentionTag}
@@ -842,6 +1121,27 @@ export const ProfileScreen: React.FC = () => {
         }}
       />
     </View>,
+  );
+
+  // 9. Haftalik Uyum Raporu card
+  infoSections.push(
+    <TouchableOpacity
+      key="weekly-report"
+      style={styles.weeklyReportCard}
+      activeOpacity={0.8}
+      onPress={() => navigation.navigate('WeeklyReport')}
+      accessibilityLabel="Haftalik Uyum Raporu"
+      accessibilityRole="button"
+    >
+      <View style={styles.weeklyReportLeft}>
+        <Text style={styles.weeklyReportIcon}>📊</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.weeklyReportTitle}>Haftalik Uyum Raporu</Text>
+          <Text style={styles.weeklyReportSubtitle}>Bu haftanin istatistiklerini gor</Text>
+        </View>
+      </View>
+      <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.4)" />
+    </TouchableOpacity>,
   );
 
   return (
@@ -1071,6 +1371,14 @@ const styles = StyleSheet.create({
     color: '#22C55E',
     marginTop: 6,
   },
+  celebrationEmoji: {
+    position: 'absolute',
+    right: -8,
+    top: -12,
+  },
+  celebrationEmojiText: {
+    fontSize: 24,
+  },
   intentionChip: {
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.md,
@@ -1219,6 +1527,45 @@ const styles = StyleSheet.create({
   weeklyViewsGoldCta: {
     fontWeight: fontWeights.semibold,
     color: palette.gold[500],
+  },
+
+  // ── Mood selector (Anlık Ruh Hali) ──
+  moodSection: {
+    marginTop: 4,
+    gap: 8,
+  },
+  moodSectionTitle: {
+    fontSize: 13,
+    fontWeight: fontWeights.medium,
+    color: colors.textSecondary,
+  },
+  moodChipsContainer: {
+    gap: 8,
+    paddingRight: spacing.sm,
+  },
+  moodChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: borderRadius.full,
+    borderWidth: 1.5,
+  },
+  moodChipEmoji: {
+    fontSize: 14,
+    includeFontPadding: false,
+  },
+  moodChipLabel: {
+    fontSize: 12,
+    fontWeight: fontWeights.medium,
+    includeFontPadding: false,
+  },
+  moodActiveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#FFFFFF',
   },
 
   // ── Listening status section ──
@@ -1429,6 +1776,50 @@ const styles = StyleSheet.create({
     letterSpacing: 0.1,
   },
 
+  // ── Uyum Analizi reminder card ──
+  uyumReminderCard: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    borderWidth: 1.5,
+    borderColor: palette.purple[500] + '50',
+    backgroundColor: 'rgba(139, 92, 246, 0.06)',
+    ...shadows.small,
+    shadowColor: palette.purple[500],
+    shadowOpacity: 0.08,
+  },
+  uyumReminderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  uyumReminderIconContainer: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(139, 92, 246, 0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  uyumReminderIcon: {
+    fontSize: 20,
+  },
+  uyumReminderContent: {
+    flex: 1,
+  },
+  uyumReminderTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: palette.purple[600],
+    marginBottom: 2,
+  },
+  uyumReminderSubtitle: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: colors.textSecondary,
+  },
+
   // ── Boost card ──
   boostCard: {
     marginHorizontal: spacing.lg,
@@ -1515,5 +1906,116 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: borderRadius.lg,
     backgroundColor: colors.surfaceLight,
+  },
+
+  // ── Gonderilerim (My Posts) ──
+  myPostsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  myPostsSeeAll: {
+    fontSize: 13,
+    fontWeight: fontWeights.semibold,
+    color: palette.purple[500],
+  },
+  myPostsEmpty: {
+    paddingVertical: spacing.lg,
+    alignItems: 'center',
+  },
+  myPostsEmptyText: {
+    fontSize: 14,
+    fontWeight: fontWeights.regular,
+    color: colors.textTertiary,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  myPostsList: {
+    gap: spacing.sm,
+  },
+  myPostCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.smd,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  myPostThumb: {
+    width: 52,
+    height: 52,
+    borderRadius: borderRadius.sm,
+    backgroundColor: colors.surfaceLight,
+    marginRight: spacing.smd,
+  },
+  myPostVideoPlaceholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  myPostInfo: {
+    flex: 1,
+    gap: 4,
+  },
+  myPostSnippet: {
+    fontSize: 13,
+    fontWeight: fontWeights.medium,
+    color: colors.text,
+    lineHeight: 18,
+  },
+  myPostStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.smd,
+  },
+  myPostStatItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  myPostStatText: {
+    fontSize: 12,
+    fontWeight: fontWeights.medium,
+    color: colors.textSecondary,
+  },
+  myPostTime: {
+    fontSize: 11,
+    fontWeight: fontWeights.regular,
+    color: colors.textTertiary,
+  },
+
+  // ── Haftalik Uyum Raporu card ──
+  weeklyReportCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.smd,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(139,92,246,0.25)',
+  },
+  weeklyReportLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: spacing.smd,
+  },
+  weeklyReportIcon: {
+    fontSize: 24,
+  },
+  weeklyReportTitle: {
+    fontSize: 15,
+    fontWeight: fontWeights.semibold,
+    color: '#FFFFFF',
+  },
+  weeklyReportSubtitle: {
+    fontSize: 12,
+    fontWeight: fontWeights.regular,
+    color: 'rgba(255,255,255,0.5)',
+    marginTop: 2,
   },
 });

@@ -21,7 +21,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MatchesStackParamList } from '../../navigation/types';
 import type { ProfileViewer } from '@luma/shared';
-import { GOLD_COSTS } from '@luma/shared';
+import { JETON_COSTS } from '@luma/shared';
 import { useViewersStore } from '../../stores/viewersStore';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
 import { colors, palette } from '../../theme/colors';
@@ -760,7 +760,7 @@ const ViewerDetailSheet: React.FC<ViewerDetailSheetProps> = ({
               <Ionicons name="chatbubble-outline" size={16} color={colors.primary} />
               <Text style={sheetStyles.secondaryCTAText}>Mesaj Gönder</Text>
               <View style={sheetStyles.jetonBadge}>
-                <Text style={sheetStyles.jetonText}>{'💰'} {GOLD_COSTS.SEND_MESSAGE}</Text>
+                <Text style={sheetStyles.jetonText}>{'💰'} {JETON_COSTS.SEND_MESSAGE}</Text>
               </View>
             </View>
           </Pressable>

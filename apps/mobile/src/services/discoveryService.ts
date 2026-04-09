@@ -41,7 +41,7 @@ export interface FeedCard {
   job?: string;
   education?: string;
   /** Subscription tier of the user */
-  packageTier?: 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
+  packageTier?: 'FREE' | 'PREMIUM' | 'SUPREME';
   /** Profile prompts (Hinge-style question + answer) */
   prompts?: Array<{ id: string; question: string; answer: string; order: number }>;
   /** Favorite spots/locations */
@@ -139,6 +139,26 @@ export interface DailyPicksResponse {
   totalAvailable: number; // 3 for Free, 10 for Gold+
 }
 
+// ─── Daily Match (Günün Eşleşmesi) ─────────────────────────────
+
+export interface DailyMatchUser {
+  userId: string;
+  firstName: string;
+  age: number | null;
+  city: string | null;
+  photoUrl: string | null;
+  compatibilityScore: number;
+  isSuperCompatible: boolean;
+}
+
+export interface DailyMatchResponse {
+  match: DailyMatchUser | null;
+  remaining: number;
+  nextAvailableAt: string | null;
+  limit: number;
+  period: 'daily' | 'weekly';
+}
+
 // ─── Login Streak ──────────────────────────────────────────────
 
 export interface LoginStreakResponse {
@@ -195,6 +215,38 @@ export interface PersonalityResponse {
   enneagramType: string | null;
 }
 
+// ─── Weekly Report (Haftalik Uyum Raporu) ────────────────────
+
+/** Info about the highest-compatibility match of the week */
+export interface TopCompatMatchInfo {
+  userId: string;
+  firstName: string;
+  compatibilityScore: number;
+  matchedAt: string;
+}
+
+/** A trending interest tag in the user's area */
+export interface TrendingInterest {
+  tag: string;
+  count: number;
+}
+
+export interface WeeklyReportResponse {
+  weekStart: string;
+  totalSwipes: number;
+  totalLikes: number;
+  totalMatches: number;
+  avgCompatibility: number;
+  topCategory: string | null;
+  messagesExchanged: number;
+  mostActiveDay: string | null;
+  likeRate: number;
+  likesReceived: number;
+  topCompatibilityMatch: TopCompatMatchInfo | null;
+  trendingInterests: TrendingInterest[];
+  insights: string[];
+}
+
 // ─── Send Greeting (Selam Gonder) ─────────────────────────────
 
 export interface SendGreetingResponse {
@@ -241,7 +293,7 @@ const MOCK_CARDS: FeedCard[] = [
     ],
     favoriteSpots: [
       { name: 'Bebek Sahili', category: 'sahil' },
-      { name: 'Kadikoy', category: 'semt' },
+      { name: 'Kadıköy', category: 'semt' },
       { name: 'Cihangir', category: 'semt' },
     ],
   },
@@ -278,9 +330,9 @@ const MOCK_CARDS: FeedCard[] = [
       { id: 'p2-3', question: 'En cok deger verdigim...', answer: 'Samimiyet ve yaraticilik', order: 2 },
     ],
     favoriteSpots: [
-      { name: 'Belgrad Ormani', category: 'park' },
+      { name: 'Belgrad Ormanı', category: 'park' },
       { name: 'Moda Sahili', category: 'sahil' },
-      { name: 'Karakoy', category: 'semt' },
+      { name: 'Karaköy', category: 'semt' },
     ],
   },
   {
@@ -318,9 +370,9 @@ const MOCK_CARDS: FeedCard[] = [
       { id: 'p3-3', question: 'Ilk bulusmada...', answer: 'Acik havada yürüyüş ve samimi bir sohbet tercih ederim', order: 2 },
     ],
     favoriteSpots: [
-      { name: 'Kiz Kulesi', category: 'tarihi' },
-      { name: 'Nisantasi', category: 'semt' },
-      { name: 'Camlica Tepesi', category: 'doga' },
+      { name: 'Kız Kulesi', category: 'tarihi' },
+      { name: 'Nişantaşı', category: 'semt' },
+      { name: 'Çamlıca Tepesi', category: 'doga' },
     ],
   },
   {
@@ -355,7 +407,7 @@ const MOCK_CARDS: FeedCard[] = [
       { id: 'p4-2', question: 'En cok deger verdigim...', answer: 'Beraber sessizce ayni odada kitap okuyabilmek', order: 1 },
     ],
     favoriteSpots: [
-      { name: 'Ortakoy', category: 'semt' },
+      { name: 'Ortaköy', category: 'semt' },
       { name: 'Emirgan Korusu', category: 'park' },
       { name: 'Besiktas', category: 'semt' },
     ],
@@ -633,10 +685,10 @@ const MOCK_PROMPT_POOL: Array<{ question: string; answers: string[] }> = [
 
 // Mock favorite spots pool for generated cards
 const MOCK_FAVORITE_SPOTS_POOL: Array<Array<{ name: string; category: string }>> = [
-  [{ name: 'Bebek Sahili', category: 'sahil' }, { name: 'Kadikoy', category: 'semt' }, { name: 'Cihangir', category: 'semt' }],
-  [{ name: 'Belgrad Ormani', category: 'park' }, { name: 'Moda Sahili', category: 'sahil' }, { name: 'Karakoy', category: 'semt' }],
-  [{ name: 'Kiz Kulesi', category: 'tarihi' }, { name: 'Nisantasi', category: 'semt' }, { name: 'Camlica Tepesi', category: 'doga' }],
-  [{ name: 'Ortakoy', category: 'semt' }, { name: 'Emirgan Korusu', category: 'park' }, { name: 'Besiktas', category: 'semt' }],
+  [{ name: 'Bebek Sahili', category: 'sahil' }, { name: 'Kadıköy', category: 'semt' }, { name: 'Cihangir', category: 'semt' }],
+  [{ name: 'Belgrad Ormanı', category: 'park' }, { name: 'Moda Sahili', category: 'sahil' }, { name: 'Karaköy', category: 'semt' }],
+  [{ name: 'Kız Kulesi', category: 'tarihi' }, { name: 'Nişantaşı', category: 'semt' }, { name: 'Çamlıca Tepesi', category: 'doga' }],
+  [{ name: 'Ortaköy', category: 'semt' }, { name: 'Emirgan Korusu', category: 'park' }, { name: 'Besiktas', category: 'semt' }],
   [{ name: 'Balat', category: 'semt' }, { name: 'Galata Kulesi', category: 'tarihi' }, { name: 'Princes Adalari', category: 'doga' }],
   [{ name: 'Rumeli Hisari', category: 'tarihi' }, { name: 'Macka Parki', category: 'park' }, { name: 'Arnavutkoy', category: 'semt' }],
   [{ name: 'Konyaalti Sahili', category: 'sahil' }, { name: 'Duden Selalesi', category: 'doga' }, { name: 'Kaleici', category: 'tarihi' }],
@@ -947,6 +999,22 @@ export const discoveryService = {
     }
   },
 
+  // ── Daily Match (Günün Eşleşmesi) ──────────────────────────
+  getDailyMatch: async (): Promise<DailyMatchResponse> => {
+    try {
+      const response = await api.get<DailyMatchResponse>('/matches/daily');
+      return response.data;
+    } catch (error) {
+      return devMockOrThrow(error, {
+        match: null,
+        remaining: 0,
+        nextAvailableAt: null,
+        limit: 1,
+        period: 'weekly' as const,
+      }, 'discoveryService.getDailyMatch');
+    }
+  },
+
   // ── Daily Picks ────────────────────────────────────────────
   getDailyPicks: async (): Promise<DailyPicksResponse> => {
     const response = await api.get<DailyPicksResponse>('/discovery/daily-picks');
@@ -1043,6 +1111,30 @@ export const discoveryService = {
     } catch {
       // Profile not found or API down
       return null;
+    }
+  },
+
+  // ── Weekly Report (Haftalik Uyum Raporu) ───────────────────
+  getWeeklyReport: async (): Promise<WeeklyReportResponse> => {
+    try {
+      const response = await api.get<WeeklyReportResponse>('/discovery/weekly-report');
+      return response.data;
+    } catch (error) {
+      return devMockOrThrow<WeeklyReportResponse>(error, {
+        weekStart: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+        totalSwipes: 42,
+        totalLikes: 18,
+        totalMatches: 3,
+        avgCompatibility: 76,
+        topCategory: 'İletişim Tarzı',
+        messagesExchanged: 27,
+        mostActiveDay: 'Çarşamba',
+        likeRate: 42.86,
+        likesReceived: 12,
+        topCompatibilityMatch: null,
+        trendingInterests: [],
+        insights: ['Harika bir hafta! 3 yeni eslesme kazandin'],
+      }, 'discoveryService.getWeeklyReport');
     }
   },
 

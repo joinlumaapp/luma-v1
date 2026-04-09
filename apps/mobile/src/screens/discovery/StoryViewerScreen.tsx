@@ -582,7 +582,7 @@ export const StoryViewerScreen: React.FC = () => {
   const authUserId = useAuthStore((s) => s.user?.id);
   const packageTier: PackageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE');
   const isOwnStory = currentUser.userId === authUserId;
-  const canSeeViewerDetails = hasTierAccess(packageTier, 'PRO');
+  const canSeeViewerDetails = hasTierAccess(packageTier, 'SUPREME');
 
   return (
     <View style={styles.container}>
@@ -668,7 +668,7 @@ export const StoryViewerScreen: React.FC = () => {
         style={[styles.footer, { bottom: insets.bottom + 12 }]}
       >
         {isOwnStory ? (
-          // Own story — show viewer count (details gated behind PRO+)
+          // Own story — show viewer count (details gated behind Supreme)
           <View style={styles.ownStoryFooter}>
             <TouchableOpacity
               style={styles.viewersButton}
@@ -682,7 +682,7 @@ export const StoryViewerScreen: React.FC = () => {
             </TouchableOpacity>
             {!canSeeViewerDetails && (
               <Text style={styles.viewerUpsellText}>
-                PRO ile kimlerin gördüğünü öğren
+                Supreme ile kimlerin gördüğünü öğren
               </Text>
             )}
           </View>

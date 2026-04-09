@@ -8,7 +8,7 @@ import { api, parseApiError } from '../services/api';
 import { paymentService } from '../services/paymentService';
 import { iapService } from '../services/iapService';
 import { devMockOrThrow } from '../utils/mockGuard';
-import { GOLD_COSTS } from '@luma/shared';
+import { JETON_COSTS } from '@luma/shared';
 import type { AxiosError } from 'axios';
 
 export interface CoinPack {
@@ -26,22 +26,22 @@ export const COIN_PACKS: CoinPack[] = [
   { id: 'gold_1000', coins: 1000, price: '349,99₺' },
 ];
 
-// ── Spend costs — derived from authoritative GOLD_COSTS in @luma/shared ──
-export const DM_COST = GOLD_COSTS.SEND_MESSAGE;                      // 150 — paid DM to non-match
+// ── Spend costs — derived from authoritative JETON_COSTS in @luma/shared ──
+export const DM_COST = JETON_COSTS.SEND_MESSAGE;                      // 150 — paid DM to non-match
 export const AD_REWARD_MIN = 5;
 export const AD_REWARD_MAX = 10;
 
-export const INSTANT_MESSAGE_COST = GOLD_COSTS.SEND_MESSAGE;         // 150 — paid message to non-match
-export const PROFILE_BOOST_COST = GOLD_COSTS.PROFILE_BOOST;          // 100 — 24h profile boost
-export const EXTRA_LIKES_COST = GOLD_COSTS.EXTRA_LIKES_REVEAL;       // 20 — buy 5 extra likes
-export const PROFILE_HIGHLIGHT_COST = GOLD_COSTS.PRIORITY_VISIBILITY_1H; // 60 — highlight profile 1 hour
-export const PRIORITY_MESSAGE_COST = GOLD_COSTS.PRIORITY_MESSAGE;    // 40 — priority message (shown first)
-export const UNDO_SWIPE_COST = GOLD_COSTS.UNDO_PASS;                 // 30 — undo a passed profile
-export const SUGGESTED_STORY_VIEW_COST = GOLD_COSTS.SUGGESTED_STORY_VIEW; // 20 — view suggested story
-export const FLIRT_START_COST = GOLD_COSTS.FLIRT_START;               // 25 — flirt beyond daily limit
-export const SURPRISE_MATCH_COST = GOLD_COSTS.GREETING;              // 50 — Canlı Keşfet first match
-export const SURPRISE_SWITCH_COST = GOLD_COSTS.SUPER_LIKE;           // 25 — Canlı Keşfet switch
-export const GREETING_COST = GOLD_COSTS.GREETING;                    // 50 — Selam Gönder greeting
+export const INSTANT_MESSAGE_COST = JETON_COSTS.SEND_MESSAGE;         // 150 — paid message to non-match
+export const PROFILE_BOOST_COST = JETON_COSTS.PROFILE_BOOST;          // 100 — 24h profile boost
+export const EXTRA_LIKES_COST = JETON_COSTS.EXTRA_LIKES_REVEAL;       // 20 — buy 5 extra likes
+export const PROFILE_HIGHLIGHT_COST = JETON_COSTS.PRIORITY_VISIBILITY_1H; // 60 — highlight profile 1 hour
+export const PRIORITY_MESSAGE_COST = JETON_COSTS.PRIORITY_MESSAGE;    // 40 — priority message (shown first)
+export const UNDO_SWIPE_COST = JETON_COSTS.UNDO_PASS;                 // 30 — undo a passed profile
+export const SUGGESTED_STORY_VIEW_COST = JETON_COSTS.SUGGESTED_STORY_VIEW; // 20 — view suggested story
+export const FLIRT_START_COST = JETON_COSTS.FLIRT_START;               // 25 — flirt beyond daily limit
+export const SURPRISE_MATCH_COST = JETON_COSTS.GREETING;              // 50 — Canlı Keşfet first match
+export const SURPRISE_SWITCH_COST = JETON_COSTS.SUPER_LIKE;           // 25 — Canlı Keşfet switch
+export const GREETING_COST = JETON_COSTS.GREETING;                    // 50 — Selam Gönder greeting
 
 // ── Earn rewards ──
 export const WELCOME_BONUS = 100;              // New user gift

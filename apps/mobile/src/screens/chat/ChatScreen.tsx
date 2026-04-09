@@ -15,6 +15,7 @@ import {
   BackHandler,
   Platform,
   Animated,
+  Easing,
   ActivityIndicator,
   Image,
   Modal,
@@ -101,66 +102,80 @@ const groupMessagesByDate = (messages: ChatMessage[]): GroupedItem[] => {
   return result;
 };
 
-// Typing dots animation component
-const TypingIndicator: React.FC<{ partnerName: string }> = ({ partnerName }) => {
-  const dot1 = useRef(new Animated.Value(0)).current;
-  const dot2 = useRef(new Animated.Value(0)).current;
-  const dot3 = useRef(new Animated.Value(0)).current;
+// Typing dots animation component — 3 dots with staggered scale bounce
+// Each dot: scale 0.5→1→0.5, staggered 200ms apart, 400ms per half-cycle
+const TypingDot: React.FC<{ delay: number }> = React.memo(({ delay }) => {
+  const anim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const animateDot = (dot: Animated.Value, delay: number) => {
-      return Animated.loop(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(dot, {
-            toValue: 1,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-          Animated.timing(dot, {
-            toValue: 0,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-    };
+    const DOT_COUNT = 3;
+    const STAGGER = 200;
+    const HALF_CYCLE = 400;
 
-    const anim = Animated.parallel([
-      animateDot(dot1, 0),
-      animateDot(dot2, 200),
-      animateDot(dot3, 400),
-    ]);
-    anim.start();
-
-    return () => {
-      anim.stop();
-    };
-  }, [dot1, dot2, dot3]);
-
-  const getDotStyle = (dotAnim: Animated.Value) => ({
-    opacity: dotAnim.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0.3, 1],
-    }),
-    transform: [
-      {
-        translateY: dotAnim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0, -4],
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        // Scale up 0.5→1 + fade in
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: HALF_CYCLE,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
         }),
-      },
-    ],
-  });
+        // Scale down 1→0.5 + fade out
+        Animated.timing(anim, {
+          toValue: 0,
+          duration: HALF_CYCLE,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        // Pause so the wave looks natural before looping
+        Animated.delay((DOT_COUNT - 1) * STAGGER + 200 - delay),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [anim, delay]);
 
+  return (
+    <Animated.View
+      style={[
+        typingStyles.dot,
+        {
+          opacity: anim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0.3, 1],
+          }),
+          transform: [
+            {
+              scale: anim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.5, 1],
+              }),
+            },
+            {
+              translateY: anim.interpolate({
+                inputRange: [0, 0.5, 1],
+                outputRange: [0, -4, 0],
+              }),
+            },
+          ],
+        },
+      ]}
+    />
+  );
+});
+TypingDot.displayName = 'TypingDot';
+
+const TypingIndicator: React.FC<{ partnerName: string }> = ({ partnerName }) => {
   return (
     <View style={typingStyles.container}>
       <View style={typingStyles.bubble}>
         <Text style={typingStyles.name}>{partnerName}</Text>
         <View style={typingStyles.dotsRow}>
-          <Animated.View style={[typingStyles.dot, getDotStyle(dot1)]} />
-          <Animated.View style={[typingStyles.dot, getDotStyle(dot2)]} />
-          <Animated.View style={[typingStyles.dot, getDotStyle(dot3)]} />
+          <TypingDot delay={0} />
+          <TypingDot delay={200} />
+          <TypingDot delay={400} />
         </View>
       </View>
     </View>
@@ -390,9 +405,9 @@ export const ChatScreen: React.FC = () => {
   }, [messages.length]);
 
   const packageTier = useAuthStore((state) => state.user?.packageTier ?? 'FREE');
-  const showReadReceipts = packageTier === 'PRO' || packageTier === 'RESERVED';
+  const showReadReceipts = packageTier === 'PREMIUM' || packageTier === 'SUPREME';
 
-  // Read receipt upsell banner — shown once per chat session for FREE/GOLD users
+  // Read receipt upsell banner — shown once per chat session for FREE users
   const [readReceiptBannerDismissed, setReadReceiptBannerDismissed] = useState(false);
   const showReadReceiptUpsell = !showReadReceipts && !readReceiptBannerDismissed;
 
@@ -813,7 +828,7 @@ export const ChatScreen: React.FC = () => {
           />
         )}
 
-        {/* Read receipt upsell banner — one-time per session, FREE/GOLD only */}
+        {/* Read receipt upsell banner — one-time per session, FREE only */}
         {showReadReceiptUpsell && messages.length > 0 && (
           <TouchableOpacity
             style={styles.readReceiptUpsellBanner}
@@ -822,12 +837,12 @@ export const ChatScreen: React.FC = () => {
               navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' });
             }}
             activeOpacity={0.8}
-            accessibilityLabel="Okundu bilgisi PRO özelliği"
+            accessibilityLabel="Okundu bilgisi Premium özelliği"
             accessibilityRole="button"
             testID="chat-read-receipt-upsell"
           >
             <Text style={styles.readReceiptUpsellText}>
-              Mesajlarının okunup okunmadığını gör — PRO ile aç
+              Mesajlarının okunup okunmadığını gör — Premium ile aç
             </Text>
             <TouchableOpacity
               onPress={() => setReadReceiptBannerDismissed(true)}

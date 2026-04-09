@@ -22,7 +22,7 @@ export interface ConversationSummary {
   lastMessageAt: string;
   unreadCount: number;
   isOnline: boolean;
-  packageTier?: 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
+  packageTier?: 'FREE' | 'PREMIUM' | 'SUPREME';
 }
 
 export interface ConversationsResponse {

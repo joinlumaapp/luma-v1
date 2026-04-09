@@ -26,14 +26,6 @@ export const API_ROUTES = {
     TRACK_VIEW: '/profiles/view/:targetUserId',
     VISITORS: '/profiles/visitors',
     LOCATION: '/profiles/location',
-    COACH: '/profiles/coach',
-    PERSONALITY: '/profiles/personality',
-    GET_PROMPTS: '/profiles/:userId/prompts',
-    SAVE_PROMPTS: '/profiles/prompts',
-    BOOST_STATUS: '/profiles/boost/status',
-    BOOST: '/profiles/boost',
-    INCOGNITO: '/profiles/incognito',
-    LOGIN_STREAK: '/profiles/login-streak',
   },
   // Subsystem 5-6: Compatibility
   COMPATIBILITY: {
@@ -47,63 +39,46 @@ export const API_ROUTES = {
     DAILY_INSIGHT: '/compatibility/daily/insight',
     DAILY_STATS: '/compatibility/daily/stats/:questionId',
     DAILY_STREAK: '/compatibility/daily/streak',
-    GET_DETAILED: '/compatibility/detailed/:targetUserId',
   },
   // Subsystem 8: Discovery
   DISCOVERY: {
     GET_FEED: '/discovery/feed',
     SWIPE: '/discovery/swipe',
     UNDO: '/discovery/undo',
-    LIKES_YOU: '/discovery/likes-you',
-    DAILY_PICKS: '/discovery/daily-picks',
-    VIEW_DAILY_PICK: '/discovery/daily-picks/:pickedUserId/view', // PATCH
-    WEEKLY_REPORT: '/discovery/weekly-report',
-    PRIORITY_BOOST: '/discovery/priority-boost',
-    NEARBY_NOTIFY: '/discovery/nearby-notify',
-    SEND_GREETING: '/discovery/greeting',
   },
   // Subsystem 9: Matches
   MATCHES: {
     GET_ALL: '/matches',
     GET_ONE: '/matches/:id',
     UNMATCH: '/matches/:id',
-    CREATE_DATE_PLAN: '/matches/:matchId/date-plans',
-    GET_DATE_PLANS: '/matches/:matchId/date-plans',
-    RESPOND_DATE_PLAN: '/matches/date-plans/:planId/respond',
-    DELETE_DATE_PLAN: '/matches/date-plans/:planId',
-    // ─── Viewers (Kim Gördü) ──────────────────────────
-    GET_VIEWERS: '/matches/viewers',
-    // ─── Secret Admirer ───────────────────────────────
-    SEND_SECRET_ADMIRER: '/matches/secret-admirer',
-    GUESS_SECRET_ADMIRER: '/matches/secret-admirer/:id/guess',
-    GET_SECRET_ADMIRERS: '/matches/secret-admirers',
-    // ─── Weekly Top ───────────────────────────────────
-    GET_WEEKLY_TOP: '/matches/weekly-top',
-    // ─── Compatibility X-Ray ──────────────────────────
-    GET_COMPATIBILITY_XRAY: '/matches/:id/compatibility-xray',
-    // ─── Activity Strip ───────────────────────────────
-    GET_ACTIVITY_STRIP: '/matches/activity-strip',
-    // ─── Warm Banner ──────────────────────────────────
-    GET_WARM_BANNER: '/matches/warm-banner',
+    DAILY_MATCH: '/matches/daily',
   },
-  // Subsystem 11: Relationships
-  RELATIONSHIPS: {
-    ACTIVATE: '/relationships/activate',
-    DEACTIVATE: '/relationships/deactivate',
-    TOGGLE_VISIBILITY: '/relationships/visibility',
-    GET_STATUS: '/relationships/status',
-    GET_MILESTONES: '/relationships/milestones',
-    CONFIRM_DEACTIVATE: '/relationships/deactivate/confirm',
-    CANCEL_DEACTIVATE: '/relationships/deactivate/cancel',
-    COUPLE_MATCHES: '/relationships/couple-matches',
+  // Canlı (Live) — Random video matching
+  CANLI: {
+    START_SEARCH: '/canli/search',
+    CANCEL_SEARCH: '/canli/search/cancel',
+    END_SESSION: '/canli/sessions/:id/end',
+    SESSION_ACTION: '/canli/sessions/:id/action', // POST: takip_et, begen, sonraki
+    GET_HISTORY: '/canli/history',
   },
-  // Subsystem 12: Couples Club (routed through relationships controller)
-  COUPLES_CLUB: {
-    GET_EVENTS: '/relationships/events',
-    CREATE_EVENT: '/relationships/events',
-    RSVP_EVENT: '/relationships/events/:eventId/rsvp',
-    CANCEL_RSVP: '/relationships/events/:eventId/rsvp',
-    GET_LEADERBOARD: '/relationships/leaderboard',
+  // Akış (Feed) — Social feed with stories and posts
+  FEED: {
+    GET_POPULAR: '/feed/popular',
+    GET_FOLLOWING: '/feed/following',
+    CREATE_POST: '/feed/posts',
+    DELETE_POST: '/feed/posts/:postId',
+    LIKE_POST: '/feed/posts/:postId/like',
+    COMMENT_POST: '/feed/posts/:postId/comments',
+    GET_STORIES: '/feed/stories',
+    CREATE_STORY: '/feed/stories',
+    VIEW_STORY: '/feed/stories/:storyId/view',
+  },
+  // Follow system
+  FOLLOWS: {
+    FOLLOW: '/follows/:userId',
+    UNFOLLOW: '/follows/:userId',
+    GET_FOLLOWERS: '/follows/followers',
+    GET_FOLLOWING: '/follows/following',
   },
   // Subsystem 14: Badges
   BADGES: {
@@ -111,7 +86,13 @@ export const API_ROUTES = {
     GET_MY_BADGES: '/badges/me',
     GET_PROGRESS: '/badges/progress',
   },
-  // Subsystem 16-17: Gold
+  // Subsystem 16-17: Packages & Gold
+  PACKAGES: {
+    GET_ALL: '/packages',
+    SUBSCRIBE: '/packages/subscribe',
+    CANCEL: '/packages/cancel',
+    VALIDATE_RECEIPT: '/packages/validate-receipt',
+  },
   GOLD: {
     GET_BALANCE: '/gold/balance',
     GET_HISTORY: '/gold/history',
@@ -134,11 +115,10 @@ export const API_ROUTES = {
   // Subsystem 13: Places
   PLACES: {
     CHECK_IN: '/places/check-in',
-    GET_SHARED: '/places/shared/:partnerId',
+    GET_SHARED: '/places/shared',
     ADD_MEMORY: '/places/memories',
     GET_TIMELINE: '/places/timeline/:partnerId',
     GET_MY_CHECK_INS: '/places/my-check-ins',
-    GET_POPULAR: '/places/popular',
   },
   // Subsystem: Chat / Messaging
   CHAT: {
@@ -146,12 +126,10 @@ export const API_ROUTES = {
     GET_MESSAGES: '/chat/conversations/:matchId/messages',
     SEND_MESSAGE: '/chat/conversations/:matchId/messages',
     MARK_READ: '/chat/conversations/:matchId/read',
-    DELETE_MESSAGE: '/chat/messages/:messageId',
   },
   // Notifications
   NOTIFICATIONS: {
     GET_ALL: '/notifications',
-    BADGE_COUNT: '/notifications/badge-count',
     MARK_READ: '/notifications/read',
     MARK_ALL_READ: '/notifications/mark-all-read',
     GET_PREFERENCES: '/notifications/preferences',
@@ -168,7 +146,7 @@ export const API_ROUTES = {
   },
   // Mood System
   MOOD: {
-    SET: '/profiles/mood',           // PUT
+    SET: '/profiles/mood',           // PATCH
     GET: '/profiles/mood/:userId',   // GET
   },
   // Voice Intro
@@ -188,66 +166,6 @@ export const API_ROUTES = {
   REACTIONS: {
     TOGGLE: '/chat/messages/:messageId/react',   // POST
   },
-  // Subsystem 19: Analytics
-  ANALYTICS: {
-    BATCH_EVENTS: '/analytics/events',          // POST — receive client event batch
-    DASHBOARD: '/analytics/dashboard',          // GET — admin dashboard stats
-    RETENTION: '/analytics/retention',          // GET — retention cohorts
-    USER_FUNNEL: '/analytics/funnel/:userId',   // GET — single user funnel
-  },
-  // Stories
-  STORIES: {
-    LIST: '/stories',
-    CREATE: '/stories',
-    GET: '/stories/:storyId',
-    DELETE: '/stories/:storyId',
-    VIEW: '/stories/:storyId/view',
-    LIKE: '/stories/:storyId/like',
-    VIEWERS: '/stories/:storyId/viewers',
-    REPLY: '/stories/:storyId/reply',
-  },
-  // Posts (Gonderi — permanent feed posts)
-  POSTS: {
-    LIST: '/posts',                  // GET — feed posts (paginated)
-    CREATE: '/posts',                // POST — create post
-    MY: '/posts/my',                 // GET — own posts for profile
-    DELETE: '/posts/:postId',        // DELETE — soft delete own post
-    LIKE: '/posts/:postId/like',     // POST — toggle like
-    LIKERS: '/posts/:postId/likers', // GET — liker list (premium only)
-  },
-  // Engagement
-  ENGAGEMENT: {
-    DAILY_REWARD: '/engagement/daily-reward/claim',     // POST
-    CHALLENGE_PROGRESS: '/engagement/challenge/progress', // POST
-    LEADERBOARD: '/engagement/leaderboard',              // GET
-    ACHIEVEMENT_UNLOCK: '/engagement/achievement/unlock', // POST
-    EXTEND_MATCH: '/engagement/match/extend',            // POST
-    LIKES_TEASER: '/engagement/likes-teaser',            // GET
-  },
-  // Users
-  USERS: {
-    ME: '/users/me',           // GET
-    UPDATE: '/users/me',       // PATCH
-    FOLLOW: '/users/:userId/follow',  // POST (toggle)
-    FOLLOWERS: '/users/me/followers',  // GET
-    FOLLOWING: '/users/me/following',  // GET
-  },
-  // Call History
-  CALL_HISTORY: {
-    GET_ALL: '/call-history',           // GET (paginated)
-    GET_ONE: '/call-history/:callId',   // GET
-    DELETE: '/call-history/:callId',    // DELETE (soft)
-  },
-} as const;
-
-/**
- * @deprecated Use API_ROUTES.PAYMENTS instead. PACKAGES was consolidated into PAYMENTS.
- */
-export const PACKAGES_ROUTES = {
-  GET_ALL: API_ROUTES.PAYMENTS.GET_PACKAGES,
-  SUBSCRIBE: API_ROUTES.PAYMENTS.SUBSCRIBE,
-  CANCEL: API_ROUTES.PAYMENTS.CANCEL_SUBSCRIPTION,
-  VALIDATE_RECEIPT: API_ROUTES.PAYMENTS.VALIDATE_RECEIPT,
 } as const;
 
 // WebSocket events
@@ -255,6 +173,21 @@ export const WS_EVENTS = {
   // Connection
   CONNECT: 'connect',
   DISCONNECT: 'disconnect',
+  // Canlı (Live) — Random video matching
+  CANLI_SEARCHING: 'canli:searching',
+  CANLI_MATCH_FOUND: 'canli:match_found',
+  CANLI_SESSION_START: 'canli:session_start',
+  CANLI_SESSION_END: 'canli:session_end',
+  CANLI_USER_LEFT: 'canli:user_left',
+  // WebRTC Signaling — used by both Canlı and in-chat calls
+  WEBRTC_OFFER: 'webrtc:offer',
+  WEBRTC_ANSWER: 'webrtc:answer',
+  WEBRTC_ICE_CANDIDATE: 'webrtc:ice_candidate',
+  // Voice/Video calls (in messaging, between matched/friended users)
+  CALL_INITIATE: 'call:initiate',
+  CALL_ACCEPT: 'call:accept',
+  CALL_REJECT: 'call:reject',
+  CALL_END: 'call:end',
   // Chat / Messaging
   CHAT_JOIN: 'chat:join',
   CHAT_LEAVE: 'chat:leave',
@@ -262,21 +195,16 @@ export const WS_EVENTS = {
   CHAT_TYPING: 'chat:typing',
   CHAT_STOP_TYPING: 'chat:stop_typing',
   CHAT_READ: 'chat:read',
-  // Calls (voice/video)
-  CALL_INITIATE: 'call:initiate',
-  CALL_ACCEPT: 'call:accept',
-  CALL_REJECT: 'call:reject',
-  CALL_END: 'call:end',
-  CALL_BUSY: 'call:busy',
-  WEBRTC_OFFER: 'webrtc:offer',
-  WEBRTC_ANSWER: 'webrtc:answer',
-  WEBRTC_ICE_CANDIDATE: 'webrtc:ice_candidate',
   // Notifications
   NOTIFICATION_NEW_MATCH: 'notification:new_match',
   NOTIFICATION_NEW_MESSAGE: 'notification:new_message',
+  NOTIFICATION_CANLI_MATCH: 'notification:canli_match',
+  NOTIFICATION_NEW_FOLLOWER: 'notification:new_follower',
+  NOTIFICATION_SUPER_LIKE: 'notification:super_like',
+  NOTIFICATION_DAILY_MATCH: 'notification:daily_match',
   NOTIFICATION_BADGE_EARNED: 'notification:badge_earned',
   NOTIFICATION_SUBSCRIPTION_EXPIRING: 'notification:subscription_expiring',
-  NOTIFICATION_RELATIONSHIP_REQUEST: 'notification:relationship_request',
+  NOTIFICATION_FRIEND_MADE: 'notification:friend_made',
   NOTIFICATION_SYSTEM: 'notification:system',
 } as const;
 
@@ -285,9 +213,10 @@ export const RATE_LIMITS = {
   auth: { max: 5, windowMs: 60_000 },
   profile: { max: 20, windowMs: 60_000 },
   swipe: { max: 30, windowMs: 60_000 },
+  canli: { max: 10, windowMs: 60_000 },
   chatMessage: { max: 60, windowMs: 60_000 },
   photoUpload: { max: 10, windowMs: 300_000 },
-  goldTransaction: { max: 5, windowMs: 60_000 },
+  jetonTransaction: { max: 5, windowMs: 60_000 },
   moderation: { max: 10, windowMs: 60_000 },
   general: { max: 100, windowMs: 60_000 },
 } as const;

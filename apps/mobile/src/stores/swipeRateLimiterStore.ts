@@ -53,9 +53,8 @@ interface TierSwipeConfig {
 
 const TIER_SWIPE_CONFIG: Record<PackageTier, TierSwipeConfig> = {
   FREE: { batchSize: 30, cooldownMs: 30 * 60 * 1000 },
-  GOLD: { batchSize: 50, cooldownMs: 15 * 60 * 1000 },
-  PRO: { batchSize: 100, cooldownMs: 5 * 60 * 1000 },
-  RESERVED: { batchSize: -1, cooldownMs: -1 }, // unlimited
+  PREMIUM: { batchSize: 50, cooldownMs: 15 * 60 * 1000 },
+  SUPREME: { batchSize: -1, cooldownMs: -1 }, // unlimited
 };
 
 /** Read the current user tier at call time (not at store creation time) */
@@ -176,7 +175,7 @@ export const useSwipeRateLimiterStore = create<SwipeRateLimiterState>((set, get)
   /** Calculate effective batch size based on tier and like category */
   getEffectiveBatchSize: (): number => {
     const config = getTierConfig();
-    // RESERVED tier = unlimited (-1)
+    // SUPREME tier = unlimited (-1)
     if (config.batchSize === -1) return -1;
 
     const baseBatch = config.batchSize;
@@ -231,7 +230,7 @@ export const useSwipeRateLimiterStore = create<SwipeRateLimiterState>((set, get)
     if (isInitialized) return;
 
     const config = getTierConfig();
-    // RESERVED tier: unlimited batch (-1 means no limit tracking needed)
+    // SUPREME tier: unlimited batch (-1 means no limit tracking needed)
     const initialBatch = config.batchSize === -1 ? Infinity : config.batchSize;
 
     // Check if session date matches today; if not, reset counters
@@ -316,7 +315,7 @@ export const useSwipeRateLimiterStore = create<SwipeRateLimiterState>((set, get)
   shouldTriggerCooldown: (): boolean => {
     const config = getTierConfig();
 
-    // RESERVED tier: no cooldown ever
+    // SUPREME tier: no cooldown ever
     if (config.cooldownMs === -1) return false;
 
     const state = get();
@@ -343,7 +342,7 @@ export const useSwipeRateLimiterStore = create<SwipeRateLimiterState>((set, get)
   /** Activate cooldown using tier-based duration */
   startCooldown: () => {
     const config = getTierConfig();
-    // RESERVED tier should never reach here, but guard anyway
+    // SUPREME tier should never reach here, but guard anyway
     if (config.cooldownMs === -1) return;
 
     const end = Date.now() + config.cooldownMs;

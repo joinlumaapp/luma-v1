@@ -104,14 +104,14 @@ describe("PaymentsService", () => {
   // ═══════════════════════════════════════════════════════════════
 
   describe("getPackages()", () => {
-    it("should return all 4 packages and gold packs", async () => {
+    it("should return all 3 packages and gold packs", async () => {
       const result = await service.getPackages();
 
-      expect(result.packages).toHaveLength(4);
+      expect(result.packages).toHaveLength(3);
       expect(result.goldPacks).toHaveLength(4);
       const tiers = result.packages.map((p) => p.tier);
       expect(tiers).toEqual(
-        expect.arrayContaining(["FREE", "GOLD", "PRO", "RESERVED"]),
+        expect.arrayContaining(["FREE", "PREMIUM", "SUPREME"]),
       );
     });
 
@@ -121,9 +121,9 @@ describe("PaymentsService", () => {
       const freePkg = result.packages.find((p) => p.tier === "FREE");
       expect(freePkg?.features.dailySwipes).toBe(999999);
 
-      const goldPkg = result.packages.find((p) => p.tier === "GOLD");
-      expect(goldPkg?.features.dailySwipes).toBe(999999);
-      expect(goldPkg?.features.seeWhoLikesYou).toBe(true);
+      const premiumPkg = result.packages.find((p) => p.tier === "PREMIUM");
+      expect(premiumPkg?.features.dailySwipes).toBe(999999);
+      expect(premiumPkg?.features.seeWhoLikesYou).toBe(true);
     });
 
     it("should include gold packs with amounts and prices", async () => {
@@ -148,9 +148,8 @@ describe("PaymentsService", () => {
       const result = await service.getPackages();
 
       const free = result.packages.find((p) => p.tier === "FREE");
-      const gold = result.packages.find((p) => p.tier === "GOLD");
-      const pro = result.packages.find((p) => p.tier === "PRO");
-      const reserved = result.packages.find((p) => p.tier === "RESERVED");
+      const premium = result.packages.find((p) => p.tier === "PREMIUM");
+      const supreme = result.packages.find((p) => p.tier === "SUPREME");
 
       // Free tier: no premium features
       expect(free?.features.premiumQuestions).toBe(0);
@@ -161,19 +160,17 @@ describe("PaymentsService", () => {
       expect(free?.features.priorityInFeed).toBe(false);
       expect(free?.features.monthlyGold).toBe(0);
 
-      // Gold: readReceipts should be false (not Pro-level)
-      expect(gold?.features.readReceipts).toBe(false);
-      expect(gold?.features.seeWhoLikesYou).toBe(true);
-      expect(gold?.features.undoSwipe).toBe(true);
+      // Premium: readReceipts enabled, seeWhoLikesYou enabled
+      expect(premium?.features.readReceipts).toBe(true);
+      expect(premium?.features.seeWhoLikesYou).toBe(true);
+      expect(premium?.features.undoSwipe).toBe(true);
 
-      // Pro: all features except VIP
-      expect(pro?.features.readReceipts).toBe(true);
-      expect(pro?.features.profileBoost).toBe(true);
-      expect(pro?.features.priorityInFeed).toBe(true);
-
-      // Reserved: everything enabled, highest values
-      expect(reserved?.features.dailySwipes).toBe(999999);
-      expect(reserved?.features.monthlyGold).toBe(1000);
+      // Supreme: everything enabled, highest values
+      expect(supreme?.features.readReceipts).toBe(true);
+      expect(supreme?.features.profileBoost).toBe(true);
+      expect(supreme?.features.priorityInFeed).toBe(true);
+      expect(supreme?.features.dailySwipes).toBe(999999);
+      expect(supreme?.features.monthlyGold).toBe(1000);
     });
   });
 
@@ -200,7 +197,7 @@ describe("PaymentsService", () => {
 
       await expect(
         service.subscribe("u1", {
-          packageTier: PackageTier.GOLD,
+          packageTier: PackageTier.PREMIUM,
           platform: "apple",
           receipt: "mock-receipt",
         }),
@@ -214,7 +211,7 @@ describe("PaymentsService", () => {
 
       await expect(
         service.subscribe("u1", {
-          packageTier: PackageTier.GOLD,
+          packageTier: PackageTier.PREMIUM,
           platform: "apple",
           receipt: "duplicate-receipt",
         }),
@@ -265,7 +262,7 @@ describe("PaymentsService", () => {
     it("should return gold balance and recent transactions", async () => {
       mockPrisma.user.findUnique.mockResolvedValue({
         goldBalance: 250,
-        packageTier: "GOLD",
+        packageTier: "PREMIUM",
       });
       mockPrisma.goldTransaction.findMany.mockResolvedValue([
         {
@@ -281,7 +278,7 @@ describe("PaymentsService", () => {
       const result = await service.getGoldBalance("u1");
 
       expect(result.balance).toBe(250);
-      expect(result.packageTier).toBe("GOLD");
+      expect(result.packageTier).toBe("PREMIUM");
       expect(result.currency).toBe("gold");
       expect(result.recentTransactions).toHaveLength(1);
     });
@@ -438,12 +435,12 @@ describe("PaymentsService", () => {
       const expiryDate = new Date("2027-03-01");
       const startDate = new Date("2027-02-01");
       mockPrisma.user.findUnique.mockResolvedValue({
-        packageTier: "GOLD",
+        packageTier: "PREMIUM",
         goldBalance: 50,
       });
       mockPrisma.subscription.findFirst.mockResolvedValue({
         id: "sub1",
-        packageTier: "GOLD",
+        packageTier: "PREMIUM",
         platform: "APPLE",
         startDate,
         expiryDate,
@@ -457,7 +454,7 @@ describe("PaymentsService", () => {
 
       const result = await service.getSubscriptionStatus("u1");
 
-      expect(result.packageTier).toBe("GOLD");
+      expect(result.packageTier).toBe("PREMIUM");
       expect(result.isPaid).toBe(true);
       expect(result.isActive).toBe(true);
       expect(result.autoRenew).toBe(true);
@@ -481,12 +478,12 @@ describe("PaymentsService", () => {
       const now = new Date();
       const soonExpiry = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000); // 2 days from now
       mockPrisma.user.findUnique.mockResolvedValue({
-        packageTier: "PRO",
+        packageTier: "SUPREME",
         goldBalance: 100,
       });
       mockPrisma.subscription.findFirst.mockResolvedValue({
         id: "sub1",
-        packageTier: "PRO",
+        packageTier: "SUPREME",
         platform: "GOOGLE",
         startDate: new Date(),
         expiryDate: soonExpiry,
@@ -507,12 +504,12 @@ describe("PaymentsService", () => {
       const trialEnd = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000); // 5 days from now
       const expiryDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
       mockPrisma.user.findUnique.mockResolvedValue({
-        packageTier: "GOLD",
+        packageTier: "PREMIUM",
         goldBalance: 250,
       });
       mockPrisma.subscription.findFirst.mockResolvedValue({
         id: "sub1",
-        packageTier: "GOLD",
+        packageTier: "PREMIUM",
         platform: "APPLE",
         startDate: new Date(),
         expiryDate,
@@ -533,12 +530,12 @@ describe("PaymentsService", () => {
       const now = new Date();
       const gracePeriodEnd = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000);
       mockPrisma.user.findUnique.mockResolvedValue({
-        packageTier: "GOLD",
+        packageTier: "PREMIUM",
         goldBalance: 0,
       });
       mockPrisma.subscription.findFirst.mockResolvedValue({
         id: "sub1",
-        packageTier: "GOLD",
+        packageTier: "PREMIUM",
         platform: "APPLE",
         startDate: new Date(),
         expiryDate: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
@@ -564,7 +561,7 @@ describe("PaymentsService", () => {
       // Phase 1: newly expired (no gracePeriodEnd)
       mockPrisma.subscription.findMany
         .mockResolvedValueOnce([
-          { id: "sub1", userId: "u1", packageTier: "GOLD", expiryDate: new Date("2025-01-01") },
+          { id: "sub1", userId: "u1", packageTier: "PREMIUM", expiryDate: new Date("2025-01-01") },
         ])
         // Phase 2: grace period expired (none yet)
         .mockResolvedValueOnce([]);
@@ -587,8 +584,8 @@ describe("PaymentsService", () => {
         .mockResolvedValueOnce([])
         // Phase 2: grace period expired
         .mockResolvedValueOnce([
-          { id: "sub1", userId: "u1", packageTier: "GOLD" },
-          { id: "sub2", userId: "u2", packageTier: "PRO" },
+          { id: "sub1", userId: "u1", packageTier: "PREMIUM" },
+          { id: "sub2", userId: "u2", packageTier: "SUPREME" },
         ]);
       mockPrisma.$transaction.mockImplementation(
         async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
@@ -623,7 +620,7 @@ describe("PaymentsService", () => {
 
       await expect(
         service.upgradePackage("u1", {
-          targetTier: PackageTier.GOLD,
+          targetTier: PackageTier.PREMIUM,
           platform: "apple",
           receipt: "receipt",
         }),
@@ -632,13 +629,13 @@ describe("PaymentsService", () => {
 
     it("should throw BadRequestException when downgrading", async () => {
       mockPrisma.user.findUnique.mockResolvedValue({
-        packageTier: "PRO",
+        packageTier: "SUPREME",
         goldBalance: 0,
       });
 
       await expect(
         service.upgradePackage("u1", {
-          targetTier: PackageTier.GOLD,
+          targetTier: PackageTier.PREMIUM,
           platform: "apple",
           receipt: "receipt",
         }),
@@ -647,13 +644,13 @@ describe("PaymentsService", () => {
 
     it("should throw BadRequestException when upgrading to same tier", async () => {
       mockPrisma.user.findUnique.mockResolvedValue({
-        packageTier: "GOLD",
+        packageTier: "PREMIUM",
         goldBalance: 0,
       });
 
       await expect(
         service.upgradePackage("u1", {
-          targetTier: PackageTier.GOLD,
+          targetTier: PackageTier.PREMIUM,
           platform: "apple",
           receipt: "receipt",
         }),
@@ -669,7 +666,7 @@ describe("PaymentsService", () => {
 
       await expect(
         service.upgradePackage("u1", {
-          targetTier: PackageTier.GOLD,
+          targetTier: PackageTier.PREMIUM,
           platform: "apple",
           receipt: "duplicate",
         }),
@@ -849,7 +846,7 @@ describe("PaymentsService", () => {
       mockPrisma.subscription.findMany.mockResolvedValue([
         {
           id: "sub1",
-          packageTier: "GOLD",
+          packageTier: "PREMIUM",
           platform: "APPLE",
           isActive: true,
           createdAt: new Date(),
@@ -982,14 +979,14 @@ describe("PaymentsService", () => {
 
       await expect(
         service.subscribe("u1", {
-          packageTier: PackageTier.GOLD,
+          packageTier: PackageTier.PREMIUM,
           platform: "apple",
           receipt: "invalid-receipt",
         }),
       ).rejects.toThrow(BadRequestException);
     });
 
-    it("should successfully subscribe to GOLD tier with trial for first-time user", async () => {
+    it("should successfully subscribe to PREMIUM tier with trial for first-time user", async () => {
       mockPrisma.subscription.findFirst
         .mockResolvedValueOnce(null) // no active subscription
         .mockResolvedValueOnce(null); // no previous trial
@@ -1009,13 +1006,13 @@ describe("PaymentsService", () => {
       );
 
       const result = await service.subscribe("u1", {
-        packageTier: PackageTier.GOLD,
+        packageTier: PackageTier.PREMIUM,
         platform: "apple",
         receipt: "valid-receipt",
       });
 
       expect(result.subscribed).toBe(true);
-      expect(result.packageTier).toBe("GOLD");
+      expect(result.packageTier).toBe("PREMIUM");
       expect(result.isTrial).toBe(true);
       expect(result.trialEndDate).toBeDefined();
     });
@@ -1039,7 +1036,7 @@ describe("PaymentsService", () => {
       );
 
       const result = await service.subscribe("u1", {
-        packageTier: PackageTier.GOLD,
+        packageTier: PackageTier.PREMIUM,
         platform: "apple",
         receipt: "valid-receipt",
       });

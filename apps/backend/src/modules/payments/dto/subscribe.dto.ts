@@ -2,18 +2,17 @@ import { ApiProperty } from "@nestjs/swagger";
 import { IsNotEmpty, IsString, IsEnum, IsIn } from "class-validator";
 
 /**
- * LUMA has exactly 4 package tiers (locked architecture).
+ * LUMA has exactly 3 package tiers (locked architecture).
  */
 export enum PackageTier {
   FREE = "FREE",
-  GOLD = "GOLD",
-  PRO = "PRO",
-  RESERVED = "RESERVED",
+  PREMIUM = "PREMIUM",
+  SUPREME = "SUPREME",
 }
 
 export class SubscribeDto {
   @ApiProperty({
-    description: "Package tier to subscribe to (4 locked tiers)",
+    description: "Package tier to subscribe to (3 locked tiers)",
     enum: PackageTier,
   })
   @IsNotEmpty()

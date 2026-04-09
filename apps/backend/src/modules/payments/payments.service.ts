@@ -18,7 +18,7 @@ import {
   SpendGoldDto,
 } from "./dto";
 
-// LOCKED: 4 Package Tiers with features
+// LOCKED: 3 Package Tiers with features
 const PACKAGE_DEFINITIONS = {
   FREE: {
     tier: "FREE",
@@ -40,10 +40,10 @@ const PACKAGE_DEFINITIONS = {
       priorityInFeed: false,
     },
   },
-  GOLD: {
-    tier: "GOLD",
-    name: "Gold",
-    nameTr: "Gold",
+  PREMIUM: {
+    tier: "PREMIUM",
+    name: "Premium",
+    nameTr: "Premium",
     monthlyPriceUsd: 14.99,
     monthlyPriceTry: 499,
     features: {
@@ -55,35 +55,15 @@ const PACKAGE_DEFINITIONS = {
       dailySuperCompatibility: 0,
       seeWhoLikesYou: true,
       profileBoost: false,
-      readReceipts: false,
+      readReceipts: true,
       undoSwipe: true,
       priorityInFeed: false,
     },
   },
-  PRO: {
-    tier: "PRO",
-    name: "Pro",
-    nameTr: "Pro",
-    monthlyPriceUsd: 29.99,
-    monthlyPriceTry: 599.99,
-    features: {
-      dailySwipes: 999999,
-      coreQuestions: 20,
-      premiumQuestions: 25,
-      monthlyGold: 500,
-      dailyCompatibilityChecks: 5,
-      dailySuperCompatibility: 1,
-      seeWhoLikesYou: true,
-      profileBoost: true,
-      readReceipts: true,
-      undoSwipe: true,
-      priorityInFeed: true,
-    },
-  },
-  RESERVED: {
-    tier: "RESERVED",
-    name: "Reserved",
-    nameTr: "Reserved",
+  SUPREME: {
+    tier: "SUPREME",
+    name: "Supreme",
+    nameTr: "Supreme",
     monthlyPriceUsd: 49.99,
     monthlyPriceTry: 1199,
     features: {
@@ -162,9 +142,8 @@ const ONE_TIME_PRODUCTS: Record<
 // Tier hierarchy: higher number = higher tier
 const TIER_ORDER: Record<string, number> = {
   FREE: 0,
-  GOLD: 1,
-  PRO: 2,
-  RESERVED: 3,
+  PREMIUM: 1,
+  SUPREME: 2,
 };
 
 @Injectable()
@@ -179,7 +158,7 @@ export class PaymentsService {
 
   /**
    * Get all available subscription packages.
-   * LUMA: 4 packages LOCKED.
+   * LUMA: 3 packages LOCKED.
    */
   async getPackages() {
     return {
@@ -213,7 +192,7 @@ export class PaymentsService {
     await this.prisma.subscription.create({
       data: {
         userId,
-        packageTier: "GOLD",
+        packageTier: "PREMIUM",
         platform: "TRIAL",
         productId: "trial_48h",
         startDate: now,
@@ -225,16 +204,16 @@ export class PaymentsService {
       },
     });
 
-    // Update user's package tier to GOLD
+    // Update user's package tier to PREMIUM
     await this.prisma.user.update({
       where: { id: userId },
-      data: { packageTier: "GOLD" },
+      data: { packageTier: "PREMIUM" },
     });
 
     this.logger.log(`Trial activated for user ${userId}, expires at ${expiresAt.toISOString()}`);
 
     return {
-      packageTier: "GOLD",
+      packageTier: "PREMIUM",
       expiresAt: expiresAt.toISOString(),
       trialDurationHours: 48,
     };
@@ -304,7 +283,7 @@ export class PaymentsService {
       const subscription = await tx.subscription.create({
         data: {
           userId,
-          packageTier: tierKey as "FREE" | "GOLD" | "PRO" | "RESERVED",
+          packageTier: tierKey as "FREE" | "PREMIUM" | "SUPREME",
           platform,
           productId: `luma_${dto.packageTier.toLowerCase()}_monthly`,
           purchaseToken: dto.receipt,
@@ -331,7 +310,7 @@ export class PaymentsService {
       // Update user's package tier
       await tx.user.update({
         where: { id: userId },
-        data: { packageTier: tierKey as "FREE" | "GOLD" | "PRO" | "RESERVED" },
+        data: { packageTier: tierKey as "FREE" | "PREMIUM" | "SUPREME" },
       });
 
       // Award monthly Gold allocation
@@ -387,7 +366,7 @@ export class PaymentsService {
 
   /**
    * Upgrade package tier.
-   * Validates tier hierarchy: Free -> Gold -> Pro -> Reserved.
+   * Validates tier hierarchy: Free -> Premium -> Supreme.
    * Only allows upgrading to a higher tier.
    */
   async upgradePackage(userId: string, dto: UpgradePackageDto) {
@@ -438,9 +417,8 @@ export class PaymentsService {
 
     const targetTierUpper = dto.targetTier as
       | "FREE"
-      | "GOLD"
-      | "PRO"
-      | "RESERVED";
+      | "PREMIUM"
+      | "SUPREME";
     const packageDef =
       PACKAGE_DEFINITIONS[targetTierKey as keyof typeof PACKAGE_DEFINITIONS];
 
@@ -540,7 +518,7 @@ export class PaymentsService {
 
   /**
    * Downgrade package tier.
-   * Validates tier hierarchy: Reserved -> Pro -> Gold -> Free.
+   * Validates tier hierarchy: Supreme -> Premium -> Free.
    * Only allows downgrading to a lower tier.
    * The downgrade takes effect at the end of the current billing period.
    */
@@ -606,9 +584,8 @@ export class PaymentsService {
 
     const targetTierUpper = targetTierKey as
       | "FREE"
-      | "GOLD"
-      | "PRO"
-      | "RESERVED";
+      | "PREMIUM"
+      | "SUPREME";
     const packageDef =
       PACKAGE_DEFINITIONS[targetTierKey as keyof typeof PACKAGE_DEFINITIONS];
 

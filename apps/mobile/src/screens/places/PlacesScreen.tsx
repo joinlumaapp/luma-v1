@@ -24,7 +24,6 @@ import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows, layout } from '../../theme/spacing';
 import { placesService, SharedPlace, CheckInRequest, PlaceStatus } from '../../services/placesService';
 import { locationService } from '../../services/locationService';
-import { useRelationshipStore } from '../../stores/relationshipStore';
 import { PlaceMemoriesTimeline } from '../../components/places/PlaceMemoriesTimeline';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 
@@ -474,8 +473,6 @@ export const PlacesScreen: React.FC = () => {
   const [isCheckingIn, setIsCheckingIn] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
 
-  const { relationship, hasActiveRelationship, fetchStatus } = useRelationshipStore();
-
   /** Places with status assigned for map view color-coding */
   const placesWithStatus = useMemo((): SharedPlace[] => {
     return places.map((p, i) => ({
@@ -485,18 +482,9 @@ export const PlacesScreen: React.FC = () => {
     }));
   }, [places]);
 
-  useEffect(() => {
-    fetchStatus();
-  }, [fetchStatus]);
-
   const loadPlaces = useCallback(async () => {
-    if (!hasActiveRelationship || !relationship?.partnerId) {
-      setLoading(false);
-      return;
-    }
-
     try {
-      const data = await placesService.getSharedPlaces(relationship.partnerId);
+      const data = await placesService.getMyPlaces();
       setPlaces(data);
     } catch {
       // Silently handle -- empty state will show
@@ -504,7 +492,7 @@ export const PlacesScreen: React.FC = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [hasActiveRelationship, relationship?.partnerId]);
+  }, []);
 
   useEffect(() => {
     loadPlaces();
@@ -772,10 +760,10 @@ export const PlacesScreen: React.FC = () => {
   );
 
   const renderTimelineView = () => {
-    if (!relationship?.partnerId) return null;
+    if (places.length === 0) return null;
     return (
       <PlaceMemoriesTimeline
-        partnerId={relationship.partnerId}
+        partnerId=""
         onAddMemory={() => setCheckInModalVisible(true)}
       />
     );
@@ -794,7 +782,7 @@ export const PlacesScreen: React.FC = () => {
       </View>
 
       {/* Content */}
-      {!hasActiveRelationship && !loading ? (
+      {places.length === 0 && !loading ? (
         <View style={styles.noRelationshipContainer}>
           <View style={styles.emptyIconBranded}>
             <Text style={styles.emptyIconBrandedLetter}>L</Text>

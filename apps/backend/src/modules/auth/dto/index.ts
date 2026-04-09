@@ -3,3 +3,4 @@ export { VerifySmsDto } from "./verify-sms.dto";
 export { VerifySelfieDto } from "./verify-selfie.dto";
 export { LoginDto } from "./login.dto";
 export { RefreshTokenDto } from "./refresh-token.dto";
+export { AppleSignInDto } from "./apple-signin.dto";

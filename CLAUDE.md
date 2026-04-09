@@ -1,19 +1,9 @@
-# LUMA V1 -- Project Instructions for Claude
+# LUMA V1 — Project Instructions for Claude
 
 ## Project Overview
-LUMA is a compatibility-first social discovery platform that combines meaningful matching with social features. It merges the best of Instagram (social feed), Tinder (card swipe discovery), and Omegle (random live video) into a single dating & friendship app.
+LUMA is a premium compatibility-based dating & social discovery app. It combines meaningful matching with social features to create a platform where users find compatible people through algorithmic compatibility scoring, social content, and live interactions.
 
-**Core Philosophy:** "Gercek uyum icin kendin ol." -- Compatibility is the foundation. Every feature serves the goal of connecting compatible people.
-
-### Locked V1 Architecture
-- **5 Main Tabs**: Akis, Kesfet, Canli, Eslesme, Profil
-- **3 Packages**: Ucretsiz, Premium, Supreme (NO Gold, Pro, or Reserved)
-- **20+5 Questions**: 20 uyum (mandatory) + 5 kisilik (optional)
-- **4 Relationship Types**: Takip, Arkadas, Eslesme, Super Begeni
-- **5 Hedefler**: Evlenmek, Iliski bulmak, Sohbet/Arkadas, Kulturleri ogrenmek, Dunyayi gezmek
-- **Jeton Economy**: In-app currency for premium actions
-- **Uyum Score Range**: 47-97% (90+ = Super Uyum)
-- **Photos**: Min 2, Max 9
+**Core Philosophy:** "Gerçek uyum için kendin ol." — Compatibility is the foundation. Every feature serves the goal of connecting compatible people.
 
 ## Tech Stack
 - **Mobile**: React Native + TypeScript (apps/mobile/)
@@ -23,7 +13,7 @@ LUMA is a compatibility-first social discovery platform that combines meaningful
 - **Infrastructure**: AWS (Terraform in infrastructure/)
 - **CI/CD**: GitHub Actions (.github/workflows/)
 - **Real-time**: WebSocket (Socket.io) for messaging, live video, notifications
-- **Video**: WebRTC for Canli (live) random video matching
+- **Video**: WebRTC for Canlı (live) random video matching
 - **Push Notifications**: Firebase Cloud Messaging (FCM)
 - **Ads**: Google AdMob (rewarded ads for free users)
 
@@ -46,129 +36,191 @@ LUMA is a compatibility-first social discovery platform that combines meaningful
 
 ## Design Direction
 - **Reference**: Bumpy dating app (animations, gradients, modern UI)
-- Smooth card swipe transitions in Kesfet
+- Smooth card swipe transitions in Keşfet
 - Konfeti/kalp animasyonu on match
-- Gradient backgrounds (pink-to-peach light theme, purple-to-dark premium theme)
+- Gradient backgrounds (pink-to-peach theme)
 - Soft, rounded UI elements
 - Micro-animations on interactions (like, follow, boost)
+- Dark theme for Üyelik & Jeton screens (purple/dark gradient)
 
 ---
 
-## APP ARCHITECTURE -- 5 Main Tabs
+## CRITICAL RULE — SESSION-END MD UPDATE
 
-### Tab 1: Akis (Feed)
+**Her oturum sonunda, yapılan tüm değişiklikleri ilgili .md dosyalarına yansıt.**
+
+Bu kural zorunludur. Oturum boyunca yapılan her kod değişikliği, yeni özellik, bug fix, mimari karar veya kaldırılan özellik aşağıdaki dosyalarda güncellenmelidir:
+
+| Dosya | Ne zaman güncelle |
+|-------|-------------------|
+| `progress.md` | Herhangi bir özellik tamamlandığında, durumu değiştiğinde veya yeni bir özellik eklendiğinde |
+| `roadmap.md` | Yol haritasındaki bir madde tamamlandığında veya plan değiştiğinde |
+| `decisions.md` | Yeni bir mimari veya ürün kararı alındığında |
+| `data_model.md` | Veritabanı şeması değiştiğinde (yeni tablo, alan ekleme/çıkarma) |
+| `algorithm_spec.md` | Uyumluluk algoritması değiştiğinde |
+| `monetization.md` | Paket, jeton veya fiyatlandırma değiştiğinde |
+| `debug.md` | Önemli bir bug çözüldüğünde veya bilinen sorun eklendiğinde |
+| `CLAUDE.md` | Mimari kurallar, tech stack veya temel yapı değiştiğinde |
+| `scope_lock.md` | Kilitli sayılar veya kaldırılan konseptler değiştiğinde |
+| `vision.md` | Vizyon veya misyon ifadesi değiştiğinde |
+
+**Güncelleme formatı:**
+- Her değişikliğe tarih ekle (format: YYYY-MM-DD)
+- Status değişikliklerini işaretle: ❌ Not Started → 🟡 In Progress → ✅ Done
+- Kaldırılan özellikler için "Removed" notu ekle, silme
+- Yeni eklenen özellikler için "Added on [tarih]" notu ekle
+
+**Oturum sonu kontrol listesi:**
+1. Bu oturumda hangi dosyalar değişti?
+2. Bu değişiklikler hangi .md dosyalarını etkiliyor?
+3. İlgili tüm .md dosyalarını güncelle
+4. progress.md'deki "Last Updated" tarihini güncelle
+
+---
+
+## APP ARCHITECTURE — 5 Main Tabs
+
+### Tab 1: Akış (Feed)
 Instagram-like social feed with stories and posts.
 
-**Top Section -- Stories:**
+**Top Section — Stories:**
 - Horizontal scrollable story circles
 - First circle: user's own story with "+" to add new
 - Only stories from matched/followed users visible
 - Stories expire after 24 hours
-- Story creation limits by package (Ucretsiz: 1/gun, Premium: 5/gun, Supreme: Sinirsiz)
-- Supreme users' stories appear first (Hikaye Onde Gosterim)
+- Story creation limits by package (Ücretsiz: 1/gün, Premium: 5/gün, Supreme: Sınırsız)
+- Supreme users' stories appear first (Hikaye Önde Gösterim)
 
 **Post Creation:**
-- "Gonderini paylas..." input area
-- 3 post types: Fotograf, Video, Yazi
-- Each post shows: user avatar, name, verification badge, city, time ago, hedef tag
+- "Gönderini paylaş..." input area
+- 3 post types: Fotoğraf, Video, Yazı
+- Each post shows: user avatar, name, verification badge, city, time ago, hedef tag (e.g., "Arkadaş Arıyorum")
 
 **Feed Tabs:**
-- **Populer**: Posts from nearby users sorted by distance + uyum score + engagement. Visible to everyone.
+- **Popüler**: Posts from nearby users sorted by distance + uyum score + engagement. Visible to everyone.
 - **Takip**: Posts only from users you follow.
 
 **Interactions on posts:**
-- Begen (like with heart animation)
+- Beğen (like with heart animation)
 - Yorum (comment)
 - Takip et (follow from post)
 - Profili ziyaret et (visit profile)
 
-### Tab 2: Kesfet (Discover)
+### Tab 2: Keşfet (Discover)
 Card-based swipe system for finding compatible people.
 
 **Card Display:**
 - Full-screen profile cards with photos
-- Shows: name, age, city, uyum yuzdesi (compatibility %), hedef tag, kisilik tipi tag
-- Swipe right = Begen, Swipe left = Pas gec
-- Swipe up = Super Begeni (costs jeton)
+- Shows: name, age, city, uyum yüzdesi (compatibility %), hedef tag, kişilik tipi tag
+- Swipe right = Beğen, Swipe left = Pas geç
+- Swipe up = Süper Beğeni (costs jeton)
 
 **Top Right Controls:**
-- Boost button (profilini one cikar)
-- Filter button (yas, mesafe, cinsiyet, gelismis filtreler)
+- ⚡ Boost button (profilini öne çıkar)
+- ⚙ Filter button (yaş, mesafe, cinsiyet, gelişmiş filtreler)
 
 **Matching Logic:**
-- Karsilikli begeni (mutual like) = Eslesme -> mesajlasma acilir
-- Tek tarafli begeni -> Eslesme bolumunde "Begeniler" tabinda blurlu gorunur
-- Begeni gorunurlugu: Ucretsiz (1-2 blurlu), Premium (sinirli net), Supreme (sinirsiz net)
+- Karşılıklı beğeni (mutual like) = Eşleşme → mesajlaşma açılır
+- Tek taraflı beğeni → Eşleşme bölümünde "Beğenenler" tabında blurlu görünür
+- Beğeni görünürlüğü: Ücretsiz (1-2 blurlu), Premium (sınırlı net), Supreme (sınırsız net)
+
+**Empty State:**
+- "Şu an yakınında yeni profil yok"
+- "Filtreleri Genişlet" button
+- "Tekrar Ara" link
 
 **Filters (package-tiered):**
-- Ucretsiz: Yas araligi, cinsiyet, mesafe (temel)
-- Premium: + Ilgi alanlari, egitim, yasam tarzi
-- Supreme: Tum filtreler acik + gelismis kombinasyonlar
+- Ücretsiz: Yaş aralığı, cinsiyet, mesafe (temel)
+- Premium: + İlgi alanları, eğitim, yaşam tarzı
+- Supreme: Tüm filtreler açık + gelişmiş kombinasyonlar
 
-### Tab 3: Canli (Live)
+### Tab 3: Canlı (Live)
 Omegle-style random video matching for instant connections.
 
+**Screen Layout:**
+- Full-screen camera view (user's own camera)
+- Jeton counter (top right)
+- "Uyumuna göre biriyle anında tanış" text
+- "Bağlan" button (gradient pink-purple)
+
 **How It Works:**
-1. User taps "Baglan"
+1. User taps "Bağlan"
 2. System finds a compatible user (based on uyum score + filters)
 3. Live video chat begins (jeton consumed)
-4. At end of chat, options appear: Takip Et, Begen, Sonraki
-5. Karsilikli takip = Arkadas olur
+4. At end of chat, options appear:
+   - Takip Et → adds to following
+   - Beğen → if mutual, creates match
+   - Sonraki → skip to next person
+5. Karşılıklı takip = Arkadaş olur
 
 **Jeton Cost:**
-- Each Canli session costs jeton
-- Ucretsiz users get limited daily sessions
+- Each Canlı session costs jeton (exact amount defined in monetization.md)
+- Ücretsiz users get limited daily sessions
 - Supreme users: unlimited
 
-**Important:** Voice/video calls between matched/friended users happen in the MESSAGING section, NOT in Canli tab. Canli is ONLY for random discovery.
+**Important:** Voice/video calls between matched/friended users happen in the MESSAGING section, NOT in Canlı tab. Canlı is ONLY for random discovery.
 
-### Tab 4: Eslesme (Matches)
+### Tab 4: Eşleşme (Matches)
 Central hub for all connections and communications.
 
-**5 Scrollable Sub-Tabs:**
-1. **Eslesmeler** -- Grid of matched users (mutual likes from Kesfet)
-2. **Mesajlar** -- Chat list with matched/friended users (text, voice call, video call, selam gonder)
-3. **Begeniler** -- Users who liked you (blurlu for free, limited for premium, full for supreme)
-4. **Takipciler** -- Users who follow you (blurlu for free, limited for premium, full for supreme)
-5. **Kim Gordu** -- Users who viewed your profile (package-gated)
+**Scrollable Tabs (horizontal):**
+1. **Eşleşmeler** — Grid of matched users (mutual likes from Keşfet)
+2. **Mesajlar** — Chat list with matched/friended users. Supports: text, voice call, video call, selam gönder
+3. **Beğenenler** — Users who liked you (blurlu for free, limited for premium, full for supreme)
+4. **Takipçiler** — Users who follow you (blurlu for free, limited for premium, full for supreme)
+5. **Kim Gördü** — Users who viewed your profile (package-gated)
+
+**Empty State:**
+- "Henüz Eşleşmen Yok"
+- "Keşfet sekmesinde profilleri beğenerek eşleşme oluşturabilirsin."
+- "Keşfet'e Git" button
 
 **Messaging Features:**
 - Text messages
 - Voice call (between matched/friended users, costs jeton for free users)
 - Video call (between matched/friended users, costs jeton for free users)
-- Selam Gonder (icebreaker message, costs jeton)
-- Okundu Bilgisi (read receipts -- Premium+)
-- Buz Kirici Oyunlar (icebreaker mini-games)
+- Selam Gönder (icebreaker message, costs jeton)
+- Okundu Bilgisi (read receipts — Premium+)
+- Buz Kırıcı Oyunlar (icebreaker mini-games to start conversation)
 
 ### Tab 5: Profil (Profile)
 User profile management and settings.
 
 **Profile View:**
-- Cover photo, Name, Age, Verification badge, Uyum yuzdesi badge, City
-- Kisilik tipi tag (e.g., "Acik Fikirli")
-- Stats: Gonderi count, Takipci count, Takip count
-- Buttons: "Duzenle" + package upgrade CTA
-- Profil Gucu bar (% completion indicator)
-- "Profilini One Cikar" (Boost -- 24 saat 10x gorunurluk)
+- Cover photo area
+- Name, Age, Verification badge, Uyum yüzdesi badge
+- City
+- Kişilik tipi tag (e.g., "Açık Fikirli")
+- Stats: Gönderi count, Takipçi count, Takip count
+- Buttons: "Düzenle" + "Premium'a Geç" (or package upgrade CTA)
+- Profil Gücü bar (% completion indicator with tips)
+- "Profilini Öne Çıkar" (Boost — 24 saat 10x görünürlük)
+- "X kişi profilini gördü — Premium ile öğren"
 
-**Hakkimda Section (grid cards):**
-Yas, Cinsiyet, Sehir, Is, Egitim, Cocuk, Sigara, Boy, Spor, Burc, Evcil Hayvan, Alkol
+**Hakkımda Section (grid cards):**
+Yaş, Cinsiyet, Şehir, İş, Eğitim, Çocuk, Sigara, Boy, Spor, Burç, Evcil Hayvan, Alkol
 
 **Gamification Section:**
-- **Kasif** -- Daily missions (e.g., "5 profili kesfet" -> earn jeton). Timer for next mission.
-- **Bu Haftanin Yildizlari** -- Weekly leaderboard: En Cok Begenilen, En Cok Mesaj, En Uyumlu. Resets every Monday.
+- **Kaşif** — Daily missions (e.g., "5 profili keşfet" → earn jeton). Timer for next mission.
+- **Bu Haftanın Yıldızları** — Weekly leaderboard: En Çok Beğenilen, En Çok Mesaj, En Uyumlu. Resets every Monday.
 
-**Profili Duzenle (Edit Profile):**
-- Kisilik Tipi: "Kisilik Testini Coz" (5 fun questions, 1 minute)
+**Profili Düzenle (Edit Profile):**
+- Kişilik Tipi: "Kişilik Testini Çöz" (5 fun questions, 1 minute)
 - Profil Videosu: 10-30 second video
-- Fotograflar: Min 2, max 9 (3x3 grid). First photo = Ana (main profile photo)
-- Hedefim: 5 options (see Locked Architecture above)
-- Hakkimda Daha Fazlasi: Kilo, Cinsel Yonelim, Burc, Egzersiz, Egitim Seviyesi, Medeni Durum, Cocuklar, Icki, Sigara, Evcil Hayvanlar, Din, Degerler
-- Ilgi Alanlari: Select up to 15
-- Prompt'larim: Max 3 profile prompts
-- Sevdigin Mekanlar: Max 8 favorite places
+- Fotoğraflar: Min 2, max 9 (3x3 grid). First photo = Ana (main profile photo)
+- Hedefim: Evlenmek, Bir ilişki bulmak, Sohbet etmek ve arkadaşlarla tanışmak, Diğer kültürleri öğrenmek, Dünyayı gezmek
+- Hakkımda Daha Fazlası: Kilo, Cinsel Yönelim, Burç, Egzersiz, Eğitim Seviyesi, Medeni Durum, Çocuklar, İçki, Sigara, Evcil Hayvanlar, Din, Değerler
+- İlgi Alanları: Select up to 15
+- Prompt'larım: Max 3 profile prompts (questions displayed on profile)
+- Sevdiğin Mekanlar: Max 8 favorite places. Categories: Park, Kafe, Sahil. Popular places list (Istanbul-based: Kadıköy, Bebek Sahili, etc.)
 
-**Settings:** Account, Notification preferences, Privacy, Package management, Help & support, Logout
+**Settings (⚙ icon):**
+- Account settings
+- Notification preferences (3-tier system, see below)
+- Privacy settings
+- Package management
+- Help & support
+- Logout
 
 ---
 
@@ -178,184 +230,212 @@ Yas, Cinsiyet, Sehir, Is, Egitim, Cocuk, Sigara, Boy, Spor, Burc, Evcil Hayvan, 
 
 | Type | How It Happens | Result |
 |------|---------------|--------|
-| **Takip** (Follow) | One-way from Akis, profile, or Canli | See their posts in Takip tab |
-| **Arkadas** (Friend) | Mutual follow (both follow each other) | Enhanced visibility, messaging |
-| **Eslesme** (Match) | Mutual like in Kesfet | Full messaging + voice/video call |
-| **Super Begeni** | Jeton-powered like in Kesfet | Notifies other user, priority visibility |
+| **Takip** (Follow) | One-way from Akış, profile, or Canlı | See their posts in Takip tab |
+| **Arkadaş** (Friend) | Mutual follow (both follow each other) | Enhanced visibility, messaging |
+| **Eşleşme** (Match) | Mutual like in Keşfet | Full messaging + voice/video call |
+| **Süper Beğeni** | Jeton-powered like in Keşfet | Notifies other user, priority visibility |
 
 ---
 
 ## AUTHENTICATION SYSTEM
 
-**Login Methods:**
-- Telefon + OTP (primary method)
-- Google Sign-In (planned)
-- Apple Sign-In (planned -- required for iOS App Store)
+**Login Screen:**
+- Luma logo (3D heart)
+- "Gerçek uyum için kendin ol."
+- "Google ile bağlan" button
+- "Apple ile bağlan" button (required for iOS App Store)
+- "Telefon ile devam et" button (primary, red/pink gradient)
+- "Zaten hesabın var mı? Giriş yap" link
+- Terms & Privacy links at bottom
+
+**Phone Auth Flow:**
+- Country code selector (+90 Turkey default)
+- Phone number input
+- SMS OTP verification
+- "Numaranı kimseyle paylaşmıyoruz." privacy notice
 
 **Onboarding Flow (after auth):**
 1. Basic info (name, birthday, gender)
 2. Photo upload (min 2 required)
-3. Uyum Analizi (20 questions -- MANDATORY)
+3. Uyum Analizi (20 questions — MANDATORY)
 4. Hedef selection
 5. City/location permission
-6. Kisilik Testi (5 questions -- OPTIONAL, can skip)
+6. Kişilik Testi (5 questions — OPTIONAL, can skip)
 7. Welcome to app
 
 ---
 
-## COMPATIBILITY SYSTEM (Test System)
+## COMPATIBILITY SYSTEM
 
 ### Uyum Analizi (Compatibility Analysis)
 - **20 questions**, mandatory during onboarding
-- 4 answer options per question (NOT Likert scale)
+- 4 answer options per question
 - Progress bar shows completion (Soru 1/20, 2/20, etc.)
 - "Atla" (Skip) option available but discouraged
-- Results calculate **uyum yuzdesi** (compatibility %) between users (range: 47-97%)
-- 90+ = **Super Uyum** with special UI treatment (glow, badge, konfeti)
-- This is the CORE matching algorithm -- all recommendations depend on it
-- Questions organized across 8 psychological categories: lifestyle, values, communication style, future plans, personality traits, relationship approach, social habits, conflict resolution
+- Results calculate **uyum yüzdesi** (compatibility %) between users
+- Uyum score range: **47-97**, 90+ = **Süper Uyum**
+- This is the CORE matching algorithm — all recommendations depend on it
+- Questions cover: lifestyle, values, communication style, future plans, personality traits
 
-### Kisilik Testi (Personality Quiz)
+### Kişilik Testi (Personality Quiz)
 - **5 questions**, optional
-- Quick and fun format (under 1 minute)
-- Results assign a **kisilik tipi** tag shown on profile
-- Example tags: "Acik Fikirli", "Lider ve kararli", "Sessiz ve derin", "Eglenceli ve enerjik", "Mantikli ve analitik"
+- Quick and fun format
+- Results assign a **kişilik tipi** tag shown on profile (e.g., "Açık Fikirli", "Lider ve kararlı", "Sessiz ve derin", "Eğlenceli ve enerjik", "Mantıklı ve analitik")
 - Does NOT affect matching algorithm, purely cosmetic/social
 
 ---
 
 ## PACKAGE SYSTEM
 
-**CRITICAL RULE: No feature is fully locked. Every feature is accessible to ALL users -- only QUANTITY and LIMITS differ by package.**
+**CRITICAL RULE: No feature is fully locked. Every feature is accessible to all users — only QUANTITY differs by package.**
 
 ### 3 Packages:
+1. **Ücretsiz** (0₺/ay) — Tadımlık deneyim
+2. **Premium** (499₺/ay) — Tam erişim, makul limitlerle
+3. **Supreme** (1.199₺/ay) — Sınırsız + özel ayrıcalıklar, "En Popüler" badge
 
-| Feature | Ucretsiz (0 TL) | Premium (499 TL/ay) | Supreme (1.199 TL/ay) |
-|---------|-----------------|---------------------|----------------------|
-| Swipe (Kesfet) | Limited/day | More/day | Unlimited |
-| Story creation | 1/gun | 5/gun | Unlimited |
-| Begeni gorunurlugu | 1-2 blurlu | Sinirli net | Unlimited net |
-| Kim Gordu | Limited | Expanded | Full |
-| Filtreler | Basic | Advanced | All + combinations |
-| Boost | Purchase only | 4/ay included | Unlimited |
-| Jeton/ay | 0 | 250 | 1000 |
-| Okundu bilgisi | No | Yes | Yes |
-| Hikaye onde gosterim | No | No | Yes |
-| Reklam | Yes (AdMob) | No | No |
-| Gunun Eslesmesi | 1/hafta | 1/gun | 3/gun |
-| Badge | -- | -- | "En Populer" |
+**IMPORTANT: There are NO other packages. Gold, Pro, Reserved are permanently removed concepts.**
 
-### Jeton (Token) Economy
-In-app currency for premium actions across all packages.
+**Detailed comparison table: See monetization.md**
 
-**What costs jeton:**
-- Selam Gonder (icebreaker message)
-- Super Begeni (special like in Kesfet)
-- Boost (24h profile visibility 10x)
-- Canli sessions (random video chat)
-- Voice/video calls (free users only)
+### Jeton (Token) Economy:
+- In-app currency for premium actions (DB field: `goldBalance`)
+- Used for: Selam Gönder, Süper Beğeni, Boost, Canlı sessions
+- Purchase packages: 79.99₺ (base), 199.99₺ (500, "EN POPÜLER"), 349.99₺ (1000)
+- Supreme gets 1000 free jeton/month, Premium gets 250/month
+- Earned through: Kaşif daily missions, watching ads (free users)
 
-**Purchase packages:**
-- 79,99 TL (base amount)
-- 199,99 TL (500 jeton -- "EN POPULER")
-- 349,99 TL (1000 jeton)
-
-**Monthly allocation:**
-- Ucretsiz: 0 jeton
-- Premium: 250 jeton/ay
-- Supreme: 1000 jeton/ay
-
-**Earn jeton for free:**
-- Kasif daily missions (e.g., "5 profili kesfet" -> +5 jeton)
-- Watching rewarded ads (free users only)
-
-### Boost System
-- "24 saat boyunca profilini one cikar ve 10x daha fazla gorunurluk kazan"
-- Boost packages (jeton cost): 1 boost (120), 5 boost (500), 10 boost (900), 20 boost (1500)
-- Supreme: Unlimited boost
+### Boost System:
+- "24 saat boyunca profilini öne çıkar ve 10x daha fazla görünürlük kazan"
+- Boost packages (jeton): 1 boost (120), 5 boost (500, %20 kaydet), 900 (%32 kaydet), 1500 (%37 kaydet, "EN POPÜLER")
+- Supreme: Sınırsız boost
 - Premium: 4 boost/ay included
 
 ---
 
 ## NEW FEATURES (V1)
 
-### 1. Gunun Eslesmesi (Daily Match)
-AI-powered daily recommendation based on uyum score + ilgi alanlari + mesafe.
-- Ucretsiz: 1/hafta, Premium: 1/gun, Supreme: 3/gun
+### 1. Günün Eşleşmesi (Daily Match)
+AI-powered daily recommendation based on uyum score + ilgi alanları + mesafe.
+- Ücretsiz: 1/hafta
+- Premium: 1/gün
+- Supreme: 3/gün
 
-### 2. Ortak Mekan Onerisi (Mutual Place Suggestion)
-When two users match, system checks their "Sevdigin Mekanlar" lists and suggests a meeting place if overlap exists.
+### 2. Ortak Mekan Önerisi (Mutual Place Suggestion)
+When two users match, system checks their "Sevdiğin Mekanlar" lists and suggests a meeting place if overlap exists.
 
-### 3. Mood Status (Anlik Ruh Hali)
-Quick status on profile: "Sohbete acigim", "Bugun sessizim", "Bulusmaya varim", "Kafede takiliyorum".
+### 3. Mood Status (Anlık Ruh Hali)
+Quick status on profile: "Sohbete açığım", "Bugün sessizim", "Buluşmaya varım", "Kafede takılıyorum".
 Active users with mood status get priority in feeds.
 
-### 4. Buz Kirici Oyunlar (Icebreaker Games)
+### 4. Buz Kırıcı Oyunlar (Icebreaker Games)
 Mini-games to start conversations after matching:
-- "2 Dogru 1 Yanlis"
+- "2 Doğru 1 Yanlış"
 - Quick question prompts
 - "Bu mu O mu?" (This or That)
 
-### 5. Haftalik Uyum Raporu (Weekly Compatibility Report)
-Weekly summary: compatibility stats, most active day, profile views, gamification boost.
+### 5. Haftalık Uyum Raporu (Weekly Compatibility Report)
+Weekly summary sent to user:
+- "Bu hafta X kişiyle %80+ uyumun vardı"
+- "En aktif günün: Çarşamba"
+- "Profil görüntülenme: X kişi"
+- Gamification boost — keeps users engaged
 
 ---
 
-## NOTIFICATION SYSTEM (3-Tier)
+## NOTIFICATION SYSTEM
+
+3-tier notification architecture:
 
 **Kritik (Always push, cannot disable):**
-- Yeni eslesme, Yeni mesaj, Super begeni aldin, Canli eslesme bulundu
+- Yeni eşleşme (new match)
+- Yeni mesaj (new message)
+- Süper beğeni aldın (received super like)
+- Canlı eşleşme bulundu (live match found)
 
-**Onemli (Default ON, user can disable):**
-- Yeni takipci, Begeni aldin, Arkadaslik olustu, Uyum sonucu hazir, Gunun eslesmesi hazir
+**Önemli (Default ON, user can disable):**
+- Yeni takipçi
+- Beğeni aldın
+- Arkadaşlık oluştu
+- Uyum sonucu hazır
+- Günün eşleşmesi hazır
 
-**Dusuk Oncelik (Default OFF, user can enable):**
-- Hikaye goruntuleme, Gonderi etkilesimi, Kasif gorevi hatirlatma, Boost suresi bitti, Haftalik rapor hazir
+**Düşük Öncelik (Default OFF, user can enable):**
+- Hikaye görüntüleme
+- Gönderi etkileşimi (like/comment on post)
+- Kaşif görevi hatırlatma
+- Boost süresi bitti
+- Haftalık rapor hazır
+
+User can toggle each notification type individually in Settings.
 
 ---
 
 ## GAMIFICATION
 
-### Kasif (Explorer) Missions
-- Daily missions that reward jeton (e.g., "5 profili kesfet" -> +5 jeton)
-- Progress bar + timer for next mission, resets daily
+### Kaşif (Explorer) Missions
+- Daily missions that reward jeton
+- Example: "5 profili keşfet" → +5 jeton
+- Progress bar (0/5)
+- Timer shows when next mission available
+- Resets daily
 
-### Bu Haftanin Yildizlari (Weekly Stars)
-- 3 categories: En Cok Begenilen, En Cok Mesaj, En Uyumlu
-- Resets every Monday, visible on profile
+### Bu Haftanın Yıldızları (Weekly Stars)
+- Leaderboard with 3 categories:
+  - En Çok Beğenilen (Most Liked)
+  - En Çok Mesaj (Most Messages)
+  - En Uyumlu (Most Compatible)
+- Resets every Monday
+- Visible on profile scroll-down
 
-### Profil Gucu (Profile Strength)
+### Profil Gücü (Profile Strength)
 - Percentage indicator showing profile completion
+- Tips to improve: "İlgi alanlarını seç", "Profil videosu ekle", etc.
 - Higher profile strength = better visibility in feeds
 
 ---
 
 ## AD SYSTEM
-- Google AdMob integration for free users only
-- Rewarded ads: watch ad to earn jeton or unlock temporary access
-- Ads NEVER shown to Premium or Supreme users (Reklamsiz Deneyim)
-- Ad placements: between feed posts, before Canli sessions, after kesfet card stack ends
+- Google AdMob integration for free users
+- Rewarded ads: "Devam etmek için reklam izle" — watch ad to unlock temporary access
+- Ads NEVER shown to Premium or Supreme users (Reklamsız Deneyim)
+- Ad placements: between feed posts, before Canlı sessions, after keşfet card stack ends
+
+---
+
+## PERMANENTLY REMOVED CONCEPTS
+These features/terms have been permanently removed from V1. Do NOT re-add them:
+- **Gold/Pro/Reserved packages** — Only Ücretsiz/Premium/Supreme exist
+- **Harmony Room** — All room-based features removed
+- **Couples Club** — Removed from V1
+- **Relationship module** — Removed from V1
+- **Premium questions (25 extra)** — Only 20 core questions exist
+- **Likert scale** — All questions use 4 discrete options
+- **30-minute boost** — Boost duration is 24 hours
+
+---
+
+## LOCKED NUMBERS
+- 3 packages: Ücretsiz, Premium, Supreme
+- 20 compatibility questions, 4 options each
+- 5 personality quiz questions
+- 5 Hedef options: Evlenmek, İlişki, Sohbet/Arkadaş, Kültür, Dünya gezme
+- Photos: min 2, max 9
+- İlgi Alanları: max 15
+- Prompt'larım: max 3
+- Sevdiğin Mekanlar: max 8
+- Profile Video: 10-30 seconds
+- Uyum score range: 47-97, 90+ = Süper Uyum
+- Boost duration: 24 hours
 
 ---
 
 ## ARCHITECTURE RULES
-- Follow the 5-tab structure above -- do not invent new tabs or sections
+- Follow the module structure described above — do not invent new tabs or sections
 - Package system: NEVER fully lock a feature, only limit quantities
-- **3 packages ONLY**: Ucretsiz, Premium, Supreme (NO Gold, Pro, or Reserved -- those are REMOVED)
-- **Uyum Analizi**: exactly 20 questions, 4 options each (NOT Likert 1-5)
-- **Kisilik Testi**: exactly 5 questions
-- **Hedef options**: exactly 5 (Evlenmek, Iliski bulmak, Sohbet/Arkadas, Kulturleri ogrenmek, Dunyayi gezmek)
-- **Uyum score range**: 47-97% (90+ = Super Uyum)
-- **Photos**: min 2, max 9
-- **Ilgi Alanlari**: max 15
-- **Prompt'larim**: max 3
-- **Sevdigin Mekanlar**: max 8
-- **Profile Video**: 10-30 seconds
-- **NO Room concept** -- the old Compatibility Room system is completely removed
-- **NO 45-question system** -- replaced by 20+5
-- **NO intention tags** -- replaced by 5 Hedefler
-
----
+- 3 packages ONLY: Ücretsiz, Premium, Supreme
+- Jeton in UI = `goldBalance` in database
+- All .md files MUST be updated at end of each session
 
 ## Available Agents
 See `.claude/agents/` for department-specific agents.
@@ -364,11 +444,11 @@ See `.claude/agents/` for department-specific agents.
 See `.claude/skills/` for quick-action slash commands.
 
 ## Reference Documents
-- `monetization.md` -- Detailed package comparison table & jeton pricing
-- `algorithm_spec.md` -- Compatibility algorithm specification (8 categories, score formulas)
-- `data_model.md` -- Database schema and entity models
-- `vision.md` -- App vision and mission
-- `roadmap.md` -- Development roadmap (8 phases, 16 weeks)
-- `progress.md` -- Current progress tracking
-- `decisions.md` -- Architectural decisions log
-- `debug.md` -- Current bug tracking and deploy status
+- `monetization.md` — Detailed package comparison table & jeton pricing
+- `algorithm_spec.md` — Compatibility algorithm specification
+- `data_model.md` — Database schema and models
+- `vision.md` — App vision and mission
+- `roadmap.md` — Development roadmap
+- `progress.md` — Current progress tracking
+- `scope_lock.md` — Locked numbers and removed concepts
+- `decisions.md` — Architecture and product decisions

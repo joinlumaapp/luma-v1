@@ -1,4 +1,4 @@
-// Trial banner — shows remaining Gold trial time in Discovery header
+// Trial banner — shows remaining Premium trial time in Discovery header
 // Format: "Premium Deneme: 23s 45dk kaldi" with gold accent
 // Tappable: navigates to MembershipPlans. Urgency mode when < 1 hour left.
 

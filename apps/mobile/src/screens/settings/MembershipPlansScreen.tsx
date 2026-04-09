@@ -63,8 +63,8 @@ const GLASS = {
 
 /** Maps UI plan selection to the PackageTier used by iapService */
 const PLAN_TO_TIER: Record<string, PackageTier> = {
-  supreme: 'RESERVED',
-  premium: 'GOLD',
+  supreme: 'SUPREME',
+  premium: 'PREMIUM',
 };
 
 /** Maps coin pack IDs to App Store / Play Store product IDs */
@@ -203,10 +203,9 @@ const FEATURES: TierFeature[] = [
 // Map PackageTier to plan category
 const getTierCategory = (tier: PackageTier): 'free' | 'premium' | 'supreme' => {
   switch (tier) {
-    case 'RESERVED':
+    case 'SUPREME':
       return 'supreme';
-    case 'PRO':
-    case 'GOLD':
+    case 'PREMIUM':
       return 'premium';
     default:
       return 'free';
@@ -315,7 +314,7 @@ const SupremeCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
           <Text style={cardStyles.tierSubtitle}>Elite deneyim</Text>
         </View>
         <View style={cardStyles.priceRight}>
-          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>{PACKAGE_TIERS.find(t => t.id === 'RESERVED')?.priceDisplay ?? '1.199₺'}</Text>
+          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>{PACKAGE_TIERS.find(t => t.id === 'SUPREME')?.priceDisplay ?? '1.199₺'}</Text>
           <Text style={cardStyles.pricePeriod}>/ay</Text>
           {/* "En Populer" badge — below price */}
           <LinearGradient
@@ -398,7 +397,7 @@ const PremiumCard: React.FC<TierCardProps> = ({ isCurrentPlan, onSelect }) => (
           <Text style={cardStyles.tierSubtitle}>Tam erişim</Text>
         </View>
         <View style={cardStyles.priceContainer}>
-          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>{PACKAGE_TIERS.find(t => t.id === 'GOLD')?.priceDisplay ?? '499₺'}</Text>
+          <Text style={[cardStyles.price, { color: GLASS.textPrimary }]}>{PACKAGE_TIERS.find(t => t.id === 'PREMIUM')?.priceDisplay ?? '499₺'}</Text>
           <Text style={cardStyles.pricePeriod}>/ay</Text>
         </View>
       </View>

@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useWaveStore } from '../../stores/waveStore';
 import { useAuthStore } from '../../stores/authStore';
 import { WAVE_CONFIG } from '../../constants/config';
-import { GOLD_COSTS } from '@luma/shared';
+import { JETON_COSTS } from '@luma/shared';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
@@ -23,12 +23,11 @@ import { spacing, borderRadius, shadows } from '../../theme/spacing';
 
 const WAVE_DAILY_LIMITS: Record<string, number> = {
   FREE: WAVE_CONFIG.DAILY_LIMITS.FREE,
-  GOLD: WAVE_CONFIG.DAILY_LIMITS.GOLD,
-  PRO: WAVE_CONFIG.DAILY_LIMITS.PRO,
-  RESERVED: WAVE_CONFIG.DAILY_LIMITS.RESERVED,
+  PREMIUM: WAVE_CONFIG.DAILY_LIMITS.PREMIUM,
+  SUPREME: WAVE_CONFIG.DAILY_LIMITS.SUPREME,
 };
 
-const WAVE_COIN_COST = GOLD_COSTS.WAVE_EXTRA;
+const WAVE_COIN_COST = JETON_COSTS.WAVE_EXTRA;
 
 interface SendWaveModalProps {
   visible: boolean;

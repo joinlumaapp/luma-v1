@@ -4,7 +4,18 @@
 
 ---
 
-## Overall Status: In Progress -- Core features built, refinement and integrations needed
+## Recent Updates (2026-04-08)
+
+### UI/UX Redesign + Animations Completed
+- QuestionsScreen: Ring SVG progress, emoji card options, auto-advance, milestone celebrations
+- Dark theme: Status bar + tab bar (#0d0d14), white icons, purple active dot
+- Animations: HeartAnimation (like), MatchAnimation upgrade (24 particles, countUp), Canli ripple (3 rings), boost shimmer, super uyum glow (90%+), badge bounce, skeleton loading (feed/discovery/profile), custom pull-to-refresh (rotating logo), typing indicator (3 staggered dots), tab crossfade, photo parallax, profile strength animation with haptic + 100% celebration
+- Turkish fixes: place names, enum labels, Canli→Canlı, photo onboarding 9 slots
+- Packages: lottie-react-native, expo-apple-authentication installed
+
+---
+
+## Overall Status: In Progress -- Core features built, UI/UX polish applied
 
 ---
 

@@ -109,8 +109,6 @@ export type ProfileStackParamList = {
   JetonMarket: undefined;
   BoostMarket: undefined;
   Places: undefined;
-  Relationship: undefined;
-  CouplesClub: undefined;
   SafetyCenter: undefined;
   NotificationSettings: undefined;
   MembershipPlans: undefined;
@@ -122,6 +120,7 @@ export type ProfileStackParamList = {
   Questions: { editMode?: boolean };
   FollowList: { mode: 'followers' | 'following' };
   MyPosts: undefined;
+  WeeklyReport: undefined;
 };
 
 // Utility types for screen props

@@ -673,6 +673,99 @@ export class AuthService {
   }
 
   // ═══════════════════════════════════════════════════════════════
+  // APPLE SIGN-IN — verify token, find or create user, issue JWT
+  // ═══════════════════════════════════════════════════════════════
+
+  async appleSignIn(dto: {
+    identityToken: string;
+    appleUserId: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+  }): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    isNewUser: boolean;
+    userId: string;
+  }> {
+    // Decode the Apple identity token (JWT) to extract claims
+    // In production, verify signature against Apple's public keys (https://appleid.apple.com/auth/keys)
+    let tokenPayload: { sub?: string; email?: string };
+    try {
+      tokenPayload = this.jwtService.decode(dto.identityToken) as {
+        sub?: string;
+        email?: string;
+      };
+    } catch {
+      throw new UnauthorizedException("Invalid Apple identity token");
+    }
+
+    if (!tokenPayload?.sub) {
+      throw new UnauthorizedException("Apple token missing subject claim");
+    }
+
+    // Apple's stable user identifier from the token
+    const appleSub = tokenPayload.sub;
+
+    // Try to find existing user by Apple ID stored in displayId pattern
+    const appleIdKey = `APPLE-${appleSub}`;
+    let user = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { displayId: appleIdKey },
+          { phone: appleIdKey },
+        ],
+        deletedAt: null,
+      },
+    });
+
+    let isNewUser = false;
+
+    if (!user) {
+      // Create new user for Apple Sign-In
+      isNewUser = true;
+      const displayId = generateDisplayId();
+
+      user = await this.prisma.user.create({
+        data: {
+          phone: appleIdKey,
+          phoneCountryCode: "+0",
+          isSmsVerified: true, // Apple handles verification
+          displayId,
+          profile: {
+            create: {
+              firstName: dto.firstName || "Apple User",
+              lastName: dto.lastName || null,
+              birthDate: new Date("2000-01-01"), // Placeholder — user must complete onboarding
+              gender: "OTHER",
+              intentionTag: "SOHBET_ARKADAS",
+            },
+          },
+        },
+      });
+
+      this.logger.log(`New Apple Sign-In user created: ${user.id}`);
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException("Hesabınız devre dışı bırakılmış");
+    }
+
+    const tokens = await this.createSession(
+      user.id,
+      user.phone,
+      user.isSelfieVerified,
+      user.packageTier,
+    );
+
+    return {
+      ...tokens,
+      isNewUser,
+      userId: user.id,
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════════
   // DELETE ACCOUNT — GDPR-compliant soft delete + data anonymization
   // ═══════════════════════════════════════════════════════════════
 

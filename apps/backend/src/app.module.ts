@@ -23,7 +23,6 @@ import { ProfilesModule } from "./modules/profiles/profiles.module";
 import { CompatibilityModule } from "./modules/compatibility/compatibility.module";
 import { DiscoveryModule } from "./modules/discovery/discovery.module";
 import { MatchesModule } from "./modules/matches/matches.module";
-import { RelationshipsModule } from "./modules/relationships/relationships.module";
 import { BadgesModule } from "./modules/badges/badges.module";
 import { PaymentsModule } from "./modules/payments/payments.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
@@ -106,7 +105,6 @@ import { WsConnectionModule } from "./common/providers/ws-connection.module";
     CompatibilityModule, // Subsystem 5-7: Questions, Scoring, Levels
     DiscoveryModule, // Subsystem 8: Card Flow & Swiping
     MatchesModule, // Subsystem 9: Match System
-    RelationshipsModule, // Subsystem 11-12: Relationship Mode & Couples Club
     BadgesModule, // Subsystem 14: Badge & Reputation
     PaymentsModule, // Subsystem 16-18: Packages, Gold, Monetization
     NotificationsModule, // Push notifications

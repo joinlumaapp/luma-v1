@@ -45,7 +45,7 @@ export interface StoryUser {
   userName: string;
   userAvatarUrl: string;
   /** Package tier of the story creator — used for priority sorting */
-  packageTier?: 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
+  packageTier?: 'FREE' | 'PREMIUM' | 'SUPREME';
   stories: Story[];
   hasUnseenStories: boolean;
   latestStoryAt: string;
@@ -143,7 +143,7 @@ const MOCK_STORY_USERS: StoryUser[] = [
     userId: 'bot-006',
     userName: 'Merve',
     userAvatarUrl: 'https://i.pravatar.cc/150?img=23',
-    packageTier: 'PRO',
+    packageTier: 'SUPREME',
     isFollowing: true,
     hasUnseenStories: true,
     latestStoryAt: hoursAgo(3),
@@ -171,7 +171,7 @@ const MOCK_STORY_USERS: StoryUser[] = [
     userId: 'bot-005',
     userName: 'Defne',
     userAvatarUrl: 'https://i.pravatar.cc/150?img=20',
-    packageTier: 'GOLD',
+    packageTier: 'PREMIUM',
     isFollowing: true,
     hasUnseenStories: false,
     latestStoryAt: hoursAgo(8),
@@ -197,7 +197,7 @@ const MOCK_STORY_USERS: StoryUser[] = [
     userId: 'bot-007',
     userName: 'Buse',
     userAvatarUrl: 'https://i.pravatar.cc/150?img=25',
-    packageTier: 'RESERVED',
+    packageTier: 'SUPREME',
     isFollowing: true,
     hasUnseenStories: true,
     latestStoryAt: hoursAgo(5),
@@ -315,7 +315,7 @@ const MOCK_STORY_USERS: StoryUser[] = [
     userId: 'bot-009',
     userName: 'Ipek',
     userAvatarUrl: 'https://i.pravatar.cc/150?img=32',
-    packageTier: 'GOLD',
+    packageTier: 'PREMIUM',
     isFollowing: false,
     isSuggested: true,
     hasUnseenStories: true,

@@ -52,7 +52,7 @@ describe("ProfilesController", () => {
           firstName: "Mehmet",
           bio: "Merhaba!",
           city: "Istanbul",
-          intentionTag: IntentionTagValue.SERIOUS_RELATIONSHIP,
+          intentionTag: IntentionTagValue.EVLENMEK,
         },
         photos: [
           {
@@ -361,46 +361,46 @@ describe("ProfilesController", () => {
   describe("setIntentionTag()", () => {
     const userId = "user-uuid-1";
 
-    it("should set intention tag to SERIOUS_RELATIONSHIP", async () => {
-      const dto = { intentionTag: IntentionTagValue.SERIOUS_RELATIONSHIP };
+    it("should set intention tag to EVLENMEK", async () => {
+      const dto = { intentionTag: IntentionTagValue.EVLENMEK };
       const expected = {
-        intentionTag: IntentionTagValue.SERIOUS_RELATIONSHIP,
+        intentionTag: IntentionTagValue.EVLENMEK,
         message: "Niyet etiketi güncellendi",
       };
       mockProfilesService.setIntentionTag.mockResolvedValue(expected);
 
       const result = await controller.setIntentionTag(userId, dto);
 
-      expect(result.intentionTag).toBe("SERIOUS_RELATIONSHIP");
+      expect(result.intentionTag).toBe("EVLENMEK");
       expect(result.message).toContain("güncellendi");
     });
 
-    it("should set intention tag to EXPLORING", async () => {
-      const dto = { intentionTag: IntentionTagValue.EXPLORING };
+    it("should set intention tag to ILISKI", async () => {
+      const dto = { intentionTag: IntentionTagValue.ILISKI };
       mockProfilesService.setIntentionTag.mockResolvedValue({
-        intentionTag: IntentionTagValue.EXPLORING,
+        intentionTag: IntentionTagValue.ILISKI,
         message: "Niyet etiketi güncellendi",
       });
 
       const result = await controller.setIntentionTag(userId, dto);
 
-      expect(result.intentionTag).toBe("EXPLORING");
+      expect(result.intentionTag).toBe("ILISKI");
     });
 
-    it("should set intention tag to NOT_SURE", async () => {
-      const dto = { intentionTag: IntentionTagValue.NOT_SURE };
+    it("should set intention tag to SOHBET_ARKADAS", async () => {
+      const dto = { intentionTag: IntentionTagValue.SOHBET_ARKADAS };
       mockProfilesService.setIntentionTag.mockResolvedValue({
-        intentionTag: IntentionTagValue.NOT_SURE,
+        intentionTag: IntentionTagValue.SOHBET_ARKADAS,
         message: "Niyet etiketi güncellendi",
       });
 
       const result = await controller.setIntentionTag(userId, dto);
 
-      expect(result.intentionTag).toBe("NOT_SURE");
+      expect(result.intentionTag).toBe("SOHBET_ARKADAS");
     });
 
     it("should throw NotFoundException when profile does not exist", async () => {
-      const dto = { intentionTag: IntentionTagValue.EXPLORING };
+      const dto = { intentionTag: IntentionTagValue.ILISKI };
       mockProfilesService.setIntentionTag.mockRejectedValue(
         new NotFoundException("Profil bulunamadı. Önce profil oluşturun."),
       );
@@ -411,9 +411,9 @@ describe("ProfilesController", () => {
     });
 
     it("should delegate to profilesService.setIntentionTag with userId and dto", async () => {
-      const dto = { intentionTag: IntentionTagValue.SERIOUS_RELATIONSHIP };
+      const dto = { intentionTag: IntentionTagValue.EVLENMEK };
       mockProfilesService.setIntentionTag.mockResolvedValue({
-        intentionTag: IntentionTagValue.SERIOUS_RELATIONSHIP,
+        intentionTag: IntentionTagValue.EVLENMEK,
         message: "OK",
       });
 

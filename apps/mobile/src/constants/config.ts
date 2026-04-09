@@ -1,5 +1,7 @@
 // LUMA application configuration
+// Imports V1 locked values from @luma/shared — single source of truth
 import Constants from 'expo-constants';
+import { V1_LOCKED } from '@luma/shared';
 
 // Read API URL from Expo config (set via app.config.ts extra.apiUrl)
 // Falls back to Railway staging URL if not set, then localhost for dev
@@ -33,31 +35,30 @@ export const APP_CONFIG: {
   GIPHY_API_KEY: '',
 };
 
-// LOCKED architecture constants — do not modify
+// LOCKED architecture constants — derived from @luma/shared V1_LOCKED
 export const LOCKED_ARCHITECTURE = {
-  MENU_TABS: 5,
+  MENU_TABS: V1_LOCKED.menuTabs,
   MAIN_CATEGORIES: 19,
   SUBSYSTEMS: 48,
-  INTENTION_TAGS: 3,
-  PACKAGES: 4,
-  MATCH_ANIMATIONS: 2,
-  TOTAL_QUESTIONS: 45,
-  CORE_QUESTIONS: 20,
-  PREMIUM_QUESTIONS: 25,
+  INTENTION_TAGS: V1_LOCKED.intentionTags,
+  PACKAGES: V1_LOCKED.packages,
+  MATCH_ANIMATIONS: V1_LOCKED.matchAnimations,
+  TOTAL_QUESTIONS: V1_LOCKED.uyumQuestions,
+  PERSONALITY_QUESTIONS: V1_LOCKED.kisilikQuestions,
   COMPATIBILITY_LEVELS: 2,
 } as const;
 
-// Intention tags — 3 in backend, 2 visible in UI (NOT_SURE hidden for now)
+// Hedefler — 5 relationship/life goals shown during onboarding
 export const INTENTION_TAGS = [
-  { id: 'SERIOUS_RELATIONSHIP', label: 'Anlamlı Bağlantı', icon: 'heart' },
-  { id: 'EXPLORING', label: 'Keşfet', icon: 'compass' },
-  { id: 'NOT_SURE', label: 'Emin Değilim', icon: 'help-circle', hidden: true },
+  { id: 'EVLENMEK', label: 'Evlenmek', icon: 'heart' },
+  { id: 'ILISKI', label: 'İlişki Bulmak', icon: 'heart-outline' },
+  { id: 'SOHBET_ARKADAS', label: 'Sohbet / Arkadaşlık', icon: 'chatbubbles' },
+  { id: 'KULTUR', label: 'Kültürleri Öğrenmek', icon: 'globe' },
+  { id: 'DUNYA_GEZME', label: 'Dünyayı Gezmek', icon: 'airplane' },
 ] as const;
 
-// Visible modes for onboarding (excludes hidden tags)
-export const VISIBLE_MODES = INTENTION_TAGS.filter(
-  (t): t is typeof INTENTION_TAGS[0] | typeof INTENTION_TAGS[1] => !('hidden' in t && t.hidden),
-);
+// All intention tags are visible — no hidden tags
+export const VISIBLE_MODES = INTENTION_TAGS;
 
 // Interest tags — predefined list for onboarding selection (legacy flat list)
 // @deprecated Use INTEREST_CATEGORIES for categorized picker. Kept for backward compat lookups.
@@ -285,7 +286,7 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
   },
 ];
 
-// Package tiers — LOCKED at 4
+// Package tiers — LOCKED at 3
 export const PACKAGE_TIERS = [
   {
     id: 'FREE',
@@ -295,10 +296,10 @@ export const PACKAGE_TIERS = [
     priceDisplay: '0₺',
     badge: null,
     features: [
-      '20 beğeni / gün',
+      'Sınırlı beğeni / gün',
       'Temel uyumluluk skoru',
-      '10 video keşif / gün',
-      '3 oyun odası / gün',
+      'Sınırlı Canlı oturumu / gün',
+      '1 hikaye / gün',
       'Reklamlı deneyim',
     ],
     limitations: [
@@ -309,20 +310,21 @@ export const PACKAGE_TIERS = [
     ],
   },
   {
-    id: 'GOLD',
+    id: 'PREMIUM',
     name: 'Premium',
     tagline: '\uD83D\uDD25 3x daha fazla eşleşme',
     price: 499,
     priceDisplay: '499₺',
     badge: 'En Popüler',
     features: [
-      '\u2728 Sınırsız beğeni',
-      '\uD83D\uDC40 Seni beğenenleri gör',
+      '\u2728 Daha fazla beğeni / gün',
+      '\uD83D\uDC40 Seni beğenenleri gör (sınırlı)',
       '\uD83D\uDD04 Geri al — hata yapma korkusu yok',
-      '\uD83C\uDFA5 Sınırsız video keşif',
-      '\uD83C\uDFAE Tüm oyun odalarına erişim',
+      '\uD83C\uDFA5 Daha fazla Canlı oturumu',
+      '\uD83D\uDCAC Okundu bilgisi',
       '\uD83D\uDEAB Reklamsız deneyim',
       '\uD83D\uDCE6 Ayda 250 jeton hediye',
+      '\uD83D\uDC4D Ayda 4 Boost hediye',
     ],
     limitations: [],
     emotionalHooks: [
@@ -331,56 +333,35 @@ export const PACKAGE_TIERS = [
     ],
   },
   {
-    id: 'PRO',
+    id: 'SUPREME',
     name: 'Supreme',
-    tagline: '\u26A1 Anında fark edil',
-    price: 499,
-    priceDisplay: '499₺',
+    tagline: '\uD83D\uDC51 Tam deneyim',
+    price: 1199,
+    priceDisplay: '1.199₺',
     badge: 'En İyi Değer',
     features: [
       '\uD83D\uDC8E Premium\'daki her şey',
+      '\u267E\uFE0F Sınırsız beğeni',
       '\uD83D\uDE80 Öncelikli gösterim — profilin üstte',
-      '\uD83D\uDC4D Ayda 4 Boost hediye',
-      '\uD83D\uDCAC Okundu bilgisi — mesajın okundu mu gör',
-      '\uD83D\uDD0D Gelişmiş filtreler — şehir, ilgi alanı, aktif kullanıcılar',
-      '\uD83C\uDFC6 Detaylı uyumluluk analizi',
-      '\uD83D\uDCE6 Ayda 500 jeton hediye',
-    ],
-    limitations: [],
-    emotionalHooks: [
-      'Profilin diğerlerinden önce gösterilir — 5x daha fazla görünürlük',
-      'En iyi eşleşmeleri kaçırma',
-    ],
-  },
-  {
-    id: 'RESERVED',
-    name: 'Sınırsız',
-    tagline: '\uD83D\uDC51 Elite deneyim',
-    price: 1199,
-    priceDisplay: '1.199₺',
-    badge: 'Elite',
-    features: [
-      '\uD83D\uDC51 Supreme\'daki her şey',
-      '\u267E\uFE0F Sınırsız Boost — her zaman öne çık',
-      '\uD83C\uDF1F Özel rozet — profilinde fark yarat',
-      '\uD83C\uDFAE Özel premium oyunlar',
-      '\uD83C\uDF89 VIP etkinlik davetleri',
-      '\uD83D\uDCDE Öncelikli müşteri desteği',
+      '\u267E\uFE0F Sınırsız Boost',
+      '\uD83D\uDC40 Seni beğenenleri sınırsız gör',
+      '\uD83D\uDD0D Tüm gelişmiş filtreler',
+      '\uD83C\uDF1F "En Popüler" rozeti',
+      '\uD83C\uDFC6 Hikaye önde gösterim',
       '\uD83D\uDCE6 Ayda 1000 jeton hediye',
-      '\uD83C\uDFAF Özel eşleştirme algoritması',
     ],
     limitations: [],
     emotionalHooks: [
-      'En prestijli üyelik — sadece %2 kullanıcı için',
       'Tam kontrol, tam görünürlük, tam deneyim',
+      'En iyi eşleşmeleri kaçırma',
     ],
   },
 ] as const;
 
 // Profile configuration
 export const PROFILE_CONFIG = {
-  MAX_PHOTOS: 6,
-  MIN_PHOTOS: 2,
+  MAX_PHOTOS: V1_LOCKED.maxPhotos,
+  MIN_PHOTOS: V1_LOCKED.minPhotos,
   MIN_BIO_LENGTH: 10,
   MAX_BIO_LENGTH: 500,
   MIN_AGE: 18,
@@ -393,9 +374,8 @@ const isSaturday = (): boolean => new Date().getDay() === 6;
 // Base daily like limits per tier (before any bonuses)
 const BASE_DAILY_LIKES = {
   FREE: 20,
-  GOLD: 50,
-  PRO: 999999,
-  RESERVED: 999999,
+  PREMIUM: 50,
+  SUPREME: 999999,
 } as const;
 
 /** Returns tier daily likes with Saturday 2x bonus applied to free tier */
@@ -414,9 +394,8 @@ export const DISCOVERY_CONFIG = {
   /** Per-tier daily like limits — must match backend DAILY_FEED_VIEW_LIMITS */
   DAILY_LIKES: {
     FREE: 20,
-    GOLD: 50,
-    PRO: 999999,    // Unlimited
-    RESERVED: 999999, // Unlimited
+    PREMIUM: 50,
+    SUPREME: 999999, // Unlimited
   },
   /** Whether Saturday 2x bonus is currently active */
   IS_SATURDAY_BONUS: isSaturday(),
@@ -430,9 +409,8 @@ export const DISCOVERY_CONFIG = {
 export const FEED_POST_CONFIG = {
   DAILY_LIMITS: {
     FREE: 1,
-    GOLD: 5,
-    PRO: -1,
-    RESERVED: -1,
+    PREMIUM: 5,
+    SUPREME: -1,
   },
 } as const;
 
@@ -440,9 +418,8 @@ export const FEED_POST_CONFIG = {
 export const BOOST_CONFIG = {
   MONTHLY_LIMITS: {
     FREE: 0,
-    GOLD: 4,
-    PRO: 4,
-    RESERVED: -1,
+    PREMIUM: 4,
+    SUPREME: -1,
   },
 } as const;
 
@@ -450,9 +427,8 @@ export const BOOST_CONFIG = {
 export const LIKES_VIEW_CONFIG = {
   DAILY_LIMITS: {
     FREE: 1,
-    GOLD: 20,
-    PRO: 50,
-    RESERVED: -1,
+    PREMIUM: 20,
+    SUPREME: -1,
   },
 } as const;
 
@@ -460,16 +436,15 @@ export const LIKES_VIEW_CONFIG = {
 export const WAVE_CONFIG = {
   DAILY_LIMITS: {
     FREE: 3,
-    GOLD: 20,
-    PRO: 20,
-    RESERVED: -1, // Sınırsız
+    PREMIUM: 20,
+    SUPREME: -1, // Sınırsız
   },
   COIN_COST: 5,
 } as const;
 
 // Paid first message configuration
 export const PAID_MESSAGE_CONFIG = {
-  PRICE_GOLD: 150,
+  COST_JETON: 150,
   MAX_LENGTH: 300,
 } as const;
 
@@ -477,20 +452,18 @@ export const PAID_MESSAGE_CONFIG = {
 export const MESSAGE_CONFIG = {
   DAILY_LIMITS: {
     FREE: 1,
-    GOLD: 10,
-    PRO: 10,
-    RESERVED: -1,
+    PREMIUM: 10,
+    SUPREME: -1,
   },
-  SINGLE_MESSAGE_PACK_PRICE: 150, // Gold — in-app currency
+  SINGLE_MESSAGE_PACK_PRICE: 150, // Jeton — in-app currency
 } as const;
 
 // Private message from comments — daily limits per package tier (-1 = unlimited)
 export const PRIVATE_MESSAGE_CONFIG = {
   DAILY_LIMITS: {
     FREE: 0,
-    GOLD: 10,
-    PRO: 10,
-    RESERVED: -1,
+    PREMIUM: 10,
+    SUPREME: -1,
   },
 } as const;
 
@@ -504,53 +477,49 @@ export const MONETIZATION_ENABLED = true;
 export const FLIRT_CONFIG = {
   DAILY_LIMITS: {
     FREE: -1,
-    GOLD: -1,
-    PRO: -1,
-    RESERVED: -1,
+    PREMIUM: -1,
+    SUPREME: -1,
   },
 } as const;
 
 // Boost duration options with jeton costs
 export const BOOST_DURATION_OPTIONS = [
-  { minutes: 30, label: '30 dk', goldCost: 50 },
-  { minutes: 120, label: '2 saat', goldCost: 120 },
-  { minutes: 1440, label: '24 saat', goldCost: 250 },
+  { minutes: 30, label: '30 dk', jetonCost: 50 },
+  { minutes: 120, label: '2 saat', jetonCost: 120 },
+  { minutes: 1440, label: '24 saat', jetonCost: 250 },
 ] as const;
 
 // Boost pack purchase options (jeton cost)
 export const BOOST_PACKS = [
-  { id: 'boost_20', count: 20, costGold: 1500, discount: '%37 KAYDET', popular: true },
-  { id: 'boost_10', count: 10, costGold: 900, discount: '%32 KAYDET' },
-  { id: 'boost_5', count: 5, costGold: 500, discount: '%20 KAYDET' },
-  { id: 'boost_1', count: 1, costGold: 120 },
+  { id: 'boost_15', count: 15, costJeton: 1500, discount: '%37 KAYDET', popular: true },
+  { id: 'boost_10', count: 10, costJeton: 900, discount: '%32 KAYDET' },
+  { id: 'boost_5', count: 5, costJeton: 500, discount: '%20 KAYDET' },
+  { id: 'boost_1', count: 1, costJeton: 120 },
 ] as const;
 
 // Instant Connect daily session limits per package tier (-1 = unlimited)
 export const INSTANT_CONNECT_CONFIG = {
   DAILY_LIMITS: {
     FREE: 1,
-    GOLD: 5,
-    PRO: 10,
-    RESERVED: -1,
+    PREMIUM: 5,
+    SUPREME: -1,
   },
-  MATCH_COST: 50,     // coins for first match
-  SWITCH_COST: 25,    // coins to switch to another match
+  MATCH_COST: 50,     // jeton for first match
+  SWITCH_COST: 25,    // jeton to switch to another match
 } as const;
 
 // Monthly token bonus per tier (awarded on subscription renewal)
 export const MONTHLY_TOKEN_BONUS = {
   FREE: 0,
-  GOLD: 250,
-  PRO: 500,
-  RESERVED: 1000,
+  PREMIUM: 250,
+  SUPREME: 1000,
 } as const;
 
 // ─── Kim Gördü — Viewer Reveal Config ─────────────────────────────
 export const VIEWERS_REVEAL_CONFIG = {
   FREE: { dailyReveals: 1, delayHours: 24 },
-  GOLD: { dailyReveals: 5, delayHours: 6 },
-  PRO: { dailyReveals: 15, delayHours: 0 },
-  RESERVED: { dailyReveals: 999999, delayHours: 0 },
+  PREMIUM: { dailyReveals: 5, delayHours: 6 },
+  SUPREME: { dailyReveals: 999999, delayHours: 0 },
 } as const;
 
 // ─── Beğenenler — Likes Reveal Config ────────────────────────────
@@ -559,55 +528,53 @@ export const LIKES_REVEAL_CONFIG = LIKES_VIEW_CONFIG.DAILY_LIMITS;
 
 // ─── Mesaj Paketleri ──────────────────────────────────────────────
 export const MESSAGE_BUNDLE_CONFIG = [
-  { id: 'msg_bundle_1', count: 1, costGold: 150, discountPercent: 0 },
-  { id: 'msg_bundle_3', count: 3, costGold: 350, discountPercent: 22 },
-  { id: 'msg_bundle_5', count: 5, costGold: 500, discountPercent: 33 },
-  { id: 'msg_bundle_10', count: 10, costGold: 800, discountPercent: 47 },
+  { id: 'msg_bundle_1', count: 1, costJeton: 150, discountPercent: 0 },
+  { id: 'msg_bundle_3', count: 3, costJeton: 350, discountPercent: 22 },
+  { id: 'msg_bundle_5', count: 5, costJeton: 500, discountPercent: 33 },
+  { id: 'msg_bundle_10', count: 10, costJeton: 800, discountPercent: 47 },
 ] as const;
 
 // ─── Tier Ücretsiz Mesaj Hakları (aylık) ──────────────────────────
 export const FREE_MESSAGE_ALLOWANCE = {
   FREE: 0,
-  GOLD: 1,
-  PRO: 3,
-  RESERVED: 5,
+  PREMIUM: 1,
+  SUPREME: 5,
 } as const;
 
 // ─── Gizli Hayran — Secret Admirer Config ─────────────────────────
 export const SECRET_ADMIRER_CONFIG = {
-  COST_GOLD: 75,
+  COST_JETON: 75,
   EXTRA_GUESS_COST: 25,
   FREE_GUESSES: 3,
   EXPIRY_HOURS: 48,
-  FREE_SENDS_PER_MONTH: { FREE: 0, GOLD: 1, PRO: 3, RESERVED: -1 },
+  FREE_SENDS_PER_MONTH: { FREE: 0, PREMIUM: 1, SUPREME: -1 },
 } as const;
 
 // ─── Uyum Röntgeni — Compatibility X-Ray Config ──────────────────
 export const COMPATIBILITY_XRAY_CONFIG = {
-  COST_GOLD: 30,
-  FREE_PER_DAY: { FREE: 0, GOLD: 0, PRO: 10, RESERVED: 999999 },
+  COST_JETON: 30,
+  FREE_PER_DAY: { FREE: 0, PREMIUM: 0, SUPREME: 999999 },
 } as const;
 
 // ─── Haftalık Top 3 ───────────────────────────────────────────────
 export const WEEKLY_TOP_CONFIG = {
-  VISIBLE_COUNT: { FREE: 1, GOLD: 2, PRO: 3, RESERVED: 999999 },
-  REVEAL_COST_GOLD: 40,
+  VISIBLE_COUNT: { FREE: 1, PREMIUM: 2, SUPREME: 999999 },
+  REVEAL_COST_JETON: 40,
   REFRESH_DAY: 1, // Monday
 } as const;
 
 // ─── AI Sohbet Önerileri ──────────────────────────────────────────
 export const AI_CHAT_SUGGESTION_CONFIG = {
-  FREE_PER_DAY: { FREE: 0, GOLD: 2, PRO: 5, RESERVED: 999999 },
+  FREE_PER_DAY: { FREE: 0, PREMIUM: 2, SUPREME: 999999 },
   PACK_SIZE: 10,
-  PACK_COST_GOLD: 30,
+  PACK_COST_JETON: 30,
 } as const;
 
 // ─── Yakınında Etiketi Görünürlüğü ───────────────────────────────
 export const NEARBY_VISIBILITY_CONFIG = {
   FREE: 'hidden' as const,
-  GOLD: 'label' as const,
-  PRO: 'distance' as const,
-  RESERVED: 'distance_push' as const,
+  PREMIUM: 'label' as const,
+  SUPREME: 'distance_push' as const,
 } as const;
 
 // ─── Süper Uyumlu Eşik ───────────────────────────────────────────

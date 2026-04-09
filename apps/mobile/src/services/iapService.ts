@@ -10,9 +10,8 @@ import { Platform } from 'react-native';
 /** Product IDs registered in App Store Connect / Google Play Console */
 const PRODUCT_IDS = {
   subscriptions: [
-    'com.luma.dating.gold.monthly',
-    'com.luma.dating.pro.monthly',
-    'com.luma.dating.reserved.monthly',
+    'com.luma.dating.premium.monthly',
+    'com.luma.dating.supreme.monthly',
   ],
   gold: [
     'com.luma.dating.gold.50',
@@ -24,9 +23,8 @@ const PRODUCT_IDS = {
 
 /** Maps package tier IDs to store product IDs */
 const TIER_TO_PRODUCT_ID: Record<string, string> = {
-  GOLD: 'com.luma.dating.gold.monthly',
-  PRO: 'com.luma.dating.pro.monthly',
-  RESERVED: 'com.luma.dating.reserved.monthly',
+  PREMIUM: 'com.luma.dating.premium.monthly',
+  SUPREME: 'com.luma.dating.supreme.monthly',
 };
 
 /** Result of a successful purchase containing receipt data */
@@ -110,7 +108,7 @@ async function initIAP(): Promise<IAPStatus> {
  * In production, triggers the native store payment sheet.
  * In mock mode, returns a clearly-labeled dev receipt.
  *
- * @param packageTier - The tier to subscribe to ('GOLD' | 'PRO' | 'RESERVED')
+ * @param packageTier - The tier to subscribe to ('PREMIUM' | 'SUPREME')
  * @returns Purchase result with receipt data for backend validation
  */
 async function purchaseSubscription(

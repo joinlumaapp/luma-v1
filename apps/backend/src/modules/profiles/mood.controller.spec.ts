@@ -40,39 +40,61 @@ describe("MoodController", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════
-  // PUT /profiles/mood
+  // PATCH /profiles/mood
   // ═══════════════════════════════════════════════════════════════
 
   describe("setMood()", () => {
     const userId = "user-uuid-1";
 
-    it("should set mood successfully and return mood data with expiry", async () => {
+    it("should set mood successfully and return mood data with 4h expiry", async () => {
       const moodSetAt = new Date("2026-02-23T10:00:00.000Z");
       mockPrisma.user.findUnique.mockResolvedValue({ id: userId });
       mockPrisma.userProfile.update.mockResolvedValue({
-        currentMood: MoodValue.ENERJIK,
+        currentMood: MoodValue.SOHBETE_ACIGIM,
         moodSetAt,
       });
 
-      const dto = { mood: MoodValue.ENERJIK };
+      const dto = { mood: MoodValue.SOHBETE_ACIGIM };
       const result = await controller.setMood(userId, dto);
 
-      expect(result.mood).toBe(MoodValue.ENERJIK);
+      expect(result.mood).toBe(MoodValue.SOHBETE_ACIGIM);
       expect(result.moodSetAt).toBe(moodSetAt.toISOString());
       expect(result.expiresAt).toBeDefined();
-      expect(result.message).toBe("Ruh halin güncellendi!");
 
-      // Verify expiry is 24 hours after moodSetAt
-      const expiresAt = new Date(result.expiresAt);
+      // Verify expiry is 4 hours after moodSetAt
+      const expiresAt = new Date(result.expiresAt!);
       expect(expiresAt.getTime()).toBe(
-        moodSetAt.getTime() + 24 * 60 * 60 * 1000,
+        moodSetAt.getTime() + 4 * 60 * 60 * 1000,
       );
+    });
+
+    it("should clear mood when null is sent", async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ id: userId });
+      mockPrisma.userProfile.update.mockResolvedValue({
+        currentMood: null,
+        moodSetAt: null,
+      });
+
+      const dto = { mood: null as unknown as MoodValue };
+      const result = await controller.setMood(userId, dto);
+
+      expect(result.mood).toBeNull();
+      expect(result.moodSetAt).toBeNull();
+      expect(result.expiresAt).toBeNull();
+
+      expect(mockPrisma.userProfile.update).toHaveBeenCalledWith({
+        where: { userId },
+        data: {
+          currentMood: null,
+          moodSetAt: null,
+        },
+      });
     });
 
     it("should throw NotFoundException when user does not exist", async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
-      const dto = { mood: MoodValue.MUTLU };
+      const dto = { mood: MoodValue.BULUSMAYA_VARIM };
       await expect(controller.setMood(userId, dto)).rejects.toThrow(
         NotFoundException,
       );
@@ -82,11 +104,11 @@ describe("MoodController", () => {
       const moodSetAt = new Date();
       mockPrisma.user.findUnique.mockResolvedValue({ id: userId });
       mockPrisma.userProfile.update.mockResolvedValue({
-        currentMood: MoodValue.SAKIN,
+        currentMood: MoodValue.BUGUN_SESSIZIM,
         moodSetAt,
       });
 
-      const dto = { mood: MoodValue.SAKIN };
+      const dto = { mood: MoodValue.BUGUN_SESSIZIM };
       await controller.setMood(userId, dto);
 
       expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
@@ -95,7 +117,7 @@ describe("MoodController", () => {
       expect(mockPrisma.userProfile.update).toHaveBeenCalledWith({
         where: { userId },
         data: {
-          currentMood: MoodValue.SAKIN,
+          currentMood: MoodValue.BUGUN_SESSIZIM,
           moodSetAt: expect.any(Date),
         },
       });
@@ -109,25 +131,25 @@ describe("MoodController", () => {
   describe("getUserMood()", () => {
     const userId = "user-uuid-1";
 
-    it("should return active mood when within 24h", async () => {
+    it("should return active mood when within 4h", async () => {
       const recentDate = new Date(Date.now() - 2 * 60 * 60 * 1000); // 2 hours ago
       mockPrisma.userProfile.findUnique.mockResolvedValue({
-        currentMood: MoodValue.HEYECANLI,
+        currentMood: MoodValue.KAFEDE_TAKILIYORUM,
         moodSetAt: recentDate,
       });
 
       const result = await controller.getUserMood(userId);
 
-      expect(result.mood).toBe(MoodValue.HEYECANLI);
+      expect(result.mood).toBe(MoodValue.KAFEDE_TAKILIYORUM);
       expect(result.isActive).toBe(true);
       expect(result.moodSetAt).toBe(recentDate.toISOString());
       expect(result.expiresAt).toBeDefined();
     });
 
-    it("should return inactive mood when expired (set > 24h ago)", async () => {
-      const expiredDate = new Date(Date.now() - 25 * 60 * 60 * 1000); // 25 hours ago
+    it("should return inactive mood when expired (set > 4h ago)", async () => {
+      const expiredDate = new Date(Date.now() - 5 * 60 * 60 * 1000); // 5 hours ago
       mockPrisma.userProfile.findUnique.mockResolvedValue({
-        currentMood: MoodValue.DUSUNCELI,
+        currentMood: MoodValue.BUGUN_SESSIZIM,
         moodSetAt: expiredDate,
       });
 

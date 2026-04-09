@@ -29,9 +29,8 @@ interface PackageComparisonModalProps {
 interface ComparisonFeature {
   label: string;
   FREE: string;
-  GOLD: string;
-  PRO: string;
-  RESERVED: string;
+  PREMIUM: string;
+  SUPREME: string;
 }
 
 // ─── Constants ───────────────────────────────────────────────
@@ -39,16 +38,14 @@ interface ComparisonFeature {
 // Package accent colors aligned with PackagesScreen
 const TIER_COLORS: Record<PackageTier, string> = {
   FREE: colors.textSecondary,
-  GOLD: '#FFD700',
-  PRO: colors.primary,
-  RESERVED: colors.secondary,
+  PREMIUM: '#FFD700',
+  SUPREME: colors.secondary,
 };
 
 const TIER_LABELS: Record<PackageTier, string> = {
   FREE: 'Ücretsiz',
-  GOLD: 'Premium',
-  PRO: 'Pro',
-  RESERVED: 'Supreme',
+  PREMIUM: 'Premium',
+  SUPREME: 'Supreme',
 };
 
 const getTierPrice = (id: string): string => {
@@ -58,118 +55,103 @@ const getTierPrice = (id: string): string => {
 
 const TIER_PRICES: Record<PackageTier, string> = {
   FREE: getTierPrice('FREE'),
-  GOLD: getTierPrice('GOLD'),
-  PRO: getTierPrice('PRO'),
-  RESERVED: getTierPrice('RESERVED'),
+  PREMIUM: getTierPrice('PREMIUM'),
+  SUPREME: getTierPrice('SUPREME'),
 };
 
 // Tier order for hierarchy checks
-const TIER_ORDER: PackageTier[] = ['FREE', 'GOLD', 'PRO', 'RESERVED'];
+const TIER_ORDER: PackageTier[] = ['FREE', 'PREMIUM', 'SUPREME'];
 
-// Feature comparison data — each row maps to all 4 tiers (Bumble-style layout)
+// Feature comparison data — each row maps to all 3 tiers (Bumble-style layout)
 const FEATURES: ComparisonFeature[] = [
   {
     label: 'Beğeni limiti',
     FREE: '20/gün',
-    GOLD: '50/gün',
-    PRO: 'Sınırsız',
-    RESERVED: 'Sınırsız',
+    PREMIUM: '50/gün',
+    SUPREME: 'Sınırsız',
   },
   {
     label: 'Geri al',
     FREE: '\u2717',
-    GOLD: 'Sınırsız',
-    PRO: 'Sınırsız',
-    RESERVED: 'Sınırsız',
+    PREMIUM: 'Sınırsız',
+    SUPREME: 'Sınırsız',
   },
   {
     label: 'Kimin beğendiğini gör',
     FREE: '\u2717',
-    GOLD: '\u2713',
-    PRO: '\u2713',
-    RESERVED: '\u2713',
+    PREMIUM: '\u2713',
+    SUPREME: '\u2713',
   },
   {
     label: 'Reklamsız',
     FREE: '\u2717',
-    GOLD: '\u2713',
-    PRO: '\u2713',
-    RESERVED: '\u2713',
+    PREMIUM: '\u2713',
+    SUPREME: '\u2713',
   },
   {
     label: 'Boost hediye',
     FREE: '\u2717',
-    GOLD: '4/ay',
-    PRO: '4/ay',
-    RESERVED: 'Sınırsız',
+    PREMIUM: '4/ay',
+    SUPREME: 'Sınırsız',
   },
   {
     label: 'Beğenilerin öncelikli',
     FREE: '\u2717',
-    GOLD: '\u2717',
-    PRO: '\u2713',
-    RESERVED: '\u2713',
+    PREMIUM: '\u2717',
+    SUPREME: '\u2713',
   },
   {
     label: 'Gelişmiş filtreler',
     FREE: '\u2717',
-    GOLD: '\u2717',
-    PRO: '\u2713',
-    RESERVED: '\u2713',
+    PREMIUM: '\u2717',
+    SUPREME: '\u2713',
   },
   {
     label: 'Yakın çevre profilleri',
     FREE: '\u2717',
-    GOLD: '\u2717',
-    PRO: '\u2713',
-    RESERVED: '\u2713',
+    PREMIUM: '\u2717',
+    SUPREME: '\u2713',
   },
   {
     label: 'Beğenenleri gör',
     FREE: '1/gün',
-    GOLD: '20/gün',
-    PRO: '50/gün',
-    RESERVED: 'Sınırsız',
+    PREMIUM: '20/gün',
+    SUPREME: 'Sınırsız',
   },
   {
     label: 'Sosyal Akış',
     FREE: '\u2717',
-    GOLD: '\u2713',
-    PRO: '\u2713',
-    RESERVED: '\u2713',
+    PREMIUM: '\u2713',
+    SUPREME: '\u2713',
   },
   {
     label: 'Günlük mesaj',
     FREE: '1/gün',
-    GOLD: '10/gün',
-    PRO: '10/gün',
-    RESERVED: 'Sınırsız',
+    PREMIUM: '10/gün',
+    SUPREME: 'Sınırsız',
   },
   {
     label: 'Özel rozet',
     FREE: '\u2717',
-    GOLD: '\u2717',
-    PRO: '\u2717',
-    RESERVED: '\u2713',
+    PREMIUM: '\u2717',
+    SUPREME: '\u2713',
   },
   {
     label: 'VIP destek',
     FREE: '\u2717',
-    GOLD: '\u2717',
-    PRO: '\u2717',
-    RESERVED: '\u2713',
+    PREMIUM: '\u2717',
+    SUPREME: '\u2713',
   },
   {
     label: 'Özel etkinlik davet',
     FREE: '\u2717',
-    GOLD: '\u2717',
-    PRO: '\u2717',
-    RESERVED: '\u2713',
+    PREMIUM: '\u2717',
+    SUPREME: '\u2713',
   },
 ];
 
 // Recommended tier constant
-const RECOMMENDED_TIER: PackageTier = 'PRO';
+const RECOMMENDED_TIER: PackageTier = 'SUPREME';
 
 // ─── Component ───────────────────────────────────────────────
 

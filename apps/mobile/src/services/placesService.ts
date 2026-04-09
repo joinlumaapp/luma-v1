@@ -88,6 +88,13 @@ export const placesService = {
     return response.data;
   },
 
+  // Get current user's favorite places
+  getMyPlaces: async (): Promise<SharedPlace[]> => {
+    const response = await api.get<SharedPlacesResponse>('/places/my');
+    const body = response.data;
+    return (body as SharedPlacesResponse).sharedPlaces ?? (body as unknown as SharedPlace[]);
+  },
+
   // Get places shared with a matched user
   getSharedPlaces: async (partnerId: string): Promise<SharedPlace[]> => {
     const response = await api.get<SharedPlacesResponse>(

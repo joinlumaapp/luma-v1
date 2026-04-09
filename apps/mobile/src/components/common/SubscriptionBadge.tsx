@@ -16,10 +16,9 @@ type BadgeDisplayTier = 'free' | 'premium' | 'supreme';
 
 const mapToDisplayTier = (tier: PackageTier): BadgeDisplayTier => {
   switch (tier) {
-    case 'GOLD':
-    case 'PRO':
+    case 'PREMIUM':
       return 'premium';
-    case 'RESERVED':
+    case 'SUPREME':
       return 'supreme';
     default:
       return 'free';

@@ -1,11 +1,12 @@
 import {
   Controller,
   Get,
-  Put,
+  Patch,
   Body,
   Param,
   UseGuards,
   NotFoundException,
+  BadRequestException,
 } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
@@ -14,54 +15,65 @@ import { SetMoodDto, MoodValue } from "./dto/set-mood.dto";
 import { PrismaService } from "../../prisma/prisma.service";
 
 /**
- * MoodController — "Bugün Ne Moddayım?" feature.
+ * MoodController — "Anlık Ruh Hali" feature.
  *
- * Users can set a mood that appears as a badge on their discovery card.
- * Moods expire after 24 hours automatically.
+ * Users can set a mood that appears as a badge on their discovery card
+ * and feed posts. Moods expire after 4 hours automatically.
+ * Tapping the same mood again clears it (send null).
  *
  * Endpoints:
- *   PUT  /profiles/mood         — Set current mood
- *   GET  /profiles/mood/:userId — Get a user's current mood
+ *   PATCH /profiles/mood         — Set or clear current mood
+ *   GET   /profiles/mood/:userId — Get a user's current mood
  */
 @ApiTags("Profiles")
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller("profiles")
 export class MoodController {
-  private static readonly MOOD_EXPIRY_HOURS = 24;
+  /** Mood expiry duration in hours */
+  private static readonly MOOD_EXPIRY_HOURS = 4;
 
   constructor(private readonly prisma: PrismaService) {}
 
-  @Put("mood")
-  @ApiOperation({ summary: "Set current mood (expires after 24 hours)" })
+  @Patch("mood")
+  @ApiOperation({ summary: "Set or clear mood status (expires after 4 hours)" })
   async setMood(@CurrentUser("sub") userId: string, @Body() dto: SetMoodDto) {
+    // Validate mood value when provided
+    const validMoods: string[] = Object.values(MoodValue);
+    if (dto.mood !== null && dto.mood !== undefined && !validMoods.includes(dto.mood)) {
+      throw new BadRequestException("Geçersiz mood değeri");
+    }
+
     // Verify user exists
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
 
     if (!user) {
-      throw new NotFoundException("Kullanici bulunamadi");
+      throw new NotFoundException("Kullanıcı bulunamadı");
     }
 
-    // Upsert mood — store in userProfile's JSON field or dedicated mood table
-    // Using userProfile metadata for simplicity
+    const mood = dto.mood ?? null;
+
     const profile = await this.prisma.userProfile.update({
       where: { userId },
       data: {
-        currentMood: dto.mood,
-        moodSetAt: new Date(),
+        currentMood: mood,
+        moodSetAt: mood ? new Date() : null,
       },
     });
 
     return {
-      mood: profile.currentMood as MoodValue,
-      moodSetAt: (profile.moodSetAt as Date).toISOString(),
-      expiresAt: new Date(
-        (profile.moodSetAt as Date).getTime() +
-          MoodController.MOOD_EXPIRY_HOURS * 60 * 60 * 1000,
-      ).toISOString(),
-      message: "Ruh halin güncellendi!",
+      mood: profile.currentMood,
+      moodSetAt: profile.moodSetAt
+        ? (profile.moodSetAt as Date).toISOString()
+        : null,
+      expiresAt: profile.moodSetAt
+        ? new Date(
+            (profile.moodSetAt as Date).getTime() +
+              MoodController.MOOD_EXPIRY_HOURS * 60 * 60 * 1000,
+          ).toISOString()
+        : null,
     };
   }
 
@@ -77,7 +89,7 @@ export class MoodController {
     });
 
     if (!profile) {
-      throw new NotFoundException("Profil bulunamadi");
+      throw new NotFoundException("Profil bulunamadı");
     }
 
     // Check if mood has expired

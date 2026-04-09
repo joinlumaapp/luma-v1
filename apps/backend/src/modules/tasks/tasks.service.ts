@@ -1,7 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { PrismaService } from "../../prisma/prisma.service";
-import { RelationshipsService } from "../relationships/relationships.service";
 import { StoriesService } from "../stories/stories.service";
 import { PaymentsService } from "../payments/payments.service";
 
@@ -15,10 +14,9 @@ import { PaymentsService } from "../payments/payments.service";
  * 5. Clean old notifications
  * 6. Clean old expired verifications
  * 7. Clean old daily swipe counts
- * 8. Auto-end expired relationship deactivations (48-hour deadline)
- * 9. Clean up expired stories (24-hour TTL)
- * 10. Process expired subscriptions with grace period
- * 11. Clean up expired moods (24-hour TTL)
+ * 8. Clean up expired stories (24-hour TTL)
+ * 9. Process expired subscriptions with grace period
+ * 10. Clean up expired moods (24-hour TTL)
  */
 @Injectable()
 export class TasksService {
@@ -26,7 +24,6 @@ export class TasksService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly relationshipsService: RelationshipsService,
     private readonly storiesService: StoriesService,
     private readonly paymentsService: PaymentsService,
   ) {}
@@ -154,21 +151,7 @@ export class TasksService {
     }
   }
 
-  // ─── 9. Auto-End Expired Relationship Deactivations ────────────
-  // Runs every 10 minutes — ends relationships past the 48-hour deadline
-  @Cron(CronExpression.EVERY_10_MINUTES)
-  async autoEndExpiredRelationships(): Promise<void> {
-    const endedCount =
-      await this.relationshipsService.autoEndExpiredRelationships();
-
-    if (endedCount > 0) {
-      this.logger.log(
-        `Auto-ended ${endedCount} expired relationship deactivation(s)`,
-      );
-    }
-  }
-
-  // ─── 10. Clean Up Expired Stories ──────────────────────────────
+  // ─── 9. Clean Up Expired Stories ──────────────────────────────
   // Runs every 30 minutes — soft-deletes stories older than 24 hours
   @Cron("*/30 * * * *")
   async cleanupExpiredStories(): Promise<void> {
@@ -180,15 +163,15 @@ export class TasksService {
   }
 
   // ─── 12. Clean Up Expired Moods ─────────────────────────────
-  // Runs every hour — clears moods older than 24 hours
+  // Runs every hour — clears moods older than 4 hours
   @Cron(CronExpression.EVERY_HOUR)
   async cleanupExpiredMoods(): Promise<void> {
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
 
     const result = await this.prisma.userProfile.updateMany({
       where: {
         currentMood: { not: null },
-        moodSetAt: { lt: twentyFourHoursAgo },
+        moodSetAt: { lt: fourHoursAgo },
       },
       data: {
         currentMood: null,

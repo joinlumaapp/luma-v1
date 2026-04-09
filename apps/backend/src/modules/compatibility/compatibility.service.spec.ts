@@ -72,7 +72,7 @@ describe("CompatibilityService", () => {
 
     // Default mocks for daily limit check (used by getScoreWithUser)
     // Individual tests can override these as needed
-    prisma.user.findUnique.mockResolvedValue({ packageTier: "RESERVED" });
+    prisma.user.findUnique.mockResolvedValue({ packageTier: "SUPREME" });
     prisma.compatibilityScore.count.mockResolvedValue(0);
     prisma.userProfile.findUnique.mockResolvedValue(null);
   });
@@ -89,7 +89,7 @@ describe("CompatibilityService", () => {
       );
     });
 
-    it("should return only core (non-premium) questions for FREE users", async () => {
+    it("should return all active questions for FREE users", async () => {
       prisma.user.findUnique.mockResolvedValue({ packageTier: "FREE" });
       prisma.compatibilityQuestion.findMany.mockResolvedValue([
         {
@@ -99,7 +99,6 @@ describe("CompatibilityService", () => {
           textEn: "Q1",
           textTr: "S1",
           weight: 1,
-          isPremium: false,
           options: [{ id: "o1", labelEn: "A", labelTr: "A", order: 0 }],
         },
       ]);
@@ -107,33 +106,27 @@ describe("CompatibilityService", () => {
 
       const result = await service.getQuestions("user-1");
 
-      // Should have filtered to isPremium: false
-      expect(prisma.compatibilityQuestion.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({ isPremium: false }),
-        }),
-      );
-      expect(result.hasPremiumAccess).toBe(false);
-      expect(result.totalCount).toBe(20);
-    });
-
-    it("should return all 45 questions for GOLD users (premium access)", async () => {
-      prisma.user.findUnique.mockResolvedValue({ packageTier: "GOLD" });
-      prisma.compatibilityQuestion.findMany.mockResolvedValue([]);
-      prisma.userAnswer.findMany.mockResolvedValue([]);
-
-      const result = await service.getQuestions("user-1");
-
-      // Should NOT filter by isPremium
       expect(prisma.compatibilityQuestion.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ isActive: true }),
         }),
       );
-      const callArg = prisma.compatibilityQuestion.findMany.mock.calls[0][0];
-      expect(callArg.where.isPremium).toBeUndefined();
-      expect(result.hasPremiumAccess).toBe(true);
-      expect(result.totalCount).toBe(45);
+      expect(result.totalCount).toBe(20);
+    });
+
+    it("should return all 20 questions for PREMIUM users", async () => {
+      prisma.user.findUnique.mockResolvedValue({ packageTier: "PREMIUM" });
+      prisma.compatibilityQuestion.findMany.mockResolvedValue([]);
+      prisma.userAnswer.findMany.mockResolvedValue([]);
+
+      const result = await service.getQuestions("user-1");
+
+      expect(prisma.compatibilityQuestion.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ isActive: true }),
+        }),
+      );
+      expect(result.totalCount).toBe(20);
     });
 
     it("should mark answered questions with their selected option", async () => {
@@ -146,7 +139,6 @@ describe("CompatibilityService", () => {
           textEn: "Q1",
           textTr: "S1",
           weight: 1,
-          isPremium: false,
           options: [{ id: "o1", labelEn: "A", labelTr: "A", order: 0 }],
         },
         {
@@ -156,7 +148,6 @@ describe("CompatibilityService", () => {
           textEn: "Q2",
           textTr: "S2",
           weight: 1,
-          isPremium: false,
           options: [{ id: "o2", labelEn: "B", labelTr: "B", order: 0 }],
         },
       ]);
@@ -173,15 +164,14 @@ describe("CompatibilityService", () => {
       expect(result.answeredCount).toBe(1);
     });
 
-    it("should grant premium access for PRO and RESERVED tiers", async () => {
-      for (const tier of ["PRO", "RESERVED"]) {
+    it("should return questions for PREMIUM and SUPREME tiers", async () => {
+      for (const tier of ["PREMIUM", "SUPREME"]) {
         prisma.user.findUnique.mockResolvedValue({ packageTier: tier });
         prisma.compatibilityQuestion.findMany.mockResolvedValue([]);
         prisma.userAnswer.findMany.mockResolvedValue([]);
 
         const result = await service.getQuestions("user-1");
-        expect(result.hasPremiumAccess).toBe(true);
-        expect(result.totalCount).toBe(45);
+        expect(result.totalCount).toBe(20);
       }
     });
   });
@@ -719,11 +709,7 @@ describe("CompatibilityService", () => {
 
       // Core q1: adjacent (70pts) * weight(1) * 2x = 140, max = 100 * 1 * 2 = 200
       // Premium q2: exact (100pts) * weight(1) * 1x = 100, max = 100 * 1 * 1 = 100
-      // baseScore (core only): 140/200 = 70%
-      // deepScore (all): (140+100)/(200+100) = 240/300 = 80%
       // finalScore = core only = 70%
-      expect(result.baseScore).toBe(70);
-      expect(result.deepScore).toBe(80);
       expect(result.finalScore).toBe(70);
     });
 
@@ -961,11 +947,7 @@ describe("CompatibilityService", () => {
       const result = await service.getScoreWithUser("aaa", "bbb");
 
       // Core: (100*2 + 100*2)/(100*2 + 100*2) = 400/400 = 100%, clamped to 97
-      // Premium: 100*1 / 100*1 = 100%
-      // Deep: (400+100)/(400+100) = 100%, clamped to 97
       // Final: core only = 97
-      expect(result.baseScore).toBe(97);
-      expect(result.deepScore).toBe(97);
       expect(result.finalScore).toBe(97);
     });
 

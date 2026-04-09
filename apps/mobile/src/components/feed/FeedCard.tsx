@@ -213,7 +213,6 @@ const likeButtonStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: spacing.sm + 2,
   },
   actionBtn: {},
   likeWrapper: {
@@ -278,6 +277,14 @@ const formatTimeAgo = (dateString: string): string => {
   });
 };
 
+
+// ─── Mood display config (Anlık Ruh Hali) ──────────────────
+const FEED_MOOD_DISPLAY: Record<string, { label: string; emoji: string; color: string }> = {
+  sohbete_acigim: { label: 'Sohbete a\u00E7\u0131\u011F\u0131m', emoji: '\uD83D\uDCAC', color: '#22C55E' },
+  bugun_sessizim: { label: 'Bug\u00FCn sessizim', emoji: '\uD83E\uDD2B', color: '#6B7280' },
+  bulusmaya_varim: { label: 'Bulu\u015Fmaya var\u0131m', emoji: '\u2615', color: '#F59E0B' },
+  kafede_takiliyorum: { label: 'Kafede tak\u0131l\u0131yorum', emoji: '\uD83C\uDFEA', color: '#3B82F6' },
+};
 
 // ─── Feed Video Player ──────────────────────────────────────
 
@@ -484,14 +491,16 @@ const TextContent: React.FC<{ content: string }> = ({ content }) => {
 interface FeedCardProps {
   post: FeedPost;
   onLike: (postId: string) => void;
+  onComment?: (postId: string) => void;
   onFollow: (userId: string) => void;
   onProfilePress: (userId: string) => void;
   onPostTap?: (post: FeedPost) => void;
+  onLikeCountPress?: (postId: string) => void;
   /** Whether this card is currently visible in the viewport (for video auto-play) */
   isVisible?: boolean;
 }
 
-export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onProfilePress, onPostTap, isVisible = false }) => {
+export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onFollow, onProfilePress, onPostTap, onLikeCountPress, isVisible = false }) => {
   const lastTapRef = useRef<number>(0);
   const doubleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -504,6 +513,14 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onPr
   const handleLikePress = useCallback(() => {
     onLike(post.id);
   }, [onLike, post.id]);
+
+  const handleCommentPress = useCallback(() => {
+    onComment?.(post.id);
+  }, [onComment, post.id]);
+
+  const handleLikeCountPress = useCallback(() => {
+    onLikeCountPress?.(post.id);
+  }, [onLikeCountPress, post.id]);
 
   const handleProfilePress = useCallback(() => {
     onProfilePress(post.userId);
@@ -545,7 +562,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onPr
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.headerInfo} onPress={handleProfilePress} activeOpacity={0.7}>
-          {/* Name + badge */}
+          {/* Name + badge + mood */}
           <View style={styles.nameRow}>
             <Text style={styles.userName} numberOfLines={1}>{post.userName}</Text>
             {post.verificationLevel === 'VERIFIED' && (
@@ -553,6 +570,15 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onPr
             )}
             {post.verificationLevel === 'PREMIUM' && (
               <Ionicons name="shield-checkmark" size={15} color={palette.gold[500]} style={styles.verifiedIcon} />
+            )}
+            {/* Mood badge — inline next to name */}
+            {post.currentMood && FEED_MOOD_DISPLAY[post.currentMood] && (
+              <View style={[styles.feedMoodBadge, { backgroundColor: FEED_MOOD_DISPLAY[post.currentMood].color + '18' }]}>
+                <Text style={styles.feedMoodEmoji}>{FEED_MOOD_DISPLAY[post.currentMood].emoji}</Text>
+                <Text style={[styles.feedMoodLabel, { color: FEED_MOOD_DISPLAY[post.currentMood].color }]}>
+                  {FEED_MOOD_DISPLAY[post.currentMood].label}
+                </Text>
+              </View>
             )}
           </View>
 
@@ -612,12 +638,35 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onFollow, onPr
       {/* ── Action Separator ── */}
       <View style={styles.actionSeparator} />
 
-      {/* ── Centered Like Button (Reanimated) ── */}
-      <AnimatedLikeButton
-        isLiked={post.isLiked}
-        likeCount={post.likeCount}
-        onPress={handleLikePress}
-      />
+      {/* ── Action Buttons: Like + Comment ── */}
+      <View style={styles.actionButtonsRow}>
+        <View style={styles.actionWithCount}>
+          <AnimatedLikeButton
+            isLiked={post.isLiked}
+            likeCount={post.likeCount}
+            onPress={handleLikePress}
+          />
+          {post.likeCount > 0 && onLikeCountPress && (
+            <TouchableOpacity onPress={handleLikeCountPress} activeOpacity={0.7} hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}>
+              <Text style={styles.tappableCount}>{post.likeCount} begeni</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <View style={styles.actionWithCount}>
+          <TouchableOpacity style={styles.commentButton} onPress={handleCommentPress} activeOpacity={0.7}>
+            <Ionicons name="chatbubble-outline" size={22} color="#9CA3AF" />
+            {post.commentCount > 0 && (
+              <Text style={styles.commentCount}>{post.commentCount}</Text>
+            )}
+          </TouchableOpacity>
+          {post.commentCount > 0 && (
+            <TouchableOpacity onPress={handleCommentPress} activeOpacity={0.7} hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}>
+              <Text style={styles.tappableCount}>{post.commentCount} yorum</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
 
     </View>
   );
@@ -675,6 +724,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
+    flexWrap: 'wrap',
   },
   userName: {
     fontSize: 15,
@@ -685,6 +735,26 @@ const styles = StyleSheet.create({
   },
   verifiedIcon: {
     marginLeft: 3,
+  },
+  // ── Feed mood badge (inline next to name) ──
+  feedMoodBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginLeft: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: borderRadius.full,
+  },
+  feedMoodEmoji: {
+    fontSize: 11,
+    includeFontPadding: false,
+  },
+  feedMoodLabel: {
+    fontSize: 10,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    includeFontPadding: false,
   },
   subtitleRow: {
     flexDirection: 'row',
@@ -812,6 +882,42 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     marginHorizontal: -spacing.xs,
     opacity: 0.6,
+  },
+
+  // ── Action Buttons Row (like + comment side by side) ──
+  actionButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: spacing.smd,
+    paddingTop: spacing.sm + 2,
+  },
+  actionWithCount: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  tappableCount: {
+    fontSize: 11,
+    color: colors.textTertiary,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+  },
+  commentButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.surfaceLight,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  commentCount: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
   },
 
   // ── Like button styles now in AnimatedLikeButton (likeButtonStyles) ──

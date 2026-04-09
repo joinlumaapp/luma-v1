@@ -819,8 +819,6 @@ describe("MatchesService", () => {
       const result = await service.getMatch("u1", "m1");
 
       expect(result.compatibility.breakdown).toEqual({});
-      expect(result.compatibility.baseScore).toBeUndefined();
-      expect(result.compatibility.deepScore).toBeUndefined();
     });
 
     it("should return partner as userA when current user is userB", async () => {

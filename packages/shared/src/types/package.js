@@ -1,165 +1,162 @@
 "use strict";
-// LUMA V1 — Package, Subscription & Gold Types
-// Subsystems 16, 17, 18
+// LUMA V1 — Package, Subscription & Jeton Types
+// Updated: 2026-04-08 — 3 packages (Ücretsiz/Premium/Supreme), no Harmony Room
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PACKAGE_TIER_ORDER = exports.GOLD_COSTS = exports.GOLD_PACKS_TRY = exports.GOLD_PACKS = exports.PACKAGE_FEATURES = exports.GoldTransactionType = exports.PaymentPlatform = exports.PACKAGE_PRICING = void 0;
-const user_1 = require("./user");
-// Pricing tiers per paid package (Free has no pricing)
-exports.PACKAGE_PRICING = {
-    GOLD: [
-        { duration: 'monthly', price: 14.99, monthlyEquivalent: 14.99, savingsPercent: 0 },
-        { duration: 'quarterly', price: 34.99, monthlyEquivalent: 11.66, savingsPercent: 22 },
-        { duration: 'yearly', price: 99.99, monthlyEquivalent: 8.33, savingsPercent: 44 },
-    ],
-    PRO: [
-        { duration: 'monthly', price: 29.99, monthlyEquivalent: 29.99, savingsPercent: 0 },
-        { duration: 'quarterly', price: 69.99, monthlyEquivalent: 23.33, savingsPercent: 22 },
-        { duration: 'yearly', price: 199.99, monthlyEquivalent: 16.67, savingsPercent: 44 },
-    ],
-    RESERVED: [
-        { duration: 'monthly', price: 49.99, monthlyEquivalent: 49.99, savingsPercent: 0 },
-        { duration: 'quarterly', price: 119.99, monthlyEquivalent: 40.00, savingsPercent: 20 },
-        { duration: 'yearly', price: 349.99, monthlyEquivalent: 29.17, savingsPercent: 42 },
-    ],
-};
+exports.FOUNDER_BADGE = exports.PACKAGE_TIER_ORDER = exports.PACKAGE_FEATURES = exports.BOOST_PACKS = exports.JETON_PACKS = exports.JETON_COSTS = exports.JetonTransactionType = exports.PaymentPlatform = void 0;
+var user_1 = require("./user");
 var PaymentPlatform;
 (function (PaymentPlatform) {
-    PaymentPlatform["APPLE"] = "APPLE";
-    PaymentPlatform["GOOGLE"] = "GOOGLE";
+    PaymentPlatform["APPLE"] = "apple";
+    PaymentPlatform["GOOGLE"] = "google";
 })(PaymentPlatform || (exports.PaymentPlatform = PaymentPlatform = {}));
-var GoldTransactionType;
-(function (GoldTransactionType) {
+var JetonTransactionType;
+(function (JetonTransactionType) {
     // Credits
-    GoldTransactionType["PURCHASE"] = "PURCHASE";
-    GoldTransactionType["SUBSCRIPTION_ALLOCATION"] = "SUBSCRIPTION_ALLOCATION";
-    GoldTransactionType["REFERRAL_BONUS"] = "REFERRAL_BONUS";
-    GoldTransactionType["BADGE_REWARD"] = "BADGE_REWARD";
-    GoldTransactionType["STREAK_REWARD"] = "STREAK_REWARD";
-    GoldTransactionType["DAILY_LOGIN"] = "DAILY_LOGIN";
+    JetonTransactionType["PURCHASE"] = "purchase";
+    JetonTransactionType["SUBSCRIPTION_ALLOCATION"] = "subscription_allocation";
+    JetonTransactionType["MISSION_REWARD"] = "mission_reward";
+    JetonTransactionType["AD_REWARD"] = "ad_reward";
+    JetonTransactionType["PROFILE_COMPLETION"] = "profile_completion";
+    JetonTransactionType["LEADERBOARD_REWARD"] = "leaderboard_reward";
     // Debits
-    GoldTransactionType["PROFILE_BOOST"] = "PROFILE_BOOST";
-    GoldTransactionType["SUPER_LIKE"] = "SUPER_LIKE";
-    GoldTransactionType["READ_RECEIPTS"] = "READ_RECEIPTS";
-    GoldTransactionType["UNDO_PASS"] = "UNDO_PASS";
-    GoldTransactionType["SPOTLIGHT"] = "SPOTLIGHT";
-    GoldTransactionType["TRAVEL_MODE"] = "TRAVEL_MODE";
-    GoldTransactionType["PRIORITY_MESSAGE"] = "PRIORITY_MESSAGE";
-    GoldTransactionType["VOICE_CALL"] = "VOICE_CALL";
-    GoldTransactionType["VIDEO_CALL"] = "VIDEO_CALL";
-    GoldTransactionType["EXTRA_LIKES_REVEAL"] = "EXTRA_LIKES_REVEAL";
-    GoldTransactionType["EXTRA_VIEWERS_REVEAL"] = "EXTRA_VIEWERS_REVEAL";
-    GoldTransactionType["VIEWER_DELAY_BYPASS"] = "VIEWER_DELAY_BYPASS";
-    GoldTransactionType["PRIORITY_VISIBILITY_1H"] = "PRIORITY_VISIBILITY_1H";
-    GoldTransactionType["PRIORITY_VISIBILITY_3H"] = "PRIORITY_VISIBILITY_3H";
-    GoldTransactionType["ACTIVITY_STRIP_PIN"] = "ACTIVITY_STRIP_PIN";
-    GoldTransactionType["SECRET_ADMIRER_SEND"] = "SECRET_ADMIRER_SEND";
-    GoldTransactionType["SECRET_ADMIRER_EXTRA_GUESS"] = "SECRET_ADMIRER_EXTRA_GUESS";
-    GoldTransactionType["COMPATIBILITY_XRAY"] = "COMPATIBILITY_XRAY";
-    GoldTransactionType["SUPER_COMPATIBLE_REVEAL"] = "SUPER_COMPATIBLE_REVEAL";
-    GoldTransactionType["AI_CHAT_SUGGESTION_PACK"] = "AI_CHAT_SUGGESTION_PACK";
-    GoldTransactionType["NEARBY_NOTIFY"] = "NEARBY_NOTIFY";
-    GoldTransactionType["WEEKLY_TOP_REVEAL"] = "WEEKLY_TOP_REVEAL";
-    GoldTransactionType["MESSAGE_BUNDLE_3"] = "MESSAGE_BUNDLE_3";
-    GoldTransactionType["MESSAGE_BUNDLE_5"] = "MESSAGE_BUNDLE_5";
-    GoldTransactionType["MESSAGE_BUNDLE_10"] = "MESSAGE_BUNDLE_10";
-})(GoldTransactionType || (exports.GoldTransactionType = GoldTransactionType = {}));
-// Package feature definitions — Single authoritative source
+    JetonTransactionType["PROFILE_BOOST"] = "profile_boost";
+    JetonTransactionType["SUPER_LIKE"] = "super_like";
+    JetonTransactionType["SELAM_GONDER"] = "selam_gonder";
+    JetonTransactionType["CANLI_SESSION"] = "canli_session";
+    JetonTransactionType["VOICE_CALL"] = "voice_call";
+    JetonTransactionType["VIDEO_CALL"] = "video_call";
+    JetonTransactionType["UNDO_SWIPE"] = "undo_swipe";
+})(JetonTransactionType || (exports.JetonTransactionType = JetonTransactionType = {}));
+// Jeton costs for actions
+exports.JETON_COSTS = {
+    SUPER_LIKE: 15,
+    BOOST_24H: 120,
+    CANLI_SESSION: 20,
+    VOICE_CALL: 10,
+    VIDEO_CALL: 15,
+    UNDO_EXTRA: 10,
+    UNDO_PASS: 10,
+    SELAM_GONDER: {
+        FREE: 10,
+        PREMIUM: 5,
+        SUPREME: 3,
+    },
+    PROFILE_BOOST: 120,
+    PRIORITY_MESSAGE: 40,
+    SEND_MESSAGE: 150,
+    GREETING: 50,
+    WAVE_EXTRA: 5,
+    MATCH_EXTEND: 5,
+    DATE_PLANNER: 5,
+    EXTRA_LIKES_REVEAL: 20,
+    PRIORITY_VISIBILITY_1H: 60,
+    SUGGESTED_STORY_VIEW: 20,
+    FLIRT_START: 25,
+};
+// Jeton purchase packages (TRY pricing)
+exports.JETON_PACKS = [
+    { id: 'jeton_100', amount: 100, priceTry: 79.99, isPopular: false },
+    { id: 'jeton_500', amount: 500, priceTry: 199.99, isPopular: true }, // EN POPÜLER
+    { id: 'jeton_1000', amount: 1000, priceTry: 349.99, isPopular: false },
+];
+// Boost purchase packages (jeton cost)
+exports.BOOST_PACKS = [
+    { id: 'boost_1', count: 1, jetonCost: 120, savings: null },
+    { id: 'boost_5', count: 5, jetonCost: 500, savings: '%20 kaydet' },
+    { id: 'boost_bulk_1', count: 8, jetonCost: 900, savings: '%32 kaydet' },
+    { id: 'boost_bulk_2', count: 13, jetonCost: 1500, savings: '%37 kaydet' }, // EN POPÜLER
+];
+// Package feature definitions — THE source of truth for all package gating
+// Rule: No feature is fully locked. Every feature is accessible to ALL users.
+// Packages only change QUANTITIES and LIMITS.
 exports.PACKAGE_FEATURES = {
     FREE: {
-        dailySwipes: 999999,
-        monthlyGold: 0,
-        premiumQuestions: false,
-        seeWhoLikedYou: false,
-        readReceipts: false,
-        profileBoost: false,
-        undoSwipe: false,
+        nameTr: 'Ücretsiz',
+        priceTryMonthly: 0,
+        monthlyJeton: 0,
+        isAdFree: false,
+        dailySwipes: 999999, // Sınırsız beğeni
+        dailyDirectMessages: 1,
+        dailySelamGonder: 3,
+        dailyUndo: 1,
+        monthlyBoosts: 0, // Purchase with jeton
+        readReceipts: false, // 1/gün deneme (handled in UI)
+        seeWhoLikedYou: 'blurred', // 1-2 blurlu önizleme
+        profileViewers: 'count_only', // Sadece sayı
+        dailyStories: 1,
         priorityInFeed: false,
+        storyPriority: false,
+        advancedFilters: false, // Temel: yaş, cinsiyet, mesafe
+        specialBadge: false,
+        dailyMatch: 1, // Per week (1/hafta)
+        dailyMatchUnit: 'week',
+        dailyIcebreakerGames: 1,
+        weeklyReport: 'basic',
+        dailyLiveSessions: 3,
+        dailyVoiceVideoCalls: 0, // Jeton ile
     },
-    GOLD: {
+    PREMIUM: {
+        nameTr: 'Premium',
+        priceTryMonthly: 499,
+        monthlyJeton: 250,
+        isAdFree: true,
         dailySwipes: 999999,
-        monthlyGold: 250,
-        premiumQuestions: true,
-        seeWhoLikedYou: true,
-        readReceipts: false,
-        profileBoost: false,
-        undoSwipe: true,
-        priorityInFeed: false,
-    },
-    PRO: {
-        dailySwipes: 999999,
-        monthlyGold: 500,
-        premiumQuestions: true,
-        seeWhoLikedYou: true,
+        dailyDirectMessages: 10,
+        dailySelamGonder: 10,
+        dailyUndo: 5,
+        monthlyBoosts: 4,
         readReceipts: true,
-        profileBoost: true,
-        undoSwipe: true,
+        seeWhoLikedYou: 'limited', // Sınırlı sayıda net
+        profileViewers: 'limited',
+        dailyStories: 5,
         priorityInFeed: true,
+        storyPriority: true,
+        advancedFilters: true, // İlgi alanı, eğitim, yaşam tarzı
+        specialBadge: false,
+        dailyMatch: 1, // Per day (1/gün)
+        dailyMatchUnit: 'day',
+        dailyIcebreakerGames: 5,
+        weeklyReport: 'detailed',
+        dailyLiveSessions: 10,
+        dailyVoiceVideoCalls: 5,
     },
-    RESERVED: {
+    SUPREME: {
+        nameTr: 'Supreme',
+        priceTryMonthly: 1199,
+        monthlyJeton: 1000,
+        isAdFree: true,
         dailySwipes: 999999,
-        monthlyGold: 1000,
-        premiumQuestions: true,
-        seeWhoLikedYou: true,
+        dailyDirectMessages: 999999, // Sınırsız
+        dailySelamGonder: 20,
+        dailyUndo: 999999,
+        monthlyBoosts: 999999,
         readReceipts: true,
-        profileBoost: true,
-        undoSwipe: true,
-        priorityInFeed: true,
+        seeWhoLikedYou: 'unlimited', // Tümü net
+        profileViewers: 'unlimited',
+        dailyStories: 999999,
+        priorityInFeed: true, // En yüksek öncelik
+        storyPriority: true,
+        advancedFilters: true, // Tümü açık
+        specialBadge: true, // Supreme rozeti
+        dailyMatch: 3, // Per day (3/gün)
+        dailyMatchUnit: 'day',
+        dailyIcebreakerGames: 999999,
+        weeklyReport: 'vip',
+        dailyLiveSessions: 999999,
+        dailyVoiceVideoCalls: 999999,
     },
-};
-// Gold pack definitions — authoritative pricing
-exports.GOLD_PACKS = [
-    { id: 'gold_50', amount: 50, price: 4.99, currency: 'USD' },
-    { id: 'gold_150', amount: 150, price: 12.99, currency: 'USD' },
-    { id: 'gold_500', amount: 500, price: 39.99, currency: 'USD' },
-    { id: 'gold_1000', amount: 1000, price: 69.99, currency: 'USD' },
-];
-// Gold pack definitions — TRY pricing (authoritative)
-exports.GOLD_PACKS_TRY = [
-    { id: 'gold_50', amount: 50, bonus: 0, priceTry: 29.99, priceUsd: 4.99 },
-    { id: 'gold_150', amount: 150, bonus: 10, priceTry: 79.99, priceUsd: 12.99 },
-    { id: 'gold_500', amount: 500, bonus: 50, priceTry: 199.99, priceUsd: 39.99 },
-    { id: 'gold_1000', amount: 1000, bonus: 150, priceTry: 349.99, priceUsd: 69.99 },
-];
-// Gold spending costs
-exports.GOLD_COSTS = {
-    PROFILE_BOOST: 100, // 24h profile boost
-    SUPER_LIKE: 25, // Send a super like
-    READ_RECEIPTS: 15, // See if message was read (single use)
-    UNDO_PASS: 30, // Undo a passed profile
-    SPOTLIGHT: 75, // Show to everyone in area for 30 min
-    TRAVEL_MODE: 200, // Show profile in different city for 24h
-    PRIORITY_MESSAGE: 40, // Pin message to top
-    SUGGESTED_STORY_VIEW: 20, // View a suggested story beyond daily limit
-    FLIRT_START: 25, // Send a flirt request beyond daily limit
-    VOICE_CALL: 25, // Voice call with match
-    VIDEO_CALL: 50, // Video call with match
-    SEND_MESSAGE: 150, // Send paid message to non-match
-    GREETING: 50, // Send greeting (Selam) to unmatched user
-    WAVE_EXTRA: 5, // Send wave beyond daily limit
-    MATCH_EXTEND: 5, // Extend match countdown +24h
-    DATE_PLANNER: 5, // Create date plan with match
-    EXTRA_LIKES_REVEAL: 20,
-    EXTRA_VIEWERS_REVEAL: 15,
-    VIEWER_DELAY_BYPASS: 25,
-    PRIORITY_VISIBILITY_1H: 60,
-    PRIORITY_VISIBILITY_3H: 150,
-    ACTIVITY_STRIP_PIN: 40,
-    SECRET_ADMIRER_SEND: 75,
-    SECRET_ADMIRER_EXTRA_GUESS: 25,
-    COMPATIBILITY_XRAY: 30,
-    SUPER_COMPATIBLE_REVEAL: 20,
-    AI_CHAT_SUGGESTION_PACK: 30,
-    NEARBY_NOTIFY: 35,
-    WEEKLY_TOP_REVEAL: 40,
-    MESSAGE_BUNDLE_3: 350,
-    MESSAGE_BUNDLE_5: 500,
-    MESSAGE_BUNDLE_10: 800,
 };
 // Package tier hierarchy for upgrade validation
-exports.PACKAGE_TIER_ORDER = {
-    [user_1.PackageTier.FREE]: 0,
-    [user_1.PackageTier.GOLD]: 1,
-    [user_1.PackageTier.PRO]: 2,
-    [user_1.PackageTier.RESERVED]: 3,
+exports.PACKAGE_TIER_ORDER = (_a = {},
+    _a[user_1.PackageTier.FREE] = 0,
+    _a[user_1.PackageTier.PREMIUM] = 1,
+    _a[user_1.PackageTier.SUPREME] = 2,
+    _a);
+// Founder badge — first 777 users
+exports.FOUNDER_BADGE = {
+    maxUsers: 777,
+    key: 'kurucu',
+    nameTr: 'Kurucu',
+    nameEn: 'Founder',
 };
-//# sourceMappingURL=package.js.map

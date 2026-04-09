@@ -80,14 +80,12 @@ export function usePremiumGate(
   const allowed = canAccess(effectiveTier, feature);
   const limit = getFeatureLimit(effectiveTier, feature);
 
-  // Find the minimum required tier by checking GOLD first, then PRO, then RESERVED
+  // Find the minimum required tier by checking PREMIUM first, then SUPREME
   let requiredTier: PackageTier = 'FREE';
-  if (!hasTierAccess(effectiveTier, 'GOLD') && canAccess('GOLD', feature)) {
-    requiredTier = 'GOLD';
-  } else if (!hasTierAccess(effectiveTier, 'PRO') && canAccess('PRO', feature)) {
-    requiredTier = 'PRO';
-  } else if (!hasTierAccess(effectiveTier, 'RESERVED') && canAccess('RESERVED', feature)) {
-    requiredTier = 'RESERVED';
+  if (!hasTierAccess(effectiveTier, 'PREMIUM') && canAccess('PREMIUM', feature)) {
+    requiredTier = 'PREMIUM';
+  } else if (!hasTierAccess(effectiveTier, 'SUPREME') && canAccess('SUPREME', feature)) {
+    requiredTier = 'SUPREME';
   }
 
   // Build denial reason
@@ -101,7 +99,7 @@ export function usePremiumGate(
 
   // Override: feature-specific fine-grained server flags
   // These come directly from the server snapshot and override tier-level access.
-  // Example: seeWhoLikesYou might be gated by the server even at GOLD.
+  // Example: seeWhoLikesYou might be gated by the server even at PREMIUM.
   let serverOverride = true;
   if (snapshot?.features) {
     if (feature === 'who_likes' && !snapshot.features.seeWhoLikesYou) {

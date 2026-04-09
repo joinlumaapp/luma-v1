@@ -260,11 +260,10 @@ export const useStoryStore = create<StoryState>((set, get) => ({
   getOrderedStoryUsers: () => {
     const { storyUsers } = get();
 
-    // Package tier priority: RESERVED > PRO > GOLD > FREE
+    // Package tier priority: SUPREME > PREMIUM > FREE
     const TIER_PRIORITY: Record<string, number> = {
-      RESERVED: 3,
-      PRO: 2,
-      GOLD: 1,
+      SUPREME: 2,
+      PREMIUM: 1,
       FREE: 0,
     };
 

@@ -6,7 +6,7 @@ export class UpgradePackageDto {
   @ApiProperty({
     description: "Target package tier to upgrade to",
     enum: PackageTier,
-    example: PackageTier.GOLD,
+    example: PackageTier.PREMIUM,
   })
   @IsNotEmpty()
   @IsEnum(PackageTier)

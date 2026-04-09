@@ -5,41 +5,56 @@ export const APP_VERSION = '1.0.0';
 
 // V1 Locked Numbers — LOCKED: DO NOT MODIFY
 export const V1_LOCKED = {
-  mainCategories: 19,
-  subsystems: 48,
-  totalQuestions: 45,
-  coreQuestions: 20,
-  premiumQuestions: 25,
-  intentionTags: 3,
-  packages: 4,
-  menuTabs: 5,
-  matchAnimations: 2,
-  compatibilityLevels: 2,
-  badges: 8,
+  uyumQuestions: 20,       // Uyum Analizi: 20 soru, 4 seçenek
+  kisilikQuestions: 5,     // Kişilik Testi: 5 soru, opsiyonel
+  optionsPerQuestion: 4,   // Her soruda 4 seçenek (Likert YOK)
+  intentionTags: 5,        // 5 Hedef seçeneği
+  packages: 3,             // Ücretsiz, Premium, Supreme
+  menuTabs: 5,             // Akış, Keşfet, Canlı, Eşleşme, Profil
+  matchAnimations: 2,      // Konfeti + Kalp
+  compatibilityScoreMin: 47,
+  compatibilityScoreMax: 97,
+  superCompatibilityThreshold: 90,
+  maxPhotos: 9,
+  minPhotos: 2,
+  maxInterests: 15,
+  maxPrompts: 3,
+  maxFavoritePlaces: 8,
+  boostDurationHours: 24,
+  profileVideoMinSec: 10,
+  profileVideoMaxSec: 30,
 } as const;
 
 // Menu Tab Configuration — LOCKED: 5 Tabs
 export const MENU_TABS = {
-  FEED: { index: 0, key: 'feed', label: 'Feed', icon: 'home' },
-  DISCOVER: { index: 1, key: 'discover', label: 'Keşfet', icon: 'compass' },
-  ACTIVITIES: { index: 2, key: 'activities', label: 'Etkinlik', icon: 'calendar' },
-  MATCHES: { index: 3, key: 'matches', label: 'Eşleşmeler', icon: 'heart' },
-  PROFILE: { index: 4, key: 'profile', label: 'Profil', icon: 'user' },
+  FEED:     { index: 0, key: 'feed',     label: 'Akış',        icon: 'home' },
+  DISCOVER: { index: 1, key: 'discover', label: 'Keşfet',      icon: 'compass' },
+  LIVE:     { index: 2, key: 'live',     label: 'Canlı',       icon: 'video' },
+  MATCHES:  { index: 3, key: 'matches',  label: 'Eşleşme',     icon: 'heart' },
+  PROFILE:  { index: 4, key: 'profile',  label: 'Profil',      icon: 'user' },
 } as const;
 
-// Intention Tag Labels — Soft, non-judgmental language per brand identity
+// Hedef Labels — User-facing Turkish labels
 export const INTENTION_TAG_LABELS = {
-  serious_relationship: {
-    en: 'Looking for long-term compatibility',
-    tr: 'Uzun vadeli uyumluluk arıyorum',
+  evlenmek: {
+    en: 'Marriage',
+    tr: 'Evlenmek',
   },
-  exploring: {
-    en: 'Open to a natural connection',
-    tr: 'Doğal bir bağlantıya açığım',
+  iliski: {
+    en: 'Find a relationship',
+    tr: 'Bir ilişki bulmak',
   },
-  not_sure: {
-    en: 'Exploring for now',
-    tr: 'Şimdilik keşfediyorum',
+  sohbet_arkadas: {
+    en: 'Chat and make friends',
+    tr: 'Sohbet etmek ve arkadaşlarla tanışmak',
+  },
+  kultur: {
+    en: 'Learn other cultures',
+    tr: 'Diğer kültürleri öğrenmek',
+  },
+  dunya_gezme: {
+    en: 'Travel the world',
+    tr: 'Dünyayı gezmek',
   },
 } as const;
 
@@ -58,7 +73,7 @@ export const BADGE_DEFINITIONS = {
 // Photo constraints
 export const PHOTO_LIMITS = {
   minRequired: 2,
-  maxAllowed: 6,
+  maxAllowed: 9, // 3x3 grid, first = Ana (main profile photo)
   maxFileSizeMB: 10,
   allowedFormats: ['image/jpeg', 'image/png', 'image/webp'],
   thumbnailWidth: 200,
@@ -80,8 +95,7 @@ export const AGE_LIMITS = {
 
 // Discovery swipe limits per package tier
 export const DISCOVERY_LIMITS = {
-  FREE: 999999,
-  GOLD: 999999,
-  PRO: 999999,
-  RESERVED: 999999,
+  FREE: 30,
+  PREMIUM: 100,
+  SUPREME: 999999, // Sınırsız
 } as const;

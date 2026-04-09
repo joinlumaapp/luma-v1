@@ -110,7 +110,7 @@ const MemoizedConversationCard = memo<ConversationCardProps>(({ item, onPress, o
             {item.name}
           </Text>
           {/* Supreme gold heart badge */}
-          {item.packageTier === 'RESERVED' && (
+          {item.packageTier === 'SUPREME' && (
             <View style={styles.supremeBadge} accessibilityLabel="Supreme üye">
               <Text style={styles.supremeBadgeIcon}>{'\u2764'}</Text>
             </View>

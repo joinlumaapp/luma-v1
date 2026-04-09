@@ -2,20 +2,22 @@ import { ApiProperty } from "@nestjs/swagger";
 import { IsNotEmpty, IsEnum } from "class-validator";
 
 /**
- * LUMA has exactly 3 Intention Tags (LOCKED architecture).
+ * LUMA has exactly 5 Hedefler (LOCKED architecture).
  * Values match Prisma enum: IntentionTag
  */
 export enum IntentionTagValue {
-  SERIOUS_RELATIONSHIP = "SERIOUS_RELATIONSHIP",
-  EXPLORING = "EXPLORING",
-  NOT_SURE = "NOT_SURE",
+  EVLENMEK = "EVLENMEK",
+  ILISKI = "ILISKI",
+  SOHBET_ARKADAS = "SOHBET_ARKADAS",
+  KULTUR = "KULTUR",
+  DUNYA_GEZME = "DUNYA_GEZME",
 }
 
 export class SetIntentionTagDto {
   @ApiProperty({
-    description: "User intention tag (one of 3 LOCKED options)",
+    description: "User intention tag (one of 5 LOCKED Hedefler)",
     enum: IntentionTagValue,
-    example: IntentionTagValue.SERIOUS_RELATIONSHIP,
+    example: IntentionTagValue.EVLENMEK,
   })
   @IsNotEmpty()
   @IsEnum(IntentionTagValue)

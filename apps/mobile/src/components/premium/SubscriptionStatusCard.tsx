@@ -30,16 +30,14 @@ interface SubscriptionStatusCardProps {
 // Package tier colors
 const TIER_COLORS: Record<string, string> = {
   FREE: colors.textSecondary,
-  GOLD: '#FFD700',
-  PRO: colors.primary,
-  RESERVED: colors.secondary,
+  PREMIUM: '#FFD700',
+  SUPREME: colors.secondary,
 };
 
 const TIER_DISPLAY_NAMES: Record<string, string> = {
   FREE: 'Ücretsiz',
-  GOLD: 'Premium',
-  PRO: 'Pro',
-  RESERVED: 'Supreme',
+  PREMIUM: 'Premium',
+  SUPREME: 'Supreme',
 };
 
 // ─── Component ───────────────────────────────────────────────

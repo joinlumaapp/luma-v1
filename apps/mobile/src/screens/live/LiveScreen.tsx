@@ -242,11 +242,13 @@ export const LiveScreen: React.FC = () => {
   const controlsSlideAnim = useRef(new Animated.Value(100)).current;
   const controlsOpacityAnim = useRef(new Animated.Value(0)).current;
 
-  // Searching animation
-  const ringScale = useRef(new Animated.Value(1)).current;
+  // Searching animation — 3 concentric ripple rings
+  const ringScale = useRef(new Animated.Value(0)).current;
   const ringOpacity = useRef(new Animated.Value(0.6)).current;
-  const outerRingScale = useRef(new Animated.Value(1)).current;
-  const outerRingOpacity = useRef(new Animated.Value(0.3)).current;
+  const outerRingScale = useRef(new Animated.Value(0)).current;
+  const outerRingOpacity = useRef(new Animated.Value(0.6)).current;
+  const thirdRingScale = useRef(new Animated.Value(0)).current;
+  const thirdRingOpacity = useRef(new Animated.Value(0.6)).current;
   const [searchDots, setSearchDots] = useState('');
   const [searchSeconds, setSearchSeconds] = useState(0);
 
@@ -286,53 +288,72 @@ export const LiveScreen: React.FC = () => {
     return () => pulse.stop();
   }, [pulseAnim, phase]);
 
-  // Searching phase animations
+  // Searching phase animations — 3 expanding ripple rings with stagger
   useEffect(() => {
     if (phase !== 'searching') return;
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
 
-    const innerPulse = Animated.loop(
+    // Ring 1 — starts at 0ms, expands scale 0→3, opacity 0.6→0 over 2s, repeats
+    const ring1Loop = Animated.loop(
       Animated.sequence([
         Animated.parallel([
-          Animated.timing(ringScale, {
-            toValue: 1.3, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true,
-          }),
-          Animated.timing(ringOpacity, {
-            toValue: 0.15, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true,
-          }),
+          Animated.timing(ringScale, { toValue: 0, duration: 0, useNativeDriver: true }),
+          Animated.timing(ringOpacity, { toValue: 0.6, duration: 0, useNativeDriver: true }),
         ]),
         Animated.parallel([
           Animated.timing(ringScale, {
-            toValue: 1, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true,
+            toValue: 3, duration: 2000, easing: Easing.out(Easing.ease), useNativeDriver: true,
           }),
           Animated.timing(ringOpacity, {
-            toValue: 0.6, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true,
+            toValue: 0, duration: 2000, easing: Easing.out(Easing.ease), useNativeDriver: true,
           }),
         ]),
       ]),
     );
-    innerPulse.start();
+    ring1Loop.start();
 
-    const outerPulse = Animated.loop(
+    // Ring 2 — starts at 700ms stagger
+    const ring2Loop = Animated.loop(
       Animated.sequence([
-        Animated.delay(400),
+        Animated.delay(700),
+        Animated.parallel([
+          Animated.timing(outerRingScale, { toValue: 0, duration: 0, useNativeDriver: true }),
+          Animated.timing(outerRingOpacity, { toValue: 0.6, duration: 0, useNativeDriver: true }),
+        ]),
         Animated.parallel([
           Animated.timing(outerRingScale, {
-            toValue: 1.5, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true,
+            toValue: 3, duration: 2000, easing: Easing.out(Easing.ease), useNativeDriver: true,
           }),
           Animated.timing(outerRingOpacity, {
-            toValue: 0, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true,
+            toValue: 0, duration: 2000, easing: Easing.out(Easing.ease), useNativeDriver: true,
           }),
-        ]),
-        Animated.parallel([
-          Animated.timing(outerRingScale, { toValue: 1, duration: 0, useNativeDriver: true }),
-          Animated.timing(outerRingOpacity, { toValue: 0.3, duration: 0, useNativeDriver: true }),
         ]),
       ]),
     );
-    outerPulse.start();
+    ring2Loop.start();
 
+    // Ring 3 — starts at 1400ms stagger
+    const ring3Loop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(1400),
+        Animated.parallel([
+          Animated.timing(thirdRingScale, { toValue: 0, duration: 0, useNativeDriver: true }),
+          Animated.timing(thirdRingOpacity, { toValue: 0.6, duration: 0, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(thirdRingScale, {
+            toValue: 3, duration: 2000, easing: Easing.out(Easing.ease), useNativeDriver: true,
+          }),
+          Animated.timing(thirdRingOpacity, {
+            toValue: 0, duration: 2000, easing: Easing.out(Easing.ease), useNativeDriver: true,
+          }),
+        ]),
+      ]),
+    );
+    ring3Loop.start();
+
+    // Cycling dots: "" → "." → ".." → "..." every 500ms
     const dotsInterval = setInterval(() => {
       setSearchDots((prev) => (prev.length >= 3 ? '' : prev + '.'));
     }, 500);
@@ -342,12 +363,13 @@ export const LiveScreen: React.FC = () => {
     }, 1000);
 
     return () => {
-      innerPulse.stop();
-      outerPulse.stop();
+      ring1Loop.stop();
+      ring2Loop.stop();
+      ring3Loop.stop();
       clearInterval(dotsInterval);
       clearInterval(timerInterval);
     };
-  }, [phase, ringScale, ringOpacity, outerRingScale, outerRingOpacity]);
+  }, [phase, ringScale, ringOpacity, outerRingScale, outerRingOpacity, thirdRingScale, thirdRingOpacity]);
 
   // Helper: clear progressive billing interval
   const clearBillingInterval = useCallback(() => {
@@ -600,7 +622,7 @@ export const LiveScreen: React.FC = () => {
 
           {/* Top bar */}
           <View style={[s.topBar, { paddingTop: insets.top + 8 }]}>
-            <Text style={s.title}>Canli</Text>
+            <Text style={s.title}>Canlı</Text>
             <TouchableOpacity
               onPress={() => navigation.navigate('JetonMarket' as never)}
               activeOpacity={0.7}
@@ -643,19 +665,26 @@ export const LiveScreen: React.FC = () => {
             style={StyleSheet.absoluteFillObject}
           />
 
-          {/* Pulsing rings */}
+          {/* 3 concentric expanding ripple rings */}
           <View style={searchStyles.ringArea}>
             <Animated.View
               style={[
                 searchStyles.ring,
-                searchStyles.outerRing,
+                searchStyles.rippleRing,
+                { transform: [{ scale: thirdRingScale }], opacity: thirdRingOpacity },
+              ]}
+            />
+            <Animated.View
+              style={[
+                searchStyles.ring,
+                searchStyles.rippleRing,
                 { transform: [{ scale: outerRingScale }], opacity: outerRingOpacity },
               ]}
             />
             <Animated.View
               style={[
                 searchStyles.ring,
-                searchStyles.innerRing,
+                searchStyles.rippleRing,
                 { transform: [{ scale: ringScale }], opacity: ringOpacity },
               ]}
             />
@@ -665,7 +694,7 @@ export const LiveScreen: React.FC = () => {
           </View>
 
           <Text style={searchStyles.searchingText}>
-            Uyumlu biri araniyor{searchDots}
+            Uyumlu biri aran{'\u0131'}yor{searchDots}
           </Text>
           <Text style={searchStyles.timer}>{formatTime(searchSeconds)}</Text>
 
@@ -1044,15 +1073,11 @@ const searchStyles = StyleSheet.create({
     borderRadius: RING_SIZE / 2,
     borderWidth: 2,
   },
-  innerRing: {
+  rippleRing: {
     width: RING_SIZE,
     height: RING_SIZE,
     borderColor: palette.purple[400],
-  },
-  outerRing: {
-    width: RING_SIZE + 40,
-    height: RING_SIZE + 40,
-    borderColor: palette.purple[600],
+    backgroundColor: 'transparent',
   },
   centerIcon: {
     width: 80,

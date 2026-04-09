@@ -282,27 +282,31 @@ const GENDER_LABELS: Record<string, string> = {
 };
 
 const SMOKING_LABELS: Record<string, string> = {
-  NEVER: 'İçmiyor',
-  never: 'İçmiyor',
-  SOMETIMES: 'Ara sıra',
-  sometimes: 'Ara sıra',
+  NEVER: 'İçmem',
+  never: 'İçmem',
+  SOMETIMES: 'Bazen',
+  sometimes: 'Bazen',
   OFTEN: 'Sık sık',
   often: 'Sık sık',
   QUIT: 'Bıraktım',
   quit: 'Bıraktım',
-  REGULAR: 'İçiyor',
-  regular: 'İçiyor',
+  REGULAR: 'İçerim',
+  regular: 'İçerim',
   TOLERATE: 'İçmez ama karışmaz',
   tolerate: 'İçmez ama karışmaz',
 };
 
 const SPORTS_LABELS: Record<string, string> = {
-  NEVER: 'Pek yapmam',
-  never: 'Pek yapmam',
-  SOMETIMES: 'Ara sıra',
-  sometimes: 'Ara sıra',
+  NEVER: 'Hiç yapmam',
+  never: 'Hiç yapmam',
+  RARELY: 'Nadiren',
+  rarely: 'Nadiren',
+  SOMETIMES: 'Bazen',
+  sometimes: 'Bazen',
   REGULAR: 'Düzenli',
   regular: 'Düzenli',
+  REGULARLY: 'Düzenli',
+  regularly: 'Düzenli',
   OFTEN: 'Düzenli',
   often: 'Düzenli',
   DAILY: 'Her gün',
@@ -312,30 +316,53 @@ const SPORTS_LABELS: Record<string, string> = {
 const CHILDREN_LABELS: Record<string, string> = {
   HAVE: 'Var',
   have: 'Var',
+  HAS_CHILDREN: 'Var',
+  has_children: 'Var',
   NO_CHILDREN: 'Yok',
   no_children: 'Yok',
   WANT: 'İstiyor',
-  want: 'İleride olabilir',
+  want: 'İstiyor',
+  WANTS_CHILDREN: 'İstiyor',
+  wants_children: 'İstiyor',
   MAYBE: 'Belki',
   maybe: 'Belki',
   DONT_WANT: 'İstemiyor',
   dont_want: 'İstemiyor',
+  DOESNT_WANT: 'İstemiyor',
+  doesnt_want: 'İstemiyor',
+};
+
+const DRINKING_LABELS: Record<string, string> = {
+  NEVER: 'İçmem',
+  never: 'İçmem',
+  SOCIALLY: 'Sosyal',
+  socially: 'Sosyal',
+  SOMETIMES: 'Bazen',
+  sometimes: 'Bazen',
+  REGULAR: 'İçerim',
+  regular: 'İçerim',
+  REGULARLY: 'İçerim',
+  regularly: 'İçerim',
 };
 
 const INTENTION_TAG_LABELS: Record<string, string> = {
+  EVLENMEK: 'Evlenmek',
+  ILISKI: 'Bir ilişki bulmak',
+  SOHBET_ARKADAS: 'Sohbet / Arkadaşlık',
+  KULTUR: 'Kültürleri öğrenmek',
+  DUNYA_GEZME: 'Dünyayı gezmek',
+  // Legacy keys for backward compatibility
   SERIOUS_RELATIONSHIP: 'Ciddi İlişki',
-  serious: 'Ciddi İlişki',
-  EXPLORING: 'Keşfediyorum',
-  exploring: 'Keşfediyorum',
-  NOT_SURE: 'Emin Değilim',
-  not_sure: 'Emin Değilim',
+  MARRIAGE: 'Evlenmek',
+  FRIENDSHIP: 'Sohbet / Arkadaşlık',
+  LEARN_CULTURES: 'Kültürleri öğrenmek',
+  TRAVEL: 'Dünyayı gezmek',
 };
 
 const PACKAGE_TIER_LABELS: Record<string, string> = {
   FREE: 'Ücretsiz',
-  GOLD: 'Premium',
-  PRO: 'Pro',
-  RESERVED: 'Supreme',
+  PREMIUM: 'Premium',
+  SUPREME: 'Supreme',
 };
 
 /** Translate gender enum to Turkish display label */
@@ -353,6 +380,10 @@ export const translateSports = (value: string | null | undefined): string =>
 /** Translate children enum to Turkish display label */
 export const translateChildren = (value: string | null | undefined): string =>
   value ? CHILDREN_LABELS[value] ?? value : 'Belirtilmedi';
+
+/** Translate drinking/alcohol enum to Turkish display label */
+export const translateDrinking = (value: string | null | undefined): string =>
+  value ? DRINKING_LABELS[value] ?? value : 'Belirtilmedi';
 
 /** Translate intention tag enum to Turkish display label */
 export const translateIntentionTag = (value: string | null | undefined): string =>

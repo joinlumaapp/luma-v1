@@ -7,11 +7,16 @@ export { PulseGlow } from './PulseGlow';
 export { SlideIn } from './SlideIn';
 export { LikeSentToast } from './LikeSentToast';
 export { BadgeEarnedOverlay } from './BadgeEarnedOverlay';
+export { HeartAnimation } from './HeartAnimation';
 // New — world-class dating app animations
 export { CardSkeleton } from './CardSkeleton';
 export { SwipeStamp } from './SwipeStamp';
 export { TypingIndicator } from './TypingIndicator';
 export { EmptyFeed, EmptyChat, LoadingPulse } from './EmptyStates';
+export { FeedSkeleton, DiscoverySkeleton, ProfileSkeleton } from './SkeletonLoader';
+export { ConfettiOverlay } from './ConfettiOverlay';
+export { RippleEffect } from './RippleEffect';
+export { HeartBounce } from './HeartBounce';
 
 // Screen transitions
 export {

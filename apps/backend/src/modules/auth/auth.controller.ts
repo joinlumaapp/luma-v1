@@ -23,6 +23,7 @@ import {
   VerifySelfieDto,
   LoginDto,
   RefreshTokenDto,
+  AppleSignInDto,
 } from "./dto";
 import {
   CurrentUser,
@@ -126,6 +127,21 @@ export class AuthController {
   @ApiResponse({ status: 401, description: "Invalid or revoked refresh token" })
   async refreshToken(@Body() dto: RefreshTokenDto) {
     return this.authService.refreshToken(dto);
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Post("apple")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "Sign in with Apple",
+    description:
+      "Verifies the Apple identityToken, finds or creates the user, and returns JWT tokens. iOS only.",
+  })
+  @ApiResponse({ status: 200, description: "Apple sign-in successful, tokens issued" })
+  @ApiResponse({ status: 401, description: "Invalid Apple identity token" })
+  async appleSignIn(@Body() dto: AppleSignInDto) {
+    return this.authService.appleSignIn(dto);
   }
 
   @Delete("delete-account")

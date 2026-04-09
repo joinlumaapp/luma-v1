@@ -97,6 +97,16 @@ export class MatchesController {
     );
   }
 
+  // ─── Daily Match (Günün Eşleşmesi) ─────────────────────────────
+
+  @Get("daily")
+  @ApiOperation({
+    summary: "Get daily match recommendation based on uyum score",
+  })
+  async getDailyMatch(@CurrentUser("sub") userId: string) {
+    return this.matchesService.getDailyMatch(userId);
+  }
+
   // ─── Core Match Endpoints ───────────────────────────────────
 
   @Get()

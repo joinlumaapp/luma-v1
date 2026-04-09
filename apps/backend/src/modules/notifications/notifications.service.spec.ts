@@ -317,17 +317,45 @@ describe("NotificationsService", () => {
     });
   });
 
-  describe("notifyRelationshipRequest()", () => {
-    it("should send RELATIONSHIP_REQUEST notification", async () => {
+  describe("notifyCanliMatchFound()", () => {
+    it("should send CANLI_MATCH_FOUND notification", async () => {
       mockPrisma.notificationPreference.findUnique.mockResolvedValue(null);
       mockPrisma.notification.create.mockResolvedValue({ id: "n1" });
       mockPrisma.deviceToken.findMany.mockResolvedValue([]);
 
-      const result = await service.notifyRelationshipRequest("u1", "Deniz");
+      const result = await service.notifyCanliMatchFound("u1");
 
       expect(result.stored).toBe(true);
       const createCall = mockPrisma.notification.create.mock.calls[0][0];
-      expect(createCall.data.type).toBe("RELATIONSHIP_REQUEST");
+      expect(createCall.data.type).toBe("CANLI_MATCH_FOUND");
+    });
+  });
+
+  describe("notifyDailyMatchReady()", () => {
+    it("should send DAILY_MATCH_READY notification", async () => {
+      mockPrisma.notificationPreference.findUnique.mockResolvedValue(null);
+      mockPrisma.notification.create.mockResolvedValue({ id: "n1" });
+      mockPrisma.deviceToken.findMany.mockResolvedValue([]);
+
+      const result = await service.notifyDailyMatchReady("u1");
+
+      expect(result.stored).toBe(true);
+      const createCall = mockPrisma.notification.create.mock.calls[0][0];
+      expect(createCall.data.type).toBe("DAILY_MATCH_READY");
+    });
+  });
+
+  describe("notifyFriendshipFormed()", () => {
+    it("should send FRIENDSHIP_FORMED notification", async () => {
+      mockPrisma.notificationPreference.findUnique.mockResolvedValue(null);
+      mockPrisma.notification.create.mockResolvedValue({ id: "n1" });
+      mockPrisma.deviceToken.findMany.mockResolvedValue([]);
+
+      const result = await service.notifyFriendshipFormed("u1", "Deniz");
+
+      expect(result.stored).toBe(true);
+      const createCall = mockPrisma.notification.create.mock.calls[0][0];
+      expect(createCall.data.type).toBe("FRIENDSHIP_FORMED");
       expect(createCall.data.body).toContain("Deniz");
     });
   });

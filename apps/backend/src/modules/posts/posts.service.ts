@@ -24,6 +24,7 @@ interface PostWithUser {
   likeCount: number;
   createdAt: Date;
   updatedAt: Date;
+  _count?: { comments: number };
   user: {
     id: string;
     isSelfieVerified: boolean;
@@ -33,6 +34,8 @@ interface PostWithUser {
       birthDate: Date;
       city: string | null;
       intentionTag: string;
+      currentMood: string | null;
+      moodSetAt: Date | null;
     } | null;
     photos: { url: string }[];
   };
@@ -46,6 +49,7 @@ export interface PostResponse {
   photoUrls: string[];
   videoUrl: string | null;
   likeCount: number;
+  commentCount: number;
   createdAt: string;
   userName: string;
   userAge: number;
@@ -56,6 +60,7 @@ export interface PostResponse {
   isFollowing: boolean;
   intentionTag: string;
   isLiked: boolean;
+  currentMood: string | null;
 }
 
 @Injectable()
@@ -147,13 +152,22 @@ export class PostsService {
     };
   }
 
-  /** Get user's own posts for profile display */
-  async getMyPosts(userId: string) {
-    const posts = await this.prisma.post.findMany({
-      where: { userId, deletedAt: null },
-      include: this.postInclude(),
-      orderBy: { createdAt: "desc" },
-    });
+  /** Get a user's posts (paginated, newest first) */
+  async getUserPosts(userId: string, page: number = 1, limit: number = 20) {
+    const skip = (page - 1) * limit;
+
+    const [posts, total] = await Promise.all([
+      this.prisma.post.findMany({
+        where: { userId, deletedAt: null },
+        include: this.postInclude(),
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      this.prisma.post.count({
+        where: { userId, deletedAt: null },
+      }),
+    ]);
 
     const postIds = posts.map((p) => p.id);
     const likedPostIds = await this.getLikedPostIds(userId, postIds);
@@ -168,8 +182,9 @@ export class PostsService {
 
     return {
       posts: mappedPosts,
-      nextCursor: null,
-      hasMore: false,
+      total,
+      page,
+      hasMore: skip + posts.length < total,
     };
   }
 
@@ -324,11 +339,185 @@ export class PostsService {
     }));
   }
 
+  /** Get paginated list of users who liked a post */
+  async getLikes(postId: string, page: number, limit: number) {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      select: { id: true, deletedAt: true },
+    });
+
+    if (!post || post.deletedAt) {
+      throw new NotFoundException("Gonderi bulunamadi");
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [likes, total] = await Promise.all([
+      this.prisma.postLike.findMany({
+        where: { postId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              profile: {
+                select: { firstName: true, lastName: true },
+              },
+              photos: {
+                where: { isPrimary: true },
+                select: { url: true, thumbnailUrl: true },
+                take: 1,
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      this.prisma.postLike.count({ where: { postId } }),
+    ]);
+
+    return {
+      likes: likes.map((like) => ({
+        userId: like.user.id,
+        firstName: like.user.profile?.firstName || "Kullanici",
+        lastName: like.user.profile?.lastName || "",
+        photoUrl: like.user.photos?.[0]?.thumbnailUrl || like.user.photos?.[0]?.url || "",
+        likedAt: like.createdAt.toISOString(),
+      })),
+      total,
+      page,
+      hasMore: skip + likes.length < total,
+    };
+  }
+
+  /** Create a comment on a post */
+  async createComment(postId: string, userId: string, text: string) {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      select: { id: true, deletedAt: true },
+    });
+
+    if (!post || post.deletedAt) {
+      throw new NotFoundException("Gonderi bulunamadi");
+    }
+
+    const comment = await this.prisma.postComment.create({
+      data: { postId, userId, text },
+      include: {
+        user: {
+          select: {
+            id: true,
+            profile: {
+              select: { firstName: true },
+            },
+            photos: {
+              where: { isPrimary: true },
+              select: { url: true },
+              take: 1,
+            },
+          },
+        },
+      },
+    });
+
+    return {
+      id: comment.id,
+      postId: comment.postId,
+      userId: comment.userId,
+      text: comment.text,
+      userName: comment.user.profile?.firstName || "Kullanici",
+      userAvatarUrl: comment.user.photos?.[0]?.url ?? "",
+      createdAt: comment.createdAt.toISOString(),
+    };
+  }
+
+  /** Get paginated comments for a post (newest first) */
+  async getComments(postId: string, page: number, limit: number) {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      select: { id: true, deletedAt: true },
+    });
+
+    if (!post || post.deletedAt) {
+      throw new NotFoundException("Gonderi bulunamadi");
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [comments, total] = await Promise.all([
+      this.prisma.postComment.findMany({
+        where: { postId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              profile: {
+                select: { firstName: true },
+              },
+              photos: {
+                where: { isPrimary: true },
+                select: { url: true },
+                take: 1,
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      this.prisma.postComment.count({ where: { postId } }),
+    ]);
+
+    return {
+      comments: comments.map((comment) => ({
+        id: comment.id,
+        postId: comment.postId,
+        userId: comment.userId,
+        text: comment.text,
+        userName: comment.user.profile?.firstName || "Kullanici",
+        userAvatarUrl: comment.user.photos?.[0]?.url ?? "",
+        createdAt: comment.createdAt.toISOString(),
+      })),
+      total,
+      page,
+      hasMore: skip + comments.length < total,
+    };
+  }
+
+  /** Delete own comment */
+  async deleteComment(commentId: string, userId: string) {
+    const comment = await this.prisma.postComment.findUnique({
+      where: { id: commentId },
+      select: { id: true, userId: true },
+    });
+
+    if (!comment) {
+      throw new NotFoundException("Yorum bulunamadi");
+    }
+
+    if (comment.userId !== userId) {
+      throw new ForbiddenException("Bu yorumu silme yetkiniz yok");
+    }
+
+    await this.prisma.postComment.delete({
+      where: { id: commentId },
+    });
+
+    this.logger.log(`User ${userId} deleted comment ${commentId}`);
+
+    return { success: true };
+  }
+
   // ── Private helpers ──────────────────────────────────────────
 
   /** Standard include clause for post queries with user data */
   private postInclude() {
     return {
+      _count: {
+        select: { comments: true },
+      },
       user: {
         select: {
           id: true,
@@ -340,6 +529,8 @@ export class PostsService {
               birthDate: true,
               city: true,
               intentionTag: true,
+              currentMood: true,
+              moodSetAt: true,
             },
           },
           photos: {
@@ -349,7 +540,7 @@ export class PostsService {
           },
         },
       },
-    } as const;
+    };
   }
 
   /** Map a Prisma post (with included user data) to the API response format */
@@ -365,14 +556,21 @@ export class PostsService {
 
     let verificationLevel: "PREMIUM" | "VERIFIED" | "NONE" = "NONE";
     if (
-      post.user.packageTier === "GOLD" ||
-      post.user.packageTier === "PRO" ||
-      post.user.packageTier === "RESERVED"
+      post.user.packageTier === "PREMIUM" ||
+      post.user.packageTier === "SUPREME"
     ) {
       verificationLevel = "PREMIUM";
     } else if (post.user.isSelfieVerified) {
       verificationLevel = "VERIFIED";
     }
+
+    // Check mood expiry (4 hours)
+    const MOOD_EXPIRY_MS = 4 * 60 * 60 * 1000;
+    const moodSetAt = profile?.moodSetAt as Date | null | undefined;
+    const isMoodActive =
+      profile?.currentMood &&
+      moodSetAt &&
+      new Date().getTime() - moodSetAt.getTime() < MOOD_EXPIRY_MS;
 
     return {
       id: post.id,
@@ -382,6 +580,7 @@ export class PostsService {
       photoUrls: post.photoUrls,
       videoUrl: post.videoUrl,
       likeCount: post.likeCount,
+      commentCount: post._count?.comments ?? 0,
       createdAt: post.createdAt.toISOString(),
       userName: profile?.firstName || "Kullanici",
       userAge: age,
@@ -392,6 +591,7 @@ export class PostsService {
       isFollowing: isFollowedByMe,
       intentionTag: profile?.intentionTag ?? "EXPLORING",
       isLiked: isLikedByMe,
+      currentMood: isMoodActive ? (profile!.currentMood as string) : null,
     };
   }
 

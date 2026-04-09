@@ -45,7 +45,7 @@ function createMockProfile(overrides: Partial<Record<string, unknown>> = {}) {
     country: "TR",
     latitude: 41.0082,
     longitude: 28.9784,
-    intentionTag: "EXPLORING",
+    intentionTag: "ILISKI",
     isComplete: false,
     lastActiveAt: new Date(),
     createdAt: new Date(),
@@ -203,7 +203,7 @@ describe("ProfilesService", () => {
         profile: createMockProfile({
           bio: "Hello",
           city: "Istanbul",
-          intentionTag: "EXPLORING",
+          intentionTag: "ILISKI",
         }),
         photos: [createMockPhoto()],
       });
@@ -212,7 +212,17 @@ describe("ProfilesService", () => {
       const result = await service.getProfile("user-uuid-1");
 
       expect(result.userId).toBe("user-uuid-1");
-      expect(result.profile).toEqual(user.profile);
+      // Profile is spread with mood expiry fields (currentMood, moodSetAt, moodExpiresAt)
+      expect(result.profile).toEqual(
+        expect.objectContaining({
+          bio: "Hello",
+          city: "Istanbul",
+          intentionTag: "ILISKI",
+          currentMood: null,
+          moodSetAt: null,
+          moodExpiresAt: null,
+        }),
+      );
       expect(result.photos).toEqual(user.photos);
       expect(result.profileCompletion).toBeDefined();
       expect(typeof result.profileCompletion).toBe("number");
@@ -257,7 +267,7 @@ describe("ProfilesService", () => {
         profile: createMockProfile({
           bio: "Merhaba! Ben Ali, Istanbul'dan.",
           city: "Istanbul",
-          intentionTag: "EXPLORING",
+          intentionTag: "ILISKI",
         }),
         photos: [
           createMockPhoto(),
@@ -293,7 +303,7 @@ describe("ProfilesService", () => {
         profile: createMockProfile({
           bio: null,
           city: null,
-          intentionTag: "EXPLORING",
+          intentionTag: "ILISKI",
         }),
         photos: [],
       });
@@ -415,7 +425,7 @@ describe("ProfilesService", () => {
       const upsertCall = mockPrismaUserProfile.upsert.mock.calls[0][0];
       expect(upsertCall.create.firstName).toBe("Kullanici");
       expect(upsertCall.create.gender).toBe("OTHER");
-      expect(upsertCall.create.intentionTag).toBe("NOT_SURE");
+      expect(upsertCall.create.intentionTag).toBe("SOHBET_ARKADAS");
       expect(upsertCall.create.isComplete).toBe(false);
     });
 
@@ -475,7 +485,7 @@ describe("ProfilesService", () => {
       const profile = createMockProfile({
         firstName: "Ali",
         bio: "Merhaba, ben Ali!",
-        intentionTag: "EXPLORING",
+        intentionTag: "ILISKI",
         isComplete: false,
       });
       mockPrismaUser.findUnique.mockResolvedValue(user);
@@ -505,7 +515,7 @@ describe("ProfilesService", () => {
       const profile = createMockProfile({
         firstName: "Ali",
         bio: "Merhaba, ben Ali!",
-        intentionTag: "EXPLORING",
+        intentionTag: "ILISKI",
         isComplete: true,
       });
       mockPrismaUser.findUnique.mockResolvedValue(user);
@@ -528,7 +538,7 @@ describe("ProfilesService", () => {
       const profile = createMockProfile({
         firstName: "Ali",
         bio: null,
-        intentionTag: "EXPLORING",
+        intentionTag: "ILISKI",
         isComplete: true,
       });
       mockPrismaUser.findUnique.mockResolvedValue(user);
@@ -1024,20 +1034,20 @@ describe("ProfilesService", () => {
       mockPrismaUserProfile.findUnique.mockResolvedValue(profile);
       mockPrismaUserProfile.update.mockResolvedValue({
         ...profile,
-        intentionTag: "SERIOUS_RELATIONSHIP",
+        intentionTag: "EVLENMEK",
       });
 
-      const dto = { intentionTag: IntentionTagValue.SERIOUS_RELATIONSHIP };
+      const dto = { intentionTag: IntentionTagValue.EVLENMEK };
       const result = await service.setIntentionTag("user-uuid-1", dto);
 
-      expect(result.intentionTag).toBe("SERIOUS_RELATIONSHIP");
+      expect(result.intentionTag).toBe("EVLENMEK");
       expect(result.message).toBe("Niyet etiketi güncellendi");
     });
 
     it("should throw NotFoundException when profile does not exist", async () => {
       mockPrismaUserProfile.findUnique.mockResolvedValue(null);
 
-      const dto = { intentionTag: IntentionTagValue.EXPLORING };
+      const dto = { intentionTag: IntentionTagValue.ILISKI };
 
       await expect(service.setIntentionTag("user-uuid-1", dto)).rejects.toThrow(
         NotFoundException,
@@ -1052,12 +1062,12 @@ describe("ProfilesService", () => {
       mockPrismaUserProfile.findUnique.mockResolvedValue(profile);
       mockPrismaUserProfile.update.mockResolvedValue(profile);
 
-      const dto = { intentionTag: IntentionTagValue.NOT_SURE };
+      const dto = { intentionTag: IntentionTagValue.SOHBET_ARKADAS };
       await service.setIntentionTag("user-uuid-1", dto);
 
       expect(mockPrismaUserProfile.update).toHaveBeenCalledWith({
         where: { userId: "user-uuid-1" },
-        data: { intentionTag: "NOT_SURE" },
+        data: { intentionTag: "SOHBET_ARKADAS" },
       });
     });
 
@@ -1066,16 +1076,16 @@ describe("ProfilesService", () => {
       mockPrismaUserProfile.findUnique.mockResolvedValue(profile);
       mockPrismaUserProfile.update.mockResolvedValue(profile);
 
-      const dto = { intentionTag: IntentionTagValue.EXPLORING };
+      const dto = { intentionTag: IntentionTagValue.ILISKI };
       const result = await service.setIntentionTag("user-uuid-1", dto);
 
-      expect(result.intentionTag).toBe("EXPLORING");
+      expect(result.intentionTag).toBe("ILISKI");
     });
 
     it("should lookup profile by userId", async () => {
       mockPrismaUserProfile.findUnique.mockResolvedValue(null);
 
-      const dto = { intentionTag: IntentionTagValue.EXPLORING };
+      const dto = { intentionTag: IntentionTagValue.ILISKI };
 
       await expect(
         service.setIntentionTag("some-user-id", dto),
@@ -1495,7 +1505,7 @@ describe("ProfilesService", () => {
         profile: createMockProfile({
           bio: "1234567890",
           city: "Istanbul",
-          intentionTag: "EXPLORING",
+          intentionTag: "ILISKI",
         }),
         photos: [
           createMockPhoto(),
@@ -1517,7 +1527,7 @@ describe("ProfilesService", () => {
         profile: createMockProfile({
           bio: "123456789",
           city: "Istanbul",
-          intentionTag: "EXPLORING",
+          intentionTag: "ILISKI",
         }),
         photos: [
           createMockPhoto(),
@@ -1539,7 +1549,7 @@ describe("ProfilesService", () => {
         profile: createMockProfile({
           bio: "A long enough bio text",
           city: "Istanbul",
-          intentionTag: "EXPLORING",
+          intentionTag: "ILISKI",
         }),
         photos: [createMockPhoto()],
       });

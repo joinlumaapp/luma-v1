@@ -17,7 +17,6 @@ export interface CompatibilityQuestion {
   textTr: string;
   text: string;
   weight: number;
-  isPremium: boolean;
   options: QuestionOption[] | string[];
   answeredOptionId: string | null;
   isAnswered: boolean;
@@ -27,7 +26,6 @@ export interface GetQuestionsResponse {
   questions: CompatibilityQuestion[];
   answeredCount: number;
   totalCount: number;
-  hasPremiumAccess: boolean;
 }
 
 export interface SubmitAnswerRequest {
@@ -66,7 +64,6 @@ export interface MyAnswersResponse {
     category: string;
     textEn: string;
     textTr: string;
-    isPremium: boolean;
     selectedOption: {
       id: string;
       labelEn: string;

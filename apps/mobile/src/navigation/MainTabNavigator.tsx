@@ -7,6 +7,12 @@
 
 import React, { useEffect, useRef } from 'react';
 import { StyleSheet, View, Text, Platform, Animated } from 'react-native';
+import Reanimated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSequence,
+  withSpring,
+} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -55,8 +61,6 @@ import { EditProfileScreen } from '../screens/profile/EditProfileScreen';
 import { SettingsScreen } from '../screens/profile/SettingsScreen';
 import { MyPostsScreen } from '../screens/profile/MyPostsScreen';
 import { PlacesScreen } from '../screens/places/PlacesScreen';
-import { RelationshipScreen } from '../screens/relationship/RelationshipScreen';
-import { CouplesClubScreen } from '../screens/couples-club/CouplesClubScreen';
 import { NotificationSettingsScreen } from '../screens/settings/NotificationSettingsScreen';
 import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';
 import { MembershipPlansScreen } from '../screens/settings/MembershipPlansScreen';
@@ -69,6 +73,7 @@ import { AccountDeletionScreen } from '../screens/settings/AccountDeletionScreen
 import { PrivacyPolicyScreen } from '../screens/settings/PrivacyPolicyScreen';
 import { QuestionsScreen } from '../screens/profile/QuestionsScreen';
 import { InterestPickerScreen } from '../screens/profile/InterestPickerScreen';
+import { WeeklyReportScreen } from '../screens/profile/WeeklyReportScreen';
 import { ReportScreen } from '../screens/moderation/ReportScreen';
 import { JetonMarketScreen } from '../screens/store/JetonMarketScreen';
 
@@ -159,7 +164,7 @@ const TAB_ICONS: Record<string, { active: keyof typeof Ionicons.glyphMap; inacti
 const TabIcon: React.FC<{ name: string; focused: boolean }> = React.memo(({ name, focused }) => {
   const icons = TAB_ICONS[name];
   const iconName = icons ? (focused ? icons.active : icons.inactive) : 'help-outline';
-  const iconColor = focused ? '#8B5CF6' : 'rgba(150, 150, 150, 0.7)';
+  const iconColor = focused ? '#FFFFFF' : 'rgba(255, 255, 255, 0.5)';
 
   // Scale press animation — bounces from 0.85 to 1.0 when tab changes
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -208,21 +213,42 @@ const TabIcon: React.FC<{ name: string; focused: boolean }> = React.memo(({ name
 TabIcon.displayName = 'TabIcon';
 
 // Tab icon with unread count badge (red circle with white number) — memoized
+// Animation 7: Badge bounces when unread count increases
 const TabIconWithBadge: React.FC<{
   name: string;
   focused: boolean;
   badgeCount: number;
 }> = React.memo(({ name, focused, badgeCount }) => {
+  const badgeScale = useSharedValue(1);
+  const prevCountRef = useRef(badgeCount);
+
+  useEffect(() => {
+    // Only bounce when count increases (not on initial render or decrease)
+    if (badgeCount > prevCountRef.current && badgeCount > 0) {
+      badgeScale.value = withSequence(
+        withSpring(1.4, { damping: 6, stiffness: 300 }),
+        withSpring(0.9, { damping: 8, stiffness: 250 }),
+        withSpring(1.1, { damping: 10, stiffness: 200 }),
+        withSpring(1.0, { damping: 12, stiffness: 180 }),
+      );
+    }
+    prevCountRef.current = badgeCount;
+  }, [badgeCount, badgeScale]);
+
+  const badgeAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: badgeScale.value }],
+  }));
+
   return (
     <View style={styles.tabIconContainer}>
       <View>
         <TabIcon name={name} focused={focused} />
         {badgeCount > 0 && (
-          <View style={styles.unreadBadge}>
+          <Reanimated.View style={[styles.unreadBadge, badgeAnimatedStyle]}>
             <Text style={styles.unreadBadgeText}>
               {badgeCount > 99 ? '99+' : badgeCount}
             </Text>
-          </View>
+          </Reanimated.View>
         )}
       </View>
     </View>
@@ -238,7 +264,7 @@ const DiscoveryStackNavigator: React.FC = React.memo(() => (
       animation: 'slide_from_right',
       statusBarAnimation: 'none',
       statusBarStyle: 'light',
-      statusBarColor: '#000000',
+      statusBarColor: '#0d0d14',
     }}
   >
     <DiscoveryStack.Screen name="Discovery" component={DiscoveryScreen} />
@@ -309,7 +335,7 @@ const MatchesStackNavigator: React.FC = React.memo(() => (
       animation: 'slide_from_right',
       statusBarAnimation: 'none',
       statusBarStyle: 'light',
-      statusBarColor: '#000000',
+      statusBarColor: '#0d0d14',
     }}
   >
     <MatchesStack.Screen name="MatchesList" component={MatchesListScreen} />
@@ -386,7 +412,7 @@ const FeedStackNavigator: React.FC = React.memo(() => (
       animation: 'slide_from_right',
       statusBarAnimation: 'none',
       statusBarStyle: 'light',
-      statusBarColor: '#000000',
+      statusBarColor: '#0d0d14',
     }}
   >
     <FeedStack.Screen name="SocialFeed" component={SocialFeedScreen} />
@@ -419,7 +445,7 @@ const LiveStackNavigator: React.FC = React.memo(() => (
       headerShown: false,
       statusBarAnimation: 'none',
       statusBarStyle: 'light',
-      statusBarColor: '#000000',
+      statusBarColor: '#0d0d14',
     }}
   >
     <LiveStack.Screen name="Live" component={LiveScreen} />
@@ -437,7 +463,7 @@ const ProfileStackNavigator: React.FC = React.memo(() => (
       animation: 'slide_from_right',
       statusBarAnimation: 'none',
       statusBarStyle: 'light',
-      statusBarColor: '#000000',
+      statusBarColor: '#0d0d14',
     }}
   >
     <ProfileStack.Screen name="Profile" component={ProfileScreen} />
@@ -446,8 +472,6 @@ const ProfileStackNavigator: React.FC = React.memo(() => (
     <ProfileStack.Screen name="Settings" component={SettingsScreen} />
     <ProfileStack.Screen name="JetonMarket" component={JetonMarketScreen} />
     <ProfileStack.Screen name="Places" component={PlacesScreen} />
-    <ProfileStack.Screen name="Relationship" component={RelationshipScreen} />
-    <ProfileStack.Screen name="CouplesClub" component={CouplesClubScreen} />
     <ProfileStack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
     <ProfileStack.Screen name="MembershipPlans" component={MembershipPlansScreen} />
     <ProfileStack.Screen name="PersonalitySelection" component={PersonalitySelectionScreen} />
@@ -459,6 +483,11 @@ const ProfileStackNavigator: React.FC = React.memo(() => (
     <ProfileStack.Screen name="Questions" component={QuestionsScreen} />
     <ProfileStack.Screen name="FollowList" component={FollowListScreen} />
     <ProfileStack.Screen name="MyPosts" component={MyPostsScreen} />
+    <ProfileStack.Screen
+      name="WeeklyReport"
+      component={WeeklyReportScreen}
+      options={{ animation: 'slide_from_right' }}
+    />
     <ProfileStack.Screen
       name="BoostMarket"
       component={BoostMarketScreen}
@@ -514,7 +543,8 @@ export const MainTabNavigator: React.FC = () => {
         headerShown: false,
         lazy: true,
         freezeOnBlur: true,
-        tabBarStyle: [styles.tabBar, { backgroundColor: darkTheme.tabBarBackground }],
+        animation: 'fade',
+        tabBarStyle: [styles.tabBar, { backgroundColor: darkTheme.tabBarBackground, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: darkTheme.tabBarBorder }],
         tabBarActiveTintColor: darkTheme.tabBarActive,
         tabBarInactiveTintColor: darkTheme.tabBarInactive,
         tabBarLabelStyle: {
@@ -633,7 +663,7 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     marginTop: 2,
-    backgroundColor: '#8B5CF6',
+    backgroundColor: '#FFFFFF',
   },
   // Unread message badge
   unreadBadge: {
@@ -648,7 +678,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 4,
     borderWidth: 1.5,
-    borderColor: '#08080F',
+    borderColor: '#0d0d14',
   },
   unreadBadgeText: {
     ...typography.captionSmall,

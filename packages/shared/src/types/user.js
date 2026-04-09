@@ -2,26 +2,27 @@
 // LUMA V1 — User & Profile Types
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.VerificationType = exports.VerificationStatus = exports.PackageTier = exports.Gender = exports.IntentionTag = void 0;
-// Subsystem 4: Intention Tags — LOCKED: 3 Tags
+// Hedef (Intention Tags) — LOCKED: 5 Tags
 var IntentionTag;
 (function (IntentionTag) {
-    IntentionTag["SERIOUS_RELATIONSHIP"] = "SERIOUS_RELATIONSHIP";
-    IntentionTag["EXPLORING"] = "EXPLORING";
-    IntentionTag["NOT_SURE"] = "NOT_SURE";
+    IntentionTag["EVLENMEK"] = "evlenmek";
+    IntentionTag["ILISKI"] = "iliski";
+    IntentionTag["SOHBET_ARKADAS"] = "sohbet_arkadas";
+    IntentionTag["KULTUR"] = "kultur";
+    IntentionTag["DUNYA_GEZME"] = "dunya_gezme";
 })(IntentionTag || (exports.IntentionTag = IntentionTag = {}));
 var Gender;
 (function (Gender) {
-    Gender["MALE"] = "MALE";
-    Gender["FEMALE"] = "FEMALE";
-    Gender["OTHER"] = "OTHER";
+    Gender["MALE"] = "male";
+    Gender["FEMALE"] = "female";
+    Gender["OTHER"] = "other";
 })(Gender || (exports.Gender = Gender = {}));
-// Subsystem 16: Package Tiers — LOCKED: 4 Packages
+// Package Tiers — LOCKED: 3 Packages (NO Gold/Pro/Reserved)
 var PackageTier;
 (function (PackageTier) {
-    PackageTier["FREE"] = "FREE";
-    PackageTier["GOLD"] = "GOLD";
-    PackageTier["PRO"] = "PRO";
-    PackageTier["RESERVED"] = "RESERVED";
+    PackageTier["FREE"] = "free";
+    PackageTier["PREMIUM"] = "premium";
+    PackageTier["SUPREME"] = "supreme";
 })(PackageTier || (exports.PackageTier = PackageTier = {}));
 var VerificationStatus;
 (function (VerificationStatus) {
@@ -35,4 +36,3 @@ var VerificationType;
     VerificationType["SMS"] = "SMS";
     VerificationType["SELFIE"] = "SELFIE";
 })(VerificationType || (exports.VerificationType = VerificationType = {}));
-//# sourceMappingURL=user.js.map

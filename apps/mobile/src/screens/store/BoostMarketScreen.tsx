@@ -27,7 +27,7 @@ import { useScreenTracking } from '../../hooks/useAnalytics';
 interface BoostPack {
   id: string;
   count: number;
-  costGold: number;
+  costJeton: number;
   discount?: string;
   popular?: boolean;
 }
@@ -62,7 +62,7 @@ const PackCard: React.FC<{
       </View>
     )}
 
-    <Text style={cardStyles.price}>{'\uD83E\uDE99'} {pack.costGold}</Text>
+    <Text style={cardStyles.price}>{'\uD83E\uDE99'} {pack.costJeton}</Text>
   </TouchableOpacity>
 );
 
@@ -153,10 +153,10 @@ export const BoostMarketScreen: React.FC = () => {
     const pack = BOOST_PACKS.find((p) => p.id === selectedPack);
     if (!pack) return;
 
-    if (coinBalance < pack.costGold) {
+    if (coinBalance < pack.costJeton) {
       Alert.alert(
         'Yetersiz Jeton',
-        `Bu paket için ${pack.costGold} jeton gerekli. Mevcut bakiyen: ${coinBalance}`,
+        `Bu paket için ${pack.costJeton} jeton gerekli. Mevcut bakiyen: ${coinBalance}`,
         [
           { text: 'Vazgeç', style: 'cancel' },
           { text: 'Jeton Al', onPress: () => navigation.navigate('JetonMarket' as never) },
@@ -167,7 +167,7 @@ export const BoostMarketScreen: React.FC = () => {
 
     setIsPurchasing(true);
     try {
-      const success = await spendCoins(pack.costGold, `Boost x${pack.count}`);
+      const success = await spendCoins(pack.costJeton, `Boost x${pack.count}`);
       if (success) {
         Alert.alert(
           'Başarılı!',

@@ -50,7 +50,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const GRID_PADDING = 24;
 const GRID_GAP = 10;
 const PHOTO_CELL_WIDTH = (SCREEN_WIDTH - GRID_PADDING * 2 - GRID_GAP * 2) / 3;
-const PHOTO_CELL_HEIGHT = PHOTO_CELL_WIDTH * 1.45;
+const PHOTO_CELL_HEIGHT = PHOTO_CELL_WIDTH; // Square aspect ratio
 const PHOTO_SLOTS = 9;
 
 const MAX_BIO_LENGTH = 500;
@@ -79,11 +79,11 @@ const calculateAge = (birthDate: string): number => {
 
 // ── Intention tag options (Bumpy-inspired) ────────────────────────────────
 const INTENTION_OPTIONS: Array<{ value: string; label: string; emoji: string; description: string }> = [
-  { value: 'MARRIAGE', label: 'Evlenmek', emoji: '💍', description: 'Evlenecek birini bulmak ve ortak bir gelecek inşa etmek' },
-  { value: 'SERIOUS_RELATIONSHIP', label: 'Bir ilişki bulmak', emoji: '💖', description: 'Uzun bir ilişki yaşamak için ruh eşini bulmak' },
-  { value: 'FRIENDSHIP', label: 'Sohbet etmek ve arkadaşlarla tanışmak', emoji: '💬', description: 'Farklı insanlarla baskı altında olmadan konuşmak' },
-  { value: 'LEARN_CULTURES', label: 'Diğer kültürleri öğrenmek', emoji: '🎓', description: 'Yeni dil pratiği yapmak ve yeni bir şeyler öğrenmek' },
-  { value: 'TRAVEL', label: 'Dünyayı gezmek', emoji: '✈️', description: 'Seyahat arkadaşlarıyla tanışmak ve deneyimlerini paylaşmak' },
+  { value: 'EVLENMEK', label: 'Evlenmek', emoji: '💍', description: 'Hayat arkadaşımı arıyorum' },
+  { value: 'ILISKI', label: 'Bir ilişki bulmak', emoji: '💕', description: 'Ciddi bir ilişki istiyorum' },
+  { value: 'SOHBET_ARKADAS', label: 'Sohbet / Arkadaşlık', emoji: '💬', description: 'Yeni insanlarla tanışmak' },
+  { value: 'KULTUR', label: 'Kültürleri öğrenmek', emoji: '🌍', description: 'Farklı kültürler keşfetmek' },
+  { value: 'DUNYA_GEZME', label: 'Dünyayı gezmek', emoji: '✈️', description: 'Seyahat arkadaşı bulmak' },
 ];
 
 // ── Life values options (inline to avoid import issues) ───────────────────
@@ -677,7 +677,7 @@ export const EditProfileScreen: React.FC = () => {
           {/* ─── Completion Card (moved to ProfileScreen) ─── */}
 
           {/* ─── Uyum Sorulari (top position for visibility) ─── */}
-          {answeredCount < 45 && (
+          {answeredCount < 20 && (
             <View style={{
               backgroundColor: colors.primary + '08',
               borderWidth: 1,
@@ -720,7 +720,7 @@ export const EditProfileScreen: React.FC = () => {
                 }}>
                   <View style={{
                     height: '100%',
-                    width: `${Math.min((answeredCount / 45) * 100, 100)}%`,
+                    width: `${Math.min((answeredCount / 20) * 100, 100)}%`,
                     backgroundColor: answeredCount >= 30 ? colors.success : answeredCount >= 15 ? '#F59E0B' : colors.primary,
                     borderRadius: 3,
                   }} />
@@ -730,7 +730,7 @@ export const EditProfileScreen: React.FC = () => {
                   fontFamily: 'Poppins_600SemiBold',
                   fontWeight: '600',
                   color: colors.primary,
-                }}>{answeredCount}/45</Text>
+                }}>{answeredCount}/20</Text>
               </View>
 
               {/* CTA Button */}
@@ -902,11 +902,11 @@ export const EditProfileScreen: React.FC = () => {
             )}
           </View>
 
-          {/* ── Fotoğraflar (3x2 grid) ────────────────────────────────── */}
+          {/* ── Fotoğraflar (3x3 grid) ────────────────────────────────── */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Fotoğraflar</Text>
             <Text style={styles.sectionHint}>
-              İlk fotoğraf profil fotoğrafın olacak. En az 2, en fazla 6 fotoğraf ekle.
+              İlk fotoğraf profil fotoğrafın olacak. En az 2, en fazla 9 fotoğraf ekle.
             </Text>
             <View style={styles.photoGrid}>
               {photoSlots.map((uri, index) => {
@@ -940,11 +940,12 @@ export const EditProfileScreen: React.FC = () => {
                         <View style={styles.photoRemoveButton}>
                           <Ionicons name="close" size={12} color="#FFFFFF" />
                         </View>
-                        {/* Main photo badge */}
+                        {/* Main photo badge — purple ANA indicator */}
                         {isMain && (
                           <View style={styles.photoMainBadge}>
-                            <Ionicons name="star" size={10} color="#FFFFFF" />
-                            <Text style={styles.photoMainBadgeText}>Ana</Text>
+                            <View style={styles.photoMainBadgeInner}>
+                              <Text style={styles.photoMainBadgeText}>ANA</Text>
+                            </View>
                           </View>
                         )}
                         {/* Order number */}
@@ -1245,7 +1246,7 @@ export const EditProfileScreen: React.FC = () => {
             </View>
           </View>
 
-          <SectionHeader title="Hedefim" description="Baskalarina ne aradiginizi soyleyin" />
+          <SectionHeader title="Hedefim" description="Başkalarına ne aradığınızı söyleyin" />
 
           {/* ── Hedefim Kartlari (Bumpy-style) ──────────────────────── */}
           <View style={{ marginHorizontal: 24, gap: 8 }}>
@@ -1257,9 +1258,9 @@ export const EditProfileScreen: React.FC = () => {
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
-                    backgroundColor: colors.surface,
+                    backgroundColor: isSelected ? '#8B5CF620' : colors.surface,
                     borderWidth: isSelected ? 2 : 1,
-                    borderColor: isSelected ? colors.primary : colors.surfaceBorder,
+                    borderColor: isSelected ? '#8B5CF6' : colors.surfaceBorder,
                     borderRadius: 14,
                     paddingHorizontal: 16,
                     paddingVertical: 14,
@@ -1267,7 +1268,7 @@ export const EditProfileScreen: React.FC = () => {
                   onPress={() => setIntentionTag(option.value)}
                   activeOpacity={0.7}
                 >
-                  <Text style={{ fontSize: 22, marginRight: 12 }}>{option.emoji}</Text>
+                  <Text style={{ fontSize: 28, marginRight: 12 }}>{option.emoji}</Text>
                   <View style={{ flex: 1 }}>
                     <Text style={{
                       fontSize: 15,
@@ -1289,7 +1290,7 @@ export const EditProfileScreen: React.FC = () => {
                     borderRadius: 12,
                     borderWidth: isSelected ? 0 : 1.5,
                     borderColor: colors.surfaceBorder,
-                    backgroundColor: isSelected ? colors.primary : 'transparent',
+                    backgroundColor: isSelected ? '#8B5CF6' : 'transparent',
                     justifyContent: 'center',
                     alignItems: 'center',
                     marginLeft: 8,
@@ -1408,7 +1409,7 @@ export const EditProfileScreen: React.FC = () => {
             )}
           </View>
 
-          {/* ── Sevdigin Mekanlar ──────────────────────────────────────── */}
+          {/* ── Sevdiğin Mekanlar ──────────────────────────────────────── */}
           <View style={styles.section}>
             <FavoriteSpotsEditor
               spots={profile.favoriteSpots}
@@ -1587,7 +1588,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
 
-  // ── Photo Grid (3x2) ──
+  // ── Photo Grid (3x3) ──
   photoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -1596,7 +1597,7 @@ const styles = StyleSheet.create({
   photoCell: {
     width: PHOTO_CELL_WIDTH,
     height: PHOTO_CELL_HEIGHT,
-    borderRadius: 20,
+    borderRadius: 12,
     backgroundColor: colors.surface,
     borderWidth: 1.5,
     borderColor: colors.surfaceBorder,
@@ -1604,10 +1605,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   photoCellMain: {
-    borderColor: palette.gold[500],
+    borderColor: '#8B5CF6',
     borderWidth: 2.5,
     borderStyle: 'solid',
-    borderRadius: 20,
+    borderRadius: 12,
   },
   photoContent: {
     flex: 1,
@@ -1630,15 +1631,18 @@ const styles = StyleSheet.create({
   },
   photoMainBadge: {
     position: 'absolute',
-    bottom: 0,
+    bottom: 6,
     left: 0,
     right: 0,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
-    backgroundColor: palette.gold[500] + 'DD',
-    paddingVertical: 3,
+    flexDirection: 'row',
+  },
+  photoMainBadgeInner: {
+    backgroundColor: '#8B5CF6',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
   },
   photoMainBadgeText: {
     fontSize: 10,
@@ -1646,6 +1650,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.bold,
     color: '#FFFFFF',
     includeFontPadding: false,
+    letterSpacing: 0.5,
   },
   photoOrderBadge: {
     position: 'absolute',

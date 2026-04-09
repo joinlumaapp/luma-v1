@@ -48,7 +48,7 @@ describe("PaymentsController", () => {
   // ═══════════════════════════════════════════════════════════════
 
   describe("getPackages()", () => {
-    it("should return all 4 subscription packages and gold packs", async () => {
+    it("should return all 3 subscription packages and gold packs", async () => {
       const expected = {
         packages: [
           {
@@ -58,17 +58,16 @@ describe("PaymentsController", () => {
             monthlyPriceTry: 0,
           },
           {
-            tier: "GOLD",
-            name: "Gold",
-            nameTr: "Gold",
-            monthlyPriceTry: 149.99,
+            tier: "PREMIUM",
+            name: "Premium",
+            nameTr: "Premium",
+            monthlyPriceTry: 499,
           },
-          { tier: "PRO", name: "Pro", nameTr: "Pro", monthlyPriceTry: 299.99 },
           {
-            tier: "RESERVED",
-            name: "Reserved",
-            nameTr: "Reserved",
-            monthlyPriceTry: 999.99,
+            tier: "SUPREME",
+            name: "Supreme",
+            nameTr: "Supreme",
+            monthlyPriceTry: 1199,
           },
         ],
         goldPacks: [
@@ -80,7 +79,7 @@ describe("PaymentsController", () => {
 
       const result = await controller.getPackages();
 
-      expect(result.packages).toHaveLength(4);
+      expect(result.packages).toHaveLength(3);
       expect(result.goldPacks).toBeDefined();
     });
 
@@ -116,7 +115,7 @@ describe("PaymentsController", () => {
   describe("subscribe()", () => {
     const userId = "user-uuid-1";
     const dto = {
-      packageTier: PackageTier.GOLD,
+      packageTier: PackageTier.PREMIUM,
       platform: "apple",
       receipt: "mock-receipt-data",
     };
@@ -125,7 +124,7 @@ describe("PaymentsController", () => {
       const expected = {
         subscribed: true,
         subscriptionId: "sub-1",
-        packageTier: "GOLD",
+        packageTier: "PREMIUM",
         expiresAt: new Date("2026-03-23"),
       };
       mockPaymentsService.subscribe.mockResolvedValue(expected);
@@ -133,7 +132,7 @@ describe("PaymentsController", () => {
       const result = await controller.subscribe(userId, dto);
 
       expect(result.subscribed).toBe(true);
-      expect(result.packageTier).toBe("GOLD");
+      expect(result.packageTier).toBe("PREMIUM");
       expect(result.subscriptionId).toBe("sub-1");
     });
 
@@ -306,7 +305,7 @@ describe("PaymentsController", () => {
     it("should return gold balance and recent transactions", async () => {
       const expected = {
         balance: 500,
-        packageTier: "GOLD",
+        packageTier: "PREMIUM",
         currency: "gold",
         recentTransactions: [
           { id: "tx-1", type: "PURCHASE", amount: 150, balance: 500 },
@@ -317,7 +316,7 @@ describe("PaymentsController", () => {
       const result = await controller.getGoldBalance(userId);
 
       expect(result.balance).toBe(500);
-      expect(result.packageTier).toBe("GOLD");
+      expect(result.packageTier).toBe("PREMIUM");
       expect(result.currency).toBe("gold");
       expect(result.recentTransactions).toHaveLength(1);
     });
@@ -450,8 +449,8 @@ describe("PaymentsController", () => {
 
     it("should return subscription status with features", async () => {
       const expected = {
-        packageTier: "GOLD",
-        packageName: "Gold",
+        packageTier: "PREMIUM",
+        packageName: "Premium",
         isPaid: true,
         isActive: true,
         autoRenew: true,
@@ -462,7 +461,7 @@ describe("PaymentsController", () => {
 
       const result = await controller.getSubscriptionStatus(userId);
 
-      expect(result.packageTier).toBe("GOLD");
+      expect(result.packageTier).toBe("PREMIUM");
       expect(result.isPaid).toBe(true);
       expect(result.goldBalance).toBe(50);
     });

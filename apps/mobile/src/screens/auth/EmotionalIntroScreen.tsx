@@ -15,6 +15,7 @@ import {
   Linking,
   Dimensions,
 } from 'react-native';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import Animated, {
   FadeInDown,
   FadeInUp,
@@ -43,7 +44,7 @@ import { fontWeights } from '../../theme/typography';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const LOGO_SIZE = SCREEN_WIDTH * 0.82;
-const lumaLogo = require('../../../assets/splash-logo.png');
+const lumaLogo = require('../../../assets/images/luma-logo.png');
 
 type IntroNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'EmotionalIntro'>;
 
@@ -185,7 +186,7 @@ const EmotionalIntroScreen: React.FC = () => {
       displayId: 'dev-001',
       phone: '+90 555 555 5555',
       isVerified: true,
-      packageTier: 'RESERVED',
+      packageTier: 'SUPREME',
     });
     setOnboarded(true);
     await storage.setTokens('dev-access-token', 'dev-refresh-token');
@@ -203,7 +204,7 @@ const EmotionalIntroScreen: React.FC = () => {
       displayId: 'dev-001',
       phone: '+90 555 555 5555',
       isVerified: true,
-      packageTier: 'RESERVED',
+      packageTier: 'SUPREME',
     });
     setStartedOnboarding(true);
   }, []);
@@ -221,6 +222,52 @@ const EmotionalIntroScreen: React.FC = () => {
     storage.clearAll();
     useProfileStore.getState().reset();
     useTestModeStore.getState().setTestMode(false);
+  }, []);
+
+  const handleAppleSignIn = useCallback(async () => {
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      if (!credential.identityToken) {
+        console.error('Apple sign in: no identity token');
+        return;
+      }
+
+      // Send identity token to backend for verification
+      const api = require('../../services/api').default;
+      const response = await api.post('/auth/apple', {
+        identityToken: credential.identityToken,
+        appleUserId: credential.user,
+        firstName: credential.fullName?.givenName || undefined,
+        lastName: credential.fullName?.familyName || undefined,
+        email: credential.email || undefined,
+      });
+
+      const { accessToken, refreshToken, isNewUser, userId } = response.data;
+      const { login, setStartedOnboarding } = useAuthStore.getState();
+
+      login(accessToken, refreshToken, {
+        id: userId,
+        displayId: `apple-${credential.user.substring(0, 8)}`,
+        phone: '',
+        packageTier: 'FREE',
+        isVerified: true,
+      });
+
+      if (isNewUser) {
+        setStartedOnboarding(true);
+      }
+    } catch (e: unknown) {
+      const error = e as { code?: string };
+      if (error.code !== 'ERR_REQUEST_CANCELED') {
+        console.error('Apple sign in error:', e);
+      }
+    }
   }, []);
 
   const handleLogoLongPress = useCallback(() => {
@@ -283,6 +330,19 @@ const EmotionalIntroScreen: React.FC = () => {
 
         {/* Bottom section — buttons with staggered entrance */}
         <View style={styles.bottomSection}>
+          {/* Apple Sign-In — iOS only */}
+          {Platform.OS === 'ios' && (
+            <Animated.View entering={FadeInUp.duration(500).delay(550)} style={styles.fullWidth}>
+              <AppleAuthentication.AppleAuthenticationButton
+                buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
+                cornerRadius={28}
+                style={styles.appleButton}
+                onPress={handleAppleSignIn}
+              />
+            </Animated.View>
+          )}
+
           {/* Google button — disabled until Google Auth is implemented */}
           <Animated.View entering={FadeInUp.duration(500).delay(600)} style={styles.fullWidth}>
             <TouchableOpacity
@@ -457,6 +517,11 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === 'ios' ? 48 : 36,
     alignItems: 'center',
     gap: 14,
+  },
+  // Apple Sign-In button
+  appleButton: {
+    width: '100%',
+    height: 56,
   },
   // Google button — white, rounded
   googleButton: {

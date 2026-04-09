@@ -84,10 +84,10 @@ interface FloatingHeartConfig {
   size: number;
 }
 
-const FLOATING_HEART_COUNT = 12;
+const FLOATING_HEART_COUNT = 24;
 
-// Mixed particle types: hearts, stars, sparkles for variety
-const PARTICLE_EMOJIS = ['💜', '💖', '✨', '⭐', '💫', '🌟', '💗', '❤️', '✨', '💜', '⭐', '💖'];
+// Mixed particle types: hearts, stars, sparkles, confetti for variety
+const PARTICLE_EMOJIS = ['💜', '💖', '✨', '🎉', '💜', '💖', '✨', '🎉', '💗', '❤️', '⭐', '💫', '🌟', '💜', '💖', '✨', '🎉', '💗', '💜', '💖', '✨', '🎉', '⭐', '💫'];
 
 const generateFloatingHearts = (): FloatingHeartConfig[] =>
   Array.from({ length: FLOATING_HEART_COUNT }, (_, i) => ({
@@ -363,6 +363,9 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
   // CTA pulse
   const ctaPulse = useRef(new Animated.Value(1)).current;
 
+  // Background gradient pulse — cycles opacity 0.3 → 0.8 over 3s
+  const bgPulseOpacity = useRef(new Animated.Value(0.3)).current;
+
   // ── Memos ──
   const floatingHearts = useMemo(() => generateFloatingHearts(), []);
   const title = useMemo(
@@ -402,6 +405,7 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
     ctaPulse.setValue(1);
     flashOpacity.setValue(0);
     shakeX.setValue(0);
+    bgPulseOpacity.setValue(0.3);
 
     // Triple haptic pulses (3x light taps with 100ms spacing)
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -507,8 +511,8 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
         }),
         Animated.timing(scoreProgress, {
           toValue: 1,
-          duration: 400,
-          easing: Easing.out(Easing.ease),
+          duration: 1500,
+          easing: Easing.out(Easing.cubic),
           useNativeDriver: false, // must be false for interpolation used in non-transform
         }),
         Animated.timing(buttonsOpacity, {
@@ -552,6 +556,25 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
     );
     heartLoop.start();
 
+    // Background gradient pulse — 3s per cycle between 0.3 and 0.8 opacity
+    const bgPulseLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(bgPulseOpacity, {
+          toValue: 0.8,
+          duration: 1500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(bgPulseOpacity, {
+          toValue: 0.3,
+          duration: 1500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    bgPulseLoop.start();
+
     // CTA pulse every 3s
     const ctaLoop = Animated.loop(
       Animated.sequence([
@@ -576,6 +599,7 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
     return () => {
       heartLoop.stop();
       ctaLoop.stop();
+      bgPulseLoop.stop();
     };
   }, [
     visible,
@@ -595,6 +619,7 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
     ctaPulse,
     flashOpacity,
     shakeX,
+    bgPulseOpacity,
   ]);
 
   const heartCompositeScale = Animated.multiply(
@@ -618,6 +643,18 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
       <Animated.View style={[styles.backdrop, { opacity: overlayOpacity, transform: [{ translateX: shakeX }] }]}>
         {/* Gradient background — purple to pink */}
         <LinearGradient colors={GRADIENT_BG} style={StyleSheet.absoluteFill} />
+
+        {/* Pulsing purple-pink gradient overlay — cycles between 0.3 and 0.8 opacity */}
+        <Animated.View
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              backgroundColor: palette.purple[600],
+              opacity: bgPulseOpacity,
+            },
+          ]}
+          pointerEvents="none"
+        />
 
         {/* Screen flash overlay — brief white glow */}
         <Animated.View

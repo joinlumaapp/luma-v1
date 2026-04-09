@@ -33,7 +33,7 @@ import { borderRadius, spacing } from '../../theme/spacing';
 
 // ─── Types ────────────────────────────────────────────────────
 
-type IntentionVariant = 'serious' | 'exploring' | 'not_sure';
+type IntentionVariant = 'EVLENMEK' | 'ILISKI' | 'SOHBET_ARKADAS' | 'KULTUR' | 'DUNYA_GEZME' | 'serious' | 'exploring' | 'not_sure';
 type BadgeSize = 'sm' | 'md';
 
 interface BadgeBaseProps {
@@ -77,6 +77,38 @@ interface IntentionConfig {
 }
 
 const INTENTION_CONFIGS: Record<IntentionVariant, IntentionConfig> = {
+  // New 5 hedefler
+  EVLENMEK: {
+    label: 'Evlenmek',
+    bg: 'rgba(139, 92, 246, 0.18)',
+    text: '#8B5CF6',
+    icon: 'heart',
+  },
+  ILISKI: {
+    label: 'Bir ilişki bulmak',
+    bg: 'rgba(236, 72, 153, 0.18)',
+    text: '#EC4899',
+    icon: 'heart-outline',
+  },
+  SOHBET_ARKADAS: {
+    label: 'Sohbet / Arkadaşlık',
+    bg: 'rgba(59, 130, 246, 0.18)',
+    text: '#3B82F6',
+    icon: 'chatbubbles',
+  },
+  KULTUR: {
+    label: 'Kültürleri öğrenmek',
+    bg: 'rgba(16, 185, 129, 0.18)',
+    text: '#10B981',
+    icon: 'globe',
+  },
+  DUNYA_GEZME: {
+    label: 'Dünyayı gezmek',
+    bg: 'rgba(245, 158, 11, 0.18)',
+    text: '#F59E0B',
+    icon: 'airplane',
+  },
+  // Legacy keys for backward compatibility
   serious: {
     label: 'Ciddi İlişki',
     bg: 'rgba(16, 185, 129, 0.18)',

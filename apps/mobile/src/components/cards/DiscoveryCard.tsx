@@ -9,7 +9,16 @@ import {
   Pressable,
   StyleSheet,
   Animated,
+  Dimensions,
 } from 'react-native';
+import Reanimated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  withSequence,
+  Easing as ReanimatedEasing,
+} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { palette } from '../../theme/colors';
@@ -22,6 +31,8 @@ import { analyticsService, ANALYTICS_EVENTS } from '../../services/analyticsServ
 import { useDiscoveryStore } from '../../stores/discoveryStore';
 import { CachedImage } from '../common/CachedImage';
 import { VideoProfile } from '../profile/VideoProfile';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -54,7 +65,7 @@ export interface DiscoveryCardProfile {
   matchReasons?: string[];
   /** Real compatibility reasons generated from shared signals */
   compatReasons?: string[];
-  packageTier?: 'FREE' | 'GOLD' | 'PRO' | 'RESERVED';
+  packageTier?: 'FREE' | 'PREMIUM' | 'SUPREME';
   /** Profile prompts (Hinge-style question + answer) */
   prompts?: Array<{ id: string; question: string; answer: string; order: number }>;
   /** Profile video data */
@@ -63,6 +74,8 @@ export interface DiscoveryCardProfile {
     thumbnailUrl: string;
     duration: number;
   } | null;
+  /** Current mood status (Anlık Ruh Hali) — null if not set or expired */
+  currentMood?: string | null;
 }
 
 interface DiscoveryCardProps {
@@ -71,6 +84,8 @@ interface DiscoveryCardProps {
   onInstantMessage?: (userId: string) => void;
   /** Whether this card is the active/visible card (for video auto-play) */
   isActiveCard?: boolean;
+  /** Whether the user has an active boost — shows shimmer + badge */
+  isBoosted?: boolean;
 }
 
 // ─── Interest tag label lookup ───────────────────────────────
@@ -99,45 +114,155 @@ for (const cat of INTEREST_CATEGORIES) {
 // ─── Intention tag display config ────────────────────────────
 
 const INTENTION_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+  // New 5 hedefler
+  EVLENMEK: {
+    label: 'Evlenmek',
+    color: palette.purple[300],
+    bg: 'rgba(139, 92, 246, 0.14)',
+  },
+  ILISKI: {
+    label: 'Bir ilişki bulmak',
+    color: palette.pink[300],
+    bg: 'rgba(244, 114, 182, 0.14)',
+  },
+  SOHBET_ARKADAS: {
+    label: 'Sohbet / Arkadaşlık',
+    color: '#60A5FA',
+    bg: 'rgba(59, 130, 246, 0.14)',
+  },
+  KULTUR: {
+    label: 'Kültürleri öğrenmek',
+    color: '#34D399',
+    bg: 'rgba(16, 185, 129, 0.14)',
+  },
+  DUNYA_GEZME: {
+    label: 'Dünyayı gezmek',
+    color: '#FBBF24',
+    bg: 'rgba(245, 158, 11, 0.14)',
+  },
+  // Legacy keys for backward compatibility
   SERIOUS_RELATIONSHIP: {
     label: 'Ciddi ilişki',
     color: palette.purple[300],
     bg: 'rgba(139, 92, 246, 0.14)',
   },
-  serious: {
-    label: 'Ciddi ilişki',
+  MARRIAGE: {
+    label: 'Evlenmek',
     color: palette.purple[300],
     bg: 'rgba(139, 92, 246, 0.14)',
   },
-  EXPLORING: {
-    label: 'Keşfetmek',
-    color: palette.pink[300],
-    bg: 'rgba(244, 114, 182, 0.14)',
+  FRIENDSHIP: {
+    label: 'Sohbet / Arkadaşlık',
+    color: '#60A5FA',
+    bg: 'rgba(59, 130, 246, 0.14)',
   },
-  exploring: {
-    label: 'Keşfetmek',
-    color: palette.pink[300],
-    bg: 'rgba(244, 114, 182, 0.14)',
+  LEARN_CULTURES: {
+    label: 'Kültürleri öğrenmek',
+    color: '#34D399',
+    bg: 'rgba(16, 185, 129, 0.14)',
   },
-  NOT_SURE: {
-    label: 'Flört',
-    color: palette.coral[300],
-    bg: 'rgba(255, 140, 128, 0.14)',
+  TRAVEL: {
+    label: 'Dünyayı gezmek',
+    color: '#FBBF24',
+    bg: 'rgba(245, 158, 11, 0.14)',
   },
-  not_sure: {
-    label: 'Flört',
-    color: palette.coral[300],
-    bg: 'rgba(255, 140, 128, 0.14)',
-  },
+};
+
+// ─── Mood display config (Anlık Ruh Hali) ───────────────────
+const MOOD_DISPLAY: Record<string, { label: string; emoji: string; color: string }> = {
+  sohbete_acigim: { label: 'Sohbete a\u00E7\u0131\u011F\u0131m', emoji: '\uD83D\uDCAC', color: '#22C55E' },
+  bugun_sessizim: { label: 'Bug\u00FCn sessizim', emoji: '\uD83E\uDD2B', color: '#6B7280' },
+  bulusmaya_varim: { label: 'Bulu\u015Fmaya var\u0131m', emoji: '\u2615', color: '#F59E0B' },
+  kafede_takiliyorum: { label: 'Kafede tak\u0131l\u0131yorum', emoji: '\uD83C\uDFEA', color: '#3B82F6' },
 };
 
 // ─── Component ────────────────────────────────────────────────
 
-const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap, isActiveCard = false }) => {
+const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap, isActiveCard = false, isBoosted = false }) => {
   const hasVideo = !!profile.profileVideo?.url;
   const compatScore = profile.compatibility?.score ?? 0;
   const isSuper = profile.compatibility?.level === 'super';
-  const isSupreme = profile.packageTier === 'RESERVED';
+  const isSupreme = profile.packageTier === 'SUPREME';
+  const isSuperCompat = compatScore >= 90;
+
+  // ── Animation 5: Boost Shimmer ──
+  const shimmerTranslateX = useSharedValue(-SCREEN_WIDTH);
+  const boostBadgeOpacity = useSharedValue(0.8);
+
+  useEffect(() => {
+    if (!isBoosted) return;
+    // Diagonal shimmer sweep: left-to-right every 2s
+    shimmerTranslateX.value = withRepeat(
+      withTiming(SCREEN_WIDTH, { duration: 2000, easing: ReanimatedEasing.linear }),
+      -1, // infinite repeat
+      false,
+    );
+    // Subtle badge glow pulse: 0.8 -> 1.0
+    boostBadgeOpacity.value = withRepeat(
+      withSequence(
+        withTiming(1.0, { duration: 1000, easing: ReanimatedEasing.inOut(ReanimatedEasing.ease) }),
+        withTiming(0.8, { duration: 1000, easing: ReanimatedEasing.inOut(ReanimatedEasing.ease) }),
+      ),
+      -1,
+      false,
+    );
+  }, [isBoosted, shimmerTranslateX, boostBadgeOpacity]);
+
+  const shimmerStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shimmerTranslateX.value }, { rotate: '25deg' }],
+  }));
+
+  const boostBadgeStyle = useAnimatedStyle(() => ({
+    opacity: boostBadgeOpacity.value,
+  }));
+
+  // ── Animation 6: Super Compatibility Glow (>=90%) ──
+  const superGlowOpacity = useSharedValue(0.3);
+  const superBadgeScale = useSharedValue(1.0);
+  const superBorderOpacity = useSharedValue(0.3);
+
+  useEffect(() => {
+    if (!isSuperCompat) return;
+    // Pulsing golden glow: opacity 0.3 -> 0.8
+    superGlowOpacity.value = withRepeat(
+      withSequence(
+        withTiming(0.8, { duration: 1000, easing: ReanimatedEasing.inOut(ReanimatedEasing.ease) }),
+        withTiming(0.3, { duration: 1000, easing: ReanimatedEasing.inOut(ReanimatedEasing.ease) }),
+      ),
+      -1,
+      false,
+    );
+    // Sparkle scale pulse: 1.0 -> 1.05 -> 1.0 over 1.5s
+    superBadgeScale.value = withRepeat(
+      withSequence(
+        withTiming(1.05, { duration: 750, easing: ReanimatedEasing.inOut(ReanimatedEasing.ease) }),
+        withTiming(1.0, { duration: 750, easing: ReanimatedEasing.inOut(ReanimatedEasing.ease) }),
+      ),
+      -1,
+      false,
+    );
+    // Border opacity pulse
+    superBorderOpacity.value = withRepeat(
+      withSequence(
+        withTiming(0.8, { duration: 1000, easing: ReanimatedEasing.inOut(ReanimatedEasing.ease) }),
+        withTiming(0.3, { duration: 1000, easing: ReanimatedEasing.inOut(ReanimatedEasing.ease) }),
+      ),
+      -1,
+      false,
+    );
+  }, [isSuperCompat, superGlowOpacity, superBadgeScale, superBorderOpacity]);
+
+  const superGlowStyle = useAnimatedStyle(() => ({
+    opacity: superGlowOpacity.value,
+  }));
+
+  const superBadgeAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: superBadgeScale.value }],
+  }));
+
+  const superBorderStyle = useAnimatedStyle(() => ({
+    opacity: superBorderOpacity.value,
+  }));
 
   // ── Supreme Aura: pulsing gold border opacity ──
   const auraOpacity = useRef(new Animated.Value(0.4)).current;
@@ -198,6 +323,11 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
     ? INTENTION_CONFIG[profile.intentionTag] ?? null
     : null;
 
+  // Mood config
+  const moodConfig = profile.currentMood
+    ? MOOD_DISPLAY[profile.currentMood] ?? null
+    : null;
+
   // Build meta line: "2.3 km · Su an aktif"
   const hasDistance = !!distanceLabel;
   const hasActivity = !!activityStatus;
@@ -233,9 +363,48 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
         </View>
       )}
 
+      {/* ── Animation 5: Boost shimmer sweep ── */}
+      {isBoosted && (
+        <Reanimated.View
+          style={[styles.shimmerOverlay, shimmerStyle]}
+          pointerEvents="none"
+        >
+          <LinearGradient
+            colors={[
+              'transparent',
+              'rgba(255, 255, 255, 0.15)',
+              'transparent',
+            ] as [string, string, ...string[]]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFillObject}
+          />
+        </Reanimated.View>
+      )}
+
+      {/* ── Animation 5: Boost Aktif badge ── */}
+      {isBoosted && (
+        <Reanimated.View style={[styles.boostBadge, boostBadgeStyle]}>
+          <Text style={styles.boostBadgeText}>⚡ Boost Aktif</Text>
+        </Reanimated.View>
+      )}
+
+      {/* ── Animation 6: Super Uyum badge (>=90%) ── */}
+      {isSuperCompat && (
+        <Reanimated.View style={[styles.superCompatBadge, superBadgeAnimStyle]}>
+          <Text style={styles.superCompatBadgeText}>⭐ Süper Uyum!</Text>
+        </Reanimated.View>
+      )}
+
       {/* Verified badge — top-left */}
-      {profile.isVerified && (
+      {profile.isVerified && !isSuperCompat && (
         <View style={styles.verifiedBadge}>
+          <Ionicons name="checkmark" size={12} color="#FFFFFF" />
+        </View>
+      )}
+      {/* Verified badge — shifted down when super compat badge is shown */}
+      {profile.isVerified && isSuperCompat && (
+        <View style={[styles.verifiedBadge, { top: spacing.smd + 32 }]}>
           <Ionicons name="checkmark" size={12} color="#FFFFFF" />
         </View>
       )}
@@ -319,6 +488,16 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
           </View>
         )}
 
+        {/* Mood badge — Anlık Ruh Hali */}
+        {moodConfig && (
+          <View style={[styles.moodBadge, { backgroundColor: moodConfig.color + '25' }]}>
+            <Text style={styles.moodBadgeEmoji}>{moodConfig.emoji}</Text>
+            <Text style={[styles.moodBadgeLabel, { color: moodConfig.color }]}>
+              {moodConfig.label}
+            </Text>
+          </View>
+        )}
+
         {/* Intention tag — soft pill */}
         {intentionConfig && (
           <View style={[styles.intentionPill, { backgroundColor: intentionConfig.bg }]}>
@@ -356,9 +535,26 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
     </View>
   );
 
+  // Wrap super compatibility cards (>=90%) in a golden glow
+  if (isSuperCompat && !isSupreme) {
+    return (
+      <View style={styles.superCompatGlowWrapper}>
+        <Reanimated.View
+          style={[styles.superCompatGlowBorder, superBorderStyle]}
+          pointerEvents="none"
+        />
+        <Reanimated.View
+          style={[styles.superCompatGlowShadow, superGlowStyle]}
+          pointerEvents="none"
+        />
+        {cardContent}
+      </View>
+    );
+  }
+
   // Wrap supreme profiles in a pulsing golden aura
   if (isSupreme) {
-    return (
+    const wrappedContent = (
       <View style={styles.supremeAuraWrapper}>
         <Animated.View
           style={[
@@ -370,6 +566,25 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
         {cardContent}
       </View>
     );
+
+    // Supreme + super compat: add golden glow on top
+    if (isSuperCompat) {
+      return (
+        <View style={styles.superCompatGlowWrapper}>
+          <Reanimated.View
+            style={[styles.superCompatGlowBorder, superBorderStyle]}
+            pointerEvents="none"
+          />
+          <Reanimated.View
+            style={[styles.superCompatGlowShadow, superGlowStyle]}
+            pointerEvents="none"
+          />
+          {wrappedContent}
+        </View>
+      );
+    }
+
+    return wrappedContent;
   }
 
   return cardContent;
@@ -379,7 +594,8 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
 
 export const DiscoveryCard = React.memo(DiscoveryCardInner, (prevProps, nextProps) => {
   return prevProps.profile.userId === nextProps.profile.userId
-    && prevProps.isActiveCard === nextProps.isActiveCard;
+    && prevProps.isActiveCard === nextProps.isActiveCard
+    && prevProps.isBoosted === nextProps.isBoosted;
 });
 
 // ─── Styles ───────────────────────────────────────────────────
@@ -567,6 +783,28 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.35)',
   },
 
+  // ── Mood badge (Anlık Ruh Hali) ──
+  moodBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 4,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  moodBadgeEmoji: {
+    fontSize: 12,
+    includeFontPadding: false,
+  },
+  moodBadgeLabel: {
+    fontSize: 11,
+    fontWeight: fontWeights.medium,
+    fontFamily: poppinsFonts.medium,
+    includeFontPadding: false,
+    letterSpacing: 0.2,
+  },
+
   // ── Intention pill ──
   intentionPill: {
     alignSelf: 'flex-start',
@@ -620,6 +858,95 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.65)',
     lineHeight: 18,
     includeFontPadding: false,
+  },
+
+  // ── Boost Shimmer (Animation 5) ──
+  shimmerOverlay: {
+    position: 'absolute',
+    top: -50,
+    bottom: -50,
+    width: 60,
+    zIndex: 5,
+  },
+  boostBadge: {
+    position: 'absolute',
+    top: spacing.smd,
+    right: spacing.smd,
+    backgroundColor: '#FFD700',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    zIndex: 6,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  boostBadgeText: {
+    fontSize: 11,
+    fontWeight: fontWeights.bold,
+    fontFamily: poppinsFonts.bold,
+    color: '#FFFFFF',
+    includeFontPadding: false,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+
+  // ── Super Compatibility Glow (Animation 6) ──
+  superCompatBadge: {
+    position: 'absolute',
+    top: spacing.smd,
+    left: spacing.smd,
+    backgroundColor: '#FFD700',
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    zIndex: 6,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  superCompatBadgeText: {
+    fontSize: 12,
+    fontWeight: fontWeights.bold,
+    fontFamily: poppinsFonts.bold,
+    color: '#FFFFFF',
+    includeFontPadding: false,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  superCompatGlowWrapper: {
+    flex: 1,
+    borderRadius: 22,
+    overflow: 'hidden',
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 18,
+    elevation: 10,
+  },
+  superCompatGlowBorder: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 22,
+    borderWidth: 1.5,
+    borderColor: '#FFD700',
+    zIndex: 10,
+  },
+  superCompatGlowShadow: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 22,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 20,
+    elevation: 12,
+    backgroundColor: 'transparent',
+    zIndex: 9,
   },
 
   // ── Supreme Aura ──

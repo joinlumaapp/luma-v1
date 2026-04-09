@@ -61,9 +61,34 @@ export class ProfilesService {
       photos: approvedPhotos,
     });
 
+    // Check mood expiry — if moodSetAt is > 4 hours ago, treat as null
+    const MOOD_EXPIRY_MS = 4 * 60 * 60 * 1000;
+    let moodData: { currentMood: string | null; moodSetAt: Date | null; moodExpiresAt: string | null } = {
+      currentMood: null,
+      moodSetAt: null,
+      moodExpiresAt: null,
+    };
+
+    if (user.profile?.currentMood && user.profile?.moodSetAt) {
+      const moodSetAt = user.profile.moodSetAt as Date;
+      const expiresAt = new Date(moodSetAt.getTime() + MOOD_EXPIRY_MS);
+      if (new Date() < expiresAt) {
+        moodData = {
+          currentMood: user.profile.currentMood as string,
+          moodSetAt: moodSetAt,
+          moodExpiresAt: expiresAt.toISOString(),
+        };
+      }
+    }
+
     return {
       userId: user.id,
-      profile: user.profile,
+      profile: {
+        ...user.profile,
+        currentMood: moodData.currentMood,
+        moodSetAt: moodData.moodSetAt,
+        moodExpiresAt: moodData.moodExpiresAt,
+      },
       photos: user.photos.map((p) => ({
         ...p,
         // Indicate moderation status to the owner
@@ -138,7 +163,7 @@ export class ProfilesService {
         country: dto.country,
         latitude: dto.latitude,
         longitude: dto.longitude,
-        intentionTag: (dto.intentionTag ?? "NOT_SURE") as any,
+        intentionTag: (dto.intentionTag ?? "SOHBET_ARKADAS") as any,
         interestTags: dto.interestTags ?? [],
         height: dto.height,
         education: dto.education,

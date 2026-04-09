@@ -45,8 +45,8 @@ const GRID_GAP = 10;
 const GRID_PADDING = 24;
 const CELL_SIZE = (width - GRID_PADDING * 2 - GRID_GAP * 2) / 3;
 
-// Onboarding shows 6 slots initially; users can add more later in EditProfile
-const ONBOARDING_PHOTO_SLOTS = 6;
+// Onboarding shows 9 slots (3x3 grid); min 2 required
+const ONBOARDING_PHOTO_SLOTS = 9;
 
 // Gold accent for main photo border
 const GOLD_ACCENT = '#C4A882';
@@ -298,9 +298,9 @@ export const PhotosScreen: React.FC = () => {
         <Animated.View style={buttonAnimStyle}>
           <FullWidthButton
             label={
-              selectedCount === 0
-                ? 'En az 1 fotoğraf ekle'
-                : `Devam et (${selectedCount}/6)`
+              selectedCount < 2
+                ? `En az 2 fotoğraf ekle (${selectedCount}/9)`
+                : `Devam et (${selectedCount}/9)`
             }
             onPress={handleContinue}
             disabled={!isValid}

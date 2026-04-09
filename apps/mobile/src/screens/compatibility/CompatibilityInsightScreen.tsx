@@ -344,8 +344,8 @@ export const CompatibilityInsightScreen: React.FC = () => {
   const { matchId, partnerName } = route.params;
 
   const packageTier = useAuthStore((state) => state.user?.packageTier ?? 'FREE');
-  // Dimensions are locked for Free and Gold users (need Pro or Reserved to unlock all 7)
-  const isFreeUser = packageTier === 'FREE' || packageTier === 'GOLD';
+  // Dimensions are locked for Free and Premium users (need Supreme to unlock all 7)
+  const isFreeUser = packageTier === 'FREE' || packageTier === 'PREMIUM';
 
   const [isLoading, setIsLoading] = useState(true);
   const [compatibilityData, setCompatibilityData] = useState<CompatibilityData | null>(null);

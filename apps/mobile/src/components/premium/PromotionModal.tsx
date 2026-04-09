@@ -1,4 +1,4 @@
-// PromotionModal — Timed upgrade promotion for non-premium → PRO, premium → RESERVED
+// PromotionModal — Timed upgrade promotion for non-premium → PREMIUM, premium → SUPREME
 // Shows at strategic intervals: after 3rd app open, then every 24h
 
 import React, { useEffect, useState, useCallback } from 'react';
@@ -30,7 +30,7 @@ const PROMO_SESSION_KEY = 'promo.shownThisSession';
 const COOLDOWN_MS = 12 * 60 * 60 * 1000; // 12 hours between promotions
 
 interface PromoConfig {
-  tier: 'PRO' | 'RESERVED';
+  tier: 'PREMIUM' | 'SUPREME';
   title: string;
   subtitle: string;
   features: string[];
@@ -39,8 +39,8 @@ interface PromoConfig {
   icon: string;
 }
 
-const proConfig: PromoConfig = {
-  tier: 'PRO',
+const premiumConfig: PromoConfig = {
+  tier: 'PREMIUM',
   title: 'Premium\'a Geç',
   subtitle: 'Daha fazla eşleşme, daha fazla olasılık!',
   features: [
@@ -55,8 +55,8 @@ const proConfig: PromoConfig = {
   icon: 'rocket',
 };
 
-const reservedConfig: PromoConfig = {
-  tier: 'RESERVED',
+const supremeConfig: PromoConfig = {
+  tier: 'SUPREME',
   title: 'Supreme Deneyimi',
   subtitle: 'En ayrıcalıklı üyelik seni bekliyor!',
   features: [
@@ -72,13 +72,13 @@ const reservedConfig: PromoConfig = {
 };
 
 function getPromoConfig(packageTier: PackageTier): PromoConfig | null {
-  if (packageTier === 'FREE' || packageTier === 'GOLD') {
-    return proConfig;
+  if (packageTier === 'FREE') {
+    return premiumConfig;
   }
-  if (packageTier === 'PRO') {
-    return reservedConfig;
+  if (packageTier === 'PREMIUM') {
+    return supremeConfig;
   }
-  // RESERVED users already have top tier
+  // SUPREME users already have top tier
   return null;
 }
 

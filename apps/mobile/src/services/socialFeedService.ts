@@ -60,9 +60,12 @@ export interface FeedPost {
   videoUrl: string | null;
   /** Server-provided thumbnail for video posts (may be absent from older API responses) */
   thumbnailUrl?: string | null;
+  commentCount: number;
   likeCount: number;
   isLiked: boolean;
   createdAt: string;
+  /** Current mood status of the post author (Anlık Ruh Hali) */
+  currentMood?: string | null;
 }
 
 export interface CreatePostRequest {
@@ -142,6 +145,7 @@ const MOCK_POSTS: FeedPost[] = [
     photoUrls: [],
     videoUrl: null,
     thumbnailUrl: null,
+    commentCount: 3,
     likeCount: 42,
     isLiked: false,
     createdAt: minutesAgo(12),
@@ -162,6 +166,7 @@ const MOCK_POSTS: FeedPost[] = [
     photoUrls: [],
     videoUrl: null,
     thumbnailUrl: null,
+    commentCount: 8,
     likeCount: 67,
     isLiked: true,
     createdAt: minutesAgo(35),
@@ -182,6 +187,7 @@ const MOCK_POSTS: FeedPost[] = [
     photoUrls: ['https://picsum.photos/seed/cappadocia/600/400'],
     videoUrl: null,
     thumbnailUrl: null,
+    commentCount: 15,
     likeCount: 128,
     isLiked: false,
     createdAt: hoursAgo(1),
@@ -202,6 +208,7 @@ const MOCK_POSTS: FeedPost[] = [
     photoUrls: [],
     videoUrl: null,
     thumbnailUrl: null,
+    commentCount: 0,
     likeCount: 53,
     isLiked: false,
     createdAt: hoursAgo(2),
@@ -285,6 +292,7 @@ export const socialFeedService = {
         photoUrls: data.photoUrls,
         videoUrl: data.videoUrl ?? null,
         thumbnailUrl: data.thumbnailUrl ?? null,
+        commentCount: 0,
         likeCount: 0,
         isLiked: false,
         createdAt: new Date().toISOString(),

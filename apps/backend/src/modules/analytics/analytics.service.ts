@@ -31,9 +31,8 @@ export interface DashboardMetrics {
   };
   packageDistribution: {
     free: number;
-    gold: number;
-    pro: number;
-    reserved: number;
+    premium: number;
+    supreme: number;
   };
 }
 
@@ -480,20 +479,18 @@ export class AnalyticsService {
 
   private async getPackageDistribution(): Promise<{
     free: number;
-    gold: number;
-    pro: number;
-    reserved: number;
+    premium: number;
+    supreme: number;
   }> {
     try {
-      const [free, gold, pro, reserved] = await Promise.all([
+      const [free, premium, supreme] = await Promise.all([
         this.prisma.user.count({ where: { packageTier: "FREE" } }),
-        this.prisma.user.count({ where: { packageTier: "GOLD" } }),
-        this.prisma.user.count({ where: { packageTier: "PRO" } }),
-        this.prisma.user.count({ where: { packageTier: "RESERVED" } }),
+        this.prisma.user.count({ where: { packageTier: "PREMIUM" } }),
+        this.prisma.user.count({ where: { packageTier: "SUPREME" } }),
       ]);
-      return { free, gold, pro, reserved };
+      return { free, premium, supreme };
     } catch {
-      return { free: 0, gold: 0, pro: 0, reserved: 0 };
+      return { free: 0, premium: 0, supreme: 0 };
     }
   }
 

@@ -26,7 +26,7 @@ interface BoostStatus {
 export interface BoostDuration {
   minutes: number;
   label: string;
-  goldCost: number;
+  jetonCost: number;
 }
 
 interface BoostModalProps {
@@ -73,7 +73,7 @@ export const BoostModal: React.FC<BoostModalProps> = ({
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   const selectedDuration = BOOST_DURATIONS[selectedIndex];
-  const hasEnoughGold = goldBalance >= selectedDuration.goldCost;
+  const hasEnoughGold = goldBalance >= selectedDuration.jetonCost;
 
   // Countdown timer for active boost
   useEffect(() => {
@@ -220,7 +220,7 @@ export const BoostModal: React.FC<BoostModalProps> = ({
                             isSelected && styles.durationCostSelected,
                           ]}
                         >
-                          {dur.goldCost}
+                          {dur.jetonCost}
                         </Text>
                       </View>
                     </TouchableOpacity>
