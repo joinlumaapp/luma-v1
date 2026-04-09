@@ -1379,7 +1379,7 @@ const styles = StyleSheet.create({
     backgroundColor: palette.purple[500],
   },
   uploadProgressText: {
-    fontSize: 11,
+    fontSize: 14,
     color: colors.textSecondary,
     textAlign: 'center',
   },
@@ -1414,7 +1414,7 @@ const styles = StyleSheet.create({
   },
   // GIF button
   gifButtonText: {
-    fontSize: 11,
+    fontSize: 14,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',

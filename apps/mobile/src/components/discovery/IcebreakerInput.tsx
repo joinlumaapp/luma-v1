@@ -302,12 +302,12 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   targetLabel: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.semibold,
     color: colors.text,
   },
   targetAnswer: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
   },
@@ -373,12 +373,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs,
   },
   hintText: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: fontWeights.regular,
     color: colors.textTertiary,
   },
   charCounter: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
   },

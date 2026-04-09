@@ -227,13 +227,13 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   metaText: {
-    fontSize: 11,
+    fontSize: 14,
     color: colors.textSecondary,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
   },
   intentionEmoji: {
-    fontSize: 10,
+    fontSize: 14,
   },
 
   // Compatibility
@@ -275,10 +275,10 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   compatSubtitle: {
-    fontSize: 12,
+    fontSize: 14,
     color: colors.textSecondary,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
   },
 
   // Actions
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   fullProfileText: {
-    fontSize: 13,
+    fontSize: 14,
     color: colors.textSecondary,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',

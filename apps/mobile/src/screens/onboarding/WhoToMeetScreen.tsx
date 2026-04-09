@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 15,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     lineHeight: 22,
     color: onboardingColors.textSecondary,
     marginBottom: 32,
@@ -182,9 +182,9 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   privacyText: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     lineHeight: 18,
     color: onboardingColors.textSecondary,
     flex: 1,

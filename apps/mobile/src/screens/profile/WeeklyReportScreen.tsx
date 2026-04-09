@@ -338,7 +338,7 @@ export const WeeklyReportScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0d0d14',
+    backgroundColor: '#08080F',
   },
   centered: {
     justifyContent: 'center',
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontFamily: poppinsFonts.regular,
-    fontSize: 12,
+    fontSize: 14,
     color: 'rgba(255,255,255,0.5)',
     marginTop: 2,
   },
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontFamily: poppinsFonts.regular,
-    fontSize: 13,
+    fontSize: 14,
     color: 'rgba(255,255,255,0.5)',
   },
 
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
   },
   lockedText: {
     fontFamily: poppinsFonts.medium,
-    fontSize: 13,
+    fontSize: 14,
     color: '#A78BFA',
     marginTop: spacing.sm,
     marginBottom: spacing.smd,
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
   },
   lockedButtonText: {
     fontFamily: poppinsFonts.semibold,
-    fontSize: 13,
+    fontSize: 14,
     color: '#FFFFFF',
   },
 

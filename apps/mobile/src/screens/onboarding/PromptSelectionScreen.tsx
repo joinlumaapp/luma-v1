@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 15,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: onboardingColors.textSecondary,
     lineHeight: 22,
     marginBottom: 28,
@@ -532,7 +532,7 @@ const styles = StyleSheet.create({
   },
   questionText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: onboardingColors.textSecondary,
@@ -563,7 +563,7 @@ const styles = StyleSheet.create({
   answerPlaceholder: {
     color: onboardingColors.textTertiary,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
   },
 
   // Bottom row
@@ -574,9 +574,9 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   charCount: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: onboardingColors.textTertiary,
   },
   slotActions: {
@@ -616,7 +616,7 @@ const styles = StyleSheet.create({
     backgroundColor: onboardingColors.text,
   },
   completionText: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: onboardingColors.textSecondary,

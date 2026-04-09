@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   superIcon: {
-    fontSize: 12,
+    fontSize: 14,
     color: colors.text,
   },
   compatText: {

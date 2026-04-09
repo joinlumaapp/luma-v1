@@ -29,7 +29,7 @@ export const Navigation: React.FC = () => {
 
   const navigationTheme = useMemo(
     () => ({
-      dark: isDark,
+      dark: true, // Always dark — ensures light-content status bar across all screens
       colors: {
         primary: colors.primary,
         background: colors.background,
@@ -39,10 +39,10 @@ export const Navigation: React.FC = () => {
         notification: colors.secondary,
       },
       fonts: {
-        regular: { fontFamily: 'Poppins_400Regular', fontWeight: '400' as const },
+        regular: { fontFamily: 'Poppins_500Medium', fontWeight: '500' as const },
         medium: { fontFamily: 'Poppins_500Medium', fontWeight: '500' as const },
-        bold: { fontFamily: 'Poppins_600SemiBold', fontWeight: '600' as const },
-        heavy: { fontFamily: 'Poppins_600SemiBold', fontWeight: '600' as const },
+        bold: { fontFamily: 'Poppins_700Bold', fontWeight: '700' as const },
+        heavy: { fontFamily: 'Poppins_800ExtraBold', fontWeight: '800' as const },
       },
     }),
     [isDark, colors],

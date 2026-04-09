@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontFamily: poppinsFonts.regular,
-    fontSize: 13,
+    fontSize: 14,
     lineHeight: 18,
     color: colors.textSecondary,
     marginBottom: spacing.md,
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
   },
   pickLabel: {
     fontFamily: poppinsFonts.medium,
-    fontSize: 12,
+    fontSize: 14,
     lineHeight: 16,
     color: colors.textSecondary,
     marginBottom: spacing.sm,
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
   },
   categoryChipText: {
     fontFamily: poppinsFonts.medium,
-    fontSize: 12,
+    fontSize: 14,
     lineHeight: 16,
     color: colors.textSecondary,
   },
@@ -465,7 +465,7 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     fontFamily: poppinsFonts.semibold,
-    fontSize: 13,
+    fontSize: 14,
     lineHeight: 18,
     color: '#FFFFFF',
   },
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
   },
   suggestionsLabel: {
     fontFamily: poppinsFonts.semibold,
-    fontSize: 13,
+    fontSize: 14,
     lineHeight: 18,
     color: colors.textSecondary,
     marginBottom: spacing.sm,
@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
   },
   suggestionText: {
     fontFamily: poppinsFonts.regular,
-    fontSize: 12,
+    fontSize: 14,
     lineHeight: 16,
     color: colors.text,
   },

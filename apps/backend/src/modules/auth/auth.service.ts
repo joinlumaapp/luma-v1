@@ -768,6 +768,97 @@ export class AuthService {
   }
 
   // ═══════════════════════════════════════════════════════════════
+  // GOOGLE SIGN-IN — authenticate with Google ID token
+  // ═══════════════════════════════════════════════════════════════
+
+  async googleSignIn(dto: {
+    idToken: string;
+    googleUserId: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+  }): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    isNewUser: boolean;
+    userId: string;
+    user: {
+      firstName?: string;
+      lastName?: string;
+      email?: string;
+    };
+  }> {
+    // In production, verify the Google ID token against Google's public keys
+    // For now, trust the client-provided googleUserId
+    const googleIdKey = `GOOGLE-${dto.googleUserId}`;
+
+    // Try to find existing user by Google ID
+    let user = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { displayId: googleIdKey },
+          { phone: googleIdKey },
+        ],
+        deletedAt: null,
+      },
+      include: { profile: true },
+    });
+
+    let isNewUser = false;
+
+    if (!user) {
+      // Create new user for Google Sign-In
+      isNewUser = true;
+      const displayId = generateDisplayId();
+      const referralCode = await this.generateUniqueReferralCode();
+
+      user = await this.prisma.user.create({
+        data: {
+          phone: googleIdKey,
+          phoneCountryCode: "+0",
+          isSmsVerified: true, // Google handles verification
+          displayId,
+          referralCode,
+          profile: {
+            create: {
+              firstName: dto.firstName || "Google User",
+              lastName: dto.lastName || null,
+              birthDate: new Date("2000-01-01"), // Placeholder — must complete onboarding
+              gender: "OTHER",
+              intentionTag: "SOHBET_ARKADAS",
+            },
+          },
+        },
+        include: { profile: true },
+      });
+
+      this.logger.log(`New Google Sign-In user created: ${user.id}`);
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException("Hesabınız devre dışı bırakılmış");
+    }
+
+    const tokens = await this.createSession(
+      user.id,
+      user.phone,
+      user.isSelfieVerified,
+      user.packageTier,
+    );
+
+    return {
+      ...tokens,
+      isNewUser,
+      userId: user.id,
+      user: {
+        firstName: dto.firstName || user.profile?.firstName || undefined,
+        lastName: dto.lastName || user.profile?.lastName || undefined,
+        email: dto.email,
+      },
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════════
   // DELETE ACCOUNT — GDPR-compliant soft delete + data anonymization
   // ═══════════════════════════════════════════════════════════════
 

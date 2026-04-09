@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     color: colors.text,
     fontFamily: 'Poppins_300Light',
-    fontWeight: '300',
+    fontWeight: '500',
     marginTop: -2,
   },
   title: {

@@ -920,7 +920,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   closeBtnText: {
-    fontSize: 12,
+    fontSize: 14,
     color: 'rgba(255, 255, 255, 0.35)',
     lineHeight: 16,
   },
@@ -1066,7 +1066,7 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: 'rgba(196, 181, 253, 0.75)',
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     textAlign: 'center',
     letterSpacing: 0.1,
   },

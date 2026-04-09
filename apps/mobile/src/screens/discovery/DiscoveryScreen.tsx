@@ -1455,7 +1455,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   boostTimerText: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: palette.gold[600],
@@ -1477,10 +1477,10 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 149, 0, 0.25)',
   },
   streakBadgeEmoji: {
-    fontSize: 13,
+    fontSize: 14,
   },
   streakBadgeCount: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#FF9500',
@@ -1504,7 +1504,7 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   streakTooltipText: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#FFFFFF',

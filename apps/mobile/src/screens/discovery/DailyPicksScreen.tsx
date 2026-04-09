@@ -567,7 +567,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: colors.text,
     fontFamily: 'Poppins_300Light',
-    fontWeight: '300',
+    fontWeight: '500',
     marginTop: -2,
   },
   headerTitle: {
@@ -686,7 +686,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   compatBadgeText: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },

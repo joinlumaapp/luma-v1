@@ -509,9 +509,9 @@ const gridStyles = StyleSheet.create({
     textAlign: 'center',
   },
   teaseSubtitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.textSecondary,
     textAlign: 'center',
   },
@@ -560,7 +560,7 @@ const gridStyles = StyleSheet.create({
     borderRadius: 8,
   },
   badgeText: {
-    fontSize: 10,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#fff',
@@ -574,7 +574,7 @@ const gridStyles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   hintText: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: 'rgba(255,255,255,0.85)',
@@ -600,9 +600,9 @@ const gridStyles = StyleSheet.create({
     color: '#fff',
   },
   ctaSub: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.textTertiary,
   },
 });
@@ -939,9 +939,9 @@ const sheetStyles = StyleSheet.create({
     marginBottom: 4,
   },
   activity: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 8,
@@ -957,7 +957,7 @@ const sheetStyles = StyleSheet.create({
     marginBottom: 12,
   },
   repeatText: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: palette.pink[400],
@@ -978,7 +978,7 @@ const sheetStyles = StyleSheet.create({
     paddingVertical: 6,
   },
   interestText: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: colors.primary,
@@ -1026,7 +1026,7 @@ const sheetStyles = StyleSheet.create({
     paddingVertical: 2,
   },
   jetonText: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: palette.gold[500],
@@ -1055,9 +1055,9 @@ const sheetStyles = StyleSheet.create({
     marginBottom: 4,
   },
   teaserSubtitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 20,
@@ -1067,7 +1067,7 @@ const sheetStyles = StyleSheet.create({
     paddingVertical: 8,
   },
   teaserDismissText: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: colors.textTertiary,
@@ -1248,9 +1248,9 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   headerSub: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.textTertiary,
     marginTop: 1,
   },
@@ -1407,9 +1407,9 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   cardTime: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.textTertiary,
   },
   repeatRow: {
@@ -1419,7 +1419,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   repeatText: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: palette.pink[400],
@@ -1473,7 +1473,7 @@ const styles = StyleSheet.create({
   premiumSubtitle: {
     fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 20,
@@ -1569,7 +1569,7 @@ const styles = StyleSheet.create({
   emptySubtitle: {
     fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 21,
@@ -1599,9 +1599,9 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   emptyStatLabel: {
-    fontSize: 10,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.textTertiary,
     textAlign: 'center',
   },
@@ -1627,9 +1627,9 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   emptyCTASub: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.textTertiary,
     marginTop: 2,
   },
@@ -1646,7 +1646,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   emptyBoostPillText: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: palette.purple[600],

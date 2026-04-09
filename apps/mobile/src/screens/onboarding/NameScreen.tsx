@@ -1,4 +1,4 @@
-// Onboarding step 1/11: First name + last name input — cream/beige theme
+// Onboarding step 1/13: First name + last name input — cream/beige theme
 
 import React, { useState, useCallback, useRef } from 'react';
 import {
@@ -15,7 +15,7 @@ import type { OnboardingStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../stores/profileStore';
 import {
   OnboardingLayout,
-  ArrowButton,
+  FullWidthButton,
   onboardingColors,
 } from '../../components/onboarding/OnboardingLayout';
 
@@ -49,11 +49,17 @@ export const NameScreen: React.FC = () => {
         step={1}
         totalSteps={13}
         showBack={false}
-        footer={<ArrowButton onPress={handleContinue} disabled={!isValid} />}
+        footer={
+          <FullWidthButton
+            label="Devam Et"
+            onPress={handleContinue}
+            disabled={!isValid}
+          />
+        }
       >
-        <Text style={styles.title}>Adın</Text>
+        <Text style={styles.title}>Ad{'\u0131'}n</Text>
         <Text style={styles.subtitle}>
-          Profilinde görünecek adın ve soyadın
+          Profilinde g{'\u00F6'}r{'\u00FC'}necek ad{'\u0131'}n ve soyad{'\u0131'}n
         </Text>
 
         <View style={styles.row}>
@@ -68,8 +74,7 @@ export const NameScreen: React.FC = () => {
             autoCapitalize="words"
             returnKeyType="next"
             onSubmitEditing={() => lastNameRef.current?.focus()}
-            accessibilityLabel="Adın"
-            accessibilityHint="Profilinde görünecek adını gir"
+            accessibilityLabel="Ad"
           />
           <TextInput
             ref={lastNameRef}
@@ -82,8 +87,7 @@ export const NameScreen: React.FC = () => {
             autoCapitalize="words"
             returnKeyType="done"
             onSubmitEditing={handleContinue}
-            accessibilityLabel="Soyadın"
-            accessibilityHint="Profilinde görünecek soyadını gir"
+            accessibilityLabel="Soyad"
           />
         </View>
 
@@ -97,32 +101,33 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: 28,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontSize: 32,
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
     color: onboardingColors.text,
+    letterSpacing: -0.5,
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontSize: 17,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
     color: onboardingColors.textSecondary,
     marginBottom: 28,
-    lineHeight: 22,
+    lineHeight: 24,
   },
   row: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 14,
   },
   input: {
     backgroundColor: onboardingColors.surface,
     borderRadius: 16,
     paddingHorizontal: 20,
     height: 56,
-    fontSize: 17,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontSize: 18,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: onboardingColors.text,
     borderWidth: 2,
     borderColor: onboardingColors.surfaceBorder,
@@ -131,13 +136,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   inputFocused: {
-    borderColor: onboardingColors.text,
-  },
-  hint: {
-    fontSize: 13,
-    color: onboardingColors.textTertiary,
-    marginTop: 12,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    borderColor: '#8B5CF6',
   },
 });

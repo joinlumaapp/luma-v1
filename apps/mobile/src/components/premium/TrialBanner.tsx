@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     opacity: 0.75,
   },
   label: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: palette.gold[600],
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     color: '#E65100',
   },
   time: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: palette.gold[500],
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     color: '#FF6B00',
   },
   urgencyBadge: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#FF3D00',

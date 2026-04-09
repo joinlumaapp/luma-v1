@@ -171,10 +171,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   toneEmoji: {
-    fontSize: 12,
+    fontSize: 14,
   },
   toneLabel: {
-    fontSize: 10,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: fontWeights.semibold,
   },
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   refreshText: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: fontWeights.medium,
     color: palette.purple[500],

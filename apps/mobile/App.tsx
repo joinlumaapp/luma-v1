@@ -188,10 +188,10 @@ const errorStyles = StyleSheet.create({
 // Status bar: light = WHITE icons on dark status bar background
 setStatusBarStyle('light');
 if (Platform.OS === 'android') {
-  setStatusBarBackgroundColor('#0d0d14', false);
+  setStatusBarBackgroundColor('#08080F', false);
   setStatusBarTranslucent(false);
   // Also set via RN StatusBar for edge-to-edge compatibility
-  RNStatusBar.setBackgroundColor('#0d0d14');
+  RNStatusBar.setBackgroundColor('#08080F');
   RNStatusBar.setBarStyle('light-content');
   RNStatusBar.setTranslucent(false);
 }
@@ -406,7 +406,7 @@ export default function App(): React.JSX.Element {
         <SafeAreaProvider>
           <ThemeProvider>
             <ToastProvider>
-              <StatusBar style="light" backgroundColor="#0d0d14" />
+              <StatusBar style="light" backgroundColor="#08080F" />
               <AppVersionGate />
               <NetworkMonitor />
               <NotificationInitializer />

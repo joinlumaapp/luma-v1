@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   subtitle: {
-    fontSize: 13,
+    fontSize: 14,
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,

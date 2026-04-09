@@ -25,6 +25,7 @@ import {
   RefreshTokenDto,
   AppleSignInDto,
 } from "./dto";
+import { GoogleSignInDto } from "./dto/google-signin.dto";
 import {
   CurrentUser,
   Public,
@@ -142,6 +143,21 @@ export class AuthController {
   @ApiResponse({ status: 401, description: "Invalid Apple identity token" })
   async appleSignIn(@Body() dto: AppleSignInDto) {
     return this.authService.appleSignIn(dto);
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Post("google")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "Sign in with Google",
+    description:
+      "Verifies the Google ID token, finds or creates the user, and returns JWT tokens.",
+  })
+  @ApiResponse({ status: 200, description: "Google sign-in successful, tokens issued" })
+  @ApiResponse({ status: 401, description: "Invalid Google ID token" })
+  async googleSignIn(@Body() dto: GoogleSignInDto) {
+    return this.authService.googleSignIn(dto);
   }
 
   @Delete("delete-account")

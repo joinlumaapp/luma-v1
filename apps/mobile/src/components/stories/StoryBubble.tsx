@@ -220,7 +220,7 @@ const s = StyleSheet.create({
   },
   // Labels
   label: {
-    fontSize: 10,
+    fontSize: 14,
     color: colors.text,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',

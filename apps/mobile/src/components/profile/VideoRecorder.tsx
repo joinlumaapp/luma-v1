@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.divider,
   },
   dividerText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
     includeFontPadding: false,
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   specText: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
     includeFontPadding: false,
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   videoInfoText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: colors.textSecondary,
     includeFontPadding: false,

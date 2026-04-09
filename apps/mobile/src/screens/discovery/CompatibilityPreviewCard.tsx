@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
     minWidth: 90,
   },
   starIcon: {
-    fontSize: 12,
+    fontSize: 14,
     color: colors.accent,
     marginBottom: 2,
   },

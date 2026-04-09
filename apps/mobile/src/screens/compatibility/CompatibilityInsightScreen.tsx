@@ -895,7 +895,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   expandIcon: {
-    fontSize: 10,
+    fontSize: 14,
     color: colors.textTertiary,
   },
   dimensionBar: {
@@ -923,7 +923,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   lockIcon: {
-    fontSize: 10,
+    fontSize: 14,
     marginRight: 4,
   },
   lockText: {

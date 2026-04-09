@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
     color: palette.purple[300],
   },
   areaDescription: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     lineHeight: 19,

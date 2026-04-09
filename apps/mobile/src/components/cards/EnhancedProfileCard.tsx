@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
   compatText: {
     fontFamily: poppinsFonts.bold,
     fontWeight: fontWeights.bold,
-    fontSize: 13,
+    fontSize: 14,
   },
   verifiedBadge: {
     position: 'absolute',
@@ -498,6 +498,6 @@ const styles = StyleSheet.create({
   intentionText: {
     fontFamily: poppinsFonts.semibold,
     fontWeight: fontWeights.semibold,
-    fontSize: 11,
+    fontSize: 14,
   },
 });

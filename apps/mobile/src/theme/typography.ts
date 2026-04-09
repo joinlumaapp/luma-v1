@@ -1,14 +1,8 @@
 /**
  * LUMA Design System — Typography
  *
- * Premium typographic system built on Poppins — a geometric sans-serif
- * that balances friendliness with sophistication. Chosen because:
- * - Geometric forms convey modernity (like Hinge's editorial feel)
- * - Rounded terminals feel approachable (like Bumble's warmth)
- * - Wide range of weights enables clear visual hierarchy
- *
- * Type scale follows a modular scale (1.25 ratio) for harmonious sizing.
- * Line heights use a minimum 1.4x ratio to prevent descender clipping.
+ * BOLD & THICK — premium feel. No thin text anywhere.
+ * Minimum: fontWeight '500', fontSize 14.
  *
  * @module theme/typography
  */
@@ -19,17 +13,12 @@ import { Platform, TextStyle } from 'react-native';
 // Font Family — Poppins Weights
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Poppins font family mapping.
- * React Native requires explicit font names per weight (no numeric fontWeight
- * with custom fonts). Loaded via expo-font in App.tsx.
- */
 export const poppinsFonts = {
-  light: 'Poppins_300Light',
-  regular: 'Poppins_400Regular',
-  medium: 'Poppins_500Medium',
-  semibold: 'Poppins_600SemiBold',
-  bold: 'Poppins_600SemiBold',
+  light: 'Poppins_500Medium',
+  regular: 'Poppins_600SemiBold',
+  medium: 'Poppins_600SemiBold',
+  semibold: 'Poppins_700Bold',
+  bold: 'Poppins_800ExtraBold',
   extrabold: 'Poppins_800ExtraBold',
   black: 'Poppins_900Black',
 } as const;
@@ -48,159 +37,125 @@ const androidFix: TextStyle = Platform.select({
 }) as TextStyle;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Font Weights
+// Font Weights — BOLD system, no thin text
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const fontWeights = {
-  light: '300' as const,
-  regular: '400' as const,
-  medium: '500' as const,
-  semibold: '600' as const,
-  bold: '600' as const,
-  extrabold: '700' as const,
+  light: '500' as const,
+  regular: '600' as const,
+  medium: '600' as const,
+  semibold: '700' as const,
+  bold: '800' as const,
+  extrabold: '800' as const,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Font Size Scale
+// Font Size Scale — Larger, more readable
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Modular type scale (~1.25 ratio).
- * Provides clear hierarchy from tiny captions to hero display text.
- */
 export const fontSizes = {
-  /** 10px — Micro labels, badge counts */
-  xs: 10,
-  /** 12px — Captions, timestamps, helper text */
-  sm: 12,
-  /** 14px — Body small, secondary text */
-  md: 14,
-  /** 16px — Body default, primary readable text */
-  base: 16,
-  /** 18px — Body large, emphasized content */
-  lg: 18,
-  /** 20px — Subtitle, section headers */
-  xl: 20,
-  /** 24px — Title, screen headers */
+  /** 14px — Micro labels, badge counts (minimum allowed) */
+  xs: 14,
+  /** 15px — Captions, timestamps, helper text */
+  sm: 15,
+  /** 16px — Body small, secondary text */
+  md: 16,
+  /** 17px — Body default, primary readable text */
+  base: 17,
+  /** 20px — Body large, emphasized content */
+  lg: 20,
+  /** 22px — Subtitle, section headers (h4) */
+  xl: 22,
+  /** 24px — Title h3, screen sub-headers */
   '2xl': 24,
-  /** 30px — Large title, hero text */
-  '3xl': 30,
-  /** 36px — Display, splash headlines */
-  '4xl': 36,
-  /** 48px — Hero display, onboarding headlines */
-  '5xl': 48,
+  /** 28px — Title h2 */
+  '3xl': 28,
+  /** 34px — Display h1, screen headers */
+  '4xl': 34,
+  /** 42px — Hero display, onboarding headlines */
+  '5xl': 42,
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Line Heights — Optimized for Readability
+// Line Heights
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Line heights paired with font sizes.
- * Minimum 1.4x ratio prevents descender/ascender clipping with Poppins.
- */
 export const lineHeights = {
-  xs: 16,
-  sm: 18,
-  md: 22,
-  base: 24,
+  xs: 20,
+  sm: 22,
+  md: 24,
+  base: 26,
   lg: 28,
   xl: 30,
-  '2xl': 34,
-  '3xl': 42,
-  '4xl': 50,
-  '5xl': 64,
+  '2xl': 32,
+  '3xl': 36,
+  '4xl': 42,
+  '5xl': 52,
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Letter Spacing — Fine-tuned per weight
+// Letter Spacing
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Letter spacing values for different use cases.
- * Tighter for large headlines, wider for small uppercase labels.
- */
 export const letterSpacing = {
-  /** -0.5px — Tight tracking for display/hero text */
   tight: -0.5,
-  /** -0.25px — Slightly tight for headlines */
-  snug: -0.25,
-  /** 0px — Normal tracking for body text */
+  snug: -0.3,
   normal: 0,
-  /** 0.25px — Slightly wide for small text readability */
   wide: 0.25,
-  /** 0.5px — Wide tracking for buttons and labels */
   wider: 0.5,
-  /** 1.5px — Ultra-wide for uppercase subtitles */
   widest: 1.5,
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Typography Presets — Complete text styles
+// Typography Presets
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Ready-to-use typography presets.
- * Spread these into StyleSheet definitions for consistent text styling.
- *
- * @example
- * ```ts
- * const styles = StyleSheet.create({
- *   title: { ...typography.h3, color: colors.text },
- *   body: { ...typography.body, color: colors.textSecondary },
- * });
- * ```
- */
 export const typography = {
-  // ── Display — Hero text for splash, onboarding ──
-  /** 48px bold — Splash screen, onboarding hero text */
+  // ── Display — Hero text ──
   display: {
-    fontFamily: poppinsFonts.bold,
+    fontFamily: poppinsFonts.extrabold,
     fontSize: fontSizes['5xl'],
     lineHeight: lineHeights['5xl'],
-    fontWeight: fontWeights.bold,
-    letterSpacing: letterSpacing.normal,
+    fontWeight: fontWeights.extrabold,
+    letterSpacing: letterSpacing.tight,
     ...androidFix,
   },
 
-  // ── Headlines — Bold, commanding, Poppins ──
-  /** 36px bold — Primary screen title */
+  // ── Headlines — h1-h4 all use '800' weight, tight spacing ──
   h1: {
     fontFamily: poppinsFonts.bold,
     fontSize: fontSizes['4xl'],
     lineHeight: lineHeights['4xl'],
     fontWeight: fontWeights.bold,
-    letterSpacing: letterSpacing.normal,
+    letterSpacing: letterSpacing.tight,
     ...androidFix,
   },
-  /** 30px bold — Section title */
   h2: {
     fontFamily: poppinsFonts.bold,
     fontSize: fontSizes['3xl'],
     lineHeight: lineHeights['3xl'],
     fontWeight: fontWeights.bold,
-    letterSpacing: letterSpacing.normal,
+    letterSpacing: letterSpacing.tight,
     ...androidFix,
   },
-  /** 24px semibold — Card title, modal header */
   h3: {
-    fontFamily: poppinsFonts.semibold,
+    fontFamily: poppinsFonts.bold,
     fontSize: fontSizes['2xl'],
     lineHeight: lineHeights['2xl'],
-    fontWeight: fontWeights.semibold,
+    fontWeight: fontWeights.bold,
+    letterSpacing: letterSpacing.tight,
     ...androidFix,
   },
-  /** 20px semibold — Subsection header */
   h4: {
     fontFamily: poppinsFonts.semibold,
     fontSize: fontSizes.xl,
     lineHeight: lineHeights.xl,
     fontWeight: fontWeights.semibold,
+    letterSpacing: letterSpacing.snug,
     ...androidFix,
   },
 
-  // ── Body — Clean, readable ──
-  /** 18px medium — Emphasized body text, lead paragraphs */
+  // ── Body — '600' weight, 17px minimum ──
   bodyLarge: {
     fontFamily: poppinsFonts.medium,
     fontSize: fontSizes.lg,
@@ -208,61 +163,54 @@ export const typography = {
     fontWeight: fontWeights.medium,
     ...androidFix,
   },
-  /** 16px regular — Default body text */
   body: {
-    fontFamily: poppinsFonts.regular,
+    fontFamily: poppinsFonts.medium,
     fontSize: fontSizes.base,
     lineHeight: lineHeights.base,
-    fontWeight: fontWeights.regular,
+    fontWeight: fontWeights.medium,
     ...androidFix,
   },
-  /** 14px regular — Secondary body text, descriptions */
   bodySmall: {
-    fontFamily: poppinsFonts.regular,
+    fontFamily: poppinsFonts.medium,
     fontSize: fontSizes.md,
     lineHeight: lineHeights.md,
-    fontWeight: fontWeights.regular,
+    fontWeight: fontWeights.medium,
     ...androidFix,
   },
 
-  // ── Captions — Supportive text ──
-  /** 12px regular — Timestamps, helper text, metadata */
+  // ── Captions — '500' weight, 15px minimum ──
   caption: {
-    fontFamily: poppinsFonts.regular,
+    fontFamily: poppinsFonts.light,
     fontSize: fontSizes.sm,
     lineHeight: lineHeights.sm,
-    fontWeight: fontWeights.regular,
+    fontWeight: fontWeights.light,
     ...androidFix,
   },
-  /** 10px regular — Badge counts, micro labels */
   captionSmall: {
-    fontFamily: poppinsFonts.regular,
+    fontFamily: poppinsFonts.light,
     fontSize: fontSizes.xs,
     lineHeight: lineHeights.xs,
-    fontWeight: fontWeights.regular,
+    fontWeight: fontWeights.light,
     ...androidFix,
   },
 
-  // ── UI Elements — Interactive text ──
-  /** 16px semibold — Primary button text */
+  // ── UI Elements ──
   button: {
     fontFamily: poppinsFonts.semibold,
-    fontSize: fontSizes.base,
-    lineHeight: lineHeights.base,
+    fontSize: 18,
+    lineHeight: 24,
     fontWeight: fontWeights.semibold,
     letterSpacing: letterSpacing.wider,
     ...androidFix,
   },
-  /** 14px semibold — Small button, chip text */
   buttonSmall: {
-    fontFamily: poppinsFonts.semibold,
+    fontFamily: poppinsFonts.medium,
     fontSize: fontSizes.md,
     lineHeight: lineHeights.md,
-    fontWeight: fontWeights.semibold,
+    fontWeight: fontWeights.medium,
     letterSpacing: letterSpacing.wide,
     ...androidFix,
   },
-  /** 14px medium — Form labels, input labels */
   label: {
     fontFamily: poppinsFonts.medium,
     fontSize: fontSizes.md,
@@ -270,26 +218,23 @@ export const typography = {
     fontWeight: fontWeights.medium,
     ...androidFix,
   },
-  /** 10px medium — Tab bar labels */
   tabBar: {
+    fontFamily: poppinsFonts.light,
+    fontSize: fontSizes.xs,
+    lineHeight: lineHeights.xs,
+    fontWeight: fontWeights.light,
+    ...androidFix,
+  },
+
+  // ── Special ──
+  subtitle: {
     fontFamily: poppinsFonts.medium,
     fontSize: fontSizes.xs,
     lineHeight: lineHeights.xs,
     fontWeight: fontWeights.medium,
-    ...androidFix,
-  },
-
-  // ── Special — Premium/editorial text ──
-  /** 10px semibold uppercase — Premium subtitles, section overlines */
-  subtitle: {
-    fontFamily: poppinsFonts.semibold,
-    fontSize: fontSizes.xs,
-    lineHeight: lineHeights.xs,
-    fontWeight: fontWeights.semibold,
     letterSpacing: letterSpacing.widest,
     ...androidFix,
   },
-  /** 14px light — Elegant descriptions, quote text (Hinge-inspired) */
   elegant: {
     fontFamily: poppinsFonts.light,
     fontSize: fontSizes.md,
@@ -298,7 +243,6 @@ export const typography = {
     letterSpacing: letterSpacing.wide,
     ...androidFix,
   },
-  /** 18px bold — Numeric displays (compatibility %, coin counts) */
   numeric: {
     fontFamily: poppinsFonts.bold,
     fontSize: fontSizes.lg,
@@ -306,7 +250,6 @@ export const typography = {
     fontWeight: fontWeights.bold,
     ...androidFix,
   },
-  /** 30px extrabold — Large numeric hero (match %, big stats) */
   numericLarge: {
     fontFamily: poppinsFonts.bold,
     fontSize: fontSizes['3xl'],

@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     color: '#FF6B00',
   },
   subtitle: {
-    fontSize: 13,
+    fontSize: 14,
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   compatText: {
-    fontSize: 12,
+    fontSize: 14,
     color: palette.purple[400],
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',

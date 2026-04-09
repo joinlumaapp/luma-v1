@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     borderBottomColor: GOLD_COLOR + '30',
   },
   badgeText: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: GOLD_BORDER,
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
     backgroundColor: SUPER_GLOW_COLOR + '18',
   },
   compatBadgeText: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: palette.purple[600],
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
     color: SUPER_GLOW_COLOR,
   },
   superLabel: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: SUPER_GLOW_COLOR,
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   ctaText: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#FFFFFF',
@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
     borderTopColor: GOLD_COLOR + '20',
   },
   remainingText: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: GOLD_BORDER,
@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   countdownValue: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: GOLD_BORDER,

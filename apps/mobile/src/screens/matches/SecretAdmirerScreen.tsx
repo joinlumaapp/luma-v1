@@ -126,12 +126,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   cardTitle: { color: colors.text, fontSize: 15, fontWeight: fontWeights.semibold },
-  cardSubtitle: { color: colors.textSecondary, fontSize: 11, marginTop: 2 },
+  cardSubtitle: { color: colors.textSecondary, fontSize: 14, marginTop: 2 },
   guessBadge: {
     backgroundColor: colors.primary + '26', borderRadius: 8,
     paddingHorizontal: 8, paddingVertical: 4,
   },
-  guessText: { color: palette.purple[400], fontSize: 10, fontWeight: fontWeights.semibold },
+  guessText: { color: palette.purple[400], fontSize: 14, fontWeight: fontWeights.semibold },
   candidatesRow: { flexDirection: 'row', gap: 12, justifyContent: 'center' },
   candidateCard: {
     flex: 1, alignItems: 'center', padding: 12,
@@ -143,13 +143,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center', marginBottom: 8,
   },
   candidateAvatarText: { color: palette.purple[400], fontSize: 24, fontWeight: fontWeights.bold },
-  candidateLabel: { color: colors.textSecondary, fontSize: 10 },
+  candidateLabel: { color: colors.textSecondary, fontSize: 12 },
   expiryText: {
-    color: colors.textTertiary, fontSize: 10, textAlign: 'center', marginTop: 12,
+    color: colors.textTertiary, fontSize: 14, textAlign: 'center', marginTop: 12,
   },
   emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 8 },
   emptyTitle: { color: colors.text, fontSize: 16, fontWeight: fontWeights.semibold },
-  emptySubtitle: { color: colors.textTertiary, fontSize: 12, textAlign: 'center', paddingHorizontal: 40 },
+  emptySubtitle: { color: colors.textTertiary, fontSize: 14, textAlign: 'center', paddingHorizontal: 40 },
 });
 
 export default SecretAdmirerScreen;

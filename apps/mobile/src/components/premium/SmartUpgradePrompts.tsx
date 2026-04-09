@@ -102,7 +102,7 @@ const teaserStyles = StyleSheet.create({
     color: colors.text,
   },
   subtitle: {
-    fontSize: 12, fontFamily: 'Poppins_400Regular', fontWeight: fontWeights.regular,
+    fontSize: 14, fontFamily: 'Poppins_400Regular', fontWeight: fontWeights.regular,
     color: colors.textSecondary,
   },
   arrow: {
@@ -211,7 +211,7 @@ const boostStyles = StyleSheet.create({
     paddingHorizontal: 10, paddingVertical: 3,
   },
   urgencyText: {
-    fontSize: 11, fontFamily: 'Poppins_600SemiBold', fontWeight: fontWeights.semibold,
+    fontSize: 14, fontFamily: 'Poppins_600SemiBold', fontWeight: fontWeights.semibold,
     color: palette.gold[600],
   },
   content: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
@@ -221,7 +221,7 @@ const boostStyles = StyleSheet.create({
     color: colors.text,
   },
   subtitle: {
-    fontSize: 13, fontFamily: 'Poppins_400Regular', fontWeight: fontWeights.regular,
+    fontSize: 14, fontFamily: 'Poppins_400Regular', fontWeight: fontWeights.regular,
     color: colors.textSecondary, lineHeight: 19,
   },
   acceptButton: {
@@ -336,7 +336,7 @@ const nudgeStyles = StyleSheet.create({
     color: colors.text,
   },
   subtitle: {
-    fontSize: 13, fontFamily: 'Poppins_400Regular', fontWeight: fontWeights.regular,
+    fontSize: 14, fontFamily: 'Poppins_400Regular', fontWeight: fontWeights.regular,
     color: colors.textSecondary, lineHeight: 19, marginTop: 2,
   },
   ctaButton: {
@@ -352,7 +352,7 @@ const nudgeStyles = StyleSheet.create({
     borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2,
   },
   costText: {
-    fontSize: 11, fontFamily: 'Poppins_600SemiBold', fontWeight: fontWeights.semibold,
+    fontSize: 14, fontFamily: 'Poppins_600SemiBold', fontWeight: fontWeights.semibold,
     color: '#FFFFFF',
   },
 });
@@ -454,14 +454,14 @@ const weeklyStyles = StyleSheet.create({
     color: palette.purple[600],
   },
   statLabel: {
-    fontSize: 11, fontFamily: 'Poppins_400Regular', fontWeight: fontWeights.regular,
+    fontSize: 14, fontFamily: 'Poppins_400Regular', fontWeight: fontWeights.regular,
     color: colors.textTertiary, marginTop: 2,
   },
   statDivider: {
     width: 1, height: 28, backgroundColor: colors.surfaceBorder,
   },
   lossText: {
-    fontSize: 13, fontFamily: 'Poppins_400Regular', fontWeight: fontWeights.regular,
+    fontSize: 14, fontFamily: 'Poppins_400Regular', fontWeight: fontWeights.regular,
     color: '#EF4444', lineHeight: 19,
   },
   upgradeButton: {
@@ -503,7 +503,7 @@ const socialStyles = StyleSheet.create({
     borderWidth: 1, borderColor: palette.purple[500] + '15',
   },
   text: {
-    flex: 1, fontSize: 13, fontFamily: 'Poppins_400Regular', fontWeight: fontWeights.regular,
+    flex: 1, fontSize: 14, fontFamily: 'Poppins_400Regular', fontWeight: fontWeights.regular,
     color: colors.textSecondary,
   },
   bold: {
@@ -597,7 +597,7 @@ const supremeStyles = StyleSheet.create({
     color: '#FFFFFF',
   },
   subtitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
     fontWeight: fontWeights.regular,
     color: 'rgba(255,255,255,0.85)',

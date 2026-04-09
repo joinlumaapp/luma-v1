@@ -269,7 +269,7 @@ const DiscoveryStackNavigator: React.FC = React.memo(() => (
       animation: 'slide_from_right',
       statusBarAnimation: 'none',
       statusBarStyle: 'light',
-      statusBarColor: '#0d0d14',
+      statusBarColor: '#08080F',
     }}
   >
     <DiscoveryStack.Screen name="Discovery" component={DiscoveryScreen} />
@@ -340,7 +340,7 @@ const MatchesStackNavigator: React.FC = React.memo(() => (
       animation: 'slide_from_right',
       statusBarAnimation: 'none',
       statusBarStyle: 'light',
-      statusBarColor: '#0d0d14',
+      statusBarColor: '#08080F',
     }}
   >
     <MatchesStack.Screen name="MatchesList" component={MatchesListScreen} />
@@ -437,7 +437,7 @@ const FeedStackNavigator: React.FC = React.memo(() => (
       animation: 'slide_from_right',
       statusBarAnimation: 'none',
       statusBarStyle: 'light',
-      statusBarColor: '#0d0d14',
+      statusBarColor: '#08080F',
     }}
   >
     <FeedStack.Screen name="SocialFeed" component={SocialFeedScreen} />
@@ -470,7 +470,7 @@ const LiveStackNavigator: React.FC = React.memo(() => (
       headerShown: false,
       statusBarAnimation: 'none',
       statusBarStyle: 'light',
-      statusBarColor: '#0d0d14',
+      statusBarColor: '#08080F',
     }}
   >
     <LiveStack.Screen name="Live" component={LiveScreen} />
@@ -488,7 +488,7 @@ const ProfileStackNavigator: React.FC = React.memo(() => (
       animation: 'slide_from_right',
       statusBarAnimation: 'none',
       statusBarStyle: 'light',
-      statusBarColor: '#0d0d14',
+      statusBarColor: '#08080F',
     }}
   >
     <ProfileStack.Screen name="Profile" component={ProfileScreen} />
@@ -704,7 +704,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 4,
     borderWidth: 1.5,
-    borderColor: '#0d0d14',
+    borderColor: '#08080F',
   },
   unreadBadgeText: {
     ...typography.captionSmall,

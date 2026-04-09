@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(236,72,153,0.08)', borderColor: 'rgba(236,72,153,0.2)',
   },
   compareLabel: {
-    fontSize: 12, fontWeight: fontWeights.semibold, color: colors.textTertiary,
+    fontSize: 14, fontWeight: fontWeights.semibold, color: colors.textTertiary,
     marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5,
   },
   compareAnswer: {
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(236,72,153,0.06)',
   },
   resultAnswerLabel: {
-    fontSize: 11, fontWeight: fontWeights.semibold, color: colors.textTertiary,
+    fontSize: 14, fontWeight: fontWeights.semibold, color: colors.textTertiary,
     marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5,
   },
   resultAnswerText: {

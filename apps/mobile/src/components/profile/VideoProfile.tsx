@@ -449,13 +449,13 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   durationText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.semibold,
     color: palette.white,
     includeFontPadding: false,
   },
   durationTextCompact: {
-    fontSize: 10,
+    fontSize: 14,
   },
   videoBadge: {
     position: 'absolute',
@@ -471,7 +471,7 @@ const styles = StyleSheet.create({
     zIndex: 4,
   },
   videoBadgeText: {
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: fontWeights.bold,
     color: palette.white,
     includeFontPadding: false,
@@ -505,7 +505,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   errorText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: palette.white,
     includeFontPadding: false,
@@ -523,7 +523,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   retryButtonText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: palette.white,
     includeFontPadding: false,

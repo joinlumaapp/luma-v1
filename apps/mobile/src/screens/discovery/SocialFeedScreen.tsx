@@ -1341,10 +1341,10 @@ const storySheetStyles = StyleSheet.create({
     fontWeight: '600',
   },
   rowSub: {
-    fontSize: 12,
+    fontSize: 14,
     color: colors.textTertiary,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     marginTop: 1,
   },
 });
@@ -1382,7 +1382,7 @@ const createStyles = StyleSheet.create({
     fontSize: 16,
     color: colors.textTertiary,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     marginBottom: spacing.lg,
   },
   iconRow: {
@@ -1395,7 +1395,7 @@ const createStyles = StyleSheet.create({
     flex: 1,
   },
   iconLabel: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
   },
@@ -1646,10 +1646,10 @@ const modalStyles = StyleSheet.create({
     gap: 4,
   },
   headerBadgeEmoji: {
-    fontSize: 11,
+    fontSize: 14,
   },
   headerBadgeLabel: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
@@ -1697,9 +1697,9 @@ const modalStyles = StyleSheet.create({
     color: colors.text,
   },
   trackArtist: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.textSecondary,
     marginTop: 1,
   },
@@ -1736,7 +1736,7 @@ const modalStyles = StyleSheet.create({
     backgroundColor: colors.surfaceLight,
   },
   moodTagText: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: colors.textSecondary,
@@ -1779,7 +1779,7 @@ const modalStyles = StyleSheet.create({
   },
   mediaRemoveText: {
     color: '#FFFFFF',
-    fontSize: 10,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },

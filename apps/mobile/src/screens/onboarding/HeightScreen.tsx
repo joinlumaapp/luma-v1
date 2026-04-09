@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: onboardingColors.textSecondary,
     marginBottom: 32,
     lineHeight: 22,
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: onboardingColors.textSecondary,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
   },
   itemTextCenter: {
     fontSize: 20,

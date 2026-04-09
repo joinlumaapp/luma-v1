@@ -1723,7 +1723,7 @@ const emotionalStyles = StyleSheet.create({
     includeFontPadding: false,
   },
   urgencyBannerSecondary: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: 'rgba(255,255,255,0.8)',
   },
@@ -1738,14 +1738,14 @@ const emotionalStyles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   socialProofText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: GLASS.textSecondary,
   },
 
   // ── Loss aversion ──
   lossText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.regular,
     color: GLASS.textTertiary,
     textAlign: 'center',

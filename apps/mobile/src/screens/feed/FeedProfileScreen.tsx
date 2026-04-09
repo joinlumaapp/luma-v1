@@ -352,7 +352,7 @@ export const FeedProfileScreen: React.FC = () => {
             onPress={() => navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' })}
           >
             <Ionicons name="lock-closed" size={16} color={palette.purple[500]} />
-            <Text style={{ fontSize: 13, color: colors.textSecondary, fontFamily: 'Poppins_400Regular', flex: 1 }}>
+            <Text style={{ fontSize: 14, color: colors.textSecondary, fontFamily: 'Poppins_400Regular', flex: 1 }}>
               Gönderileri ve takipçi bilgilerini görebilmek için premium üyelik gerekiyor. Hemen keşfetmeye başla!
             </Text>
             <Ionicons name="chevron-forward" size={16} color={palette.purple[400]} />
@@ -400,7 +400,7 @@ export const FeedProfileScreen: React.FC = () => {
             <Text style={styles.subsectionTitle}>Burada olma sebebi</Text>
             <View style={{ flexDirection: 'row' }}>
               <View style={{ backgroundColor: 'rgba(139,92,246,0.12)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20 }}>
-                <Text style={{ fontSize: 13, fontWeight: fontWeights.medium, color: '#8B5CF6' }}>
+                <Text style={{ fontSize: 14, fontWeight: fontWeights.medium, color: '#8B5CF6' }}>
                   {translateIntentionTag(profile.intentionTag)}
                 </Text>
               </View>
@@ -610,7 +610,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   intentionText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.semibold,
     color: colors.primary,
     letterSpacing: 0.2,
@@ -632,7 +632,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.bold,
   },
   compatSuperLabel: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.bold,
     color: colors.accent,
     backgroundColor: colors.accent + '18',
@@ -666,7 +666,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   statLabel: {
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
     marginTop: 3,
@@ -773,7 +773,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   aboutRowLabel: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
     marginBottom: 2,
@@ -813,7 +813,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   miniPostStat: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
   },
@@ -833,7 +833,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(139, 92, 246, 0.15)',
   },
   hobbyChipText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: palette.purple[600],
   },
@@ -849,7 +849,7 @@ const styles = StyleSheet.create({
     borderColor: colors.accent + '30',
   },
   premiumChipText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.semibold,
     color: colors.accent,
   },
@@ -873,7 +873,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   premiumBannerSubtitle: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: fontWeights.regular,
     color: 'rgba(255,255,255,0.7)',
     marginTop: 2,
@@ -908,7 +908,7 @@ const lockStyles = StyleSheet.create({
     borderColor: colors.accent + '30',
   },
   text: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: fontWeights.bold,
     color: colors.accent,
   },
@@ -954,7 +954,7 @@ const compatStyles = StyleSheet.create({
     fontWeight: fontWeights.bold,
   },
   description: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     lineHeight: 18,
@@ -973,7 +973,7 @@ const compatStyles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   tierLabel: {
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
   },

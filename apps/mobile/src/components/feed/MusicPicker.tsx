@@ -374,17 +374,17 @@ const itemStyles = StyleSheet.create({
     letterSpacing: 0.1,
   },
   artist: {
-    fontSize: 12,
+    fontSize: 14,
     color: 'rgba(255,255,255,0.55)',
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     marginTop: 2,
   },
   duration: {
-    fontSize: 11,
+    fontSize: 14,
     color: 'rgba(255,255,255,0.4)',
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     marginLeft: spacing.sm,
   },
 });
@@ -416,10 +416,10 @@ const emptyStyles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   subText: {
-    fontSize: 13,
+    fontSize: 14,
     color: 'rgba(255,255,255,0.35)',
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     textAlign: 'center',
   },
 });
@@ -505,7 +505,7 @@ const pickerStyles = StyleSheet.create({
     fontSize: 14,
     color: '#FFFFFF',
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     paddingVertical: 0,
   },
   sectionHeader: {
@@ -514,7 +514,7 @@ const pickerStyles = StyleSheet.create({
     paddingBottom: spacing.smd,
   },
   sectionTitle: {
-    fontSize: 13,
+    fontSize: 14,
     color: 'rgba(255,255,255,0.45)',
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',

@@ -149,14 +149,14 @@ export const layout = {
   iconXLarge: 48,
 
   // ── Interactive Elements ──
-  /** 52px — Primary button height */
-  buttonHeight: 52,
+  /** 56px — Primary button height (premium) */
+  buttonHeight: 56,
   /** 44px — Secondary/small button height */
   buttonSmallHeight: 44,
   /** 40px — Compact button (chips, tags) */
   buttonCompactHeight: 40,
-  /** 52px — Text input height */
-  inputHeight: 52,
+  /** 56px — Text input height (premium) */
+  inputHeight: 56,
   /** 44px — Minimum touch target (a11y) */
   minTouchTarget: 44,
 
@@ -203,6 +203,14 @@ export const shadows = {
     shadowRadius: 8,
     elevation: 8,
   },
+  /** Premium CTA button shadow */
+  button: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+  },
   glow: {
     shadowColor: '#8B5CF6',
     shadowOffset: { width: 0, height: 0 },
@@ -211,6 +219,44 @@ export const shadows = {
     elevation: 6,
   },
 } as const;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Premium UI Constants — Shared across all screens
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Back button style constants — circular frosted glass look */
+export const backButtonStyle = {
+  width: 44,
+  height: 44,
+  borderRadius: 22,
+  backgroundColor: 'rgba(255,255,255,0.15)',
+  justifyContent: 'center' as const,
+  alignItems: 'center' as const,
+} as const;
+
+/** Primary CTA button style constants */
+export const ctaButtonStyle = {
+  height: 56,
+  borderRadius: 16,
+  justifyContent: 'center' as const,
+  alignItems: 'center' as const,
+  ...shadows.button,
+} as const;
+
+/** Text input style constants */
+export const inputStyle = {
+  height: 56,
+  borderRadius: 16,
+  backgroundColor: 'rgba(255,255,255,0.08)',
+  borderWidth: 1,
+  borderColor: 'rgba(255,255,255,0.12)',
+  paddingHorizontal: spacing.md,
+  fontSize: 16,
+  fontWeight: '500' as const,
+} as const;
+
+/** Input placeholder color for dark theme */
+export const inputPlaceholderColor = 'rgba(255,255,255,0.4)';
 
 export type Spacing = keyof typeof spacing;
 export type BorderRadius = keyof typeof borderRadius;

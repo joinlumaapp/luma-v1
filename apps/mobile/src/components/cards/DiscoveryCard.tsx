@@ -693,7 +693,7 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   eliteLabel: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: fontWeights.semibold,
     fontFamily: poppinsFonts.semibold,
     color: '#D4AF37',
@@ -717,7 +717,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(236, 72, 153, 0.45)',
   },
   compatScore: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.bold,
     fontFamily: poppinsFonts.semibold,
     color: '#F9A8D4',
@@ -727,7 +727,7 @@ const styles = StyleSheet.create({
     color: '#F472B6',
   },
   compatLabel: {
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: fontWeights.regular,
     fontFamily: poppinsFonts.regular,
     color: '#F9A8D4',
@@ -749,13 +749,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   metaDot: {
-    fontSize: 12,
+    fontSize: 14,
     color: 'rgba(255,255,255,0.5)',
     marginHorizontal: 6,
     includeFontPadding: false,
   },
   metaText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     fontFamily: poppinsFonts.medium,
     color: 'rgba(255,255,255,0.85)',
@@ -794,11 +794,11 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   moodBadgeEmoji: {
-    fontSize: 12,
+    fontSize: 14,
     includeFontPadding: false,
   },
   moodBadgeLabel: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     fontFamily: poppinsFonts.medium,
     includeFontPadding: false,
@@ -813,7 +813,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   intentionText: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     fontFamily: poppinsFonts.medium,
     includeFontPadding: false,
@@ -843,7 +843,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   tagLabel: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     fontFamily: poppinsFonts.medium,
     color: 'rgba(255,255,255,0.8)',
@@ -852,7 +852,7 @@ const styles = StyleSheet.create({
 
   // ── Bio ──
   bioText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.regular,
     fontFamily: poppinsFonts.regular,
     color: 'rgba(255,255,255,0.65)',
@@ -884,7 +884,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   boostBadgeText: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: fontWeights.bold,
     fontFamily: poppinsFonts.bold,
     color: '#FFFFFF',
@@ -911,7 +911,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   superCompatBadgeText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.bold,
     fontFamily: poppinsFonts.bold,
     color: '#FFFFFF',

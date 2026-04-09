@@ -1456,13 +1456,13 @@ const styles = StyleSheet.create({
     borderColor: palette.purple[500] + '30',
   },
   matchCountBadgeText: {
-    fontSize: 12,
+    fontSize: 14,
     color: palette.purple[400],
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   dynamicSubtitle: {
-    fontSize: 12,
+    fontSize: 14,
     color: colors.textSecondary,
     marginTop: 3,
     lineHeight: 16,
@@ -1510,17 +1510,17 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   tabChipEmoji: {
-    fontSize: 13,
+    fontSize: 14,
   },
   tabChipText: {
-    fontSize: 12,
+    fontSize: 14,
     lineHeight: 16,
     color: colors.textSecondary,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   tabChipTextActive: {
-    fontSize: 12,
+    fontSize: 14,
     lineHeight: 16,
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
@@ -1534,7 +1534,7 @@ const styles = StyleSheet.create({
     marginLeft: 2,
   },
   tabBadgeTextActive: {
-    fontSize: 10,
+    fontSize: 14,
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
@@ -1699,7 +1699,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   newInlineBadgeText: {
-    fontSize: 10,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#FFFFFF',
@@ -1751,7 +1751,7 @@ const styles = StyleSheet.create({
     marginLeft: spacing.sm,
   },
   unreadCountText: {
-    fontSize: 10,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#FFFFFF',
@@ -1820,7 +1820,7 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
-    fontSize: 10,
+    fontSize: 14,
   },
   lastActivity: {
     ...typography.caption,
@@ -1972,7 +1972,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 7,
   },
   viewersCountBadgeText: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#FFFFFF',
@@ -2066,7 +2066,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   viewerLockIcon: {
-    fontSize: 10,
+    fontSize: 14,
   },
   viewerInfo: {
     flex: 1,
@@ -2114,7 +2114,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   viewerPremiumHintText: {
-    fontSize: 10,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#8B5CF6',
@@ -2147,7 +2147,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   viewerUpgradeText: {
-    fontSize: 10,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#FFFFFF',

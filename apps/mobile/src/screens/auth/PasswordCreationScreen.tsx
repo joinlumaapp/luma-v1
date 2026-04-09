@@ -284,14 +284,14 @@ const styles = StyleSheet.create({
     color: palette.success,
   },
   ruleText: {
-    fontSize: 13,
+    fontSize: 14,
     color: onboardingColors.textSecondary,
   },
   ruleTextPassed: {
     color: palette.success,
   },
   errorText: {
-    fontSize: 13,
+    fontSize: 14,
     color: palette.error,
     marginTop: 8,
     marginLeft: 4,

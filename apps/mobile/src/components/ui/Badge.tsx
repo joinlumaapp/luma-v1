@@ -132,8 +132,8 @@ const INTENTION_CONFIGS: Record<IntentionVariant, IntentionConfig> = {
 // ─── Size tokens ──────────────────────────────────────────────
 
 const SIZE_TOKENS: Record<BadgeSize, { paddingH: number; paddingV: number; fontSize: number; iconSize: number }> = {
-  sm: { paddingH: spacing.sm, paddingV: 2, fontSize: 10, iconSize: 10 },
-  md: { paddingH: spacing.sm + 4, paddingV: spacing.xs + 1, fontSize: 12, iconSize: 13 },
+  sm: { paddingH: spacing.sm, paddingV: 2, fontSize: 14, iconSize: 10 },
+  md: { paddingH: spacing.sm + 4, paddingV: spacing.xs + 1, fontSize: 14, iconSize: 13 },
 };
 
 // ─── Component ────────────────────────────────────────────────

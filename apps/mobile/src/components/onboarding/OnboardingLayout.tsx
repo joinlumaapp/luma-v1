@@ -1,5 +1,4 @@
 // Shared onboarding layout — cream background, progress bar, back/skip buttons
-// Matches reference design: refs/1-8.jpeg
 
 import React from 'react';
 import {
@@ -12,10 +11,11 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { colors, palette, surfaces } from '../../theme/colors';
 import { BrandedBackground } from '../common/BrandedBackground';
 
-// Onboarding-specific cream theme colors — mapped to design system tokens
+// Onboarding-specific cream theme colors
 export const onboardingColors = {
   background: surfaces.cream.background,
   surface: surfaces.cream.surface1,
@@ -33,19 +33,12 @@ export const onboardingColors = {
 } as const;
 
 interface OnboardingLayoutProps {
-  /** Current step (1-based) */
   step: number;
-  /** Total steps */
   totalSteps: number;
-  /** Show back button (default: true) */
   showBack?: boolean;
-  /** Show skip button (default: false) */
   showSkip?: boolean;
-  /** Called when skip is pressed */
   onSkip?: () => void;
-  /** Main content */
   children: React.ReactNode;
-  /** Footer content (buttons) */
   footer?: React.ReactNode;
 }
 
@@ -61,7 +54,6 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
 
-  // Calculate segment widths
   const progressPercent = (step / totalSteps) * 100;
 
   return (
@@ -74,25 +66,28 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
             onPress={() => navigation.goBack()}
             style={styles.backButton}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            activeOpacity={0.7}
           >
-            <Ionicons name="chevron-back" size={24} color={onboardingColors.text} />
+            <Ionicons name="chevron-back" size={24} color="#3D2B1F" />
           </TouchableOpacity>
         ) : (
           <View style={styles.backPlaceholder} />
         )}
 
-        {/* Segment progress bar */}
+        {/* Progress bar — thick, visible, gradient fill */}
         <View style={styles.progressContainer}>
           <View style={styles.progressBg}>
-            <View
+            <LinearGradient
+              colors={['#9B6BF8', '#EC4899'] as [string, string]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
               style={[styles.progressFill, { width: `${progressPercent}%` }]}
             />
           </View>
-          <View style={styles.progressDot} />
         </View>
 
         {showSkip ? (
-          <TouchableOpacity onPress={onSkip} style={styles.skipButton}>
+          <TouchableOpacity onPress={onSkip} style={styles.skipButton} activeOpacity={0.7}>
             <Text style={styles.skipText}>Atla</Text>
           </TouchableOpacity>
         ) : (
@@ -115,43 +110,63 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
   );
 };
 
-/** Black arrow button (bottom-right) — ref style */
-export const ArrowButton: React.FC<{
-  onPress: () => void;
-  disabled?: boolean;
-}> = ({ onPress, disabled = false }) => (
-  <View style={styles.arrowButtonRow}>
-    <TouchableOpacity
-      style={[styles.arrowButton, disabled && styles.arrowButtonDisabled]}
-      onPress={onPress}
-      disabled={disabled}
-      activeOpacity={0.8}
-    >
-      <Ionicons
-        name="chevron-forward"
-        size={28}
-        color={disabled ? onboardingColors.textTertiary : onboardingColors.buttonText}
-      />
-    </TouchableOpacity>
-  </View>
-);
-
-/** Full-width black button */
+/** Full-width gradient CTA button — used on all onboarding screens */
 export const FullWidthButton: React.FC<{
   label: string;
   onPress: () => void;
   disabled?: boolean;
 }> = ({ label, onPress, disabled = false }) => (
   <TouchableOpacity
-    style={[styles.fullButton, disabled && styles.fullButtonDisabled]}
     onPress={onPress}
     disabled={disabled}
-    activeOpacity={0.8}
+    activeOpacity={0.85}
+    style={[styles.fullButtonWrapper, disabled && styles.fullButtonDisabled]}
   >
-    <Text style={[styles.fullButtonText, disabled && styles.fullButtonTextDisabled]}>
-      {label}
-    </Text>
+    <LinearGradient
+      colors={disabled
+        ? ['#D1D5DB', '#D1D5DB'] as [string, string]
+        : ['#9B6BF8', '#EC4899'] as [string, string]
+      }
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+      style={styles.fullButtonGradient}
+    >
+      <Text style={[styles.fullButtonText, disabled && styles.fullButtonTextDisabled]}>
+        {label}
+      </Text>
+    </LinearGradient>
   </TouchableOpacity>
+);
+
+/** Arrow button (bottom-right) — gradient version */
+export const ArrowButton: React.FC<{
+  onPress: () => void;
+  disabled?: boolean;
+}> = ({ onPress, disabled = false }) => (
+  <View style={styles.arrowButtonRow}>
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={disabled}
+      activeOpacity={0.85}
+      style={[styles.arrowButtonWrapper, disabled && styles.arrowButtonDisabledWrapper]}
+    >
+      <LinearGradient
+        colors={disabled
+          ? ['#D1D5DB', '#D1D5DB'] as [string, string]
+          : ['#9B6BF8', '#EC4899'] as [string, string]
+        }
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.arrowButton}
+      >
+        <Ionicons
+          name="chevron-forward"
+          size={28}
+          color={disabled ? '#9CA3AF' : '#FFFFFF'}
+        />
+      </LinearGradient>
+    </TouchableOpacity>
+  </View>
 );
 
 const styles = StyleSheet.create({
@@ -169,6 +184,8 @@ const styles = StyleSheet.create({
   backButton: {
     width: 44,
     height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.06)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -177,36 +194,26 @@ const styles = StyleSheet.create({
   },
   progressContainer: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+    justifyContent: 'center',
   },
   progressBg: {
-    flex: 1,
-    height: 4,
-    backgroundColor: onboardingColors.progressBg,
-    borderRadius: 2,
+    height: 6,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    borderRadius: 3,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: onboardingColors.progressFill,
-    borderRadius: 2,
-  },
-  progressDot: {
-    width: 6,
-    height: 6,
     borderRadius: 3,
-    backgroundColor: onboardingColors.progressBg,
   },
   skipButton: {
     paddingHorizontal: 4,
   },
   skipText: {
     fontSize: 16,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-    color: onboardingColors.text,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: '#8B5CF6',
   },
   skipPlaceholder: {
     width: 32,
@@ -219,49 +226,67 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: 24,
   },
-  // Arrow button (bottom-right)
+  // Arrow button
   arrowButtonRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
+  },
+  arrowButtonWrapper: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#9B6BF8',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.3,
+        shadowRadius: 16,
+      },
+      android: { elevation: 8 },
+    }),
+  },
+  arrowButtonDisabledWrapper: {
+    shadowOpacity: 0,
+    elevation: 0,
   },
   arrowButton: {
     width: 64,
     height: 64,
     borderRadius: 16,
-    backgroundColor: onboardingColors.buttonBg,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  // Full-width gradient button
+  fullButtonWrapper: {
+    borderRadius: 16,
+    overflow: 'hidden',
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
+        shadowColor: '#9B6BF8',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.3,
+        shadowRadius: 16,
       },
-      android: { elevation: 4 },
+      android: { elevation: 8 },
     }),
   },
-  arrowButtonDisabled: {
-    backgroundColor: onboardingColors.surfaceBorder,
+  fullButtonDisabled: {
+    shadowOpacity: 0,
+    elevation: 0,
   },
-  // Full-width button
-  fullButton: {
+  fullButtonGradient: {
     height: 56,
     borderRadius: 16,
-    backgroundColor: onboardingColors.buttonBg,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  fullButtonDisabled: {
-    backgroundColor: onboardingColors.surfaceBorder,
-  },
   fullButtonText: {
-    fontSize: 16,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    color: onboardingColors.buttonText,
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
   fullButtonTextDisabled: {
-    color: onboardingColors.textTertiary,
+    color: '#9CA3AF',
   },
 });

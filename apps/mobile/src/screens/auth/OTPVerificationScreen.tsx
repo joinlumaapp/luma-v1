@@ -11,6 +11,7 @@ import {
   Platform,
   Alert,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
@@ -22,10 +23,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { onboardingColors } from '../../components/onboarding/OnboardingLayout';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
-import { surfaces, semanticColors } from '../../theme/colors';
-import { spacing, borderRadius, layout } from '../../theme/spacing';
+import { semanticColors } from '../../theme/colors';
+import { spacing, borderRadius, shadows } from '../../theme/spacing';
 import { fontWeights } from '../../theme/typography';
 import { analyticsService, ANALYTICS_EVENTS } from '../../services/analyticsService';
+import { WelcomeModal } from '../../components/common/WelcomeModal';
 
 type OTPNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'OTPVerification'>;
 type OTPRouteProp = RouteProp<AuthStackParamList, 'OTPVerification'>;
@@ -54,6 +56,7 @@ export const OTPVerificationScreen: React.FC = () => {
   const [resendCount, setResendCount] = useState(0);
   const [isRateLimited, setIsRateLimited] = useState(false);
   const [rateLimitTimer, setRateLimitTimer] = useState(0);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
   const inputRefs = useRef<Array<TextInput | null>>([]);
 
@@ -89,7 +92,6 @@ export const OTPVerificationScreen: React.FC = () => {
   const handleVerify = useCallback(async (otpCode: string) => {
     setIsVerifying(true);
     try {
-      // Founder test mode: 000000 auto-verifies (DEV ONLY — stripped from production bundle)
       if (__DEV__) {
         if (isTestMode && otpCode === '000000') {
           const { login, activateTrial } = useAuthStore.getState();
@@ -102,13 +104,12 @@ export const OTPVerificationScreen: React.FC = () => {
           });
           activateTrial().catch(() => {});
           try { useCoinStore.getState().claimWelcomeBonus(); } catch {}
-          navigation.navigate('EmailEntry');
+          // Show welcome modal, then go to onboarding
+          setShowWelcomeModal(true);
           return;
         }
       }
 
-      // Use authStore.verifyOTP which handles analytics identify, socket connect,
-      // token persistence, dev fallback, and token refresh timer
       const verified = await useAuthStore.getState().verifyOTP(phoneNumber, otpCode);
 
       if (!verified) {
@@ -120,29 +121,19 @@ export const OTPVerificationScreen: React.FC = () => {
         return;
       }
 
-      // Track OTP verified event
       analyticsService.track(ANALYTICS_EVENTS.OTP_VERIFIED, {});
 
-      // verifyOTP sets isOnboarded based on API response (user.isNew flag):
-      // - New user (no profile): isOnboarded = false
-      // - Returning user (has profile): isOnboarded = true
       const { isOnboarded, activateTrial } = useAuthStore.getState();
 
       if (!isOnboarded) {
-        // New user -> activate trial, award welcome bonus, then collect email + password
-        // Non-blocking: trial activation failure must NOT trigger logout
+        // New user — activate trial, welcome bonus, show premium modal
         activateTrial().catch(() => {});
         try { useCoinStore.getState().claimWelcomeBonus(); } catch {}
-        Alert.alert(
-          'Hoş geldin!',
-          '48 saatlik Premium deneyimin başladı! Premium özelliklerinin keyfini çıkar.\n\nHoş geldin hediyesi: 100 Jeton!',
-        );
-        navigation.navigate('EmailEntry');
+        // Show premium welcome modal instead of plain Alert
+        setShowWelcomeModal(true);
         return;
       }
-
-      // Returning user with complete profile -> RootNavigator will show MainTabs
-      // because isAuthenticated=true and isOnboarded=true (already set by verifyOTP)
+      // Returning user — RootNavigator will show MainTabs automatically
     } catch {
       setFailedAttempts((prev) => prev + 1);
       Alert.alert('Hata', 'Kod geçersiz. Tekrar deneyin.');
@@ -186,7 +177,6 @@ export const OTPVerificationScreen: React.FC = () => {
   const handleResend = async () => {
     if (resendTimer > 0 || isRateLimited) return;
     try {
-      // Use authStore.sendOTP to keep cooldown and attempts state in sync
       const success = await useAuthStore.getState().sendOTP(phoneNumber, countryCode);
       if (success) {
         setResendCount((prev) => prev + 1);
@@ -212,10 +202,6 @@ export const OTPVerificationScreen: React.FC = () => {
     }
   };
 
-  const handleBack = () => {
-    navigation.goBack();
-  };
-
   const formatTimer = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -228,6 +214,8 @@ export const OTPVerificationScreen: React.FC = () => {
   );
 
   const remainingResends = maxResendAttempts - resendCount;
+  const isCodeComplete = !code.includes('');
+  const isDisabled = !isCodeComplete || isVerifying || isRateLimited;
 
   return (
     <KeyboardAvoidingView
@@ -236,15 +224,17 @@ export const OTPVerificationScreen: React.FC = () => {
     >
       <BrandedBackground />
 
-      {/* Header */}
+      {/* Header — premium back button */}
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <TouchableOpacity
-          onPress={handleBack}
+          onPress={() => navigation.goBack()}
           style={styles.backButton}
+          activeOpacity={0.7}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           accessibilityLabel="Geri"
           accessibilityRole="button"
         >
-          <Ionicons name="arrow-back" size={22} color={onboardingColors.text} />
+          <Ionicons name="chevron-back" size={22} color="#3D2B1F" />
         </TouchableOpacity>
       </View>
 
@@ -273,7 +263,7 @@ export const OTPVerificationScreen: React.FC = () => {
           </View>
         )}
 
-        {/* OTP inputs */}
+        {/* OTP inputs — glass style */}
         <View style={styles.otpContainer}>
           {code.map((digit, index) => (
             <TextInput
@@ -298,7 +288,7 @@ export const OTPVerificationScreen: React.FC = () => {
           ))}
         </View>
 
-        {/* Resend section */}
+        {/* Resend section — proper spacing */}
         <View style={styles.resendContainer}>
           {isRateLimited ? (
             <Text style={styles.resendTimerText}>
@@ -309,7 +299,7 @@ export const OTPVerificationScreen: React.FC = () => {
               Tekrar gönder ({formatTimer(resendTimer)})
             </Text>
           ) : remainingResends > 0 ? (
-            <TouchableOpacity onPress={handleResend}>
+            <TouchableOpacity onPress={handleResend} activeOpacity={0.6}>
               <Text style={styles.resendButton}>Kodu Tekrar Gönder</Text>
             </TouchableOpacity>
           ) : (
@@ -327,29 +317,44 @@ export const OTPVerificationScreen: React.FC = () => {
         )}
       </View>
 
-      {/* Footer */}
-      <View style={styles.footer}>
+      {/* Footer — Gradient CTA button */}
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 24 }]}>
         <TouchableOpacity
-          style={[
-            styles.verifyButton,
-            (code.includes('') || isVerifying || isRateLimited) && styles.verifyButtonDisabled,
-          ]}
           onPress={() => handleVerify(code.join(''))}
-          disabled={code.includes('') || isVerifying || isRateLimited}
+          disabled={isDisabled}
           activeOpacity={0.85}
+          style={[styles.verifyButtonWrapper, isDisabled && styles.verifyButtonDisabled]}
           accessibilityLabel="Doğrula"
           accessibilityRole="button"
         >
-          <Text
-            style={[
-              styles.verifyButtonText,
-              (code.includes('') || isVerifying || isRateLimited) && styles.verifyButtonTextDisabled,
-            ]}
+          <LinearGradient
+            colors={isDisabled
+              ? ['#D1D5DB', '#D1D5DB'] as [string, string]
+              : ['#9B6BF8', '#EC4899'] as [string, string]
+            }
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.verifyGradient}
           >
-            Doğrula
-          </Text>
+            <Text style={[
+              styles.verifyButtonText,
+              isDisabled && styles.verifyButtonTextDisabled,
+            ]}>
+              Doğrula
+            </Text>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
+
+      {/* Premium welcome modal — replaces plain Alert */}
+      <WelcomeModal
+        visible={showWelcomeModal}
+        onDismiss={() => {
+          setShowWelcomeModal(false);
+          // Go to onboarding after modal dismiss
+          useAuthStore.getState().setStartedOnboarding(true);
+        }}
+      />
     </KeyboardAvoidingView>
   );
 };
@@ -364,20 +369,12 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: onboardingColors.surface,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.06)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: onboardingColors.surfaceBorder,
-  },
-  backText: {
-    fontSize: 20,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.semibold,
-    color: onboardingColors.text,
   },
   content: {
     flex: 1,
@@ -385,19 +382,20 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xl,
   },
   title: {
-    fontSize: 28,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.bold,
+    fontSize: 32,
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
     color: onboardingColors.text,
+    letterSpacing: -0.5,
     marginBottom: spacing.sm,
   },
   subtitle: {
-    fontSize: 15,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: fontWeights.regular,
-    color: onboardingColors.textSecondary,
+    fontSize: 17,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: 'rgba(0,0,0,0.6)',
     marginBottom: spacing.xl,
-    lineHeight: 22,
+    lineHeight: 24,
   },
   warningBanner: {
     backgroundColor: semanticColors.error.light,
@@ -408,8 +406,8 @@ const styles = StyleSheet.create({
     borderColor: semanticColors.error.light,
   },
   warningText: {
-    fontSize: 13,
-    fontFamily: 'Poppins_500Medium',
+    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: fontWeights.medium,
     color: semanticColors.error.dark,
     textAlign: 'center',
@@ -417,82 +415,90 @@ const styles = StyleSheet.create({
   otpContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
+    gap: 10,
+    marginBottom: 24,
   },
   otpInput: {
-    width: 48,
-    height: 56,
-    borderRadius: borderRadius.md,
-    backgroundColor: onboardingColors.surface,
-    borderWidth: 2,
-    borderColor: onboardingColors.surfaceBorder,
+    width: 50,
+    height: 60,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(139,92,246,0.3)',
     textAlign: 'center',
     textAlignVertical: 'center',
-    fontSize: 22,
-    lineHeight: 28,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.bold,
-    color: onboardingColors.text,
+    fontSize: 32,
+    lineHeight: 38,
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
+    color: '#2D1B4E',
     includeFontPadding: false,
     paddingVertical: 0,
     paddingHorizontal: 0,
   },
   otpInputActive: {
-    borderColor: onboardingColors.text,
+    borderColor: '#8B5CF6',
+    borderWidth: 2,
+    backgroundColor: 'rgba(255,255,255,0.8)',
   },
   otpInputFilled: {
-    borderColor: onboardingColors.text,
-    backgroundColor: surfaces.cream.backgroundElevated,
+    borderColor: '#8B5CF6',
+    backgroundColor: 'rgba(255,255,255,0.8)',
   },
   resendContainer: {
     alignItems: 'center',
-    marginTop: spacing.md,
-    gap: spacing.xs,
+    marginBottom: 20,
+    marginTop: 0,
   },
   resendTimerText: {
-    fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
+    fontSize: 15,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: fontWeights.regular,
     color: onboardingColors.textTertiary,
   },
   resendButton: {
-    fontSize: 14,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.semibold,
-    color: onboardingColors.text,
+    fontSize: 15,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '600',
+    color: '#8B5CF6',
+    textAlign: 'center',
   },
   verifyingContainer: {
     alignItems: 'center',
-    marginTop: spacing.lg,
+    marginTop: spacing.md,
   },
   verifyingText: {
-    fontSize: 15,
-    fontFamily: 'Poppins_500Medium',
+    fontSize: 16,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: fontWeights.medium,
     color: onboardingColors.textSecondary,
   },
   footer: {
     paddingHorizontal: spacing.lg,
-    paddingBottom: Platform.OS === 'ios' ? 48 : 36,
   },
-  verifyButton: {
-    backgroundColor: onboardingColors.buttonBg,
-    height: layout.buttonHeight,
-    borderRadius: borderRadius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
+  verifyButtonWrapper: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    ...shadows.button,
   },
   verifyButtonDisabled: {
-    backgroundColor: onboardingColors.surfaceBorder,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  verifyGradient: {
+    height: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 16,
   },
   verifyButtonText: {
-    fontSize: 16,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.semibold,
-    color: onboardingColors.buttonText,
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
   verifyButtonTextDisabled: {
-    color: onboardingColors.textTertiary,
+    color: '#9CA3AF',
   },
 });

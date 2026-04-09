@@ -748,7 +748,7 @@ const styles = StyleSheet.create({
   },
   // 2H: Skip button
   skipTopText: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: 'rgba(255,255,255,0.4)',
@@ -776,9 +776,9 @@ const styles = StyleSheet.create({
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
   ringTotalText: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: onboardingColors.textTertiary,
     marginTop: -2,
     ...Platform.select({ android: { includeFontPadding: false } }),
@@ -792,7 +792,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   categoryBadgeText: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: '#8B5CF6',
@@ -920,7 +920,7 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 15,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: onboardingColors.textSecondary,
     marginTop: spacing.sm,
     ...Platform.select({ android: { includeFontPadding: false } }),
@@ -945,7 +945,7 @@ const styles = StyleSheet.create({
   celebrationSubtitle: {
     fontSize: 16,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: onboardingColors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
@@ -976,7 +976,7 @@ const styles = StyleSheet.create({
   resultSubtitle: {
     fontSize: 15,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: onboardingColors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
@@ -1004,7 +1004,7 @@ const styles = StyleSheet.create({
   halfwaySubtitle: {
     fontSize: 15,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: onboardingColors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,

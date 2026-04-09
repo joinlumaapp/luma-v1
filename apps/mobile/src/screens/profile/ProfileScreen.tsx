@@ -1114,7 +1114,7 @@ export const ProfileScreen: React.FC = () => {
             >
               <Text
                 style={{
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: fontWeights.medium,
                   color: colors.textTertiary,
                   marginBottom: 8,
@@ -1162,7 +1162,7 @@ export const ProfileScreen: React.FC = () => {
               <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: row.iconBg, justifyContent: 'center', alignItems: 'center', marginRight: 8 }}>
                 <Ionicons name={row.icon} size={16} color={palette.purple[600]} />
               </View>
-              <Text style={{ fontSize: 11, fontWeight: '500', color: colors.textTertiary, letterSpacing: 0.5 }}>{row.label}</Text>
+              <Text style={{ fontSize: 14, fontWeight: '500', color: colors.textTertiary, letterSpacing: 0.5 }}>{row.label}</Text>
             </View>
             <Text style={{ fontSize: 15, fontWeight: '600', color: row.value === 'Belirtilmedi' ? colors.textTertiary : colors.text }} numberOfLines={1} adjustsFontSizeToFit>{row.value}</Text>
           </View>
@@ -1369,7 +1369,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(212, 175, 55, 0.3)',
   },
   supremeHeaderBadgeText: {
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: fontWeights.bold,
     color: '#D4AF37',
     letterSpacing: 1.5,
@@ -1451,7 +1451,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   strengthPillText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.bold,
     letterSpacing: 0.3,
   },
@@ -1505,13 +1505,13 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   strengthCardHint: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginTop: 6,
   },
   strengthCardComplete: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: '#22C55E',
     marginTop: 6,
@@ -1531,7 +1531,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   intentionText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.semibold,
     letterSpacing: 0.2,
   },
@@ -1560,7 +1560,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   statLabel: {
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
     marginTop: 3,
@@ -1592,7 +1592,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   gradientButtonText: {
-    fontSize: 13,
+    fontSize: 14,
     lineHeight: 20,
     fontWeight: fontWeights.bold,
     color: '#FFFFFF',
@@ -1610,7 +1610,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(139, 92, 246, 0.06)',
   },
   outlinedButtonText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.bold,
     color: palette.purple[600],
     letterSpacing: 0.3,
@@ -1632,7 +1632,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   premiumButtonText: {
-    fontSize: 13,
+    fontSize: 14,
     lineHeight: 20,
     fontWeight: fontWeights.bold,
     color: '#FFFFFF',
@@ -1661,7 +1661,7 @@ const styles = StyleSheet.create({
     backgroundColor: palette.purple[400],
   },
   weeklyViewsText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
   },
@@ -1680,7 +1680,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   moodSectionTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: colors.textSecondary,
   },
@@ -1702,7 +1702,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   moodChipLabel: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     includeFontPadding: false,
   },
@@ -1735,13 +1735,13 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   clearListeningText: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: fontWeights.medium,
     color: palette.rose[500],
   },
   listeningInactive: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.regular,
     color: colors.textTertiary,
     fontStyle: 'italic',
@@ -1750,7 +1750,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   visibilityLabel: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: fontWeights.medium,
     color: colors.textSecondary,
@@ -1772,7 +1772,7 @@ const styles = StyleSheet.create({
     borderColor: palette.purple[500],
   },
   visibilityChipText: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: fontWeights.medium,
     color: colors.textSecondary,
@@ -1831,7 +1831,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(236, 72, 153, 0.15)',
   },
   lookingForChipText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: palette.pink[600],
   },
@@ -1844,7 +1844,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(139, 92, 246, 0.15)',
   },
   hobbyChipText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: palette.purple[600],
   },
@@ -1872,7 +1872,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   aboutRowLabel: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
     marginBottom: 2,
@@ -1915,7 +1915,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
   },
   quickActionLabel: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.semibold,
     color: colors.text,
     letterSpacing: 0.1,
@@ -1960,8 +1960,8 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   uyumReminderSubtitle: {
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: 14,
+    fontWeight: '500',
     color: colors.textSecondary,
   },
 
@@ -2003,7 +2003,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   boostSubtitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
   },
@@ -2023,7 +2023,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.success,
   },
   boostActiveText: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: fontWeights.semibold,
     color: colors.success,
   },
@@ -2061,7 +2061,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   myPostsSeeAll: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.semibold,
     color: palette.purple[500],
   },
@@ -2104,7 +2104,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   myPostSnippet: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: colors.text,
     lineHeight: 18,
@@ -2120,12 +2120,12 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   myPostStatText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: colors.textSecondary,
   },
   myPostTime: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: fontWeights.regular,
     color: colors.textTertiary,
   },
@@ -2158,7 +2158,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   weeklyReportSubtitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.regular,
     color: 'rgba(255,255,255,0.5)',
     marginTop: 2,
@@ -2194,7 +2194,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   referralSubtitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginTop: 2,
@@ -2206,7 +2206,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   referralCodeText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.bold,
     color: palette.purple[500],
     letterSpacing: 0.5,
@@ -2270,7 +2270,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   discountTimer: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: '#F59E0B',
     marginBottom: 20,

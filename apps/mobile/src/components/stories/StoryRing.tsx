@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
   label: {
     ...typography.captionSmall,
     color: colors.textSecondary,
-    fontSize: 10,
+    fontSize: 14,
     marginTop: 4,
     textAlign: 'center',
   },
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
 
   /** Sparkle emoji icon */
   suggestedSparkleIcon: {
-    fontSize: 11,
+    fontSize: 14,
   },
 
   /** Gold-tinted label for suggested stories */

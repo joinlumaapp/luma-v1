@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
     color: onboardingColors.textTertiary,
   },
   securityNote: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
     fontWeight: fontWeights.regular,
     color: onboardingColors.textTertiary,

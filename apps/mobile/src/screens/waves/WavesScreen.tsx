@@ -189,7 +189,7 @@ const cardStyles = StyleSheet.create({
     alignItems: 'center',
   },
   waveEmoji: {
-    fontSize: 11,
+    fontSize: 14,
   },
   info: {
     flex: 1,

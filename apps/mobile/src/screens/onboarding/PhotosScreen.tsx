@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 15,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     lineHeight: 22,
     color: onboardingColors.textSecondary,
     marginBottom: 16,
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   countText: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: onboardingColors.textSecondary,
@@ -448,7 +448,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   mainBadgeText: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: GOLD_ACCENT,
@@ -491,7 +491,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   profileSlotLabel: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: GOLD_ACCENT,
@@ -505,7 +505,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   compressingText: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: onboardingColors.textSecondary,
@@ -538,7 +538,7 @@ const styles = StyleSheet.create({
   tipItem: {
     fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     lineHeight: 20,
     color: onboardingColors.textSecondary,
     paddingLeft: 4,

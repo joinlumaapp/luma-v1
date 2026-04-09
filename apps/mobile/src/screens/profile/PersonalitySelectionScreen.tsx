@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
   subtitleText: {
     fontSize: 15,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.textSecondary,
     marginBottom: 32,
   },
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
   resultDesc: {
     fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
@@ -433,9 +433,9 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
   compatLabel: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.textSecondary,
     marginTop: 2,
   },

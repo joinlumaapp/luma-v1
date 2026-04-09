@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   headerSubtitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginTop: 2,
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   gameDesc: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.regular,
     color: 'rgba(255,255,255,0.85)',
     marginTop: 4,
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   gameDuration: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: 'rgba(255,255,255,0.7)',
   },

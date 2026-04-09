@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(139, 92, 246, 0.15)',
   },
   profileLinkText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600',
     color: '#8B5CF6',
     fontFamily: 'Poppins_600SemiBold',

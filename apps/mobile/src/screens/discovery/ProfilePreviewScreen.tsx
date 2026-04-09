@@ -545,7 +545,7 @@ export const ProfilePreviewScreen: React.FC = () => {
         )}
         {profile.intentionTag && (
           <View style={{ marginTop: spacing.sm }}>
-            <Text style={[styles.bioText, { fontSize: 13, color: colors.textSecondary, marginBottom: 6 }]}>
+            <Text style={[styles.bioText, { fontSize: 14, color: colors.textSecondary, marginBottom: 6 }]}>
               Burada olma sebebi
             </Text>
             <View style={{ flexDirection: 'row' }}>
@@ -555,7 +555,7 @@ export const ProfilePreviewScreen: React.FC = () => {
                 paddingVertical: 6,
                 borderRadius: 20,
               }}>
-                <Text style={{ fontSize: 13, fontFamily: 'Poppins_500Medium', fontWeight: '500', color: palette.purple[500] }}>
+                <Text style={{ fontSize: 14, fontFamily: 'Poppins_500Medium', fontWeight: '500', color: palette.purple[500] }}>
                   {translateIntentionTag(profile.intentionTag)}
                 </Text>
               </View>
@@ -600,7 +600,7 @@ export const ProfilePreviewScreen: React.FC = () => {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{
-                fontSize: 11,
+                fontSize: 14,
                 fontFamily: 'Poppins_500Medium',
                 fontWeight: '500',
                 color: colors.textTertiary,
@@ -798,7 +798,7 @@ export const ProfilePreviewScreen: React.FC = () => {
             onPress={() => navigation.navigate('MembershipPlans' as never)}
           >
             <Ionicons name="lock-closed" size={16} color={palette.purple[500]} />
-            <Text style={{ fontSize: 13, color: colors.textSecondary, fontFamily: 'Poppins_400Regular', flex: 1 }}>
+            <Text style={{ fontSize: 14, color: colors.textSecondary, fontFamily: 'Poppins_400Regular', flex: 1 }}>
               Gönderileri ve takipçi bilgilerini görebilmek için premium üyelik gerekiyor. Hemen keşfetmeye başla!
             </Text>
             <Ionicons name="chevron-forward" size={16} color={palette.purple[400]} />
@@ -1042,7 +1042,7 @@ const styles = StyleSheet.create({
   cityText: {
     fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.textSecondary,
   },
   metaRow: {
@@ -1062,7 +1062,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   intentionText: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: colors.primary,
@@ -1086,7 +1086,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   compatSuperLabel: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: colors.accent,
@@ -1121,7 +1121,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   statLabel: {
-    fontSize: 10,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: colors.textTertiary,
@@ -1173,7 +1173,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_600SemiBold',
   },
   promptQuestion: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500' as const,
     color: colors.textSecondary,
@@ -1244,7 +1244,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   tagText: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: colors.primary,
@@ -1286,7 +1286,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.full,
   },
   messageCtaText: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#FFFFFF',

@@ -1,5 +1,21 @@
 # LUMA V1 — Project Instructions for Claude
 
+## MANDATORY — Session-End .md Update Rule
+**At the END of every session, before finishing, you MUST update all relevant .md files to reflect changes made during the session. This is not optional — it is a blocking requirement.**
+
+Check and update these files based on what changed:
+- `progress.md` — Mark completed features ✅, update in-progress 🟡, add new features
+- `roadmap.md` — Update milestones, mark completed items
+- `decisions.md` — Log any architecture or product decisions made
+- `data_model.md` — If any Prisma schema or database changes were made
+- `monetization.md` — If any package, jeton, or pricing changes were made
+- `debug.md` — If any bugs were fixed or new known issues found
+- `scope_lock.md` — If any locked numbers changed or concepts were removed
+
+**Never end a session without checking this list.**
+
+---
+
 ## Project Overview
 LUMA is a premium compatibility-based dating & social discovery app. It combines meaningful matching with social features to create a platform where users find compatible people through algorithmic compatibility scoring, social content, and live interactions.
 

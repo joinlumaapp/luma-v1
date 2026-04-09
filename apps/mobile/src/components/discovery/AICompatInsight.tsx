@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   talkingTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: fontWeights.semibold,
     color: palette.purple[600],
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   },
   talkingText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
     fontWeight: fontWeights.regular,
     color: colors.text,

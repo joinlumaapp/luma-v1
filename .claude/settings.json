@@ -66,7 +66,25 @@
       "Bash(RAILWAY_TOKEN=\"06b7779e-5f49-45c7-adc6-f41035d2470f\" railway redeploy --service luma-v1 --yes)",
       "Bash(RAILWAY_TOKEN=\"d9b989d8-b558-4605-abd7-8897609d8e8f\" railway logs --tail 50)",
       "Bash(python3 write_all_md_files.py)",
-      "Read(//home/ubuntu-user/projects/luma-v1/apps/mobile/**)"
+      "Read(//home/ubuntu-user/projects/luma-v1/apps/mobile/**)",
+      "WebFetch(domain:status.ngrok.com)",
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); [print\\(t['public_url']\\) for t in data.get\\('tunnels',[]\\)]\")",
+      "Bash(EXPO_PID=$! sleep 15)",
+      "Bash(tar xz:*)",
+      "Bash(ngrok version:*)",
+      "Bash(unzip -o /tmp/ngrok.zip -d /usr/local/bin)",
+      "Bash(python3 -c \"import zipfile; z=zipfile.ZipFile\\('/tmp/ngrok.zip'\\); z.extractall\\('/tmp/ngrok-extract'\\); z.close\\(\\)\")",
+      "Bash(cp /tmp/ngrok-extract/ngrok /usr/local/bin/ngrok)",
+      "Bash(/tmp/ngrok-extract/ngrok version:*)",
+      "Bash(/tmp/ngrok-extract/ngrok config:*)",
+      "Bash(/tmp/ngrok-extract/ngrok http:*)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({k:d[k] for k in ['name','bundleUrl','hostUri','debuggerHost'] if k in d}, indent=2\\)\\)\")",
+      "Bash(python3 -c ':*)",
+      "Bash(EXPO_PACKAGER_PROXY_URL=https://aflame-skimming-tavern.ngrok-free.dev npx expo start --port 8081 --clear)",
+      "Read(//home/ubuntu-user/projects/luma-v1/**)",
+      "Bash(rm -rf /tmp/metro-*)",
+      "Bash(rm -rf /tmp/haste-map-*)",
+      "Bash(rm -rf /tmp/react-native-*)"
     ],
     "additionalDirectories": [
       "/home/ubuntu-user/projects/luma-v1/.claude/agents"

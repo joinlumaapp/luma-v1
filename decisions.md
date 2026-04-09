@@ -92,3 +92,34 @@
 **Date:** 2026-04-08
 **Decision:** Compatibility score is always between 47 and 97. 100% is mathematically impossible. Scores >= 90 trigger Super Uyum with special effects (glow animation, priority, konfeti, badge).
 **Reasoning:** 47 minimum prevents demoralizing "0% compatible" results. 97 cap maintains authenticity -- perfect compatibility doesn't exist. 90+ threshold creates an aspirational tier.
+
+## Decision 018: Phone Auth = Direct to Onboarding (No Email/Password)
+**Date:** 2026-04-09
+**Decision:** Phone authentication flow goes directly from OTP verification to onboarding. No email entry or password creation screen required. Phone number IS the login credential.
+**Rejected:** Requiring email + password after phone OTP (old flow: Phone→OTP→Email→Password→Onboarding)
+**Reasoning:** Adding email/password on top of phone OTP creates unnecessary friction. Users already authenticated via phone. Social login (Google/Apple) also skips email/password for the same reason.
+
+## Decision 019: Google Sign-In via expo-auth-session
+**Date:** 2026-04-09
+**Decision:** Use expo-auth-session with Google provider for Google Sign-In. Backend POST /auth/google creates/finds user. Pre-fills name from Google profile into onboarding.
+**Reasoning:** expo-auth-session works in Expo Go during development. Google provides name + email, reducing onboarding friction. Same pattern as Apple Sign-In for consistency.
+
+## Decision 020: Referral System with Jeton Rewards
+**Date:** 2026-04-09
+**Decision:** Each user gets auto-generated LUMA-XXXX referral code. When a new user signs up with a referral code, BOTH users earn 50 jeton. Max one referral code per user.
+**Reasoning:** Viral growth mechanism. Mutual reward incentivizes both inviter and invitee. 50 jeton is enough to try premium actions (3 super likes) but not enough to replace purchasing.
+
+## Decision 021: Premium Expiration Campaign (%20 Discount)
+**Date:** 2026-04-09
+**Decision:** Daily cron checks for subscriptions expiring in 3 days. Sends push notification + shows full-screen modal on app open. 20% discount valid for 48 hours only. After that, normal pricing.
+**Reasoning:** Reduces involuntary churn. Time-limited discount creates urgency. Full-screen modal ensures visibility.
+
+## Decision 022: i18n with Turkish Default
+**Date:** 2026-04-09
+**Decision:** Use i18next + react-i18next for internationalization. Turkish is the default language. English available via Settings toggle. Device locale auto-detection with Turkish fallback.
+**Reasoning:** Turkey is the launch market, so Turkish must be perfect. English opens the door for international expansion. Starting with main screens only -- full translation can be incremental.
+
+## Decision 023: Bold Typography as Brand Identity
+**Date:** 2026-04-09
+**Decision:** All fontWeights shifted one level up globally (300→400, 400→500, 500→600, 600→700). All fontSizes increased by 2px. Minimum body text is 16px/500 weight. Headings minimum 700 weight.
+**Reasoning:** Thin/light typography feels weak and unconfident on mobile screens. Bold, thick text creates a premium, assertive brand feel. Matches the Bumpy-inspired design direction.

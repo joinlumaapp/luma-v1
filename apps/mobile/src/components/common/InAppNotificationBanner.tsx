@@ -436,9 +436,9 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   body: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: 'rgba(255, 255, 255, 0.7)',
     lineHeight: 18,
   },

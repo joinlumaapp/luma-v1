@@ -890,7 +890,7 @@ const s = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   lockedBadgeText: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: palette.gold[600],
@@ -984,7 +984,7 @@ const s = StyleSheet.create({
     borderColor: colors.primary,
   },
   chipText: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: colors.textSecondary,
@@ -995,7 +995,7 @@ const s = StyleSheet.create({
     fontWeight: '600',
   },
   selectedCount: {
-    fontSize: 12,
+    fontSize: 14,
     color: colors.primary,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
@@ -1016,7 +1016,7 @@ const s = StyleSheet.create({
     borderColor: colors.primary,
   },
   miniChipText: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: colors.textSecondary,
@@ -1048,9 +1048,9 @@ const s = StyleSheet.create({
     justifyContent: 'space-between',
   },
   fallbackLabel: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.textTertiary,
   },
 
@@ -1080,7 +1080,7 @@ const s = StyleSheet.create({
     borderColor: colors.surfaceBorder,
   },
   upgradeBannerBtnText: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: colors.text,

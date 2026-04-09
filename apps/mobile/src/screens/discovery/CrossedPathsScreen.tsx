@@ -272,7 +272,7 @@ const cardStyles = StyleSheet.create({
     borderColor: colors.background,
   },
   verifiedIcon: {
-    fontSize: 10,
+    fontSize: 14,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
@@ -313,7 +313,7 @@ const cardStyles = StyleSheet.create({
     marginBottom: 2,
   },
   pinIcon: {
-    fontSize: 12,
+    fontSize: 14,
   },
   areaText: {
     ...typography.bodySmall,

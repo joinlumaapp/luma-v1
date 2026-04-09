@@ -22,7 +22,7 @@ export const AuthNavigator: React.FC = () => {
         animation: 'slide_from_right',
         statusBarAnimation: 'none',
         statusBarStyle: 'light',
-        statusBarColor: '#0d0d14',
+        statusBarColor: '#08080F',
       }}
     >
       <Stack.Screen name="EmotionalIntro" component={EmotionalIntroScreen} />

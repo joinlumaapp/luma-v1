@@ -92,7 +92,7 @@ const cardStyles = StyleSheet.create({
     color: '#1F2937',
   },
   label: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
     fontWeight: fontWeights.regular,
     color: '#6B7280',
@@ -105,7 +105,7 @@ const cardStyles = StyleSheet.create({
     marginTop: 4,
   },
   discountText: {
-    fontSize: 10,
+    fontSize: 14,
     fontFamily: 'Poppins_700Bold',
     fontWeight: fontWeights.bold,
     color: palette.purple[700],

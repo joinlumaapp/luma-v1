@@ -261,7 +261,7 @@ const screenStyles = StyleSheet.create({
     marginTop: 8,
   },
   emptySubtitle: {
-    fontSize: 13,
+    fontSize: 14,
     color: colors.textSecondary,
     fontFamily: 'Poppins_400Regular',
     textAlign: 'center',
@@ -310,7 +310,7 @@ const gridStyles = StyleSheet.create({
     borderColor: colors.surfaceBorder,
   },
   textContent: {
-    fontSize: 10,
+    fontSize: 14,
     color: colors.text,
     fontFamily: 'Poppins_400Regular',
     lineHeight: 14,
@@ -329,7 +329,7 @@ const gridStyles = StyleSheet.create({
     paddingVertical: 2,
   },
   likeCount: {
-    fontSize: 10,
+    fontSize: 14,
     color: '#FFFFFF',
     fontWeight: '600',
   },

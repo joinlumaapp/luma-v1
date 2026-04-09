@@ -699,9 +699,9 @@ export const EditProfileScreen: React.FC = () => {
                     color: colors.text,
                   }}>Uyum Sorularını Tamamla</Text>
                   <Text style={{
-                    fontSize: 12,
+                    fontSize: 14,
                     fontFamily: 'Poppins_400Regular',
-                    fontWeight: '400',
+                    fontWeight: '500',
                     color: colors.textSecondary,
                     marginTop: 2,
                   }}>Soruları cevapla, %92 daha fazla eşleşme şansı yakala!</Text>
@@ -726,7 +726,7 @@ export const EditProfileScreen: React.FC = () => {
                   }} />
                 </View>
                 <Text style={{
-                  fontSize: 13,
+                  fontSize: 14,
                   fontFamily: 'Poppins_600SemiBold',
                   fontWeight: '600',
                   color: colors.primary,
@@ -792,7 +792,7 @@ export const EditProfileScreen: React.FC = () => {
                   : 'Kişilik Testini Çöz'}
               </Text>
               <Text style={{
-                fontSize: 12,
+                fontSize: 14,
                 fontFamily: poppinsFonts.regular,
                 color: colors.textTertiary,
                 marginTop: 2,
@@ -1277,9 +1277,9 @@ export const EditProfileScreen: React.FC = () => {
                       color: colors.text,
                     }}>{option.label}</Text>
                     <Text style={{
-                      fontSize: 12,
+                      fontSize: 14,
                       fontFamily: 'Poppins_400Regular',
-                      fontWeight: '400',
+                      fontWeight: '500',
                       color: colors.textSecondary,
                       marginTop: 2,
                     }}>{option.description}</Text>
@@ -1345,7 +1345,7 @@ export const EditProfileScreen: React.FC = () => {
                     borderWidth: 1,
                     borderColor: '#93C5FD',
                   }}>
-                    <Text style={{ fontSize: 13, color: '#1E40AF', fontFamily: 'Poppins_500Medium', fontWeight: '500' }}>{getInterestDisplay(tag).emoji} {getInterestDisplay(tag).display}</Text>
+                    <Text style={{ fontSize: 14, color: '#1E40AF', fontFamily: 'Poppins_500Medium', fontWeight: '500' }}>{getInterestDisplay(tag).emoji} {getInterestDisplay(tag).display}</Text>
                   </View>
                 ))}
               </View>
@@ -1579,7 +1579,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   sectionHint: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: poppinsFonts.regular,
     fontWeight: fontWeights.regular,
     color: colors.textTertiary,
@@ -1645,7 +1645,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   photoMainBadgeText: {
-    fontSize: 10,
+    fontSize: 14,
     fontFamily: poppinsFonts.bold,
     fontWeight: fontWeights.bold,
     color: '#FFFFFF',
@@ -1664,7 +1664,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   photoOrderText: {
-    fontSize: 10,
+    fontSize: 14,
     fontFamily: poppinsFonts.bold,
     fontWeight: fontWeights.bold,
     color: '#FFFFFF',
@@ -1677,7 +1677,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   photoUploadingText: {
-    fontSize: 10,
+    fontSize: 14,
     fontFamily: poppinsFonts.medium,
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
@@ -1686,7 +1686,7 @@ const styles = StyleSheet.create({
 
   // ── Bio ──
   charCounter: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: poppinsFonts.regular,
     fontWeight: fontWeights.regular,
     color: colors.textTertiary,
@@ -1731,7 +1731,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   infoLabel: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: poppinsFonts.medium,
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
@@ -1756,7 +1756,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   readOnlyTagText: {
-    fontSize: 10,
+    fontSize: 14,
     fontFamily: poppinsFonts.medium,
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
@@ -1868,7 +1868,7 @@ const styles = StyleSheet.create({
     borderColor: colors.surfaceBorder,
   },
   promptEditQuestion: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: poppinsFonts.medium,
     fontWeight: fontWeights.medium,
     color: colors.textSecondary,
@@ -1896,7 +1896,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.surfaceBorder + '60',
   },
   charCount: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: poppinsFonts.regular,
     fontWeight: fontWeights.regular,
     color: colors.textTertiary,
@@ -1966,7 +1966,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   voiceSubtitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: poppinsFonts.regular,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
@@ -1980,7 +1980,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   videoUploadingText: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: poppinsFonts.medium,
     fontWeight: fontWeights.medium,
     color: palette.gold[600],
@@ -2032,7 +2032,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   videoDurationText: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: poppinsFonts.semibold,
     fontWeight: fontWeights.semibold,
     color: '#FFFFFF',
@@ -2058,7 +2058,7 @@ const styles = StyleSheet.create({
     backgroundColor: palette.error + '08',
   },
   videoActionText: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: poppinsFonts.semibold,
     fontWeight: fontWeights.semibold,
     color: palette.gold[600],
@@ -2145,9 +2145,9 @@ const sectionStyles = StyleSheet.create({
     marginBottom: 4,
   },
   headerDesc: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.textSecondary,
   },
   fieldRow: {
@@ -2181,13 +2181,13 @@ const sectionStyles = StyleSheet.create({
   fieldValue: {
     fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.textSecondary,
   },
   fieldPlaceholder: {
     fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.textTertiary,
   },
   pickerOverlay: {

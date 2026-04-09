@@ -190,7 +190,7 @@ export const MatchDetailScreen: React.FC = () => {
             onPress={() => navigation.navigate('MembershipPlans' as never)}
           >
             <Ionicons name="lock-closed" size={16} color={palette.purple[500]} />
-            <Text style={{ fontSize: 13, color: colors.textSecondary, fontFamily: 'Poppins_400Regular', flex: 1 }}>
+            <Text style={{ fontSize: 14, color: colors.textSecondary, fontFamily: 'Poppins_400Regular', flex: 1 }}>
               Gönderileri ve takipçi bilgilerini görebilmek için premium üyelik gerekiyor. Hemen keşfetmeye başla!
             </Text>
             <Ionicons name="chevron-forward" size={16} color={palette.purple[400]} />
@@ -216,7 +216,7 @@ export const MatchDetailScreen: React.FC = () => {
             </Text>
             <View style={{ flexDirection: 'row' }}>
               <View style={{ backgroundColor: 'rgba(139,92,246,0.12)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20 }}>
-                <Text style={{ fontSize: 13, fontWeight: fontWeights.medium, color: '#8B5CF6' }}>
+                <Text style={{ fontSize: 14, fontWeight: fontWeights.medium, color: '#8B5CF6' }}>
                   {translateIntentionTag(selectedMatch.intentionTag)}
                 </Text>
               </View>
@@ -238,7 +238,7 @@ export const MatchDetailScreen: React.FC = () => {
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {matchInterests.map((tag: string) => (
             <View key={tag} style={{ backgroundColor: 'rgba(139, 92, 246, 0.08)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(139, 92, 246, 0.15)' }}>
-              <Text style={{ fontSize: 13, fontWeight: fontWeights.medium, color: palette.purple[600] }}>{tag}</Text>
+              <Text style={{ fontSize: 14, fontWeight: fontWeights.medium, color: palette.purple[600] }}>{tag}</Text>
             </View>
           ))}
         </View>
@@ -276,7 +276,7 @@ export const MatchDetailScreen: React.FC = () => {
                 <Ionicons name={row.icon} size={18} color={colors.text} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 11, fontWeight: fontWeights.medium, color: colors.textTertiary, marginBottom: 2 }}>{row.label}</Text>
+                <Text style={{ fontSize: 14, fontWeight: fontWeights.medium, color: colors.textTertiary, marginBottom: 2 }}>{row.label}</Text>
                 <Text style={{ fontSize: 15, fontWeight: fontWeights.medium, color: colors.text }}>{row.value}</Text>
               </View>
             </View>
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   intentionText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.semibold,
     color: colors.primary,
     letterSpacing: 0.2,
@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.bold,
   },
   compatSuperLabel: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.bold,
     color: colors.accent,
     backgroundColor: colors.accent + '18',
@@ -540,7 +540,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   statLabel: {
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
     marginTop: 3,
@@ -691,7 +691,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   unmatchButtonText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: colors.error,
   },

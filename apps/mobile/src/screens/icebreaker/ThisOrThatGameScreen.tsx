@@ -300,8 +300,8 @@ const styles = StyleSheet.create({
   resultsLabels: {
     flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: spacing.xl,
   },
-  resultsLabelLeft: { fontSize: 13, fontWeight: fontWeights.semibold, color: palette.purple[400] },
-  resultsLabelRight: { fontSize: 13, fontWeight: fontWeights.semibold, color: '#EC4899' },
+  resultsLabelLeft: { fontSize: 14, fontWeight: fontWeights.semibold, color: palette.purple[400] },
+  resultsLabelRight: { fontSize: 14, fontWeight: fontWeights.semibold, color: '#EC4899' },
   resultsButtons: { gap: spacing.md, marginTop: spacing.lg },
   secondaryBtn: {
     paddingVertical: 16, alignItems: 'center', borderRadius: borderRadius.xl,

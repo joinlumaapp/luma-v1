@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   headerSubtitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,

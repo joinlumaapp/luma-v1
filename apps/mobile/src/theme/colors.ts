@@ -303,7 +303,7 @@ export const darkTheme = {
   error: palette.error,
   warning: palette.warning,
   info: palette.info,
-  tabBarBackground: '#0d0d14',
+  tabBarBackground: '#08080F',
   tabBarBorder: 'rgba(255, 255, 255, 0.08)',
   tabBarActive: '#FFFFFF',
   tabBarInactive: 'rgba(255, 255, 255, 0.5)',

@@ -934,10 +934,10 @@ export const LikesYouScreen: React.FC<LikesYouScreenProps> = ({ embedded = false
             borderWidth: 1, borderColor: 'rgba(139,92,246,0.2)',
             borderRadius: 14, alignItems: 'center',
           }}>
-            <Text style={{ color: '#fff', fontSize: 13, fontWeight: '500' }}>
+            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '500' }}>
               Tüm beğenenlerini görmek ister misin?
             </Text>
-            <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 4 }}>
+            <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, marginTop: 4 }}>
               Premium üyeler günde 10 profil açabiliyor
             </Text>
             <TouchableOpacity
@@ -947,7 +947,7 @@ export const LikesYouScreen: React.FC<LikesYouScreenProps> = ({ embedded = false
                 borderRadius: 10, paddingVertical: 10, paddingHorizontal: 40,
               }}
             >
-              <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>{'Premium\'a Yükselt 👑'}</Text>
+              <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>{'Premium\'a Yükselt 👑'}</Text>
             </TouchableOpacity>
           </View>
         ) : null}
@@ -1023,9 +1023,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   likesTeaseSubtitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 8,
@@ -1046,9 +1046,9 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   likesTeaseSub: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.textTertiary,
     marginTop: 2,
   },
@@ -1087,11 +1087,11 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
   headerSubtitle: {
-    fontSize: 12,
+    fontSize: 14,
     color: colors.textSecondary,
     marginTop: 2,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
   },
   countBadge: {
     borderRadius: borderRadius.full,
@@ -1110,7 +1110,7 @@ const styles = StyleSheet.create({
     }),
   },
   countBadgeText: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#1A1A2E',
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
@@ -1152,10 +1152,10 @@ const styles = StyleSheet.create({
   },
   compactSubText: {
     color: colors.textSecondary,
-    fontSize: 11,
+    fontSize: 14,
     marginTop: 1,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
   },
   compactUpgradeChip: {
     flexDirection: 'row',
@@ -1168,7 +1168,7 @@ const styles = StyleSheet.create({
   },
   compactUpgradeText: {
     color: palette.gold[400],
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: '600',
     fontFamily: 'Poppins_600SemiBold',
   },
@@ -1192,12 +1192,12 @@ const styles = StyleSheet.create({
   },
   compactChipTitle: {
     color: colors.text,
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: '600',
     fontFamily: 'Poppins_600SemiBold',
   },
   compactChipValue: {
-    fontSize: 10,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
   },
@@ -1212,7 +1212,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
-    fontSize: 11,
+    fontSize: 14,
   },
 
   // ── Grid ──
@@ -1389,7 +1389,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.smd,
   },
   cardName: {
-    fontSize: 12,
+    fontSize: 14,
     lineHeight: 16,
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
@@ -1614,7 +1614,7 @@ const styles = StyleSheet.create({
     borderColor: palette.purple[500] + '25',
   },
   modalHintText: {
-    fontSize: 11,
+    fontSize: 14,
     color: palette.purple[400],
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',

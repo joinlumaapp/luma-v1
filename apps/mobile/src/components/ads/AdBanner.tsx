@@ -248,6 +248,6 @@ const adStyles = StyleSheet.create({
   ctaText: {
     ...typography.buttonSmall,
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 14,
   },
 });

@@ -47,7 +47,7 @@ const defaultScreenOptions: NativeStackNavigationOptions = {
   contentStyle: { backgroundColor: ONBOARDING_BG },
   statusBarAnimation: 'none',
   statusBarStyle: 'light',
-  statusBarColor: '#0d0d14',
+  statusBarColor: '#08080F',
 };
 
 export const OnboardingNavigator: React.FC = () => {

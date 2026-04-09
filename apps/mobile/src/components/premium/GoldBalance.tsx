@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
-    fontSize: 11,
+    fontSize: 14,
   },
   balanceText: {
     ...typography.bodySmall,

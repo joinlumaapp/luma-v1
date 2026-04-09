@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.textTertiary,
   },
   text: {
-    fontSize: 11,
+    fontSize: 14,
     color: colors.textTertiary,
   },
   textOnline: {

@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
   },
   backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, justifyContent: 'center', alignItems: 'center' },
   headerTitle: { color: colors.text, fontSize: 20, fontWeight: fontWeights.bold },
-  headerSubtitle: { color: colors.textTertiary, fontSize: 11, marginTop: 2 },
+  headerSubtitle: { color: colors.textTertiary, fontSize: 14, marginTop: 2 },
   cardsContainer: { flex: 1, padding: 16, gap: 12 },
   matchCard: {
     flex: 1, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.surfaceBorder,
@@ -157,13 +157,13 @@ const styles = StyleSheet.create({
   photoGradient: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '50%' },
   photoInfo: { position: 'absolute', bottom: 12, left: 12 },
   matchName: { color: colors.text, fontSize: 16, fontWeight: fontWeights.bold },
-  matchReason: { color: colors.textSecondary, fontSize: 11, marginTop: 2 },
+  matchReason: { color: colors.textSecondary, fontSize: 14, marginTop: 2 },
   compatBadge: {
     position: 'absolute', top: 10, right: 10,
     backgroundColor: palette.gold[400] + 'E6', borderRadius: 8,
     paddingHorizontal: 8, paddingVertical: 4,
   },
-  compatText: { color: colors.textInverse, fontSize: 12, fontWeight: fontWeights.bold },
+  compatText: { color: colors.textInverse, fontSize: 14, fontWeight: fontWeights.bold },
   lockedCard: {
     width: '100%', aspectRatio: 1.2, backgroundColor: colors.primary + '14',
     justifyContent: 'center', alignItems: 'center',
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.primary + '4D',
     justifyContent: 'center', alignItems: 'center', marginBottom: 8,
   },
-  lockText: { color: colors.textSecondary, fontSize: 12, marginTop: 4 },
+  lockText: { color: colors.textSecondary, fontSize: 14, marginTop: 4 },
   compatBadgeBlurred: {
     position: 'absolute', top: 10, right: 10,
     backgroundColor: colors.primary + '4D', borderRadius: 8,
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     backgroundColor: palette.gold[400], justifyContent: 'center', alignItems: 'center',
   },
   refreshText: {
-    color: colors.textTertiary, fontSize: 11, textAlign: 'center',
+    color: colors.textTertiary, fontSize: 14, textAlign: 'center',
     paddingVertical: 16,
   },
 });

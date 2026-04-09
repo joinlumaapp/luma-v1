@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   },
   label: {
     color: colors.textSecondary,
-    fontSize: 11,
+    fontSize: 14,
   },
   dots: {
     flexDirection: 'row',
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   },
   count: {
     color: palette.purple[400],
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: fontWeights.semibold,
   },
   buyButton: {
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   },
   buyText: {
     color: colors.textInverse,
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: fontWeights.bold,
   },
 });

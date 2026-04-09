@@ -560,7 +560,7 @@ const styles = StyleSheet.create({
   controlLabel: {
     ...typography.caption,
     color: 'rgba(255, 255, 255, 0.6)',
-    fontSize: 10,
+    fontSize: 14,
   },
   endedRow: {
     alignItems: 'center',

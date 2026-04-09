@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
   },
   counterText: {
     color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
   },
 

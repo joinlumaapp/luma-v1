@@ -844,13 +844,13 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   mediaBadgeText: {
-    fontSize: 12,
+    fontSize: 14,
     color: 'rgba(255,255,255,0.6)',
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
   },
   expiryNote: {
-    fontSize: 12,
+    fontSize: 14,
     color: 'rgba(255,255,255,0.4)',
     textAlign: 'center',
     marginTop: spacing.md,
@@ -1168,7 +1168,7 @@ const styles = StyleSheet.create({
   },
   progressBarText: {
     textAlign: 'center',
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600' as const,
     color: '#FFFFFF',

@@ -15,7 +15,13 @@ import {
   Linking,
   Dimensions,
 } from 'react-native';
-import * as AppleAuthentication from 'expo-apple-authentication';
+// Lazy import — native module crashes on Android/Expo Go
+let AppleAuthentication: typeof import('expo-apple-authentication') | null = null;
+try {
+  AppleAuthentication = require('expo-apple-authentication');
+} catch {
+  // Not available on this platform
+}
 import Animated, {
   FadeInDown,
   FadeInUp,
@@ -225,6 +231,7 @@ const EmotionalIntroScreen: React.FC = () => {
   }, []);
 
   const handleAppleSignIn = useCallback(async () => {
+    if (!AppleAuthentication) return;
     try {
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
@@ -330,8 +337,8 @@ const EmotionalIntroScreen: React.FC = () => {
 
         {/* Bottom section — buttons with staggered entrance */}
         <View style={styles.bottomSection}>
-          {/* Apple Sign-In — iOS only */}
-          {Platform.OS === 'ios' && (
+          {/* Apple Sign-In — iOS only, lazy loaded */}
+          {Platform.OS === 'ios' && AppleAuthentication && (
             <Animated.View entering={FadeInUp.duration(500).delay(550)} style={styles.fullWidth}>
               <AppleAuthentication.AppleAuthenticationButton
                 buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
@@ -472,7 +479,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.5)',
   },
   devButtonText: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: fontWeights.bold,
     color: palette.white,
@@ -497,7 +504,7 @@ const styles = StyleSheet.create({
   tagline: {
     fontSize: 18,
     fontFamily: 'Poppins_300Light',
-    fontWeight: '300' as const,
+    fontWeight: '500' as const,
     color: 'rgba(80, 40, 60, 0.7)',
     textAlign: 'center' as const,
     letterSpacing: 0.5,
@@ -615,7 +622,7 @@ const styles = StyleSheet.create({
   },
   // Privacy text
   privacyText: {
-    fontSize: 11,
+    fontSize: 14,
     lineHeight: 16,
     color: 'rgba(80, 40, 60, 0.5)',
     textAlign: 'center',
@@ -651,7 +658,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   testPanelSubtitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
     fontWeight: fontWeights.regular,
     color: palette.gray[500],
@@ -682,7 +689,7 @@ const styles = StyleSheet.create({
     color: palette.white,
   },
   testPanelButtonDesc: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
     fontWeight: fontWeights.regular,
     color: palette.gray[400],

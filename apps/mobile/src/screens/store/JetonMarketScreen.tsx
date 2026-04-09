@@ -80,7 +80,7 @@ const cardStyles = StyleSheet.create({
     color: '#1F2937',
   },
   label: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
     fontWeight: fontWeights.regular,
     color: '#6B7280',
@@ -364,7 +364,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
   },
   balanceCoinText: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: fontWeights.bold,
     color: palette.purple[500],
   },
@@ -454,7 +454,7 @@ const s = StyleSheet.create({
     color: colors.text,
   },
   adSubtitle: {
-    fontSize: 12,
+    fontSize: 14,
     color: colors.textSecondary,
   },
   adButton: {

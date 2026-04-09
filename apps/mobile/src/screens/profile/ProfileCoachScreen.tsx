@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.surfaceBorder,
   },
   backIcon: { fontSize: 24, color: colors.text, fontFamily: 'Poppins_300Light',
- fontWeight: '300', marginTop: -2 },
+ fontWeight: '500', marginTop: -2 },
   headerTitle: { ...typography.h3, color: colors.text },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   scrollContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl },
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.sm,
     paddingHorizontal: spacing.sm, paddingVertical: 2,
   },
-  priorityText: { fontSize: 11, fontWeight: '600' },
+  priorityText: { fontSize: 14, fontWeight: '600' },
   // Empty
   emptyContainer: {
     alignItems: 'center', paddingTop: 60,

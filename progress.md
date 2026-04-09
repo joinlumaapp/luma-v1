@@ -1,274 +1,251 @@
 # LUMA V1 -- Progress Tracking
 
-**Last Updated:** 2026-04-08
+**Last Updated:** 2026-04-09
 
 ---
 
-## Recent Updates (2026-04-08)
+## Recent Updates (2026-04-09)
 
-### UI/UX Redesign + Animations Completed
-- QuestionsScreen: Ring SVG progress, emoji card options, auto-advance, milestone celebrations
-- Dark theme: Status bar + tab bar (#0d0d14), white icons, purple active dot
-- Animations: HeartAnimation (like), MatchAnimation upgrade (24 particles, countUp), Canli ripple (3 rings), boost shimmer, super uyum glow (90%+), badge bounce, skeleton loading (feed/discovery/profile), custom pull-to-refresh (rotating logo), typing indicator (3 staggered dots), tab crossfade, photo parallax, profile strength animation with haptic + 100% celebration
-- Turkish fixes: place names, enum labels, Canli→Canlı, photo onboarding 9 slots
-- Packages: lottie-react-native, expo-apple-authentication installed
+### Session 3 — Auth Fixes + Global UI Overhaul
+- Phone auth flow fixed: OTP verify → direct to onboarding (no email/password step)
+- Google Sign-In enabled: expo-auth-session + backend POST /auth/google endpoint
+- Apple Sign-In connected to backend (was TODO, now sends credential to /auth/apple)
+- Global typography upgrade: all fontWeights bumped one level (300→400, 400→500, 500→600, 600→700), all fontSizes +2px
+- OTP screen redesigned: glass OTP boxes, gradient Dogrula button, premium back button, proper layout spacing
+- ~60+ files updated to remove thin fonts (fontWeight 300/400 → 500 minimum)
+
+### Session 2 — i18n + Icebreaker Games + Referral + Discount
+- i18n infrastructure: i18next + react-i18next + expo-localization, TR/EN translations
+- Language toggle in Settings (Turkce/English)
+- Main screen headers + tab labels use useTranslation
+- Buz Kirici Oyunlar: 3 game screens (2 Dogru 1 Yanlis, Bu mu O mu, Hizli Sorular) + game selection
+- Icebreaker game button added to chat input toolbar
+- Referral/Davet system: backend module + mobile UI (invite card on profile, share sheet)
+- Premium expiration campaign: cron job + discount modal on profile
+
+### Session 1 — V1 Refactoring + UI/UX Redesign + New Features
+- Prisma schema: PackageTier 4→3, IntentionTag 7→5, removed Relationship/CouplesClub models
+- All backend services updated (compatibility, payments, notifications, discovery, etc.)
+- QuestionsScreen: Ring SVG progress, emoji cards, auto-advance, 10+10 split
+- Dark theme: tab bar + status bar, animations (heart, confetti, skeleton, ripple, etc.)
+- Apple Sign-In: expo-apple-authentication + backend appleSignIn method
+- Comment system: CommentSheet + backend comment endpoints
+- Post engagement: like/comment counts on Profile posts
+- DailyMatchCard + backend getDailyMatch endpoint
+- WeeklyReportScreen + backend weekly report
+- Mood Status: mood selector on profile, 4h expiry cron
+- Shared package refactoring: JETON_COSTS, V1_LOCKED aligned to spec
 
 ---
 
-## Overall Status: In Progress -- Core features built, UI/UX polish applied
+## Overall Status: In Progress -- Core features built, UI/UX polish applied, auth flows fixed
 
 ---
 
 ## Authentication & Onboarding
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Phone OTP Login | Done | PhoneEntryScreen + OTPVerificationScreen |
-| Email Entry | Done | EmailEntryScreen exists |
-| Password Creation | Done | PasswordCreationScreen exists |
-| Sign Up Choice | Done | SignUpChoiceScreen with options |
-| Selfie Verification | Done | SelfieVerificationScreen UI |
-| Emotional Intro | Done | EmotionalIntroScreen |
-| Google Sign-In | Placeholder | UI exists, backend integration pending |
-| Apple Sign-In | Not Started | Required for iOS App Store |
-| Onboarding: Name | Done | NameScreen |
-| Onboarding: Birth Date | Done | BirthDateScreen |
-| Onboarding: Gender | Done | GenderScreen |
-| Onboarding: Height | Done | HeightScreen |
-| Onboarding: City | Done | CitySelectionScreen |
-| Onboarding: Photos | Done | PhotosScreen (min 2, max 9) |
-| Onboarding: Bio | Done | BioScreen |
-| Onboarding: Smoking | Done | SmokingScreen |
-| Onboarding: Children | Done | ChildrenScreen |
-| Onboarding: Sports | Done | SportsScreen |
-| Onboarding: Who to Meet | Done | WhoToMeetScreen |
-| Onboarding: Prompts | Done | PromptSelectionScreen |
-| Backend auth module | Done | auth.controller + auth.service + sms.provider |
+| Feature | Status | Notes | Updated |
+|---------|--------|-------|---------|
+| Phone OTP Login | ✅ Done | PhoneEntry → OTP → direct to onboarding | 2026-04-09 |
+| Google Sign-In | ✅ Done | expo-auth-session + POST /auth/google + profile pre-fill | 2026-04-09 |
+| Apple Sign-In | ✅ Done | expo-apple-authentication + POST /auth/apple | 2026-04-09 |
+| Sign Up Choice | ✅ Done | 3 buttons: Apple (iOS), Google, Phone | 2026-04-09 |
+| Emotional Intro | ✅ Done | EmotionalIntroScreen | |
+| Selfie Verification | ✅ Done | SelfieVerificationScreen UI | |
+| Email Entry | ✅ Done | EmailEntryScreen (no longer in phone/google flow) | 2026-04-09 |
+| Password Creation | ✅ Done | PasswordCreationScreen (no longer in phone/google flow) | 2026-04-09 |
+| Onboarding: All 13 steps | ✅ Done | Name→BirthDate→Gender→WhoToMeet→Height→Sports→Smoking→Children→City→Bio→Prompts→Photos→Selfie | |
+| Onboarding 10+10 Split | ✅ Done | First 10 questions during onboarding, rest from profile | 2026-04-09 |
+| Backend auth module | ✅ Done | auth.controller + auth.service + sms.provider + google + apple | 2026-04-09 |
 
 ---
 
 ## Tab 1: Akis (Feed)
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| SocialFeed screen | Done | SocialFeedScreen -- tab root |
-| Story viewer | Done | StoryViewerScreen |
-| Story creator | Done | StoryCreator component |
-| Feed profile view | Done | FeedProfileScreen |
-| Post detail | Done | PostDetailScreen |
-| Notifications screen | Done | NotificationsScreen (accessible from feed) |
-| Backend stories module | Done | stories.controller + stories.service |
-| Backend posts module | Done | posts.controller + posts.service |
-| Story 24h expiry | Partial | Backend logic exists, needs testing |
-| Populer / Takip tabs | Partial | Basic feed exists, algorithm refinement needed |
-| Begeni/Yorum animations | Partial | Basic interactions work, Bumpy-style animations incomplete |
+| Feature | Status | Notes | Updated |
+|---------|--------|-------|---------|
+| SocialFeed screen | ✅ Done | SocialFeedScreen with i18n header | 2026-04-09 |
+| Story viewer/creator | ✅ Done | StoryViewerScreen + StoryCreator | |
+| Feed profile view | ✅ Done | FeedProfileScreen | |
+| Post detail | ✅ Done | PostDetailScreen | |
+| Comment system | ✅ Done | CommentSheet + backend comment CRUD | 2026-04-09 |
+| Post engagement | ✅ Done | Like/comment counts, connected to Profile | 2026-04-09 |
+| Notifications screen | ✅ Done | NotificationsScreen | |
+| Backend stories/posts | ✅ Done | Full CRUD + 24h story expiry | |
+| Populer / Takip tabs | 🟡 Partial | Basic feed exists, algorithm refinement needed | |
 
 ---
 
 ## Tab 2: Kesfet (Discover)
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Discovery screen (swipe) | Done | DiscoveryScreen with card swipe |
-| Profile preview | Done | ProfilePreviewScreen |
-| Compatibility preview card | Done | CompatibilityPreviewCard component |
-| Filter screen | Done | FilterScreen |
-| Likes You screen | Done | LikesYouScreen |
-| Daily Picks screen | Done | DailyPicksScreen |
-| Daily Question | Done | DailyQuestionScreen + backend daily-question module |
-| Crossed Paths | Done | CrossedPathsScreen |
-| Instant Connect | Done | InstantConnectScreen |
-| Waves | Done | WavesScreen |
-| Backend discovery module | Done | discovery.controller + discovery.service |
-| Uyum yuzdesi on cards | Partial | Component exists, real score integration pending |
-| Super Begeni (swipe up) | Partial | UI exists, jeton deduction needs testing |
-| Gelismis filtreler (paket bazli) | Partial | Basic filters done, Premium/Supreme differentiation needed |
-| Eslesme animasyonu (konfeti/kalp) | Not Started | Must add on mutual like (Bumpy reference) |
-| Boost activation | Partial | UI exists (BoostMarketScreen), backend integration partial |
+| Feature | Status | Notes | Updated |
+|---------|--------|-------|---------|
+| Discovery screen (swipe) | ✅ Done | DiscoveryScreen with card swipe | |
+| Profile preview | ✅ Done | ProfilePreviewScreen | |
+| Filter screen | ✅ Done | FilterScreen | |
+| Likes You screen | ✅ Done | LikesYouScreen | |
+| Daily Picks | ✅ Done | DailyPicksScreen | |
+| Daily Question | ✅ Done | DailyQuestionScreen + backend | |
+| Crossed Paths | ✅ Done | CrossedPathsScreen | |
+| Gunun Eslesmesi | ✅ Done | DailyMatchCard + backend getDailyMatch | 2026-04-09 |
+| Boost system | 🟡 Partial | UI done, backend partial | |
+| Eslesme animasyonu | 🟡 Partial | MatchAnimation upgraded (24 particles) | 2026-04-09 |
 
 ---
 
 ## Tab 3: Canli (Live)
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Live screen | Done | LiveScreen with camera UI |
-| Jeton counter on screen | Done | Shows jeton balance |
-| Baglan button | Done | Gradient button present |
-| JetonMarket navigation | Done | Can buy jetons from Live tab |
-| MembershipPlans navigation | Done | Can upgrade from Live tab |
-| WebRTC video matching | Partial | Infrastructure exists, real pairing untested |
-| Uyum bazli eslestirme | Not Started | Algorithm integration for live pairing |
-| Gorusme sonu secenekler | Not Started | Takip Et / Begen / Sonraki buttons |
-| Jeton kesme per session | Partial | Logic exists, needs testing |
+| Feature | Status | Notes | Updated |
+|---------|--------|-------|---------|
+| Live screen | ✅ Done | LiveScreen with camera UI | |
+| Jeton counter + Baglan | ✅ Done | Gradient button + jeton display | |
+| WebRTC video matching | 🟡 Partial | Infrastructure exists, real pairing untested | |
+| Canli uyum eslestirme | ❌ Not Started | Algorithm integration needed | |
 
 ---
 
 ## Tab 4: Eslesme (Matches)
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Matches list | Done | MatchesListScreen |
-| Match detail | Done | MatchDetailScreen |
-| Viewers preview | Done | ViewersPreviewScreen (Kim Gordu) |
-| Chat list | Done | ChatListScreen |
-| Chat screen | Done | ChatScreen with deferred mount |
-| Call screen | Done | CallScreen (voice + video UI) |
-| Date planner | Done | DatePlannerScreen |
-| Secret admirer | Done | SecretAdmirerScreen |
-| Weekly top | Done | WeeklyTopScreen |
-| Compatibility insight | Done | CompatibilityInsightScreen |
-| Likes You (from matches) | Done | LikesYouScreen accessible |
-| Backend matches module | Done | matches.controller + matches.service + date-plan + secret-admirer + compatibility-xray |
-| Backend chat module | Done | chat.controller + chat.service + chat.gateway + icebreaker + call-history |
-| WebRTC voice call | Partial | CallScreen UI done, WebRTC integration incomplete |
-| WebRTC video call | Partial | CallScreen UI done, WebRTC integration incomplete |
-| Selam Gonder | Partial | Jeton deduction needs testing |
-| Okundu Bilgisi | Partial | Premium+ package check needs implementation |
-| Buz Kirici Oyunlar | Partial | Backend icebreaker controller exists, mobile UI incomplete |
-| Takipciler sub-tab | Partial | FollowListScreen exists but not as dedicated Eslesme sub-tab |
+| Feature | Status | Notes | Updated |
+|---------|--------|-------|---------|
+| Matches list | ✅ Done | MatchesListScreen with i18n tabs | 2026-04-09 |
+| Match detail | ✅ Done | MatchDetailScreen | |
+| Takipciler tab | ✅ Done | Dedicated tab in MatchesListScreen | 2026-04-09 |
+| Kim Gordu tab | ✅ Done | ViewersPreviewScreen | 2026-04-09 |
+| Chat screen | ✅ Done | ChatScreen with icebreaker button | 2026-04-09 |
+| Call screen | ✅ Done | CallScreen (voice + video UI) | |
+| Date planner | ✅ Done | DatePlannerScreen | |
+| Secret admirer | ✅ Done | SecretAdmirerScreen | |
+| Weekly top | ✅ Done | WeeklyTopScreen | |
+| Buz Kirici Oyunlar | ✅ Done | 3 games: 2 Dogru 1 Yanlis, Bu mu O mu, Hizli Sorular | 2026-04-09 |
+| Compatibility insight | ✅ Done | CompatibilityInsightScreen | |
+| WebRTC calls | 🟡 Partial | UI done, WebRTC peer connection incomplete | |
 
 ---
 
 ## Tab 5: Profil (Profile)
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Profile screen | Done | ProfileScreen |
-| Edit profile | Done | EditProfileScreen |
-| Interest picker | Done | InterestPickerScreen (max 15) |
-| Settings | Done | SettingsScreen |
-| Questions (Uyum) | Done | QuestionsScreen (20 soru) |
-| Personality selection | Done | PersonalitySelectionScreen (Kisilik Testi, 5 soru) |
-| Profile coach | Done | ProfileCoachScreen (Profil Gucu) |
-| Follow list | Done | FollowListScreen |
-| My posts | Done | MyPostsScreen |
-| Places (Mekanlar) | Done | PlacesScreen (max 8) |
-| Backend profiles module | Done | profiles.controller + profiles.service + mood + voice-intro |
-| Backend engagement module | Done | engagement.controller + engagement.service (Kasif) |
-| Backend badges module | Done | badges.controller + badges.service |
+| Feature | Status | Notes | Updated |
+|---------|--------|-------|---------|
+| Profile screen | ✅ Done | ProfileScreen with i18n + referral card + discount modal | 2026-04-09 |
+| Edit profile | ✅ Done | EditProfileScreen | |
+| Mood Status | ✅ Done | Mood selector on profile, 4h expiry cron | 2026-04-09 |
+| Questions (Uyum) | ✅ Done | QuestionsScreen (20 soru, ring progress, 10+10 split) | 2026-04-09 |
+| Personality selection | ✅ Done | PersonalitySelectionScreen (5 soru) | |
+| Profile coach | ✅ Done | ProfileCoachScreen | |
+| Referral/Davet | ✅ Done | Invite card, share sheet, 50 jeton bonus | 2026-04-09 |
+| Haftalik Rapor | ✅ Done | WeeklyReportScreen + backend | 2026-04-09 |
+| Places | ✅ Done | PlacesScreen (max 8) | |
+| Follow list / My posts | ✅ Done | FollowListScreen + MyPostsScreen | |
+| Settings | ✅ Done | SettingsScreen with language toggle | 2026-04-09 |
 
 ---
 
 ## Settings & Safety
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Notification settings | Done | NotificationSettingsScreen |
-| Membership plans | Done | MembershipPlansScreen (3 paket: Ucretsiz/Premium/Supreme) |
-| Blocked users | Done | BlockedUsersScreen |
-| Safety center | Done | SafetyCenterScreen |
-| Account deletion | Done | AccountDeletionScreen |
-| Privacy policy | Done | PrivacyPolicyScreen |
+| Feature | Status | Notes | Updated |
+|---------|--------|-------|---------|
+| Notification settings | ✅ Done | NotificationSettingsScreen | |
+| Raporlama (Report) | ✅ Done | ReportScreen accessible from Discovery + Matches | 2026-04-09 |
+| Engelleme (Block) | ✅ Done | BlockedUsersScreen + backend | 2026-04-09 |
+| Safety center | ✅ Done | SafetyCenterScreen | |
+| Account deletion | ✅ Done | AccountDeletionScreen | |
+| Privacy policy | ✅ Done | PrivacyPolicyScreen | |
 
 ---
 
 ## Monetization
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Paket ekrani (3 paket) | Done | MembershipPlansScreen -- Ucretsiz/Premium/Supreme |
-| Jeton magazasi | Done | JetonMarketScreen (3 paket: 79,99/199,99/349,99 TL) |
-| Boost magazasi | Done | BoostMarketScreen (24 saat, 10x gorunurluk) |
-| Supreme celebration | Done | SupremeCelebrationScreen |
-| Backend payments module | Done | payments.controller + payments.service + receipt-validator |
-| In-app purchase (iOS) | Not Started | App Store entegrasyonu yapilacak |
-| In-app purchase (Android) | Not Started | Google Play entegrasyonu yapilacak |
-| Jeton kesme logic | Partial | Some actions deduct, full coverage incomplete |
-| Paket limitleri enforcement | Partial | Some limits applied, full enforcement needed |
-| AdMob reklam entegrasyonu | Not Started | Rewarded ads for free users |
+| Feature | Status | Notes | Updated |
+|---------|--------|-------|---------|
+| 3 Paket ekrani | ✅ Done | MembershipPlansScreen | |
+| Jeton magazasi | ✅ Done | JetonMarketScreen | |
+| Boost magazasi | ✅ Done | BoostMarketScreen | |
+| Premium bitis kampanyasi | ✅ Done | Cron (daily 09:00) + %20 discount modal + 48h validity | 2026-04-09 |
+| Backend payments | ✅ Done | payments.controller + service + receipt-validator | |
+| In-app purchase | ❌ Not Started | App Store + Google Play integration | |
+| AdMob reklam | ❌ Not Started | Rewarded ads for free users | |
+
+---
+
+## i18n & Localization
+
+| Feature | Status | Notes | Updated |
+|---------|--------|-------|---------|
+| i18n infrastructure | ✅ Done | i18next + react-i18next + expo-localization | 2026-04-09 |
+| Turkish translations | ✅ Done | tr.json — main screens, tabs, buttons | 2026-04-09 |
+| English translations | ✅ Done | en.json — same keys, English text | 2026-04-09 |
+| Language toggle | ✅ Done | Settings screen: Turkce / English | 2026-04-09 |
+| Tab bar labels | ✅ Done | 5 tabs use useTranslation | 2026-04-09 |
+| Screen headers | ✅ Done | Profil, Akis, Eslesmeler headers i18n | 2026-04-09 |
+
+---
+
+## UI/UX & Animations
+
+| Feature | Status | Notes | Updated |
+|---------|--------|-------|---------|
+| Lottie animations | ✅ Done | Heart, confetti, skeleton placeholder JSONs | 2026-04-09 |
+| Skeleton loaders | ✅ Done | FeedSkeleton, DiscoverySkeleton, ProfileSkeleton | 2026-04-09 |
+| Micro interactions | ✅ Done | Pull-to-refresh, typing indicator, double-tap like, tab crossfade | 2026-04-09 |
+| Heart bounce (like) | ✅ Done | HeartBounce component | 2026-04-09 |
+| Ripple effect | ✅ Done | RippleEffect component (Canli) | 2026-04-09 |
+| Confetti overlay | ✅ Done | ConfettiOverlay (match) | 2026-04-09 |
+| Global typography upgrade | ✅ Done | fontWeights +1 level, fontSizes +2px, bold/thick feel | 2026-04-09 |
+| Premium back button | ✅ Done | BackButton component (44x44, frosted glass) | 2026-04-09 |
+| PrimaryButton CTA | ✅ Done | Gradient + shadow + spring animation (0.97 scale) | 2026-04-09 |
+| PremiumInput | ✅ Done | Glass input, height 56, borderRadius 16 | 2026-04-09 |
 
 ---
 
 ## Compatibility & Algorithm
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Uyum Analizi (20 soru) | Done | QuestionsScreen + backend compatibility module |
-| Kisilik Testi (5 soru) | Done | PersonalitySelectionScreen |
-| Compatibility scoring | Done | Backend compatibility.service (47-97 range, 90+ Super Uyum) |
-| Daily question | Done | DailyQuestionScreen + backend daily-question module |
-| Compatibility insight (xray) | Done | CompatibilityInsightScreen + backend compatibility-xray.service |
-| Weekly report | Done | Backend weekly-report.service |
-| Gunun Eslesmesi (AI daily) | Not Started | AI-powered daily recommendation |
-| Haftalik Uyum Raporu (mobile) | Partial | Backend exists, mobile push/display incomplete |
+| Feature | Status | Notes | Updated |
+|---------|--------|-------|---------|
+| Uyum Analizi (20 soru) | ✅ Done | QuestionsScreen + backend (47-97 range) | |
+| Kisilik Testi (5 soru) | ✅ Done | PersonalitySelectionScreen | |
+| Scoring algorithm | ✅ Done | Single finalScore, 90+ = Super Uyum | 2026-04-09 |
+| Haftalik Uyum Raporu | ✅ Done | WeeklyReportScreen + backend weekly-report.service | 2026-04-09 |
 
 ---
 
 ## Real-time & Communication
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| WebSocket chat | Done | chat.gateway (Socket.io) |
-| Text messaging | Done | ChatScreen |
-| Presence (online status) | Done | Backend presence module + usePresenceTracking hook |
-| Incoming call overlay | Done | IncomingCallOverlay component |
-| Minimized call bar | Done | MinimizedCallBar component |
-| Call store listeners | Done | setupCallStoreListeners in MainTabNavigator |
-| WebRTC actual call flow | Partial | UI complete, WebRTC peer connection incomplete |
+| Feature | Status | Notes | Updated |
+|---------|--------|-------|---------|
+| WebSocket chat | ✅ Done | chat.gateway (Socket.io) | |
+| Text messaging | ✅ Done | ChatScreen | |
+| Bildirim sistemi | ✅ Done | Push notifications for likes, comments, follows, matches | 2026-04-09 |
+| Presence tracking | ✅ Done | Backend presence module + hooks | |
+| WebRTC calls | 🟡 Partial | UI complete, peer connection incomplete | |
 
 ---
 
-## Moderation & Safety
+## Infrastructure & Backend
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Report screen | Done | ReportScreen (accessible from Discovery + Matches) |
-| Backend moderation module | Done | moderation.controller + moderation.service + content-scanner |
-| Backend admin module | Done | admin.controller + admin.service |
-| Block system | Done | BlockedUsersScreen + backend |
-| Content scanning | Done | content-scanner.service |
-| Photo verification (selfie) | Done | SelfieVerificationScreen + backend |
-
----
-
-## Infrastructure & Backend Services
-
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Health check | Done | health.controller + app-info.controller |
-| Storage (S3) | Done | storage module with image-processor |
-| Search service | Done | search.module + search.service |
-| Analytics module | Done | analytics.controller + analytics.service |
-| Tasks/scheduler | Done | tasks.module + tasks.service |
-| Cache module | Done | Backend cache module exists |
-| Relationships module | Done | relationships.controller + relationships.service |
-| Users module | Done | Backend users module exists |
-| Docker setup | Done | docker-compose.yml mevcut |
-| Railway backend deploy | Issues | Deploy sorunlari yasaniyor |
-| EAS APK build | In Progress | Preview build kuyruunda |
-| CI/CD (GitHub Actions) | Partial | Basic pipeline exists |
-| Redis caching | Partial | Module exists, full integration ongoing |
-| Elasticsearch | Not Started | User search needs ES integration |
-
----
-
-## New V1 Features (Not Yet Implemented)
-
-| Feature | Status | Priority |
-|---------|--------|----------|
-| Eslesme animasyonu (konfeti/kalp) | Not Started | Yuksek |
-| Bumpy-tarzi mikro-animasyonlar | Not Started | Yuksek |
-| Gunun Eslesmesi (AI daily) | Not Started | Yuksek |
-| Ortak Mekan Onerisi | Not Started | Orta |
-| Mood Status | Partial | Backend mood.controller exists, mobile incomplete |
-| Canli uyum eslestirme | Not Started | Orta |
-| Canli gorusme sonu secenekler | Not Started | Orta |
-| In-app purchase (iOS + Android) | Not Started | Yuksek |
-| AdMob reklam sistemi | Not Started | Orta |
-| Apple Sign-In | Not Started | Yuksek (App Store zorunlu) |
+| Feature | Status | Notes | Updated |
+|---------|--------|-------|---------|
+| Referral module | ✅ Done | POST /referral/claim, GET /referral/me, auto-code generation | 2026-04-09 |
+| Google auth endpoint | ✅ Done | POST /auth/google | 2026-04-09 |
+| Premium campaign cron | ✅ Done | Daily 09:00 UTC, notifies 3-day-before-expiry users | 2026-04-09 |
+| Discount endpoints | ✅ Done | GET/POST /payments/discount/status|claim | 2026-04-09 |
+| Shared package refactoring | ✅ Done | config.ts aligned to V1 spec, JETON_COSTS | 2026-04-09 |
+| Health check | ✅ Done | health.controller | |
+| Storage (S3) | ✅ Done | storage module | |
+| Tasks/scheduler | ✅ Done | 13 cron jobs including moods, stories, campaign | 2026-04-09 |
+| Railway deploy | 🟡 Issues | Deploy sorunlari | |
 
 ---
 
 ## Next Steps (Priority Order)
 
-1. Apple Sign-In (App Store zorunlulugu)
-2. Google Sign-In entegrasyonu (su an placeholder)
-3. In-app purchase (App Store + Google Play)
-4. Eslesme animasyonlari (konfeti/kalp) -- Bumpy referansi
-5. Gunun Eslesmesi ozelligi
-6. Canli'da uyum bazli eslestirme + gorusme sonu butonlar
-7. WebRTC sesli/goruntulu arama (tam entegrasyon)
-8. Paket limitleri tam enforcement
-9. Jeton kesme logic tam kapsam
-10. AdMob reklam sistemi
+1. In-app purchase (Google Play + App Store) — monetization activation
+2. WebRTC voice/video call — full peer connection
+3. Canli uyum eslestirme + gorusme sonu butonlar
+4. Paket limitleri tam enforcement
+5. AdMob reklam sistemi (free users)
+6. Elasticsearch user search
+7. Firebase FCM push notification production setup
+8. Performance optimization + E2E tests
+9. Google Play Store submission
+10. iOS App Store submission

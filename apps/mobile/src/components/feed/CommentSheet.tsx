@@ -464,13 +464,13 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   commentName: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
   },
   commentTime: {
-    fontSize: 11,
+    fontSize: 14,
     color: '#6B7280',
     fontFamily: 'Poppins_400Regular',
   },
@@ -545,7 +545,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_600SemiBold',
   },
   charCount: {
-    fontSize: 11,
+    fontSize: 14,
     color: '#6B7280',
     textAlign: 'right',
     marginTop: spacing.xs,

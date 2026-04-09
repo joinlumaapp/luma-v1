@@ -138,7 +138,7 @@ const MemoizedConversationCard = memo<ConversationCardProps>(({ item, onPress, o
           )}
         </View>
         {!item.lastMessage && (
-          <Text style={{ color: '#A78BFA', fontSize: 10, fontStyle: 'italic', marginTop: 2 }}>
+          <Text style={{ color: '#A78BFA', fontSize: 14, fontStyle: 'italic', marginTop: 2 }}>
             Hen\u00FCz mesaj yok \u2014 selam ver! {'\uD83D\uDC4B'}
           </Text>
         )}
@@ -228,7 +228,7 @@ export const ChatListScreen: React.FC = () => {
     }}>
       <Text style={{ fontSize: 18 }}>{'\uD83D\uDCAC'}</Text>
       <View style={{ flex: 1 }}>
-        <Text style={{ color: '#fff', fontSize: 11, fontWeight: '500' }}>E\u015Fle\u015Fmeden mesaj at!</Text>
+        <Text style={{ color: '#fff', fontSize: 14, fontWeight: '500' }}>E\u015Fle\u015Fmeden mesaj at!</Text>
         <Text style={{ color: 'rgba(255,255,255,0.35)', fontSize: 9, marginTop: 1 }}>
           Tekli: 150{'\uD83D\uDCB0'} {'\u00B7'} 3{'\u2019'}l\u00FC paket: 350{'\uD83D\uDCB0'}
         </Text>

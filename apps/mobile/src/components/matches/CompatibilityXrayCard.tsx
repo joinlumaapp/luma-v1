@@ -71,13 +71,13 @@ const styles = StyleSheet.create({
   },
   overallText: { color: palette.gold[400], fontSize: 14, fontWeight: fontWeights.bold },
   categoryRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 8 },
-  categoryName: { color: colors.textSecondary, fontSize: 11, width: 90 },
+  categoryName: { color: colors.textSecondary, fontSize: 14, width: 90 },
   barContainer: {
     flex: 1, height: 6, backgroundColor: colors.surfaceBorder, borderRadius: 3,
   },
   barFill: { height: 6, borderRadius: 3 },
-  categoryScore: { fontSize: 11, fontWeight: fontWeights.semibold, width: 30, textAlign: 'right' },
+  categoryScore: { fontSize: 14, fontWeight: fontWeights.semibold, width: 30, textAlign: 'right' },
   highlightsSection: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.surfaceBorder },
-  highlightsTitle: { color: colors.textSecondary, fontSize: 10, marginBottom: 6 },
-  highlightItem: { color: colors.textTertiary, fontSize: 10, marginBottom: 2 },
+  highlightsTitle: { color: colors.textSecondary, fontSize: 14, marginBottom: 6 },
+  highlightItem: { color: colors.textTertiary, fontSize: 14, marginBottom: 2 },
 });

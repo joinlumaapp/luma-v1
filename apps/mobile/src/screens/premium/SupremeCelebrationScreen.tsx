@@ -601,7 +601,7 @@ const styles = StyleSheet.create({
   },
   subheading: {
     fontSize: 16,
-    fontWeight: '400',
+    fontWeight: '500',
     color: CREAM,
     textAlign: 'center',
     lineHeight: 24,

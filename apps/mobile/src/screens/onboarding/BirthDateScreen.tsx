@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: onboardingColors.textSecondary,
     lineHeight: 20,
   },

@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
   },
   inputGroup: { gap: 6 },
   inputLabel: {
-    fontSize: 13, fontWeight: fontWeights.semibold, color: colors.textSecondary,
+    fontSize: 14, fontWeight: fontWeights.semibold, color: colors.textSecondary,
   },
   textInput: {
     backgroundColor: colors.surface,
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.surfaceBorder,
   },
   hintText: {
-    fontSize: 13, fontWeight: fontWeights.regular, color: colors.textTertiary,
+    fontSize: 14, fontWeight: fontWeights.regular, color: colors.textTertiary,
     textAlign: 'center', lineHeight: 18, marginTop: spacing.sm,
   },
   submitBtn: { borderRadius: borderRadius.xl, overflow: 'hidden', marginTop: spacing.md },
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
     textAlign: 'center', lineHeight: 32, fontSize: 16, fontWeight: fontWeights.bold, color: '#FFFFFF',
   },
   guessText: { flex: 1, fontSize: 15, fontWeight: fontWeights.medium, color: colors.text },
-  guessLabel: { fontSize: 13, fontWeight: fontWeights.semibold, color: '#EF4444' },
+  guessLabel: { fontSize: 14, fontWeight: fontWeights.semibold, color: '#EF4444' },
   // Result bubble
   resultBubble: {
     alignItems: 'center', marginTop: spacing.lg,

@@ -1,15 +1,23 @@
-// SignUpChoiceScreen — Auth stack: Phone / Google registration choice
+// SignUpChoiceScreen — Auth stack: Phone / Google / Apple registration choice
 // Cream/beige theme, no step counter
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
-import * as AppleAuthentication from 'expo-apple-authentication';
+// Lazy import — expo-apple-authentication has native modules that crash on Android/Expo Go
+let AppleAuthentication: typeof import('expo-apple-authentication') | null = null;
+try {
+  AppleAuthentication = require('expo-apple-authentication');
+} catch {
+  // Not available on this platform
+}
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,11 +25,16 @@ import type { AuthStackParamList } from '../../navigation/types';
 import { onboardingColors } from '../../components/onboarding/OnboardingLayout';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { spacing } from '../../theme/spacing';
+import { useAuthStore } from '../../stores/authStore';
+import { useCoinStore } from '../../stores/coinStore';
+import { useProfileStore } from '../../stores/profileStore';
+import api from '../../services/api';
 
 type NavProp = NativeStackNavigationProp<AuthStackParamList, 'SignUpChoice'>;
 
 export const SignUpChoiceScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const handlePhone = () => {
     navigation.navigate('PhoneEntry');
@@ -31,7 +44,28 @@ export const SignUpChoiceScreen: React.FC = () => {
     navigation.goBack();
   };
 
+  const handleGoogleSignIn = useCallback(async () => {
+    // Google Sign-In requires a production build (EAS) with proper OAuth client IDs.
+    // In Expo Go dev mode, show informational alert.
+    if (__DEV__) {
+      Alert.alert(
+        'Google Sign-In',
+        'Google ile giriş production build gerektirir. Şimdilik telefon ile devam edebilirsin.',
+        [{ text: 'Tamam' }],
+      );
+      return;
+    }
+    setIsGoogleLoading(true);
+    try {
+      // Production: will use @react-native-google-signin/google-signin in EAS build
+      Alert.alert('Hata', 'Google ile giriş yapılamadı. Tekrar deneyin.');
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  }, []);
+
   const handleAppleSignIn = useCallback(async () => {
+    if (!AppleAuthentication) return;
     try {
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
@@ -39,12 +73,43 @@ export const SignUpChoiceScreen: React.FC = () => {
           AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
       });
-      // TODO: Send credential.identityToken to backend
-      console.log('Apple sign in success:', credential.user);
+
+      // Send to backend
+      const res = await api.post('/auth/apple', {
+        identityToken: credential.identityToken,
+        appleUserId: credential.user,
+        firstName: credential.fullName?.givenName,
+        lastName: credential.fullName?.familyName,
+        email: credential.email,
+      });
+
+      const data = res.data;
+      const { login, setStartedOnboarding, activateTrial } = useAuthStore.getState();
+
+      login(data.accessToken, data.refreshToken, {
+        id: data.userId,
+        displayId: `APPLE-${credential.user}`,
+        phone: `APPLE-${credential.user}`,
+        isVerified: true,
+        packageTier: 'FREE',
+      });
+
+      if (data.isNewUser) {
+        if (credential.fullName?.givenName) {
+          useProfileStore.getState().setField('firstName', credential.fullName.givenName);
+        }
+        activateTrial().catch(() => {});
+        try { useCoinStore.getState().claimWelcomeBonus(); } catch {}
+        Alert.alert(
+          'Hoş geldin!',
+          '48 saatlik Premium deneyimin başladı!\n\nHoş geldin hediyesi: 100 Jeton!',
+        );
+        setStartedOnboarding(true);
+      }
     } catch (e: unknown) {
       const error = e as { code?: string };
       if (error.code !== 'ERR_REQUEST_CANCELED') {
-        console.error('Apple sign in error:', e);
+        Alert.alert('Hata', 'Apple ile giriş yapılamadı.');
       }
     }
   }, []);
@@ -74,8 +139,8 @@ export const SignUpChoiceScreen: React.FC = () => {
 
       {/* Buttons */}
       <View style={styles.footer}>
-        {/* Apple Sign-In — iOS only */}
-        {Platform.OS === 'ios' && (
+        {/* Apple Sign-In — iOS only, lazy loaded */}
+        {Platform.OS === 'ios' && AppleAuthentication && (
           <AppleAuthentication.AppleAuthenticationButton
             buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
             buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
@@ -85,18 +150,21 @@ export const SignUpChoiceScreen: React.FC = () => {
           />
         )}
 
-        {/* Google button — disabled until Google Auth is implemented */}
+        {/* Google button — ACTIVE */}
         <TouchableOpacity
-          style={[styles.googleButton, styles.googleButtonDisabled]}
-          disabled={true}
-          activeOpacity={1}
+          style={styles.googleButton}
+          onPress={handleGoogleSignIn}
+          disabled={isGoogleLoading}
+          activeOpacity={0.8}
           accessibilityRole="button"
-          accessibilityLabel="Google ile bağlan, çok yakında"
-          accessibilityState={{ disabled: true }}
+          accessibilityLabel="Google ile bağlan"
         >
-          <Ionicons name="logo-google" size={20} color={onboardingColors.text} />
+          {isGoogleLoading ? (
+            <ActivityIndicator size="small" color={onboardingColors.text} />
+          ) : (
+            <Ionicons name="logo-google" size={20} color={onboardingColors.text} />
+          )}
           <Text style={styles.googleButtonText}>Google ile bağlan</Text>
-          <Text style={styles.comingSoonBadge}>Çok yakında</Text>
         </TouchableOpacity>
 
         {/* Phone button */}
@@ -117,6 +185,7 @@ export const SignUpChoiceScreen: React.FC = () => {
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -128,14 +197,12 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: onboardingColors.surface,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.06)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: onboardingColors.surfaceBorder,
   },
   content: {
     flex: 1,
@@ -143,18 +210,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    fontSize: 28,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontSize: 32,
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
     color: onboardingColors.text,
+    letterSpacing: -0.5,
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontSize: 17,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
     color: onboardingColors.textSecondary,
-    lineHeight: 22,
+    lineHeight: 24,
   },
   footer: {
     paddingHorizontal: spacing.lg,
@@ -163,13 +231,13 @@ const styles = StyleSheet.create({
   },
   appleButton: {
     width: '100%',
-    height: 54,
+    height: 56,
   },
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 54,
+    height: 56,
     borderRadius: 16,
     backgroundColor: onboardingColors.surface,
     borderWidth: 1.5,
@@ -177,39 +245,30 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   googleButtonText: {
-    fontSize: 16,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontSize: 17,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: onboardingColors.text,
-  },
-  googleButtonDisabled: {
-    opacity: 0.45,
-  },
-  comingSoonBadge: {
-    fontSize: 10,
-    color: onboardingColors.textTertiary,
-    marginLeft: 4,
-    fontStyle: 'italic' as const,
   },
   phoneButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 54,
+    height: 56,
     borderRadius: 16,
     backgroundColor: onboardingColors.buttonBg,
     gap: 10,
   },
   phoneButtonText: {
-    fontSize: 16,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontSize: 17,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: onboardingColors.buttonText,
   },
   privacyNote: {
-    fontSize: 13,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
     color: onboardingColors.textTertiary,
     textAlign: 'center',
     marginTop: 4,

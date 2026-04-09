@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   actionText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.bold,
   },
 });

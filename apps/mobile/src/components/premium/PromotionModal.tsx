@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: palette.gray[500],
     textAlign: 'center',
     marginTop: 4,
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
   featureText: {
     fontSize: 15,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: palette.gray[800],
   },
   buttonWrapper: {
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
   dismissText: {
     fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: palette.gray[400],
   },
 });

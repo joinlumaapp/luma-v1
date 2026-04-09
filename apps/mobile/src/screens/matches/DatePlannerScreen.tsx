@@ -1267,7 +1267,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   statusText: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },

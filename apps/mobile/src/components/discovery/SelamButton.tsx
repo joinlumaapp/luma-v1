@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   text: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#FFFFFF',

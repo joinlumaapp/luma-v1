@@ -250,7 +250,7 @@ const likeButtonStyles = StyleSheet.create({
     borderColor: palette.rose[200],
   },
   actionCount: {
-    fontSize: 13,
+    fontSize: 14,
     color: colors.textSecondary,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
@@ -747,11 +747,11 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.full,
   },
   feedMoodEmoji: {
-    fontSize: 11,
+    fontSize: 14,
     includeFontPadding: false,
   },
   feedMoodLabel: {
-    fontSize: 10,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     includeFontPadding: false,
@@ -763,13 +763,13 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   subtitleText: {
-    fontSize: 12,
+    fontSize: 14,
     color: colors.textTertiary,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
   },
   subtitleDot: {
-    fontSize: 10,
+    fontSize: 14,
     color: colors.textTertiary,
   },
   followButton: {
@@ -786,7 +786,7 @@ const styles = StyleSheet.create({
     backgroundColor: palette.purple[50] + '60',
   },
   followButtonText: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: palette.purple[500],
@@ -796,9 +796,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   followButtonTextActive: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.textTertiary,
   },
 
@@ -815,7 +815,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   intentionEmoji: {
-    fontSize: 13,
+    fontSize: 14,
   },
   intentionLabel: {
     fontSize: 11.5,
@@ -838,7 +838,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: colors.text,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontWeight: '500',
     marginBottom: spacing.sm,
   },
 
@@ -869,7 +869,7 @@ const styles = StyleSheet.create({
     borderColor: palette.rose[400],
   },
   doubleTapBtnText: {
-    fontSize: 10,
+    fontSize: 14,
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
@@ -897,7 +897,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   tappableCount: {
-    fontSize: 11,
+    fontSize: 14,
     color: colors.textTertiary,
     fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
@@ -914,7 +914,7 @@ const styles = StyleSheet.create({
     borderColor: colors.surfaceBorder,
   },
   commentCount: {
-    fontSize: 13,
+    fontSize: 14,
     color: colors.textSecondary,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
@@ -986,7 +986,7 @@ const mediaStyles = StyleSheet.create({
   },
   videoErrorText: {
     color: colors.textTertiary,
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
   },
   imageGradientOverlay: {

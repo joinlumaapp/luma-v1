@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   question: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.bold,
     color: palette.gold[700],
     textTransform: 'uppercase',
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   commentHintText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: palette.gold[600],
   },
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     borderColor: glassmorphism.borderGold,
   },
   compactQuestion: {
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: fontWeights.bold,
     color: palette.gold[700],
     textTransform: 'uppercase',
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   compactAnswer: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: colors.text,
     lineHeight: 16,

@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
   },
   interestText: {
     fontFamily: poppinsFonts.medium,
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: '#059669',
     ...Platform.select({
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   },
   compatText: {
     fontFamily: poppinsFonts.medium,
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.medium,
     color: '#B8860B',
     ...Platform.select({

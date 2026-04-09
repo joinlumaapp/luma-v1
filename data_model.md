@@ -19,6 +19,8 @@
 | packageTier | PackageTier enum | FREE / PREMIUM / SUPREME |
 | goldBalance | INT, default 0 | Jeton bakiyesi (DB'de goldBalance, uygulama icinde "jeton") |
 | displayId | VARCHAR(20), UNIQUE | Gorunen kullanici ID'si |
+| referralCode | VARCHAR(10), UNIQUE, nullable | Davet kodu (LUMA-XXXX) — Added 2026-04-09 |
+| referredById | UUID (FK -> User), nullable | Kim davet etti — Added 2026-04-09 |
 | isActive | BOOLEAN, default true | Aktif mi |
 | deletedAt | TIMESTAMP, nullable | Soft delete |
 | createdAt | TIMESTAMP | |
@@ -26,7 +28,10 @@
 
 **Enum PackageTier:** `FREE` | `PREMIUM` | `SUPREME`
 
+**Enum NotificationType:** `NEW_MATCH` | `NEW_MESSAGE` | `SUPER_LIKE` | `MATCH_REMOVED` | `BADGE_EARNED` | `SUBSCRIPTION_EXPIRING` | `CANLI_MATCH_FOUND` | `DAILY_MATCH_READY` | `FRIENDSHIP_FORMED` | `SYSTEM` | `POST_LIKE` | `STORY_LIKE` | `NEW_FOLLOWER` | `REFERRAL_REWARD` — REFERRAL_REWARD added 2026-04-09
+
 > Not: DB'de `goldBalance` olarak adlandirilan alan, uygulama icinde "jeton" olarak gosterilir. Ayni sey.
+> Not: `phone` alani Google/Apple Sign-In kullanicilari icin `GOOGLE-{id}` veya `APPLE-{id}` formatinda saklanir. — Added 2026-04-09
 
 ### UserSession
 | Alan | Tip | Aciklama |
@@ -550,10 +555,13 @@
 | trialEndDate | TIMESTAMP, nullable | Deneme bitis zamani |
 | gracePeriodEnd | TIMESTAMP, nullable | Odeme tolerans suresi |
 | cancelledAt | TIMESTAMP, nullable | Iptal zamani |
+| discountOfferedAt | TIMESTAMP, nullable | Indirim teklif zamani — Added 2026-04-09 |
+| discountUsed | BOOLEAN, default false | Indirim kullanildi mi — Added 2026-04-09 |
 | createdAt | TIMESTAMP | |
 | updatedAt | TIMESTAMP | |
 
 > Premium: 499 TL/ay, Supreme: 1.199 TL/ay
+> Indirim kampanyasi: Abonelik bitisine 3 gun kala %20 indirim teklifi, 48 saat gecerli — Added 2026-04-09
 
 ### IapReceipt
 | Alan | Tip | Aciklama |

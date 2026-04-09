@@ -163,12 +163,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: palette.gold[400],
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: fontWeights.semibold,
   },
   headerMore: {
     color: colors.textTertiary,
-    fontSize: 11,
+    fontSize: 14,
   },
   scrollContent: {
     paddingHorizontal: 16,
