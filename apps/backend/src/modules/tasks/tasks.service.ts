@@ -3,6 +3,7 @@ import { Cron, CronExpression } from "@nestjs/schedule";
 import { PrismaService } from "../../prisma/prisma.service";
 import { StoriesService } from "../stories/stories.service";
 import { PaymentsService } from "../payments/payments.service";
+import { NotificationsService } from "../notifications/notifications.service";
 
 /**
  * Scheduled tasks (cron jobs) for LUMA V1.
@@ -26,6 +27,7 @@ export class TasksService {
     private readonly prisma: PrismaService,
     private readonly storiesService: StoriesService,
     private readonly paymentsService: PaymentsService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   // ─── 1. Clean Up Expired OTP Codes ───────────────────────────
@@ -181,6 +183,72 @@ export class TasksService {
 
     if (result.count > 0) {
       this.logger.log(`Cleared ${result.count} expired mood(s)`);
+    }
+  }
+
+  // ─── 13. Premium Expiration Campaign ─────────────────────────
+  // Runs daily at 09:00 UTC — sends discount notifications to users
+  // whose subscription expires in 3 days
+  @Cron("0 9 * * *")
+  async premiumExpirationCampaign(): Promise<void> {
+    const now = new Date();
+    const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+    // Find active subscriptions expiring within 3 days that haven't been offered a discount
+    const expiringSubs = await this.prisma.subscription.findMany({
+      where: {
+        isActive: true,
+        autoRenew: false,
+        expiryDate: {
+          gt: now,
+          lte: threeDaysFromNow,
+        },
+        discountOfferedAt: null,
+      },
+      select: {
+        id: true,
+        userId: true,
+        packageTier: true,
+        expiryDate: true,
+      },
+    });
+
+    let notifiedCount = 0;
+
+    for (const sub of expiringSubs) {
+      try {
+        const daysLeft = Math.ceil(
+          (sub.expiryDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000),
+        );
+
+        const packageName =
+          sub.packageTier === "SUPREME" ? "Supreme" : "Premium";
+
+        // Mark discount as offered
+        await this.prisma.subscription.update({
+          where: { id: sub.id },
+          data: { discountOfferedAt: now },
+        });
+
+        // Send push notification
+        await this.notificationsService.notifySubscriptionExpiring(
+          sub.userId,
+          daysLeft,
+          packageName,
+        );
+
+        notifiedCount++;
+      } catch (err) {
+        this.logger.error(
+          `Failed to send expiration campaign for subscription ${sub.id}: ${err}`,
+        );
+      }
+    }
+
+    if (notifiedCount > 0) {
+      this.logger.log(
+        `Premium expiration campaign: notified ${notifiedCount} user(s)`,
+      );
     }
   }
 }

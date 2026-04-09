@@ -31,6 +31,8 @@ import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { IncognitoToggle } from '../../components/discovery/IncognitoToggle';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { useTranslation } from 'react-i18next';
+import { changeLanguage } from '../../i18n/i18n';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -106,9 +108,21 @@ export const SettingsScreen: React.FC = () => {
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
   const { colors } = useTheme();
+  const { i18n } = useTranslation();
 
   const packageTier = user?.packageTier ?? 'FREE';
   const isSupreme = packageTier === 'SUPREME';
+
+  // ── Language state ──────────────────────────────────────────
+  const [currentLang, setCurrentLang] = useState<'tr' | 'en'>(
+    (i18n.language as 'tr' | 'en') || 'tr',
+  );
+
+  const handleLanguageChange = useCallback(async (lang: 'tr' | 'en') => {
+    setCurrentLang(lang);
+    await changeLanguage(lang);
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+  }, []);
 
   // ── Notification toggles ──────────────────────────────────────
   const [pushNotifications, setPushNotificationsRaw] = useState(true);
@@ -589,7 +603,31 @@ export const SettingsScreen: React.FC = () => {
       ],
     },
 
-    // 5. Destek
+    // 5. Dil / Language
+    {
+      title: 'Dil / Language',
+      icon: 'language-outline',
+      data: [
+        {
+          key: 'lang_tr',
+          icon: 'flag-outline',
+          title: 'Türkçe',
+          type: 'action' as const,
+          subtitle: currentLang === 'tr' ? '✓ Aktif' : undefined,
+          onPress: () => handleLanguageChange('tr'),
+        },
+        {
+          key: 'lang_en',
+          icon: 'globe-outline',
+          title: 'English',
+          type: 'action' as const,
+          subtitle: currentLang === 'en' ? '✓ Active' : undefined,
+          onPress: () => handleLanguageChange('en'),
+        },
+      ],
+    },
+
+    // 6. Destek
     {
       title: 'Destek',
       icon: 'help-circle-outline',

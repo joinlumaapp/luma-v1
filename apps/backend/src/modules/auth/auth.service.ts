@@ -214,12 +214,14 @@ export class AuthService {
       }
       userId = existingUser.id;
     } else {
-      // New user — create account
+      // New user — create account with auto-generated referral code
+      const referralCode = await this.generateUniqueReferralCode();
       const user = await this.prisma.user.create({
         data: {
           phone: dto.phone,
           phoneCountryCode: dto.countryCode,
           displayId: generateDisplayId(),
+          referralCode,
         },
       });
       userId = user.id;
@@ -930,6 +932,31 @@ export class AuthService {
     const max = Math.pow(10, OTP_LENGTH);
     const randomNumber = crypto.randomInt(0, max);
     return randomNumber.toString().padStart(OTP_LENGTH, "0");
+  }
+
+  /**
+   * Generate a unique LUMA-XXXX referral code.
+   */
+  private async generateUniqueReferralCode(): Promise<string> {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    for (let attempt = 0; attempt < 10; attempt++) {
+      let random = "";
+      for (let i = 0; i < 4; i++) {
+        random += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      const code = `LUMA-${random}`;
+      const existing = await this.prisma.user.findUnique({
+        where: { referralCode: code },
+        select: { id: true },
+      });
+      if (!existing) return code;
+    }
+    // Fallback: 6 char code
+    let random = "";
+    for (let i = 0; i < 6; i++) {
+      random += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return `LUMA-${random}`;
   }
 
   /**

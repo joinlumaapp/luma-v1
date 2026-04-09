@@ -43,6 +43,7 @@ import { palette } from '../../theme/colors';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { LikesYouScreen } from '../discovery/LikesYouScreen';
 import { WeeklyInsightNudge } from '../../components/premium/SmartUpgradePrompts';
+import { useTranslation } from 'react-i18next';
 
 type MatchesNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'MatchesList'>;
 
@@ -732,6 +733,7 @@ ItemSeparator.displayName = 'ItemSeparator';
 
 export const MatchesListScreen: React.FC = () => {
   useScreenTracking('Matches');
+  const { t } = useTranslation();
   const navigation = useNavigation<MatchesNavigationProp>();
   const insets = useSafeAreaInsets();
 
@@ -1184,7 +1186,7 @@ export const MatchesListScreen: React.FC = () => {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Eşleşmeler</Text>
+          <Text style={styles.headerTitle}>{t('matches.title')}</Text>
         </View>
         <View style={styles.skeletonContainer}>
           {Array.from({ length: SKELETON_ROWS }).map((_, i) => (
@@ -1203,7 +1205,7 @@ export const MatchesListScreen: React.FC = () => {
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-              <Text style={styles.headerTitle}>Eşleşmeler</Text>
+              <Text style={styles.headerTitle}>{t('matches.title')}</Text>
               {newMatchCount > 0 && (
                 <View style={styles.matchCountBadge}>
                   <Text style={styles.matchCountBadgeText}>{newMatchCount} yeni</Text>
@@ -1227,11 +1229,11 @@ export const MatchesListScreen: React.FC = () => {
         style={styles.tabScrollView}
       >
         {([
-          { key: 'matches' as const, label: 'Eşleşmeler', emoji: '💞', isNav: false, isPremiumOnly: false },
-          { key: 'messages' as const, label: 'Mesajlar', emoji: '💬', isNav: false, isPremiumOnly: false },
-          { key: 'likes' as const, label: 'Beğenenler', emoji: '💜', isNav: false, isPremiumOnly: false },
-          { key: 'followers' as const, label: 'Takipçiler', emoji: '👥', isNav: false, isPremiumOnly: false },
-          { key: 'viewers' as const, label: 'Kim Gördü', emoji: '👀', isNav: false, isPremiumOnly: true },
+          { key: 'matches' as const, label: t('matches.tabs.matches'), emoji: '💞', isNav: false, isPremiumOnly: false },
+          { key: 'messages' as const, label: t('matches.tabs.messages'), emoji: '💬', isNav: false, isPremiumOnly: false },
+          { key: 'likes' as const, label: t('matches.tabs.likes'), emoji: '💜', isNav: false, isPremiumOnly: false },
+          { key: 'followers' as const, label: t('matches.tabs.followers'), emoji: '👥', isNav: false, isPremiumOnly: false },
+          { key: 'viewers' as const, label: t('matches.tabs.viewers'), emoji: '👀', isNav: false, isPremiumOnly: true },
         ]).map((tab, tabIndex) => {
           const isActive = tab.isNav ? false : activeTab === tab.key;
           const isLocked = tab.isPremiumOnly && !isPremium;

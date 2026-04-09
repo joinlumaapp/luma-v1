@@ -80,6 +80,10 @@ const NOTIFICATION_TEMPLATES: Record<NotificationType, NotificationTemplate> = {
     title: "Yeni Takipci!",
     body: "{name} seni takip etmeye basladi",
   },
+  REFERRAL_REWARD: {
+    title: "Davet Ödülü!",
+    body: "Arkadaşın katıldı! 50 jeton kazandın",
+  },
 };
 
 /** Maps notification types to preference keys. */
@@ -100,6 +104,7 @@ const TYPE_TO_PREF_KEY: Record<
   POST_LIKE: "system",
   STORY_LIKE: "system",
   NEW_FOLLOWER: "system",
+  REFERRAL_REWARD: "system",
 };
 
 // ────────────────────────────────────────────────────────────────────

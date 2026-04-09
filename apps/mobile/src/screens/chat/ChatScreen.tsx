@@ -992,6 +992,17 @@ export const ChatScreen: React.FC = () => {
           >
             <Text style={styles.mediaButtonText}>+</Text>
           </TouchableOpacity>
+          {/* Icebreaker game button */}
+          <TouchableOpacity
+            style={[styles.mediaButton, { backgroundColor: 'rgba(139,92,246,0.15)' }]}
+            onPress={() => navigation.navigate('IcebreakerGame', { matchId, partnerName })}
+            activeOpacity={0.7}
+            accessibilityLabel="Buz kırıcı oyun"
+            accessibilityRole="button"
+            testID="chat-icebreaker-btn"
+          >
+            <Text style={[styles.mediaButtonText, { fontSize: 16 }]}>{'\uD83C\uDFAE'}</Text>
+          </TouchableOpacity>
           {/* GIF button */}
           <TouchableOpacity
             style={styles.mediaButton}

@@ -1,5 +1,6 @@
 // LUMA App entry point
 
+import './src/i18n/i18n'; // Initialize i18n before anything else
 import React, { Component, useEffect, useRef } from 'react';
 import {
   AppState,

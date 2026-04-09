@@ -84,6 +84,12 @@ model User {
   postLikes              PostLike[]
   postComments           PostComment[]
 
+  // Referral system
+  referralCode   String?  @unique @map("referral_code") @db.VarChar(10)
+  referredById   String?  @map("referred_by_id") @db.Uuid
+  referredBy     User?    @relation("Referrals", fields: [referredById], references: [id])
+  referrals      User[]   @relation("Referrals")
+
   @@index([deletedAt])                // Soft-delete: filter active/deleted users
   @@index([packageTier])              // Tier filtering: find users by package
   @@map("users")
@@ -547,6 +553,10 @@ model Subscription {
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt @map("updated_at")
 
+  // Premium expiration campaign
+  discountOfferedAt DateTime? @map("discount_offered_at")
+  discountUsed      Boolean   @default(false) @map("discount_used")
+
   user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   receipts IapReceipt[]
 
@@ -653,6 +663,7 @@ enum NotificationType {
   POST_LIKE
   STORY_LIKE
   NEW_FOLLOWER
+  REFERRAL_REWARD
 }
 
 model DeviceToken {

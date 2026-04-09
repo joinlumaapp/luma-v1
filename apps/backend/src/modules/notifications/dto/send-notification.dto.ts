@@ -22,6 +22,7 @@ export enum SendNotificationType {
   DAILY_MATCH_READY = "DAILY_MATCH_READY",
   FRIENDSHIP_FORMED = "FRIENDSHIP_FORMED",
   SYSTEM = "SYSTEM",
+  REFERRAL_REWARD = "REFERRAL_REWARD",
 }
 
 export class SendNotificationDto {

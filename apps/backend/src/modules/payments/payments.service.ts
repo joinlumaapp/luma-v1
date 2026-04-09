@@ -1740,6 +1740,140 @@ export class PaymentsService {
     return purchase !== null;
   }
 
+  // ─── Discount Campaign ─────────────────────────────────────────
+
+  private static readonly DISCOUNT_VALIDITY_HOURS = 48;
+  private static readonly DISCOUNT_PERCENT = 20;
+
+  /**
+   * Check if user has an active discount offer.
+   */
+  async getDiscountStatus(userId: string): Promise<{
+    hasDiscount: boolean;
+    discountPercent: number;
+    expiresAt: Date | null;
+    packageTier: string | null;
+    originalPrice: number | null;
+    discountedPrice: number | null;
+  }> {
+    const sub = await this.prisma.subscription.findFirst({
+      where: {
+        userId,
+        discountOfferedAt: { not: null },
+        discountUsed: false,
+      },
+      orderBy: { discountOfferedAt: "desc" },
+    });
+
+    if (!sub || !sub.discountOfferedAt) {
+      return {
+        hasDiscount: false,
+        discountPercent: 0,
+        expiresAt: null,
+        packageTier: null,
+        originalPrice: null,
+        discountedPrice: null,
+      };
+    }
+
+    const discountExpiresAt = new Date(
+      sub.discountOfferedAt.getTime() +
+        PaymentsService.DISCOUNT_VALIDITY_HOURS * 60 * 60 * 1000,
+    );
+
+    if (discountExpiresAt < new Date()) {
+      return {
+        hasDiscount: false,
+        discountPercent: 0,
+        expiresAt: null,
+        packageTier: null,
+        originalPrice: null,
+        discountedPrice: null,
+      };
+    }
+
+    const pkg = PACKAGE_DEFINITIONS[sub.packageTier];
+    const originalPrice = pkg?.monthlyPriceTry ?? 499;
+    const discountedPrice = Math.round(
+      originalPrice * (1 - PaymentsService.DISCOUNT_PERCENT / 100),
+    );
+
+    return {
+      hasDiscount: true,
+      discountPercent: PaymentsService.DISCOUNT_PERCENT,
+      expiresAt: discountExpiresAt,
+      packageTier: sub.packageTier,
+      originalPrice,
+      discountedPrice,
+    };
+  }
+
+  /**
+   * Claim the discount and extend subscription by 1 month.
+   */
+  async claimDiscount(userId: string): Promise<{
+    claimed: boolean;
+    newExpiryDate: Date;
+    discountPercent: number;
+  }> {
+    const sub = await this.prisma.subscription.findFirst({
+      where: {
+        userId,
+        discountOfferedAt: { not: null },
+        discountUsed: false,
+      },
+      orderBy: { discountOfferedAt: "desc" },
+    });
+
+    if (!sub || !sub.discountOfferedAt) {
+      throw new BadRequestException("Aktif indirim kampanyan yok");
+    }
+
+    const discountExpiresAt = new Date(
+      sub.discountOfferedAt.getTime() +
+        PaymentsService.DISCOUNT_VALIDITY_HOURS * 60 * 60 * 1000,
+    );
+
+    if (discountExpiresAt < new Date()) {
+      throw new BadRequestException(
+        "İndirim süresi dolmuş. Normal fiyatla yenileyebilirsin.",
+      );
+    }
+
+    // Extend subscription by 1 month from now
+    const newExpiryDate = new Date();
+    newExpiryDate.setMonth(newExpiryDate.getMonth() + 1);
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.subscription.update({
+        where: { id: sub.id },
+        data: {
+          discountUsed: true,
+          isActive: true,
+          expiryDate: newExpiryDate,
+          gracePeriodEnd: null,
+          autoRenew: false,
+        },
+      });
+
+      // Ensure user has the package tier
+      await tx.user.update({
+        where: { id: userId },
+        data: { packageTier: sub.packageTier },
+      });
+    });
+
+    this.logger.log(
+      `User ${userId} claimed ${PaymentsService.DISCOUNT_PERCENT}% discount on ${sub.packageTier}, new expiry: ${newExpiryDate.toISOString()}`,
+    );
+
+    return {
+      claimed: true,
+      newExpiryDate,
+      discountPercent: PaymentsService.DISCOUNT_PERCENT,
+    };
+  }
+
   // ─── Private Helpers ───────────────────────────────────────────
 
   /**

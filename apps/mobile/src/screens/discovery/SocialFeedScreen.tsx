@@ -57,6 +57,7 @@ import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { AdBanner } from '../../components/ads';
 import { FeedSkeleton } from '../../components/animations/SkeletonLoader';
+import { useTranslation } from 'react-i18next';
 import ReAnimated, {
   useSharedValue,
   useAnimatedStyle,
@@ -554,6 +555,7 @@ type FeedNavProp = NativeStackNavigationProp<FeedStackParamList, 'SocialFeed'>;
 
 export const SocialFeedScreen: React.FC = () => {
   useScreenTracking('SocialFeed');
+  const { t } = useTranslation();
   const { getAnimatedStyle } = useStaggeredEntrance(2); // header + feed content
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<FeedNavProp>();
@@ -1108,7 +1110,7 @@ export const SocialFeedScreen: React.FC = () => {
       <BrandedBackground />
       {/* Header — always visible at top, entrance animation */}
       <Animated.View style={[styles.headerArea, getAnimatedStyle(0)]}>
-        <Text style={styles.headerTitle}>Akış</Text>
+        <Text style={styles.headerTitle}>{t('feed.title')}</Text>
         <View style={styles.headerRight}>
           <TouchableOpacity
             onPress={() => navigation.navigate('Notifications')}

@@ -80,6 +80,10 @@ export type MatchesStackParamList = {
   Report: { userId: string; userName: string };
   SecretAdmirer: undefined;
   WeeklyTop: undefined;
+  IcebreakerGame: { matchId: string; partnerName: string };
+  TwoTruthsGame: { matchId: string; partnerName: string };
+  ThisOrThatGame: { matchId: string; partnerName: string };
+  QuickQuestionsGame: { matchId: string; partnerName: string };
 };
 
 // -- Live Stack --

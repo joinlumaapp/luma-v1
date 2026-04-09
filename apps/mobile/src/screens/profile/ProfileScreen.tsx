@@ -11,6 +11,8 @@ import {
   Easing,
   RefreshControl,
   Image,
+  Share,
+  Alert,
 } from 'react-native';
 import ReAnimated, {
   useSharedValue,
@@ -49,11 +51,13 @@ import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
 import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { ProfileSkeleton } from '../../components/animations/SkeletonLoader';
+import { useTranslation } from 'react-i18next';
 
 import { DailyChallenge, WeeklyLeaderboard } from '../../components/engagement';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 import api from '../../services/api';
 import { socialFeedService, type FeedPost } from '../../services/socialFeedService';
+import { referralService, type ReferralInfo, type DiscountStatus } from '../../services/referralService';
 // NowListening and listeningStore removed — music feature removed
 
 type ProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'Profile'>;
@@ -256,6 +260,7 @@ for (const m of MOOD_OPTIONS) {
 
 export const ProfileScreen: React.FC = () => {
   useScreenTracking('Profile');
+  const { t } = useTranslation();
   const { getAnimatedStyle } = useStaggeredEntrance(2); // header bar + profile content
   const navigation = useNavigation<ProfileNavigationProp>();
   const insets = useSafeAreaInsets();
@@ -373,6 +378,9 @@ export const ProfileScreen: React.FC = () => {
 
   // Pull-to-refresh state
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [referralInfo, setReferralInfo] = useState<ReferralInfo | null>(null);
+  const [discountStatus, setDiscountStatus] = useState<DiscountStatus | null>(null);
+  const [showDiscountModal, setShowDiscountModal] = useState(false);
 
   // Skeleton shimmer for loading state
   const shimmerAnim = useRef(new Animated.Value(0.3)).current;
@@ -500,6 +508,27 @@ export const ProfileScreen: React.FC = () => {
     }
   }, [user?.id]);
 
+  const fetchReferralInfo = useCallback(async () => {
+    try {
+      const info = await referralService.getMyReferrals();
+      setReferralInfo(info);
+    } catch {
+      // Non-critical
+    }
+  }, []);
+
+  const fetchDiscountStatus = useCallback(async () => {
+    try {
+      const status = await referralService.getDiscountStatus();
+      setDiscountStatus(status);
+      if (status.hasDiscount) {
+        setShowDiscountModal(true);
+      }
+    } catch {
+      // Non-critical
+    }
+  }, []);
+
   // Pull-to-refresh handler — re-fetches all profile data
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -512,11 +541,13 @@ export const ProfileScreen: React.FC = () => {
         fetchMyPosts(),
         fetchFollowCounts(),
         fetchMood(),
+        fetchReferralInfo(),
+        fetchDiscountStatus(),
       ]);
     } finally {
       setIsRefreshing(false);
     }
-  }, [fetchProfile, fetchStrength, fetchWeeklyViews, fetchBoostStatus, fetchMyPosts, fetchFollowCounts, fetchMood]);
+  }, [fetchProfile, fetchStrength, fetchWeeklyViews, fetchBoostStatus, fetchMyPosts, fetchFollowCounts, fetchMood, fetchReferralInfo, fetchDiscountStatus]);
 
   useEffect(() => {
     fetchProfile();
@@ -527,7 +558,9 @@ export const ProfileScreen: React.FC = () => {
     fetchMyPosts();
     fetchFollowCounts();
     fetchMood();
-  }, [fetchProfile, fetchStrength, fetchWeeklyViews, fetchBoostStatus, fetchMatches, fetchMyPosts, fetchFollowCounts, fetchMood]);
+    fetchReferralInfo();
+    fetchDiscountStatus();
+  }, [fetchProfile, fetchStrength, fetchWeeklyViews, fetchBoostStatus, fetchMatches, fetchMyPosts, fetchFollowCounts, fetchMood, fetchReferralInfo, fetchDiscountStatus]);
 
   // Shimmer for loading
   useEffect(() => {
@@ -565,7 +598,7 @@ export const ProfileScreen: React.FC = () => {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.headerBar}>
-          <Text style={styles.headerTitle}>Profil</Text>
+          <Text style={styles.headerTitle}>{t('profile.title')}</Text>
         </View>
         <ProfileSkeleton />
       </View>
@@ -601,7 +634,7 @@ export const ProfileScreen: React.FC = () => {
   const headerBar = (
     <View style={[styles.headerBar, { paddingTop: insets.top }]}>
       <View style={styles.headerLeft}>
-        <Text style={styles.headerTitle}>Profil</Text>
+        <Text style={styles.headerTitle}>{t('profile.title')}</Text>
       </View>
       <View style={styles.headerRight}>
         <TouchableOpacity
@@ -890,6 +923,47 @@ export const ProfileScreen: React.FC = () => {
           </View>
         )
       )}
+
+      {/* Referral / Davet card */}
+      <TouchableOpacity
+        onPress={async () => {
+          const code = referralInfo?.referralCode;
+          if (!code) return;
+          try {
+            await Share.share({
+              message: `Luma'ya katıl! Davet kodum: ${code}\nİkimiz de 50 jeton kazanalım!\nhttps://luma.app/invite/${code}`,
+            });
+          } catch {
+            // User cancelled share
+          }
+        }}
+        activeOpacity={0.8}
+        style={styles.referralCard}
+        accessibilityLabel="Arkadaşını davet et"
+        accessibilityRole="button"
+      >
+        <View style={styles.referralRow}>
+          <LinearGradient
+            colors={['#7C3AED', '#A855F7'] as [string, string, ...string[]]}
+            style={styles.referralIconGradient}
+          >
+            <Ionicons name="gift-outline" size={18} color="#FFFFFF" />
+          </LinearGradient>
+          <View style={styles.referralContent}>
+            <Text style={styles.referralTitle}>Arkadaşını Davet Et</Text>
+            <Text style={styles.referralSubtitle}>
+              {referralInfo?.referralCount
+                ? `${referralInfo.referralCount} arkadaşını davet ettin`
+                : 'İkiniz de 50 jeton kazanın!'}
+            </Text>
+          </View>
+          {referralInfo?.referralCode && (
+            <View style={styles.referralCodeBadge}>
+              <Text style={styles.referralCodeText}>{referralInfo.referralCode}</Text>
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
     </View>
   );
 
@@ -1176,6 +1250,77 @@ export const ProfileScreen: React.FC = () => {
         onActivate={handleBoostActivate}
         onBuyGold={handleBoostBuyGold}
       />
+
+      {/* Premium expiration discount modal */}
+      {showDiscountModal && discountStatus?.hasDiscount && (
+        <View style={styles.discountModalOverlay}>
+          <View style={styles.discountModalCard}>
+            <LinearGradient
+              colors={['#1a1a2e', '#16213e'] as [string, string, ...string[]]}
+              style={styles.discountModalGradient}
+            >
+              <Text style={styles.discountModalEmoji}>{'\u23F3'}</Text>
+              <Text style={styles.discountModalTitle}>
+                Premium ayrıcalıklarını kaybetmek üzeresin
+              </Text>
+              <Text style={styles.discountModalSubtitle}>
+                {discountStatus.packageTier === 'SUPREME' ? 'Supreme' : 'Premium'} üyeliğin sona eriyor.{'\n'}
+                Şimdi yenile, %{discountStatus.discountPercent} indirim kazan!
+              </Text>
+
+              <View style={styles.discountPriceRow}>
+                <Text style={styles.discountOldPrice}>
+                  {discountStatus.originalPrice}{'\u20BA'}
+                </Text>
+                <Text style={styles.discountNewPrice}>
+                  {discountStatus.discountedPrice}{'\u20BA'}/ay
+                </Text>
+              </View>
+
+              {discountStatus.expiresAt && (
+                <Text style={styles.discountTimer}>
+                  {'\u23F0'} İndirim 48 saat geçerli
+                </Text>
+              )}
+
+              <TouchableOpacity
+                style={styles.discountClaimButton}
+                activeOpacity={0.85}
+                onPress={async () => {
+                  try {
+                    await referralService.claimDiscount();
+                    Alert.alert('Tebrikler!', 'Üyeliğin indirimli olarak yenilendi!');
+                    setShowDiscountModal(false);
+                    setDiscountStatus(null);
+                    fetchProfile();
+                  } catch {
+                    Alert.alert('Hata', 'İndirim uygulanamadı. Lütfen tekrar deneyin.');
+                  }
+                }}
+              >
+                <LinearGradient
+                  colors={[palette.purple[500], palette.purple[700]] as [string, string, ...string[]]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.discountClaimGradient}
+                >
+                  <Text style={styles.discountClaimText}>
+                    Yenile (%{discountStatus.discountPercent} indirimli)
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.discountDismissButton}
+                activeOpacity={0.7}
+                onPress={() => setShowDiscountModal(false)}
+              >
+                <Text style={styles.discountDismissText}>Ücretsiz devam et</Text>
+              </TouchableOpacity>
+            </LinearGradient>
+          </View>
+        </View>
+      )}
     </View>
   );
 };
@@ -2017,5 +2162,139 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.regular,
     color: 'rgba(255,255,255,0.5)',
     marginTop: 2,
+  },
+
+  // ── Referral card ──
+  referralCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(139,92,246,0.2)',
+    marginTop: spacing.smd,
+  },
+  referralRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.smd,
+  },
+  referralIconGradient: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  referralContent: {
+    flex: 1,
+  },
+  referralTitle: {
+    fontSize: 15,
+    fontWeight: fontWeights.semibold,
+    color: colors.text,
+  },
+  referralSubtitle: {
+    fontSize: 12,
+    fontWeight: fontWeights.regular,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  referralCodeBadge: {
+    backgroundColor: 'rgba(139,92,246,0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  referralCodeText: {
+    fontSize: 12,
+    fontWeight: fontWeights.bold,
+    color: palette.purple[500],
+    letterSpacing: 0.5,
+  },
+
+  // ── Discount modal ──
+  discountModalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999,
+  },
+  discountModalCard: {
+    width: '88%',
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  discountModalGradient: {
+    padding: 28,
+    alignItems: 'center',
+  },
+  discountModalEmoji: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
+  discountModalTitle: {
+    fontSize: 20,
+    fontWeight: fontWeights.bold,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  discountModalSubtitle: {
+    fontSize: 14,
+    fontWeight: fontWeights.regular,
+    color: 'rgba(255,255,255,0.7)',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  discountPriceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 8,
+  },
+  discountOldPrice: {
+    fontSize: 18,
+    fontWeight: fontWeights.medium,
+    color: 'rgba(255,255,255,0.4)',
+    textDecorationLine: 'line-through',
+  },
+  discountNewPrice: {
+    fontSize: 28,
+    fontWeight: fontWeights.bold,
+    color: '#FFFFFF',
+  },
+  discountTimer: {
+    fontSize: 12,
+    fontWeight: fontWeights.medium,
+    color: '#F59E0B',
+    marginBottom: 20,
+  },
+  discountClaimButton: {
+    width: '100%',
+    marginBottom: 12,
+  },
+  discountClaimGradient: {
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  discountClaimText: {
+    fontSize: 16,
+    fontWeight: fontWeights.bold,
+    color: '#FFFFFF',
+  },
+  discountDismissButton: {
+    paddingVertical: 12,
+  },
+  discountDismissText: {
+    fontSize: 14,
+    fontWeight: fontWeights.medium,
+    color: 'rgba(255,255,255,0.5)',
   },
 });

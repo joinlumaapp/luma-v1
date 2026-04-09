@@ -227,4 +227,30 @@ export class PaymentsController {
   async handleGoogleWebhook(@Body() dto: GoogleWebhookDto) {
     return this.paymentsService.handleGoogleWebhook(dto.message.data);
   }
+
+  // ─── Discount Campaign ──────────────────────────────────────────
+
+  @UseGuards(JwtAuthGuard)
+  @Get("discount/status")
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: "Check if user has an active discount offer (20% off renewal)",
+  })
+  async getDiscountStatus(
+    @CurrentUser("sub") userId: string,
+  ) {
+    return this.paymentsService.getDiscountStatus(userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post("discount/claim")
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: "Claim the 20% discount and renew subscription",
+  })
+  async claimDiscount(
+    @CurrentUser("sub") userId: string,
+  ) {
+    return this.paymentsService.claimDiscount(userId);
+  }
 }

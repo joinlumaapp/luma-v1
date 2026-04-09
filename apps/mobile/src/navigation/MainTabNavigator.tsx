@@ -35,6 +35,7 @@ import { useNotificationStore } from '../stores/notificationStore';
 import { NotificationPermissionModal } from '../components/notifications/NotificationPermissionModal';
 import { PromotionModal } from '../components/premium/PromotionModal';
 import { usePresenceTracking } from '../hooks/usePresence';
+import { useTranslation } from 'react-i18next';
 import { useSocket } from '../hooks/useSocket';
 import { setupCallStoreListeners } from '../stores/callStore';
 import { withDeferredMount } from './LazyScreens';
@@ -101,6 +102,10 @@ import { DatePlannerScreen } from '../screens/matches/DatePlannerScreen';
 import SecretAdmirerScreen from '../screens/matches/SecretAdmirerScreen';
 import WeeklyTopScreen from '../screens/matches/WeeklyTopScreen';
 import { CallScreen } from '../screens/chat/CallScreen';
+import { IcebreakerGameScreen } from '../screens/icebreaker/IcebreakerGameScreen';
+import { TwoTruthsGameScreen } from '../screens/icebreaker/TwoTruthsGameScreen';
+import { ThisOrThatGameScreen } from '../screens/icebreaker/ThisOrThatGameScreen';
+import { QuickQuestionsGameScreen } from '../screens/icebreaker/QuickQuestionsGameScreen';
 import { IncomingCallOverlay } from '../components/chat/IncomingCallOverlay';
 import { MinimizedCallBar } from '../components/chat/MinimizedCallBar';
 // ── Deferred Screens ─────────────────────────────────────────
@@ -400,6 +405,26 @@ const MatchesStackNavigator: React.FC = React.memo(() => (
         animation: 'slide_from_bottom',
       }}
     />
+    <MatchesStack.Screen
+      name="IcebreakerGame"
+      component={IcebreakerGameScreen}
+      options={{ headerShown: false, animation: 'slide_from_bottom' }}
+    />
+    <MatchesStack.Screen
+      name="TwoTruthsGame"
+      component={TwoTruthsGameScreen}
+      options={{ headerShown: false }}
+    />
+    <MatchesStack.Screen
+      name="ThisOrThatGame"
+      component={ThisOrThatGameScreen}
+      options={{ headerShown: false }}
+    />
+    <MatchesStack.Screen
+      name="QuickQuestionsGame"
+      component={QuickQuestionsGameScreen}
+      options={{ headerShown: false }}
+    />
   </MatchesStack.Navigator>
 ));
 MatchesStackNavigator.displayName = 'MatchesStackNavigator';
@@ -498,6 +523,7 @@ const ProfileStackNavigator: React.FC = React.memo(() => (
 ProfileStackNavigator.displayName = 'ProfileStackNavigator';
 
 export const MainTabNavigator: React.FC = () => {
+  const { t } = useTranslation();
   usePresenceTracking();
 
   // Socket lifecycle — connect/disconnect on foreground/background/network changes
@@ -558,11 +584,11 @@ export const MainTabNavigator: React.FC = () => {
         name="FeedTab"
         component={FeedStackNavigator}
         options={{
-          tabBarLabel: 'Akış',
+          tabBarLabel: t('tabs.feed'),
           tabBarIcon: ({ focused }) => (
             <TabIcon name="feed" focused={focused} />
           ),
-          tabBarAccessibilityLabel: 'Sosyal Akış',
+          tabBarAccessibilityLabel: t('tabs.feed'),
           tabBarButtonTestID: 'tab-feed',
         }}
         listeners={({ navigation, route }) => createTabResetListener(navigation, route)}
@@ -571,11 +597,11 @@ export const MainTabNavigator: React.FC = () => {
         name="DiscoveryTab"
         component={DiscoveryStackNavigator}
         options={{
-          tabBarLabel: 'Keşfet',
+          tabBarLabel: t('tabs.discover'),
           tabBarIcon: ({ focused }) => (
             <TabIcon name="compass" focused={focused} />
           ),
-          tabBarAccessibilityLabel: 'Keşfet',
+          tabBarAccessibilityLabel: t('tabs.discover'),
           tabBarButtonTestID: 'tab-discovery',
         }}
         listeners={({ navigation, route }) => createTabResetListener(navigation, route)}
@@ -584,11 +610,11 @@ export const MainTabNavigator: React.FC = () => {
         name="LiveTab"
         component={LiveStackNavigator}
         options={{
-          tabBarLabel: 'Canlı',
+          tabBarLabel: t('tabs.live'),
           tabBarIcon: ({ focused }) => (
             <TabIcon name="live" focused={focused} />
           ),
-          tabBarAccessibilityLabel: 'Canlı Bağlantı',
+          tabBarAccessibilityLabel: t('tabs.live'),
           tabBarButtonTestID: 'tab-live',
         }}
         listeners={({ navigation, route }) => createTabResetListener(navigation, route)}
@@ -597,7 +623,7 @@ export const MainTabNavigator: React.FC = () => {
         name="MatchesTab"
         component={MatchesStackNavigator}
         options={{
-          tabBarLabel: 'Eşleşme',
+          tabBarLabel: t('tabs.matches'),
           tabBarIcon: ({ focused }) => (
             <TabIconWithBadge
               name="heart"
@@ -614,11 +640,11 @@ export const MainTabNavigator: React.FC = () => {
         name="ProfileTab"
         component={ProfileStackNavigator}
         options={{
-          tabBarLabel: 'Profil',
+          tabBarLabel: t('tabs.profile'),
           tabBarIcon: ({ focused }) => (
             <TabIcon name="user" focused={focused} />
           ),
-          tabBarAccessibilityLabel: 'Profil',
+          tabBarAccessibilityLabel: t('tabs.profile'),
           tabBarButtonTestID: 'tab-profile',
         }}
         listeners={({ navigation, route }) => createTabResetListener(navigation, route)}

@@ -40,6 +40,7 @@ import { PresenceModule } from "./modules/presence/presence.module";
 import { EngagementModule } from "./modules/engagement/engagement.module";
 import { StoriesModule } from "./modules/stories/stories.module";
 import { PostsModule } from "./modules/posts/posts.module";
+import { ReferralModule } from "./modules/referral/referral.module";
 import { WsConnectionModule } from "./common/providers/ws-connection.module";
 
 @Module({
@@ -122,6 +123,7 @@ import { WsConnectionModule } from "./common/providers/ws-connection.module";
     EngagementModule, // Subsystem 15: Daily rewards, challenges, leaderboard
     StoriesModule, // Stories: create, view, like, reply (24h expiry)
     PostsModule, // Posts: feed CRUD, likes, liker list
+    ReferralModule, // Referral/invite system with jeton rewards
     WsConnectionModule, // Redis-backed WebSocket connection registry (horizontal scaling)
   ],
   providers: [
