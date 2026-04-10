@@ -1,10 +1,37 @@
 # LUMA V1 -- Debug & Known Issues Log
 
-**Last Updated:** 2026-04-08
+**Last Updated:** 2026-04-10
 
 ---
 
 ## Active Issues
+
+### FIXED -- Onboarding State Loss on Back/Forward Navigation
+- **Date fixed:** 2026-04-10
+- **Symptom:** When user pressed back during onboarding and came forward again, all their input (name, date, photos, answers) was lost — app appeared to "crash" or reset
+- **Root cause:** React Navigation native stack unmounts screens on back navigation. All 11 onboarding screens initialized local state as empty (useState('') / useState(null)), so every remount cleared user input. Data was only saved to the profile store on "Continue" button press.
+- **Fix:**
+  - Every onboarding screen now initializes local state from profile store on mount
+  - Selection screens (Gender, WhoToMeet, Sports, Smoking, Children) auto-save via useEffect on selection change
+  - Text screens (Name, City, Bio) auto-save on unmount via useEffect cleanup
+  - BirthDate auto-saves when all 3 parts (day/month/year) are selected
+  - Photos screen restores photo URIs from store on mount
+- **Affected files:** 11 screens in apps/mobile/src/screens/onboarding/
+- **Status:** FIXED — zero state loss on back/forward
+
+### FIXED -- Süper Uyum Yellow Glow Too Aggressive
+- **Date fixed:** 2026-04-10
+- **Symptom:** When a profile card showed Süper Uyum (90%+ compatibility), the entire card flashed yellow with border glow, shadow, and opacity pulse animations — visually overwhelming
+- **Fix:** Removed all yellow glow/flash animations from DiscoveryCard. Kept only a subtle pink badge pulse (scale 1.0→1.1→1.0 every 2s). Card background stays normal.
+- **Files:** apps/mobile/src/components/cards/DiscoveryCard.tsx
+- **Status:** FIXED
+
+### FIXED -- Verification Badge Position Inconsistent
+- **Date fixed:** 2026-04-10
+- **Symptom:** Verification badge used different colors (blue/purple/gold) and positions (left/bottom/inline) across DiscoveryCard, MatchesList, FeedCard, ProfileScreen
+- **Fix:** Unified to green (#10B981) 22x22 badge at top-right (top: 8, right: 8) across all user cards. Single VerifiedBadge component updated to green. FeedCard uses new green inline badge.
+- **Files:** 6 files (DiscoveryCard, VerifiedBadge, FeedCard, QuickProfilePreview, MatchesListScreen, CrossedPathsScreen)
+- **Status:** FIXED
 
 ### FIXED -- API URL Pointing to Unreachable Domain
 - **Date fixed:** 2026-04-08

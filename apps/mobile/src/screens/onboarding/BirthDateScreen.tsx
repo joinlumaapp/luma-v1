@@ -1,6 +1,6 @@
 // Onboarding step 2/11: Birth date picker with zodiac sign — cream/beige theme
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -66,11 +66,23 @@ function getZodiacSign(month: number, day: number): string {
 
 export const BirthDateScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
-  const [selectedDay, setSelectedDay] = useState<number | null>(null);
-  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
-  const [selectedYear, setSelectedYear] = useState<number | null>(null);
-  const [showZodiac, setShowZodiac] = useState(true);
+  const storedBirthDate = useProfileStore((state) => state.profile.birthDate);
   const setProfileField = useProfileStore((state) => state.setField);
+
+  // Restore from store if user previously filled this
+  const [selectedDay, setSelectedDay] = useState<number | null>(() => {
+    if (storedBirthDate) { const d = new Date(storedBirthDate); return isNaN(d.getTime()) ? null : d.getDate(); }
+    return null;
+  });
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(() => {
+    if (storedBirthDate) { const d = new Date(storedBirthDate); return isNaN(d.getTime()) ? null : d.getMonth(); }
+    return null;
+  });
+  const [selectedYear, setSelectedYear] = useState<number | null>(() => {
+    if (storedBirthDate) { const d = new Date(storedBirthDate); return isNaN(d.getTime()) ? null : d.getFullYear(); }
+    return null;
+  });
+  const [showZodiac, setShowZodiac] = useState(true);
 
   // Calculate valid days based on selected month and year
   const maxDay = useMemo(() => {
@@ -88,6 +100,14 @@ export const BirthDateScreen: React.FC = () => {
       setSelectedDay(maxDay);
     }
   }, [maxDay, selectedDay]);
+
+  // Auto-save when all parts selected so back navigation preserves it
+  useEffect(() => {
+    if (selectedDay !== null && selectedMonth !== null && selectedYear !== null) {
+      const d = new Date(selectedYear, selectedMonth, selectedDay);
+      setProfileField('birthDate', d.toISOString());
+    }
+  }, [selectedDay, selectedMonth, selectedYear, setProfileField]);
 
   const isValid = selectedDay !== null && selectedMonth !== null && selectedYear !== null;
 
@@ -122,7 +142,7 @@ export const BirthDateScreen: React.FC = () => {
   return (
     <OnboardingLayout
       step={2}
-      totalSteps={13}
+      totalSteps={12}
       showBack
       footer={<ArrowButton onPress={handleContinue} disabled={!isValid} />}
     >

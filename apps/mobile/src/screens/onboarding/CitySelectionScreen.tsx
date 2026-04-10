@@ -1,6 +1,6 @@
 // Onboarding step 10/14: City selection — text input with popular cities
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -42,20 +42,29 @@ const POPULAR_CITIES = [
 
 export const CitySelectionScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
-  const [city, setCity] = useState('');
+  const storedCity = useProfileStore((state) => state.profile.city);
+  const [city, setCity] = useState(() => storedCity || '');
   const setField = useProfileStore((state) => state.setField);
+
+  // Auto-save on unmount so back navigation preserves input
+  useEffect(() => {
+    return () => {
+      const c = city.trim();
+      if (c.length >= 2) useProfileStore.getState().setField('city', c);
+    };
+  }, [city]);
 
   const isValid = city.trim().length >= 2;
 
   const handleContinue = useCallback(() => {
     if (isValid) {
       setField('city', city.trim());
-      navigation.navigate('Bio');
+      navigation.navigate('PromptSelection');
     }
   }, [isValid, city, setField, navigation]);
 
   const handleSkip = useCallback(() => {
-    navigation.navigate('Bio');
+    navigation.navigate('PromptSelection');
   }, [navigation]);
 
   const handleSelectCity = useCallback((selectedCity: string) => {
@@ -69,7 +78,7 @@ export const CitySelectionScreen: React.FC = () => {
     >
       <OnboardingLayout
         step={9}
-        totalSteps={13}
+        totalSteps={12}
         showBack
         showSkip
         onSkip={handleSkip}

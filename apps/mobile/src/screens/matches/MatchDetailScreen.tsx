@@ -25,6 +25,8 @@ import { useMatchStore } from '../../stores/matchStore';
 import { JETON_COSTS } from '@luma/shared';
 import { useScreenTracking, analyticsService, ANALYTICS_EVENTS } from '../../hooks/useAnalytics';
 import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
+import { PromptAnswerCard } from '../../components/profile/PromptAnswerCard';
+import type { PromptAnswer } from '../../components/profile/PromptAnswerCard';
 import { VerifiedBadge } from '../../components/common/VerifiedBadge';
 import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
 import { CoinBalance } from '../../components/common/CoinBalance';
@@ -225,6 +227,31 @@ export const MatchDetailScreen: React.FC = () => {
         )}
       </View>,
     );
+  }
+
+  // 1b. Prompt answers — interleaved between photos (Hinge-style)
+  {
+    const matchPrompts = (selectedMatch as unknown as Record<string, unknown>).prompts as
+      Array<{ id: string; question: string; answer: string; emoji?: string }> | undefined;
+    if (matchPrompts && matchPrompts.length > 0) {
+      matchPrompts.forEach((prompt, idx) => {
+        const promptData: PromptAnswer = {
+          id: prompt.id || `prompt-${idx}`,
+          question: prompt.question,
+          answer: prompt.answer,
+          emoji: prompt.emoji,
+        };
+        infoSections.push(
+          <PromptAnswerCard
+            key={`prompt-card-${idx}`}
+            prompt={promptData}
+            showActions={true}
+            onLike={() => { /* TODO: send like notification */ }}
+            onComment={() => { /* TODO: open chat with quote */ }}
+          />,
+        );
+      });
+    }
   }
 
   // 2. İlgi Alanları — interest tags

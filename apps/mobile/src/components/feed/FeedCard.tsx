@@ -27,6 +27,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { INTENTION_TAG_OPTIONS, type FeedPost } from '../../services/socialFeedService';
+import { PromptAnswerPreview } from '../profile/PromptAnswerCard';
 import { useAuthStore } from '../../stores/authStore';
 // NowListening removed — music feature removed from feed
 
@@ -565,11 +566,10 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
           {/* Name + age + badge + mood */}
           <View style={styles.nameRow}>
             <Text style={styles.userName} numberOfLines={1}>{post.userName}{post.userAge > 0 ? `, ${post.userAge}` : ''}</Text>
-            {post.verificationLevel === 'VERIFIED' && (
-              <Ionicons name="checkmark-circle" size={15} color={palette.purple[400]} style={styles.verifiedIcon} />
-            )}
-            {post.verificationLevel === 'PREMIUM' && (
-              <Ionicons name="shield-checkmark" size={15} color={palette.gold[500]} style={styles.verifiedIcon} />
+            {(post.verificationLevel === 'VERIFIED' || post.verificationLevel === 'PREMIUM' || post.isVerified) && (
+              <View style={styles.verifiedBadgeInline}>
+                <Ionicons name="checkmark" size={10} color="#FFFFFF" />
+              </View>
             )}
             {/* Mood badge — inline next to name */}
             {post.currentMood && FEED_MOOD_DISPLAY[post.currentMood] && (
@@ -590,6 +590,16 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
             {post.userCity ? <Text style={styles.subtitleDot}>{'\u00B7'}</Text> : null}
             <Text style={styles.subtitleText}>{timeAgo}</Text>
           </View>
+
+          {/* Prompt preview — conversation starter */}
+          {post.promptPreview && post.promptPreview.answer && (
+            <PromptAnswerPreview prompt={{
+              id: post.promptPreview.id,
+              question: post.promptPreview.question,
+              answer: post.promptPreview.answer,
+              emoji: post.promptPreview.emoji,
+            }} />
+          )}
 
         </TouchableOpacity>
 
@@ -741,6 +751,15 @@ const styles = StyleSheet.create({
   },
   verifiedIcon: {
     marginLeft: 3,
+  },
+  verifiedBadgeInline: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#10B981',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 4,
   },
   // ── Feed mood badge (inline next to name) ──
   feedMoodBadge: {

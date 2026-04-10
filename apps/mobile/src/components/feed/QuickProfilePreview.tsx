@@ -110,7 +110,9 @@ export const QuickProfilePreview: React.FC<QuickProfilePreviewProps> = ({
             <View style={styles.nameRow}>
               <Text style={styles.userName} numberOfLines={1}>{post.userName}</Text>
               {post.isVerified && (
-                <Ionicons name="checkmark-circle" size={15} color={palette.purple[400]} />
+                <View style={styles.verifiedBadgeInline}>
+                  <Ionicons name="checkmark" size={10} color="#FFFFFF" />
+                </View>
               )}
             </View>
 
@@ -203,6 +205,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 5,
     marginBottom: 4,
+  },
+  verifiedBadgeInline: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#10B981',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   userName: {
     fontSize: 17,

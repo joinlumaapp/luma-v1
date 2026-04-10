@@ -24,6 +24,8 @@ import { discoveryService } from '../../services/discoveryService';
 import { VoiceIntroPlayer } from '../../components/profile/VoiceIntro';
 import { CompatibilityPreviewCard } from './CompatibilityPreviewCard';
 import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
+import { PromptAnswerCard } from '../../components/profile/PromptAnswerCard';
+import type { PromptAnswer } from '../../components/profile/PromptAnswerCard';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
@@ -566,7 +568,30 @@ export const ProfilePreviewScreen: React.FC = () => {
     );
   }
 
-  // Block 2: Hakkımda — lifestyle detail rows with icon circles (matches ProfileScreen aboutRows)
+  // Block 2: Profile Prompts — Hinge-style cards interleaved between photos
+  // Pushed BEFORE lifestyle so they appear between the first photos
+  // Insert each prompt as its own infoSection so they appear between photos
+  if (profile.prompts && profile.prompts.length > 0) {
+    profile.prompts.forEach((prompt, idx) => {
+      const promptData: PromptAnswer = {
+        id: prompt.id || `prompt-${idx}`,
+        question: prompt.question,
+        answer: prompt.answer,
+        emoji: (prompt as { emoji?: string }).emoji,
+      };
+      infoSections.push(
+        <PromptAnswerCard
+          key={`prompt-card-${idx}`}
+          prompt={promptData}
+          showActions={true}
+          onLike={() => { /* TODO: send like notification */ }}
+          onComment={() => { /* TODO: open chat with quote */ }}
+        />,
+      );
+    });
+  }
+
+  // Block 3: Hakkımda — lifestyle detail rows with icon circles
   const lifestyleItems: Array<{ icon: keyof typeof Ionicons.glyphMap; iconBg: string; label: string; value: string }> = [];
   if (profile.job) lifestyleItems.push({ icon: 'briefcase-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'İş', value: profile.job });
   if (profile.education) lifestyleItems.push({ icon: 'school-outline', iconBg: 'rgba(236, 72, 153, 0.10)', label: 'Eğitim', value: profile.education });
@@ -621,19 +646,6 @@ export const ProfilePreviewScreen: React.FC = () => {
         ))}
       </View>,
     );
-  }
-
-  // Block 3: Profile Prompts (Hinge-style Q&A cards interspersed)
-  if (profile.prompts && profile.prompts.length > 0) {
-    profile.prompts.forEach((prompt, idx) => {
-      infoSections.push(
-        <View key={`prompt-${idx}`} style={styles.promptCard}>
-          <Text style={styles.promptQuoteIcon}>{'\u201C'}</Text>
-          <Text style={styles.promptQuestion}>{prompt.question}</Text>
-          <Text style={styles.promptAnswer}>{prompt.answer}</Text>
-        </View>,
-      );
-    });
   }
 
   // Block 3b: Favorite Spots

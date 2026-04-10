@@ -27,6 +27,8 @@ import { devMockOrThrow } from '../../utils/mockGuard';
 import { useAuthStore } from '../../stores/authStore';
 import { getCompatibilityPersonality, type CompatibilityPersonality, translateIntentionTag } from '../../utils/formatters';
 import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
+import { PromptAnswerCard } from '../../components/profile/PromptAnswerCard';
+import type { PromptAnswer } from '../../components/profile/PromptAnswerCard';
 import { VerifiedBadge } from '../../components/common/VerifiedBadge';
 import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
@@ -58,7 +60,7 @@ interface FeedUserProfile {
   intentionTag: string;
   zodiacSign: string;
   packageTier?: 'FREE' | 'PREMIUM' | 'SUPREME';
-  // currentlyListening removed — music feature removed
+  prompts?: Array<{ id: string; question: string; answer: string; emoji?: string }>;
 }
 
 // ─── Dev-only mock profiles ────────────────────────────────────────────────
@@ -411,12 +413,25 @@ export const FeedProfileScreen: React.FC = () => {
     );
   }
 
-  // Currently Listening section removed — music feature removed
-  if (false) {
-    infoSections.push(
-      <View key="listening" style={styles.listeningSection}>
-      </View>,
-    );
+  // 1b. Prompt answers — interleaved between photos (Hinge-style)
+  if (profile.prompts && profile.prompts.length > 0) {
+    profile.prompts.forEach((prompt, idx) => {
+      const promptData: PromptAnswer = {
+        id: prompt.id || `prompt-${idx}`,
+        question: prompt.question,
+        answer: prompt.answer,
+        emoji: prompt.emoji,
+      };
+      infoSections.push(
+        <PromptAnswerCard
+          key={`prompt-card-${idx}`}
+          prompt={promptData}
+          showActions={true}
+          onLike={() => { /* TODO: send like notification */ }}
+          onComment={() => { /* TODO: open chat with quote */ }}
+        />,
+      );
+    });
   }
 
   // 2. Compatibility badge card

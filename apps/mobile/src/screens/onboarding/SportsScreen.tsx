@@ -1,6 +1,6 @@
 // Onboarding step 6/13: Sports frequency — single select
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -33,15 +33,20 @@ const SPORTS_OPTIONS: SportsOption[] = [
 
 export const SportsScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
-  const [selected, setSelected] = useState<string | null>(null);
+  const storedSports = useProfileStore((state) => state.profile.sports);
+  const [selected, setSelected] = useState<string | null>(() => storedSports || null);
   const setField = useProfileStore((state) => state.setField);
+
+  // Auto-save on change so back navigation preserves selection
+  useEffect(() => {
+    if (selected) setField('sports', selected);
+  }, [selected, setField]);
 
   const handleContinue = useCallback(() => {
     if (selected) {
-      setField('sports', selected);
       navigation.navigate('Smoking');
     }
-  }, [selected, setField, navigation]);
+  }, [selected, navigation]);
 
   const handleSkip = useCallback(() => {
     navigation.navigate('Smoking');
@@ -50,7 +55,7 @@ export const SportsScreen: React.FC = () => {
   return (
     <OnboardingLayout
       step={6}
-      totalSteps={13}
+      totalSteps={12}
       showBack
       showSkip
       onSkip={handleSkip}

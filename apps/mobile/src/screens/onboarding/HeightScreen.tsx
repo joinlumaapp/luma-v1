@@ -66,9 +66,12 @@ HeightItem.displayName = 'HeightItem';
 export const HeightScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
   const setField = useProfileStore((state) => state.setField);
-  const [selectedHeight, setSelectedHeight] = useState<number>(DEFAULT_HEIGHT);
+  const storedHeight = useProfileStore((state) => state.profile.height);
+  const initialHeight = storedHeight && storedHeight >= MIN_HEIGHT && storedHeight <= MAX_HEIGHT
+    ? storedHeight : DEFAULT_HEIGHT;
+  const [selectedHeight, setSelectedHeight] = useState<number>(initialHeight);
   const flatListRef = useRef<FlatList<number>>(null);
-  const defaultIndex = DEFAULT_HEIGHT - MIN_HEIGHT;
+  const defaultIndex = initialHeight - MIN_HEIGHT;
 
   const handleContinue = useCallback(() => {
     setField('height', selectedHeight);
@@ -121,7 +124,7 @@ export const HeightScreen: React.FC = () => {
   return (
     <OnboardingLayout
       step={5}
-      totalSteps={13}
+      totalSteps={12}
       showBack
       showSkip
       onSkip={handleSkip}

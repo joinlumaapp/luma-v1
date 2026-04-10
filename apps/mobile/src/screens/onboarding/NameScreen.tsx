@@ -1,6 +1,6 @@
 // Onboarding step 1/13: First name + last name input — cream/beige theme
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   Text,
   TextInput,
@@ -23,10 +23,21 @@ type NavProp = NativeStackNavigationProp<OnboardingStackParamList, 'Name'>;
 
 export const NameScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  const profile = useProfileStore((state) => state.profile);
+  const [firstName, setFirstName] = useState(() => profile.firstName || '');
+  const [lastName, setLastName] = useState(() => profile.lastName || '');
   const setProfileField = useProfileStore((state) => state.setField);
   const lastNameRef = useRef<TextInput>(null);
+
+  // Auto-save to store so back navigation preserves input
+  useEffect(() => {
+    return () => {
+      const fn = firstName.trim();
+      const ln = lastName.trim();
+      if (fn.length >= 2) useProfileStore.getState().setField('firstName', fn);
+      if (ln.length > 0) useProfileStore.getState().setField('lastName', ln);
+    };
+  }, [firstName, lastName]);
 
   const isValid = firstName.trim().length >= 2;
 
@@ -47,7 +58,7 @@ export const NameScreen: React.FC = () => {
     >
       <OnboardingLayout
         step={1}
-        totalSteps={13}
+        totalSteps={12}
         showBack={false}
         footer={
           <FullWidthButton

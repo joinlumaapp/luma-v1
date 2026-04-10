@@ -1,10 +1,66 @@
 # LUMA V1 -- Progress Tracking
 
-**Last Updated:** 2026-04-09
+**Last Updated:** 2026-04-10
 
 ---
 
-## Recent Updates (2026-04-09)
+## Recent Updates (2026-04-10)
+
+### Session 4 — Discovery/Profile Polish + Prompt System Overhaul
+
+**Discovery Card fixes:**
+- Süper Uyum: Removed aggressive yellow glow/flash animation on cards
+- Replaced with subtle badge pulse (scale 1.0→1.1→1.0 every 2s)
+- Card background stays normal on compatibility match
+- Verification badge moved to top-right corner (22x22, #10B981 green, white checkmark)
+- Applied new badge everywhere: DiscoveryCard, MatchesList, CrossedPaths, VerifiedBadge component
+- Feed posts: replaced purple/gold verification icons with consistent green badge
+
+**Welcome screen logo animation:**
+- Luma logo bounce-in: scale 0→1, translateY -100→0, rotate -10deg→0 (spring damping 8, stiffness 100)
+- Continuous subtle pulse after landing (1.0→1.05→1.0 every 3s)
+- Tagline fades in 500ms after logo lands (withDelay)
+
+**Onboarding navigation crash fix:**
+- Root cause: all onboarding screens lost local state on back navigation
+- Fix: each screen now initializes local state from profile store
+- Auto-save on selection/unmount (Gender, WhoToMeet, Sports, Smoking, Children)
+- Text screens auto-save on unmount (Name, City, Bio)
+- BirthDate auto-saves when all 3 parts selected
+- Photos screen restores photo URIs from store
+- 11 onboarding screens updated, zero state loss on back/forward
+
+**"Profilini Zenginleştir" — Hinge+Bumble prompt system:**
+- Merged old "Kendini Tanıt" + "Hakkında" screens into single premium experience
+- 5 new prompt categories with emojis: Kişilik, Yaşam Tarzı, Hayaller, Eğlence, Yemek & Seyahat
+- 30 prompts total, each with emoji icon and pastel card color
+- Horizontal category chip scroll (active: gradient, inactive: purple border)
+- Tap-to-expand prompt cards with TextInput + character counter
+- "✨ Daha çekici yap" AI suggestion placeholder button
+- Gradient Kaydet pill button
+- Confetti burst when all 3 prompts completed
+- Removed BioScreen from navigator, 13 → 12 onboarding steps
+
+**Prompt answers between photos (Hinge-style):**
+- New PromptAnswerCard component with ❤️ like + 💬 comment buttons
+- Integrated into 4 profile screens: ProfilePreviewScreen, ProfileScreen, FeedProfileScreen, MatchDetailScreen
+- Cards interleave between photos via existing InterleavedProfileLayout algorithm
+- PromptAnswerPreview (compact version) shown below user name in FeedCard posts
+- FeedPost interface extended with promptPreview field
+- Soft gradient background (light purple → light pink), glassmorphism shadow
+
+**ProfileScreen dark theme redesign — 8 sections rewritten:**
+1. Profil Gücü compact card (80px, gradient progress bar, tap to open strength checklist modal)
+2. Uyum Analizi card (gradient border, SVG circular progress, or completion badge)
+3. Profil Görüntülenme card (BlurView glassmorphism, stacked avatars, package-tier CTA)
+4. Hakkımda 3-column grid (12 fields, emoji icons, "Ekle +" for empty)
+5. Boost button (48px compact, gold-orange gradient, jeton price)
+6. Arkadaşını Davet Et (Share API with user ID as code)
+7. Kaşif Günlük Görevler (mission card + progress + reward, timer)
+8. Bu Haftanın Yıldızları (horizontal scroll, 3 gradient-border category cards)
+- Strength checklist modal with 8-item checklist + gain percentages
+- Removed old DailyChallenge/WeeklyLeaderboard imports
+- All cards use rgba(255,255,255,0.06) backgrounds, white text, fontWeight 600+
 
 ### Session 3 — Auth Fixes + Global UI Overhaul
 - Phone auth flow fixed: OTP verify → direct to onboarding (no email/password step)
@@ -54,7 +110,9 @@
 | Selfie Verification | ✅ Done | SelfieVerificationScreen UI | |
 | Email Entry | ✅ Done | EmailEntryScreen (no longer in phone/google flow) | 2026-04-09 |
 | Password Creation | ✅ Done | PasswordCreationScreen (no longer in phone/google flow) | 2026-04-09 |
-| Onboarding: All 13 steps | ✅ Done | Name→BirthDate→Gender→WhoToMeet→Height→Sports→Smoking→Children→City→Bio→Prompts→Photos→Selfie | |
+| Onboarding: All 12 steps | ✅ Done | Name→BirthDate→Gender→WhoToMeet→Height→Sports→Smoking→Children→City→Profilini Zenginleştir (merged Bio+Prompts)→Photos→Selfie | 2026-04-10 |
+| Onboarding state persistence | ✅ Done | Back/forward navigation preserves all inputs via store init + auto-save | 2026-04-10 |
+| Profilini Zenginleştir screen | ✅ Done | 5 categories, 30 prompts with emojis, pastel cards, expand-to-answer, confetti | 2026-04-10 |
 | Onboarding 10+10 Split | ✅ Done | First 10 questions during onboarding, rest from profile | 2026-04-09 |
 | Backend auth module | ✅ Done | auth.controller + auth.service + sms.provider + google + apple | 2026-04-09 |
 
@@ -127,7 +185,8 @@
 
 | Feature | Status | Notes | Updated |
 |---------|--------|-------|---------|
-| Profile screen | ✅ Done | ProfileScreen with i18n + referral card + discount modal | 2026-04-09 |
+| Profile screen | ✅ Done | Dark theme redesign: compact strength card, Uyum Analizi SVG circular, glassmorphism viewer CTA, 3-col Hakkımda grid, compact boost, invite, Kaşif missions, weekly stars | 2026-04-10 |
+| Prompt answers between photos | ✅ Done | PromptAnswerCard with ❤️ like + 💬 comment, interleaved via InterleavedProfileLayout across 4 profile screens + FeedCard preview | 2026-04-10 |
 | Edit profile | ✅ Done | EditProfileScreen | |
 | Mood Status | ✅ Done | Mood selector on profile, 4h expiry cron | 2026-04-09 |
 | Questions (Uyum) | ✅ Done | QuestionsScreen (20 soru, ring progress, 10+10 split) | 2026-04-09 |

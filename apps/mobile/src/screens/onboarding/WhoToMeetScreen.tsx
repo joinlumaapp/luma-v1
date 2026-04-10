@@ -1,6 +1,6 @@
 // Onboarding step 2/8: Who to meet — multi-select (cream/beige design)
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -35,7 +35,10 @@ const PREFERENCE_OPTIONS: PreferenceChoice[] = [
 
 export const WhoToMeetScreen: React.FC = () => {
   const navigation = useNavigation<WhoToMeetNavigationProp>();
-  const [selected, setSelected] = useState<PreferenceOption[]>([]);
+  const storedPref = useProfileStore((state) => state.profile.genderPreference);
+  const [selected, setSelected] = useState<PreferenceOption[]>(
+    () => (storedPref?.length ? storedPref as PreferenceOption[] : []),
+  );
   const setProfileField = useProfileStore((state) => state.setField);
 
   const toggleOption = useCallback((value: PreferenceOption) => {
@@ -47,9 +50,13 @@ export const WhoToMeetScreen: React.FC = () => {
     });
   }, []);
 
+  // Auto-save on change so back navigation preserves selection
+  useEffect(() => {
+    if (selected.length > 0) setProfileField('genderPreference', selected);
+  }, [selected, setProfileField]);
+
   const handleConfirm = () => {
     if (selected.length > 0) {
-      setProfileField('genderPreference', selected);
       navigation.navigate('Height');
     }
   };
@@ -59,7 +66,7 @@ export const WhoToMeetScreen: React.FC = () => {
   return (
     <OnboardingLayout
       step={4}
-      totalSteps={13}
+      totalSteps={12}
       footer={
         <FullWidthButton
           label="Onayla"

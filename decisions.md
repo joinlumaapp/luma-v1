@@ -123,3 +123,27 @@
 **Date:** 2026-04-09
 **Decision:** All fontWeights shifted one level up globally (300→400, 400→500, 500→600, 600→700). All fontSizes increased by 2px. Minimum body text is 16px/500 weight. Headings minimum 700 weight.
 **Reasoning:** Thin/light typography feels weak and unconfident on mobile screens. Bold, thick text creates a premium, assertive brand feel. Matches the Bumpy-inspired design direction.
+
+## Decision 024: Merge Bio + PromptSelection into "Profilini Zenginleştir"
+**Date:** 2026-04-10
+**Decision:** Removed standalone BioScreen from onboarding. Bio and prompts are now combined into a single "Profilini Zenginleştir" experience — Hinge+Bumble inspired with 5 categories, 30 emoji-tagged prompts, and expand-to-answer cards. Onboarding steps reduced from 13 to 12.
+**Rejected:** Two separate screens for bio text and prompts (old flow)
+**Reasoning:** Users found it confusing to have both a "write your bio" screen and a "pick prompts" screen. Modern dating apps (Hinge) combine these into prompt answers that serve as both bio and conversation starters. Reduces onboarding friction and improves profile quality since prompts encourage specific, authentic answers.
+
+## Decision 025: Prompts Between Photos (Not as Separate Section)
+**Date:** 2026-04-10
+**Decision:** User prompt answers are displayed BETWEEN photos on profile screens, not in a separate "Q&A" section. Uses the existing InterleavedProfileLayout algorithm with prompts pushed early in infoSections array. Each prompt card includes ❤️ like + 💬 comment buttons for conversation starters.
+**Rejected:** Dedicated prompts section at bottom of profile (old Hinge-style card grid)
+**Reasoning:** Interleaving prompts with photos keeps scroll engagement high, matches Hinge's storytelling flow, and makes each prompt a conversation starter. The like/comment buttons let other users react to specific answers (future: sends "X liked your answer: [prompt]" notification).
+
+## Decision 026: Onboarding State Persistence via Store Init + Unmount Save
+**Date:** 2026-04-10
+**Decision:** Every onboarding screen initializes its local state from the profile store on mount. Selection screens auto-save on change via useEffect. Text screens save on unmount via useEffect cleanup. Prevents data loss when user goes back and forward in the onboarding flow.
+**Rejected:** Passing data via route params, using global form context, skipping auto-save
+**Reasoning:** React Navigation native stack unmounts screens on back navigation, losing all local state. Users hit "continue" on later screens and lost their entries when returning. Using the profile store as the source of truth, with local state mirroring it, gives instant UI updates without losing persistence.
+
+## Decision 027: Green Verification Badge at Top-Right
+**Date:** 2026-04-10
+**Decision:** Verification checkmark badge is green (#10B981), 22x22px, positioned at top-right (top: 8, right: 8) on all user cards and avatars. Replaces previous inconsistent positioning (some left, some bottom) and colors (blue/purple/gold).
+**Rejected:** Blue Twitter-style badge, gold premium-only badge, badge next to name
+**Reasoning:** Green = trust + safety in dating context. Top-right is the universal "status indicator" position (iOS, WhatsApp, Instagram). Single consistent badge style across all screens reduces visual noise. Badge indicates full verification (selfie + profile complete), not package tier.

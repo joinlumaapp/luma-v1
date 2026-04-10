@@ -64,14 +64,14 @@ export const VerifiedBadge: React.FC<VerifiedBadgeProps> = ({
   );
 };
 
-const BADGE_BLUE = '#3B82F6';
+const BADGE_GREEN = '#10B981';
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: BADGE_BLUE,
+    backgroundColor: BADGE_GREEN,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: BADGE_BLUE,
+    shadowColor: BADGE_GREEN,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.4,
     shadowRadius: 4,

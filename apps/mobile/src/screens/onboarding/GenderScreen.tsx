@@ -1,6 +1,6 @@
 // Onboarding step 1/8: Gender selection (cream/beige design)
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -36,12 +36,19 @@ const GENDER_OPTIONS: GenderChoice[] = [
 
 export const GenderScreen: React.FC = () => {
   const navigation = useNavigation<GenderNavigationProp>();
-  const [selectedGender, setSelectedGender] = useState<GenderOption | null>(null);
+  const storedGender = useProfileStore((state) => state.profile.gender);
+  const [selectedGender, setSelectedGender] = useState<GenderOption | null>(
+    () => (storedGender as GenderOption) || null,
+  );
   const setProfileField = useProfileStore((state) => state.setField);
+
+  // Auto-save selection so back navigation preserves it
+  useEffect(() => {
+    if (selectedGender) setProfileField('gender', selectedGender);
+  }, [selectedGender, setProfileField]);
 
   const handleContinue = () => {
     if (selectedGender) {
-      setProfileField('gender', selectedGender);
       navigation.navigate('WhoToMeet');
     }
   };
@@ -49,7 +56,7 @@ export const GenderScreen: React.FC = () => {
   return (
     <OnboardingLayout
       step={3}
-      totalSteps={13}
+      totalSteps={12}
       showBack={true}
       footer={
         <ArrowButton onPress={handleContinue} disabled={!selectedGender} />

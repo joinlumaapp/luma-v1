@@ -13,15 +13,11 @@ import {
   Image,
   Share,
   Alert,
+  Modal,
+  Pressable,
 } from 'react-native';
-import ReAnimated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withSpring,
-  withSequence,
-  withDelay,
-} from 'react-native-reanimated';
+import { BlurView } from 'expo-blur';
+import Svg, { Circle } from 'react-native-svg';
 import { notificationAsync } from '../../utils/haptics';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -49,11 +45,12 @@ import { BoostModal } from '../../components/boost/BoostModal';
 import { VerifiedBadge } from '../../components/common/VerifiedBadge';
 import { SubscriptionBadge } from '../../components/common/SubscriptionBadge';
 import { InterleavedProfileLayout } from '../../components/profile/InterleavedProfileLayout';
+import { PromptAnswerCard } from '../../components/profile/PromptAnswerCard';
+import type { PromptAnswer } from '../../components/profile/PromptAnswerCard';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { ProfileSkeleton } from '../../components/animations/SkeletonLoader';
 import { useTranslation } from 'react-i18next';
 
-import { DailyChallenge, WeeklyLeaderboard } from '../../components/engagement';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 import api from '../../services/api';
 import { socialFeedService, type FeedPost } from '../../services/socialFeedService';
@@ -142,13 +139,6 @@ const getInterestTagDisplay = (tag: string): string => {
   return tag;
 };
 
-// Hakkımda row data type
-interface AboutRow {
-  icon: keyof typeof Ionicons.glyphMap;
-  iconBg: string;
-  label: string;
-  value: string;
-}
 
 // ─── Gold shimmer animation for Premium CTA ──────────────────────────────────
 
@@ -274,50 +264,21 @@ export const ProfileScreen: React.FC = () => {
   const fetchMatches = useMatchStore((state) => state.fetchMatches);
   // Listening status removed — music feature removed
 
-  // ── Profile Strength animation (reanimated) ───────────────────────────────
+  // ── Profile Strength: haptic feedback on increase ──
   const prevCompletionPercent = useRef(completionPercent);
-  const strengthProgressWidth = useSharedValue(completionPercent / 100);
-  const celebrationScale = useSharedValue(0);
-  const celebrationOpacity = useSharedValue(0);
-
   useEffect(() => {
     if (completionPercent > prevCompletionPercent.current) {
-      // Animate progress bar fill
-      strengthProgressWidth.value = withTiming(completionPercent / 100, { duration: 800 });
-
-      // Haptic feedback on increase
       notificationAsync('success');
-
-      // Celebration at 100%
-      if (completionPercent >= 100) {
-        celebrationScale.value = withSequence(
-          withSpring(1.3, { damping: 6 }),
-          withSpring(1.0, { damping: 10 }),
-        );
-        celebrationOpacity.value = withSequence(
-          withTiming(1, { duration: 200 }),
-          withDelay(1000, withTiming(0, { duration: 500 })),
-        );
-      }
-    } else {
-      // Initial render or decrease — set immediately
-      strengthProgressWidth.value = withTiming(completionPercent / 100, { duration: 400 });
     }
     prevCompletionPercent.current = completionPercent;
-  }, [completionPercent, strengthProgressWidth, celebrationScale, celebrationOpacity]);
-
-  const strengthFillAnimatedStyle = useAnimatedStyle(() => ({
-    width: `${strengthProgressWidth.value * 100}%`,
-  }));
-
-  const celebrationAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: celebrationOpacity.value,
-    transform: [{ scale: celebrationScale.value }],
-  }));
+  }, [completionPercent]);
 
   // Mood state (Anlık Ruh Hali)
   const [currentMood, setCurrentMood] = useState<string | null>(null);
   const [moodLoading, setMoodLoading] = useState(false);
+
+  // Profile strength checklist modal
+  const [strengthModalVisible, setStrengthModalVisible] = useState(false);
 
   const handleMoodPress = useCallback(async (moodId: string) => {
     if (moodLoading) return;
@@ -609,26 +570,6 @@ export const ProfileScreen: React.FC = () => {
   const age = calculateAge(profile.birthDate);
   const intentionConfig = profile.intentionTag ? INTENTION_CONFIG[profile.intentionTag] : null;
 
-  // Build about rows
-  const aboutRows: AboutRow[] = [
-    { icon: 'calendar-outline', iconBg: 'rgba(139, 92, 246, 0.10)', label: 'Yaş', value: profile.birthDate ? `${age}` : 'Belirtilmedi' },
-    { icon: 'person-outline', iconBg: 'rgba(59, 130, 246, 0.10)', label: 'Cinsiyet', value: translateGender(profile.gender) },
-    { icon: 'location-outline', iconBg: 'rgba(245, 158, 11, 0.10)', label: 'Şehir', value: profile.city || 'Belirtilmedi' },
-    { icon: 'briefcase-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'İş', value: profile.job || 'Belirtilmedi' },
-    { icon: 'school-outline', iconBg: 'rgba(236, 72, 153, 0.10)', label: 'Eğitim', value: profile.education || 'Belirtilmedi' },
-    { icon: 'people-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'Çocuk', value: profile.children ? translateChildren(profile.children) : 'Belirtilmedi' },
-    { icon: 'flame-outline', iconBg: 'rgba(239, 68, 68, 0.10)', label: 'Sigara', value: profile.smoking ? translateSmoking(profile.smoking) : 'Belirtilmedi' },
-    { icon: 'resize-outline', iconBg: 'rgba(139, 92, 246, 0.10)', label: 'Boy', value: profile.height ? `${profile.height} cm` : 'Belirtilmedi' },
-    { icon: 'fitness-outline', iconBg: 'rgba(59, 130, 246, 0.10)', label: 'Spor', value: profile.sports ? translateSports(profile.sports) : 'Belirtilmedi' },
-    { icon: 'star-outline', iconBg: 'rgba(245, 158, 11, 0.10)', label: 'Burç', value: profile.zodiacSign ? profile.zodiacSign : 'Belirtilmedi' },
-    { icon: 'paw-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'Evcil Hayvan', value: profile.pets ? profile.pets : 'Belirtilmedi' },
-    { icon: 'wine-outline', iconBg: 'rgba(139, 92, 246, 0.10)', label: 'Alkol', value: profile.alcohol ? translateDrinking(profile.alcohol) : 'Belirtilmedi' },
-    { icon: 'leaf-outline', iconBg: 'rgba(16, 185, 129, 0.10)', label: 'Din', value: profile.religion ? profile.religion : 'Belirtilmedi' },
-    { icon: 'heart-half-outline', iconBg: 'rgba(236, 72, 153, 0.10)', label: 'Medeni Durum', value: profile.maritalStatus ? profile.maritalStatus : 'Belirtilmedi' },
-    { icon: 'ribbon-outline', iconBg: 'rgba(59, 130, 246, 0.10)', label: 'Eğitim Seviyesi', value: profile.educationLevel ? profile.educationLevel : 'Belirtilmedi' },
-    { icon: 'barbell-outline', iconBg: 'rgba(139, 92, 246, 0.10)', label: 'Kilo', value: profile.weight ? `${profile.weight} kg` : 'Belirtilmedi' },
-  ];
-
   // ── Header Bar ──────────────────────────────────────────────────────────────
 
   const headerBar = (
@@ -792,178 +733,195 @@ export const ProfileScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* Profile strength card — animated fill + celebration */}
-      <TouchableOpacity onPress={handleEditProfile} activeOpacity={0.7} style={styles.strengthCardContainer} accessibilityLabel={`Profil gücün yüzde ${completionPercent}, düzenlemek için dokunun`} accessibilityRole="button">
-        <View style={styles.strengthCardRow}>
-          <Text style={styles.strengthCardLabel}>Profil Gücün</Text>
-          <View style={styles.strengthCardTrack}>
-            <ReAnimated.View style={[
-              styles.strengthCardFill,
-              {
-                backgroundColor: completionPercent >= 85 ? '#22C55E' : completionPercent >= 60 ? palette.purple[500] : completionPercent >= 30 ? '#F59E0B' : '#EF4444',
-              },
-              strengthFillAnimatedStyle,
-            ]} />
-          </View>
-          <Text style={[
-            styles.strengthCardPercent,
-            {
-              color: completionPercent >= 85 ? '#22C55E' : completionPercent >= 60 ? palette.purple[500] : completionPercent >= 30 ? '#F59E0B' : '#EF4444',
-            },
-          ]}>%{completionPercent}</Text>
-          {/* 100% celebration emoji */}
-          <ReAnimated.View style={[styles.celebrationEmoji, celebrationAnimatedStyle]} pointerEvents="none">
-            <Text style={styles.celebrationEmojiText}>{'\uD83C\uDF89'}</Text>
-          </ReAnimated.View>
-        </View>
-        {completionPercent < 100 && (
-          <Text style={styles.strengthCardHint}>
-            {profile.photos.length < 2 ? '💡 Daha fazla fotoğraf ekle'
-              : profile.bio.length < 50 ? '💡 Bio ekleyerek profilini güçlendir'
-              : profile.interestTags.length === 0 ? '💡 İlgi alanlarını seç'
-              : '💡 Detaylı bilgilerini tamamla'}
-          </Text>
-        )}
-        {completionPercent >= 100 && (
-          <Text style={styles.strengthCardComplete}>{'\u2728'} Profilin tamamlanmış!</Text>
-        )}
-      </TouchableOpacity>
-
-      {/* Uyum Analizi completion reminder card */}
+      {/* ═══ 1. PROFİL GÜCÜ — Compact card ═══ */}
       {(() => {
-        const answeredCount = profile.answers ? Object.keys(profile.answers).length : 0;
-        const isUyumComplete = answeredCount >= 20;
-        if (!isUyumComplete) {
-          const remainingPercent = 100 - Math.round((answeredCount / 20) * 100);
-          return (
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Questions', { editMode: true })}
-              activeOpacity={0.8}
-              style={styles.uyumReminderCard}
-              accessibilityLabel={`Uyum analizini tamamla, ${answeredCount} / 20 soru tamamlandı`}
-              accessibilityRole="button"
-              testID="profile-uyum-reminder"
-            >
-              <View style={styles.uyumReminderRow}>
-                <View style={styles.uyumReminderIconContainer}>
-                  <Text style={styles.uyumReminderIcon}>{'\uD83D\uDCCA'}</Text>
-                </View>
-                <View style={styles.uyumReminderContent}>
-                  <Text style={styles.uyumReminderTitle}>Uyum Analizini Tamamla</Text>
-                  <Text style={styles.uyumReminderSubtitle}>
-                    {answeredCount}/20 soru tamamland{'\u0131'} — %{remainingPercent} kald{'\u0131'}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={palette.purple[400]} />
-              </View>
-            </TouchableOpacity>
-          );
-        }
-        return null;
-      })()}
+        // Determine bar color based on completion
+        const getBarGradient = (): [string, string, ...string[]] => {
+          if (completionPercent >= 100) return ['#F59E0B', '#FBBF24'];
+          if (completionPercent >= 71) return ['#8B5CF6', '#EC4899'];
+          if (completionPercent >= 41) return ['#F59E0B', '#F59E0B'];
+          return ['#EF4444', '#EF4444'];
+        };
 
-      {/* Boost card */}
-      <TouchableOpacity
-        onPress={handleBoostPress}
-        activeOpacity={0.8}
-        style={styles.boostCard}
-        accessibilityLabel="Profilini öne çıkar"
-        accessibilityRole="button"
-        testID="profile-boost-btn"
-      >
-        <View style={styles.boostRow}>
-          <LinearGradient
-            colors={[palette.gold[400], palette.gold[600]] as [string, string, ...string[]]}
-            style={styles.boostIconGradient}
-          >
-            <Text style={styles.boostIconText}>{'\u26A1'}</Text>
-          </LinearGradient>
-          <View style={styles.boostContent}>
-            <Text style={styles.boostTitle}>
-              {boostStatus.isActive ? 'Öne Çıkarma Aktif' : 'Profilini Öne Çıkar'}
-            </Text>
-            <Text style={styles.boostSubtitle}>
-              {boostStatus.isActive
-                ? `Kalan süre: ${boostRemaining || '...'}`
-                : '24 saat boyunca 10x daha fazla görünürlük'}
-            </Text>
-          </View>
-          {boostStatus.isActive ? (
-            <View style={styles.boostActiveBadge}>
-              <View style={styles.boostActiveDot} />
-              <Text style={styles.boostActiveText}>Aktif</Text>
-            </View>
-          ) : (
-            <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
-          )}
-        </View>
-      </TouchableOpacity>
+        // Determine the biggest-gain next step for the hint
+        const hint = (() => {
+          if (profile.photos.length < 2) return '💡 Fotoğraf ekle +%20';
+          if (profile.photos.length < 4) return '💡 Fotoğraf ekle +%15';
+          if (!profile.bio || profile.bio.length < 50) return '💡 Bio ekle +%12';
+          if (profile.interestTags.length === 0) return '💡 İlgi alanları seç +%10';
+          if (profile.prompts.length === 0) return '💡 Profil promptu ekle +%10';
+          if (!profile.job) return '💡 Mesleğini ekle +%5';
+          return '💡 Detaylı bilgileri tamamla';
+        })();
 
-      {/* Weekly views — compact inline (PREMIUM+ sees count, FREE sees teaser) */}
-      {weeklyViewCount !== null && weeklyViewCount > 0 && (
-        packageTier === 'FREE' ? (
+        return (
           <TouchableOpacity
-            style={styles.weeklyViewsRow}
-            activeOpacity={0.7}
-            onPress={() => navigation.navigate('MembershipPlans')}
-            accessibilityLabel="Premium ile profil görüntüleyenleri gör"
+            onPress={() => setStrengthModalVisible(true)}
+            activeOpacity={0.8}
+            style={styles.pgCard}
+            accessibilityLabel={`Profil gücü yüzde ${completionPercent}`}
             accessibilityRole="button"
           >
-            <Text style={styles.weeklyViewsText}>
-              <Text style={styles.weeklyViewsBold}>{weeklyViewCount} kişi</Text> profilini gördü —{' '}
-              <Text style={styles.weeklyViewsGoldCta}>Premium ile öğren</Text>
-            </Text>
+            <View style={styles.pgTopRow}>
+              <Text style={styles.pgLabel}>Profil Gücü</Text>
+              <Text style={styles.pgPercent}>%{completionPercent}</Text>
+            </View>
+            <View style={styles.pgBarTrack}>
+              <LinearGradient
+                colors={getBarGradient()}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={[styles.pgBarFill, { width: `${completionPercent}%` }]}
+              />
+            </View>
+            {completionPercent < 100 ? (
+              <Text style={styles.pgHint}>{hint}</Text>
+            ) : (
+              <Text style={styles.pgHintComplete}>✨ Profilin tamamlanmış!</Text>
+            )}
           </TouchableOpacity>
-        ) : (
-          <View style={styles.weeklyViewsRow}>
-            <View style={styles.weeklyViewsDot} />
-            <Text style={styles.weeklyViewsText}>
-              Bu hafta <Text style={styles.weeklyViewsBold}>{weeklyViewCount} kişi</Text> profilini gördü
-            </Text>
-          </View>
-        )
+        );
+      })()}
+
+      {/* ═══ 2. UYUM ANALİZİ — Gradient border card or completed badge ═══ */}
+      {(() => {
+        const answeredCount = profile.answers ? Object.keys(profile.answers).length : 0;
+        const TOTAL_Q = 20;
+        const isComplete = answeredCount >= TOTAL_Q;
+
+        if (isComplete) {
+          return (
+            <View style={styles.uyumCompleteBadge}>
+              <Ionicons name="checkmark-circle" size={16} color="#10B981" />
+              <Text style={styles.uyumCompleteBadgeText}>Uyum Analizi Tamamlandı</Text>
+            </View>
+          );
+        }
+
+        // Circular progress — SVG stroke-dashoffset
+        const size = 72;
+        const stroke = 6;
+        const radius = (size - stroke) / 2;
+        const circumference = 2 * Math.PI * radius;
+        const progress = answeredCount / TOTAL_Q;
+        const strokeOffset = circumference * (1 - progress);
+
+        return (
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Questions', { editMode: true })}
+            activeOpacity={0.85}
+            style={styles.uyumCardWrapper}
+            accessibilityLabel={`Uyum Analizini tamamla, ${answeredCount} bölü ${TOTAL_Q} soru tamamlandı`}
+            accessibilityRole="button"
+            testID="profile-uyum-reminder"
+          >
+            <LinearGradient
+              colors={['#8B5CF6', '#EC4899']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.uyumCardBorder}
+            >
+              <View style={styles.uyumCardInner}>
+                <Text style={styles.uyumCardTitle}>🎯 Uyum Analizini Tamamla</Text>
+
+                <View style={styles.uyumCardBody}>
+                  {/* Circular progress */}
+                  <View style={styles.uyumCircleWrap}>
+                    <Svg width={size} height={size}>
+                      <Circle
+                        cx={size / 2}
+                        cy={size / 2}
+                        r={radius}
+                        stroke="rgba(255,255,255,0.1)"
+                        strokeWidth={stroke}
+                        fill="none"
+                      />
+                      <Circle
+                        cx={size / 2}
+                        cy={size / 2}
+                        r={radius}
+                        stroke="#EC4899"
+                        strokeWidth={stroke}
+                        fill="none"
+                        strokeDasharray={`${circumference} ${circumference}`}
+                        strokeDashoffset={strokeOffset}
+                        strokeLinecap="round"
+                        transform={`rotate(-90 ${size / 2} ${size / 2})`}
+                      />
+                    </Svg>
+                    <View style={styles.uyumCircleCenter}>
+                      <Text style={styles.uyumCircleCount}>{answeredCount}/{TOTAL_Q}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.uyumCardTextCol}>
+                    <Text style={styles.uyumCardSubtitle}>
+                      Tamamla ve %95+ uyumlu kişileri bul
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Gradient continue button */}
+                <LinearGradient
+                  colors={['#8B5CF6', '#EC4899']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.uyumCardButton}
+                >
+                  <Text style={styles.uyumCardButtonText}>Devam Et</Text>
+                  <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
+                </LinearGradient>
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+        );
+      })()}
+
+      {/* ═══ 3. PROFİL GÖRÜNTÜLENMESİ — Premium CTA card ═══ */}
+      {weeklyViewCount !== null && weeklyViewCount > 0 && (
+        <TouchableOpacity
+          style={styles.viewersCard}
+          activeOpacity={0.85}
+          onPress={() => {
+            if (packageTier === 'FREE') {
+              navigation.navigate('MembershipPlans');
+            } else {
+              // ViewersPreview lives in Matches tab — switch tabs
+              (navigation.getParent() as unknown as { navigate: (tab: string, params: { screen: string }) => void })?.navigate('MatchesTab', { screen: 'ViewersPreview' });
+            }
+          }}
+          accessibilityLabel={`${weeklyViewCount} kişi profilini gördü`}
+          accessibilityRole="button"
+        >
+          <BlurView intensity={20} tint="dark" style={styles.viewersCardBlur}>
+            <View style={styles.viewersCardRow}>
+              {/* Stacked blurred avatars placeholder */}
+              <View style={styles.viewersAvatarsStack}>
+                <View style={[styles.viewersAvatarCircle, { backgroundColor: '#8B5CF6', left: 0 }]} />
+                <View style={[styles.viewersAvatarCircle, { backgroundColor: '#EC4899', left: 18 }]} />
+                <View style={[styles.viewersAvatarCircle, { backgroundColor: '#F59E0B', left: 36 }]} />
+              </View>
+
+              {/* Text content */}
+              <View style={styles.viewersTextCol}>
+                <Text style={styles.viewersCountText}>
+                  {weeklyViewCount} kişi profilini gördü
+                </Text>
+                <Text style={styles.viewersSubText}>
+                  {packageTier === 'FREE'
+                    ? 'Premium ile kimlerin gördüğünü öğren ✨'
+                    : packageTier === 'SUPREME'
+                    ? 'Tümünü gör'
+                    : `İlk 5 kişi — tümünü gör`}
+                </Text>
+              </View>
+
+              <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.6)" />
+            </View>
+          </BlurView>
+        </TouchableOpacity>
       )}
 
-      {/* Referral / Davet card */}
-      <TouchableOpacity
-        onPress={async () => {
-          const code = referralInfo?.referralCode;
-          if (!code) return;
-          try {
-            await Share.share({
-              message: `Luma'ya katıl! Davet kodum: ${code}\nİkimiz de 50 jeton kazanalım!\nhttps://luma.app/invite/${code}`,
-            });
-          } catch {
-            // User cancelled share
-          }
-        }}
-        activeOpacity={0.8}
-        style={styles.referralCard}
-        accessibilityLabel="Arkadaşını davet et"
-        accessibilityRole="button"
-      >
-        <View style={styles.referralRow}>
-          <LinearGradient
-            colors={['#7C3AED', '#A855F7'] as [string, string, ...string[]]}
-            style={styles.referralIconGradient}
-          >
-            <Ionicons name="gift-outline" size={18} color="#FFFFFF" />
-          </LinearGradient>
-          <View style={styles.referralContent}>
-            <Text style={styles.referralTitle}>Arkadaşını Davet Et</Text>
-            <Text style={styles.referralSubtitle}>
-              {referralInfo?.referralCount
-                ? `${referralInfo.referralCount} arkadaşını davet ettin`
-                : 'İkiniz de 50 jeton kazanın!'}
-            </Text>
-          </View>
-          {referralInfo?.referralCode && (
-            <View style={styles.referralCodeBadge}>
-              <Text style={styles.referralCodeText}>{referralInfo.referralCode}</Text>
-            </View>
-          )}
-        </View>
-      </TouchableOpacity>
     </View>
   );
 
@@ -1075,9 +1033,26 @@ export const ProfileScreen: React.FC = () => {
     </View>,
   );
 
-  // Listening status section removed — music feature removed
+  // 2. Prompts — Hinge-style cards interleaved between photos (pushed early)
+  if (profile.prompts.length > 0) {
+    profile.prompts.forEach((prompt, idx) => {
+      const promptData: PromptAnswer = {
+        id: prompt.id || `prompt-${idx}`,
+        question: prompt.question,
+        answer: prompt.answer,
+        emoji: (prompt as { emoji?: string }).emoji,
+      };
+      infoSections.push(
+        <PromptAnswerCard
+          key={`prompt-card-${idx}`}
+          prompt={promptData}
+          showActions={false}
+        />,
+      );
+    });
+  }
 
-  // 2. İlgi Alanları
+  // 2b. İlgi Alanları
   if (profile.interestTags.length > 0) {
     infoSections.push(
       <View key="interests" style={styles.section}>
@@ -1095,81 +1070,59 @@ export const ProfileScreen: React.FC = () => {
     );
   }
 
-  // 2b. Prompts — Hinge-style Q&A cards
-  if (profile.prompts.length > 0) {
+  // 3. Hakkımda — 3-column compact grid (dark theme)
+  {
+    // Filter to the 12 most important fields
+    const hakkimdaFields: Array<{ icon: string; label: string; value: string; isEmpty: boolean }> = [
+      { icon: '🎂', label: 'Yaş', value: profile.birthDate ? `${age}` : '', isEmpty: !profile.birthDate },
+      { icon: '👤', label: 'Cinsiyet', value: profile.gender ? translateGender(profile.gender) : '', isEmpty: !profile.gender },
+      { icon: '📍', label: 'Şehir', value: profile.city || '', isEmpty: !profile.city },
+      { icon: '💼', label: 'İş', value: profile.job || '', isEmpty: !profile.job },
+      { icon: '🎓', label: 'Eğitim', value: profile.education || '', isEmpty: !profile.education },
+      { icon: '📏', label: 'Boy', value: profile.height ? `${profile.height}` : '', isEmpty: !profile.height },
+      { icon: '⭐', label: 'Burç', value: profile.zodiacSign || '', isEmpty: !profile.zodiacSign },
+      { icon: '🚬', label: 'Sigara', value: profile.smoking ? translateSmoking(profile.smoking) : '', isEmpty: !profile.smoking },
+      { icon: '🍷', label: 'Alkol', value: profile.alcohol ? translateDrinking(profile.alcohol) : '', isEmpty: !profile.alcohol },
+      { icon: '🐾', label: 'Evcil', value: profile.pets || '', isEmpty: !profile.pets },
+      { icon: '💪', label: 'Spor', value: profile.sports ? translateSports(profile.sports) : '', isEmpty: !profile.sports },
+      { icon: '👶', label: 'Çocuk', value: profile.children ? translateChildren(profile.children) : '', isEmpty: !profile.children },
+    ];
+
     infoSections.push(
-      <View key="prompts" style={styles.section}>
-        <Text style={styles.sectionTitle}>Sorular & Cevaplar</Text>
-        <View style={{ gap: 12 }}>
-          {profile.prompts.map((prompt) => (
-            <View
-              key={prompt.id}
-              style={{
-                backgroundColor: colors.surface,
-                borderRadius: 16,
-                padding: 18,
-                borderWidth: 1,
-                borderColor: colors.surfaceBorder,
-              }}
+      <View key="hakkimda-grid" style={styles.hakkimdaSection}>
+        {/* Header with "Düzenle" link */}
+        <View style={styles.hakkimdaHeader}>
+          <Text style={styles.hakkimdaTitle}>Hakkımda</Text>
+          <TouchableOpacity onPress={handleEditProfile} activeOpacity={0.7}>
+            <Text style={styles.hakkimdaEditLink}>Düzenle</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* 3-column grid */}
+        <View style={styles.hakkimdaGrid}>
+          {hakkimdaFields.map((field) => (
+            <TouchableOpacity
+              key={field.label}
+              style={styles.hakkimdaCell}
+              activeOpacity={0.7}
+              onPress={field.isEmpty ? handleEditProfile : undefined}
+              disabled={!field.isEmpty}
             >
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: fontWeights.medium,
-                  color: colors.textTertiary,
-                  marginBottom: 8,
-                  lineHeight: 19,
-                }}
-              >
-                {prompt.question}
-              </Text>
-              <Text
-                style={{
-                  fontSize: 16,
-                  fontWeight: fontWeights.semibold,
-                  color: colors.text,
-                  lineHeight: 24,
-                }}
-              >
-                {prompt.answer}
-              </Text>
-            </View>
+              <Text style={styles.hakkimdaCellIcon}>{field.icon}</Text>
+              <Text style={styles.hakkimdaCellLabel}>{field.label}</Text>
+              {field.isEmpty ? (
+                <Text style={styles.hakkimdaCellEmpty}>Ekle +</Text>
+              ) : (
+                <Text style={styles.hakkimdaCellValue} numberOfLines={1} adjustsFontSizeToFit>
+                  {field.value}
+                </Text>
+              )}
+            </TouchableOpacity>
           ))}
         </View>
       </View>,
     );
   }
-
-  // 3. Hakkımda — premium grid card design
-  infoSections.push(
-    <View key="details" style={styles.section}>
-      <Text style={styles.sectionTitle}>Hakkımda</Text>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-        {aboutRows.map((row) => (
-          <View
-            key={row.label}
-            accessibilityLabel={`${row.label}: ${row.value}`}
-            style={{
-              width: '47%' as unknown as number,
-              backgroundColor: colors.surface,
-              borderRadius: 16,
-              padding: 14,
-              borderWidth: 1,
-              borderColor: colors.surfaceBorder,
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-              <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: row.iconBg, justifyContent: 'center', alignItems: 'center', marginRight: 8 }}>
-                <Ionicons name={row.icon} size={16} color={palette.purple[600]} />
-              </View>
-              <Text style={{ fontSize: 14, fontWeight: '500', color: colors.textTertiary, letterSpacing: 0.5 }}>{row.label}</Text>
-            </View>
-            <Text style={{ fontSize: 15, fontWeight: '600', color: row.value === 'Belirtilmedi' ? colors.textTertiary : colors.text }} numberOfLines={1} adjustsFontSizeToFit>{row.value}</Text>
-          </View>
-        ))}
-      </View>
-    </View>,
-  );
 
   // 4. Profil Kocu + Kisilik Tipi — removed
 
@@ -1178,23 +1131,195 @@ export const ProfileScreen: React.FC = () => {
   // 6b. Timed Boost Offer — temporarily disabled for stability
   // TODO: Re-enable after SmartUpgradePrompts CachedAvatar fix
 
-  // 7. Daily Challenge card
+  // ═══ 4. BOOST Button — Compact gradient ═══
   infoSections.push(
-    <View key="daily-challenge" style={{ marginTop: spacing.sm }}>
-      <DailyChallenge variant="card" />
-    </View>,
+    <TouchableOpacity
+      key="boost-button"
+      style={styles.boostButton}
+      activeOpacity={0.85}
+      onPress={handleBoostPress}
+      accessibilityLabel="Profilini Boost ile öne çıkar"
+      accessibilityRole="button"
+    >
+      <LinearGradient
+        colors={['#F59E0B', '#F97316']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.boostButtonGradient}
+      >
+        <View style={styles.boostButtonLeft}>
+          <Text style={styles.boostButtonIcon}>⚡</Text>
+          <Text style={styles.boostButtonText}>
+            {boostStatus.isActive ? 'Boost Aktif — 10x Görünürlük' : 'Boost — 10x Görünürlük'}
+          </Text>
+        </View>
+        <View style={styles.boostButtonRight}>
+          {boostStatus.isActive ? (
+            <Text style={styles.boostButtonPrice}>{boostRemaining || '...'}</Text>
+          ) : (
+            <Text style={styles.boostButtonPrice}>120 💰</Text>
+          )}
+        </View>
+      </LinearGradient>
+    </TouchableOpacity>,
   );
 
-  // 8. Weekly Leaderboard
+  // ═══ 5. ARKADAŞINI DAVET ET ═══
+  {
+    const inviteCode = (referralInfo?.referralCode || user?.id?.substring(0, 8) || 'LUMA').toUpperCase();
+    infoSections.push(
+      <View key="referral-card" style={styles.inviteCard}>
+        <View style={styles.inviteLeft}>
+          <Text style={styles.inviteIcon}>🎁</Text>
+          <View style={styles.inviteTextCol}>
+            <Text style={styles.inviteTitle}>Arkadaşını Davet Et</Text>
+            <Text style={styles.inviteSubtitle}>Her davet için 50 jeton kazan!</Text>
+          </View>
+        </View>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={async () => {
+            try {
+              await Share.share({
+                message: `Luma ile uyumlu insanlarla tanış! Davet kodum: ${inviteCode}`,
+                url: `https://luma.app/invite/${inviteCode}`,
+              });
+            } catch {
+              // User cancelled share
+            }
+          }}
+          accessibilityLabel="Arkadaşını davet et"
+          accessibilityRole="button"
+        >
+          <LinearGradient
+            colors={['#8B5CF6', '#EC4899']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.inviteButton}
+          >
+            <Text style={styles.inviteButtonText}>Davet Et</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>,
+    );
+  }
+
+  // ═══ 6. KAŞİF — Günlük Görevler (compact) ═══
+  {
+    // Mock daily mission data — replace with real data from missions API
+    const dailyMission = {
+      icon: '🔍',
+      description: '5 profili keşfet',
+      progress: 2,
+      total: 5,
+      reward: 5,
+      isComplete: false,
+    };
+    const nextMissionTime = '3s 24dk';
+
+    infoSections.push(
+      <View key="kasif-missions" style={styles.kasifSection}>
+        <Text style={styles.kasifSectionTitle}>🧭 Günlük Görevler</Text>
+
+        {dailyMission.isComplete ? (
+          <View style={styles.kasifCompleteBadge}>
+            <Ionicons name="checkmark-circle" size={16} color="#10B981" />
+            <Text style={styles.kasifCompleteText}>Bugünkü görevler tamamlandı!</Text>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={styles.kasifCard}
+            activeOpacity={0.85}
+            onPress={() => {
+              // Navigate to discovery tab to start mission
+              (navigation.getParent() as unknown as { navigate: (tab: string) => void })?.navigate('DiscoveryTab');
+            }}
+          >
+            <View style={styles.kasifCardRow}>
+              <Text style={styles.kasifMissionIcon}>{dailyMission.icon}</Text>
+              <View style={styles.kasifMissionCol}>
+                <Text style={styles.kasifMissionText}>{dailyMission.description}</Text>
+                <View style={styles.kasifProgressTrack}>
+                  <View
+                    style={[
+                      styles.kasifProgressFill,
+                      { width: `${(dailyMission.progress / dailyMission.total) * 100}%` },
+                    ]}
+                  />
+                </View>
+                <Text style={styles.kasifProgressLabel}>
+                  {dailyMission.progress}/{dailyMission.total}
+                </Text>
+              </View>
+              <View style={styles.kasifReward}>
+                <Text style={styles.kasifRewardText}>+{dailyMission.reward} 💰</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        )}
+
+        <Text style={styles.kasifTimerText}>Sonraki görev: {nextMissionTime}</Text>
+      </View>,
+    );
+  }
+
+  // ═══ 7. BU HAFTANIN YILDIZLARI ═══
+  {
+    // Mock data — replace with real leaderboard API
+    const weeklyStars = [
+      { category: 'En Çok Beğenilen', emoji: '💜', name: 'Ayşe', value: '342 beğeni', color: '#8B5CF6' },
+      { category: 'En Çok Mesaj', emoji: '💬', name: 'Zeynep', value: '128 mesaj', color: '#EC4899' },
+      { category: 'En Uyumlu', emoji: '⭐', name: 'Elif', value: '%96 uyum', color: '#F59E0B' },
+    ];
+
+    infoSections.push(
+      <View key="weekly-stars" style={styles.starsSection}>
+        <Text style={styles.starsSectionTitle}>⭐ Bu Haftanın Yıldızları</Text>
+
+        <HScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.starsScrollContent}
+        >
+          {weeklyStars.map((star) => (
+            <View key={star.category} style={styles.starCard}>
+              <LinearGradient
+                colors={[star.color, star.color + '80']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.starCardBorder}
+              >
+                <View style={styles.starCardInner}>
+                  <Text style={styles.starCardEmoji}>{star.emoji}</Text>
+                  <Text style={styles.starCardCategory}>{star.category}</Text>
+                  <View style={[styles.starAvatarPlaceholder, { backgroundColor: star.color }]}>
+                    <Text style={styles.starAvatarInitial}>{star.name[0]}</Text>
+                  </View>
+                  <Text style={styles.starCardName}>{star.name}</Text>
+                  <Text style={styles.starCardValue}>{star.value}</Text>
+                </View>
+              </LinearGradient>
+            </View>
+          ))}
+        </HScrollView>
+
+        <TouchableOpacity
+          style={styles.starsSeeAllButton}
+          activeOpacity={0.7}
+          onPress={() => {
+            (navigation as unknown as { navigate: (s: string) => void }).navigate('WeeklyTop');
+          }}
+        >
+          <Text style={styles.starsSeeAllText}>Sıralamayı Gör</Text>
+          <Ionicons name="chevron-forward" size={14} color="#8B5CF6" />
+        </TouchableOpacity>
+      </View>,
+    );
+  }
+
+  // Bottom spacer for tab bar
   infoSections.push(
-    <View key="weekly-leaderboard" style={{ marginTop: spacing.sm }}>
-      <WeeklyLeaderboard
-        onProfilePress={(_userId: string) => {
-          // Navigate to profile preview — cross-stack navigation
-          (navigation as unknown as { push: (screen: string, params: Record<string, string>) => void }).push('ProfilePreview', { userId: _userId });
-        }}
-      />
-    </View>,
+    <View key="bottom-spacer" style={{ height: 100 }} />,
   );
 
   // 9. Haftalik Uyum Raporu card
@@ -1321,6 +1446,83 @@ export const ProfileScreen: React.FC = () => {
           </View>
         </View>
       )}
+
+      {/* ═══ Profile Strength Checklist Modal ═══ */}
+      <Modal
+        visible={strengthModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setStrengthModalVisible(false)}
+      >
+        <Pressable
+          style={styles.strengthModalOverlay}
+          onPress={() => setStrengthModalVisible(false)}
+        >
+          <Pressable style={styles.strengthModalCard} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.strengthModalHeader}>
+              <Text style={styles.strengthModalTitle}>Profil Gücü</Text>
+              <TouchableOpacity
+                onPress={() => setStrengthModalVisible(false)}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
+                <Ionicons name="close" size={22} color="rgba(255,255,255,0.7)" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.strengthModalPercent}>%{completionPercent}</Text>
+            <Text style={styles.strengthModalSubtitle}>
+              {completionPercent >= 100
+                ? 'Tebrikler! Profilin tamamen dolu.'
+                : 'Profilini tamamlamak için eksiklerin:'}
+            </Text>
+
+            {/* Checklist */}
+            <View style={styles.strengthChecklist}>
+              {[
+                { label: `Fotoğraf ekle (${profile.photos.length}/9)`, done: profile.photos.length >= 4, gain: '+%20' },
+                { label: 'Bio yaz (min 50 karakter)', done: (profile.bio?.length ?? 0) >= 50, gain: '+%12' },
+                { label: 'Profil promptlarını cevapla', done: profile.prompts.length > 0, gain: '+%10' },
+                { label: 'İlgi alanlarını seç', done: profile.interestTags.length > 0, gain: '+%10' },
+                { label: 'Mesleğini ekle', done: !!profile.job, gain: '+%5' },
+                { label: 'Eğitim bilgisi ekle', done: !!profile.education, gain: '+%5' },
+                { label: 'Boy bilgisi ekle', done: !!profile.height, gain: '+%3' },
+                { label: '20 uyum sorusunu cevapla', done: (profile.answers ? Object.keys(profile.answers).length : 0) >= 20, gain: '+%15' },
+              ].map((item, idx) => (
+                <View key={idx} style={styles.strengthChecklistRow}>
+                  <View style={[styles.strengthCheckCircle, item.done && styles.strengthCheckCircleDone]}>
+                    {item.done && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
+                  </View>
+                  <Text style={[styles.strengthCheckLabel, item.done && styles.strengthCheckLabelDone]}>
+                    {item.label}
+                  </Text>
+                  {!item.done && (
+                    <Text style={styles.strengthCheckGain}>{item.gain}</Text>
+                  )}
+                </View>
+              ))}
+            </View>
+
+            {/* CTA button */}
+            <TouchableOpacity
+              style={styles.strengthModalCta}
+              activeOpacity={0.85}
+              onPress={() => {
+                setStrengthModalVisible(false);
+                handleEditProfile();
+              }}
+            >
+              <LinearGradient
+                colors={['#8B5CF6', '#EC4899']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.strengthModalCtaGradient}
+              >
+                <Text style={styles.strengthModalCtaText}>Profili Düzenle</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 };
@@ -1333,6 +1535,664 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+
+  // ═══ NEW: Hakkımda grid (3-column) ═══
+  hakkimdaSection: {
+    marginTop: 12,
+    marginHorizontal: spacing.lg,
+  },
+  hakkimdaHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  hakkimdaTitle: {
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  hakkimdaEditLink: {
+    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: '#8B5CF6',
+  },
+  hakkimdaGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  hakkimdaCell: {
+    width: '31.5%',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+    gap: 4,
+  },
+  hakkimdaCellIcon: {
+    fontSize: 18,
+    marginBottom: 2,
+  },
+  hakkimdaCellLabel: {
+    fontSize: 11,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.5)',
+    textAlign: 'center',
+  },
+  hakkimdaCellValue: {
+    fontSize: 13,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: '#FFFFFF',
+    textAlign: 'center',
+  },
+  hakkimdaCellEmpty: {
+    fontSize: 12,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: '#8B5CF6',
+    textAlign: 'center',
+  },
+
+  // ═══ NEW: Boost button (compact) ═══
+  boostButton: {
+    marginTop: 12,
+    marginHorizontal: spacing.lg,
+    height: 48,
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#F59E0B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  boostButtonGradient: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+  },
+  boostButtonLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  boostButtonIcon: {
+    fontSize: 18,
+  },
+  boostButtonText: {
+    fontSize: 15,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  boostButtonRight: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderRadius: 12,
+  },
+  boostButtonPrice: {
+    fontSize: 13,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+
+  // ═══ NEW: Invite card ═══
+  inviteCard: {
+    marginTop: 12,
+    marginHorizontal: spacing.lg,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  inviteLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  inviteIcon: {
+    fontSize: 28,
+  },
+  inviteTextCol: {
+    flex: 1,
+  },
+  inviteTitle: {
+    fontSize: 15,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  inviteSubtitle: {
+    fontSize: 12,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 2,
+  },
+  inviteButton: {
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  inviteButtonText: {
+    fontSize: 13,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+
+  // ═══ NEW: Kaşif daily missions ═══
+  kasifSection: {
+    marginTop: 12,
+    marginHorizontal: spacing.lg,
+  },
+  kasifSectionTitle: {
+    fontSize: 16,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 10,
+  },
+  kasifCard: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  kasifCardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  kasifMissionIcon: {
+    fontSize: 24,
+  },
+  kasifMissionCol: {
+    flex: 1,
+    gap: 4,
+  },
+  kasifMissionText: {
+    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  kasifProgressTrack: {
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    overflow: 'hidden',
+    marginTop: 2,
+  },
+  kasifProgressFill: {
+    height: '100%',
+    borderRadius: 2.5,
+    backgroundColor: '#8B5CF6',
+  },
+  kasifProgressLabel: {
+    fontSize: 11,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.6)',
+  },
+  kasifReward: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+  },
+  kasifRewardText: {
+    fontSize: 12,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#F59E0B',
+  },
+  kasifTimerText: {
+    fontSize: 11,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.5)',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  kasifCompleteBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  kasifCompleteText: {
+    fontSize: 13,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: '#10B981',
+  },
+
+  // ═══ NEW: Weekly Stars ═══
+  starsSection: {
+    marginTop: 12,
+  },
+  starsSectionTitle: {
+    fontSize: 16,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 10,
+    marginHorizontal: spacing.lg,
+  },
+  starsScrollContent: {
+    paddingHorizontal: spacing.lg,
+    gap: 12,
+  },
+  starCard: {
+    width: 140,
+  },
+  starCardBorder: {
+    borderRadius: 16,
+    padding: 1.5,
+  },
+  starCardInner: {
+    backgroundColor: '#08080F',
+    borderRadius: 15,
+    padding: 14,
+    alignItems: 'center',
+    gap: 6,
+  },
+  starCardEmoji: {
+    fontSize: 22,
+  },
+  starCardCategory: {
+    fontSize: 11,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.6)',
+    textAlign: 'center',
+  },
+  starAvatarPlaceholder: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  starAvatarInitial: {
+    fontSize: 20,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  starCardName: {
+    fontSize: 14,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginTop: 2,
+  },
+  starCardValue: {
+    fontSize: 11,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.6)',
+  },
+  starsSeeAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    marginTop: 14,
+    marginHorizontal: spacing.lg,
+    paddingVertical: 10,
+  },
+  starsSeeAllText: {
+    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: '#8B5CF6',
+  },
+
+  // ═══ NEW: Profil Gücü (compact) ═══
+  pgCard: {
+    marginTop: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  pgTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  pgLabel: {
+    fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  pgPercent: {
+    fontSize: 15,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  pgBarTrack: {
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  pgBarFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  pgHint: {
+    marginTop: 8,
+    fontSize: 13,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.7)',
+  },
+  pgHintComplete: {
+    marginTop: 8,
+    fontSize: 13,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: '#10B981',
+  },
+
+  // ═══ NEW: Uyum Analizi card ═══
+  uyumCardWrapper: {
+    marginTop: 12,
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  uyumCardBorder: {
+    borderRadius: 18,
+    padding: 1.5,
+  },
+  uyumCardInner: {
+    backgroundColor: '#08080F',
+    borderRadius: 17,
+    padding: 16,
+  },
+  uyumCardTitle: {
+    fontSize: 16,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 14,
+  },
+  uyumCardBody: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginBottom: 14,
+  },
+  uyumCircleWrap: {
+    width: 72,
+    height: 72,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  uyumCircleCenter: {
+    position: 'absolute',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  uyumCircleCount: {
+    fontSize: 15,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  uyumCardTextCol: {
+    flex: 1,
+  },
+  uyumCardSubtitle: {
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.75)',
+    lineHeight: 20,
+  },
+  uyumCardButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+    height: 44,
+    borderRadius: 22,
+  },
+  uyumCardButtonText: {
+    fontSize: 15,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  uyumCompleteBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    alignSelf: 'flex-start',
+    marginTop: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  uyumCompleteBadgeText: {
+    fontSize: 13,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: '#10B981',
+  },
+
+  // ═══ NEW: Profile viewers CTA card ═══
+  viewersCard: {
+    marginTop: 12,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  viewersCardBlur: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  viewersCardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  viewersAvatarsStack: {
+    width: 72,
+    height: 40,
+    position: 'relative',
+  },
+  viewersAvatarCircle: {
+    position: 'absolute',
+    top: 4,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#08080F',
+    opacity: 0.85,
+  },
+  viewersTextCol: {
+    flex: 1,
+    marginLeft: 4,
+  },
+  viewersCountText: {
+    fontSize: 15,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 2,
+  },
+  viewersSubText: {
+    fontSize: 13,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.6)',
+  },
+
+  // ═══ NEW: Strength checklist modal ═══
+  strengthModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  strengthModalCard: {
+    width: '100%',
+    backgroundColor: '#14141F',
+    borderRadius: 20,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  strengthModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  strengthModalTitle: {
+    fontSize: 20,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  strengthModalPercent: {
+    fontSize: 42,
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
+    color: '#EC4899',
+    marginTop: 4,
+  },
+  strengthModalSubtitle: {
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.65)',
+    marginTop: 4,
+    marginBottom: 18,
+  },
+  strengthChecklist: {
+    gap: 12,
+    marginBottom: 20,
+  },
+  strengthChecklistRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  strengthCheckCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  strengthCheckCircleDone: {
+    backgroundColor: '#10B981',
+    borderColor: '#10B981',
+  },
+  strengthCheckLabel: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: '#FFFFFF',
+  },
+  strengthCheckLabelDone: {
+    color: 'rgba(255,255,255,0.5)',
+    textDecorationLine: 'line-through',
+  },
+  strengthCheckGain: {
+    fontSize: 12,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#F59E0B',
+  },
+  strengthModalCta: {
+    borderRadius: 28,
+    overflow: 'hidden',
+  },
+  strengthModalCtaGradient: {
+    height: 52,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 28,
+  },
+  strengthModalCtaText: {
+    fontSize: 16,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 
   // ── Header bar ──

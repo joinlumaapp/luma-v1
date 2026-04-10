@@ -59,9 +59,19 @@ interface PhotoSlot {
 
 export const PhotosScreen: React.FC = () => {
   const navigation = useNavigation<PhotosNavigationProp>();
-  const [photoSlots, setPhotoSlots] = useState<(PhotoSlot | null)[]>(
-    Array.from({ length: ONBOARDING_PHOTO_SLOTS }, () => null)
-  );
+  const storedPhotos = useProfileStore((state) => state.profile.photos);
+  const [photoSlots, setPhotoSlots] = useState<(PhotoSlot | null)[]>(() => {
+    const slots: (PhotoSlot | null)[] = Array.from({ length: ONBOARDING_PHOTO_SLOTS }, () => null);
+    // Restore previously selected photos from store
+    if (storedPhotos?.length) {
+      storedPhotos.forEach((uri, i) => {
+        if (i < ONBOARDING_PHOTO_SLOTS && uri) {
+          slots[i] = { uri, compressed: null };
+        }
+      });
+    }
+    return slots;
+  });
   const [compressingIndex, setCompressingIndex] = useState<number | null>(null);
   const [detectingFace, setDetectingFace] = useState(false);
   const setProfileField = useProfileStore((state) => state.setField);
@@ -293,8 +303,8 @@ export const PhotosScreen: React.FC = () => {
 
   return (
     <OnboardingLayout
-      step={12}
-      totalSteps={13}
+      step={11}
+      totalSteps={12}
       footer={
         <Animated.View style={buttonAnimStyle}>
           <FullWidthButton

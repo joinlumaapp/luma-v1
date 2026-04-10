@@ -1,6 +1,6 @@
 // Onboarding step 7/13: Smoking habits — single select
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -34,15 +34,20 @@ const SMOKING_OPTIONS: SmokingOption[] = [
 
 export const SmokingScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
-  const [selected, setSelected] = useState<string | null>(null);
+  const storedSmoking = useProfileStore((state) => state.profile.smoking);
+  const [selected, setSelected] = useState<string | null>(() => storedSmoking || null);
   const setField = useProfileStore((state) => state.setField);
+
+  // Auto-save on change so back navigation preserves selection
+  useEffect(() => {
+    if (selected) setField('smoking', selected);
+  }, [selected, setField]);
 
   const handleContinue = useCallback(() => {
     if (selected) {
-      setField('smoking', selected);
       navigation.navigate('Children');
     }
-  }, [selected, setField, navigation]);
+  }, [selected, navigation]);
 
   const handleSkip = useCallback(() => {
     navigation.navigate('Children');
@@ -51,7 +56,7 @@ export const SmokingScreen: React.FC = () => {
   return (
     <OnboardingLayout
       step={7}
-      totalSteps={13}
+      totalSteps={12}
       showBack
       showSkip
       onSkip={handleSkip}

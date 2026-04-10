@@ -23,7 +23,6 @@ try {
   // Not available on this platform
 }
 import Animated, {
-  FadeInDown,
   FadeInUp,
   useSharedValue,
   useAnimatedStyle,
@@ -31,7 +30,9 @@ import Animated, {
   withRepeat,
   withSequence,
   withTiming,
+  withDelay,
   Easing,
+  runOnJS,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -150,6 +151,59 @@ const FounderTestPanel: React.FC<{
 const EmotionalIntroScreen: React.FC = () => {
   const navigation = useNavigation<IntroNavigationProp>();
   const [showTestPanel, setShowTestPanel] = useState(false);
+
+  // ── Logo bounce-in animation ──
+  const logoScale = useSharedValue(0);
+  const logoTranslateY = useSharedValue(-100);
+  const logoRotate = useSharedValue(-10);
+
+  // Continuous subtle pulse after landing
+  const logoPulse = useSharedValue(1);
+
+  // Tagline fade-in (delayed until after logo lands)
+  const taglineOpacity = useSharedValue(0);
+  const taglineTranslateY = useSharedValue(15);
+
+  const startPulseAndTagline = useCallback(() => {
+    // Subtle pulse: 1.0 → 1.05 → 1.0 every 3s
+    logoPulse.value = withRepeat(
+      withSequence(
+        withTiming(1.05, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1.0, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
+      ),
+      -1,
+      false,
+    );
+    // Tagline fades in 500ms after logo lands
+    taglineOpacity.value = withDelay(500,
+      withTiming(1, { duration: 600, easing: Easing.out(Easing.ease) }),
+    );
+    taglineTranslateY.value = withDelay(500,
+      withSpring(0, { damping: 12, stiffness: 100 }),
+    );
+  }, [logoPulse, taglineOpacity, taglineTranslateY]);
+
+  useEffect(() => {
+    const springConfig = { damping: 8, stiffness: 100 };
+    logoScale.value = withSpring(1, springConfig, (finished) => {
+      if (finished) runOnJS(startPulseAndTagline)();
+    });
+    logoTranslateY.value = withSpring(0, springConfig);
+    logoRotate.value = withSpring(0, springConfig);
+  }, [logoScale, logoTranslateY, logoRotate, startPulseAndTagline]);
+
+  const logoAnimStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: logoTranslateY.value },
+      { scale: logoScale.value * logoPulse.value },
+      { rotate: `${logoRotate.value}deg` },
+    ],
+  }));
+
+  const taglineAnimStyle = useAnimatedStyle(() => ({
+    opacity: taglineOpacity.value,
+    transform: [{ translateY: taglineTranslateY.value }],
+  }));
 
   // Phone button press animation
   const phoneScale = useSharedValue(1);
@@ -315,9 +369,9 @@ const EmotionalIntroScreen: React.FC = () => {
         {/* Top spacer */}
         <View style={styles.topSpacer} />
 
-        {/* Center — LUMA 3D logo with entrance animation */}
+        {/* Center — LUMA 3D logo with bounce-in + pulse animation */}
         <View style={styles.logoSection}>
-          <Animated.View entering={FadeInDown.duration(800).delay(200).springify().damping(12)}>
+          <Animated.View style={logoAnimStyle}>
             <Pressable onLongPress={handleLogoLongPress} delayLongPress={3000}>
               <View style={styles.logoContainer}>
                 <Image
@@ -330,8 +384,8 @@ const EmotionalIntroScreen: React.FC = () => {
           </Animated.View>
         </View>
 
-        {/* Tagline — emotional hook */}
-        <Animated.View entering={FadeInUp.duration(600).delay(500)} style={styles.taglineContainer}>
+        {/* Tagline — fades in after logo lands */}
+        <Animated.View style={[styles.taglineContainer, taglineAnimStyle]}>
           <Text style={styles.tagline}>Gerçek uyum için kendin ol.</Text>
         </Animated.View>
 

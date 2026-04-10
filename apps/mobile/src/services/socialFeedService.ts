@@ -66,6 +66,8 @@ export interface FeedPost {
   createdAt: string;
   /** Current mood status of the post author (Anlık Ruh Hali) */
   currentMood?: string | null;
+  /** Random prompt answer from the user — shown as conversation starter */
+  promptPreview?: { id: string; question: string; answer: string; emoji?: string } | null;
 }
 
 export interface CreatePostRequest {

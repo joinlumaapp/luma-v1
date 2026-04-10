@@ -1,6 +1,6 @@
 // Onboarding step 8/13: Children status — single select
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -34,15 +34,20 @@ const CHILDREN_OPTIONS: ChildrenOption[] = [
 
 export const ChildrenScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
-  const [selected, setSelected] = useState<string | null>(null);
+  const storedChildren = useProfileStore((state) => state.profile.children);
+  const [selected, setSelected] = useState<string | null>(() => storedChildren || null);
   const setField = useProfileStore((state) => state.setField);
+
+  // Auto-save on change so back navigation preserves selection
+  useEffect(() => {
+    if (selected) setField('children', selected);
+  }, [selected, setField]);
 
   const handleContinue = useCallback(() => {
     if (selected) {
-      setField('children', selected);
       navigation.navigate('CitySelection');
     }
-  }, [selected, setField, navigation]);
+  }, [selected, navigation]);
 
   const handleSkip = useCallback(() => {
     navigation.navigate('CitySelection');
@@ -51,7 +56,7 @@ export const ChildrenScreen: React.FC = () => {
   return (
     <OnboardingLayout
       step={8}
-      totalSteps={13}
+      totalSteps={12}
       showBack
       showSkip
       onSkip={handleSkip}

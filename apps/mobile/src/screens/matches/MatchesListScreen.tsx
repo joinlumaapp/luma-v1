@@ -226,6 +226,11 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
             style={[styles.avatarContainer, { transform: [{ scale: avatarScaleAnim }] }]}
           >
             {renderAvatar()}
+            {item.isVerified && (
+              <View style={styles.verifiedBadgeTopRight}>
+                <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+              </View>
+            )}
             {item.isNew && (
               <LinearGradient
                 colors={[palette.purple[500], palette.pink[500]]}
@@ -265,11 +270,6 @@ const MatchCard = memo<MatchCardProps>(({ item, index, onPress, onAvatarPress, o
               <Text style={styles.compatText}>
                 %{item.compatibilityPercent} uyumlu
               </Text>
-              {item.isVerified && (
-                <View style={styles.verifiedDot}>
-                  <Ionicons name="checkmark-circle" size={14} color={colors.success} />
-                </View>
-              )}
             </View>
             {item.lastMessage ? (
               <Text style={styles.messagePreview} numberOfLines={1}>
@@ -1853,6 +1853,18 @@ const styles = StyleSheet.create({
   },
   verifiedDot: {
     marginLeft: 2,
+  },
+  verifiedBadgeTopRight: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#10B981',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 3,
   },
   // ── Mesajlar tab: chat icon ──
   chatIconContainer: {

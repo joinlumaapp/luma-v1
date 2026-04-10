@@ -216,52 +216,24 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
     opacity: boostBadgeOpacity.value,
   }));
 
-  // ── Animation 6: Super Compatibility Glow (>=90%) ──
-  const superGlowOpacity = useSharedValue(0.3);
+  // ── Animation 6: Super Compatibility Badge Pulse (>=90%) ──
   const superBadgeScale = useSharedValue(1.0);
-  const superBorderOpacity = useSharedValue(0.3);
 
   useEffect(() => {
     if (!isSuperCompat) return;
-    // Pulsing golden glow: opacity 0.3 -> 0.8
-    superGlowOpacity.value = withRepeat(
-      withSequence(
-        withTiming(0.8, { duration: 1000, easing: ReanimatedEasing.inOut(ReanimatedEasing.ease) }),
-        withTiming(0.3, { duration: 1000, easing: ReanimatedEasing.inOut(ReanimatedEasing.ease) }),
-      ),
-      -1,
-      false,
-    );
-    // Sparkle scale pulse: 1.0 -> 1.05 -> 1.0 over 1.5s
+    // Subtle pulse: scale 1.0 -> 1.1 -> 1.0 every 2s
     superBadgeScale.value = withRepeat(
       withSequence(
-        withTiming(1.05, { duration: 750, easing: ReanimatedEasing.inOut(ReanimatedEasing.ease) }),
-        withTiming(1.0, { duration: 750, easing: ReanimatedEasing.inOut(ReanimatedEasing.ease) }),
+        withTiming(1.1, { duration: 1000, easing: ReanimatedEasing.inOut(ReanimatedEasing.ease) }),
+        withTiming(1.0, { duration: 1000, easing: ReanimatedEasing.inOut(ReanimatedEasing.ease) }),
       ),
       -1,
       false,
     );
-    // Border opacity pulse
-    superBorderOpacity.value = withRepeat(
-      withSequence(
-        withTiming(0.8, { duration: 1000, easing: ReanimatedEasing.inOut(ReanimatedEasing.ease) }),
-        withTiming(0.3, { duration: 1000, easing: ReanimatedEasing.inOut(ReanimatedEasing.ease) }),
-      ),
-      -1,
-      false,
-    );
-  }, [isSuperCompat, superGlowOpacity, superBadgeScale, superBorderOpacity]);
-
-  const superGlowStyle = useAnimatedStyle(() => ({
-    opacity: superGlowOpacity.value,
-  }));
+  }, [isSuperCompat, superBadgeScale]);
 
   const superBadgeAnimStyle = useAnimatedStyle(() => ({
     transform: [{ scale: superBadgeScale.value }],
-  }));
-
-  const superBorderStyle = useAnimatedStyle(() => ({
-    opacity: superBorderOpacity.value,
   }));
 
   // ── Supreme Aura: pulsing gold border opacity ──
@@ -396,16 +368,10 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
         </Reanimated.View>
       )}
 
-      {/* Verified badge — top-left */}
-      {profile.isVerified && !isSuperCompat && (
+      {/* Verified badge — top-right */}
+      {profile.isVerified && (
         <View style={styles.verifiedBadge}>
-          <Ionicons name="checkmark" size={12} color="#FFFFFF" />
-        </View>
-      )}
-      {/* Verified badge — shifted down when super compat badge is shown */}
-      {profile.isVerified && isSuperCompat && (
-        <View style={[styles.verifiedBadge, { top: spacing.smd + 32 }]}>
-          <Ionicons name="checkmark" size={12} color="#FFFFFF" />
+          <Ionicons name="checkmark" size={14} color="#FFFFFF" />
         </View>
       )}
 
@@ -535,26 +501,9 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
     </View>
   );
 
-  // Wrap super compatibility cards (>=90%) in a golden glow
-  if (isSuperCompat && !isSupreme) {
-    return (
-      <View style={styles.superCompatGlowWrapper}>
-        <Reanimated.View
-          style={[styles.superCompatGlowBorder, superBorderStyle]}
-          pointerEvents="none"
-        />
-        <Reanimated.View
-          style={[styles.superCompatGlowShadow, superGlowStyle]}
-          pointerEvents="none"
-        />
-        {cardContent}
-      </View>
-    );
-  }
-
   // Wrap supreme profiles in a pulsing golden aura
   if (isSupreme) {
-    const wrappedContent = (
+    return (
       <View style={styles.supremeAuraWrapper}>
         <Animated.View
           style={[
@@ -566,25 +515,6 @@ const DiscoveryCardInner: React.FC<DiscoveryCardProps> = ({ profile, onCompatTap
         {cardContent}
       </View>
     );
-
-    // Supreme + super compat: add golden glow on top
-    if (isSuperCompat) {
-      return (
-        <View style={styles.superCompatGlowWrapper}>
-          <Reanimated.View
-            style={[styles.superCompatGlowBorder, superBorderStyle]}
-            pointerEvents="none"
-          />
-          <Reanimated.View
-            style={[styles.superCompatGlowShadow, superGlowStyle]}
-            pointerEvents="none"
-          />
-          {wrappedContent}
-        </View>
-      );
-    }
-
-    return wrappedContent;
   }
 
   return cardContent;
@@ -636,15 +566,15 @@ const styles = StyleSheet.create({
     height: '60%',
   },
 
-  // ── Verified badge — top-left ──
+  // ── Verified badge — top-right ──
   verifiedBadge: {
     position: 'absolute',
-    top: spacing.smd,
-    left: spacing.smd,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(16, 185, 129, 0.85)',
+    top: 8,
+    right: 8,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#10B981',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 2,
@@ -894,59 +824,23 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
 
-  // ── Super Compatibility Glow (Animation 6) ──
+  // ── Super Compatibility Badge (Animation 6) — subtle pulse only ──
   superCompatBadge: {
     position: 'absolute',
     top: spacing.smd,
     left: spacing.smd,
-    backgroundColor: '#FFD700',
+    backgroundColor: 'rgba(236, 72, 153, 0.85)',
     borderRadius: borderRadius.full,
     paddingHorizontal: 10,
     paddingVertical: 4,
     zIndex: 6,
-    shadowColor: '#FFD700',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-    elevation: 5,
   },
   superCompatBadgeText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: fontWeights.bold,
     fontFamily: poppinsFonts.bold,
     color: '#FFFFFF',
     includeFontPadding: false,
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  superCompatGlowWrapper: {
-    flex: 1,
-    borderRadius: 22,
-    overflow: 'hidden',
-    shadowColor: '#FFD700',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 18,
-    elevation: 10,
-  },
-  superCompatGlowBorder: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 22,
-    borderWidth: 1.5,
-    borderColor: '#FFD700',
-    zIndex: 10,
-  },
-  superCompatGlowShadow: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 22,
-    shadowColor: '#FFD700',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 20,
-    elevation: 12,
-    backgroundColor: 'transparent',
-    zIndex: 9,
   },
 
   // ── Supreme Aura ──
