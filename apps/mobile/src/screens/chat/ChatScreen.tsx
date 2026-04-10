@@ -49,6 +49,7 @@ import { presenceService } from '../../services/presenceService';
 import { formatActivityStatus } from '../../utils/formatters';
 import { GiphyPicker } from '../../components/chat/GiphyPicker';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { Ionicons } from '@expo/vector-icons';
 
 type ChatNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'Chat'>;
 type ChatRouteProp = RouteProp<MatchesStackParamList, 'Chat'>;
@@ -673,7 +674,7 @@ export const ChatScreen: React.FC = () => {
           accessibilityHint="Önceki ekrana dönmek için dokunun"
           testID="chat-back-btn"
         >
-          <Text style={styles.backText}>{'\u2039'}</Text>
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
 
         <View style={styles.headerInfo}>
@@ -1132,16 +1133,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  backText: {
-    ...typography.h4,
-    color: colors.text,
   },
   headerInfo: {
     flex: 1,

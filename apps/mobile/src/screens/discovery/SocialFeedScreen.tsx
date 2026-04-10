@@ -1411,7 +1411,8 @@ const styles = StyleSheet.create({
   headerArea: {
     backgroundColor: 'transparent',
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm + 2,
+    paddingTop: 8,
+    paddingBottom: spacing.sm + 2,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

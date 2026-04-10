@@ -13,7 +13,7 @@ import Reanimated, {
   withSequence,
   withSpring,
 } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -160,7 +160,7 @@ function createTabResetListener(
 const TAB_ICONS: Record<string, { active: keyof typeof Ionicons.glyphMap; inactive: keyof typeof Ionicons.glyphMap }> = {
   compass: { active: 'compass', inactive: 'compass-outline' },
   heart: { active: 'heart', inactive: 'heart-outline' },
-  feed: { active: 'newspaper', inactive: 'newspaper-outline' },
+  feed: { active: 'home', inactive: 'home-outline' },
   live: { active: 'videocam', inactive: 'videocam-outline' },
   user: { active: 'person', inactive: 'person-outline' },
 };
@@ -169,7 +169,7 @@ const TAB_ICONS: Record<string, { active: keyof typeof Ionicons.glyphMap; inacti
 const TabIcon: React.FC<{ name: string; focused: boolean }> = React.memo(({ name, focused }) => {
   const icons = TAB_ICONS[name];
   const iconName = icons ? (focused ? icons.active : icons.inactive) : 'help-outline';
-  const iconColor = focused ? '#FFFFFF' : 'rgba(255, 255, 255, 0.5)';
+  const iconColor = focused ? '#9B6BF8' : 'rgba(255, 255, 255, 0.4)';
 
   // Scale press animation — bounces from 0.85 to 1.0 when tab changes
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -205,7 +205,7 @@ const TabIcon: React.FC<{ name: string; focused: boolean }> = React.memo(({ name
 
   return (
     <Animated.View style={[styles.tabIconContainer, { transform: [{ scale: scaleAnim }] }]}>
-      <Ionicons name={iconName} size={24} color={iconColor} />
+      <Ionicons name={iconName} size={26} color={iconColor} />
       <Animated.View
         style={[
           styles.tabIndicator,
@@ -570,13 +570,18 @@ export const MainTabNavigator: React.FC = () => {
         lazy: true,
         freezeOnBlur: true,
         animation: 'fade',
-        tabBarStyle: [styles.tabBar, { backgroundColor: darkTheme.tabBarBackground, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: darkTheme.tabBarBorder }],
-        tabBarActiveTintColor: darkTheme.tabBarActive,
-        tabBarInactiveTintColor: darkTheme.tabBarInactive,
+        tabBarStyle: {
+          backgroundColor: '#08080F',
+          borderTopWidth: 0,
+          height: 64,
+          paddingBottom: 8,
+          paddingTop: 4,
+        },
+        tabBarActiveTintColor: '#9B6BF8',
+        tabBarInactiveTintColor: 'rgba(255,255,255,0.5)',
         tabBarLabelStyle: {
-          ...typography.tabBar,
-          fontSize: 9,
-          lineHeight: 14,
+          fontSize: 11,
+          fontWeight: '600' as const,
         },
       }}
     >
@@ -585,8 +590,8 @@ export const MainTabNavigator: React.FC = () => {
         component={FeedStackNavigator}
         options={{
           tabBarLabel: t('tabs.feed'),
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name="feed" focused={focused} />
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="home" size={26} color={color} />
           ),
           tabBarAccessibilityLabel: t('tabs.feed'),
           tabBarButtonTestID: 'tab-feed',
@@ -598,8 +603,8 @@ export const MainTabNavigator: React.FC = () => {
         component={DiscoveryStackNavigator}
         options={{
           tabBarLabel: t('tabs.discover'),
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name="compass" focused={focused} />
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="compass" size={26} color={color} />
           ),
           tabBarAccessibilityLabel: t('tabs.discover'),
           tabBarButtonTestID: 'tab-discovery',
@@ -611,8 +616,8 @@ export const MainTabNavigator: React.FC = () => {
         component={LiveStackNavigator}
         options={{
           tabBarLabel: t('tabs.live'),
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name="live" focused={focused} />
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="videocam" size={26} color={color} />
           ),
           tabBarAccessibilityLabel: t('tabs.live'),
           tabBarButtonTestID: 'tab-live',
@@ -624,12 +629,17 @@ export const MainTabNavigator: React.FC = () => {
         component={MatchesStackNavigator}
         options={{
           tabBarLabel: t('tabs.matches'),
-          tabBarIcon: ({ focused }) => (
-            <TabIconWithBadge
-              name="heart"
-              focused={focused}
-              badgeCount={matchesTabBadge}
-            />
+          tabBarIcon: ({ color }) => (
+            <View>
+              <Ionicons name="heart" size={26} color={color} />
+              {matchesTabBadge > 0 && (
+                <View style={styles.unreadBadge}>
+                  <Text style={styles.unreadBadgeText}>
+                    {matchesTabBadge > 99 ? '99+' : matchesTabBadge}
+                  </Text>
+                </View>
+              )}
+            </View>
           ),
           tabBarAccessibilityLabel: `Eşleşmeler${matchesTabBadge > 0 ? `, ${newMatchCount} yeni eşleşme, ${totalUnread} okunmamış mesaj` : ''}`,
           tabBarButtonTestID: 'tab-matches',
@@ -641,8 +651,8 @@ export const MainTabNavigator: React.FC = () => {
         component={ProfileStackNavigator}
         options={{
           tabBarLabel: t('tabs.profile'),
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name="user" focused={focused} />
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="person" size={26} color={color} />
           ),
           tabBarAccessibilityLabel: t('tabs.profile'),
           tabBarButtonTestID: 'tab-profile',
@@ -663,33 +673,9 @@ export const MainTabNavigator: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  tabBar: {
-    borderTopWidth: 0,
-    height: layout.tabBarHeight,
-    paddingBottom: spacing.xs,
-    paddingTop: spacing.xs,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 12,
-      },
-    }),
-  },
   tabIconContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  tabIndicator: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginTop: 2,
-    backgroundColor: '#FFFFFF',
   },
   // Unread message badge
   unreadBadge: {

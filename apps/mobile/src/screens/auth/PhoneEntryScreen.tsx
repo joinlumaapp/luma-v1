@@ -394,10 +394,10 @@ const styles = StyleSheet.create({
     backgroundColor: onboardingColors.surfaceBorder,
   },
   submitButtonText: {
-    fontSize: 16,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.semibold,
-    color: onboardingColors.buttonText,
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
     letterSpacing: 0.3,
   },
   submitButtonTextDisabled: {

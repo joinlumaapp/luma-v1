@@ -562,9 +562,9 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.headerInfo} onPress={handleProfilePress} activeOpacity={0.7}>
-          {/* Name + badge + mood */}
+          {/* Name + age + badge + mood */}
           <View style={styles.nameRow}>
-            <Text style={styles.userName} numberOfLines={1}>{post.userName}</Text>
+            <Text style={styles.userName} numberOfLines={1}>{post.userName}{post.userAge > 0 ? `, ${post.userAge}` : ''}</Text>
             {post.verificationLevel === 'VERIFIED' && (
               <Ionicons name="checkmark-circle" size={15} color={palette.purple[400]} style={styles.verifiedIcon} />
             )}
@@ -655,7 +655,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
 
         <View style={styles.actionWithCount}>
           <TouchableOpacity style={styles.commentButton} onPress={handleCommentPress} activeOpacity={0.7}>
-            <Ionicons name="chatbubble-outline" size={22} color="#9CA3AF" />
+            <Ionicons name="chatbubble-outline" size={24} color="#9CA3AF" />
             {post.commentCount > 0 && (
               <Text style={styles.commentCount}>{post.commentCount}</Text>
             )}
@@ -665,6 +665,12 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
               <Text style={styles.tappableCount}>{post.commentCount} yorum</Text>
             </TouchableOpacity>
           )}
+        </View>
+
+        <View style={styles.actionWithCount}>
+          <TouchableOpacity style={styles.commentButton} activeOpacity={0.7}>
+            <Ionicons name="share-outline" size={24} color="#9CA3AF" />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -678,7 +684,7 @@ const styles = StyleSheet.create({
   // ── Card Container ──
   card: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.xl,
+    borderRadius: 16,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md + 4,
     paddingBottom: spacing.md,
@@ -686,11 +692,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.smd,
     borderWidth: 1,
     borderColor: `${palette.pink[200]}30`,
-    shadowColor: palette.purple[900],
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
   },
 
   // ── Header ──
@@ -778,17 +784,17 @@ const styles = StyleSheet.create({
     gap: 4,
     marginLeft: spacing.sm,
     marginTop: 4,
-    paddingHorizontal: spacing.smd,
-    paddingVertical: 6,
-    borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: palette.purple[300] + '50',
-    backgroundColor: palette.purple[50] + '60',
+    height: 36,
+    paddingHorizontal: 16,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: palette.purple[400],
+    backgroundColor: 'transparent',
   },
   followButtonText: {
     fontSize: 14,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: palette.purple[500],
   },
   followButtonActive: {

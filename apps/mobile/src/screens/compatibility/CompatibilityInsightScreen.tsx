@@ -24,6 +24,7 @@ import { compatibilityService } from '../../services/compatibilityService';
 import { useAuthStore } from '../../stores/authStore';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { Ionicons } from '@expo/vector-icons';
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -490,7 +491,7 @@ export const CompatibilityInsightScreen: React.FC = () => {
             onPress={() => navigation.goBack()}
             style={styles.backButton}
           >
-            <Text style={styles.backText}>{'<'}</Text>
+            <Ionicons name="chevron-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Uyum Analizi</Text>
           <View style={{ width: 40 }} />
@@ -765,16 +766,12 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  backText: {
-    ...typography.h4,
-    color: colors.text,
   },
   headerTitle: {
     ...typography.bodyLarge,

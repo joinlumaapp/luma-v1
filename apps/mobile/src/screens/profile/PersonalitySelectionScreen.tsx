@@ -12,6 +12,7 @@ import * as Haptics from 'expo-haptics';
 import { useProfileStore } from '../../stores/profileStore';
 import { colors } from '../../theme/colors';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { Ionicons } from '@expo/vector-icons';
 
 // --- Quiz Questions --------------------------------------------------------
 
@@ -230,8 +231,8 @@ export const PersonalitySelectionScreen: React.FC = () => {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack} hitSlop={12}>
-          <Text style={styles.backText}>{'\u2190'}</Text>
+        <TouchableOpacity onPress={handleBack} hitSlop={12} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.stepText}>{currentIndex + 1}/{QUIZ_QUESTIONS.length}</Text>
       </View>
@@ -289,9 +290,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     marginBottom: 8,
   },
-  backText: {
-    fontSize: 24,
-    color: colors.text,
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   stepText: {
     fontSize: 14,

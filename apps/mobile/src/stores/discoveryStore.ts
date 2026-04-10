@@ -339,6 +339,9 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
       const newCooldownEnd = Date.now() + DISCOVERY_CONFIG.BATCH_COOLDOWN_MS;
       await AsyncStorage.setItem(BATCH_COOLDOWN_KEY, String(newCooldownEnd));
       set({ batchCooldownEnd: newCooldownEnd });
+    } else if (get().cards.length === 0) {
+      // No cards at all — force load even if cooldown hasn't passed (stale state)
+      await get().fetchFeed();
     } else {
       // Still in cooldown — store the end time for countdown UI
       set({ batchCooldownEnd: cooldownEnd });

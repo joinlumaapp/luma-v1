@@ -21,6 +21,7 @@ import { useNotificationStore } from '../../stores/notificationStore';
 import { storage } from '../../utils/storage';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { useScreenTracking } from '../../hooks/useAnalytics';
+import { Ionicons } from '@expo/vector-icons';
 
 // ─── Settings Configuration ──────────────────────────────────────────
 
@@ -215,7 +216,7 @@ export const NotificationSettingsScreen: React.FC = () => {
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         >
-          <Text style={styles.backText}>{'<'}</Text>
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Bildirim Ayarları</Text>
         <View style={styles.headerRight}>
@@ -321,16 +322,12 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.divider,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  backText: {
-    ...typography.h4,
-    color: colors.text,
   },
   headerTitle: {
     ...typography.bodyLarge,

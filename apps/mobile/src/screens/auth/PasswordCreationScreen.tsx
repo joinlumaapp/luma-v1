@@ -21,6 +21,7 @@ import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { fontWeights } from '../../theme/typography';
+import { Ionicons } from '@expo/vector-icons';
 
 type NavProp = NativeStackNavigationProp<AuthStackParamList, 'PasswordCreation'>;
 
@@ -77,7 +78,7 @@ export const PasswordCreationScreen: React.FC = () => {
           accessibilityLabel="Geri"
           accessibilityRole="button"
         >
-          <Text style={styles.backText}>{'<'}</Text>
+          <Ionicons name="chevron-back" size={24} color={onboardingColors.text} />
         </TouchableOpacity>
       </View>
 
@@ -199,15 +200,11 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
-  },
-  backText: {
-    fontSize: 24,
-    color: onboardingColors.text,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.semibold,
+    alignItems: 'center',
   },
   scrollView: {
     flex: 1,

@@ -28,6 +28,7 @@ import {
   type AnswerStatsResponse,
 } from '../../services/dailyQuestionService';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { Ionicons } from '@expo/vector-icons';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 
 const { width: _SCREEN_WIDTH } = Dimensions.get('window');
@@ -751,7 +752,7 @@ export const DailyQuestionScreen: React.FC = () => {
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         >
-          <Text style={styles.backText}>{'<'}</Text>
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Günün Sorusu</Text>
         <View style={styles.dayBadge}>
@@ -1008,16 +1009,12 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  backText: {
-    ...typography.h4,
-    color: colors.text,
   },
   headerTitle: {
     ...typography.bodyLarge,

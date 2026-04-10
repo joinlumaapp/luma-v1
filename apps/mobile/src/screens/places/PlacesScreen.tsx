@@ -26,6 +26,7 @@ import { placesService, SharedPlace, CheckInRequest, PlaceStatus } from '../../s
 import { locationService } from '../../services/locationService';
 import { PlaceMemoriesTimeline } from '../../components/places/PlaceMemoriesTimeline';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { Ionicons } from '@expo/vector-icons';
 
 type ViewMode = 'list' | 'map' | 'timeline';
 
@@ -775,7 +776,7 @@ export const PlacesScreen: React.FC = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backText}>{'<'}</Text>
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Keşfedilen Mekanlar</Text>
         <View style={{ width: 40 }} />
@@ -867,16 +868,12 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.divider,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  backText: {
-    ...typography.h4,
-    color: colors.text,
   },
   headerTitle: {
     ...typography.bodyLarge,

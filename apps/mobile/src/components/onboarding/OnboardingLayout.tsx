@@ -5,6 +5,7 @@ import {
   View,
   Text,
   TouchableOpacity,
+  ScrollView,
   StyleSheet,
   Platform,
 } from 'react-native';
@@ -95,10 +96,16 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
         )}
       </View>
 
-      {/* Content */}
-      <View style={styles.content}>
+      {/* Content — scrollable so it never hides behind footer */}
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.contentInner}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        bounces={false}
+      >
         {children}
-      </View>
+      </ScrollView>
 
       {/* Footer */}
       {footer && (
@@ -222,6 +229,10 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     paddingTop: 24,
+  },
+  contentInner: {
+    paddingBottom: 24,
+    flexGrow: 1,
   },
   footer: {
     paddingHorizontal: 24,

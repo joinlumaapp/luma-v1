@@ -29,6 +29,7 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { Ionicons } from '@expo/vector-icons';
 
 const PRIORITY_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
   high: { label: 'Yüksek', color: colors.error, icon: '!' },
@@ -160,7 +161,7 @@ export const ProfileCoachScreen: React.FC = () => {
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
           <View style={styles.backButton}>
-            <Text style={styles.backIcon}>{'\u2039'}</Text>
+            <Ionicons name="chevron-back" size={24} color={colors.text} />
           </View>
         </Pressable>
         <Text style={styles.headerTitle}>Profil Koçu</Text>
@@ -268,12 +269,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
   },
   backButton: {
-    width: 36, height: 36, borderRadius: 18,
+    width: 44, height: 44, borderRadius: 22,
     backgroundColor: colors.surface, justifyContent: 'center', alignItems: 'center',
     borderWidth: 1, borderColor: colors.surfaceBorder,
   },
-  backIcon: { fontSize: 24, color: colors.text, fontFamily: 'Poppins_300Light',
- fontWeight: '500', marginTop: -2 },
   headerTitle: { ...typography.h3, color: colors.text },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   scrollContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl },

@@ -25,6 +25,7 @@ import { colors, glassmorphism } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows, layout } from '../../theme/spacing';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { Ionicons } from '@expo/vector-icons';
 
 type NavProp = NativeStackNavigationProp<DiscoveryStackParamList, 'CrossedPaths'>;
 
@@ -671,7 +672,7 @@ export const CrossedPathsScreen: React.FC = () => {
           accessibilityLabel="Geri"
           accessibilityRole="button"
         >
-          <Text style={styles.backText}>{'‹'}</Text>
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Yolun Kesişenler</Text>
         <View style={styles.headerSpacer} />
@@ -732,16 +733,12 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.divider,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  backText: {
-    ...typography.h4,
-    color: colors.text,
   },
   headerTitle: {
     ...typography.bodyLarge,

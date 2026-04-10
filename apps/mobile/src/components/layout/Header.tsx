@@ -3,6 +3,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, layout } from '../../theme/spacing';
@@ -33,7 +34,7 @@ export const Header: React.FC<HeaderProps> = ({
             onPress={onBack}
             activeOpacity={0.7}
           >
-            <Text style={styles.backIcon}>{'\u2039'}</Text>
+            <Ionicons name="chevron-back" size={24} color={colors.text} />
           </TouchableOpacity>
         ) : (
           <View style={styles.spacer} />
@@ -61,7 +62,7 @@ export const Header: React.FC<HeaderProps> = ({
   );
 };
 
-const BUTTON_SIZE = 40;
+const BUTTON_SIZE = 44;
 
 const styles = StyleSheet.create({
   container: {
@@ -83,11 +84,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backIcon: {
-    fontSize: 28,
+    fontSize: 24,
     color: colors.text,
-    fontFamily: 'Poppins_300Light',
-    fontWeight: '500',
-    marginTop: -2,
   },
   title: {
     ...typography.h4,

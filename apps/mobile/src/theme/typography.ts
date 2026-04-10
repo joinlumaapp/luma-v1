@@ -229,10 +229,10 @@ export const typography = {
   // ── Special ──
   subtitle: {
     fontFamily: poppinsFonts.medium,
-    fontSize: fontSizes.xs,
-    lineHeight: lineHeights.xs,
+    fontSize: fontSizes.lg,
+    lineHeight: lineHeights.lg,
     fontWeight: fontWeights.medium,
-    letterSpacing: letterSpacing.widest,
+    letterSpacing: letterSpacing.snug,
     ...androidFix,
   },
   elegant: {

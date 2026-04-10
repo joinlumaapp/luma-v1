@@ -67,9 +67,9 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
 
           {/* Benefit rows */}
           <View style={styles.benefitsContainer}>
-            <BenefitRow icon="heart" label="Eşleşmeleri anında gör" />
-            <BenefitRow icon="chatbubble" label="Mesajları kaçırma" />
-            <BenefitRow icon="sparkles" label="Aktivite davetlerinden haberdar ol" />
+            <BenefitRow icon="notifications" label="Eşleşmeleri anında gör" />
+            <BenefitRow icon="chatbubble-ellipses" label="Mesajları kaçırma" />
+            <BenefitRow icon="calendar" label="Aktivite davetlerinden haberdar ol" />
           </View>
 
           {/* Primary button */}

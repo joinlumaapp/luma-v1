@@ -19,6 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 // We lazy-import it in the error boundary restart handler to avoid crashes.
 // import * as Updates from 'expo-updates';
 import { useFonts } from 'expo-font';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import {
   Poppins_300Light,
   Poppins_400Regular,
@@ -367,6 +368,7 @@ function AppVersionGate(): React.JSX.Element | null {
 // ─── App Root ─────────────────────────────────────────────────────────
 export default function App(): React.JSX.Element {
   const [fontsLoaded] = useFonts({
+    ...Ionicons.font,
     Poppins_300Light,
     Poppins_400Regular,
     Poppins_500Medium,

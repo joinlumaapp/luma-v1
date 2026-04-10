@@ -34,6 +34,7 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const NUM_COLUMNS = 2;
@@ -478,7 +479,7 @@ export const DailyPicksScreen: React.FC = () => {
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <View style={styles.backButton}>
-              <Text style={styles.backIcon}>{'\u2039'}</Text>
+              <Ionicons name="chevron-back" size={24} color={colors.text} />
             </View>
           </Pressable>
           <Text style={styles.headerTitle}>Günün Seçkileri</Text>
@@ -554,21 +555,14 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
-  },
-  backIcon: {
-    fontSize: 24,
-    color: colors.text,
-    fontFamily: 'Poppins_300Light',
-    fontWeight: '500',
-    marginTop: -2,
   },
   headerTitle: {
     ...typography.h3,

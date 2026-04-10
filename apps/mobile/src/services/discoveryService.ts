@@ -1108,9 +1108,23 @@ export const discoveryService = {
     try {
       const response = await api.get(`/profiles/${userId}`);
       return response.data;
-    } catch {
-      // Profile not found or API down
-      return null;
+    } catch (error) {
+      // In dev mode, return mock profile so navigation from feed works
+      return devMockOrThrow(error, {
+        userId,
+        firstName: 'Luma',
+        name: 'Luma Kullanıcı',
+        age: 25,
+        city: 'İstanbul',
+        bio: 'Merhaba! LUMA kullanıcısıyım.',
+        photoUrls: [],
+        photoUrl: null,
+        intentionTag: 'FRIENDS',
+        isVerified: false,
+        compatibilityPercent: 72,
+        overallCompatibility: 72,
+        interestTags: [],
+      }, 'discoveryService.getProfileById');
     }
   },
 

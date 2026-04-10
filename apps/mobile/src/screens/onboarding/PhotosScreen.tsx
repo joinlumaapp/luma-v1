@@ -213,6 +213,7 @@ export const PhotosScreen: React.FC = () => {
         key={index}
         style={[
           styles.photoCell,
+          slot && styles.photoCellFilled,
           isMain && styles.photoCellMain,
           isMain && slot && styles.photoCellMainFilled,
         ]}
@@ -277,8 +278,8 @@ export const PhotosScreen: React.FC = () => {
             <View style={[styles.addIconCircle, isMain && styles.addIconCircleMain]}>
               <Ionicons
                 name={isMain ? 'person-outline' : 'add'}
-                size={isMain ? 24 : 22}
-                color={isMain ? GOLD_ACCENT : onboardingColors.textTertiary}
+                size={isMain ? 28 : 32}
+                color={isMain ? GOLD_ACCENT : 'rgba(139,92,246,0.5)'}
               />
             </View>
             {isMain && (
@@ -391,11 +392,18 @@ const styles = StyleSheet.create({
   photoCell: {
     width: CELL_SIZE,
     height: CELL_SIZE * 1.25,
-    borderRadius: 16,
+    borderRadius: 12,
     backgroundColor: onboardingColors.surface,
-    borderWidth: 1.5,
-    borderColor: onboardingColors.surfaceBorder,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: 'rgba(139,92,246,0.3)',
     overflow: 'hidden',
+  },
+  photoCellFilled: {
+    borderStyle: 'solid',
+    borderWidth: 0,
+    borderColor: 'transparent',
+    borderRadius: 16,
   },
   photoCellMain: {
     borderWidth: 2,

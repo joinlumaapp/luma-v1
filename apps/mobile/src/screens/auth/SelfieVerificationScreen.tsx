@@ -5,6 +5,7 @@ import {
   View,
   Text,
   TouchableOpacity,
+  ScrollView,
   StyleSheet,
   Dimensions,
   Alert,
@@ -15,6 +16,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../navigation/types';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../stores/authStore';
 import { useProfileStore } from '../../stores/profileStore';
 import { useTestModeStore } from '../../stores/testModeStore';
@@ -301,12 +303,18 @@ export const SelfieVerificationScreen: React.FC = () => {
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <TouchableOpacity onPress={handleBack} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Geri dön">
-          <Text style={styles.backText}>{'<'}</Text>
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
       </View>
 
-      {/* Content */}
-      <View style={styles.content}>
+      {/* Everything in one scroll flow — no overlap possible */}
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={[styles.contentInner, { paddingBottom: insets.bottom + 32 }]}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={styles.title}>Selfie Doğrulama</Text>
         <Text style={styles.subtitle}>
           Profilinin gerçek olduğunu doğrulamak için bir selfie çek. Yüzün net görünmeli.
@@ -378,55 +386,55 @@ export const SelfieVerificationScreen: React.FC = () => {
             </Text>
           </View>
         </View>
-      </View>
 
-      {/* Actions */}
-      <View style={styles.footer}>
-        {selfieComplete ? (
-          <>
+        {/* Actions — inside scroll so they never overlap instructions */}
+        <View style={styles.footer}>
+          {selfieComplete ? (
+            <>
+              <TouchableOpacity
+                style={[styles.continueButton, isVerifying && styles.selfieButtonDisabled]}
+                onPress={handleContinue}
+                disabled={isVerifying}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel="Onayla ve devam et"
+              >
+                {isVerifying ? (
+                  <ActivityIndicator color={colors.text} />
+                ) : (
+                  <Text style={styles.continueButtonText}>Onayla ve Devam Et</Text>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleRetake} style={styles.skipButton} accessibilityRole="button" accessibilityLabel="Tekrar çek">
+                <Text style={styles.retakeText}>Tekrar Çek</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
             <TouchableOpacity
-              style={[styles.continueButton, isVerifying && styles.selfieButtonDisabled]}
-              onPress={handleContinue}
-              disabled={isVerifying}
+              style={[styles.selfieButton, (isTakingSelfie || isValidatingFace || !permissionGranted) && styles.selfieButtonDisabled]}
+              onPress={handleTakeSelfie}
+              disabled={isTakingSelfie || isValidatingFace || !permissionGranted}
               activeOpacity={0.85}
               accessibilityRole="button"
-              accessibilityLabel="Onayla ve devam et"
+              accessibilityLabel="Selfie çek"
             >
-              {isVerifying ? (
+              {isValidatingFace ? (
                 <ActivityIndicator color={colors.text} />
               ) : (
-                <Text style={styles.continueButtonText}>Onayla ve Devam Et</Text>
+                <Text style={styles.selfieButtonText}>
+                  {isTakingSelfie ? '\u00c7ekiliyor...' : 'Selfie \u00c7ek'}
+                </Text>
               )}
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleRetake} style={styles.skipButton} accessibilityRole="button" accessibilityLabel="Tekrar çek">
-              <Text style={styles.retakeText}>Tekrar Çek</Text>
-            </TouchableOpacity>
-          </>
-        ) : (
-          <TouchableOpacity
-            style={[styles.selfieButton, (isTakingSelfie || isValidatingFace || !permissionGranted) && styles.selfieButtonDisabled]}
-            onPress={handleTakeSelfie}
-            disabled={isTakingSelfie || isValidatingFace || !permissionGranted}
-            activeOpacity={0.85}
-            accessibilityRole="button"
-            accessibilityLabel="Selfie çek"
-          >
-            {isValidatingFace ? (
-              <ActivityIndicator color={colors.text} />
-            ) : (
-              <Text style={styles.selfieButtonText}>
-                {isTakingSelfie ? '\u00c7ekiliyor...' : 'Selfie \u00c7ek'}
-              </Text>
-            )}
-          </TouchableOpacity>
-        )}
+          )}
 
-        {!selfieComplete && (
-          <TouchableOpacity onPress={handleSkip} style={styles.skipButton} accessibilityRole="button" accessibilityLabel="Şimdilik atla">
-            <Text style={styles.skipText}>Şimdilik Atla</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+          {!selfieComplete && (
+            <TouchableOpacity onPress={handleSkip} style={styles.skipButton} accessibilityRole="button" accessibilityLabel="Şimdilik atla">
+              <Text style={styles.skipText}>Şimdilik Atla</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </ScrollView>
     </View>
   );
 };
@@ -441,20 +449,19 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  backText: {
-    ...typography.h4,
-    color: colors.text,
-  },
   content: {
     flex: 1,
     paddingHorizontal: spacing.lg,
+  },
+  contentInner: {
+    flexGrow: 1,
   },
   title: {
     ...typography.h2,
@@ -560,9 +567,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   footer: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxl,
-    gap: spacing.md,
+    marginTop: 24,
+    gap: 12,
   },
   selfieButton: {
     backgroundColor: colors.primary,

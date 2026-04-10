@@ -348,6 +348,8 @@ export const DiscoveryScreen: React.FC = () => {
   // ─── Daily match (Gunun Eslesmesi) state ────────────────────
   const [dailyMatchData, setDailyMatchData] = useState<DailyMatchResponse | null>(null);
   const [dailyMatchLoading, setDailyMatchLoading] = useState(true);
+  const [dailyMatchUsed, setDailyMatchUsed] = useState(false);
+  const [dailyMatchBannerVisible, setDailyMatchBannerVisible] = useState(false);
 
   useEffect(() => {
     discoveryService.getDailyMatch().then((data) => {
@@ -358,7 +360,20 @@ export const DiscoveryScreen: React.FC = () => {
     });
   }, []);
 
+  // Auto-hide daily match used banner after 3 seconds
+  useEffect(() => {
+    if (!dailyMatchBannerVisible) return;
+    const timer = setTimeout(() => setDailyMatchBannerVisible(false), 3000);
+    return () => clearTimeout(timer);
+  }, [dailyMatchBannerVisible]);
+
+  // ─── Supreme promo overlay state (shown every 5th card) ────
+  const [showSupremeOverlay, setShowSupremeOverlay] = useState(false);
+  const swipeCountForPromo = useRef(0);
+
   const handleDailyMatchPress = useCallback((userId: string) => {
+    setDailyMatchUsed(true);
+    setDailyMatchBannerVisible(true);
     navigation.navigate('ProfilePreview', { userId });
   }, [navigation]);
 
@@ -488,6 +503,14 @@ export const DiscoveryScreen: React.FC = () => {
       }
 
       swipeAction(direction, card.id);
+
+      // Show Supreme promo overlay every 5th swipe (FREE/PREMIUM only)
+      if (packageTier !== 'SUPREME') {
+        swipeCountForPromo.current += 1;
+        if (swipeCountForPromo.current % 5 === 0) {
+          setTimeout(() => setShowSupremeOverlay(true), 400);
+        }
+      }
 
       // Track for daily challenge
       profilesExplored.current += 1;
@@ -878,25 +901,23 @@ export const DiscoveryScreen: React.FC = () => {
           <TrialBanner />
         </View>
         <View style={styles.emptyContainer}>
-          {/* Pulsating Luma icon */}
-          <Animated.View style={[styles.emptyIconCircle, styles.emptyPulse]}>
-            <Text style={styles.emptyIconLetter}>L</Text>
-          </Animated.View>
+          {/* Search icon */}
+          <View style={styles.emptyIconCircle}>
+            <Ionicons name="compass-outline" size={64} color={palette.purple[400]} />
+          </View>
 
           <Text style={styles.emptyTitle}>Şu an yakınında yeni profil yok</Text>
           <Text style={styles.emptySubtitle}>
-            Filtrelerini genişleterek daha fazla kişi görebilirsin.
+            Filtreleri genişleterek daha fazla kişi görebilirsin.
           </Text>
 
           <Pressable
             onPress={handleFilterPress}
             accessibilityLabel="Filtreleri genişlet"
             accessibilityRole="button"
+            style={styles.emptyButtonWrapper}
           >
-            <View
-              style={styles.refreshButton}
-              testID="discovery-filter-expand-btn"
-            >
+            <View style={styles.refreshButton} testID="discovery-filter-expand-btn">
               <Text style={styles.refreshButtonText}>Filtreleri Genişlet</Text>
             </View>
           </Pressable>
@@ -905,9 +926,9 @@ export const DiscoveryScreen: React.FC = () => {
             onPress={() => refreshFeed()}
             accessibilityLabel="Tekrar ara"
             accessibilityRole="button"
-            style={{ marginTop: 8 }}
+            style={styles.emptyRetryLink}
           >
-            <Text style={[styles.refreshButtonText, { color: colors.textTertiary }]}>Tekrar Ara</Text>
+            <Text style={styles.emptyRetryText}>Tekrar Ara</Text>
           </Pressable>
         </View>
       </View>
@@ -987,28 +1008,20 @@ export const DiscoveryScreen: React.FC = () => {
         {/* Trial banner — shows remaining Premium trial time */}
         <TrialBanner />
 
-        {/* Supreme promo banner — FREE and PREMIUM users only */}
-        {(packageTier === 'FREE' || packageTier === 'PREMIUM') && (
-          <SupremePromoBanner
-            onPress={() => navigation.navigate('MembershipPlans' as never)}
-          />
+        {/* Daily match used banner — auto-hides after 3s */}
+        {dailyMatchBannerVisible && (
+          <View style={styles.dailyMatchUsedBanner}>
+            <Ionicons name="checkmark-circle" size={16} color={palette.success} />
+            <Text style={styles.dailyMatchUsedText}>Günün Eşleşmesi kullanıldı — yarın tekrar gel!</Text>
+          </View>
         )}
 
-        {/* Liked you teaser — FREE users only */}
-        {packageTier === 'FREE' && (
-          <LikedYouTeaser
-            count={3}
-            blurredAvatars={[]}
-            onPress={() => navigation.navigate('LikesYou' as never)}
-          />
-        )}
-
-        {/* Daily match card — Gunun Eslesmesi */}
-        {(dailyMatchLoading || dailyMatchData) && (
+        {/* Daily match card — only if available AND not yet used today */}
+        {!dailyMatchUsed && !dailyMatchLoading && dailyMatchData?.match && (
           <DailyMatchCard
-            data={dailyMatchData ?? { match: null, remaining: 0, nextAvailableAt: null, limit: 1, period: 'daily' }}
+            data={dailyMatchData}
             onPress={handleDailyMatchPress}
-            isLoading={dailyMatchLoading}
+            isLoading={false}
           />
         )}
 
@@ -1356,6 +1369,28 @@ export const DiscoveryScreen: React.FC = () => {
         </KeyboardAvoidingView>
       </Modal>
 
+      {/* Supreme promo overlay — shown every 5th swipe, dismissable */}
+      {showSupremeOverlay && (
+        <Modal visible transparent animationType="fade" onRequestClose={() => setShowSupremeOverlay(false)}>
+          <Pressable style={styles.supremeOverlay} onPress={() => setShowSupremeOverlay(false)}>
+            <View style={styles.supremeOverlayCard}>
+              <Pressable style={styles.supremeOverlayClose} onPress={() => setShowSupremeOverlay(false)}>
+                <Ionicons name="close" size={22} color={colors.textSecondary} />
+              </Pressable>
+              <Ionicons name="diamond" size={40} color={palette.purple[500]} />
+              <Text style={styles.supremeOverlayTitle}>Sınırsız beğen, sınırsız eşleş</Text>
+              <Text style={styles.supremeOverlaySubtitle}>Supreme ile tüm limitleri kaldır ve ayrıcalıklı özelliklere eriş.</Text>
+              <Pressable
+                style={styles.supremeOverlayButton}
+                onPress={() => { setShowSupremeOverlay(false); navigation.navigate('MembershipPlans' as never); }}
+              >
+                <Text style={styles.supremeOverlayButtonText}>Supreme'u Keşfet</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Modal>
+      )}
+
       {/* Login streak banner */}
       {streakData && (
         <StreakBanner
@@ -1632,51 +1667,59 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: spacing.xxl,
+    paddingHorizontal: 32,
   },
   emptyIconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.primary + '18',
-    borderWidth: 2,
-    borderColor: colors.primary + '30',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: palette.purple[50] ?? 'rgba(139,92,246,0.08)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.lg,
-    overflow: 'hidden',
-  },
-  emptyPulse: {
-    // Pulse animation is applied via Animated.View — opacity cycles give a breathing effect
-    // The actual animation is driven by Reanimated; this style is a static placeholder
-  },
-  emptyIconLetter: {
-    fontSize: 32,
-    color: colors.primary,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    marginBottom: 24,
   },
   emptyTitle: {
-    ...typography.h3,
+    fontSize: 22,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: 8,
   },
   emptySubtitle: {
-    ...typography.body,
+    fontSize: 16,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
     color: colors.textSecondary,
     textAlign: 'center',
-    marginBottom: spacing.lg,
+    lineHeight: 24,
+  },
+  emptyButtonWrapper: {
+    width: '100%',
+    marginTop: 24,
   },
   refreshButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: palette.purple[500],
     borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
+    height: 52,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   refreshButtonText: {
-    ...typography.button,
+    fontSize: 17,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: '#FFFFFF',
+  },
+  emptyRetryLink: {
+    marginTop: 16,
+    paddingVertical: 8,
+  },
+  emptyRetryText: {
+    fontSize: 16,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: palette.purple[500],
   },
   // ── Like-with-comment modal ──
   commentModalOverlay: {
@@ -1860,6 +1903,80 @@ const styles = StyleSheet.create({
   limitOverlayDismissBtnText: {
     ...typography.buttonSmall,
     color: colors.textSecondary,
+  },
+
+  // ── Daily match used banner ──
+  dailyMatchUsedBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 10,
+    backgroundColor: 'rgba(16,185,129,0.1)',
+    marginHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.sm,
+  },
+  dailyMatchUsedText: {
+    ...typography.caption,
+    color: palette.success,
+    flex: 1,
+  },
+
+  // ── Supreme promo overlay ──
+  supremeOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+  },
+  supremeOverlayCard: {
+    width: '100%',
+    maxWidth: 340,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.xxl,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.lg,
+    alignItems: 'center',
+  },
+  supremeOverlayClose: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.surfaceBorder,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  supremeOverlayTitle: {
+    ...typography.h3,
+    color: colors.text,
+    textAlign: 'center',
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  supremeOverlaySubtitle: {
+    ...typography.body,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+    lineHeight: 22,
+  },
+  supremeOverlayButton: {
+    width: '100%',
+    height: 52,
+    borderRadius: borderRadius.lg,
+    backgroundColor: palette.purple[500],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  supremeOverlayButtonText: {
+    ...typography.button,
+    color: '#FFFFFF',
   },
 });
 

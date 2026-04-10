@@ -583,10 +583,10 @@ const styles = StyleSheet.create({
     borderRadius: 28,
   },
   otherButtonText: {
-    fontSize: 16,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.semibold,
-    color: palette.white,
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   // Login link — more visible for returning users
   loginText: {

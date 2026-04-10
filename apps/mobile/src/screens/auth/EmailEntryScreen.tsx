@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import type { AuthStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../stores/authStore';
 import { onboardingColors } from '../../components/onboarding/OnboardingLayout';
@@ -56,7 +57,7 @@ export const EmailEntryScreen: React.FC = () => {
           accessibilityLabel="Geri"
           accessibilityRole="button"
         >
-          <Text style={styles.backText}>{'<'}</Text>
+          <Ionicons name="chevron-back" size={24} color={onboardingColors.text} />
         </TouchableOpacity>
       </View>
 
@@ -120,15 +121,12 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.06)',
     justifyContent: 'center',
-  },
-  backText: {
-    fontSize: 24,
-    color: onboardingColors.text,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    alignItems: 'center',
   },
   content: {
     flex: 1,
@@ -185,10 +183,10 @@ const styles = StyleSheet.create({
     opacity: 0.3,
   },
   continueText: {
-    fontSize: 17,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    color: onboardingColors.background,
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   continueTextDisabled: {
     opacity: 0.5,
