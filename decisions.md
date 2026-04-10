@@ -142,6 +142,12 @@
 **Rejected:** Passing data via route params, using global form context, skipping auto-save
 **Reasoning:** React Navigation native stack unmounts screens on back navigation, losing all local state. Users hit "continue" on later screens and lost their entries when returning. Using the profile store as the source of truth, with local state mirroring it, gives instant UI updates without losing persistence.
 
+## Decision 028: Welcome Screen Position — End of Onboarding
+**Date:** 2026-04-10
+**Decision:** The "Hoş Geldin" celebration screen shows AFTER onboarding is fully complete, not after OTP verification. New flow: Phone → OTP → Onboarding (12 steps) → Welcome → MainTabs. The Welcome screen is the final step of the OnboardingNavigator stack, with back gesture disabled. SelfieVerificationScreen navigates to Welcome, and Welcome's CTA button calls `setOnboarded(true)` which triggers RootNavigator to switch to MainTabs.
+**Rejected:** Welcome modal immediately after OTP (old flow), navigation.reset at Welcome screen
+**Reasoning:** A welcome screen before the user has set up their profile is meaningless — they haven't "joined" anything yet. Celebrating at the END of onboarding rewards the user for completing all 12 steps and creates a satisfying conclusion. Since RootNavigator switches on the `isOnboarded` flag, the Welcome button flipping that flag automatically transitions to MainTabs without needing navigation.reset — the whole onboarding stack is unmounted by the switch.
+
 ## Decision 027: Green Verification Badge at Top-Right
 **Date:** 2026-04-10
 **Decision:** Verification checkmark badge is green (#10B981), 22x22px, positioned at top-right (top: 8, right: 8) on all user cards and avatars. Replaces previous inconsistent positioning (some left, some bottom) and colors (blue/purple/gold).

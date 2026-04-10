@@ -21,14 +21,17 @@ import { useAuthStore } from '../../stores/authStore';
 import { useProfileStore } from '../../stores/profileStore';
 import { useTestModeStore } from '../../stores/testModeStore';
 import { validateSelfieFace } from '../../services/faceDetectionService';
-import { storage } from '../../utils/storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 
-type SelfieNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'SelfieVerification'>;
+// Navigation prop is typed loosely because SelfieVerification is reused in both
+// AuthStack and OnboardingStack. When inside onboarding it can navigate to 'Welcome'.
+type SelfieNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'SelfieVerification'> & {
+  navigate: (screen: string, params?: Record<string, unknown>) => void;
+};
 
 const { width } = Dimensions.get('window');
 const CAMERA_SIZE = width * 0.7;
@@ -185,9 +188,10 @@ export const SelfieVerificationScreen: React.FC = () => {
       }
     }
 
-    useAuthStore.getState().setOnboarded(true);
-    await storage.setOnboarded(true);
-  }, [updateProfile]);
+    // Navigate to the final Welcome step (shown BEFORE setOnboarded flips).
+    // Welcome screen handles the actual setOnboarded(true) call on CTA tap.
+    navigation.navigate('Welcome');
+  }, [updateProfile, navigation]);
 
   // Founder test mode: auto-approve selfie after 2s
   useEffect(() => {

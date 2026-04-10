@@ -6,6 +6,42 @@
 
 ## Active Issues
 
+### FIXED -- OTP Screen Shake and Double-Verify Bug
+- **Date fixed:** 2026-04-10
+- **Symptoms:**
+  - Screen shook/glitched when user typed OTP digits
+  - handleVerify could fire twice: once from auto-effect on 6-digit completion, once from button tap
+  - BrandedBackground gradient shifted up/down when keyboard opened
+- **Root causes:**
+  - KeyboardAvoidingView wrapped BrandedBackground — the padding behavior lifted the entire background
+  - No guard against concurrent verify calls (isVerifying state lagged behind refs)
+- **Fix:**
+  - Moved BrandedBackground outside KeyboardAvoidingView so it stays fixed
+  - Added `verifyInFlight` useRef guard — synchronous check at top of handleVerify blocks re-entry
+  - KeyboardAvoidingView behavior: 'padding' on iOS, undefined on Android (Android handles automatically)
+  - Removed WelcomeModal dependency from OTP flow (modal replaced by full WelcomeScreen at end of onboarding)
+- **Files:** apps/mobile/src/screens/auth/OTPVerificationScreen.tsx
+- **Status:** FIXED
+
+### FIXED -- Welcome Screen Wrong Position in Flow
+- **Date fixed:** 2026-04-10
+- **Symptom:** WelcomeModal was showing immediately after OTP verification, before user had set up their profile. Users saw "Welcome, enjoy Premium!" before even entering their name.
+- **Fix:**
+  - Created new `WelcomeScreen.tsx` as the final step of onboarding flow
+  - Removed WelcomeModal from OTPVerificationScreen
+  - SelfieVerificationScreen now navigates to `Welcome` instead of directly flipping `setOnboarded(true)`
+  - Welcome screen's CTA button handles `setOnboarded(true)`, triggering RootNavigator switch to MainTabs
+  - New flow: Phone → OTP → Onboarding (12 steps) → Welcome → MainTabs
+- **Files:** OTPVerificationScreen, SelfieVerificationScreen, OnboardingNavigator, types.ts, WelcomeScreen (new)
+- **Status:** FIXED
+
+### FIXED -- Luma Logo Bouncing Side to Side on Welcome Screen
+- **Date fixed:** 2026-04-10
+- **Symptom:** Logo bounce-in animation on EmotionalIntroScreen used translateY + rotate, causing the logo to visually bounce side-to-side instead of staying centered
+- **Fix:** Removed translateY and rotate transforms entirely. Logo now uses only a heartbeat scale pulse (1.0 → 1.08 → 1.0 every 1200ms). Stays centered at all times.
+- **Files:** apps/mobile/src/screens/auth/EmotionalIntroScreen.tsx
+- **Status:** FIXED
+
 ### FIXED -- Onboarding State Loss on Back/Forward Navigation
 - **Date fixed:** 2026-04-10
 - **Symptom:** When user pressed back during onboarding and came forward again, all their input (name, date, photos, answers) was lost — app appeared to "crash" or reset

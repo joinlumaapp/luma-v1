@@ -6,6 +6,32 @@
 
 ## Recent Updates (2026-04-10)
 
+### Session 5 — Logo Fix, OTP Bug, Welcome Screen Reorder
+
+**Welcome screen logo animation (EmotionalIntroScreen):**
+- Removed bounce-in animation (translateY, rotate) — logo was moving side to side
+- Logo now stays fixed in place with only a heartbeat pulse
+- Scale 1.0 → 1.08 → 1.0 every 1200ms (600ms up + 600ms down)
+- Tagline uses simple FadeInUp entrance (no delay on callback)
+
+**OTP screen shake/bug fix (OTPVerificationScreen):**
+- Added `verifyInFlight` useRef guard to prevent double-fire of handleVerify
+- BrandedBackground moved OUTSIDE KeyboardAvoidingView (was shifting with keyboard)
+- KeyboardAvoidingView behavior set to 'padding' on iOS, undefined on Android
+- Removed WelcomeModal display from OTP flow (moved to end of onboarding)
+- New users now go directly to onboarding after OTP verification
+- Test mode (000000) also goes straight to onboarding
+
+**Welcome screen moved to END of onboarding:**
+- NEW: `src/screens/onboarding/WelcomeScreen.tsx` — final celebration step
+- Shows 💜 animated heart, "Hoş Geldin!" title, bonus card (48h Premium + 100 jeton), "Luma'ya Başla" CTA
+- Registered as last screen in OnboardingStackParamList + OnboardingNavigator
+- SelfieVerificationScreen now navigates to Welcome instead of calling setOnboarded(true) directly
+- Welcome's CTA calls setOnboarded(true) → RootNavigator switches to MainTabs (no navigation.reset needed)
+- Back gesture disabled on Welcome screen
+- **New flow:** Phone → OTP → Onboarding (12 steps) → Welcome → MainTabs
+- **Old flow:** Phone → OTP → WelcomeModal → Onboarding → MainTabs
+
 ### Session 4 — Discovery/Profile Polish + Prompt System Overhaul
 
 **Discovery Card fixes:**

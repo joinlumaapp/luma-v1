@@ -27,7 +27,6 @@ import { semanticColors } from '../../theme/colors';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 import { fontWeights } from '../../theme/typography';
 import { analyticsService, ANALYTICS_EVENTS } from '../../services/analyticsService';
-import { WelcomeModal } from '../../components/common/WelcomeModal';
 
 type OTPNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'OTPVerification'>;
 type OTPRouteProp = RouteProp<AuthStackParamList, 'OTPVerification'>;
@@ -56,7 +55,9 @@ export const OTPVerificationScreen: React.FC = () => {
   const [resendCount, setResendCount] = useState(0);
   const [isRateLimited, setIsRateLimited] = useState(false);
   const [rateLimitTimer, setRateLimitTimer] = useState(0);
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
+  // Guard ref — prevents double-fire of handleVerify from auto-effect + button press
+  const verifyInFlight = useRef(false);
 
   const inputRefs = useRef<Array<TextInput | null>>([]);
 
@@ -90,11 +91,15 @@ export const OTPVerificationScreen: React.FC = () => {
   }, [code]);
 
   const handleVerify = useCallback(async (otpCode: string) => {
+    // Double-tap / auto-fire guard
+    if (verifyInFlight.current) return;
+    verifyInFlight.current = true;
     setIsVerifying(true);
+
     try {
       if (__DEV__) {
         if (isTestMode && otpCode === '000000') {
-          const { login, activateTrial } = useAuthStore.getState();
+          const { login, activateTrial, setStartedOnboarding } = useAuthStore.getState();
           login('test-access-token', 'test-refresh-token', {
             id: 'test-user-001',
             displayId: 'test-001',
@@ -104,8 +109,8 @@ export const OTPVerificationScreen: React.FC = () => {
           });
           activateTrial().catch(() => {});
           try { useCoinStore.getState().claimWelcomeBonus(); } catch {}
-          // Show welcome modal, then go to onboarding
-          setShowWelcomeModal(true);
+          // Go straight to onboarding — welcome screen shown at END of onboarding
+          setStartedOnboarding(true);
           return;
         }
       }
@@ -123,14 +128,13 @@ export const OTPVerificationScreen: React.FC = () => {
 
       analyticsService.track(ANALYTICS_EVENTS.OTP_VERIFIED, {});
 
-      const { isOnboarded, activateTrial } = useAuthStore.getState();
+      const { isOnboarded, activateTrial, setStartedOnboarding } = useAuthStore.getState();
 
       if (!isOnboarded) {
-        // New user — activate trial, welcome bonus, show premium modal
+        // New user — activate trial, welcome bonus, then go straight to onboarding
         activateTrial().catch(() => {});
         try { useCoinStore.getState().claimWelcomeBonus(); } catch {}
-        // Show premium welcome modal instead of plain Alert
-        setShowWelcomeModal(true);
+        setStartedOnboarding(true);
         return;
       }
       // Returning user — RootNavigator will show MainTabs automatically
@@ -142,8 +146,9 @@ export const OTPVerificationScreen: React.FC = () => {
       inputRefs.current[0]?.focus();
     } finally {
       setIsVerifying(false);
+      verifyInFlight.current = false;
     }
-  }, [phoneNumber, navigation, isTestMode]);
+  }, [phoneNumber, isTestMode]);
 
   const handleDigitInput = (text: string, index: number) => {
     const digit = text.replace(/[^0-9]/g, '');
@@ -218,12 +223,14 @@ export const OTPVerificationScreen: React.FC = () => {
   const isDisabled = !isCodeComplete || isVerifying || isRateLimited;
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+    <View style={styles.container}>
+      {/* Background stays fixed behind keyboard shifts */}
       <BrandedBackground />
 
+      <KeyboardAvoidingView
+        style={styles.kbWrapper}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
       {/* Header — premium back button */}
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <TouchableOpacity
@@ -346,16 +353,8 @@ export const OTPVerificationScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Premium welcome modal — replaces plain Alert */}
-      <WelcomeModal
-        visible={showWelcomeModal}
-        onDismiss={() => {
-          setShowWelcomeModal(false);
-          // Go to onboarding after modal dismiss
-          useAuthStore.getState().setStartedOnboarding(true);
-        }}
-      />
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </View>
   );
 };
 
@@ -363,6 +362,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: onboardingColors.background,
+  },
+  kbWrapper: {
+    flex: 1,
   },
   header: {
     paddingHorizontal: spacing.md,

@@ -1,8 +1,9 @@
 // Onboarding flow: Name -> BirthDate -> Gender -> WhoToMeet -> Height
 // -> Sports -> Smoking -> Children -> CitySelection
-// -> PromptSelection ("Profilini Zenginleştir") -> Photos -> Selfie
+// -> PromptSelection ("Profilini Zenginleştir") -> Photos -> Selfie -> Welcome
 //
 // Bio screen merged into PromptSelection as a single premium experience.
+// Welcome screen shown as final step before entering MainTabs.
 //
 // Features:
 // - Smooth slide transitions between steps (slide_from_right with 300ms duration)
@@ -29,6 +30,7 @@ import { CitySelectionScreen } from '../screens/onboarding/CitySelectionScreen';
 import { PromptSelectionScreen } from '../screens/onboarding/PromptSelectionScreen';
 import { PhotosScreen } from '../screens/onboarding/PhotosScreen';
 import { SelfieVerificationScreen } from '../screens/auth/SelfieVerificationScreen';
+import { WelcomeScreen } from '../screens/onboarding/WelcomeScreen';
 
 const Stack = createNativeStackNavigator<OnboardingStackParamList>();
 
@@ -36,7 +38,7 @@ const Stack = createNativeStackNavigator<OnboardingStackParamList>();
 const ONBOARDING_BG = '#F5F0E8';
 
 // Ordered screen names for reference (used by OnboardingLayout step/totalSteps)
-// Total: 12 screens. Bio merged into PromptSelection.
+// Total: 12 content screens. Welcome is a celebratory final step, not counted in progress.
 export const ONBOARDING_TOTAL_STEPS = 12;
 
 // Default screen options: smooth slide transitions, cream background
@@ -72,6 +74,15 @@ export const OnboardingNavigator: React.FC = () => {
           gestureEnabled: false,
           animation: 'fade_from_bottom',
           animationDuration: 400,
+        }}
+      />
+      <Stack.Screen
+        name="Welcome"
+        component={WelcomeScreen}
+        options={{
+          gestureEnabled: false,
+          animation: 'fade',
+          animationDuration: 500,
         }}
       />
     </Stack.Navigator>
