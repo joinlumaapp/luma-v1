@@ -15,7 +15,6 @@ import {
   Dimensions,
   Platform,
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { palette } from '../../theme/colors';
@@ -638,7 +637,6 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      <StatusBar style="light" backgroundColor="#08080F" />
       {/* Full-screen backdrop with shake */}
       <Animated.View style={[styles.backdrop, { opacity: overlayOpacity, transform: [{ translateX: shakeX }] }]}>
         {/* Gradient background — purple to pink */}

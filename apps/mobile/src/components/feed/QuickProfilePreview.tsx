@@ -12,7 +12,6 @@ import {
   Animated,
   Pressable,
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, palette } from '../../theme/colors';
@@ -81,7 +80,6 @@ export const QuickProfilePreview: React.FC<QuickProfilePreviewProps> = ({
 
   return (
     <Modal transparent visible={visible} animationType="none" statusBarTranslucent onRequestClose={handleClose}>
-      <StatusBar style="light" backgroundColor="#08080F" />
       {/* Backdrop */}
       <Animated.View style={[styles.backdrop, { opacity: backdropAnim }]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />

@@ -10,7 +10,6 @@ import {
   Modal,
   Dimensions,
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { colors, palette } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
@@ -298,7 +297,6 @@ export const BadgeEarnedOverlay: React.FC<BadgeEarnedOverlayProps> = ({
       statusBarTranslucent
       onRequestClose={onDismiss}
     >
-      <StatusBar style="light" backgroundColor="#08080F" />
       <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]}>
         {/* Sparkle particles */}
         {sparkles.map((config, idx) => (

@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
   Linking,
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
@@ -47,7 +46,6 @@ export const ForceUpdateModal: React.FC<ForceUpdateModalProps> = ({
       statusBarTranslucent
       onRequestClose={isOptional ? onDismiss : undefined}
     >
-      <StatusBar style="light" backgroundColor="#08080F" />
       <View style={styles.container}>
         <View style={styles.content}>
           {/* Logo */}

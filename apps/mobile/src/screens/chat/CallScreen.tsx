@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
@@ -186,7 +185,6 @@ export const CallScreen: React.FC = () => {
   if (!isPremium) {
     return (
       <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-        <StatusBar style="light" backgroundColor="#08080F" />
         <View style={styles.premiumGate}>
           <View style={styles.premiumIcon}>
             <Text style={styles.premiumIconText}>
@@ -241,7 +239,6 @@ export const CallScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-      <StatusBar style="light" backgroundColor="#08080F" />
 
       {/* Top bar: minimize + quality */}
       <View style={styles.topBar}>

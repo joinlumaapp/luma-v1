@@ -17,7 +17,6 @@ import {
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
@@ -245,7 +244,6 @@ export const MusicPicker: React.FC<MusicPickerProps> = ({ visible, onClose, onSe
       statusBarTranslucent
       onRequestClose={handleClose}
     >
-      <StatusBar style="light" backgroundColor="#08080F" />
       <View style={pickerStyles.overlay}>
         {/* Backdrop */}
         <Animated.View

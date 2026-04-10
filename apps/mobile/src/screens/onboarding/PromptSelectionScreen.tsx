@@ -395,23 +395,12 @@ export const PromptSelectionScreen: React.FC = () => {
         <View style={styles.footerContainer}>
           {/* Completion counter */}
           <View style={styles.completionRow}>
-            <View style={styles.completionDots}>
-              {Array.from({ length: MAX_PROMPTS }).map((_, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.completionDot,
-                    i < completedCount && styles.completionDotFilled,
-                  ]}
-                />
-              ))}
-            </View>
             <Text style={styles.completionText}>
               {completedCount}/{MAX_PROMPTS} tamamlandi
             </Text>
           </View>
 
-          {/* Confetti burst when all 3 done */}
+          {/* Confetti burst when all prompts done */}
           {showConfetti && <ConfettiBurst />}
 
           {/* Devam Et button */}
@@ -459,7 +448,7 @@ export const PromptSelectionScreen: React.FC = () => {
           {/* Title + Subtitle */}
           <Text style={styles.title}>Profilini Zenginlestir</Text>
           <Text style={styles.subtitle}>
-            3 soru sec ve cevapla. Cevaplarin{'\n'}fotograflarinin arasinda gorunecek.
+            15'e kadar soru sec ve cevapla. Cevaplarin{'\n'}fotograflarinin arasinda gorunecek.
           </Text>
 
           {/* Category chips — horizontal scroll */}
@@ -533,19 +522,19 @@ const styles = StyleSheet.create({
 
   // Header
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontFamily: 'Poppins_800ExtraBold',
     fontWeight: '800',
     color: onboardingColors.text,
-    lineHeight: 36,
+    lineHeight: 32,
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: onboardingColors.textSecondary,
-    lineHeight: 23,
+    lineHeight: 22,
     marginBottom: 20,
   },
 
@@ -580,8 +569,8 @@ const styles = StyleSheet.create({
   },
   chipTextInactive: {
     fontSize: 14,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: onboardingColors.text,
   },
 
@@ -607,19 +596,19 @@ const styles = StyleSheet.create({
   },
   promptText: {
     flex: 1,
-    fontSize: 17,
+    fontSize: 15,
     fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: '#1E293B',
-    lineHeight: 24,
+    lineHeight: 22,
   },
   promptTextSaved: {
     color: '#166534',
   },
   savedAnswerPreview: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: '#475569',
     lineHeight: 20,
     marginTop: 8,
@@ -634,8 +623,8 @@ const styles = StyleSheet.create({
   },
   selectHintText: {
     fontSize: 13,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: '#9B6BF8',
   },
   disabledOverlay: {
@@ -651,11 +640,11 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   answerInput: {
-    fontSize: 16,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: '#1E293B',
-    lineHeight: 24,
+    lineHeight: 22,
     minHeight: 60,
     maxHeight: 120,
     padding: 12,
@@ -666,8 +655,8 @@ const styles = StyleSheet.create({
   },
   charCounter: {
     fontSize: 12,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '400',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: '#94A3B8',
     textAlign: 'right',
   },
@@ -677,8 +666,8 @@ const styles = StyleSheet.create({
   },
   aiButtonText: {
     fontSize: 14,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: '#9B6BF8',
   },
   savePill: {
@@ -720,9 +709,9 @@ const styles = StyleSheet.create({
   },
   completionText: {
     fontSize: 14,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-    color: onboardingColors.textSecondary,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: onboardingColors.text,
   },
   continueButton: {
     width: SCREEN_WIDTH - 48,
@@ -732,9 +721,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   continueButtonText: {
-    fontSize: 18,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontSize: 16,
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
     color: '#FFFFFF',
   },
   continueButtonTextDisabled: {

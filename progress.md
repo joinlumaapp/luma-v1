@@ -1,10 +1,46 @@
 # LUMA V1 -- Progress Tracking
 
-**Last Updated:** 2026-04-10
+**Last Updated:** 2026-04-11
 
 ---
 
-## Recent Updates (2026-04-10)
+## Recent Updates (2026-04-11)
+
+### Session 6 — Prompt limit to 15, global status bar, bold text
+
+**Prompt system expansion:**
+- MAX_PROMPTS: 3 → 15 (users can select up to 15 prompts)
+- Counter updated: "X/15 tamamlandı"
+- Subtitle: "15'e kadar soru seç ve cevapla..."
+- Completion dots removed (would be 15 dots, too many) — kept compact text counter
+- Expanded prompt bank:
+  - Kişilik: 6 → 10 prompts
+  - Yaşam Tarzı: 6 → 10 prompts
+  - Hayaller: 6 → 10 prompts
+  - Eğlence: 6 → 7 prompts
+  - Yemek & Seyahat: 6 → 7 prompts
+- Total: 30 → 44 prompts
+
+**Global status bar (one source of truth):**
+- Removed ~23 per-screen `<StatusBar>` components from 17 files
+- Removed ~17 unused `import { StatusBar } from 'expo-status-bar'` lines
+- App.tsx keeps the single global `<StatusBar style="light" backgroundColor="#08080F" />`
+- Module-level `setStatusBarStyle/BackgroundColor/Translucent` calls remain for Android early-init
+- Fixed StoryCreator early-return fallthrough caused by SED cleanup
+
+**Prompt screen bold typography:**
+- Title: 28 → 24, fontWeight '800'
+- Subtitle: '500' → '600', fontSize 16 → 15
+- Chip inactive: '500' → '700'
+- Prompt text: fontSize 17 → 15 (bold '700')
+- Saved answer preview: '400' → '600'
+- Select hint: '500' → '700'
+- Answer input: '500' → '600'
+- Char counter: '400' → '700'
+- AI button: '600' → '700'
+- Completion text: '500' → '700'
+- Continue button: '700' → '800', size 18 → 16
+- Zero fontWeight '400' or '500' remaining in this screen
 
 ### Session 5 — Logo Fix, OTP Bug, Welcome Screen Reorder
 

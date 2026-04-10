@@ -10,7 +10,6 @@ import {
   Pressable,
   ActivityIndicator,
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCoinStore, DM_COST } from '../../stores/coinStore';
@@ -54,7 +53,6 @@ export const DMPaymentModal: React.FC<DMPaymentModalProps> = ({
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      <StatusBar style="light" backgroundColor="#08080F" />
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable style={styles.card} onPress={() => {}}>
           {/* Close button */}
