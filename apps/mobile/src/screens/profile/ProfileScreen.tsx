@@ -8,9 +8,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Animated,
-  Easing,
   RefreshControl,
-  Image,
   Share,
   Alert,
   Modal,
@@ -140,89 +138,8 @@ const getInterestTagDisplay = (tag: string): string => {
 };
 
 
-// ─── Gold shimmer animation for Premium CTA ──────────────────────────────────
-
-const GoldShimmerButton: React.FC<{
-  onPress: () => void;
-  label: string;
-  icon: keyof typeof Ionicons.glyphMap;
-}> = ({ onPress, label, icon }) => {
-  const shimmerAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const animation = Animated.loop(
-      Animated.timing(shimmerAnim, {
-        toValue: 1,
-        duration: 2400,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }),
-    );
-    animation.start();
-    return () => animation.stop();
-  }, [shimmerAnim]);
-
-  const shimmerTranslate = shimmerAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-200, 200],
-  });
-
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.85}
-      style={styles.premiumButtonOuter}
-      accessibilityLabel={label}
-      accessibilityRole="button"
-    >
-      <LinearGradient
-        colors={[palette.gold[500], palette.gold[600], palette.gold[500]] as [string, string, ...string[]]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.premiumButtonGradient}
-      >
-        {/* Shimmer overlay */}
-        <Animated.View
-          style={[
-            styles.premiumShimmer,
-            { transform: [{ translateX: shimmerTranslate }] },
-          ]}
-          pointerEvents="none"
-        />
-        <Ionicons name={icon} size={16} color="#FFFFFF" />
-        <Text style={styles.premiumButtonText}>{label}</Text>
-      </LinearGradient>
-    </TouchableOpacity>
-  );
-};
-
-// Strength Ring Color Helper
-const getStrengthColor = (level: 'low' | 'medium' | 'high'): string => {
-  if (level === 'low') return '#EF4444';
-  if (level === 'medium') return '#F59E0B';
-  return '#10B981';
-};
 
 // ─── Intention tag display config ────────────────────────────────────────────
-
-// ─── Time Ago Helper ──────────────────────────────────────────
-const formatTimeAgo = (dateString: string): string => {
-  const now = Date.now();
-  const then = new Date(dateString).getTime();
-  const diffMs = now - then;
-  const diffMin = Math.floor(diffMs / 60_000);
-  const diffHour = Math.floor(diffMs / 3_600_000);
-  const diffDay = Math.floor(diffMs / 86_400_000);
-
-  if (diffMin < 1) return 'az once';
-  if (diffMin < 60) return `${diffMin} dk`;
-  if (diffHour < 24) return `${diffHour} sa`;
-  if (diffDay < 7) return `${diffDay} gun`;
-  return new Date(dateString).toLocaleDateString('tr-TR', {
-    day: 'numeric',
-    month: 'short',
-  });
-};
 
 const INTENTION_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
   SERIOUS_RELATIONSHIP: { label: 'Ciddi İlişki', bg: 'rgba(139, 92, 246, 0.12)', text: palette.purple[600] },
@@ -586,7 +503,7 @@ export const ProfileScreen: React.FC = () => {
           accessibilityHint="Uygulama ayarlarını açmak için dokunun"
           testID="profile-settings-btn"
         >
-          <Ionicons name="settings-outline" size={22} color={colors.text} />
+          <Ionicons name="settings-outline" size={22} color={'#FFFFFF'} />
         </TouchableOpacity>
       </View>
     </View>
@@ -604,11 +521,15 @@ export const ProfileScreen: React.FC = () => {
           {isVerified && <VerifiedBadge size="large" animated />}
           {packageTier !== 'FREE' && <SubscriptionBadge tier={packageTier} compact />}
           {strengthData && (
-            <View style={[styles.strengthPill, { borderColor: getStrengthColor(strengthData.level) + '40' }]}>
-              <Text style={[styles.strengthPillText, { color: getStrengthColor(strengthData.level) }]}>
-                %{strengthData.percentage}
-              </Text>
-            </View>
+            <LinearGradient
+              colors={['#8B5CF6', '#EC4899']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.strengthPill}
+            >
+              <Text style={styles.strengthPillEmoji}>💜</Text>
+              <Text style={styles.strengthPillText}>%{strengthData.percentage} Uyum</Text>
+            </LinearGradient>
           )}
         </View>
 
@@ -630,9 +551,8 @@ export const ProfileScreen: React.FC = () => {
         )}
       </View>
 
-      {/* Mood selector — Anlık Ruh Hali */}
+      {/* Mood selector — chips only, no title */}
       <View style={styles.moodSection}>
-        <Text style={styles.moodSectionTitle}>Anlık Ruh Halin</Text>
         <HScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -640,33 +560,44 @@ export const ProfileScreen: React.FC = () => {
         >
           {MOOD_OPTIONS.map((mood) => {
             const isSelected = currentMood === mood.id;
-            return (
-              <TouchableOpacity
-                key={mood.id}
-                style={[
-                  styles.moodChip,
-                  isSelected
-                    ? { backgroundColor: mood.color, borderColor: mood.color }
-                    : { backgroundColor: 'transparent', borderColor: colors.surfaceBorder },
-                ]}
-                onPress={() => handleMoodPress(mood.id)}
-                activeOpacity={0.7}
-                disabled={moodLoading}
-                accessibilityLabel={`${mood.label} ${isSelected ? '(aktif)' : ''}`}
-                accessibilityRole="button"
-              >
+            const chipContent = (
+              <>
                 {isSelected && <View style={styles.moodActiveDot} />}
                 <Text style={styles.moodChipEmoji}>{mood.emoji}</Text>
                 <Text
                   style={[
                     styles.moodChipLabel,
-                    isSelected
-                      ? { color: '#FFFFFF' }
-                      : { color: colors.textSecondary },
+                    { color: isSelected ? '#FFFFFF' : 'rgba(255,255,255,0.7)' },
                   ]}
                 >
                   {mood.label}
                 </Text>
+              </>
+            );
+            return (
+              <TouchableOpacity
+                key={mood.id}
+                onPress={() => handleMoodPress(mood.id)}
+                activeOpacity={0.7}
+                disabled={moodLoading}
+                accessibilityLabel={`${mood.label} ${isSelected ? '(aktif)' : ''}`}
+                accessibilityRole="button"
+                style={styles.moodChipWrapper}
+              >
+                {isSelected ? (
+                  <LinearGradient
+                    colors={['#8B5CF6', '#EC4899']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.moodChip}
+                  >
+                    {chipContent}
+                  </LinearGradient>
+                ) : (
+                  <View style={[styles.moodChip, styles.moodChipInactive]}>
+                    {chipContent}
+                  </View>
+                )}
               </TouchableOpacity>
             );
           })}
@@ -674,63 +605,68 @@ export const ProfileScreen: React.FC = () => {
       </View>
 
       {/* Premium stats row — tappable */}
-      <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+      <View style={styles.statsGrid}>
         <TouchableOpacity
-          style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}
+          style={styles.statsCell}
           onPress={() => navigation.navigate('MyPosts')}
           activeOpacity={0.7}
         >
-          <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{myPosts.length}</Text>
-          <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Gönderi</Text>
+          <Text style={styles.statsCellValue}>{myPosts.length}</Text>
+          <Text style={styles.statsCellLabel}>Gönderi</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}
+          style={styles.statsCell}
           onPress={() => navigation.navigate('FollowList', { mode: 'followers' })}
           activeOpacity={0.7}
         >
-          <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{followerCount}</Text>
-          <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takipçi</Text>
+          <Text style={styles.statsCellValue}>{followerCount}</Text>
+          <Text style={styles.statsCellLabel}>Takipçi</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}
+          style={styles.statsCell}
           onPress={() => navigation.navigate('FollowList', { mode: 'following' })}
           activeOpacity={0.7}
         >
-          <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{followingCount}</Text>
-          <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takip</Text>
+          <Text style={styles.statsCellValue}>{followingCount}</Text>
+          <Text style={styles.statsCellLabel}>Takip</Text>
         </TouchableOpacity>
       </View>
 
       {/* Action buttons row */}
       <View style={styles.actionButtonsRow}>
-        {/* Edit Profile — gradient purple */}
+        {/* Edit Profile — transparent + white border */}
         <TouchableOpacity
           onPress={handleEditProfile}
           activeOpacity={0.85}
-          style={styles.actionButtonFlex}
+          style={[styles.actionButtonFlex, styles.editProfileButton]}
           accessibilityLabel="Profili düzenle"
           accessibilityRole="button"
           testID="profile-edit-btn"
         >
-          <LinearGradient
-            colors={[palette.purple[500], palette.purple[700]] as [string, string, ...string[]]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.gradientButton}
-          >
-            <Ionicons name="pencil" size={15} color="#FFFFFF" />
-            <Text style={styles.gradientButtonText}>Düzenle</Text>
-          </LinearGradient>
+          <Ionicons name="pencil" size={15} color="#FFFFFF" />
+          <Text style={styles.editProfileButtonText}>Düzenle</Text>
         </TouchableOpacity>
 
-        {/* Premium / Üyelik */}
-        <View style={styles.actionButtonFlex}>
-          <GoldShimmerButton
-            onPress={() => navigation.navigate('MembershipPlans')}
-            label={packageTier === 'FREE' ? "Premium'a Geç" : packageTier === 'SUPREME' ? 'Supreme' : 'Premium Üye'}
-            icon={packageTier === 'SUPREME' ? 'diamond' : packageTier === 'FREE' ? 'rocket' : 'star'}
-          />
-        </View>
+        {/* Premium / Üyelik — purple→pink gradient */}
+        <TouchableOpacity
+          onPress={() => navigation.navigate('MembershipPlans')}
+          activeOpacity={0.85}
+          style={styles.actionButtonFlex}
+          accessibilityLabel="Premium üyelik"
+          accessibilityRole="button"
+        >
+          <LinearGradient
+            colors={['#8B5CF6', '#EC4899']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.premiumActionButton}
+          >
+            <Ionicons name="sparkles" size={15} color="#FFFFFF" />
+            <Text style={styles.premiumActionButtonText}>
+              {packageTier === 'FREE' ? "Premium'a Geç" : packageTier === 'SUPREME' ? 'Supreme' : 'Premium Üye'}
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
       </View>
 
       {/* ═══ 1. PROFİL GÜCÜ — Compact card ═══ */}
@@ -927,80 +863,6 @@ export const ProfileScreen: React.FC = () => {
 
   // ── Info Sections (interleaved with photos) ─────────────────────────────────
   const infoSections: React.ReactNode[] = [];
-
-  // 0. Gonderilerim — recent posts preview with like/comment counts
-  infoSections.push(
-    <View key="my-posts" style={styles.section}>
-      <View style={styles.myPostsHeader}>
-        <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>
-          Gonderilerim ({myPosts.length})
-        </Text>
-        {myPosts.length > 0 && (
-          <TouchableOpacity
-            onPress={() => navigation.navigate('MyPosts')}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.myPostsSeeAll}>Tumunu Gor</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-      {myPosts.length === 0 ? (
-        <View style={styles.myPostsEmpty}>
-          <Text style={styles.myPostsEmptyText}>
-            Henuz gonderin yok {'\u2014'} ilk gonderini paylas!
-          </Text>
-        </View>
-      ) : (
-        <View style={styles.myPostsList}>
-          {myPosts.slice(0, 4).map((post) => {
-            const hasPhoto = post.photoUrls.length > 0;
-            const snippet = post.content.length > 60
-              ? post.content.substring(0, 60) + '...'
-              : post.content;
-            return (
-              <TouchableOpacity
-                key={post.id}
-                style={styles.myPostCard}
-                activeOpacity={0.7}
-                onPress={() => navigation.navigate('MyPosts')}
-              >
-                {hasPhoto && (
-                  <Image
-                    source={{ uri: post.photoUrls[0] }}
-                    style={styles.myPostThumb}
-                    resizeMode="cover"
-                  />
-                )}
-                {!hasPhoto && post.videoUrl && (
-                  <View style={[styles.myPostThumb, styles.myPostVideoPlaceholder]}>
-                    <Ionicons name="videocam" size={16} color={palette.purple[300]} />
-                  </View>
-                )}
-                <View style={styles.myPostInfo}>
-                  {snippet.length > 0 && (
-                    <Text style={styles.myPostSnippet} numberOfLines={2}>
-                      {snippet}
-                    </Text>
-                  )}
-                  <View style={styles.myPostStats}>
-                    <View style={styles.myPostStatItem}>
-                      <Ionicons name="heart" size={12} color="#EF4444" />
-                      <Text style={styles.myPostStatText}>{post.likeCount}</Text>
-                    </View>
-                    <View style={styles.myPostStatItem}>
-                      <Ionicons name="chatbubble" size={12} color="#9CA3AF" />
-                      <Text style={styles.myPostStatText}>{post.commentCount}</Text>
-                    </View>
-                    <Text style={styles.myPostTime}>{formatTimeAgo(post.createdAt)}</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      )}
-    </View>,
-  );
 
   // 1. Hakkında — bio + lookingFor chips
   infoSections.push(
@@ -1317,11 +1179,6 @@ export const ProfileScreen: React.FC = () => {
     );
   }
 
-  // Bottom spacer for tab bar
-  infoSections.push(
-    <View key="bottom-spacer" style={{ height: 100 }} />,
-  );
-
   // 9. Haftalik Uyum Raporu card
   infoSections.push(
     <TouchableOpacity
@@ -1352,7 +1209,7 @@ export const ProfileScreen: React.FC = () => {
           topContent={topContent}
           infoSections={infoSections}
           headerBar={headerBar}
-          scrollBottomPadding={spacing.xl * 2}
+          scrollBottomPadding={120}
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
@@ -1360,7 +1217,7 @@ export const ProfileScreen: React.FC = () => {
               tintColor="#D4AF37"
               colors={['#D4AF37']}
               title="Güncelleniyor..."
-              titleColor={colors.textSecondary}
+              titleColor={'rgba(255,255,255,0.6)'}
             />
           }
         />
@@ -1534,7 +1391,7 @@ export const ProfileScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#08080F',
   },
 
   // ═══ NEW: Hakkımda grid (3-column) ═══
@@ -1550,8 +1407,8 @@ const styles = StyleSheet.create({
   },
   hakkimdaTitle: {
     fontSize: 18,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
     color: '#FFFFFF',
   },
   hakkimdaEditLink: {
@@ -1566,36 +1423,37 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   hakkimdaCell: {
-    width: '31.5%',
+    width: '31.78%',
     backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 14,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: 10,
-    paddingVertical: 12,
+    paddingVertical: 14,
     alignItems: 'center',
     gap: 4,
   },
   hakkimdaCellIcon: {
-    fontSize: 18,
-    marginBottom: 2,
+    fontSize: 20,
+    marginBottom: 4,
+    textAlign: 'center',
   },
   hakkimdaCellLabel: {
-    fontSize: 11,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontSize: 12,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: 'rgba(255,255,255,0.5)',
     textAlign: 'center',
   },
   hakkimdaCellValue: {
-    fontSize: 13,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontSize: 15,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: '#FFFFFF',
     textAlign: 'center',
   },
   hakkimdaCellEmpty: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: '#8B5CF6',
@@ -1605,6 +1463,7 @@ const styles = StyleSheet.create({
   // ═══ NEW: Boost button (compact) ═══
   boostButton: {
     marginTop: 12,
+    marginBottom: 16,
     marginHorizontal: spacing.lg,
     height: 48,
     borderRadius: 12,
@@ -1633,8 +1492,8 @@ const styles = StyleSheet.create({
   },
   boostButtonText: {
     fontSize: 15,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
     color: '#FFFFFF',
   },
   boostButtonRight: {
@@ -1689,8 +1548,8 @@ const styles = StyleSheet.create({
   },
   inviteSubtitle: {
     fontSize: 12,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: 'rgba(255,255,255,0.6)',
     marginTop: 2,
   },
@@ -1713,8 +1572,8 @@ const styles = StyleSheet.create({
   },
   kasifSectionTitle: {
     fontSize: 16,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
     color: '#FFFFFF',
     marginBottom: 10,
   },
@@ -1763,8 +1622,8 @@ const styles = StyleSheet.create({
   },
   kasifProgressLabel: {
     fontSize: 11,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: 'rgba(255,255,255,0.6)',
   },
   kasifReward: {
@@ -1783,9 +1642,9 @@ const styles = StyleSheet.create({
   },
   kasifTimerText: {
     fontSize: 11,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-    color: 'rgba(255,255,255,0.5)',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 8,
     textAlign: 'center',
   },
@@ -1814,8 +1673,8 @@ const styles = StyleSheet.create({
   },
   starsSectionTitle: {
     fontSize: 16,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
     color: '#FFFFFF',
     marginBottom: 10,
     marginHorizontal: spacing.lg,
@@ -1871,8 +1730,8 @@ const styles = StyleSheet.create({
   },
   starCardValue: {
     fontSize: 11,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: 'rgba(255,255,255,0.6)',
   },
   starsSeeAllButton: {
@@ -1914,8 +1773,8 @@ const styles = StyleSheet.create({
   },
   pgLabel: {
     fontSize: 15,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   pgPercent: {
@@ -1937,8 +1796,8 @@ const styles = StyleSheet.create({
   pgHint: {
     marginTop: 8,
     fontSize: 13,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: 'rgba(255,255,255,0.7)',
   },
   pgHintComplete: {
@@ -1969,8 +1828,8 @@ const styles = StyleSheet.create({
   },
   uyumCardTitle: {
     fontSize: 16,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
     color: '#FFFFFF',
     marginBottom: 14,
   },
@@ -2002,8 +1861,8 @@ const styles = StyleSheet.create({
   },
   uyumCardSubtitle: {
     fontSize: 14,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: 'rgba(255,255,255,0.75)',
     lineHeight: 20,
   },
@@ -2091,8 +1950,8 @@ const styles = StyleSheet.create({
   },
   viewersSubText: {
     fontSize: 13,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: 'rgba(255,255,255,0.6)',
   },
 
@@ -2120,8 +1979,8 @@ const styles = StyleSheet.create({
   },
   strengthModalTitle: {
     fontSize: 20,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
     color: '#FFFFFF',
   },
   strengthModalPercent: {
@@ -2133,8 +1992,8 @@ const styles = StyleSheet.create({
   },
   strengthModalSubtitle: {
     fontSize: 14,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: 'rgba(255,255,255,0.65)',
     marginTop: 4,
     marginBottom: 18,
@@ -2164,12 +2023,12 @@ const styles = StyleSheet.create({
   strengthCheckLabel: {
     flex: 1,
     fontSize: 14,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
   strengthCheckLabelDone: {
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(255,255,255,0.7)',
     textDecorationLine: 'line-through',
   },
   strengthCheckGain: {
@@ -2215,7 +2074,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     lineHeight: 38,
     fontWeight: fontWeights.bold,
-    color: colors.text,
+    color: '#FFFFFF',
   },
   supremeHeaderBadge: {
     flexDirection: 'row',
@@ -2244,7 +2103,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'visible',
@@ -2254,7 +2113,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     justifyContent: 'center',
     alignItems: 'center',
     ...shadows.small,
@@ -2273,7 +2132,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: palette.gold[500],
     borderWidth: 1.5,
-    borderColor: colors.background,
+    borderColor: '#08080F',
   },
 
   // ── Top section (below hero photo) ──
@@ -2294,26 +2153,68 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   userName: {
-    fontSize: 26,
-    lineHeight: 38,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.semibold,
-    color: colors.text,
+    fontSize: 22,
+    lineHeight: 32,
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
+    color: '#FFFFFF',
     paddingRight: 4,
     includeFontPadding: false,
     textAlignVertical: 'center',
   },
   strengthPill: {
-    borderWidth: 1.5,
     borderRadius: borderRadius.full,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     marginLeft: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    overflow: 'hidden',
   },
   strengthPillText: {
     fontSize: 14,
-    fontWeight: fontWeights.bold,
-    letterSpacing: 0.3,
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 0.2,
+  },
+  strengthPillEmoji: {
+    fontSize: 14,
+  },
+
+  // ═══ Stats row cells (Gönderi | Takipçi | Takip) ═══
+  statsGrid: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+  },
+  statsCell: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  statsCellValue: {
+    fontSize: 22,
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
+    color: '#FFFFFF',
+    paddingHorizontal: 4,
+    textAlign: 'center',
+    width: '100%',
+  },
+  statsCellLabel: {
+    fontSize: 11,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 4,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
   },
   jobTitle: {
     fontSize: 15,
@@ -2323,13 +2224,13 @@ const styles = StyleSheet.create({
   },
   cityText: {
     fontSize: 14,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.6)',
   },
   strengthCardContainer: {
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
+    borderColor: 'rgba(255,255,255,0.1)',
     borderRadius: 16,
     marginTop: 12,
     paddingHorizontal: 16,
@@ -2343,12 +2244,12 @@ const styles = StyleSheet.create({
   strengthCardLabel: {
     fontSize: 14,
     fontWeight: fontWeights.semibold,
-    color: colors.text,
+    color: '#FFFFFF',
   },
   strengthCardTrack: {
     flex: 1,
     height: 8,
-    backgroundColor: colors.surfaceBorder,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 4,
     marginLeft: 10,
     marginRight: 8,
@@ -2366,13 +2267,13 @@ const styles = StyleSheet.create({
   },
   strengthCardHint: {
     fontSize: 14,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.6)',
     marginTop: 6,
   },
   strengthCardComplete: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontWeight: '600',
     color: '#22C55E',
     marginTop: 6,
   },
@@ -2401,7 +2302,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-start',
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: borderRadius.lg,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
@@ -2415,14 +2316,14 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 20,
     fontWeight: fontWeights.bold,
-    color: colors.text,
+    color: '#FFFFFF',
     textAlign: 'center',
     includeFontPadding: false,
   },
   statLabel: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
-    color: colors.textTertiary,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 3,
     textAlign: 'center',
     letterSpacing: 0.3,
@@ -2431,7 +2332,7 @@ const styles = StyleSheet.create({
   statDivider: {
     width: 1,
     height: 24,
-    backgroundColor: colors.surfaceBorder,
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
 
   // ── Action buttons row ──
@@ -2441,6 +2342,42 @@ const styles = StyleSheet.create({
   },
   actionButtonFlex: {
     flex: 1,
+  },
+  editProfileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 44,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'transparent',
+  },
+  editProfileButtonText: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
+  },
+  premiumActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 44,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  premiumActionButtonText: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
   },
   gradientButton: {
     flexDirection: 'row',
@@ -2522,12 +2459,12 @@ const styles = StyleSheet.create({
   },
   weeklyViewsText: {
     fontSize: 14,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.6)',
   },
   weeklyViewsBold: {
     fontWeight: fontWeights.bold,
-    color: colors.text,
+    color: '#FFFFFF',
   },
   weeklyViewsGoldCta: {
     fontWeight: fontWeights.semibold,
@@ -2537,25 +2474,27 @@ const styles = StyleSheet.create({
   // ── Mood selector (Anlık Ruh Hali) ──
   moodSection: {
     marginTop: 4,
-    gap: 8,
-  },
-  moodSectionTitle: {
-    fontSize: 14,
-    fontWeight: fontWeights.medium,
-    color: colors.textSecondary,
   },
   moodChipsContainer: {
     gap: 8,
     paddingRight: spacing.sm,
+  },
+  moodChipWrapper: {
+    borderRadius: borderRadius.full,
+    overflow: 'hidden',
   },
   moodChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
     paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingVertical: 8,
     borderRadius: borderRadius.full,
-    borderWidth: 1.5,
+  },
+  moodChipInactive: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   moodChipEmoji: {
     fontSize: 14,
@@ -2563,14 +2502,14 @@ const styles = StyleSheet.create({
   },
   moodChipLabel: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontWeight: '600',
     includeFontPadding: false,
   },
   moodActiveDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255,255,255,0.95)',
   },
 
   // ── Listening status section ──
@@ -2579,13 +2518,13 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     marginTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.surfaceBorder,
+    borderTopColor: 'rgba(255,255,255,0.1)',
   },
   listeningSectionTitle: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: fontWeights.semibold,
-    color: colors.text,
+    color: '#FFFFFF',
     marginBottom: spacing.md,
   },
   listeningActive: {
@@ -2596,14 +2535,14 @@ const styles = StyleSheet.create({
   },
   clearListeningText: {
     fontSize: 14,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: palette.rose[500],
   },
   listeningInactive: {
     fontSize: 14,
-    fontWeight: fontWeights.regular,
-    color: colors.textTertiary,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.7)',
     fontStyle: 'italic',
   },
   visibilityRow: {
@@ -2611,9 +2550,9 @@ const styles = StyleSheet.create({
   },
   visibilityLabel: {
     fontSize: 14,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: fontWeights.medium,
-    color: colors.textSecondary,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.6)',
   },
   visibilityOptions: {
     flexDirection: 'row',
@@ -2622,7 +2561,7 @@ const styles = StyleSheet.create({
   },
   visibilityChip: {
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
+    borderColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: borderRadius.full,
@@ -2633,9 +2572,9 @@ const styles = StyleSheet.create({
   },
   visibilityChipText: {
     fontSize: 14,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: fontWeights.medium,
-    color: colors.textSecondary,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.6)',
   },
   visibilityChipTextActive: {
     color: '#FFFFFF',
@@ -2650,7 +2589,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: fontWeights.semibold,
-    color: colors.text,
+    color: '#FFFFFF',
     letterSpacing: 0,
     includeFontPadding: false,
     marginBottom: spacing.md,
@@ -2659,20 +2598,20 @@ const styles = StyleSheet.create({
   // ── Bio ──
   bioText: {
     fontSize: 15,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.6)',
     lineHeight: 24,
   },
   lookingForSection: {
     marginTop: spacing.md,
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.surfaceBorder,
+    borderTopColor: 'rgba(255,255,255,0.1)',
   },
   subsectionTitle: {
     fontSize: 14,
     fontWeight: fontWeights.semibold,
-    color: colors.text,
+    color: '#FFFFFF',
     marginBottom: spacing.sm,
   },
 
@@ -2692,7 +2631,7 @@ const styles = StyleSheet.create({
   },
   lookingForChipText: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontWeight: '600',
     color: palette.pink[600],
   },
   hobbyChip: {
@@ -2705,7 +2644,7 @@ const styles = StyleSheet.create({
   },
   hobbyChipText: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontWeight: '600',
     color: palette.purple[600],
   },
 
@@ -2715,7 +2654,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceBorder + '80',
+    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   aboutRowLast: {
     borderBottomWidth: 0,
@@ -2733,17 +2672,17 @@ const styles = StyleSheet.create({
   },
   aboutRowLabel: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
-    color: colors.textTertiary,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.7)',
     marginBottom: 2,
   },
   aboutRowValue: {
     fontSize: 15,
-    fontWeight: fontWeights.medium,
-    color: colors.text,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   aboutRowValueEmpty: {
-    color: colors.textTertiary,
+    color: 'rgba(255,255,255,0.7)',
     fontStyle: 'italic',
   },
 
@@ -2756,7 +2695,7 @@ const styles = StyleSheet.create({
   },
   quickActionCard: {
     flex: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     alignItems: 'center',
@@ -2777,7 +2716,7 @@ const styles = StyleSheet.create({
   quickActionLabel: {
     fontSize: 14,
     fontWeight: fontWeights.semibold,
-    color: colors.text,
+    color: '#FFFFFF',
     letterSpacing: 0.1,
   },
 
@@ -2821,15 +2760,15 @@ const styles = StyleSheet.create({
   },
   uyumReminderSubtitle: {
     fontSize: 14,
-    fontWeight: '500',
-    color: colors.textSecondary,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.6)',
   },
 
   // ── Boost card ──
   boostCard: {
     marginHorizontal: spacing.lg,
     marginBottom: spacing.md,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     borderWidth: 1,
@@ -2859,13 +2798,13 @@ const styles = StyleSheet.create({
   boostTitle: {
     fontSize: 15,
     fontWeight: fontWeights.semibold,
-    color: colors.text,
+    color: '#FFFFFF',
     marginBottom: 2,
   },
   boostSubtitle: {
     fontSize: 14,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.6)',
   },
   boostActiveBadge: {
     flexDirection: 'row',
@@ -2898,96 +2837,19 @@ const styles = StyleSheet.create({
     width: 144,
     height: 144,
     borderRadius: 72,
-    backgroundColor: colors.surfaceLight,
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
   skeletonNameBlock: {
     width: 160,
     height: 20,
     borderRadius: borderRadius.sm,
-    backgroundColor: colors.surfaceLight,
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
   skeletonCardBlock: {
     width: layout.screenWidth - spacing.lg * 2,
     height: 80,
     borderRadius: borderRadius.lg,
-    backgroundColor: colors.surfaceLight,
-  },
-
-  // ── Gonderilerim (My Posts) ──
-  myPostsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  myPostsSeeAll: {
-    fontSize: 14,
-    fontWeight: fontWeights.semibold,
-    color: palette.purple[500],
-  },
-  myPostsEmpty: {
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-  },
-  myPostsEmptyText: {
-    fontSize: 14,
-    fontWeight: fontWeights.regular,
-    color: colors.textTertiary,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  myPostsList: {
-    gap: spacing.sm,
-  },
-  myPostCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.smd,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-  },
-  myPostThumb: {
-    width: 52,
-    height: 52,
-    borderRadius: borderRadius.sm,
-    backgroundColor: colors.surfaceLight,
-    marginRight: spacing.smd,
-  },
-  myPostVideoPlaceholder: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  myPostInfo: {
-    flex: 1,
-    gap: 4,
-  },
-  myPostSnippet: {
-    fontSize: 14,
-    fontWeight: fontWeights.medium,
-    color: colors.text,
-    lineHeight: 18,
-  },
-  myPostStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.smd,
-  },
-  myPostStatItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-  },
-  myPostStatText: {
-    fontSize: 14,
-    fontWeight: fontWeights.medium,
-    color: colors.textSecondary,
-  },
-  myPostTime: {
-    fontSize: 14,
-    fontWeight: fontWeights.regular,
-    color: colors.textTertiary,
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
 
   // ── Haftalik Uyum Raporu card ──
@@ -2995,13 +2857,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: spacing.sm,
+    marginTop: 12,
+    marginHorizontal: spacing.lg,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.smd,
     backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: borderRadius.lg,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(139,92,246,0.25)',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   weeklyReportLeft: {
     flexDirection: 'row',
@@ -3014,23 +2877,25 @@ const styles = StyleSheet.create({
   },
   weeklyReportTitle: {
     fontSize: 15,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   weeklyReportSubtitle: {
     fontSize: 14,
-    fontWeight: fontWeights.regular,
-    color: 'rgba(255,255,255,0.5)',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
     marginTop: 2,
   },
 
   // ── Referral card ──
   referralCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.xl,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 16,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: 'rgba(139,92,246,0.2)',
+    borderColor: 'rgba(255,255,255,0.1)',
     marginTop: spacing.smd,
   },
   referralRow: {
@@ -3051,12 +2916,12 @@ const styles = StyleSheet.create({
   referralTitle: {
     fontSize: 15,
     fontWeight: fontWeights.semibold,
-    color: colors.text,
+    color: '#FFFFFF',
   },
   referralSubtitle: {
     fontSize: 14,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.6)',
     marginTop: 2,
   },
   referralCodeBadge: {
@@ -3106,7 +2971,7 @@ const styles = StyleSheet.create({
   },
   discountModalSubtitle: {
     fontSize: 14,
-    fontWeight: fontWeights.regular,
+    fontWeight: '600',
     color: 'rgba(255,255,255,0.7)',
     textAlign: 'center',
     lineHeight: 20,
@@ -3120,8 +2985,8 @@ const styles = StyleSheet.create({
   },
   discountOldPrice: {
     fontSize: 18,
-    fontWeight: fontWeights.medium,
-    color: 'rgba(255,255,255,0.4)',
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.7)',
     textDecorationLine: 'line-through',
   },
   discountNewPrice: {
@@ -3131,7 +2996,7 @@ const styles = StyleSheet.create({
   },
   discountTimer: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontWeight: '600',
     color: '#F59E0B',
     marginBottom: 20,
   },
@@ -3154,7 +3019,7 @@ const styles = StyleSheet.create({
   },
   discountDismissText: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
-    color: 'rgba(255,255,255,0.5)',
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.7)',
   },
 });

@@ -18,6 +18,7 @@ These rules define the boundaries of LUMA V1. If any of these change, the scope 
 | Uyum skor araligi | **47-97** | 100% matematik olarak imkansiz |
 | Super Uyum esigi | **90+** | Ozel UI efektleri tetikler |
 | Maksimum fotograf | **9** | Profil basina (min 2, max 9) |
+| Prompt'larim | **15** | Profil basina max prompt cevabi (eskiden 3, 2026-04-11'de guncellendi) |
 | Bildirim katmanlari | **3** | Kritik, Onemli, Dusuk |
 
 ---

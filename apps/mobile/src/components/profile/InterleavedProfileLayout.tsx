@@ -26,7 +26,7 @@ import {
 } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, palette } from '../../theme/colors';
+import { palette } from '../../theme/colors';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -515,8 +515,8 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: borderRadius.xl,
     overflow: 'hidden',
-    // Match app cream background to prevent white hairline at rounded edges
-    backgroundColor: colors.background,
+    // Transparent — parent screen's background (dark or cream) shows through
+    backgroundColor: 'transparent',
   },
   interleavedImage: {
     width: '100%',

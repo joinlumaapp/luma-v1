@@ -153,3 +153,36 @@
 **Decision:** Verification checkmark badge is green (#10B981), 22x22px, positioned at top-right (top: 8, right: 8) on all user cards and avatars. Replaces previous inconsistent positioning (some left, some bottom) and colors (blue/purple/gold).
 **Rejected:** Blue Twitter-style badge, gold premium-only badge, badge next to name
 **Reasoning:** Green = trust + safety in dating context. Top-right is the universal "status indicator" position (iOS, WhatsApp, Instagram). Single consistent badge style across all screens reduces visual noise. Badge indicates full verification (selfie + profile complete), not package tier.
+
+## Decision 029: Profile Screen Dark Theme (#08080F)
+**Date:** 2026-04-11
+**Decision:** Profile ekranı koyu tema (#08080F) — tüm kartlar koyu, beyaz arka plan kaldırıldı. Container background `#08080F`, all cards use `rgba(255,255,255,0.06)` with `rgba(255,255,255,0.1)` borders (borderRadius 16 for cards, 12 for grid cells). Text colors: white (titles/values), `rgba(255,255,255,0.7)` (body), `rgba(255,255,255,0.6)` (muted labels), `rgba(255,255,255,0.5)` (tiny meta).
+**Rejected:** Cream theme (#F5F0E8), mixed light/dark cards, per-card theme variations
+**Reasoning:** The app uses a single dark visual language on dating/social content. A cream profile against dark content tabs (Keşfet, Akış, Eşleşme) created jarring context switches. Unifying on dark gives premium feel and consistent brand identity. All prompt cards (including PromptAnswerCard shared component) also migrated to dark.
+
+## Decision 030: Profilini Zenginleştir — 15 Prompts Max (was 3)
+**Date:** 2026-04-11
+**Decision:** Profilini Zenginleştir max 3 → 15 prompt'a çıkarıldı. `MAX_PROMPTS = 15`. Prompt bank expanded from 30 → 44 prompts across 5 categories. Users can now pick up to 15 prompts to fill out during onboarding (and later from profile edit).
+**Rejected:** Hinge's 3-prompt limit, unlimited prompts, per-category minimums
+**Reasoning:** 3 prompts was too few to meaningfully fill the Hinge-style interleaved photo layout (only 3 prompt cards distributed between up to 9 photos). 15 prompts lets users express multiple facets (personality + lifestyle + dreams + entertainment + food/travel) and fully populate the interleaved layout. Still capped to prevent profile bloat.
+
+## Decision 031: Gönderilerim Removed from Profile Tab
+**Date:** 2026-04-11
+**Decision:** Gönderilerim profil ekranından kaldırıldı, sadece Akış'ta gösterilecek. The profile tab no longer shows a "Gönderilerim (X)" section listing recent posts — that concern belongs entirely to the Akış (Feed) tab. Post count is still shown in the profile stats row (Gönderi | Takipçi | Takip) via `myPosts.length`.
+**Rejected:** Keep both places (duplicate content), show posts only on tap-through, hide behind "Daha Fazla" toggle
+**Reasoning:** Profile is about identity (photos, prompts, about, compatibility). Akış is about content (posts, comments, stories). Showing posts in both violates separation of concerns and makes profile feel bloated. Users already have a "Gönderi" stats button that navigates to MyPosts screen for full list.
+
+## Decision 032: Global Status Bar in App.tsx
+**Date:** 2026-04-11
+**Decision:** Status bar global olarak App.tsx'te yönetilecek, her zaman koyu tema. Single `<StatusBar style="light" backgroundColor="#08080F" />` JSX in App.tsx + module-level `setStatusBarStyle('light')` / `setStatusBarBackgroundColor('#08080F', false)` / `setStatusBarTranslucent(false)` for Android early-init. No per-screen `<StatusBar>` components anywhere (all ~23 previous usages removed across 17 files in Session 6).
+**Rejected:** Per-screen StatusBar (old approach), dark mode detection, mixed light/dark based on current screen
+**Reasoning:** The entire app uses a dark theme now, so the status bar never needs to change. Per-screen StatusBar components conflicted with react-native-screens native handling on Android, causing flashes and unreliable color on screen transitions. A single source of truth avoids race conditions.
+
+## Decision 033: All Text Minimum fontWeight 600, Titles 800
+**Date:** 2026-04-11
+**Decision:** Tüm yazılar minimum fontWeight 600, başlıklar 800. No `fontWeight '400'` or `'500'` anywhere in the app. Typography scale:
+- **800 (ExtraBold):** Main section titles (Hakkımda, Günlük Görevler, Bu Haftanın Yıldızları, Uyum Analizi), major buttons (Boost, Luma'ya Başla), large display text
+- **700 (Bold):** Sub-titles, button labels (Düzenle, Premium'a Geç), values (Hakkımda grid values), card titles
+- **600 (SemiBold):** Body text, hints, labels, minimum weight for any visible text
+**Rejected:** fontWeight 400/500 medium text, inconsistent per-screen weights
+**Reasoning:** Dark backgrounds need bolder text for contrast and readability. Premium brands (Hinge, Bumble) use heavy typography. User repeatedly flagged thin text as unreadable. Baking the minimum into a rule prevents regression — reviewers now know "no thin text" is a hard constraint.

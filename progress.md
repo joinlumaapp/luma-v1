@@ -6,6 +6,83 @@
 
 ## Recent Updates (2026-04-11)
 
+### Session 7 — Profile Dark Theme Overhaul + Welcome Screen Dark (2026-04-11)
+
+**Profile screen redesign — full dark theme (#08080F):** 🟡 In Progress
+- Koyu tema, kalın yazılar, kart redesign uygulandı (2026-04-11)
+- Screen container: cream `#F5F0E8` → `#08080F` (dark)
+- All `colors.surface*` / `colors.text*` references replaced with explicit dark-theme values
+- Every card: `rgba(255,255,255,0.06)` bg, `rgba(255,255,255,0.1)` border, borderRadius 16
+- White text with 0.7 opacity for labels/hints, 0.6 for muted labels, 0.5 for tiny meta
+- Zero `#FFFFFF`/`#FFF`/cream backgrounds remain (only text colors use white hex)
+
+**Profile top section redesign:**
+- userName: fontSize 26 → 22, fontWeight '800' (Poppins_800ExtraBold)
+- VerifiedBadge: green `#10B981` → blue `#3B82F6`
+- Uyum skoru pill enlarged: gradient `#8B5CF6 → #EC4899`, shows `💜 %X Uyum`, padding 12/6, fontSize 14, fontWeight '800'
+- Stats row (Gönderi | Takipçi | Takip): inline styles refactored to dedicated `statsGrid`/`statsCell` styles, numbers beyaz '800', labels `rgba(255,255,255,0.6)` '600'
+- Düzenle button: transparent bg + `rgba(255,255,255,0.2)` border, white text
+- Premium button: purple→pink gradient with sparkles (✨) icon, removed GoldShimmerButton component
+- Both action buttons: height 44, borderRadius 12
+- Mood chips: removed "Anlık Ruh Halin" title, selected chip uses gradient `#8B5CF6 → #EC4899`, inactive `rgba(255,255,255,0.08)`
+
+**Profile typography (all text minimum fontWeight 600):**
+- Titles (Hakkımda, Günlük Görevler, Bu Haftanın Yıldızları, Uyum Analizi, Strength Modal) → '800'
+- Buttons (Boost) → '800'
+- Sub-titles ("Profil Gücü" label) → '700'
+- Values (Hakkımda grid, 21/Erkek/İstanbul) → '700'
+- Labels (Yaş, Cinsiyet, Şehir) → '600' + rgba(255,255,255,0.5), fontSize 12
+- Bulk promotions: all `fontWeight: '500'`/`fontWeight: fontWeights.regular`/`fontWeight: fontWeights.medium` → '600'
+- All `Poppins_500Medium` → `Poppins_600SemiBold`
+- Zero `fontWeight '400'/'500'` remaining in ProfileScreen.tsx
+
+**Profile bottom section:**
+- Boost button: `marginBottom: 16` added (no longer sticks to tab bar)
+- Haftalık Uyum Raporu: all text bumped to white + fontWeight '700' (was subtitle grey, unreadable)
+- Weekly report card: `marginTop: 12`, `marginHorizontal: spacing.lg`
+- ScrollView: `scrollBottomPadding` 48 → 120 (content no longer hides under tab bar)
+- Removed duplicate 100px bottom-spacer element (caused double-padding)
+
+**Gönderilerim section removed from profile (2026-04-11):**
+- Entire "Gönderilerim (X)" section removed from ProfileScreen
+- Dead code cleanup: formatTimeAgo helper, Image import, 14 `myPost*` styles deleted
+- Posts now shown only in Akış tab — profile stays focused on identity
+- `myPosts` state kept only for the "Gönderi" stats count
+
+**Hakkımda grid refined:**
+- borderRadius 14 → 12
+- paddingVertical 12 → 14
+- Icon fontSize 18 → 20, centered
+- Label fontSize 11 → 12, color rgba(255,255,255,0.5)
+- Value fontSize 13 → 15, beyaz '700'
+- 3-column grid (width 31.78%, gap 8)
+
+**PromptAnswerCard dark theme:**
+- LinearGradient `['#F5F0FF', '#FFF0F5']` → flat `rgba(255,255,255,0.06)` View
+- Question text: `#64748B` → `rgba(255,255,255,0.7)`
+- Answer text: `#1E293B` → `#FFFFFF`
+- Action buttons: `rgba(255,255,255,0.1)` bg
+- Preview (FeedCard): same dark treatment
+
+**Welcome screen dark theme + animation (2026-04-11):**
+- Koyu tema + animasyon eklendi
+- Background: `#F5F0E8` (cream) → `#08080F` (dark)
+- Heart pulse: 1.0 → 1.08 → 1.0 forever (was 1.0 → 1.1 → 1.0)
+- Title "Hoş Geldin!": `#2D1B4E` → `#FFFFFF`, fontSize 36 → 28, '800'
+- Subtitle: `rgba(45,27,78,0.7)` → `rgba(255,255,255,0.7)`, '500' → '600'
+- Bonus card: `rgba(255,255,255,0.7)` → `rgba(255,255,255,0.06)` + border `rgba(255,255,255,0.1)`
+- Bonus title/text/bold: all → white with '700'/'800' weights
+- CTA gradient: `#9B6BF8 → #EC4899` → `#8B5CF6 → #EC4899` (standard purple)
+
+**Status bar global fix (2026-04-11):**
+- Global StatusBar managed in App.tsx only (`<StatusBar style="light" backgroundColor="#08080F" />`)
+- Module-level `setStatusBarStyle/BackgroundColor/Translucent` for Android early-init
+- Every screen always sees dark status bar (no per-screen override conflicts)
+
+**Profilini Zenginleştir (2026-04-11):**
+- 15 prompt'a çıkarıldı (MAX_PROMPTS: 3 → 15)
+- Kalın tipografi uygulandı (önceki oturumdan tamamlandı, bu oturumda doğrulandı)
+
 ### Session 6 — Prompt limit to 15, global status bar, bold text
 
 **Prompt system expansion:**

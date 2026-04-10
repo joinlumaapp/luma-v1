@@ -40,12 +40,12 @@ export const WelcomeScreen: React.FC = () => {
     // Entrance: spring to 1
     heartScale.value = withSpring(1, { damping: 10, stiffness: 150 });
 
-    // After entrance, start heartbeat pulse
+    // After entrance, start heartbeat pulse (1.0 → 1.08 → 1.0 forever)
     heartScale.value = withDelay(
       600,
       withRepeat(
         withSequence(
-          withTiming(1.1, { duration: 600, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1.08, { duration: 600, easing: Easing.inOut(Easing.ease) }),
           withTiming(1.0, { duration: 600, easing: Easing.inOut(Easing.ease) }),
         ),
         -1,
@@ -119,7 +119,7 @@ export const WelcomeScreen: React.FC = () => {
             accessibilityRole="button"
           >
             <LinearGradient
-              colors={['#9B6BF8', '#EC4899']}
+              colors={['#8B5CF6', '#EC4899']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.ctaGradient}
@@ -136,7 +136,7 @@ export const WelcomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F0E8',
+    backgroundColor: '#08080F',
   },
   content: {
     flex: 1,
@@ -152,39 +152,39 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   title: {
-    fontSize: 36,
+    fontSize: 28,
     fontFamily: 'Poppins_800ExtraBold',
     fontWeight: '800',
-    color: '#2D1B4E',
+    color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 12,
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
   },
   subtitle: {
-    fontSize: 17,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-    color: 'rgba(45, 27, 78, 0.7)',
+    fontSize: 16,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.7)',
     textAlign: 'center',
-    lineHeight: 25,
+    lineHeight: 24,
     marginBottom: 32,
     paddingHorizontal: 20,
   },
   bonusCard: {
     width: '100%',
     maxWidth: SCREEN_WIDTH - 48,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 20,
     padding: 24,
-    borderWidth: 1.5,
-    borderColor: 'rgba(139, 92, 246, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
     gap: 12,
   },
   bonusTitle: {
     fontSize: 18,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
-    color: '#8B5CF6',
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
+    color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 8,
   },
@@ -199,15 +199,15 @@ const styles = StyleSheet.create({
   bonusText: {
     flex: 1,
     fontSize: 16,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-    color: '#374151',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: '#FFFFFF',
     lineHeight: 22,
   },
   bonusBold: {
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
-    color: '#8B5CF6',
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
   spacer: {
     flex: 1,

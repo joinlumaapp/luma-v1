@@ -10,7 +10,6 @@ import {
   StyleSheet,
   Platform,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { spacing } from '../../theme/spacing';
 
@@ -49,12 +48,7 @@ export const PromptAnswerCard: React.FC<PromptAnswerCardProps> = ({
 
   return (
     <View style={styles.wrapper}>
-      <LinearGradient
-        colors={['#F5F0FF', '#FFF0F5']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.card}
-      >
+      <View style={styles.card}>
         {/* Question row */}
         <View style={styles.questionRow}>
           <Text style={styles.emoji}>{prompt.emoji || '💬'}</Text>
@@ -85,7 +79,7 @@ export const PromptAnswerCard: React.FC<PromptAnswerCardProps> = ({
             </TouchableOpacity>
           </View>
         )}
-      </LinearGradient>
+      </View>
     </View>
   );
 };
@@ -111,11 +105,14 @@ const styles = StyleSheet.create({
     marginVertical: spacing.sm,
   },
   card: {
-    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 16,
     padding: 20,
     ...Platform.select({
       ios: {
-        shadowColor: 'rgba(139, 92, 246, 0.15)',
+        shadowColor: 'rgba(139, 92, 246, 0.25)',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 1,
         shadowRadius: 12,
@@ -138,14 +135,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
-    color: '#64748B',
+    color: 'rgba(255,255,255,0.7)',
     lineHeight: 20,
   },
   answerText: {
     fontSize: 18,
     fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
-    color: '#1E293B',
+    color: '#FFFFFF',
     lineHeight: 26,
     marginLeft: 28,
   },
@@ -159,7 +156,9 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.7)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -175,7 +174,9 @@ const previewStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(139, 92, 246, 0.06)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 8,
@@ -189,16 +190,16 @@ const previewStyles = StyleSheet.create({
   },
   question: {
     fontSize: 11,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-    color: '#94A3B8',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.7)',
     lineHeight: 14,
   },
   answer: {
     fontSize: 13,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    color: '#1E293B',
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
     lineHeight: 18,
   },
 });
