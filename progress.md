@@ -6,6 +6,72 @@
 
 ## Recent Updates (2026-04-11)
 
+### Session 9 — Dark Theme Revert → Hybrid Light/Dark (2026-04-11)
+
+**Context:** Session 8'de yaptığım global `colors = darkTheme` flip'i yanlıştı. Auth ve
+onboarding ekranları tasarım olarak AÇIK tema (krem/bej, pembe gradient) olmalıydı.
+Flip sonucu bütün app dark oldu → auth/onboarding'de beyaz yazılar krem üzerinde
+görünmez hale geldi. Bu oturum Session 8'i geri aldı + hybrid light/dark mimarisi kurdu.
+
+**Progressive revert commits (bu oturum):**
+- `bc3abf8` fix: auth/onboarding text colors (onboardingColors hardcoded dark navy, backgrounds unchanged)
+- `c7c2705` fix: ProfileScreen bg cream (tek satırlık test commit'i — kullanıcı beğenmedi, daha fazla fix istedi)
+- `dced57c` feat: full app light theme conversion (root-cause `colors = creamTheme` + 114 hardcoded dark in ProfileScreen + WelcomeScreen + App.tsx StatusBar)
+- `36faafa` fix: tab bar stays dark (kullanıcı tercihi — ana ana app dark olarak korundu)
+
+**Final theme architecture (hybrid):**
+| Alan | Tema | Nasıl uygulandı |
+|---|---|---|
+| Auth ekranları (EmotionalIntro, Phone, OTP, Selfie) | **Krem** | EmotionalIntro kendi gradient'iyle, diğerleri `onboardingColors` (hardcoded navy text) |
+| Onboarding (Name, BirthDate, Photos, ..., Welcome) | **Krem** | `onboardingColors` + ONBOARDING_BG `#F5F0E8` |
+| Profil tab (ana profil ekranı) | **Krem** | Bulk sed: 114 dark hex → cream eq. Gradient button text'leri beyaz korundu |
+| Ana ekranlar (Akış, Keşfet, Canlı, Eşleşme) | **Krem** (otomatik) | Global `colors = creamTheme` flip'i sayesinde `colors.x` kullanan tüm dosyalar otomatik krem |
+| **Tab bar** | **Koyu `#08080F`** | User tercihi — hybrid'in tek dark ana elemanı |
+| **Bu Haftanın Yıldızları kartları** | **Koyu** | ProfileScreen star card block user exception |
+| Üyelik/Jeton marketleri | Koyu (dokunulmadı) | User "koyu kalabilir" dedi |
+| StatusBar | **Dark icons on cream** | `setStatusBarStyle('dark')`, `#F5F0E8` bg |
+| Gradient butonlar | Mor-pembe / turuncu | Session 8'den beri hiç değişmedi |
+
+**Kök sebep fix (2 satır, ~86 dosyayı cascade etkiledi):**
+- `theme/colors.ts`: `colors = darkTheme` → **`creamTheme`**
+- `theme/ThemeContext.tsx`: `isDark: true/'dark'` → **`false/'light'`**
+
+**ProfileScreen.tsx büyük temizlik (bulk sed + 6 surgical revert):**
+- `rgba(255,255,255,0.06)` kart bg → `#FFFFFF` solid beyaz kart
+- `rgba(255,255,255,0.1)` kart border → `rgba(0,0,0,0.08)`
+- `rgba(255,255,255,0.7/0.6/0.5/0.4)` yarı-şeffaf beyaz metin → `rgba(0,0,0,...)` eşdeğerleri
+- Solid `#FFFFFF` metin → `#1A1A2E` navy
+- `#08080F` bg → `#F5F0E8` krem
+- **Manuel revert edilen 6 gradient buton metni beyaz kaldı**: `boostButtonText`, `premiumActionButtonText`, `strengthPillText`, `uyumCardButtonText`, `strengthModalCtaText`, `inviteButtonText`
+- **starCard bloğu (8 style) koyuya restore edildi**: starCardInner, starCardCategory, starAvatarInitial, starCardName, starCardValue
+
+**WelcomeScreen.tsx revert:**
+- Container bg `#08080F` → `#F5F0E8`
+- Bonus card bg `rgba(255,255,255,0.06)` → `#FFFFFF` + border `rgba(0,0,0,0.08)`
+- Title/bonus text beyaz → dark navy
+- bonusTitle/bonusBold → `#8B5CF6` mor accent
+- CTA gradient button text beyaz korundu
+
+**App.tsx StatusBar:**
+- Module-level: `setStatusBarStyle('light')` → `'dark'`, bg `#08080F` → `#F5F0E8`
+- JSX: `<StatusBar style="light" backgroundColor="#08080F" />` → `style="dark" backgroundColor="#F5F0E8"`
+- Android RNStatusBar setters da `#F5F0E8` / `dark-content`
+
+**MainTabNavigator tab bar (final: koyu):**
+- İlk denedim: krem bg + `rgba(0,0,0,0.08)` border + inactive `rgba(0,0,0,0.45)`
+- Kullanıcı "tab bar siyah kalıcak" dedi → geri aldım
+- Final: `#08080F` bg, no border, inactive `rgba(255,255,255,0.5)`, unreadBadge border `#08080F`
+
+**Dokunulmayan (user exception):**
+- Üyelik/Jeton/Boost marketleri — zaten koyu kalsa da olur
+- Gradient butonlar (boost turuncu, premium/invite/uyum/strength pill/modal purple-pink)
+- Star cards (Bu Haftanın Yıldızları) — explicit dark block restore
+- EmotionalIntroScreen — kendi hardcoded gradient + dark brown text kullanıyor
+
+**Learned (project memory'ye eklendi):**
+- `feedback_theme_scope.md` — LUMA tema hybrid; global colors flip ASLA yapma, kullanıcıya sormadan mimari kararı alma
+- Session 8'de "86 dosyayı tek satırla çöz" kararı yanlıştı çünkü auth/onboarding'in krem tasarımını bozdu. "Kök sebep" her zaman doğru değil — önce scope doğrula.
+
 ### Session 8 — Full-App Static Audit + Root-Cause Dark Theme Fix (2026-04-11)
 
 **Scope:** Comprehensive static code audit covering auth, onboarding, 5 tabs, tab bar,

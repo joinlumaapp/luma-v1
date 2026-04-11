@@ -187,11 +187,13 @@
 **Rejected:** fontWeight 400/500 medium text, inconsistent per-screen weights
 **Reasoning:** Dark backgrounds need bolder text for contrast and readability. Premium brands (Hinge, Bumble) use heavy typography. User repeatedly flagged thin text as unreadable. Baking the minimum into a rule prevents regression — reviewers now know "no thin text" is a hard constraint.
 
-## Decision 034: Global `colors` Export = darkTheme (Single Source Dark Mode)
+## Decision 034: Global `colors` Export = darkTheme (Single Source Dark Mode) [REVERSED by 036]
 **Date:** 2026-04-11
+**Status:** ⚠️ REVERSED on 2026-04-11 — see Decision 036.
 **Decision:** `theme/colors.ts` exports `colors = darkTheme` as the global theme object. `ThemeContext` also provides `darkTheme` always (`isDark: true`, `themeMode: 'dark'`). Light/cream themes are still defined as exports (`creamTheme`, `lightTheme`) for reference but NOT used at runtime. Onboarding navigator `contentStyle` background is also `#08080F`.
 **Rejected:** Cream as default with per-screen override, dynamic dark/light toggle, system theme detection, multi-theme support
-**Reasoning:** During Session 8 audit, static analysis found 86 files still rendering in cream because they referenced `colors.surface`, `colors.background`, `colors.text*` — which resolved to `creamTheme` values at the global level. Instead of editing 86 files one by one, flipping the single `colors` export line cascades dark values to every consumer. Any screen that was previously using cream theme surface colors now automatically gets the correct dark values. LUMA is a dark-first brand — supporting a light mode was never on the roadmap, so the cream theme object can remain for historical reference but should never be used.
+**Reasoning at the time:** Session 8 audit found 86 files still rendering in cream because they referenced `colors.surface`, `colors.background`, `colors.text*`. Instead of editing 86 files one by one, flipping the single `colors` export line was thought to cascade dark values to every consumer.
+**Why it was reversed:** This decision broke auth and onboarding screens, which are DESIGNED to be light-themed (cream + pink gradient + dark text). The global flip made them dark with white text on their cream backgrounds (invisible). The premise "LUMA is dark-first" was wrong — LUMA is **hybrid** light/dark, and the flip violated the actual design.
 
 ## Decision 035: Prompt Card Interactions Gated by Match State
 **Date:** 2026-04-11
@@ -202,3 +204,28 @@
 - **ProfileScreen** (own profile): `showActions={false}` — can't like/comment on yourself
 **Rejected:** Actions always enabled (breaks UX before match), actions never enabled (wastes the Hinge-style interaction pattern), implementing a full "like a prompt" backend endpoint (premature — not in spec)
 **Reasoning:** Hinge popularized "like a specific prompt answer" as an alternative to a generic like. LUMA mimics this only after a match is established, because pre-match swipes already have a binary like/pass decision — a third "like the prompt" signal would confuse the matching flow. The `onComment` → Chat prefill is the most useful micro-interaction: it gives the user an instant conversation starter contextualized to what attracted them.
+
+## Decision 036: Hybrid Light/Dark Theme — Cream is Default, Tab Bar + Premium are Dark
+**Date:** 2026-04-11 (reverses Decision 034)
+**Decision:** LUMA uses a **hybrid** light/dark theme architecture:
+- **Default/light (cream `#F5F0E8`)**: Auth screens, all onboarding screens, Profile tab, Feed/Discovery/Live/Matches tabs, Welcome screen, modals
+- **Dark islands (`#08080F`)**: Main bottom tab bar, "Bu Haftanın Yıldızları" cards on Profile, Üyelik/Jeton/Boost market screens
+- **Gradient buttons** (purple-pink `#8B5CF6 → #EC4899` or orange `#F59E0B → #F97316`): rendered on any theme, always white text
+
+Implementation:
+- `theme/colors.ts`: `colors = creamTheme` (reverted from darkTheme)
+- `theme/ThemeContext.tsx`: `isDark: false`, `themeMode: 'light'`
+- `OnboardingNavigator.ONBOARDING_BG`: `#F5F0E8`
+- `App.tsx` StatusBar: `style="dark"`, `backgroundColor="#F5F0E8"` — dark icons on cream
+- `MainTabNavigator.tabBarStyle.backgroundColor`: `#08080F` (dark) — the ONE exception
+- `ProfileScreen.tsx`: cream container, white cards, dark text — star cards block hardcoded dark as exception, gradient button text hardcoded white (6 styles)
+- `components/onboarding/OnboardingLayout.tsx`: `onboardingColors` struct with hardcoded light-theme values (doesn't follow `colors` export) — this was the Session 8 fix that should have been the whole solution
+
+**Rejected:**
+- Full dark theme (broke auth/onboarding — Decision 034, reversed)
+- Full light theme (would make tab bar + premium sections inconsistent with brand premium feel)
+- Dynamic theme detection (not in scope)
+
+**Reasoning:** LUMA is NOT a dark-first app and NOT a light-first app — it is **deliberately hybrid**. Auth and onboarding are light because user-trust moments deserve warm, inviting visuals (pink-cream gradients). The main content tabs are light for readability on long-duration content (feed, messages, profile). The tab bar is dark because it's a persistent navigation frame that should recede visually and contrast with the bright content above it. Premium sections (star cards, membership, jeton market) use dark to signal "premium / reserved" visual weight. Gradient buttons span both themes because they're brand elements, not theme-dependent UI chrome.
+
+**Do NOT flip the global `colors` export.** Any future request to "make the app dark" or "unify themes" should trigger a scope discussion: which specific screens, why, and confirmation that the auth/onboarding light design is NOT affected. See `feedback_theme_scope.md` in project memory.

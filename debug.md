@@ -6,6 +6,28 @@
 
 ## Active Issues
 
+### FIXED -- Wrong Dark Theme Applied to Auth/Onboarding (Session 9 revert)
+- **Date fixed:** 2026-04-11
+- **Symptoms:**
+  - After Session 8's global `colors = darkTheme` flip, auth and onboarding screens rendered with white text on their cream/pink gradient backgrounds → text completely invisible
+  - User reported "yazılar okunmuyor" (text can't be read) on NameScreen, BirthDateScreen, OTP screen, etc.
+  - ONBOARDING_BG was also flipped to dark `#08080F` in Session 8
+- **Root cause:**
+  - Session 8's `theme/colors.ts: colors = creamTheme → darkTheme` flip was made with the wrong mental model ("LUMA is dark-first app")
+  - Auth and onboarding screens are actually DESIGNED to be light-themed (cream + pink gradient + dark text)
+  - `onboardingColors` struct in `OnboardingLayout.tsx` referenced `colors.text` which cascaded to white after the flip
+  - ~86 files using `colors.x` references all shifted from cream to dark simultaneously
+- **Fix (progressive, 4 commits):**
+  1. `bc3abf8` — onboardingColors hardcoded to cream-theme values (text='#1A1A2E', textSecondary='rgba(0,0,0,0.6)', etc.); ONBOARDING_BG reverted to '#F5F0E8'; OTP back icon reverted from '#FFFFFF' to '#1A1A2E'
+  2. `c7c2705` — ProfileScreen container bg reverted to '#F5F0E8' (single-line test)
+  3. `dced57c` — Full root-cause revert: `colors = creamTheme` + `ThemeContext` back to light + ProfileScreen bulk sed (114 dark hex → cream equivalents) + WelcomeScreen + App.tsx StatusBar (dark-content on cream)
+  4. `36faafa` — Tab bar stays dark per user preference (the ONE dark island in the hybrid theme)
+- **Learning recorded:**
+  - Project memory `feedback_theme_scope.md` added: LUMA is hybrid, not dark-first; never flip global `colors` without scope confirmation
+  - Decision 034 marked as REVERSED, new Decision 036 documents hybrid architecture
+- **Files:** theme/colors.ts, theme/ThemeContext.tsx, ProfileScreen.tsx, WelcomeScreen.tsx, App.tsx, MainTabNavigator.tsx, OnboardingLayout.tsx, OnboardingNavigator.tsx, OTPVerificationScreen.tsx
+- **Status:** FIXED (2 sessions of over-correction → hybrid settled)
+
 ### FIXED -- 27 TypeScript Compilation Errors (Session 8 audit)
 - **Date fixed:** 2026-04-11
 - **Symptoms:**
