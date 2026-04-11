@@ -1391,7 +1391,7 @@ export const ProfileScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#08080F',
+    backgroundColor: '#F5F0E8',
   },
 
   // ═══ NEW: Hakkımda grid (3-column) ═══
