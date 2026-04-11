@@ -186,3 +186,19 @@
 - **600 (SemiBold):** Body text, hints, labels, minimum weight for any visible text
 **Rejected:** fontWeight 400/500 medium text, inconsistent per-screen weights
 **Reasoning:** Dark backgrounds need bolder text for contrast and readability. Premium brands (Hinge, Bumble) use heavy typography. User repeatedly flagged thin text as unreadable. Baking the minimum into a rule prevents regression — reviewers now know "no thin text" is a hard constraint.
+
+## Decision 034: Global `colors` Export = darkTheme (Single Source Dark Mode)
+**Date:** 2026-04-11
+**Decision:** `theme/colors.ts` exports `colors = darkTheme` as the global theme object. `ThemeContext` also provides `darkTheme` always (`isDark: true`, `themeMode: 'dark'`). Light/cream themes are still defined as exports (`creamTheme`, `lightTheme`) for reference but NOT used at runtime. Onboarding navigator `contentStyle` background is also `#08080F`.
+**Rejected:** Cream as default with per-screen override, dynamic dark/light toggle, system theme detection, multi-theme support
+**Reasoning:** During Session 8 audit, static analysis found 86 files still rendering in cream because they referenced `colors.surface`, `colors.background`, `colors.text*` — which resolved to `creamTheme` values at the global level. Instead of editing 86 files one by one, flipping the single `colors` export line cascades dark values to every consumer. Any screen that was previously using cream theme surface colors now automatically gets the correct dark values. LUMA is a dark-first brand — supporting a light mode was never on the roadmap, so the cream theme object can remain for historical reference but should never be used.
+
+## Decision 035: Prompt Card Interactions Gated by Match State
+**Date:** 2026-04-11
+**Decision:** PromptAnswerCard's `showActions` (❤️ like + 💬 comment buttons) is:
+- **ProfilePreviewScreen** (pre-match preview from Keşfet swipe): `showActions={false}` — no interaction allowed before matching
+- **MatchDetailScreen** (viewing an existing match): `showActions={true}` with functional handlers — `onLike` shows feedback Alert ("Beğeni gönderildi ❤️"), `onComment` navigates to Chat with the prompt answer prefilled as `initialMessage` (`"{answer}" — bu cevabına bayıldım 💬`)
+- **FeedProfileScreen** (viewing a user's profile from the feed): `showActions={true}` — users can interact with posts/profiles freely
+- **ProfileScreen** (own profile): `showActions={false}` — can't like/comment on yourself
+**Rejected:** Actions always enabled (breaks UX before match), actions never enabled (wastes the Hinge-style interaction pattern), implementing a full "like a prompt" backend endpoint (premature — not in spec)
+**Reasoning:** Hinge popularized "like a specific prompt answer" as an alternative to a generic like. LUMA mimics this only after a match is established, because pre-match swipes already have a binary like/pass decision — a third "like the prompt" signal would confuse the matching flow. The `onComment` → Chat prefill is the most useful micro-interaction: it gives the user an instant conversation starter contextualized to what attracted them.

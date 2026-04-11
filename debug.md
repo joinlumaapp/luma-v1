@@ -1,10 +1,83 @@
 # LUMA V1 -- Debug & Known Issues Log
 
-**Last Updated:** 2026-04-10
+**Last Updated:** 2026-04-11
 
 ---
 
 ## Active Issues
+
+### FIXED -- 27 TypeScript Compilation Errors (Session 8 audit)
+- **Date fixed:** 2026-04-11
+- **Symptoms:**
+  - `tsc --noEmit` baseline emitted 27 errors across 7 files
+  - Would block any CI with strict TypeScript checks
+  - Missing API route constants (`CALL_HISTORY`, `SEND_GREETING`) would have caused runtime 404s when those services were called
+- **Root causes:**
+  - Invalid `statusBarColor` prop in NativeStackNavigationOptions (removed in a recent @react-navigation/native-stack version) used in 8 places across 3 navigators
+  - MainTabNavigator had 4 unused imports (Platform, darkTheme, spacing, layout) + missing `tabIndicator` style + type mismatch on CommonActions.reset
+  - StoryViewerScreen route params typed as `unknown[]` causing implicit-any errors on map callbacks
+  - `API_ROUTES.CALL_HISTORY.*` and `DISCOVERY.SEND_GREETING` referenced by services but never added to the shared constants file
+- **Fix:**
+  - Removed all `statusBarColor` props (status bar managed globally in App.tsx)
+  - Cleaned unused imports, added `tabIndicator` style (bg #8B5CF6, 4x4 dot), loosened reset listener signature to any
+  - Narrowed `StoryViewer.storyUsers?` to `{ userId, userName, userAvatarUrl }[]`
+  - Added `API_ROUTES.CALL_HISTORY.{GET_ALL,GET_ONE,DELETE}` + `DISCOVERY.SEND_GREETING` to @luma/shared
+- **Files:** AuthNavigator, MainTabNavigator, OnboardingNavigator, DiscoveryScreen, StoryViewerScreen, navigation/types.ts, packages/shared/src/constants/api.ts
+- **Status:** FIXED (27 → 0)
+
+### FIXED -- Cream Theme Leaking into ~86 Files (Root-Cause Dark Fix)
+- **Date fixed:** 2026-04-11
+- **Symptoms:**
+  - Even after individually dark-theming ProfileScreen/FeedScreen/etc. in earlier sessions, 86 files still rendered with cream backgrounds
+  - Agent audit found ~50 instances in profile subsystem alone
+  - Users saw inconsistent cream cards in store screens, edit profile, interest picker
+- **Root cause:**
+  - `theme/colors.ts` exported `colors = creamTheme` as the global theme
+  - Any file using `colors.surface`/`colors.background`/`colors.text*` received cream values at runtime
+  - Manual per-file dark migration (previous sessions) only fixed files where `colors.*` was replaced with explicit `rgba(...)` — files still using `colors.surface` remained cream
+- **Fix:**
+  - Single-line flip: `export const colors = creamTheme` → `darkTheme` in `theme/colors.ts`
+  - Matching flip in `ThemeContext.tsx` (isDark: true, themeMode: 'dark')
+  - Onboarding navigator `ONBOARDING_BG` `#F5F0E8` → `#08080F`
+  - Follow-up: bulk-fixed hardcoded hex backgrounds that bypassed the `colors` export (JetonMarket, BoostMarket, EditProfile, InterestPicker — 4 files, 10 hex replacements)
+- **Files:** theme/colors.ts, theme/ThemeContext.tsx, OnboardingNavigator.tsx + 4 hardcoded-hex cleanup files
+- **Status:** FIXED (Decision 034)
+
+### FIXED -- Takipçiler Tab Empty (Never Fetched)
+- **Date fixed:** 2026-04-11
+- **Symptom:**
+  - Eşleşme tab → Takipçiler sub-tab showed empty list forever
+  - `followers` state declared but never populated; setters were `void`-silenced to suppress unused warnings
+  - `// TODO: Replace with API call when follower endpoint is ready` comment sat there unaddressed
+- **Fix:**
+  - Added `fetchFollowers()` in MatchesListScreen useEffect
+  - Calls `/users/me/followers` (same endpoint used in ProfileScreen stats count)
+  - Maps backend response to `FollowerItem` shape (userId → id, firstName → name, photoUrl/avatarUrl fallback, followedAt timestamp, isBlurred gate for FREE tier)
+  - Silent fail → empty state (which is correctly rendered)
+- **Files:** apps/mobile/src/screens/matches/MatchesListScreen.tsx
+- **Status:** FIXED
+
+### FIXED -- Prompt Card Like/Comment Handlers Were TODOs
+- **Date fixed:** 2026-04-11
+- **Symptom:**
+  - PromptAnswerCard's ❤️ and 💬 buttons in ProfilePreviewScreen + MatchDetailScreen tapped but did nothing (empty `/* TODO */` callbacks)
+  - Silent UX breakage — users expected feedback
+- **Fix:**
+  - MatchDetailScreen: onLike → Alert feedback ("Beğeni gönderildi ❤️"), onComment → navigate to Chat with `initialMessage` prefilled as `"{prompt.answer}" — bu cevabına bayıldım 💬`
+  - ProfilePreviewScreen: `showActions={false}` — pre-match preview should not allow interactions (Decision 035)
+- **Files:** ProfilePreviewScreen.tsx, MatchDetailScreen.tsx
+- **Status:** FIXED
+
+### FIXED -- OTP Phone Mask Only Supported +90 (Turkey)
+- **Date fixed:** 2026-04-11
+- **Symptom:**
+  - `maskedPhone` regex `/(\+\d{2})(\d{3})(\d{3})(\d{4})/` assumed 2-digit country code + 10 digits
+  - +1 (US), +44 (UK), +49 (DE) phones shown unmasked on OTP screen
+- **Fix:**
+  - Generic implementation: extract country code (1-3 digits) then mask middle digits
+  - Output format: `{country} {first 3} *** {last 4}` for any international number
+- **Files:** apps/mobile/src/screens/auth/OTPVerificationScreen.tsx
+- **Status:** FIXED
 
 ### FIXED -- OTP Screen Shake and Double-Verify Bug
 - **Date fixed:** 2026-04-10

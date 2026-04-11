@@ -6,6 +6,79 @@
 
 ## Recent Updates (2026-04-11)
 
+### Session 8 — Full-App Static Audit + Root-Cause Dark Theme Fix (2026-04-11)
+
+**Scope:** Comprehensive static code audit covering auth, onboarding, 5 tabs, tab bar,
+navigation wiring, dark theme consistency, TypeScript strict compliance. Used 3 parallel
+Explore agents + direct file reads + `tsc --noEmit` baseline. Found 51 issues total,
+fixed 43, confirmed 8 as intentional.
+
+**TypeScript compilation errors (27 → 0):**
+- Removed invalid `statusBarColor` prop from AuthNavigator, MainTabNavigator (6 places), OnboardingNavigator — not a valid NativeStackNavigationOptions key
+- MainTabNavigator: removed unused imports (Platform, darkTheme, spacing, layout); added missing `tabIndicator` style (backgroundColor #8B5CF6, 4x4 dot); loosened createTabResetListener navigation param type to `any` (CommonActions.reset shape mismatch)
+- DiscoveryScreen: removed unused LikedYouTeaser, SupremePromoBanner imports
+- StoryViewerScreen: narrowed route params `storyUsers?` from `unknown[]` to typed shape
+- Added missing `API_ROUTES.CALL_HISTORY.{GET_ALL,GET_ONE,DELETE}` and `DISCOVERY.SEND_GREETING` to @luma/shared — runtime would have 404'd on any call from callHistoryService/discoveryService
+
+**Root-cause global dark theme fix (86 files unified in 3 lines):**
+- `theme/colors.ts`: `export const colors = creamTheme` → `darkTheme`
+- `theme/ThemeContext.tsx`: ThemeProvider now always dark (`isDark: true`, `themeMode: 'dark'`)
+- `navigation/OnboardingNavigator.tsx`: `ONBOARDING_BG` `#F5F0E8` → `#08080F`
+- This single change cascades to every file using `colors.surface`/`colors.background`/`colors.text*` — eliminates cream leaks in ~86 files without per-file edits
+- Still had to fix hardcoded hex backgrounds separately (see below) — those didn't go through the `colors` export
+
+**Hardcoded light background cleanup:**
+- JetonMarketScreen: 4× `#FFFFFF`/`#FAF5FF` → `rgba(255,255,255,0.06)`
+- BoostMarketScreen: 3× `#FFFFFF`/`#FAF5FF` → `rgba(255,255,255,0.06)`
+- EditProfileScreen: `#E0F2FE`, `#F0F0F0` → dark equivalents
+- InterestPickerScreen: selected-chip `#E0F2FE` → `rgba(139,92,246,0.15)`
+- DailyPicksScreen: 4× `#FFD700` gold → `#8B5CF6` purple (brand consistency)
+
+**Broken features fixed:**
+- **Takipçiler (Followers) tab** was entirely empty — TODO marker, no API call, setters `void`-silenced. Wired to `/users/me/followers` endpoint with FollowerItem mapping, isBlurred gate for FREE users
+- **Prompt card like/comment handlers** in MatchDetailScreen were `/* TODO */` empty stubs → now functional: onLike shows Alert feedback, onComment navigates to Chat with prompt answer prefilled as `initialMessage`
+- **ProfilePreviewScreen** prompt cards showActions changed to `false` — preview mode shouldn't allow interactions before matching
+
+**Auth polish (from Agent 1):**
+- OTP phone mask regex only supported `+90` → generic implementation supports any country code (+1, +44, +49, etc.)
+- SelfieVerification: `state.profile.photos` now defaults to `?? []` (null safety)
+- PhoneEntryScreen back icon `arrow-back` → `chevron-back` (matches 5 other auth screens)
+- OTPVerificationScreen back icon color `#3D2B1F` (cream-era brown) → `#FFFFFF` + size 22 → 24
+
+**LiveScreen typography:**
+- 20× `fontWeight: '500'`/`'400'` → `'600'` (violated minimum weight rule from Session 7)
+- 20× `Poppins_500Medium`/`Poppins_400Regular` → `Poppins_600SemiBold`
+
+**ProfileScreen onPress cleanup:**
+- Hakkımda grid: `onPress={field.isEmpty ? handleEditProfile : undefined}` → plain `onPress={handleEditProfile}` + `disabled={!field.isEmpty}` (React Native's `disabled` prop already prevents press, ternary was redundant)
+
+**Confirmed intentional (not bugs):**
+- ViewersPreviewScreen:237 `backgroundColor: '#fff'` — animated shimmer overlay on gradient CTA, opacity interpolates 0→0.2→0 for shine effect
+- StoryViewerScreen:832 `backgroundColor: '#fff'` — Instagram-style story progress bar fill
+- App.tsx:190-198 dual `expo-status-bar` + `RNStatusBar` calls — documented fix for react-native-screens Android override bug; comment explains both are needed
+- PasswordCreationScreen lack of onboarding step counter — part of email signup branch, NOT the main 12-step onboarding flow, so showing "1/12" there would be misleading
+
+**Commits:**
+- `d5493e0` feat: audit sweep (27 TS + global theme + followers + live + OTP) — 13 files, +105/-70
+- `31c8269` fix: auth back icon consistency + OTP dark color — 2 files
+- `36dd824` fix: Agent 2 findings (prompt handlers, daily picks gold) — 3 files, +19/-9
+- `9a215ac` fix: Agent 3 findings (hardcoded light bgs + ProfileScreen onPress) — 5 files
+
+**Final counts:**
+| Category | Found | Fixed |
+|---|---|---|
+| TypeScript errors | 27 | 27 |
+| Theme leaks (86 files, root cause) | 1 cause | 1 flip + hardcoded hex sweep |
+| Broken features | 4 | 4 |
+| Typography violations | 20 | 20 |
+| Auth polish | 5 | 5 |
+| Intentional (confirmed not bugs) | 8 | — |
+
+**What statik analiz can't verify (manual test only):**
+- Runtime backend data shape (followers endpoint actual JSON vs FollowerItem interface)
+- Native camera/mic permissions (Canlı, Selfie flows)
+- Firebase push, Netgsm SMS, Google/Apple OAuth (integrations not yet wired)
+
 ### Session 7 — Profile Dark Theme Overhaul + Welcome Screen Dark (2026-04-11)
 
 **Profile screen redesign — full dark theme (#08080F):** 🟡 In Progress
