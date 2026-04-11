@@ -558,14 +558,15 @@ export const MainTabNavigator: React.FC = () => {
         freezeOnBlur: true,
         animation: 'fade',
         tabBarStyle: {
-          backgroundColor: '#08080F',
-          borderTopWidth: 0,
+          backgroundColor: '#F5F0E8',
+          borderTopWidth: 1,
+          borderTopColor: 'rgba(0,0,0,0.08)',
           height: 64,
           paddingBottom: 8,
           paddingTop: 4,
         },
         tabBarActiveTintColor: '#9B6BF8',
-        tabBarInactiveTintColor: 'rgba(255,255,255,0.5)',
+        tabBarInactiveTintColor: 'rgba(0,0,0,0.45)',
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600' as const,
@@ -686,7 +687,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 4,
     borderWidth: 1.5,
-    borderColor: '#08080F',
+    borderColor: '#F5F0E8',
   },
   unreadBadgeText: {
     ...typography.captionSmall,

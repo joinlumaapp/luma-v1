@@ -186,14 +186,14 @@ const errorStyles = StyleSheet.create({
 // failed because react-native-screens overrides it at the native Android
 // level during screen transitions.
 //
-// Status bar: light = WHITE icons on dark status bar background
-setStatusBarStyle('light');
+// Status bar: dark = DARK icons on cream/light status bar background
+setStatusBarStyle('dark');
 if (Platform.OS === 'android') {
-  setStatusBarBackgroundColor('#08080F', false);
+  setStatusBarBackgroundColor('#F5F0E8', false);
   setStatusBarTranslucent(false);
   // Also set via RN StatusBar for edge-to-edge compatibility
-  RNStatusBar.setBackgroundColor('#08080F');
-  RNStatusBar.setBarStyle('light-content');
+  RNStatusBar.setBackgroundColor('#F5F0E8');
+  RNStatusBar.setBarStyle('dark-content');
   RNStatusBar.setTranslucent(false);
 }
 
@@ -408,7 +408,7 @@ export default function App(): React.JSX.Element {
         <SafeAreaProvider>
           <ThemeProvider>
             <ToastProvider>
-              <StatusBar style="light" backgroundColor="#08080F" />
+              <StatusBar style="dark" backgroundColor="#F5F0E8" />
               <AppVersionGate />
               <NetworkMonitor />
               <NotificationInitializer />
