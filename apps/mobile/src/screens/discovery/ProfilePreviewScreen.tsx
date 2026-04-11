@@ -579,13 +579,12 @@ export const ProfilePreviewScreen: React.FC = () => {
         answer: prompt.answer,
         emoji: (prompt as { emoji?: string }).emoji,
       };
+      // Preview mode — hide like/comment actions until match is established
       infoSections.push(
         <PromptAnswerCard
           key={`prompt-card-${idx}`}
           prompt={promptData}
-          showActions={true}
-          onLike={() => { /* TODO: send like notification */ }}
-          onComment={() => { /* TODO: open chat with quote */ }}
+          showActions={false}
         />,
       );
     });

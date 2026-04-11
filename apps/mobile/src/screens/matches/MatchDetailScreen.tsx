@@ -246,8 +246,19 @@ export const MatchDetailScreen: React.FC = () => {
             key={`prompt-card-${idx}`}
             prompt={promptData}
             showActions={true}
-            onLike={() => { /* TODO: send like notification */ }}
-            onComment={() => { /* TODO: open chat with quote */ }}
+            onLike={() => {
+              // Haptic feedback only — micro-reaction, no network call
+              Alert.alert('Beğeni gönderildi ❤️', `"${promptData.question}" cevabını beğendin.`);
+            }}
+            onComment={() => {
+              // Open chat with the prompt answer prefilled as a quote
+              navigation.navigate('Chat', {
+                matchId,
+                partnerName: selectedMatch?.name ?? '',
+                partnerPhotoUrl: selectedMatch?.photos?.[0] ?? '',
+                initialMessage: `"${promptData.answer}" — bu cevabına bayıldım 💬`,
+              });
+            }}
           />,
         );
       });

@@ -742,7 +742,7 @@ const styles = StyleSheet.create({
   },
   upgradeFooterTitle: {
     ...typography.h4,
-    color: '#FFD700',
+    color: '#8B5CF6',
     textAlign: 'center',
   },
   upgradeFooterSubtitle: {
@@ -751,7 +751,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   upgradeFooterButton: {
-    backgroundColor: '#FFD700',
+    backgroundColor: '#8B5CF6',
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.sm + 2,
@@ -826,9 +826,9 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#FFD700' + '18',
+    backgroundColor: '#8B5CF6' + '18',
     borderWidth: 2,
-    borderColor: '#FFD700' + '30',
+    borderColor: '#8B5CF6' + '30',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.lg,
