@@ -118,6 +118,15 @@
 | lifeValues | VARCHAR(200), nullable | Hayat degerleri |
 | isIncognito | BOOLEAN, default false | Kesfet'te gizlenme modu |
 | personalityTag | VARCHAR(50), nullable | Kisilik Testi sonucu etiketi ("Acik Fikirli", "Lider ve Kararli", vs.) |
+| livingSituation | VARCHAR(30), nullable | 🏠 Yasam Duzeni: alone / roommate / family — Added 2026-04-12 |
+| languages | STRING[], default [] | 🗣️ Diller (multi-select): turkish / english / german / french / spanish / arabic / russian / other — Added 2026-04-12 |
+| sleepSchedule | VARCHAR(30), nullable | 🌙 Uyku Duzeni: early_bird / night_owl / flexible — Added 2026-04-12 |
+| diet | VARCHAR(30), nullable | 🍽️ Beslenme: omnivore / vegetarian / vegan / halal / gluten_free — Added 2026-04-12 |
+| workStyle | VARCHAR(30), nullable | 💼 Calisma Sekli: office / remote / hybrid / student / unemployed — Added 2026-04-12 |
+| travelFrequency | VARCHAR(30), nullable | 🌍 Seyahat: often / sometimes / rarely / wants_to — Added 2026-04-12 |
+| distancePreference | VARCHAR(20), nullable | 📏 Mesafe Tercihi: close / city / far — Added 2026-04-12 |
+| communicationStyle | VARCHAR(30), nullable | 💬 Iletisim Tarzi: constant_texter / occasional_texter / in_person — Added 2026-04-12 |
+| hookah | VARCHAR(20), nullable | 🚬 Nargile: yes / sometimes / never — Added 2026-04-12 |
 | videoUrl | STRING, nullable | Profil video URL (10-30 sn) |
 | videoKey | STRING, nullable | Video S3 key |
 | videoThumbnailUrl | STRING, nullable | Video thumbnail |

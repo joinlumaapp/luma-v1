@@ -596,15 +596,15 @@ export const MARITAL_STATUS_OPTIONS = [
 ] as const;
 
 export const ALCOHOL_OPTIONS = [
-  'İçmem', 'Bazen', 'Sosyal', 'Düzenli',
+  'Asla', 'Bazen', 'Sık sık', 'Sosyal ortamlarda',
 ] as const;
 
 export const SEXUAL_ORIENTATION_OPTIONS = [
-  'Heteroseksüel', 'Gay', 'Lezbiyen', 'Biseksüel', 'Diğer',
+  'Heteroseksüel', 'Gey', 'Biseksüel', 'Diğer', 'Söylememeyi tercih ederim',
 ] as const;
 
 export const PETS_OPTIONS = [
-  'Kedi', 'Köpek', 'Kedi ve Köpek', 'Diğer', 'Yok',
+  'Yok', 'Kedi', 'Köpek', 'Diğer', 'İstiyorum',
 ] as const;
 
 export const RELIGION_OPTIONS = [
@@ -612,15 +612,53 @@ export const RELIGION_OPTIONS = [
 ] as const;
 
 export const EXERCISE_OPTIONS = [
-  'Hiç', 'Bazen', 'Sık',
+  'Hiç', 'Bazen', 'Sık sık', 'Her gün',
 ] as const;
 
 export const SMOKING_OPTIONS = [
-  'İçmem', 'Bazen', 'Düzenli', 'Tolere Ederim',
+  'İçmem', 'Bazen', 'Sık sık', 'Bırakmaya çalışıyorum',
 ] as const;
 
 export const CHILDREN_OPTIONS = [
-  'Var', 'Yok', 'İstiyorum', 'İstemiyorum',
+  'Var', 'İstiyorum', 'İstemiyorum', 'Açığım',
+] as const;
+
+// ── Hakkımda Daha Fazlası — extended lifestyle fields ──────────────────────
+
+export const LIVING_SITUATION_OPTIONS = [
+  'Yalnız yaşıyorum', 'Ev arkadaşıyla', 'Ailemle',
+] as const;
+
+export const LANGUAGE_OPTIONS = [
+  'Türkçe', 'İngilizce', 'Almanca', 'Fransızca', 'İspanyolca', 'Arapça', 'Rusça', 'Diğer',
+] as const;
+
+export const SLEEP_SCHEDULE_OPTIONS = [
+  'Erken yatarım', 'Gece kuşuyum', 'Değişken',
+] as const;
+
+export const DIET_OPTIONS = [
+  'Her şey', 'Vejetaryen', 'Vegan', 'Helal', 'Glutensiz',
+] as const;
+
+export const WORK_STYLE_OPTIONS = [
+  'Ofisten', 'Uzaktan', 'Hibrit', 'Öğrenci', 'Çalışmıyorum',
+] as const;
+
+export const TRAVEL_FREQUENCY_OPTIONS = [
+  'Sık sık', 'Ara sıra', 'Nadiren', 'Henüz değil ama istiyorum',
+] as const;
+
+export const DISTANCE_PREFERENCE_OPTIONS = [
+  'Yakın olsun', 'Şehir içi yeter', 'Uzak mesafe olabilir',
+] as const;
+
+export const COMMUNICATION_STYLE_OPTIONS = [
+  'Sürekli yazışırım', 'Ara sıra yazışırım', 'Yüz yüze tercih ederim',
+] as const;
+
+export const HOOKAH_OPTIONS = [
+  'İçerim', 'Bazen', 'İçmem',
 ] as const;
 
 export const LIFE_VALUES_OPTIONS = [

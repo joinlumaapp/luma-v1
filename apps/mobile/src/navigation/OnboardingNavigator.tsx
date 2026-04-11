@@ -1,9 +1,10 @@
 // Onboarding flow: Name -> BirthDate -> Gender -> WhoToMeet -> Height
 // -> Sports -> Smoking -> Children -> CitySelection
-// -> PromptSelection ("Profilini Zenginleştir") -> Photos -> Selfie -> Welcome
+// -> PromptSelection ("Profilini Zenginleştir") -> Photos -> Selfie
 //
 // Bio screen merged into PromptSelection as a single premium experience.
-// Welcome screen shown as final step before entering MainTabs.
+// Welcome bonus is now a celebratory Modal shown on MainTabs after selfie success
+// (see components/common/WelcomeBonusModal.tsx).
 //
 // Features:
 // - Smooth slide transitions between steps (slide_from_right with 300ms duration)
@@ -30,7 +31,6 @@ import { CitySelectionScreen } from '../screens/onboarding/CitySelectionScreen';
 import { PromptSelectionScreen } from '../screens/onboarding/PromptSelectionScreen';
 import { PhotosScreen } from '../screens/onboarding/PhotosScreen';
 import { SelfieVerificationScreen } from '../screens/auth/SelfieVerificationScreen';
-import { WelcomeScreen } from '../screens/onboarding/WelcomeScreen';
 
 const Stack = createNativeStackNavigator<OnboardingStackParamList>();
 
@@ -72,15 +72,6 @@ export const OnboardingNavigator: React.FC = () => {
           gestureEnabled: false,
           animation: 'fade_from_bottom',
           animationDuration: 400,
-        }}
-      />
-      <Stack.Screen
-        name="Welcome"
-        component={WelcomeScreen}
-        options={{
-          gestureEnabled: false,
-          animation: 'fade',
-          animationDuration: 500,
         }}
       />
     </Stack.Navigator>

@@ -41,9 +41,9 @@ const androidFix: TextStyle = Platform.select({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const fontWeights = {
-  light: '500' as const,
-  regular: '600' as const,
-  medium: '600' as const,
+  light: '700' as const,
+  regular: '700' as const,
+  medium: '700' as const,
   semibold: '700' as const,
   bold: '800' as const,
   extrabold: '800' as const,
@@ -54,26 +54,26 @@ export const fontWeights = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const fontSizes = {
-  /** 14px — Micro labels, badge counts (minimum allowed) */
-  xs: 14,
-  /** 15px — Captions, timestamps, helper text */
-  sm: 15,
-  /** 16px — Body small, secondary text */
-  md: 16,
-  /** 17px — Body default, primary readable text */
-  base: 17,
-  /** 20px — Body large, emphasized content */
-  lg: 20,
-  /** 22px — Subtitle, section headers (h4) */
-  xl: 22,
-  /** 24px — Title h3, screen sub-headers */
-  '2xl': 24,
-  /** 28px — Title h2 */
-  '3xl': 28,
-  /** 34px — Display h1, screen headers */
-  '4xl': 34,
-  /** 42px — Hero display, onboarding headlines */
-  '5xl': 42,
+  /** 18px — Micro labels, badge counts (minimum allowed) */
+  xs: 18,
+  /** 19px — Captions, timestamps, helper text */
+  sm: 19,
+  /** 20px — Body small, secondary text */
+  md: 20,
+  /** 21px — Body default, primary readable text */
+  base: 21,
+  /** 24px — Body large, emphasized content */
+  lg: 24,
+  /** 26px — Subtitle, section headers (h4) */
+  xl: 26,
+  /** 28px — Title h3, screen sub-headers */
+  '2xl': 28,
+  /** 32px — Title h2 */
+  '3xl': 32,
+  /** 38px — Display h1, screen headers */
+  '4xl': 38,
+  /** 46px — Hero display, onboarding headlines */
+  '5xl': 46,
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -81,16 +81,16 @@ export const fontSizes = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const lineHeights = {
-  xs: 20,
-  sm: 22,
-  md: 24,
-  base: 26,
-  lg: 28,
-  xl: 30,
-  '2xl': 32,
-  '3xl': 36,
-  '4xl': 42,
-  '5xl': 52,
+  xs: 24,
+  sm: 26,
+  md: 28,
+  base: 30,
+  lg: 32,
+  xl: 34,
+  '2xl': 36,
+  '3xl': 40,
+  '4xl': 46,
+  '5xl': 56,
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -197,8 +197,8 @@ export const typography = {
   // ── UI Elements ──
   button: {
     fontFamily: poppinsFonts.semibold,
-    fontSize: 18,
-    lineHeight: 24,
+    fontSize: 22,
+    lineHeight: 28,
     fontWeight: fontWeights.semibold,
     letterSpacing: letterSpacing.wider,
     ...androidFix,

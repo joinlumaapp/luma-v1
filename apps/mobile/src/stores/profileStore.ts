@@ -44,6 +44,16 @@ export interface ProfileData {
   pets: string;
   religion: string;
   lifeValues: string;
+  // ── Hakkımda Daha Fazlası — new fields ──
+  livingSituation: string;
+  languages: string[];
+  sleepSchedule: string;
+  diet: string;
+  workStyle: string;
+  travelFrequency: string;
+  distancePreference: string;
+  communicationStyle: string;
+  hookah: string;
   /** MBTI personality type from the personality quiz (e.g. "ENFP") */
   personalityType: string | null;
   isComplete: boolean;
@@ -128,6 +138,15 @@ const initialProfile: ProfileData = {
   pets: '',
   religion: '',
   lifeValues: '',
+  livingSituation: '',
+  languages: [],
+  sleepSchedule: '',
+  diet: '',
+  workStyle: '',
+  travelFrequency: '',
+  distancePreference: '',
+  communicationStyle: '',
+  hookah: '',
   personalityType: null,
   isComplete: false,
   profileVideo: null,
@@ -227,6 +246,15 @@ const mapResponseToProfile = (data: ProfileResponse): ProfileData => {
     pets: fields.pets ?? '',
     religion: fields.religion ?? '',
     lifeValues: fields.lifeValues ?? '',
+    livingSituation: fields.livingSituation ?? '',
+    languages: Array.isArray(fields.languages) ? fields.languages : [],
+    sleepSchedule: fields.sleepSchedule ?? '',
+    diet: fields.diet ?? '',
+    workStyle: fields.workStyle ?? '',
+    travelFrequency: fields.travelFrequency ?? '',
+    distancePreference: fields.distancePreference ?? '',
+    communicationStyle: fields.communicationStyle ?? '',
+    hookah: fields.hookah ?? '',
     personalityType: fields.personalityType ?? null,
     isComplete: fields.isComplete ?? false,
     profileVideo: videoData ? {
@@ -535,42 +563,76 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
 
   calculateCompletion: () => {
     const { profile } = get();
-    let filled = 0;
-    const total = 22; // all possible fields
+    let pct = 0;
 
-    // Core fields (required-ish)
-    if ((profile.firstName ?? '').length > 0) filled++;
-    if ((profile.birthDate ?? '').length > 0) filled++;
-    if ((profile.gender ?? '').length > 0) filled++;
-    if ((profile.intentionTag ?? '').length > 0) filled++;
-    if ((profile.photos ?? []).length >= PROFILE_CONFIG.MIN_PHOTOS) filled++;
-    if ((profile.bio ?? '').length >= PROFILE_CONFIG.MIN_BIO_LENGTH) filled++;
+    // Photos — min 2 uploaded: +15
+    if ((profile.photos ?? []).length >= PROFILE_CONFIG.MIN_PHOTOS) pct += 15;
 
-    // Basic info
-    if ((profile.job ?? '').length > 0) filled++;
-    if ((profile.education ?? '').length > 0) filled++;
-    if ((profile.city ?? '').length > 0) filled++;
-    if (profile.height != null && profile.height > 0) filled++;
+    // Bio (Hakkımda): +10
+    if ((profile.bio ?? '').length >= PROFILE_CONFIG.MIN_BIO_LENGTH) pct += 10;
 
-    // Extended info
-    if ((profile.sexualOrientation ?? '').length > 0) filled++;
-    if ((profile.zodiacSign ?? '').length > 0) filled++;
-    if ((profile.educationLevel ?? '').length > 0) filled++;
-    if ((profile.maritalStatus ?? '').length > 0) filled++;
-    if ((profile.alcohol ?? '').length > 0) filled++;
-    if ((profile.smoking ?? '').length > 0) filled++;
-    if ((profile.children ?? '').length > 0) filled++;
-    if ((profile.pets ?? '').length > 0) filled++;
-    if ((profile.religion ?? '').length > 0) filled++;
+    // İlgi Alanları (≥ 1): +10
+    if ((profile.interestTags ?? []).length >= 1) pct += 10;
 
-    // Personality
-    if ((profile.interestTags ?? []).length > 0) filled++;
-    if ((profile.prompts ?? []).length > 0) filled++;
+    // Hedefim: +8
+    if ((profile.intentionTag ?? '').length > 0) pct += 8;
 
-    // Compatibility
-    if (Object.keys(profile.answers ?? {}).length > 0) filled++;
+    // Kişilik Testi (solved): +8
+    if (profile.personalityType != null && profile.personalityType.length > 0) pct += 8;
 
-    return Math.round((filled / total) * 100);
+    // Prompt'larım (≥ 1): +8
+    if ((profile.prompts ?? []).length >= 1) pct += 8;
+
+    // Profil Videosu: +8
+    if (profile.profileVideo != null) pct += 8;
+
+    // Sevdiğin Mekanlar (≥ 1): +5
+    if ((profile.favoriteSpots ?? []).length >= 1) pct += 5;
+
+    // Temel Bilgiler — ad, yaş, cinsiyet, şehir, boy ALL filled: +8
+    const basicAllFilled =
+      (profile.firstName ?? '').length > 0 &&
+      (profile.birthDate ?? '').length > 0 &&
+      (profile.gender ?? '').length > 0 &&
+      (profile.city ?? '').length > 0 &&
+      profile.height != null && profile.height > 0;
+    if (basicAllFilled) pct += 8;
+
+    // Meslek & Eğitim — at least one filled: +5
+    if ((profile.job ?? '').length > 0 || (profile.education ?? '').length > 0) pct += 5;
+
+    // Hakkımda Daha Fazlası — legacy fields, at least 5 filled: +8
+    const legacyExtended = [
+      profile.weight != null && profile.weight > 0 ? '1' : '',
+      profile.zodiacSign,
+      profile.sports,           // Egzersiz
+      profile.educationLevel,
+      profile.maritalStatus,
+      profile.children,
+      profile.alcohol,
+      profile.smoking,
+      profile.pets,
+      profile.religion,
+      profile.lifeValues,
+      profile.sexualOrientation,
+    ].filter((v) => (v ?? '').length > 0).length;
+    if (legacyExtended >= 5) pct += 8;
+
+    // Hakkımda Daha Fazlası — new lifestyle fields, at least 3 filled: +7
+    const newExtended = [
+      profile.livingSituation,
+      (profile.languages ?? []).length > 0 ? '1' : '',
+      profile.sleepSchedule,
+      profile.diet,
+      profile.workStyle,
+      profile.travelFrequency,
+      profile.distancePreference,
+      profile.communicationStyle,
+      profile.hookah,
+    ].filter((v) => (v ?? '').length > 0).length;
+    if (newExtended >= 3) pct += 7;
+
+    return Math.min(pct, 100);
   },
 
   reset: () =>

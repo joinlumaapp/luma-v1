@@ -123,7 +123,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       './plugins/withAndroidStatusBar',
       {
-        statusBarColor: '#0d0d14',
+        statusBarColor: '#000000',
         lightIcons: true,
       },
     ],

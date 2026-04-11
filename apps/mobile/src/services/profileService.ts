@@ -37,6 +37,16 @@ export interface ProfileFields {
   religion?: string;
   lifeValues?: string;
   exercise?: string;
+  // ── Hakkımda Daha Fazlası — new extended fields ──
+  livingSituation?: string;
+  languages?: string[];
+  sleepSchedule?: string;
+  diet?: string;
+  workStyle?: string;
+  travelFrequency?: string;
+  distancePreference?: string;
+  communicationStyle?: string;
+  hookah?: string;
   personalityType?: string | null;
   interestTags?: string[];
   genderPreference?: string[];

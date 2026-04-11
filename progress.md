@@ -1,6 +1,101 @@
 # LUMA V1 -- Progress Tracking
 
-**Last Updated:** 2026-04-11
+**Last Updated:** 2026-04-12
+
+---
+
+## Recent Updates (2026-04-12)
+
+### Session 10 — Profile polish + 9 new lifestyle fields + status bar fix (2026-04-12)
+
+**Context:** Kullanıcı Profil + Profili Düzenle ekranlarında çok sayıda UI/UX iyileştirmesi istedi. Status bar (Android 15 edge-to-edge), transition pembe sızıntısı ve mood chip fonksiyonu kök sebep seviyesinde çözüldü. "Hakkımda Daha Fazlası"na 9 yeni lifestyle alanı eklendi (shared types dahil).
+
+#### 1. Status Bar — Android 15 edge-to-edge kök çözüm ✅
+**Problem:** Expo SDK 54 + Android 15 (API 35) `android:statusBarColor`'ı yoksayıyor, `BrandedBackground` krem olarak status bar altına taşıyordu. Onceki 3 turda "kesin çözüm" denemeleri çalışmadı çünkü platform zorlaması vardı.
+
+**4-katmanlı savunma:**
+- [App.tsx:313-337](apps/mobile/App.tsx#L313-L337): `StatusBarBackground` — `useSafeAreaInsets`'le `height: insets.top`, absolute, `zIndex: 999 / elevation: 999`, `pointerEvents: none` siyah View overlay
+- `setStatusBarStyle('light')` + `RNStatusBar.setBarStyle/setBackgroundColor/setTranslucent` imperative calls useEffect içinde + her foreground dönüşünde tekrar
+- [navigation/index.tsx](apps/mobile/src/navigation/index.tsx) `onStateChange` + `onReady`: her ekran geçişinde `forceBlackStatusBar()` çağrısı
+- [app.json](apps/mobile/app.json): `androidStatusBar` + `android.statusBar` bloğu `#000000`
+- [app.config.ts plugin](apps/mobile/app.config.ts#L126) + [withAndroidStatusBar.js](apps/mobile/plugins/withAndroidStatusBar.js): `statusBarColor: '#000000'`, `windowLightStatusBar: false` (light icons)
+
+**Sonuç:** Hiçbir ekran/transition status bar'ı bozamaz. Overlay her şeyin üstünde çizer.
+
+#### 2. Transition pembe sızıntısı fix ✅
+**Kök sebep:** [App.tsx:438](apps/mobile/App.tsx#L438) `styles.root.backgroundColor: '#E8959E'` — splash döneminden kalma. Back gesture sırasında ekran slide out edip altındaki root görünüyordu.
+**Fix:** `#E8959E` → `#F5F0E8` (cream base theme).
+
+#### 3. Mood chip "Sohbete açığım" fonksiyonu ✅
+**Kök sebep:** [handleMoodPress](apps/mobile/src/screens/profile/ProfileScreen.tsx#L201-L224) önce API'yi `await` ediyor, başarısız olursa `catch` sessizce yutup state güncellemiyordu. Backend offline/401'de chip hiç tepki vermiyordu.
+**Fix:** Optimistic update — önce lokal state güncellenir, sonra server sync. Hata olursa lokal state KORUNUR (revert yok). Kullanıcı tepkiyi anında görür.
+
+#### 4. ProfileScreen — yeni kartlar, başlıklar, sıralama
+- "💜 Uyumunu Keşfet" kartı — gradient border kaldırıldı, samimi yeniden tasarım + motivasyon mesajları (0/20, 1-10, 11-19 bucket'ları), SVG gradient progress çember
+- "23 kişi profilini gördü" kartı: BlurView dark tint → düz açık bg, avatar'larda gerçek foto (`useViewersStore` entegrasyonu), FREE tier `blurRadius: 8`
+- Bu Haftanın Yıldızları → Akış'a taşındı ([SocialFeedScreen](apps/mobile/src/screens/discovery/SocialFeedScreen.tsx))
+- Haftalık Uyum Raporu → Profil'den Eşleşmeler'e taşındı ([MatchesListScreen](apps/mobile/src/screens/matches/MatchesListScreen.tsx)), eski `WeeklyInsightNudge` kaldırıldı
+- Hakkımda grid: 3 sütun garantili (`width: '31.8%'` + `justifyContent: space-between`), "Hedefim" ilk karta pin'lendi ve "Hakkında"dan kaldırıldı
+- Tüm section başlıkları merkezlendi ve 22px/800 yapıldı ("Hakkında", "İlgi Alanları", "Günlük Görevler", "Bu Haftanın Yıldızları", "Uyumunu Keşfet", "Hakkımda")
+- İlgi Alanları sayacı `(5/15)` kaldırıldı
+
+#### 5. Typography 2x global upgrade ✅
+[typography.ts](apps/mobile/src/theme/typography.ts) tokens +4 büyütüldü (xs 14→18, base 17→21, 2xl 24→28, 3xl 28→32 vs.), lineHeights proporsiyonel, `fontWeights` minimum `'700'`. ProfileScreen + SocialFeedScreen + EditProfileScreen inline `fontSize` ve `fontWeight` değerleri Python script ile tablo eşleşmesiyle güncellendi (azalan sıra, collision-free).
+
+#### 6. EditProfileScreen — Bumble-style premium redesign ✅
+- Section'lar bej kart (`#FAF5F0`, `borderRadius: 16`, `padding: 16`)
+- FieldRow beyaz kart + hafif shadow (`shadowOpacity: 0.04`, `elevation: 1`)
+- Emoji 22→24, label 19/700→16/600, value 18/700→15/500, chevron `#CCCCCC`/18
+- "Değerler" layout fix: `flexShrink: 0` + `minWidth: 80` + `numberOfLines: 1` → tek satır garantisi
+- Kaydet butonu gradient `#FF6B6B → #EE5A24`, her zaman aktif görünür, shadow
+- Uyum Soruları bölümü Profili Düzenle'den kaldırıldı (ProfileScreen'deki "Uyumunu Keşfet" kartında var)
+- Tüm section başlıkları merkezlendi (`sectionTitle`, `headerTitle`, `FavoriteSpotsEditor.title` dahil)
+- Prompt'larım limit `3 → MAX_PROMPTS (15)`
+- İngilizce enum değerleri Türkçe'ye çevrildi: [formatters.ts](apps/mobile/src/utils/formatters.ts) yeni `translatePets`, `translateExercise`, `translateSexualOrientation` + genişletilmiş `CHILDREN/DRINKING/SMOKING_LABELS`
+
+#### 7. Hakkımda Daha Fazlası — 9 yeni lifestyle alanı ✅
+
+**Shared types ([packages/shared/src/types/user.ts](packages/shared/src/types/user.ts)):**
+`UserProfile` interface'ine 9 field eklendi + 9 enum:
+- 🏠 `livingSituation: LivingSituation | null` (alone/roommate/family)
+- 🗣️ `languages: Language[]` — **çoklu seçim** (turkish/english/german/french/spanish/arabic/russian/other)
+- 🌙 `sleepSchedule: SleepSchedule | null` (early_bird/night_owl/flexible)
+- 🍽️ `diet: Diet | null` (omnivore/vegetarian/vegan/halal/gluten_free)
+- 💼 `workStyle: WorkStyle | null` (office/remote/hybrid/student/unemployed)
+- 🌍 `travelFrequency: TravelFrequency | null` (often/sometimes/rarely/wants_to)
+- 📏 `distancePreference: DistancePreference | null` (close/city/far)
+- 💬 `communicationStyle: CommunicationStyle | null` (constant_texter/occasional_texter/in_person)
+- 🚬 `hookah: HookahHabit | null` (yes/sometimes/never)
+
+**Mobile entegrasyonu:**
+- `ProfileFields` ([profileService.ts](apps/mobile/src/services/profileService.ts)) + `ProfileData` ([profileStore.ts](apps/mobile/src/stores/profileStore.ts)) + `initialProfile` + normalize fonksiyonu güncellendi
+- 9 yeni `_OPTIONS` array [constants/config.ts](apps/mobile/src/constants/config.ts#L626-L663)
+- EditProfileScreen: 9 useState + setter + extendedFieldValues + useEffect sync + hasChanges + handleSave payload + 9 yeni FieldRow + Diller için custom multi-select bottom sheet
+- ProfileScreen: Hakkımda grid'ine 9 kart conditional push (sadece dolu olanlar)
+
+#### 8. Profil Gücü skorlama — yeni ağırlıklı sistem ✅
+[calculateCompletion](apps/mobile/src/stores/profileStore.ts#L564-L633) tamamen yeniden yazıldı. Eski "filled/22 * 100" yerine her kriter kendi ağırlığı:
+
+| Kriter | Ağırlık | Koşul |
+|---|---|---|
+| Fotoğraf | 15% | `>= 2` |
+| Bio | 10% | min length |
+| İlgi Alanları | 10% | `>= 1` |
+| Hedefim | 8% | dolu |
+| Kişilik Testi | 8% | `personalityType != null` |
+| Prompt'larım | 8% | `>= 1` |
+| Profil Videosu | 8% | `!= null` |
+| Sevdiğin Mekanlar | 5% | `>= 1` |
+| Temel Bilgiler | 8% | firstName+birthDate+gender+city+height HEPSİ |
+| Meslek & Eğitim | 5% | job VEYA education |
+| HDF eski (12 alan) | 8% | en az 5 dolu |
+| HDF yeni (9 alan) | 7% | en az 3 dolu |
+| **Toplam** | **100%** | |
+
+Uyum Analizi çıkarıldı. `updateProfile` → `calculateCompletion` otomatik → Zustand selector auto re-render.
+
+#### 9. "23 kişi" kartı avatar resimleri ✅
+[useViewersStore](apps/mobile/src/stores/viewersStore.ts) entegrasyonu, `photoUrl` olan ilk 3 viewer gösterilir, FREE tier `blurRadius: 8 + opacity: 0.7`.
 
 ---
 

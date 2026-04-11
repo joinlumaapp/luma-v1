@@ -17,7 +17,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
-import { poppinsFonts, fontSizes, lineHeights } from '../../theme/typography';
+import { poppinsFonts } from '../../theme/typography';
 import {
   SPOT_CATEGORIES,
   getSpotCategory,
@@ -337,18 +337,21 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   title: {
-    fontFamily: poppinsFonts.bold,
-    fontSize: fontSizes.lg,
-    lineHeight: lineHeights.lg,
-    color: colors.text,
-    marginBottom: 4,
+    fontFamily: 'Poppins_800ExtraBold',
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: '800',
+    color: '#1A1A2E',
+    marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
     fontFamily: poppinsFonts.regular,
-    fontSize: 14,
-    lineHeight: 18,
+    fontSize: 18,
+    lineHeight: 24,
     color: colors.textSecondary,
     marginBottom: spacing.md,
+    textAlign: 'center',
   },
 
   // ── Existing spots ──

@@ -59,10 +59,6 @@ export const SelfieVerificationScreen: React.FC = () => {
     }
   }, [permission, requestPermission]);
 
-  // Get the first profile photo for the reference display
-  const profilePhotos = useProfileStore((state) => state.profile.photos ?? []);
-  const firstProfilePhoto = profilePhotos.length > 0 ? profilePhotos[0] : null;
-
   /**
    * Save collected onboarding profile fields to the backend before marking
    * onboarding as complete. Without this, firstName and other fields collected
@@ -188,10 +184,11 @@ export const SelfieVerificationScreen: React.FC = () => {
       }
     }
 
-    // Navigate to the final Welcome step (shown BEFORE setOnboarded flips).
-    // Welcome screen handles the actual setOnboarded(true) call on CTA tap.
-    navigation.navigate('Welcome');
-  }, [updateProfile, navigation]);
+    // Flip to MainTabs and show celebratory Welcome bonus popup on top.
+    // The WelcomeBonusModal handles the final CTA that persists onboarded flag.
+    useAuthStore.getState().setShowWelcomeBonus(true);
+    useAuthStore.getState().setOnboarded(true);
+  }, [updateProfile]);
 
   // Founder test mode: auto-approve selfie after 2s
   useEffect(() => {
@@ -271,15 +268,13 @@ export const SelfieVerificationScreen: React.FC = () => {
       // Send captured photo base64 to backend for verification
       const result = await verifySelfie(capturedBase64);
 
-      if (result.verified) {
-        Alert.alert('Başarılı', 'Kimliğin başarıyla doğrulandı!');
-      } else {
+      if (!result.verified) {
         Alert.alert(
           'Doğrulama Başarısız',
           'Selfie doğrulaması başarısız oldu. Tekrar deneyebilir veya atlayabilirsin.',
         );
       }
-      // Save profile fields to backend, then mark onboarding as complete
+      // Success path flows silently into MainTabs via saveProfileAndComplete.
       await saveProfileAndComplete();
     } catch {
       Alert.alert('Hata', 'Selfie doğrulanırken bir hata oluştu. Lütfen tekrar deneyin.');
@@ -307,7 +302,7 @@ export const SelfieVerificationScreen: React.FC = () => {
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <TouchableOpacity onPress={handleBack} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Geri dön">
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
+          <Ionicons name="chevron-back" size={24} color="#1A1A2E" />
         </TouchableOpacity>
       </View>
 
@@ -321,23 +316,9 @@ export const SelfieVerificationScreen: React.FC = () => {
       >
         <Text style={styles.title}>Selfie Doğrulama</Text>
         <Text style={styles.subtitle}>
-          Profilinin gerçek olduğunu doğrulamak için bir selfie çek. Yüzün net görünmeli.
+          Profilinin gerçek olduğunu doğrulamak için bir selfie çek.{'\n'}
+          Yüzün net görünmeli.
         </Text>
-
-        {/* Profile photo reference — accountability reminder */}
-        {firstProfilePhoto && (
-          <View style={styles.referenceContainer}>
-            <Image
-              source={{ uri: firstProfilePhoto }}
-              style={styles.referencePhoto}
-              resizeMode="cover"
-              accessibilityLabel="Profil fotoğrafın"
-            />
-            <Text style={styles.referenceText}>
-              Profil fotoğrafınla aynı kişi olduğundan emin ol
-            </Text>
-          </View>
-        )}
 
         {/* Camera preview area */}
         <View style={styles.cameraContainer}>
@@ -372,22 +353,16 @@ export const SelfieVerificationScreen: React.FC = () => {
         {/* Instructions */}
         <View style={styles.instructions}>
           <View style={styles.instructionRow}>
-            <Text style={styles.instructionBullet}>1</Text>
-            <Text style={styles.instructionText}>
-              Yüzünü çerçeve içine yerleştir
-            </Text>
+            <Text style={styles.instructionEmoji}>📸</Text>
+            <Text style={styles.instructionText}>Yüzünü çerçeve içine yerleştir</Text>
           </View>
           <View style={styles.instructionRow}>
-            <Text style={styles.instructionBullet}>2</Text>
-            <Text style={styles.instructionText}>
-              İyi aydınlatılmış bir ortamda ol
-            </Text>
+            <Text style={styles.instructionEmoji}>💡</Text>
+            <Text style={styles.instructionText}>İyi aydınlatılmış ortamda çek</Text>
           </View>
           <View style={styles.instructionRow}>
-            <Text style={styles.instructionBullet}>3</Text>
-            <Text style={styles.instructionText}>
-              Güneş gözlüğü veya maske takma
-            </Text>
+            <Text style={styles.instructionEmoji}>🚫</Text>
+            <Text style={styles.instructionText}>Güneş gözlüğü veya maske takma</Text>
           </View>
         </View>
 
@@ -446,7 +421,7 @@ export const SelfieVerificationScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#F5F0E8',
   },
   header: {
     paddingHorizontal: spacing.md,
@@ -456,7 +431,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.surface,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -469,38 +444,14 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.h2,
-    color: colors.text,
+    color: '#1A1A2E',
     marginBottom: spacing.sm,
   },
   subtitle: {
     ...typography.body,
-    color: colors.textSecondary,
+    color: 'rgba(26, 26, 46, 0.7)',
     marginBottom: spacing.lg,
-    lineHeight: 24,
-  },
-  referenceContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.smd,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: spacing.smd,
-  },
-  referencePhoto: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 2,
-    borderColor: colors.primary,
-  },
-  referenceText: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-    flex: 1,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   cameraContainer: {
     alignItems: 'center',
@@ -510,7 +461,7 @@ const styles = StyleSheet.create({
     width: CAMERA_SIZE,
     height: CAMERA_SIZE,
     borderRadius: CAMERA_SIZE / 2,
-    backgroundColor: colors.surface,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
@@ -527,7 +478,7 @@ const styles = StyleSheet.create({
   },
   cameraIcon: {
     fontSize: 48,
-    color: colors.textTertiary,
+    color: 'rgba(26, 26, 46, 0.35)',
   },
   permissionText: {
     ...typography.bodySmall,
@@ -553,21 +504,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.md,
   },
-  instructionBullet: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.primary + '20',
-    color: colors.primary,
+  instructionEmoji: {
+    fontSize: 22,
+    width: 32,
     textAlign: 'center',
-    ...typography.bodySmall,
-    lineHeight: 28,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   instructionText: {
     ...typography.body,
-    color: colors.textSecondary,
+    color: '#1A1A2E',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     flex: 1,
   },
   footer: {

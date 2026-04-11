@@ -31,6 +31,9 @@ import {
   ALCOHOL_OPTIONS, SEXUAL_ORIENTATION_OPTIONS, PETS_OPTIONS,
   RELIGION_OPTIONS, EXERCISE_OPTIONS as CONFIG_EXERCISE_OPTIONS,
   SMOKING_OPTIONS as CONFIG_SMOKING_OPTIONS, CHILDREN_OPTIONS as CONFIG_CHILDREN_OPTIONS,
+  LIVING_SITUATION_OPTIONS, LANGUAGE_OPTIONS, SLEEP_SCHEDULE_OPTIONS,
+  DIET_OPTIONS, WORK_STYLE_OPTIONS, TRAVEL_FREQUENCY_OPTIONS,
+  DISTANCE_PREFERENCE_OPTIONS, COMMUNICATION_STYLE_OPTIONS, HOOKAH_OPTIONS,
   INTEREST_CATEGORIES,
 } from '../../constants/config';
 import { useProfileStore } from '../../stores/profileStore';
@@ -39,7 +42,15 @@ import { VideoRecorder } from '../../components/profile/VideoRecorder';
 import { VideoProfile } from '../../components/profile/VideoProfile';
 import { FavoriteSpotsEditor } from '../../components/profile/FavoriteSpotsEditor';
 import { PromptPickerSheet } from '../../components/prompts/PromptPickerSheet';
-import type { PromptOption } from '../../constants/promptBank';
+import { MAX_PROMPTS, type PromptOption } from '../../constants/promptBank';
+import {
+  translateChildren,
+  translateDrinking,
+  translateSmoking,
+  translatePets,
+  translateExercise,
+  translateSexualOrientation,
+} from '../../utils/formatters';
 import type { VideoMetadata } from '../../services/videoService';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { useScreenTracking } from '../../hooks/useAnalytics';
@@ -180,17 +191,23 @@ const FieldRow: React.FC<FieldRowProps> = ({
     activeOpacity={readOnly ? 1 : 0.7}
   >
     <Text style={sectionStyles.fieldIcon}>{icon}</Text>
-    <Text style={sectionStyles.fieldLabel}>{label}</Text>
+    <Text style={sectionStyles.fieldLabel} numberOfLines={1}>{label}</Text>
     <View style={sectionStyles.fieldRight}>
       {value ? (
-        <Text style={sectionStyles.fieldValue}>{value}</Text>
+        <Text
+          style={sectionStyles.fieldValue}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {value}
+        </Text>
       ) : (
-        <Text style={sectionStyles.fieldPlaceholder}>{placeholder}</Text>
+        <Text style={sectionStyles.fieldPlaceholder} numberOfLines={1}>{placeholder}</Text>
       )}
       {readOnly ? (
-        <Ionicons name="lock-closed" size={14} color={colors.textTertiary} />
+        <Ionicons name="lock-closed" size={14} color="#CCCCCC" />
       ) : (
-        <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />
+        <Ionicons name="chevron-forward" size={18} color="#CCCCCC" />
       )}
     </View>
   </TouchableOpacity>
@@ -295,6 +312,17 @@ export const EditProfileScreen: React.FC = () => {
   const [pets, setPets] = useState<string>(profile.pets ?? '');
   const [religion, setReligion] = useState<string>(profile.religion ?? '');
   const [lifeValues, setLifeValues] = useState<string>(profile.lifeValues ?? '');
+  // ── Hakkımda Daha Fazlası — new extended fields ──
+  const [livingSituation, setLivingSituation] = useState<string>(profile.livingSituation ?? '');
+  const [languages, setLanguages] = useState<string[]>(profile.languages ?? []);
+  const [sleepSchedule, setSleepSchedule] = useState<string>(profile.sleepSchedule ?? '');
+  const [diet, setDiet] = useState<string>(profile.diet ?? '');
+  const [workStyle, setWorkStyle] = useState<string>(profile.workStyle ?? '');
+  const [travelFrequency, setTravelFrequency] = useState<string>(profile.travelFrequency ?? '');
+  const [distancePreference, setDistancePreference] = useState<string>(profile.distancePreference ?? '');
+  const [communicationStyle, setCommunicationStyle] = useState<string>(profile.communicationStyle ?? '');
+  const [hookah, setHookah] = useState<string>(profile.hookah ?? '');
+  const [showLanguagesPicker, setShowLanguagesPicker] = useState(false);
 
   // Snapshot store-managed fields at mount so hasChanges can detect mutations
   const initialPromptsRef = useRef(JSON.stringify(profile.prompts));
@@ -321,6 +349,14 @@ export const EditProfileScreen: React.FC = () => {
     religion: setReligion,
     weight: setWeight,
     lifeValues: setLifeValues,
+    livingSituation: setLivingSituation,
+    sleepSchedule: setSleepSchedule,
+    diet: setDiet,
+    workStyle: setWorkStyle,
+    travelFrequency: setTravelFrequency,
+    distancePreference: setDistancePreference,
+    communicationStyle: setCommunicationStyle,
+    hookah: setHookah,
     gender: (value: string) => {
       const genderMap: Record<string, string> = { 'Erkek': 'MALE', 'Kadin': 'FEMALE', 'Diger': 'OTHER' };
       setLocalGender(genderMap[value] ?? value);
@@ -345,6 +381,14 @@ export const EditProfileScreen: React.FC = () => {
     religion,
     weight,
     lifeValues,
+    livingSituation,
+    sleepSchedule,
+    diet,
+    workStyle,
+    travelFrequency,
+    distancePreference,
+    communicationStyle,
+    hookah,
   };
 
   const pickerConfigRef = useRef(pickerConfig);
@@ -389,6 +433,16 @@ export const EditProfileScreen: React.FC = () => {
     setPets(profile.pets ?? '');
     setReligion(profile.religion ?? '');
     setLifeValues(profile.lifeValues ?? '');
+    // Hakkımda Daha Fazlası — new fields
+    setLivingSituation(profile.livingSituation ?? '');
+    setLanguages(profile.languages ?? []);
+    setSleepSchedule(profile.sleepSchedule ?? '');
+    setDiet(profile.diet ?? '');
+    setWorkStyle(profile.workStyle ?? '');
+    setTravelFrequency(profile.travelFrequency ?? '');
+    setDistancePreference(profile.distancePreference ?? '');
+    setCommunicationStyle(profile.communicationStyle ?? '');
+    setHookah(profile.hookah ?? '');
   }, [
     profile.firstName, profile.lastName,
     profile.bio, profile.city, profile.job, profile.education,
@@ -398,6 +452,9 @@ export const EditProfileScreen: React.FC = () => {
     profile.weight, profile.sexualOrientation, profile.zodiacSign,
     profile.educationLevel, profile.maritalStatus, profile.alcohol,
     profile.pets, profile.religion, profile.lifeValues,
+    profile.livingSituation, profile.languages, profile.sleepSchedule,
+    profile.diet, profile.workStyle, profile.travelFrequency,
+    profile.distancePreference, profile.communicationStyle, profile.hookah,
   ]);
 
   // ── Photo handlers ─────────────────────────────────────────────────────
@@ -544,7 +601,7 @@ export const EditProfileScreen: React.FC = () => {
 
   const handlePromptSelect = useCallback(
     (prompt: PromptOption) => {
-      if (profile.prompts.length >= 3) return;
+      if (profile.prompts.length >= MAX_PROMPTS) return;
       const newPrompt = {
         id: prompt.id,
         question: prompt.textTr,
@@ -587,6 +644,16 @@ export const EditProfileScreen: React.FC = () => {
         pets,
         religion,
         lifeValues,
+        // Hakkımda Daha Fazlası — new fields
+        livingSituation,
+        languages,
+        sleepSchedule,
+        diet,
+        workStyle,
+        travelFrequency,
+        distancePreference,
+        communicationStyle,
+        hookah,
       });
       navigation.goBack();
     } catch {
@@ -600,6 +667,8 @@ export const EditProfileScreen: React.FC = () => {
     children, profile.interestTags, localGender, localBirthDate,
     weight, sexualOrientation, zodiacSign, educationLevel, maritalStatus,
     alcohol, pets, religion, lifeValues,
+    livingSituation, languages, sleepSchedule, diet, workStyle,
+    travelFrequency, distancePreference, communicationStyle, hookah,
     isSaving, updateProfile, navigation,
   ]);
 
@@ -626,11 +695,19 @@ export const EditProfileScreen: React.FC = () => {
     pets !== (profile.pets ?? '') ||
     religion !== (profile.religion ?? '') ||
     lifeValues !== (profile.lifeValues ?? '') ||
+    livingSituation !== (profile.livingSituation ?? '') ||
+    JSON.stringify(languages) !== JSON.stringify(profile.languages ?? []) ||
+    sleepSchedule !== (profile.sleepSchedule ?? '') ||
+    diet !== (profile.diet ?? '') ||
+    workStyle !== (profile.workStyle ?? '') ||
+    travelFrequency !== (profile.travelFrequency ?? '') ||
+    distancePreference !== (profile.distancePreference ?? '') ||
+    communicationStyle !== (profile.communicationStyle ?? '') ||
+    hookah !== (profile.hookah ?? '') ||
     JSON.stringify(profile.prompts) !== initialPromptsRef.current ||
     JSON.stringify(profile.favoriteSpots) !== initialFavoriteSpotsRef.current;
 
   const age = calculateAge(localBirthDate || profile.birthDate);
-  const answeredCount = Object.keys(profile.answers ?? {}).length;
 
   // ── Build photo grid data (always 9 slots) ────────────────────────────
   const photoSlots: Array<string | null> = [];
@@ -674,84 +751,9 @@ export const EditProfileScreen: React.FC = () => {
           ]}
           keyboardShouldPersistTaps="handled"
         >
-          {/* ─── Completion Card (moved to ProfileScreen) ─── */}
-
-          {/* ─── Uyum Sorulari (top position for visibility) ─── */}
-          {answeredCount < 20 && (
-            <View style={{
-              backgroundColor: colors.primary + '08',
-              borderWidth: 1,
-              borderColor: colors.primary + '20',
-              borderRadius: 16,
-              marginHorizontal: 24,
-              marginTop: 12,
-              marginBottom: 8,
-              padding: 16,
-            }}>
-              {/* Motivational header */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                <Text style={{ fontSize: 20, marginRight: 8 }}>{'💜'}</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={{
-                    fontSize: 16,
-                    fontFamily: 'Poppins_700Bold',
-                    fontWeight: '700',
-                    color: colors.text,
-                  }}>Uyum Sorularını Tamamla</Text>
-                  <Text style={{
-                    fontSize: 14,
-                    fontFamily: 'Poppins_400Regular',
-                    fontWeight: '500',
-                    color: colors.textSecondary,
-                    marginTop: 2,
-                  }}>Soruları cevapla, %92 daha fazla eşleşme şansı yakala!</Text>
-                </View>
-              </View>
-
-              {/* Progress */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-                <View style={{
-                  flex: 1,
-                  height: 6,
-                  backgroundColor: colors.surfaceLight,
-                  borderRadius: 3,
-                  overflow: 'hidden',
-                  marginRight: 8,
-                }}>
-                  <View style={{
-                    height: '100%',
-                    width: `${Math.min((answeredCount / 20) * 100, 100)}%`,
-                    backgroundColor: answeredCount >= 30 ? colors.success : answeredCount >= 15 ? '#F59E0B' : colors.primary,
-                    borderRadius: 3,
-                  }} />
-                </View>
-                <Text style={{
-                  fontSize: 14,
-                  fontFamily: 'Poppins_600SemiBold',
-                  fontWeight: '600',
-                  color: colors.primary,
-                }}>{answeredCount}/20</Text>
-              </View>
-
-              {/* CTA Button */}
-              <TouchableOpacity
-                onPress={() => navigation.navigate('Questions', { editMode: true })}
-                style={{
-                  backgroundColor: colors.primary,
-                  borderRadius: 12,
-                  paddingVertical: 13,
-                  alignItems: 'center',
-                }}
-              >
-                <Text style={{
-                  fontSize: 15,
-                  fontFamily: 'Poppins_700Bold',
-                  fontWeight: '700',
-                  color: '#fff',
-                }}>Sorulara Devam Et</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+          {/* Uyum Soruları removed from Edit Profile — already surfaced on the
+              main Profile screen via the "Uyumunu Keşfet" card, so duplicating
+              it here was redundant. */}
 
           {/* ── Kişilik Testi ──────────────────────────────────────────── */}
           <SectionHeader title="Kişilik Tipin" description="Eğlenceli bir quiz ile kişiliğini keşfet" />
@@ -778,12 +780,12 @@ export const EditProfileScreen: React.FC = () => {
               alignItems: 'center',
               marginRight: 12,
             }}>
-              <Text style={{ fontSize: 22 }}>{profile.personalityType ? '🧠' : '🎯'}</Text>
+              <Text style={{ fontSize: 26 }}>{profile.personalityType ? '🧠' : '🎯'}</Text>
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{
-                fontSize: 15,
-                fontWeight: '600',
+                fontSize: 19,
+                fontWeight: '700',
                 fontFamily: poppinsFonts.semibold,
                 color: colors.text,
               }}>
@@ -792,7 +794,7 @@ export const EditProfileScreen: React.FC = () => {
                   : 'Kişilik Testini Çöz'}
               </Text>
               <Text style={{
-                fontSize: 14,
+                fontSize: 18,
                 fontFamily: poppinsFonts.regular,
                 color: colors.textTertiary,
                 marginTop: 2,
@@ -975,17 +977,16 @@ export const EditProfileScreen: React.FC = () => {
 
           {/* ── Hakkımda (Bio) ────────────────────────────────────────── */}
           <View style={styles.section}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Hakkımda</Text>
-              <Text
-                style={[
-                  styles.charCounter,
-                  bio.length >= MAX_BIO_LENGTH && styles.charCounterLimit,
-                ]}
-              >
-                {bio.length}/{MAX_BIO_LENGTH}
-              </Text>
-            </View>
+            <Text style={styles.sectionTitle}>Hakkımda</Text>
+            <Text
+              style={[
+                styles.charCounter,
+                { textAlign: 'right', marginBottom: 6 },
+                bio.length >= MAX_BIO_LENGTH && styles.charCounterLimit,
+              ]}
+            >
+              {bio.length}/{MAX_BIO_LENGTH}
+            </Text>
             <TextInput
               style={styles.bioInput}
               value={bio}
@@ -1268,18 +1269,18 @@ export const EditProfileScreen: React.FC = () => {
                   onPress={() => setIntentionTag(option.value)}
                   activeOpacity={0.7}
                 >
-                  <Text style={{ fontSize: 28, marginRight: 12 }}>{option.emoji}</Text>
+                  <Text style={{ fontSize: 32, marginRight: 12 }}>{option.emoji}</Text>
                   <View style={{ flex: 1 }}>
                     <Text style={{
-                      fontSize: 15,
+                      fontSize: 19,
                       fontFamily: 'Poppins_600SemiBold',
-                      fontWeight: '600',
+                      fontWeight: '700',
                       color: colors.text,
                     }}>{option.label}</Text>
                     <Text style={{
-                      fontSize: 14,
+                      fontSize: 18,
                       fontFamily: 'Poppins_400Regular',
-                      fontWeight: '500',
+                      fontWeight: '700',
                       color: colors.textSecondary,
                       marginTop: 2,
                     }}>{option.description}</Text>
@@ -1308,17 +1309,28 @@ export const EditProfileScreen: React.FC = () => {
             description="Uygun kişileri bulmak için kendiniz hakkında daha fazla bilgi belirtin"
           />
           <FieldRow icon="⚖️" label="Kilo" value={weight ? `${weight} kg` : ''} onPress={() => {}} />
-          <FieldRow icon="⚥" label="Cinsel Yönelim" value={sexualOrientation || ''} onPress={() => openPicker('Cinsel Yönelim', SEXUAL_ORIENTATION_OPTIONS, 'sexualOrientation')} />
+          <FieldRow icon="⚥" label="Cinsel Yönelim" value={sexualOrientation ? translateSexualOrientation(sexualOrientation) : ''} onPress={() => openPicker('Cinsel Yönelim', SEXUAL_ORIENTATION_OPTIONS, 'sexualOrientation')} />
           <FieldRow icon="♍" label="Burç" value={zodiacSign || ''} onPress={() => openPicker('Burç', ZODIAC_SIGNS, 'zodiacSign')} />
-          <FieldRow icon="🏋️" label="Egzersiz" value={exercise || ''} onPress={() => openPicker('Egzersiz', CONFIG_EXERCISE_OPTIONS, 'exercise')} />
+          <FieldRow icon="🏋️" label="Egzersiz" value={exercise ? translateExercise(exercise) : ''} onPress={() => openPicker('Egzersiz', CONFIG_EXERCISE_OPTIONS, 'exercise')} />
           <FieldRow icon="🎓" label="Eğitim Seviyesi" value={educationLevel || ''} onPress={() => openPicker('Eğitim Seviyesi', EDUCATION_LEVELS, 'educationLevel')} />
           <FieldRow icon="💕" label="Medeni Durum" value={maritalStatus || ''} onPress={() => openPicker('Medeni Durum', MARITAL_STATUS_OPTIONS, 'maritalStatus')} />
-          <FieldRow icon="👶" label="Çocuklar" value={children || ''} onPress={() => openPicker('Çocuklar', CONFIG_CHILDREN_OPTIONS, 'children')} />
-          <FieldRow icon="🍷" label="İçki" value={alcohol || ''} onPress={() => openPicker('İçki', ALCOHOL_OPTIONS, 'alcohol')} />
-          <FieldRow icon="🚬" label="Sigara" value={smoking || ''} onPress={() => openPicker('Sigara', CONFIG_SMOKING_OPTIONS, 'smoking')} />
-          <FieldRow icon="🐾" label="Evcil Hayvanlar" value={pets || ''} onPress={() => openPicker('Evcil Hayvanlar', PETS_OPTIONS, 'pets')} />
+          <FieldRow icon="👶" label="Çocuklar" value={children ? translateChildren(children) : ''} onPress={() => openPicker('Çocuklar', CONFIG_CHILDREN_OPTIONS, 'children')} />
+          <FieldRow icon="🍷" label="İçki" value={alcohol ? translateDrinking(alcohol) : ''} onPress={() => openPicker('İçki', ALCOHOL_OPTIONS, 'alcohol')} />
+          <FieldRow icon="🚬" label="Sigara" value={smoking ? translateSmoking(smoking) : ''} onPress={() => openPicker('Sigara', CONFIG_SMOKING_OPTIONS, 'smoking')} />
+          <FieldRow icon="🐾" label="Evcil Hayvanlar" value={pets ? translatePets(pets) : ''} onPress={() => openPicker('Evcil Hayvanlar', PETS_OPTIONS, 'pets')} />
           <FieldRow icon="🕌" label="Din" value={religion || ''} onPress={() => openPicker('Din', RELIGION_OPTIONS, 'religion')} />
           <FieldRow icon="🌐" label="Değerler" value={lifeValues || ''} onPress={() => openPicker('Senin için hayattaki en önemli şey nedir?', VALUES_OPTIONS, 'lifeValues')} />
+
+          {/* ── Hakkımda Daha Fazlası — 9 new fields ── */}
+          <FieldRow icon="🏠" label="Yaşam Düzeni" value={livingSituation || ''} onPress={() => openPicker('Yaşam Düzeni', LIVING_SITUATION_OPTIONS, 'livingSituation')} />
+          <FieldRow icon="🗣️" label="Diller" value={languages.join(', ')} onPress={() => setShowLanguagesPicker(true)} />
+          <FieldRow icon="🌙" label="Uyku Düzeni" value={sleepSchedule || ''} onPress={() => openPicker('Uyku Düzeni', SLEEP_SCHEDULE_OPTIONS, 'sleepSchedule')} />
+          <FieldRow icon="🍽️" label="Beslenme" value={diet || ''} onPress={() => openPicker('Beslenme', DIET_OPTIONS, 'diet')} />
+          <FieldRow icon="💼" label="Çalışma Şekli" value={workStyle || ''} onPress={() => openPicker('Çalışma Şekli', WORK_STYLE_OPTIONS, 'workStyle')} />
+          <FieldRow icon="🌍" label="Seyahat" value={travelFrequency || ''} onPress={() => openPicker('Seyahat', TRAVEL_FREQUENCY_OPTIONS, 'travelFrequency')} />
+          <FieldRow icon="📏" label="Mesafe Tercihi" value={distancePreference || ''} onPress={() => openPicker('Mesafe Tercihi', DISTANCE_PREFERENCE_OPTIONS, 'distancePreference')} />
+          <FieldRow icon="💬" label="İletişim Tarzı" value={communicationStyle || ''} onPress={() => openPicker('İletişim Tarzı', COMMUNICATION_STYLE_OPTIONS, 'communicationStyle')} />
+          <FieldRow icon="🚬" label="Nargile" value={hookah || ''} onPress={() => openPicker('Nargile', HOOKAH_OPTIONS, 'hookah')} />
 
           {/* ── İlgi Alanları ─────────────────────────────────────────── */}
           <SectionHeader title="İlgi Alanları" description="Başkalarına neyle ilgilendiğini söyle" />
@@ -1345,18 +1357,18 @@ export const EditProfileScreen: React.FC = () => {
                     borderWidth: 1,
                     borderColor: '#93C5FD',
                   }}>
-                    <Text style={{ fontSize: 14, color: '#1E40AF', fontFamily: 'Poppins_500Medium', fontWeight: '500' }}>{getInterestDisplay(tag).emoji} {getInterestDisplay(tag).display}</Text>
+                    <Text style={{ fontSize: 18, color: '#1E40AF', fontFamily: 'Poppins_500Medium', fontWeight: '700' }}>{getInterestDisplay(tag).emoji} {getInterestDisplay(tag).display}</Text>
                   </View>
                 ))}
               </View>
             ) : (
-              <Text style={{ fontSize: 14, color: colors.textTertiary, fontFamily: 'Poppins_400Regular' }}>
+              <Text style={{ fontSize: 18, color: colors.textTertiary, fontFamily: 'Poppins_400Regular' }}>
                 İlgi alanlarını seç (en fazla 15)
               </Text>
             )}
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 12 }}>
               <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
-              <Text style={{ fontSize: 14, color: colors.primary, fontFamily: 'Poppins_600SemiBold', fontWeight: '600', marginLeft: 6 }}>
+              <Text style={{ fontSize: 18, color: colors.primary, fontFamily: 'Poppins_600SemiBold', fontWeight: '700', marginLeft: 6 }}>
                 {profile.interestTags.length > 0 ? 'Düzenle' : 'Seç'}
               </Text>
             </View>
@@ -1365,7 +1377,7 @@ export const EditProfileScreen: React.FC = () => {
           {/* ── Prompt'larim ──────────────────────────────────────────── */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Prompt'larim</Text>
-            <Text style={styles.sectionHint}>Profilinde görünecek sorular (max 3)</Text>
+            <Text style={styles.sectionHint}>Profilinde görünecek sorular (max 15)</Text>
 
             {profile.prompts.map((prompt: { id: string; question: string; answer: string; order: number }, idx: number) => (
               <View key={prompt.id} style={styles.promptEditCard}>
@@ -1395,7 +1407,7 @@ export const EditProfileScreen: React.FC = () => {
               </View>
             ))}
 
-            {profile.prompts.length < 3 && (
+            {profile.prompts.length < MAX_PROMPTS && (
               <TouchableOpacity
                 style={styles.addPromptButton}
                 onPress={() => setShowPromptPicker(true)}
@@ -1454,19 +1466,12 @@ export const EditProfileScreen: React.FC = () => {
             onPress={handleSave}
             disabled={isSaving || !hasChanges}
             activeOpacity={0.85}
-            style={[
-              styles.saveButtonOuter,
-              (!hasChanges && !isSaving) && styles.saveButtonDisabled,
-            ]}
+            style={styles.saveButtonOuter}
             accessibilityLabel="Değişiklikleri kaydet"
             accessibilityRole="button"
           >
             <LinearGradient
-              colors={
-                hasChanges
-                  ? [palette.gold[400], palette.gold[600]] as [string, string, ...string[]]
-                  : [palette.gray[300], palette.gray[400]] as [string, string, ...string[]]
-              }
+              colors={['#FF6B6B', '#EE5A24']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.saveButtonGradient}
@@ -1506,6 +1511,53 @@ export const EditProfileScreen: React.FC = () => {
           onDismiss={() => setPickerConfig(null)}
         />
       )}
+
+      {/* Languages Multi-Select Picker */}
+      {showLanguagesPicker && (
+        <View style={sectionStyles.pickerOverlay}>
+          <TouchableOpacity style={StyleSheet.absoluteFill} onPress={() => setShowLanguagesPicker(false)} />
+          <View style={sectionStyles.pickerSheet}>
+            <View style={sectionStyles.pickerHandle} />
+            <Text style={sectionStyles.pickerTitle}>Diller (Çoklu Seçim)</Text>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {Array.from(LANGUAGE_OPTIONS).map((lang) => {
+                const isSelected = languages.includes(lang);
+                return (
+                  <TouchableOpacity
+                    key={lang}
+                    style={[sectionStyles.pickerOption, isSelected && sectionStyles.pickerOptionSelected]}
+                    onPress={() => {
+                      if (isSelected) {
+                        setLanguages(languages.filter((l) => l !== lang));
+                      } else {
+                        setLanguages([...languages, lang]);
+                      }
+                    }}
+                  >
+                    <Text
+                      style={[
+                        sectionStyles.pickerOptionText,
+                        isSelected && sectionStyles.pickerOptionTextSelected,
+                      ]}
+                    >
+                      {lang}
+                    </Text>
+                    {isSelected && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+                  </TouchableOpacity>
+                );
+              })}
+              <TouchableOpacity
+                style={[sectionStyles.pickerOption, { justifyContent: 'center', marginTop: 8 }]}
+                onPress={() => setShowLanguagesPicker(false)}
+              >
+                <Text style={[sectionStyles.pickerOptionText, { color: colors.primary, fontWeight: '800' }]}>
+                  Tamam
+                </Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      )}
     </KeyboardAvoidingView>
   );
 };
@@ -1541,7 +1593,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontFamily: poppinsFonts.semibold,
     fontWeight: fontWeights.semibold,
     color: colors.text,
@@ -1553,15 +1605,22 @@ const styles = StyleSheet.create({
 
   // ── ScrollView ──
   scrollContent: {
-    paddingTop: spacing.sm,
+    paddingTop: spacing.md,
+    paddingHorizontal: 16,
+    paddingBottom: 32,
   },
 
-  // ── Sections ──
+  // ── Sections — beige card wrapper, Bumble-style ──
   section: {
-    paddingHorizontal: GRID_PADDING,
-    paddingVertical: spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
+    backgroundColor: '#FAF5F0',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+  },
+  sectionDivider: {
+    height: 1,
+    backgroundColor: '#E8E0D8',
+    marginVertical: 20,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
@@ -1570,19 +1629,21 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontFamily: poppinsFonts.bold,
-    fontWeight: fontWeights.bold,
-    color: colors.text,
+    fontSize: 22,
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
+    color: '#1A1A2E',
     letterSpacing: 0,
-    marginBottom: spacing.sm,
+    marginBottom: 8,
+    textAlign: 'center',
     includeFontPadding: false,
   },
   sectionHint: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: poppinsFonts.regular,
     fontWeight: fontWeights.regular,
     color: colors.textTertiary,
+    textAlign: 'center',
     marginBottom: spacing.md,
     lineHeight: 18,
     includeFontPadding: false,
@@ -1645,7 +1706,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   photoMainBadgeText: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: poppinsFonts.bold,
     fontWeight: fontWeights.bold,
     color: '#FFFFFF',
@@ -1664,7 +1725,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   photoOrderText: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: poppinsFonts.bold,
     fontWeight: fontWeights.bold,
     color: '#FFFFFF',
@@ -1677,7 +1738,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   photoUploadingText: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: poppinsFonts.medium,
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
@@ -1686,7 +1747,7 @@ const styles = StyleSheet.create({
 
   // ── Bio ──
   charCounter: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: poppinsFonts.regular,
     fontWeight: fontWeights.regular,
     color: colors.textTertiary,
@@ -1699,7 +1760,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.md,
-    fontSize: 15,
+    fontSize: 19,
     fontFamily: poppinsFonts.regular,
     fontWeight: fontWeights.regular,
     color: colors.text,
@@ -1731,7 +1792,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   infoLabel: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: poppinsFonts.medium,
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
@@ -1739,7 +1800,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   infoValue: {
-    fontSize: 15,
+    fontSize: 19,
     fontFamily: poppinsFonts.medium,
     fontWeight: fontWeights.medium,
     color: colors.text,
@@ -1756,7 +1817,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   readOnlyTagText: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: poppinsFonts.medium,
     fontWeight: fontWeights.medium,
     color: colors.textTertiary,
@@ -1789,7 +1850,7 @@ const styles = StyleSheet.create({
     backgroundColor: palette.gold[500] + '10',
   },
   pickerItemText: {
-    fontSize: 15,
+    fontSize: 19,
     fontFamily: poppinsFonts.regular,
     fontWeight: fontWeights.regular,
     color: colors.text,
@@ -1813,7 +1874,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   textFieldInput: {
-    fontSize: 15,
+    fontSize: 19,
     fontFamily: poppinsFonts.regular,
     fontWeight: fontWeights.regular,
     color: colors.text,
@@ -1844,7 +1905,7 @@ const styles = StyleSheet.create({
     backgroundColor: palette.purple[500] + '12',
   },
   intentionLabel: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: poppinsFonts.medium,
     fontWeight: fontWeights.medium,
     color: colors.text,
@@ -1868,7 +1929,7 @@ const styles = StyleSheet.create({
     borderColor: colors.surfaceBorder,
   },
   promptEditQuestion: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: poppinsFonts.medium,
     fontWeight: fontWeights.medium,
     color: colors.textSecondary,
@@ -1877,7 +1938,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   promptEditAnswer: {
-    fontSize: 15,
+    fontSize: 19,
     fontFamily: poppinsFonts.regular,
     fontWeight: fontWeights.regular,
     color: colors.text,
@@ -1896,7 +1957,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.surfaceBorder + '60',
   },
   charCount: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: poppinsFonts.regular,
     fontWeight: fontWeights.regular,
     color: colors.textTertiary,
@@ -1915,7 +1976,7 @@ const styles = StyleSheet.create({
     backgroundColor: palette.purple[500] + '05',
   },
   addPromptText: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: poppinsFonts.semibold,
     fontWeight: fontWeights.semibold,
     color: palette.purple[500],
@@ -1958,7 +2019,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   voiceTitle: {
-    fontSize: 15,
+    fontSize: 19,
     fontFamily: poppinsFonts.semibold,
     fontWeight: fontWeights.semibold,
     color: colors.text,
@@ -1966,7 +2027,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   voiceSubtitle: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: poppinsFonts.regular,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
@@ -1980,7 +2041,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   videoUploadingText: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: poppinsFonts.medium,
     fontWeight: fontWeights.medium,
     color: palette.gold[600],
@@ -2032,7 +2093,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   videoDurationText: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: poppinsFonts.semibold,
     fontWeight: fontWeights.semibold,
     color: '#FFFFFF',
@@ -2058,7 +2119,7 @@ const styles = StyleSheet.create({
     backgroundColor: palette.error + '08',
   },
   videoActionText: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: poppinsFonts.semibold,
     fontWeight: fontWeights.semibold,
     color: palette.gold[600],
@@ -2084,7 +2145,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   videoAddText: {
-    fontSize: 16,
+    fontSize: 20,
     fontFamily: poppinsFonts.semibold,
     fontWeight: fontWeights.semibold,
     color: palette.gold[600],
@@ -2104,15 +2165,14 @@ const styles = StyleSheet.create({
     borderTopColor: colors.divider,
   },
   saveButtonOuter: {
-    borderRadius: borderRadius.md,
+    borderRadius: 16,
     overflow: 'hidden',
-    ...shadows.medium,
-    shadowColor: palette.gold[500],
-    shadowOpacity: 0.3,
-  },
-  saveButtonDisabled: {
-    opacity: 0.6,
-    shadowOpacity: 0,
+    opacity: 1,
+    shadowColor: '#EE5A24',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 4,
   },
   saveButtonGradient: {
     flexDirection: 'row',
@@ -2120,11 +2180,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 16,
+    borderRadius: 16,
   },
   saveButtonText: {
-    fontSize: 16,
-    fontFamily: poppinsFonts.bold,
-    fontWeight: fontWeights.bold,
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: 0.3,
     includeFontPadding: false,
@@ -2138,57 +2199,70 @@ const sectionStyles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   headerTitle: {
+    fontSize: 22,
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
+    color: '#1A1A2E',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  headerDesc: {
     fontSize: 18,
     fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
-    color: colors.text,
-    marginBottom: 4,
-  },
-  headerDesc: {
-    fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
     color: colors.textSecondary,
+    textAlign: 'center',
   },
   fieldRow: {
     flexDirection: 'row',
+    flexWrap: 'nowrap',
     alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 14,
-    marginHorizontal: 24,
-    marginBottom: 8,
+    marginBottom: 10,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 1,
   },
   fieldIcon: {
-    fontSize: 18,
+    fontSize: 24,
     marginRight: 12,
   },
   fieldLabel: {
-    flex: 1,
-    fontSize: 15,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-    color: colors.text,
+    flexShrink: 0,
+    minWidth: 80,
+    marginRight: 8,
+    fontSize: 16,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    color: '#1A1A2E',
   },
   fieldRight: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
     gap: 6,
   },
   fieldValue: {
-    fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
+    flexShrink: 1,
+    fontSize: 15,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
-    color: colors.textSecondary,
+    color: '#666666',
+    textAlign: 'right',
   },
   fieldPlaceholder: {
-    fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
+    flexShrink: 1,
+    fontSize: 15,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
-    color: colors.textTertiary,
+    color: '#AAAAAA',
+    textAlign: 'right',
   },
   pickerOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -2214,7 +2288,7 @@ const sectionStyles = StyleSheet.create({
     marginBottom: 16,
   },
   pickerTitle: {
-    fontSize: 16,
+    fontSize: 20,
     fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.text,
@@ -2235,13 +2309,13 @@ const sectionStyles = StyleSheet.create({
     borderRadius: 8,
   },
   pickerOptionText: {
-    fontSize: 15,
+    fontSize: 19,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontWeight: '700',
     color: colors.text,
   },
   pickerOptionTextSelected: {
     color: colors.primary,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

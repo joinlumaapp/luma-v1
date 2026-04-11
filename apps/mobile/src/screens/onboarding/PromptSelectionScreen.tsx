@@ -163,11 +163,6 @@ const PromptCard: React.FC<{
                 {answer.length}/{MAX_PROMPT_ANSWER_LENGTH}
               </Text>
 
-              {/* AI suggestion placeholder */}
-              <TouchableOpacity style={styles.aiButton} activeOpacity={0.7}>
-                <Text style={styles.aiButtonText}>✨ Daha cekici yap</Text>
-              </TouchableOpacity>
-
               {/* Save pill */}
               <TouchableOpacity onPress={onSave} activeOpacity={0.8}>
                 <LinearGradient
@@ -270,6 +265,11 @@ export const PromptSelectionScreen: React.FC = () => {
   // Which prompt is currently expanded for editing
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // Scroll ref + cached y positions so we can auto-scroll the expanded card
+  // above the keyboard when the input gains focus.
+  const cardsScrollRef = useRef<ScrollView>(null);
+  const cardYPositions = useRef<Record<string, number>>({});
+
   // Answers in progress (before save)
   const [draftAnswers, setDraftAnswers] = useState<Record<string, string>>(() => {
     const map: Record<string, string> = {};
@@ -299,6 +299,20 @@ export const PromptSelectionScreen: React.FC = () => {
       );
     }
   }, [showConfetti, btnScale]);
+
+  // When a card expands, scroll it into view above the keyboard.
+  // LayoutAnimation runs ~250ms, keyboard ~250ms — delay scroll slightly so
+  // the target y is measured after the card has grown.
+  React.useEffect(() => {
+    if (!expandedId) return;
+    const timer = setTimeout(() => {
+      const y = cardYPositions.current[expandedId];
+      if (y != null && cardsScrollRef.current) {
+        cardsScrollRef.current.scrollTo({ y: Math.max(0, y - 16), animated: true });
+      }
+    }, 280);
+    return () => clearTimeout(timer);
+  }, [expandedId]);
 
   // ── Handlers ──
 
@@ -390,6 +404,7 @@ export const PromptSelectionScreen: React.FC = () => {
       totalSteps={12}
       showBack
       showSkip
+      scrollable={false}
       onSkip={handleSkip}
       footer={
         <View style={styles.footerContainer}>
@@ -427,14 +442,11 @@ export const PromptSelectionScreen: React.FC = () => {
     >
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={120}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 120 : 0}
       >
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
+        {/* Fixed header region */}
+        <View style={styles.fixedHeader}>
           {/* Progress bar */}
           <View style={styles.progressBarBg}>
             <LinearGradient
@@ -467,8 +479,17 @@ export const PromptSelectionScreen: React.FC = () => {
               />
             ))}
           </ScrollView>
+        </View>
 
-          {/* Prompt cards */}
+        {/* Scrollable prompt cards list */}
+        <ScrollView
+          ref={cardsScrollRef}
+          style={styles.cardsScroll}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.cardsScrollContent}
+          keyboardShouldPersistTaps="handled"
+          scrollEnabled={true}
+        >
           <View style={styles.cardsContainer}>
             {filteredPrompts.map((prompt) => {
               const sel = selected.find((s) => s.id === prompt.id);
@@ -477,19 +498,25 @@ export const PromptSelectionScreen: React.FC = () => {
               const catInfo = PROMPT_CATEGORIES.find((c) => c.key === prompt.category) || PROMPT_CATEGORIES[0];
 
               return (
-                <PromptCard
+                <View
                   key={prompt.id}
-                  prompt={prompt}
-                  isSelected={isSelected}
-                  isExpanded={isExpanded}
-                  answer={draftAnswers[prompt.id] || sel?.answer || ''}
-                  onTap={() => handlePromptTap(prompt)}
-                  onChangeAnswer={(text) => handleChangeAnswer(prompt.id, text)}
-                  onSave={() => handleSave(prompt.id)}
-                  onRemove={() => handleRemove(prompt.id)}
-                  canSelect={canSelectMore}
-                  categoryInfo={catInfo}
-                />
+                  onLayout={(e) => {
+                    cardYPositions.current[prompt.id] = e.nativeEvent.layout.y;
+                  }}
+                >
+                  <PromptCard
+                    prompt={prompt}
+                    isSelected={isSelected}
+                    isExpanded={isExpanded}
+                    answer={draftAnswers[prompt.id] || sel?.answer || ''}
+                    onTap={() => handlePromptTap(prompt)}
+                    onChangeAnswer={(text) => handleChangeAnswer(prompt.id, text)}
+                    onSave={() => handleSave(prompt.id)}
+                    onRemove={() => handleRemove(prompt.id)}
+                    canSelect={canSelectMore}
+                    categoryInfo={catInfo}
+                  />
+                </View>
               );
             })}
           </View>
@@ -505,7 +532,19 @@ export const PromptSelectionScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  scrollContent: { paddingBottom: 40 },
+
+  // Fixed header region (progress bar + title + subtitle + chips)
+  fixedHeader: {
+    // no flex — natural height, stays at top
+  },
+
+  // Scrollable cards area — fills remaining space
+  cardsScroll: {
+    flex: 1,
+  },
+  cardsScrollContent: {
+    paddingBottom: 24,
+  },
 
   // Progress bar
   progressBarBg: {
@@ -659,16 +698,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#94A3B8',
     textAlign: 'right',
-  },
-  aiButton: {
-    alignSelf: 'flex-start',
-    paddingVertical: 6,
-  },
-  aiButtonText: {
-    fontSize: 14,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
-    color: '#9B6BF8',
   },
   savePill: {
     alignSelf: 'flex-start',

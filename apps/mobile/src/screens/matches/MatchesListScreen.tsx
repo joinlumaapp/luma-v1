@@ -43,7 +43,6 @@ import { useAuthStore } from '../../stores/authStore';
 import { palette } from '../../theme/colors';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { LikesYouScreen } from '../discovery/LikesYouScreen';
-import { WeeklyInsightNudge } from '../../components/premium/SmartUpgradePrompts';
 import { useTranslation } from 'react-i18next';
 
 type MatchesNavigationProp = NativeStackNavigationProp<MatchesStackParamList, 'MatchesList'>;
@@ -1412,14 +1411,23 @@ export const MatchesListScreen: React.FC = () => {
           contentContainerStyle={styles.listContent}
           ListHeaderComponent={
             <>
-              {!isPremium && activeTab === 'matches' && (
-                <WeeklyInsightNudge
-                  viewCount={viewersCount}
-                  likeCount={likesYouCount}
-                  missedMatches={0}
-                  onUpgrade={() => navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' })}
-                  onDismiss={() => {}}
-                />
+              {activeTab === 'matches' && (
+                <TouchableOpacity
+                  style={weeklyReportStyles.card}
+                  activeOpacity={0.8}
+                  onPress={() => navigation.getParent()?.navigate('ProfileTab', { screen: 'WeeklyReport' })}
+                  accessibilityLabel="Haftalık Uyum Raporu"
+                  accessibilityRole="button"
+                >
+                  <View style={weeklyReportStyles.left}>
+                    <Text style={weeklyReportStyles.icon}>📊</Text>
+                    <View style={weeklyReportStyles.textCol}>
+                      <Text style={weeklyReportStyles.title}>Haftalık Uyum Raporu</Text>
+                      <Text style={weeklyReportStyles.subtitle}>Bu haftanın istatistiklerini gör</Text>
+                    </View>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="rgba(0,0,0,0.45)" />
+                </TouchableOpacity>
               )}
               {renderNudgeSection()}
             </>
@@ -1447,6 +1455,48 @@ export const MatchesListScreen: React.FC = () => {
     </View>
   );
 };
+
+// ── Weekly Report card — moved here from ProfileScreen, adapted for Matches ──
+const weeklyReportStyles = StyleSheet.create({
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 12,
+    marginHorizontal: spacing.lg,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: 'rgba(0,0,0,0.04)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.08)',
+  },
+  left: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 12,
+  },
+  icon: {
+    fontSize: 24,
+  },
+  textCol: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 15,
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
+    color: '#1A1A2E',
+  },
+  subtitle: {
+    fontSize: 13,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: 'rgba(0,0,0,0.6)',
+    marginTop: 2,
+  },
+});
 
 const styles = StyleSheet.create({
   container: {

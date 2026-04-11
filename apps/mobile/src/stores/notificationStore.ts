@@ -3,8 +3,12 @@
 
 import { Platform } from 'react-native';
 import { create } from 'zustand';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { notificationService } from '../services/notificationService';
 import { useAuthStore } from './authStore';
+
+const STORAGE_KEY_GRANTED = '@luma_notifications_granted';
+const STORAGE_KEY_DISMISSED = '@luma_notifications_dismissed';
 import type {
   Notification,
   NotificationPreferences,
@@ -260,13 +264,16 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     if (hasPermission || showPermissionModal) return;
 
     try {
-      const result = await notificationService.requestPermission();
-      if (result.granted) {
+      // Kalıcı flag — kullanıcı daha önce "Bildirimleri Aç"a bastıysa bir daha gösterme
+      const storedGranted = await AsyncStorage.getItem(STORAGE_KEY_GRANTED);
+      if (storedGranted === 'true') {
         set({ hasPermission: true });
         await get().registerDevice();
-      } else {
-        set({ showPermissionModal: true });
+        return;
       }
+
+      // Flag yok → popup göster. OS iznini modal'daki butondan iste.
+      set({ showPermissionModal: true });
     } catch (error) {
       if (__DEV__) {
         console.error('[BildirimStore] Izin kontrolu basarisiz:', error);
@@ -277,12 +284,19 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
 
   dismissPermissionModal: () => {
     set({ showPermissionModal: false });
+    // Kalıcı değil — her app açılışında popup tekrar gösterilmeli
+    AsyncStorage.setItem(STORAGE_KEY_DISMISSED, 'false').catch((error) => {
+      if (__DEV__) {
+        console.error('[BildirimStore] Dismiss flag kaydi basarisiz:', error);
+      }
+    });
   },
 
   allowPermission: async () => {
     try {
       const granted = await get().requestPermission();
       if (granted) {
+        await AsyncStorage.setItem(STORAGE_KEY_GRANTED, 'true');
         await get().registerDevice();
       }
     } catch (error) {

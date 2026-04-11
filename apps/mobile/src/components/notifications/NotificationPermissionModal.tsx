@@ -6,7 +6,6 @@ import { Modal, View, Text, Pressable, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, palette } from '../../theme/colors';
-import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 
 interface NotificationPermissionModalProps {
@@ -16,15 +15,13 @@ interface NotificationPermissionModalProps {
 }
 
 interface BenefitRowProps {
-  icon: keyof typeof Ionicons.glyphMap;
+  emoji: string;
   label: string;
 }
 
-const BenefitRow: React.FC<BenefitRowProps> = ({ icon, label }) => (
+const BenefitRow: React.FC<BenefitRowProps> = ({ emoji, label }) => (
   <View style={styles.benefitRow}>
-    <View style={styles.benefitIconContainer}>
-      <Ionicons name={icon} size={20} color={palette.purple[500]} />
-    </View>
+    <Text style={styles.benefitEmoji}>{emoji}</Text>
     <Text style={styles.benefitText}>{label}</Text>
   </View>
 );
@@ -44,46 +41,39 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
     >
       <View style={styles.overlay}>
         <View style={styles.card}>
-          {/* Gradient bell icon */}
+          {/* Luma heart logo (small, purple-pink gradient) */}
           <LinearGradient
-            colors={[palette.purple[500], palette.pink[500]]}
+            colors={['#8B5CF6', '#EC4899']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.iconCircle}
+            style={styles.logoCircle}
           >
-            <Ionicons name="notifications" size={32} color={palette.white} />
+            <Ionicons name="heart" size={28} color={palette.white} />
           </LinearGradient>
 
           {/* Title */}
-          <Text style={styles.title}>Bildirimleri Aç</Text>
+          <Text style={styles.title}>Luma'yı Kaçırma!</Text>
 
           {/* Subtitle */}
           <Text style={styles.subtitle}>
-            Yeni eşleşmelerini, mesajlarını ve aktivite davetlerini anında öğren.
-            Bildirimleri açarak hiçbir fırsatı kaçırma!
+            Luma ile uyumlu insanlarla tanış, eşleşmelerini ve mesajlarını anında gör.
           </Text>
 
           {/* Benefit rows */}
           <View style={styles.benefitsContainer}>
-            <BenefitRow icon="notifications" label="Eşleşmeleri anında gör" />
-            <BenefitRow icon="chatbubble-ellipses" label="Mesajları kaçırma" />
-            <BenefitRow icon="calendar" label="Aktivite davetlerinden haberdar ol" />
+            <BenefitRow emoji="💜" label="Yeni eşleşmelerini anında öğren" />
+            <BenefitRow emoji="💬" label="Mesajları kaçırma" />
+            <BenefitRow emoji="🎯" label="Günün eşleşmesinden haberdar ol" />
           </View>
 
           {/* Primary button */}
           <Pressable onPress={onAllow} style={styles.allowButton}>
             <LinearGradient
-              colors={[palette.purple[500], palette.pink[500]]}
+              colors={['#8B5CF6', '#EC4899']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.allowButtonGradient}
             >
-              <Ionicons
-                name="notifications-outline"
-                size={20}
-                color={palette.white}
-                style={styles.allowButtonIcon}
-              />
               <Text style={styles.allowButtonText}>Bildirimleri Aç</Text>
             </LinearGradient>
           </Pressable>
@@ -116,58 +106,69 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
     alignItems: 'center',
   },
-  iconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+  logoCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.md,
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
   title: {
-    ...typography.h3,
-    color: colors.text,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
+    fontSize: 22,
+    color: '#1A1A2E',
     textAlign: 'center',
     marginBottom: spacing.sm,
   },
   subtitle: {
-    ...typography.body,
-    color: colors.textSecondary,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    fontSize: 14,
+    color: '#4A4A6A',
     textAlign: 'center',
     marginBottom: spacing.lg,
-    lineHeight: 22,
+    lineHeight: 20,
+    paddingHorizontal: spacing.xs,
   },
   benefitsContainer: {
     width: '100%',
     marginBottom: spacing.lg,
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   benefitRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
   },
-  benefitIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: palette.purple[50],
-    justifyContent: 'center',
-    alignItems: 'center',
+  benefitEmoji: {
+    fontSize: 20,
     marginRight: spacing.md,
   },
   benefitText: {
-    ...typography.body,
-    color: colors.text,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    fontSize: 14,
+    color: '#1A1A2E',
     flex: 1,
   },
   allowButton: {
     width: '100%',
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
   allowButtonGradient: {
     height: layout.buttonHeight,
@@ -176,19 +177,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: borderRadius.lg,
   },
-  allowButtonIcon: {
-    marginRight: spacing.sm,
-  },
   allowButtonText: {
-    ...typography.button,
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
+    fontSize: 16,
     color: palette.white,
+    letterSpacing: 0.3,
   },
   dismissButton: {
     paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
   },
   dismissButtonText: {
-    ...typography.body,
-    color: colors.textTertiary,
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+    fontSize: 14,
+    color: '#6B6B85',
   },
 });
 

@@ -229,3 +229,69 @@ Implementation:
 **Reasoning:** LUMA is NOT a dark-first app and NOT a light-first app — it is **deliberately hybrid**. Auth and onboarding are light because user-trust moments deserve warm, inviting visuals (pink-cream gradients). The main content tabs are light for readability on long-duration content (feed, messages, profile). The tab bar is dark because it's a persistent navigation frame that should recede visually and contrast with the bright content above it. Premium sections (star cards, membership, jeton market) use dark to signal "premium / reserved" visual weight. Gradient buttons span both themes because they're brand elements, not theme-dependent UI chrome.
 
 **Do NOT flip the global `colors` export.** Any future request to "make the app dark" or "unify themes" should trigger a scope discussion: which specific screens, why, and confirmation that the auth/onboarding light design is NOT affected. See `feedback_theme_scope.md` in project memory.
+
+## Decision 037: Status Bar — 4-Layer Defense Against Android 15 Edge-to-Edge
+**Date:** 2026-04-12
+**Decision:** Status bar is **permanently black with light icons** across every screen. Because Expo SDK 54 targets Android 15 (API 35) which enforces edge-to-edge mode, `android:statusBarColor` is **ignored** at the OS level. We defend the contract with 4 independent layers:
+1. **Native theme plugin** (`plugins/withAndroidStatusBar.js`): writes `android:statusBarColor=#000000`, `windowLightStatusBar=false` — works on pre-Android 15 devices.
+2. **app.json + app.config.ts** (`androidStatusBar`, `android.statusBar`): declarative fallback.
+3. **Runtime imperative calls** (`App.tsx` useEffect + `navigation/index.tsx` onStateChange): `StatusBar.setBarStyle('light-content')` + `setBackgroundColor('#000000')` at mount, on every AppState→active, and on every navigation transition.
+4. **JS-level opaque overlay** (`StatusBarBackground` in App.tsx): absolute-positioned View with `height: useSafeAreaInsets().top`, `backgroundColor: '#000000'`, `zIndex: 999`, `elevation: 999`, `pointerEvents: 'none'` — rendered LAST inside the providers tree. **This is the layer that actually wins on Android 15**, since edge-to-edge makes the real system bar transparent and everything below visible.
+
+**Rejected:**
+- Single `<StatusBar style="light" />` — react-native-screens overrides during transitions.
+- Disabling edge-to-edge — not supported on Android 15+.
+- `react-native-edge-to-edge` library — extra dependency, still needs an inset strip.
+
+**Reasoning:** The user had asked "permanently black status bar" 4 times across 4 sessions; each prior fix worked partially and broke elsewhere. Root cause is Android 15 edge-to-edge: the app always draws *through* the status bar region and whatever is behind it (BrandedBackground cream, auth gradient) bleeds in. The overlay solves this definitively because it's an opaque rectangle in our own render tree. Defense-in-depth: pre-Android 15 → native theme wins; Android 15+ → overlay wins.
+
+## Decision 038: Hakkımda Daha Fazlası — 9 New Lifestyle Fields
+**Date:** 2026-04-12
+**Decision:** Add 9 optional lifestyle fields to `UserProfile` (shared types) and surface them in EditProfileScreen's "Hakkımda Daha Fazlası" section. All are string enums except `languages` which is multi-select.
+
+| Emoji | Field | Type | Values |
+|---|---|---|---|
+| 🏠 | `livingSituation` | enum | alone / roommate / family |
+| 🗣️ | `languages` | **enum[]** (multi) | turkish / english / german / french / spanish / arabic / russian / other |
+| 🌙 | `sleepSchedule` | enum | early_bird / night_owl / flexible |
+| 🍽️ | `diet` | enum | omnivore / vegetarian / vegan / halal / gluten_free |
+| 💼 | `workStyle` | enum | office / remote / hybrid / student / unemployed |
+| 🌍 | `travelFrequency` | enum | often / sometimes / rarely / wants_to |
+| 📏 | `distancePreference` | enum | close / city / far |
+| 💬 | `communicationStyle` | enum | constant_texter / occasional_texter / in_person |
+| 🚬 | `hookah` | enum | yes / sometimes / never |
+
+**Storage:** Mobile persists Turkish display strings directly (e.g. `"Yalnız yaşıyorum"`), consistent with legacy extended fields. Enum constants in `shared/types/user.ts` are scaffolding for future backend normalization but are not currently enforced at the write boundary.
+
+**Rejected:**
+- Storing enum keys + translating at display — would require migrating all legacy extended fields. Out of scope.
+- Single-select for languages — user explicitly asked for multi-select.
+
+**Reasoning:** These fields deepen profile richness for compatibility, search filters, and "ortak noktalar" cards. Multi-select languages is essential because bilingualism is common in LUMA's target market.
+
+## Decision 039: Profile Gücü — Weighted Scoring (Not Field-Count Averaging)
+**Date:** 2026-04-12
+**Decision:** `calculateCompletion()` uses **fixed weight per criterion**, summing to exactly 100%.
+
+| Criterion | Weight | Condition |
+|---|---|---|
+| Photos | 15% | `>= 2` |
+| Bio | 10% | min length |
+| İlgi Alanları | 10% | `>= 1` |
+| Hedefim | 8% | set |
+| Kişilik Testi | 8% | `personalityType != null` |
+| Prompt'larım | 8% | `>= 1` |
+| Profil Videosu | 8% | `!= null` |
+| Sevdiğin Mekanlar | 5% | `>= 1` |
+| Temel Bilgiler | 8% | firstName + birthDate + gender + city + height all filled |
+| Meslek & Eğitim | 5% | job OR education |
+| HDF legacy (12 fields) | 8% | at least 5 filled |
+| HDF new (9 fields) | 7% | at least 3 filled |
+
+**Uyum Analizi is no longer part of profile strength.** The earlier 95%-cap-if-incomplete rule has been removed — Uyum Analizi now only affects matching.
+
+**Rejected:**
+- Equal-weight field counting (old `filled/22 * 100`) — rewards filling 20 tiny fields over one big "photos" field.
+- Separate backend computation — keep client-side so it updates live as the user edits.
+
+**Reasoning:** Photos drive match rates disproportionally; single-value checkbox fields are low-signal individually but high-signal in aggregate — hence "at least N of M" bucket thresholds. Users get "I need more photos" guidance rather than "fill every checkbox."

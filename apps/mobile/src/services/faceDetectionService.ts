@@ -1,6 +1,7 @@
 // Face detection service for profile photo validation
 // Uses @infinitered/react-native-mlkit-face-detection for on-device ML Kit face detection
-// Falls back gracefully if the native module is not yet available (pre-build)
+// Gracefully no-ops when the native module is unavailable (Expo Go, dev client
+// without the native binary, or any environment where the module failed to link).
 
 import { Alert } from 'react-native';
 
@@ -10,44 +11,67 @@ interface FaceDetectionResult {
   error?: string;
 }
 
+// ─── Native module bootstrap ────────────────────────────────────────────────
+//
+// Load the MLKit face detection native module via require() wrapped in try/catch
+// so that Expo Go / unlinked builds don't crash at startup. In those environments
+// `FaceDetection` stays null and the validators short-circuit to a "pass" result
+// so the onboarding flow is not blocked. Production EAS builds include the
+// native binary and get full detection.
+
+interface FaceDetectionModule {
+  detectFaces: (uri: string) => Promise<Array<unknown>>;
+}
+
+let FaceDetection: FaceDetectionModule | null = null;
+
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const mod = require('@infinitered/react-native-mlkit-face-detection');
+  const candidate = (mod?.default ?? mod) as FaceDetectionModule | undefined;
+  if (candidate && typeof candidate.detectFaces === 'function') {
+    FaceDetection = candidate;
+  } else if (__DEV__) {
+    console.log('[FaceDetection] MLKit module shape unexpected; skipping.');
+  }
+} catch (e: unknown) {
+  if (__DEV__) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.log(`[FaceDetection] MLKit native module not available: ${msg}`);
+  }
+}
+
 /**
  * Detect faces in a static image URI using ML Kit.
  *
- * Returns { hasFace, faceCount } on success. If the native module is not yet
- * linked (e.g. before the next EAS build), the function returns hasFace: true
- * so that the photo upload flow is not blocked.
+ * Returns { hasFace, faceCount } on success. If the native module is not
+ * available (Expo Go, unlinked build), returns hasFace: true so the photo
+ * upload flow is not blocked.
  */
 const detectFaces = async (uri: string): Promise<FaceDetectionResult> => {
+  if (!FaceDetection) {
+    return {
+      hasFace: true,
+      faceCount: 0,
+      error: 'native_module_unavailable',
+    };
+  }
+
   try {
-    // Dynamic import so the app does not crash if the native module is missing
-    const FaceDetection = await import(
-      '@infinitered/react-native-mlkit-face-detection'
-    );
-
-    const detector = FaceDetection.default ?? FaceDetection;
-
-    // Use the static image detection API
-    const faces = await detector.detectFaces(uri);
-
+    const faces = await FaceDetection.detectFaces(uri);
     return {
       hasFace: Array.isArray(faces) && faces.length > 0,
       faceCount: Array.isArray(faces) ? faces.length : 0,
     };
   } catch (error: unknown) {
-    // If the native module is not installed/linked yet, allow the photo through
-    // and log a warning so developers know the module needs to be set up
     const message =
       error instanceof Error ? error.message : 'Unknown face detection error';
 
     if (__DEV__) {
-      console.warn(
-        '[FaceDetection] Native module not available. ' +
-          'Install @infinitered/react-native-mlkit-face-detection and rebuild. ' +
-          `Error: ${message}`,
-      );
+      console.warn(`[FaceDetection] detectFaces failed: ${message}`);
     }
 
-    // Graceful degradation: allow the photo when the module is unavailable
+    // Graceful degradation: allow the photo when detection errors
     return {
       hasFace: true,
       faceCount: 0,

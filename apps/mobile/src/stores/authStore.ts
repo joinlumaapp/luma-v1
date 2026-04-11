@@ -40,6 +40,8 @@ interface AuthState {
   isLoading: boolean;
   isOnboarded: boolean;
   hasStartedOnboarding: boolean;
+  /** Shown once on first MainTabs landing after selfie success — celebratory popup */
+  showWelcomeBonus: boolean;
   user: AuthUser | null;
   trialExpiresAt: number | null;
   error: string | null;
@@ -63,6 +65,7 @@ interface AuthState {
   setTokens: (accessToken: string, refreshToken: string) => void;
   setVerified: (isVerified: boolean) => void;
   setOnboarded: (isOnboarded: boolean) => void;
+  setShowWelcomeBonus: (visible: boolean) => void;
   setStartedOnboarding: (started: boolean) => void;
   setLoading: (isLoading: boolean) => void;
   setUser: (user: AuthUser) => void;
@@ -85,6 +88,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: false,
   isOnboarded: false,
   hasStartedOnboarding: false,
+  showWelcomeBonus: false,
   user: null,
   trialExpiresAt: null,
   error: null,
@@ -659,6 +663,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   setOnboarded: (isOnboarded) =>
     set({ isOnboarded }),
+
+  setShowWelcomeBonus: (visible) =>
+    set({ showWelcomeBonus: visible }),
 
   setStartedOnboarding: (started) =>
     set({ hasStartedOnboarding: started }),

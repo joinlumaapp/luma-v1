@@ -1,12 +1,12 @@
 // Navigation entry point
 // Deep link yapılandırması, bildirim yönlendirmesi ve in-app banner entegrasyonu
 
-import React, { useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
+import { Platform, StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import type { NavigationContainerRef } from '@react-navigation/native';
 import { RootNavigator } from './RootNavigator';
 import type { RootStackParamList } from './types';
-import { useTheme } from '../theme/ThemeContext';
 import { useAuthStore } from '../stores/authStore';
 import { linkingConfig } from '../services/deepLinkService';
 import { useNotificationHandler } from '../hooks/useNotificationHandler';
@@ -17,7 +17,6 @@ import { NetworkProvider } from '../providers/NetworkProvider';
 export let navigationRef: NavigationContainerRef<RootStackParamList> | null = null;
 
 export const Navigation: React.FC = () => {
-  const { isDark, colors } = useTheme();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const navRef = useRef<NavigationContainerRef<RootStackParamList>>(null);
 
@@ -27,26 +26,37 @@ export const Navigation: React.FC = () => {
     isAuthenticated,
   });
 
+  // Transparent navigation theme — app-owned backgrounds render through,
+  // while dark=true forces light-content status bar across every screen.
   const navigationTheme = useMemo(
     () => ({
-      dark: true, // Always dark — ensures light-content status bar across all screens
+      dark: true,
       colors: {
-        primary: colors.primary,
-        background: colors.background,
-        card: colors.surface,
-        text: colors.text,
-        border: colors.border,
-        notification: colors.secondary,
+        primary: '#8B5CF6',
+        background: 'transparent',
+        card: 'transparent',
+        text: '#000000',
+        border: 'transparent',
+        notification: '#EC4899',
       },
       fonts: {
-        regular: { fontFamily: 'Poppins_500Medium', fontWeight: '500' as const },
-        medium: { fontFamily: 'Poppins_500Medium', fontWeight: '500' as const },
+        regular: { fontFamily: 'Poppins_600SemiBold', fontWeight: '600' as const },
+        medium: { fontFamily: 'Poppins_600SemiBold', fontWeight: '600' as const },
         bold: { fontFamily: 'Poppins_700Bold', fontWeight: '700' as const },
         heavy: { fontFamily: 'Poppins_800ExtraBold', fontWeight: '800' as const },
       },
     }),
-    [isDark, colors],
+    [],
   );
+
+  // Re-force the black status bar after every navigation transition so that
+  // react-native-screens can't silently flip it back to the system default.
+  const forceBlackStatusBar = useCallback(() => {
+    StatusBar.setBarStyle('light-content');
+    if (Platform.OS === 'android') {
+      StatusBar.setBackgroundColor('#000000');
+    }
+  }, []);
 
   return (
     <NetworkProvider>
@@ -57,7 +67,9 @@ export const Navigation: React.FC = () => {
         onReady={() => {
           // Global ref'i ayarla — hook dışı erişim için
           navigationRef = navRef.current;
+          forceBlackStatusBar();
         }}
+        onStateChange={forceBlackStatusBar}
       >
         <RootNavigator />
         {/* Ön plan bildirim banner'ı — tüm ekranların üzerinde */}

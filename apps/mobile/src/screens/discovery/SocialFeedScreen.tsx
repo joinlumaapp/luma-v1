@@ -1091,7 +1091,50 @@ export const SocialFeedScreen: React.FC = () => {
       </View>
   );
 
-  // Feed list header: story bar + create post card + filter tabs
+  // Weekly Stars — mock until leaderboard API is wired. Moved here from Profile
+  // so it sits between the story bar and the post composer on the feed.
+  const weeklyStars = [
+    { category: 'En Çok Beğenilen', emoji: '💜', name: 'Ayşe', value: '342 beğeni', color: '#8B5CF6' },
+    { category: 'En Çok Mesaj', emoji: '💬', name: 'Zeynep', value: '128 mesaj', color: '#EC4899' },
+    { category: 'En Uyumlu', emoji: '⭐', name: 'Elif', value: '%96 uyum', color: '#F59E0B' },
+  ];
+
+  const weeklyStarsSection = (
+    <View style={starsStyles.section}>
+      <Text style={starsStyles.title}>⭐ Haftanın Yıldızları ⭐</Text>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={starsStyles.scrollContent}
+      >
+        {weeklyStars.map((star) => (
+          <View key={star.category} style={starsStyles.card}>
+            <Text style={starsStyles.emoji}>{star.emoji}</Text>
+            <Text style={starsStyles.category}>{star.category}</Text>
+            <View style={[starsStyles.avatar, { backgroundColor: star.color }]}>
+              <Text style={starsStyles.avatarInitial}>{star.name[0]}</Text>
+            </View>
+            <Text style={starsStyles.name}>{star.name}</Text>
+            <Text style={starsStyles.value}>{star.value}</Text>
+          </View>
+        ))}
+      </ScrollView>
+
+      <TouchableOpacity
+        style={starsStyles.seeAllButton}
+        activeOpacity={0.7}
+        onPress={() => {
+          (navigation as unknown as { navigate: (s: string) => void }).navigate('WeeklyTop');
+        }}
+      >
+        <Text style={starsStyles.seeAllText}>Sıralamayı Gör</Text>
+        <Ionicons name="chevron-forward" size={14} color="#8B5CF6" />
+      </TouchableOpacity>
+    </View>
+  );
+
+  // Feed list header: story bar + weekly stars + create post card + filter tabs
   const feedListHeader = (
     <View>
       <StoryBarSection
@@ -1101,6 +1144,7 @@ export const SocialFeedScreen: React.FC = () => {
         onCreateStory={handleCreateStory}
         onViewStory={handleStoryView}
       />
+      {weeklyStarsSection}
       {listHeader}
     </View>
   );
@@ -1335,16 +1379,16 @@ const storySheetStyles = StyleSheet.create({
     flex: 1,
   },
   rowTitle: {
-    fontSize: 15,
+    fontSize: 19,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontWeight: '700',
   },
   rowSub: {
-    fontSize: 14,
+    fontSize: 18,
     color: colors.textTertiary,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontWeight: '700',
     marginTop: 1,
   },
 });
@@ -1379,10 +1423,10 @@ const createStyles = StyleSheet.create({
     elevation: 4,
   },
   placeholder: {
-    fontSize: 16,
+    fontSize: 20,
     color: colors.textTertiary,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontWeight: '700',
     marginBottom: spacing.lg,
   },
   iconRow: {
@@ -1395,9 +1439,93 @@ const createStyles = StyleSheet.create({
     flex: 1,
   },
   iconLabel: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontWeight: '700',
+  },
+});
+
+// ─── Weekly Stars Styles ──────────────────────────────────────
+
+const starsStyles = StyleSheet.create({
+  section: {
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  title: {
+    fontSize: 24,
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
+    color: '#1A1A2E',
+    textAlign: 'center',
+    marginBottom: 12,
+    marginHorizontal: spacing.lg,
+  },
+  scrollContent: {
+    paddingHorizontal: spacing.lg,
+    gap: 12,
+  },
+  card: {
+    width: 140,
+    backgroundColor: 'rgba(0,0,0,0.04)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.08)',
+    padding: 14,
+    alignItems: 'center',
+    gap: 6,
+  },
+  emoji: {
+    fontSize: 26,
+  },
+  category: {
+    fontSize: 17,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: 'rgba(0,0,0,0.65)',
+    textAlign: 'center',
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  avatarInitial: {
+    fontSize: 24,
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  name: {
+    fontSize: 18,
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
+    color: '#1A1A2E',
+    marginTop: 2,
+  },
+  value: {
+    fontSize: 17,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: 'rgba(0,0,0,0.65)',
+  },
+  seeAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    marginTop: 10,
+    marginHorizontal: spacing.lg,
+    paddingVertical: 8,
+  },
+  seeAllText: {
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#8B5CF6',
   },
 });
 
@@ -1411,8 +1539,8 @@ const styles = StyleSheet.create({
   headerArea: {
     backgroundColor: 'transparent',
     paddingHorizontal: spacing.lg,
-    paddingTop: 8,
-    paddingBottom: spacing.sm + 2,
+    paddingTop: 10,
+    paddingBottom: spacing.sm + 4,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -1420,8 +1548,14 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.divider ?? 'rgba(0,0,0,0.1)',
   },
   headerTitle: {
-    ...typography.h3,
-    color: colors.text,
+    fontSize: 32,
+    lineHeight: 38,
+    fontFamily: 'Poppins_800ExtraBold',
+    fontWeight: '800',
+    color: '#1A1A2E',
+    letterSpacing: 0.2,
+    includeFontPadding: false,
+    flexShrink: 1,
   },
   headerRight: {
     flexDirection: 'row',
@@ -1479,7 +1613,7 @@ const tabStyles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   tabTextActive: {
-    fontSize: 14,
+    fontSize: 18,
     color: '#FFFFFF',
     fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
@@ -1503,10 +1637,10 @@ const tabStyles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   tabText: {
-    fontSize: 14,
+    fontSize: 18,
     color: colors.textSecondary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });
 
@@ -1538,7 +1672,7 @@ const mediaCaptionStyles = StyleSheet.create({
     ...typography.body,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontWeight: '700',
   },
   cancelText: {
     ...typography.body,
@@ -1551,7 +1685,7 @@ const mediaCaptionStyles = StyleSheet.create({
   },
   submitButtonText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
@@ -1636,7 +1770,7 @@ const modalStyles = StyleSheet.create({
     ...typography.body,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontWeight: '700',
   },
   headerBadge: {
     flexDirection: 'row',
@@ -1647,12 +1781,12 @@ const modalStyles = StyleSheet.create({
     gap: 4,
   },
   headerBadgeEmoji: {
-    fontSize: 14,
+    fontSize: 18,
   },
   headerBadgeLabel: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontWeight: '700',
   },
   cancelText: {
     ...typography.body,
@@ -1662,7 +1796,7 @@ const modalStyles = StyleSheet.create({
     ...typography.body,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontWeight: '700',
   },
   submitTextDisabled: {
     opacity: 0.4,
@@ -1692,15 +1826,15 @@ const modalStyles = StyleSheet.create({
     flex: 1,
   },
   trackTitle: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontWeight: '700',
     color: colors.text,
   },
   trackArtist: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontWeight: '700',
     color: colors.textSecondary,
     marginTop: 1,
   },
@@ -1718,9 +1852,9 @@ const modalStyles = StyleSheet.create({
   },
   _addMusicText_removed: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontWeight: '700',
     color: palette.purple[500],
   },
   moodTagsRow: {
@@ -1737,9 +1871,9 @@ const modalStyles = StyleSheet.create({
     backgroundColor: colors.surfaceLight,
   },
   moodTagText: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontWeight: '700',
     color: colors.textSecondary,
   },
   textInput: {
@@ -1780,9 +1914,9 @@ const modalStyles = StyleSheet.create({
   },
   mediaRemoveText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontWeight: '700',
   },
   videoOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -1791,7 +1925,7 @@ const modalStyles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.2)',
   },
   videoOverlayText: {
-    fontSize: 18,
+    fontSize: 22,
     color: '#FFFFFF',
   },
   bottomBar: {
@@ -1817,13 +1951,13 @@ const modalStyles = StyleSheet.create({
     backgroundColor: colors.surfaceLight,
   },
   mediaButtonIcon: {
-    fontSize: 16,
+    fontSize: 20,
   },
   mediaButtonLabel: {
     ...typography.captionSmall,
     color: colors.textSecondary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
+    fontWeight: '700',
   },
   charCount: {
     ...typography.captionSmall,
@@ -1849,7 +1983,7 @@ const emptyStyles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   icon: {
-    fontSize: 28,
+    fontSize: 32,
   },
   title: {
     ...typography.h4,

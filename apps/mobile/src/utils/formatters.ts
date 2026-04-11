@@ -288,12 +288,15 @@ const SMOKING_LABELS: Record<string, string> = {
   sometimes: 'Bazen',
   OFTEN: 'Sık sık',
   often: 'Sık sık',
-  QUIT: 'Bıraktım',
-  quit: 'Bıraktım',
-  REGULAR: 'İçerim',
-  regular: 'İçerim',
-  TOLERATE: 'İçmez ama karışmaz',
-  tolerate: 'İçmez ama karışmaz',
+  QUIT: 'Bırakmaya çalışıyorum',
+  quit: 'Bırakmaya çalışıyorum',
+  TRYING_TO_QUIT: 'Bırakmaya çalışıyorum',
+  trying_to_quit: 'Bırakmaya çalışıyorum',
+  'trying to quit': 'Bırakmaya çalışıyorum',
+  REGULAR: 'Sık sık',
+  regular: 'Sık sık',
+  TOLERATE: 'İçmem',
+  tolerate: 'İçmem',
 };
 
 const SPORTS_LABELS: Record<string, string> = {
@@ -318,31 +321,35 @@ const CHILDREN_LABELS: Record<string, string> = {
   have: 'Var',
   HAS_CHILDREN: 'Var',
   has_children: 'Var',
-  NO_CHILDREN: 'Yok',
-  no_children: 'Yok',
-  WANT: 'İstiyor',
-  want: 'İstiyor',
-  WANTS_CHILDREN: 'İstiyor',
-  wants_children: 'İstiyor',
-  MAYBE: 'Belki',
-  maybe: 'Belki',
-  DONT_WANT: 'İstemiyor',
-  dont_want: 'İstemiyor',
-  DOESNT_WANT: 'İstemiyor',
-  doesnt_want: 'İstemiyor',
+  WANT: 'İstiyorum',
+  want: 'İstiyorum',
+  WANTS_CHILDREN: 'İstiyorum',
+  wants_children: 'İstiyorum',
+  DONT_WANT: 'İstemiyorum',
+  dont_want: 'İstemiyorum',
+  "don't want": 'İstemiyorum',
+  DOESNT_WANT: 'İstemiyorum',
+  doesnt_want: 'İstemiyorum',
+  OPEN_TO_IT: 'Açığım',
+  open_to_it: 'Açığım',
+  'open to it': 'Açığım',
+  MAYBE: 'Açığım',
+  maybe: 'Açığım',
 };
 
 const DRINKING_LABELS: Record<string, string> = {
-  NEVER: 'İçmem',
-  never: 'İçmem',
-  SOCIALLY: 'Sosyal',
-  socially: 'Sosyal',
+  NEVER: 'Asla',
+  never: 'Asla',
+  SOCIALLY: 'Sosyal ortamlarda',
+  socially: 'Sosyal ortamlarda',
   SOMETIMES: 'Bazen',
   sometimes: 'Bazen',
-  REGULAR: 'İçerim',
-  regular: 'İçerim',
-  REGULARLY: 'İçerim',
-  regularly: 'İçerim',
+  OFTEN: 'Sık sık',
+  often: 'Sık sık',
+  REGULAR: 'Sık sık',
+  regular: 'Sık sık',
+  REGULARLY: 'Sık sık',
+  regularly: 'Sık sık',
 };
 
 const INTENTION_TAG_LABELS: Record<string, string> = {
@@ -363,6 +370,57 @@ const PACKAGE_TIER_LABELS: Record<string, string> = {
   FREE: 'Ücretsiz',
   PREMIUM: 'Premium',
   SUPREME: 'Supreme',
+};
+
+const PETS_LABELS: Record<string, string> = {
+  NONE: 'Yok',
+  none: 'Yok',
+  NO_PETS: 'Yok',
+  no_pets: 'Yok',
+  CAT: 'Kedi',
+  cat: 'Kedi',
+  DOG: 'Köpek',
+  dog: 'Köpek',
+  OTHER: 'Diğer',
+  other: 'Diğer',
+  WANT_ONE: 'İstiyorum',
+  want_one: 'İstiyorum',
+  'want one': 'İstiyorum',
+  WANT: 'İstiyorum',
+  want: 'İstiyorum',
+};
+
+const EXERCISE_LABELS: Record<string, string> = {
+  NEVER: 'Hiç',
+  never: 'Hiç',
+  SOMETIMES: 'Bazen',
+  sometimes: 'Bazen',
+  OFTEN: 'Sık sık',
+  often: 'Sık sık',
+  REGULAR: 'Sık sık',
+  regular: 'Sık sık',
+  REGULARLY: 'Sık sık',
+  regularly: 'Sık sık',
+  DAILY: 'Her gün',
+  daily: 'Her gün',
+};
+
+const SEXUAL_ORIENTATION_LABELS: Record<string, string> = {
+  HETEROSEXUAL: 'Heteroseksüel',
+  heterosexual: 'Heteroseksüel',
+  STRAIGHT: 'Heteroseksüel',
+  straight: 'Heteroseksüel',
+  GAY: 'Gey',
+  gay: 'Gey',
+  LESBIAN: 'Gey',
+  lesbian: 'Gey',
+  BISEXUAL: 'Biseksüel',
+  bisexual: 'Biseksüel',
+  OTHER: 'Diğer',
+  other: 'Diğer',
+  PREFER_NOT_TO_SAY: 'Söylememeyi tercih ederim',
+  prefer_not_to_say: 'Söylememeyi tercih ederim',
+  'prefer not to say': 'Söylememeyi tercih ederim',
 };
 
 /** Translate gender enum to Turkish display label */
@@ -392,3 +450,15 @@ export const translateIntentionTag = (value: string | null | undefined): string 
 /** Translate package tier enum to Turkish display label */
 export const translatePackageTier = (value: string | null | undefined): string =>
   value ? PACKAGE_TIER_LABELS[value] ?? value : 'Ücretsiz';
+
+/** Translate pets enum to Turkish display label */
+export const translatePets = (value: string | null | undefined): string =>
+  value ? PETS_LABELS[value] ?? value : '';
+
+/** Translate exercise enum to Turkish display label */
+export const translateExercise = (value: string | null | undefined): string =>
+  value ? EXERCISE_LABELS[value] ?? value : '';
+
+/** Translate sexual orientation enum to Turkish display label */
+export const translateSexualOrientation = (value: string | null | undefined): string =>
+  value ? SEXUAL_ORIENTATION_LABELS[value] ?? value : '';

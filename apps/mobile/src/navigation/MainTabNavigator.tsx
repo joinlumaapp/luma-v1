@@ -32,6 +32,7 @@ import { useChatStore } from '../stores/chatStore';
 import { useMatchStore } from '../stores/matchStore';
 import { useNotificationStore } from '../stores/notificationStore';
 import { NotificationPermissionModal } from '../components/notifications/NotificationPermissionModal';
+import { WelcomeBonusModal } from '../components/common/WelcomeBonusModal';
 import { PromotionModal } from '../components/premium/PromotionModal';
 import { usePresenceTracking } from '../hooks/usePresence';
 import { useTranslation } from 'react-i18next';
@@ -652,6 +653,7 @@ export const MainTabNavigator: React.FC = () => {
       onAllow={allowPermission}
       onDismiss={dismissPermissionModal}
     />
+    <WelcomeBonusModal />
     <IncomingCallOverlay />
     <MinimizedCallBar />
     <PromotionModal />

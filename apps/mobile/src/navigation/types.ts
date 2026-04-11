@@ -35,7 +35,6 @@ export type OnboardingStackParamList = {
   PromptSelection: undefined;
   Photos: undefined;
   SelfieVerification: undefined;
-  Welcome: undefined;
 };
 
 // -- Main Tabs (5 tabs) --

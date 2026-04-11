@@ -13,7 +13,7 @@ import {
   Platform,
   StatusBar as RNStatusBar,
 } from 'react-native';
-import { StatusBar, setStatusBarStyle, setStatusBarBackgroundColor, setStatusBarTranslucent } from 'expo-status-bar';
+import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 // expo-updates is only available in EAS builds, not in Expo Go dev client.
 // We lazy-import it in the error boundary restart handler to avoid crashes.
@@ -37,7 +37,7 @@ import { enableScreens } from 'react-native-screens';
 enableScreens(true);
 
 // ─── Static imports (no lazy loading overhead) ────────────────────────
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Navigation } from './src/navigation';
 import { ThemeProvider } from './src/theme/ThemeContext';
@@ -179,24 +179,6 @@ const errorStyles = StyleSheet.create({
   },
 });
 
-// ─── Global Status Bar ───────────────────────────────────────────────
-// Uses expo-status-bar which integrates properly with the Expo runtime
-// and does NOT conflict with react-native-screens native status bar
-// management. Previous attempts using react-native's StatusBar component
-// failed because react-native-screens overrides it at the native Android
-// level during screen transitions.
-//
-// Status bar: dark = DARK icons on cream/light status bar background
-setStatusBarStyle('dark');
-if (Platform.OS === 'android') {
-  setStatusBarBackgroundColor('#F5F0E8', false);
-  setStatusBarTranslucent(false);
-  // Also set via RN StatusBar for edge-to-edge compatibility
-  RNStatusBar.setBackgroundColor('#F5F0E8');
-  RNStatusBar.setBarStyle('dark-content');
-  RNStatusBar.setTranslucent(false);
-}
-
 // ─── Network Monitor ──────────────────────────────────────────────────
 function NetworkMonitor(): null {
   const { showToast } = useToast();
@@ -332,6 +314,34 @@ const splashStyles = StyleSheet.create({
   },
 });
 
+// ─── Status Bar Background (Android 15 edge-to-edge fix) ─────────────
+// Expo SDK 54 + Android 15 enforce edge-to-edge, which means the Android
+// theme's `android:statusBarColor` is ignored and the app draws behind the
+// system status bar. We paint our own black strip over the status bar
+// inset so the icons (set via expo-status-bar style="light") always sit
+// on solid black, matching the permanent dark status bar the user wants.
+function StatusBarBackground(): React.JSX.Element {
+  const insets = useSafeAreaInsets();
+  return (
+    <View
+      pointerEvents="none"
+      style={[statusBarBgStyles.overlay, { height: insets.top }]}
+    />
+  );
+}
+
+const statusBarBgStyles = StyleSheet.create({
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#000000',
+    zIndex: 999,
+    elevation: 999,
+  },
+});
+
 // ─── App Version Gate ────────────────────────────────────────────────
 function AppVersionGate(): React.JSX.Element | null {
   const {
@@ -378,12 +388,25 @@ export default function App(): React.JSX.Element {
     Poppins_900Black,
   });
 
+  // Force black status bar immediately on app open + whenever the app
+  // returns from background. Belt-and-suspenders with the native theme
+  // plugin and the edge-to-edge overlay, so at least one layer always wins.
   useEffect(() => {
+    const forceBlackStatusBar = (): void => {
+      RNStatusBar.setBarStyle('light-content');
+      if (Platform.OS === 'android') {
+        RNStatusBar.setBackgroundColor('#000000');
+        RNStatusBar.setTranslucent(false);
+      }
+    };
+
+    forceBlackStatusBar();
     analyticsService.initialize().catch(() => {});
     analyticsService.track(ANALYTICS_EVENTS.APP_OPENED);
 
     const handleAppStateChange = (nextState: AppStateStatus): void => {
       if (nextState === 'active') {
+        forceBlackStatusBar();
         analyticsService.track(ANALYTICS_EVENTS.APP_OPENED);
         // Check trial expiry whenever app comes to foreground
         useAuthStore.getState().checkTrialExpiry();
@@ -408,12 +431,14 @@ export default function App(): React.JSX.Element {
         <SafeAreaProvider>
           <ThemeProvider>
             <ToastProvider>
-              <StatusBar style="dark" backgroundColor="#F5F0E8" />
+              <StatusBar style="light" translucent backgroundColor="#000000" />
               <AppVersionGate />
               <NetworkMonitor />
               <NotificationInitializer />
               <TrialExpiryChecker />
               <Navigation />
+              {/* Must be LAST so it paints over every screen's top inset */}
+              <StatusBarBackground />
             </ToastProvider>
           </ThemeProvider>
         </SafeAreaProvider>
@@ -425,6 +450,9 @@ export default function App(): React.JSX.Element {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#E8959E',
+    // Was pink (#E8959E) from the splash era — bled through during screen
+    // transitions on every navigator. Cream matches the app's base theme
+    // so back-swipes and stack pops no longer flash a pink strip.
+    backgroundColor: '#F5F0E8',
   },
 });

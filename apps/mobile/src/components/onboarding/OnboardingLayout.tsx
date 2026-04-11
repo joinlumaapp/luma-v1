@@ -50,6 +50,8 @@ interface OnboardingLayoutProps {
   onSkip?: () => void;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  /** When false, content area is a fixed View (caller manages its own scrolling) */
+  scrollable?: boolean;
 }
 
 export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
@@ -60,6 +62,7 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
   onSkip,
   children,
   footer,
+  scrollable = true,
 }) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
@@ -105,16 +108,22 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
         )}
       </View>
 
-      {/* Content — scrollable so it never hides behind footer */}
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.contentInner}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        bounces={false}
-      >
-        {children}
-      </ScrollView>
+      {/* Content — scrollable by default; caller can opt out for fixed layouts */}
+      {scrollable ? (
+        <ScrollView
+          style={styles.content}
+          contentContainerStyle={styles.contentInner}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          bounces={false}
+        >
+          {children}
+        </ScrollView>
+      ) : (
+        <View style={[styles.content, styles.contentInner, styles.contentFixed]}>
+          {children}
+        </View>
+      )}
 
       {/* Footer */}
       {footer && (
@@ -242,6 +251,10 @@ const styles = StyleSheet.create({
   contentInner: {
     paddingBottom: 24,
     flexGrow: 1,
+  },
+  contentFixed: {
+    // When scrollable=false, children should fill available height
+    flex: 1,
   },
   footer: {
     paddingHorizontal: 24,
