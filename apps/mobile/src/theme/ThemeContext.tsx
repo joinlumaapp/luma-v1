@@ -1,7 +1,7 @@
-// LUMA Theme Context — always light theme
+// LUMA Theme Context — always dark theme (2026-04-11)
 
 import React, { createContext, useContext, useMemo } from 'react';
-import { creamTheme, type ThemeColors, type ThemeMode } from './colors';
+import { darkTheme, type ThemeColors, type ThemeMode } from './colors';
 
 interface ThemeContextType {
   /** Whether the current resolved theme is dark */
@@ -10,24 +10,24 @@ interface ThemeContextType {
   themeMode: ThemeMode;
   /** The resolved color tokens for the current theme */
   colors: ThemeColors;
-  /** No-op: theme is always light */
+  /** No-op: theme is always dark */
   setThemeMode: (mode: ThemeMode) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-  isDark: false,
-  themeMode: 'light',
-  colors: creamTheme,
+  isDark: true,
+  themeMode: 'dark',
+  colors: darkTheme,
   setThemeMode: () => {},
 });
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Always light — dark mode and system preference are not supported
+  // Always dark — LUMA is a dark-first app
   const value = useMemo<ThemeContextType>(
     () => ({
-      isDark: false,
-      themeMode: 'light',
-      colors: creamTheme,
+      isDark: true,
+      themeMode: 'dark',
+      colors: darkTheme,
       setThemeMode: () => {},
     }),
     [],

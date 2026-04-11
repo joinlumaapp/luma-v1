@@ -877,8 +877,8 @@ const fallbackStyles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: 'rgba(255,255,255,0.6)',
     textAlign: 'center',
     paddingHorizontal: 40,
@@ -922,8 +922,8 @@ const controlStyles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: 'rgba(255,255,255,0.6)',
   },
 });
@@ -1091,16 +1091,16 @@ const searchStyles = StyleSheet.create({
   },
   searchingText: {
     fontSize: 18,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: '#FFFFFF',
     textAlign: 'center',
     minWidth: 220,
   },
   timer: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: 'rgba(255,255,255,0.3)',
     marginTop: spacing.sm,
   },
@@ -1116,8 +1116,8 @@ const searchStyles = StyleSheet.create({
   },
   cancelText: {
     fontSize: 15,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: 'rgba(255,255,255,0.7)',
   },
 });
@@ -1150,8 +1150,8 @@ const connStyles = StyleSheet.create({
   },
   remoteVideoSubLabel: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: 'rgba(255,255,255,0.4)',
   },
   // Top overlay — timer only
@@ -1189,15 +1189,15 @@ const connStyles = StyleSheet.create({
   },
   rateText: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: 'rgba(255,255,255,0.6)',
     marginLeft: 4,
   },
   freeText: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: '#34D399',
     marginLeft: 4,
   },
@@ -1213,8 +1213,8 @@ const connStyles = StyleSheet.create({
   },
   rateNoticeText: {
     fontSize: 14,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: '#FBBF24',
   },
   // Bottom controls
@@ -1267,8 +1267,8 @@ const endedStyles = StyleSheet.create({
   },
   subText: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
     color: 'rgba(255,255,255,0.4)',
   },
 });

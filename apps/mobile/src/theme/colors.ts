@@ -440,5 +440,5 @@ export const opacity = {
   intense: 0.85,
 } as const;
 
-// Default theme is cream
-export const colors: ThemeColors = creamTheme;
+// Default theme is dark — LUMA is a dark-first app (2026-04-11)
+export const colors: ThemeColors = darkTheme;

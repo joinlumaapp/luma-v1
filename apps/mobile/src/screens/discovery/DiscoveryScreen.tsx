@@ -56,7 +56,7 @@ import { HeartAnimation } from '../../components/animations/HeartAnimation';
 import { DiscoveryCard } from '../../components/cards/DiscoveryCard';
 import { CompatibilityBottomSheet } from '../../components/discovery/CompatibilityBottomSheet';
 import { TrialBanner } from '../../components/premium/TrialBanner';
-import { LikedYouTeaser, MatchUpgradeNudge, SupremePromoBanner } from '../../components/premium/SmartUpgradePrompts';
+import { MatchUpgradeNudge } from '../../components/premium/SmartUpgradePrompts';
 import { discoveryService, type BoostStatusResponse, type DailyMatchResponse } from '../../services/discoveryService';
 import type { LoginStreakResponse } from '../../services/discoveryService';
 import { DailyMatchCard } from '../../components/discovery/DailyMatchCard';

@@ -213,10 +213,19 @@ export const OTPVerificationScreen: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const maskedPhone = phoneNumber.replace(
-    /(\+\d{2})(\d{3})(\d{3})(\d{4})/,
-    '$1 $2 *** $4'
-  );
+  // Mask middle digits for any international format.
+  // Shows country code + first group + *** + last 4 digits.
+  // Works for +90 5XX XXX XXXX, +1 5XX XXX XXXX, +44 7XXX XXXXXX, etc.
+  const maskedPhone = (() => {
+    if (!phoneNumber) return '';
+    const match = phoneNumber.match(/^(\+\d{1,3})\s?(\d+)$/);
+    if (!match) return phoneNumber;
+    const [, country, rest] = match;
+    if (rest.length <= 4) return `${country} ${rest}`;
+    const last4 = rest.slice(-4);
+    const head = rest.slice(0, Math.max(0, Math.min(3, rest.length - 4)));
+    return `${country} ${head} *** ${last4}`.trim();
+  })();
 
   const remainingResends = maxResendAttempts - resendCount;
   const isCodeComplete = !code.includes('');

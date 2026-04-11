@@ -60,7 +60,7 @@ export const SelfieVerificationScreen: React.FC = () => {
   }, [permission, requestPermission]);
 
   // Get the first profile photo for the reference display
-  const profilePhotos = useProfileStore((state) => state.profile.photos);
+  const profilePhotos = useProfileStore((state) => state.profile.photos ?? []);
   const firstProfilePhoto = profilePhotos.length > 0 ? profilePhotos[0] : null;
 
   /**

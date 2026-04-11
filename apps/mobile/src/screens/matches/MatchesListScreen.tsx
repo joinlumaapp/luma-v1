@@ -32,6 +32,7 @@ import { useChatStore } from '../../stores/chatStore';
 import { getAllConversationMeta } from '../../services/chatPersistence';
 import { profileService } from '../../services/profileService';
 import type { ProfileVisitor } from '../../services/profileService';
+import api from '../../services/api';
 import { SlideIn } from '../../components/animations/SlideIn';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 import { formatMatchActivity, formatActivityStatus } from '../../utils/formatters';
@@ -748,18 +749,14 @@ export const MatchesListScreen: React.FC = () => {
   const [viewers, setViewers] = useState<ProfileVisitor[]>([]);
   const [viewersCount, setViewersCount] = useState(0);
   const [likesYouCount, setLikesYouCount] = useState(0);
-  // TODO: Replace with API call when follower endpoint is ready
   const [followersCount, setFollowersCount] = useState(0);
   const [followers, setFollowers] = useState<FollowerItem[]>([]);
-  // Suppress unused warnings — setters will be used when API is integrated
-  void setFollowersCount;
-  void setFollowers;
   const [isRefreshing, setIsRefreshing] = useState(false);
   const tabScrollRef = useRef<ScrollView>(null);
   const packageTier = useAuthStore((s) => s.user?.packageTier ?? 'FREE');
   const isPremium = ['PREMIUM', 'SUPREME'].includes(packageTier);
 
-  // Fetch profile visitors + likes-you count
+  // Fetch profile visitors + likes-you count + followers
   useEffect(() => {
     const fetchViewers = async () => {
       const data = await profileService.getProfileVisitors();
@@ -779,7 +776,36 @@ export const MatchesListScreen: React.FC = () => {
       }
     };
     fetchLikesCount();
-  }, []);
+
+    // Fetch followers list for Takipçiler tab
+    const fetchFollowers = async () => {
+      try {
+        const res = await api.get<Array<{
+          userId: string;
+          name?: string;
+          firstName?: string;
+          photoUrl?: string | null;
+          avatarUrl?: string | null;
+          followedAt?: string;
+        }>>('/users/me/followers');
+        const list = Array.isArray(res.data) ? res.data : [];
+        const mapped: FollowerItem[] = list.map((f) => ({
+          id: f.userId,
+          name: f.name ?? f.firstName ?? 'Luma kullanıcısı',
+          photoUrl: f.photoUrl ?? f.avatarUrl ?? null,
+          followedAt: f.followedAt ?? new Date().toISOString(),
+          isBlurred: !isPremium,
+        }));
+        setFollowers(mapped);
+        setFollowersCount(mapped.length);
+      } catch {
+        // Silent fail — keep empty state
+        setFollowers([]);
+        setFollowersCount(0);
+      }
+    };
+    fetchFollowers();
+  }, [isPremium]);
 
   // Fetch matches immediately on mount — no InteractionManager deferral
   // since lazy:false pre-mounts all tabs, data should load eagerly

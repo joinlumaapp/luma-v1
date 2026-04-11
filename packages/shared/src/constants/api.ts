@@ -45,6 +45,13 @@ export const API_ROUTES = {
     GET_FEED: '/discovery/feed',
     SWIPE: '/discovery/swipe',
     UNDO: '/discovery/undo',
+    SEND_GREETING: '/discovery/send-greeting',
+  },
+  // Call history — voice/video call log
+  CALL_HISTORY: {
+    GET_ALL: '/call-history',
+    GET_ONE: '/call-history/:callId',
+    DELETE: '/call-history/:callId',
   },
   // Subsystem 9: Matches
   MATCHES: {

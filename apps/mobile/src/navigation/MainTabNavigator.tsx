@@ -6,7 +6,7 @@
 //   deferred mount for heavy sub-screens (chat, edit profile, etc.)
 
 import React, { useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, Platform, Animated } from 'react-native';
+import { StyleSheet, View, Text, Animated } from 'react-native';
 import Reanimated, {
   useSharedValue,
   useAnimatedStyle,
@@ -26,8 +26,7 @@ import type {
   LiveStackParamList,
   ProfileStackParamList,
 } from './types';
-import { darkTheme } from '../theme/colors';
-import { spacing, layout, borderRadius } from '../theme/spacing';
+import { borderRadius } from '../theme/spacing';
 import { typography } from '../theme/typography';
 import { useChatStore } from '../stores/chatStore';
 import { useMatchStore } from '../stores/matchStore';
@@ -128,10 +127,8 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
  * when the user taps a tab — whether switching to it or re-pressing it.
  * Also triggers haptic feedback (Impact.Light) on every tab press.
  */
-function createTabResetListener(
-  navigation: { getState?: () => { routes: { name: string; state?: unknown }[] }; dispatch: (action: unknown) => void },
-  route: { name: string },
-) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function createTabResetListener(navigation: any, route: { name: string }) {
   return {
     tabPress: (e: { preventDefault: () => void }) => {
       // Haptic feedback on every tab press
@@ -147,9 +144,9 @@ function createTabResetListener(
           CommonActions.reset({
             ...tabState,
             routes: tabState.routes.map((r: { name: string; state?: unknown }) =>
-              r.name === route.name ? { ...r, state: undefined } : r
+              r.name === route.name ? { ...r, state: undefined } : r,
             ),
-          })
+          }),
         );
       }
     },
@@ -267,9 +264,7 @@ const DiscoveryStackNavigator: React.FC = React.memo(() => (
     screenOptions={{
       headerShown: false,
       animation: 'slide_from_right',
-      statusBarAnimation: 'none',
       statusBarStyle: 'light',
-      statusBarColor: '#08080F',
     }}
   >
     <DiscoveryStack.Screen name="Discovery" component={DiscoveryScreen} />
@@ -338,9 +333,7 @@ const MatchesStackNavigator: React.FC = React.memo(() => (
     screenOptions={{
       headerShown: false,
       animation: 'slide_from_right',
-      statusBarAnimation: 'none',
       statusBarStyle: 'light',
-      statusBarColor: '#08080F',
     }}
   >
     <MatchesStack.Screen name="MatchesList" component={MatchesListScreen} />
@@ -435,9 +428,7 @@ const FeedStackNavigator: React.FC = React.memo(() => (
     screenOptions={{
       headerShown: false,
       animation: 'slide_from_right',
-      statusBarAnimation: 'none',
       statusBarStyle: 'light',
-      statusBarColor: '#08080F',
     }}
   >
     <FeedStack.Screen name="SocialFeed" component={SocialFeedScreen} />
@@ -468,9 +459,7 @@ const LiveStackNavigator: React.FC = React.memo(() => (
   <LiveStack.Navigator
     screenOptions={{
       headerShown: false,
-      statusBarAnimation: 'none',
       statusBarStyle: 'light',
-      statusBarColor: '#08080F',
     }}
   >
     <LiveStack.Screen name="Live" component={LiveScreen} />
@@ -486,9 +475,7 @@ const ProfileStackNavigator: React.FC = React.memo(() => (
     screenOptions={{
       headerShown: false,
       animation: 'slide_from_right',
-      statusBarAnimation: 'none',
       statusBarStyle: 'light',
-      statusBarColor: '#08080F',
     }}
   >
     <ProfileStack.Screen name="Profile" component={ProfileScreen} />
@@ -676,6 +663,15 @@ const styles = StyleSheet.create({
   tabIconContainer: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // Active tab indicator dot under the icon
+  tabIndicator: {
+    position: 'absolute',
+    bottom: -6,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#8B5CF6',
   },
   // Unread message badge
   unreadBadge: {
