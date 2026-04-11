@@ -35,7 +35,7 @@ import { WelcomeScreen } from '../screens/onboarding/WelcomeScreen';
 const Stack = createNativeStackNavigator<OnboardingStackParamList>();
 
 // Cream background for all onboarding screens
-const ONBOARDING_BG = '#08080F';
+const ONBOARDING_BG = '#F5F0E8';
 
 // Ordered screen names for reference (used by OnboardingLayout step/totalSteps)
 // Total: 12 content screens. Welcome is a celebratory final step, not counted in progress.

@@ -13,24 +13,33 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, palette, surfaces } from '../../theme/colors';
+import { palette, surfaces } from '../../theme/colors';
 import { BrandedBackground } from '../common/BrandedBackground';
 
-// Onboarding-specific cream theme colors
+// Onboarding-specific cream/light theme colors.
+// HARDCODED (do not follow global `colors` export which is darkTheme).
+// Auth/onboarding flows intentionally use a light theme with dark text.
+//
+// Background/button/selection values preserved from the pre-flip cream theme
+// (`colors.text` used to be `#2C1810` dark brown). Only the *text* colors
+// here are new — they now default to dark navy for better contrast.
 export const onboardingColors = {
-  background: surfaces.cream.background,
-  surface: surfaces.cream.surface1,
-  surfaceBorder: surfaces.cream.surface3,
-  text: colors.text,
-  textSecondary: colors.textSecondary,
-  textTertiary: palette.gray[400],
-  selectedBg: colors.text,
+  // Surfaces & borders — unchanged cream theme
+  background: surfaces.cream.background,   // #F5F0E8 cream
+  surface: surfaces.cream.surface1,         // #FFFFFF card bg
+  surfaceBorder: surfaces.cream.surface3,   // #F0EBE3 subtle border
+  // Text colors — dark navy on cream for readability
+  text: '#1A1A2E',                           // titles & strong body
+  textSecondary: 'rgba(0,0,0,0.6)',          // subtitles / hints
+  textTertiary: 'rgba(0,0,0,0.4)',           // placeholders
+  // Button / selection fills — preserved dark brown from original cream theme
+  selectedBg: '#2C1810',
   selectedText: palette.white,
   checkGreen: palette.success,
-  buttonBg: colors.text,
+  buttonBg: '#2C1810',
   buttonText: palette.white,
-  progressFill: colors.text,
-  progressBg: colors.border,
+  progressFill: '#2C1810',
+  progressBg: '#E8E0D4',
 } as const;
 
 interface OnboardingLayoutProps {

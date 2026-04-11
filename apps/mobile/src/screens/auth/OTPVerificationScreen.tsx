@@ -250,7 +250,7 @@ export const OTPVerificationScreen: React.FC = () => {
           accessibilityLabel="Geri"
           accessibilityRole="button"
         >
-          <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+          <Ionicons name="chevron-back" size={24} color="#1A1A2E" />
         </TouchableOpacity>
       </View>
 
