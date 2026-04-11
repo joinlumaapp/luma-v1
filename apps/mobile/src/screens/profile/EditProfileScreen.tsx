@@ -1338,7 +1338,7 @@ export const EditProfileScreen: React.FC = () => {
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                 {profile.interestTags.map((tag) => (
                   <View key={tag} style={{
-                    backgroundColor: '#E0F2FE',
+                    backgroundColor: 'rgba(139,92,246,0.15)',
                     borderRadius: 20,
                     paddingHorizontal: 12,
                     paddingVertical: 6,
@@ -1616,7 +1616,7 @@ const styles = StyleSheet.create({
   photoImage: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#F0F0F0',
+    backgroundColor: 'rgba(255,255,255,0.06)',
   },
   photoRemoveButton: {
     position: 'absolute',

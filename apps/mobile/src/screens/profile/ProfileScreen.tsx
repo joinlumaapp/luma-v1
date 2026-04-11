@@ -967,7 +967,7 @@ export const ProfileScreen: React.FC = () => {
               key={field.label}
               style={styles.hakkimdaCell}
               activeOpacity={0.7}
-              onPress={field.isEmpty ? handleEditProfile : undefined}
+              onPress={handleEditProfile}
               disabled={!field.isEmpty}
             >
               <Text style={styles.hakkimdaCellIcon}>{field.icon}</Text>

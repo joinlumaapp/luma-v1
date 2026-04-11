@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     borderRadius: 24, backgroundColor: colors.surface,
     borderWidth: 1.5, borderColor: colors.surfaceBorder,
   },
-  chipSelected: { backgroundColor: '#E0F2FE', borderColor: '#93C5FD' },
+  chipSelected: { backgroundColor: 'rgba(139,92,246,0.15)', borderColor: '#93C5FD' },
   chipEmoji: { fontSize: 16 },
   chipText: { fontSize: 14, fontFamily: 'Poppins_500Medium', fontWeight: '500', color: colors.text },
   chipTextSelected: { color: '#1E40AF' },

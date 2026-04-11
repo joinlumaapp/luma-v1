@@ -57,7 +57,7 @@ const PackCard: React.FC<{
 const cardStyles = StyleSheet.create({
   card: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: borderRadius.lg,
     borderWidth: 1.5,
     borderColor: '#E5E7EB',
@@ -70,7 +70,7 @@ const cardStyles = StyleSheet.create({
   },
   cardSelected: {
     borderColor: palette.purple[500],
-    backgroundColor: '#FAF5FF',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 2,
   },
   count: {
@@ -318,7 +318,7 @@ export const JetonMarketScreen: React.FC = () => {
 const s = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255,255,255,0.06)',
   },
   container: {
     flex: 1,
@@ -359,7 +359,7 @@ const s = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     justifyContent: 'center',
     alignItems: 'center',
   },
