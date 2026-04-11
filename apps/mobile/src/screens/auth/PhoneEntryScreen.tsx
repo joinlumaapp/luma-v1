@@ -145,7 +145,7 @@ export const PhoneEntryScreen: React.FC = () => {
             accessibilityLabel="Geri"
             accessibilityRole="button"
           >
-            <Ionicons name="arrow-back" size={22} color={onboardingColors.text} />
+            <Ionicons name="chevron-back" size={24} color={onboardingColors.text} />
           </TouchableOpacity>
         </View>
 
