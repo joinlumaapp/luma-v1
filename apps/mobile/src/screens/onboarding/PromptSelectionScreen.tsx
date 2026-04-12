@@ -310,6 +310,7 @@ export const PromptSelectionScreen: React.FC = () => {
       onSkip={handleSkip}
       footer={
         <View style={styles.footerContainer}>
+          <Text style={styles.counterText}>{answeredCount}/15 cevaplandı</Text>
           <TouchableOpacity onPress={handleContinue} activeOpacity={0.85}>
             <LinearGradient
               colors={['#FF6B6B', '#EE5A24']}
@@ -369,11 +370,6 @@ export const PromptSelectionScreen: React.FC = () => {
             });
           }}
         />
-
-        {/* Answered counter */}
-        <View style={styles.counterRow}>
-          <Text style={styles.counterText}>{answeredCount}/15 cevaplandı</Text>
-        </View>
       </KeyboardAvoidingView>
     </OnboardingLayout>
   );
@@ -417,17 +413,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    paddingBottom: 16,
-  },
-
-  counterRow: {
-    alignItems: 'center',
-    paddingVertical: 8,
+    paddingBottom: 24,
   },
   counterText: {
     fontSize: 13,
     fontFamily: 'Poppins_600SemiBold',
     color: '#888888',
+    marginBottom: 8,
   },
 
   footerContainer: {
